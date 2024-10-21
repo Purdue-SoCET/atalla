@@ -37,7 +37,10 @@ initial begin
     tb_enable = 1'b1;
     #(CLK_PERIOD*32);
 
-    $finish;
+    tb_enable = 1'b0;
+    #(CLK_PERIOD*32);
+
+    $stop;
 end
 
 endmodule

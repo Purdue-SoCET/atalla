@@ -1,5 +1,5 @@
 
-module flex_counter #( parameter N=16 ) (
+module flex_counter #( parameter N=4 ) (
     input logic nrst,
     input logic clk,
     input logic enable,
