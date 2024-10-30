@@ -8,21 +8,30 @@ module dispatch(
 
     import types_pkg::*;
 
-    dispatch_t dispatch;
+    dispatch_t n_dispatch;
 
-    always_ff @ (posedge CLK, negedgs nRST) begin: Pipeline Latching
+    always_ff @ (posedge CLK, negedge nRST) begin: Pipeline Latching
       if (~nRST)
-        diif.dispatch_p <= '0;
-    	else if (diif.flush)
-        diif.dispatch_p <= '0;
-      else if (diif.freeze)
-        diif.dispatch_p <= diif.dispatch_p;
-      else if (dispatch.ihit)
-        diif.dispatch_p <= dispatch;
+        diif.out <= '0;
     	else
-        diif.dispatch_p <= diif.dispatch_p;
+        diif.out <= n_dispatch;
+    end
+
+    always_comb begin : Pipeline Latching
+      case (1'b1)
+        diif.flush:  n_dispatch = '0;
+        diif.freeze: n_dispatch = diif.out;
+        diif.ihit:   n_dispatch = n_dispatch;
+        default:     n_dispatch = diif.out;
+      endcase
+    end
 
     // need control logic to determine which FU to dispatch, compare to fu_busy
     // to determine if possible to dispatch, stall PC if not possible to dispatch
+
+    always_comb begin : Next Dispatch
+      //TODO
+      n_dispatch = diif.out;
+    end
 
 endmodule
