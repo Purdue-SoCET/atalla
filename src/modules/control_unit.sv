@@ -1,5 +1,7 @@
 // control unit
 
+// need to include matrix related instructions, gemm, ld.m, sw.m
+
 `include "types_pkg.vh"
 `include "control_unit_if.vh"
 

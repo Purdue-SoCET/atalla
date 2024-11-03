@@ -1,4 +1,6 @@
 
+// need to include matrix related instructions, gemm, ld.m, sw.m
+
 `ifndef CONTROL_UNIT_IF_VH
 `define CONTROL_UNIT_IF_VH
 
