@@ -11,19 +11,19 @@ interface control_unit_if;
   import types_pkg::*;
 
   logic [2:0] mem_type, branch_type;
-  logic [3:0] alu_op;
+  logic [3:0] alu_op. stride;
   logic [5:0] b_type;
   logic [1:0] u_type;
-  logic halt_pre, i_flag, reg_write, jalr, jal;
+  logic halt_pre, i_flag, reg_write, jalr, jal, gemm, ld_m, st_m;
   word_t imm, instr;
 
   modport ctrl (
     input instr,
-    output halt_pre, b_type, i_flag, mem_type, reg_write, jalr, jal, u_type, alu_op, branch_type, imm
+    output halt_pre, b_type, i_flag, mem_type, reg_write, jalr, jal, u_type, alu_op, branch_type, imm, stride, gemm, ld_m, st_m
   );
 
   modport tb (
-    input halt_pre, b_type, i_flag, mem_type, reg_write, jalr, jal, u_type, alu_op, branch_type, imm,
+    input halt_pre, b_type, i_flag, mem_type, reg_write, jalr, jal, u_type, alu_op, branch_type, imm, stride, gemm, ld_m, st_m,
     output instr
   );
 

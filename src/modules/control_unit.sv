@@ -44,6 +44,7 @@ module control_unit(
       ctrl_if.alu_op = '0;
       ctrl_if.branch_type = '0;
       ctrl_if.imm = '0;
+      ctrl_if.stride = '0;
       casez (instr[6:0])
         RTYPE:
             begin 
@@ -168,6 +169,31 @@ module control_unit(
                 ctrl_if.imm = {instr[31:12], 12'b0};
             end
         HALT: ctrl_if.halt_pre = '1;
+        7'b1000111: // ld.m
+            begin 
+                ctrl_if.imm = $signed({instr[17:7]});
+                // ctrl_if.reg_write = '1;
+                ctrl_if.i_flag = '1;
+                ctrl_if.alu_op = ALU_ADD;
+                // ctrl_if.mem_type[TO_REG] = '1;
+                // ctrl_if.mem_type[READ] = '1;
+                ctrl_if.stride = instr[22:18]; // register
+                ctrl_if.ld_m = '1;
+            end
+        7'b1010111: //st.m
+            begin
+                ctrl_if.imm = $signed({instr[17:7]});
+                ctrl_if.i_flag = '1;
+                ctrl_if.alu_op = ALU_ADD;
+                // ctrl_if.mem_type[WRITE] = '1;
+                ctrl_if.stride = instr[22:18]; // register
+                ctrl_if.st_m = '1;
+            end
+        7'b1110111: // gemm.m "md = ma @ mb + mc"
+            begin
+                ctrl_if.gemm = '1;
+                //i think thats it?
+            end
       endcase
     end
 
