@@ -1,6 +1,6 @@
 // mapped needs this
 `include "cache_control_if.vh"
-`include "cpu_ram_if.vh"
+//`include "cpu_ram_if.vh"
 `include "caches_if.vh"
 `include "datapath_cache_if.vh"
 `include "cpu_types_pkg.vh"
@@ -35,39 +35,39 @@ int test_num;
 
 import cpu_types_pkg::*;
 
-     task reset_dut;
-  begin
-    write('0,'0,'1,'0);
-    // Activate the design's reset (does not need to be synchronize with clock)
-    nrst = 1'b0;
-    
-    
-    // Wait for a couple clock cycles
-    @(posedge CLK);
-    
-    // Release the reset
-    @(negedge CLK);
-    nrst = '1;
-    
-    // Wait for a while before activating the design
-    @(posedge CLK);
-  end
+  task reset_dut;
+    begin
+      write('0,'0,'1,'0);
+      // Activate the design's reset (does not need to be synchronize with clock)
+      nrst = 1'b0;
+      
+      
+      // Wait for a couple clock cycles
+      @(posedge CLK);
+      
+      // Release the reset
+      @(negedge CLK);
+      nrst = '1;
+      
+      // Wait for a while before activating the design
+      @(posedge CLK);
+    end
   endtask
 
-   task write(
-        logic   local_imemREN, 
-        word_t local_imemaddr,
-        logic local_iwait,
-        word_t local_iload
-   );
-   begin
-        my_dcif.imemREN = local_imemREN;
-        my_dcif.imemaddr = local_imemaddr;
+  task write(
+      logic   local_imemREN, 
+      word_t local_imemaddr,
+      logic local_iwait,
+      word_t local_iload
+  );
+  begin
+      my_dcif.imemREN = local_imemREN;
+      my_dcif.imemaddr = local_imemaddr;
 
-        my_cif0.iwait = local_iwait;
-        my_cif0.iload = local_iload;
-    end
-   endtask
+      my_cif0.iwait = local_iwait;
+      my_cif0.iload = local_iload;
+  end
+  endtask
 
 
 
