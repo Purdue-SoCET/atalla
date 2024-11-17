@@ -26,7 +26,7 @@ interface control_unit_if;
   matrix_mem_t m_mem_type;
   logic [3:0] matrix_rd, matrix_rs1
 
-  modport ctrl (
+  modport cu (
     input instr,
     output halt, b_type, i_flag, s_mem_type, reg_write, jalr, jal, u_type, alu_op, branch_type, imm, stride, fu_s, fu_m, m_mem_type, matrix_rd, matrix_rs1
   );
@@ -36,8 +36,5 @@ interface control_unit_if;
     output instr
   );
 
-
-
 endinterface
-
 `endif //CONTROL_UNIT_IF_VH

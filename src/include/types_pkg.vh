@@ -31,7 +31,9 @@ package types_pkg;
   // Pipeline Stage Structs
   typedef struct packed {
     logic hazard;
-    cu_t cu;
+
+    // control signals
+    
   } dispatch_t;
 
   typedef struct packed {
@@ -91,7 +93,6 @@ package types_pkg;
     LOAD,
     ADD // not using it but here still 
   } utype_t;
-
 
 endpackage
 `endif
