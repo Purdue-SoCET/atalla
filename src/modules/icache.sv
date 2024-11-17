@@ -1,8 +1,13 @@
 `include "datapath_cache_if.vh"
 `include "caches_if.vh"
 
-// dpif.ihit, dpif.imemload, cif.iREN, cif.iaddr, cif.iwait, cif.iload
-module icache (
+// Parametric cache design
+module icache #(
+  parameter WORD_W = 32,      // Word width
+  parameter ITAG_W = 26,      // Instruction cache tag width
+  parameter IIDX_W = 4,       // Instruction cache index width
+  parameter IBYT_W = 2        // Instruction cache byte offset width
+)(
   input logic CLK, nRST,
   datapath_cache_if.icache dcif,
   caches_if.icache cif
@@ -11,7 +16,7 @@ module icache (
 
   // Declare variables at the top (before any logic)
   icachef_t icache_format;
-  icache_frame[15:0] icache, nxt_icache;
+  icache_frame [(1 << IIDX_W) - 1:0] icache, nxt_icache; // Parametrized size
 
   typedef enum logic {
       idle = 1'b0,
@@ -33,6 +38,7 @@ module icache (
 
   // Combinational logic for handling cache state
   always_comb begin
+      icache_format = '0;
       dcif.ihit = '0;
       cif.iREN = '0;
       cif.iaddr = '0;

@@ -113,8 +113,9 @@ import cpu_types_pkg::*;
       #50
 
 
-
-      $finish;
+      #1000
+      #1000
+      $stop;
       
 
     end
