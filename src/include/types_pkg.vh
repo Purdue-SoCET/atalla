@@ -23,5 +23,8 @@ package types_pkg;
     logic [2:0] fu_index;
   } dispatch_t
 
+  // Word Type
+  typedef logic [WORD_W-1:0] word_t;
+
 endpackage
 `endif
