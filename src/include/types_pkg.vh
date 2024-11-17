@@ -94,5 +94,8 @@ package types_pkg;
     ADD // not using it but here still 
   } utype_t;
 
+  // Word Type
+  typedef logic [WORD_W-1:0] word_t;
+
 endpackage
 `endif
