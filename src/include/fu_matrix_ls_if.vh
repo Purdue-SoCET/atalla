@@ -5,11 +5,11 @@
 `define MATRIX_LS_IF_VH
 
 // types
-`include "cpu_types_pkg.vh"
+`include "types_pkg.vh"
 
 interface matrix_ls_if;
 // import types
-import cpu_types_pkg::*;
+import types_pkg::*;
 
 // Signals
 
