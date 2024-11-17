@@ -44,7 +44,7 @@ module dispatch(
     end
 
     always_comb begin : Hazard Logic
-      case (cuif.fu)
+      case (cuif.cu.fu)
         ALU: struct_h = fust.alu.busy;
         LDST: struct_h = fust.ldst.busy;
         BRANCH: struct_h = fust.branch.busy;
@@ -55,8 +55,9 @@ module dispatch(
     end
 
     always_comb begin : Dispatch Out
-      //TODO
       dispatch = diif.fetch.out;
+      dispatch.hazard = hazard;
+      dispatch.cu = cuif.cu;
     end
 
 endmodule
