@@ -37,7 +37,23 @@ package types_pkg;
   } dispatch_t;
 
   typedef struct packed {
-    cu_t cu; 
+    logic [3:0] alu_op;
+    logic [3:0] stride;
+    logic halt;
+    logic i_flag; 
+    logc reg_write; 
+    logic jalr;
+    logic jal;
+    scalar_mem_t s_mem_type;
+    branch_t branch_type;
+    word_t imm;
+    utype_t u_type;
+    matrix_mem_t 
+    fu_scalar fu_s;
+    fu_matrix fu_m
+    matrix_mem_t m_mem_type;
+    logic [3:0] matrix_rd;
+    logic [3:0] matrix_rs1
   } issue_t;
 
   typedef struct packed {
