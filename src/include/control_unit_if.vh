@@ -20,7 +20,6 @@ interface control_unit_if;
   branch_t branch_type;
   word_t imm, instr;
   utype_t u_type;
-  matrix_mem_t 
   fu_scalar fu_s;
   fu_matrix fu_m
   matrix_mem_t m_mem_type;

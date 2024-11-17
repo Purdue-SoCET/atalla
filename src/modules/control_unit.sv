@@ -13,10 +13,6 @@ module control_unit(
 
     word_t instr;
 
-    // u type
-    parameter LOAD = 0;
-    parameter ADD = 1;
-
     assign instr = cu_if.instr;
 
     always_comb begin
