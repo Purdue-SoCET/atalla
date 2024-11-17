@@ -13,19 +13,6 @@ module control_unit(
 
     word_t instr;
 
-    // mem
-    parameter WRITE = 2;
-    parameter READ = 1;
-    parameter TO_REG = 0;
-
-    // branch
-    parameter B_BEQ = 0;
-    parameter B_BNE = 1;
-    parameter B_BLT = 2;
-    parameter B_BGE = 3;
-    parameter B_BLTU = 4;
-    parameter B_BGEU = 5;
-
     // u type
     parameter LOAD = 0;
     parameter ADD = 1;
@@ -33,10 +20,9 @@ module control_unit(
     assign instr = ctrl_if.instr;
 
     always_comb begin
-      ctrl_if.halt_pre = '0;
+      ctrl_if.halt = '0;
       ctrl_if.i_flag = '0;
-      ctrl_if.b_type = '0;
-      ctrl_if.mem_type = '0;
+      ctrl_if.s_mem_type = '0;
       ctrl_if.reg_write = '0;
       ctrl_if.jalr = '0;
       ctrl_if.jal = '0;
@@ -45,10 +31,16 @@ module control_unit(
       ctrl_if.branch_type = '0;
       ctrl_if.imm = '0;
       ctrl_if.stride = '0;
+      ctrl_if.fu_s = '0;
+      ctrl_if.fu_m = '0;
+      ctrl_if.m_mem_type = '0;
+      ctrl_if.matrix_rd = '0;
+      ctrl_if.matrix_rs1 = '0;
       casez (instr[6:0])
         RTYPE:
             begin 
                 ctrl_if.reg_write = '1;
+                ctrl_if.fu_s = ALU;
                 casez(instr[14:12])
                     SLL: ctrl_if.alu_op = ALU_SLL;
                     SRL_SRA: ctrl_if.alu_op = (instr[31:25] == SRA) ? ALU_SRA : ALU_SRL;
@@ -65,6 +57,7 @@ module control_unit(
                 ctrl_if.reg_write = '1;
                 ctrl_if.i_flag = '1;
                 ctrl_if.imm = $signed({instr[31:20]});
+                ctrl_if.fu_s = ALU;
                 casez(instr[14:12])
                     ADDI: ctrl_if.alu_op = ALU_ADD;
                     XORI: ctrl_if.alu_op = ALU_XOR;
@@ -82,9 +75,10 @@ module control_unit(
                     ctrl_if.imm = $signed({instr[31:20]});
                     ctrl_if.reg_write = '1;
                     ctrl_if.i_flag = '1;
-                    ctrl_if.alu_op = ALU_ADD;
-                    ctrl_if.mem_type[TO_REG] = '1;
-                    ctrl_if.mem_type[READ] = '1;
+                    // ctrl_if.alu_op = ALU_ADD;
+                    ctrl_if.s_mem_type = MEM_TO_REG;
+                    ctrl_if.s_mem_type = LOAD;
+                    ctrl_if.fu_s = LD_ST;
                 end
             end
         JALR:
@@ -94,57 +88,59 @@ module control_unit(
                 ctrl_if.jalr = '1;
                 ctrl_if.alu_op = ALU_ADD;
                 ctrl_if.i_flag = '1;
+                ctrl_if.fu_s = ALU;
             end
         STYPE:
             begin
                 if (instr[14:12] == 3'h2) begin 
-                    // ctrl_if.reg_write = '1;
                     ctrl_if.imm = $signed({instr[31:25], instr[11:7]});
                     ctrl_if.i_flag = '1;
-                    ctrl_if.alu_op = ALU_ADD;
-                    ctrl_if.mem_type[WRITE] = '1;
+                    // ctrl_if.alu_op = ALU_ADD
+                    ctrl_if.s_mem_type = STORE;
+                    ctrl_if.fu_s = LD_ST;
                 end 
             end
         BTYPE:
             begin 
                 // ctrl_if.reg_write = '1;
                 ctrl_if.imm = $signed({instr[31], instr[7], instr[30:25], instr[11:8], 1'b0});
+                ctrl_if.fu_s = BRANCH;
                 casez(instr[14:12])
                     BEQ: 
                         begin 
-                            ctrl_if.b_type[B_BEQ] = '1; 
-                            ctrl_if.alu_op = ALU_SUB;
-                            ctrl_if.branch_type = 3'd1;
+                            ctrl_if.branch_type = BEQ; 
+                            // ctrl_if.alu_op = ALU_SUB;
+                            // ctrl_if.branch_type = 3'd1;
                         end
                     BNE: 
                         begin 
-                            ctrl_if.b_type[B_BNE] = '1; 
-                            ctrl_if.alu_op = ALU_SUB;
-                            ctrl_if.branch_type = 3'd2;
+                            ctrl_if.branch_type = BNE; 
+                            // ctrl_if.alu_op = ALU_SUB;
+                            // ctrl_if.branch_type = 3'd2;
                         end
                     BLT: 
                         begin 
-                            ctrl_if.b_type[B_BLT] = '1; 
-                            ctrl_if.alu_op = ALU_SUB;
-                            ctrl_if.branch_type = 3'd3;
+                            ctrl_if.branch_type = BLT; 
+                            // ctrl_if.alu_op = ALU_SUB;
+                            // ctrl_if.branch_type = 3'd3;
                         end
                     BGE: 
                         begin 
-                            ctrl_if.b_type[B_BGE] = '1; 
-                            ctrl_if.alu_op = ALU_SUB;
-                            ctrl_if.branch_type = 3'd4;
+                            ctrl_if.branch_type = BGE; 
+                            // ctrl_if.alu_op = ALU_SUB;
+                            // ctrl_if.branch_type = 3'd4;
                         end
                     BLTU: 
                         begin 
-                            ctrl_if.b_type[B_BLTU] = '1; 
-                            ctrl_if.alu_op = ALU_SLTU;
-                            ctrl_if.branch_type = 3'd5;
+                            ctrl_if.branch_type = BLTU; 
+                            // ctrl_if.alu_op = ALU_SLTU;
+                            // ctrl_if.branch_type = 3'd5;
                         end
                     BGEU: 
                         begin 
-                            ctrl_if.b_type[B_BGEU] = '1; 
-                            ctrl_if.alu_op = ALU_SLTU;
-                            ctrl_if.branch_type = 3'd6;
+                            ctrl_if.branch_type = BGEU; 
+                            // ctrl_if.alu_op = ALU_SLTU;
+                            // ctrl_if.branch_type = 3'd6;
                         end
                 endcase
             end
@@ -155,43 +151,46 @@ module control_unit(
                 ctrl_if.reg_write = '1;
                 ctrl_if.alu_op = ALU_ADD;
                 ctrl_if.i_flag = '1;
+                ctrl_if.fu_s = ALU;
             end
         LUI:
             begin
                 ctrl_if.imm = {instr[31:12], 12'b0};
-                ctrl_if.u_type[LOAD] = '1;
+                ctrl_if.u_type = LOAD;
                 ctrl_if.reg_write = '1;
             end
-        AUIPC:
-            begin 
-                ctrl_if.u_type[ADD] = '1;
-                ctrl_if.reg_write = '1;
-                ctrl_if.imm = {instr[31:12], 12'b0};
-            end
-        HALT: ctrl_if.halt_pre = '1;
+        // AUIPC:
+        //     begin 
+        //         ctrl_if.u_type = ADD;
+        //         ctrl_if.reg_write = '1;
+        //         ctrl_if.imm = {instr[31:12], 12'b0};
+        //     end
+        HALT: ctrl_if.halt = '1;
         7'b1000111: // ld.m
             begin 
                 ctrl_if.imm = $signed({instr[17:7]});
-                // ctrl_if.reg_write = '1;
-                ctrl_if.i_flag = '1;
-                ctrl_if.alu_op = ALU_ADD;
-                // ctrl_if.mem_type[TO_REG] = '1;
-                // ctrl_if.mem_type[READ] = '1;
+                // ctrl_if.i_flag = '1;
+                // ctrl_if.alu_op = ALU_ADD;
                 ctrl_if.stride = instr[22:18]; // register
-                ctrl_if.ld_m = '1;
+                ctrl_if.fu = LD_ST;
+                ctrl_if.m_mem_type = LOAD;
+                ctrl_if.matrix_rd = instr[31:28];
+                ctrl_if.matrix_rs1 = instr[27:23];
             end
         7'b1010111: //st.m
             begin
                 ctrl_if.imm = $signed({instr[17:7]});
-                ctrl_if.i_flag = '1;
-                ctrl_if.alu_op = ALU_ADD;
-                // ctrl_if.mem_type[WRITE] = '1;
+                // ctrl_if.i_flag = '1;
+                // ctrl_if.alu_op = ALU_ADD;
                 ctrl_if.stride = instr[22:18]; // register
-                ctrl_if.st_m = '1;
+                ctrl_if.fu_m = LD_ST;
+                ctrl_if.m_mem_type = STORE;
+                ctrl_if.matrix_rd = instr[31:28];
+                ctrl_if.matrix_rs1 = instr[27:23];
             end
         7'b1110111: // gemm.m "md = ma @ mb + mc"
             begin
-                ctrl_if.gemm = '1;
+                ctrl_if.fu_m = GEMM;
                 //i think thats it?
             end
       endcase

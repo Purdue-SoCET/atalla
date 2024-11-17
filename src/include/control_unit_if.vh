@@ -10,20 +10,29 @@ interface control_unit_if;
   // import types
   import types_pkg::*;
 
-  logic [2:0] mem_type, branch_type;
-  logic [3:0] alu_op. stride;
-  logic [5:0] b_type;
-  logic [1:0] u_type;
-  logic halt_pre, i_flag, reg_write, jalr, jal, gemm, ld_m, st_m;
+  // logic [2:0] mem_type, branch_type;
+  // logic [1:0] u_type;
+  // logic [5:0] b_type;
+
+  logic [3:0] alu_op, stride;
+  logic halt, i_flag, reg_write, jalr, jal;
+  scalar_mem_t s_mem_type;
+  branch_t branch_type;
   word_t imm, instr;
+  utype_t u_type;
+  matrix_mem_t 
+  fu_scalar fu_s;
+  fu_matrix fu_m
+  matrix_mem_t m_mem_type;
+  logic [3:0] matrix_rd, matrix_rs1
 
   modport ctrl (
     input instr,
-    output halt_pre, b_type, i_flag, mem_type, reg_write, jalr, jal, u_type, alu_op, branch_type, imm, stride, gemm, ld_m, st_m
+    output halt, b_type, i_flag, s_mem_type, reg_write, jalr, jal, u_type, alu_op, branch_type, imm, stride, fu_s, fu_m, m_mem_type, matrix_rd, matrix_rs1
   );
 
   modport tb (
-    input halt_pre, b_type, i_flag, mem_type, reg_write, jalr, jal, u_type, alu_op, branch_type, imm, stride, gemm, ld_m, st_m,
+    input halt, b_type, i_flag, s_mem_type, reg_write, jalr, jal, u_type, alu_op, branch_type, imm, stride, fu_s, fu_m, m_mem_type, matrix_rd, matrix_rs1,
     output instr
   );
 
