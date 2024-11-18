@@ -14,13 +14,13 @@ interface control_unit_if;
   // logic [1:0] u_type;
   // logic [5:0] b_type;
 
-  logic [3:0] alu_op, stride;
+  logic [3:0] alu_op;
+  logic [4:0] stride
   logic halt, i_flag, reg_write, jalr, jal;
   scalar_mem_t s_mem_type;
   branch_t branch_type;
   word_t imm, instr;
   utype_t u_type;
-  matrix_mem_t 
   fu_scalar fu_s;
   fu_matrix fu_m
   matrix_mem_t m_mem_type;
