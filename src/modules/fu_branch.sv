@@ -6,6 +6,7 @@ module fu_branch(
   fu_branch_if.btb fubif
 );
   import types_pkg::*;
+  
   parameter BUFFER_SIZE = 256;
   parameter IDX_SIZE    = 8;
   parameter TAG_SIZE    = 32 - IDX_SIZE - 2;
