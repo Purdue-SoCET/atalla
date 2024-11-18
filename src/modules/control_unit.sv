@@ -31,7 +31,6 @@ module control_unit(
       cu_if.fu_m = '0;
       cu_if.m_mem_type = '0;
       cu_if.matrix_rd = '0;
-      cu_if.matrix_rs1 = '0;
       casez (instr[6:0])
         RTYPE:
             begin 
@@ -171,7 +170,6 @@ module control_unit(
                 cu_if.fu = LD_ST;
                 cu_if.m_mem_type = LOAD;
                 cu_if.matrix_rd = instr[31:28];
-                cu_if.matrix_rs1 = instr[27:23];
             end
         7'b1010111: //st.m
             begin
@@ -182,7 +180,6 @@ module control_unit(
                 cu_if.fu_m = LD_ST;
                 cu_if.m_mem_type = STORE;
                 cu_if.matrix_rd = instr[31:28];
-                cu_if.matrix_rs1 = instr[27:23];
             end
         7'b1110111: // gemm.m "md = ma @ mb + mc"
             begin

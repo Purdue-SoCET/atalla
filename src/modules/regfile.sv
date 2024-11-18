@@ -12,7 +12,7 @@ module register_file(
     register_file_if.rf rf_if
 );
 
-    import cpu_types_pkg::*;
+    import types_pkg::*;
 
     word_t [31:0] register, next_reg;
 

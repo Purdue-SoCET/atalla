@@ -24,7 +24,7 @@ interface control_unit_if;
   fu_scalar fu_s;
   fu_matrix fu_m
   matrix_mem_t m_mem_type;
-  logic [3:0] matrix_rd, matrix_rs1
+  logic [3:0] matrix_rd;
 
   modport cu (
     input instr,
