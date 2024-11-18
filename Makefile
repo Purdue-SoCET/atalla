@@ -2,6 +2,10 @@ fc:
 	vlog -sv ./src/testbench/flex_counter_tb.sv ./src/modules/flex_counter.sv
 	vsim -voptargs="+acc" work.flex_counter_tb
 
+mls:
+	vlog -sv ./src/testbench/fu_matrix_ls_tb.sv ./src/modules/fu_matrix_ls.sv
+	vsim -voptargs="+acc" work.fu_matrix_ls_tb
+
 %:
 	vlog -sv ./src/testbench/$*_tb.sv ./src/**/*
 	vsim -voptargs="+acc" work.$*_tb

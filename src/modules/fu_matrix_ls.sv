@@ -1,6 +1,6 @@
 /* FU Matrix LS Code */
 
-`include "cpu_types_pkg.vh"
+`include "cpu_types.vh"
 `include "fu_matrix_ls_if.vh"
 
 module fu_matrix_ls
@@ -9,7 +9,7 @@ module fu_matrix_ls
 );
 
 // importing types
-import cpu_types_pkg::*;
+import cpu_types::*;
 
 assign mlsif.done = mlsif.mhit; // Mhit
 
@@ -19,7 +19,7 @@ always_comb begin : LOAD_STORE
             mlsif.ls_out[0] = 1;
             mlsif.rd_out = mlsif.rd_in;
             mlsif.stride_out = mlsif.stride_in;
-            mlsif.address = mlsif.rs_in + mlsif.imm_in
+            mlsif.address = mlsif.rs_in + mlsif.imm_in;
         end
 
         else if (mlsif.ls_in[1]) begin  // STORE
@@ -27,7 +27,7 @@ always_comb begin : LOAD_STORE
             mlsif.rd_out = mlsif.rd_in;
             mlsif.stride_out = mlsif.stride_in;
             mlsif.imm_in = mlsif.stride_in;
-            mlsif.address = mlsif.rs_in + mlsif.imm_in
+            mlsif.address = mlsif.rs_in + mlsif.imm_in;
         end
     end
 end
