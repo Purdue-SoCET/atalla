@@ -1,18 +1,18 @@
 `ifndef FU_ALU_IF_VH
 `define FU_ALU_IF_VH
 
-`include "types_pkg.vh"
+`include "cpu_types.vh"
 
 interface fu_alu_if;
-  import types_pkg::*;
+  import cpu_types::*;
 
-  logic negative, overflow, zero, enable;
+  logic negative, overflow, zero, alu_enable;
   logic [3:0] aluop;
   //aluop_t aluop;
   word_t port_a, port_b, port_output;
 
   modport alu (
-    input aluop, port_a, port_b, alu_enable
+    input aluop, port_a, port_b, alu_enable,
     output  negative, overflow, port_output, zero
   );
 

@@ -1,12 +1,15 @@
 `include "dispatch_if.vh"
 `include "types_pkg.vh"
+`include "control_unit_if.vh"
 
 module dispatch(
     input logic CLK, nRST,
-    dispatch_if.DI diif
+    dispatch_if.DI diif,
+    control_unit_if.cu cuif
 );
 
     import types_pkg::*;
+    import cpu_types::*;
 
     dispatch_t n_dispatch;
     dispatch_t dispatch;
@@ -45,13 +48,13 @@ module dispatch(
       rt = Instruction[20:16];
       rd = Instruction[15:11];
       imm = Instruction[15:0];
-      func = funct_t'(Instruction[5:0]);
+      // func = funct_t'(Instruction[5:0]); // changes based on instruction type??? 
     end
 
     always_comb begin : Hazard_Logic
-      case (cuif.cu.fu)
+      case (cuif.fu_s)
         ALU: struct_h = fust.alu.busy;
-        LDST: struct_h = fust.ldst.busy;
+        LD_ST: struct_h = fust.ldst.busy;
         BRANCH: struct_h = fust.branch.busy;
         default: struct_h = 1'b0;
       endcase
@@ -62,7 +65,7 @@ module dispatch(
     always_comb begin : Dispatch_Out
       dispatch = diif.fetch.out;
       dispatch.hazard = hazard;
-      dispatch.cu = cuif.cu;
+      // dispatch.cu = cuif; not in types_pkg???
     end
 
 endmodule

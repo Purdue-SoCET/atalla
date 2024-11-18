@@ -1,10 +1,11 @@
 `ifndef FU_BRANCH_IF_VH
 `define FU_BRANCH_IF_VH
 
-`include "types_pkg.vh"
+`include "cpu_types.vh"
+
 
 interface fu_alu_if;
-  import types_pkg::*;
+  import cpu_types::*;
 
   logic branch_outcome, update_btb, pred_outcome, hit;
   word_t pc, pc_fetch, branch_target, pred_target;
