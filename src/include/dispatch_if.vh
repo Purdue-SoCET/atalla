@@ -6,22 +6,23 @@ interface dispatch_if;
     import types_pkg::*;
 
     //Inputs from fetch
-    fetch_t fetch_p;
+    typedef logic [2:0] fetch_t;
+    fetch_t fetch;
 
-    //Inputs to latch
+    // Inputs to latch
     logic flush, freeze;
 
-    //Inputs from issue 
+    // Inputs from issue 
     logic [2:0] fu_busy;
     
-    //Inputs from memory
+    // Inputs from memory
     logic ihit;
     
-    //Outputs of stage
+    // Outputs of stage
     dispatch_t out;
     
     modport DI (
-        input fetch_p, flush, freeze, fu_busy, ihit,
+        input fetch, flush, freeze, fu_busy, ihit,
         output out
     );
 

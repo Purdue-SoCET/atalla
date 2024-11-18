@@ -1,37 +1,71 @@
 `include "dispatch_if.vh"
 `include "types_pkg.vh"
+`include "control_unit_if.vh"
 
 module dispatch(
     input logic CLK, nRST,
-    dispatch_if.DI diif
+    dispatch_if.DI diif,
+    control_unit_if.cu cuif
 );
 
     import types_pkg::*;
+    import cpu_types::*;
 
     dispatch_t n_dispatch;
+    dispatch_t dispatch;
 
-    always_ff @ (posedge CLK, negedge nRST) begin: Pipeline Latching
+    // hazards
+    logic WAW_h;
+    logic struct_h;
+    logic hazard;
+
+    logic [31:0] Instruction;
+    opcode_t op;
+    logic [4:0] rs, rt, rd;
+    logic [15:0] imm;
+
+    always_ff @ (posedge CLK, negedge nRST) begin: Pipeline_Latching
       if (~nRST)
         diif.out <= '0;
     	else
         diif.out <= n_dispatch;
     end
 
-    always_comb begin : Pipeline Latching
+    always_comb begin : Pipeline_Output
       case (1'b1)
         diif.flush:  n_dispatch = '0;
         diif.freeze: n_dispatch = diif.out;
-        diif.ihit:   n_dispatch = n_dispatch;
+        hazard:      n_dispatch = diif.out;
+        diif.ihit:   n_dispatch = dispatch;
         default:     n_dispatch = diif.out;
       endcase
     end
 
-    // need control logic to determine which FU to dispatch, compare to fu_busy
-    // to determine if possible to dispatch, stall PC if not possible to dispatch
+    always_comb begin: Instruction_Signals
+      Instruction = diif.fetch.imemload;
+      op = opcode_t'(Instruction[31:26]);
+      rs = Instruction[25:21];
+      rt = Instruction[20:16];
+      rd = Instruction[15:11];
+      imm = Instruction[15:0];
+      // func = funct_t'(Instruction[5:0]); // changes based on instruction type??? 
+    end
 
-    always_comb begin : Next Dispatch
-      //TODO
-      n_dispatch = diif.out;
+    always_comb begin : Hazard_Logic
+      case (cuif.fu_s)
+        ALU: struct_h = fust.alu.busy;
+        LD_ST: struct_h = fust.ldst.busy;
+        BRANCH: struct_h = fust.branch.busy;
+        default: struct_h = 1'b0;
+      endcase
+      WAW_h = rst[rd].busy;
+      hazard = struct_h | WAW_h;
+    end
+
+    always_comb begin : Dispatch_Out
+      dispatch = diif.fetch.out;
+      dispatch.hazard = hazard;
+      // dispatch.cu = cuif; not in types_pkg???
     end
 
 endmodule
