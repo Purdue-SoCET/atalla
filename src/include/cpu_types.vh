@@ -11,7 +11,7 @@
 `define CPU_TYPES_VH
 
 
-package CPU_TYPES;
+package cpu_types;
 
  // word width and size
  parameter WORD_W    = 32;

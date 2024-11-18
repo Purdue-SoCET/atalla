@@ -7,5 +7,5 @@ mls:
 	vsim -voptargs="+acc" work.fu_matrix_ls_tb
 
 %:
-	vlog -sv ./src/testbench/$*_tb.sv ./src/**/*
+	vlog -sv ./src/testbench/$*_tb.sv ./src/modules/* +incdir+./src/include/
 	vsim -voptargs="+acc" work.$*_tb

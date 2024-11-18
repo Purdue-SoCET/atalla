@@ -1,7 +1,10 @@
 `ifndef TYPES_PKG_VH
 `define TYPES_PKG_VH
 
+`include "cpu_types.vh"
+
 package types_pkg;
+import cpu_types::*;
   // all our instruction params
   parameter WORD_W = 32;
   parameter REG_W  = 5;
@@ -10,22 +13,21 @@ package types_pkg;
   parameter FU_S_W = 2;
   parameter FU_M_W = 1;
 
-  typedef logic [REG_W-1:0] regbits_t;
   typedef logic [MATRIX_W-1:0] mbits_t;
 
   typedef logic [FU_S_W-1:0] fu_sbits_t;
   typedef logic [FU_M_W-1:0] fu_mbits_t;
  
   // defines the Function Units
-  typdef enum logic [FU_S_W-1:0] {
+  typedef enum logic [FU_S_W-1:0] {
     ALU,
     LD_ST,
     BRANCH
   } fu_scalar;
 
-  typdef enum logic [FU_M_W-1:0] {
-    LD_ST,
-    GEMM
+  typedef enum logic [FU_M_W-1:0] {
+    M_LD_ST,
+    M_GEMM
   } fu_matrix;
 
   // Pipeline Stage Structs
@@ -36,9 +38,9 @@ package types_pkg;
     
   } dispatch_t;
 
-  typedef struct packed {
-    cu_t cu; 
-  } issue_t;
+  // typedef struct packed {
+  //   cu_t cu; 
+  // } issue_t;
 
   typedef struct packed {
     logic busy;
@@ -69,13 +71,12 @@ package types_pkg;
   } fust_m_t;
 
   typedef enum logic [2:0] {
-    BEQ, 
-    BNE, 
-    BNE,
-    BLT,
-    BGE,
-    BLTU,
-    BGEU,
+    BT_BEQ, 
+    BT_BNE, 
+    BT_BLT,
+    BT_BGE,
+    BT_BLTU,
+    BT_BGEU
   } branch_t;
 
   typedef enum logic [1:0] {
@@ -85,14 +86,14 @@ package types_pkg;
   } scalar_mem_t; // 
 
   typedef enum logic [1:0] {
-    STORE,
-    LOAD
+    M_STORE,
+    M_LOAD
   } matrix_mem_t; // load or store for matrix ld_st fu
 
   typedef enum logic [2:0] {
-    LOAD,
-    ADD // not using it but here still 
-  } utype_t;
+    UT_LOAD,
+    UT_ADD // not using it but here still 
+  } utype_t; // what is this ???
 
 endpackage
 
