@@ -3,6 +3,7 @@
 // need to include matrix related instructions, gemm, ld.m, sw.m
 
 `include "types_pkg.vh"
+`include "cpu_types.vh"
 `include "control_unit_if.vh"
 
 module control_unit(
@@ -10,6 +11,7 @@ module control_unit(
 );
 
     import types_pkg::*;
+    import cpu_types::*;
 
     word_t instr;
 

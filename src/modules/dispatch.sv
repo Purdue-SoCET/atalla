@@ -14,16 +14,21 @@ module dispatch(
     // hazards
     logic WAW_h;
     logic struct_h;
-    logic harzard;
+    logic hazard;
 
-    always_ff @ (posedge CLK, negedge nRST) begin: Pipeline Latching
+    logic [31:0] Instruction;
+    opcode_t op;
+    logic [4:0] rs, rt, rd;
+    logic [15:0] imm;
+
+    always_ff @ (posedge CLK, negedge nRST) begin: Pipeline_Latching
       if (~nRST)
         diif.out <= '0;
     	else
         diif.out <= n_dispatch;
     end
 
-    always_comb begin : Pipeline Output
+    always_comb begin : Pipeline_Output
       case (1'b1)
         diif.flush:  n_dispatch = '0;
         diif.freeze: n_dispatch = diif.out;
@@ -33,7 +38,7 @@ module dispatch(
       endcase
     end
 
-    always_comb begin: Instruction Signals
+    always_comb begin: Instruction_Signals
       Instruction = diif.fetch.imemload;
       op = opcode_t'(Instruction[31:26]);
       rs = Instruction[25:21];
@@ -43,7 +48,7 @@ module dispatch(
       func = funct_t'(Instruction[5:0]);
     end
 
-    always_comb begin : Hazard Logic
+    always_comb begin : Hazard_Logic
       case (cuif.cu.fu)
         ALU: struct_h = fust.alu.busy;
         LDST: struct_h = fust.ldst.busy;
@@ -54,7 +59,7 @@ module dispatch(
       hazard = struct_h | WAW_h;
     end
 
-    always_comb begin : Dispatch Out
+    always_comb begin : Dispatch_Out
       dispatch = diif.fetch.out;
       dispatch.hazard = hazard;
       dispatch.cu = cuif.cu;
