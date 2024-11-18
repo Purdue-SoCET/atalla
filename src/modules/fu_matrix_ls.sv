@@ -18,17 +18,16 @@ always_comb begin : LOAD_STORE
         if (mlsif.ls_in[0]) begin   // LOAD
             mlsif.ls_out[0] = 1;
             mlsif.rd_out = mlsif.rd_in;
-            mlsif.rs_out = mlsif.rs_in;
             mlsif.stride_out = mlsif.stride_in;
-            mlsif.imm_in = mlsif.imm_out
+            mlsif.address = mlsif.rs_in + mlsif.imm_in
         end
 
         else if (mlsif.ls_in[1]) begin  // STORE
             mlsif.ls_out[1] = 1;
             mlsif.rd_out = mlsif.rd_in;
-            mlsif.rs_out = mlsif.rs_in;
             mlsif.stride_out = mlsif.stride_in;
             mlsif.imm_in = mlsif.stride_in;
+            mlsif.address = mlsif.rs_in + mlsif.imm_in
         end
     end
 end
