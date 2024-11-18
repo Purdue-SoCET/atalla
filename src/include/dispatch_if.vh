@@ -6,6 +6,7 @@ interface dispatch_if;
     import types_pkg::*;
 
     //Inputs from fetch
+    typedef logic [2:0] fetch_t;
     fetch_t fetch;
 
     // Inputs to latch

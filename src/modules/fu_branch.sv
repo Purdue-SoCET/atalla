@@ -1,11 +1,14 @@
 `include "fu_branch_if.vh"
 `include "types_pkg.vh"
+`include "cpu_types.vh"
 
 module fu_branch(
   input logic CLK, nRST, ihit,
   fu_branch_if.btb fubif
 );
   import types_pkg::*;
+  import cpu_types::*;
+
   parameter BUFFER_SIZE = 256;
   parameter IDX_SIZE    = 8;
   parameter TAG_SIZE    = 32 - IDX_SIZE - 2;
