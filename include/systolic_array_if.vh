@@ -1,10 +1,10 @@
 `ifndef SYSTOLIC_ARRAY_IF_VH
 `define SYSTOLIC_ARRAY_IF_VH
 
-interface systolic_array_memory_if;
+interface systolic_array_if #(parameter array_dim = 4, parameter data_w = 16);
   // Parameters
-  parameter array_dim = 4;    //4x4 systolic array
-  parameter data_w = 16;      //FP 16 for our implementation
+  // parameter array_dim = 4;    //4x4 systolic array
+  // parameter data_w = 16;      //FP 16 for our implementation
 
   // Signals
   logic weight_en;        // Current input bus is for array weights
@@ -19,11 +19,13 @@ interface systolic_array_memory_if;
   logic [data_w*array_dim-1:0] array_output;        // Output data from the array
 
   // Memory Ports
-  modport memory_array(   //memory to systolic array
+  //memory to systolic array
+  modport memory_array (  
     input  weight_en, input_en, partial_en, row_en, array_in, array_in_partials,
     output drained, fifo_has_space, row_out, array_output
   );
-  modport array_memory(   //systolic array to memory
+  //systolic array to memory
+  modport array_memory(   
     input drained, fifo_has_space, row_out, array_output,
     output weight_en, input_en, partial_en, row_en, array_in, array_in_partials
   );

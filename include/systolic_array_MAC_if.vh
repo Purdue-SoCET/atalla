@@ -1,9 +1,9 @@
 `ifndef SYSTOLIC_ARRAY_MAC_IF_VH
 `define SYSTOLIC_ARRAY_MAC_IF_VH
 
-interface systolic_array_MAC_if;
+interface systolic_array_MAC_if #(parameter data_w = 16);
   // Parameters
-  parameter data_w = 16;      //FP 16 for our implementation
+  // parameter data_w = 16;      //FP 16 for our implementation
 
   // Signals
   logic start;          // MAC unit start signal
@@ -15,7 +15,7 @@ interface systolic_array_MAC_if;
 
   // MAC Port for Array
   modport MAC(
-    input  start, count, weight, in_value, in_accumulate, array_in_partials,
+    input  start, count, weight, in_value, in_accumulate,
     output out_accumulate
   );
 endinterface
