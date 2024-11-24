@@ -15,13 +15,13 @@ interface fu_scalar_ls_if;
   logic dhit, dmemWEN, dmemREN, dhit_in;
 
   modport sls (
-    input imm, mem_type, rs1, rs2, dmem_in, dhit_in;
-    output dmemaddr, dmemREN, dmemWEN, dmemstore, dmemload, dhit;
+    input imm, mem_type, rs1, rs2, dmem_in, dhit_in,
+    output dmemaddr, dmemREN, dmemWEN, dmemstore, dmemload, dhit
   );
 
   modport tb (
-    input dmemaddr, dmemREN, dmemWEN, dmemstore, dmemload, dhit;
-    output imm, mem_type, rs1, rs2, dmem_in, dhit_in;
+    input dmemaddr, dmemREN, dmemWEN, dmemstore, dmemload, dhit,
+    output imm, mem_type, rs1, rs2, dmem_in, dhit_in
   );
 
 endinterface

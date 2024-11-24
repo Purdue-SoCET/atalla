@@ -15,20 +15,22 @@ module fu_scalar_ls (
 
     state_t state, next_state;
 
-    word_t lacthed_dmemaddr, latched_dmemstore;
-    logic latched_dmemREN, latched_dmemWEN;
+    word_t latched_dmemaddr, latched_dmemstore, addr;
+    logic latched_dmemREN, latched_dmemWEN, write, read;
+
+
 
     always_ff @(posedge CLK, negedge nRST) begin
         if (!nRST) begin
             state <= idle;
-            lacthed_dmemaddr <= '0;
+            latched_dmemaddr <= '0;
             latched_dmemstore <= '0;
             latched_dmemREN <= '0;
             latched_dmemWEN <= '0;
         end
         else begin
             state <= next_state;
-            lacthed_dmemaddr <= addr;
+            latched_dmemaddr <= addr;
             latched_dmemstore <= sls_if.rs2;
             latched_dmemREN <= read;
             latched_dmemWEN <= write;
@@ -88,7 +90,6 @@ module fu_scalar_ls (
                     next_state = latched;
                 end
             end
-
         endcase
     end
 
