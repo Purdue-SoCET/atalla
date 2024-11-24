@@ -20,7 +20,7 @@ module control_unit(
     always_comb begin
       cu_if.halt = '0;
       cu_if.i_flag = '0;
-      cu_if.s_mem_type = '0
+      cu_if.s_mem_type = '0;
       cu_if.reg_write = '0;
       cu_if.jalr = '0;
       cu_if.jal = '0;

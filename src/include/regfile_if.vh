@@ -8,11 +8,11 @@
 `define REGISTER_FILE_IF_VH
 
 // all types
-`include "cpu_types_pkg.vh"
+`include "cpu_types.vh"
 
 interface register_file_if;
   // import types
-  import cpu_types_pkg::*;
+  import cpu_types::*;
 
   logic     WEN;
   regbits_t wsel, rsel1, rsel2;

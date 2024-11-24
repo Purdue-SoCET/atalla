@@ -14,7 +14,7 @@ interface control_unit_if;
 
   // logic [2:0] mem_type, branch_type;
   // logic [1:0] u_type;
-  logic [5:0] b_type;
+  // logic [5:0] b_type;
 
   logic [3:0] alu_op;
   logic [4:0] stride;
@@ -30,11 +30,11 @@ interface control_unit_if;
 
   modport cu (
     input instr,
-    output halt, b_type, i_flag, s_mem_type, reg_write, jalr, jal, u_type, alu_op, branch_type, imm, stride, fu_s, fu_m, m_mem_type, matrix_rd, matrix_rs1
+    output halt, i_flag, s_mem_type, reg_write, jalr, jal, u_type, alu_op, branch_type, imm, stride, fu_s, fu_m, m_mem_type, matrix_rd, matrix_rs1
   );
 
   modport tb (
-    input halt, b_type, i_flag, s_mem_type, reg_write, jalr, jal, u_type, alu_op, branch_type, imm, stride, fu_s, fu_m, m_mem_type, matrix_rd, matrix_rs1,
+    input halt, i_flag, s_mem_type, reg_write, jalr, jal, u_type, alu_op, branch_type, imm, stride, fu_s, fu_m, m_mem_type, matrix_rd, matrix_rs1,
     output instr
   );
 

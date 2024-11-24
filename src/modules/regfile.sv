@@ -3,16 +3,16 @@
 // rrbathin
 // 8/22/2024
 
-`include "cpu_types_pkg.vh"
-`include "register_file_if.vh"
+`include "cpu_types.vh"
+`include "regfile_if.vh"
 
 module register_file(
     input logic CLK,
     input logic nRST,
-    register_file_if.rf rf_if
+    regfile_if.rf rf_if
 );
 
-    import types_pkg::*;
+    import cpu_types::*;
 
     word_t [31:0] register, next_reg;
 

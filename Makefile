@@ -3,5 +3,5 @@ fc:
 	vsim -voptargs="+acc" work.flex_counter_tb
 
 %:
-	vlog -sv ./src/testbench/$*_tb.sv ./src/modules/* +incdir+./src/include/
+	vlog -sv ./src/testbench/$*_tb.sv ./src/modules/$*.sv +incdir+./src/include/
 	vsim -voptargs="+acc" work.$*_tb
