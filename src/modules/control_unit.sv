@@ -2,9 +2,11 @@
 
 // need to include matrix related instructions, gemm, ld.m, sw.m
 
-`include "types_pkg.vh"
-`include "cpu_types.vh"
+// `include "types_pkg.vh"
+// `include "cpu_types.vh"
 `include "control_unit_if.vh"
+
+
 
 module control_unit(
     control_unit_if.cu cu_if
@@ -33,6 +35,7 @@ module control_unit(
       cu_if.fu_m = '0;
       cu_if.m_mem_type = '0;
       cu_if.matrix_rd = '0;
+      cu_if.mem_to_reg = '0;
       casez (instr[6:0])
         RTYPE:
             begin 
@@ -73,7 +76,7 @@ module control_unit(
                     cu_if.reg_write = '1;
                     cu_if.i_flag = '1;
                     // cu_if.alu_op = ALU_ADD;
-                    cu_if.s_mem_type = MEM_TO_REG;
+                    cu_if.mem_to_reg = '1;
                     cu_if.s_mem_type = LOAD;
                     cu_if.fu_s = LD_ST;
                 end
@@ -169,7 +172,7 @@ module control_unit(
                 // cu_if.i_flag = '1;
                 // cu_if.alu_op = ALU_ADD;
                 cu_if.stride = instr[22:18]; // register
-                cu_if.fu_m = LD_ST;
+                cu_if.fu_m = LD_ST_M;
                 cu_if.m_mem_type = LOAD;
                 cu_if.matrix_rd = instr[31:28];
             end
@@ -179,7 +182,7 @@ module control_unit(
                 // cu_if.i_flag = '1;
                 // cu_if.alu_op = ALU_ADD;
                 cu_if.stride = instr[22:18]; // register
-                cu_if.fu_m = LD_ST;
+                cu_if.fu_m = LD_ST_M;
                 cu_if.m_mem_type = STORE;
                 cu_if.matrix_rd = instr[31:28];
             end

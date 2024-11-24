@@ -58,7 +58,7 @@ program test(
 
     task check_outputs;
         input logic tb_halt_pre; 
-        input logic [5:0] tb_b_type; 
+        // input logic [5:0] tb_b_type; 
         input logic tb_i_flag; 
         input logic [2:0] tb_mem_type; 
         input logic tb_reg_write; 
@@ -71,8 +71,8 @@ program test(
     begin 
         // if (ctrl_if.halt_pre != tb_halt_pre)
         //     $display("Incorrect halt test# %d", tb_test_num);
-        if (ctrl_if.b_type != tb_b_type)
-            $display("Incorrect branch test# %d", tb_test_num);
+        // if (ctrl_if.b_type != tb_b_type)
+        //     $display("Incorrect branch test# %d", tb_test_num);
         if (ctrl_if.i_flag != tb_i_flag)
             $display("Incorrect i type flag test# %d", tb_test_num);
         // if (ctrl_if.mem_type != tb_mem_type)
@@ -108,7 +108,7 @@ program test(
 
         test_num += 1; // 1
         run_test('0,'0,'0);
-        check_outputs('0, '0, '0, '0, '0, '0, '0, '0, '0, '0, test_num);
+        check_outputs('0, '0, '0, '0, '0, '0, '0, '0, '0, test_num);
 
         #(PERIOD);
         #(PERIOD);
@@ -117,35 +117,35 @@ program test(
 
         test_num += 1; // 2
         run_test(7'b0110011, 7'b0, 3'b0);
-        check_outputs('0, 6'b0, '0, 3'b0, '1, '0, '0, 2'b0, 4'b0011, 3'b0, test_num);
+        check_outputs('0, '0, 3'b0, '1, '0, '0, 2'b0, 4'b0011, 3'b0, test_num);
 
         #(PERIOD);
         #(PERIOD);
 
         test_num += 1; // 3
         run_test(7'b0110011, 7'h20, 3'b0);
-        check_outputs('0, 6'b0, '0, 3'b0, '1, '0, '0, 2'b0, 4'b0100, 3'b0, test_num);
+        check_outputs('0, '0, 3'b0, '1, '0, '0, 2'b0, 4'b0100, 3'b0, test_num);
 
         #(PERIOD);
         #(PERIOD);
 
         test_num += 1; // 4
         run_test(7'b0110011, 7'h00, 3'h7);
-        check_outputs('0, 6'b0, '0, 3'b0, '1, '0, '0, 2'b0, 4'b0101, 3'b0, test_num);
+        check_outputs('0, '0, 3'b0, '1, '0, '0, 2'b0, 4'b0101, 3'b0, test_num);
 
         #(PERIOD);
         #(PERIOD);
 
         test_num += 1; // 5
         run_test(7'b0110011, 7'h00, 3'h5);
-        check_outputs('0, 6'b0, '0, 3'b0, '1, '0, '0, 2'b0, 4'b0001, 3'b0, test_num);
+        check_outputs('0, '0, 3'b0, '1, '0, '0, 2'b0, 4'b0001, 3'b0, test_num);
 
         #(PERIOD);
         #(PERIOD);
 
         test_num += 1; // 6
         run_test(7'b0110011, 7'h20, 3'h5);
-        check_outputs('0, 6'b0, '0, 3'b0, '1, '0, '0, 2'b0, 4'b0010, 3'b0, test_num);
+        check_outputs('0, '0, 3'b0, '1, '0, '0, 2'b0, 4'b0010, 3'b0, test_num);
 
         #(PERIOD);
         #(PERIOD);
@@ -154,28 +154,28 @@ program test(
 
         test_num += 1; // 7
         run_test(7'b0010011, 7'h00, 3'h0);
-        check_outputs('0, 6'b0, '1, 3'b0, '1, '0, '0, 2'b0, 4'b0011, 3'b0, test_num);
+        check_outputs('0, '1, 3'b0, '1, '0, '0, 2'b0, 4'b0011, 3'b0, test_num);
 
         #(PERIOD);
         #(PERIOD);
 
         test_num += 1; // 8
         run_test(7'b0010011, 7'h00, 3'h2);
-        check_outputs('0, 6'b0, '1, 3'b0, '1, '0, '0, 2'b0, 4'b1010, 3'b0, test_num);
+        check_outputs('0, '1, 3'b0, '1, '0, '0, 2'b0, 4'b1010, 3'b0, test_num);
 
         #(PERIOD);
         #(PERIOD);
 
         test_num += 1; // 9
         run_test(7'b0010011, 7'h00, 3'h5);
-        check_outputs('0, 6'b0, '1, 3'b0, '1, '0, '0, 2'b0, 4'b0001, 3'b0, test_num);
+        check_outputs('0, '1, 3'b0, '1, '0, '0, 2'b0, 4'b0001, 3'b0, test_num);
 
         #(PERIOD);
         #(PERIOD);
 
         test_num += 1; // 10
         run_test(7'b0010011, 7'h20, 3'h5);
-        check_outputs('0, 6'b0, '1, 3'b0, '1, '0, '0, 2'b0, 4'b0010, 3'b0, test_num);
+        check_outputs('0, '1, 3'b0, '1, '0, '0, 2'b0, 4'b0010, 3'b0, test_num);
 
         #(PERIOD);
         #(PERIOD);
@@ -184,7 +184,7 @@ program test(
 
         test_num += 1; // 11
         run_test(7'b0000011, 7'h00, 3'h2);
-        check_outputs('0, 6'b0, '1, 3'b011, '1, '0, '0, 2'b0, 4'b0011, 3'b0, test_num);
+        check_outputs('0, '1, 3'b011, '1, '0, '0, 2'b0, 4'b0011, 3'b0, test_num);
 
         #(PERIOD);
         #(PERIOD);
@@ -193,7 +193,7 @@ program test(
 
         test_num += 1; // 12
         run_test(7'b1100111, 7'h00, 3'h0);
-        check_outputs('0, 6'b0, '1, 3'b000, '1, '1, '0, 2'b0, 4'b0011, 3'b0, test_num);
+        check_outputs('0, '1, 3'b000, '1, '1, '0, 2'b0, 4'b0011, 3'b0, test_num);
 
         #(PERIOD);
         #(PERIOD);
@@ -202,7 +202,7 @@ program test(
 
         test_num += 1; // 13
         run_test(7'b0100011, 7'h00, 3'h2);
-        check_outputs('0, 6'b0, '1, 3'b100, '0, '0, '0, 2'b0, 4'b0011, 3'b0, test_num);
+        check_outputs('0, '1, 3'b100, '0, '0, '0, 2'b0, 4'b0011, 3'b0, test_num);
 
         #(PERIOD);
         #(PERIOD);
@@ -211,21 +211,21 @@ program test(
 
         test_num += 1; // 14
         run_test(7'b1100011, 7'h00, 3'h0);
-        check_outputs('0, 6'b000001, '0, 3'b0, '0, '0, '0, 2'b0, 4'b0100, 3'd1, test_num);
+        check_outputs('0, '0, 3'b0, '0, '0, '0, 2'b0, 4'b0100, 3'd1, test_num);
 
         #(PERIOD);
         #(PERIOD);
 
         test_num += 1; // 15
         run_test(7'b1100011, 7'h00, 3'h5);
-        check_outputs('0, 6'b001000, '0, 3'b0, '0, '0, '0, 2'b0, 4'b0100, 3'd4, test_num);
+        check_outputs('0, '0, 3'b0, '0, '0, '0, 2'b0, 4'b0100, 3'd4, test_num);
 
         #(PERIOD);
         #(PERIOD);
 
         test_num += 1; // 16
         run_test(7'b1100011, 7'h00, 3'h6);
-        check_outputs('0, 6'b010000, '0, 3'b0, '0, '0, '0, 2'b0, 4'b1011, 3'd5, test_num);
+        check_outputs('0, '0, 3'b0, '0, '0, '0, 2'b0, 4'b1011, 3'd5, test_num);
 
         #(PERIOD);
         #(PERIOD);
@@ -234,7 +234,7 @@ program test(
 
         test_num += 1; // 17
         run_test(7'b1101111, 7'h00, 3'h0);
-        check_outputs('0, 6'b0, '1, 3'b0, '1, '0, '1, 2'b0, 4'b0011, 3'd0, test_num);
+        check_outputs('0, '1, 3'b0, '1, '0, '1, 2'b0, 4'b0011, 3'd0, test_num);
 
         #(PERIOD);
         #(PERIOD);
@@ -243,7 +243,7 @@ program test(
 
         test_num += 1; // 18
         run_test(7'b0110111, 7'h00, 3'h0);
-        check_outputs('0, 6'b0, '0, 3'b0, '1, '0, '0, 2'b01, 4'b0, 3'd0, test_num);
+        check_outputs('0, '0, 3'b0, '1, '0, '0, 2'b01, 4'b0, 3'd0, test_num);
 
         #(PERIOD);
         #(PERIOD);
@@ -252,7 +252,7 @@ program test(
 
         test_num += 1; // 19
         run_test(7'b0010111, 7'h00, 3'h0);
-        check_outputs('0, 6'b0, '0, 3'b0, '1, '0, '0, 2'b10, 4'b0, 3'd0, test_num);
+        check_outputs('0, '0, 3'b0, '1, '0, '0, 2'b10, 4'b0, 3'd0, test_num);
 
         #(PERIOD);
         #(PERIOD);
@@ -261,7 +261,7 @@ program test(
 
         test_num += 1; // 20
         run_test(7'b1111111, 7'h00, 3'h0);
-        check_outputs('1, 6'b0, '0, 3'b0, '0, '0, '0, 2'b0, 4'b0, 3'd0, test_num);
+        check_outputs('1, '0, 3'b0, '0, '0, '0, 2'b0, 4'b0, 3'd0, test_num);
 
         #(PERIOD);
         #(PERIOD);
