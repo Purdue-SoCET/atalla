@@ -78,7 +78,7 @@ package types_pkg;
     fu_mbits_t t1;
     fu_mbits_t t2;
     fu_mbits_t t3;
-  } fust_m_row_t;
+  } fust_m_ldst_row_t;
 
   typedef struct packed {
     fust_m_row_t [FU_M_W-1:0] op;
