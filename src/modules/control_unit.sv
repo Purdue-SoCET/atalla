@@ -3,6 +3,7 @@
 // need to include matrix related instructions, gemm, ld.m, sw.m
 
 `include "types_pkg.vh"
+`include "cpu_types.vh"
 `include "control_unit_if.vh"
 
 module control_unit(
@@ -10,6 +11,7 @@ module control_unit(
 );
 
     import types_pkg::*;
+    import cpu_types::*;
 
     word_t instr;
 
@@ -18,7 +20,7 @@ module control_unit(
     always_comb begin
       cu_if.halt = '0;
       cu_if.i_flag = '0;
-      cu_if.s_mem_type = '0;
+      cu_if.s_mem_type = '0
       cu_if.reg_write = '0;
       cu_if.jalr = '0;
       cu_if.jal = '0;
@@ -167,7 +169,7 @@ module control_unit(
                 // cu_if.i_flag = '1;
                 // cu_if.alu_op = ALU_ADD;
                 cu_if.stride = instr[22:18]; // register
-                cu_if.fu = LD_ST;
+                cu_if.fu_m = LD_ST;
                 cu_if.m_mem_type = LOAD;
                 cu_if.matrix_rd = instr[31:28];
             end
