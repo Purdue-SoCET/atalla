@@ -53,22 +53,11 @@ module fu_scalar_ls (
                     next_state = latched;
                     sls_if.dmemWEN = write;
                     sls_if.dmemstore = sls_if.rs2;
-                    if (sls_if.dhit_in) begin
-                        next_state = idle;
-                        sls_if.dmemWEN = '0;
-                        sls_if.dhit = '1;
-                    end
                 end 
                 else if (sls_if.mem_type == LOAD) begin
                     sls_if.dmemaddr = addr;
                     next_state = latched;
                     sls_if.dmemREN = read;
-                    if (sls_if.dhit_in) begin
-                        next_state = idle;
-                        sls_if.dmemload = sls_if.dmem_in;
-                        sls_if.dmemREN = '0;
-                        sls_if.dhit = '1;
-                    end
                 end
                 else begin
                     next_state = idle;
@@ -78,7 +67,7 @@ module fu_scalar_ls (
                 if (sls_if.mem_type == STORE) begin
                     sls_if.dmemaddr = latched_dmemaddr;
                     sls_if.dmemWEN = latched_dmemWEN;
-                    sls_if.dmemstore = sls_if.rs2;
+                    sls_if.dmemstore = latched_dmemstore;
                     if (sls_if.dhit_in) begin
                         next_state = idle;
                         sls_if.dmemWEN = '0;
