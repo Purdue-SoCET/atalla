@@ -13,7 +13,12 @@ interface dispatch_if;
     logic flush, freeze;
 
     // Inputs from issue 
-    logic [2:0] fu_busy;
+    fust_s_t fust_s;
+    fust_m_t fust_m;
+    fust_g_t fust_g;
+
+    // Inputs from writeback
+    wb_t wb;
     
     // Inputs from memory
     logic ihit;
@@ -22,7 +27,7 @@ interface dispatch_if;
     dispatch_t out;
     
     modport DI (
-        input fetch, flush, freeze, fu_busy, ihit,
+        input fetch, flush, freeze, fust_s, fust_m, fust_g, wb, ihit,
         output out
     );
 
