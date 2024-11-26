@@ -68,13 +68,13 @@ module dispatch(
     end
 
     always_comb begin : Hazard_Logic
-      case (cuif.fu_s) //todo: expose isif fust busy signals to dispatch
+      case (cuif.fu_s)
         FU_ALU:     s_busy = diif.fust_s.op[FU_ALU].busy;
         FU_LD_ST:   s_busy = diif.fust_s.op[FU_LD_ST].busy;
         FU_BRANCH:  s_busy = diif.fust_s.op[FU_BRANCH].busy;
         default: s_busy = 1'b0;
       endcase
-      case (cuif.fu_m) //same
+      case (cuif.fu_m)
         FU_LD_ST_M: m_busy = diif.fust_m.op[FU_LD_ST_M].busy;
         FU_GEMM:    m_busy = diif.fust_m.op[FU_GEMM].busy;
         default: m_busy = 1'b0;
