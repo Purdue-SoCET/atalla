@@ -2,31 +2,32 @@
 
 // need to include matrix related instructions, gemm, ld.m, sw.m
 
-`include "types_pkg.vh"
-`include "cpu_types.vh"
+`include "datapath_types.vh"
 `include "control_unit_if.vh"
 
 module control_unit(
     control_unit_if.cu cu_if
 );
 
-    import types_pkg::*;
-    import cpu_types::*;
+    import isa_pkg::*;
+    import datapath_pkg::*;
 
     word_t instr;
+    logic [6:0] op;
 
     assign instr = cu_if.instr;
+    assign op = opcode_t'(instr[6:0]);
 
     always_comb begin
       cu_if.halt = '0;
       cu_if.i_flag = '0;
-      cu_if.s_mem_type = '0
+      cu_if.s_mem_type = '0;
       cu_if.reg_write = '0;
       cu_if.jalr = '0;
       cu_if.jal = '0;
       cu_if.u_type = '0;
       cu_if.alu_op = '0;
-      cu_if.branch_type = '0;
+      cu_if.branch_op = '0;
       cu_if.imm = '0;
       cu_if.stride = '0;
       cu_if.fu_s = '0;
@@ -34,11 +35,11 @@ module control_unit(
       cu_if.m_mem_type = '0;
       cu_if.matrix_rd = '0;
       cu_if.matrix_rs1 = '0;
-      casez (instr[6:0])
+      casez (op)
         RTYPE:
             begin 
                 cu_if.reg_write = '1;
-                cu_if.fu_s = ALU;
+                cu_if.fu_s = FU_ALU;
                 casez(instr[14:12])
                     SLL: cu_if.alu_op = ALU_SLL;
                     SRL_SRA: cu_if.alu_op = (instr[31:25] == SRA) ? ALU_SRA : ALU_SRL;
@@ -55,7 +56,7 @@ module control_unit(
                 cu_if.reg_write = '1;
                 cu_if.i_flag = '1;
                 cu_if.imm = $signed({instr[31:20]});
-                cu_if.fu_s = ALU;
+                cu_if.fu_s = FU_ALU;
                 casez(instr[14:12])
                     ADDI: cu_if.alu_op = ALU_ADD;
                     XORI: cu_if.alu_op = ALU_XOR;
@@ -76,7 +77,7 @@ module control_unit(
                     // cu_if.alu_op = ALU_ADD;
                     cu_if.s_mem_type = MEM_TO_REG;
                     cu_if.s_mem_type = LOAD;
-                    cu_if.fu_s = LD_ST;
+                    cu_if.fu_s = FU_LD_ST;
                 end
             end
         JALR:
@@ -86,7 +87,7 @@ module control_unit(
                 cu_if.jalr = '1;
                 cu_if.alu_op = ALU_ADD;
                 cu_if.i_flag = '1;
-                cu_if.fu_s = ALU;
+                cu_if.fu_s = FU_ALU;
             end
         STYPE:
             begin
@@ -95,50 +96,50 @@ module control_unit(
                     cu_if.i_flag = '1;
                     // cu_if.alu_op = ALU_ADD
                     cu_if.s_mem_type = STORE;
-                    cu_if.fu_s = LD_ST;
+                    cu_if.fu_s = FU_LD_ST;
                 end 
             end
         BTYPE:
             begin 
                 // cu_if.reg_write = '1;
                 cu_if.imm = $signed({instr[31], instr[7], instr[30:25], instr[11:8], 1'b0});
-                cu_if.fu_s = BRANCH;
+                cu_if.fu_s = FU_BRANCH;
                 casez(instr[14:12])
                     BEQ: 
                         begin 
-                            cu_if.branch_type = BEQ; 
+                            cu_if.branch_op = BEQ; 
                             // cu_if.alu_op = ALU_SUB;
-                            // cu_if.branch_type = 3'd1;
+                            // cu_if.branch_op = 3'd1;
                         end
                     BNE: 
                         begin 
-                            cu_if.branch_type = BNE; 
+                            cu_if.branch_op = BNE; 
                             // cu_if.alu_op = ALU_SUB;
-                            // cu_if.branch_type = 3'd2;
+                            // cu_if.branch_op = 3'd2;
                         end
                     BLT: 
                         begin 
-                            cu_if.branch_type = BLT; 
+                            cu_if.branch_op = BLT; 
                             // cu_if.alu_op = ALU_SUB;
-                            // cu_if.branch_type = 3'd3;
+                            // cu_if.branch_op = 3'd3;
                         end
                     BGE: 
                         begin 
-                            cu_if.branch_type = BGE; 
+                            cu_if.branch_op = BGE; 
                             // cu_if.alu_op = ALU_SUB;
-                            // cu_if.branch_type = 3'd4;
+                            // cu_if.branch_op = 3'd4;
                         end
                     BLTU: 
                         begin 
-                            cu_if.branch_type = BLTU; 
+                            cu_if.branch_op = BLTU; 
                             // cu_if.alu_op = ALU_SLTU;
-                            // cu_if.branch_type = 3'd5;
+                            // cu_if.branch_op = 3'd5;
                         end
                     BGEU: 
                         begin 
-                            cu_if.branch_type = BGEU; 
+                            cu_if.branch_op = BGEU; 
                             // cu_if.alu_op = ALU_SLTU;
-                            // cu_if.branch_type = 3'd6;
+                            // cu_if.branch_op = 3'd6;
                         end
                 endcase
             end
@@ -149,7 +150,7 @@ module control_unit(
                 cu_if.reg_write = '1;
                 cu_if.alu_op = ALU_ADD;
                 cu_if.i_flag = '1;
-                cu_if.fu_s = ALU;
+                cu_if.fu_s = FU_ALU;
             end
         LUI:
             begin
@@ -170,7 +171,7 @@ module control_unit(
                 // cu_if.i_flag = '1;
                 // cu_if.alu_op = ALU_ADD;
                 cu_if.stride = instr[22:18]; // register
-                cu_if.fu_m = LD_ST;
+                cu_if.fu_m = FU_LD_ST_M;
                 cu_if.m_mem_type = LOAD;
                 cu_if.matrix_rd = instr[31:28];
                 cu_if.matrix_rs1 = instr[27:23];
@@ -181,14 +182,14 @@ module control_unit(
                 // cu_if.i_flag = '1;
                 // cu_if.alu_op = ALU_ADD;
                 cu_if.stride = instr[22:18]; // register
-                cu_if.fu_m = LD_ST;
+                cu_if.fu_m = FU_LD_ST_M;
                 cu_if.m_mem_type = STORE;
                 cu_if.matrix_rd = instr[31:28];
                 cu_if.matrix_rs1 = instr[27:23];
             end
         7'b1110111: // gemm.m "md = ma @ mb + mc"
             begin
-                cu_if.fu_m = GEMM;
+                cu_if.fu_m = FU_GEMM;
                 //i think thats it?
             end
       endcase
