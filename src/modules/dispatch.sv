@@ -23,7 +23,7 @@ module dispatch(
     logic s_busy;
     logic m_busy;
     logic hazard;
-    logic [31:0] Instruction;
+    logic [31:0] instr;
     opcode_t op;
     logic [4:0] s_rd, s_rs1, s_rs2;
     logic [3:0] m_rd, m_rs1, m_rs2, m_rs3;
@@ -50,31 +50,31 @@ module dispatch(
       endcase
     end
 
-    always_comb begin: Instruction_Signals
-      Instruction = diif.fetch.imemload;
-      op = opcode_t'(Instruction[6:0]);
-      s_rd = Instruction[11:7];
-      s_rs1 = Instruction[19:15];
-      s_rs2 = Instruction[24:20];
-      m_rd = Instruction[31:28];
-      m_rs1 = Instruction[27:24];
-      m_rs2 = Instruction[23:20];
-      m_rs3 = Instruction[19:16];
-      imm = Instruction[15:0];
+    always_comb begin: Instr_Signals
+      instr = diif.fetch.imemload;
+      op = opcode_t'(instr[6:0]);
+      s_rd = instr[11:7];
+      s_rs1 = instr[19:15];
+      s_rs2 = instr[24:20];
+      m_rd = instr[31:28];
+      m_rs1 = instr[27:24];
+      m_rs2 = instr[23:20];
+      m_rs3 = instr[19:16];
+      imm = instr[15:0];
     end
 
     always_comb begin : Control_Unit
-      cuif.opcode = op;
+      cuif.instr = instr;
     end
 
     always_comb begin : Hazard_Logic
-      case (cuif.fu_s)
+      case (cuif.fu_s) //todo: expose isif fust busy signals to dispatch
         FU_ALU:     s_busy = diif.fust_s.alu.busy;
         FU_LD_ST:   s_busy = diif.fust_s.ldst.busy;
         FU_BRANCH:  s_busy = diif.fust_s.branch.busy;
         default: s_busy = 1'b0;
       endcase
-      case (cuif.fu_m)
+      case (cuif.fu_m) //same
         FU_LD_ST_M: m_busy = diif.fust_m.ldst_m.busy;
         FU_GEMM:    m_busy = diif.fust_m.gemm.busy;
         default: m_busy = 1'b0;

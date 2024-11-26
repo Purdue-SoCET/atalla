@@ -19,12 +19,12 @@ module rst_m (
 
   always_comb begin
     if (rsif.di_write) begin //assumes dispatch reads the state is IDLE
-      status[rsif.di_sel].busy = 1;
-      status[rsif.di_sel].tag = rsif.di_tag;
+      status.idx[rsif.di_sel].busy = 1;
+      status.idx[rsif.di_sel].tag = rsif.di_tag;
     end
     if (rsif.wb_write) begin
-      status[rsif.wb_sel].busy = 0;
-      status[rsif.wb_sel].tag = '0;
+      status.idx[rsif.wb_sel].busy = 0;
+      status.idx[rsif.wb_sel].tag = '0;
     end
   end
 

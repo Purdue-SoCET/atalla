@@ -77,11 +77,11 @@ package datapath_pkg;
   } rst_m_row_t;
 
   typedef struct packed {
-    logic [WORD_W-1:0] rst_s_row_t; 
+    rst_s_row_t [WORD_W-1:0] idx; 
   } rst_s_t;
 
   typedef struct packed {
-    logic [15:0] rst_m_row_t; 
+    rst_m_row_t [15:0] idx; 
   } rst_m_t;
 
   // defines the Function Units
