@@ -17,8 +17,8 @@ module dispatch(
     rst_m_if rstmif();
 
     control_unit CU(cuif);
-    // rst_s RSTS(CLK, nRST, rstsif);
-    // rst_m RSTM(CLK, nRST, rstmif);
+    rst_s RSTS(CLK, nRST, rstsif);
+    rst_m RSTM(CLK, nRST, rstmif);
 
     // Local Variables
     logic WAW;
