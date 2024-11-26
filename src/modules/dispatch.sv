@@ -1,5 +1,7 @@
 `include "datapath_types.vh"
 `include "dispatch_if.vh"
+`include "rst_s_if.vh"
+`include "rst_m_if.vh"
 
 module dispatch(
     input logic CLK, nRST,
@@ -15,8 +17,8 @@ module dispatch(
     rst_m_if rstmif();
 
     control_unit CU(cuif);
-    rst_s RSTS(CLK, nRST, rstsif);
-    rst_m RSTM(CLK, nRST, rstmif);
+    // rst_s RSTS(CLK, nRST, rstsif);
+    // rst_m RSTM(CLK, nRST, rstmif);
 
     // Local Variables
     logic WAW;
