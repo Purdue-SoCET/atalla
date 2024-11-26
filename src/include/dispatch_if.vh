@@ -1,9 +1,9 @@
 `ifndef DISPATCH_IF_VH
 `define DISPATCH_IF_VH
-`include "types_pkg.vh"
+`include "datapath_types.vh"
 
 interface dispatch_if;
-    import types_pkg::*;
+    import datapath_pkg::*;
 
     //Inputs from fetch
     typedef logic [2:0] fetch_t;
