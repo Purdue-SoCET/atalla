@@ -7,6 +7,7 @@ interface issue_if;
 
     //Inputs from dispatch
     dispatch_t dispatch;
+    //TODO: add the n_fu signals from dispatch output
 
     // Inputs to latch
     logic flush, freeze;

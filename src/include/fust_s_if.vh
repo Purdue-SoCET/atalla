@@ -8,13 +8,13 @@ interface fust_s_if;
   // Inputs from dispatch
   logic en;
   fu_s_t fu;
-  fust_s_t n_fust;
+  fust_s_row_t fust_row;
 
   // Outputs of stage
   fust_s_t fust;
     
   modport FUSTS (
-      input en, fu, n_fust,
+      input en, fu, fust_row,
       output fust
   );
 

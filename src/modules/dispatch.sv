@@ -91,7 +91,7 @@ module dispatch(
         if (~WAW & ~flush & ~diif.freeze) begin
           rstsif.di_sel = s_rd;
           rstsif.di_write = 1'b1;
-          rstsif.di_tag = (cuif.fu_s == FU_S_LD_ST); // 0 for ALU, 1 for LD
+          rstsif.di_tag = (cuif.fu_s == FU_S_LD_ST) ? 2'd2 : 2'd1; // 1 for ALU, 2 for LD
         end
       end
 
@@ -100,7 +100,7 @@ module dispatch(
         if (~WAW & ~flush & ~diif.freeze) begin
           rstmif.di_sel = m_rd;
           rstmif.di_write = 1'b1;
-          rstmif.di_tag = (cuif.fu_m == FU_M_LD_ST); // 0 for GEMM, 1 for LD
+          rstmif.di_tag = (cuif.fu_m == FU_M_LD_ST) ? 2'd2 : 2'd1; // 1 for GEMM, 2 for LD
         end
       end
       
@@ -118,38 +118,36 @@ module dispatch(
 
     always_comb begin : FUST
       // To Issue **Combinationally**
-      n_fust_s_en = (cuif.fu_t == FU_S_T & ~flush & ~diif.freeze & ~hazard);
-      n_fust_m_en = (cuif.fu_t == FU_M_T & ~flush & ~diif.freeze & ~hazard);
-      n_fust_g_en = (cuif.fu_t == FU_G_T & ~flush & ~diif.freeze & ~hazard);
+      diif.n_fust_s_en   = (cuif.fu_t == FU_S_T & ~flush & ~diif.freeze & ~hazard);
+      diif.n_fu_s        = cuif.fu_s;
+      diif.n_fust_s.busy = 1'b1;
+      diif.n_fust_s.rd   = s_rd;
+      diif.n_fust_s.rs1  = s_rs1;
+      diif.n_fust_s.rs2  = s_rs2;
+      diif.n_fust_s.imm  = cuif.imm;
+      diif.n_fust_s.t1   = rstsif.status[s_rs1].tag;
+      diif.n_fust_s.t2   = rstsif.status[s_rs2].tag;
 
-      n_fu_s = cuif.fu_s;
-      //n_fu_m = 1'b0; // only one row in FUST
-      //n_fu_g = 1'b0; // only one row in FUST
+      diif.n_fust_m_en   = (cuif.fu_t == FU_M_T & ~flush & ~diif.freeze & ~hazard);
+      //n_fu_m           = 1'b0; // only one row in FUST
+      diif.n_fust_m.busy = 1'b1;
+      diif.n_fust_m.rd   = m_rd;
+      diif.n_fust_m.rs1  = s_rs1;
+      diif.n_fust_m.rs2  = s_rs2;
+      diif.n_fust_m.imm  = cuif.imm[10:0];
+      diif.n_fust_m.t1   = rstsif.status[s_rs1].tag;
+      diif.n_fust_m.t2   = rstsif.status[s_rs2].tag;
 
-      n_fust_s.op[cuif.fu_s].busy = 1'b1;
-      n_fust_s.op[cuif.fu_s].rd   = s_rd;
-      n_fust_s.op[cuif.fu_s].rs1  = s_rs1;
-      n_fust_s.op[cuif.fu_s].rs2  = s_rs2;
-      n_fust_s.op[cuif.fu_s].imm  = cuif.imm;
-      n_fust_s.op[cuif.fu_s].t1   = rstsif.status[s_rs1].tag;
-      n_fust_s.op[cuif.fu_s].t2   = rstsif.status[s_rs2].tag;
-
-      n_fust_m.op.busy = 1'b1;
-      n_fust_m.op.rs1  = s_rs1;
-      n_fust_m.op.rs2  = s_rs2;
-      n_fust_m.op.rd   = m_rd;
-      n_fust_m.op.imm  = cuif.imm[10:0];
-      n_fust_m.op.t1   = rstsif.status[s_rs1].tag;
-      n_fust_m.op.t2   = rstsif.status[s_rs2].tag;
-
-      n_fust_g.op.busy = 1'b1;
-      n_fust_g.op.rd   = m_rd;
-      n_fust_g.op.rs1  = m_rs1;
-      n_fust_g.op.rs2  = m_rs2;
-      n_fust_g.op.rs3  = m_rs3;
-      n_fust_g.op.t1   = rstmif.status[m_rs1].tag;
-      n_fust_g.op.t2   = rstmif.status[m_rs2].tag;
-      n_fust_g.op.t3   = rstmif.status[m_rs3].tag;
+      diif.n_fust_g_en   = (cuif.fu_t == FU_G_T & ~flush & ~diif.freeze & ~hazard);
+      //n_fu_g           = 1'b0; // only one row in FUST
+      diif.n_fust_g.busy = 1'b1;
+      diif.n_fust_g.rd   = m_rd;
+      diif.n_fust_g.rs1  = m_rs1;
+      diif.n_fust_g.rs2  = m_rs2;
+      diif.n_fust_g.rs3  = m_rs3;
+      diif.n_fust_g.t1   = rstmif.status[m_rs1].tag;
+      diif.n_fust_g.t2   = rstmif.status[m_rs2].tag;
+      diif.n_fust_g.t3   = rstmif.status[m_rs3].tag;
     end
 
     always_comb begin : Dispatch_Out
@@ -168,7 +166,7 @@ module dispatch(
       // To Writeback
       dispatch.wb.s_rw_en = cuif.reg_write;
       dispatch.wb.s_rw = s_rd;
-      dispatch.wb.m_rw_en = (cuif.m_mem_type == M_LOAD | cuif.m_mem_type == FU_M_GEMM);
+      dispatch.wb.m_rw_en = cuif.m_reg_write; //to be implemented
       dispatch.wb.m_rw = m_rd;
     end
 

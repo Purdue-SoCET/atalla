@@ -20,16 +20,7 @@ module fust_m (
   always_comb begin
     fust = fuif.fust;
    
-    if (fuif.en) begin
-      fust.op.busy = fuif.n_fust.busy;
-      fust.op.rd   = fuif.n_fust.rd;
-      fust.op.rs1  = fuif.n_fust.rs1;
-      fust.op.rs2  = fuif.n_fust.rs2;
-      fust.op.imm  = fuif.n_fust.imm;
-      fust.op.t1   = fuif.n_fust.t1;
-      fust.op.t2   = fuif.n_fust.t2;
-      fust.op.t3   = fuif.n_fust.t3;
-    end
+    fust.op = fuif.en ? fuif.fust_row;
   end
 
 endmodule

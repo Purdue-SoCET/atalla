@@ -8,13 +8,13 @@ interface fust_m_if;
   // Inputs from dispatch
   logic en;
   //logic fu; //dont need op idx with 1 row in FUST
-  fust_m_t n_fust;
+  fust_m_row_t fust_row;
 
   // Outputs of stage
   fust_m_t fust;
     
   modport FUSTM (
-      input en, fu, n_fust,
+      input en, fu, fust_row,
       output fust
   );
 

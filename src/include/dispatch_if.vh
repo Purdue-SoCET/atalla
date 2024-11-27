@@ -25,10 +25,10 @@ interface dispatch_if;
     
     // Outputs of stage
     dispatch_t out;
-    fust_s_t n_fust_s;
-    fust_m_t n_fust_m;
-    fust_g_t n_fust_g;
-    fu_s_t n_fu_s;
+    fust_s_row_t n_fust_s;
+    fust_m_row_t n_fust_m;
+    fust_g_row_t n_fust_g;
+    fu_scalar_t n_fu_s;
     logic n_fu_m, n_fu_g;
     logic n_fust_s_en, n_fust_m_en, n_fust_g_en;
     
