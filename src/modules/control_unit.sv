@@ -24,7 +24,7 @@ module control_unit(
       cu_if.halt = '0;
       cu_if.i_flag = '0;
       cu_if.s_mem_type = '0;
-      cu_if.reg_write = '0;
+      cu_if.s_reg_write = '0;
       cu_if.jalr = '0;
       cu_if.jal = '0;
       cu_if.u_type = '0;
@@ -40,7 +40,7 @@ module control_unit(
       casez (op)
         RTYPE:
             begin 
-                cu_if.reg_write = '1;
+                cu_if.s_reg_write = '1;
                 cu_if.fu_s = FU_S_ALU;
                 casez(instr[14:12])
                     SLL: cu_if.alu_op = ALU_SLL;
@@ -55,7 +55,7 @@ module control_unit(
             end
         ITYPE: 
             begin 
-                cu_if.reg_write = '1;
+                cu_if.s_reg_write = '1;
                 cu_if.i_flag = '1;
                 cu_if.imm = $signed({instr[31:20]});
                 cu_if.fu_s = FU_S_ALU;
@@ -74,7 +74,7 @@ module control_unit(
             begin
                 if (instr[14:12] == 3'h2) begin 
                     cu_if.imm = $signed({instr[31:20]});
-                    cu_if.reg_write = '1;
+                    cu_if.s_reg_write = '1;
                     cu_if.i_flag = '1;
                     // cu_if.alu_op = ALU_ADD;
                     cu_if.mem_to_reg = '1;
@@ -85,7 +85,7 @@ module control_unit(
         JALR:
             begin 
                 cu_if.imm = $signed({instr[31:20]});
-                cu_if.reg_write = '1;
+                cu_if.s_reg_write = '1;
                 cu_if.jalr = '1;
                 cu_if.alu_op = ALU_ADD;
                 cu_if.i_flag = '1;
@@ -149,7 +149,7 @@ module control_unit(
             begin 
                 cu_if.imm = $signed({instr[31], instr[19:12], instr[20], instr[30:21], 1'b0});
                 cu_if.jal = '1;
-                cu_if.reg_write = '1;
+                cu_if.s_reg_write = '1;
                 cu_if.alu_op = ALU_ADD;
                 cu_if.i_flag = '1;
                 cu_if.fu_s = FU_S_ALU;
@@ -158,7 +158,7 @@ module control_unit(
             begin
                 cu_if.imm = {instr[31:12], 12'b0};
                 cu_if.u_type = LOAD;
-                cu_if.reg_write = '1;
+                cu_if.s_reg_write = '1;
             end
         // AUIPC:
         //     begin 
@@ -176,6 +176,7 @@ module control_unit(
                 cu_if.fu_m = FU_M_LD_ST;
                 cu_if.m_mem_type = LOAD;
                 cu_if.matrix_rd = instr[31:28];
+                cu_if.m_reg_write = '1;
             end
         7'b1010111: //st.m
             begin
@@ -190,6 +191,7 @@ module control_unit(
         7'b1110111: // gemm.m "md = ma @ mb + mc"
             begin
                 cu_if.fu_m = FU_M_GEMM;
+                cu_if.m_reg_write = '1;
                 //i think thats it?
             end
       endcase

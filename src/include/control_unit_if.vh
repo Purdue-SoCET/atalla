@@ -13,7 +13,7 @@ interface control_unit_if;
 
   aluop_t alu_op;
   logic [4:0] stride;
-  logic halt, i_flag, reg_write, jalr, jal, mem_to_reg;
+  logic halt, i_flag, m_reg_write, s_reg_write, jalr, jal, mem_to_reg;
   scalar_mem_t s_mem_type;
   branch_t branch_op;
   word_t imm, instr;
@@ -25,11 +25,11 @@ interface control_unit_if;
 
   modport cu (
     input instr,
-    output halt, b_type, i_flag, s_mem_type, reg_write, jalr, jal, u_type, alu_op, branch_op, imm, stride, fu_s, fu_m, m_mem_type, matrix_rd, matrix_rs1
+    output halt, b_type, i_flag, s_mem_type, m_reg_write, s_reg_write, jalr, jal, u_type, alu_op, branch_op, imm, stride, fu_s, fu_m, m_mem_type, matrix_rd, matrix_rs1
   );
 
   modport tb (
-    input halt, b_type, i_flag, s_mem_type, reg_write, jalr, jal, u_type, alu_op, branch_op, imm, stride, fu_s, fu_m, m_mem_type, matrix_rd, matrix_rs1,
+    input halt, b_type, i_flag, s_mem_type, m_reg_write, s_reg_write, jalr, jal, u_type, alu_op, branch_op, imm, stride, fu_s, fu_m, m_mem_type, matrix_rd, matrix_rs1,
     output instr
   );
 
