@@ -6,7 +6,7 @@ interface dispatch_if;
     import datapath_pkg::*;
 
     //Inputs from fetch
-    typedef logic [2:0] fetch_t;
+    // typedef logic [2:0] fetch_t;
     fetch_t fetch;
 
     // Inputs to latch
@@ -35,6 +35,11 @@ interface dispatch_if;
     modport DI (
         input fetch, flush, freeze, fust_s, fust_m, fust_g, wb, ihit,
         output out, n_fust_s, n_fust_m, n_fust_g, n_fu_s, n_fu_m, n_fu_g, n_fust_s_en, n_fust_m_en, n_fust_g_en
+    );
+
+    modport tb (
+        input out, n_fust_s, n_fust_m, n_fust_g, n_fu_s, n_fu_m, n_fu_g, n_fust_s_en, n_fust_m_en, n_fust_g_en,
+        output fetch, flush, freeze, fust_s, fust_m, fust_g, wb, ihit
     );
 
 endinterface
