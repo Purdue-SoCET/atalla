@@ -1,5 +1,9 @@
 `include "datapath_types.vh"
 `include "dispatch_if.vh"
+`include "control_unit_if.vh"
+`include "control_unit.sv"
+`include "rst_s.sv"
+`include "rst_m.sv"
 `include "rst_s_if.vh"
 `include "rst_m_if.vh"
 
@@ -72,13 +76,13 @@ module dispatch(
         default: s_busy = 1'b0;
       endcase
       case (cuif.fu_m)
-        FU_M_LD_ST: m_busy = diif.fust_m.op[FU_M_LD_ST].busy;
-        FU_M_GEMM:    m_busy = diif.fust_m.op[FU_M_GEMM].busy;
+        FU_M_LD_ST: m_busy = diif.fust_m.op.busy;
+        FU_M_GEMM:    m_busy = diif.fust_g.op.busy;
         default: m_busy = 1'b0;
       endcase
 
-      WAW = (cuif.m_mem_type == M_LOAD | cuif.fu_m == FU_M_GEMM) ? rstmif.status[m_rd].busy : 
-            (cuif.reg_write) ? rstsif.status[s_rd].busy: 1'b0;
+      WAW = (cuif.m_mem_type == M_LOAD | cuif.fu_m == FU_M_GEMM) ? rstmif.status.idx[m_rd].busy : 
+            (cuif.s_reg_write) ? rstsif.status.idx[s_rd].busy: 1'b0;
       hazard = s_busy | m_busy | WAW; //TODO: remember to tie this hazard back to stall the fetch to not squash this stage on a hazard
     end
 
@@ -87,7 +91,7 @@ module dispatch(
 
       // only write to Reg Status Table if doing a regwrite,
       // and the instruction is actually moving forward
-      if (cuif.reg_write) begin
+      if (cuif.s_reg_write) begin
         if (~WAW & ~flush & ~diif.freeze) begin
           rstsif.di_sel = s_rd;
           rstsif.di_write = 1'b1;
@@ -105,14 +109,14 @@ module dispatch(
       end
       
       // writeback needs to update the RST on commits
-      if (diif.wb.srw_en) begin
-        rstsif.wb_sel = diif.wb.srw;
-        rstsif.wb_write = diif.wb.srw_en;
+      if (diif.wb.s_rw_en) begin
+        rstsif.wb_sel = diif.wb.s_rw;
+        rstsif.wb_write = diif.wb.s_rw_en;
       end
 
-      if (diif.wb.mrw_en) begin
-        rstmif.wb_sel = diif.wb.mrw;
-        rstmif.wb_write = diif.wb.mrw_en;
+      if (diif.wb.m_rw_en) begin
+        rstmif.wb_sel = diif.wb.m_rw;
+        rstmif.wb_write = diif.wb.m_rw_en;
       end
     end
 
@@ -125,8 +129,8 @@ module dispatch(
       diif.n_fust_s.rs1  = s_rs1;
       diif.n_fust_s.rs2  = s_rs2;
       diif.n_fust_s.imm  = cuif.imm;
-      diif.n_fust_s.t1   = rstsif.status[s_rs1].tag;
-      diif.n_fust_s.t2   = rstsif.status[s_rs2].tag;
+      diif.n_fust_s.t1   = rstsif.status.idx[s_rs1].tag;
+      diif.n_fust_s.t2   = rstsif.status.idx[s_rs2].tag;
 
       diif.n_fust_m_en   = (cuif.fu_t == FU_M_T & ~flush & ~diif.freeze & ~hazard);
       //n_fu_m           = 1'b0; // only one row in FUST
@@ -135,8 +139,8 @@ module dispatch(
       diif.n_fust_m.rs1  = s_rs1;
       diif.n_fust_m.rs2  = s_rs2;
       diif.n_fust_m.imm  = cuif.imm[10:0];
-      diif.n_fust_m.t1   = rstsif.status[s_rs1].tag;
-      diif.n_fust_m.t2   = rstsif.status[s_rs2].tag;
+      diif.n_fust_m.t1   = rstsif.status.idx[s_rs1].tag;
+      diif.n_fust_m.t2   = rstsif.status.idx[s_rs2].tag;
 
       diif.n_fust_g_en   = (cuif.fu_t == FU_G_T & ~flush & ~diif.freeze & ~hazard);
       //n_fu_g           = 1'b0; // only one row in FUST
@@ -145,9 +149,9 @@ module dispatch(
       diif.n_fust_g.rs1  = m_rs1;
       diif.n_fust_g.rs2  = m_rs2;
       diif.n_fust_g.rs3  = m_rs3;
-      diif.n_fust_g.t1   = rstmif.status[m_rs1].tag;
-      diif.n_fust_g.t2   = rstmif.status[m_rs2].tag;
-      diif.n_fust_g.t3   = rstmif.status[m_rs3].tag;
+      diif.n_fust_g.t1   = rstmif.status.idx[m_rs1].tag;
+      diif.n_fust_g.t2   = rstmif.status.idx[m_rs2].tag;
+      diif.n_fust_g.t3   = rstmif.status.idx[m_rs3].tag;
     end
 
     always_comb begin : Dispatch_Out
@@ -164,7 +168,7 @@ module dispatch(
       dispatch.fu_ldst_m_ctr.mem_type = cuif.m_mem_type;
 
       // To Writeback
-      dispatch.wb.s_rw_en = cuif.reg_write;
+      dispatch.wb.s_rw_en = cuif.s_reg_write;
       dispatch.wb.s_rw = s_rd;
       dispatch.wb.m_rw_en = cuif.m_reg_write; //to be implemented
       dispatch.wb.m_rw = m_rd;
