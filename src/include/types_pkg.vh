@@ -4,7 +4,7 @@
 `include "cpu_types.vh"
 
 package types_pkg;
-import cpu_types::*;
+  import cpu_types::*;
   // all our instruction params
   parameter WORD_W = 32;
   parameter REG_W  = 5;
@@ -97,4 +97,4 @@ import cpu_types::*;
 
 endpackage
 
-`endif
+`endif // TYPES_PKG
