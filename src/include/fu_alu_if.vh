@@ -1,10 +1,10 @@
 `ifndef FU_ALU_IF_VH
 `define FU_ALU_IF_VH
 
-`include "cpu_types.vh"
+`include "datapath_types.vh"
 
 interface fu_alu_if;
-  import cpu_types::*;
+  import datapath_pkg::*;
 
   logic negative, overflow, zero, alu_enable;
   logic [3:0] aluop;

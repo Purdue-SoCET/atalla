@@ -1,3 +1,4 @@
+
 `ifndef TYPES_PKG_VH
 `define TYPES_PKG_VH
 
@@ -81,20 +82,19 @@ package types_pkg;
 
   typedef enum logic [1:0] {
     STORE,
-    LOAD,
-    MEM_TO_REG
-  } scalar_mem_t; // 
+    LOAD
+  } scalar_mem_t; 
 
   typedef enum logic [1:0] {
     M_STORE,
     M_LOAD
   } matrix_mem_t; // load or store for matrix ld_st fu
 
-  typedef enum logic [2:0] {
+  typedef enum logic [1:0] {
     UT_LOAD,
     UT_ADD // not using it but here still 
   } utype_t; // what is this ???
 
 endpackage
+`endif
 
-`endif // TYPES_PKG
