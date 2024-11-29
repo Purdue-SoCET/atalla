@@ -5,11 +5,13 @@
 `define MATRIX_LS_IF_VH
 
 // types
-`include "types_pkg.vh"
+`include "datapath_types.vh"
+`include "isa_types.vh"
 
 interface matrix_ls_if;
 // import types
-import types_pkg::*;
+import datapath_pkg::*;
+import isa_pkg::*;
 
 // Signals
 
@@ -27,9 +29,9 @@ import types_pkg::*;
 logic           mhit;
 logic           enable;
 logic [1:0]     ls_in;
-logic [4:0]     rd_in, rs_in;
+logic [4:0]     rd_in;
 logic [10:0]    imm_in;
-word_t          stride_in;
+word_t          stride_in, rs_in;
 
 /*
     Outputs: 
@@ -43,14 +45,14 @@ word_t          stride_in;
 
 logic           done;
 logic [1:0]     ls_out;
-logic [4:0]     rd_out, rs_out;
-logic [10:0]    imm_out,
-word_t          stride_out;
+logic [4:0]     rd_out;
+logic [10:0]    imm_out;
+word_t          address, stride_out;
 
 // LS Matrix Port Map
 modport mls (
     input   mhit, enable, ls_in, rd_in, rs_in, stride_in, imm_in,
-    output  done, ls_out, rd_out, rs_out, stride_out, imm_out
+    output  done, ls_out, rd_out, address, stride_out
 );
 
 endinterface
