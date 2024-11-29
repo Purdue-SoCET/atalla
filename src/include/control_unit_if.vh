@@ -17,8 +17,8 @@ interface control_unit_if;
   branch_t branch_op;
   word_t imm, instr;
   utype_t u_type;
-  fu_scalar fu_s;
-  fu_matrix fu_m;
+  fu_scalar_t fu_s;
+  fu_matrix_t fu_m;
   matrix_mem_t m_mem_type;
   logic [3:0] matrix_rd, matrix_rs1;
 

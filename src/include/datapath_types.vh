@@ -23,11 +23,19 @@ package datapath_pkg;
     M_LOAD
   } matrix_mem_t; // load or store for matrix ld_st fu
 
+  typedef enum logic [2:0] {
+    FUST_EMTPY,
+    FUST_WAIT,
+    FUST_RDY,
+    FUST_EX
+  } fust_state_e;
+
   typedef struct packed {
     logic busy;
     regbits_t rd;
     regbits_t rs1;
     regbits_t rs2;
+    logic [24:0] imm; //instr[31:7] TODO: double check this is right 
     fu_sbits_t t1;
     fu_sbits_t t2;
   } fust_s_row_t;
@@ -67,12 +75,12 @@ package datapath_pkg;
   } fust_g_t;
 
   typedef struct packed {
-    regbits_t tag;
+    logic [1:0] tag;
     logic busy;
   } rst_s_row_t;
 
   typedef struct packed {
-    matbits_t tag;
+    logic [1:0] tag;
     logic busy;
   } rst_m_row_t;
 
@@ -85,16 +93,16 @@ package datapath_pkg;
   } rst_m_t;
 
   // defines the Function Units
-  typedef enum logic [FU_S_W-1:0] {
-    FU_ALU,
-    FU_LD_ST,
-    FU_BRANCH
-  } fu_scalar;
+  typedef enum logic [2:0] {
+    FU_S_ALU    = 3'd0,
+    FU_S_LD_ST  = 3'd1,
+    FU_S_BRANCH = 3'd2
+  } fu_scalar_t;
 
-  typedef enum logic [FU_M_W-1:0] {
-    FU_LD_ST_M,
-    FU_GEMM
-  } fu_matrix;
+  typedef enum logic [2:0] {
+    FU_M_LD_ST  = 3'd3,
+    FU_M_GEMM   = 3'd4
+  } fu_matrix_t;
 
   // Control Signal structs
   typedef struct packed {
@@ -124,11 +132,14 @@ package datapath_pkg;
     regbits_t s_rw;
     logic m_rw_en;
     matbits_t m_rw;
+    logic [WORD_W-1:0] s_wdata; //empty until execute
   } wb_t;
 
   // Pipeline Stage Structs
   typedef struct packed {
     // Issue signals
+    fu_scalar_t fu_s;
+    fu_matrix_t fu_m;
     fust_m_t fust_m;
     fust_g_t fust_g;
     fust_s_t fust_s;

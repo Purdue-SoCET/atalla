@@ -39,7 +39,7 @@ module control_unit(
         RTYPE:
             begin 
                 cu_if.reg_write = '1;
-                cu_if.fu_s = FU_ALU;
+                cu_if.fu_s = FU_S_ALU;
                 casez(instr[14:12])
                     SLL: cu_if.alu_op = ALU_SLL;
                     SRL_SRA: cu_if.alu_op = (instr[31:25] == SRA) ? ALU_SRA : ALU_SRL;
@@ -56,7 +56,7 @@ module control_unit(
                 cu_if.reg_write = '1;
                 cu_if.i_flag = '1;
                 cu_if.imm = $signed({instr[31:20]});
-                cu_if.fu_s = FU_ALU;
+                cu_if.fu_s = FU_S_ALU;
                 casez(instr[14:12])
                     ADDI: cu_if.alu_op = ALU_ADD;
                     XORI: cu_if.alu_op = ALU_XOR;
@@ -77,7 +77,7 @@ module control_unit(
                     // cu_if.alu_op = ALU_ADD;
                     cu_if.s_mem_type = MEM_TO_REG;
                     cu_if.s_mem_type = LOAD;
-                    cu_if.fu_s = FU_LD_ST;
+                    cu_if.fu_s = FU_S_LD_ST;
                 end
             end
         JALR:
@@ -87,7 +87,7 @@ module control_unit(
                 cu_if.jalr = '1;
                 cu_if.alu_op = ALU_ADD;
                 cu_if.i_flag = '1;
-                cu_if.fu_s = FU_ALU;
+                cu_if.fu_s = FU_S_ALU;
             end
         STYPE:
             begin
@@ -96,14 +96,14 @@ module control_unit(
                     cu_if.i_flag = '1;
                     // cu_if.alu_op = ALU_ADD
                     cu_if.s_mem_type = STORE;
-                    cu_if.fu_s = FU_LD_ST;
+                    cu_if.fu_s = FU_S_LD_ST;
                 end 
             end
         BTYPE:
             begin 
                 // cu_if.reg_write = '1;
                 cu_if.imm = $signed({instr[31], instr[7], instr[30:25], instr[11:8], 1'b0});
-                cu_if.fu_s = FU_BRANCH;
+                cu_if.fu_s = FU_S_BRANCH;
                 casez(instr[14:12])
                     BEQ: 
                         begin 
@@ -150,7 +150,7 @@ module control_unit(
                 cu_if.reg_write = '1;
                 cu_if.alu_op = ALU_ADD;
                 cu_if.i_flag = '1;
-                cu_if.fu_s = FU_ALU;
+                cu_if.fu_s = FU_S_ALU;
             end
         LUI:
             begin
@@ -171,7 +171,7 @@ module control_unit(
                 // cu_if.i_flag = '1;
                 // cu_if.alu_op = ALU_ADD;
                 cu_if.stride = instr[22:18]; // register
-                cu_if.fu_m = FU_LD_ST_M;
+                cu_if.fu_m = FU_M_LD_ST;
                 cu_if.m_mem_type = LOAD;
                 cu_if.matrix_rd = instr[31:28];
                 cu_if.matrix_rs1 = instr[27:23];
@@ -182,14 +182,14 @@ module control_unit(
                 // cu_if.i_flag = '1;
                 // cu_if.alu_op = ALU_ADD;
                 cu_if.stride = instr[22:18]; // register
-                cu_if.fu_m = FU_LD_ST_M;
+                cu_if.fu_m = FU_M_LD_ST;
                 cu_if.m_mem_type = STORE;
                 cu_if.matrix_rd = instr[31:28];
                 cu_if.matrix_rs1 = instr[27:23];
             end
         7'b1110111: // gemm.m "md = ma @ mb + mc"
             begin
-                cu_if.fu_m = FU_GEMM;
+                cu_if.fu_m = FU_M_GEMM;
                 //i think thats it?
             end
       endcase

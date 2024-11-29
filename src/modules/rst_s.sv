@@ -18,6 +18,8 @@ module rst_s (
   end
 
   always_comb begin
+    status = rstif.status;
+
     if (rstif.di_write) begin //assumes dispatch reads the state is IDLE
       status.idx[rstif.di_sel].busy = 1;
       status.idx[rstif.di_sel].tag = rstif.di_tag;
