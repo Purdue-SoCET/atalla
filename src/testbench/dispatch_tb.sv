@@ -73,7 +73,7 @@ program test (
     dispatch_if.tb dis_if
 );
     initial begin
-        nRST = 0;
+        nRST = 1;
         dis_if.fetch = '0; 
         dis_if.flush = '0;
         dis_if.freeze = '0;
@@ -81,12 +81,29 @@ program test (
         dis_if.fust_m = '0; 
         dis_if.fust_g = '0;
         dis_if.wb = '0;
-        dis_if.wb.m_rw_en = '0;
         dis_if.ihit = '0;
 
         @(posedge CLK);
         @(posedge CLK);
+        nRST = 0;
         @(posedge CLK);
+        @(posedge CLK);
+        @(posedge CLK);
+
+        // test case 1 - write after write hazard
+
+        dis_if.fetch.imemload = 32'b010101010101_00111_000_10101_0010011;
+
+        @(posedge CLK);
+        @(posedge CLK);
+        @(posedge CLK);
+
+        dis_if.fetch.imemload = 32'b010000010101_00111_000_10101_0010011;
+
+        @(posedge CLK);
+        @(posedge CLK);
+        @(posedge CLK);
+
 
         $finish;
     end

@@ -27,6 +27,7 @@ module control_unit(
       cu_if.i_flag = '0;
       cu_if.s_mem_type = scalar_mem_t'('0);
       cu_if.s_reg_write = '0;
+      cu_if.m_reg_write = '0;
       cu_if.jalr = '0;
       cu_if.jal = '0;
       cu_if.u_type = utype_t'('0);
