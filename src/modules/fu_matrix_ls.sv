@@ -1,6 +1,7 @@
 /* FU Matrix LS Code */
 
-//`include "datapath_types.vh"
+`include "datapath_types.vh"
+`include "isa_types.vh"
 `include "fu_matrix_ls_if.vh"
 
 module fu_matrix_ls
@@ -9,7 +10,8 @@ module fu_matrix_ls
 );
 
 // importing types
-//import datapath_pkg::*;
+import datapath_pkg::*;
+import isa_pkg::*;
 
 assign mlsif.done = mlsif.mhit; // Mhit
 
