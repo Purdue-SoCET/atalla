@@ -13,8 +13,9 @@ package datapath_pkg;
   typedef logic [FU_M_W-1:0] fu_mbits_t;
  
   typedef enum logic [1:0] {
-    STORE,
-    LOAD
+    scalar_na = 2'd0,
+    STORE = 2'd2,
+    LOAD = 2'd3
   } scalar_mem_t;
 
   typedef enum logic [1:0] {
@@ -105,7 +106,7 @@ package datapath_pkg;
   } fu_scalar_t;
 
   typedef enum logic [2:0] {
-    NA = 3'd0,
+    matrix_na = 3'd0,
     FU_M_LD_ST  = 3'd3,
     FU_M_GEMM   = 3'd4
   } fu_matrix_t;
