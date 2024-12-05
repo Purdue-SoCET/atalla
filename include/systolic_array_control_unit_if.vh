@@ -19,16 +19,17 @@ interface systolic_array_control_unit_if #(parameter array_dim = 4, parameter da
   logic MAC_count;           // Count signals for all MACs
   logic [N-1:0] fifo_shift;       // Shift signal for FIFOS
   logic [N-1:0] ps_fifo_shift;    // Shift signal for partial sum FIFOS
-  logic [$clog2(array_dim)-1:0]input_row;          // Which FIFO to load input into
-  logic [$clog2(array_dim)-1:0]weight_row;         // Which MAC row to load weights into
-  logic [$clog2(array_dim)-1:0]partials_row;       // Which FIFO to load partials into
-  logic [$clog2(array_dim)-1:0] row_en;            // Row enable for inputs/weights & partial sums
-  logic [$clog2(array_dim)-1:0] row_out;           // Which row the systolic array is outputing
+  logic [$clog2(array_dim)-1:0] iteration;         // Which iteration the systolic array is on
+  logic [$clog2(array_dim)-1:0] input_row;          // Which FIFO to load input into
+  logic [$clog2(array_dim)-1:0] weight_row;         // Whi ch MAC row to load weights into
+  logic [$clog2(array_dim)-1:0] partials_row;       // Which FIFO to load partials into
+  logic [$clog2(array_dim)-1:0] row_en;             // Row enable for inputs/weights & partial sums
+  logic [$clog2(array_dim)-1:0] row_out;            // Which row the systolic array is outputing
 
   // Control Unit Ports
   modport control_unit(
     input  weight_en, input_en, partial_en, row_en,
-    output fifo_shift, input_type, input_load, input_row, weight_load, weight_row, partials_load, partials_row, row_out, MAC_start, MAC_count
+    output fifo_shift, ps_fifo_shift, iteration, input_type, input_load, input_row, weight_load, weight_row, partials_load, partials_row, row_out, MAC_start, MAC_count
   );
 endinterface
 
