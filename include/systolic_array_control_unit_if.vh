@@ -11,13 +11,14 @@ interface systolic_array_control_unit_if #(parameter array_dim = 4, parameter da
   logic input_en;         // Current input bus is for array inputs
   logic partial_en;       // Memory is sending partial sums
   logic fifo_has_space;   // FIFOS can load more inputs 
-  logic fifo_shift;       // Shift signal for FIFOS
   logic input_type;       // Inputs are weights/inputs
   logic input_load;       // Load inputs into certain FIFOs
   logic weight_load;      // Load weights into certain row of MACS
   logic partials_load;    // Load partials into certain FIFOs
   logic MAC_start;           // Start signals for all MACs
   logic MAC_count;           // Count signals for all MACs
+  logic [N-1:0] fifo_shift;       // Shift signal for FIFOS
+  logic [N-1:0] ps_fifo_shift;    // Shift signal for partial sum FIFOS
   logic [$clog2(array_dim)-1:0]input_row;          // Which FIFO to load input into
   logic [$clog2(array_dim)-1:0]weight_row;         // Which MAC row to load weights into
   logic [$clog2(array_dim)-1:0]partials_row;       // Which FIFO to load partials into
