@@ -17,9 +17,14 @@ interface systolic_array_control_unit_if #(parameter array_dim = 4, parameter da
   logic partials_load;    // Load partials into certain FIFOs
   logic MAC_start;           // Start signals for all MACs
   logic MAC_count;           // Count signals for all MACs
-  logic [N-1:0] fifo_shift;       // Shift signal for FIFOS
-  logic [N-1:0] ps_fifo_shift;    // Shift signal for partial sum FIFOS
-  logic [$clog2(array_dim)-1:0] iteration;         // Which iteration the systolic array is on
+  logic add_start;           // Start signals for all partial sum adders
+  logic add_count;           // Count signals for all partial sum adders
+  logic [array_dim-1:0] fifo_enable;       // enable signal for FIFOS (MAC take 0 instead of fifo value)
+  logic [array_dim-1:0] ps_fifo_enable;    // enable signal for partial sum FIFOS (add take 0 instead of fifo value)
+  logic [array_dim-1:0] fifo_shift;       // Shift signal for FIFOS
+  logic [array_dim-1:0] ps_fifo_shift;    // Shift signal for partial sum FIFOS
+  logic [$clog2(array_dim):0] iteration_in;       // Which iteration is the inst inside the systolic array
+  logic [$clog2(array_dim):0] iteration_out;      // Which iteration is the inst coming out of the systolic array
   logic [$clog2(array_dim)-1:0] input_row;          // Which FIFO to load input into
   logic [$clog2(array_dim)-1:0] weight_row;         // Whi ch MAC row to load weights into
   logic [$clog2(array_dim)-1:0] partials_row;       // Which FIFO to load partials into
@@ -29,7 +34,7 @@ interface systolic_array_control_unit_if #(parameter array_dim = 4, parameter da
   // Control Unit Ports
   modport control_unit(
     input  weight_en, input_en, partial_en, row_en,
-    output fifo_shift, ps_fifo_shift, iteration, input_type, input_load, input_row, weight_load, weight_row, partials_load, partials_row, row_out, MAC_start, MAC_count
+    output fifo_has_space, fifo_enable, ps_fifo_enable, fifo_shift, ps_fifo_shift, iteration_in, iteration_out, input_type, input_load, input_row, weight_load, weight_row, partials_load, partials_row, row_out, MAC_start, MAC_count, add_start, add_count
   );
 endinterface
 

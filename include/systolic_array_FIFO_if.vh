@@ -13,7 +13,7 @@ interface systolic_array_fifo_if #(parameter array_dim = 4, parameter data_w = 1
   logic [data_w*array_dim-1:0] out;           // Final array_dim value to be seen by array
   // Memory Ports
   modport FIFO(
-    input  load, shift, load_values,
+    input  load, shift, load_values, 
     output out
   );
 endinterface
