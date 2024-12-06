@@ -59,9 +59,9 @@ module systolic_array #(
     always_comb begin : input_bus_identity
         top_input = '0;
         weights = '{default: '0};
-        if (control_unit_if.input_type == 1'b1) begin
+        if (control_unit_if.input_type == 1'b0) begin
             top_input = memory.array_in;
-        end else if (control_unit_if.input_type == 1'b0) begin
+        end else if (control_unit_if.input_type == 1'b1) begin
             weights = memory.array_in;
         end
     end
@@ -102,11 +102,7 @@ module systolic_array #(
             assign input_fifos_ifs[i].shift = control_unit_if.fifo_shift[i];
             assign input_fifos_ifs[i].load_values = top_input;
             for (j = 0; j < N; j = j + 1) begin
-                if (control_unit_if.fifo_enable) begin
-                    assign MAC_inputs[i][j] = input_fifos_ifs[i].out[j * WIDTH +: WIDTH];
-                end else begin
-                    assign MAC_inputs[i][j] = '0;
-                end
+                assign MAC_inputs[i][j] = input_fifos_ifs[i].out[j * WIDTH +: WIDTH];
             end
         end
     endgenerate
@@ -120,11 +116,7 @@ module systolic_array #(
             assign ps_fifos_ifs[i].load = loadps[i];
             assign ps_fifos_ifs[i].shift = control_unit_if.ps_fifo_shift[i];
             assign ps_fifos_ifs[i].load_values = memory.array_in_partials;
-            if (control_unit_if.fifo_enable) begin
-                assign ps_add_inputs[i] = ps_fifos_ifs[i].out;
-            end else begin
-                assign ps_add_inputs[i] = '0;
-            end
+            assign ps_add_inputs[i] = ps_fifos_ifs[i].out;
         end
     endgenerate
     // MAC Generation
@@ -176,5 +168,14 @@ module systolic_array #(
             output_buffer <= output_buffer_next;
         end
     end
-    
+    // output time :D
+    integer k;
+    always_comb begin
+        for (k = 0; k < 3; k++)begin
+            if (control_unit_if.iteration[k] > 2*N-1)begin
+                memory.row_out = control_unit_if.iteration[k]-2*N;
+                memory.array_output = {output_buffer[memory.row_out]};
+            end
+        end
+    end
 endmodule
