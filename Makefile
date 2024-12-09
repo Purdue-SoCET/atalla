@@ -1,6 +1,6 @@
 fc:
-	vlog -sv ./src/testbench/flex_counter_tb.sv ./src/modules/flex_counter.sv
-	vsim -voptargs="+acc" work.flex_counter_tb
+	vlog -sv ./src/testbench/fu_gemm_tb.sv ./src/modules/fu_gemm.sv
+	vsim -voptargs="+acc" work.fu_gemm_tb
 
 %:
 	vlog -sv ./src/testbench/$*_tb.sv ./src/**/*
