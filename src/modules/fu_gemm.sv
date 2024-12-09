@@ -29,12 +29,14 @@ always_comb begin
     next_reg2 = reg2;
     next_reg3 = reg3;
     next_regd = regd;
+    ready = next_ready;
 
     if(fugif.flush) begin
         next_reg1 = '0;
         next_reg2 = '0;
         next_reg3 = '0;
         next_regd = '0;
+        next_ready = '0;
     end
     else if (fugif.freeze) begin
         next_ready = 0; //want to not assert a ready value in case there is a freeze
