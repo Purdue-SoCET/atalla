@@ -1,6 +1,3 @@
-`include "cpu_types.vh"
-`include "fu_alu_if.vh"
-
 module fu_alu(
     fu_alu_if.alu aluif
 );
