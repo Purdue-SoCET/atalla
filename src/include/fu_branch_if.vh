@@ -1,24 +1,19 @@
-`ifndef FU_BRANCH_IF_VH
-`define FU_BRANCH_IF_VH
-
 `include "cpu_types.vh"
 
-
-interface fu_alu_if;
+interface fu_branch_if;
   import cpu_types::*;
 
-  logic branch_outcome, update_btb, pred_outcome, hit;
-  word_t pc, pc_fetch, branch_target, pred_target;
+  logic branch, branch_gate_sel, branch_outcome;
+  logic [1:0] branch_type;
+  word_t reg_a, reg_b, current_pc, updated_pc, imm;
 
-  modport btb (
-    input branch_outcome, update_btb, branch_target, pc, pc_fetch,
-    output  pred_outcome, hit, pred_target
+  modport br (
+    input branch, branch_type, branch_gate_sel, reg_a, reg_b, current_pc, imm,
+    output branch_outcome, updated_pc
   );
 
   modport tb (
-    input  pred_outcome, hit, pred_target,
-    output branch_outcome, update_btb, branch_target, pc, pc_fetch
+    output branch_outcome, updated_pc,
+    input branch, branch_type, branch_gate_sel, reg_a, reg_b, current_pc, imm
   );
 endinterface
-
-`endif

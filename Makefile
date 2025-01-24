@@ -10,6 +10,10 @@ branch:
 	vlog -sv +incdir+./src/include ./src/testbench/fu_branch_tb.sv ./src/modules/fu_branch.sv
 	vsim -voptargs="+acc" work.fu_branch_tb
 
+bp:
+	vlog -sv +incdir+./src/include ./src/testbench/fu_branchpred_tb.sv ./src/modules/fu_branchpred.sv
+	vsim -voptargs="+acc" work.fu_branchpred_tb
+
 %:
 	vlog -sv ./src/testbench/$*_tb.sv ./src/modules/* +incdir+./src/include/
 	vsim -voptargs="+acc" work.$*_tb
