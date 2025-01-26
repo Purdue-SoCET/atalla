@@ -10,7 +10,7 @@ interface fu_alu_if;
 
   modport alu (
     input aluop, port_a, port_b,
-    output  negative, overflow, port_output, zero
+    output negative, overflow, port_output, zero
   );
 
   modport tb (
