@@ -14,7 +14,6 @@ module icache #(
 );
   import cpu_types_pkg::*;
 
-  // Declare variables at the top (before any logic)
   icachef_t icache_format;
   icache_frame [(1 << IIDX_W) - 1:0] icache, nxt_icache; // Parametrized size
 
