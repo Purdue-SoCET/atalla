@@ -26,10 +26,9 @@ always_comb begin : LOAD_STORE
 
         else if (mlsif.ls_in[1]) begin  // STORE
             mlsif.ls_out[1] = 1;
-            mlsif.rd_out = mlsif.rd_in;
+            mlsif.rd_out = mlsif.rs_in;
             mlsif.stride_out = mlsif.stride_in;
-            mlsif.imm_in = mlsif.stride_in;
-            mlsif.address = mlsif.rs_in + mlsif.imm_in;
+            mlsif.address = mlsif.rd_in + mlsif.imm_in;
         end
     end
 end
