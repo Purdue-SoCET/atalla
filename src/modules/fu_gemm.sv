@@ -1,7 +1,11 @@
-`include "types_pkg.vh"
+`include "isa_types.vh"
+`include "datapath_types.vh"
 `include "fu_gemm_if.vh"
 
-module fu_gemm (input logic CLK, nRST, fu_gemm_if.GEMM fugif);
+module fu_gemm (
+    input logic CLK,nRST, 
+                fu_gemm_if.GEMM fugif
+);
 
 logic [3:0] next_reg1, next_reg2, next_reg3, next_regd;
 logic ready, next_ready;

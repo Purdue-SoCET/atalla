@@ -1,9 +1,10 @@
 `ifndef FU_GEMM_IF_VH
 `define FU_GEMM_IF_VH
-`include "types_pkg.vh"
+`include "isa_types.vh"
 
 interface fu_gemm_if;
-    import types_pkg::*;
+    import isa_pkg::*;
+    import datapath_pkg::*;
 
     //Inputs from fetch
     logic [31:0] fetch_p; //from fetch instruction
@@ -18,6 +19,7 @@ interface fu_gemm_if;
         input fetch_p, flush, freeze,
         output rs1, rs2, rs3, rd
     );
+
     modport tb (
         input rs1, rs2, rs3, rd,
         output fetch_p, flush, freeze

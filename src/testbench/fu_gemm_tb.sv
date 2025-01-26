@@ -1,6 +1,7 @@
 `timescale 1ns / 10ps
 `include "fu_gemm_if.vh"
-`include "types_pkg.vh"
+`include "isa_types.vh"
+`include "datapath_types.vh"
 
 module fu_gemm_tb;
 
@@ -29,17 +30,17 @@ initial begin
     @(posedge CLK);
 
     nRST = 1;
-    fetch_p = 32'hABCDEF01;
+    fugif.fetch_p = 32'hABCDEF01;
     fugif.flush = 0;
     fugif.freeze = 0;
     @(posedge CLK * 3);
 
-    fetch_p = 32'h00FFAABB;
+    fugif.fetch_p = 32'h00FFAABB;
     fugif.flush = 1;
     fugif.freeze = 0;
     @(posedge CLK * 3);
     
-    fetch_p = 32'hFAAAAACC;
+    fugif.fetch_p = 32'hFAAAAACC;
     fugif.flush = 0;
     fugif.freeze = 1;
     @(posedge CLK * 5);
