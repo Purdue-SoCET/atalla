@@ -9,9 +9,7 @@ mls:
 
 %:
 	vlog -sv ./src/testbench/$*_tb.sv ./src/modules/$*.sv +incdir+./src/include/ 
-	vsim -voptargs="+acc" work.$*_tb 
-	
-# "view objects; do ./src/waves/$*.do; run -all;" -onfinish stop
+	vsim -voptargs="+acc" work.$*_tb -do "view objects; do ./src/waves/$*.do; run -all;" -onfinish stop
 
 # ./src/waves/$*.do 
 
