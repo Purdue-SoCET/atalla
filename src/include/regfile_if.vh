@@ -1,18 +1,13 @@
-/*
-  Eric Villasenor
-  evillase@gmail.com
-
-  register file interface
-*/
 `ifndef REGISTER_FILE_IF_VH
 `define REGISTER_FILE_IF_VH
 
 // all types
-`include "cpu_types.vh"
+`include "datapath_types.vh"
 
 interface register_file_if;
   // import types
-  import cpu_types::*;
+  import isa_pkg::*;
+  import datapath_pkg::*;
 
   logic     WEN;
   regbits_t wsel, rsel1, rsel2;
