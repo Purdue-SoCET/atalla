@@ -16,9 +16,14 @@ package datapath_pkg;
  
   typedef enum logic [1:0] {
     STORE,
-    LOAD,
-    MEM_TO_REG
+    LOAD
   } scalar_mem_t;
+
+  typedef enum logic [1:0] {
+    FU_S_T,
+    FU_M_T,
+    FU_G_T
+  } fu_type;
 
   typedef enum logic {
     M_STORE,
@@ -54,7 +59,7 @@ package datapath_pkg;
     logic [10:0] imm;
     fu_mbits_t t1;
     fu_sbits_t t2;
-    fu_sbits_t t3;
+    // fu_sbits_t t3;
   } fust_m_row_t;
 
   typedef struct packed {
@@ -102,6 +107,7 @@ package datapath_pkg;
   } fu_scalar_t;
 
   typedef enum logic [2:0] {
+    NA = 3'd0,
     FU_M_LD_ST  = 3'd3,
     FU_M_GEMM   = 3'd4
   } fu_matrix_t;
@@ -206,6 +212,12 @@ package datapath_pkg;
     matbits_t ms2;
     matbits_t ms3;
   } issue_t;
+
+  typedef struct packed {
+    word_t imemload;
+  } fetch_t;
+
+
 
 endpackage
 `endif

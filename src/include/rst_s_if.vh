@@ -6,12 +6,12 @@ interface rst_s_if;
   import datapath_pkg::*;
 
   // Inputs from dispatch
-  logic [3:0] di_sel;
+  logic [4:0] di_sel;
   logic di_write;
   logic [1:0] di_tag;
 
   // Inputs from writeback
-  logic [3:0] wb_sel;
+  logic [4:0] wb_sel;
   logic wb_write;
     
   // Outputs of stage
