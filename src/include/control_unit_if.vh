@@ -13,7 +13,7 @@ interface control_unit_if;
 
   aluop_t alu_op;
   logic [4:0] stride;
-  logic halt, i_flag, m_reg_write, s_reg_write, jalr, jal, mem_to_reg;
+  logic halt, i_flag, m_reg_write, s_reg_write, jalr, jal;
   scalar_mem_t s_mem_type;
   branch_t branch_op;
   word_t imm, instr;
