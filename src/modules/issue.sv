@@ -36,7 +36,6 @@ module issue(
     regbits_t s_rs1, s_rs2;
     logic [4:0] incoming_instr;
 
-    // i think these are delcared right?
     logic [4:0] rdy;
     logic [4:0][1:0] age;
     fust_state_e [4:0] fust_state;
@@ -58,7 +57,6 @@ module issue(
         incoming_instr = 5'b01000;
       else if (isif.fust_g_en)
         incoming_instr = 5'b10000;
-      end
     end
 
     always_ff @ (posedge CLK, negedge nRST) begin: Pipeline_Latching
@@ -114,7 +112,7 @@ module issue(
         endcase
       end
     end
-
+    
     always_ff @ (posedge CLK, negedge nRST) begin: Oldest_Latch
       if (~nRST) begin
         oldest_age <= '0;
@@ -135,6 +133,13 @@ module issue(
           next_oldest_rdy[i] = 1'b1;
         end
       end
+    end
+
+    always_ff @ (posedge CLK, negedge nRST) begin: Ready_Latch
+      if (~nRST)
+        rdy <= '0;
+      else
+        next_rdy <= rdy;
     end
 
     always_comb begin : Ready_Logic
