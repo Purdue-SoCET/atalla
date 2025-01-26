@@ -3,32 +3,31 @@
 
 module fu_gemm (input logic CLK, nRST, fu_gemm_if.GEMM fugif);
 
-logic [3:0] reg1, reg2, reg3, regd;
 logic [3:0] next_reg1, next_reg2, next_reg3, next_regd;
 logic ready, next_ready;
 
 always_ff @(posedge CLK, negedge nRST) begin
     if(nRST == 0) begin
-        reg1 <= '0;
-        reg2 <= '0;
-        reg3 <= '0;
-        regd <= '0;
+        fugif.rs1 <= '0;
+        fugif.rs2 <= '0;
+        fugif.rs3 <= '0;
+        fugif.rd <= '0;
         ready <= '0;
     end
     else begin
-        reg1 <= next_reg1;
-        reg2 <= next_reg2;
-        reg3 <= next_reg3;
-        regd <= next_regd;
+        fugif.rs1 <= next_reg1;
+        fugif.rs2 <= next_reg2;
+        fugif.rs3 <= next_reg3;
+        fugif.rd <= next_regd;
         ready <= next_ready;
     end
 end
 
 always_comb begin
-    next_reg1 = reg1;
-    next_reg2 = reg2;
-    next_reg3 = reg3;
-    next_regd = regd;
+    next_reg1 = fugif.rs1;
+    next_reg2 = fugif.rs2;
+    next_reg3 = fugif.rs3;
+    next_regd = fugif.rd;
     ready = next_ready;
 
     if(fugif.flush) begin
@@ -50,7 +49,5 @@ always_comb begin
     end
 
 end
-        
-
 
 endmodule
