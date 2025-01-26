@@ -6,14 +6,16 @@ alu:
 	vlog -sv +incdir+./src/include ./src/testbench/fu_alu_tb.sv ./src/modules/fu_alu.sv
 	vsim -voptargs="+acc" work.fu_alu_tb
 
-branch:
-	vlog -sv +incdir+./src/include ./src/testbench/fu_branch_tb.sv ./src/modules/fu_branch.sv
-	vsim -voptargs="+acc" work.fu_branch_tb
-
-bp:
-	vlog -sv +incdir+./src/include ./src/testbench/fu_branchpred_tb.sv ./src/modules/fu_branchpred.sv
-	vsim -voptargs="+acc" work.fu_branchpred_tb
+mls:
+	vlog -sv +incdir+./src/include ./src/testbench/fu_matrix_ls_tb.sv ./src/modules/fu_matrix_ls.sv
+	vsim -voptargs="+acc" work.fu_matrix_ls_tb
 
 %:
-	vlog -sv ./src/testbench/$*_tb.sv ./src/modules/* +incdir+./src/include/
-	vsim -voptargs="+acc" work.$*_tb
+	vlog -sv ./src/testbench/$*_tb.sv ./src/modules/$*.sv +incdir+./src/include/ 
+	vsim -voptargs="+acc" work.$*_tb -do "view objects; do ./src/waves/$*.do; run -all;" -onfinish stop
+
+# ./src/waves/$*.do 
+
+# dispatch:
+# 	vlog -sv ./src/testbench/dispatch_tb.sv ./src/modules/dispatch.sv ./src/modules/rst_m.sv ./src/modules/rst_s.sv +incdir+./src/include/
+# 	vsim -voptargs="+acc" work.$*_tb
