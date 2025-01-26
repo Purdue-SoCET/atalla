@@ -6,9 +6,11 @@
 package datapath_pkg;
   import isa_pkg::*;
 
+  parameter FU_W   = 3;
   parameter FU_S_W = 2;
   parameter FU_M_W = 1;
 
+  typedef logic [FU_W-1:0]   fu_bits_t;
   typedef logic [FU_S_W-1:0] fu_sbits_t;
   typedef logic [FU_M_W-1:0] fu_mbits_t;
  
@@ -30,7 +32,7 @@ package datapath_pkg;
   } matrix_mem_t; // load or store for matrix ld_st fu
 
   typedef enum logic [2:0] {
-    FUST_EMTPY,
+    FUST_EMPTY,
     FUST_WAIT,
     FUST_RDY,
     FUST_EX
@@ -204,6 +206,12 @@ package datapath_pkg;
     fu_ldst_t fu_ldst;
     fu_ldst_m_t fu_ldst_m;
     fu_gemm_t fu_gemm;
+    fu_bits_t fu_en;
+    regbits_t rs1;
+    regbits_t rs2;
+    matbits_t ms1;
+    matbits_t ms2;
+    matbits_t ms3;
   } issue_t;
 
   typedef struct packed {

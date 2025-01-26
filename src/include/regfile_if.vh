@@ -1,9 +1,3 @@
-/*
-  Eric Villasenor
-  evillase@gmail.com
-
-  register file interface
-*/
 `ifndef REGISTER_FILE_IF_VH
 `define REGISTER_FILE_IF_VH
 
@@ -12,7 +6,8 @@
 
 interface register_file_if;
   // import types
-  import datapath_types::*;
+  import isa_pkg::*;
+  import datapath_pkg::*;
 
   logic     WEN;
   regbits_t wsel, rsel1, rsel2;
