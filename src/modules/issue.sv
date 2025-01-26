@@ -37,7 +37,9 @@ module issue(
     logic [4:0] incoming_instr;
 
     logic [4:0] rdy;
+    logic [4:0] n_rdy;
     logic [4:0][1:0] age;
+    logic [4:0][1:0] n_age;
     fust_state_e [4:0] fust_state;
     fust_state_e [4:0] next_fust_state;
     logic [4:0] oldest_rdy;
@@ -45,13 +47,13 @@ module issue(
     logic [1:0] oldest_age;
     logic [1:0] next_oldest_age;
 
-    always_comb begin : incoming_instr
+    always_comb begin : Incoming_Instr_Logic
       incoming_instr = '0;
       if (isif.fust_s_en) begin
         case (isif.fu_s)
-          FUST_S_ALU:    incoming_instr = 5'b00001;
-          FUST_S_LD_ST:  incoming_instr = 5'b00010;
-          FUST_S_BRANCH: incoming_instr = 5'b00100;
+          FU_S_ALU:    incoming_instr = 5'b00001;
+          FU_S_LD_ST:  incoming_instr = 5'b00010;
+          FU_S_BRANCH: incoming_instr = 5'b00100;
         endcase
       end else if (isif.fust_m_en)
         incoming_instr = 5'b01000;
@@ -97,18 +99,18 @@ module issue(
       if (~nRST)
         age <= '0;
       else
-        age <= next_age;
+        age <= n_age;
     end
 
     always_comb begin : Age_Logic
-      next_age = age;
+      n_age = age;
       for (int i = 0; i < 5; i++) begin
         case (fust_state[i])
-          FUST_EMTPY: next_age[i] = incoming_instr[i]; // set new instructions to age 1
-          FUST_WAIT:  next_age[i] = age[i] + 1;
-          FUST_RDY:   next_age[i] = age[i] + 1;
-          FUST_EX:    next_age[i] = '0;
-          default: next_age = age;
+          FUST_EMPTY: n_age[i] = incoming_instr[i]; // set new instructions to age 1
+          FUST_WAIT:  n_age[i] = age[i] + 1;
+          FUST_RDY:   n_age[i] = age[i] + 1;
+          FUST_EX:    n_age[i] = '0;
+          default: n_age = age;
         endcase
       end
     end
@@ -124,10 +126,10 @@ module issue(
     end
 
     always_comb begin : Oldest_Logic
-      next_oldest_age = oldest_age
+      next_oldest_age = oldest_age;
       next_oldest_rdy = oldest_rdy;
       for (int i = 0; i < 5; i++) begin
-        if (next_rdy[i] & (next_age[i] > oldest_age)) begin
+        if (n_rdy[i] & (n_age[i] > oldest_age)) begin
           next_oldest_age = age[i];
           next_oldest_rdy = '0;
           next_oldest_rdy[i] = 1'b1;
@@ -139,29 +141,29 @@ module issue(
       if (~nRST)
         rdy <= '0;
       else
-        next_rdy <= rdy;
+        rdy <= n_rdy;
     end
 
     always_comb begin : Ready_Logic
-      next_rdy = rdy;
+      n_rdy = rdy;
       for (int i = 0; i < 5; i++) begin
         case (fust_state[i])
-          FUST_EMTPY: next_rdy[i] = 1'b0;
+          FUST_EMPTY: n_rdy[i] = 1'b0;
           FUST_WAIT: begin // implies instruction is already loaded
             if (i < 3) begin // Scalar FUST
-              next_rdy[i] = (~|fusif.fust.op[i].t1 & ~|fusif.fust.op[i].t2);
+              n_rdy[i] = (~|fusif.fust.op[i].t1 & ~|fusif.fust.op[i].t2);
             end else if (i == 3) begin // Matrix LD/ST FUST
-              next_rdy[i] = (~|fumif.fust.op.t1 & ~|fumif.fust.op.t2);
+              n_rdy[i] = (~|fumif.fust.op.t1 & ~|fumif.fust.op.t2);
             end else if (i == 4) begin // GEMM FUST
-              next_rdy[i] = (~|fugif.fust.op.t1 & ~|fugif.fust.op.t2 & ~|fugif.fust.op.t3);
+              n_rdy[i] = (~|fugif.fust.op.t1 & ~|fugif.fust.op.t2 & ~|fugif.fust.op.t3);
             end
           end
           // I think just let FUST_RDY state get its rdy bit resolved in EX if
-          // output logic is going to depend on next_rdy, clearing it in RDY
+          // output logic is going to depend on n_rdy, clearing it in RDY
           // wont let it issue
           //FUST_RDY:
-          FUST_EX: next_rdy[i] = 1'b0;
-          default: next_rdy[i] = rdy[i];
+          FUST_EX: n_rdy[i] = 1'b0;
+          default: n_rdy[i] = rdy[i];
         endcase
       end
     end
@@ -178,18 +180,19 @@ module issue(
       next_fust_state = fust_state;
       for (int i = 0; i < 5; i++) begin
         case (fust_state[i])
-          FUST_EMTPY: next_fust_state[i] = incoming_instr[i] ? FUST_WAIT : FUST_EMPTY;
+          FUST_EMPTY: next_fust_state[i] = incoming_instr[i] ? FUST_WAIT : FUST_EMPTY;
           FUST_WAIT: begin
-            if (next_rdy[i])
-              next_fust_state[i] = (next_rdy[i] == next_oldest_rdy[i]) ? FUST_EX : FUST_RDY;
+            if (n_rdy[i])
+              next_fust_state[i] = (n_rdy[i] == next_oldest_rdy[i]) ? FUST_EX : FUST_RDY;
           end
           FUST_RDY: next_fust_state[i] = (next_oldest_rdy[i]) ? FUST_EX : FUST_RDY;
           FUST_EX: begin
             //TODO:wait for wb to flag done and go back to emtpy/wait based on
             //incoming_instr
             //TODO:handle flushing
-            next_fust_state[i] = FUST_EMTPY;//temp
+            next_fust_state[i] = FUST_EMPTY;//temp
           end
+        endcase
       end
     end
 
