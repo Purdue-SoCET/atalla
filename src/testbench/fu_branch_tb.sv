@@ -176,6 +176,22 @@ initial begin
     fubif.reg_b = 32'h7FFFFFFF;
     #(CLK_PERIOD*10);
 
+    // BGEU: Case 5
+    tb_test_case = "BGEU 5";
+    fubif.branch_type = 2'd2;
+    fubif.branch_gate_sel = 1'b0;
+    fubif.reg_a = 32'hFFFFFFFF;
+    fubif.reg_b = 32'd10;
+    #(CLK_PERIOD*10);
+
+    // BGEU: Case 6
+    tb_test_case = "BGEU 6";
+    fubif.branch_type = 2'd2;
+    fubif.branch_gate_sel = 1'b0;
+    fubif.reg_a = 32'd10;
+    fubif.reg_b = 32'hFFFFFFFF;
+    #(CLK_PERIOD*10);
+
     tb_enable = 1'b0;
     #(CLK_PERIOD*10);
 
