@@ -60,6 +60,7 @@ module issue(
       else if (isif.fust_g_en)
         incoming_instr = 5'b10000;
     end
+      
 
     always_ff @ (posedge CLK, negedge nRST) begin: Pipeline_Latching
       if (~nRST)

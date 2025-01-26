@@ -11,8 +11,10 @@ mls:
 	vsim -voptargs="+acc" work.fu_matrix_ls_tb
 
 %:
-	vlog -sv ./src/testbench/$*_tb.sv ./src/modules/$*.sv +incdir+./src/include/
-	vsim -voptargs="+acc" work.$*_tb
+	vlog -sv ./src/testbench/$*_tb.sv ./src/modules/$*.sv +incdir+./src/include/ 
+	vsim -voptargs="+acc" work.$*_tb -do "view objects; do ./src/waves/$*.do; run -all;" -onfinish stop
+
+# ./src/waves/$*.do 
 
 # dispatch:
 # 	vlog -sv ./src/testbench/dispatch_tb.sv ./src/modules/dispatch.sv ./src/modules/rst_m.sv ./src/modules/rst_s.sv +incdir+./src/include/

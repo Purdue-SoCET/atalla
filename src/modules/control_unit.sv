@@ -5,10 +5,6 @@
 `include "datapath_types.vh"
 `include "control_unit_if.vh"
 
-
-
-
-
 module control_unit(
     control_unit_if.cu cu_if
 );
@@ -185,20 +181,17 @@ module control_unit(
         7'b1010111: //st.m
             begin
                 cu_if.imm = $signed({instr[17:7]});
-                // cu_if.i_flag = '1;
-                // cu_if.alu_op = ALU_ADD;
                 cu_if.stride = instr[22:18]; // register
                 cu_if.fu_m = FU_M_LD_ST;
                 cu_if.m_mem_type = M_STORE;
                 cu_if.matrix_rd = instr[31:28];
                 cu_if.fu_t = FU_M_T;
             end
-        7'b1110111: // gemm.m "md = ma @ mb + mc"
+        7'b1110111: // gemm.m
             begin
                 cu_if.fu_m = FU_M_GEMM;
                 cu_if.m_reg_write = '1;
                 cu_if.fu_t = FU_G_T;
-                //i think thats it?
             end
       endcase
     end
