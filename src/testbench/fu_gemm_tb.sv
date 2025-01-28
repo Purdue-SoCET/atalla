@@ -14,7 +14,7 @@ module fu_gemm_tb;
 
     test PROG (.CLK(CLK), .nRST(nRST), .fugif(fugif));
 
-    dispatch DUT (.CLK(CLK), .nRST(nRST), .fugif(fugif));
+    fu_gemm DUT (.CLK(CLK), .nRST(nRST), .fugif(fugif));
 
 endmodule
 
@@ -24,25 +24,29 @@ program test (
     fu_gemm_if.tb fugif
 );
 initial begin
-
+    parameter PERIOD = 1;
     nRST = 0;
-
-    @(posedge CLK);
+    
+    #(PERIOD * 10);
 
     nRST = 1;
     fugif.fetch_p = 32'hABCDEF01;
     fugif.flush = 0;
     fugif.freeze = 0;
-    @(posedge CLK * 3);
+
+    #(PERIOD * 10);
 
     fugif.fetch_p = 32'h00FFAABB;
     fugif.flush = 1;
     fugif.freeze = 0;
-    @(posedge CLK * 3);
+
+    #(PERIOD * 10);
     
     fugif.fetch_p = 32'hFAAAAACC;
     fugif.flush = 0;
     fugif.freeze = 1;
-    @(posedge CLK * 5);
+
+    #(PERIOD * 10);
     $finish;
 end
+endprogram 

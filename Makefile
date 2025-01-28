@@ -10,6 +10,7 @@ mls:
 %:
 	vlog -sv ./src/testbench/$*_tb.sv ./src/modules/$*.sv +incdir+./src/include/
 	vsim -voptargs="+acc" work.$*_tb
+	# verilator --sc ./src/testbench/$*_tb.sv ./src/modules/$*.sv -Isrc/include/
 
 # dispatch:
 # 	vlog -sv ./src/testbench/dispatch_tb.sv ./src/modules/dispatch.sv ./src/modules/rst_m.sv ./src/modules/rst_s.sv +incdir+./src/include/
