@@ -225,4 +225,10 @@ module issue(
       end
     end
 
+    always_comb begin : Dispatch_Loopback
+      isif.fust_s = fusif.fust_row;
+      isif.fust_m = fumif.fust_row;
+      isif.fust_g = fugif.fust_row;
+    end
+
 endmodule
