@@ -42,6 +42,7 @@ program test (
             scoreboard.flush = '0;
             scoreboard.freeze = '0;
             scoreboard.wb = '0;
+            scoreboard.fetch = '0;
 
             @(posedge CLK);
         end

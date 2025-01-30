@@ -16,8 +16,8 @@ module scoreboard(
     dispatch_if diif();
     issue_if isif();
 
-    dispatch(CLK, nRST, diif);
-    issue(CLK, nRST, isif);
+    dispatch DI (CLK, nRST, diif);
+    issue IS (CLK, nRST, isif);
 
     always_comb begin
       diif.fetch = sbif.fetch;
@@ -28,7 +28,7 @@ module scoreboard(
       diif.fust_m = isif.fust_m;
       diif.fust_g = isif.fust_g;
 
-      isif.dispatch = dispatch.out;
+      isif.dispatch = diif.out;
       isif.flush = sbif.flush;
       isif.freeze = sbif.freeze;
       isif.wb = sbif.wb;

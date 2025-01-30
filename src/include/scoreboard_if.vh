@@ -13,7 +13,7 @@ interface scoreboard_if;
 
     issue_t out;
     
-    modport IS (
+    modport SB (
         input fetch, flush, freeze, wb, 
         output out
     );

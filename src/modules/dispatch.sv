@@ -146,9 +146,9 @@ module dispatch(
       //n_fu_g           = 1'b0; // only one row in FUST
       diif.n_fust_g.busy = 1'b1;
       diif.n_fust_g.rd   = m_rd;
-      diif.n_fust_g.rs1  = m_rs1;
-      diif.n_fust_g.rs2  = m_rs2;
-      diif.n_fust_g.rs3  = m_rs3;
+      diif.n_fust_g.ms1  = m_rs1;
+      diif.n_fust_g.ms2  = m_rs2;
+      diif.n_fust_g.ms3  = m_rs3;
       diif.n_fust_g.t1   = rstmif.status.idx[m_rs1].tag;
       diif.n_fust_g.t2   = rstmif.status.idx[m_rs2].tag;
       diif.n_fust_g.t3   = rstmif.status.idx[m_rs3].tag;
