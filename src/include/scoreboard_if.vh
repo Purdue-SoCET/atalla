@@ -11,9 +11,15 @@ interface scoreboard_if;
     issue_t out;
     
     modport IS (
-        input flush, freeze, wb,
+        input flush, freeze, wb, 
         output out
     );
+
+    modport tb (
+        input out,
+        output flush, freeze, wb
+    );
+    
 
 endinterface
 `endif
