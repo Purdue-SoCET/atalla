@@ -91,8 +91,9 @@ module dispatch(
 
       // only write to Reg Status Table if doing a regwrite,
       // and the instruction is actually moving forward
+      rstsif.di_write = 1'b0;
       if (cuif.s_reg_write) begin
-        if (~WAW & ~flush & ~diif.freeze) begin
+        if (~WAW & ~flush & ~diif.freeze) begin // WAW a little strange, will need to take a look going forward
           rstsif.di_sel = s_rd;
           rstsif.di_write = 1'b1;
           rstsif.di_tag = (cuif.fu_s == FU_S_LD_ST) ? 2'd2 : 2'd1; // 1 for ALU, 2 for LD
