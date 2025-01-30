@@ -5,19 +5,22 @@
 interface scoreboard_if;
     import datapath_pkg::*;
 
+    // inputs
+    fetch_t fetch;
     logic flush, freeze;
+
     wb_t wb;
 
     issue_t out;
     
     modport IS (
-        input flush, freeze, wb, 
+        input fetch, flush, freeze, wb, 
         output out
     );
 
     modport tb (
         input out,
-        output flush, freeze, wb
+        output fetch, flush, freeze, wb
     );
     
 

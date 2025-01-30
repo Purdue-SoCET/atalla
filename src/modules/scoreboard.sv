@@ -20,6 +20,10 @@ module scoreboard(
     issue(CLK, nRST, isif);
 
     always_comb begin
+      diif.fetch = sbif.fetch;
+      diif.flush = sbif.flush;
+      diif.freeze = sbif.freeze;
+
       diif.fust_s = isif.fust_s;
       diif.fust_m = isif.fust_m;
       diif.fust_g = isif.fust_g;
