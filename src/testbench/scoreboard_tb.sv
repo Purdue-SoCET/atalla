@@ -8,7 +8,7 @@ module scoreboard_tb;
 
     always #(PERIOD/2) CLK++;
 
-    scoreboard_if sbif ();
+    scoreboard_if sbif();
 
     test PROG (.CLK(CLK), .nRST(nRST), .sbif(sbif));
 
@@ -19,7 +19,7 @@ endmodule
 program test (
     input logic CLK, 
     output logic nRST,
-    scoreboard.tb sbif
+    scoreboard_if.tb sbif
 );
 
     task reset_dut;
@@ -39,10 +39,10 @@ program test (
 
     task reset_in;
         begin
-            scoreboard.flush = '0;
-            scoreboard.freeze = '0;
-            scoreboard.wb = '0;
-            scoreboard.fetch = '0;
+            sbif.flush = '0;
+            sbif.freeze = '0;
+            sbif.wb = '0;
+            sbif.fetch = '0;
 
             @(posedge CLK);
         end

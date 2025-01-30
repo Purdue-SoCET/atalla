@@ -2,9 +2,13 @@
 // issue should read registers and issue to execute by the next clock edge
 `include "datapath_types.vh"
 `include "issue_if.vh"
+`include "regfile.sv"
 `include "regfile_if.vh"
+`include "fust_s.sv"
 `include "fust_s_if.vh"
+`include "fust_m.sv"
 `include "fust_m_if.vh"
+`include "fust_g.sv"
 `include "fust_g_if.vh"
 
 module issue(
