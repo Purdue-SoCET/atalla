@@ -196,6 +196,7 @@ module issue(
             //TODO:wait for wb to flag done and go back to emtpy/wait based on
             //incoming_instr
             //TODO:handle flushing
+
             next_fust_state[i] = FUST_EMPTY;//temp
           end
           default: next_fust_state = fust_state;
