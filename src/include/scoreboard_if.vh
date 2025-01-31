@@ -9,7 +9,7 @@ interface scoreboard_if;
     fetch_t fetch;
     logic flush, freeze;
 
-    wb_t wb;
+    wb_ctr_t wb;
 
     issue_t out;
     

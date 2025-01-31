@@ -161,18 +161,18 @@ module dispatch(
       // To Execute
       dispatch.fu_s = cuif.fu_s;
       dispatch.fu_m = cuif.fu_m;
-      dispatch.fu_alu_ctr.alu_op = cuif.alu_op;
-      dispatch.fu_branch_ctr.branch_op = cuif.branch_op;
-      dispatch.fu_ldst_ctr.imm = cuif.imm;
-      dispatch.fu_ldst_ctr.mem_type = cuif.s_mem_type;
-      dispatch.fu_ldst_m_ctr.imm = cuif.imm;
-      dispatch.fu_ldst_m_ctr.mem_type = cuif.m_mem_type;
+
+      dispatch.ex_ctr.imm = cuif.imm;
+      dispatch.ex_ctr.alu_op = cuif.alu_op;
+      dispatch.ex_ctr.branch_op = cuif.branch_op;
+      dispatch.ex_ctr.s_mem_type = cuif.s_mem_type;
+      dispatch.ex_ctr.m_mem_type = cuif.m_mem_type;
+      dispatch.ex_ctr.m_rw = cuif.matrix_rd;
+      dispatch.ex_ctr.m_rw_en = cuif.m_reg_write;
 
       // To Writeback
-      dispatch.wb.s_rw_en = cuif.s_reg_write;
-      dispatch.wb.s_rw = s_rd;
-      dispatch.wb.m_rw_en = cuif.m_reg_write; //to be implemented
-      dispatch.wb.m_rw = m_rd;
+      dispatch.wb_ctr.rw_en = cuif.s_reg_write;
+      dispatch.wb_ctr.rw = s_rd;
     end
 
     function automatic void init_rst();
