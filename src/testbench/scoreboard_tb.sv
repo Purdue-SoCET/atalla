@@ -82,6 +82,7 @@ program test (
 
         @(posedge CLK);
         @(posedge CLK);
+        @(posedge CLK);
 
         $finish;
     end

@@ -112,20 +112,22 @@ module dispatch(
       // writeback needs to update the RST on commits
       if (diif.wb.s_rw_en) begin
         rstsif.wb_sel = diif.wb.s_rw;
-        rstsif.wb_write = diif.wb.s_rw_en;
+        // rstsif.wb_write = diif.wb.rw_en;
+        rstsif.wb_write = '0;
       end
 
       if (diif.wb.m_rw_en) begin
         rstmif.wb_sel = diif.wb.m_rw;
-        rstmif.wb_write = diif.wb.m_rw_en;
+        // rstmif.wb_write = diif.wb.m_rw_en;
+        rstmif.wb_write = '0;
       end
     end
 
     always_comb begin : FUST
       // To Issue **Combinationally**
-      diif.n_fust_s_en   = (cuif.fu_t == FU_S_T & ~flush & ~diif.freeze & ~hazard);
+      diif.n_fust_s_en   = (cuif.fu_t == FU_S_T & ~diif.flush & ~diif.freeze & ~hazard);
       diif.n_fu_s        = cuif.fu_s;
-      diif.n_fust_s.busy = 1'b1;
+      diif.n_fust_s.busy = 1'b0;
       diif.n_fust_s.rd   = s_rd;
       diif.n_fust_s.rs1  = s_rs1;
       diif.n_fust_s.rs2  = s_rs2;
@@ -135,7 +137,7 @@ module dispatch(
 
       diif.n_fust_m_en   = (cuif.fu_t == FU_M_T & ~flush & ~diif.freeze & ~hazard);
       //n_fu_m           = 1'b0; // only one row in FUST
-      diif.n_fust_m.busy = 1'b1;
+      diif.n_fust_m.busy = 1'b0;
       diif.n_fust_m.rd   = m_rd;
       diif.n_fust_m.rs1  = s_rs1;
       diif.n_fust_m.rs2  = s_rs2;
@@ -145,7 +147,7 @@ module dispatch(
 
       diif.n_fust_g_en   = (cuif.fu_t == FU_G_T & ~flush & ~diif.freeze & ~hazard);
       //n_fu_g           = 1'b0; // only one row in FUST
-      diif.n_fust_g.busy = 1'b1;
+      diif.n_fust_g.busy = 1'b0;
       diif.n_fust_g.rd   = m_rd;
       diif.n_fust_g.ms1  = m_rs1;
       diif.n_fust_g.ms2  = m_rs2;
@@ -171,8 +173,8 @@ module dispatch(
       dispatch.ex_ctr.m_rw_en = cuif.m_reg_write;
 
       // To Writeback
-      dispatch.wb_ctr.rw_en = cuif.s_reg_write;
-      dispatch.wb_ctr.rw = s_rd;
+      dispatch.wb_ctr.s_rw_en = cuif.s_reg_write;
+      dispatch.wb_ctr.s_rw = s_rd;
     end
 
     function automatic void init_rst();

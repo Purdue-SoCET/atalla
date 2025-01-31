@@ -1,8 +1,10 @@
 `ifndef ISSUE_IF_VH
 `define ISSUE_IF_VH
+`include "isa_types.vh"
 `include "datapath_types.vh"
 
 interface issue_if;
+    import isa_pkg::*;
     import datapath_pkg::*;
 
     //Inputs from dispatch
@@ -19,6 +21,7 @@ interface issue_if;
 
     // Inputs from writeback
     wb_ctr_t wb;
+    regbits_t s_wdata;
     
     // Outputs of stage
     issue_t out;
@@ -27,7 +30,7 @@ interface issue_if;
     fust_g_t fust_g;
     
     modport IS (
-        input dispatch, flush, freeze, wb, n_fust_s, n_fust_m, n_fust_g, n_fu_s, n_fu_m, n_fu_g, n_fust_s_en, n_fust_m_en, n_fust_g_en,
+        input dispatch, flush, freeze, wb, n_fust_s, n_fust_m, n_fust_g, n_fu_s, n_fu_m, n_fu_g, n_fust_s_en, n_fust_m_en, n_fust_g_en, s_wdata,
         output out, fust_s, fust_m, fust_g
     );
 

@@ -173,8 +173,10 @@ package datapath_pkg;
   } ex_ctr_t;
 
   typedef struct packed {
-    logic rw_en;
-    regbits_t rw;
+    logic s_rw_en;
+    regbits_t s_rw;
+    logic m_rw_en;
+    matbits_t m_rw; // still need m_rw in wb for dispatch loopback to clear RST
   } wb_ctr_t;
 
   /**********
