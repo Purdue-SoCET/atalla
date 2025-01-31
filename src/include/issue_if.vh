@@ -18,7 +18,7 @@ interface issue_if;
     logic flush, freeze;
 
     // Inputs from writeback
-    wb_t wb;
+    wb_ctr_t wb;
     
     // Outputs of stage
     issue_t out;
