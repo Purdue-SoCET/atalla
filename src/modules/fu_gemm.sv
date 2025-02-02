@@ -1,10 +1,11 @@
-`include "isa_types.vh"
-`include "datapath_types.vh"
-`include "fu_gemm_if.vh"
+// `include "isa_types.vh"
+// `include "datapath_types.vh"
+// `include "fu_gemm_if.vh"
 
-module fu_gemm (
-    input logic CLK,nRST, 
-                fu_gemm_if.GEMM fugif
+module fu_gemm(
+    input logic CLK, 
+    input logic nRST, 
+    fu_gemm_if.GEMM fugif
 );
 
 logic [3:0] next_reg1, next_reg2, next_reg3, next_regd;
@@ -13,6 +14,7 @@ logic prev_rs1; // previous weights register
 logic next_new_weights;
 logic weights_flag, next_weights_flag;
 
+//pipeline later with weights
 always_ff @(posedge CLK, negedge nRST) begin
     if(nRST == 0) begin
         fugif.rs1 <= '0;
@@ -41,7 +43,7 @@ always_comb begin
     next_reg2 = fugif.rs2;
     next_reg3 = fugif.rs3;
     next_regd = fugif.rd;
-    ready = next_ready;
+    next_ready = ready;
 
     if(fugif.flush) begin
         next_reg1 = '0;
@@ -53,11 +55,19 @@ always_comb begin
     else if (fugif.freeze) begin
         next_ready = 0; //want to not assert a ready value in case there is a freeze
     end //no need for setting the next_regs because, default case takes care of this
+<<<<<<< HEAD
     else if (fugif.GEMM_enable) begin // GEMM instr ready
         next_reg1 = fugif.fetchp[10:7]; 
         next_reg2 = fugif.fetchp[14:11];
         next_reg3 = fugif.fetchp[18:15];
         next_regd = fugif.fetchp[22:19];
+=======
+    else begin
+        next_reg1 = fugif.fetch_p[10:7]; 
+        next_reg2 = fugif.fetch_p[14:11];
+        next_reg3 = fugif.fetch_p[18:15];
+        next_regd = fugif.fetch_p[22:19];
+>>>>>>> 62c86be7d3500bf67f82ccad666ad19d1b043eb6
         next_ready = 1;
     end
 end

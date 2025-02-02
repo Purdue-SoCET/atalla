@@ -1,6 +1,7 @@
 `ifndef FU_GEMM_IF_VH
 `define FU_GEMM_IF_VH
 `include "isa_types.vh"
+`include "datapath_types.vh"
 
 interface fu_gemm_if;
     import isa_pkg::*;
@@ -10,7 +11,7 @@ interface fu_gemm_if;
     logic [31:0] fetch_p; //from fetch instruction
     
     //These would be outputs from the GEMM function
-    regbits_t rs1, rs2, rs3, rd; //tells the systolic array which values to multiply together
+    matbits_t rs1, rs2, rs3, rd; //tells the systolic array which values to multiply together
 
     //Inputs to latch
     logic flush, freeze;
