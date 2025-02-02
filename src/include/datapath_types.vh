@@ -6,15 +6,18 @@
 package datapath_pkg;
   import isa_pkg::*;
 
+  parameter FU_W   = 3;
   parameter FU_S_W = 2;
-  parameter FU_M_W = 1;
+  parameter FU_M_W = 2;
 
+  typedef logic [FU_W-1:0]   fu_bits_t;
   typedef logic [FU_S_W-1:0] fu_sbits_t;
   typedef logic [FU_M_W-1:0] fu_mbits_t;
  
   typedef enum logic [1:0] {
-    STORE,
-    LOAD
+    scalar_na = 2'd0,
+    STORE = 2'd2,
+    LOAD = 2'd3
   } scalar_mem_t;
 
   typedef enum logic [1:0] {
@@ -29,7 +32,7 @@ package datapath_pkg;
   } matrix_mem_t; // load or store for matrix ld_st fu
 
   typedef enum logic [2:0] {
-    FUST_EMTPY,
+    FUST_EMPTY,
     FUST_WAIT,
     FUST_RDY,
     FUST_EX
@@ -40,13 +43,13 @@ package datapath_pkg;
     regbits_t rd;
     regbits_t rs1;
     regbits_t rs2;
-    logic [24:0] imm; //instr[31:7] TODO: double check this is right 
+    word_t imm; //instr[31:7] TODO: double check this is right 
     fu_sbits_t t1;
     fu_sbits_t t2;
   } fust_s_row_t;
 
   typedef struct packed {
-    fust_s_row_t [FU_S_W-1:0] op;
+    fust_s_row_t [2:0] op;
   } fust_s_t;
 
   typedef struct packed {
@@ -56,7 +59,7 @@ package datapath_pkg;
     regbits_t rs2;
     logic [10:0] imm;
     fu_mbits_t t1;
-    fu_sbits_t t2;
+    fu_mbits_t t2;
     // fu_sbits_t t3;
   } fust_m_row_t;
 
@@ -67,9 +70,9 @@ package datapath_pkg;
   typedef struct packed {
     logic busy;
     matbits_t rd;
-    matbits_t rs1;
-    matbits_t rs2;
-    matbits_t rs3;
+    matbits_t ms1;
+    matbits_t ms2;
+    matbits_t ms3;
     fu_mbits_t t1;
     fu_mbits_t t2;
     fu_mbits_t t3;
@@ -98,14 +101,14 @@ package datapath_pkg;
   } rst_m_t;
 
   // defines the Function Units
-  typedef enum logic [2:0] {
-    FU_S_ALU    = 3'd0,
-    FU_S_LD_ST  = 3'd1,
-    FU_S_BRANCH = 3'd2
+  typedef enum logic [1:0] {
+    FU_S_ALU    = 2'd0,
+    FU_S_LD_ST  = 2'd1,
+    FU_S_BRANCH = 2'd2
   } fu_scalar_t;
 
   typedef enum logic [2:0] {
-    NA = 3'd0,
+    matrix_na = 3'd0,
     FU_M_LD_ST  = 3'd3,
     FU_M_GEMM   = 3'd4
   } fu_matrix_t;
@@ -203,6 +206,12 @@ package datapath_pkg;
     fu_ldst_t fu_ldst;
     fu_ldst_m_t fu_ldst_m;
     fu_gemm_t fu_gemm;
+    fu_bits_t fu_en;
+    word_t rdat1;
+    word_t rdat2;
+    matbits_t ms1;
+    matbits_t ms2;
+    matbits_t ms3;
   } issue_t;
 
   typedef struct packed {

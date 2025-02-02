@@ -20,7 +20,7 @@ module fust_s (
   always_comb begin
     fust = fuif.fust;
     
-    fust.op[fuif.fu] = fuif.en ? fuif.fust_row;
+    fust.op[fuif.fu] = fuif.en ? fuif.fust_row : fuif.fust.op[fuif.fu];
   end
 
 endmodule
