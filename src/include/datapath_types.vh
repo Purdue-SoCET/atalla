@@ -134,11 +134,11 @@ package datapath_pkg;
   } fu_ldst_m_ctr_t;
 
   typedef struct packed {
-    logic s_rw_en;
-    regbits_t s_rw;
-    logic m_rw_en;
-    matbits_t m_rw;
-    logic [WORD_W-1:0] s_wdata; //empty until execute
+    logic s_rw_en;  // scalar read write enable
+    regbits_t s_rw; // scalar read write register
+    logic m_rw_en;  // MAYBE: matrix read write matrix
+    matbits_t m_rw; // MATBE: matrix data
+    logic [WORD_W-1:0] s_wdata; //empty until execute (write data)
   } wb_t;
 
   // Pipeline Stage Structs
@@ -208,6 +208,14 @@ package datapath_pkg;
   typedef struct packed {
     word_t imemload;
   } fetch_t;
+
+  typedef struct packed {
+    word_t port_output;
+    regbits_t rs1;
+    regbits_t rs2;
+    fu_ldst_ctr_t fu_ldst_ctr;
+    wb_t wb;
+  } func_all_out_t;
 
 
 
