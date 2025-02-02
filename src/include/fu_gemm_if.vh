@@ -14,15 +14,26 @@ interface fu_gemm_if;
 
     //Inputs to latch
     logic flush, freeze;
+
+    //-----------------------------
+    //Inputs for enable
+    logic GEMM_enable;
+    logic ls_enable;
+
+    //Inputs for new weights
+    logic ls_in; //if ls_in[0] == 1, then load
+
+    //Outputs for new weights
+    logic new_weights;
     
     modport GEMM (
-        input fetch_p, flush, freeze,
-        output rs1, rs2, rs3, rd
+        input fetch_p, flush, freeze, GEMM_enable, ls_enable, ls_in,
+        output rs1, rs2, rs3, rd, new_weights
     );
 
     modport tb (
-        input rs1, rs2, rs3, rd,
-        output fetch_p, flush, freeze
+        input rs1, rs2, rs3, rd, new_weights,
+        output fetch_p, flush, freeze, GEMM_enable, ls_enable, ls_in
     );
 
 endinterface
