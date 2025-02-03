@@ -5,7 +5,7 @@ interface systolic_array_control_unit_if #(parameter array_dim = 4, parameter mu
   // Parameters
   // parameter array_dim = 4;    //4x4 systolic array
   // parameter MUL_LEN = 2,     // how long in cycles the mutliplication takes
-  //  parameter ADD_LEN = 3     // how long in cycles the addition takes
+  // parameter ADD_LEN = 3     // how long in cycles the addition takes
 
   // Signals
   logic weight_en;        // Current input bus is for array weights
@@ -20,18 +20,18 @@ interface systolic_array_control_unit_if #(parameter array_dim = 4, parameter mu
   logic [$clog2(mul_len+add_len)-1:0] MAC_count;     // Count signals for all MACs
   logic add_start;           // Start signals for all partial sum adders
   logic [$clog2(add_len)-1:0] add_count;           // Count signals for all partial sum adders
-  logic [array_dim-1:0] fifo_shift;       // Shift signal for FIFOS
-  logic [array_dim-1:0] ps_fifo_shift;    // Shift signal for partial sum FIFOS=
+  logic fifo_shift;       // Shift signal for FIFOS
+  logic out_fifo_shift;    // Shift signal for partial sum FIFOS=
   logic [$clog2(array_dim)-1:0] input_row;          // Which FIFO to load input into
   logic [$clog2(array_dim)-1:0] weight_row;         // Whi ch MAC row to load weights into
   logic [$clog2(array_dim)-1:0] partials_row;       // Which FIFO to load partials into
   logic [$clog2(array_dim)-1:0] row_en;             // Row enable for inputs/weights & partial sums
-  logic [$clog2(array_dim)-1:0] iteration;            // Which row the systolic array is outputing
+  logic [$clog2(3*array_dim)-1:0] iteration [2:0];            // Which row the systolic array is outputing
 
   // Control Unit Ports
   modport control_unit(
     input  weight_en, input_en, partial_en, row_en,
-    output fifo_has_space, fifo_shift, ps_fifo_shift, input_type, input_load, input_row, weight_load, weight_row, partials_load, partials_row, iteration, MAC_start, MAC_count, add_start, add_count
+    output fifo_has_space, fifo_shift, out_fifo_shift, input_type, input_load, input_row, weight_load, weight_row, partials_load, partials_row, iteration, MAC_start, MAC_count, add_start, add_count
   );
 endinterface
 
