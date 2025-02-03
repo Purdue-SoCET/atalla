@@ -8,86 +8,29 @@ module fu_gemm(
     fu_gemm_if.GEMM fugif
 );
 
-logic [3:0] next_reg1, next_reg2, next_reg3, next_regd;
-logic ready, next_ready;
-logic prev_rs1; // previous weights register
-logic next_new_weights;
-logic weights_flag, next_weights_flag;
-
-//pipeline later with weights
-always_ff @(posedge CLK, negedge nRST) begin
-    if(nRST == 0) begin
-        fugif.rs1 <= '0;
-        fugif.rs2 <= '0;
-        fugif.rs3 <= '0;
-        fugif.rd <= '0;
-        ready <= '0;
-
-        prev_rs1 <= 0;
-        new_weights <= 0;
-    end
-    else begin
-        fugif.rs1 <= next_reg1;
-        fugif.rs2 <= next_reg2;
-        fugif.rs3 <= next_reg3;
-        fugif.rd <= next_regd;
-        ready <= next_ready;
-
-        prev_rs1 <= next_reg1; 
-        new_weights <= next_new_weights;
+always_comb begin: //if there is enable, and hit (mem is ready)
+    if(fugif.gemm_enable) begin
+        fugif.gemm_matrix_num.rd = fugif.rd_in
+        fugif.gemm_matrix_num.rs1 = fugif.rs1_in
+        fugif.gemm_matrix_num.rs2 = fugif.rs2_in
+        fugif.gemm_matrix_num.rs3 = fugif.rs3_in
+        //if rs1 != prev OR LS to prev_rs1
+        fugif.new_weights = (fugif.rs1_in != prev_rs1) | (fugif.ls_enable && (fugif.rs1_in == prev_rs1));
     end
 end
 
-always_comb begin
-    next_reg1 = fugif.rs1;
-    next_reg2 = fugif.rs2;
-    next_reg3 = fugif.rs3;
-    next_regd = fugif.rd;
-    next_ready = ready;
+//Previous rs1 logic
+logic rs1, prev_rs1; // previous weights register
 
-    if(fugif.flush) begin
-        next_reg1 = '0;
-        next_reg2 = '0;
-        next_reg3 = '0;
-        next_regd = '0;
-        next_ready = '0;
+always_ff @(negedge fugif.gemm_enable, negedge nRST) begin
+    if(!nRST) begin
+        prev_rs1 <= '0;
     end
-    else if (fugif.freeze) begin
-        next_ready = 0; //want to not assert a ready value in case there is a freeze
-    end //no need for setting the next_regs because, default case takes care of this
-<<<<<<< HEAD
-    else if (fugif.GEMM_enable) begin // GEMM instr ready
-        next_reg1 = fugif.fetchp[10:7]; 
-        next_reg2 = fugif.fetchp[14:11];
-        next_reg3 = fugif.fetchp[18:15];
-        next_regd = fugif.fetchp[22:19];
-=======
-    else begin
-        next_reg1 = fugif.fetch_p[10:7]; 
-        next_reg2 = fugif.fetch_p[14:11];
-        next_reg3 = fugif.fetch_p[18:15];
-        next_regd = fugif.fetch_p[22:19];
->>>>>>> 62c86be7d3500bf67f82ccad666ad19d1b043eb6
-        next_ready = 1;
+    else begin //on the negative edge of enable we store the rs1 value for comparison for next enable
+        prev_rs1 <= fugif.rs1;
     end
 end
 
-//set the new weights signal
-always_comb begin
-    next_new_weights = new_weights;
 
-    if(fugif.fetchp[22:19] == prev_rs1) begin //if rs1 is same
-        next_new_weights = '0;
-    end
-    else if(fugif.fetchp[22:19] != prev_rs1) begin //if rs1 is differnt than prev, new weights
-        next_new_weights = '1;
-    end
-
-    if(ls_enable && ls_in[1]) begin //STORE matrix instruction
-        if(fugif.fetchp[22:19] = prev_rs1) begin //writing to previous weights
-            next_weights_flag = '1;
-        end
-    end
-end
 
 endmodule
