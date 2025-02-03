@@ -26,17 +26,17 @@ interface fu_gemm_if;
         new_weight: weights are new
         gemm_matrix_num: concatenation of {rd,rs3,rs2,rs1}
     */
-    logic new_weights;
+    logic new_weight;
     fu_gemm_t gemm_matrix_num
 
     modport GEMM (
-        input fetch_p, flush, freeze, gemm_enable, ls_enable, ls_in, gemm_hit,
-        output rs1, rs2, rs3, rd, new_weights
+        input gemm_enable, ls_enable, rs1_in, rs2_in, rs3_in, rd_in,
+        output new_weight, gemm_matrix_num
     );
 
     modport tb (
-        input rs1, rs2, rs3, rd, new_weights,
-        output fetch_p, flush, freeze, gemm_enable, ls_enable, ls_in, gemm_hit
+        input new_weight, gemm_matrix_num,
+        output gemm_enable, ls_enable, rs1_in, rs2_in, rs3_in, rd_in
     );
 
 endinterface

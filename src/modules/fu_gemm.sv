@@ -8,6 +8,9 @@ module fu_gemm(
     fu_gemm_if.GEMM fugif
 );
 
+logic ls_flag, nxt_ls_flag;
+logic prev_rs1;
+
 always_comb begin: //if there is enable, and hit (mem is ready)
     if(fugif.gemm_enable) begin
         fugif.gemm_matrix_num.rd = fugif.rd_in
@@ -15,22 +18,27 @@ always_comb begin: //if there is enable, and hit (mem is ready)
         fugif.gemm_matrix_num.rs2 = fugif.rs2_in
         fugif.gemm_matrix_num.rs3 = fugif.rs3_in
         //if rs1 != prev OR LS to prev_rs1
-        fugif.new_weights = (fugif.rs1_in != prev_rs1) | (fugif.ls_enable && (fugif.rs1_in == prev_rs1));
+        fugif.new_weights = (fugif.rs1_in != prev_rs1) | ls_flag;
     end
-end
 
-//Previous rs1 logic
-logic rs1, prev_rs1; // previous weights register
+    nxt_ls_flag = ls_flag | (fugif.ls_enable && (fugif.rs1_in == prev_rs1));
+end
 
 always_ff @(negedge fugif.gemm_enable, negedge nRST) begin
     if(!nRST) begin
         prev_rs1 <= '0;
     end
-    else begin //on the negative edge of enable we store the rs1 value for comparison for next enable
+    else if begin //on the negative edge of enable we store the rs1 value for comparison for next enable
         prev_rs1 <= fugif.rs1;
     end
 end
 
-
-
+always_ff @(posedge CLK, negedge fugif.gemm_enable, negedge nRST) begin
+    if(!nRST || !fugif.gemm_enable) begin
+        ls_flag <= '0;
+    end
+    else if begin 
+        ls_flag <= nxt_ls_flag;
+    end
+end
 endmodule
