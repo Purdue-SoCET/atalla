@@ -11,42 +11,77 @@ module fu_gemm_tb;
     always #(PERIOD/2) CLK++;
 
     fu_gemm_if fugif ();
-
-    test PROG (.CLK(CLK), .nRST(nRST), .fugif(fugif));
-
     fu_gemm DUT (.CLK(CLK), .nRST(nRST), .fugif(fugif));
 
-endmodule
+    int casenum;
+    string casename;
 
-program test (
-    input logic CLK, 
-    output logic nRST,
-    fu_gemm_if.tb fugif
-);
 initial begin
-    parameter PERIOD = 1;
-    nRST = 0;
-    
-    #(PERIOD * 10);
+    #(PERIOD);
+    casenum = '0;
+    casename = "nRST";
+
+    nRST = '1;
+    fugif.gemm_enable = '0;
+    fugif.ls_enable = '0;
+    fugif.rs1_in = '0;
+    fugif.rs2_in = '0;
+    fugif.rs3_in = '0;
+    fugif.rd_in = '0;
+
+    #(PERIOD);
 
     nRST = 1;
-    fugif.fetch_p = 32'hABCDEF01;
-    fugif.flush = 0;
-    fugif.freeze = 0;
 
-    #(PERIOD * 10);
+    #(PERIOD);
 
-    fugif.fetch_p = 32'h00FFAABB;
-    fugif.flush = 1;
-    fugif.freeze = 0;
+    //Test Case 1: Normal Input
+    casenum += 1;
+    casename = "Normal Input";
 
-    #(PERIOD * 10);
+    fugif.gemm_enable = '1;
+    fugif.rs1_in = 'h1;
+    fugif.rs2_in = 'h2;
+    fugif.rs3_in = 'h3;
+    fugif.rd_in = 'h4;
+
+    #(PERIOD);
+    fugif.gemm_enable = '0;
+    #(PERIOD);
+
+    //Test Case 2: Differnt RS1, new_weight = 1
+    casenum += 1;
+    casename = "Differnt RS1, new_weight = 1";
+
+    fugif.gemm_enable = '1;
+    fugif.rs1_in = 'h2;
+    fugif.rs2_in = 'h2;
+    fugif.rs3_in = 'h3;
+    fugif.rd_in = 'h4;
+
+    #(PERIOD);
+    fugif.gemm_enable = '0;
+    #(PERIOD);
     
-    fugif.fetch_p = 32'hFAAAAACC;
-    fugif.flush = 0;
-    fugif.freeze = 1;
+    //Test Case 3: Same RS1 throw LS, new_weight = 1
+    casenum += 1;
+    casename = "Same RS1 throw LS, new_weight = 1";
 
-    #(PERIOD * 10);
+    ls_enable = '1;
+    fugif.rs1_in = 'h2; //new weights should be high now
+
+    #(PERIOD);
+
+    fugif.gemm_enable = '1;
+    fugif.rs1_in = 'h2;
+    fugif.rs2_in = 'h2;
+    fugif.rs3_in = 'h3;
+    fugif.rd_in = 'h4;
+
+    #(PERIOD);
+    fugif.gemm_enable = '0;
+    #(PERIOD);
+
     $finish;
 end
 endprogram 
