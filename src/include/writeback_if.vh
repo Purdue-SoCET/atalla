@@ -10,13 +10,19 @@ interface writeback_if;
     import datapath_pkg::*;
 
     // Inputs from Functional Units
-    // 
+    // ALU_out, alu_done
+    // Scalar_load, L/S done
+    word_t alu_out, dmemload
+    logic load_done, alu_done
+    regbits_t reg_sel_alu, reg_sel_load
+
+    // Possible other done flags? 
     // Outputs of stage
-    wb_t wb;
+    wb_t wb_out;
     
-    modport IS (
-        input dispatch, flush, freeze, wb,
-        output out
+    modport wb (
+        input alu_out, dmemload, load_ready, alu_ready, reg_sel_alu, reg_sel_load,
+        output wb_out
     );
 
 endinterface
