@@ -43,7 +43,7 @@ package datapath_pkg;
     regbits_t rd;
     regbits_t rs1;
     regbits_t rs2;
-    word_t imm; //instr[31:7] TODO: double check this is right 
+    word_t imm; //instr[31:7] TO: double check this is right 
     fu_sbits_t t1;
     fu_sbits_t t2;
   } fust_s_row_t;
@@ -136,12 +136,15 @@ package datapath_pkg;
     matrix_mem_t mem_type;
   } fu_ldst_m_ctr_t;
 
+  // output for Writeback.sv
   typedef struct packed {
-    logic s_rw_en;  // scalar read write enable
+    logic s_rw_en;  // scalar read write reg enable
     regbits_t s_rw; // scalar read write register
-    logic m_rw_en;  // MAYBE: matrix read write matrix
-    matbits_t m_rw; // MATBE: matrix data
+    // logic m_rw_en;  // MAYBE: matrix read write matrix
+    // matbits_t m_rw; // MAYBE: matrix data
     logic [WORD_W-1:0] s_wdata; //empty until execute (write data)
+    logic alu_done; // ALU WB COMPLETE
+    logic load_done; // LOAD WB COMPLETE
   } wb_t;
 
   // Pipeline Stage Structs
@@ -217,14 +220,6 @@ package datapath_pkg;
   typedef struct packed {
     word_t imemload;
   } fetch_t;
-
-  typedef struct packed {
-    word_t port_output;
-    regbits_t rs1;
-    regbits_t rs2;
-    fu_ldst_ctr_t fu_ldst_ctr;
-    wb_t wb;
-  } func_all_out_t;
 
 
 
