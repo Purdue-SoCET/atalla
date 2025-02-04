@@ -84,7 +84,7 @@ module issue(
     always_comb begin : Regfile
       rfif.WEN   = isif.wb.s_rw_en;
       rfif.wsel  = isif.wb.s_rw;
-      rfif.wdata = isif.wb.s_wdata;
+      rfif.wdata = isif.s_wdata;
       rfif.rsel1 = s_rs1;
       rfif.rsel2 = s_rs2;
     end
@@ -196,6 +196,7 @@ module issue(
             //TODO:wait for wb to flag done and go back to emtpy/wait based on
             //incoming_instr
             //TODO:handle flushing
+
             next_fust_state[i] = FUST_EMPTY;//temp
           end
           default: next_fust_state = fust_state;
