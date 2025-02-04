@@ -46,6 +46,8 @@ module scoreboard(
       isif.n_fust_m_en = diif.n_fust_m_en;
       isif.n_fust_g_en = diif.n_fust_g_en;
 
+      isif.s_wdata = sbif.s_wdata;
+
       sbif.out = isif.out;
     end
 endmodule

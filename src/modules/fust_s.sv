@@ -21,6 +21,7 @@ module fust_s (
     fust = fuif.fust;
     
     fust.op[fuif.fu] = fuif.en ? fuif.fust_row : fuif.fust.op[fuif.fu];
+    fust.busy = fuif.busy;
   end
 
 endmodule

@@ -76,7 +76,6 @@ package datapath_pkg;
   } fu_matrix_t;
 
   typedef struct packed {
-    logic busy;
     regbits_t rd;
     regbits_t rs1;
     regbits_t rs2;
@@ -86,11 +85,11 @@ package datapath_pkg;
   } fust_s_row_t;
 
   typedef struct packed {
+    logic [2:0] busy;
     fust_s_row_t [2:0] op;
   } fust_s_t;
 
   typedef struct packed {
-    logic busy;
     matbits_t rd;
     regbits_t rs1;
     regbits_t rs2;
@@ -101,11 +100,11 @@ package datapath_pkg;
   } fust_m_row_t;
 
   typedef struct packed {
+    logic busy;
     fust_m_row_t op;
   } fust_m_t;
 
   typedef struct packed {
-    logic busy;
     matbits_t rd;
     matbits_t ms1;
     matbits_t ms2;
@@ -116,6 +115,7 @@ package datapath_pkg;
   } fust_g_row_t;
 
   typedef struct packed {
+    logic busy;
     fust_g_row_t op;
   } fust_g_t;
 

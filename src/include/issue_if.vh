@@ -20,7 +20,7 @@ interface issue_if;
     logic flush, freeze;
 
     // Inputs from writeback
-    wb_ctr_t wb;
+    wb_t wb;
     regbits_t s_wdata;
     
     // Outputs of stage

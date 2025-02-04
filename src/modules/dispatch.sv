@@ -127,7 +127,6 @@ module dispatch(
       // To Issue **Combinationally**
       diif.n_fust_s_en   = (cuif.fu_t == FU_S_T & ~diif.flush & ~diif.freeze & ~hazard);
       diif.n_fu_s        = cuif.fu_s;
-      diif.n_fust_s.busy = 1'b0;
       diif.n_fust_s.rd   = s_rd;
       diif.n_fust_s.rs1  = s_rs1;
       diif.n_fust_s.rs2  = s_rs2;
@@ -137,7 +136,6 @@ module dispatch(
 
       diif.n_fust_m_en   = (cuif.fu_t == FU_M_T & ~flush & ~diif.freeze & ~hazard);
       //n_fu_m           = 1'b0; // only one row in FUST
-      diif.n_fust_m.busy = 1'b0;
       diif.n_fust_m.rd   = m_rd;
       diif.n_fust_m.rs1  = s_rs1;
       diif.n_fust_m.rs2  = s_rs2;
@@ -147,7 +145,6 @@ module dispatch(
 
       diif.n_fust_g_en   = (cuif.fu_t == FU_G_T & ~flush & ~diif.freeze & ~hazard);
       //n_fu_g           = 1'b0; // only one row in FUST
-      diif.n_fust_g.busy = 1'b0;
       diif.n_fust_g.rd   = m_rd;
       diif.n_fust_g.ms1  = m_rs1;
       diif.n_fust_g.ms2  = m_rs2;
