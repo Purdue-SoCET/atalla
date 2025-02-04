@@ -180,6 +180,14 @@ package datapath_pkg;
     matbits_t m_rw; // still need m_rw in wb for dispatch loopback to clear RST
   } wb_ctr_t;
 
+  typedef struct packed {
+    logic s_rw_en;  // scalar read write reg enable
+    regbits_t s_rw; // scalar read write register
+    logic [WORD_W-1:0] s_wdata; //empty until execute (write data)
+    logic load_done;  // Load Done Signal for Score Board
+    logic alu_done;   // Alu Done Signal for Score Board
+  } wb_t;
+
   /**********
     DISPATCH
   **********/
