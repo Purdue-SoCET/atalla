@@ -222,11 +222,11 @@ module issue(
               // stall ALU from writing
               next_fust_state[i] = FUST_EX;
             end
-            if ((i == 1 & (fusif.fust.op[0].t1 == 2'd1 | fusif.fust.op[0].t2 == 2'd1) &
-                (fust_state[0] == FUST_WAIT | fust_state[0] == FUST_RDY) &
-                age[0] > age[1]) begin
+            if ((i == 1 & (fusif.fust.op[0].t1 == 2'd1 | fusif.fust.op[0].t2 == 2'd1) &&
+                (fust_state[0] == FUST_WAIT | fust_state[0] == FUST_RDY) &&
+                age[0] > age[1])) begin
               // stall LD/ST from writing
-              next_fust_state[i] == FUST_EX;
+              next_fust_state[i] = FUST_EX;
             end
 
           end
