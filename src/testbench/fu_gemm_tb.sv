@@ -22,7 +22,7 @@ initial begin
 
     nRST = '0;
     fugif.gemm_enable = '0;
-    fugif.ls_enable = '0;
+    fugif.new_weight_in = '0;
     fugif.rs1_in = '0;
     fugif.rs2_in = '0;
     fugif.rs3_in = '0;
@@ -39,6 +39,7 @@ initial begin
     casename = "Normal Input";
 
     fugif.gemm_enable = '1;
+    fugif.new_weight_in = '0;
     fugif.rs1_in = 'h1;
     fugif.rs2_in = 'h2;
     fugif.rs3_in = 'h3;
@@ -46,6 +47,11 @@ initial begin
 
     #(PERIOD);
     fugif.gemm_enable = '0;
+    fugif.new_weight_in = '0;
+    fugif.rs1_in = '0;
+    fugif.rs2_in = '0;
+    fugif.rs3_in = '0;
+    fugif.rd_in = '0;
     #(PERIOD);
 
     //Test Case 2: Differnt RS1, new_weight = 1
@@ -53,6 +59,7 @@ initial begin
     casename = "Differnt RS1, new_weight = 1";
 
     fugif.gemm_enable = '1;
+    fugif.new_weight_in = '1;
     fugif.rs1_in = 'h2;
     fugif.rs2_in = 'h2;
     fugif.rs3_in = 'h3;
@@ -60,25 +67,11 @@ initial begin
 
     #(PERIOD);
     fugif.gemm_enable = '0;
-    #(PERIOD);
-    
-    //Test Case 3: Same RS1 throw LS, new_weight = 1
-    casenum += 1;
-    casename = "Same RS1 throw LS, new_weight = 1";
-
-    fugif.ls_enable = '1;
-    fugif.rs1_in = 'h2; //new weights should be high now
-
-    #(PERIOD);
-
-    fugif.gemm_enable = '1;
-    fugif.rs1_in = 'h2;
-    fugif.rs2_in = 'h2;
-    fugif.rs3_in = 'h3;
-    fugif.rd_in = 'h4;
-
-    #(PERIOD);
-    fugif.gemm_enable = '0;
+    fugif.new_weight_in = '0;
+    fugif.rs1_in = '0;
+    fugif.rs2_in = '0;
+    fugif.rs3_in = '0;
+    fugif.rd_in = '0;
     #(PERIOD);
 
     $finish;
