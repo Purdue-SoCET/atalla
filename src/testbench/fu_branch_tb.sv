@@ -1,10 +1,8 @@
 `include "fu_branch_if.vh"
-// `include "types_pkg.vh"
 `include "isa_types.vh"
 
 `timescale 1ns / 10ps
 
-// import types_pkg::*;
 import isa_pkg::*;
 
 module fu_branch_tb;
