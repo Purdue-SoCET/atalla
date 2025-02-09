@@ -70,14 +70,14 @@ module dispatch(
 
     always_comb begin : Hazard_Logic
       case (cuif.fu_s)
-        FU_S_ALU:     s_busy = diif.fust_s.op[FU_S_ALU].busy;
-        FU_S_LD_ST:   s_busy = diif.fust_s.op[FU_S_LD_ST].busy;
-        FU_S_BRANCH:  s_busy = diif.fust_s.op[FU_S_BRANCH].busy;
+        FU_S_ALU:     s_busy = diif.fust_s.busy[FU_S_ALU];
+        FU_S_LD_ST:   s_busy = diif.fust_s.busy[FU_S_LD_ST];
+        FU_S_BRANCH:  s_busy = diif.fust_s.busy[FU_S_BRANCH];
         default: s_busy = 1'b0;
       endcase
       case (cuif.fu_m)
-        FU_M_LD_ST: m_busy = diif.fust_m.op.busy;
-        FU_M_GEMM:    m_busy = diif.fust_g.op.busy;
+        FU_M_LD_ST: m_busy = diif.fust_m.busy;
+        FU_M_GEMM:    m_busy = diif.fust_g.busy;
         default: m_busy = 1'b0;
       endcase
 
