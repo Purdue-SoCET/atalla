@@ -5,7 +5,7 @@
 
 module fu_gemm_tb;
 
-    parameter PERIOD = 10;
+    parameter PERIOD = 2;
     logic CLK = 0, nRST;
 
     always #(PERIOD/2) CLK++;
@@ -17,11 +17,10 @@ module fu_gemm_tb;
     string casename;
 
 initial begin
-    #(PERIOD);
     casenum = '0;
     casename = "nRST";
 
-    nRST = '1;
+    nRST = '0;
     fugif.gemm_enable = '0;
     fugif.ls_enable = '0;
     fugif.rs1_in = '0;
@@ -67,7 +66,7 @@ initial begin
     casenum += 1;
     casename = "Same RS1 throw LS, new_weight = 1";
 
-    ls_enable = '1;
+    fugif.ls_enable = '1;
     fugif.rs1_in = 'h2; //new weights should be high now
 
     #(PERIOD);
@@ -84,4 +83,4 @@ initial begin
 
     $finish;
 end
-endprogram 
+endmodule

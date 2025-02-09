@@ -27,7 +27,7 @@ interface fu_gemm_if;
         gemm_matrix_num: concatenation of {rd,rs3,rs2,rs1}
     */
     logic new_weight;
-    fu_gemm_t gemm_matrix_num
+    fu_gemm_t gemm_matrix_num;
 
     modport GEMM (
         input gemm_enable, ls_enable, rs1_in, rs2_in, rs3_in, rd_in,
