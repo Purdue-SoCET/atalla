@@ -12,7 +12,8 @@ mls:
 
 wb:
 	vlog -sv +incdir+./src/include ./src/testbench/writeback_tb.sv ./src/modules/writeback.sv
-	vsim -voptargs="+acc" work.writeback_tb
+	vsim -voptargs="+acc" work.writeback_tb -do "do ./src/waves/writeback.do; run -all"
+
 
 %:
 	vlog -sv ./src/testbench/$*_tb.sv ./src/modules/$*.sv +incdir+./src/include/ 
