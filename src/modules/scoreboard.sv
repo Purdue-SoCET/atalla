@@ -27,7 +27,7 @@ module scoreboard(
       diif.fust_s = isif.fust_s;
       diif.fust_m = isif.fust_m;
       diif.fust_g = isif.fust_g;
-      diif.wb = sbif.wb;
+      diif.wb = sbif.wb_ctrl;
 
       isif.dispatch = diif.out;
       isif.flush = sbif.flush;

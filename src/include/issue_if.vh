@@ -20,11 +20,11 @@ interface issue_if;
     logic flush, freeze;
 
     // Inputs from execute
-    ex_t ex; //branch and matrix done signals
+    // ex_t ex; //branch and matrix done signals
 
     // Inputs from writeback
     wb_t wb; //alu and ld/st done signals
-    regbits_t s_wdata;
+    word_t s_wdata;
     
     // Outputs of stage
     issue_t out;

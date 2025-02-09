@@ -205,7 +205,7 @@ module issue(
             //TODO:handle flushing on speculation
             if (isif.wb.s_rw_en & isif.wb.alu_done & (i == 0)) begin
               next_fust_state[i] = incoming_instr[i] ? FUST_WAIT : FUST_EMPTY;
-            end else if (isif.wb_s_rw_en & isif.wb.load_done & (i == 1)) begin
+            end else if (isif.wb.s_rw_en & isif.wb.load_done & (i == 1)) begin
               next_fust_state[i] = incoming_instr[i] ? FUST_WAIT : FUST_EMPTY;
             end
           end
