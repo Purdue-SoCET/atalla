@@ -143,7 +143,8 @@ program test (
 
         @(posedge CLK);
 
-        rtype_instr(RTYPE, 5'd10, 5'd11, 5'd12, ADD_SUB, ADD); // (opcode, rd, rs1, rs2, funct3, funct7)
+        // (opcode, rd, rs1, rs2, funct3, funct7)
+        rtype_instr(RTYPE, 5'd10, 5'd11, 5'd12, ADD_SUB, ADD); 
         rtype_instr(RTYPE, 5'd15, 5'd10, 5'd12, ADD_SUB, ADD);
 
         // once that instruction is done and wb sends done, send second instruction

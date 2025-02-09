@@ -97,17 +97,17 @@ module issue(
       fusif.en       = isif.n_fust_s_en;
       fusif.fu       = isif.n_fu_s;
       fusif.fust_row = isif.n_fust_s;
-      fusif.busy[0]  = fust_state[0] != FUST_EMPTY;
-      fusif.busy[1]  = fust_state[1] != FUST_EMPTY;
-      fusif.busy[2]  = fust_state[2] != FUST_EMPTY;
+      fusif.busy[0]  = next_fust_state[0] != FUST_EMPTY;
+      fusif.busy[1]  = next_fust_state[1] != FUST_EMPTY;
+      fusif.busy[2]  = next_fust_state[2] != FUST_EMPTY;
 
       fumif.en       = isif.n_fust_m_en;
       fumif.fust_row = isif.n_fust_m;
-      fumif.busy     = fust_state[3] != FUST_EMPTY;
+      fumif.busy     = next_fust_state[3] != FUST_EMPTY;
 
       fugif.en       = isif.n_fust_g_en;
       fugif.fust_row = isif.n_fust_g;
-      fugif.busy     = fust_state[4] != FUST_EMPTY;
+      fugif.busy     = next_fust_state[4] != FUST_EMPTY;
     end
 
     always_ff @ (posedge CLK, negedge nRST) begin: Age_Latch

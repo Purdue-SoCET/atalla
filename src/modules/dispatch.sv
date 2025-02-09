@@ -70,9 +70,9 @@ module dispatch(
 
     always_comb begin : Hazard_Logic
       case (cuif.fu_s)
-        FU_S_ALU:     s_busy = diif.fust_s.busy[FU_S_ALU];
-        FU_S_LD_ST:   s_busy = diif.fust_s.busy[FU_S_LD_ST];
-        FU_S_BRANCH:  s_busy = diif.fust_s.busy[FU_S_BRANCH];
+        FU_S_ALU:     s_busy = diif.fust_s.busy[FU_S_ALU - 1];
+        FU_S_LD_ST:   s_busy = diif.fust_s.busy[FU_S_LD_ST - 1];
+        FU_S_BRANCH:  s_busy = diif.fust_s.busy[FU_S_BRANCH - 1];
         default: s_busy = 1'b0;
       endcase
       case (cuif.fu_m)
@@ -83,7 +83,7 @@ module dispatch(
 
       WAW = (cuif.m_mem_type == M_LOAD | cuif.fu_m == FU_M_GEMM) ? rstmif.status.idx[m_rd].busy : 
             (cuif.s_reg_write) ? rstsif.status.idx[s_rd].busy: 1'b0;
-      hazard = s_busy | m_busy | WAW; //TODO: remember to tie this hazard back to stall the fetch to not squash this stage on a hazard
+      hazard = (s_busy | m_busy | WAW); //TODO: remember to tie this hazard back to stall the fetch to not squash this stage on a hazard
     end
 
     always_comb begin : Reg_Status_Tables
