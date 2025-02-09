@@ -67,7 +67,7 @@ module fu_scalar_ls (
                     next_state = idle;
                 end
             end
-            latched: begin
+            latched: begin 
                 if (sls_if.mem_type == STORE) begin
                     sls_if.dmemaddr = latched_dmemaddr;
                     sls_if.dmemWEN = latched_dmemWEN;

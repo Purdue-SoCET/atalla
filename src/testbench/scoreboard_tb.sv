@@ -144,9 +144,11 @@ program test (
         @(posedge CLK);
 
         rtype_instr(RTYPE, 5'd10, 5'd11, 5'd12, ADD_SUB, ADD); // (opcode, rd, rs1, rs2, funct3, funct7)
-        rtype_instr(RTYPE, 5'd15, 5'd10, 5'd12, ADD_SUB, ADD); // check to see if the dependency of r10 is correctly handled
+        itype_instr(ITYPE_LW, 5'd15, 5'd10, '0, 12'd100); // check to see if the dependency of r10 is correctly handled
 
         // TODO: figure out wb stuff for finishing an instruction - allow the first instruction to go through
+        
+
 
         // once that instruction is done and wb sends done, send second instruction
         // allow second instruction to go through 
@@ -169,6 +171,9 @@ program test (
 
         @(posedge CLK);
         @(posedge CLK);
+        @(posedge CLK);
+        @(posedge CLK);
+        
 
         $finish;
     end
