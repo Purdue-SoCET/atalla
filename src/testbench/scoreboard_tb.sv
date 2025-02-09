@@ -144,33 +144,9 @@ program test (
         @(posedge CLK);
 
         rtype_instr(RTYPE, 5'd10, 5'd11, 5'd12, ADD_SUB, ADD); // (opcode, rd, rs1, rs2, funct3, funct7)
-        itype_instr(ITYPE_LW, 5'd15, 5'd10, '0, 12'd100); // check to see if the dependency of r10 is correctly handled
-
-        // TODO: figure out wb stuff for finishing an instruction - allow the first instruction to go through
-        
+        rtype_instr(RTYPE, 5'd15, 5'd10, 5'd12, ADD_SUB, ADD);
 
 
-        // once that instruction is done and wb sends done, send second instruction
-        // allow second instruction to go through 
-
-        // do the same as above but add a load/store instruction for the third instruction 
-        // let it all go through 
-
-        // do three s type instructions all back to back no dependencies
-        
-        // do three s type instructions all back to back with dependencies 
-
-        // do three i type (lw) instructions all back to back no dependencies
-        
-        // do three i type (lw) instructions all back to back with dependencies 
-
-        // mix and match the above
-
-        // go into matrix stuff now, similar to the above stuff
-
-
-        @(posedge CLK);
-        @(posedge CLK);
         @(posedge CLK);
         @(posedge CLK);
         

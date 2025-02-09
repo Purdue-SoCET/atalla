@@ -27,6 +27,7 @@ module scoreboard(
       diif.fust_s = isif.fust_s;
       diif.fust_m = isif.fust_m;
       diif.fust_g = isif.fust_g;
+      diif.wb = sbif.wb;
 
       isif.dispatch = diif.out;
       isif.flush = sbif.flush;
@@ -38,12 +39,14 @@ module scoreboard(
       isif.n_fust_g = diif.n_fust_g;
 
       isif.n_fu_s = diif.n_fu_s;
-      isif.n_fu_m = diif.n_fu_m;
-      isif.n_fu_g = diif.n_fu_g;
+      // isif.n_fu_m = diif.n_fu_m;
+      // isif.n_fu_g = diif.n_fu_g;
 
       isif.n_fust_s_en = diif.n_fust_s_en;
       isif.n_fust_m_en = diif.n_fust_m_en;
       isif.n_fust_g_en = diif.n_fust_g_en;
+
+      isif.s_wdata = sbif.s_wdata;
 
       sbif.out = isif.out;
     end
