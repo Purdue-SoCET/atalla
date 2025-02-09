@@ -1,6 +1,6 @@
-// `include "isa_types.vh"
-// `include "datapath_types.vh"
-// `include "fu_gemm_if.vh"
+`include "isa_types.vh"
+`include "datapath_types.vh"
+`include "fu_gemm_if.vh"
 
 module fu_gemm(
     input logic CLK, 
