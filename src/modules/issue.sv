@@ -203,11 +203,32 @@ module issue(
           FUST_RDY: next_fust_state[i] = (next_oldest_rdy[i]) ? FUST_EX : FUST_RDY;
           FUST_EX: begin
             //TODO:handle flushing on speculation
+
             if (isif.wb.s_rw_en & isif.wb.alu_done & (i == 0)) begin
               next_fust_state[i] = incoming_instr[i] ? FUST_WAIT : FUST_EMPTY;
             end else if (isif.wb_s_rw_en & isif.wb.load_done & (i == 1)) begin
               next_fust_state[i] = incoming_instr[i] ? FUST_WAIT : FUST_EMPTY;
             end
+            //TODO: handle dones from branch and matrix FUs
+
+            // WAR HANDLING
+            //writing to reg A, where an older FUST thats in RDY or WAIT (hasnt
+            //read register) needs to stall the write to A until all reads to
+            //reg A are in EX
+            
+            if ((i == 0 & (fusif.fust.op[1].t1 == 2'd0 | fusif.fust.op[1].t2 == 2'd0)) &
+                (fust_state[1] == FUST_WAIT | fust_state[1] == FUST_RDY) &
+                age[1] > age[0]) begin
+              // stall ALU from writing
+              next_fust_state[i] = FUST_EX;
+            end
+            if ((i == 1 & (fusif.fust.op[0].t1 == 2'd1 | fusif.fust.op[0].t2 == 2'd1) &
+                (fust_state[0] == FUST_WAIT | fust_state[0] == FUST_RDY) &
+                age[0] > age[1]) begin
+              // stall LD/ST from writing
+              next_fust_state[i] == FUST_EX;
+            end
+
           end
           default: next_fust_state = fust_state;
         endcase
