@@ -1,11 +1,14 @@
 `include "fu_branch_if.vh"
-`include "datapath_types.vh"
+// `include "datapath_types.vh"
+`include "isa_types.vh"
 
 module fu_branch(
   input logic CLK, nRST, ihit,
   fu_branch_if.btb fubif
 );
-  import datapath_pkg::*;
+  // import datapath_pkg::*;
+  // import types_pkg::*;
+  import isa_pkg::*;
 
   parameter BUFFER_SIZE = 256;
   parameter IDX_SIZE    = 8;
