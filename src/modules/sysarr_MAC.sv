@@ -10,7 +10,7 @@ module sysarr_MAC (
    always_comb begin
     mac.out_accumulate = '0;
     if (mac.count == 4)begin
-        mac.out_accumulate = (mac.in_value * mac.weight) + mac.in_accumulate;;
+        mac.out_accumulate = (mac.in_value * mac.weight) + mac.in_accumulate;
     end
 end
 endmodule
