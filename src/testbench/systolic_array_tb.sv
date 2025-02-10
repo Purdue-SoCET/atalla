@@ -151,104 +151,104 @@ module systolic_array_tb();
     memory_if.array_in = '0;
     memory_if.array_in_partials = '0;
     
-    // // 2x2 Example
-    // $display("BASIC 2X2 Example with Simple Partials");
-    // file = $fopen("matops.txt", "r");
-    // get_matrices();
-    // $system("/bin/python3 /home/asicfab/a/wagne329/tensor-core/matrix_mul.py matops");
-    // out_file = $fopen("matops_output.txt", "r");
-    // get_m_output();
-    // reset();
-    // //LOAD WEIGHTS
-    // row_load(.rtype(2'b00), .rnum(2'd0), .rinput(m_weights[0]), .rpartial(64'b0));
-    // row_load(.rtype(2'b00), .rnum(2'd1), .rinput(m_weights[1]), .rpartial(64'b0));
-    // row_load(.rtype(2'b00), .rnum(2'd2), .rinput(m_weights[2]), .rpartial(64'b0));
-    // row_load(.rtype(2'b00), .rnum(2'd3), .rinput(m_weights[3]), .rpartial(64'b0));
-    // //LOAD INPUTS AND PARTIALS TOGETHER
-    // row_load(.rtype(2'b11), .rnum(2'd0), .rinput(m_inputs[0]), .rpartial(m_partials[0]));
-    // repeat(2) @(posedge tb_clk); //iteration 0 delay of 6 for mul_len+add_len+1
-    // row_load(.rtype(2'b11), .rnum(2'd1), .rinput(m_inputs[1]), .rpartial(m_partials[1]));
-    // repeat(5) @(posedge tb_clk); //iteration 1
-    // row_load(.rtype(2'b11), .rnum(2'd2), .rinput(m_inputs[2]), .rpartial(m_partials[2]));
-    // repeat(5) @(posedge tb_clk); //iteration 2
-    // row_load(.rtype(2'b11), .rnum(2'd3), .rinput(m_inputs[3]), .rpartial(m_partials[3]));
-    // repeat(5) @(posedge tb_clk); //iteration 3
-    // repeat(6) @(posedge tb_clk); //iteration 4
-    // repeat(6) @(posedge tb_clk); //iteration 5
-    // repeat(6) @(posedge tb_clk); //iteration 6
-    // repeat(6) @(posedge tb_clk); //iteration 7
-    // repeat(6) @(posedge tb_clk); //iteration 8
-    // repeat(6) @(posedge tb_clk); //iteration 9
-    // repeat(6) @(posedge tb_clk); //iteration 10
-    // repeat(6) @(posedge tb_clk); //iteration 11
-    // repeat(6) @(posedge tb_clk); //iteration 12
-    // $display("array should be drained %d", memory_if.drained);
-    // $display("fifos should have space  %d", memory_if.fifo_has_space);
-    // $fclose(file);
-    // $fclose(out_file);
-    // //BASIC 2x2 with different timing
-    // $display("BASIC 2X2 Example with timing changes Simple Partials");
-    // //LOAD WEIGHTS
-    // row_load(.rtype(2'b00), .rnum(2'd0), .rinput({16'd1, 16'd2, 16'd0, 16'd0}), .rpartial(64'b0));
-    // row_load(.rtype(2'b00), .rnum(2'd1), .rinput({16'd3, 16'd4, 16'd0, 16'd0}), .rpartial(64'b0));
-    // row_load(.rtype(2'b00), .rnum(2'd2), .rinput({16'd0, 16'd0, 16'd0, 16'd0}), .rpartial(64'b0));
-    // row_load(.rtype(2'b00), .rnum(2'd3), .rinput({16'd0, 16'd0, 16'd0, 16'd0}), .rpartial(64'b0));
-    // //LOAD INPUTS AND PARTIALS TOGETHER
-    // row_load(.rtype(2'b11), .rnum(2'd0), .rinput({16'd5, 16'd6, 16'd0, 16'd0}), .rpartial({16'd0, 16'd0, 16'd1, 16'd1}));
-    // repeat(2) @(posedge tb_clk); //iteration 0 delay of 6 for mul_len+add_len+1
-    // row_load(.rtype(2'b11), .rnum(2'd1), .rinput({16'd7, 16'd8, 16'd0, 16'd0}), .rpartial({16'd0, 16'd0, 16'd1, 16'd1}));
-    // repeat(5) @(posedge tb_clk); //iteration 1
-    // row_load(.rtype(2'b11), .rnum(2'd2), .rinput({16'd0, 16'd0, 16'd0, 16'd0}), .rpartial({16'd1, 16'd1, 16'd1, 16'd1}));
-    // repeat(5) @(posedge tb_clk); //iteration 2
-    // row_load(.rtype(2'b11), .rnum(2'd3), .rinput({16'd0, 16'd0, 16'd0, 16'd0}), .rpartial({16'd1, 16'd1, 16'd1, 16'd1}));
-    // repeat(5) @(posedge tb_clk); //iteration 3
-    // repeat(6) @(posedge tb_clk); //iteration 4
-    // repeat(6) @(posedge tb_clk); //iteration 5
-    // repeat(6) @(posedge tb_clk); //iteration 6
-    // repeat(6) @(posedge tb_clk); //iteration 7
-    // repeat(6) @(posedge tb_clk); //iteration 8
-    // repeat(6) @(posedge tb_clk); //iteration 9
-    // repeat(6) @(posedge tb_clk); //iteration 10
-    // repeat(6) @(posedge tb_clk); //iteration 11
-    // repeat(6) @(posedge tb_clk); //iteration 12
-    // $display("array should be drained %d", memory_if.drained);
-    // $display("fifos should have space  %d", memory_if.fifo_has_space);
-    // // FULL 4x4 Single Operation Example
-    // $display("Full 4X4 Example");
-    // file = $fopen("matops1.txt", "r");
-    // get_matrices();
-    // $system("/bin/python3 /home/asicfab/a/wagne329/tensor-core/matrix_mul.py matops1");
-    // out_file = $fopen("matops1_output.txt", "r");
-    // get_m_output();
-    // reset();
-    // // LOAD WEIGHTS
-    // row_load(.rtype(2'b00), .rnum(2'd0), .rinput(m_weights[0]), .rpartial(64'b0));
-    // row_load(.rtype(2'b00), .rnum(2'd1), .rinput(m_weights[1]), .rpartial(64'b0));
-    // row_load(.rtype(2'b00), .rnum(2'd2), .rinput(m_weights[2]), .rpartial(64'b0));
-    // row_load(.rtype(2'b00), .rnum(2'd3), .rinput(m_weights[3]), .rpartial(64'b0));
-    // //LOAD INPUTS AND PARTIALS TOGETHER
-    // row_load(.rtype(2'b11), .rnum(2'd0), .rinput(m_inputs[0]), .rpartial(m_partials[0]));
-    // repeat(2) @(posedge tb_clk); //iteration 0 delay of 6 for mul_len+add_len+1
-    // row_load(.rtype(2'b11), .rnum(2'd1), .rinput(m_inputs[1]), .rpartial(m_partials[1]));
-    // repeat(5) @(posedge tb_clk); //iteration 1
-    // row_load(.rtype(2'b11), .rnum(2'd2), .rinput(m_inputs[2]), .rpartial(m_partials[2]));
-    // repeat(5) @(posedge tb_clk); //iteration 2
-    // row_load(.rtype(2'b11), .rnum(2'd3), .rinput(m_inputs[3]), .rpartial(m_partials[3]));
-    // repeat(5) @(posedge tb_clk); // iteration 3
-    // repeat(6) @(posedge tb_clk); // iteration 4
-    // repeat(6) @(posedge tb_clk); // iteration 5
-    // repeat(6) @(posedge tb_clk); // iteration 6
-    // repeat(6) @(posedge tb_clk); // iteration 7
-    // repeat(6) @(posedge tb_clk); // iteration 8
-    // repeat(6) @(posedge tb_clk); // iteration 9
-    // repeat(6) @(posedge tb_clk); // iteration 10
-    // repeat(6) @(posedge tb_clk); // iteration 11
-    // repeat(6) @(posedge tb_clk); // iteration 12
-    // $display("array should be drained %d", memory_if.drained);
-    // $display("fifos should have space  %d", memory_if.fifo_has_space);
-    // $fclose(file);
-    // $fclose(out_file);
-    // reset();
+    // 2x2 Example
+    $display("BASIC 2X2 Example with Simple Partials");
+    file = $fopen("matops.txt", "r");
+    get_matrices();
+    $system("/bin/python3 /home/asicfab/a/wagne329/tensor-core/matrix_mul.py matops");
+    out_file = $fopen("matops_output.txt", "r");
+    get_m_output();
+    reset();
+    //LOAD WEIGHTS
+    row_load(.rtype(2'b00), .rnum(2'd0), .rinput(m_weights[0]), .rpartial(64'b0));
+    row_load(.rtype(2'b00), .rnum(2'd1), .rinput(m_weights[1]), .rpartial(64'b0));
+    row_load(.rtype(2'b00), .rnum(2'd2), .rinput(m_weights[2]), .rpartial(64'b0));
+    row_load(.rtype(2'b00), .rnum(2'd3), .rinput(m_weights[3]), .rpartial(64'b0));
+    //LOAD INPUTS AND PARTIALS TOGETHER
+    row_load(.rtype(2'b11), .rnum(2'd0), .rinput(m_inputs[0]), .rpartial(m_partials[0]));
+    repeat(2) @(posedge tb_clk); //iteration 0 delay of 6 for mul_len+add_len+1
+    row_load(.rtype(2'b11), .rnum(2'd1), .rinput(m_inputs[1]), .rpartial(m_partials[1]));
+    repeat(4) @(posedge tb_clk); //iteration 1
+    row_load(.rtype(2'b11), .rnum(2'd2), .rinput(m_inputs[2]), .rpartial(m_partials[2]));
+    repeat(4) @(posedge tb_clk); //iteration 2
+    row_load(.rtype(2'b11), .rnum(2'd3), .rinput(m_inputs[3]), .rpartial(m_partials[3]));
+    repeat(4) @(posedge tb_clk); //iteration 3
+    repeat(5) @(posedge tb_clk); //iteration 4
+    repeat(5) @(posedge tb_clk); //iteration 5
+    repeat(5) @(posedge tb_clk); //iteration 6
+    repeat(5) @(posedge tb_clk); //iteration 7
+    repeat(5) @(posedge tb_clk); //iteration 8
+    repeat(5) @(posedge tb_clk); //iteration 9
+    repeat(5) @(posedge tb_clk); //iteration 10
+    repeat(5) @(posedge tb_clk); //iteration 11
+    repeat(5) @(posedge tb_clk); //iteration 12
+    $display("array should be drained %d", memory_if.drained);
+    $display("fifos should have space  %d", memory_if.fifo_has_space);
+    $fclose(file);
+    $fclose(out_file);
+    //BASIC 2x2 with different timing
+    $display("BASIC 2X2 Example with timing changes Simple Partials");
+    //LOAD WEIGHTS
+    row_load(.rtype(2'b00), .rnum(2'd0), .rinput({16'd1, 16'd2, 16'd0, 16'd0}), .rpartial(64'b0));
+    row_load(.rtype(2'b00), .rnum(2'd1), .rinput({16'd3, 16'd4, 16'd0, 16'd0}), .rpartial(64'b0));
+    row_load(.rtype(2'b00), .rnum(2'd2), .rinput({16'd0, 16'd0, 16'd0, 16'd0}), .rpartial(64'b0));
+    row_load(.rtype(2'b00), .rnum(2'd3), .rinput({16'd0, 16'd0, 16'd0, 16'd0}), .rpartial(64'b0));
+    //LOAD INPUTS AND PARTIALS TOGETHER
+    row_load(.rtype(2'b11), .rnum(2'd0), .rinput({16'd5, 16'd6, 16'd0, 16'd0}), .rpartial({16'd0, 16'd0, 16'd1, 16'd1}));
+    repeat(2) @(posedge tb_clk); //iteration 0 delay of 6 for mul_len+add_len+1
+    row_load(.rtype(2'b11), .rnum(2'd1), .rinput({16'd7, 16'd8, 16'd0, 16'd0}), .rpartial({16'd0, 16'd0, 16'd1, 16'd1}));
+    repeat(4) @(posedge tb_clk); //iteration 1
+    row_load(.rtype(2'b11), .rnum(2'd2), .rinput({16'd0, 16'd0, 16'd0, 16'd0}), .rpartial({16'd1, 16'd1, 16'd1, 16'd1}));
+    repeat(4) @(posedge tb_clk); //iteration 2
+    row_load(.rtype(2'b11), .rnum(2'd3), .rinput({16'd0, 16'd0, 16'd0, 16'd0}), .rpartial({16'd1, 16'd1, 16'd1, 16'd1}));
+    repeat(4) @(posedge tb_clk); //iteration 3
+    repeat(5) @(posedge tb_clk); //iteration 4
+    repeat(5) @(posedge tb_clk); //iteration 5
+    repeat(5) @(posedge tb_clk); //iteration 6
+    repeat(5) @(posedge tb_clk); //iteration 7
+    repeat(5) @(posedge tb_clk); //iteration 8
+    repeat(5) @(posedge tb_clk); //iteration 9
+    repeat(5) @(posedge tb_clk); //iteration 10
+    repeat(5) @(posedge tb_clk); //iteration 11
+    repeat(5) @(posedge tb_clk); //iteration 12
+    $display("array should be drained %d", memory_if.drained);
+    $display("fifos should have space  %d", memory_if.fifo_has_space);
+    // FULL 4x4 Single Operation Example
+    $display("Full 4X4 Example");
+    file = $fopen("matops1.txt", "r");
+    get_matrices();
+    $system("/bin/python3 /home/asicfab/a/wagne329/tensor-core/matrix_mul.py matops1");
+    out_file = $fopen("matops1_output.txt", "r");
+    get_m_output();
+    reset();
+    // LOAD WEIGHTS
+    row_load(.rtype(2'b00), .rnum(2'd0), .rinput(m_weights[0]), .rpartial(64'b0));
+    row_load(.rtype(2'b00), .rnum(2'd1), .rinput(m_weights[1]), .rpartial(64'b0));
+    row_load(.rtype(2'b00), .rnum(2'd2), .rinput(m_weights[2]), .rpartial(64'b0));
+    row_load(.rtype(2'b00), .rnum(2'd3), .rinput(m_weights[3]), .rpartial(64'b0));
+    //LOAD INPUTS AND PARTIALS TOGETHER
+    row_load(.rtype(2'b11), .rnum(2'd0), .rinput(m_inputs[0]), .rpartial(m_partials[0]));
+    repeat(2) @(posedge tb_clk); //iteration 0 delay of 6 for mul_len+add_len+1
+    row_load(.rtype(2'b11), .rnum(2'd1), .rinput(m_inputs[1]), .rpartial(m_partials[1]));
+    repeat(4) @(posedge tb_clk); //iteration 1
+    row_load(.rtype(2'b11), .rnum(2'd2), .rinput(m_inputs[2]), .rpartial(m_partials[2]));
+    repeat(4) @(posedge tb_clk); //iteration 2
+    row_load(.rtype(2'b11), .rnum(2'd3), .rinput(m_inputs[3]), .rpartial(m_partials[3]));
+    repeat(4) @(posedge tb_clk); // iteration 3
+    repeat(5) @(posedge tb_clk); // iteration 4
+    repeat(5) @(posedge tb_clk); // iteration 5
+    repeat(5) @(posedge tb_clk); // iteration 6
+    repeat(5) @(posedge tb_clk); // iteration 7
+    repeat(5) @(posedge tb_clk); // iteration 8
+    repeat(5) @(posedge tb_clk); // iteration 9
+    repeat(5) @(posedge tb_clk); // iteration 10
+    repeat(5) @(posedge tb_clk); // iteration 11
+    repeat(5) @(posedge tb_clk); // iteration 12
+    $display("array should be drained %d", memory_if.drained);
+    $display("fifos should have space  %d", memory_if.fifo_has_space);
+    $fclose(file);
+    $fclose(out_file);
+    reset();
     // PIPELINED EXAMPLE
     $display("Pipelined Example");
     file = $fopen("matops2.txt", "r");
