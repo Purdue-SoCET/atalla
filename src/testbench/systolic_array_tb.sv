@@ -197,7 +197,7 @@ module systolic_array_tb();
     row_load(.rtype(2'b11), .rnum(2'd0), .rinput({16'd5, 16'd6, 16'd0, 16'd0}), .rpartial({16'd0, 16'd0, 16'd1, 16'd1}));
     repeat(2) @(posedge tb_clk); //iteration 0 delay of 6 for mul_len+add_len+1
     row_load(.rtype(2'b11), .rnum(2'd1), .rinput({16'd7, 16'd8, 16'd0, 16'd0}), .rpartial({16'd0, 16'd0, 16'd1, 16'd1}));
-    repeat(4) @(posedge tb_clk); //iteration 1
+    repeat(24) @(posedge tb_clk); //iteration 1
     row_load(.rtype(2'b11), .rnum(2'd2), .rinput({16'd0, 16'd0, 16'd0, 16'd0}), .rpartial({16'd1, 16'd1, 16'd1, 16'd1}));
     repeat(4) @(posedge tb_clk); //iteration 2
     row_load(.rtype(2'b11), .rnum(2'd3), .rinput({16'd0, 16'd0, 16'd0, 16'd0}), .rpartial({16'd1, 16'd1, 16'd1, 16'd1}));
@@ -206,7 +206,7 @@ module systolic_array_tb();
     repeat(5) @(posedge tb_clk); //iteration 5
     repeat(5) @(posedge tb_clk); //iteration 6
     repeat(5) @(posedge tb_clk); //iteration 7
-    repeat(5) @(posedge tb_clk); //iteration 8
+    repeat(25) @(posedge tb_clk); //iteration 8
     repeat(5) @(posedge tb_clk); //iteration 9
     repeat(5) @(posedge tb_clk); //iteration 10
     repeat(5) @(posedge tb_clk); //iteration 11
