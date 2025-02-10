@@ -147,6 +147,20 @@ program test (
         rtype_instr(RTYPE, 5'd10, 5'd11, 5'd12, ADD_SUB, ADD); 
         rtype_instr(RTYPE, 5'd15, 5'd10, 5'd12, ADD_SUB, ADD);
 
+
+        @(posedge CLK);
+
+        sbif.wb.alu_done = '1;
+        sbif.wb_ctrl.s_rw_en = '1;
+        sbif.wb_ctrl.s_rw = 5'd10;
+
+        sbif.wb.s_rw_en = '1;
+        sbif.wb.s_rw = 5'd10;
+
+        @(posedge CLK);
+        @(posedge CLK);
+        @(posedge CLK);
+
         // once that instruction is done and wb sends done, send second instruction
         // allow second instruction to go through 
         // do the same as above but add a load/store instruction for the third instruction 

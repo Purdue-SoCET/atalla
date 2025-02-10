@@ -93,7 +93,7 @@ module dispatch(
       // and the instruction is actually moving forward
       rstsif.di_write = 1'b0;
       if (cuif.s_reg_write) begin
-        if (~WAW & ~flush & ~diif.freeze) begin // WAW a little strange, will need to take a look going forward
+        if (~hazard & ~flush & ~diif.freeze) begin // hazard a little strange, will need to take a look going forward
           rstsif.di_sel = s_rd;
           rstsif.di_write = 1'b1;
           rstsif.di_tag = (cuif.fu_s == FU_S_LD_ST) ? 2'd2 : 2'd1; // 1 for ALU, 2 for LD
@@ -102,7 +102,7 @@ module dispatch(
 
       // maybe add a m_reg_write in cuif to simplify
       if (cuif.m_mem_type == M_LOAD | cuif.fu_m == FU_M_GEMM) begin
-        if (~WAW & ~flush & ~diif.freeze) begin
+        if (~hazard & ~flush & ~diif.freeze) begin
           rstmif.di_sel = m_rd;
           rstmif.di_write = 1'b1;
           rstmif.di_tag = (cuif.fu_m == FU_M_LD_ST) ? 2'd2 : 2'd1; // 1 for GEMM, 2 for LD
@@ -112,14 +112,14 @@ module dispatch(
       // writeback needs to update the RST on commits
       if (diif.wb.s_rw_en) begin
         rstsif.wb_sel = diif.wb.s_rw;
-        // rstsif.wb_write = diif.wb.rw_en;
-        rstsif.wb_write = '0;
+        rstsif.wb_write = '1;
+        // rstsif.wb_write = '0;
       end
 
       if (diif.wb.m_rw_en) begin
         rstmif.wb_sel = diif.wb.m_rw;
-        // rstmif.wb_write = diif.wb.m_rw_en;
-        rstmif.wb_write = '0;
+        rstmif.wb_write = '1;
+        // rstmif.wb_write = '0;
       end
     end
 
