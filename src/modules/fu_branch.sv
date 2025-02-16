@@ -8,6 +8,7 @@ module fu_branch(
   import isa_pkg::*;
 
   logic zero;
+  logic actual_outcome;
 
   always_comb begin : ZERO_LOGIC
     zero = '0;
@@ -20,16 +21,28 @@ module fu_branch(
   end
 
   always_comb begin : BRANCH_LOGIC
-    fubif.branch_outcome = '0;
+    // updated_pc is corrected PC after branch resolution (ignore during correct prediction)
+    // update_pc is original PC of branch instr being resolved (used to update the BTB)
+
+    fubif.branch_outcome = 1'b0;
     fubif.updated_pc = fubif.current_pc + 32'd4;
+    fubif.misprediction = 1'b0;
+    fubif.correct_pc = fubif.current_pc + 32'd4;
+    fubif.branch_target = '0;
+    fubif.update_btb = 1'b0;
+    fubif.update_pc = '0;
 
-    if (fubif.branch) begin
-      casez (fubif.branch_gate_sel)
-        1'b0: fubif.branch_outcome = zero;    // 1'b0: BEQ, BGE, BGEU
-        1'b1: fubif.branch_outcome = ~zero;   // 1'b1: BNE, BLT, BLTU
-      endcase
+    if (fubif.branch) {
+      actual_outcome = fubif.branch_gate_sel ? ~zero : zero;
+      fubif.branch_outcome = actual_outcome;
+      fubif.updated_pc = actual_outcome ? (fubif.current_pc + fubif.imm) : (fubif.current_pc + 32'd4);
 
-      if (fubif.branch_outcome) fubif.updated_pc = fubif.current_pc + fubif.imm;
-    end
+      fubif.misprediction = (actual_outcome != fubif.predicted_outcome);
+      fubif.correct_pc = fubif.updated_pc;
+
+      fubif.update_btb = 1'b1;
+      fubif.update_pc = fubif.current_pc;
+      fubif.branch_target = fubif.current_pc + fubif.imm;
+    }
   end
 endmodule
