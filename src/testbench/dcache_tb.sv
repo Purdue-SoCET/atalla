@@ -297,7 +297,7 @@ import cpu_types_pkg::*;
       // check in memory after halt if these memory are written
     
       #1000
-      $finish;
+      $stop;
       
 
     end

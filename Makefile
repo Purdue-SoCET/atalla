@@ -1,4 +1,4 @@
-SCRDIR = /home/asicfab/a/socet192/SOCET/tensor-core/src/scripts
+SCRDIR = /home/asicfab/a/wong371/william_wk/tensor-core/src/scripts
 SIMTIME = 100us             # Default simulation run time
 
 # modelsim viewing options
