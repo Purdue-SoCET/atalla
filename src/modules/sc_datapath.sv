@@ -6,14 +6,14 @@
 `include "dispatch_if.vh"
 `include "issue_if.vh"
 `include "regfile_if.vh"
-`include "execute_if.vh"
+// `include "execute_if.vh"
 `include "fu_branch_if.vh"
 `include "fu_alu_if.vh"
 `include "fu_scalar_ls_if.vh"
 `include "fu_scalar_ls_if.vh"
 `include "fu_matrix_ls_if.vh"
 `include "fu_gemm_if.vh"
-`include "fu_branch_pred.vh"
+`include "fu_branchpred.vh"
 
 module sc_datapath
 (
@@ -24,7 +24,7 @@ module sc_datapath
     fetch FETCH (CLK, nrst, fif);
 
     control_unit_if cuif();
-    control_unit (CLK, nrst, cuif);
+    control_unit cu(CLK, nrst, cuif);
 
     scoreboard_if sbif();
     scoreboard SCOREBOARD (CLK, nsrt, sbif);
@@ -33,7 +33,7 @@ module sc_datapath
     dispatch DISPATCH (CLK, nrst, dif);
     
     issue_if isif();
-    issue ISSUE (CLK, nrst, isif)
+    issue ISSUE (CLK, nrst, isif);
     
     regfile_if rfif();
     regfile REGFILE (CLK, nrst, fuif);

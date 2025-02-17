@@ -1,6 +1,6 @@
 `ifndef FU_ALU_IF_VH
 `define FU_ALU_IF_VH
-`include "cpu_types.vh"
+// `include "types.vh"
 `include "datapath_types.vh"
 
 interface fu_alu_if;
