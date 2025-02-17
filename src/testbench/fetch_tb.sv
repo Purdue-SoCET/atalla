@@ -50,7 +50,8 @@ module fetch_tb;
     tb_test_num = tb_test_num + 1;
     fif.imemload = 32'hACE1ACE1;
     fif.misprediction = 1'b1;
-    #(PERIOD * 16);
+    fif.correct_pc = 32'hABCDEF01;
+    #(PERIOD * 6);
     check_output(fif.instr, 32'hACE1ACE1, tb_test_case);
     check_output(fif.pc, 32'h00001000, tb_test_case);
 
@@ -58,18 +59,19 @@ module fetch_tb;
     tb_test_num = tb_test_num + 1;
     fif.misprediction = 1'b0;
     fif.imemload = 32'hACE2ACE2;
-    #(PERIOD * 16);
+    #(PERIOD * 6);
     check_output(fif.instr, 32'hACE2ACE2, tb_test_case);
     check_output(fif.pc, 32'hDEADBEEF, tb_test_case);
 
     tb_test_case = "Stall Test";
     tb_test_num = tb_test_num + 1;
     fif.misprediction = 1'b0;
+    fif.correct_pc = 32'd0;
     fif.imemload = 32'hACE2ACE2;
     fif.stall = 1'b1;
     fif.correct_target = 32'h00004000;
     fif.pc_prediction = 32'hAABBCCDD;
-    #(PERIOD * 16);
+    #(PERIOD * 6);
     check_output(fif.instr, 32'hACE2ACE2, tb_test_case);
     check_output(fif.pc, 32'hDEADBEEF, tb_test_case);
 
@@ -78,10 +80,11 @@ module fetch_tb;
     fif.misprediction = 1'b0;
     fif.imemload = 32'hACE2ACE2;
     fif.stall = 1'b0;
+    fif.correct_pc = 32'd0;
     fif.dispatch_free = 1'b0;
     fif.correct_target = 32'h00004000;
     fif.pc_prediction = 32'hAABBCCDD;
-    #(PERIOD * 16);
+    #(PERIOD * 6);
     check_output(fif.instr, 32'hACE2ACE2, tb_test_case);
     check_output(fif.pc, 32'hDEADBEEF, tb_test_case);
 
