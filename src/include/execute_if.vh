@@ -48,16 +48,7 @@ interface execute_if;
           mls_mhit, mls_enable, mls_ls_in, mls_rd_in, mls_rs_in, mls_rs_in, mls_stride_in, mls_imm_in,
           // GEMM FU
           gemm_fetch_p, gemm_flush, gemm_freeze,
-    output// Branch FU
-          bfu_pred_outcome, bfu_hit, bfu_pred_target
-          // Scalar ALU FU
-          salu_negative, salu_overflow, salu_port_output, salu_zero,
-          // Scalar Load/Store FU
-          sls_dmemaddr, sls_dmemREN, sls_dmemWEN, sls_dmemstore, sls_dmemload, sls_dhit,
-          // MLS FU
-          mls_done, mls_ls_out, mls_rd_out, mls_address, mls_stride_out
-          // Gemm FU
-         eif.gemm_rs1, eif.gemm_rs2, eif.gemm_rs3, eif.gemm_rd
+    output eif_output_t,
   );
 
   modport tb (
