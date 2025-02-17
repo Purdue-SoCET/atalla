@@ -171,7 +171,7 @@ module control_unit(
         //         cu_if.imm = {instr[31:12], 12'b0};
         //     end
         HALT: cu_if.halt = '1;
-        7'b1000111: // ld.m
+        LD_M: 
             begin 
                 cu_if.imm = {{22{instr[17]}}, instr[16:7]};
                 // cu_if.i_flag = '1;
@@ -183,7 +183,7 @@ module control_unit(
                 cu_if.m_reg_write = '1;
                 cu_if.fu_t = FU_M_T;
             end
-        7'b1010111: //st.m
+        ST_M: //st.m
             begin
                 cu_if.imm = {{22{instr[17]}}, instr[16:7]};
                 cu_if.stride = instr[22:18]; // register
@@ -192,7 +192,7 @@ module control_unit(
                 cu_if.matrix_rd = instr[31:28];
                 cu_if.fu_t = FU_M_T;
             end
-        7'b1110111: // gemm.m
+        GEMM: // gemm.m
             begin
                 cu_if.fu_m = FU_M_GEMM;
                 cu_if.m_reg_write = '1;

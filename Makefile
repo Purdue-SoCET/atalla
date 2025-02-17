@@ -19,6 +19,9 @@ wb:
 	vlog -sv ./src/testbench/$*_tb.sv ./src/modules/$*.sv +incdir+./src/include/ 
 	vsim -voptargs="+acc" work.$*_tb -do "view objects; do ./src/waves/$*.do; run -all;" -onfinish stop
 
+%_vlint:
+	verilator --lint-only src/modules/$*.sv -Isrc/include -Isrc/modules
+
 # ./src/waves/$*.do 
 
 # dispatch:

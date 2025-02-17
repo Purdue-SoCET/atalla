@@ -10,11 +10,14 @@ interface fust_g_if;
   //logic fu; //dont need op idx with 1 row in FUST
   fust_g_row_t fust_row;
 
+  // Inputs from issue
+  logic busy;
+
   // Outputs of stage
   fust_g_t fust;
     
   modport FUSTG (
-      input en, fust_row,
+      input en, fust_row, busy,
       output fust
   );
 
