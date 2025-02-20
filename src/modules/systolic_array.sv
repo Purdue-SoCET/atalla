@@ -3,7 +3,6 @@
 `include "systolic_array_MAC_if.vh"
 `include "systolic_array_add_if.vh"
 `include "systolic_array_FIFO_if.vh"
-`include "systolic_array_PS_FIFO_if.vh"
 `include "systolic_array_OUT_FIFO_if.vh"
 
 module systolic_array #(
@@ -31,7 +30,7 @@ module systolic_array #(
     logic [WIDTH*N-1:0] weights [N-1:0];
 
     // Generate variables
-    genvar i,j,k,l,m,n,o,p;
+    genvar i,j,l,m,n,o,p;
 
     // Instantiate Control Unit interface
     systolic_array_control_unit_if #(.array_dim(N), .mul_len(2), .add_len(3)) control_unit_if();
@@ -50,14 +49,15 @@ module systolic_array #(
     // Instantiate Input Fifos
     systolic_array_FIFO_if #(.array_dim(N), .data_w(WIDTH)) input_fifos_ifs[N-1:0] (); 
     // Instantiate Partial Fifos
-    systolic_array_PS_FIFO_if #(.array_dim(N), .data_w(WIDTH)) ps_fifos_ifs[N-1:0] (); 
+    systolic_array_FIFO_if #(.array_dim(N), .data_w(WIDTH)) ps_fifos_ifs[N-1:0] (); 
     // Instantiate Output Fifos
     systolic_array_OUT_FIFO_if #(.array_dim(N), .data_w(WIDTH)) out_fifos_ifs[N-1:0] (); 
     always_comb begin : control_unit_connections
         control_unit_if.weight_en = memory.weight_en;
         control_unit_if.input_en = memory.input_en;
         control_unit_if.partial_en = memory.partial_en;
-        control_unit_if.row_en = memory.row_en;
+        control_unit_if.row_in_en = memory.row_in_en;
+        control_unit_if.row_ps_en = memory.row_ps_en;
         memory.fifo_has_space = control_unit_if.fifo_has_space;
     end
     //Selection Muxes for the input bus
@@ -104,22 +104,20 @@ module systolic_array #(
                 .nRST(nRST),
                 .fifo(input_fifos_ifs[j].FIFO));
             assign input_fifos_ifs[j].load = loadi[j];
-            assign input_fifos_ifs[j].shift = control_unit_if.fifo_shift;
+            assign input_fifos_ifs[j].shift = control_unit_if.in_fifo_shift[j];
             assign input_fifos_ifs[j].load_values = top_input;
-            for (k = 0; k < N; k++) begin
-                assign MAC_inputs[j][k] = input_fifos_ifs[j].out[(N - k) * WIDTH - 1 -: WIDTH];
-            end
+            assign MAC_inputs[j][0] = input_fifos_ifs[j].out;
         end
     endgenerate
     // Partial Sum Generation
     generate
         for (l = 0; l < N; l++) begin
-            sysarr_PS_FIFO ps_fifos (
+            sysarr_FIFO ps_fifos (
                 .clk(clk),
                 .nRST(nRST),
-                .ps_fifo(ps_fifos_ifs[l].PS_FIFO));
+                .fifo(ps_fifos_ifs[l].FIFO));
             assign ps_fifos_ifs[l].load = loadps[l];
-            assign ps_fifos_ifs[l].shift = control_unit_if.fifo_shift;
+            assign ps_fifos_ifs[l].shift = control_unit_if.ps_fifo_shift[l];
             assign ps_fifos_ifs[l].load_values = memory.array_in_partials;
             assign ps_add_inputs[l] = ps_fifos_ifs[l].out;
         end
@@ -149,10 +147,14 @@ module systolic_array #(
                 assign mac_ifs[m*N + n].count = control_unit_if.MAC_count;
                 assign mac_ifs[m*N + n].weight = weights[n][(N - m) * WIDTH - 1 -: WIDTH];
                 assign mac_ifs[m*N + n].in_value = MAC_inputs[m][n];
+                assign mac_ifs[m*N + n].MAC_shift = control_unit_if.MAC_shift;
                 if (m == 0) begin : no_accumulate
                     assign mac_ifs[m*N + n].in_accumulate = '0;
                 end else begin : accumulation_blk
                     assign mac_ifs[m*N + n].in_accumulate = MAC_outputs[m-1][n];
+                end
+                if (n != 0)begin : macInputForwarding
+                    assign MAC_inputs[m][n] = mac_ifs[m*N + (n-1)].in_pass;
                 end
                 assign nxt_MAC_outputs[m][n] = mac_ifs[m*N + n].out_accumulate;
             end
