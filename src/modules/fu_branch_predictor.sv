@@ -39,7 +39,7 @@ module fu_branch_predictor(
 
   always_ff @(posedge CLK, negedge nRST) begin : REG_LOGIC
     if (nRST == 1'b0) begin
-      buffer <= '0;
+      buffer[0] <= '0;
     end else begin
       // update_btb should be high when branch instruction is processed
       if (fubpif.update_btb) begin
