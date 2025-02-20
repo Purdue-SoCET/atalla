@@ -22,14 +22,26 @@ module sysarr_control_unit #(
     logic [$clog2(3*N)-1:0] nxt_iteration [2:0];
     logic [2:0] iteration_full;             // whether there is an iteration in this slot: 001 means an iteration in first slot 
     logic [2:0] nxt_iteration_full;
-    logic [1:0] input_tracker;
-    logic [1:0] data_loaded;
-    logic [1:0] nxt_data_loaded;
-    logic MAC_done; // flag for if the MAC is done and when data_loaded and mac_done the next mac starts
+    logic input_loading;        // only continue with execution if input row is loaded
+    logic [$clog2(N)-1:0] curr_input_row;   // current input row to check
+    logic partial_loading;      // only continue with execution if partial row is loaded
+    logic [$clog2(N)-1:0] curr_partial_row; // current partial row to check
+    logic output_loading;       // we are creating the output 
+    logic [N-1:0] in_data_loaded;       // registers for saving what input rows we have loaded so far
+    logic [N-1:0] ps_data_loaded;       // registers for saving what partials rows we have loaded so far
+    logic [N-1:0] nxt_in_data_loaded;
+    logic [N-1:0] nxt_ps_data_loaded;
+    logic input_fully_loaded;           // flag for input data fully loaded so we can start tracking the next input
+    logic [1:0] partial_fully_loaded;         // flag for partial data fully loaded so we can start tracking the next partials just use count for pipelining guarentees
+    logic nxt_input_fully_loaded;
+    logic [1:0] nxt_partial_fully_loaded;
+    logic ready;                        // ready for next MAC cycle / iteration
+    logic MAC_done;              // flag for if the MAC is inactive
     logic nxt_MAC_done;
-    integer i,j,k;
+    integer a,b,f,i,j,k,l,m,n;
     // we have space for another instruction to start loading in inputs 
     assign cu.iteration = iteration;
+
     always_comb begin : input_buses // if we are receiving inputs tell the fifos where to load them :D
         cu.input_type = 1'b0; 
         cu.input_row = '0;
@@ -39,21 +51,21 @@ module sysarr_control_unit #(
         cu.partials_row = '0;
         cu.partials_load = 1'b0;
         if (cu.input_en) begin
-            cu.input_row = cu.row_en;
+            cu.input_row = cu.row_in_en;
             cu.input_load = 1'b1;
         end else if (cu.weight_en) begin
             cu.input_type = 1'b1;
-            cu.weight_row = cu.row_en;
+            cu.weight_row = cu.row_in_en;
             cu.weight_load = 1'b1;
         end
         if (cu.partial_en) begin
-            cu.partials_row = cu.row_en;
+            cu.partials_row = cu.row_ps_en;
             cu.partials_load = 1'b1;
         end
     end
     
     // start an instruction the cycle after the first row of input loads (only need first entry)
-    assign start_flag = cu.input_en && (cu.row_en == 0);
+    assign start_flag = cu.input_en && (cu.row_in_en == 0);
 
     // iteration tracker
     always_ff @(posedge clk, negedge nRST) begin
@@ -78,6 +90,7 @@ module sysarr_control_unit #(
                 end
             end
         end
+        // needs to be much more complicated
         for (j = 0; j < 3; j++)begin // counting logic
             if (nxt_iteration_full[j] && nxt_MAC_start)begin // if there is an iteration counter in this slot and a mac cycle is about to start
                 nxt_iteration[j] = iteration[j] + 1;
@@ -91,10 +104,27 @@ module sysarr_control_unit #(
     
     // fifo shifts and enables
     always_comb begin
-        cu.fifo_shift = '0;
+        cu.in_fifo_shift = '0;
+        cu.ps_fifo_shift = '0;
         cu.out_fifo_shift = '0;
-        if (nxt_MAC_start) begin
-            cu.fifo_shift = 1'b1;
+        cu.MAC_shift = '0;
+        for (f = 0; f < N; f++)begin
+            for (a = 0; a < 3; a++) begin
+                if (iteration_full[a] && ((f < iteration[a]) && (f + N >= iteration[a])))begin
+                    //5,8 0 6,9 1 7,10 2 8,11 3 iteration_start,iteration_end, f
+                    cu.in_fifo_shift[f] = nxt_MAC_start;
+                end
+            end
+            // if (output_loading) begin  // shift each  fifo n times
+            for (b = 0; b < 3; b++) begin
+                if (iteration_full[b] && ((f + N < iteration[b]) && (f + 2 * N >= iteration[b])))begin
+                    cu.ps_fifo_shift[f] = nxt_MAC_start;
+                end
+            end
+            // end
+        end
+        if (|iteration_full)begin
+            cu.MAC_shift = cu.MAC_start;
         end
         if (cu.add_count == ADD_LEN-1) begin
             cu.out_fifo_shift = 1'b1;
@@ -114,39 +144,80 @@ module sysarr_control_unit #(
     end
     always_ff @(posedge clk, negedge nRST) begin
         if(nRST == 1'b0)begin
-            data_loaded <= '0; 
+            in_data_loaded <= '0;
+            ps_data_loaded <= '0;
+            input_fully_loaded <= '0;
+            partial_fully_loaded <= '0;
         end else begin
-            data_loaded <= nxt_data_loaded;
+            in_data_loaded <= nxt_in_data_loaded;
+            ps_data_loaded <= nxt_ps_data_loaded;
+            input_fully_loaded <= nxt_input_fully_loaded;
+            partial_fully_loaded <= nxt_partial_fully_loaded;
         end 
     end
     always_comb begin
-        nxt_data_loaded = data_loaded;
+        nxt_in_data_loaded = in_data_loaded;
+        nxt_ps_data_loaded = ps_data_loaded;
+        nxt_input_fully_loaded = input_fully_loaded;
+        nxt_partial_fully_loaded = partial_fully_loaded;
+        for (k = 0; k < 3; k++)begin
+            if (iteration_full[k])begin
+                if (iteration[k] == N && cu.MAC_start)begin
+                    nxt_input_fully_loaded = 1'b0;
+                end else if (iteration[k] == 2 * N + 1 && cu.MAC_start)begin
+                    nxt_partial_fully_loaded -= 1;
+                end
+            end
+        end
         if (cu.input_en) begin
-            nxt_data_loaded[0] = 1'b1;
+            nxt_in_data_loaded[cu.row_in_en] = 1'b1;
         end
         if (cu.partial_en) begin
-            nxt_data_loaded[1] = 1'b1;
+            nxt_ps_data_loaded[cu.row_ps_en] = 1'b1;
         end
-        if(cu.MAC_start) begin//if(data_loaded == 2'b11 && cu.MAC_start)begin //reset state if another MAC starts which means that data was successfully loaded in array
-            nxt_data_loaded = '0;
+        if (&nxt_in_data_loaded)begin
+            nxt_input_fully_loaded = 1'b1;
+            nxt_in_data_loaded = '0;
+        end
+        if (&nxt_ps_data_loaded)begin
+            nxt_partial_fully_loaded += 1;
+            nxt_ps_data_loaded = '0;
         end
     end
-
-    always_comb begin // input tracker tracks the iterations if an input is being loaded.
-        input_tracker = '0; //no operations
-        for (k = 0; k < 3; k++)begin
-            if (iteration_full[k] && iteration[k] != 3 * N)begin
-                input_tracker = 2'b01; //there is an operation happening but its done loading
-                if (iteration[k] < N)begin
-                    input_tracker = 2'b11; //there is an operation happening and its not done loading
-                    break;
-                end
+    always_comb begin // tracks if a gemm is still loading inputs or partial sums
+        input_loading = '0;
+        curr_input_row = '0;
+        partial_loading = '0; 
+        curr_partial_row = '0;
+        output_loading = '0; 
+        for (l = 0; l < 3; l++)begin
+            if ((start_flag || iteration_full[l]) && iteration[l] < N)begin
+                input_loading = 1'b1;
+                /* verilator lint_off WIDTHTRUNC */
+                curr_input_row = iteration[l];
+                /* verilator lint_off WIDTHTRUNC */
+                break;
+            end
+        end
+        for (m = 0; m < 3; m++)begin
+            if (iteration_full[m] && iteration[m] <= 2 * N && iteration[m] > N)begin
+                partial_loading = 1'b1;
+                /* verilator lint_off WIDTHTRUNC */
+                curr_partial_row = iteration[m] - (N + 1);
+                /* verilator lint_off WIDTHTRUNC */
+                break;
+            end
+        end
+        for (n = 0; n < 3; n++)begin
+            if (iteration_full[n] && iteration[n] > N)begin
+                output_loading = 1'b1;
+                break;
             end
         end
     end
     // tells the memory subsystem if the input fifo has space for another gemm
     // if any iteration slot is still in the backend of the fifos then there is no space
-    assign cu.fifo_has_space = input_tracker == 2'b01 || input_tracker == 2'b00;
+    assign cu.fifo_has_space = input_loading == 1'b0 & partial_loading == 1'b0;
     
     always_comb begin
         nxt_MAC_count = cu.MAC_count;
@@ -156,12 +227,24 @@ module sysarr_control_unit #(
         if (cu.MAC_count > 0 || cu.MAC_start) begin 
             nxt_MAC_count = cu.MAC_count + 1;
         end
-        // set flage of mac done high if count == max
-        if ((cu.MAC_count >= (ADD_LEN + MUL_LEN - 2)) || ~|iteration_full)begin // 
+        // set flag of mac done high if count == max
+        if ((cu.MAC_count >= (ADD_LEN + MUL_LEN - 2)) || ~|iteration_full)begin  
             nxt_MAC_done = 1'b1;
         end
-        /*if we loaded something or there is not loading to be done and the MAC is done*/
-        if((&data_loaded || input_tracker == 2'b01) & MAC_done)begin 
+        /*if mac is done then we evaluate if inputs/partials for the next iteration are ready*/
+        ready = 0;
+        if (MAC_done)begin
+            if (input_loading & partial_loading)begin // an input and partial from two gemms are concurrently loading need to wait for both
+                ready = (in_data_loaded[curr_input_row] || input_fully_loaded) && (ps_data_loaded[curr_partial_row] || |partial_fully_loaded);
+            end else if (input_loading)begin // input being loaded
+                ready = in_data_loaded[curr_input_row] || input_fully_loaded;
+            end else if (partial_loading)begin //input loaded but waiting for partials add all loaded signal
+                ready = ps_data_loaded[curr_partial_row] || |partial_fully_loaded;
+            end else begin // output being produced
+                ready = |iteration_full;
+            end
+        end
+        if(ready)begin 
             nxt_MAC_start = 1'b1;
             nxt_MAC_count = '0;
             nxt_MAC_done = 1'b0;
@@ -178,15 +261,11 @@ module sysarr_control_unit #(
             cu.add_count <= nxt_add_count;
         end 
     end
-    integer q;
     always_comb begin
         nxt_add_start = 1'b0;
         nxt_add_count = cu.add_count;
-        for (q = 0; q < 3; q++)begin
-            if (iteration[q] > N && cu.MAC_start)begin
-                nxt_add_start = 1'b1;
-                break;
-            end
+        if (output_loading && cu.MAC_start)begin
+            nxt_add_start = 1'b1;
         end
         if (cu.add_start || cu.add_count > 0) begin
             nxt_add_count = cu.add_count + 1;

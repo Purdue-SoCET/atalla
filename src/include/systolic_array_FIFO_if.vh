@@ -10,7 +10,7 @@ interface systolic_array_FIFO_if #(parameter array_dim = 4, parameter data_w = 1
   logic load;     // FIFO load signal
   logic shift;    // FIFO shift signal
   logic [data_w*array_dim-1:0] load_values;   // Load for a row of a matrix
-  logic [data_w*array_dim-1:0] out;           // Final array_dim value to be seen by array
+  logic [data_w-1:0] out;           // Final array_dim value to be seen by array
   // Memory Ports
   modport FIFO(
     input  load, shift, load_values, 

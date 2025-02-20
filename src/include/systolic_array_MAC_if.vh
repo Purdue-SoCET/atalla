@@ -16,13 +16,15 @@ interface systolic_array_MAC_if #(parameter data_w = 16, parameter mul_len = 2, 
   /* verilator lint_off UNUSEDSIGNAL */
   logic [data_w-1:0] weight;                    // Input weight value to be pre-loaded
   logic [data_w-1:0] in_value;                  // Input value to be multiplied
+  logic MAC_shift;                              // shift the input to the next array
+  logic [data_w-1:0] in_pass;                  // Input value to be passed to next MAC
   logic [data_w-1:0] in_accumulate;             // Input accumulate value from above
   logic [data_w-1:0] out_accumulate;            // Output accumulate value
 
   // MAC Port for Array
   modport MAC(
-    input  start, count, weight, in_value, in_accumulate,
-    output out_accumulate
+    input  start, count, weight, in_value, MAC_shift, in_accumulate,
+    output out_accumulate, in_pass
   );
 endinterface
 

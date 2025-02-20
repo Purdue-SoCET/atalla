@@ -9,27 +9,38 @@ module sysarr_FIFO #(
 );
     // Internal storage for FIFO
     logic [2 * WIDTH * N - 1 : 0] fifo_mem; //need space for two arrays 2 rows of matrix rows
-    logic [2 * WIDTH * N - 1 : 0] fifo_mem_next;
+    logic [2 * WIDTH * N - 1 : 0] fifo_mem_nxt;
+    // write pointer
+    logic [$clog2(2 * N) : 0] wrt_ptr;
+    logic [$clog2(2 * N) : 0] wrt_ptr_nxt;
 
     always_ff @(posedge clk or negedge nRST) begin
         if (!nRST) begin
             fifo_mem <= '0;     // Reset fifo mem to all zeros
+            wrt_ptr <= '0;
         end else begin
-            fifo_mem <= fifo_mem_next; 
+            fifo_mem <= fifo_mem_nxt;
+            wrt_ptr <= wrt_ptr_nxt;
         end
     end
     integer i;
     always_comb begin
-        fifo_mem_next = fifo_mem;
-        fifo.out = fifo_mem[WIDTH * N - 1 : 0]; // Output from the last row
+        fifo_mem_nxt = fifo_mem;
+        wrt_ptr_nxt = wrt_ptr;
+        fifo.out = fifo_mem[WIDTH - 1 : 0];
         if (fifo.load) begin
             for (i = 0; i < N; i = i + 1) begin
-                fifo_mem_next[(2 * WIDTH * N - 1) - i * WIDTH -: WIDTH ] = fifo.load_values[i * WIDTH +: WIDTH ];
+                /* verilator lint_off WIDTHEXPAND */
+                fifo_mem_nxt[(N - i + wrt_ptr) * WIDTH - 1 -: WIDTH ] = fifo.load_values[i * WIDTH +: WIDTH ];
+                /* verilator lint_off WIDTHEXPAND */
             end
-            // fifo_mem_next[2 * WIDTH * N - 1 : WIDTH * N] = fifo.load_values;    // Load into first row bakcwards
+            wrt_ptr_nxt = wrt_ptr_nxt + N;
         end
         if (fifo.shift)begin
-            fifo_mem_next = fifo_mem_next >> WIDTH;    // Shift values forward 
+            fifo_mem_nxt = fifo_mem_nxt >> WIDTH;    // Shift values forward 
+            if (wrt_ptr != '0) begin
+                wrt_ptr_nxt = wrt_ptr_nxt - 1;
+            end
         end
     end
 
