@@ -2,7 +2,7 @@
 `include "isa_types.vh"
 
 module fetch(
-    input logic CLK, nRST,
+    input logic CLK, nRST, ihit,
     fetch_if.ft fif
 );
     import isa_pkg::*;

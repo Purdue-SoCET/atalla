@@ -13,6 +13,7 @@ module fetch_branch_tb;
 
     parameter PERIOD = 2;
     logic CLK = 0, nRST;
+    logic ihit = 1;
 
   // clock
     always #(PERIOD/2) CLK++;
@@ -26,7 +27,7 @@ module fetch_branch_tb;
     test PROG (CLK, nRST, fbif);
 
     fetch_branch FB (.CLK(CLK), .nRST(nRST), .fbif(fbif));
-    fetch FETCH (.CLK(CLK), .nRST(nRST), .fif(fif));
+    fetch FETCH (.CLK(CLK), .nRST(nRST), .ihit(ihit), .fif(fif));
     fu_branch_predictor FUBR (.CLK(CLK), .nRST(nRST), .fubpif(fubpif));
     fu_branch FUB (.CLK(CLK), .nRST(nRST), .fubif(fubif));
 endmodule 
@@ -52,11 +53,9 @@ endmodule
     fbif.imm = 32'd0;
     fbif.predicted_outcome = '0;
     fbif.current_pc = '0;
-    fbif.ihit = 1'b0;
 
     @(posedge CLK);
     nRST = 1;
-    fbif.ihit = 1'b1;
 
     #(CLOCK_TIME * 80);
     

@@ -13,14 +13,14 @@ interface fetch_branch_if;
 
   modport fb (
     input imemload, flush, stall, dispatch_free, branch, branch_type, branch_gate_sel, reg_a, reg_b, 
-          current_pc, imm, predicted_outcome, ihit,
+          current_pc, imm, predicted_outcome,
     output instr, pc
   );
 
   modport tb (
     input pc, instr,
     output imemload, flush, stall, dispatch_free, branch, branch_type, branch_gate_sel, reg_a, reg_b, 
-           current_pc, imm, predicted_outcome, ihit
+           current_pc, imm, predicted_outcome
   );
 endinterface
 

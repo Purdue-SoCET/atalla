@@ -10,13 +10,13 @@ interface fetch_if;
   word_t imemload, pc_prediction, instr, pc, correct_target, correct_pc;
 
   modport ft (
-    input ihit, imemload, flush, stall, dispatch_free, pc_prediction, misprediction, correct_target, correct_pc,
+    input imemload, flush, stall, dispatch_free, pc_prediction, misprediction, correct_target, correct_pc,
     output instr, pc
   );
 
   modport tb (
     input instr, pc,
-    output ihit, imemload, flush, stall, dispatch_free, pc_prediction, misprediction, correct_target, correct_pc
+    output imemload, flush, stall, dispatch_free, pc_prediction, misprediction, correct_target, correct_pc
   );
 
 endinterface
