@@ -26,7 +26,7 @@ module fetch(
         if (!nRST) begin
             pc_reg <= PC_INIT;
         end else begin
-            if (fif.ihit && !fif.stall && fif.dispatch_free) begin
+            if (ihit && !fif.stall && fif.dispatch_free) begin
                 pc_reg <= next_pc;
             end
         end

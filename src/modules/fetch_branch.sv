@@ -12,8 +12,8 @@ module fetch_branch (
 );
 import isa_pkg::*;
 
-logic ihit = 1;
 //grab ihit from a different interface, from i cache possibly
+logic ihit = 1;
 
 fu_branch_if fubif();
 fu_branch_predictor_if fubpif();
@@ -24,6 +24,7 @@ fu_branch_predictor PRED (CLK, nRST, fubpif);
 fetch FETCH (CLK, nRST, ihit, fif);
 
 //Fetch_branch connections
+
 assign fubif.branch = fbif.branch; //fetch_branch
 assign fubif.branch_type = fbif.branch_type;
 assign fubif.branch_gate_sel = fbif.branch_gate_sel;
@@ -51,5 +52,9 @@ assign fif.imemload = fbif.imemload;
 assign fif.flush = fbif.flush;
 assign fif.stall = fbif.stall;
 assign fif.dispatch_free = fbif.dispatch_free;
+assign fif.ihit = fbif.ihit;
+
+assign fbif.pc = fif.pc;
+assign fbif.instr = fif.instr;
 
 endmodule 

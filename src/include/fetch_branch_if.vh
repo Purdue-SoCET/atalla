@@ -12,7 +12,7 @@ interface fetch_branch_if;
   //have to add the rest of the logic for the fetch stage, once its done
 
   modport fb (
-    input imemload, flush, stall, dispatch_free, branch, branch_type, branch_gate_sel, reg_a, reg_b, 
+    input imemload, flush, stall, dispatch_free, branch, branch_type, branch_gate_sel, reg_a, reg_b, ihit, 
           current_pc, imm, predicted_outcome,
     output instr, pc
   );
@@ -20,7 +20,7 @@ interface fetch_branch_if;
   modport tb (
     input pc, instr,
     output imemload, flush, stall, dispatch_free, branch, branch_type, branch_gate_sel, reg_a, reg_b, 
-           current_pc, imm, predicted_outcome
+           current_pc, imm, predicted_outcome, ihit
   );
 endinterface
 
