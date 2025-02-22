@@ -124,6 +124,8 @@ module dispatch(
     end
 
     always_comb begin : FUST
+      diif.n_fu_t = cuif.fu_t;
+
       // To Issue **Combinationally**
       diif.n_fust_s_en   = (cuif.fu_t == FU_S_T & ~diif.flush & ~diif.freeze & ~hazard);
       diif.n_fu_s        = cuif.fu_s;

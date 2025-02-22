@@ -9,6 +9,7 @@ interface issue_if;
 
     //Inputs from dispatch
     dispatch_t dispatch;
+    fu_type n_fu_t;
     fust_s_row_t n_fust_s;
     fust_m_row_t n_fust_m;
     fust_g_row_t n_fust_g;
@@ -33,7 +34,7 @@ interface issue_if;
     fust_g_t fust_g;
     
     modport IS (
-        input dispatch, flush, freeze, wb, n_fust_s, n_fust_m, n_fust_g, n_fu_s, n_fu_m, n_fu_g, n_fust_s_en, n_fust_m_en, n_fust_g_en, s_wdata,
+        input dispatch, flush, freeze, wb, n_fu_t, n_fust_s, n_fust_m, n_fust_g, n_fu_s, n_fu_m, n_fu_g, n_fust_s_en, n_fust_m_en, n_fust_g_en, s_wdata,
         output out, fust_s, fust_m, fust_g
     );
 
