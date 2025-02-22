@@ -53,16 +53,16 @@ module issue(
 
     always_comb begin : Incoming_Instr_Logic
       incoming_instr = '0;
-      if (isif.n_fust_s_en) begin
+      if (isif.n_fu_t == FU_S_T) begin
         case (isif.n_fu_s)
           FU_S_ALU:    incoming_instr = 5'b00001;
           FU_S_LD_ST:  incoming_instr = 5'b00010;
           FU_S_BRANCH: incoming_instr = 5'b00100;
           default: incoming_instr = '0;
         endcase
-      end else if (isif.n_fust_m_en)
+      end else if (isif.n_fu_t == FU_M_T)
         incoming_instr = 5'b01000;
-      else if (isif.n_fust_g_en)
+      else if (isif.n_fu_t == FU_G_T)
         incoming_instr = 5'b10000;
     end
       
@@ -216,6 +216,8 @@ module issue(
             //read register) needs to stall the write to A until all reads to
             //reg A are in EX
             
+            // TODO: need stall signals for the execute FUs if next_fust_state
+            // is stalled in EX
             if ((i == 0 & (fusif.fust.op[1].t1 == 2'd0 | fusif.fust.op[1].t2 == 2'd0)) &
                 (fust_state[1] == FUST_WAIT | fust_state[1] == FUST_RDY) &
                 age[1] > age[0]) begin
