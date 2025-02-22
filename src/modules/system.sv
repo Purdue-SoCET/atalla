@@ -10,6 +10,7 @@
 //types
 `include "isa_types.vh"
 `include "cpu_ram_if.vh"
+`include "cpu_types_pkg.vh"
 
 module system (input logic CLK, nrst, system_if.sys syif);
 
