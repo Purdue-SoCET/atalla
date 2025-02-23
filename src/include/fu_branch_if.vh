@@ -3,7 +3,7 @@
 
 `include "datapath_types.vh"
 
-interface fu_alu_if;
+interface fu_branch_if;
   import datapath_pkg::*;
 
   logic branch_outcome, update_btb, pred_outcome, hit;
