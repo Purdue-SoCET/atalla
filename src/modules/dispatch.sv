@@ -126,6 +126,19 @@ module dispatch(
     always_comb begin : FUST
       diif.n_fu_t = cuif.fu_t;
 
+      // tag updates on WB
+      if (diif.wb.s_rw_en & diif.wb.alu_done & diif.fust_state[0] == FUST_EX) begin
+        diif.n_t1[FU_S_LD_ST] = (diif.fust_s.t1[FU_S_LD_ST] == 2'd1) && diif.fust_s.busy[FU_S_LD_ST] ? '0 : diif.fust_s.t1[FU_S_LD_ST];
+        diif.n_t2[FU_S_LD_ST] = (diif.fust_s.t2[FU_S_LD_ST] == 2'd1) && diif.fust_s.busy[FU_S_LD_ST] ? '0 : diif.fust_s.t2[FU_S_LD_ST];
+        diif.n_t1[FU_S_BRANCH] = (diif.fust_s.t1[FU_S_BRANCH] == 2'd1) && diif.fust_s.busy[FU_S_BRANCH] ? '0 : diif.fust_s.t1[FU_S_BRANCH];
+        diif.n_t2[FU_S_BRANCH] = (diif.fust_s.t2[FU_S_BRANCH] == 2'd1) && diif.fust_s.busy[FU_S_BRANCH] ? '0 : diif.fust_s.t2[FU_S_BRANCH];
+      end else if (diif.wb.s_rw_en & diif.wb.alu_done & diif.fust_state[1] == FUST_EX) begin
+        diif.n_t1[FU_S_ALU] = (diif.fust_s.t1[FU_S_ALU] == 2'd2) && diif.fust_s.busy[FU_S_ALU] ? '0 : diif.fust_s.t1[FU_S_ALU];
+        diif.n_t2[FU_S_ALU] = (diif.fust_s.t2[FU_S_ALU] == 2'd2) && diif.fust_s.busy[FU_S_ALU] ? '0 : diif.fust_s.t2[FU_S_ALU];
+        diif.n_t1[FU_S_BRANCH] = (diif.fust_s.t1[FU_S_BRANCH] == 2'd2) && diif.fust_s.busy[FU_S_BRANCH] ? '0 : diif.fust_s.t1[FU_S_BRANCH];
+        diif.n_t2[FU_S_BRANCH] = (diif.fust_s.t2[FU_S_BRANCH] == 2'd2) && diif.fust_s.busy[FU_S_BRANCH] ? '0 : diif.fust_s.t2[FU_S_BRANCH];
+      end
+
       // To Issue **Combinationally**
       diif.n_fust_s_en   = (cuif.fu_t == FU_S_T & ~diif.flush & ~diif.freeze & ~hazard);
       diif.n_fu_s        = cuif.fu_s;
@@ -133,8 +146,8 @@ module dispatch(
       diif.n_fust_s.rs1  = s_rs1;
       diif.n_fust_s.rs2  = s_rs2;
       diif.n_fust_s.imm  = cuif.imm;
-      diif.n_fust_s.t1   = rstsif.status.idx[s_rs1].tag;
-      diif.n_fust_s.t2   = rstsif.status.idx[s_rs2].tag;
+      diif.n_t1[cuif.fu_s]   = rstsif.status.idx[s_rs1].tag;
+      diif.n_t2[cuif.fu_s]   = rstsif.status.idx[s_rs2].tag;
 
       diif.n_fust_m_en   = (cuif.fu_t == FU_M_T & ~flush & ~diif.freeze & ~hazard);
       //n_fu_m           = 1'b0; // only one row in FUST

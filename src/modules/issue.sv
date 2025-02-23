@@ -100,6 +100,8 @@ module issue(
       fusif.busy[0]  = (fust_state[0] == FUST_EX && (next_fust_state[0] == FUST_EMPTY || next_fust_state[0] == FUST_WAIT)) ? 1'd0 : next_fust_state[0] != FUST_EMPTY;
       fusif.busy[1]  = (fust_state[1] == FUST_EX && (next_fust_state[1] == FUST_EMPTY || next_fust_state[1] == FUST_WAIT)) ? 1'd0 : next_fust_state[1] != FUST_EMPTY;
       fusif.busy[2]  = (fust_state[2] == FUST_EX && (next_fust_state[2] == FUST_EMPTY || next_fust_state[2] == FUST_WAIT)) ? 1'd0 : next_fust_state[2] != FUST_EMPTY;
+      fusif.t1 = isif.n_t1;
+      fusif.t2 = isif.n_t2;
 
       fumif.en       = isif.n_fust_m_en;
       fumif.fust_row = isif.n_fust_m;
@@ -204,21 +206,21 @@ module issue(
           FUST_EX: begin
             //TODO:handle flushing on speculation
 
-            if (isif.wb.s_rw_en & isif.wb.alu_done & (i == 0)) begin
-              next_fust_state[i] = incoming_instr[i] ? FUST_WAIT : FUST_EMPTY;
-              // TODO 
-              fusif.fust.op[1].t1 = (fusif.fust.op[1].t1 == 2'd1) && fusif.busy[1] ? '0 : fusif.fust.op[1].t1;
-              fusif.fust.op[1].t2 = (fusif.fust.op[1].t2 == 2'd1) && fusif.busy[1] ? '0 : fusif.fust.op[1].t2;
-              fusif.fust.op[2].t1 = (fusif.fust.op[2].t1 == 2'd1) && fusif.busy[2] ? '0 : fusif.fust.op[2].t1;
-              fusif.fust.op[2].t2 = (fusif.fust.op[2].t2 == 2'd1) && fusif.busy[2] ? '0 : fusif.fust.op[2].t2;
-            end else if (isif.wb.s_rw_en & isif.wb.load_done & (i == 1)) begin
-              next_fust_state[i] = incoming_instr[i] ? FUST_WAIT : FUST_EMPTY;
-              // TODO 
-              fusif.fust.op[0].t1 = (fusif.fust.op[0].t1 == 2'd2) && fusif.busy[0] ? '0 : fusif.fust.op[0].t1;
-              fusif.fust.op[0].t2 = (fusif.fust.op[0].t2 == 2'd2) && fusif.busy[0] ? '0 : fusif.fust.op[0].t2;
-              fusif.fust.op[2].t1 = (fusif.fust.op[2].t1 == 2'd2) && fusif.busy[2] ? '0 : fusif.fust.op[2].t1;
-              fusif.fust.op[2].t2 = (fusif.fust.op[2].t2 == 2'd2) && fusif.busy[2] ? '0 : fusif.fust.op[2].t2;
-            end
+            // if (isif.wb.s_rw_en & isif.wb.alu_done & (i == 0)) begin
+            //   next_fust_state[i] = incoming_instr[i] ? FUST_WAIT : FUST_EMPTY;
+            //   // TODO 
+            //   fusif.fust.op[1].t1 = (fusif.fust.op[1].t1 == 2'd1) && fusif.busy[1] ? '0 : fusif.fust.op[1].t1;
+            //   fusif.fust.op[1].t2 = (fusif.fust.op[1].t2 == 2'd1) && fusif.busy[1] ? '0 : fusif.fust.op[1].t2;
+            //   fusif.fust.op[2].t1 = (fusif.fust.op[2].t1 == 2'd1) && fusif.busy[2] ? '0 : fusif.fust.op[2].t1;
+            //   fusif.fust.op[2].t2 = (fusif.fust.op[2].t2 == 2'd1) && fusif.busy[2] ? '0 : fusif.fust.op[2].t2;
+            // end else if (isif.wb.s_rw_en & isif.wb.load_done & (i == 1)) begin
+            //   next_fust_state[i] = incoming_instr[i] ? FUST_WAIT : FUST_EMPTY;
+            //   // TODO 
+            //   fusif.fust.op[0].t1 = (fusif.fust.op[0].t1 == 2'd2) && fusif.busy[0] ? '0 : fusif.fust.op[0].t1;
+            //   fusif.fust.op[0].t2 = (fusif.fust.op[0].t2 == 2'd2) && fusif.busy[0] ? '0 : fusif.fust.op[0].t2;
+            //   fusif.fust.op[2].t1 = (fusif.fust.op[2].t1 == 2'd2) && fusif.busy[2] ? '0 : fusif.fust.op[2].t1;
+            //   fusif.fust.op[2].t2 = (fusif.fust.op[2].t2 == 2'd2) && fusif.busy[2] ? '0 : fusif.fust.op[2].t2;
+            // end
             //TODO: handle dones from branch and matrix FUs
 
             // WAR HANDLING
@@ -249,6 +251,7 @@ module issue(
 
     always_comb begin : Output_Logic
       issue = isif.out;
+      isif.fust_state = fust_state;
       s_rs1 = '0;
       s_rs2 = '0;
       for (int i = 0; i < 5; i++) begin

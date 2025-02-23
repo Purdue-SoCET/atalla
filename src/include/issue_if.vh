@@ -32,10 +32,11 @@ interface issue_if;
     fust_s_t fust_s;
     fust_m_t fust_m;
     fust_g_t fust_g;
+    fust_state_e [4:0] fust_state;
     
     modport IS (
         input dispatch, flush, freeze, wb, n_fu_t, n_fust_s, n_fust_m, n_fust_g, n_fu_s, n_fu_m, n_fu_g, n_fust_s_en, n_fust_m_en, n_fust_g_en, s_wdata,
-        output out, fust_s, fust_m, fust_g
+        output out, fust_s, fust_m, fust_g, fust_state
     );
 
 endinterface
