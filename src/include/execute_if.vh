@@ -45,31 +45,14 @@ interface execute_if;
           // Scalar Load/Store FU
           sls_mem_type, sls_rs1, sls_rs2, sls_dmem_in, sls_dhit_in,    
           // MLS FU
-<<<<<<< HEAD
-          mls_mhit, mls_enable, mls_ls_in, mls_rd_in, mls_rs_in, mls_stride_in, mls_imm_in,
-=======
           mls_mhit, mls_enable, mls_ls_in, mls_rd_in, mls_rs_in, mls_rs_in, mls_stride_in, mls_imm_in,
->>>>>>> scheduler-execute-joseph
           // GEMM FU
           gemm_fetch_p, gemm_flush, gemm_freeze,
     output eif_output_t
   );
 
   modport tb (
-<<<<<<< HEAD
-    input // Branch FU
-          bfu_pred_outcome, bfu_hit, bfu_pred_target,
-          // Scalar ALU FU
-          salu_negative, salu_overflow, salu_port_output, salu_zero,
-          // Scalar Load/Store FU
-          sls_dmemaddr, sls_dmemREN, sls_dmemWEN, sls_dmemstore, sls_dmemload, sls_dhit,
-          // MLS FU
-          mls_done, mls_ls_out, mls_rd_out, mls_address, mls_stride_out,
-          // Gemm FU
-          gemm_rs1, gemm_rs2, gemm_rs3, gemm_rd,
-=======
     input eif_output_t,
->>>>>>> scheduler-execute-joseph
     output// Branch FU
           ihit, bfu_branch_outcome, bfu_update_btb, bfu_branch_target, bfu_pc, bfu_pc_fetch,
           // Scalar ALU FU
@@ -77,11 +60,7 @@ interface execute_if;
           // Scalar Load/Store FU
           sls_mem_type, sls_rs1, sls_rs2, sls_dmem_in, sls_dhit_in,    
           // MLS FU
-<<<<<<< HEAD
-          mls_mhit, mls_enable, mls_ls_in, mls_rd_in, mls_rs_in, mls_stride_in, mls_imm_in,
-=======
           mls_mhit, mls_enable, mls_ls_in, mls_rd_in, mls_rs_in, mls_rs_in, mls_stride_in, mls_imm_in,
->>>>>>> scheduler-execute-joseph
           // GEMM FU
           gemm_fetch_p, gemm_flush, gemm_freeze
   );
