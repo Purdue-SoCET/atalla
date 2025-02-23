@@ -1,5 +1,6 @@
 SOURCE_FILES = \
 	./src/modules/system.sv \
+	./src/modules/ram.sv \
 	./src/modules/scheduler_core.sv \
 	./src/modules/memory_control.sv \
 	./src/modules/caches.sv \

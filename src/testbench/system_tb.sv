@@ -31,21 +31,7 @@ module system_tb;
   test                                PROG (CLK,nRST,syif);
 
   // dut
-`ifndef MAPPED
   system                              DUT (CLK,nRST,syif);
-`else
-  system                              DUT (,,,,//for altera debug ports
-    CLK,
-    nRST,
-    syif.halt,
-    syif.load,
-    syif.addr,
-    syif.store,
-    syif.REN,
-    syif.WEN,
-    syif.tbCTRL
-  );
-`endif
 endmodule
 
 program test(input logic CLK, output logic nRST, system_if.tb syif);

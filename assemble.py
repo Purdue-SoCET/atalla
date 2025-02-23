@@ -535,18 +535,20 @@ class Renderer():
         
     def _write_binary(self):
         minsize = max(op.pc for op in self.ops) + 4
+        
             
-        with open(f"{self.output_filename}", "wb") as f:
+        with open(self.output_filename, "wb") as f:
             f.truncate(minsize)
             f.close()
             
-        with open(f"{self.output_filename}", "r+b") as f:
+        with open(self.output_filename, "r+b") as f:
             m = mmap.mmap(f.fileno(), 0)
             for op in self.ops:
                 print(f"{op.pc}:{op.pc+4} - {hex(op.bytes)}")
                 m[op.pc:op.pc+4] = op.bytes.to_bytes(4)
             m.close()
             f.close()
+        print(f"wrote binary to {self.output_filename}.")
         
     def _generate_binary(self):
         for op in self.ops: op.encode()
