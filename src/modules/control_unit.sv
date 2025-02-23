@@ -33,7 +33,7 @@ module control_unit(
       cu_if.branch_op = branch_t'('0);
       cu_if.imm = '0;
       cu_if.stride = '0;
-      cu_if.fu_s = fu_scalar_t'('0);
+      cu_if.fu_s = FU_NONE;
       cu_if.fu_m = fu_matrix_t'('0);
       cu_if.m_mem_type = matrix_mem_t'('0);
       cu_if.matrix_rd = '0;
@@ -76,7 +76,7 @@ module control_unit(
             end
         ITYPE_LW:
             begin
-                if (instr[14:12] == 3'h2) begin 
+                if (instr[14:12] == funct3_i_t'(3'h2)) begin 
                     cu_if.imm = {{20{instr[31]}},instr[31:20]};   // $signed({instr[31:20]}); lowk kinda 
                     cu_if.s_reg_write = '1;
                     cu_if.i_flag = '1;

@@ -97,9 +97,9 @@ module issue(
       fusif.en       = isif.n_fust_s_en;
       fusif.fu       = isif.n_fu_s;
       fusif.fust_row = isif.n_fust_s;
-      fusif.busy[0]  = next_fust_state[0] != FUST_EMPTY;
-      fusif.busy[1]  = next_fust_state[1] != FUST_EMPTY;
-      fusif.busy[2]  = next_fust_state[2] != FUST_EMPTY;
+      fusif.busy[0]  = (fust_state[0] == FUST_EX && (next_fust_state[0] == FUST_EMPTY || next_fust_state[0] == FUST_WAIT)) ? 1'd0 : next_fust_state[0] != FUST_EMPTY;
+      fusif.busy[1]  = (fust_state[1] == FUST_EX && (next_fust_state[1] == FUST_EMPTY || next_fust_state[1] == FUST_WAIT)) ? 1'd0 : next_fust_state[1] != FUST_EMPTY;
+      fusif.busy[2]  = (fust_state[2] == FUST_EX && (next_fust_state[2] == FUST_EMPTY || next_fust_state[2] == FUST_WAIT)) ? 1'd0 : next_fust_state[2] != FUST_EMPTY;
 
       fumif.en       = isif.n_fust_m_en;
       fumif.fust_row = isif.n_fust_m;
@@ -206,8 +206,16 @@ module issue(
 
             if (isif.wb.s_rw_en & isif.wb.alu_done & (i == 0)) begin
               next_fust_state[i] = incoming_instr[i] ? FUST_WAIT : FUST_EMPTY;
+              fusif.fust.op[1].t1 = (fusif.fust.op[1].t1 == 2'd1) && fusif.busy[1] ? '0 : fusif.fust.op[1].t1;
+              fusif.fust.op[1].t2 = (fusif.fust.op[1].t2 == 2'd1) && fusif.busy[1] ? '0 : fusif.fust.op[1].t2;
+              fusif.fust.op[2].t1 = (fusif.fust.op[2].t1 == 2'd1) && fusif.busy[2] ? '0 : fusif.fust.op[2].t1;
+              fusif.fust.op[2].t2 = (fusif.fust.op[2].t2 == 2'd1) && fusif.busy[2] ? '0 : fusif.fust.op[2].t2;
             end else if (isif.wb.s_rw_en & isif.wb.load_done & (i == 1)) begin
               next_fust_state[i] = incoming_instr[i] ? FUST_WAIT : FUST_EMPTY;
+              fusif.fust.op[0].t1 = (fusif.fust.op[0].t1 == 2'd2) && fusif.busy[0] ? '0 : fusif.fust.op[0].t1;
+              fusif.fust.op[0].t2 = (fusif.fust.op[0].t2 == 2'd2) && fusif.busy[0] ? '0 : fusif.fust.op[0].t2;
+              fusif.fust.op[2].t1 = (fusif.fust.op[2].t1 == 2'd2) && fusif.busy[2] ? '0 : fusif.fust.op[2].t1;
+              fusif.fust.op[2].t2 = (fusif.fust.op[2].t2 == 2'd2) && fusif.busy[2] ? '0 : fusif.fust.op[2].t2;
             end
             //TODO: handle dones from branch and matrix FUs
 

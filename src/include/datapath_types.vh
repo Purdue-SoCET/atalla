@@ -64,10 +64,10 @@ package datapath_pkg;
   } fu_ldst_m_ctr_t;
 
   typedef enum logic [1:0] {
-    FU_NONE     = 2'd0,
-    FU_S_ALU    = 2'd1,
-    FU_S_LD_ST  = 2'd2,
-    FU_S_BRANCH = 2'd3
+    FU_S_ALU    = 2'd0,
+    FU_S_LD_ST  = 2'd1,
+    FU_S_BRANCH = 2'd2,
+    FU_NONE     = 2'd3
   } fu_scalar_t;
 
   typedef enum logic [2:0] {

@@ -70,7 +70,7 @@ program test (
         input opcode_t opcode;
         input regbits_t rd;
         input regbits_t rs1;
-        input funct3_r_t funct3;
+        input funct3_i_t funct3;
         input logic [11:0] imm;
         begin
             sbif.fetch.imemload = {imm, rs1, funct3, rd, opcode};
@@ -82,7 +82,7 @@ program test (
         input opcode_t opcode;
         input regbits_t rs1;
         input regbits_t rs2;
-        input funct3_r_t funct3;
+        input logic [2:0] funct3;
         input logic [11:0] imm;
         begin
             sbif.fetch.imemload = {imm[11:5], rs2, rs1, funct3, imm[4:0], opcode};
@@ -144,8 +144,8 @@ program test (
         @(posedge CLK);
 
         // (opcode, rd, rs1, rs2, funct3, funct7)
-        rtype_instr(RTYPE, 5'd10, 5'd11, 5'd12, ADD_SUB, ADD); 
-        rtype_instr(RTYPE, 5'd15, 5'd10, 5'd12, ADD_SUB, ADD);
+        rtype_instr(RTYPE, 5'd10, 5'd11, 5'd12, ADD_SUB, ADD);
+        rtype_instr(RTYPE, 5'd10, 5'd15, 5'd14, ADD_SUB, ADD);
 
 
         @(posedge CLK);
@@ -158,8 +158,98 @@ program test (
         sbif.wb.s_rw = 5'd10;
 
         @(posedge CLK);
+
+        sbif.wb.alu_done = '0;
+
+        sbif.wb_ctrl.s_rw_en = '0;
+        sbif.wb_ctrl.s_rw = '0;
+
+        sbif.wb.s_rw_en = '0;
+        sbif.wb.s_rw = '0;
+
         @(posedge CLK);
         @(posedge CLK);
+        @(posedge CLK);
+        @(posedge CLK);
+
+        sbif.wb.alu_done = '1;
+
+        sbif.wb_ctrl.s_rw_en = '1;
+        sbif.wb_ctrl.s_rw = 5'd10;
+
+        sbif.wb.s_rw_en = '1;
+        sbif.wb.s_rw = 5'd10;
+
+        @(posedge CLK);
+
+        sbif.wb.alu_done = '0;
+
+        sbif.wb_ctrl.s_rw_en = '0;
+        sbif.wb_ctrl.s_rw = '0;
+
+        sbif.wb.s_rw_en = '0;
+        sbif.wb.s_rw = '0;
+
+        @(posedge CLK);
+        @(posedge CLK);
+        @(posedge CLK);
+        @(posedge CLK);
+
+
+        reset_in();
+        reset_dut();
+
+        itype_instr(ITYPE_LW, 5'd4, 5'd6, funct3_i_t'(3'h2), 12'd0);
+        rtype_instr(RTYPE, 5'd10, 5'd4, 5'd12, ADD_SUB, ADD);
+        sbif.fetch.imemload = '0;
+
+        @(posedge CLK);
+        @(posedge CLK);
+
+        sbif.wb.load_done = '1;
+
+        sbif.wb_ctrl.s_rw_en = '1;
+        sbif.wb_ctrl.s_rw = 5'd4;
+
+        sbif.wb.s_rw_en = '1;
+        sbif.wb.s_rw = 5'd4;
+
+        @(posedge CLK);
+
+        sbif.wb.load_done = '0;
+
+        sbif.wb_ctrl.s_rw_en = '0;
+        sbif.wb_ctrl.s_rw = '0;
+
+        sbif.wb.s_rw_en = '0;
+        sbif.wb.s_rw = '0;
+
+        @(posedge CLK);
+        @(posedge CLK);
+        @(posedge CLK);
+
+        sbif.wb.alu_done = '1;
+
+        sbif.wb_ctrl.s_rw_en = '1;
+        sbif.wb_ctrl.s_rw = 5'd10;
+
+        sbif.wb.s_rw_en = '1;
+        sbif.wb.s_rw = 5'd10;
+
+        @(posedge CLK);
+
+        sbif.wb.alu_done = '0;
+
+        sbif.wb_ctrl.s_rw_en = '0;
+        sbif.wb_ctrl.s_rw = '0;
+
+        sbif.wb.s_rw_en = '0;
+        sbif.wb.s_rw = '0;
+
+        @(posedge CLK);
+        @(posedge CLK);
+        @(posedge CLK);
+
 
         // once that instruction is done and wb sends done, send second instruction
         // allow second instruction to go through 
