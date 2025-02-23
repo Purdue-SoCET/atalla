@@ -217,10 +217,6 @@ package datapath_pkg;
   } issue_t;
 
   typedef struct packed {
-    word_t imemload;
-  } fetch_t;
-
-  typedef struct packed {
     // Branch FU
     logic bfu_branch_outcome;
     word_t bfu_updated_pc;
@@ -261,7 +257,7 @@ package datapath_pkg;
   typedef struct packed {
     logic           done;       // Done signal to Issue Queue
     logic [1:0]     ls_out;     // Load or store to Scratchpad [Load, Store]
-    logic [4:0]     rd_out;     // Matrix Reg destination (to Scratchpad)
+    logic [3:0]     rd_out;     // Matrix Reg destination (to Scratchpad)
     logic [10:0]    imm_out;    // Immediate to Scratchpad
     word_t          address;    // Address to Scratchpad
     word_t          stride_out; // stride value

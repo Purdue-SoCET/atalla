@@ -1,3 +1,21 @@
+SOURCE_FILES = \
+	./src/modules/system.sv \
+	./src/modules/scheduler_core.sv \
+	./src/modules/memory_control.sv \
+	./src/modules/caches.sv \
+	./src/modules/icache.sv \
+	./src/modules/dcache.sv \
+	./src/modules/scoreboard.sv \
+	./src/modules/fetch.sv \
+	./src/modules/fetch_branch.sv \
+	./src/modules/dispatch.sv \
+	./src/modules/issue.sv \
+	./src/modules/scoreboard.sv \
+	./src/modules/fu_alu.sv \
+	./src/modules/fu_branch_predictor.sv \
+	./src/modules/fu_branch.sv \
+	./src/modules/writeback.sv
+
 fc:
 	vlog -sv ./src/testbench/flex_counter_tb.sv ./src/modules/flex_counter.sv
 	vsim -voptargs="+acc" work.flex_counter_tb
@@ -11,15 +29,20 @@ wb:
 	vsim -voptargs="+acc" work.writeback_tb -do "do ./src/waves/writeback.do; run -all"
 
 
+source:
+	vlog -sv $(SOURCE_FILES) +incdir+./src/include/ 
+
 %:
-	vlog -sv ./src/testbench/$*_tb.sv ./src/modules/$*.sv +incdir+./src/include/ 
+	vlog -sv $(SOURCE_FILES) +incdir+./src/include/ 
+	vlog -sv ./src/testbench/$*_tb.sv +incdir+./src/include/
 	vsim -voptargs="+acc" work.$*_tb -do "view objects; do ./src/waves/$*.do; run -all;" -onfinish stop
 
 %_vlint:
 	verilator --lint-only src/modules/$*.sv -Isrc/include -Isrc/modules
 
 # ./src/waves/$*.do 
+%_vlint:
+	verilator --lint-only src/modules/$*.sv -Isrc/include -Isrc/modules
 
-# dispatch:
-# 	vlog -sv ./src/testbench/dispatch_tb.sv ./src/modules/dispatch.sv ./src/modules/rst_m.sv ./src/modules/rst_s.sv +incdir+./src/include/
-# 	vsim -voptargs="+acc" work.$*_tb
+vlog: 
+	vlog ./src/modules/fu_branch.sv ./src/modules/fu_branch_predictor.sv ./src/modules/fetch_branch.sv ./src/testbench/fetch_branch_tb.sv

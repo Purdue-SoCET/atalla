@@ -55,7 +55,7 @@ module fu_branch_predictor(
       end
     end
   end
-
+  
   assign btb_hit = buffer[pc_idx].valid && (buffer[pc_idx].tag == pc_tag);
   assign btb_target = buffer[pc_idx].target;
 

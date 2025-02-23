@@ -1,5 +1,5 @@
-// `ifndef FU_BRANCH_PREDICTOR_IF_VH
-// `define FU_BRANCH_PREDICTOR_IF_VH
+`ifndef FU_BRANCH_PREDICTOR_IF_VH
+`define FU_BRANCH_PREDICTOR_IF_VH
 
 `include "isa_types.vh"
 
@@ -20,4 +20,4 @@ interface fu_branch_predictor_if;
   );
 endinterface
 
-// `endif
+`endif

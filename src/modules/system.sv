@@ -46,7 +46,7 @@ module system (input logic CLK, nrst, system_if.sys syif);
   cpu_ram_if                            prif ();
 
   // scheduler core processor
-  scheduler_core #(.PC0('h0))           CPU (CPUCLK, nrst, halt, prif);
+  scheduler_core                        CPU (CPUCLK, nrst, halt, prif);
 
   // memory
   ram                                   RAM (CLK, nrst, prif);

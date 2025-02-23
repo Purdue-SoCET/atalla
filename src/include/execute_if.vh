@@ -54,7 +54,7 @@ interface execute_if;
           // Scalar ALU FU
           salu_aluop, salu_port_a, salu_port_b, imm, 
           // Scalar Load/Store FU
-          sls_mem_type, sls_rs1, sls_rs2, sls_dmem_in, sls_dhit_in,    
+          sls_megit m_type, sls_rs1, sls_rs2, sls_dmem_in, sls_dhit_in,    
           // MLS FU
           mls_mhit, mls_enable, mls_ls_in, mls_rd_in, mls_rs_in, mls_rs_in, mls_stride_in, mls_imm_in,
           // GEMM FU

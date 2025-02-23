@@ -15,7 +15,7 @@ module fetch(
 
         if (fif.misprediction) begin
             next_pc = fif.correct_pc;
-        end else if (fif.stall || !fif.dispatch_free) begin
+        end else if (fif.stall || !fif.dispatch_free) begin //sets the pc to the original
             next_pc = pc_reg;
         end else begin
             next_pc = fif.pc_prediction;

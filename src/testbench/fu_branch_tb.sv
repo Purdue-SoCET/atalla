@@ -1,9 +1,25 @@
 `include "fu_branch_if.vh"
+<<<<<<< HEAD
+=======
+<<<<<<< HEAD
+`include "cpu_types.vh"
+`include "types_pkg.vh"
+
+`timescale 1ns / 10ps
+
+import cpu_types::*;
+import types_pkg::*;
+=======
+>>>>>>> 9c5d5014b5aa7fa94338db381e0464ca6fec6f65
 `include "isa_types.vh"
 
 `timescale 1ns / 10ps
 
 import isa_pkg::*;
+<<<<<<< HEAD
+=======
+>>>>>>> scheduler-fetchbranchverify-pierce
+>>>>>>> 9c5d5014b5aa7fa94338db381e0464ca6fec6f65
 
 module fu_branch_tb;
 
