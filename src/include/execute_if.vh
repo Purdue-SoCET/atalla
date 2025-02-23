@@ -15,28 +15,35 @@ interface execute_if;
   // SA Outputs: weight_en, input_en, partial_en, row_en, array_in, array_in_partials,
 
   // Branch FU
-  logic branch_outcome, update_btb, pred_outcome, hit;
-  word_t pc, pc_fetch, branch_target, pred_target;
+  logic bfu_branch_outcome, bfu_update_btb, bfu_pred_outcome, bfu_pc, bfu_hit;
+  word_t pc, bfu_pc_fetch, bfu_branch_target, bfu_pred_target;
   // Scalar ALU FU
-  word_t imm, dmemload, dmemaddr, dmem_in, dmemstore, rs1, rs2;
-  scalar_mem_t mem_type;
-  logic dhit, dmemWEN, dmemREN, dhit_in;
+  word_t /*imm*/ salu_dmemload, salu_dmemaddr, salu_dmem_in, salu_dmemstore, salu_rs1, salu_rs2, salu_port_a, salu_port_b;
+  word_t salu_negative, salu_overflow, salu_port_output, salu_zero;
+
+  scalar_mem_t salu_mem_type;
+  logic salu_dhit, salu_dmemWEN, salu_dmemREN, salu_dhit_in;
+  aluop_t salu_aluop;
   // Scalar Load/Store FU
-  word_t imm, dmemload, dmemaddr, dmem_in, dmemstore, rs1, rs2;
-  scalar_mem_t mem_type;
-  logic dhit, dmemWEN, dmemREN, dhit_in;
+  word_t imm, sls_dmemload, sls_dmemaddr, sls_dmem_in, sls_dmemstore, sls_rs1, sls_rs2;
+  scalar_mem_t sls_mem_type;
+  logic sls_dhit, sls_dmemWEN, sls_dmemREN, sls_dhit_in;
   // MLS FU
-  logic           mhit, enable;
-  logic [1:0]     ls_in;
-  logic [4:0]     rd_in;
-  logic [10:0]    imm_in;
-  word_t          stride_in, rs_in;
+  logic           mls_mhit, mls_enable;
+  logic [1:0]     mls_ls_in;
+  logic [4:0]     mls_rd_in;
+  logic [10:0]    mls_imm_in;
+  word_t          mls_stride_in, mls_rs_in;
+  word_t          mls_done, mls_ls_out, mls_rd_out, mls_address, mls_stride_out;
+
   // Gemm FU
   word_t gemm_rs1, gemm_rs2, gemm_rs3, gemm_rd;
   logic gemm_fetch_p, gemm_flush, gemm_freeze;
+
+  // EIF
+  word_t eif_output_t;
+  logic ihit;
   
-
-
   modport eif (
     input // Branch FU
           ihit, bfu_branch_outcome, bfu_update_btb, bfu_branch_target, bfu_pc, bfu_pc_fetch,
@@ -45,7 +52,7 @@ interface execute_if;
           // Scalar Load/Store FU
           sls_mem_type, sls_rs1, sls_rs2, sls_dmem_in, sls_dhit_in,    
           // MLS FU
-          mls_mhit, mls_enable, mls_ls_in, mls_rd_in, mls_rs_in, mls_rs_in, mls_stride_in, mls_imm_in,
+          mls_mhit, mls_enable, mls_ls_in, mls_rd_in, mls_rs_in, mls_stride_in, mls_imm_in,
           // GEMM FU
           gemm_fetch_p, gemm_flush, gemm_freeze,
     output eif_output_t
@@ -69,7 +76,7 @@ interface execute_if;
           // Scalar Load/Store FU
           sls_mem_type, sls_rs1, sls_rs2, sls_dmem_in, sls_dhit_in,    
           // MLS FU
-          mls_mhit, mls_enable, mls_ls_in, mls_rd_in, mls_rs_in, mls_rs_in, mls_stride_in, mls_imm_in,
+          mls_mhit, mls_enable, mls_ls_in, mls_rd_in, mls_rs_in, mls_stride_in, mls_imm_in,
           // GEMM FU
           gemm_fetch_p, gemm_flush, gemm_freeze
   );
