@@ -8,7 +8,7 @@
 `include "dispatch_if.vh"
 `include "issue_if.vh"
 `include "regfile_if.vh"
-`include "execute_if.vh"
+// `include "execute_if.vh"
 `include "writeback_if.vh"
 `include "datapath_cache_if.vh"
 
@@ -30,10 +30,11 @@ module sc_datapath
     issue ISSUE (CLK, nrst, isif);
     
     regfile_if rfif();
-    regfile REGFILE (CLK, nrst, fuif);
+    // regfile REGFILE (CLK, nrst, fuif);
+    regfile REGFILE (CLK, nrst, rfif);
 
-    execute_if eif();
-    execute EXECUTE (CLK, nrst, eif);
+    // execute_if eif();
+    // execute EXECUTE (CLK, nrst, eif);
 
     writeback_if wbif();
     writeback WRITEBACK (CLK, nrst, wbif);
@@ -136,7 +137,7 @@ module sc_datapath
     assign ew_execute.wb_data = wbif.wb_out;
 
     //AFTER LATCH
-    assign sbif.wb = ew_writeback.wb;
+    assign sbif.wb = ew_writeback;
 
 // FLIP-FLOP FOR LATCHES
 

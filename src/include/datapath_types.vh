@@ -217,10 +217,6 @@ package datapath_pkg;
   } issue_t;
 
   typedef struct packed {
-    word_t imemload;
-  } fetch_t;
-
-  typedef struct packed {
     // Branch FU
     logic bfu_pred_outcome;
     logic bfu_hit;
