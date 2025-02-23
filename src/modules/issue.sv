@@ -168,7 +168,7 @@ module issue(
           FUST_EMPTY: n_rdy[i] = 1'b0;
           FUST_WAIT: begin // implies instruction is already loaded
             if (i < 3) begin // Scalar FUST
-              n_rdy[i] = (~|fusif.fust.op[i].t1 & ~|fusif.fust.op[i].t2);
+              n_rdy[i] = (~|fusif.fust.t1[i] & ~|fusif.fust.t2[i]);
             end else if (i == 3) begin // Matrix LD/ST FUST
               n_rdy[i] = (~|fumif.fust.op.t1 & ~|fumif.fust.op.t2);
             end else if (i == 4) begin // GEMM FUST
@@ -230,13 +230,13 @@ module issue(
             
             // TODO: need stall signals for the execute FUs if next_fust_state
             // is stalled in EX
-            if ((i == 0 & (fusif.fust.op[1].t1 == 2'd0 | fusif.fust.op[1].t2 == 2'd0)) &
+            if ((i == 0 & (fusif.fust.t1[1] == 2'd0 | fusif.fust.t2[1] == 2'd0)) &
                 (fust_state[1] == FUST_WAIT | fust_state[1] == FUST_RDY) &
                 age[1] > age[0]) begin
               // stall ALU from writing
               next_fust_state[i] = FUST_EX;
             end
-            if ((i == 1 & (fusif.fust.op[0].t1 == 2'd1 | fusif.fust.op[0].t2 == 2'd1) &&
+            if ((i == 1 & (fusif.fust.t1[0] == 2'd1 | fusif.fust.t2[0] == 2'd1) &&
                 (fust_state[0] == FUST_WAIT | fust_state[0] == FUST_RDY) &&
                 age[0] > age[1])) begin
               // stall LD/ST from writing
