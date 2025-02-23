@@ -61,9 +61,9 @@ module sc_datapath
     //assign fif.flush = 
     //assign fif.stall = eif.
     //assign fif.dispatch_free =
-    assign fif.pc_prediction = eif.pc_fetch;
-    assign fif.misprediction = eif.pred_outcome;
-    assign fif.correct_target = eif.branch_target;
+    // assign fif.pc_prediction = eif.pc_fetch;
+    // assign fif.misprediction = eif.pred_outcome;
+    // assign fif.correct_target = eif.branch_target;
     
     //BEFORE LATCH
     assign fd_fetch.instr = fif.instr;
@@ -84,26 +84,26 @@ module sc_datapath
     assign ie_issue.pc = fd_dispatch.pc;
     
     //BRANCH FU
-    assign eif.ihit = dcif.ihit; 
-    // assign eif.bfu_branch_outcome = fubpif.predicted_outcome;
-    // assign bfu_update_btb =
-    //this is an output in the functional unit???
-    // assign eif.bfu_branch_target = fubpif.predicted_targe;
-    assign eif.bfu_pc = ie_issue.pc;
-    assign eif.bfu_pc_fetch = fif.pc;
+    // assign eif.ihit = dcif.ihit; 
+    // // assign eif.bfu_branch_outcome = fubpif.predicted_outcome;
+    // // assign bfu_update_btb =
+    // //this is an output in the functional unit???
+    // // assign eif.bfu_branch_target = fubpif.predicted_targe;
+    // assign eif.bfu_pc = ie_issue.pc;
+    // assign eif.bfu_pc_fetch = fif.pc;
 
-    //SCALAR ALU
-    assign eif.salu_aluop = cuif.alu_op;
-    assign eif.salu_port_a = ie_execute.rdat1;
-    assign eif.salu_port_b = ie_execute.rdat2;
-    assign eif.imm = cuif.imm;
+    // //SCALAR ALU
+    // assign eif.salu_aluop = cuif.alu_op;
+    // assign eif.salu_port_a = ie_execute.rdat1;
+    // assign eif.salu_port_b = ie_execute.rdat2;
+    // assign eif.imm = cuif.imm;
 
-    //SCALAR LOAD/STORE
-    assign eif.sls_mem_type = cuif.s_mem_type;
-    assign eif.sls_rs1 = rfif.rdat1; //didnt know where to find rsel signal control unit does not decode it
-    assign eif.sls_rs2 = rfif.rdat2;
-    assign eif.sls_dmem_in = cuif.s_reg_write;
-    assign eif.sls_dhit_in = dcif.dhit;
+    // //SCALAR LOAD/STORE
+    // assign eif.sls_mem_type = cuif.s_mem_type;
+    // assign eif.sls_rs1 = rfif.rdat1; //didnt know where to find rsel signal control unit does not decode it
+    // assign eif.sls_rs2 = rfif.rdat2;
+    // assign eif.sls_dmem_in = cuif.s_reg_write;
+    // assign eif.sls_dhit_in = dcif.dhit;
 
     //AFTER LATCH CONNECTIONS
     // assign fuslsif.rs1 = rfif.rdat1;
@@ -125,11 +125,11 @@ module sc_datapath
     // assign fif.correct_target = fubif.pred_target;
     
     //WRITEBACK TO SCALAR ALU FU CONNECTIONS
-    assign wbif.wb_select = eif.dmemaddr;
-    assign wbif.store_out = eif.dmemstore;
+    // assign wbif.wb_select = eif.dmemaddr;
+    // assign wbif.store_out = eif.dmemstore;
     
-    //WRITEBACK TO SCALAR LOAD/STORE FU CONNECTIONS
-    assign wbif.alu_out = eif.port_output;
+    // //WRITEBACK TO SCALAR LOAD/STORE FU CONNECTIONS
+    // assign wbif.alu_out = eif.port_output;
 
 //  EXECUTE/WRITEBACK CONNECTIONS
     

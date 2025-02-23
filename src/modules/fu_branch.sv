@@ -13,18 +13,11 @@ module fu_branch(
   always_comb begin : ZERO_LOGIC
     zero = '0;
 
-<<<<<<< HEAD
-    casez (fubif.branch_type)
-      2'd0: zero = (fubif.reg_a - fubif.reg_b) ? 1'b0 : 1'b1;                    // 2'd0: BEQ, BNE
-      2'd1: zero = ($signed(fubif.reg_a) < $signed(fubif.reg_b)) ? 1'b0 : 1'b1;  // 2'd1: BLT, BGE
-      2'd2: zero = (fubif.reg_a < fubif.reg_b) ? 1'b0 : 1'b1;                    // 2'd2: BLTU, BGEU
-=======
     case (fubif.branch_type)
       2'd0: zero = (fubif.reg_a - fubif.reg_b >= 1) ? 1'b0 : 1'b1;                    // 2'd0: BEQ, BNE
       2'd1: zero = ($signed(fubif.reg_a) < $signed(fubif.reg_b)) ? 1'b0 : 1'b1;  // 2'd1: BLT, BGE
       2'd2: zero = (fubif.reg_a < fubif.reg_b) ? 1'b0 : 1'b1;                    // 2'd2: BLTU, BGEU
       default: zero = 1'b0;   
->>>>>>> scheduler-fetchbranchverify-pierce
     endcase
   end
 
@@ -39,14 +32,9 @@ module fu_branch(
     fubif.branch_target = '0;
     fubif.update_btb = 1'b0;
     fubif.update_pc = '0;
-<<<<<<< HEAD
-
-    if (fubif.branch) begin
-=======
     actual_outcome = '0;
 
     if (fubif.branch) begin 
->>>>>>> scheduler-fetchbranchverify-pierce
       actual_outcome = fubif.branch_gate_sel ? ~zero : zero;
       fubif.branch_outcome = actual_outcome;
       fubif.updated_pc = actual_outcome ? (fubif.current_pc + fubif.imm) : (fubif.current_pc + 32'd4);

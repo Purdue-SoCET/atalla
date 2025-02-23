@@ -34,7 +34,7 @@ module sc_datapath_tb;
   sc_datapath                              DUT (CLK,nRST,dcif);
 endmodule
 
-program test(input logic CLK, output logic nRST, datapath_cache_if.tb dcif);
+program test(input logic CLK, output logic nRST, datapath_cache_if.cache dcif);
   
   parameter PERIOD = 10;
   

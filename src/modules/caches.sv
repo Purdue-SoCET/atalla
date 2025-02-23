@@ -6,7 +6,7 @@ this block holds the i and d cache
 module caches (
 input logic CLK, nRST,
 datapath_cache_if dcif,
-caches_if cif
+cache_control_if cif
 );
 // icache
 icache ICACHE(CLK, nRST, dcif, cif);

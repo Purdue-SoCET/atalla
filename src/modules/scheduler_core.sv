@@ -7,6 +7,9 @@
   and caches
 */
 
+`include "caches_if.vh"
+`include "cache_control_if.vh"
+
 module scheduler_core (
   input logic CLK, nrst,
   output logic halt,
@@ -18,15 +21,12 @@ parameter PC0 = 0;
   // bus interface
   datapath_cache_if                 dcif ();
   // coherence interface
-  caches_if                         cif0();
-  // cif1 will not be used, but ccif expects it as an input
-  caches_if                         cif1();
-  cache_control_if #(.CPUS(1))      ccif (cif0, cif1);
+  cache_control_if      ccif ();
 
   // map datapath
-  sc_datapath #(.PC_INIT(PC0))      SC_DP (CLK, nrst, dcif); //scheduler core datapath
+  sc_datapath                       SC_DP (CLK, nrst, dcif); //scheduler core datapath
   // map caches
-  caches                            CM (CLK, nrst, dcif, cif0);
+  caches                            CM (CLK, nrst, dcif, ccif);
   // map coherence
   memory_control                    CC (CLK, nrst, ccif);
 
