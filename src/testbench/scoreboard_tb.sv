@@ -196,77 +196,77 @@ program test (
         @(posedge CLK);
 
 
-        reset_in();
-        reset_dut();
+        // reset_in();
+        // reset_dut();
 
-        itype_instr(ITYPE_LW, 5'd4, 5'd6, funct3_i_t'(3'h2), 12'd0);
-        rtype_instr(RTYPE, 5'd10, 5'd4, 5'd12, ADD_SUB, ADD);
-        sbif.fetch.imemload = '0;
+        // itype_instr(ITYPE_LW, 5'd4, 5'd6, funct3_i_t'(3'h2), 12'd0);
+        // rtype_instr(RTYPE, 5'd10, 5'd4, 5'd12, ADD_SUB, ADD);
+        // sbif.fetch.imemload = '0;
 
-        @(posedge CLK);
-        @(posedge CLK);
+        // @(posedge CLK);
+        // @(posedge CLK);
 
-        sbif.wb.load_done = '1;
+        // sbif.wb.load_done = '1;
 
-        sbif.wb_ctrl.s_rw_en = '1;
-        sbif.wb_ctrl.s_rw = 5'd4;
+        // sbif.wb_ctrl.s_rw_en = '1;
+        // sbif.wb_ctrl.s_rw = 5'd4;
 
-        sbif.wb.s_rw_en = '1;
-        sbif.wb.s_rw = 5'd4;
+        // sbif.wb.s_rw_en = '1;
+        // sbif.wb.s_rw = 5'd4;
 
-        @(posedge CLK);
+        // @(posedge CLK);
 
-        sbif.wb.load_done = '0;
+        // sbif.wb.load_done = '0;
 
-        sbif.wb_ctrl.s_rw_en = '0;
-        sbif.wb_ctrl.s_rw = '0;
+        // sbif.wb_ctrl.s_rw_en = '0;
+        // sbif.wb_ctrl.s_rw = '0;
 
-        sbif.wb.s_rw_en = '0;
-        sbif.wb.s_rw = '0;
+        // sbif.wb.s_rw_en = '0;
+        // sbif.wb.s_rw = '0;
 
-        @(posedge CLK);
-        @(posedge CLK);
-        @(posedge CLK);
+        // @(posedge CLK);
+        // @(posedge CLK);
+        // @(posedge CLK);
 
-        sbif.wb.alu_done = '1;
+        // sbif.wb.alu_done = '1;
 
-        sbif.wb_ctrl.s_rw_en = '1;
-        sbif.wb_ctrl.s_rw = 5'd10;
+        // sbif.wb_ctrl.s_rw_en = '1;
+        // sbif.wb_ctrl.s_rw = 5'd10;
 
-        sbif.wb.s_rw_en = '1;
-        sbif.wb.s_rw = 5'd10;
+        // sbif.wb.s_rw_en = '1;
+        // sbif.wb.s_rw = 5'd10;
 
-        @(posedge CLK);
+        // @(posedge CLK);
 
-        sbif.wb.alu_done = '0;
+        // sbif.wb.alu_done = '0;
 
-        sbif.wb_ctrl.s_rw_en = '0;
-        sbif.wb_ctrl.s_rw = '0;
+        // sbif.wb_ctrl.s_rw_en = '0;
+        // sbif.wb_ctrl.s_rw = '0;
 
-        sbif.wb.s_rw_en = '0;
-        sbif.wb.s_rw = '0;
+        // sbif.wb.s_rw_en = '0;
+        // sbif.wb.s_rw = '0;
 
-        @(posedge CLK);
-        @(posedge CLK);
-        @(posedge CLK);
+        // @(posedge CLK);
+        // @(posedge CLK);
+        // @(posedge CLK);
 
 
-        // once that instruction is done and wb sends done, send second instruction
-        // allow second instruction to go through 
-        // do the same as above but add a load/store instruction for the third instruction 
-        // let it all go through 
+        // // once that instruction is done and wb sends done, send second instruction
+        // // allow second instruction to go through 
+        // // do the same as above but add a load/store instruction for the third instruction 
+        // // let it all go through 
 
-        // do three s type instructions all back to back no dependencies
+        // // do three s type instructions all back to back no dependencies
         
-        // do three s type instructions all back to back with dependencies 
-        // do three i type (lw) instructions all back to back no dependencies
+        // // do three s type instructions all back to back with dependencies 
+        // // do three i type (lw) instructions all back to back no dependencies
         
-        // do three i type (lw) instructions all back to back with dependencies 
-        // mix and match the above
-        // go into matrix stuff now, similar to the above stuff
+        // // do three i type (lw) instructions all back to back with dependencies 
+        // // mix and match the above
+        // // go into matrix stuff now, similar to the above stuff
 
-        @(posedge CLK);
-        @(posedge CLK);
+        // @(posedge CLK);
+        // @(posedge CLK);
         
 
         $finish;

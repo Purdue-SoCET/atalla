@@ -100,8 +100,8 @@ module issue(
       fusif.busy[0]  = (fust_state[0] == FUST_EX && (next_fust_state[0] == FUST_EMPTY || next_fust_state[0] == FUST_WAIT)) ? 1'd0 : next_fust_state[0] != FUST_EMPTY;
       fusif.busy[1]  = (fust_state[1] == FUST_EX && (next_fust_state[1] == FUST_EMPTY || next_fust_state[1] == FUST_WAIT)) ? 1'd0 : next_fust_state[1] != FUST_EMPTY;
       fusif.busy[2]  = (fust_state[2] == FUST_EX && (next_fust_state[2] == FUST_EMPTY || next_fust_state[2] == FUST_WAIT)) ? 1'd0 : next_fust_state[2] != FUST_EMPTY;
-      fusif.t1 = isif.n_t1;
-      fusif.t2 = isif.n_t2;
+      fusif.t1 = isif.fust.n_t1;
+      fusif.t2 = isif.fust.n_t2;
 
       fumif.en       = isif.n_fust_m_en;
       fumif.fust_row = isif.n_fust_m;
