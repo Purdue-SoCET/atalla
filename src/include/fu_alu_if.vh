@@ -4,10 +4,9 @@
 `include "datapath_types.vh"
 
 interface fu_alu_if;
-  import datapath_pkg::*;
+  import isa_pkg::*;
 
   logic negative, overflow, zero;
-  // logic alu_enable;
   logic [3:0] aluop;
   word_t port_a, port_b, port_output;
 
