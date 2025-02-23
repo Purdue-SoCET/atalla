@@ -13,15 +13,11 @@ module execute (
 
 // shared signals immediate
 // Interfaces
-fu_matrix_ls_if mlsif();
-
-fu_branch_if fubif();
-
-fu_alu_if aluif();
-
-fu_scalar_ls_if slsif();
-
-fu_gemm_if fugif();
+fu_matrix_ls_if.mls mlsif();
+fu_branch_if.btb fubif();
+fu_alu_if.alu aluif();
+fu_scalar_ls_if.sls slsif();
+fu_gemm_if.GEMM fugif();
 
 // Branch FU
 fu_branch BFU(CLK, nRST, eif.ihit, fubif);
