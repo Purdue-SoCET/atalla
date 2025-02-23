@@ -80,13 +80,13 @@ package datapath_pkg;
     regbits_t rd;
     regbits_t rs1;
     regbits_t rs2;
-    word_t imm; //instr[31:7] TO: double check this is right 
-    fu_sbits_t t1;
-    fu_sbits_t t2;
+    word_t imm; //instr[31:7] TODO: double check this is right 
   } fust_s_row_t;
 
   typedef struct packed {
     logic [2:0] busy;
+    logic [2:0][1:0] t1;
+    logic [2:0][1:0] t2;
     fust_s_row_t [2:0] op;
   } fust_s_t;
 
