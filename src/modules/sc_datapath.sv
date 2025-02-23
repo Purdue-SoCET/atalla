@@ -84,10 +84,10 @@ module sc_datapath
     
     //BRANCH FU
     assign eif.ihit = dcif.ihit; 
-    assign eif.bfu_branch_outcome = fubpif.predicted_outcome;
+    // assign eif.bfu_branch_outcome = fubpif.predicted_outcome;
     // assign bfu_update_btb =
     //this is an output in the functional unit???
-    assign eif.bfu_branch_target = fubpif.predicted_targe;
+    // assign eif.bfu_branch_target = fubpif.predicted_targe;
     assign eif.bfu_pc = ie_issue.pc;
     assign eif.bfu_pc_fetch = fif.pc;
 
