@@ -218,10 +218,14 @@ package datapath_pkg;
 
   typedef struct packed {
     // Branch FU
-    logic bfu_pred_outcome;
-    logic bfu_hit;
-    word_t bfu_pred_target;
-    
+    logic bfu_branch_outcome;
+    word_t bfu_updated_pc;
+    logic bfu_misprediction;
+    word_t bfu_correct_pc;
+    logic bfu_update_btb;
+    word_t bfu_update_pc;
+    word_t bfu_branch_target;
+
     // Scalar ALU FU
     logic salu_negative;
     logic salu_overflow;
@@ -258,6 +262,7 @@ package datapath_pkg;
     word_t          address;    // Address to Scratchpad
     word_t          stride_out; // stride value
   } matrix_ls_t;
+
 
 endpackage
 `endif

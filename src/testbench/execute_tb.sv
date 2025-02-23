@@ -1,5 +1,6 @@
 `timescale 1ns / 10ps
 `include "execute_if.vh"
+`include "cpu_types.vh"
 
 module execute_tb;
 
@@ -8,20 +9,21 @@ module execute_tb;
 
     always #(PERIOD/2) CLK++;
 
-    execute_if exif ();
+    execute_if eif ();
 
-    test PROG (.CLK(CLK), .nRST(nRST), .tbif(exif));
+    test PROG (.CLK(CLK), .nRST(nRST), .tbif(eif));
 
-    execute DUT (.CLK(CLK), .nRST(nRST), .eif(exif));
+    execute DUT (.CLK(CLK), .nRST(nRST), .eif(eif));
 
 endmodule
 
 program test (
     input logic CLK, 
     output logic nRST,
-    execute_if.tb tbif
+    execute_if.tbif tbif
 );
-
+    import isa_pkg::*;
+    import datapath_pkg::*;
     task reset_dut;
         begin
             nRST = 1'b0;
@@ -74,6 +76,7 @@ program test (
         end
     endtask
 
+    parameter string tb_test_case = "INIT";
 
     initial begin
 
@@ -82,55 +85,34 @@ program test (
 
         @(posedge CLK);
 
-        // test case 1 - write after write hazard
-
-        dis_if.fetch.imemload = 32'b010101010101_00111_000_10101_0010011;
-
-        @(posedge CLK);
-        @(posedge CLK);
-        @(posedge CLK);
-
-        dis_if.fetch.imemload = 32'b010000010101_00111_000_10101_0010011;
-
-        @(posedge CLK);
-        @(posedge CLK);
-        @(posedge CLK);
-
-        // test case 2 - freeze 
+        // test case 1 - SALU
+        tb_test_case = "SALU ADD";
+        tbif.salu_port_a  = 32'd2;
+        tbif.salu_port_b = 32'd3;
+        tbif.salu_aluop = 4'd3;
+        #(100);
 
         reset_in();
-        reset_dut();
 
-        dis_if.fetch.imemload = 32'b010000010101_00111_000_10101_0010011;
-
-        @(posedge CLK);
-
-        dis_if.freeze = '1;
-
-        @(posedge CLK);
-        @(posedge CLK);
-        @(posedge CLK);
-
-        // test case 3 - flush 
+        // test case 2 - branch fu
+        tb_test_case = "Brach FU (BEQ 1)";
+        fubif.branch_type = 2'd0;
+        fubif.branch_gate_sel = 1'b0;
+        fubif.reg_a = 32'd10;
+        fubif.reg_b = 32'd10;
+        #(100);
 
         reset_in();
-        reset_dut();
 
-        dis_if.fetch.imemload = 32'b010000010101_00111_000_10101_0010011;
-
-        @(posedge CLK);
-
-        dis_if.flush = '1;
-
-        @(posedge CLK);
-        @(posedge CLK);
-        @(posedge CLK);
-
-        // test case 4 - need to add cases for -> busy bits in FUST_S and FUST_M prevent writes to FUST (the enable bit should not get set n_fust_s/m/g_en)
-        // the RSTs all get correctly written to with the correct tags and busy bits for the correct FU, and writeback writes to RSTs correctly clear the busy and tag bits 
+        // Test Case 3 - scalar load/store
+        tb_test_case = "Scalar Load/Store";
+        tbif.sls_imm = 32'd400;
+        tbif.sls_mem_type = LOAD;
+        tbif.sls_rs1 = 32'd440;
+       #(100);
 
         reset_in();
-        reset_dut();
+
 
         $finish;
     end
