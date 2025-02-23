@@ -27,6 +27,7 @@ module scoreboard(
       diif.fust_s = isif.fust_s;
       diif.fust_m = isif.fust_m;
       diif.fust_g = isif.fust_g;
+      diif.fust_state = isif.fust_state;
       diif.wb = sbif.wb_ctrl;
 
       isif.dispatch = diif.out;
@@ -40,6 +41,8 @@ module scoreboard(
 
       isif.n_fu_t = diif.n_fu_t;
       isif.n_fu_s = diif.n_fu_s;
+      isif.n_t1   = diif.n_t1;
+      isif.n_t2   = diif.n_t2;
       // isif.n_fu_m = diif.n_fu_m;
       // isif.n_fu_g = diif.n_fu_g;
 
