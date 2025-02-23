@@ -1,61 +1,121 @@
-/*
-  William Wong
-  wong371@purdue.edu
+module memory_arbiter_basic(
+  input logic CLK, nRST,
+  arbiter_caches_if.caches,
+  ram_if.tb rfif
+);
 
-  memory arbiter interface signals
-*/
-`ifndef MEMORY_ARBITER_IF_VH
-`define MEMORY_ARBITER_IF_VH
+  // Outputs to scratchpad
+  logic[63:0] load_data;
+  logic       sLoad_hit, sStore_hit;
+  logic[1:0]  sLoad_row;
+  
+  // Inputs to arbiter from scratchpad
+  logic[63:0] store_data;
+  logic[31:0] load_addr, store_addr;
+  logic       sLoad, sStore;
 
-// types
-`include "cpu_types_pkg.vh"
+  // Inputs to arbiter from scheduler
+  logic       dreq, ireq;
 
-interface memory_arbiter_if;
-  // import types
-  import cpu_types_pkg::*;
+  // WAIT SIGNALS
+  logic sp_wait, dwait, iwait;
 
-// datapath signals
-  // stop processing
-  logic               halt;
+  // State definitions
+  typedef enum logic [2:0] {
+      IDLE     = 3'b000,
+      SP_LOAD  = 3'b001,
+      SP_STORE = 3'b010,
+      DCACHE   = 3'b011,
+      ICACHE   = 3'b100
+  } arbiter_states;
 
-// Icache signals
-  // hit and enable
-  logic               ihit, imemREN;
-  // instruction addr
-  word_t             imemload, imemaddr;
+  arbiter_states arbiter_state, next_arbiter_state;
 
-// Dcache signals
-  // hit, atomic and enables
-  logic               dhit, datomic, dmemREN, dmemWEN, flushed;
-  // data and address
-  word_t              dmemload, dmemstore, dmemaddr;
+  always_ff @ (posedge CLK, negedge nRST) begin
+    if(!nRST) begin
+      arbiter_state <= IDLE;
+    end
+    else begin
+      arbiter_state <= next_arbiter_state;
+    end
+  end
 
-  // datapath ports
-  modport dp (
-    input   ihit, imemload, dhit, dmemload,
-    output  halt, imemREN, imemaddr, dmemREN, dmemWEN, datomic,
-            dmemstore, dmemaddr
-  );
+  //NEXT STATE LOGIC
+  always_comb begin
+    next_arbiter_state = arbiter_state;
+    case(arbiter_state)
+      IDLE: begin
+        if(sLoad) next_arbiter_state = SP_LOAD;
+        else if(sStore) next_arbiter_state = SP_STORE;
+        else if(dreq) next_arbiter_state = DCACHE;
+        else if(ireq) next_arbiter_state = ICACHE;
+      end
 
-  // cache block ports
-  modport cache (
-    input   halt, imemREN, dmemREN, dmemWEN, datomic,
-            dmemstore, dmemaddr, imemaddr,
-    output  ihit, dhit, imemload, dmemload, flushed
-  );
+      SP_LOAD: begin
+        if(sp_wait) next_arbiter_state = SP_LOAD;
+        else next_arbiter_state = IDLE;
+      end
 
-  // icache ports
-  modport icache (
-    input   imemREN, imemaddr,
-    output  ihit, imemload
-  );
+      SP_STORE: begin
+        if(sp_wait) next_arbiter_state = SP_STORE;
+        else next_arbiter_state = IDLE;
+      end
 
-  // dcache ports
-  modport dcache (
-    input   halt, dmemREN, dmemWEN,
-            datomic, dmemstore, dmemaddr,
-    output  dhit, dmemload, flushed
-  );
-endinterface
+      DCACHE: begin
+        if(dwait) next_arbiter_state = DCACHE;
+        else next_arbiter_state = IDLE;
+      end
 
-`endif //DATAPATH_CACHE_IF_VH
+      ICACHE: begin
+        if(iwait) next_arbiter_state = ICACHE;
+        else next_arbiter_state = IDLE;
+      end
+    endcase
+  end
+
+  //OUTPUT LOGIC
+  always_comb begin
+    load_data = '0;
+    sLoad_hit = '0;
+    sStore_hit = '0;
+    sLoad_row = '0;
+    store_data = '0;
+    load_addr = '0;
+    store_addr = '0;
+    sLoad = '0;
+    sStore = '0;
+    sp_wait = '1;
+    dwait = '1;
+    iwait = '1;
+    rfif.WEN = 0;
+    rfif.wsel = 0;
+    rfif.rsel = 0;
+    rfif.wdat = 0;
+case(arbiter_state)
+      SP_LOAD: begin
+        rfif.rsel = load_addr;
+        load_data = rfif.rdat;
+        sp_wait = rfif.ramhit ? 0 : 1;
+        sLoad_row = sLoad_row + 1;
+        sLoad_hit = 1'b1;
+      end
+
+      SP_STORE: begin
+        rfif.WEN = 1;
+        rfif.wdat = store_data;
+        rfif.wsel = store_addr;
+        sp_wait = rfif.ramhit ? 0 : '1;
+        sStore_hit = 1'b1;
+      end
+
+      DCACHE: begin
+        // Add DCACHE-specific logic here
+      end
+
+      ICACHE: begin
+        // Add ICACHE-specific logic here
+      end
+    endcase
+  end
+
+endmodule

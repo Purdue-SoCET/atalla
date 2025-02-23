@@ -2,14 +2,14 @@
 
 module dcache (
   input logic CLK, nRST,
-  datapath_cache_if.dcache dcif,   
-  caches_if.dcache cif                                                
+  fu_scalar_ls_if.dcache dcif,   
+  caches_if.dcache cif //replace with memory arbiter interface                                           
 );
 
 import cpu_types_pkg::*;
 
 // Cache configuration parameters
-parameter CS = 1024;        // Cache size in bits
+parameter CS = 1024;        // Cache size in bits Currently: 1KB dcache
 parameter BS = 2;           // Block size in words
 parameter A = 2;            // Associativity
 parameter ADDR_BITS = 32;   // Address bits
@@ -67,7 +67,7 @@ end
 // FSM states
 typedef enum logic [3:0] {
   IDLE, LOAD0, LOAD1, WB0, WB1, 
-  FLUSH, WRITE0, WRITE1, COUNT, HALT
+  FLUSH, WRITE0, WRITE1//, COUNT, HALT
 } dcache_states;
 
 dcache_states dcache_state, next_dcache_state;
@@ -90,8 +90,9 @@ always_comb begin
   next_dcache_state = dcache_state;
   case(dcache_state)
     IDLE: begin
-      if (dcif.halt) next_dcache_state = FLUSH;
-      else if (miss) begin
+      // if (dcif.halt) next_dcache_state = FLUSH;
+      // else if (miss) begin
+      if (miss) begin
         if (dcache[dcache_format.idx][lru[dcache_format.idx]].dirty)
           next_dcache_state = WB0;
         else
@@ -110,8 +111,8 @@ always_comb begin
     end
     WRITE0: if (!cif.dwait) next_dcache_state = WRITE1;
     WRITE1: if (!cif.dwait) next_dcache_state = FLUSH;
-    COUNT: if (!cif.dwait) next_dcache_state = HALT;
-    HALT: next_dcache_state = HALT;
+    // COUNT: if (!cif.dwait) next_dcache_state = HALT;
+    // HALT: next_dcache_state = HALT;
     default: next_dcache_state = IDLE;
   endcase
 end
@@ -232,15 +233,15 @@ always_comb begin
       end
     end
 
-    COUNT: begin
-      cif.dWEN = 1'b1;
-      cif.daddr = 32'h3100;
-      cif.dstore = hit_count;
-    end
+    // COUNT: begin
+    //   cif.dWEN = 1'b1;
+    //   cif.daddr = 32'h3100;
+    //   cif.dstore = hit_count;
+    // end
 
-    HALT: begin
-      dcif.flushed = 1'b1;
-    end
+    // HALT: begin
+    //   dcif.flushed = 1'b1;
+    // end
   endcase
 end
 

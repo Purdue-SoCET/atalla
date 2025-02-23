@@ -1,5 +1,7 @@
-`include "datapath_cache_if.vh"
-`include "caches_if.vh"
+`include "fetch_if.vh"
+`include "arbiter_caches_if.vh"
+
+//TODO: In progress with Scheduler.
 
 // Parametric cache design
 module icache #(
@@ -9,13 +11,13 @@ module icache #(
   parameter IBYT_W = 2        // Instruction cache byte offset width
 )(
   input logic CLK, nRST,
-  datapath_cache_if.icache dcif,
-  caches_if.icache cif
+  fetch_if.icache dcif,
+  arbiter_caches_if.icache cif
 );
   import cpu_types_pkg::*;
 
   icachef_t icache_format;
-  icache_frame [(1 << IIDX_W) - 1:0] icache, nxt_icache; // Parametrized size
+  icache_frame [(1 << IIDX_W) - 1:0] icache, nxt_icache;
 
   typedef enum logic {
       idle = 1'b0,
