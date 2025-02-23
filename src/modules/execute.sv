@@ -13,24 +13,30 @@ module execute (
 
 // shared signals immediate
 // Interfaces
-fu_matrix_ls_if.mls mlsif();
-fu_branch_if.btb fubif();
-fu_alu_if.alu aluif();
-fu_scalar_ls_if.sls slsif();
-fu_gemm_if.GEMM fugif();
+fu_matrix_ls_if.mls mlsif;
+fu_branch_if.btb fubif;
+fu_alu_if.alu aluif;
+fu_scalar_ls_if.sls slsif;
+fu_gemm_if.GEMM fugif;
+
 
 // Branch FU
 fu_branch BFU(CLK, nRST, eif.ihit, fubif);
-assign fubif.branch_outcome = eif.bfu_branch_outcome;
-assign fubif.update_btb = eif.bfu_update_btb;
-assign fubif.branch_target = eif.bfu_branch_target;
-assign fubif.pc = eif.bfu_pc;
-assign fubif.pc_fetch = eif.bfu_pc_fetch;
-// Outputs: pred_outcome, hit, pred_target
-assign eif.bfu_pred_outcome = fubif.pred_outcome;
-assign eif.bfu_hit = fubif.hit;
-assign eif.bfu_pred_target = fubif.pred_target;
-
+assign fubif.branch = eif.bfu_branch;
+assign fubif.branch_type = eif.bfu_branch_type;
+assign fubif.branch_gate_sel = eif.bfu_branch_gate_sel;
+assign fubif.reg_a = eif.bfu_reg_a;
+assign fubif.reg_b = eif.bfu_reg_b;
+assign fubif.current_pc = eif.bfu_current_pc;
+assign fubif.imm = eif.bfu_imm;
+assign fubif.predicted_outcome = eif.bfu_predicted_outcome;
+// Outputs: branch_outcome, updated_pc, misprediction, correct_pc, update_btb, update_pc, branch_target
+assign eif.branch_outcome = fubif.branch_outcome;
+assign eif.updated_pc = fubif.updated_pc; 
+assign eif.misprediction = fubif.misprediction;
+assign eif.correct_pc = fubif.correct_pc;
+assign eif.update_pc = fubif.update_pc;
+assign eif.branch_target = fubif.branch_target;
 
 // Scalar ALU FU
 fu_alu SALU(aluif);

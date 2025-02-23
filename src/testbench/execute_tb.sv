@@ -9,20 +9,21 @@ module execute_tb;
 
     always #(PERIOD/2) CLK++;
 
-    execute_if exif ();
+    execute_if eif ();
 
-    test PROG (.CLK(CLK), .nRST(nRST), .tbif(exif));
+    test PROG (.CLK(CLK), .nRST(nRST), .tbif(eif));
 
-    execute DUT (.CLK(CLK), .nRST(nRST), .eif(exif));
+    execute DUT (.CLK(CLK), .nRST(nRST), .eif(eif));
 
 endmodule
 
 program test (
     input logic CLK, 
     output logic nRST,
-    execute_if.tb tbif
+    execute_if.tbif tbif
 );
-
+    import isa_pkg::*;
+    import datapath_pkg::*;
     task reset_dut;
         begin
             nRST = 1'b0;
@@ -75,6 +76,7 @@ program test (
         end
     endtask
 
+    parameter string tb_test_case = "INIT";
 
     initial begin
 
@@ -88,15 +90,28 @@ program test (
         tbif.salu_port_a  = 32'd2;
         tbif.salu_port_b = 32'd3;
         tbif.salu_aluop = 4'd3;
-        #(PERIOD);
+        #(100);
+
+        reset_in();
 
         // test case 2 - branch fu
-        // Init
-        tb_test_case = "Brach FU";
+        tb_test_case = "Brach FU (BEQ 1)";
         fubif.branch_type = 2'd0;
         fubif.branch_gate_sel = 1'b0;
         fubif.reg_a = 32'd10;
         fubif.reg_b = 32'd10;
+        #(100);
+
+        reset_in();
+
+        // Test Case 3 - scalar load/store
+        tb_test_case = "Scalar Load/Store";
+        tbif.sls_imm = 32'd400;
+        tbif.sls_mem_type = LOAD;
+        tbif.sls_rs1 = 32'd440;
+       #(100);
+
+        reset_in();
 
 
         $finish;
