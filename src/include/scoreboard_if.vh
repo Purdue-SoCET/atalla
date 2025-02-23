@@ -11,19 +11,20 @@ interface scoreboard_if;
     fetch_t fetch;
     logic flush, freeze;
 
-    wb_ctr_t wb;
-    regbits_t s_wdata;
+    wb_t wb;
+    wb_ctr_t wb_ctrl;
+    word_t s_wdata;
 
     issue_t out;
     
     modport SB (
-        input fetch, flush, freeze, wb, s_wdata,
+        input fetch, flush, freeze, wb, s_wdata, wb_ctrl,
         output out
     );
 
     modport tb (
         input out,
-        output fetch, flush, freeze, wb, s_wdata
+        output fetch, flush, freeze, wb, s_wdata, wb_ctrl
     );
     
 

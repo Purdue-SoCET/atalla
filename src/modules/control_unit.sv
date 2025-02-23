@@ -33,7 +33,7 @@ module control_unit(
       cu_if.branch_op = branch_t'('0);
       cu_if.imm = '0;
       cu_if.stride = '0;
-      cu_if.fu_s = fu_scalar_t'('0);
+      cu_if.fu_s = FU_NONE;
       cu_if.fu_m = fu_matrix_t'('0);
       cu_if.m_mem_type = matrix_mem_t'('0);
       cu_if.matrix_rd = '0;
@@ -76,7 +76,7 @@ module control_unit(
             end
         ITYPE_LW:
             begin
-                if (instr[14:12] == 3'h2) begin 
+                if (instr[14:12] == funct3_i_t'(3'h2)) begin 
                     cu_if.imm = {{20{instr[31]}},instr[31:20]};   // $signed({instr[31:20]}); lowk kinda 
                     cu_if.s_reg_write = '1;
                     cu_if.i_flag = '1;
@@ -171,7 +171,7 @@ module control_unit(
         //         cu_if.imm = {instr[31:12], 12'b0};
         //     end
         HALT: cu_if.halt = '1;
-        7'b1000111: // ld.m
+        LD_M: 
             begin 
                 cu_if.imm = {{22{instr[17]}}, instr[16:7]};
                 // cu_if.i_flag = '1;
@@ -183,7 +183,7 @@ module control_unit(
                 cu_if.m_reg_write = '1;
                 cu_if.fu_t = FU_M_T;
             end
-        7'b1010111: //st.m
+        ST_M: //st.m
             begin
                 cu_if.imm = {{22{instr[17]}}, instr[16:7]};
                 cu_if.stride = instr[22:18]; // register
@@ -192,7 +192,7 @@ module control_unit(
                 cu_if.matrix_rd = instr[31:28];
                 cu_if.fu_t = FU_M_T;
             end
-        7'b1110111: // gemm.m
+        GEMM: // gemm.m
             begin
                 cu_if.fu_m = FU_M_GEMM;
                 cu_if.m_reg_write = '1;

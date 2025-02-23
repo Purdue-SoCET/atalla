@@ -66,7 +66,8 @@ package datapath_pkg;
   typedef enum logic [1:0] {
     FU_S_ALU    = 2'd0,
     FU_S_LD_ST  = 2'd1,
-    FU_S_BRANCH = 2'd2
+    FU_S_BRANCH = 2'd2,
+    FU_NONE     = 2'd3
   } fu_scalar_t;
 
   typedef enum logic [2:0] {
@@ -76,7 +77,6 @@ package datapath_pkg;
   } fu_matrix_t;
 
   typedef struct packed {
-    logic busy;
     regbits_t rd;
     regbits_t rs1;
     regbits_t rs2;
@@ -86,11 +86,11 @@ package datapath_pkg;
   } fust_s_row_t;
 
   typedef struct packed {
+    logic [2:0] busy;
     fust_s_row_t [2:0] op;
   } fust_s_t;
 
   typedef struct packed {
-    logic busy;
     matbits_t rd;
     regbits_t rs1;
     regbits_t rs2;
@@ -101,11 +101,11 @@ package datapath_pkg;
   } fust_m_row_t;
 
   typedef struct packed {
+    logic busy;
     fust_m_row_t op;
   } fust_m_t;
 
   typedef struct packed {
-    logic busy;
     matbits_t rd;
     matbits_t ms1;
     matbits_t ms2;
@@ -116,6 +116,7 @@ package datapath_pkg;
   } fust_g_row_t;
 
   typedef struct packed {
+    logic busy;
     fust_g_row_t op;
   } fust_g_t;
 
