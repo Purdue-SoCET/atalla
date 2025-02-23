@@ -16,6 +16,8 @@ interface issue_if;
     fu_scalar_t n_fu_s;
     logic n_fu_m, n_fu_g;
     logic n_fust_s_en, n_fust_m_en, n_fust_g_en;
+    logic [2:0][1:0] n_t1;
+    logic [2:0][1:0] n_t2;
 
     // Inputs to latch
     logic flush, freeze;
@@ -35,7 +37,7 @@ interface issue_if;
     fust_state_e [4:0] fust_state;
     
     modport IS (
-        input dispatch, flush, freeze, wb, n_fu_t, n_fust_s, n_fust_m, n_fust_g, n_fu_s, n_fu_m, n_fu_g, n_fust_s_en, n_fust_m_en, n_fust_g_en, s_wdata,
+        input dispatch, flush, freeze, wb, n_fu_t, n_fust_s, n_fust_m, n_fust_g, n_fu_s, n_fu_m, n_fu_g, n_fust_s_en, n_fust_m_en, n_fust_g_en, n_t1, n_t2, s_wdata,
         output out, fust_s, fust_m, fust_g, fust_state
     );
 
