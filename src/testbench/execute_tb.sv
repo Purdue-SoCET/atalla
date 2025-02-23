@@ -1,5 +1,6 @@
 `timescale 1ns / 10ps
 `include "execute_if.vh"
+`include "cpu_types.vh"
 
 module execute_tb;
 
@@ -82,55 +83,21 @@ program test (
 
         @(posedge CLK);
 
-        // test case 1 - write after write hazard
+        // test case 1 - SALU
+        tb_test_case = "SALU ADD";
+        tbif.salu_port_a  = 32'd2;
+        tbif.salu_port_b = 32'd3;
+        tbif.salu_aluop = 4'd3;
+        #(PERIOD);
 
-        dis_if.fetch.imemload = 32'b010101010101_00111_000_10101_0010011;
+        // test case 2 - branch fu
+        // Init
+        tb_test_case = "Brach FU";
+        fubif.branch_type = 2'd0;
+        fubif.branch_gate_sel = 1'b0;
+        fubif.reg_a = 32'd10;
+        fubif.reg_b = 32'd10;
 
-        @(posedge CLK);
-        @(posedge CLK);
-        @(posedge CLK);
-
-        dis_if.fetch.imemload = 32'b010000010101_00111_000_10101_0010011;
-
-        @(posedge CLK);
-        @(posedge CLK);
-        @(posedge CLK);
-
-        // test case 2 - freeze 
-
-        reset_in();
-        reset_dut();
-
-        dis_if.fetch.imemload = 32'b010000010101_00111_000_10101_0010011;
-
-        @(posedge CLK);
-
-        dis_if.freeze = '1;
-
-        @(posedge CLK);
-        @(posedge CLK);
-        @(posedge CLK);
-
-        // test case 3 - flush 
-
-        reset_in();
-        reset_dut();
-
-        dis_if.fetch.imemload = 32'b010000010101_00111_000_10101_0010011;
-
-        @(posedge CLK);
-
-        dis_if.flush = '1;
-
-        @(posedge CLK);
-        @(posedge CLK);
-        @(posedge CLK);
-
-        // test case 4 - need to add cases for -> busy bits in FUST_S and FUST_M prevent writes to FUST (the enable bit should not get set n_fust_s/m/g_en)
-        // the RSTs all get correctly written to with the correct tags and busy bits for the correct FU, and writeback writes to RSTs correctly clear the busy and tag bits 
-
-        reset_in();
-        reset_dut();
 
         $finish;
     end

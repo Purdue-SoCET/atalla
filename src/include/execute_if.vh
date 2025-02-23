@@ -15,7 +15,7 @@ interface execute_if;
   // SA Outputs: weight_en, input_en, partial_en, row_en, array_in, array_in_partials,
 
   // Branch FU
-  logic bfu_branch_outcome, bfu_update_btb, bfu_pred_outcome, ihit;
+  logic bfu_branch_outcome, bfu_update_btb, bfu_pred_outcome, hit;
   word_t bfu_pc, bfu_pc_fetch, bfu_branch_target, bfu_pred_target;
   // Scalar ALU FU
   word_t salu_imm, salu_dmemload, salu_dmemaddr, salu_dmem_in, salu_dmemstore, salu_rs1, salu_rs2;
@@ -39,7 +39,7 @@ interface execute_if;
 
   modport eif (
     input // Branch FU
-          ihit, bfu_branch_outcome, bfu_update_btb, bfu_branch_target, bfu_pc, bfu_pc_fetch,
+          hit, bfu_branch_outcome, bfu_update_btb, bfu_branch_target, bfu_pc, bfu_pc_fetch,
           // Scalar ALU FU
           salu_aluop, salu_port_a, salu_port_b, imm, 
           // Scalar Load/Store FU
