@@ -23,10 +23,5 @@ interface fu_scalar_ls_if;
     output imm, mem_type, rs1, rs2, dmem_in, dhit_in
   );
 
-  modport dcache (
-    input dmemREN, dmemWEN, dmemstore, dmemaddr,
-    output dmem_in, dhit_in
-  );
-
 endinterface
 `endif //FU_SCALAR_IF_VH

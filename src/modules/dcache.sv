@@ -34,7 +34,7 @@ typedef struct packed {
 
 // Internal signals
 word_t hit_count, next_hit_count, latched_dmemaddr;
-logic miss, finish_flush, dirty_hit, next_dirty_hit;
+logic miss;
 logic [NUM_SETS-1:0] lru, next_lru;
 logic [INDEX_BITS-1:0] flush_idx, next_flush_idx;
 logic [4:0] flush_counter, next_flush_counter;
@@ -76,12 +76,8 @@ dcache_states dcache_state, next_dcache_state;
 always_ff @(posedge CLK, negedge nRST) begin
   if (!nRST) begin
     dcache_state <= IDLE;
-    hit_count <= '0;
-    dirty_hit <= '0;
   end else begin
     dcache_state <= next_dcache_state;
-    hit_count <= next_hit_count;
-    dirty_hit <= next_dirty_hit;
   end
 end
 
@@ -104,8 +100,7 @@ always_comb begin
     LOAD0: if (!cif.dwait) next_dcache_state = LOAD1;
     LOAD1: if (!cif.dwait) next_dcache_state = IDLE;
     FLUSH: begin
-      if (finish_flush) next_dcache_state = COUNT;
-      else if ((flush_counter < NUM_SETS && dcache[flush_idx][0].dirty) || 
+      if ((flush_counter < NUM_SETS && dcache[flush_idx][0].dirty) || 
                (flush_counter >= NUM_SETS && dcache[flush_idx][1].dirty))
         next_dcache_state = WRITE0;
     end
@@ -133,7 +128,6 @@ always_comb begin
   next_flush_idx = flush_idx;
   next_lru = lru;
   dcif.flushed = '0;
-  next_dirty_hit = dirty_hit;
 
   case(dcache_state)
     IDLE: begin

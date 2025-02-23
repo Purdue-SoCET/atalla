@@ -1,7 +1,7 @@
 `ifndef ARBITER_CACHES_IF_VH
 `define ARBITER_CACHES_IF_VH
 
-// ram memory types
+//memory types
 `include "cpu_types_pkg.vh"
 
 interface arbiter_caches_if;

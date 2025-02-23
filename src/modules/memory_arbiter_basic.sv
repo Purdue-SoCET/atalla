@@ -1,7 +1,9 @@
 module memory_arbiter_basic(
   input logic CLK, nRST,
   ram_if.tb rfif,
-  arbiter_caches_if.caches cif
+  arbiter_caches_if.caches cif,
+  fetch_if.tb fif,
+  fu_scalar_ls_if.tb fuif
 );
 
   // Outputs to scratchpad
@@ -88,8 +90,8 @@ module memory_arbiter_basic(
     sLoad = '0;
     sStore = '0;
     sp_wait = '1;
-    dwait = '1;
-    iwait = '1;
+    cif.dwait = '1;
+    cif.iwait = '1;
     rfif.WEN = 0;
     rfif.wsel = 0;
     rfif.rsel = 0;
@@ -113,6 +115,16 @@ case(arbiter_state)
 
       DCACHE: begin
         // Add DCACHE-specific logic here
+        if(cif.dREN) begin
+          cif.dwait = '0;
+          cif.daddr = fuif.dmemaddr;
+          cif.dload = fuif.dmemstore;
+        end
+        else if(cif.dWEN) begin
+          cif.dwait = '0;
+          cif.daddr = fuif.dmemaddr;
+          cif.dstore = fuif.dmemstore;
+        end
       end
 
       ICACHE: begin
