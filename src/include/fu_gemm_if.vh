@@ -40,8 +40,4 @@ interface fu_gemm_if;
     );
 
 endinterface
-<<<<<<< HEAD
 `endif
-=======
-`endif
->>>>>>> scheduler-core
