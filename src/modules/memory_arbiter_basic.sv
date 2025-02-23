@@ -1,9 +1,10 @@
 module memory_arbiter_basic(
   input logic CLK, nRST,
-  ram_if.rf rfif
+  ram_if.tb rfif
 );
 
   //TODO: TURN ALL OF THIS INTO AN INTERFACE
+  //todo: work with varun on interface between inputs/outputs
   // Outputs to scratchpad
   logic[63:0] load_data, next_load_data;
   logic       sLoad_hit, sStore_hit, next_sLoad_hit, next_sStore_hit;
@@ -15,12 +16,25 @@ module memory_arbiter_basic(
   logic       sLoad, sStore, next_sLoad, next_sStore;
 
   // Inputs to arbiter from scheduler
+  //TODO:
   logic       dreq, ireq;
   // Outputs to scheduler
+  //TODO:
+
 
   //Main Memory Inputs & Outputs
-  logic       ramstore, ramaddr, ramWEN, ramREN;
-  logic       iwait, dwait, swait, iload, dload, sload;
+  //inputs to ram
+  //logic rfif.WEN
+  //logic[31:0] rfif.wsel, rfif.rsel, rfif.wdat
+  //output from ram
+  //logic[31:0] rfif.rdat
+  //logic       rfif.ramhit
+
+  //WAIT SIGNALS
+  logic sp_wait,     dwait,     iwait,
+        nxt_sp_wait, nxt_dwait, nxt_iwait;
+
+
 
   // State definitions
   typedef enum logic [2:0] {
@@ -46,6 +60,9 @@ module memory_arbiter_basic(
       store_addr <= 32'b0;
       sLoad <= 1'b0;
       sStore <= 1'b0;
+      sp_wait <= 1'b0;
+      dwait <= 1'b0;
+      iwait <= 1'b0;
     end
     else begin
       // Update state and signals based on next_ values
@@ -59,6 +76,9 @@ module memory_arbiter_basic(
       store_addr <= next_store_addr;
       sLoad <= next_sLoad;
       sStore <= next_sStore;
+      sp_wait <= nxt_sp_wait;
+      dwait <= nxt_dwait;
+      iwait <= nxt_iwait;
     end
   end
 
@@ -83,7 +103,7 @@ module memory_arbiter_basic(
       end
 
       SP_LOAD: begin
-        if(swait) begin
+        if(sp_wait) begin
           next_arbiter_state = SP_LOAD;
         end
         else begin
@@ -92,7 +112,7 @@ module memory_arbiter_basic(
       end
 
       SP_STORE: begin
-        if(swait) begin
+        if(sp_wait) begin
           next_arbiter_state = SP_STORE;
         end
         else begin
@@ -134,6 +154,13 @@ module memory_arbiter_basic(
     next_store_addr = '0;
     next_sLoad = '0;
     next_sStore = '0;
+    nxt_sp_wait = sp_wait;
+    nxt_dwait = dwait;
+    nxt_iwait = iwait;
+    rfif.WEN = '0;
+    rfif.wsel = '0;
+    rfif.rsel = '0;
+    rfif.wdat = '0;
     case(arbiter_state)
       IDLE: begin
         if(sLoad) begin
@@ -151,12 +178,20 @@ module memory_arbiter_basic(
       end
 
       SP_LOAD: begin
-        load_data = ramload; //TODO
+        rfif.rsel = load_addr;
+        load_data = rfif.rdat;
+        nxt_sp_wait = rfif.ramhit ? 0 : 1;
         next_sLoad_row = next_sLoad_row + 1;
+        next_sLoad_hit = 1'b1; //todo: ask varun if he wants right away or when done
         
       end
 
       SP_STORE: begin
+        rfif.WEN = 1;
+        rfif.wdat = store_data;
+        rfif.wsel = store_addr;
+        nxt_sp_wait = rfif.ramhit ? 0 : 1;
+        next_sStore_hit = 1'b1; //todo: ask varun if he wants right away or when done
       
       end
 
