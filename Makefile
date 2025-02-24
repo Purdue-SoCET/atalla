@@ -8,11 +8,15 @@ SOURCE_FILES = \
 	./src/modules/dcache.sv \
 	./src/modules/scoreboard.sv \
 	./src/modules/fetch.sv \
+	./src/modules/execute.sv \
 	./src/modules/fetch_branch.sv \
 	./src/modules/dispatch.sv \
 	./src/modules/issue.sv \
 	./src/modules/scoreboard.sv \
 	./src/modules/fu_alu.sv \
+	./src/modules/fu_scalar_ls.sv \
+	./src/modules/fu_matrix_ls.sv \
+	./src/modules/fu_gemm.sv \
 	./src/modules/fu_branch_predictor.sv \
 	./src/modules/fu_branch.sv \
 	./src/modules/writeback.sv
