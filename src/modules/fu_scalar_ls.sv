@@ -1,12 +1,14 @@
 `include "fu_scalar_ls_if.vh"
+`include "datapath_types.vh"
+`include "isa_types.vh"
 
 module fu_scalar_ls (
     input logic CLK, nRST,
     fu_scalar_ls_if.sls sls_if
 );
 
-    import types_pkg::*;
-    import cpu_types::*;
+    import isa_pkg::*;
+    import datapath_pkg::*;
 
     typedef enum logic [1:0] { 
         idle, latched
@@ -63,11 +65,7 @@ module fu_scalar_ls (
                     next_state = idle;
                 end
             end
-<<<<<<< HEAD
-            latched: begin 
-=======
             latched: begin
->>>>>>> master
                 if (sls_if.mem_type == STORE) begin
                     sls_if.dmemaddr = latched_dmemaddr;
                     sls_if.dmemWEN = latched_dmemWEN;
