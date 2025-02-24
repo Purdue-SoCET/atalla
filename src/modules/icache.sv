@@ -14,7 +14,8 @@ module icache #(
 )(
   input logic CLK, nRST,
   dispatch_if.icache dif,
-  arbiter_caches_if.icache cif
+  caches_if.icache cif,
+  fetch_if.icache dcif
 );
   import caches_pkg::*;
 
