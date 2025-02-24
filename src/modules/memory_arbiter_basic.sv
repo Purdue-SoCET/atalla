@@ -1,29 +1,11 @@
 module memory_arbiter_basic(
   input logic CLK, nRST,
-  ram_if.tb rfif,
-  arbiter_caches_if.caches cif,
-  fetch_if.tb fif,
-  fu_scalar_ls_if.tb fuif
+  arbiter_caches_if.cc acif,
+  scratchpad_if.arbiter spif
 );
 
-  // Outputs to scratchpad
-  logic[63:0] load_data;
-  logic       sLoad_hit, sStore_hit;
-  logic[1:0]  sLoad_row;
-  
-  // Inputs to arbiter from scratchpad
-  logic[63:0] store_data;
-  logic[31:0] load_addr, store_addr;
-  logic       sLoad, sStore;
-
-  // Inputs to arbiter from scheduler
-  // logic       dreq, ireq;
-  //      cif.dREN, cif.dWEN, cif.iREN
-  //      cif.daddr, cif.iaddr
-
   // WAIT SIGNALS
-  logic sp_wait; //, dwait, iwait;
-  //             cif.dwait, cif.iwait
+  logic sp_wait;
 
   // State definitions
   typedef enum logic [2:0] {
@@ -52,83 +34,86 @@ module memory_arbiter_basic(
       IDLE: begin
         if(sLoad) next_arbiter_state = SP_LOAD;
         else if(sStore) next_arbiter_state = SP_STORE;
-        else if(cif.dREN || cif.dWEN) next_arbiter_state = DCACHE;
-        else if(cif.dREN) next_arbiter_state = ICACHE;
+        else if(acif.dREN || acif.dWEN) next_arbiter_state = DCACHE;
+        else if(acif.iREN) next_arbiter_state = ICACHE;
       end
 
       SP_LOAD: begin
-        if(sp_wait) next_arbiter_state = SP_LOAD;
-        else next_arbiter_state = IDLE;
+        next_arbiter_state = IDLE;
       end
 
       SP_STORE: begin
-        if(sp_wait) next_arbiter_state = SP_STORE;
-        else next_arbiter_state = IDLE;
+        next_arbiter_state = IDLE;
       end
 
       DCACHE: begin
-        if(cif.dwait) next_arbiter_state = DCACHE;
-        else next_arbiter_state = IDLE;
+        if (acif.dwait) begin
+          next_arbiter_state = DCACHE;
+        end
+        else begin
+          next_arbiter_state = IDLE;
+        end
       end
 
       ICACHE: begin
-        if(cif.iwait) next_arbiter_state = ICACHE;
-        else next_arbiter_state = IDLE;
+        if (acif.iwait) begin
+          next_arbiter_state = ICACHE;
+        end
+        else begin
+          next_arbiter_state = IDLE;
+        end
       end
     endcase
   end
 
   //OUTPUT LOGIC
   always_comb begin
-    load_data = '0;
-    sLoad_hit = '0;
-    sStore_hit = '0;
-    sLoad_row = '0;
-    store_data = '0;
-    load_addr = '0;
-    store_addr = '0;
-    sLoad = '0;
-    sStore = '0;
-    sp_wait = '1;
-    cif.dwait = '1;
-    cif.iwait = '1;
-    rfif.WEN = 0;
-    rfif.wsel = 0;
-    rfif.rsel = 0;
-    rfif.wdat = 0;
-case(arbiter_state)
+    acif.ramstore = '0;
+    acif.ramaddr = '0;
+    acif.ramWEN = '0;
+    acif.ramREN = '0;
+    acif.dwait = '0;
+    acif.dload = '0;
+    acif.iwait = '0;
+    acif.iload = '0;
+    spif.load_data = '0;
+    spif.sLoad_hit = '0;
+    spif.sStore_hit = '0;
+    spif.sLoad_row = '0;
+    case(arbiter_state)
       SP_LOAD: begin
-        rfif.rsel = load_addr;
-        load_data = rfif.rdat;
-        sp_wait = rfif.ramhit ? 0 : 1;
-        sLoad_row = sLoad_row + 1;
-        sLoad_hit = 1'b1;
+        sp_wait = spif.sLoad;
+        acif.ramaddr = spif.load_addr;
+        acif.ramREN = spif.sLoad;
+        spif.load_data = acif.ramload;
+        spif.sLoad_hit = 1'b1;
       end
 
       SP_STORE: begin
-        rfif.WEN = 1;
-        rfif.wdat = store_data;
-        rfif.wsel = store_addr;
-        sp_wait = rfif.ramhit ? 0 : '1;
-        sStore_hit = 1'b1;
+        sp_wait = spif.sStore;
+        acif.ramstore = spif.store_data;
+        acif.ramaddr = spif.store_addr;
+        acif.ramWEN = spif.sStore;
+        spif.sStore_hit = 1'b1;
+        sLoad_row = sLoad_row + 1;
+        if(sLoad_row == 3'd5)begin
+          sLoad_row = 3'd1;
+        end
       end
 
       DCACHE: begin
-        // Add DCACHE-specific logic here
-        if(cif.dREN) begin
-          cif.dwait = '0;
-          cif.daddr = fuif.dmemaddr;
-          cif.dload = fuif.dmemstore;
-        end
-        else if(cif.dWEN) begin
-          cif.dwait = '0;
-          cif.daddr = fuif.dmemaddr;
-          cif.dstore = fuif.dmemstore;
-        end
+        acif.ramstore = acif.dstore;
+        acif.ramaddr = acif.daddr;
+        acif.ramWEN = acif.dWEN;
+        acif.ramREN = !acif.dWEN && acif.dREN;
+        acif.dwait = (acif.dREN || acif.dWEN);
+        acif.dload = acif.ramload;
       end
 
       ICACHE: begin
-        // Add ICACHE-specific logic here
+        acif.ramaddr = acif.iaddr;
+        acif.iload = acif.ramload;
+        acif.iwait = acif.iREN;
       end
     endcase
   end

@@ -41,6 +41,10 @@ interface dispatch_if;
         output fetch, flush, freeze, fust_s, fust_m, fust_g, wb, ihit
     );
 
+    modport dcache (
+        input
+        output
+    );
 
 endinterface
 `endif
