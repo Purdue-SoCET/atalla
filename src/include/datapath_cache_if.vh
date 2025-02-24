@@ -1,9 +1,3 @@
-/*
-  Eric Villasenor
-  evillase@gmail.com
-
-  holds datapath and cache interface signals
-*/
 `ifndef DATAPATH_CACHE_IF_VH
 `define DATAPATH_CACHE_IF_VH
 

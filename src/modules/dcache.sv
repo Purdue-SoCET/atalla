@@ -3,7 +3,7 @@
 module dcache (
   input logic CLK, nRST,
   caches_if.dcache cif,
-  fu_scalar_ls_if.dcache dcif,                                        
+  datapath_cache_if.dcache dcif                               
 );
 
 import caches_pkg::*;

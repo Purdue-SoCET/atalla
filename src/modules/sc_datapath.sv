@@ -1,6 +1,5 @@
 // PIPELINE PACKAGES
 `include "pipeline_types.vh"
-`include "cpu_types_pkg.vh"
 
 // INTERFACES
 `include "fetch_if.vh"
@@ -8,7 +7,7 @@
 `include "dispatch_if.vh"
 `include "issue_if.vh"
 `include "regfile_if.vh"
-// `include "execute_if.vh"
+`include "execute_if.vh"
 `include "writeback_if.vh"
 `include "datapath_cache_if.vh"
 
@@ -33,8 +32,8 @@ module sc_datapath
     // regfile REGFILE (CLK, nrst, fuif);
     regfile REGFILE (CLK, nrst, rfif);
 
-    // execute_if eif();
-    // execute EXECUTE (CLK, nrst, eif);
+    execute_if eif();
+    execute EXECUTE (CLK, nrst, eif);
 
     writeback_if wbif();
     writeback WRITEBACK (CLK, nrst, wbif);
@@ -57,7 +56,7 @@ module sc_datapath
 //  FETCH/DISPATCH CONNECTIONS
     
     //FETCH CONNECTIONS
-    assign fif.imemload = dcif.imemaddr;
+    assign fif.imemload = dcif.imemload;
     //assign fif.flush = 
     //assign fif.stall = eif.
     //assign fif.dispatch_free =

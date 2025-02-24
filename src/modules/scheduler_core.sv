@@ -9,6 +9,7 @@
 
 `include "caches_if.vh"
 `include "cache_control_if.vh"
+`include "scratchpad_if.vh"
 
 module scheduler_core (
   input logic CLK, nrst,
@@ -22,7 +23,7 @@ parameter PC0 = 0;
   datapath_cache_if                 dcif ();
   // coherence interface
   caches_if                         cif ();
-  arbiter_caches_if                 acif();
+  arbiter_caches_if                 acif(cif);
   scratchpad_if                     spif();
 
   // map datapath
@@ -31,8 +32,8 @@ parameter PC0 = 0;
   // map caches
   memory_arbiter_basic MEM_ARB(CLK, nRST, acif, spif);
 
-  icache ICACHE(CLK, nRST, dif, cif, /* fetch_if */);
-  dcache DCACHE(CLK, nRST, dcif, cif, /* fu_scalar_ls_if */);
+  icache ICACHE(CLK, nRST, cif, dcif);
+  dcache DCACHE(CLK, nRST, cif, dcif);
   // scratchpad
 
 

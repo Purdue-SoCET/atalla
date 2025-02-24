@@ -13,9 +13,8 @@ module icache #(
 //   parameter IBYT_W = 2        // Instruction cache byte offset width
 )(
   input logic CLK, nRST,
-  dispatch_if.icache dif,
   caches_if.icache cif,
-  fetch_if.icache dcif
+  datapath_cache_if.icache dcif
 );
   import caches_pkg::*;
 
@@ -43,14 +42,14 @@ module icache #(
   // Combinational logic for handling cache state
   always_comb begin
       icache_format = '0;
-      dif.ihit = '0;
+      dcif.ihit = '0;
       cif.iREN = '0;
       cif.iaddr = '0;
       nxt_icache = icache;
       nxt_icache_state = icache_state;
 
       if (icache[icache_format.idx].tag == icache_format.tag && icache[icache_format.idx].valid && dcif.imemREN) begin
-          dif.ihit = '1;
+          dcif.ihit = '1;
       end else begin
           nxt_icache_state = miss; 
       end

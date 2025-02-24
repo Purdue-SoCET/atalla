@@ -19,9 +19,10 @@ SOURCE_FILES = \
 	./src/modules/fu_gemm.sv \
 	./src/modules/fu_branch_predictor.sv \
 	./src/modules/fu_branch.sv \
-	./src/modules/writeback.sv
+	./src/modules/writeback.sv \
+	./src/modules/memory_arbiter_basic.sv
 
-	
+
 SCRDIR = /home/asicfab/a/wong371/william_wk/tensor-core/src/scripts
 SIMTIME = 100us             # Default simulation run time
 
@@ -67,10 +68,6 @@ source:
 	vlog -sv ./src/testbench/$*_tb.sv +incdir+./src/include/
 	vsim -voptargs="+acc" work.$*_tb -do "view objects; do ./src/waves/$*.do; run -all;" -onfinish stop
 
-%_vlint:
-	verilator --lint-only src/modules/$*.sv -Isrc/include -Isrc/modules
-
-# ./src/waves/$*.do 
 %_vlint:
 	verilator --lint-only src/modules/$*.sv -Isrc/include -Isrc/modules
 
