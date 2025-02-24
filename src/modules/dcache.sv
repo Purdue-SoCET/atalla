@@ -3,7 +3,7 @@
 module dcache (
   input logic CLK, nRST,
   fu_scalar_ls_if.dcache dcif,   
-  caches_if.dcache cif //replace with memory arbiter interface                                           
+  caches_if.dcache cif                                          
 );
 
 import caches_pkg::*;
