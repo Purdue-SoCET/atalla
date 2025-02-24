@@ -3,14 +3,14 @@
 `define ARBITER_CACHES_IF_VH
 
 // ram memory types
-`include "cpu_types_pkg.vh"
+`include "caches_pkg.vh"
 `include "caches_if.vh"
 
 interface arbiter_caches_if(
   caches_if cif
 );
   // import types
-  import cpu_types_pkg::*;
+  import caches_pkg::*;
 
   // arbitration
   logic   iwait, dwait, iREN, dREN, dWEN;

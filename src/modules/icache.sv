@@ -15,7 +15,7 @@ module icache #(
   dispatch_if.icache dif,
   arbiter_caches_if.icache cif
 );
-  import cpu_types_pkg::*;
+  import caches_pkg::*;
 
   icachef_t icache_format;
   icache_frame [(1 << IIDX_W) - 1:0] icache, nxt_icache;

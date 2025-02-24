@@ -6,7 +6,7 @@ module dcache (
   caches_if.dcache cif //replace with memory arbiter interface                                           
 );
 
-import cpu_types_pkg::*;
+import caches_pkg::*;
 
 // Cache configuration parameters
 parameter CS = 1024;        // Cache size in bits Currently: 1KB dcache
