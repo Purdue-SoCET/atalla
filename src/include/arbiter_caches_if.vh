@@ -16,8 +16,8 @@ interface arbiter_caches_if(
   logic   iwait, dwait, iREN, dREN, dWEN;
   word_t  iload, dload, dstore;
   word_t  iaddr, daddr;
-
-  // ram side
+ 
+  // ram
   logic                   ramWEN, ramREN;
   word_t                  ramaddr, ramstore, ramload;
 

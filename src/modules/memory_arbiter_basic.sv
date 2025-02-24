@@ -32,8 +32,8 @@ module memory_arbiter_basic(
     next_arbiter_state = arbiter_state;
     case(arbiter_state)
       IDLE: begin
-        if(sLoad) next_arbiter_state = SP_LOAD;
-        else if(sStore) next_arbiter_state = SP_STORE;
+        if(spif.sLoad) next_arbiter_state = SP_LOAD;
+        else if(spif.sStore) next_arbiter_state = SP_STORE;
         else if(acif.dREN || acif.dWEN) next_arbiter_state = DCACHE;
         else if(acif.iREN) next_arbiter_state = ICACHE;
       end
@@ -95,9 +95,9 @@ module memory_arbiter_basic(
         acif.ramaddr = spif.store_addr;
         acif.ramWEN = spif.sStore;
         spif.sStore_hit = 1'b1;
-        sLoad_row = sLoad_row + 1;
-        if(sLoad_row == 3'd5)begin
-          sLoad_row = 3'd1;
+        spif.sLoad_row = spif.sLoad_row + 1;
+        if(spif.sLoad_row == 3'd5)begin
+          spif.sLoad_row = 3'd1;
         end
       end
 

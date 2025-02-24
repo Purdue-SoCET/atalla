@@ -34,6 +34,9 @@ icache:
 	vlog -sv +incdir+./src/include ./src/testbench/$*_tb.sv ./src/modules/$*.sv
 	vsim -voptargs="+acc" work.$*_tb -do "do $(SCRDIR)/$*.do; run $(SIMTIME);" -suppress 2275
 
+%.sim:
+	vlog -sv +incdir+./src/include ./src/modules/$*.sv
+
 
 clean:
 	rm -rf work transcript vsim.wlf *.log *.jou *.vstf *.vcd
