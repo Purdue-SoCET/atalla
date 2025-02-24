@@ -20,7 +20,12 @@ SOURCE_FILES = \
 	./src/modules/fu_branch_predictor.sv \
 	./src/modules/fu_branch.sv \
 	./src/modules/writeback.sv \
-	./src/modules/memory_arbiter_basic.sv
+	./src/modules/memory_arbiter_basic.sv \
+	./src/modules/fust_g.sv \
+	./src/modules/fust_m.sv \
+	./src/modules/fust_s.sv \
+	./src/modules/rst_m.sv \
+	./src/modules/rst_s.sv
 
 
 SCRDIR = /home/asicfab/a/wong371/william_wk/tensor-core/src/scripts

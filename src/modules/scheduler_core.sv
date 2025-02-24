@@ -38,16 +38,15 @@ parameter PC0 = 0;
 
 
   // map coherence
-  // memory_control                    CC (CLK, nrst, ccif);
 
   // interface connections
-  assign scif.memaddr = ccif.ramaddr;
-  assign scif.memstore = ccif.ramstore;
-  assign scif.memREN = ccif.ramREN;
-  assign scif.memWEN = ccif.ramWEN;
+  assign scif.memaddr = acif.ramaddr;
+  assign scif.memstore = acif.ramstore;
+  assign scif.memREN = acif.ramREN;
+  assign scif.memWEN = acif.ramWEN;
 
-  assign ccif.ramload = scif.ramload;
-  assign ccif.ramstate = scif.ramstate;
+  assign acif.ramload = scif.ramload;
+  // assign acif.ramstate = scif.ramstate;
 
   assign halt = dcif.flushed;
 endmodule
