@@ -22,7 +22,6 @@ interface fetch_if;
 endinterface
 
 `endif
-<<<<<<< HEAD
 
 `ifndef FETCH_IF_VH
 `define FETCH_IF_VH
@@ -48,5 +47,3 @@ interface fetch_if;
 endinterface
 
 `endif
-=======
->>>>>>> 9c5d5014b5aa7fa94338db381e0464ca6fec6f65
