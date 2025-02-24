@@ -1,4 +1,4 @@
-`include "cpu_types_pkg.vh"
+`include "caches_pkg.vh"
 
 module dcache (
   input logic CLK, nRST,
