@@ -218,6 +218,26 @@ package datapath_pkg;
     matbits_t ms3;
   } issue_t;
 
+
+  
+  typedef struct packed {
+    logic [3:0] rs1;
+    logic [3:0] rs2;
+    logic [3:0] rs3;
+    logic [3:0] rd;
+  } fu_gemm_t;
+
+
+
+  typedef struct packed {
+    logic           done;       // Done signal to Issue Queue
+    logic [1:0]     ls_out;     // Load or store to Scratchpad [Load, Store]
+    logic [3:0]     rd_out;     // Matrix Reg destination (to Scratchpad)
+    logic [10:0]    imm_out;    // Immediate to Scratchpad
+    word_t          address;    // Address to Scratchpad
+    word_t          stride_out; // stride value
+  } matrix_ls_t;
+
   typedef struct packed {
     // Branch FU
     logic bfu_branch_outcome;
@@ -243,27 +263,12 @@ package datapath_pkg;
     logic sls_dhit;
     
     // MLS FU
-    logic mls_done;
-    logic [1:0] mls_ls_out;
-    logic [4:0] mls_rd_out;
-    word_t mls_address;
-    word_t mls_stride_out;
+    matrix_ls_t fu_matls_out;
     
     // Gemm FU
-    word_t gemm_rs1;
-    word_t gemm_rs2;
-    word_t gemm_rs3;
-    word_t gemm_rd;
+    logic gemm_new_weight_out;
+    fu_gemm_t gemm_matrix_num;
   } eif_output_t;
-
-  typedef struct packed {
-    logic           done;       // Done signal to Issue Queue
-    logic [1:0]     ls_out;     // Load or store to Scratchpad [Load, Store]
-    logic [3:0]     rd_out;     // Matrix Reg destination (to Scratchpad)
-    logic [10:0]    imm_out;    // Immediate to Scratchpad
-    word_t          address;    // Address to Scratchpad
-    word_t          stride_out; // stride value
-  } matrix_ls_t;
 
 
 endpackage

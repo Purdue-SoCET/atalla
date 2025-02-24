@@ -113,6 +113,31 @@ program test (
 
         reset_in();
 
+        // Test Case 4 - gemm  
+        tb_test_case = "GEMM";
+        fugif.gemm_enable = '1;
+        fugif.new_weight_in = '0;
+        fugif.rs1_in = 'h1;
+        fugif.rs2_in = 'h2;
+        fugif.rs3_in = 'h3;
+        fugif.rd_in = 'h4;
+        #(100);
+
+        reset_in();
+
+        // Test Case 5 - matrix load/store
+        tb_test_case = "Matrix Load/Store";
+        mlsif.enable    = 1;         // Enable the module
+        mlsif.ls_in     = 2'b01;     // LOAD operation selected (bit0 high)
+        mlsif.rd_in     = 5'd15;     // Example destination register value
+        mlsif.rs_in     = 32'd100;   // Example source register value (assume word_t is 32-bit)
+        mlsif.stride_in = 32'd5;     // Example stride value
+        mlsif.imm_in    = 11'd20;    // Immediate value (address = rs_in + imm_in)
+        mlsif.mhit      = 1;         // Scratchpad ready; done should be 1
+        #(100);
+
+        reset_in();
+
 
         $finish;
     end
