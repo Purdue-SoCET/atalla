@@ -21,14 +21,23 @@ parameter PC0 = 0;
   // bus interface
   datapath_cache_if                 dcif ();
   // coherence interface
-  cache_control_if      ccif ();
+  cache_control_if                  ccif ();
+  arbiter_caches_if                 acif();
+  scratchpad_if                     spif();
 
   // map datapath
   sc_datapath                       SC_DP (CLK, nrst, dcif); //scheduler core datapath
+
   // map caches
-  caches                            CM (CLK, nrst, dcif, ccif);
+  memory_arbiter_basic MEM_ARB(CLK, nRST, acif, spif);
+
+  icache ICACHE(CLK, nRST, dif, /* dispatch_if */, acif);
+  dcache DCACHE(CLK, nRST, dcif, /* fu_scalar_ls_if */, cif);
+  // scratchpad
+
+
   // map coherence
-  memory_control                    CC (CLK, nrst, ccif);
+  // memory_control                    CC (CLK, nrst, ccif);
 
   // interface connections
   assign scif.memaddr = ccif.ramaddr;

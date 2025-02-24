@@ -1,21 +1,25 @@
-`include "datapath_cache_if.vh"
-`include "caches_if.vh"
+`include "fetch_if.vh"
+`include "arbiter_caches_if.vh"
+
+//TODO: In progress with Scheduler.
+//Need imemREN and imemAddr from Scheduler
 
 // Parametric cache design
 module icache #(
-  parameter WORD_W = 32,      // Word width
-  parameter ITAG_W = 26,      // Instruction cache tag width
-  parameter IIDX_W = 4,       // Instruction cache index width
-  parameter IBYT_W = 2        // Instruction cache byte offset width
+//   parameter WORD_W = 32,      // Word width
+//   parameter ITAG_W = 26,      // Instruction cache tag width
+//   parameter IBLK_W = 0;
+     parameter IIDX_W = 4           // Instruction cache index width
+//   parameter IBYT_W = 2        // Instruction cache byte offset width
 )(
   input logic CLK, nRST,
-  datapath_cache_if.icache dcif,
-  cache_control_if.icache cif
+  dispatch_if.icache dif,
+  arbiter_caches_if.icache cif
 );
-  import cpu_types_pkg::*;
+  import caches_pkg::*;
 
   icachef_t icache_format;
-  icache_frame [(1 << IIDX_W) - 1:0] icache, nxt_icache; // Parametrized size
+  icache_frame [(1 << IIDX_W) - 1:0] icache, nxt_icache;
 
   typedef enum logic {
       idle = 1'b0,
@@ -38,14 +42,14 @@ module icache #(
   // Combinational logic for handling cache state
   always_comb begin
       icache_format = '0;
-      dcif.ihit = '0;
+      dif.ihit = '0;
       cif.iREN = '0;
       cif.iaddr = '0;
       nxt_icache = icache;
       nxt_icache_state = icache_state;
 
       if (icache[icache_format.idx].tag == icache_format.tag && icache[icache_format.idx].valid && dcif.imemREN) begin
-          dcif.ihit = '1;
+          dif.ihit = '1;
       end else begin
           nxt_icache_state = miss; 
       end

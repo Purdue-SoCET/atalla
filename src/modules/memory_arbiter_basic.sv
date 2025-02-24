@@ -1,25 +1,11 @@
 module memory_arbiter_basic(
-  input logic CLK, nRST
+  input logic CLK, nRST,
+  arbiter_caches_if.cc acif,
+  scratchpad_if.arbiter spif
 );
 
-  //TODO: TURN ALL OF THIS INTO AN INTERFACE
-  // Outputs to scratchpad
-  logic[63:0] load_data, next_load_data;
-  logic       sLoad_hit, sStore_hit, next_sLoad_hit, next_sStore_hit;
-  logic[1:0]  sLoad_row, next_sLoad_row;
-  
-  // Inputs to arbiter from scratchpad
-  logic[63:0] store_data, next_store_data;
-  logic[31:0] load_addr, store_addr, next_load_addr, next_store_addr;
-  logic       sLoad, sStore, next_sLoad, next_sStore;
-
-  // Inputs to arbiter from scheduler
-  logic       dreq, ireq;
-  // Outputs to scheduler
-
-  //Main Memory Inputs & Outputs
-  logic       ramstore, ramaddr, ramWEN, ramREN;
-  logic       iwait, dwait, swait, iload, dload, sload;
+  // WAIT SIGNALS
+  logic sp_wait;
 
   // State definitions
   typedef enum logic [2:0] {
@@ -34,73 +20,34 @@ module memory_arbiter_basic(
 
   always_ff @ (posedge CLK, negedge nRST) begin
     if(!nRST) begin
-      // Reset values for all signals
       arbiter_state <= IDLE;
-      load_data <= 64'b0;
-      sLoad_hit <= 1'b0;
-      sStore_hit <= 1'b0;
-      sLoad_row <= 2'b00;
-      store_data <= 64'b0;
-      load_addr <= 32'b0;
-      store_addr <= 32'b0;
-      sLoad <= 1'b0;
-      sStore <= 1'b0;
     end
     else begin
-      // Update state and signals based on next_ values
       arbiter_state <= next_arbiter_state;
-      load_data <= next_load_data;
-      sLoad_hit <= next_sLoad_hit;
-      sStore_hit <= next_sStore_hit;
-      sLoad_row <= next_sLoad_row;
-      store_data <= next_store_data;
-      load_addr <= next_load_addr;
-      store_addr <= next_store_addr;
-      sLoad <= next_sLoad;
-      sStore <= next_sStore;
     end
   end
 
-
-
   //NEXT STATE LOGIC
   always_comb begin
+    next_arbiter_state = arbiter_state;
     case(arbiter_state)
       IDLE: begin
-        if(sLoad) begin
-          next_arbiter_state = SP_LOAD;
-        end
-        else if(sStore) begin
-          next_arbiter_state = SP_STORE;
-        end
-        else if(dreq) begin
-          next_arbiter_state = DCACHE;
-        end
-        else if(ireq) begin
-          next_arbiter_state = ICACHE;
-        end
+        if(spif.sLoad) next_arbiter_state = SP_LOAD;
+        else if(spif.sStore) next_arbiter_state = SP_STORE;
+        else if(acif.dREN || acif.dWEN) next_arbiter_state = DCACHE;
+        else if(acif.iREN) next_arbiter_state = ICACHE;
       end
 
       SP_LOAD: begin
-        if(swait) begin
-          next_arbiter_state = SP_LOAD;
-        end
-        else begin
-          next_arbiter_state = IDLE;
-        end
+        next_arbiter_state = IDLE;
       end
 
       SP_STORE: begin
-        if(swait) begin
-          next_arbiter_state = SP_STORE;
-        end
-        else begin
-          next_arbiter_state = IDLE;
-        end
+        next_arbiter_state = IDLE;
       end
 
       DCACHE: begin
-        if(dwait) begin
+        if (acif.dwait) begin
           next_arbiter_state = DCACHE;
         end
         else begin
@@ -109,7 +56,7 @@ module memory_arbiter_basic(
       end
 
       ICACHE: begin
-        if(iwait) begin
+        if (acif.iwait) begin
           next_arbiter_state = ICACHE;
         end
         else begin
@@ -119,52 +66,54 @@ module memory_arbiter_basic(
     endcase
   end
 
-
-
-  //TODO: COMMUNICATION WITH OTHER MODULES
   //OUTPUT LOGIC
   always_comb begin
-    next_load_data = '0;
-    next_sLoad_hit = '0;
-    next_sStore_hit = '0;
-    next_sLoad_row = '0;
-    next_store_data = '0;
-    next_load_addr = '0;
-    next_store_addr = '0;
-    next_sLoad = '0;
-    next_sStore = '0;
+    acif.ramstore = '0;
+    acif.ramaddr = '0;
+    acif.ramWEN = '0;
+    acif.ramREN = '0;
+    acif.dwait = '0;
+    acif.dload = '0;
+    acif.iwait = '0;
+    acif.iload = '0;
+    spif.load_data = '0;
+    spif.sLoad_hit = '0;
+    spif.sStore_hit = '0;
+    spif.sLoad_row = '0;
     case(arbiter_state)
-      IDLE: begin
-        if(sLoad) begin
-          next_load_addr = load_addr;
-        end
-        else if(sStore) begin
-          next_arbiter_state = SP_STORE;
-        end
-        else if(dreq) begin
-          next_arbiter_state = DCACHE;
-        end
-        else if(ireq) begin
-          next_arbiter_state = ICACHE;
-        end
-      end
-
       SP_LOAD: begin
-        load_data = ramload; //TODO
-        next_sLoad_row = next_sLoad_row + 1;
-        
+        sp_wait = spif.sLoad;
+        acif.ramaddr = spif.load_addr;
+        acif.ramREN = spif.sLoad;
+        spif.load_data = acif.ramload;
+        spif.sLoad_hit = 1'b1;
       end
 
       SP_STORE: begin
-      
+        sp_wait = spif.sStore;
+        acif.ramstore = spif.store_data;
+        acif.ramaddr = spif.store_addr;
+        acif.ramWEN = spif.sStore;
+        spif.sStore_hit = 1'b1;
+        spif.sLoad_row = spif.sLoad_row + 1;
+        if(spif.sLoad_row == 3'd5)begin
+          spif.sLoad_row = 3'd1;
+        end
       end
 
       DCACHE: begin
-      
+        acif.ramstore = acif.dstore;
+        acif.ramaddr = acif.daddr;
+        acif.ramWEN = acif.dWEN;
+        acif.ramREN = !acif.dWEN && acif.dREN;
+        acif.dwait = (acif.dREN || acif.dWEN);
+        acif.dload = acif.ramload;
       end
 
       ICACHE: begin
-      
+        acif.ramaddr = acif.iaddr;
+        acif.iload = acif.ramload;
+        acif.iwait = acif.iREN;
       end
     endcase
   end

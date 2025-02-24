@@ -16,7 +16,6 @@ interface dispatch_if;
     fust_s_t fust_s;
     fust_m_t fust_m;
     fust_g_t fust_g;
-    fust_state_e [4:0] fust_state;
 
     // Inputs from writeback
     wb_ctr_t wb;
@@ -30,19 +29,20 @@ interface dispatch_if;
     fust_m_row_t n_fust_m;
     fust_g_row_t n_fust_g;
     fu_scalar_t n_fu_s;
-    fu_type n_fu_t;
     logic n_fust_s_en, n_fust_m_en, n_fust_g_en;
-    logic [2:0][1:0] n_t1;
-    logic [2:0][1:0] n_t2;
     
     modport DI (
-        input fetch, flush, freeze, fust_s, fust_m, fust_g, fust_state, wb, ihit,
-        output out, n_fu_t, n_fust_s, n_fust_m, n_fust_g, n_fu_s, n_fust_s_en, n_fust_m_en, n_fust_g_en, n_t1, n_t2
+        input fetch, flush, freeze, fust_s, fust_m, fust_g, wb, ihit,
+        output out, n_fust_s, n_fust_m, n_fust_g, n_fu_s, n_fust_s_en, n_fust_m_en, n_fust_g_en
     );
 
     modport tb (
-        input out, n_fu_t, n_fust_s, n_fust_m, n_fust_g, n_fu_s, n_fust_s_en, n_fust_m_en, n_fust_g_en, n_t1, n_t2,
-        output fetch, flush, freeze, fust_s, fust_m, fust_g, fust_state, wb, ihit
+        input out, n_fust_s, n_fust_m, n_fust_g, n_fu_s, n_fust_s_en, n_fust_m_en, n_fust_g_en,
+        output fetch, flush, freeze, fust_s, fust_m, fust_g, wb, ihit
+    );
+
+    modport dcache (
+        output ihit
     );
 
 endinterface
