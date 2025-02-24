@@ -21,7 +21,7 @@ parameter PC0 = 0;
   // bus interface
   datapath_cache_if                 dcif ();
   // coherence interface
-  cache_control_if                  ccif ();
+  caches_if                         cif ();
   arbiter_caches_if                 acif();
   scratchpad_if                     spif();
 
@@ -31,8 +31,8 @@ parameter PC0 = 0;
   // map caches
   memory_arbiter_basic MEM_ARB(CLK, nRST, acif, spif);
 
-  icache ICACHE(CLK, nRST, dif, /* dispatch_if */, acif);
-  dcache DCACHE(CLK, nRST, dcif, /* fu_scalar_ls_if */, cif);
+  icache ICACHE(CLK, nRST, dif, cif, /* fetch_if */);
+  dcache DCACHE(CLK, nRST, dcif, cif, /* fu_scalar_ls_if */);
   // scratchpad
 
 
