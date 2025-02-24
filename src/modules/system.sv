@@ -9,11 +9,12 @@
 `include "system_if.vh"
 //types
 `include "isa_types.vh"
-`include "cpu_ram_if.vh"
-`include "cpu_types_pkg.vh"
+`include "ram_pkg.vh"
+`include "ram_if.vh"
 
 module system (input logic CLK, nrst, system_if.sys syif);
 
+  import isa_pkg::*;
 
   // stopped running
   logic halt;
@@ -43,7 +44,7 @@ module system (input logic CLK, nrst, system_if.sys syif);
   end
 
   // interfaces
-  cpu_ram_if                            prif ();
+  ram_if                            prif ();
 
   // scheduler core processor
   scheduler_core                        CPU (CPUCLK, nrst, halt, prif);

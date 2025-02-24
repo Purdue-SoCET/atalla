@@ -8,11 +8,11 @@
 `define DATAPATH_CACHE_IF_VH
 
 // types
-`include "cpu_types_pkg.vh"
+`include "isa_types.vh"
 
 interface datapath_cache_if;
   // import types
-  import cpu_types_pkg::*;
+  import isa_pkg::*;
 
 // datapath signals
   // stop processing

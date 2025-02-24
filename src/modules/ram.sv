@@ -1,4 +1,6 @@
-`include "cpu_types_pkg.vh"
+`include "ram_if.vh"
+`include "ram_pkg.vh"
+
 module ram #(
     parameter DATA_WIDTH = 32,   // Data bus width
     parameter ADDR_WIDTH = 10,   // Address bus width
@@ -6,10 +8,10 @@ module ram #(
     parameter LAT = 6
 )(
     input logic CLK, nRST,
-    cpu_ram_if.ram ramif
+    ram_if.ram ramif
 );
 
-    import cpu_types_pkg::*;
+    import ram_pkg::*;
 
     ramstate_t rstate;
 

@@ -1,6 +1,6 @@
 // FROM 437
 
-`include "cpu_types_pkg.vh"
+`include "ram_pkg.vh"
 `include "cache_control_if.vh"
 
 module memory_control (
@@ -8,7 +8,7 @@ module memory_control (
   cache_control_if.cc ccif
 );
 
-    import cpu_types_pkg::*;
+    import ram_pkg::*;
   
   //ram outputs
   assign ccif.ramstore = ccif.dstore;

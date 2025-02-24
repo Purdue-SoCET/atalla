@@ -34,11 +34,7 @@ module fu_branch(
     fubif.update_pc = '0;
     actual_outcome = '0;
 
-<<<<<<< HEAD
     if (fubif.branch) begin
-=======
-    if (fubif.branch) begin 
->>>>>>> 9c5d5014b5aa7fa94338db381e0464ca6fec6f65
       actual_outcome = fubif.branch_gate_sel ? ~zero : zero;
       fubif.branch_outcome = actual_outcome;
       fubif.updated_pc = actual_outcome ? (fubif.current_pc + fubif.imm) : (fubif.current_pc + 32'd4);
@@ -49,10 +45,6 @@ module fu_branch(
       fubif.update_btb = 1'b1;
       fubif.update_pc = fubif.current_pc;
       fubif.branch_target = fubif.current_pc + fubif.imm;
-<<<<<<< HEAD
     end 
-=======
-    end
->>>>>>> 9c5d5014b5aa7fa94338db381e0464ca6fec6f65
   end
 endmodule

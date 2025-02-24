@@ -13,7 +13,7 @@
 module scheduler_core (
   input logic CLK, nrst,
   output logic halt,
-  cpu_ram_if.cpu scif
+  ram_if.cpu scif
 );
 
 parameter PC0 = 0;

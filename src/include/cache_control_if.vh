@@ -10,12 +10,14 @@
 `define CACHE_CONTROL_IF_VH
 
 // ram memory types
-`include "cpu_types_pkg.vh"
+`include "ram_pkg.vh"
+`include "isa_types.vh"
 
 // split this into cache_control_if and ram_if
 interface cache_control_if;
   // import types
-  import cpu_types_pkg::*;
+  import ram_pkg::*;
+  import isa_pkg::*;
 
   // access with cpuid on each processor
   parameter CPUS = 1;

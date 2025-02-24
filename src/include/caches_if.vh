@@ -13,12 +13,12 @@
 `define CACHES_IF_VH
 
 // ram memory types
-`include "cpu_types_pkg.vh"
+`include "isa_types.vh"
 
 interface caches_if;
 
   // import types
-  import cpu_types_pkg::*;
+  import isa_pkg::*;
 
   // arbitration
   logic          iwait, dwait, iREN, dREN, dWEN;
