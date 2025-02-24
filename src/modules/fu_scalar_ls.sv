@@ -1,13 +1,14 @@
 `include "fu_scalar_ls_if.vh"
-
+`include "datapath_types.vh"
+`include "isa_types.vh"
 
 module fu_scalar_ls (
     input logic CLK, nRST,
     fu_scalar_ls_if.sls sls_if
 );
 
-    import types_pkg::*;
-    import cpu_types::*;
+    import isa_pkg::*;
+    import datapath_pkg::*;
 
     typedef enum logic [1:0] { 
         idle, latched
@@ -17,7 +18,6 @@ module fu_scalar_ls (
 
     word_t latched_dmemaddr, latched_dmemstore, addr;
     logic latched_dmemREN, latched_dmemWEN, write, read;
-
 
 
     always_ff @(posedge CLK, negedge nRST) begin
@@ -92,8 +92,5 @@ module fu_scalar_ls (
             end
         endcase
     end
-
-
-
 
 endmodule

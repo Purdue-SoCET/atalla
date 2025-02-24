@@ -6,9 +6,13 @@ package types_pkg;
   parameter WORD_W = 32;
   parameter REG_W  = 5;
   parameter MATRIX_W = 4;
+  parameter VALUE_BITS = 16;
+  parameter BITS_PER_ROW = MATRIX_W * VALUE_BITS;
 
   parameter FU_S_W = 2;
   parameter FU_M_W = 1;
+  parameter MAT_S_W = 2;
+  parameter ROW_S_W = 2;
 
   typedef logic [WORD_W-1:0] word_t;
 
@@ -19,16 +23,16 @@ package types_pkg;
   typedef logic [FU_M_W-1:0] fu_mbits_t;
  
   // defines the Function Units
-  typdef enum logic [FU_S_W-1:0] {
-    ALU,
-    LD_ST,
-    BRANCH
-  } fu_scalar;
+  // typedef enum logic [FU_S_W-1:0] {
+  //   ALU,
+  //   LD_ST,
+  //   BRANCH
+  // } fu_scalar;
 
-  typdef enum logic [FU_M_W-1:0] {
-    LD_ST,
-    GEMM
-  } fu_matrix;
+  // typedef enum logic [FU_M_W-1:0] {
+  //   LD_ST,
+  //   GEMM
+  // } fu_matrix;
 
   // Pipeline Stage Structs
   typedef struct packed {
@@ -38,9 +42,9 @@ package types_pkg;
     
   } dispatch_t;
 
-  typedef struct packed {
-    cu_t cu; 
-  } issue_t;
+  // typedef struct packed {
+  //   cu_t cu;
+  // } issue_t;
 
   typedef struct packed {
     logic busy;
@@ -70,21 +74,21 @@ package types_pkg;
     fust_m_row_t [FU_M_W-1:0] op;
   } fust_m_t;
 
-  typedef enum logic [2:0] {
-    BEQ, 
-    BNE, 
-    BNE,
-    BLT,
-    BGE,
-    BLTU,
-    BGEU,
-  } branch_t;
+  // typedef enum logic [2:0] {
+  //   BEQ, 
+  //   BNE, 
+  //   BNE,
+  //   BLT,
+  //   BGE,
+  //   BLTU,
+  //   BGEU,
+  // } branch_t;
 
   typedef enum logic [1:0] {
-    STORE,
-    LOAD,
-    MEM_TO_REG
-  } scalar_mem_t; // 
+    MEM_STORE,
+    MEM_LOAD,
+    MEM_MEM_TO_REG
+  } scalar_mem_t;
 
   typedef enum logic [1:0] {
     STORE,
@@ -216,7 +220,6 @@ package types_pkg;
     regbits_t           rd;
     opcode_t            opcode;
   } r_t;
-
-
 endpackage
+
 `endif
