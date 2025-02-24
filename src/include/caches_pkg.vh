@@ -1,6 +1,12 @@
 `ifndef CACHES_PKG_VH
 `define CACHES_PKG_VH
 
+
+// CHANGE: Size of Data changed from 32bits to 64bits
+
+
+
+
 package caches_pkg;
 
   // word width and size
