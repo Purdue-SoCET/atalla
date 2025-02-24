@@ -11,7 +11,7 @@ interface caches_if;
 
   // arbitration
   logic          iwait, dwait, iREN, dREN, dWEN;
-  [63:0]         iload, dload, dstore;
+  logic[63:0]         iload, dload, dstore;
   word_t         iaddr, daddr;
 
   // icache ports to controller
@@ -23,8 +23,7 @@ interface caches_if;
   // dcache ports to controller
   modport dcache (
     input   dwait, dload,
-    output  dREN, dWEN, daddr, dstore,
-            ccwrite, cctrans
+    output  dREN, dWEN, daddr, dstore
   );
 
   // caches ports to controller

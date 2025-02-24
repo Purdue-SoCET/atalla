@@ -19,11 +19,6 @@ interface fetch_if;
     output imemload, flush, stall, dispatch_free, pc_prediction, misprediction, correct_target
   );
 
-  modport icache (
-    input 
-    output i
-  );
-
 endinterface
 
 `endif

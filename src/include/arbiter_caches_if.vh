@@ -40,7 +40,7 @@ interface arbiter_caches_if(
             // cache inputs
     input   iREN, dREN, dWEN, dstore, iaddr, daddr,
             // ram inputs
-            ramload
+            ramload,
             // cache outputs
     output  iwait, dwait, iload, dload,
             // ram outputs

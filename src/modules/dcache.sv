@@ -34,7 +34,7 @@ typedef struct packed {
 
 // Internal signals
 word_t hit_count, next_hit_count, latched_dmemaddr;
-logic miss;
+logic miss, finish_flush;
 logic [NUM_SETS-1:0] lru, next_lru;
 logic [INDEX_BITS-1:0] flush_idx, next_flush_idx;
 logic [4:0] flush_counter, next_flush_counter;

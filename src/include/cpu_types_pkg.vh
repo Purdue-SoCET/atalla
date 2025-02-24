@@ -232,14 +232,14 @@ package cpu_types_pkg;
 	logic valid;
 	logic dirty;
 	logic [DTAG_W - 1:0] tag;
-	[63:0] [1:0] data;
+	logic [63:0] [1:0] data;
   } dcache_frame;
 
   //icache frame  
   typedef struct packed {
 	logic valid;
 	logic [ITAG_W - 1:0] tag;
-	[63:0] data;
+	logic [63:0] data;
   } icache_frame;
 
 endpackage

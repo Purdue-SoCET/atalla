@@ -42,8 +42,7 @@ interface dispatch_if;
     );
 
     modport dcache (
-        input
-        output
+        output ihit;
     );
 
 endinterface
