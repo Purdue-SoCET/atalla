@@ -2,6 +2,7 @@ SOURCE_FILES = \
 	./src/modules/system.sv \
 	./src/modules/ram.sv \
 	./src/modules/scheduler_core.sv \
+	./src/modules/sc_datapath.sv \
 	./src/modules/memory_control.sv \
 	./src/modules/caches.sv \
 	./src/modules/icache.sv \
