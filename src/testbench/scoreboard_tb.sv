@@ -158,10 +158,10 @@ program test (
         sbif.wb_ctrl.load_done = '1;
 
         sbif.wb_ctrl.s_rw_en = '1;
-        sbif.wb_ctrl.s_rw = 5'd4;
+        sbif.wb_ctrl.s_rw = 5'd5;
 
         sbif.wb.s_rw_en = '1;
-        sbif.wb.s_rw = 5'd4;
+        sbif.wb.s_rw = 5'd5;
 
         @(posedge CLK);
 
@@ -174,6 +174,34 @@ program test (
         sbif.wb.s_rw_en = '0;
         sbif.wb.s_rw = '0;
 
+        @(posedge CLK);
+        @(posedge CLK);
+        @(posedge CLK);
+        @(posedge CLK);
+        @(posedge CLK);
+
+        sbif.wb.alu_done = '1;
+        sbif.wb_ctrl.alu_done = '1;
+
+        sbif.wb_ctrl.s_rw_en = '1;
+        sbif.wb_ctrl.s_rw = 5'd11;
+
+        sbif.wb.s_rw_en = '1;
+        sbif.wb.s_rw = 5'd11;
+
+        @(posedge CLK);
+
+        sbif.wb.alu_done = '0;
+        sbif.wb_ctrl.alu_done = '0;
+
+        sbif.wb_ctrl.s_rw_en = '0;
+        sbif.wb_ctrl.s_rw = '0;
+
+        sbif.wb.s_rw_en = '0;
+        sbif.wb.s_rw = '0;
+
+
+        @(posedge CLK);
         @(posedge CLK);
         @(posedge CLK);
         @(posedge CLK);

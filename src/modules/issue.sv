@@ -42,14 +42,14 @@ module issue(
 
     logic [4:0] rdy;
     logic [4:0] n_rdy;
-    logic [4:0][1:0] age;
-    logic [4:0][1:0] n_age;
+    logic [4:0][2:0] age;
+    logic [4:0][2:0] n_age;
     fust_state_e [4:0] fust_state;
     fust_state_e [4:0] next_fust_state;
     logic [4:0] oldest_rdy;
     logic [4:0] next_oldest_rdy;
-    logic [1:0] oldest_age;
-    logic [1:0] next_oldest_age;
+    // logic [2:0] oldest_age;
+    // logic [2:0] next_oldest_age;
 
     always_comb begin : Incoming_Instr_Logic
       incoming_instr = '0;
@@ -134,26 +134,49 @@ module issue(
     
     always_ff @ (posedge CLK, negedge nRST) begin: Oldest_Latch
       if (~nRST) begin
-        oldest_age <= '0;
+        // oldest_age <= '0;
         oldest_rdy <= '0;
       end else begin
-        oldest_age <= next_oldest_age;
+        // oldest_age <= next_oldest_age;
         oldest_rdy <= next_oldest_rdy;
       end
     end
 
     always_comb begin : Oldest_Logic
-      next_oldest_age = oldest_age;
+      // next_oldest_age = oldest_age;
       next_oldest_rdy = oldest_rdy;
-      for (int i = 0; i < 5; i++) begin
-        if (rdy[i] & (age[i] > oldest_age)) begin
-          next_oldest_age = age[i];
-          next_oldest_rdy = '0;
-          next_oldest_rdy[i] = 1'b1;
-        end
+      // for (int i = 0; i < 5; i++) begin
+          // && (age[i] > oldest_age)
+          // next_oldest_rdy[i] = 1'b1;
+      if (rdy[0] && (fust_state[0] != FUST_EX)) begin
+        next_oldest_rdy[0] = ((age[0] > age[1]) && (age[0] > age[2]) && (age[0] > age[3]) && (age[0] > age[4])) ? 1'b1 : oldest_rdy;
+      end
+      else if (rdy[1] && (fust_state[1] != FUST_EX)) begin
+        next_oldest_rdy[1] = ((age[1] > age[0]) && (age[1] > age[2]) && (age[1] > age[3]) && (age[1] > age[4])) ? 1'b1 : oldest_rdy;
+      end
+      else if (rdy[2] && (fust_state[2] != FUST_EX)) begin
+        next_oldest_rdy[2] = ((age[2] > age[0]) && (age[2] > age[1]) && (age[2] > age[3]) && (age[2] > age[4])) ? 1'b1 : oldest_rdy;
+      end
+      else if (rdy[3] && (fust_state[3] != FUST_EX)) begin
+        next_oldest_rdy[3] = ((age[3] > age[0]) && (age[3] > age[1]) && (age[3] > age[2]) && (age[3] > age[4])) ? 1'b1 : oldest_rdy;
+      end
+      else if (rdy[4] && (fust_state[4] != FUST_EX)) begin
+        next_oldest_rdy[4] = ((age[4] > age[0]) && (age[4] > age[1]) && (age[4] > age[2]) && (age[4] > age[3])) ? 1'b1 : oldest_rdy;
+      end
 
-        if (fust_state[i] != FUST_EX && next_fust_state[i] == FUST_EX) begin
-          next_oldest_age = '0;
+        // if (rdy[i] && fust_state == FUST_RDY && (age[i] > oldest_rdy)) begin
+        //   next_oldest_rdy[i] = 1'b1;
+        // end
+
+
+        // if (fust_state[i] != FUST_EX && next_fust_state[i] == FUST_EX) begin
+        //   next_oldest_age[i] = '0;
+        //   // next_oldest_rdy[i] = '0;
+        // end
+      for (int i = 0; i < 5; i++) begin
+        if (next_fust_state[i] == FUST_EMPTY) begin
+          next_oldest_rdy[i] = '0;
+          // next_oldest_age = '0;
         end
       end
     end
@@ -172,11 +195,11 @@ module issue(
           FUST_EMPTY: n_rdy[i] = 1'b0;
           FUST_WAIT: begin // implies instruction is already loaded
             if (i < 3) begin // Scalar FUST
-              n_rdy[i] = (~|fusif.fust.t1[i] & ~|fusif.fust.t2[i]);
+              n_rdy[i] = (!(|fusif.fust.t1[i]) && !(|fusif.fust.t2[i]));
             end else if (i == 3) begin // Matrix LD/ST FUST
-              n_rdy[i] = (~|fumif.fust.op.t1 & ~|fumif.fust.op.t2);
+              n_rdy[i] = (!(|fumif.fust.op.t1) && !(|fumif.fust.op.t2));
             end else if (i == 4) begin // GEMM FUST
-              n_rdy[i] = (~|fugif.fust.op.t1 & ~|fugif.fust.op.t2 & ~|fugif.fust.op.t3);
+              n_rdy[i] = (!(|fugif.fust.op.t1) && !(|fugif.fust.op.t2) && !(|fugif.fust.op.t3));
             end
           end
           // I think just let FUST_RDY state get its rdy bit resolved in EX if
