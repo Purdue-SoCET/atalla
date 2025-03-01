@@ -8,7 +8,7 @@ module writeback
 (
     input logic CLK, 
     input logic nRST,
-    writeback_if.wb wbif // MATRIX LOAD STORE IF
+    writeback_if.wb wbif // WRITEBACK IF
 );
 
 // Importing types
