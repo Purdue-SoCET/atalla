@@ -50,7 +50,7 @@ add wave -noupdate -group rstif /scoreboard_tb/DUT/DI/rstsif/di_write
 add wave -noupdate -group rstif /scoreboard_tb/DUT/DI/rstsif/di_tag
 add wave -noupdate -group rstif /scoreboard_tb/DUT/DI/rstsif/wb_sel
 add wave -noupdate -group rstif /scoreboard_tb/DUT/DI/rstsif/wb_write
-add wave -noupdate -subitemconfig {/scoreboard_tb/DUT/DI/rstsif/status.idx -expand} /scoreboard_tb/DUT/DI/rstsif/status
+add wave -noupdate /scoreboard_tb/DUT/DI/rstsif/status
 add wave -noupdate -divider FUST
 add wave -noupdate -group fuif /scoreboard_tb/DUT/IS/FS/fuif/en
 add wave -noupdate -group fuif /scoreboard_tb/DUT/IS/FS/fuif/fu
@@ -58,6 +58,14 @@ add wave -noupdate -group fuif /scoreboard_tb/DUT/IS/FS/fuif/fust_row
 add wave -noupdate -childformat {{/scoreboard_tb/DUT/IS/FS/fuif/fust.busy -radix binary}} -expand -subitemconfig {/scoreboard_tb/DUT/IS/FS/fuif/fust.busy {-height 16 -radix binary} /scoreboard_tb/DUT/IS/FS/fuif/fust.op -expand} /scoreboard_tb/DUT/IS/FS/fuif/fust
 add wave -noupdate -divider Issue
 add wave -noupdate -expand -group isif /scoreboard_tb/DUT/isif/dispatch
+add wave -noupdate -expand -group isif -expand /scoreboard_tb/DUT/IS/age
+add wave -noupdate -expand -group isif /scoreboard_tb/DUT/IS/n_age
+add wave -noupdate -expand -group isif -expand /scoreboard_tb/DUT/IS/oldest_age
+add wave -noupdate -expand -group isif -expand /scoreboard_tb/DUT/IS/next_oldest_age
+add wave -noupdate -expand -group isif -expand /scoreboard_tb/DUT/IS/rdy
+add wave -noupdate -expand -group isif -expand /scoreboard_tb/DUT/IS/n_rdy
+add wave -noupdate -expand -group isif -expand /scoreboard_tb/DUT/IS/oldest_rdy
+add wave -noupdate -expand -group isif -expand /scoreboard_tb/DUT/IS/next_oldest_rdy
 add wave -noupdate -expand -group isif -childformat {{/scoreboard_tb/DUT/isif/n_fust_s.rd -radix decimal} {/scoreboard_tb/DUT/isif/n_fust_s.rs1 -radix decimal} {/scoreboard_tb/DUT/isif/n_fust_s.rs2 -radix decimal}} -expand -subitemconfig {/scoreboard_tb/DUT/isif/n_fust_s.rd {-height 16 -radix decimal} /scoreboard_tb/DUT/isif/n_fust_s.rs1 {-height 16 -radix decimal} /scoreboard_tb/DUT/isif/n_fust_s.rs2 {-height 16 -radix decimal}} /scoreboard_tb/DUT/isif/n_fust_s
 add wave -noupdate -expand -group isif /scoreboard_tb/DUT/isif/n_fust_m
 add wave -noupdate -expand -group isif /scoreboard_tb/DUT/isif/n_fust_g
@@ -75,7 +83,7 @@ add wave -noupdate /scoreboard_tb/DUT/IS/incoming_instr
 add wave -noupdate /scoreboard_tb/DUT/sbif/wb
 add wave -noupdate /scoreboard_tb/DUT/sbif/wb_ctrl
 TreeUpdate [SetDefaultTree]
-WaveRestoreCursors {{Cursor 1} {345000 ps} 0}
+WaveRestoreCursors {{Cursor 1} {148050 ps} 0}
 quietly wave cursor active 1
 configure wave -namecolwidth 150
 configure wave -valuecolwidth 209
@@ -91,4 +99,4 @@ configure wave -griddelta 40
 configure wave -timeline 0
 configure wave -timelineunits ps
 update
-WaveRestoreZoom {214440 ps} {372920 ps}
+WaveRestoreZoom {52290 ps} {265650 ps}

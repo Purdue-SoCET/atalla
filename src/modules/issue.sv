@@ -124,8 +124,8 @@ module issue(
       for (int i = 0; i < 5; i++) begin
         case (fust_state[i])
           FUST_EMPTY: n_age[i] = {1'b0,incoming_instr[i]}; // set new instructions to age 1
-          FUST_WAIT:  n_age[i] = age[i] + 1;
-          FUST_RDY:   n_age[i] = age[i] + 1;
+          FUST_WAIT:  n_age[i] = (|incoming_instr) ? age[i] + 1 : age[i];
+          FUST_RDY:   n_age[i] = (|incoming_instr) ? age[i] + 1 : age[i];
           FUST_EX:    n_age[i] = '0;
           default: n_age = age;
         endcase
@@ -146,10 +146,14 @@ module issue(
       next_oldest_age = oldest_age;
       next_oldest_rdy = oldest_rdy;
       for (int i = 0; i < 5; i++) begin
-        if (n_rdy[i] & (n_age[i] > oldest_age)) begin
+        if (rdy[i] & (age[i] > oldest_age)) begin
           next_oldest_age = age[i];
           next_oldest_rdy = '0;
           next_oldest_rdy[i] = 1'b1;
+        end
+
+        if (fust_state[i] != FUST_EX && next_fust_state[i] == FUST_EX) begin
+          next_oldest_age = '0;
         end
       end
     end
