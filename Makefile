@@ -26,10 +26,11 @@ SOURCE_FILES = \
 	./src/modules/fust_m.sv \
 	./src/modules/fust_s.sv \
 	./src/modules/rst_m.sv \
-	./src/modules/rst_s.sv
+	./src/modules/rst_s.sv \
+	./src/modules/buffer_module.sv 
 
 
-SCRDIR = /home/asicfab/a/wong371/william_wk/tensor-core/src/scripts
+SCRDIR = ./tensor-core/src/scripts
 SIMTIME = 100us             # Default simulation run time
 
 # modelsim viewing options
