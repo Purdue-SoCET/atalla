@@ -43,25 +43,25 @@ add wave -noupdate /scoreboard_tb/DUT/DI/diif/n_fust_s_en
 add wave -noupdate /scoreboard_tb/DUT/DI/diif/n_fust_m_en
 add wave -noupdate /scoreboard_tb/DUT/DI/diif/n_fust_g_en
 add wave -noupdate -divider RST
-add wave -noupdate -group rstif /scoreboard_tb/DUT/DI/WAW
-add wave -noupdate -group rstif /scoreboard_tb/DUT/DI/flush
-add wave -noupdate -group rstif /scoreboard_tb/DUT/DI/rstsif/di_sel
-add wave -noupdate -group rstif /scoreboard_tb/DUT/DI/rstsif/di_write
-add wave -noupdate -group rstif /scoreboard_tb/DUT/DI/rstsif/di_tag
-add wave -noupdate -group rstif /scoreboard_tb/DUT/DI/rstsif/wb_sel
-add wave -noupdate -group rstif /scoreboard_tb/DUT/DI/rstsif/wb_write
-add wave -noupdate /scoreboard_tb/DUT/DI/rstsif/status
+add wave -noupdate -expand -group rstsif /scoreboard_tb/DUT/DI/rstsif/di_sel
+add wave -noupdate -expand -group rstsif /scoreboard_tb/DUT/DI/rstsif/di_write
+add wave -noupdate -expand -group rstsif /scoreboard_tb/DUT/DI/rstsif/di_tag
+add wave -noupdate -expand -group rstsif /scoreboard_tb/DUT/DI/rstsif/spec
+add wave -noupdate -expand -group rstsif /scoreboard_tb/DUT/DI/rstsif/wb_sel
+add wave -noupdate -expand -group rstsif /scoreboard_tb/DUT/DI/rstsif/wb_write
+add wave -noupdate -expand -group rstsif /scoreboard_tb/DUT/DI/rstsif/status
+add wave -noupdate -subitemconfig {/scoreboard_tb/DUT/DI/rstsif/status.idx -expand} /scoreboard_tb/DUT/DI/rstsif/status
 add wave -noupdate -divider FUST
 add wave -noupdate -group fuif /scoreboard_tb/DUT/IS/FS/fuif/en
 add wave -noupdate -group fuif /scoreboard_tb/DUT/IS/FS/fuif/fu
 add wave -noupdate -group fuif /scoreboard_tb/DUT/IS/FS/fuif/fust_row
-add wave -noupdate -childformat {{/scoreboard_tb/DUT/IS/FS/fuif/fust.busy -radix binary}} -expand -subitemconfig {/scoreboard_tb/DUT/IS/FS/fuif/fust.busy {-height 16 -radix binary} /scoreboard_tb/DUT/IS/FS/fuif/fust.op -expand} /scoreboard_tb/DUT/IS/FS/fuif/fust
+add wave -noupdate /scoreboard_tb/PROG/sbif/branch_miss
+add wave -noupdate /scoreboard_tb/PROG/sbif/branch_resolved
+add wave -noupdate -radix unsigned -childformat {{/scoreboard_tb/DUT/IS/FS/fuif/fust.busy -radix unsigned} {/scoreboard_tb/DUT/IS/FS/fuif/fust.t1 -radix unsigned} {/scoreboard_tb/DUT/IS/FS/fuif/fust.t2 -radix unsigned} {/scoreboard_tb/DUT/IS/FS/fuif/fust.op -radix unsigned -childformat {{{[2]} -radix unsigned -childformat {{rd -radix unsigned} {rs1 -radix unsigned} {rs2 -radix unsigned} {imm -radix unsigned} {spec -radix unsigned}}} {{[1]} -radix unsigned -childformat {{rd -radix unsigned} {rs1 -radix unsigned} {rs2 -radix unsigned} {imm -radix unsigned} {spec -radix unsigned}}} {{[0]} -radix unsigned -childformat {{rd -radix unsigned} {rs1 -radix unsigned} {rs2 -radix unsigned} {imm -radix unsigned} {spec -radix unsigned}}}}} {/scoreboard_tb/DUT/IS/FS/fuif/fust.flush -radix unsigned}} -expand -subitemconfig {/scoreboard_tb/DUT/IS/FS/fuif/fust.busy {-height 16 -radix unsigned} /scoreboard_tb/DUT/IS/FS/fuif/fust.t1 {-height 16 -radix unsigned} /scoreboard_tb/DUT/IS/FS/fuif/fust.t2 {-height 16 -radix unsigned} /scoreboard_tb/DUT/IS/FS/fuif/fust.op {-height 16 -radix unsigned -childformat {{{[2]} -radix unsigned -childformat {{rd -radix unsigned} {rs1 -radix unsigned} {rs2 -radix unsigned} {imm -radix unsigned} {spec -radix unsigned}}} {{[1]} -radix unsigned -childformat {{rd -radix unsigned} {rs1 -radix unsigned} {rs2 -radix unsigned} {imm -radix unsigned} {spec -radix unsigned}}} {{[0]} -radix unsigned -childformat {{rd -radix unsigned} {rs1 -radix unsigned} {rs2 -radix unsigned} {imm -radix unsigned} {spec -radix unsigned}}}} -expand} {/scoreboard_tb/DUT/IS/FS/fuif/fust.op[2]} {-radix unsigned -childformat {{rd -radix unsigned} {rs1 -radix unsigned} {rs2 -radix unsigned} {imm -radix unsigned} {spec -radix unsigned}}} {/scoreboard_tb/DUT/IS/FS/fuif/fust.op[2].rd} {-radix unsigned} {/scoreboard_tb/DUT/IS/FS/fuif/fust.op[2].rs1} {-radix unsigned} {/scoreboard_tb/DUT/IS/FS/fuif/fust.op[2].rs2} {-radix unsigned} {/scoreboard_tb/DUT/IS/FS/fuif/fust.op[2].imm} {-radix unsigned} {/scoreboard_tb/DUT/IS/FS/fuif/fust.op[2].spec} {-radix unsigned} {/scoreboard_tb/DUT/IS/FS/fuif/fust.op[1]} {-radix unsigned -childformat {{rd -radix unsigned} {rs1 -radix unsigned} {rs2 -radix unsigned} {imm -radix unsigned} {spec -radix unsigned}}} {/scoreboard_tb/DUT/IS/FS/fuif/fust.op[1].rd} {-radix unsigned} {/scoreboard_tb/DUT/IS/FS/fuif/fust.op[1].rs1} {-radix unsigned} {/scoreboard_tb/DUT/IS/FS/fuif/fust.op[1].rs2} {-radix unsigned} {/scoreboard_tb/DUT/IS/FS/fuif/fust.op[1].imm} {-radix unsigned} {/scoreboard_tb/DUT/IS/FS/fuif/fust.op[1].spec} {-radix unsigned} {/scoreboard_tb/DUT/IS/FS/fuif/fust.op[0]} {-radix unsigned -childformat {{rd -radix unsigned} {rs1 -radix unsigned} {rs2 -radix unsigned} {imm -radix unsigned} {spec -radix unsigned}}} {/scoreboard_tb/DUT/IS/FS/fuif/fust.op[0].rd} {-radix unsigned} {/scoreboard_tb/DUT/IS/FS/fuif/fust.op[0].rs1} {-radix unsigned} {/scoreboard_tb/DUT/IS/FS/fuif/fust.op[0].rs2} {-radix unsigned} {/scoreboard_tb/DUT/IS/FS/fuif/fust.op[0].imm} {-radix unsigned} {/scoreboard_tb/DUT/IS/FS/fuif/fust.op[0].spec} {-radix unsigned} /scoreboard_tb/DUT/IS/FS/fuif/fust.flush {-height 16 -radix unsigned}} /scoreboard_tb/DUT/IS/FS/fuif/fust
 add wave -noupdate -divider Issue
 add wave -noupdate -expand -group isif /scoreboard_tb/DUT/isif/dispatch
 add wave -noupdate -expand -group isif -expand /scoreboard_tb/DUT/IS/age
 add wave -noupdate -expand -group isif -expand /scoreboard_tb/DUT/IS/n_age
-add wave -noupdate -expand -group isif /scoreboard_tb/DUT/IS/oldest_age
-add wave -noupdate -expand -group isif /scoreboard_tb/DUT/IS/next_oldest_age
 add wave -noupdate -expand -group isif /scoreboard_tb/DUT/IS/rdy
 add wave -noupdate -expand -group isif /scoreboard_tb/DUT/IS/n_rdy
 add wave -noupdate -expand -group isif /scoreboard_tb/DUT/IS/oldest_rdy
@@ -83,7 +83,7 @@ add wave -noupdate /scoreboard_tb/DUT/IS/incoming_instr
 add wave -noupdate /scoreboard_tb/DUT/sbif/wb
 add wave -noupdate /scoreboard_tb/DUT/sbif/wb_ctrl
 TreeUpdate [SetDefaultTree]
-WaveRestoreCursors {{Cursor 3} {79910 ps} 1} {{Cursor 4} {88290 ps} 0}
+WaveRestoreCursors {{Cursor 3} {79910 ps} 1} {{Cursor 4} {84230 ps} 0}
 quietly wave cursor active 2
 configure wave -namecolwidth 150
 configure wave -valuecolwidth 209
@@ -99,4 +99,4 @@ configure wave -griddelta 40
 configure wave -timeline 0
 configure wave -timelineunits ps
 update
-WaveRestoreZoom {21310 ps} {234670 ps}
+WaveRestoreZoom {0 ps} {213360 ps}

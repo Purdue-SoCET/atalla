@@ -42,8 +42,8 @@ module issue(
 
     logic [4:0] rdy;
     logic [4:0] n_rdy;
-    logic [4:0][2:0] age;
-    logic [4:0][2:0] n_age;
+    logic [4:0][1:0] age;
+    logic [4:0][1:0] n_age;
     fust_state_e [4:0] fust_state;
     fust_state_e [4:0] next_fust_state;
     logic [4:0] oldest_rdy;
@@ -96,10 +96,27 @@ module issue(
       // by the issue stage which should allow dispatch to overwrite it.
       fusif.en       = isif.n_fust_s_en;
       fusif.fu       = isif.n_fu_s;
-      fusif.fust_row = isif.n_fust_s;
+      fusif.fust_row = isif.n_fust_s; // spec bit written here
+
       fusif.busy[0]  = (fust_state[0] == FUST_EX && (next_fust_state[0] == FUST_EMPTY || next_fust_state[0] == FUST_WAIT)) ? 1'd0 : next_fust_state[0] != FUST_EMPTY;
       fusif.busy[1]  = (fust_state[1] == FUST_EX && (next_fust_state[1] == FUST_EMPTY || next_fust_state[1] == FUST_WAIT)) ? 1'd0 : next_fust_state[1] != FUST_EMPTY;
       fusif.busy[2]  = (fust_state[2] == FUST_EX && (next_fust_state[2] == FUST_EMPTY || next_fust_state[2] == FUST_WAIT)) ? 1'd0 : next_fust_state[2] != FUST_EMPTY;
+      
+      // TODO
+      // could be writing the flush bits here as well if not in the dispatch,
+      // like how busy is being written independent of the rows that dispatch
+      // writes
+      for (int i = 0; i < 5; i++) begin
+        fusif.fust.flush[i] = 1'b0;
+        if (isif.branch_miss & fusif.fust.op[i].spec) begin
+          fusif.fust.flush[i] = 1'b1;
+        //  then flush fusif.fust.op[i], easiest way is
+        //  probably adding a flush bit to the fusif.fust.op[]
+        //  and let the fust_s clear its rows with that bit asserted
+        //  since fusif.fust.op can only write one row at a time
+        end
+      end
+
       fusif.t1 = isif.n_t1;
       fusif.t2 = isif.n_t2;
 
@@ -236,22 +253,23 @@ module issue(
             next_fust_state[i] = (next_oldest_rdy[i]) ? FUST_EX : FUST_RDY;
           end
           FUST_EX: begin
+
             //TODO:handle flushing on speculation
+            // if (isif.branch_miss & fusif.fust.op[i].spec) begin
+            //  then flush fusif.fust.op[i], easiest way is
+            //  probably adding a flush bit to the fusif.fust.op[]
+            //  and let the fust_s clear its rows with that bit asserted
+            //  since fusif.fust.op can only write one row at a time
+
+            // end
+            if (i==2 && isif.branch_miss || isif.branch_resolved) begin
+              next_fust_state[i] = FUST_EMPTY;
+            end
 
             if (isif.wb.s_rw_en & isif.wb.alu_done & (i == 0)) begin
               next_fust_state[i] = incoming_instr[i] ? FUST_WAIT : FUST_EMPTY;
-            //   // TODO 
-            //   fusif.fust.op[1].t1 = (fusif.fust.op[1].t1 == 2'd1) && fusif.busy[1] ? '0 : fusif.fust.op[1].t1;
-            //   fusif.fust.op[1].t2 = (fusif.fust.op[1].t2 == 2'd1) && fusif.busy[1] ? '0 : fusif.fust.op[1].t2;
-            //   fusif.fust.op[2].t1 = (fusif.fust.op[2].t1 == 2'd1) && fusif.busy[2] ? '0 : fusif.fust.op[2].t1;
-            //   fusif.fust.op[2].t2 = (fusif.fust.op[2].t2 == 2'd1) && fusif.busy[2] ? '0 : fusif.fust.op[2].t2;
             end else if (isif.wb.s_rw_en & isif.wb.load_done & (i == 1)) begin
               next_fust_state[i] = incoming_instr[i] ? FUST_WAIT : FUST_EMPTY;
-            //   // TODO 
-            //   fusif.fust.op[0].t1 = (fusif.fust.op[0].t1 == 2'd2) && fusif.busy[0] ? '0 : fusif.fust.op[0].t1;
-            //   fusif.fust.op[0].t2 = (fusif.fust.op[0].t2 == 2'd2) && fusif.busy[0] ? '0 : fusif.fust.op[0].t2;
-            //   fusif.fust.op[2].t1 = (fusif.fust.op[2].t1 == 2'd2) && fusif.busy[2] ? '0 : fusif.fust.op[2].t1;
-            //   fusif.fust.op[2].t2 = (fusif.fust.op[2].t2 == 2'd2) && fusif.busy[2] ? '0 : fusif.fust.op[2].t2;
             end
             //TODO: handle dones from branch and matrix FUs
 
