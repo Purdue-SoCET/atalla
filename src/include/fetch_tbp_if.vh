@@ -15,32 +15,30 @@ interface fetch_tbp_if;
         taken_res: 1 if branch taken in resolution stage
         enable_res: enable signal from resolution stage
 
+        pc_fetch: PC from fetch stage
         enable_fetch: enable signal (if BYTPE instruction) from fetch 
     */
     word_t pc_res, bt_res;
     logic taken_res;
     logic enable_res;
 
+    word_t pc_fetch;
     logic enable_fetch;
 
     /*
         Outputs: 
         nxt_PC : next PC prediction
-        pred_2bit_fetch: prediction for 2bit from fetch
-        pred_gshare_fetch: prediction for gshare from fetch
     */
     word_t nxt_PC;
-    logic pred_2bit_fetch;
-    logic pred_gshare_fetch;
 
-    modport tp (
-        input 
-        output 
+    modport tbp (
+        input pc_res, bt_res, taken_res, enable_res, pc_fetch, enable_fetch,
+        output nxt_PC
     );
 
     modport tb (
-        input 
-        output 
+        input nxt_PC,
+        output pc_res, bt_res, taken_res, enable_res, pc_fetch, enable_fetch
     );
 endinterface
 `endif

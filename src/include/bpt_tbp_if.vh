@@ -25,7 +25,7 @@ interface bpt_tbp_if;
 
     /*
         Outputs: 
-        pred_fetch: prediction from fetch stage
+        pred_fetch: prediction for fetch stage
     */
     logic pred_fetch;
 

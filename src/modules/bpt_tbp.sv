@@ -31,7 +31,7 @@ module bpt_tbp #(
         nxt_bpt_tbp = curr_bpt_tbp;
         casez(curr_bpt_tbp)
             strongly_Pred1  : begin
-                nxt_bpt_tbp = (bpt_tbpif.taken_res == 2'b01) ? strongly_Pred1    : weakly_Pred1;
+                nxt_bpt_tbp = (bpt_tbpif.taken_res == 2'b01) ? weakly_Pred1 : strongly_Pred1;
             end
             weakly_Pred1    : begin
                 nxt_bpt_tbp = weakly_Pred1;

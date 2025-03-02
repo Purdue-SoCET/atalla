@@ -27,7 +27,11 @@ SOURCE_FILES = \
 	./src/modules/fust_s.sv \
 	./src/modules/rst_m.sv \
 	./src/modules/rst_s.sv \
-	./src/modules/buffer_module.sv 
+	./src/modules/bpt_tbp.sv \
+	./src/modules/bpt.sv \
+	./src/modules/btb.sv \
+	./src/modules/nbit_stp_shiftreg.sv \
+	./src/modules/fetch_tbp.sv \
 
 
 SCRDIR = ./tensor-core/src/scripts
