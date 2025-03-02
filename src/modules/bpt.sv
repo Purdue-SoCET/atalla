@@ -27,6 +27,9 @@ module bpt #(
     //index into bpt from resolution state to find current state
     assign curr_bpt = bpt[bptif.pc_res[((size-1)+2):2]];
 
+    //check if prediction was correct by comparing upper bit of current state and taken from resolution
+    assign bptif.pred_correct = (curr_bpt[1] == bptif.taken_res);
+
     always_comb begin
         nxt_bpt = curr_bpt;
         casez(curr_bpt)

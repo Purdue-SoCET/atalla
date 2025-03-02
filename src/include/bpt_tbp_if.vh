@@ -1,9 +1,9 @@
-`ifndef BPT_IF_VH
-`define BPT_IF_VH
+`ifndef BPT_TBP_IF_VH
+`define BPT_TBP_IF_VH
 `include "isa_types.vh"
 `include "datapath_types.vh"
 
-interface bpt_if;
+interface bpt_tbp_if;
     import isa_pkg::*;
     import datapath_pkg::*;
     
@@ -11,13 +11,14 @@ interface bpt_if;
     /*
         Inputs: 
         pc_res: PC from resolution stage
-        taken_res: 1 if branch taken in resolution stage
+        taken_res: concatenation of taken from both predictors
+        [1/0] -> predictor 1 taken, predictor 2 not takenf
         enable_res: enable signal from resolution stage
 
         pc_fetch: PC from fetch stage
     */
     word_t pc_res;
-    logic taken_res;
+    logic [1:0] taken_res;
     logic enable_res;
 
     word_t pc_fetch;
@@ -25,18 +26,16 @@ interface bpt_if;
     /*
         Outputs: 
         pred_fetch: prediction from fetch stage
-        pred_correct: 1 if prediction was correct (for updating tp_bpt)
     */
     logic pred_fetch;
-    logic pred_correct;
 
-    modport bpt (
+    modport bpt_tbp (
         input pc_res, taken_res, enable_res, pc_fetch,
-        output pred_fetch, pred_correct
+        output pred_fetch
     );
 
     modport tb (
-        input pred_fetch, pred_correct,
+        input pred_fetch,
         output pc_res, taken_res, enable_res, pc_fetch
     );
 
