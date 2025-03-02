@@ -106,15 +106,12 @@ module issue(
       // could be writing the flush bits here as well if not in the dispatch,
       // like how busy is being written independent of the rows that dispatch
       // writes
-      for (int i = 0; i < 5; i++) begin
-        fusif.fust.flush[i] = 1'b0;
-        if (isif.branch_miss & fusif.fust.op[i].spec) begin
-          fusif.fust.flush[i] = 1'b1;
-        //  then flush fusif.fust.op[i], easiest way is
-        //  probably adding a flush bit to the fusif.fust.op[]
-        //  and let the fust_s clear its rows with that bit asserted
-        //  since fusif.fust.op can only write one row at a time
-        end
+      if (isif.branch_miss) begin
+        fusif.flush = 1'b1;
+      //  then flush fusif.fust.op[i], easiest way is
+      //  probably adding a flush bit to the fusif.fust.op[]
+      //  and let the fust_s clear its rows with that bit asserted
+      //  since fusif.fust.op can only write one row at a time
       end
 
       fusif.t1 = isif.n_t1;
@@ -262,15 +259,18 @@ module issue(
             //  since fusif.fust.op can only write one row at a time
 
             // end
-            if (i==2 && isif.branch_miss || isif.branch_resolved) begin
+            if (i==2 && (isif.branch_miss || isif.branch_resolved)) begin
               next_fust_state[i] = FUST_EMPTY;
             end
 
-            if (isif.wb.s_rw_en & isif.wb.alu_done & (i == 0)) begin
+            // TODO fust related wb
+            if (isif.wb.s_rw_en & isif.wb.alu_done & (i == 0)) begin 
               next_fust_state[i] = incoming_instr[i] ? FUST_WAIT : FUST_EMPTY;
             end else if (isif.wb.s_rw_en & isif.wb.load_done & (i == 1)) begin
               next_fust_state[i] = incoming_instr[i] ? FUST_WAIT : FUST_EMPTY;
             end
+
+
             //TODO: handle dones from branch and matrix FUs
 
             // WAR HANDLING

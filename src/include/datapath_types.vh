@@ -89,7 +89,6 @@ package datapath_pkg;
     logic [2:0][1:0] t1;
     logic [2:0][1:0] t2;
     fust_s_row_t [2:0] op;
-    logic [2:0] flush;
   } fust_s_t;
 
   typedef struct packed {

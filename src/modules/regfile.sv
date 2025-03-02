@@ -18,7 +18,7 @@ module regfile(
 
     word_t [31:0] register, next_reg;
 
-    always_ff @(posedge CLK, negedge nRST) begin 
+    always_ff @(negedge CLK, negedge nRST) begin 
         if (!nRST) begin 
             register <= '0;
         end
