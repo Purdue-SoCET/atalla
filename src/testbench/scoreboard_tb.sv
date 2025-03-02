@@ -156,7 +156,7 @@ program test (
 
         sbif.fetch.imemload = '0;
 
-        sbif.branch_resolved = 1'b1;
+        sbif.branch_miss = 1'b1;
 
         @(posedge CLK);
 
@@ -233,9 +233,10 @@ program test (
         // @(posedge CLK);
 
 
-        // // (opcode, rd, rs1, rs2, funct3, funct7)
+        // (opcode, rd, rs1, rs2, funct3, funct7)
         // rtype_instr(RTYPE, 5'd10, 5'd11, 5'd12, ADD_SUB, ADD);
-        // rtype_instr(RTYPE, 5'd15, 5'd10, 5'd14, ADD_SUB, ADD);
+        // rtype_instr(RTYPE, 5'd15, 5'd16, 5'd14, ADD_SUB, ADD);
+        // sbif.fetch.imemload = '0;
 
         // @(posedge CLK);
 

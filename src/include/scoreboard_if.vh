@@ -20,13 +20,13 @@ interface scoreboard_if;
     issue_t out;
     
     modport SB (
-        input fetch, flush, freeze, wb, s_wdata, wb_ctrl, branch_miss, branch_resolved,
-        output out
+        input fetch, flush, wb, s_wdata, wb_ctrl, branch_miss, branch_resolved,
+        output out, freeze
     );
 
     modport tb (
-        input out,
-        output fetch, flush, freeze, wb, s_wdata, wb_ctrl, branch_miss, branch_resolved
+        input out, freeze,
+        output fetch, flush, wb, s_wdata, wb_ctrl, branch_miss, branch_resolved
     );
     
 
