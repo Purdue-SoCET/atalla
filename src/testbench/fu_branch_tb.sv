@@ -1,25 +1,9 @@
 `include "fu_branch_if.vh"
-<<<<<<< HEAD
-=======
-<<<<<<< HEAD
-`include "cpu_types.vh"
-`include "types_pkg.vh"
-
-`timescale 1ns / 10ps
-
-import cpu_types::*;
-import types_pkg::*;
-=======
->>>>>>> 9c5d5014b5aa7fa94338db381e0464ca6fec6f65
 `include "isa_types.vh"
 
-`timescale 1ns / 10ps
-
 import isa_pkg::*;
-<<<<<<< HEAD
-=======
->>>>>>> scheduler-fetchbranchverify-pierce
->>>>>>> 9c5d5014b5aa7fa94338db381e0464ca6fec6f65
+
+`timescale 1ns / 10ps
 
 module fu_branch_tb;
 
@@ -53,6 +37,7 @@ initial begin
     fubif.branch_type = '0;
     fubif.reg_a = '0;
     fubif.reg_b = '0;
+    fubif.enable = '0;
     #(CLK_PERIOD*2);
     tb_nrst = 1'b1;
     #(CLK_PERIOD*2);
@@ -61,6 +46,7 @@ initial begin
     fubif.branch = 1'b1;
     fubif.current_pc = '0;
     fubif.imm = 32'd100;
+    fubif.enable = '1;
 
     // BEQ: Case 1
     tb_test_case = "BEQ 1";

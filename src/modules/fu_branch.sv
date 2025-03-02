@@ -14,7 +14,7 @@ module fu_branch(
     zero = '0;
 
     case (fubif.branch_type)
-      2'd0: zero = (fubif.reg_a - fubif.reg_b >= 1) ? 1'b0 : 1'b1;                    // 2'd0: BEQ, BNE
+      2'd0: zero = fubif.reg_a - fubif.reg_b == 0;                               // 2'd0: BEQ, BNE
       2'd1: zero = ($signed(fubif.reg_a) < $signed(fubif.reg_b)) ? 1'b0 : 1'b1;  // 2'd1: BLT, BGE
       2'd2: zero = (fubif.reg_a < fubif.reg_b) ? 1'b0 : 1'b1;                    // 2'd2: BLTU, BGEU
       default: zero = 1'b0;   
@@ -42,7 +42,8 @@ module fu_branch(
       fubif.misprediction = (actual_outcome != fubif.predicted_outcome);
       fubif.correct_pc = fubif.updated_pc;
 
-      fubif.update_btb = 1'b1;
+      if (fubif.enable) fubif.update_btb = 1'b1;
+      
       fubif.update_pc = fubif.current_pc;
       fubif.branch_target = fubif.current_pc + fubif.imm;
     end 
