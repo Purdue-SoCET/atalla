@@ -49,7 +49,7 @@ module dispatch(
     always_comb begin : Pipeline_Output
       case (1'b1)
         flush:       n_dispatch = '0;
-        diif.freeze: n_dispatch = diif.out;
+        // diif.freeze: n_dispatch = diif.out;
         hazard:      n_dispatch = diif.out;
         default:     n_dispatch = dispatch; // i dont think we need to advance only on ihit
       endcase
@@ -86,6 +86,7 @@ module dispatch(
       WAW = (cuif.m_mem_type == M_LOAD | cuif.fu_m == FU_M_GEMM) ? rstmif.status.idx[m_rd].busy : 
             (cuif.s_reg_write) ? rstsif.status.idx[s_rd].busy: 1'b0;
       hazard = (s_busy | m_busy | WAW); //TODO: remember to tie this hazard back to stall the fetch to not squash this stage on a hazard
+      diif.freeze = hazard;
     end
 
     always_ff @ (posedge CLK, negedge nRST) begin: Speculation_State_Latch
@@ -114,7 +115,7 @@ module dispatch(
       rstsif.spec = 1'b0;
       rstsif.flush = diif.branch_miss;
       if (cuif.s_reg_write) begin
-        if (~hazard & ~flush & ~diif.freeze) begin // hazard a little strange, will need to take a look going forward
+        if (~hazard & ~flush) begin // hazard a little strange, will need to take a look going forward
           rstsif.di_sel = s_rd;
           rstsif.di_write = 1'b1;
           rstsif.di_tag = (cuif.fu_s == FU_S_LD_ST) ? 2'd2 : 2'd1; // 1 for ALU, 2 for LD
@@ -124,7 +125,7 @@ module dispatch(
 
       // maybe add a m_reg_write in cuif to simplify
       if (cuif.m_mem_type == M_LOAD | cuif.fu_m == FU_M_GEMM) begin
-        if (~hazard & ~flush & ~diif.freeze) begin
+        if (~hazard & ~flush) begin
           rstmif.di_sel = m_rd;
           rstmif.di_write = 1'b1;
           rstmif.di_tag = (cuif.fu_m == FU_M_LD_ST) ? 2'd2 : 2'd1; // 1 for GEMM, 2 for LD
@@ -151,7 +152,7 @@ module dispatch(
       diif.n_t2 = diif.fust_s.t2;
 
       // tag updates on WB
-      if (diif.wb.s_rw_en & diif.wb.alu_done & diif.fust_state[0] == FUST_EX) begin
+      if (diif.wb.s_rw_en & diif.wb.alu_done & diif.fust_state[0] == FUST_EX) begin // TODO fust related wb
         diif.n_t1[FU_S_LD_ST] = (diif.fust_s.t1[FU_S_LD_ST] == 2'd1) && diif.fust_s.busy[FU_S_LD_ST] ? '0 : diif.fust_s.t1[FU_S_LD_ST];
         diif.n_t2[FU_S_LD_ST] = (diif.fust_s.t2[FU_S_LD_ST] == 2'd1) && diif.fust_s.busy[FU_S_LD_ST] ? '0 : diif.fust_s.t2[FU_S_LD_ST];
         diif.n_t1[FU_S_BRANCH] = (diif.fust_s.t1[FU_S_BRANCH] == 2'd1) && diif.fust_s.busy[FU_S_BRANCH] ? '0 : diif.fust_s.t1[FU_S_BRANCH];
@@ -164,7 +165,7 @@ module dispatch(
       end
 
       // To Issue **Combinationally**
-      diif.n_fust_s_en   = (cuif.fu_t == FU_S_T & ~diif.flush & ~diif.freeze & ~hazard);
+      diif.n_fust_s_en   = (cuif.fu_t == FU_S_T & ~diif.flush & ~hazard);
       diif.n_fu_s        = cuif.fu_s;
       diif.n_fust_s.rd   = s_rd;
       diif.n_fust_s.rs1  = s_rs1;
@@ -192,7 +193,7 @@ module dispatch(
       diif.n_t1[cuif.fu_s]   = diif.n_fust_s_en ? rstsif.status.idx[s_rs1].tag : diif.n_t1[cuif.fu_s];
       diif.n_t2[cuif.fu_s]   = diif.n_fust_s_en ? rstsif.status.idx[s_rs2].tag : diif.n_t2[cuif.fu_s];
 
-      diif.n_fust_m_en   = (cuif.fu_t == FU_M_T & ~flush & ~diif.freeze & ~hazard);
+      diif.n_fust_m_en   = (cuif.fu_t == FU_M_T & ~flush & ~hazard);
       //n_fu_m           = 1'b0; // only one row in FUST
       diif.n_fust_m.rd   = m_rd;
       diif.n_fust_m.rs1  = s_rs1;
@@ -201,7 +202,7 @@ module dispatch(
       diif.n_fust_m.t1   = rstsif.status.idx[s_rs1].tag;
       diif.n_fust_m.t2   = rstsif.status.idx[s_rs2].tag;
 
-      diif.n_fust_g_en   = (cuif.fu_t == FU_G_T & ~flush & ~diif.freeze & ~hazard);
+      diif.n_fust_g_en   = (cuif.fu_t == FU_G_T & ~flush & ~hazard);
       //n_fu_g           = 1'b0; // only one row in FUST
       diif.n_fust_g.rd   = m_rd;
       diif.n_fust_g.ms1  = m_rs1;

@@ -22,7 +22,7 @@ module scoreboard(
     always_comb begin
       diif.fetch = sbif.fetch;
       diif.flush = sbif.flush;
-      diif.freeze = sbif.freeze;
+      sbif.freeze = diif.freeze;
 
       diif.fust_s = isif.fust_s;
       diif.fust_m = isif.fust_m;
@@ -32,7 +32,7 @@ module scoreboard(
 
       isif.dispatch = diif.out;
       isif.flush = sbif.flush;
-      isif.freeze = sbif.freeze;
+      isif.freeze = diif.freeze;
       isif.wb = sbif.wb;
 
       isif.n_fust_s = diif.n_fust_s;

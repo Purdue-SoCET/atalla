@@ -10,7 +10,7 @@ module fust_s (
 
   fust_s_t fust;
   
-  always_ff @(negedge CLK, negedge nRST) begin
+  always_ff @(posedge CLK, negedge nRST) begin
     if (~nRST)
       fuif.fust <= '0;
     else
@@ -25,7 +25,7 @@ module fust_s (
     fust.t2 = fuif.t2;
 
     for (int i = 0; i < 3; i++) begin
-      if (fust.flush[i]) begin
+      if (fuif.flush) begin
         fust.op = '0;
         fust.t1 = '0;
         fust.t2 = '0;
