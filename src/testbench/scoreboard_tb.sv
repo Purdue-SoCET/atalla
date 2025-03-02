@@ -49,6 +49,10 @@ program test (
             sbif.freeze = '0;
             sbif.wb = '0;
             sbif.fetch = '0;
+            sbif.wb = '0;
+            sbif.wb_ctrl = '0;
+            sbif.branch_miss = 1'b0;
+            sbif.branch_resolved = 1'b0;
             @(posedge CLK);
         end
     endtask
@@ -143,43 +147,90 @@ program test (
 
         @(posedge CLK);
 
-        //  age check
-        itype_instr(ITYPE_LW, 5'd5, 5'd6, funct3_i_t'(3'h2), 12'd0);
-        rtype_instr(RTYPE, 5'd11, 5'd5, 5'd10, ADD_SUB, ADD);
-        btype_instr(BTYPE, 5'd5, 5'd15, BEQ, 13'd0);
+        // branch resolution 
+
+        btype_instr(BTYPE, 5'd5, 5'd6, BEQ, 13'd0);
+        rtype_instr(RTYPE, 5'd11, 5'd12, 5'd13, ADD_SUB, ADD);
+        // rtype_instr(RTYPE, 5'd14, 5'd15, 5'd16, ADD_SUB, ADD);
+        itype_instr(ITYPE_LW, 5'd8, 5'd9, funct3_i_t'(3'h2), 12'd0);
 
         sbif.fetch.imemload = '0;
+
+        sbif.branch_resolved = 1'b1;
+
+        @(posedge CLK);
 
         repeat (10) begin
             @(posedge CLK);
         end
 
-        sbif.wb.load_done = '1;
-        sbif.wb_ctrl.load_done = '1;
+        //  age check
+        // itype_instr(ITYPE_LW, 5'd5, 5'd6, funct3_i_t'(3'h2), 12'd0);
+        // rtype_instr(RTYPE, 5'd11, 5'd5, 5'd10, ADD_SUB, ADD);
+        // btype_instr(BTYPE, 5'd5, 5'd15, BEQ, 13'd0);
 
-        sbif.wb_ctrl.s_rw_en = '1;
-        sbif.wb_ctrl.s_rw = 5'd4;
+        // sbif.fetch.imemload = '0;
 
-        sbif.wb.s_rw_en = '1;
-        sbif.wb.s_rw = 5'd4;
+        // repeat (10) begin
+        //     @(posedge CLK);
+        // end
 
-        @(posedge CLK);
+        // sbif.wb.load_done = '1;
+        // sbif.wb_ctrl.load_done = '1;
 
-        sbif.wb.load_done = '0;
-        sbif.wb_ctrl.load_done = '0;
+        // sbif.wb_ctrl.s_rw_en = '1;
+        // sbif.wb_ctrl.s_rw = 5'd5;
 
-        sbif.wb_ctrl.s_rw_en = '0;
-        sbif.wb_ctrl.s_rw = '0;
+        // sbif.wb.s_rw_en = '1;
+        // sbif.wb.s_rw = 5'd5;
 
-        sbif.wb.s_rw_en = '0;
-        sbif.wb.s_rw = '0;
+        // sbif.s_wdata = 32'd101;
 
-        @(posedge CLK);
-        @(posedge CLK);
-        @(posedge CLK);
-        @(posedge CLK);
-        @(posedge CLK);
-        @(posedge CLK);
+        // @(posedge CLK);
+
+        // sbif.wb.load_done = '0;
+        // sbif.wb_ctrl.load_done = '0;
+
+        // sbif.wb_ctrl.s_rw_en = '0;
+        // sbif.wb_ctrl.s_rw = '0;
+
+        // sbif.wb.s_rw_en = '0;
+        // sbif.wb.s_rw = '0;
+
+        // @(posedge CLK);
+        // @(posedge CLK);
+        // @(posedge CLK);
+        // @(posedge CLK);
+        // @(posedge CLK);
+
+        // sbif.wb.alu_done = '1;
+        // sbif.wb_ctrl.alu_done = '1;
+
+        // sbif.wb_ctrl.s_rw_en = '1;
+        // sbif.wb_ctrl.s_rw = 5'd11;
+
+        // sbif.wb.s_rw_en = '1;
+        // sbif.wb.s_rw = 5'd11;
+
+        // @(posedge CLK);
+
+        // sbif.wb.alu_done = '0;
+        // sbif.wb_ctrl.alu_done = '0;
+
+        // sbif.wb_ctrl.s_rw_en = '0;
+        // sbif.wb_ctrl.s_rw = '0;
+
+        // sbif.wb.s_rw_en = '0;
+        // sbif.wb.s_rw = '0;
+
+
+        // @(posedge CLK);
+        // @(posedge CLK);
+        // @(posedge CLK);
+        // @(posedge CLK);
+        // @(posedge CLK);
+        // @(posedge CLK);
+        // @(posedge CLK);
 
 
         // // (opcode, rd, rs1, rs2, funct3, funct7)
