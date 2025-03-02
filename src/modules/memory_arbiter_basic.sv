@@ -1,8 +1,12 @@
+`include "caches_pkg.vh"
+
 module memory_arbiter_basic(
   input logic CLK, nRST,
   arbiter_caches_if.cc acif,
   scratchpad_if.arbiter spif
 );
+
+  import caches_pkg::*;
 
   // WAIT SIGNALS
   logic sp_wait;
