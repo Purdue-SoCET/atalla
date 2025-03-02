@@ -15,18 +15,20 @@ interface scoreboard_if;
     wb_ctr_t wb_ctrl;
     word_t s_wdata;
 
+    // execute signals
     logic branch_miss, branch_resolved;
+    fu_done_signals fu_ex;
 
     issue_t out;
     
     modport SB (
-        input fetch, flush, wb, s_wdata, wb_ctrl, branch_miss, branch_resolved,
+        input fetch, flush, wb, s_wdata, wb_ctrl, branch_miss, branch_resolved, fu_ex,
         output out, freeze
     );
 
     modport tb (
         input out, freeze,
-        output fetch, flush, wb, s_wdata, wb_ctrl, branch_miss, branch_resolved
+        output fetch, flush, wb, s_wdata, wb_ctrl, branch_miss, branch_resolved, fu_ex
     );
     
 

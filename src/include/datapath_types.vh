@@ -70,6 +70,13 @@ package datapath_pkg;
     FU_NONE     = 2'd3
   } fu_scalar_t;
 
+  typedef enum logic [1:0] {
+    NA,
+    ALU_DONE,
+    SCALAR_LS_DONE,
+    BRANCH_DONE // scalar stuff for now
+  } fu_done_signals; // scalar stuff for now
+
   typedef enum logic [2:0] {
     matrix_na = 3'd0,
     FU_M_LD_ST  = 3'd3,

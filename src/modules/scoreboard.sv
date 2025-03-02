@@ -52,6 +52,9 @@ module scoreboard(
 
       isif.s_wdata = sbif.s_wdata;
 
+      isif.fu_ex = sbif.fu_ex;
+      diif.fu_ex = sbif.fu_ex;
+
       isif.branch_miss = sbif.branch_miss;
       diif.branch_miss = sbif.branch_miss;
       diif.branch_resolved = sbif.branch_resolved;

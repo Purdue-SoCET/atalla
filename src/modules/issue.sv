@@ -259,15 +259,17 @@ module issue(
             //  since fusif.fust.op can only write one row at a time
 
             // end
-            if (i==2 && (isif.branch_miss || isif.branch_resolved)) begin
-              next_fust_state[i] = FUST_EMPTY;
-            end
+            
 
             // TODO fust related wb
-            if (isif.wb.s_rw_en & isif.wb.alu_done & (i == 0)) begin 
+            if (isif.fu_ex == ALU_DONE && (i == 0)) begin 
               next_fust_state[i] = incoming_instr[i] ? FUST_WAIT : FUST_EMPTY;
-            end else if (isif.wb.s_rw_en & isif.wb.load_done & (i == 1)) begin
+            end
+            else if (isif.fu_ex == SCALAR_LS_DONE && (i == 1)) begin
               next_fust_state[i] = incoming_instr[i] ? FUST_WAIT : FUST_EMPTY;
+            end
+            else if (isif.fu_ex == BRANCH_DONE && (i==2)) begin
+              next_fust_state[i] = FUST_EMPTY;
             end
 
 
