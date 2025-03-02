@@ -10,6 +10,8 @@
 `include "caches_if.vh"
 `include "cache_control_if.vh"
 `include "scratchpad_if.vh"
+`include "datapath_cache_if.vh"
+`include "arbiter_caches_if.vh"
 
 module scheduler_core (
   input logic CLK, nrst,
@@ -30,10 +32,10 @@ parameter PC0 = 0;
   sc_datapath                       SC_DP (CLK, nrst, dcif); //scheduler core datapath
 
   // map caches
-  memory_arbiter_basic MEM_ARB(CLK, nRST, acif, spif);
+  memory_arbiter_basic MEM_ARB(CLK, nrst, acif, spif);
 
-  icache ICACHE(CLK, nRST, cif, dcif);
-  dcache DCACHE(CLK, nRST, cif, dcif);
+  icache ICACHE(CLK, nrst, cif, dcif);
+  dcache DCACHE(CLK, nrst, cif, dcif);
   // scratchpad
 
 

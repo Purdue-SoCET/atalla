@@ -24,6 +24,8 @@ interface issue_if;
 
     // Inputs from execute
     // ex_t ex; //branch and matrix done signals
+    logic branch_miss;
+    logic branch_resolved;
 
     // Inputs from writeback
     wb_t wb; //alu and ld/st done signals
@@ -37,7 +39,7 @@ interface issue_if;
     fust_state_e [4:0] fust_state;
     
     modport IS (
-        input dispatch, flush, freeze, wb, n_fu_t, n_fust_s, n_fust_m, n_fust_g, n_fu_s, n_fu_m, n_fu_g, n_fust_s_en, n_fust_m_en, n_fust_g_en, n_t1, n_t2, s_wdata,
+        input dispatch, flush, freeze, wb, n_fu_t, n_fust_s, n_fust_m, n_fust_g, n_fu_s, n_fu_m, n_fu_g, n_fust_s_en, n_fust_m_en, n_fust_g_en, n_t1, n_t2, s_wdata, branch_miss, branch_resolved,
         output out, fust_s, fust_m, fust_g, fust_state
     );
 

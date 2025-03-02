@@ -1,0 +1,55 @@
+verilator --lint-only src/modules/scoreboard.sv -Isrc/include -Isrc/modules
+%Warning-WIDTHEXPAND: src/modules/issue.sv:169:113: Operator COND expects 5 bits on the Conditional True, but Conditional True's CONST '1'h1' generates 1 bits.
+                                                  : ... note: In instance 'scoreboard.IS'
+  169 |         next_oldest_rdy[0] = ((age[0] > age[1]) && (age[0] > age[2]) && (age[0] > age[3]) && (age[0] > age[4])) ? 1'b1 : oldest_rdy;
+      |                                                                                                                 ^
+                      src/modules/scoreboard.sv:6:1: ... note: In file included from 'scoreboard.sv'
+                      ... For warning description see https://verilator.org/warn/WIDTHEXPAND?v=5.028
+                      ... Use "/* verilator lint_off WIDTHEXPAND */" and lint_on around source to disable this message.
+%Warning-WIDTHTRUNC: src/modules/issue.sv:169:28: Operator ASSIGN expects 1 bits on the Assign RHS, but Assign RHS's COND generates 5 bits.
+                                                : ... note: In instance 'scoreboard.IS'
+  169 |         next_oldest_rdy[0] = ((age[0] > age[1]) && (age[0] > age[2]) && (age[0] > age[3]) && (age[0] > age[4])) ? 1'b1 : oldest_rdy;
+      |                            ^
+                     src/modules/scoreboard.sv:6:1: ... note: In file included from 'scoreboard.sv'
+%Warning-WIDTHEXPAND: src/modules/issue.sv:172:113: Operator COND expects 5 bits on the Conditional True, but Conditional True's CONST '1'h1' generates 1 bits.
+                                                  : ... note: In instance 'scoreboard.IS'
+  172 |         next_oldest_rdy[1] = ((age[1] > age[0]) && (age[1] > age[2]) && (age[1] > age[3]) && (age[1] > age[4])) ? 1'b1 : oldest_rdy;
+      |                                                                                                                 ^
+                      src/modules/scoreboard.sv:6:1: ... note: In file included from 'scoreboard.sv'
+%Warning-WIDTHTRUNC: src/modules/issue.sv:172:28: Operator ASSIGN expects 1 bits on the Assign RHS, but Assign RHS's COND generates 5 bits.
+                                                : ... note: In instance 'scoreboard.IS'
+  172 |         next_oldest_rdy[1] = ((age[1] > age[0]) && (age[1] > age[2]) && (age[1] > age[3]) && (age[1] > age[4])) ? 1'b1 : oldest_rdy;
+      |                            ^
+                     src/modules/scoreboard.sv:6:1: ... note: In file included from 'scoreboard.sv'
+%Warning-WIDTHEXPAND: src/modules/issue.sv:175:113: Operator COND expects 5 bits on the Conditional True, but Conditional True's CONST '1'h1' generates 1 bits.
+                                                  : ... note: In instance 'scoreboard.IS'
+  175 |         next_oldest_rdy[2] = ((age[2] > age[0]) && (age[2] > age[1]) && (age[2] > age[3]) && (age[2] > age[4])) ? 1'b1 : oldest_rdy;
+      |                                                                                                                 ^
+                      src/modules/scoreboard.sv:6:1: ... note: In file included from 'scoreboard.sv'
+%Warning-WIDTHTRUNC: src/modules/issue.sv:175:28: Operator ASSIGN expects 1 bits on the Assign RHS, but Assign RHS's COND generates 5 bits.
+                                                : ... note: In instance 'scoreboard.IS'
+  175 |         next_oldest_rdy[2] = ((age[2] > age[0]) && (age[2] > age[1]) && (age[2] > age[3]) && (age[2] > age[4])) ? 1'b1 : oldest_rdy;
+      |                            ^
+                     src/modules/scoreboard.sv:6:1: ... note: In file included from 'scoreboard.sv'
+%Warning-WIDTHEXPAND: src/modules/issue.sv:178:113: Operator COND expects 5 bits on the Conditional True, but Conditional True's CONST '1'h1' generates 1 bits.
+                                                  : ... note: In instance 'scoreboard.IS'
+  178 |         next_oldest_rdy[3] = ((age[3] > age[0]) && (age[3] > age[1]) && (age[3] > age[2]) && (age[3] > age[4])) ? 1'b1 : oldest_rdy;
+      |                                                                                                                 ^
+                      src/modules/scoreboard.sv:6:1: ... note: In file included from 'scoreboard.sv'
+%Warning-WIDTHTRUNC: src/modules/issue.sv:178:28: Operator ASSIGN expects 1 bits on the Assign RHS, but Assign RHS's COND generates 5 bits.
+                                                : ... note: In instance 'scoreboard.IS'
+  178 |         next_oldest_rdy[3] = ((age[3] > age[0]) && (age[3] > age[1]) && (age[3] > age[2]) && (age[3] > age[4])) ? 1'b1 : oldest_rdy;
+      |                            ^
+                     src/modules/scoreboard.sv:6:1: ... note: In file included from 'scoreboard.sv'
+%Warning-WIDTHEXPAND: src/modules/issue.sv:181:113: Operator COND expects 5 bits on the Conditional True, but Conditional True's CONST '1'h1' generates 1 bits.
+                                                  : ... note: In instance 'scoreboard.IS'
+  181 |         next_oldest_rdy[4] = ((age[4] > age[0]) && (age[4] > age[1]) && (age[4] > age[2]) && (age[4] > age[3])) ? 1'b1 : oldest_rdy;
+      |                                                                                                                 ^
+                      src/modules/scoreboard.sv:6:1: ... note: In file included from 'scoreboard.sv'
+%Warning-WIDTHTRUNC: src/modules/issue.sv:181:28: Operator ASSIGN expects 1 bits on the Assign RHS, but Assign RHS's COND generates 5 bits.
+                                                : ... note: In instance 'scoreboard.IS'
+  181 |         next_oldest_rdy[4] = ((age[4] > age[0]) && (age[4] > age[1]) && (age[4] > age[2]) && (age[4] > age[3])) ? 1'b1 : oldest_rdy;
+      |                            ^
+                     src/modules/scoreboard.sv:6:1: ... note: In file included from 'scoreboard.sv'
+%Error: Exiting due to 10 warning(s)
+make: *** [scoreboard_vlint] Error 1

@@ -1,8 +1,12 @@
+`include "caches_pkg.vh"
+
 module memory_arbiter_basic(
   input logic CLK, nRST,
   arbiter_caches_if.cc acif,
   scratchpad_if.arbiter spif
 );
+
+  import caches_pkg::*;
 
   // WAIT SIGNALS
   logic sp_wait;
@@ -106,14 +110,14 @@ module memory_arbiter_basic(
         acif.ramaddr = acif.daddr;
         acif.ramWEN = acif.dWEN;
         acif.ramREN = !acif.dWEN && acif.dREN;
-        acif.dwait = (acif.dREN || acif.dWEN);
+        acif.dwait = ((acif.dREN && acif.ramstate == ACCESS) || (acif.dWEN && acif.ramstate == ACCESS)) ? 1'b0 : 1'b1;
         acif.dload = acif.ramload;
       end
 
       ICACHE: begin
         acif.ramaddr = acif.iaddr;
         acif.iload = acif.ramload;
-        acif.iwait = acif.iREN;
+        acif.iwait = (acif.ramstate == BUSY || acif.dREN || acif.dWEN) ? 1'b1 : 1'b0;
       end
     endcase
   end

@@ -20,7 +20,7 @@ module sc_datapath
     fetch FETCH (CLK, nrst, dcif.ihit, fif);
 
     scoreboard_if sbif();
-    scoreboard SCOREBOARD (CLK, nsrt, sbif);
+    scoreboard SCOREBOARD (CLK, nrst, sbif);
 
     dispatch_if dif();
     dispatch DISPATCH (CLK, nrst, dif);
@@ -40,7 +40,8 @@ module sc_datapath
 
 // IMPORT PACKAGE
     import pipeline_pkg::*;
-    import cpu_types_pkg::*;
+    import isa_pkg::*;
+    import datapath_pkg::*;
 
 // LATCH INSTANTIATIONS
 
