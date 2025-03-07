@@ -9,17 +9,32 @@ module fu_branch(
 
   logic zero;
   logic actual_outcome;
+
   // Track if BTB has been updated for current branch instr
   logic btb_updated;
+  logic [31:0] last_branch_pc;
 
   always_ff @(posedge CLK, negedge nRST) begin
     if (!nRST) begin
       btb_updated <= 1'b0;
+      last_branch_pc <= 32'h0;
     end else begin
-      if (!fubif.branch) begin
-        btb_updated <= 1'b0;
-      end else if (fubif.branch && fubif.enable && !btb_updated) begin
-        btb_updated <= 1'b1;
+      if (fubif.branch) begin
+        if (fubif.current_pc != last_branch_pc) begin
+          // New branch instruction arrived so reset btb_updated
+          btb_updated <= 1'b0;
+        end
+
+        if (fubif.enable && !btb_updated) begin
+          btb_updated <= 1'b1;
+        end
+
+        // Update last branch PC
+        last_branch_pc <= fubif.current_pc;
+      end else begin
+        // Not a branch
+        btb_updated   <= 1'b0;
+        last_branch_pc <= 32'h0;
       end
     end
   end
@@ -57,7 +72,7 @@ module fu_branch(
 
       // enable will control when the BTB can update
       // btb_updated will only allow one update per branch instruction
-      fubif.update_btb = fubif.enable && !btb_updated;
+      if (fubif.enable && !btb_updated) fubif.update_btb = 1'b1;
       
       fubif.update_pc = fubif.current_pc;
       fubif.branch_target = fubif.current_pc + fubif.imm;
