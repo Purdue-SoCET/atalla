@@ -9,6 +9,20 @@ module fu_branch(
 
   logic zero;
   logic actual_outcome;
+  // Track if BTB has been updated for current branch instr
+  logic btb_updated;
+
+  always_ff @(posedge CLK, negedge nRST) begin
+    if (!nRST) begin
+      btb_updated <= 1'b0;
+    end else begin
+      if (!fubif.branch) begin
+        btb_updated <= 1'b0;
+      end else if (fubif.branch && fubif.enable && !btb_updated) begin
+        btb_updated <= 1'b1;
+      end
+    end
+  end
 
   always_comb begin : ZERO_LOGIC
     zero = '0;
@@ -24,10 +38,9 @@ module fu_branch(
   always_comb begin : BRANCH_LOGIC
     // updated_pc is corrected PC after branch resolution (ignore during correct prediction)
     // update_pc is original PC of branch instr being resolved (used to update the BTB)
-
     fubif.branch_outcome = 1'b0;
-    fubif.updated_pc = fubif.current_pc + 32'd4;
     fubif.misprediction = 1'b0;
+    fubif.updated_pc = fubif.current_pc + 32'd4;
     fubif.correct_pc = fubif.current_pc + 32'd4;
     fubif.branch_target = '0;
     fubif.update_btb = 1'b0;
@@ -42,7 +55,9 @@ module fu_branch(
       fubif.misprediction = (actual_outcome != fubif.predicted_outcome);
       fubif.correct_pc = fubif.updated_pc;
 
-      if (fubif.enable) fubif.update_btb = 1'b1;
+      // enable will control when the BTB can update
+      // btb_updated will only allow one update per branch instruction
+      fubif.update_btb = fubif.enable && !btb_updated;
       
       fubif.update_pc = fubif.current_pc;
       fubif.branch_target = fubif.current_pc + fubif.imm;
