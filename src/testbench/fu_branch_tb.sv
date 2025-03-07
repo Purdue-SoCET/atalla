@@ -54,6 +54,7 @@ initial begin
     fubif.branch_gate_sel = 1'b0;
     fubif.reg_a = 32'd10;
     fubif.reg_b = 32'd10;
+    fubif.current_pc = 32'd0;
     #(CLK_PERIOD*10);
 
     // BEQ: Case 2
@@ -62,6 +63,7 @@ initial begin
     fubif.branch_gate_sel = 1'b0;
     fubif.reg_a = 32'd10;
     fubif.reg_b = 32'd8;
+    fubif.current_pc = 32'd4;
     #(CLK_PERIOD*10);
 
     // BNE: Case 1
@@ -70,6 +72,7 @@ initial begin
     fubif.branch_gate_sel = 1'b1;
     fubif.reg_a = 32'd10;
     fubif.reg_b = 32'd8;
+    fubif.current_pc = 32'd8;
     #(CLK_PERIOD*10);
 
     // BNE: Case 2
@@ -78,6 +81,7 @@ initial begin
     fubif.branch_gate_sel = 1'b1;
     fubif.reg_a = 32'd10;
     fubif.reg_b = 32'd10;
+    fubif.current_pc = 32'd12;
     #(CLK_PERIOD*10);
 
     // BLT: Case 1
@@ -86,6 +90,7 @@ initial begin
     fubif.branch_gate_sel = 1'b1;
     fubif.reg_a = 32'd8;
     fubif.reg_b = 32'd10;
+    fubif.current_pc = 32'd16;
     #(CLK_PERIOD*10);
 
     // BLT: Case 2
@@ -94,6 +99,7 @@ initial begin
     fubif.branch_gate_sel = 1'b1;
     fubif.reg_a = 32'd10;
     fubif.reg_b = 32'd8;
+    fubif.current_pc = 32'd20;
     #(CLK_PERIOD*10);
 
     // BGE: Case 1
@@ -102,6 +108,7 @@ initial begin
     fubif.branch_gate_sel = 1'b0;
     fubif.reg_a = 32'd10;
     fubif.reg_b = 32'd8;
+    fubif.current_pc = 32'd24;
     #(CLK_PERIOD*10);
 
     // BGE: Case 2
@@ -110,6 +117,7 @@ initial begin
     fubif.branch_gate_sel = 1'b0;
     fubif.reg_a = 32'd8;
     fubif.reg_b = 32'd10;
+    fubif.current_pc = 32'd28;
     #(CLK_PERIOD*10);
 
     // BLTU: Case 1
@@ -118,6 +126,7 @@ initial begin
     fubif.branch_gate_sel = 1'b1;
     fubif.reg_a = 32'd8;
     fubif.reg_b = 32'd10;
+    fubif.current_pc = 32'd32;
     #(CLK_PERIOD*10);
 
     // BLTU: Case 2
@@ -126,6 +135,7 @@ initial begin
     fubif.branch_gate_sel = 1'b1;
     fubif.reg_a = 32'd10;
     fubif.reg_b = 32'd8;
+    fubif.current_pc = 32'd36;
     #(CLK_PERIOD*10);
 
     // BLTU: Case 3
@@ -134,6 +144,7 @@ initial begin
     fubif.branch_gate_sel = 1'b1;
     fubif.reg_a = 32'd8;
     fubif.reg_b = 32'h80000000;
+    fubif.current_pc = 32'd40;
     #(CLK_PERIOD*10);
 
     // BLTU: Case 4
@@ -142,6 +153,7 @@ initial begin
     fubif.branch_gate_sel = 1'b1;
     fubif.reg_a = 32'h80000000;
     fubif.reg_b = 32'd8;
+    fubif.current_pc = 32'd48;
     #(CLK_PERIOD*10);
 
     // BGEU: Case 1
@@ -150,6 +162,7 @@ initial begin
     fubif.branch_gate_sel = 1'b0;
     fubif.reg_a = 32'd10;
     fubif.reg_b = 32'd8;
+    fubif.current_pc = 32'd52;
     #(CLK_PERIOD*10);
 
     // BGEU: Case 2
@@ -158,6 +171,7 @@ initial begin
     fubif.branch_gate_sel = 1'b0;
     fubif.reg_a = 32'd8;
     fubif.reg_b = 32'd10;
+    fubif.current_pc = 32'd56;
     #(CLK_PERIOD*10);
 
     // BGEU: Case 3
@@ -166,6 +180,7 @@ initial begin
     fubif.branch_gate_sel = 1'b0;
     fubif.reg_a = 32'h7FFFFFFF;
     fubif.reg_b = 32'd10;
+    fubif.current_pc = 32'd60;
     #(CLK_PERIOD*10);
 
     // BGEU: Case 4
@@ -174,6 +189,7 @@ initial begin
     fubif.branch_gate_sel = 1'b0;
     fubif.reg_a = 32'd10;
     fubif.reg_b = 32'h7FFFFFFF;
+    fubif.current_pc = 32'd64;
     #(CLK_PERIOD*10);
 
     // BGEU: Case 5
@@ -182,6 +198,7 @@ initial begin
     fubif.branch_gate_sel = 1'b0;
     fubif.reg_a = 32'hFFFFFFFF;
     fubif.reg_b = 32'd10;
+    fubif.current_pc = 32'd68;
     #(CLK_PERIOD*10);
 
     // BGEU: Case 6
@@ -190,6 +207,7 @@ initial begin
     fubif.branch_gate_sel = 1'b0;
     fubif.reg_a = 32'd10;
     fubif.reg_b = 32'hFFFFFFFF;
+    fubif.current_pc = 32'd72;
     #(CLK_PERIOD*10);
 
     tb_enable = 1'b0;

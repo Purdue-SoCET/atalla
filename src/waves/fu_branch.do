@@ -15,8 +15,10 @@ add wave -noupdate /fu_branch_tb/fubif/updated_pc
 add wave -noupdate /fu_branch_tb/fubif/update_pc
 add wave -noupdate /fu_branch_tb/fubif/correct_pc
 add wave -noupdate /fu_branch_tb/fubif/update_btb
+add wave -noupdate /fu_branch_tb/fubif/enable
+add wave -noupdate /fu_branch_tb/DUT/btb_updated
 TreeUpdate [SetDefaultTree]
-WaveRestoreCursors {{Cursor 1} {105310 ps} 0}
+WaveRestoreCursors {{Cursor 1} {4360 ps} 0}
 quietly wave cursor active 1
 configure wave -namecolwidth 150
 configure wave -valuecolwidth 100
