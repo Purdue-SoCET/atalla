@@ -6,7 +6,7 @@
 package datapath_pkg;
   import isa_pkg::*;
 
-  parameter FU_W   = 3;
+  parameter FU_W   = 5;
   parameter FU_S_W = 2;
   parameter FU_M_W = 2;
 
@@ -43,24 +43,31 @@ package datapath_pkg;
   **************/
   typedef struct packed {
     aluop_t alu_op;  
+    // fu enable from issue
   } fu_alu_ctr_t;
 
   typedef struct packed {
     branch_t branch_op;  
+    // fu enable from issue
   } fu_branch_ctr_t;
 
   typedef struct packed {  
     word_t imm;
     scalar_mem_t mem_type;
+    // fu enable from issue
   } fu_ldst_ctr_t;
   
-  //typedef struct packed {  
-    // future double-buffer signals here probably
-  //} fu_gemm_ctr_t;
+  // typedef struct packed {  
+  //   // future double-buffer signals here probably
+  //   // whatever gemm fu needs
+  //   // fu_gemm_t the registers (rename to be accurate)
+  //   // enable
+  // } fu_gemm_ctr_t;
 
   typedef struct packed {  
     word_t imm;
     matrix_mem_t mem_type;
+    // fu enable from issue;
   } fu_ldst_m_ctr_t;
 
   typedef enum logic [1:0] {
@@ -89,7 +96,11 @@ package datapath_pkg;
     regbits_t rs2;
     word_t imm; //instr[31:7] TODO: double check this is right 
     logic spec;
+    logic [2:0] op_type;
+    scalar_mem_t mem_type;
   } fust_s_row_t;
+
+
 
   typedef struct packed {
     logic [2:0] busy;
@@ -102,9 +113,10 @@ package datapath_pkg;
     matbits_t rd;
     regbits_t rs1;
     regbits_t rs2;
-    logic [10:0] imm;
+    word_t imm;
     fu_mbits_t t1;
     fu_mbits_t t2;
+    matrix_mem_t mem_type;
     // fu_sbits_t t3;
   } fust_m_row_t;
 
@@ -155,6 +167,8 @@ package datapath_pkg;
   *******/
   typedef struct packed {
     word_t imemload;
+    word_t br_pc;
+    logic br_pred;
   } fetch_t;
 
   /******************
@@ -195,7 +209,7 @@ package datapath_pkg;
   typedef struct packed {
     logic s_rw_en;  // scalar read write reg enable
     regbits_t s_rw; // scalar read write register
-    logic [WORD_W-1:0] s_wdata; //empty until execute (write data)
+    word_t s_wdata; //empty until execute (write data)
     logic load_done;  // Load Done Signal for Score Board
     logic alu_done;   // Alu Done Signal for Score Board
   } wb_t;
@@ -213,17 +227,36 @@ package datapath_pkg;
 
     ex_ctr_t ex_ctr;
     wb_ctr_t wb_ctr;
+
+    word_t n_br_pc;
+    logic n_br_pred;
+
+    logic freeze;
   } dispatch_t;
 
   /*******
     ISSUE
   *******/
   typedef struct packed {
-    fu_bits_t fu_en;
-    word_t rdat1;
-    word_t rdat2;
-    matbits_t ms1;
-    matbits_t ms2;
+    fu_bits_t fu_en; // 0 - alu, 1 - sls, 2 - br, 3 - mls, 4 - gemm
+    // br, alu, sls, mls
+    word_t rdat1; // mls needs for addr
+    word_t rdat2; // mls usees as stride
+    word_t imm;   // mls needs for addr 
+    // branch
+    branch_t branch_type;
+    word_t branch_pc;
+    logic branch_pred_pc;
+    // alu
+    aluop_t alu_op;
+    // matrix ls
+    matrix_mem_t ls_in;
+    // scalar ls
+    scalar_mem_t mem_type;
+    // gemm
+    matbits_t md;
+    matbits_t ms1; // used for m_ls
+    matbits_t ms2; // used for m_ls
     matbits_t ms3;
   } issue_t;
 

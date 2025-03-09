@@ -10,7 +10,7 @@ interface dispatch_if;
     fetch_t fetch;
 
     // Inputs to latch
-    logic flush, freeze;
+    // logic flush;
 
     // Inputs from issue 
     fust_s_t fust_s;
@@ -41,13 +41,13 @@ interface dispatch_if;
     logic [2:0][1:0] n_t2;
     
     modport DI (
-        input fetch, flush, fust_s, fust_m, fust_g, fust_state, wb, ihit, branch_resolved, branch_miss, fu_ex,
-        output out, n_fu_t, n_fust_s, n_fust_m, n_fust_g, n_fu_s, n_fust_s_en, n_fust_m_en, n_fust_g_en, n_t1, n_t2, freeze
+        input fetch, fust_s, fust_m, fust_g, fust_state, wb, ihit, branch_resolved, branch_miss, fu_ex,
+        output out, n_fu_t, n_fust_s, n_fust_m, n_fust_g, n_fu_s, n_fust_s_en, n_fust_m_en, n_fust_g_en, n_t1, n_t2
     );
 
     modport tb (
-        input out, n_fu_t, n_fust_s, n_fust_m, n_fust_g, n_fu_s, n_fust_s_en, n_fust_m_en, n_fust_g_en, n_t1, n_t2, freeze,
-        output fetch, flush, fust_s, fust_m, fust_g, fust_state, wb, ihit, branch_resolved, branch_miss, fu_ex
+        input out, n_fu_t, n_fust_s, n_fust_m, n_fust_g, n_fu_s, n_fust_s_en, n_fust_m_en, n_fust_g_en, n_t1, n_t2,
+        output fetch, fust_s, fust_m, fust_g, fust_state, wb, ihit, branch_resolved, branch_miss, fu_ex
     );
 
 endinterface

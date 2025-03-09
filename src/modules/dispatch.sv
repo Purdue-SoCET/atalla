@@ -30,13 +30,15 @@ module dispatch(
     logic m_busy;
     logic hazard;
     logic [WORD_W-1:0] instr;
-    regbits_t s_rd, s_rs1, s_rs2;
+    regbits_t s_rd, s_rs1, s_rs2, m_stride;
     matbits_t m_rd, m_rs1, m_rs2, m_rs3;
     logic flush;
     dispatch_t n_dispatch;
     dispatch_t dispatch;
     logic spec;
     logic n_spec;
+    word_t fetch_br_pc;
+    logic fetch_br_pred;
 
     always_ff @ (posedge CLK, negedge nRST) begin: Pipeline_Latching
       if (~nRST)
@@ -45,7 +47,16 @@ module dispatch(
         diif.out <= n_dispatch;
     end
 
-    assign flush = diif.flush & diif.ihit;
+    always_comb begin
+      fetch_br_pc  = diif.out.n_br_pc;
+      fetch_br_pred = diif.out.n_br_pred;
+      if (cuif.fu_s == FU_S_BRANCH) begin
+        fetch_br_pc  = diif.fetch.br_pc;
+        fetch_br_pred = diif.fetch.br_pred;
+      end
+    end
+
+    assign flush = diif.branch_miss;
     always_comb begin : Pipeline_Output
       case (1'b1)
         flush:       n_dispatch = '0;
@@ -59,7 +70,7 @@ module dispatch(
       instr = diif.fetch.imemload;
       s_rd = instr[11:7];
       s_rs1 = instr[19:15];
-      s_rs2 = instr[24:20];
+      s_rs2 = (cuif.fu_m == FU_M_LD_ST) ? instr[22:18] : instr[24:20];
       m_rd = instr[31:28];
       m_rs1 = instr[27:24];
       m_rs2 = instr[23:20];
@@ -86,7 +97,7 @@ module dispatch(
       WAW = (cuif.m_mem_type == M_LOAD | cuif.fu_m == FU_M_GEMM) ? rstmif.status.idx[m_rd].busy : 
             (cuif.s_reg_write) ? rstsif.status.idx[s_rd].busy: 1'b0;
       hazard = (s_busy | m_busy | WAW); //TODO: remember to tie this hazard back to stall the fetch to not squash this stage on a hazard
-      diif.freeze = hazard;
+      
     end
 
     always_ff @ (posedge CLK, negedge nRST) begin: Speculation_State_Latch
@@ -167,7 +178,7 @@ module dispatch(
       end
 
       // To Issue **Combinationally**
-      diif.n_fust_s_en   = (cuif.fu_t == FU_S_T & ~diif.flush & ~hazard);
+      diif.n_fust_s_en   = (cuif.fu_t == FU_S_T & ~flush & ~hazard);
       diif.n_fu_s        = cuif.fu_s;
       diif.n_fust_s.rd   = s_rd;
       diif.n_fust_s.rs1  = s_rs1;
@@ -215,12 +226,15 @@ module dispatch(
       diif.n_fust_g.t3   = rstmif.status.idx[m_rs3].tag;
     end
 
-    always_comb begin : Dispatch_Out
+    always_comb begin : Dispatch_Out 
       dispatch = diif.out;
 
       // To Execute
       dispatch.fu_s = cuif.fu_s;
       dispatch.fu_m = cuif.fu_m;
+
+      // To Fetch
+      dispatch.freeze = hazard;
 
       dispatch.ex_ctr.imm = cuif.imm;
       dispatch.ex_ctr.alu_op = cuif.alu_op;
@@ -233,6 +247,11 @@ module dispatch(
       // To Writeback
       dispatch.wb_ctr.s_rw_en = cuif.s_reg_write;
       dispatch.wb_ctr.s_rw = s_rd;
+
+      // Branch 
+      dispatch.n_br_pc = fetch_br_pc;
+      dispatch.n_br_pred = fetch_br_pred;
+
     end
 
     function automatic void init_rst();

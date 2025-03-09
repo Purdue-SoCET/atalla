@@ -11,16 +11,16 @@ interface fu_scalar_ls_if;
 
   word_t imm, dmemload, dmemaddr, dmem_in, dmemstore, rs1, rs2;
   scalar_mem_t mem_type;
-  logic dhit, dmemWEN, dmemREN, dhit_in;
+  logic dhit, dmemWEN, dmemREN, dhit_in, enable;
 
   modport sls (
-    input imm, mem_type, rs1, rs2, dmem_in, dhit_in,
+    input enable, imm, mem_type, rs1, rs2, dmem_in, dhit_in,
     output dmemaddr, dmemREN, dmemWEN, dmemstore, dmemload, dhit
   );
 
   modport tb (
     input dmemaddr, dmemREN, dmemWEN, dmemstore, dmemload, dhit,
-    output imm, mem_type, rs1, rs2, dmem_in, dhit_in
+    output enable, imm, mem_type, rs1, rs2, dmem_in, dhit_in
   );
 
   modport dcache (

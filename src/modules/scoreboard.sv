@@ -19,10 +19,11 @@ module scoreboard(
     dispatch DI (CLK, nRST, diif);
     issue IS (CLK, nRST, isif);
 
+    // TODO: needs to output fu codes, double check all outputs of sb
+
     always_comb begin
       diif.fetch = sbif.fetch;
-      diif.flush = sbif.flush;
-      sbif.freeze = diif.freeze;
+      // diif.flush = sbif.flush;
 
       diif.fust_s = isif.fust_s;
       diif.fust_m = isif.fust_m;
@@ -31,8 +32,7 @@ module scoreboard(
       diif.wb = sbif.wb_ctrl;
 
       isif.dispatch = diif.out;
-      isif.flush = sbif.flush;
-      isif.freeze = diif.freeze;
+      // isif.flush = sbif.flush;
       isif.wb = sbif.wb;
 
       isif.n_fust_s = diif.n_fust_s;
