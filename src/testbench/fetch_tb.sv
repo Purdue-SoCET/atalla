@@ -52,7 +52,7 @@ module fetch_tb;
     fif.correct_pc = 32'hABCDEF01;
     #(PERIOD * 6);
     check_output(fif.instr, 32'hACE1ACE1, tb_test_case);
-    check_output(fif.pc, 32'h00001000, tb_test_case);
+    check_output(fif.pc, 32'hABCDEF01, tb_test_case);
 
     tb_test_case = "Correct Prediction Test";
     tb_test_num = tb_test_num + 1;
