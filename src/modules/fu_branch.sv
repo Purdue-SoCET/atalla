@@ -60,6 +60,7 @@ module fu_branch(
     fubif.branch_target = '0;
     fubif.update_btb = 1'b0;
     fubif.update_pc = '0;
+    fubif.resolved = 1'b0;
     actual_outcome = '0;
 
     if (fubif.branch) begin
@@ -72,7 +73,10 @@ module fu_branch(
 
       // enable will control when the BTB can update
       // btb_updated will only allow one update per branch instruction
-      if (fubif.enable && !btb_updated) fubif.update_btb = 1'b1;
+      if (fubif.enable) begin
+        fubif.resolved = 1'b1;
+        if (!btb_updated) fubif.update_btb = 1'b1;
+      end
       
       fubif.update_pc = fubif.current_pc;
       fubif.branch_target = fubif.current_pc + fubif.imm;
