@@ -17,6 +17,7 @@ add wave -noupdate /fu_branch_tb/fubif/correct_pc
 add wave -noupdate /fu_branch_tb/fubif/update_btb
 add wave -noupdate /fu_branch_tb/fubif/enable
 add wave -noupdate /fu_branch_tb/DUT/btb_updated
+add wave -noupdate /fu_branch_tb/fubif/resolved
 TreeUpdate [SetDefaultTree]
 WaveRestoreCursors {{Cursor 1} {4360 ps} 0}
 quietly wave cursor active 1
@@ -34,4 +35,4 @@ configure wave -griddelta 40
 configure wave -timeline 0
 configure wave -timelineunits ps
 update
-WaveRestoreZoom {0 ps} {121600 ps}
+WaveRestoreZoom {78480 ps} {200080 ps}
