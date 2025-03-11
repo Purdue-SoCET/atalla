@@ -15,7 +15,7 @@ module fetch(
 
         if (fif.misprediction) begin
             next_pc = fif.correct_pc;
-        end else if (fif.stall || !fif.dispatch_free) begin
+        end else if (fif.freeze) begin
             next_pc = pc_reg;
         end else begin
             next_pc = fif.pc_prediction;
@@ -26,7 +26,7 @@ module fetch(
         if (!nRST) begin
             pc_reg <= PC_INIT;
         end else begin
-            if (ihit && !fif.stall && fif.dispatch_free) begin
+            if (ihit && !fif.freeze) begin
                 pc_reg <= next_pc;
             end
         end
