@@ -6,7 +6,8 @@
 `include "bpt_tbp_if.vh"
 
 
-module fetch_tbp
+module fetch_tbp#( 	
+    parameter size = 11)
 (
     input logic CLK, 
     input logic nRST, 
@@ -25,12 +26,12 @@ module fetch_tbp
     //fetch stage
     assign btbif.pc_fetch = tbpif.pc_fetch;
 
-    btb BTB(.CLK(CLK), .nRST(nRST), .btbif(btbif));
+    btb #(.size(size)) BTB(.CLK(CLK), .nRST(nRST), .btbif(btbif));
  
     //--------------G-Share Predictor (Predictor 1)--------------
     //GHR
     logic [2:0] GHR_out;
-    nbit_stp_shiftreg GHR(.CLK(CLK), .nRST(nRST), .enable(tbpif.enable_res), .in(tbpif.taken_res), .out(GHR_out));
+    nbit_stp_shiftreg #(.size(3)) GHR(.CLK(CLK), .nRST(nRST), .enable(tbpif.enable_res), .in(tbpif.taken_res), .out(GHR_out));
 
     //BPT
     bpt_if bpt_gshareif();
@@ -41,9 +42,9 @@ module fetch_tbp
     assign bpt_gshareif.enable_res = tbpif.enable_res;
 
     //fetch stage
-    assign bpt_gshareif.pc_fetch = tbpif.pc_fetch ^ GHR_out; //indexed with PC XOR GHR
+    assign bpt_gshareif.pc_fetch = {tbpif.pc_fetch[31:5],tbpif.pc_fetch[4:2] ^ GHR_out, tbpif.pc_fetch[1:0]}; //indexed with PC XOR GHR
 
-    bpt bpt_gshare(.CLK(CLK), .nRST(nRST), .bptif(bpt_gshareif));
+    bpt #(.size(size)) bpt_gshare(.CLK(CLK), .nRST(nRST), .bptif(bpt_gshareif));
 
     //--------------2bit Predictor (Predictor 0)--------------
     //BPT
@@ -57,7 +58,7 @@ module fetch_tbp
     //fetch stage
     assign bpt_2bitif.pc_fetch = tbpif.pc_fetch;
 
-    bpt bpt_2bit(.CLK(CLK), .nRST(nRST), .bptif(bpt_2bitif));
+    bpt #(.size(size)) bpt_2bit(.CLK(CLK), .nRST(nRST), .bptif(bpt_2bitif));
 
     //--------------Tournament Predictor--------------
     //BPT
@@ -71,7 +72,7 @@ module fetch_tbp
     //fetch stage
     assign bpt_tbpif.pc_fetch = tbpif.pc_fetch;
 
-    bpt_tbp bpt_tbp(.CLK(CLK), .nRST(nRST), .bpt_tbpif(bpt_tbpif));
+    bpt_tbp #(.size(size)) bpt_tbp(.CLK(CLK), .nRST(nRST), .bpt_tbpif(bpt_tbpif));
 
     //------------Top Level Outputs
     logic taken;
