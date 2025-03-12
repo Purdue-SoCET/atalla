@@ -329,7 +329,6 @@ module issue(
       // TODO: output each struct if that fu is going into FUST_EX, if not set to 0
       issue = isif.out;
       isif.fust_state = fust_state;
-      // issue.fu_en = 3'd5; // need to double check this
       s_rs1 = '0;
       s_rs2 = '0;
       imm = '0;
