@@ -38,6 +38,7 @@ module issue(
     issue_t n_issue;
     issue_t issue;
     regbits_t s_rs1, s_rs2;
+    word_t imm;
     logic [4:0] incoming_instr;
 
     logic [4:0] rdy;
@@ -76,7 +77,7 @@ module issue(
 
     always_comb begin : Pipeline_Output
       case (1'b1)
-        isif.freeze: n_issue = isif.out; //need to think of cases for freezes/flushes
+        isif.dispatch.freeze: n_issue = isif.out; //need to think of cases for freezes/flushes
         default:     n_issue = issue;
       endcase
     end
@@ -84,7 +85,7 @@ module issue(
     always_comb begin : Regfile
       rfif.WEN   = isif.wb.s_rw_en;
       rfif.wsel  = isif.wb.s_rw;
-      rfif.wdata = isif.s_wdata;
+      rfif.wdata = isif.wb.s_wdata;
       rfif.rsel1 = s_rs1;
       rfif.rsel2 = s_rs2;
     end
@@ -106,13 +107,7 @@ module issue(
       // could be writing the flush bits here as well if not in the dispatch,
       // like how busy is being written independent of the rows that dispatch
       // writes
-      if (isif.branch_miss) begin
-        fusif.flush = 1'b1;
-      //  then flush fusif.fust.op[i], easiest way is
-      //  probably adding a flush bit to the fusif.fust.op[]
-      //  and let the fust_s clear its rows with that bit asserted
-      //  since fusif.fust.op can only write one row at a time
-      end
+      
 
       fusif.t1 = isif.n_t1;
       fusif.t2 = isif.n_t2;
@@ -124,6 +119,16 @@ module issue(
       fugif.en       = isif.n_fust_g_en;
       fugif.fust_row = isif.n_fust_g;
       fugif.busy     = next_fust_state[4] != FUST_EMPTY;
+
+      fusif.flush = 1'b0;
+
+      if (isif.branch_miss) begin
+        fusif.flush = 1'b1;
+      //  then flush fusif.fust.op[i], easiest way is
+      //  probably adding a flush bit to the fusif.fust.op[]
+      //  and let the fust_s clear its rows with that bit asserted
+      //  since fusif.fust.op can only write one row at a time
+      end
     end
 
     always_ff @ (posedge CLK, negedge nRST) begin: Age_Latch
@@ -163,19 +168,19 @@ module issue(
           // && (age[i] > oldest_age)
           // next_oldest_rdy[i] = 1'b1;
       if (rdy[0] && (fust_state[0] != FUST_EX)) begin
-        next_oldest_rdy[0] = ((age[0] > age[1]) && (age[0] > age[2]) && (age[0] > age[3]) && (age[0] > age[4])) ? 1'b1 : oldest_rdy;
+        next_oldest_rdy[0] = ((age[0] > age[1]) && (age[0] > age[2]) && (age[0] > age[3]) && (age[0] > age[4])) ? 1'b1 : oldest_rdy[0];
       end
       else if (rdy[1] && (fust_state[1] != FUST_EX)) begin
-        next_oldest_rdy[1] = ((age[1] > age[0]) && (age[1] > age[2]) && (age[1] > age[3]) && (age[1] > age[4])) ? 1'b1 : oldest_rdy;
+        next_oldest_rdy[1] = ((age[1] > age[0]) && (age[1] > age[2]) && (age[1] > age[3]) && (age[1] > age[4])) ? 1'b1 : oldest_rdy[1];
       end
       else if (rdy[2] && (fust_state[2] != FUST_EX)) begin
-        next_oldest_rdy[2] = ((age[2] > age[0]) && (age[2] > age[1]) && (age[2] > age[3]) && (age[2] > age[4])) ? 1'b1 : oldest_rdy;
+        next_oldest_rdy[2] = ((age[2] > age[0]) && (age[2] > age[1]) && (age[2] > age[3]) && (age[2] > age[4])) ? 1'b1 : oldest_rdy[2];
       end
       else if (rdy[3] && (fust_state[3] != FUST_EX)) begin
-        next_oldest_rdy[3] = ((age[3] > age[0]) && (age[3] > age[1]) && (age[3] > age[2]) && (age[3] > age[4])) ? 1'b1 : oldest_rdy;
+        next_oldest_rdy[3] = ((age[3] > age[0]) && (age[3] > age[1]) && (age[3] > age[2]) && (age[3] > age[4])) ? 1'b1 : oldest_rdy[3];
       end
       else if (rdy[4] && (fust_state[4] != FUST_EX)) begin
-        next_oldest_rdy[4] = ((age[4] > age[0]) && (age[4] > age[1]) && (age[4] > age[2]) && (age[4] > age[3])) ? 1'b1 : oldest_rdy;
+        next_oldest_rdy[4] = ((age[4] > age[0]) && (age[4] > age[1]) && (age[4] > age[2]) && (age[4] > age[3])) ? 1'b1 : oldest_rdy[4];
       end
 
         // if (rdy[i] && fust_state == FUST_RDY && (age[i] > oldest_rdy)) begin
@@ -233,6 +238,23 @@ module issue(
         fust_state <= next_fust_state;
     end
 
+    logic [4:0] fu_ready, next_ready;
+    logic single_ready, next_single_ready;
+    always_comb begin
+      fu_ready = '0;
+      next_ready = '0;
+      for (int i = 0; i < 5; i++) begin 
+        if (fust_state[i] == FUST_RDY) begin
+          fu_ready[i] = 1'b1;
+        end
+        if (n_rdy[i]) begin
+          next_ready[i] = 1'b1;
+        end
+      end
+      single_ready = (fu_ready == 5'd1) || (fu_ready == 5'd2) || (fu_ready == 5'd4) || (fu_ready == 5'd8) || (fu_ready == 5'd16);
+      next_single_ready = (next_ready == 5'd1) || (next_ready == 5'd2) || (next_ready == 5'd4) || (next_ready == 5'd8) || (next_ready == 5'd16);
+    end
+
     // Issue Policy: Oldest instruction first
     always_comb begin : FUST_Next_State
       next_fust_state = fust_state;
@@ -244,10 +266,10 @@ module issue(
           end
           FUST_WAIT: begin
             if (n_rdy[i])
-              next_fust_state[i] = (n_rdy[i] == next_oldest_rdy[i]) ? FUST_EX : FUST_RDY;
+              next_fust_state[i] = ((n_rdy[i] == next_oldest_rdy[i]) || (next_single_ready)) ? FUST_EX : FUST_RDY;
           end
           FUST_RDY: begin
-            next_fust_state[i] = (next_oldest_rdy[i]) ? FUST_EX : FUST_RDY;
+            next_fust_state[i] = ((next_oldest_rdy[i]) || (single_ready)) ? FUST_EX : FUST_RDY;
           end
           FUST_EX: begin
 
@@ -259,15 +281,17 @@ module issue(
             //  since fusif.fust.op can only write one row at a time
 
             // end
-            if (i==2 && (isif.branch_miss || isif.branch_resolved)) begin
-              next_fust_state[i] = FUST_EMPTY;
-            end
+            
 
             // TODO fust related wb
-            if (isif.wb.s_rw_en & isif.wb.alu_done & (i == 0)) begin 
+            if (isif.fu_ex == ALU_DONE && (i == 0)) begin 
               next_fust_state[i] = incoming_instr[i] ? FUST_WAIT : FUST_EMPTY;
-            end else if (isif.wb.s_rw_en & isif.wb.load_done & (i == 1)) begin
+            end
+            else if (isif.fu_ex == SCALAR_LS_DONE && (i == 1)) begin
               next_fust_state[i] = incoming_instr[i] ? FUST_WAIT : FUST_EMPTY;
+            end
+            else if (isif.fu_ex == BRANCH_DONE && (i==2)) begin
+              next_fust_state[i] = FUST_EMPTY;
             end
 
 
@@ -300,32 +324,51 @@ module issue(
       end
     end
 
+
     always_comb begin : Output_Logic
+      // TODO: output each struct if that fu is going into FUST_EX, if not set to 0
       issue = isif.out;
       isif.fust_state = fust_state;
+      // issue.fu_en = 3'd5; // need to double check this
       s_rs1 = '0;
       s_rs2 = '0;
+      imm = '0;
       for (int i = 0; i < 5; i++) begin
+        if (isif.fu_ex[i]) begin
+          issue.fu_en[i] = 1'b0;
+        end
         //TODO:verify this will only ever apply to one instruction per cycle
         if (fust_state[i] != FUST_EX & next_fust_state[i] == FUST_EX) begin
           // issue this instruction
           // TODO: add opcode to be sent to FUs
-          if (i < 3) begin
+          if (i < 3) begin // alu, sls, br
             s_rs1 = fusif.fust.op[i].rs1;
             s_rs2 = fusif.fust.op[i].rs2;
-            issue.fu_en = i[2:0];
-          end else if (i == 3) begin
+            issue.fu_en[i] = 1'b1;
+            imm = fusif.fust.op[i].imm;
+            issue.alu_op = aluop_t'(fusif.fust.op[i].op_type);
+            issue.mem_type = scalar_mem_t'(fusif.fust.op[i].mem_type);
+            // if (i==2) begin // better to have this or no??
+            issue.branch_type = branch_t'(fusif.fust.op[i].op_type);
+            issue.branch_pc = isif.dispatch.n_br_pc;
+            issue.branch_pred_pc = isif.dispatch.n_br_pred;
+            // end
+          end else if (i == 3) begin // mls
+            // TODO: need to figure these out, not sure rn
             s_rs1 = fumif.fust.op.rs1;
             s_rs2 = fumif.fust.op.rs2;
-            issue.fu_en = i[2:0];
-          end else if (i == 4) begin
+            issue.fu_en[i] = 1'b1;
+            imm = fumif.fust.op.imm;
+          end else if (i == 4) begin // gemm
+            issue.md  = fugif.fust.op.md;
             issue.ms1 = fugif.fust.op.ms1;
             issue.ms2 = fugif.fust.op.ms2;
             issue.ms3 = fugif.fust.op.ms3;
-            issue.fu_en = i[2:0];
+            issue.fu_en[i] = 1'b1;
           end
           issue.rdat1 = rfif.rdat1;
           issue.rdat2 = rfif.rdat2;
+          issue.imm = imm;
         end
       end
     end

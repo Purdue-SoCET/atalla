@@ -45,14 +45,15 @@ program test (
 
     task reset_in;
         begin
-            sbif.flush = '0;
-            sbif.freeze = '0;
+            // sbif.flush = '0;
+            // sbif.freeze = '0;
             sbif.wb = '0;
             sbif.fetch = '0;
             sbif.wb = '0;
             sbif.wb_ctrl = '0;
             sbif.branch_miss = 1'b0;
             sbif.branch_resolved = 1'b0;
+            sbif.fu_ex = fu_done_signals'('0);
             @(posedge CLK);
         end
     endtask
@@ -145,26 +146,111 @@ program test (
         reset_in();
         reset_dut();
 
-        @(posedge CLK);
+        // @(posedge CLK);
+        // rtype_instr(RTYPE, 5'd10, 5'd11, 5'd12, ADD_SUB, ADD);
+        // itype_instr(ITYPE_LW, 5'd8, 5'd9, funct3_i_t'(3'h2), 12'd210);
+        // itype_instr(ITYPE, 5'd18, 5'd19, ADDI, 12'd110);
+        // sbif.fetch = '0;
+
+        // repeat (3) begin
+        //     @(posedge CLK);
+        // end
+
+
+
+
+        // stype_instr;
+        // input opcode_t opcode;
+        // input regbits_t rs1;
+        // input regbits_t rs2;
+        // input logic [2:0] funct3;
+        // input logic [11:0] imm;
+
+
+
+        // // fu_ex as writeback now
+
+        // rtype_instr(RTYPE, 5'd10, 5'd11, 5'd12, ADD_SUB, ADD);
+        // rtype_instr(RTYPE, 5'd15, 5'd16, 5'd14, ADD_SUB, ADD);
+        // sbif.fetch.imemload = '0;
+
+        // @(posedge CLK);
+
+        // sbif.fu_ex = ALU_DONE;
+
+        // repeat (10) begin
+        //     @(posedge CLK);
+        // end
 
         // branch resolution 
+        
+        @(posedge CLK);
+        rtype_instr(RTYPE, 5'd5, 5'd12, 5'd13, ADD_SUB, ADD);
 
+        sbif.fetch.br_pc = 32'd200;
+        sbif.fetch.br_pred = 1'b1;
         btype_instr(BTYPE, 5'd5, 5'd6, BEQ, 13'd0);
-        rtype_instr(RTYPE, 5'd11, 5'd12, 5'd13, ADD_SUB, ADD);
+        // rtype_instr(RTYPE, 5'd11, 5'd12, 5'd13, ADD_SUB, ADD);
         // rtype_instr(RTYPE, 5'd14, 5'd15, 5'd16, ADD_SUB, ADD);
-        itype_instr(ITYPE_LW, 5'd8, 5'd9, funct3_i_t'(3'h2), 12'd0);
+        // itype_instr(ITYPE_LW, 5'd8, 5'd9, funct3_i_t'(3'h2), 12'd0);
 
-        sbif.fetch.imemload = '0;
+        sbif.fetch = '0;
+        @(posedge CLK);
+        @(posedge CLK);
+        @(posedge CLK);
 
-        sbif.branch_miss = 1'b1;
+        sbif.fu_ex = ALU_DONE;
 
         @(posedge CLK);
 
-        repeat (10) begin
-            @(posedge CLK);
-        end
+        // sbif.wb.alu_done = '1;
+        // sbif.wb_ctrl.alu_done = '1;
 
-        //  age check
+        sbif.wb.s_wdata = 32'd124;
+
+        sbif.wb_ctrl.s_rw_en = '1;
+        sbif.wb_ctrl.s_rw = 5'd5;
+
+        sbif.wb.s_rw_en = '1;
+        sbif.wb.s_rw = 5'd5;
+
+        @(posedge CLK);
+
+        itype_instr(ITYPE_LW, 5'd12, 5'd15, funct3_i_t'(3'h2), 12'd16);
+        sbif.fetch = '0;
+
+        sbif.wb.s_wdata = '0;
+
+        sbif.wb_ctrl.s_rw_en = '0;
+        sbif.wb_ctrl.s_rw = '0;
+
+        sbif.wb.s_rw_en = '0;
+        sbif.wb.s_rw = '0;
+        @(posedge CLK);
+        @(posedge CLK);
+        @(posedge CLK);
+
+
+        sbif.fu_ex = BRANCH_DONE;
+        sbif.branch_miss = 1;
+
+        @(posedge CLK);
+
+        sbif.fu_ex = fu_done_signals'('0);
+        sbif.branch_miss = 0;
+
+        @(posedge CLK);
+        @(posedge CLK);
+        @(posedge CLK);
+
+        sbif.fetch.br_pc = 32'd240;
+        sbif.fetch.br_pred = 1'b0;
+        btype_instr(BTYPE, 5'd15, 5'd5, BEQ, 13'd0);
+        sbif.fetch = '0;
+
+        repeat (10) @(posedge CLK);
+
+        // //  age check
         // itype_instr(ITYPE_LW, 5'd5, 5'd6, funct3_i_t'(3'h2), 12'd0);
         // rtype_instr(RTYPE, 5'd11, 5'd5, 5'd10, ADD_SUB, ADD);
         // btype_instr(BTYPE, 5'd5, 5'd15, BEQ, 13'd0);
@@ -174,6 +260,7 @@ program test (
         // repeat (10) begin
         //     @(posedge CLK);
         // end
+
 
         // sbif.wb.load_done = '1;
         // sbif.wb_ctrl.load_done = '1;
