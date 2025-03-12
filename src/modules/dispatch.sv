@@ -250,6 +250,9 @@ module dispatch(
       dispatch.fu_s = cuif.fu_s;
       dispatch.fu_m = cuif.fu_m;
 
+      // halt
+      dispatch.halt = cuif.halt;
+
       // To Fetch
       dispatch.freeze = hazard;
 

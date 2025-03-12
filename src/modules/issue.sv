@@ -334,6 +334,7 @@ module issue(
       s_rs2 = '0;
       imm = '0;
       for (int i = 0; i < 5; i++) begin
+        issue.halt = isif.dispatch.halt;
         if (isif.fu_ex[i]) begin
           issue.fu_en[i] = 1'b0;
         end
