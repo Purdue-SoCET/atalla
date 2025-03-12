@@ -184,6 +184,7 @@ program test (
 
         // branch resolution 
         
+        @(posedge CLK);
         rtype_instr(RTYPE, 5'd5, 5'd12, 5'd13, ADD_SUB, ADD);
 
         sbif.fetch.br_pc = 32'd200;
@@ -205,7 +206,7 @@ program test (
         // sbif.wb.alu_done = '1;
         // sbif.wb_ctrl.alu_done = '1;
 
-        sbif.wb.s_wdata = 32'd123;
+        sbif.wb.s_wdata = 32'd124;
 
         sbif.wb_ctrl.s_rw_en = '1;
         sbif.wb_ctrl.s_rw = 5'd5;
@@ -213,9 +214,41 @@ program test (
         sbif.wb.s_rw_en = '1;
         sbif.wb.s_rw = 5'd5;
 
-        repeat (10) begin
-            @(posedge CLK);
-        end
+        @(posedge CLK);
+
+        itype_instr(ITYPE_LW, 5'd12, 5'd15, funct3_i_t'(3'h2), 12'd16);
+        sbif.fetch = '0;
+
+        sbif.wb.s_wdata = '0;
+
+        sbif.wb_ctrl.s_rw_en = '0;
+        sbif.wb_ctrl.s_rw = '0;
+
+        sbif.wb.s_rw_en = '0;
+        sbif.wb.s_rw = '0;
+        @(posedge CLK);
+        @(posedge CLK);
+        @(posedge CLK);
+
+
+        sbif.fu_ex = BRANCH_DONE;
+        sbif.branch_miss = 1;
+
+        @(posedge CLK);
+
+        sbif.fu_ex = fu_done_signals'('0);
+        sbif.branch_miss = 0;
+
+        @(posedge CLK);
+        @(posedge CLK);
+        @(posedge CLK);
+
+        sbif.fetch.br_pc = 32'd240;
+        sbif.fetch.br_pred = 1'b0;
+        btype_instr(BTYPE, 5'd15, 5'd5, BEQ, 13'd0);
+        sbif.fetch = '0;
+
+        repeat (10) @(posedge CLK);
 
         // //  age check
         // itype_instr(ITYPE_LW, 5'd5, 5'd6, funct3_i_t'(3'h2), 12'd0);

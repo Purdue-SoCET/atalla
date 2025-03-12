@@ -109,8 +109,6 @@ module dispatch(
 
     always_comb begin : Speculation_State
       n_spec = spec;
-      // TODO: needs some kind of branch resolve signal from branch FU to
-      // clear speculation bit
       if (cuif.fu_s == FU_S_BRANCH)
         n_spec = 1'b1;
       else if (diif.branch_resolved || diif.branch_miss)
@@ -187,6 +185,25 @@ module dispatch(
 
       diif.n_fust_s.spec = spec; // sets spec bit in FUST on new instructions
 
+      diif.n_fust_s.op_type = '0;
+      diif.n_fust_s.mem_type = scalar_mem_t'('0);
+      diif.n_fust_m.mem_type = matrix_mem_t'('0);
+
+      if (cuif.fu_s == FU_S_ALU) begin
+        diif.n_fust_s.op_type = cuif.alu_op;
+      end 
+      else if (cuif.fu_s == FU_S_BRANCH) begin
+        diif.n_fust_s.op_type = {1'b0,cuif.branch_op};
+      end
+      
+      if (cuif.fu_s == FU_S_LD_ST) begin
+        diif.n_fust_s.mem_type = cuif.s_mem_type;
+      end
+
+      // else if (cuif.fu_s == FU_M_LD_ST) begin
+      //   diif.n_fust_s.mem_type = cuif.m_mem_type;
+      // end
+
       // look at TODO in issue about branch resolution and needing flush bits
       // example: 
       // for i = 1 to 5, if diif.fust_s.op[i].spec & diif.mispredict, then
@@ -211,13 +228,13 @@ module dispatch(
       diif.n_fust_m.rd   = m_rd;
       diif.n_fust_m.rs1  = s_rs1;
       diif.n_fust_m.rs2  = s_rs2;
-      diif.n_fust_m.imm  = cuif.imm[10:0];
+      diif.n_fust_m.imm  = cuif.imm;
       diif.n_fust_m.t1   = rstsif.status.idx[s_rs1].tag;
       diif.n_fust_m.t2   = rstsif.status.idx[s_rs2].tag;
 
       diif.n_fust_g_en   = (cuif.fu_t == FU_G_T & ~flush & ~hazard);
       //n_fu_g           = 1'b0; // only one row in FUST
-      diif.n_fust_g.rd   = m_rd;
+      diif.n_fust_g.md   = m_rd;
       diif.n_fust_g.ms1  = m_rs1;
       diif.n_fust_g.ms2  = m_rs2;
       diif.n_fust_g.ms3  = m_rs3;

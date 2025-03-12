@@ -77,11 +77,11 @@ package datapath_pkg;
     FU_NONE     = 2'd3
   } fu_scalar_t;
 
-  typedef enum logic [1:0] {
-    NA,
-    ALU_DONE,
-    SCALAR_LS_DONE,
-    BRANCH_DONE // scalar stuff for now
+  typedef enum logic [2:0] {
+    NA               = 3'b000,
+    ALU_DONE         = 3'b001,
+    SCALAR_LS_DONE   = 3'b010,
+    BRANCH_DONE      = 3'b100
   } fu_done_signals; // scalar stuff for now
 
   typedef enum logic [2:0] {
@@ -96,7 +96,7 @@ package datapath_pkg;
     regbits_t rs2;
     word_t imm; //instr[31:7] TODO: double check this is right 
     logic spec;
-    logic [2:0] op_type;
+    logic [3:0] op_type;
     scalar_mem_t mem_type;
   } fust_s_row_t;
 
@@ -126,7 +126,7 @@ package datapath_pkg;
   } fust_m_t;
 
   typedef struct packed {
-    matbits_t rd;
+    matbits_t md;
     matbits_t ms1;
     matbits_t ms2;
     matbits_t ms3;

@@ -238,6 +238,23 @@ module issue(
         fust_state <= next_fust_state;
     end
 
+    logic [4:0] fu_ready, next_ready;
+    logic single_ready, next_single_ready;
+    always_comb begin
+      fu_ready = '0;
+      next_ready = '0;
+      for (int i = 0; i < 5; i++) begin 
+        if (fust_state[i] == FUST_RDY) begin
+          fu_ready[i] = 1'b1;
+        end
+        if (n_rdy[i]) begin
+          next_ready[i] = 1'b1;
+        end
+      end
+      single_ready = (fu_ready == 5'd1) || (fu_ready == 5'd2) || (fu_ready == 5'd4) || (fu_ready == 5'd8) || (fu_ready == 5'd16);
+      next_single_ready = (next_ready == 5'd1) || (next_ready == 5'd2) || (next_ready == 5'd4) || (next_ready == 5'd8) || (next_ready == 5'd16);
+    end
+
     // Issue Policy: Oldest instruction first
     always_comb begin : FUST_Next_State
       next_fust_state = fust_state;
@@ -249,10 +266,10 @@ module issue(
           end
           FUST_WAIT: begin
             if (n_rdy[i])
-              next_fust_state[i] = (n_rdy[i] == next_oldest_rdy[i]) ? FUST_EX : FUST_RDY;
+              next_fust_state[i] = ((n_rdy[i] == next_oldest_rdy[i]) || (next_single_ready)) ? FUST_EX : FUST_RDY;
           end
           FUST_RDY: begin
-            next_fust_state[i] = (next_oldest_rdy[i]) ? FUST_EX : FUST_RDY;
+            next_fust_state[i] = ((next_oldest_rdy[i]) || (single_ready)) ? FUST_EX : FUST_RDY;
           end
           FUST_EX: begin
 
@@ -307,23 +324,6 @@ module issue(
       end
     end
 
-    // word_t br_pc;
-    // logic br_pred;
-
-    // always_ff @(posedge clk, negedge nRST) begin
-    //   if (~nRST) begin
-    //     br_pc <= '0;
-    //     br_pred <= '0;
-    //   end
-    //   else if ((isif.dispatch.fu_s == FU_S_BRANCH) && (!isif.branch_miss && !isif.branch_resolved)) begin
-    //     br_pc <= isif.dispatch.n_br_pc;
-    //     br_pred <= isif.dispatch.n_br_pred;
-    //   end else begin
-    //     br_pc <= '0;
-    //     br_pred <= '0;
-    //   end
-    // end
-
 
     always_comb begin : Output_Logic
       // TODO: output each struct if that fu is going into FUST_EX, if not set to 0
@@ -334,6 +334,9 @@ module issue(
       s_rs2 = '0;
       imm = '0;
       for (int i = 0; i < 5; i++) begin
+        if (isif.fu_ex[i]) begin
+          issue.fu_en[i] = 1'b0;
+        end
         //TODO:verify this will only ever apply to one instruction per cycle
         if (fust_state[i] != FUST_EX & next_fust_state[i] == FUST_EX) begin
           // issue this instruction
@@ -341,22 +344,27 @@ module issue(
           if (i < 3) begin // alu, sls, br
             s_rs1 = fusif.fust.op[i].rs1;
             s_rs2 = fusif.fust.op[i].rs2;
-            issue.fu_en = i[2:0];
+            issue.fu_en[i] = 1'b1;
             imm = fusif.fust.op[i].imm;
-            if (i==2) begin
-              issue.branch_pc = isif.dispatch.n_br_pc;
-              issue.branch_pred_pc = isif.dispatch.n_br_pred;
-            end
+            issue.alu_op = aluop_t'(fusif.fust.op[i].op_type);
+            issue.mem_type = scalar_mem_t'(fusif.fust.op[i].mem_type);
+            // if (i==2) begin // better to have this or no??
+            issue.branch_type = branch_t'(fusif.fust.op[i].op_type);
+            issue.branch_pc = isif.dispatch.n_br_pc;
+            issue.branch_pred_pc = isif.dispatch.n_br_pred;
+            // end
           end else if (i == 3) begin // mls
+            // TODO: need to figure these out, not sure rn
             s_rs1 = fumif.fust.op.rs1;
             s_rs2 = fumif.fust.op.rs2;
-            issue.fu_en = i[2:0];
+            issue.fu_en[i] = 1'b1;
             imm = fumif.fust.op.imm;
           end else if (i == 4) begin // gemm
+            issue.md  = fugif.fust.op.md;
             issue.ms1 = fugif.fust.op.ms1;
             issue.ms2 = fugif.fust.op.ms2;
             issue.ms3 = fugif.fust.op.ms3;
-            issue.fu_en = i[2:0];
+            issue.fu_en[i] = 1'b1;
           end
           issue.rdat1 = rfif.rdat1;
           issue.rdat2 = rfif.rdat2;

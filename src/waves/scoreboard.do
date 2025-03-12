@@ -1,11 +1,11 @@
 onerror {resume}
 quietly WaveActivateNextPane {} 0
 add wave -noupdate -divider {SB Stimulus}
-add wave -noupdate -color Gold -expand -subitemconfig {/scoreboard_tb/DUT/sbif/fetch.imemload {-color Gold -height 16}} /scoreboard_tb/DUT/sbif/fetch
+add wave -noupdate -color Gold -expand -subitemconfig {/scoreboard_tb/DUT/sbif/fetch.imemload {-color Gold -height 16} /scoreboard_tb/DUT/sbif/fetch.br_pc {-color Gold -height 16} /scoreboard_tb/DUT/sbif/fetch.br_pred {-color Gold -height 16}} /scoreboard_tb/DUT/sbif/fetch
 add wave -noupdate -color Gold /scoreboard_tb/CLK
 add wave -noupdate -color Gold /scoreboard_tb/nRST
 add wave -noupdate -color Gold /scoreboard_tb/DUT/sbif/wb
-add wave -noupdate -color Gold /scoreboard_tb/DUT/sbif/out
+add wave -noupdate -color Gold -expand -subitemconfig {/scoreboard_tb/DUT/sbif/out.fu_en {-color Gold -height 16 -expand} {/scoreboard_tb/DUT/sbif/out.fu_en[4]} {-color Gold} {/scoreboard_tb/DUT/sbif/out.fu_en[3]} {-color Gold} {/scoreboard_tb/DUT/sbif/out.fu_en[2]} {-color Gold} {/scoreboard_tb/DUT/sbif/out.fu_en[1]} {-color Gold} {/scoreboard_tb/DUT/sbif/out.fu_en[0]} {-color Gold} /scoreboard_tb/DUT/sbif/out.rdat1 {-color Gold -height 16} /scoreboard_tb/DUT/sbif/out.rdat2 {-color Gold -height 16} /scoreboard_tb/DUT/sbif/out.imm {-color Gold -height 16} /scoreboard_tb/DUT/sbif/out.branch_type {-color Gold -height 16} /scoreboard_tb/DUT/sbif/out.branch_pc {-color Gold -height 16} /scoreboard_tb/DUT/sbif/out.branch_pred_pc {-color Gold -height 16} /scoreboard_tb/DUT/sbif/out.alu_op {-color Gold -height 16} /scoreboard_tb/DUT/sbif/out.ls_in {-color Gold -height 16} /scoreboard_tb/DUT/sbif/out.mem_type {-color Gold -height 16} /scoreboard_tb/DUT/sbif/out.md {-color Gold -height 16} /scoreboard_tb/DUT/sbif/out.ms1 {-color Gold -height 16} /scoreboard_tb/DUT/sbif/out.ms2 {-color Gold -height 16} /scoreboard_tb/DUT/sbif/out.ms3 {-color Gold -height 16}} /scoreboard_tb/DUT/sbif/out
 add wave -noupdate -divider {Control Unit}
 add wave -noupdate -group cuif /scoreboard_tb/DUT/DI/cuif/alu_op
 add wave -noupdate -group cuif /scoreboard_tb/DUT/DI/cuif/stride
@@ -50,14 +50,14 @@ add wave -noupdate -expand -group rstsif /scoreboard_tb/DUT/DI/rstsif/spec
 add wave -noupdate -expand -group rstsif /scoreboard_tb/DUT/DI/rstsif/wb_sel
 add wave -noupdate -expand -group rstsif /scoreboard_tb/DUT/DI/rstsif/wb_write
 add wave -noupdate -expand -group rstsif /scoreboard_tb/DUT/DI/rstsif/status
-add wave -noupdate -subitemconfig {/scoreboard_tb/DUT/DI/rstsif/status.idx -expand} /scoreboard_tb/DUT/DI/rstsif/status
+add wave -noupdate /scoreboard_tb/DUT/DI/rstsif/status
 add wave -noupdate -divider FUST
 add wave -noupdate -group fuif /scoreboard_tb/DUT/IS/FS/fuif/en
 add wave -noupdate -group fuif /scoreboard_tb/DUT/IS/FS/fuif/fu
 add wave -noupdate -group fuif /scoreboard_tb/DUT/IS/FS/fuif/fust_row
 add wave -noupdate /scoreboard_tb/PROG/sbif/branch_miss
 add wave -noupdate /scoreboard_tb/PROG/sbif/branch_resolved
-add wave -noupdate -radix unsigned -childformat {{/scoreboard_tb/DUT/IS/FS/fuif/fust.busy -radix unsigned} {/scoreboard_tb/DUT/IS/FS/fuif/fust.t1 -radix unsigned} {/scoreboard_tb/DUT/IS/FS/fuif/fust.t2 -radix unsigned} {/scoreboard_tb/DUT/IS/FS/fuif/fust.op -radix unsigned -childformat {{{[2]} -radix unsigned -childformat {{rd -radix unsigned} {rs1 -radix unsigned} {rs2 -radix unsigned} {imm -radix unsigned} {spec -radix unsigned}}} {{[1]} -radix unsigned -childformat {{rd -radix unsigned} {rs1 -radix unsigned} {rs2 -radix unsigned} {imm -radix unsigned} {spec -radix unsigned}}} {{[0]} -radix unsigned -childformat {{rd -radix unsigned} {rs1 -radix unsigned} {rs2 -radix unsigned} {imm -radix unsigned} {spec -radix unsigned}}}}} {/scoreboard_tb/DUT/IS/FS/fuif/fust.flush -radix unsigned}} -expand -subitemconfig {/scoreboard_tb/DUT/IS/FS/fuif/fust.busy {-height 16 -radix unsigned} /scoreboard_tb/DUT/IS/FS/fuif/fust.t1 {-height 16 -radix unsigned} /scoreboard_tb/DUT/IS/FS/fuif/fust.t2 {-height 16 -radix unsigned} /scoreboard_tb/DUT/IS/FS/fuif/fust.op {-height 16 -radix unsigned -childformat {{{[2]} -radix unsigned -childformat {{rd -radix unsigned} {rs1 -radix unsigned} {rs2 -radix unsigned} {imm -radix unsigned} {spec -radix unsigned}}} {{[1]} -radix unsigned -childformat {{rd -radix unsigned} {rs1 -radix unsigned} {rs2 -radix unsigned} {imm -radix unsigned} {spec -radix unsigned}}} {{[0]} -radix unsigned -childformat {{rd -radix unsigned} {rs1 -radix unsigned} {rs2 -radix unsigned} {imm -radix unsigned} {spec -radix unsigned}}}} -expand} {/scoreboard_tb/DUT/IS/FS/fuif/fust.op[2]} {-radix unsigned -childformat {{rd -radix unsigned} {rs1 -radix unsigned} {rs2 -radix unsigned} {imm -radix unsigned} {spec -radix unsigned}}} {/scoreboard_tb/DUT/IS/FS/fuif/fust.op[2].rd} {-radix unsigned} {/scoreboard_tb/DUT/IS/FS/fuif/fust.op[2].rs1} {-radix unsigned} {/scoreboard_tb/DUT/IS/FS/fuif/fust.op[2].rs2} {-radix unsigned} {/scoreboard_tb/DUT/IS/FS/fuif/fust.op[2].imm} {-radix unsigned} {/scoreboard_tb/DUT/IS/FS/fuif/fust.op[2].spec} {-radix unsigned} {/scoreboard_tb/DUT/IS/FS/fuif/fust.op[1]} {-radix unsigned -childformat {{rd -radix unsigned} {rs1 -radix unsigned} {rs2 -radix unsigned} {imm -radix unsigned} {spec -radix unsigned}}} {/scoreboard_tb/DUT/IS/FS/fuif/fust.op[1].rd} {-radix unsigned} {/scoreboard_tb/DUT/IS/FS/fuif/fust.op[1].rs1} {-radix unsigned} {/scoreboard_tb/DUT/IS/FS/fuif/fust.op[1].rs2} {-radix unsigned} {/scoreboard_tb/DUT/IS/FS/fuif/fust.op[1].imm} {-radix unsigned} {/scoreboard_tb/DUT/IS/FS/fuif/fust.op[1].spec} {-radix unsigned} {/scoreboard_tb/DUT/IS/FS/fuif/fust.op[0]} {-radix unsigned -childformat {{rd -radix unsigned} {rs1 -radix unsigned} {rs2 -radix unsigned} {imm -radix unsigned} {spec -radix unsigned}}} {/scoreboard_tb/DUT/IS/FS/fuif/fust.op[0].rd} {-radix unsigned} {/scoreboard_tb/DUT/IS/FS/fuif/fust.op[0].rs1} {-radix unsigned} {/scoreboard_tb/DUT/IS/FS/fuif/fust.op[0].rs2} {-radix unsigned} {/scoreboard_tb/DUT/IS/FS/fuif/fust.op[0].imm} {-radix unsigned} {/scoreboard_tb/DUT/IS/FS/fuif/fust.op[0].spec} {-radix unsigned} /scoreboard_tb/DUT/IS/FS/fuif/fust.flush {-height 16 -radix unsigned}} /scoreboard_tb/DUT/IS/FS/fuif/fust
+add wave -noupdate -radix unsigned -childformat {{/scoreboard_tb/DUT/IS/FS/fuif/fust.busy -radix unsigned} {/scoreboard_tb/DUT/IS/FS/fuif/fust.t1 -radix unsigned} {/scoreboard_tb/DUT/IS/FS/fuif/fust.t2 -radix unsigned} {/scoreboard_tb/DUT/IS/FS/fuif/fust.op -radix unsigned -childformat {{{[2]} -radix unsigned -childformat {{rd -radix unsigned} {rs1 -radix unsigned} {rs2 -radix unsigned} {imm -radix unsigned} {spec -radix unsigned} {op_type -radix unsigned} {mem_type -radix unsigned}}} {{[1]} -radix unsigned -childformat {{rd -radix unsigned} {rs1 -radix unsigned} {rs2 -radix unsigned} {imm -radix unsigned} {spec -radix unsigned} {op_type -radix unsigned} {mem_type -radix unsigned}}} {{[0]} -radix unsigned -childformat {{rd -radix unsigned} {rs1 -radix unsigned} {rs2 -radix unsigned} {imm -radix unsigned} {spec -radix unsigned} {op_type -radix unsigned} {mem_type -radix unsigned}}}}}} -expand -subitemconfig {/scoreboard_tb/DUT/IS/FS/fuif/fust.busy {-height 16 -radix unsigned} /scoreboard_tb/DUT/IS/FS/fuif/fust.t1 {-height 16 -radix unsigned} /scoreboard_tb/DUT/IS/FS/fuif/fust.t2 {-height 16 -radix unsigned} /scoreboard_tb/DUT/IS/FS/fuif/fust.op {-height 16 -radix unsigned -childformat {{{[2]} -radix unsigned -childformat {{rd -radix unsigned} {rs1 -radix unsigned} {rs2 -radix unsigned} {imm -radix unsigned} {spec -radix unsigned} {op_type -radix unsigned} {mem_type -radix unsigned}}} {{[1]} -radix unsigned -childformat {{rd -radix unsigned} {rs1 -radix unsigned} {rs2 -radix unsigned} {imm -radix unsigned} {spec -radix unsigned} {op_type -radix unsigned} {mem_type -radix unsigned}}} {{[0]} -radix unsigned -childformat {{rd -radix unsigned} {rs1 -radix unsigned} {rs2 -radix unsigned} {imm -radix unsigned} {spec -radix unsigned} {op_type -radix unsigned} {mem_type -radix unsigned}}}} -expand} {/scoreboard_tb/DUT/IS/FS/fuif/fust.op[2]} {-radix unsigned -childformat {{rd -radix unsigned} {rs1 -radix unsigned} {rs2 -radix unsigned} {imm -radix unsigned} {spec -radix unsigned} {op_type -radix unsigned} {mem_type -radix unsigned}}} {/scoreboard_tb/DUT/IS/FS/fuif/fust.op[2].rd} {-radix unsigned} {/scoreboard_tb/DUT/IS/FS/fuif/fust.op[2].rs1} {-radix unsigned} {/scoreboard_tb/DUT/IS/FS/fuif/fust.op[2].rs2} {-radix unsigned} {/scoreboard_tb/DUT/IS/FS/fuif/fust.op[2].imm} {-radix unsigned} {/scoreboard_tb/DUT/IS/FS/fuif/fust.op[2].spec} {-radix unsigned} {/scoreboard_tb/DUT/IS/FS/fuif/fust.op[2].op_type} {-radix unsigned} {/scoreboard_tb/DUT/IS/FS/fuif/fust.op[2].mem_type} {-radix unsigned} {/scoreboard_tb/DUT/IS/FS/fuif/fust.op[1]} {-radix unsigned -childformat {{rd -radix unsigned} {rs1 -radix unsigned} {rs2 -radix unsigned} {imm -radix unsigned} {spec -radix unsigned} {op_type -radix unsigned} {mem_type -radix unsigned}}} {/scoreboard_tb/DUT/IS/FS/fuif/fust.op[1].rd} {-radix unsigned} {/scoreboard_tb/DUT/IS/FS/fuif/fust.op[1].rs1} {-radix unsigned} {/scoreboard_tb/DUT/IS/FS/fuif/fust.op[1].rs2} {-radix unsigned} {/scoreboard_tb/DUT/IS/FS/fuif/fust.op[1].imm} {-radix unsigned} {/scoreboard_tb/DUT/IS/FS/fuif/fust.op[1].spec} {-radix unsigned} {/scoreboard_tb/DUT/IS/FS/fuif/fust.op[1].op_type} {-radix unsigned} {/scoreboard_tb/DUT/IS/FS/fuif/fust.op[1].mem_type} {-radix unsigned} {/scoreboard_tb/DUT/IS/FS/fuif/fust.op[0]} {-radix unsigned -childformat {{rd -radix unsigned} {rs1 -radix unsigned} {rs2 -radix unsigned} {imm -radix unsigned} {spec -radix unsigned} {op_type -radix unsigned} {mem_type -radix unsigned}}} {/scoreboard_tb/DUT/IS/FS/fuif/fust.op[0].rd} {-radix unsigned} {/scoreboard_tb/DUT/IS/FS/fuif/fust.op[0].rs1} {-radix unsigned} {/scoreboard_tb/DUT/IS/FS/fuif/fust.op[0].rs2} {-radix unsigned} {/scoreboard_tb/DUT/IS/FS/fuif/fust.op[0].imm} {-radix unsigned} {/scoreboard_tb/DUT/IS/FS/fuif/fust.op[0].spec} {-radix unsigned} {/scoreboard_tb/DUT/IS/FS/fuif/fust.op[0].op_type} {-radix unsigned} {/scoreboard_tb/DUT/IS/FS/fuif/fust.op[0].mem_type} {-radix unsigned}} /scoreboard_tb/DUT/IS/FS/fuif/fust
 add wave -noupdate -divider Issue
 add wave -noupdate -expand -group isif /scoreboard_tb/DUT/isif/dispatch
 add wave -noupdate -expand -group isif -expand /scoreboard_tb/DUT/IS/age
@@ -73,8 +73,6 @@ add wave -noupdate -expand -group isif /scoreboard_tb/DUT/isif/n_fu_s
 add wave -noupdate -expand -group isif /scoreboard_tb/DUT/isif/n_fust_s_en
 add wave -noupdate -expand -group isif /scoreboard_tb/DUT/isif/n_fust_m_en
 add wave -noupdate -expand -group isif /scoreboard_tb/DUT/isif/n_fust_g_en
-add wave -noupdate -expand -group isif /scoreboard_tb/DUT/isif/flush
-add wave -noupdate -expand -group isif /scoreboard_tb/DUT/isif/freeze
 add wave -noupdate -expand -group isif /scoreboard_tb/DUT/isif/wb
 add wave -noupdate -expand -group isif /scoreboard_tb/DUT/isif/out
 add wave -noupdate -expand -group isif /scoreboard_tb/DUT/isif/fust_s
@@ -82,8 +80,16 @@ add wave -noupdate -expand /scoreboard_tb/DUT/IS/fust_state
 add wave -noupdate /scoreboard_tb/DUT/IS/incoming_instr
 add wave -noupdate /scoreboard_tb/DUT/sbif/wb
 add wave -noupdate /scoreboard_tb/DUT/sbif/wb_ctrl
+add wave -noupdate /scoreboard_tb/CLK
+add wave -noupdate -expand -group regfile /scoreboard_tb/DUT/IS/rfif/WEN
+add wave -noupdate -expand -group regfile /scoreboard_tb/DUT/IS/rfif/wsel
+add wave -noupdate -expand -group regfile -radix unsigned /scoreboard_tb/DUT/IS/rfif/rsel1
+add wave -noupdate -expand -group regfile -radix unsigned /scoreboard_tb/DUT/IS/rfif/rsel2
+add wave -noupdate -expand -group regfile -radix unsigned /scoreboard_tb/DUT/IS/rfif/wdata
+add wave -noupdate -expand -group regfile /scoreboard_tb/DUT/IS/rfif/rdat1
+add wave -noupdate -expand -group regfile /scoreboard_tb/DUT/IS/rfif/rdat2
 TreeUpdate [SetDefaultTree]
-WaveRestoreCursors {{Cursor 3} {79910 ps} 1} {{Cursor 4} {84230 ps} 0}
+WaveRestoreCursors {{Cursor 3} {79910 ps} 1} {{Cursor 4} {125000 ps} 0}
 quietly wave cursor active 2
 configure wave -namecolwidth 150
 configure wave -valuecolwidth 209
@@ -99,4 +105,4 @@ configure wave -griddelta 40
 configure wave -timeline 0
 configure wave -timelineunits ps
 update
-WaveRestoreZoom {0 ps} {213360 ps}
+WaveRestoreZoom {1640 ps} {215 ns}
