@@ -232,6 +232,8 @@ package datapath_pkg;
     logic n_br_pred;
 
     logic freeze;
+
+    logic halt;
   } dispatch_t;
 
   /*******
@@ -258,6 +260,8 @@ package datapath_pkg;
     matbits_t ms1; // used for m_ls
     matbits_t ms2; // used for m_ls
     matbits_t ms3;
+
+    logic halt;
   } issue_t;
 
 

@@ -250,6 +250,10 @@ program test (
 
         repeat (10) @(posedge CLK);
 
+        sbif.fetch = '1;
+
+        repeat (10) @(posedge CLK);
+
         // //  age check
         // itype_instr(ITYPE_LW, 5'd5, 5'd6, funct3_i_t'(3'h2), 12'd0);
         // rtype_instr(RTYPE, 5'd11, 5'd5, 5'd10, ADD_SUB, ADD);
