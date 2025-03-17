@@ -10,7 +10,7 @@ module fu_scalar_ls (
     import isa_pkg::*;
     import datapath_pkg::*;
 
-    typedef enum logic [1:0] { 
+    typedef enum logic { 
         idle, latched
     } state_t;
 
@@ -48,49 +48,51 @@ module fu_scalar_ls (
         sls_if.dmemWEN = '0;
         sls_if.dmemstore = '0;
         sls_if.dhit = '0;
-        casez (state) 
-            idle: begin
-                if (sls_if.mem_type == STORE) begin
-                    sls_if.dmemaddr = addr;
-                    next_state = latched;
-                    sls_if.dmemWEN = write;
-                    sls_if.dmemstore = sls_if.rs2;
-                end 
-                else if (sls_if.mem_type == LOAD) begin
-                    sls_if.dmemaddr = addr;
-                    next_state = latched;
-                    sls_if.dmemREN = read;
-                end
-                else begin
-                    next_state = idle;
-                end
-            end
-            latched: begin
-                if (sls_if.mem_type == STORE) begin
-                    sls_if.dmemaddr = latched_dmemaddr;
-                    sls_if.dmemWEN = latched_dmemWEN;
-                    sls_if.dmemstore = latched_dmemstore;
-                    if (sls_if.dhit_in) begin
-                        next_state = idle;
-                        sls_if.dmemWEN = '0;
-                        sls_if.dhit = '1;
+        if (sls_if.enable) begin
+            casez (state) 
+                idle: begin
+                    if (sls_if.mem_type == STORE) begin
+                        sls_if.dmemaddr = addr;
+                        next_state = latched;
+                        sls_if.dmemWEN = write;
+                        sls_if.dmemstore = sls_if.rs2;
+                    end 
+                    else if (sls_if.mem_type == LOAD) begin
+                        sls_if.dmemaddr = addr;
+                        next_state = latched;
+                        sls_if.dmemREN = read;
                     end
-                end 
-                else if (sls_if.mem_type == LOAD) begin
-                    sls_if.dmemaddr = latched_dmemaddr;
-                    sls_if.dmemREN = latched_dmemREN;
-                    if (sls_if.dhit_in) begin
+                    else begin
                         next_state = idle;
-                        sls_if.dmemload = sls_if.dmem_in;
-                        sls_if.dmemREN = '0;
-                        sls_if.dhit = '1;
                     end
                 end
-                else begin
-                    next_state = latched;
+                latched: begin
+                    if (sls_if.mem_type == STORE) begin
+                        sls_if.dmemaddr = latched_dmemaddr;
+                        sls_if.dmemWEN = latched_dmemWEN;
+                        sls_if.dmemstore = latched_dmemstore;
+                        if (sls_if.dhit_in) begin
+                            next_state = idle;
+                            sls_if.dmemWEN = '0;
+                            sls_if.dhit = '1;
+                        end
+                    end 
+                    else if (sls_if.mem_type == LOAD) begin
+                        sls_if.dmemaddr = latched_dmemaddr;
+                        sls_if.dmemREN = latched_dmemREN;
+                        if (sls_if.dhit_in) begin
+                            next_state = idle;
+                            sls_if.dmemload = sls_if.dmem_in;
+                            sls_if.dmemREN = '0;
+                            sls_if.dhit = '1;
+                        end
+                    end
+                    else begin
+                        next_state = latched;
+                    end
                 end
-            end
-        endcase
+            endcase
+        end
     end
 
 endmodule

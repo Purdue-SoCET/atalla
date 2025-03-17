@@ -23,9 +23,10 @@ fu_gemm_if fugif();
 
 // Branch FU
 fu_branch BFU(CLK, nRST, fubif);
-assign fubif.branch = eif.bfu_branch;
+assign fubif.branch = eif.bfu_branch; // is this enable?
+assign fubif.enable = eif.bfu_enable;
 assign fubif.branch_type = eif.bfu_branch_type;
-assign fubif.branch_gate_sel = eif.bfu_branch_gate_sel;
+// assign fubif.branch_gate_sel = eif.bfu_branch_gate_sel; // have this just done in the branch pred
 assign fubif.reg_a = eif.bfu_reg_a;
 assign fubif.reg_b = eif.bfu_reg_b;
 assign fubif.current_pc = eif.bfu_current_pc;

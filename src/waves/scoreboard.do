@@ -4,8 +4,9 @@ add wave -noupdate -divider {SB Stimulus}
 add wave -noupdate -color Gold -expand -subitemconfig {/scoreboard_tb/DUT/sbif/fetch.imemload {-color Gold -height 16} /scoreboard_tb/DUT/sbif/fetch.br_pc {-color Gold -height 16} /scoreboard_tb/DUT/sbif/fetch.br_pred {-color Gold -height 16}} /scoreboard_tb/DUT/sbif/fetch
 add wave -noupdate -color Gold /scoreboard_tb/CLK
 add wave -noupdate -color Gold /scoreboard_tb/nRST
-add wave -noupdate -color Gold /scoreboard_tb/DUT/sbif/wb
-add wave -noupdate -color Gold -expand -subitemconfig {/scoreboard_tb/DUT/sbif/out.fu_en {-color Gold -height 16 -expand} {/scoreboard_tb/DUT/sbif/out.fu_en[4]} {-color Gold} {/scoreboard_tb/DUT/sbif/out.fu_en[3]} {-color Gold} {/scoreboard_tb/DUT/sbif/out.fu_en[2]} {-color Gold} {/scoreboard_tb/DUT/sbif/out.fu_en[1]} {-color Gold} {/scoreboard_tb/DUT/sbif/out.fu_en[0]} {-color Gold} /scoreboard_tb/DUT/sbif/out.rdat1 {-color Gold -height 16} /scoreboard_tb/DUT/sbif/out.rdat2 {-color Gold -height 16} /scoreboard_tb/DUT/sbif/out.imm {-color Gold -height 16} /scoreboard_tb/DUT/sbif/out.branch_type {-color Gold -height 16} /scoreboard_tb/DUT/sbif/out.branch_pc {-color Gold -height 16} /scoreboard_tb/DUT/sbif/out.branch_pred_pc {-color Gold -height 16} /scoreboard_tb/DUT/sbif/out.alu_op {-color Gold -height 16} /scoreboard_tb/DUT/sbif/out.ls_in {-color Gold -height 16} /scoreboard_tb/DUT/sbif/out.mem_type {-color Gold -height 16} /scoreboard_tb/DUT/sbif/out.md {-color Gold -height 16} /scoreboard_tb/DUT/sbif/out.ms1 {-color Gold -height 16} /scoreboard_tb/DUT/sbif/out.ms2 {-color Gold -height 16} /scoreboard_tb/DUT/sbif/out.ms3 {-color Gold -height 16}} /scoreboard_tb/DUT/sbif/out
+add wave -noupdate -color Gold -subitemconfig {/scoreboard_tb/DUT/sbif/wb.s_rw_en {-color Gold} /scoreboard_tb/DUT/sbif/wb.s_rw {-color Gold} /scoreboard_tb/DUT/sbif/wb.s_wdata {-color Gold} /scoreboard_tb/DUT/sbif/wb.load_done {-color Gold} /scoreboard_tb/DUT/sbif/wb.alu_done {-color Gold}} /scoreboard_tb/DUT/sbif/wb
+add wave -noupdate /scoreboard_tb/DUT/sbif/fu_ex
+add wave -noupdate -color Gold -expand -subitemconfig {/scoreboard_tb/DUT/sbif/out.fu_en {-color Gold -height 16 -expand} {/scoreboard_tb/DUT/sbif/out.fu_en[4]} {-color Gold} {/scoreboard_tb/DUT/sbif/out.fu_en[3]} {-color Gold} {/scoreboard_tb/DUT/sbif/out.fu_en[2]} {-color Gold} {/scoreboard_tb/DUT/sbif/out.fu_en[1]} {-color Gold} {/scoreboard_tb/DUT/sbif/out.fu_en[0]} {-color Gold} /scoreboard_tb/DUT/sbif/out.rdat1 {-color Gold -height 16} /scoreboard_tb/DUT/sbif/out.rdat2 {-color Gold -height 16} /scoreboard_tb/DUT/sbif/out.imm {-color Gold -height 16} /scoreboard_tb/DUT/sbif/out.branch_type {-color Gold -height 16} /scoreboard_tb/DUT/sbif/out.branch_pc {-color Gold -height 16} /scoreboard_tb/DUT/sbif/out.branch_pred_pc {-color Gold -height 16} /scoreboard_tb/DUT/sbif/out.alu_op {-color Gold -height 16} /scoreboard_tb/DUT/sbif/out.ls_in {-color Gold -height 16} /scoreboard_tb/DUT/sbif/out.mem_type {-color Gold -height 16} /scoreboard_tb/DUT/sbif/out.md {-color Gold -height 16} /scoreboard_tb/DUT/sbif/out.ms1 {-color Gold -height 16} /scoreboard_tb/DUT/sbif/out.ms2 {-color Gold -height 16} /scoreboard_tb/DUT/sbif/out.ms3 {-color Gold -height 16} /scoreboard_tb/DUT/sbif/out.halt {-color Gold}} /scoreboard_tb/DUT/sbif/out
 add wave -noupdate -divider {Control Unit}
 add wave -noupdate -group cuif /scoreboard_tb/DUT/DI/cuif/alu_op
 add wave -noupdate -group cuif /scoreboard_tb/DUT/DI/cuif/stride
@@ -89,7 +90,7 @@ add wave -noupdate -expand -group regfile -radix unsigned /scoreboard_tb/DUT/IS/
 add wave -noupdate -expand -group regfile /scoreboard_tb/DUT/IS/rfif/rdat1
 add wave -noupdate -expand -group regfile /scoreboard_tb/DUT/IS/rfif/rdat2
 TreeUpdate [SetDefaultTree]
-WaveRestoreCursors {{Cursor 3} {79910 ps} 1} {{Cursor 4} {125000 ps} 0}
+WaveRestoreCursors {{Cursor 3} {79910 ps} 1} {{Cursor 4} {114000 ps} 0}
 quietly wave cursor active 2
 configure wave -namecolwidth 150
 configure wave -valuecolwidth 209
@@ -105,4 +106,4 @@ configure wave -griddelta 40
 configure wave -timeline 0
 configure wave -timelineunits ps
 update
-WaveRestoreZoom {1640 ps} {215 ns}
+WaveRestoreZoom {21320 ps} {234680 ps}

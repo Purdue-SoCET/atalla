@@ -19,7 +19,6 @@ module scoreboard(
     dispatch DI (CLK, nRST, diif);
     issue IS (CLK, nRST, isif);
 
-    // TODO: needs to output fu codes, double check all outputs of sb
 
     always_comb begin
       diif.fetch = sbif.fetch;
