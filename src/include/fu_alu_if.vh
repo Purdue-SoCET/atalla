@@ -6,18 +6,18 @@
 interface fu_alu_if;
   import isa_pkg::*;
 
-  logic negative, overflow, zero;
-  logic [3:0] aluop;
+  logic negative, overflow, zero, enable;
+  aluop_t aluop;
   word_t port_a, port_b, port_output;
 
   modport alu (
-    input aluop, port_a, port_b,
+    input aluop, port_a, port_b, enable,
     output negative, overflow, port_output, zero
   );
 
   modport tb (
     input negative, overflow, port_output, zero,
-    output aluop, port_a, port_b
+    output aluop, port_a, port_b, enable
   );
 
 endinterface

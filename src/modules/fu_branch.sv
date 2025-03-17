@@ -13,6 +13,7 @@ module fu_branch(
   // Track if BTB has been updated for current branch instr
   logic btb_updated;
   logic [31:0] last_branch_pc;
+  logic branch_gate_sel;
 
   always_ff @(posedge CLK, negedge nRST) begin
     if (!nRST) begin
@@ -41,11 +42,15 @@ module fu_branch(
 
   always_comb begin : ZERO_LOGIC
     zero = '0;
-
-    case (fubif.branch_type)
-      2'd0: zero = fubif.reg_a - fubif.reg_b == 0;                               // 2'd0: BEQ, BNE
-      2'd1: zero = ($signed(fubif.reg_a) < $signed(fubif.reg_b)) ? 1'b0 : 1'b1;  // 2'd1: BLT, BGE
-      2'd2: zero = (fubif.reg_a < fubif.reg_b) ? 1'b0 : 1'b1;                    // 2'd2: BLTU, BGEU
+    branch_gate_sel = '0; // set it in here based on what type
+    case (fubif.branch_type) // should be 6 types, just do based on the 6 types (use branch_t from isa package) 
+                             // and can just set branch_gate_sel internally instead of added logic to scoreboard
+      3'd0: zero = fubif.reg_a - fubif.reg_b == 0;                               // 2'd0: BEQ, BNE
+      3'd1: zero = ($signed(fubif.reg_a) < $signed(fubif.reg_b)) ? 1'b0 : 1'b1;  // 2'd1: BLT, BGE
+      3'd2: zero = (fubif.reg_a < fubif.reg_b) ? 1'b0 : 1'b1;                    // 2'd2: BLTU, BGEU
+      3'd3: zero = '0; // whatever logic for below
+      3'd4: zero = '0;
+      3'd5: zero = '0;
       default: zero = 1'b0;   
     endcase
   end
@@ -64,7 +69,7 @@ module fu_branch(
     actual_outcome = '0;
 
     if (fubif.branch) begin
-      actual_outcome = fubif.branch_gate_sel ? ~zero : zero;
+      actual_outcome = branch_gate_sel ? ~zero : zero;
       fubif.branch_outcome = actual_outcome;
       fubif.updated_pc = actual_outcome ? (fubif.current_pc + fubif.imm) : (fubif.current_pc + 32'd4);
 

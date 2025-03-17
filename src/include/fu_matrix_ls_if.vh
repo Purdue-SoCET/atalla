@@ -26,12 +26,10 @@ import isa_pkg::*;
     mhit: Scratchpad ready
 */
 
-logic           mhit;
-logic           enable;
-logic [1:0]     ls_in;
-logic [3:0]     rd_in, rs_in;
-logic [10:0]    imm_in;
-word_t          stride_in;
+logic           mhit, enable;
+matrix_mem_t    ls_in;
+matbits_t       rd_in;
+word_t          rs_in, imm_in, stride_in;
 
 // Outputs (REFER TO DATAPATH_TYPES)
 matrix_ls_t fu_matls_out;
