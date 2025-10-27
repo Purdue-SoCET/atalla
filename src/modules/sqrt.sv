@@ -223,8 +223,64 @@ module sqrt (
             valid_out_delay <= mul_done & third_pass;
         end
     end
-    
+
+    //special case handling
+    logic special_flag;
+    logic [15:0] special_result;
+    logic special_flag_latched;
+    logic [15:0] special_result_latched;
+
+    //latching of the special values
+    always_ff @(posedge CLK, negedge nRST) begin
+        if (!nRST) begin
+            special_flag_latched <= 1'b0;
+            special_result_latched <= 16'h0000;
+        end
+        else if (valid) begin
+            // Latch special case info when input is valid
+            special_flag_latched <= special_flag;
+            special_result_latched <= special_result;
+        end
+        else if (srif.valid_data_out) begin
+            // Reset after output is done
+            special_flag_latched <= 1'b0;
+            special_result_latched <= 16'h0000;
+        end
+    end
+
+    //special case combinational determination
+    always_comb begin 
+        if (sign && (exp != 5'b0 || frac != 10'b0)) begin //negative (not -0)
+            special_flag = 'b1;
+            special_result = 16'h7d00;  // NaN
+        end
+        else if (exp == 5'b11111 && frac == 10'b0) begin //inf
+            special_flag = 'b1;
+            special_result = 16'h7c00;  // +Inf
+        end
+        else if (exp == 5'b11111 && frac != 10'b0) begin //NAN
+            special_flag = 'b1;
+            special_result = 16'h7d00;  // NaN
+        end
+        else if (exp == 5'b0 && frac != 10'b0) begin //subnormal
+            special_flag = 'b1;
+            special_result = 16'h0000;  // +0
+        end
+        else if (exp == 5'b0 && frac == 10'b0 && !sign) begin //+0
+            special_flag = 'b1;
+            special_result = 16'h0000;  // +0
+        end
+        else if (exp == 5'b0 && frac == 10'b0 && sign) begin //-0
+            special_flag = 'b1;
+            special_result = 16'h8000;  // -0
+        end
+        else begin
+            special_flag = 'b0;
+            special_result = 16'h0000;  // default
+        end
+    end
+
     assign srif.valid_data_out = valid_out_delay;
-    assign srif.output_val = third_mult_result;
+    assign srif.output_val = special_flag_latched ? special_result_latched : third_mult_result;
 
 endmodule

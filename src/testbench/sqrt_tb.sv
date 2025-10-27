@@ -25,6 +25,7 @@ module sqrt_tb;
     always #5 CLK = ~CLK;
 
     logic [15:0] normal_cases [0:9];
+    logic [15:0] special_cases [0:6];
     
     initial begin
         nRST = 0;
@@ -44,8 +45,17 @@ module sqrt_tb;
         normal_cases[8] = 16'h5640; // 100.0
         normal_cases[9] = 16'h3900; // 0.625
 
+        special_cases[0] = 16'h0000; // +0
+        special_cases[1] = 16'h8000; // -0
+        special_cases[2] = 16'h7C00; // +Inf
+        special_cases[3] = 16'h7E00; // NaN
+        special_cases[4] = 16'hBC00; // -1.0 (negative)
+        special_cases[5] = 16'h0001; // subnormal (smallest)
+        special_cases[6] = 16'h03FF; // subnormal (largest)
+
         $display("\n=== Starting Square Root Tests ===\n");
 
+        $display("=== Normal Cases ===\n");
         for (int i = 0; i < 10; i++) begin
             // Wait for ready before sending new input
             while (!srif.ready) @(posedge CLK);
@@ -62,6 +72,45 @@ module sqrt_tb;
             while (!srif.valid_data_out) @(posedge CLK);
             @(posedge CLK);
             $display("Time %0t: Output received 0x%h\n", $time, srif.output_val);
+        end
+
+        repeat (5) @(posedge CLK);
+
+        $display("\n=== Special Cases ===\n");
+        for (int i = 0; i < 7; i++) begin
+            // Wait for ready before sending new input
+            while (!srif.ready) @(posedge CLK);
+            
+            @(posedge CLK);
+            srif.input_val = fp16_t'(special_cases[i]);
+            srif.valid_data_in = 1;
+            
+            case(i)
+                0: $display("Time %0t: Sending +0 (0x%h)", $time, special_cases[i]);
+                1: $display("Time %0t: Sending -0 (0x%h)", $time, special_cases[i]);
+                2: $display("Time %0t: Sending +Inf (0x%h)", $time, special_cases[i]);
+                3: $display("Time %0t: Sending NaN (0x%h)", $time, special_cases[i]);
+                4: $display("Time %0t: Sending -1.0 (0x%h)", $time, special_cases[i]);
+                5: $display("Time %0t: Sending subnormal min (0x%h)", $time, special_cases[i]);
+                6: $display("Time %0t: Sending subnormal max (0x%h)", $time, special_cases[i]);
+            endcase
+
+            @(posedge CLK);
+            srif.valid_data_in = 0;
+            
+            // Wait for output valid
+            while (!srif.valid_data_out) @(posedge CLK);
+            @(posedge CLK);
+            
+            case(i)
+                0: $display("Time %0t: Output received 0x%h (Expected: 0x0000 = +0)\n", $time, srif.output_val);
+                1: $display("Time %0t: Output received 0x%h (Expected: 0x8000 = -0)\n", $time, srif.output_val);
+                2: $display("Time %0t: Output received 0x%h (Expected: 0x7C00 = +Inf)\n", $time, srif.output_val);
+                3: $display("Time %0t: Output received 0x%h (Expected: 0x7D00 = NaN)\n", $time, srif.output_val);
+                4: $display("Time %0t: Output received 0x%h (Expected: 0x7D00 = NaN)\n", $time, srif.output_val);
+                5: $display("Time %0t: Output received 0x%h (Expected: 0x0000 = +0)\n", $time, srif.output_val);
+                6: $display("Time %0t: Output received 0x%h (Expected: 0x0000 = +0)\n", $time, srif.output_val);
+            endcase
         end
 
         repeat (10) @(posedge CLK);
