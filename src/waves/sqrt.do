@@ -29,8 +29,10 @@ add wave -noupdate -expand -group {third mult} /sqrt_tb/dut/mul_done
 add wave -noupdate -expand -group {third mult} /sqrt_tb/dut/third_mult_result
 add wave -noupdate -expand -group {output signals} /sqrt_tb/srif/output_val
 add wave -noupdate -expand -group {output signals} /sqrt_tb/srif/valid_data_out
+add wave -noupdate -expand -group {special output} /sqrt_tb/dut/special_flag_latched
+add wave -noupdate -expand -group {special output} /sqrt_tb/dut/special_result_latched
 TreeUpdate [SetDefaultTree]
-WaveRestoreCursors {{Cursor 1} {925000 ps} 0}
+WaveRestoreCursors {{Cursor 1} {86336 ps} 0}
 quietly wave cursor active 1
 configure wave -namecolwidth 150
 configure wave -valuecolwidth 100
@@ -46,4 +48,4 @@ configure wave -griddelta 40
 configure wave -timeline 0
 configure wave -timelineunits ns
 update
-WaveRestoreZoom {0 ps} {1790250 ps}
+WaveRestoreZoom {0 ps} {288750 ps}

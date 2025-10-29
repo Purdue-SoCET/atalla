@@ -6,6 +6,7 @@ module sqrt_tb;
     import vector_pkg::*;
     
     localparam MULT_LATENCY = 2;
+    localparam int MAX_ULP_TOL = 2;
 
     // Signals
     logic CLK, nRST;
@@ -24,134 +25,146 @@ module sqrt_tb;
     initial CLK = 0;
     always #5 CLK = ~CLK;
 
-    logic [15:0] normal_cases [0:9];
-    logic [15:0] special_cases [0:6];
+    integer input_file, output_file;
+    string line;
+    logic [15:0] input_val, expected_val, output_val;
+    integer ulp_error;
+    integer test_count;
+    integer pass_count, fail_count;
+    integer total_abs_ulp, max_abs_ulp;
+
+    string input_str, expected_str;
+    integer comma_pos;
+    real avg_ulp;
+
+    function integer calc_ulp(input logic [15:0] expected, input logic [15:0] actual);
+        integer exp_int, act_int;
+        exp_int = signed'({1'b0, expected});
+        act_int = signed'({1'b0, actual});
+        return act_int - exp_int;
+    endfunction
+
+    function logic [15:0] parse_hex(input string hex_str);
+        string trimmed;
+        logic [15:0] result;
+        
+        if (hex_str.len() > 2 && (hex_str.substr(0, 1) == "0x" || hex_str.substr(0, 1) == "0X")) begin
+            trimmed = hex_str.substr(2, hex_str.len()-1);
+        end else begin
+            trimmed = hex_str;
+        end
+        
+        result = trimmed.atohex();
+        return result;
+    endfunction
     
     initial begin
         nRST = 0;
         srif.input_val = '{sign: 1'b0, exp: 5'd0, frac: 10'd0};
         srif.valid_data_in = 0;
+        test_count = 0;
+        pass_count = 0;
+        fail_count = 0;
+        total_abs_ulp = 0;
+        max_abs_ulp = 0;
 
         #12 nRST = 1;
 
-        normal_cases[0] = 16'h3C00; // 1.0
-        normal_cases[1] = 16'h4000; // 2.0
-        normal_cases[2] = 16'h4200; // 3.0
-        normal_cases[3] = 16'h4400; // 4.0
-        normal_cases[4] = 16'h4880; // 9.0
-        normal_cases[5] = 16'h4c00; // 16.0
-        normal_cases[6] = 16'h3800; // 0.5
-        normal_cases[7] = 16'h3400; // 0.25
-        normal_cases[8] = 16'h5640; // 100.0
-        normal_cases[9] = 16'h3900; // 0.625
-
-        special_cases[0] = 16'h0000; // +0
-        special_cases[1] = 16'h8000; // -0
-        special_cases[2] = 16'h7C00; // +Inf
-        special_cases[3] = 16'h7E00; // NaN
-        special_cases[4] = 16'hBC00; // -1.0 (negative)
-        special_cases[5] = 16'h0001; // subnormal (smallest)
-        special_cases[6] = 16'h03FF; // subnormal (largest)
-
-        $display("\n=== Starting Square Root Tests ===\n");
-
-        $display("=== Normal Cases ===\n");
-        for (int i = 0; i < 10; i++) begin
-            // Wait for ready before sending new input
-            while (!srif.ready) @(posedge CLK);
-            
-            @(posedge CLK);
-            srif.input_val = fp16_t'(normal_cases[i]);
-            srif.valid_data_in = 1;
-            $display("Time %0t: Sending input 0x%h", $time, normal_cases[i]);
-
-            @(posedge CLK);
-            srif.valid_data_in = 0;
-            
-            // Wait for output valid
-            while (!srif.valid_data_out) @(posedge CLK);
-            @(posedge CLK);
-            $display("Time %0t: Output received 0x%h\n", $time, srif.output_val);
+        // Open input CSV file
+        input_file = $fopen("fp16_sqrt_full_sweep.csv", "r");
+        if (input_file == 0) begin
+            $finish;
         end
 
-        repeat (5) @(posedge CLK);
+        // Open output CSV file
+        output_file = $fopen("sqrt_test_results.csv", "w");
+        if (output_file == 0) begin
+            $fclose(input_file);
+            $finish;
+        end
+        
+        // Write CSV header
+        $fwrite(output_file, "Input,Expected,Output,ULP\n");
 
-        $display("\n=== Special Cases ===\n");
-        for (int i = 0; i < 7; i++) begin
-            // Wait for ready before sending new input
+        // Skip header line
+        if ($fgets(line, input_file) == 0) begin
+            $display("ERROR: Could not read header from input file!");
+            $fclose(input_file);
+            $fclose(output_file);
+            $finish;
+        end
+
+        $display("\n=== Starting Full Sweep Square Root Tests ===\n");
+
+        // Main loop
+        while (!$feof(input_file)) begin
+            // Reset temporary variables each iteration
+            input_str = "";
+            expected_str = "";
+            comma_pos = 0;
+            
+            // Read line
+            if ($fgets(line, input_file) == 0) break;
+            if (line.len() == 0) continue;
+
+            // Find comma
+            for (int i = 0; i < line.len(); i++) begin
+                if (line[i] == ",") begin
+                    comma_pos = i;
+                    break;
+                end
+            end
+            if (comma_pos == 0) continue;
+
+            input_str = line.substr(0, comma_pos-1);
+            expected_str = line.substr(comma_pos+1, line.len()-1);
+            
+            input_val = parse_hex(input_str);
+            expected_val = parse_hex(expected_str);
+            
+            // Wait for ready
             while (!srif.ready) @(posedge CLK);
             
             @(posedge CLK);
-            srif.input_val = fp16_t'(special_cases[i]);
+            srif.input_val = fp16_t'(input_val);
             srif.valid_data_in = 1;
-            
-            case(i)
-                0: $display("Time %0t: Sending +0 (0x%h)", $time, special_cases[i]);
-                1: $display("Time %0t: Sending -0 (0x%h)", $time, special_cases[i]);
-                2: $display("Time %0t: Sending +Inf (0x%h)", $time, special_cases[i]);
-                3: $display("Time %0t: Sending NaN (0x%h)", $time, special_cases[i]);
-                4: $display("Time %0t: Sending -1.0 (0x%h)", $time, special_cases[i]);
-                5: $display("Time %0t: Sending subnormal min (0x%h)", $time, special_cases[i]);
-                6: $display("Time %0t: Sending subnormal max (0x%h)", $time, special_cases[i]);
-            endcase
-
             @(posedge CLK);
             srif.valid_data_in = 0;
             
-            // Wait for output valid
-            while (!srif.valid_data_out) @(posedge CLK);
-            @(posedge CLK);
+            // Wait for valid output
+            while (!srif.valid_data_out) @(posedge CLK);            
+            output_val = srif.output_val;
+            ulp_error = calc_ulp(expected_val, output_val);
+
+            // ULP tracking
+            total_abs_ulp += (ulp_error < 0) ? -ulp_error : ulp_error;
+            if ((ulp_error < 0 ? -ulp_error : ulp_error) > max_abs_ulp)
+                max_abs_ulp = (ulp_error < 0) ? -ulp_error : ulp_error;
+
+            // Log CSV
+            $fwrite(output_file, "0x%04h,0x%04h,0x%04h,%0d\n",
+                    input_val, expected_val, output_val, ulp_error);
             
-            case(i)
-                0: $display("Time %0t: Output received 0x%h (Expected: 0x0000 = +0)\n", $time, srif.output_val);
-                1: $display("Time %0t: Output received 0x%h (Expected: 0x8000 = -0)\n", $time, srif.output_val);
-                2: $display("Time %0t: Output received 0x%h (Expected: 0x7C00 = +Inf)\n", $time, srif.output_val);
-                3: $display("Time %0t: Output received 0x%h (Expected: 0x7D00 = NaN)\n", $time, srif.output_val);
-                4: $display("Time %0t: Output received 0x%h (Expected: 0x7D00 = NaN)\n", $time, srif.output_val);
-                5: $display("Time %0t: Output received 0x%h (Expected: 0x0000 = +0)\n", $time, srif.output_val);
-                6: $display("Time %0t: Output received 0x%h (Expected: 0x0000 = +0)\n", $time, srif.output_val);
-            endcase
+            test_count++;
+            if ((ulp_error >= -MAX_ULP_TOL) && (ulp_error <= MAX_ULP_TOL)) begin
+                pass_count++;
+            end else begin
+                fail_count++;
+                $display("MISMATCH: Input=0x%04h, Expected=0x%04h, Got=0x%04h, ULP=%0d",
+                         input_val, expected_val, output_val, ulp_error);
+            end
         end
 
         repeat (10) @(posedge CLK);
 
-        $display("\n=== Test Complete ===\n");
+        $fclose(input_file);
+        $fclose(output_file);
+
+        $display("Total tests: %0d", test_count);
+        $display("Passed: %0d", pass_count);
+        $display("Failed: %0d", fail_count);
+        
         $finish;
-    end
-
-    // Monitor interface signals
-    always @(posedge CLK) begin
-        if (srif.valid_data_in && srif.ready) begin
-            $display("Time %0t: [INPUT ACCEPTED] input=0x%h", 
-                     $time, srif.input_val);
-        end
-        
-        if (srif.valid_data_out) begin
-            $display("Time %0t: [OUTPUT VALID] output=0x%h", 
-                     $time, srif.output_val);
-        end
-        
-        if (!srif.ready) begin
-            $display("Time %0t: [BUSY] Module not ready", $time);
-        end
-    end
-
-    // Monitor internal multiplier operations
-    always @(posedge CLK) begin
-        if (dut.mul_done && !dut.second_pass) begin
-            $display("Time %0t: [MULT1 Done] Slope=0x%h, NormMant=0x%h, Result=0x%h", 
-                     $time, dut.mul_b, dut.mul_a, dut.mul_out);
-        end
-        
-        if (dut.mul_done && dut.second_pass) begin
-            $display("Time %0t: [MULT2 Done] Multiplier=0x%h, Operand=0x%h, Result=0x%h", 
-                     $time, dut.mul_a, dut.mul_b, dut.mul_out);
-        end
-        
-        if (dut.valid) begin
-            $display("Time %0t: [Input Registered] exp=0x%h, frac=0x%h, slope=0x%h, intercept=0x%h",
-                     $time, dut.exp, dut.frac, dut.slope, dut.intercept);
-        end
     end
 
 endmodule

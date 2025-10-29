@@ -179,10 +179,9 @@ module sqrt (
             second_mult_latched   <= 16'b0;
         end
         else begin
-            // Capture second multiply output for next cycle
             if (mul_done && second_pass) begin
                 second_mult_latched <= mul_out;
-                third_mul_enable    <= 1'b1;  // enable third multiply next cycle
+                third_mul_enable    <= 1'b1;
             end
             else
                 third_mul_enable <= 1'b0;
@@ -224,63 +223,77 @@ module sqrt (
         end
     end
 
-    //special case handling
+    // Special case handling (checks the registered inputs)
     logic special_flag;
     logic [15:0] special_result;
     logic special_flag_latched;
     logic [15:0] special_result_latched;
 
-    //latching of the special values
-    always_ff @(posedge CLK, negedge nRST) begin
+    logic input_is_zero;
+    logic input_is_neg_zero;
+    logic input_is_inf;
+    logic input_is_nan;
+    logic input_is_subnormal;
+
+    // Combinational special-case detection
+    always_comb begin
+        // Default outputs
+        special_flag   = 1'b0;
+        special_result = 16'h0000;
+
+        // Decode conditions from *latched* inputs
+        input_is_zero      = (exp == 5'b0)     && (frac == 10'b0);
+        input_is_neg_zero  = input_is_zero     &&  sign;
+        input_is_inf       = (exp == 5'b11111) && (frac == 10'b0);
+        input_is_nan       = (exp == 5'b11111) && (frac != 10'b0);
+        input_is_subnormal = (exp == 5'b0)     && (frac != 10'b0);
+
+        // Special-case classification
+        if (input_is_neg_zero) begin
+            special_flag   = 1'b1;
+            special_result = 16'h8000;   // −0
+        end
+        else if (sign) begin
+            special_flag   = 1'b1;
+            special_result = 16'h7d00;   // NaN for negative inputs
+        end
+        else if (input_is_inf) begin
+            special_flag   = 1'b1;
+            special_result = 16'h7c00;   // +Inf
+        end
+        else if (input_is_nan) begin
+            special_flag   = 1'b1;
+            special_result = 16'h7d00;   // NaN
+        end
+        else if (input_is_subnormal || input_is_zero) begin
+            special_flag   = 1'b1;
+            special_result = 16'h0000;   // +0
+        end
+    end
+
+    // Sequential latching of special-case info
+    always_ff @(posedge CLK or negedge nRST) begin
         if (!nRST) begin
-            special_flag_latched <= 1'b0;
+            special_flag_latched   <= 1'b0;
             special_result_latched <= 16'h0000;
         end
         else if (valid) begin
-            // Latch special case info when input is valid
-            special_flag_latched <= special_flag;
+            // Capture detection results when input stage valid
+            special_flag_latched   <= special_flag;
             special_result_latched <= special_result;
         end
         else if (srif.valid_data_out) begin
-            // Reset after output is done
-            special_flag_latched <= 1'b0;
+            // Clear after output
+            special_flag_latched   <= 1'b0;
             special_result_latched <= 16'h0000;
         end
     end
 
-    //special case combinational determination
-    always_comb begin 
-        if (sign && (exp != 5'b0 || frac != 10'b0)) begin //negative (not -0)
-            special_flag = 'b1;
-            special_result = 16'h7d00;  // NaN
-        end
-        else if (exp == 5'b11111 && frac == 10'b0) begin //inf
-            special_flag = 'b1;
-            special_result = 16'h7c00;  // +Inf
-        end
-        else if (exp == 5'b11111 && frac != 10'b0) begin //NAN
-            special_flag = 'b1;
-            special_result = 16'h7d00;  // NaN
-        end
-        else if (exp == 5'b0 && frac != 10'b0) begin //subnormal
-            special_flag = 'b1;
-            special_result = 16'h0000;  // +0
-        end
-        else if (exp == 5'b0 && frac == 10'b0 && !sign) begin //+0
-            special_flag = 'b1;
-            special_result = 16'h0000;  // +0
-        end
-        else if (exp == 5'b0 && frac == 10'b0 && sign) begin //-0
-            special_flag = 'b1;
-            special_result = 16'h8000;  // -0
-        end
-        else begin
-            special_flag = 'b0;
-            special_result = 16'h0000;  // default
-        end
-    end
-
+    // Output muxing
     assign srif.valid_data_out = valid_out_delay;
-    assign srif.output_val = special_flag_latched ? special_result_latched : third_mult_result;
+    assign srif.output_val     = special_flag_latched
+                                 ? special_result_latched
+                                 : third_mult_result;
+
 
 endmodule
