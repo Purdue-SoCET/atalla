@@ -10,12 +10,13 @@ module vaddsub(
 
   import vector_pkg::*;
 
-  parameter int EXP_W = 5;
-  parameter int FRAC_W = 10;
-  parameter int SIG_W = FRAC_W + 1;
-  parameter int GRS_W = 3;
-  parameter int EXT_W = SIG_W + GRS_W;
-  parameter int SUM_W = EXT_W + 1;
+  localparam int EXP_W = 8;
+  localparam int FRAC_W = 7;
+  localparam int SIG_W = FRAC_W + 1;
+  localparam int GRS_W = 3;
+  localparam int EXT_W = SIG_W + GRS_W;
+  localparam int SUM_W = EXT_W + 1;
+  localparam int SHL_W = ($clog2(SUM_W)+1);
 
   // Stage 1 temps
   logic [SIG_W-1:0] m1, m2;
@@ -36,11 +37,11 @@ module vaddsub(
   logic [EXP_W-1:0] exp_r, exp_n;
   logic             carry;
   logic             tail;
-  int unsigned      lz;
-  int               target;
-  int               msb;
-  int               shl;
-  int               r_amt;                 // used when shl < 0
+  logic [$clog2(SUM_W+1)-1:0] lz;    // [3:0] for SUM_W=15
+  logic [$clog2(SUM_W)-1:0]   target;// [3:0], holds 13
+  logic [$clog2(SUM_W)-1:0]   msb;   // [3:0], 0..14
+  logic signed [SHL_W-1:0] shl;  // signed, covers -1..13
+  logic [$clog2(SUM_W+1)-1:0] r_amt; // [3:0], 0..1 (future-proof)             // used when shl < 0
   logic [SUM_W-1:0] mask_sum;              // variable mask for SUM_W-width
   logic [SIG_W-1:0] sig11;
   logic             guard, round, sticky;
@@ -49,28 +50,45 @@ module vaddsub(
   logic [EXP_W-1:0] exp_post;
   logic [SIG_W-1:0] sig_post;
   logic [FRAC_W-1:0] subf;                 // moved here (was declared in a branch)
+  logic [EXP_W-1:0] shl_exp;  // zero-extended | truncated version of shl
 
-  fp16_t fp1, fp2; //declaring the fp16 types
-  assign fp1 = vaddsubif.port_a;
-  assign fp2 = vaddsubif.port_b;
+  generate
+    if (EXP_W >= SHL_W) begin
+        assign shl_exp = {{(EXP_W-SHL_W){1'b0}}, $unsigned(shl)};
+    end else begin
+        assign shl_exp = $unsigned(shl[EXP_W-1:0]);
+    end
+  endgenerate
+
+
+//   fp16_t fp1, fp2; //declaring the fp16 types
+//   assign fp1 = vaddsubif.port_a;
+//   assign fp2 = vaddsubif.port_b;
+  logic [15:0] a = vaddsubif.port_a;
+  logic [15:0] b = vaddsubif.port_b;
+  localparam int TOTAL_W = 16;
+  
+  function automatic logic                 get_sign(input logic [TOTAL_W-1:0] x); return x[TOTAL_W-1]; endfunction
+  function automatic logic [EXP_W-1:0]     get_exp (input logic [TOTAL_W-1:0] x); return x[FRAC_W+EXP_W-1 -: EXP_W]; endfunction
+  function automatic logic [FRAC_W-1:0]    get_frac(input logic [TOTAL_W-1:0] x); return x[FRAC_W-1:0]; endfunction
+  
   logic sign_a;
   logic sign_b;
-  assign sign_a = fp1.sign;
-  assign sign_b = vaddsubif.sub ? (~fp2.sign) : fp2.sign;
+  assign sign_a = get_sign(a);
+  assign sign_b = vaddsubif.sub ? ~get_sign(b) : get_sign(b);
 
   //Helper Functions
-  function automatic bit is_nan(fp16_t f);  return (f.exp==5'h1F) && (f.frac!=0); endfunction
-  function automatic bit is_inf(fp16_t f);  return (f.exp==5'h1F) && (f.frac==0); endfunction
-  function automatic bit is_zero(fp16_t f); return (f.exp==0)     && (f.frac==0); endfunction
-  function automatic bit is_sub (fp16_t f); return (f.exp==0)     && (f.frac!=0); endfunction
+  localparam logic [EXP_W-1:0] EXP_ALL1 = {EXP_W{1'b1}};
+  function automatic bit is_nan (input logic [15:0] x); return (get_exp(x)==EXP_ALL1) && (get_frac(x)!='0); endfunction
+  function automatic bit is_inf (input logic [15:0] x); return (get_exp(x)==EXP_ALL1) && (get_frac(x)=='0); endfunction
+  function automatic bit is_zero(input logic [15:0] x); return (get_exp(x)=='0)       && (get_frac(x)=='0); endfunction
+  function automatic bit is_sub (input logic [15:0] x); return (get_exp(x)=='0)       && (get_frac(x)!='0); endfunction
 
-  // Effective exponent (subnormals act like exp=1 for alignment)
-  function automatic logic [EXP_W-1:0] eff_exp(fp16_t f); return (f.exp==0) ? 5'd1 : f.exp; endfunction
-  // Build significand: hidden=1 for normals, 0 for subnormals
-  function automatic logic [SIG_W-1:0] make_sig(fp16_t f);
-      if (is_zero(f))       return '0;                 // 0.frac for +0 or -0
-      else if (is_sub(f))   return {1'b0, f.frac};     // subnormal: 0.frac
-      else                  return {1'b1, f.frac};     // normal:    1.frac
+  // DAZ: subnormals act as zero
+  function automatic logic [EXP_W-1:0] eff_exp(input logic [15:0] x); return (get_exp(x)=='0) ? '0 : get_exp(x); endfunction
+  function automatic logic [SIG_W-1:0] make_sig(input logic [15:0] x);
+    if (is_zero(x) || is_sub(x)) return '0;
+    else                         return {1'b1, get_frac(x)};
   endfunction
 
   // right-shift with sticky (no variable part-selects)
@@ -78,7 +96,7 @@ module vaddsub(
     rshift_sticky(input logic [EXT_W-1:0] x, input logic [EXP_W-1:0] shamt, output logic sticky);
     logic [EXT_W-1:0] y;
     logic [EXT_W-1:0] mask;   // lower shamt bits set
-    if (shamt==0) begin
+    if (shamt == 0) begin
       y      = x;
       sticky = 1'b0;
     end else if (shamt>=EXT_W) begin
@@ -93,10 +111,9 @@ module vaddsub(
     return y;
   endfunction
 
-  function automatic int unsigned lzc15(input logic [SUM_W-1:0] x);
-      int unsigned c = SUM_W;
-      for (int i=SUM_W-1;i>=0;i--) if (x[i]) begin c=(SUM_W-1)-i; break; end
-      return c;
+  function automatic logic [$clog2(SUM_W+1)-1:0] lzc (input logic [SUM_W-1:0] x);
+    logic found; lzc = SUM_W[$clog2(SUM_W+1)-1:0]; found=1'b0;
+    for (int i=SUM_W-1; i>=0; i--) if (!found && x[i]) begin lzc = (SUM_W-1)-i; found=1'b1; end
   endfunction
 
   function automatic logic [SIG_W-1:0]
@@ -127,33 +144,24 @@ module vaddsub(
     s1n_special     = 1'b0;
     s1n_special_res = '0;
       //NaN case
-      if (is_nan(fp1) || is_nan(fp2)) begin
-          s1n_special     = 1'b1;
-          s1n_special_res = {1'b0,5'h1F,10'b1_0000_0000};
-      end 
-      //Infinity Case
-      else if (is_inf(fp1) && is_inf(fp2)) begin
-          if (sign_a ^ sign_b) begin
-              // Ifinity + (-Infinity) = NaN
-              s1n_special     = 1'b1;
-              s1n_special_res = {1'b0,5'h1F,10'b1_0000_0000};
-          end else begin
-              // same-sign Inf ± Inf = Same Infinity
-              s1n_special     = 1'b1;
-              s1n_special_res = {sign_a,5'h1F,10'h000};
-          end
-      end 
-      // Other Infininity Case (Infinity Dominates)
-      //Infinty + x = Infinity
-      else if (is_inf(fp1)) begin
-          s1n_special     = 1'b1;
-          s1n_special_res = {sign_a,5'h1F,10'h000};
-      end 
-      //x + Infinity = Infinity 
-      else if (is_inf(fp2)) begin
-          s1n_special     = 1'b1;
-          s1n_special_res = {sign_b,5'h1F,10'h000};
-      end
+    if (is_nan(a) || is_nan(b)) begin
+        s1n_special     = 1'b1;
+        s1n_special_res = {1'b0, EXP_ALL1, {1'b1, {(FRAC_W-1){1'b0}}}}; // quiet NaN
+    end else if (is_inf(a) && is_inf(b)) begin
+        if (sign_a ^ sign_b) begin
+            s1n_special     = 1'b1;
+            s1n_special_res = {1'b0, EXP_ALL1, {1'b1, {(FRAC_W-1){1'b0}}}}; // NaN
+        end else begin
+            s1n_special     = 1'b1;
+            s1n_special_res = {sign_a, EXP_ALL1, {FRAC_W{1'b0}}};           // ±Inf
+        end
+    end else if (is_inf(a)) begin
+        s1n_special     = 1'b1;
+        s1n_special_res = {sign_a, EXP_ALL1, {FRAC_W{1'b0}}};
+    end else if (is_inf(b)) begin
+        s1n_special     = 1'b1;
+        s1n_special_res = {sign_b, EXP_ALL1, {FRAC_W{1'b0}}};
+    end
   end
 
   // Magnitude Compare and Allignment
@@ -172,13 +180,13 @@ module vaddsub(
 
     if (!s1n_special) begin
       // Build full significands with hidden bits and GRS room
-      m1 = make_sig(fp1);
-      m2 = make_sig(fp2);
+      m1 = make_sig(a);
+      m2 = make_sig(b);
       M1 = {m1,{GRS_W{1'b0}}};
       M2 = {m2,{GRS_W{1'b0}}};
 
-      e1 = eff_exp(fp1);
-      e2 = eff_exp(fp2);
+      e1 = eff_exp(a);
+      e2 = eff_exp(b);
 
       // Decide which operand has the larger magnitude
       swap = (e2 > e1) || ((e2 == e1) && (m2 > m1));
@@ -239,7 +247,7 @@ module vaddsub(
       s2n_ovf = 1'b0;
 
       if (s1_special || !s1_v) begin
-          s2n_out = s1_special ? s1_special_res : 16'd0;
+          s2n_out = s1_special ? s1_special_res : '0;
       end else if (s1_mag == '0) begin
           s2n_out = {1'b0, 5'd0, 10'd0};
       end else begin
@@ -258,19 +266,19 @@ module vaddsub(
               exp_n = exp_r + 1;
           end else begin
               // Left/right normalize using LZC and a single shift
-              lz     = lzc15(mag);
+              lz     = lzc(mag);
               target = SIG_W + GRS_W - 1; 
               msb    = (SUM_W-1) - lz;
-              shl    = target - msb;
+              shl = $signed({1'b0, target}) - $signed({1'b0, msb});
 
               if (shl > 0) begin
                   norm  = mag << shl;
-                  exp_n = (exp_r > shl) ? (exp_r - shl) : '0;
+                  exp_n = (exp_r > shl_exp) ? (exp_r - shl_exp) : '0;
               end else if (shl < 0) begin
-                  r_amt = -shl;
+                  r_amt = $unsigned(-shl);
                   norm  = mag >> r_amt;
                   // tail = OR of the bits shifted out on the right
-                  if (r_amt >= SUM_W) begin
+                  if (r_amt >= SUM_W[$clog2(SUM_W+1)-1:0]) begin
                     tail = |mag;
                   end else begin
                     mask_sum = {SUM_W{1'b1}} >> (SUM_W - r_amt);
@@ -295,19 +303,16 @@ module vaddsub(
           exp_post = exp_n + (carry_up ? 1 : 0);
           sig_post = carry_up ? {1'b1, {FRAC_W{1'b0}}} : sig_rnd;
 
-          if (exp_post >= 5'h1F) begin
-          // Overflow = ±Inf
-              s2n_out = {s1_sign_r, 5'h1F, 10'h000};
-              s2n_ovf = 1'b1;
-          end else if (exp_post == 0) begin
-          // Subnormal or zero: drop hidden bit
-              subf    = sig_post[FRAC_W-1:0];
-              s2n_out = (subf == 0) ? {1'b0, 5'd0, 10'd0} : {s1_sign_r, 5'd0, subf};
-              s2n_ovf = 1'b0;
+          if (exp_post >= EXP_ALL1) begin
+            s2n_out = {s1_sign_r, EXP_ALL1, {FRAC_W{1'b0}}};
+            s2n_ovf = 1'b1;
+          end else if (exp_post == '0) begin
+          // FTZ, as you coded:
+            s2n_out = {s1_sign_r, {EXP_W{1'b0}}, {FRAC_W{1'b0}}};
+            s2n_ovf = 1'b0;
           end else begin
-          // Normalization
-              s2n_out = {s1_sign_r, exp_post, sig_post[FRAC_W-1:0]};
-              s2n_ovf = 1'b0;
+            s2n_out = {s1_sign_r, exp_post, sig_post[FRAC_W-1:0]};
+            s2n_ovf = 1'b0;
           end
       end
   end

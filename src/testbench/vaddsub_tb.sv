@@ -15,7 +15,7 @@ module vaddsub_tb;
 
 
     vaddsub_if vaddsubif ();
-    vaddsub DUT (.CLK(CLK), .nRST(nRST), .vaddsubif(vaddsubif));
+    vaddsub_1stage DUT (.CLK(CLK), .nRST(nRST), .vaddsubif(vaddsubif));
 
     // Clock generation
     always #(PERIOD/2) CLK = ~CLK;
@@ -279,7 +279,7 @@ end
     casenum = 1;
     casename = "Add Case 1: ";
 
-    vaddsubif.enable = 1;
+    vaddsubif.valid = 1;
     vaddsubif.sub = 0;
     vaddsubif.port_a = 16'b0_01111_0000000001;
     vaddsubif.port_b = 16'b0_01111_0000000011;
