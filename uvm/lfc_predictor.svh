@@ -12,8 +12,10 @@ class lfc_predictor extends uvm_subscriber#(lfc_cpu_transaction, lfc_ram_transac
     lfc_cpu_transaction output_cpu_tx;
     lfc_ram_transaction output_ram_tx;
 
-    uvm_tlm_analysis_fifo#(lfc_cpu_transaction) expected_MSHR;
+    // uvm_tlm_analysis_fifo#(lfc_cpu_transaction) expected_MSHR;
     int MSHR_occupancy = 0;
+    logic [31:0] data_model [31:0];
+    logic data_is_in_cache [31:0];
     
 
     function new(string name, uvm_component parent = null);
@@ -33,6 +35,17 @@ class lfc_predictor extends uvm_subscriber#(lfc_cpu_transaction, lfc_ram_transac
 
         // TODO: calculate expected outputs below
 
+        cpu_t.hit = data_is_in_cache[cpu_t.mem_in_addr];
+
+        if (cpu_t.hit) begin //  cache hit
+            if (cpu_t.mem_in_rw_mode) begin // write
+                data_model[cpu_t.mem_in_addr] = mem_in_store_value;
+                data_is_in_cache[cpu_t.mem_in_addr] = 1'b1;
+            end else begin // read
+                    cpu_t.hit_load = data_model[cpu_t.mem_in_addr];
+            end
+        end
+        
         if (!cpu_t.hit) begin // cache miss
             MSHR_occupancy++;
 

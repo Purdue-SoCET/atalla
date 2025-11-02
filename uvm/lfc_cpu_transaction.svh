@@ -12,7 +12,7 @@ class lfc_cpu_transaction #(parameter NUM_BANKS = 4, parameter UUID_SIZE = 4) ex
   // CPU Inputs
   logic mem_in;
   rand logic [31:0] mem_in_addr;
-  logic mem_in_rw_mode;
+  logic mem_in_rw_mode; // 0 = read, 1 = write
   rand logic [31:0] mem_in_store_value;
   logic dp_in_halt;
 
