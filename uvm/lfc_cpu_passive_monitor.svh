@@ -59,9 +59,11 @@ class lfc_cpu_passive_monitor extends uvm_monitor;
           prev_tx.copy(tx);
         end*/
 
-        // TODO: expand on this to handle more than just a cache hit
-        if(tx.hit == 1 && prev_tx.hit != 1) begin // if new hit, send to scoreboad
+        // TODO: verify that a hit takes 1 cycle like is said on page 15 of paper under background
+        if(tx.hit == 1 && prev_tx.hit == 0) begin // if new hit, send to scoreboad
           result_ap.write(tx);
+        end else if(tx.hit == 0 && prev_tx.hit == 0 && tx.stall == 0) begin // assumes hit takes 1 cycle ...
+          result_ap.write(tx);                                              // should look deeper into this 
         end
 
         prev_tx.copy(tx); // check for hit on every clock cycle
