@@ -4,11 +4,11 @@
 
 import uvm_pkg::*;
 `include "uvm_macros.svh"
-`include "lfc_if.svh"
+`include "lfc_if.sv"
 
 // --- Replace these with your real types if needed ---
-typedef virtual lfc_if.ram lfc_ram_vif_t;   // TODO: interface   add ram modport
-//typedef lfc_cpu_item       cpu_txn_t;       // TODO: sequence_item
+typedef virtual lfc_if.ram lfc_ram_vif_t;
+//typedef lfc_cpu_item       cpu_txn_t;
 
 class lfc_ram_passive_monitor extends uvm_monitor;
   `uvm_component_utils(lfc_ram_passive_monitor)

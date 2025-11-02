@@ -4,7 +4,7 @@
 
 import uvm_pkg::*;
 `include "uvm_macros.svh"
-`include "lfc_if.svh"
+`include "lfc_if.sv"
 
 // --- Replace these with your real types if needed ---
 typedef virtual lfc_if lfc_cpu_vif_t;   // TODO: interface
@@ -39,11 +39,9 @@ class lfc_cpu_active_monitor extends uvm_monitor;
   virtual task run_phase(uvm_phase phase);
     super.run_phase(phase);
     forever begin
-      // TODO: sample at @(posedge vif.clk); create cpu_txn_t t; lfc_ap.write(t);
-      //@(posedge $urandom); // placeholder to avoid zero-delay loop
       lfc_cpu_transaction tx;
       repeat(4) @(posedge vif.clk); // 4 clock edges before input is sent from driver
-      tx = transaction::type_id::create("tx");
+      tx = lfc_cpu_transaction::type_id::create("tx");
       tx.mem_in = vif.mem_in;
       tx.mem_in_addr = vif.mem_in_addr;
       tx.mem_in_rw_mode = vif.mem_in_rw_mode;

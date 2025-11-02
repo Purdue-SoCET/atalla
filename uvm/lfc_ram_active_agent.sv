@@ -1,8 +1,8 @@
 import uvm_pkg::*;
 `include "uvm_macros.svh"
-`include "lfc_ram_active_driver.svh"
-`include "lfc_ram_active_monitor.svh"
-`include "lfc_ram_active_sqr.svh"
+`include "lfc_ram_active_driver.sv"
+`include "lfc_ram_active_monitor.sv"
+`include "lfc_ram_active_sqr.sv"
 
 class lfc_ram_active_agent extends uvm_agent;
     `uvm_component_utils(lfc_ram_active_agent)

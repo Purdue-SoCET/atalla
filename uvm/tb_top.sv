@@ -1,7 +1,7 @@
 import uvm_pkg::*;
 `include "../src/modules/lockup_free_cache.sv"
-`include "lfc_if.svh"
-`include "test.svh"
+`include "lfc_if.sv"
+`include "test.sv"
 
 module tb_top();
     bit clk;

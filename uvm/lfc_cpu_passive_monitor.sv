@@ -4,12 +4,11 @@
 
 import uvm_pkg::*;
 `include "uvm_macros.svh"
-`include "lfc_if.svh"
+`include "lfc_if.sv"
 
 // --- Replace these with your real types if needed ---
-typedef virtual lfc_if lfc_cpu_vif_t;   // TODO: interface
-//typedef lfc_cpu_item       cpu_txn_t;       // TODO: sequence_item
-lfc_cpu_transaction prev_tx;
+//typedef virtual lfc_if lfc_cpu_vif_t; 
+//typedef lfc_cpu_item       cpu_txn_t;     
 
 class lfc_cpu_passive_monitor extends uvm_monitor;
   `uvm_component_utils(lfc_cpu_passive_monitor)
@@ -18,7 +17,8 @@ class lfc_cpu_passive_monitor extends uvm_monitor;
   //uvm_analysis_port #(cpu_txn_t) ap;
 
   // optional: virtual interface handle
-  lfc_cpu_vif_t vif;
+  virtual lfc_if vif;
+  lfc_cpu_transaction prev_tx;
 
   uvm_analysis_port#(lfc_cpu_transaction) result_ap;
 
@@ -36,16 +36,16 @@ class lfc_cpu_passive_monitor extends uvm_monitor;
     end
   endfunction
 
-  // minimal placeholder; add your sampling here
+  int loop_counter;
   virtual task run_phase(uvm_phase phase);
     super.run_phase(phase);
     prev_tx = lfc_cpu_transaction::type_id::create("prev_tx");
     
-    int loop_counter = 0 // prevents comparison errors on first iteration
+    loop_counter = 0;
     forever begin
         lfc_cpu_transaction tx;
         @(posedge vif.clk);
-        tx = transaction::type_id::create("tx");
+        tx = lfc_cpu_transaction::type_id::create("tx");
 
         tx.mem_out_uuid = vif.mem_out_uuid;
         tx.stall = vif.stall;
@@ -60,15 +60,15 @@ class lfc_cpu_passive_monitor extends uvm_monitor;
             result_ap.write(tx);
           end 
 
-          for(int i = 0; i < NUM_BANKS; i++) begin
-            if(tx.block_status[i] && !prev.block_status[i]) begin // uuid is valid, new cache miss, send to scoreboad
+          for(int i = 0; i < tx.NUM_BANKS; i++) begin
+            if(tx.block_status[i] && !prev_tx.block_status[i]) begin // uuid is valid, new cache miss, send to scoreboad
               result_ap.write(tx);
             end
           end
         end
 
         prev_tx.copy(tx); // check for hit on every clock cycle
-        loop_counter++
+        loop_counter++;
     end
   endtask
 

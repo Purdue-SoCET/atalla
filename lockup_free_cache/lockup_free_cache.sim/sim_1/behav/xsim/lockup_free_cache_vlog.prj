@@ -1,8 +1,15 @@
 # compile verilog/system verilog design source files
-sv xil_defaultlib  --include "D:/2025.1/Vivado/data/rsb/busdef" --include "../../../../../src/include" --include "../../../../../uvm" \
+sv xil_defaultlib  --include "D:/2025.1/Vivado/data/rsb/busdef" --include "../../../../../src/include" \
 "../../../../../src/modules/cache_bank.sv" \
 "../../../../../src/modules/cache_mshr_buffer.sv" \
-"../../../../../src/modules/lockup_free_cache.sv" \
+"../../../../../uvm/lfc_basic_sequence.sv" \
+"../../../../../uvm/lfc_cpu_active_agent.sv" \
+"../../../../../uvm/lfc_cpu_passive_monitor.sv" \
+"../../../../../uvm/lfc_cpu_passive_agent.sv" \
+"../../../../../uvm/lfc_predictor.sv" \
+"../../../../../uvm/lfc_ram_active_agent.sv" \
+"../../../../../uvm/lfc_ram_passive_agent.sv" \
+"../../../../../uvm/tb_top.sv" \
 
 # compile glbl module
 verilog xil_defaultlib "glbl.v"

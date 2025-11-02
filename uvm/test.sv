@@ -1,6 +1,6 @@
 import uvm_pkg::*;
 `include "uvm_macros.svh"
-`include "lfc_environment.svh"
+`include "lfc_environment.sv"
 
 class test extends uvm_test;
     `uvm_component_utils(test)

@@ -2,3 +2,6 @@ Running: xsim.dir/lockup_free_cache_behav/xsimk.exe -simmode gui -wdb lockup_fre
 Design successfully loaded
 Design Loading Memory Usage: 10856 KB (Peak: 10856 KB)
 Design Loading CPU Usage: 30 ms
+Simulation completed
+Simulation Memory Usage: 11940 KB (Peak: 11940 KB)
+Simulation CPU Usage: 62 ms

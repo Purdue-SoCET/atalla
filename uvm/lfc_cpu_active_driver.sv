@@ -1,6 +1,7 @@
 import uvm_pkg::*;
 `include "uvm_macros.svh"
-`include "lfc_if.svh"
+`include "lfc_if.sv"
+`include "lfc_cpu_transaction.sv"
 
 class lfc_cpu_active_driver extends uvm_driver#(lfc_cpu_transaction);
     `uvm_component_utils(lfc_cpu_active_driver)
@@ -37,7 +38,7 @@ class lfc_cpu_active_driver extends uvm_driver#(lfc_cpu_transaction);
             vif.mem_in_rw_mode = req_item.mem_in_rw_mode; // not random
             vif.mem_in_store_value = req_item.mem_in_store_value;
             vif.dp_in_halt = req_item.dp_in_halt; // not random
-            #(.2);
+            #(0.2ns);
             @(posedge vif.clk);
             seq_item_port.item_done();
         end

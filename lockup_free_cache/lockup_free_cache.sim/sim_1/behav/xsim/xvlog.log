@@ -1,0 +1,21 @@
+INFO: [VRFC 10-2263] Analyzing SystemVerilog file "C:/Users/socce/SoCET/tensor-core/src/modules/cache_bank.sv" into library xil_defaultlib
+WARNING: [VRFC 10-8725] `include directive is not isolated on its own line [C:/Users/socce/SoCET/tensor-core/src/modules/cache_bank.sv:1]
+WARNING: [VRFC 10-2502] extra semicolon in $unit (global) scope [C:/Users/socce/SoCET/tensor-core/src/modules/cache_bank.sv:1]
+INFO: [VRFC 10-311] analyzing module cache_bank
+INFO: [VRFC 10-2263] Analyzing SystemVerilog file "C:/Users/socce/SoCET/tensor-core/src/modules/cache_mshr_buffer.sv" into library xil_defaultlib
+WARNING: [VRFC 10-8725] `include directive is not isolated on its own line [C:/Users/socce/SoCET/tensor-core/src/modules/cache_mshr_buffer.sv:1]
+WARNING: [VRFC 10-2502] extra semicolon in $unit (global) scope [C:/Users/socce/SoCET/tensor-core/src/modules/cache_mshr_buffer.sv:1]
+INFO: [VRFC 10-311] analyzing module cache_mshr_buffer
+INFO: [VRFC 10-2263] Analyzing SystemVerilog file "C:/Users/socce/SoCET/tensor-core/uvm/lfc_basic_sequence.sv" into library xil_defaultlib
+INFO: [VRFC 10-2263] Analyzing SystemVerilog file "C:/Users/socce/SoCET/tensor-core/uvm/lfc_cpu_active_agent.sv" into library xil_defaultlib
+INFO: [VRFC 10-2263] Analyzing SystemVerilog file "C:/Users/socce/SoCET/tensor-core/uvm/lfc_cpu_passive_monitor.sv" into library xil_defaultlib
+INFO: [VRFC 10-2263] Analyzing SystemVerilog file "C:/Users/socce/SoCET/tensor-core/uvm/lfc_cpu_passive_agent.sv" into library xil_defaultlib
+INFO: [VRFC 10-2263] Analyzing SystemVerilog file "C:/Users/socce/SoCET/tensor-core/uvm/lfc_predictor.sv" into library xil_defaultlib
+INFO: [VRFC 10-2263] Analyzing SystemVerilog file "C:/Users/socce/SoCET/tensor-core/uvm/lfc_ram_active_agent.sv" into library xil_defaultlib
+ERROR: [VRFC 10-4982] syntax error near 'function' [C:/Users/socce/SoCET/tensor-core/uvm/lfc_ram_active_driver.sv:10]
+ERROR: [VRFC 10-8549] SystemVerilog keyword 'function' used in incorrect context [C:/Users/socce/SoCET/tensor-core/uvm/lfc_ram_active_driver.sv:10]
+ERROR: [VRFC 10-4982] syntax error near 'return' [C:/Users/socce/SoCET/tensor-core/uvm/lfc_ram_active_driver.sv:11]
+ERROR: [VRFC 10-8549] SystemVerilog keyword 'return' used in incorrect context [C:/Users/socce/SoCET/tensor-core/uvm/lfc_ram_active_driver.sv:11]
+ERROR: [VRFC 10-2989] 'transaction' is not declared [C:/Users/socce/SoCET/tensor-core/uvm/lfc_ram_active_monitor.sv:46]
+ERROR: [VRFC 10-4982] syntax error near '=' [C:/Users/socce/SoCET/tensor-core/uvm/lfc_ram_active_sqr.sv:24]
+ERROR: [VRFC 10-2989] 'lfc_ram_active_driver' is not declared [C:/Users/socce/SoCET/tensor-core/uvm/lfc_ram_active_agent.sv:19]

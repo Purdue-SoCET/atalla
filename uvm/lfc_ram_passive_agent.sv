@@ -1,6 +1,6 @@
 import uvm_pkg::*;
 `include "uvm_macros.svh"
-`include "lfc_ram_passive_monitor.svh"
+`include "lfc_ram_passive_monitor.sv"
 
 class lfc_ram_passive_agent extends uvm_agent;
     `uvm_component_utils(lfc_ram_passive_agent)

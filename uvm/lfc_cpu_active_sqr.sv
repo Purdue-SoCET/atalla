@@ -2,7 +2,7 @@
 `define LFC_CPU_ACTIVE_SQR_SVH
 
 `include "uvm_macros.svh"
-`include "lfc_cpu_transaction.svh"
+`include "lfc_cpu_transaction.sv"
 
 import uvm_pkg::*;
 

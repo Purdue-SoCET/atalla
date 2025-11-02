@@ -2,7 +2,7 @@
 `define LFC_RAM_ACTIVE_SQR_SVH
 
 `include "uvm_macros.svh"
-`include "lfc_ram_transaction.svh"
+`include "lfc_ram_transaction.sv"
 
 import uvm_pkg::*;
 

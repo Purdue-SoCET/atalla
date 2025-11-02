@@ -1,3 +1,5 @@
+import uvm_pkg::*;
+`include "uvm_macros.svh"
 //---------------------------------------------
 // seq_in: Defines the transaction (sequence item)
 //---------------------------------------------

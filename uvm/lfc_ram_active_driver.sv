@@ -1,6 +1,6 @@
 import uvm_pkg::*;
 `include "uvm_macros.svh"
-`include "lfc_if.svh"
+`include "lfc_if.sv"
 
 
 class ram_model;

@@ -4,7 +4,7 @@
 
 import uvm_pkg::*;
 `include "uvm_macros.svh"
-`include "lfc_if.svh"
+`include "lfc_if.sv"
 
 // --- Replace these with your real types if needed ---
 typedef virtual lfc_if lfc_ram_vif_t;   // TODO: interface

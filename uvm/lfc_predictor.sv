@@ -1,7 +1,7 @@
 import uvm_pkg::*;
 `include "uvm_macros.svh"
-`include "lfc_cpu_transaction.svh"
-`include "lfc_ram_transaction.svh"
+`include "lfc_cpu_transaction.sv"
+`include "lfc_ram_transaction.sv"
 
 class lfc_predictor extends uvm_subscriber#(lfc_cpu_transaction, lfc_ram_transaction);
     `uvm_component_utils(lfc_predictor)
@@ -28,8 +28,8 @@ class lfc_predictor extends uvm_subscriber#(lfc_cpu_transaction, lfc_ram_transac
     endfunction: build_phase
 
     function void write(lfc_cpu_transaction cpu_t, lfc_ram_transaction ram_t);
-        output_cpu_tx = lfc_cpu_transaction#(NUM_BANKS, UUID_SIZE);
-        output_ram_tx = lfc_ram_transaction#(NUM_BANKS);
+        output_cpu_tx = lfc_cpu_transaction#(NUM_BANKS, UUID_SIZE)::type_id::create("output_cpu_tx");
+        output_ram_tx = lfc_ram_transaction#(NUM_BANKS)::type_id::create("output_ram_tx");
         output_cpu_tx.copy(cpu_t);
         output_ram_tx.copy(ram_t);
 
@@ -39,7 +39,7 @@ class lfc_predictor extends uvm_subscriber#(lfc_cpu_transaction, lfc_ram_transac
 
         if (cpu_t.hit) begin //  cache hit
             if (cpu_t.mem_in_rw_mode) begin // write
-                data_model[cpu_t.mem_in_addr] = mem_in_store_value;
+                data_model[cpu_t.mem_in_addr] = output_cpu_tx.mem_in_store_value;
                 data_is_in_cache[cpu_t.mem_in_addr] = 1'b1;
             end else begin // read
                     cpu_t.hit_load = data_model[cpu_t.mem_in_addr];
@@ -60,10 +60,10 @@ class lfc_predictor extends uvm_subscriber#(lfc_cpu_transaction, lfc_ram_transac
             // expected_MSHR.pop[ram_t.ram_mem_addr];
         end
 
-        if MSHR_occupancy > 8 begin // overflow of MSHR buffer
+        if (MSHR_occupancy > 8) begin // overflow of MSHR buffer
             output_cpu.stall = 1;
         end else begin
-            output_cpu.stall = 0;
+            output_cpu_tx.stall = 0;
         end
 
         pred_cpu_ap.write(output_cpu_tx);
@@ -71,4 +71,4 @@ class lfc_predictor extends uvm_subscriber#(lfc_cpu_transaction, lfc_ram_transac
     endfunction: write
 
 
-endclass: predictor
+endclass: lfc_predictor
