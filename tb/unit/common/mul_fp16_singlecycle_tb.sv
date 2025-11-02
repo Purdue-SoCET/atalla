@@ -42,13 +42,13 @@ module mul_fp16_singlecycle_tb;
     // Test sequence
     initial begin
         // Initialize interface signals
-        $dumpfile("mul_fp16_singlecycle_waves.vcd");
+        $dumpfile("waves/mul_fp16_singlecycle_waves.vcd");
         $dumpvars();
         tb_nrst = 0;
         #CLK_PERIOD;
         tb_nrst = 1;
 
-        test_set1[0] = 16'h4720;
+        test_set1[0] = 16'h3da8;
         test_set1[1] = 16'h4491;
         test_set1[2] = 16'h487e;
         test_set1[3] = 16'h456f;
@@ -59,7 +59,7 @@ module mul_fp16_singlecycle_tb;
         test_set1[8] = 16'h47e0;
         test_set1[9] = 16'h48f0;
 
-        test_set2[0] = 16'h41c1;
+        test_set2[0] = 16'h3da8;
         test_set2[1] = 16'h4620;
         test_set2[2] = 16'h4849;
         test_set2[3] = 16'h46fd;

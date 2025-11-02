@@ -93,18 +93,20 @@ module mul_fp16_singlecycle(input logic clk, input logic nRST, input logic start
     assign mul_frac_product = mul_carryout ? mul_product[12:1] : mul_product[11:0];
 
     // Step 2.4: Rounding.
-    // this logic could potentially result in an edge case where if the mul significand is all 1's, rounding will cause it to become 0
-    logic [9:0] mul_significand_rounded;
+    // edit 11/02/25: Fixed this! this logic could potentially result in an edge case where if the mul significand is all 1's, rounding will cause it to become 0
+    logic [10:0] mul_significand_rounded;       // 11th bit will indicate overflow.
     always_comb begin
         if(mul_frac_product[1] & (mul_frac_product[0] | mul_round_loss | mul_frac_product[2]))
-            mul_significand_rounded = mul_frac_product[11:2] + 1;
+            mul_significand_rounded = {1'b0, mul_frac_product[11:2]} + 1;
         else
-            mul_significand_rounded = mul_frac_product[11:2];
+            mul_significand_rounded = {1'b0, mul_frac_product[11:2]};
+
     end
 
     // Concatenation to produce final result.
     logic [4:0] mul_final_exp;
-    assign mul_final_exp = (mul_product == 0) ? 0 : exp_sum;
-    assign result = {mul_sign_result, mul_final_exp, mul_significand_rounded};
+    // if significand rounding overflowed, increase the exponent
+    assign mul_final_exp = (mul_product == 0) ? 0 : mul_significand_rounded[10] ? exp_sum + 1 : exp_sum;
+    assign result = {mul_sign_result, mul_final_exp, mul_significand_rounded[9:0]};
 
 endmodule
