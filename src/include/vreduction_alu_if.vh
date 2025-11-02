@@ -2,12 +2,6 @@
 `define VREDUCTION_ALU_IF_VH
 `include "vector_types.vh"
 
-typedef enum logic [1:0] {
-    VR_MAX = 2'b00,
-    VR_MIN = 2'b01,
-    VR_SUM = 2'b10
-} reduction_op;
-
 interface vreduction_alu_if;
     import vector_pkg::*;
 

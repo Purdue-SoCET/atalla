@@ -77,5 +77,12 @@ package vector_pkg;
         logic spread;
     } control_t;
 
+    typedef enum logic [1:0] {
+    VR_MAX = 2'b00,
+    VR_MIN = 2'b01,
+    VR_SUM = 2'b10,
+    VR_SUB = 2'b11
+    } reduction_op;
+
 endpackage
 `endif
