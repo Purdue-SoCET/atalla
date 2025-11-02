@@ -54,18 +54,18 @@ class lfc_cpu_passive_monitor extends uvm_monitor;
         tx.uuid_block = vif.uuid_block;
         tx.dp_out_flushed = vif.dp_out_flushed;
 
-        /*if(!tx.input_equal(prev_tx)) begin // if new outputs, send to scoreboard
-          result_ap.write(tx);
-          prev_tx.copy(tx);
-        end*/
+        if(!tx.stall) begin
+          if(tx.hit == 1 && prev_tx.hit == 0) begin // if new hit, send to scoreboad
+            result_ap.write(tx);
+          end 
 
-        // TODO: verify that a hit takes 1 cycle like is said on page 15 of paper under background
-        if(tx.hit == 1 && prev_tx.hit == 0) begin // if new hit, send to scoreboad
-          result_ap.write(tx);
-        end else if(tx.hit == 0 && prev_tx.hit == 0 && tx.stall == 0) begin // assumes hit takes 1 cycle ...
-          result_ap.write(tx);                                              // should look deeper into this 
+          for(int i = 0; i < NUM_BANKS; i++) begin
+            if(block_status[i]) begin // uuid is valid, cache miss, send to scoreboad
+              result_ap.write(tx);
+            end
+          end
         end
-
+        
         prev_tx.copy(tx); // check for hit on every clock cycle
         
     end
