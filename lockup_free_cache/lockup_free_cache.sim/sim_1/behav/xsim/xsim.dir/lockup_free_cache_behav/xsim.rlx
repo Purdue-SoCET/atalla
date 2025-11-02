@@ -1,0 +1,12 @@
+
+{ 
+    crc :  18146377856529982642  , 
+    ccp_crc :  0  , 
+    cmdline : " --incr --debug typical --relax --mt 2 -L xil_defaultlib -L uvm -L unisims_ver -L unimacro_ver -L secureip --snapshot lockup_free_cache_behav xil_defaultlib.lockup_free_cache xil_defaultlib.glbl -L uvm" , 
+    buildDate : "May 22 2025" , 
+    buildTime : "00:13:55" , 
+    linkCmd : "D:\\2025.1\\Vivado\\data\\..\\tps\\mingw\\6.2.0\\win64.o\\nt\\bin\\gcc.exe -Wa,-W  -O -Wl,--stack,104857600 -o \"xsim.dir/lockup_free_cache_behav/xsimk.exe\"   \"xsim.dir/lockup_free_cache_behav/obj/xsim_0.win64.obj\" \"xsim.dir/lockup_free_cache_behav/obj/xsim_1.win64.obj\" -L\"D:\\2025.1\\Vivado\\lib\\win64.o\" -lxv_simulator_kernel   -lxv_simbridge_kernel" , 
+    aggregate_nets : 
+    [ 
+    ] 
+} 

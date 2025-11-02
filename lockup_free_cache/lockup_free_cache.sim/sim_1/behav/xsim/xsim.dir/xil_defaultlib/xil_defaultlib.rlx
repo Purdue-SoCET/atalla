@@ -1,0 +1,9 @@
+0.7
+2020.2
+May 22 2025
+00:13:55
+C:/Users/socce/SoCET/tensor-core/lockup_free_cache/lockup_free_cache.sim/sim_1/behav/xsim/glbl.v,1741209010,verilog,,,,glbl,,uvm,,,,,,
+C:/Users/socce/SoCET/tensor-core/src/include/cache_types_pkg.svh,1760039868,verilog,,,,,,,,,,,,
+C:/Users/socce/SoCET/tensor-core/src/modules/cache_bank.sv,1760039868,systemVerilog,C:/Users/socce/SoCET/tensor-core/src/modules/cache_mshr_buffer.sv;C:/Users/socce/SoCET/tensor-core/src/modules/lockup_free_cache.sv,C:/Users/socce/SoCET/tensor-core/src/modules/cache_mshr_buffer.sv,C:/Users/socce/SoCET/tensor-core/src/include/cache_types_pkg.svh,$unit_cache_bank_sv_2684976832;cache_bank,,uvm,../../../../../src/include;../../../../../uvm;D:/2025.1/Vivado/data/rsb/busdef,,,,,
+C:/Users/socce/SoCET/tensor-core/src/modules/cache_mshr_buffer.sv,1760039868,systemVerilog,,C:/Users/socce/SoCET/tensor-core/src/modules/lockup_free_cache.sv,C:/Users/socce/SoCET/tensor-core/src/include/cache_types_pkg.svh,cache_mshr_buffer,,uvm,../../../../../src/include;../../../../../uvm;D:/2025.1/Vivado/data/rsb/busdef,,,,,
+C:/Users/socce/SoCET/tensor-core/src/modules/lockup_free_cache.sv,1760039868,systemVerilog,,,C:/Users/socce/SoCET/tensor-core/src/include/cache_types_pkg.svh,lockup_free_cache,,uvm,../../../../../src/include;../../../../../uvm;D:/2025.1/Vivado/data/rsb/busdef,,,,,

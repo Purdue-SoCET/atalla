@@ -1,0 +1,4 @@
+Running: xsim.dir/lockup_free_cache_behav/xsimk.exe -simmode gui -wdb lockup_free_cache_behav.wdb -simrunnum 0 -socket 55053
+Design successfully loaded
+Design Loading Memory Usage: 10856 KB (Peak: 10856 KB)
+Design Loading CPU Usage: 30 ms

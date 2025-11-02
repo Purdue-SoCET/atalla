@@ -40,9 +40,10 @@ class lfc_cpu_passive_monitor extends uvm_monitor;
   virtual task run_phase(uvm_phase phase);
     super.run_phase(phase);
     prev_tx = lfc_cpu_transaction::type_id::create("prev_tx");
+    
+    int loop_counter = 0 // prevents comparison errors on first iteration
     forever begin
-        // TODO: fill this sucker in
-        lfc_transaction tx;
+        lfc_cpu_transaction tx;
         @(posedge vif.clk);
         tx = transaction::type_id::create("tx");
 
@@ -54,20 +55,20 @@ class lfc_cpu_passive_monitor extends uvm_monitor;
         tx.uuid_block = vif.uuid_block;
         tx.dp_out_flushed = vif.dp_out_flushed;
 
-        if(!tx.stall) begin
+        if(!tx.stall && loop_counter > 0) begin
           if(tx.hit == 1 && prev_tx.hit == 0) begin // if new hit, send to scoreboad
             result_ap.write(tx);
           end 
 
           for(int i = 0; i < NUM_BANKS; i++) begin
-            if(block_status[i]) begin // uuid is valid, cache miss, send to scoreboad
+            if(tx.block_status[i] && !prev.block_status[i]) begin // uuid is valid, new cache miss, send to scoreboad
               result_ap.write(tx);
             end
           end
         end
-        
+
         prev_tx.copy(tx); // check for hit on every clock cycle
-        
+        loop_counter++
     end
   endtask
 

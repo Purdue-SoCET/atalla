@@ -1,0 +1,11 @@
+# compile verilog/system verilog design source files
+sv xil_defaultlib  --include "D:/2025.1/Vivado/data/rsb/busdef" --include "../../../../../src/include" --include "../../../../../uvm" \
+"../../../../../src/modules/cache_bank.sv" \
+"../../../../../src/modules/cache_mshr_buffer.sv" \
+"../../../../../src/modules/lockup_free_cache.sv" \
+
+# compile glbl module
+verilog xil_defaultlib "glbl.v"
+
+# Do not sort compile order
+nosort
