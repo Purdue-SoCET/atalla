@@ -93,17 +93,17 @@ module mul_bf16(input logic clk, input logic nRST, input logic start, input logi
 
     // Step 2.4: Rounding.
     // this logic could potentially result in an edge case where if the mul significand is all 1's, rounding will cause it to become 0
-    logic [6:0] mul_significand_rounded;
+    logic [7:0] mul_significand_rounded;        // 8th bit will indicate overflow from rounding
     always_comb begin
         if(mul_frac_product[1] & (mul_frac_product[0] | mul_round_loss | mul_frac_product[2]))
-            mul_significand_rounded = mul_frac_product[8:2] + 1;
+            mul_significand_rounded = {1'b0, mul_frac_product[8:2]} + 1;
         else
-            mul_significand_rounded = mul_frac_product[8:2];
+            mul_significand_rounded = {1'b0, mul_frac_product[8:2]};
     end
 
     // Concatenation to produce final result.
     logic [7:0] mul_final_exp;
-    assign mul_final_exp = (mul_product == 0) ? 0 : exp_sum;
-    assign result = {mul_sign_result, mul_final_exp, mul_significand_rounded};
+    assign mul_final_exp = (mul_product == 0) ? 0 : mul_significand_rounded[7] ? exp_sum + 1 : exp_sum;
+    assign result = {mul_sign_result, mul_final_exp, mul_significand_rounded[6:0]};
 
 endmodule
