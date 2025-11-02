@@ -35,7 +35,7 @@ module cbg_benes #(
     logic [TAGWIDTH-1:0] M [TAGWIDTH-1:0] [SIZE-1:0]  ;
 
     logic [TAGWIDTH-1:0] subM [TAGWIDTH-1:0] [SIZE-1:0];
-    logic [TAGWIDTH-1:0] subz [TAGWIDTH-1:0] [SIZE-1:0];
+    logic [TAGWIDTH-1:0] subM_rearranged [TAGWIDTH-1:0] [SIZE-1:0];
 
     // logic [TAGWIDTH-1:0] block_perm [TAGWIDTH-1:0] [SIZE-1:0];
 
@@ -46,14 +46,14 @@ module cbg_benes #(
     end
 
     generate
-        genvar i, loop, j, e;
+        genvar i, loop, j;
         for(genvar level = 0; level < TAGWIDTH; level++) begin
             localparam int block_size = SIZE >> level;   // size of each block
             localparam int num_blocks = 1 << level;  // number of blocks
             
             logic [TAGWIDTH-1:0] block_perm [SIZE-1:0];
             
-            assign block_perm = (level==0) ? perm : subM[level-1];
+            assign block_perm = (level==0) ? perm : subM_rearranged[level-1];
 
             for (genvar block = 0; block < num_blocks; block++) begin : blocks
                 localparam int offset_lower = block * block_size;
@@ -177,11 +177,14 @@ module cbg_benes #(
                         .c(L[level][offset_upper:offset_lower]), 
                         .out(M[level][offset_upper:offset_lower])
                     );
-                    for(e = 0; e < 2; e++) begin
+                    for(genvar half = 0; half < 2; half++) begin
                         for(j = 0; j < block_size/2; j++) begin
-                            assign subM[level][j+block_size*block+block_size/2*e] = M[level][2*j+e+block_size*block]/2;
+                            assign subM[level][j+block_size*block+block_size/2*half] = M[level][2*j+half+block_size*block]/2;
                         end
                         // subM = [[M[2*j+e]//2 for j in range(n//2)] for e in range(2)]
+                        localparam int dest_lower = (block*block_size/2) + (SIZE/2 * half);
+                        localparam int source_lower = (block*block_size) + (block_size/2 * half);
+                        assign subM_rearranged[level][dest_lower+block_size/2-1:dest_lower] = subM[level][source_lower+block_size/2-1:source_lower];
                     end
                 end
             end
@@ -202,10 +205,12 @@ module cbg_benes #(
         for(int level = 0; level < TAGWIDTH; level++) begin
             block_size_sub = SIZE >> level;   // size of each block
             num_blocks_sub = 1 << level;  // number of blocks
-
+            
             if(level == TAGWIDTH-1) begin
-                ctrl[first] = f[TAGWIDTH-1][first];
-                first = first + 1;
+                for(int sub_idx = 0; sub_idx < SIZE >> 1; sub_idx++) begin
+                    ctrl[first] = f[TAGWIDTH-1][sub_idx];
+                    first = first + 1;
+                end
             end
             else begin
                 for(int sub_idx = 0; sub_idx < block_size_sub/2; sub_idx++) begin
@@ -223,8 +228,6 @@ module cbg_benes #(
             end
             
         end
-
-
     end
 endmodule
 
