@@ -24,29 +24,12 @@ class monitor extends uvm_monitor;
   endfunction
 
   virtual task run_phase(uvm_phase phase);
+  /*
     super.run_phase(phase);
     // prev_tx = transaction#(4)::type_id::create("prev_tx");
     forever begin
       transaction tx;
-  //     @(posedge vif.clk);
-  //     tx = transaction#(4)::type_id::create("tx");
-  //     tx.a = vif.a;
-  //     tx.b = vif.b;
-  //     tx.carry_in = vif.carry_in;
 
-  //     if (!tx.input_equal(prev_tx)) begin // if new transaction has been sent
-  //       adder_ap.write(tx);
-  //       // get outputs from DUT and send to scoreboard/comparator
- // @(posedge vif.clk)
-  //       tx.result_sum = vif.sum;
-  //       tx.result_overflow = vif.overflow;
-  //       result_ap.write(tx);
-  //       prev_tx.copy(tx);
-
-
-
-
-  //     end
       repeat(4)@(posedge vif.clk); // for reset logic
       @(posedge vif.clk);
       tx = transaction#(4)::type_id::create("tx");
@@ -85,7 +68,7 @@ class monitor extends uvm_monitor;
       @(negedge vif.out_en);
       result_ap.write(tx);
 
-    end
+    end*/
   endtask: run_phase
 endclass: monitor
  

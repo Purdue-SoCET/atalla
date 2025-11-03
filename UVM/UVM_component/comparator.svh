@@ -17,7 +17,7 @@ class comparator extends uvm_scoreboard;
     m_mismatches = 0;
   endfunction
 
-  function void build_phase(uvm_phase phase);
+/*  function void build_phase(uvm_phase phase);
     expected_export = new("expected_export", this);
     actual_export = new("actual_export", this);
     expected_fifo = new("expected_fifo", this);
@@ -79,5 +79,6 @@ class comparator extends uvm_scoreboard;
     uvm_report_info("Comparator", $sformatf("Matches:    %0d", m_matches));
     uvm_report_info("Comparator", $sformatf("Mismatches: %0d", m_mismatches));
   endfunction
+  */
 endclass
  

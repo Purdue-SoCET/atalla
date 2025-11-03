@@ -1,142 +1,90 @@
 `ifndef TRANSACTION_SVH
 `define TRANSACTION_SVH
-
-`include "sys_arr_pkg.vh"
+//`include "sys_arr_pkg.vh"
 import sys_arr_pkg::*;
 
-class transaction #(parameter NUM_BITS = 4) extends uvm_sequence_item; // NUM_BITS not used in this class
-  
+class transaction_elem extends uvm_object;
+  bit                 en;
+  int unsigned        addr;
+  rand bit [DW*N:0]     data;
+  int unsigned        pre_idle_cycles;
+  bit                 en_temp; //For the partial sum in PH_IANDSUM phase //目前先不管partial sum了
+  int unsigned        addr_temp;
+  rand bit [DW*N:0]     data_temp;
+  int unsigned        pre_idle_cycles_temp;
 
-  // Signals
-  bit weight_en;        // Current input bus is for array weights
-  bit input_en;         // Current input bus is for array inputs
-  bit partial_en;       // Memory is sending partial sums
-  bit out_en;
-  bit drained;          // Indicates the systolic array is fully drained
-  bit fifo_has_space;   // Indicates FIFO has space for another GEMM
-  bit [$clog2(N)-1:0] row_in_en;          // Row enable for inputs/weights & partial sums
-  bit [$clog2(N)-1:0] row_ps_en;          // Row enable for partial sums
-  bit [$clog2(N)-1:0] row_out;            // Which row the systolic array is outputing
-  bit [DW*N-1:0] array_in;            // Input data for the array
-  bit [DW*N-1:0] array_in_partials;   // Input partial sums for the array
-  bit [DW*N-1:0] array_output;        // Output data from the array
-  rand bit [N-1:0][DW*N-1:0] input_matrix;  // One NxN matrix for inputs
-  rand bit [N-1:0][DW*N-1:0] weight_matrix;
-  rand bit [N-1:0][DW*N-1:0] partial_matrix;
-  
-  bit [N-1:0][DW*N-1:0] out_matrix;
-
-  `uvm_object_utils_begin(transaction)
-  `uvm_field_int(weight_en, UVM_NOCOMPARE)
-  `uvm_field_int(input_en, UVM_NOCOMPARE)
-  `uvm_field_int(partial_en, UVM_NOCOMPARE)
-  `uvm_field_int(row_in_en, UVM_NOCOMPARE)
-  `uvm_field_int(row_ps_en, UVM_NOCOMPARE)
-  `uvm_field_int(row_out, UVM_NOCOMPARE)
-  `uvm_field_int(drained, UVM_NOCOMPARE)
-  `uvm_field_int(fifo_has_space, UVM_NOCOMPARE)
-  `uvm_field_int(array_in, UVM_NOCOMPARE)
-  `uvm_field_int(array_in_partials, UVM_NOCOMPARE)
-  `uvm_field_int(out_en, UVM_NOCOMPARE)
-  `uvm_field_int(array_output, UVM_NOCOMPARE)
-  `uvm_field_int(input_matrix, UVM_DEFAULT)
-  `uvm_field_int(weight_matrix, UVM_DEFAULT)
-  `uvm_field_int(partial_matrix, UVM_DEFAULT)
-  `uvm_field_int(out_matrix, UVM_DEFAULT)
+  `uvm_object_utils_begin(transaction_elem)
+    `uvm_field_int(en,              UVM_ALL_ON)
+    `uvm_field_int(addr,            UVM_ALL_ON)
+    `uvm_field_int(pre_idle_cycles, UVM_ALL_ON)
+    `uvm_field_int(data,            UVM_ALL_ON)
   `uvm_object_utils_end
-  // add constrains for randomization
 
-  function new(string name = "transaction");
-    super.new(name);
-  endfunction: new
+  function new(string name="transaction_elem"); super.new(name); endfunction
 
-   constraint input_matrix_c {
-    // input_matrix == {16{16'h3c00}}; 
-    input_matrix == {{16'h3c00, 16'h00, 16'h00, 16'h00},
-                     {16'h3c00, 16'h00, 16'h00, 16'h00},
-                     {16'h3c00, 16'h00, 16'h00, 16'h00},
-                     {16'h3c00, 16'h00, 16'h00, 16'h00}
-                    };
-                 
-  // foreach (input_matrix[j]) {
-  // input_matrix[0][0*DW +: DW-1] inside {[15'h0000:15'h7BFF]};
-  // input_matrix[0][1*DW +: DW-1] inside {[15'h0000:15'h7BFF]};
-  // input_matrix[0][2*DW +: DW-1] inside {[15'h0000:15'h7BFF]};
-  // input_matrix[0][3*DW +: DW-1] inside {[15'h0000:15'h7BFF]};
-  //   }
-  }
-
-
-   constraint weight_matrix_c {
-    // weight_matrix == {16{16'h3c00}}; 
-  // foreach (weight_matrix[i]) {
-  //   weight_matrix[i] == 64'h0001000100010001;
-  // }
-  // foreach (weight_matrix[j]) {
-    weight_matrix == 
-                    {{16'h3c00, 16'h3c00, 16'h3c00, 16'h3c00},
-                     {16'h00, 16'h00, 16'h00, 16'h00},
-                     {16'h00, 16'h00, 16'h00, 16'h00},
-                     {16'h00, 16'h00, 16'h00, 16'h00}
-                    };
-  // weight_matrix[0][0*DW +: DW-1] inside {[15'h0000:15'h7BFF]};
-  // weight_matrix[0][1*DW +: DW-1] inside {[15'h0000:15'h7BFF]};
-  // weight_matrix[0][2*DW +: DW-1] inside {[15'h0000:15'h7BFF]};
-  // weight_matrix[0][3*DW +: DW-1] inside {[15'h0000:15'h7BFF]};
-  //   }
-}
-
-// Constraints to try out. 
-  // Also test for Error state - Provide Invalid values and see how DUT reacts
-  // Negative numbers
-  // Max values
-  // Random flags to specify sign
-
-
-     constraint partial_matrix_c {
-      // partial_matrix == {16{16'h3c00}}; // Verify endianness
-  // foreach (partial_matrix[i]) {
-  //   partial_matrix[i] == 64'h0001000100010001;
-  // }
-  // foreach (partial_matrix[j]) {
-  // partial_matrix[0][0*DW +: DW-1] inside {[15'h0000:15'h7BFF]};
-  // partial_matrix[0][1*DW +: DW-1] inside {[15'h0000:15'h7BFF]};
-  // partial_matrix[0][2*DW +: DW-1] inside {[15'h0000:15'h7BFF]};
-  // partial_matrix[0][3*DW +: DW-1] inside {[15'h0000:15'h7BFF]};
-  //   }
-  partial_matrix == {{16'h0, 16'h0, 16'h0, 16'h0},
-                     {16'h0, 16'h0, 16'h0, 16'h0},
-                     {16'h0, 16'h0, 16'h0, 16'h0},
-                     {16'h0, 16'h0, 16'h0, 16'h0}}; 
-}
-
-
-  // if two transactions are the same, return 1
-  // function int input_equal(transaction tx);
-  //   int result;
-  //   if((a == tx.a) && (b == tx.b) && (carry_in == tx.carry_in)) begin
-  //     result = 1;
-  //     return result;
-  //   end
-  //   result = 0;
-  //   return result;
-  // endfunction
 endclass
 
+class transaction extends uvm_sequence_item;
+  //typedef enum {PH_IDLE, PH_INPUT, PH_PSUM, PH_IANDSUM, PH_OUTPUT} phase_e;
+  rand sys_arr_pkg::phase_e phase_kind;
+  rand bit              out_of_order_flag;
+  rand bit              pause_flag;
+  rand int unsigned     pause_number;
+  rand int unsigned     n_empty;
+  transaction_elem      plan[$];
 
-// class seq_it extends transaction;
-//   `uvm_object_utils(seq_it)
+  constraint c_knob {
+    pause_number  inside {[1:16]}; //TODO 参数化
+    n_empty       inside {[0:16]};
+  }
 
-//   function new(string name = "seq_it");
-//     super.new(name);
-//   endfunction: new
+  `uvm_object_utils_begin(transaction)
+    `uvm_field_enum(phase_e, phase_kind, UVM_ALL_ON)
+    `uvm_field_int(out_of_order_flag,       UVM_ALL_ON)
+    `uvm_field_int(pause_flag,              UVM_ALL_ON)
+    `uvm_field_int(pause_number,         UVM_ALL_ON)
+    `uvm_field_int(n_empty,            UVM_ALL_ON)
+  `uvm_object_utils_end
 
-//  constraint input_matrix_c {
-//   foreach (input_matrix[i, j]) {
-//     input_matrix[i][j] == i*4 + j + 1;
-//   }
-// }
+  function new(string name="sa_frame_txn"); super.new(name); endfunction
 
-// endclass: seq_it
+  function void build_plan();
+    plan.delete();
+    for (int a=0; a<=sys_arr_pkg::SIZE; a++) begin
+      transaction_elem e = transaction_elem::type_id::create($sformatf("elem_addr%0d", a));
+      e.en = 1;
+      e.addr = a;
+      e.pre_idle_cycles = 0;
+      assert(e.randomize()with {
+        data == 1;});
+      plan.push_back(e);
+    end
 
-`endif // TRANSACTION_SVH
+    for (int k=0; k<int'(n_empty); k++) begin
+      transaction_elem z = transaction_elem::type_id::create($sformatf("elem_hole%0d", k));
+      z.en = 0;
+      z.addr = 0;
+      z.pre_idle_cycles = 0;
+      void'(z.randomize());
+      plan.push_back(z);
+    end
+
+    if (out_of_order_flag) begin
+      foreach (plan[i]) begin
+        int j = $urandom_range(0, plan.size()-1);
+        transaction_elem t = plan[i]; plan[i] = plan[j]; plan[j] = t;
+      end
+    end
+
+    if (pause_flag && plan.size()>0) begin
+      int pos = $urandom_range(0, plan.size()-1);
+      plan[pos].pre_idle_cycles = pause_number;
+    end
+  endfunction
+
+  function void post_randomize();
+    build_plan();
+  endfunction
+  
+endclass
+`endif

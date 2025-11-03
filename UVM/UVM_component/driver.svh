@@ -21,73 +21,58 @@ class driver extends uvm_driver#(transaction);
 
   task run_phase(uvm_phase phase);
     transaction req_item;
-    // vif.check = 0;
 
     forever begin
       `uvm_info ("Driver", $sformatf ("In Driver"), UVM_NONE)
       seq_item_port.get_next_item(req_item);
-      // DUT_reset();
-      // vif.a = req_item.a;
-      // vif.b = req_item.b;
-      // vif.carry_in = req_item.carry_in;
-      // #(0.2)
-      // @(posedge vif.clk);
 
       ////input matrix
       `uvm_info ("Driver", $sformatf ("Got item"), UVM_NONE)
-      repeat(4)@(posedge vif.clk); // for reset logic
 
       `uvm_info ("Driver", $sformatf ("Wait for reset over"), UVM_NONE)
       
-      ////weight matrix
-      for(int i = 0;i < 4; i++) begin
-      @(posedge vif.clk);
-      vif.weight_en <= 1;
-      vif.row_in_en <= i;
-      vif.array_in <= req_item.weight_matrix[i];
-      
-      end
+      vif.weight_en        <= 0;
+      vif.input_en         <= 0;
+      vif.partial_en       <= 0;
+      vif.row_in_en        <= '0;
+      vif.row_ps_en        <= '0;
+      vif.array_in         <= '0;
+      vif.array_in_partials<= '0;
+      repeat(4)@(posedge vif.clk); // for reset logic
+
+      foreach (req_item.plan[i]) begin
+        transaction_elem e = req_item.plan[i];
+        repeat (e.pre_idle_cycles)
         @(posedge vif.clk);
-      vif.weight_en <= 0;
+        @(posedge vif.clk);
 
-      
-      for(int i = 0;i < 4; i++) begin
+        if(req_item.phase_kind == PH_INPUT) begin
+            vif.weight_en <= e.en;
+            vif.row_in_en <= e.addr;
+            vif.array_in  <= e.data; 
+            vif.input_en  <= 0;
+            vif.partial_en<= 0;
+        end else if (req_item.phase_kind == PH_IANDSUM) begin
+            vif.weight_en <= 0;
+            vif.row_in_en <= e.addr;
+            vif.row_ps_en <= e.addr;
+            vif.array_in  <= e.data; 
+            vif.array_in_partials  <= e.data; 
+            vif.input_en  <= 1;
+            vif.partial_en<= 1;
+        end
+
       @(posedge vif.clk);
-      vif.input_en <= 1;
-      vif.row_in_en <= i;
-      vif.array_in <= req_item.input_matrix[i]; // locally declared, should we get from req_item?
+      vif.weight_en        <= 0;
+      vif.input_en         <= 0;
+      vif.partial_en       <= 0;
+
       end
-      
-      @(posedge vif.clk);
-      vif.input_en <= 0;
 
-
-      
-    
-
-      ////partial matrix
-      for(int i = 0;i < 4; i++) begin
-      @(posedge vif.clk);
-      vif.partial_en <= 1;
-      vif.row_ps_en <= i;
-      vif.array_in_partials <= req_item.partial_matrix[i];
-      
-      end
-      
-      @(posedge vif.clk);
-      vif.partial_en <= 0;
-
-      
-      repeat(4)@(negedge vif.out_en);
+      repeat(30)@(posedge vif.clk);
       seq_item_port.item_done();
-    end
+end
   endtask: run_phase
-
-  // task DUT_reset();
-  //   @(posedge vif.clk);
-  //   vif.n_rst = 1;
-  //   @(posedge vif.clk);
-  // endtask
 
 endclass: driver
  

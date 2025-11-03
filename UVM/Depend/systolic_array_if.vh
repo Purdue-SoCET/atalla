@@ -1,10 +1,8 @@
 `ifndef SYSTOLIC_ARRAY_IF_VH
 `define SYSTOLIC_ARRAY_IF_VH
 
-`include "sys_arr_pkg.vh"
-/* verilator lint_off IMPORTSTAR */
+//`include "sys_arr_pkg.vh"
 import sys_arr_pkg::*;
-/* verilator lint_off IMPORTSTAR */
 
 interface systolic_array_if(input logic clk);
 

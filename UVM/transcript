@@ -1,0 +1,484 @@
+//  Questa Sim-64
+//  Version 2021.4 linux_x86_64 Oct 13 2021
+//
+//  Copyright 1991-2021 Mentor Graphics Corporation
+//  All Rights Reserved.
+//
+//  QuestaSim and its associated documentation contain trade
+//  secrets and commercial or financial information that are the property of
+//  Mentor Graphics Corporation and are privileged, confidential,
+//  and exempt from disclosure under the Freedom of Information Act,
+//  5 U.S.C. Section 552. Furthermore, this information
+//  is prohibited from disclosure under the Trade Secrets Act,
+//  18 U.S.C. Section 1905.
+//
+vsim -suppress 3009 -debugDB -classdebug -assertdebug work.tb_systolic "+UVM_TESTNAME=test" "+UVM_VERBOSITY=UVM_MEDIUM" "+UVM_SEQUENCE_TRACE" 
+Start time: 16:51:27 on Nov 02,2025
+# Loading /tmp/337ta03@ececomp5.ecn.purdue.edu_dpi_172789/linux_x86_64_gcc-7.4.0/export_tramp.so
+** Note: (vsim-8009) Loading existing optimized design _opt
+** Note: (vsim-8785) UVM-aware debugging capabilities will be disabled since no compiled "questa_uvm_pkg" can be found.
+This also means that later if you turn on UVM-aware debugging your debug simulations may have
+different random seeds from your non-debug simulations.
+Loading sv_std.std
+Loading work.sys_arr_pkg(fast)
+Loading work.uvm_pkg(fast)
+Loading work.tb_systolic_sv_unit(fast)
+Loading work.tb_systolic(fast)
+Loading work.systolic_array_if(fast__2)
+Loading work.systolic_array(fast)
+Loading work.systolic_array_control_unit_if(fast__1)
+Loading work.sysarr_control_unit_sv_unit(fast)
+Loading work.sysarr_control_unit(fast)
+Loading work.sysarr_FIFO_sv_unit(fast)
+Loading work.sysarr_FIFO(fast)
+Loading work.sysarr_MAC_sv_unit(fast)
+Loading work.sysarr_MAC(fast)
+Loading work.MUL_step1(fast)
+Loading work.mul_multicycle(fast)
+Loading work.adder_5b(fast)
+Loading work.ADD_step1(fast)
+Loading work.ADD_step2(fast)
+Loading work.u_to_s(fast)
+Loading work.adder_13b(fast)
+Loading work.s_to_u(fast)
+Loading work.ADD_step3(fast)
+Loading work.left_shift(fast)
+Loading work.sysarr_add_sv_unit(fast)
+Loading work.sysarr_add(fast)
+Loading work.sysarr_OUT_FIFO_sv_unit(fast)
+Loading work.sysarr_OUT_FIFO(fast)
+Loading work.systolic_array_if(fast)
+Loading work.systolic_array_MAC_if(fast__1)
+Loading work.systolic_array_add_if(fast__1)
+Loading work.systolic_array_FIFO_if(fast__1)
+Loading work.systolic_array_OUT_FIFO_if(fast__1)
+** Warning: (vsim-3015) [PCDPC] - Port size (1) does not match connection size (32) for port 'ovf_in'. The port definition is at: Source/ADD_step3.sv(22).
+   Time: 0 ps  Iteration: 0  Instance: /tb_systolic/systolic/genblk3[0]/genblk1[0]/mac_inst/add3 File: Source/sysarr_MAC.sv Line: 308
+** Warning: (vsim-3015) [PCDPC] - Port size (1) does not match connection size (32) for port 'unf_in'. The port definition is at: Source/ADD_step3.sv(23).
+   Time: 0 ps  Iteration: 0  Instance: /tb_systolic/systolic/genblk3[0]/genblk1[0]/mac_inst/add3 File: Source/sysarr_MAC.sv Line: 308
+** Warning: (vsim-3015) [PCDPC] - Port size (1) does not match connection size (32) for port 'dz'. The port definition is at: Source/ADD_step3.sv(24).
+   Time: 0 ps  Iteration: 0  Instance: /tb_systolic/systolic/genblk3[0]/genblk1[0]/mac_inst/add3 File: Source/sysarr_MAC.sv Line: 308
+** Warning: (vsim-3015) [PCDPC] - Port size (1) does not match connection size (32) for port 'inv'. The port definition is at: Source/ADD_step3.sv(25).
+   Time: 0 ps  Iteration: 0  Instance: /tb_systolic/systolic/genblk3[0]/genblk1[0]/mac_inst/add3 File: Source/sysarr_MAC.sv Line: 308
+** Warning: (vsim-3015) [PCDPC] - Port size (1) does not match connection size (32) for port 'ovf_in'. The port definition is at: Source/ADD_step3.sv(22).
+   Time: 0 ps  Iteration: 0  Instance: /tb_systolic/systolic/genblk3[0]/genblk1[1]/mac_inst/add3 File: Source/sysarr_MAC.sv Line: 308
+** Warning: (vsim-3015) [PCDPC] - Port size (1) does not match connection size (32) for port 'unf_in'. The port definition is at: Source/ADD_step3.sv(23).
+   Time: 0 ps  Iteration: 0  Instance: /tb_systolic/systolic/genblk3[0]/genblk1[1]/mac_inst/add3 File: Source/sysarr_MAC.sv Line: 308
+** Warning: (vsim-3015) [PCDPC] - Port size (1) does not match connection size (32) for port 'dz'. The port definition is at: Source/ADD_step3.sv(24).
+   Time: 0 ps  Iteration: 0  Instance: /tb_systolic/systolic/genblk3[0]/genblk1[1]/mac_inst/add3 File: Source/sysarr_MAC.sv Line: 308
+** Warning: (vsim-3015) [PCDPC] - Port size (1) does not match connection size (32) for port 'inv'. The port definition is at: Source/ADD_step3.sv(25).
+   Time: 0 ps  Iteration: 0  Instance: /tb_systolic/systolic/genblk3[0]/genblk1[1]/mac_inst/add3 File: Source/sysarr_MAC.sv Line: 308
+** Warning: (vsim-3015) [PCDPC] - Port size (1) does not match connection size (32) for port 'ovf_in'. The port definition is at: Source/ADD_step3.sv(22).
+   Time: 0 ps  Iteration: 0  Instance: /tb_systolic/systolic/genblk3[0]/genblk1[2]/mac_inst/add3 File: Source/sysarr_MAC.sv Line: 308
+** Warning: (vsim-3015) [PCDPC] - Port size (1) does not match connection size (32) for port 'unf_in'. The port definition is at: Source/ADD_step3.sv(23).
+   Time: 0 ps  Iteration: 0  Instance: /tb_systolic/systolic/genblk3[0]/genblk1[2]/mac_inst/add3 File: Source/sysarr_MAC.sv Line: 308
+** Warning: (vsim-3015) [PCDPC] - Port size (1) does not match connection size (32) for port 'dz'. The port definition is at: Source/ADD_step3.sv(24).
+   Time: 0 ps  Iteration: 0  Instance: /tb_systolic/systolic/genblk3[0]/genblk1[2]/mac_inst/add3 File: Source/sysarr_MAC.sv Line: 308
+** Warning: (vsim-3015) [PCDPC] - Port size (1) does not match connection size (32) for port 'inv'. The port definition is at: Source/ADD_step3.sv(25).
+   Time: 0 ps  Iteration: 0  Instance: /tb_systolic/systolic/genblk3[0]/genblk1[2]/mac_inst/add3 File: Source/sysarr_MAC.sv Line: 308
+** Warning: (vsim-3015) [PCDPC] - Port size (1) does not match connection size (32) for port 'ovf_in'. The port definition is at: Source/ADD_step3.sv(22).
+   Time: 0 ps  Iteration: 0  Instance: /tb_systolic/systolic/genblk3[0]/genblk1[3]/mac_inst/add3 File: Source/sysarr_MAC.sv Line: 308
+** Warning: (vsim-3015) [PCDPC] - Port size (1) does not match connection size (32) for port 'unf_in'. The port definition is at: Source/ADD_step3.sv(23).
+   Time: 0 ps  Iteration: 0  Instance: /tb_systolic/systolic/genblk3[0]/genblk1[3]/mac_inst/add3 File: Source/sysarr_MAC.sv Line: 308
+** Warning: (vsim-3015) [PCDPC] - Port size (1) does not match connection size (32) for port 'dz'. The port definition is at: Source/ADD_step3.sv(24).
+   Time: 0 ps  Iteration: 0  Instance: /tb_systolic/systolic/genblk3[0]/genblk1[3]/mac_inst/add3 File: Source/sysarr_MAC.sv Line: 308
+** Warning: (vsim-3015) [PCDPC] - Port size (1) does not match connection size (32) for port 'inv'. The port definition is at: Source/ADD_step3.sv(25).
+   Time: 0 ps  Iteration: 0  Instance: /tb_systolic/systolic/genblk3[0]/genblk1[3]/mac_inst/add3 File: Source/sysarr_MAC.sv Line: 308
+** Warning: (vsim-3015) [PCDPC] - Port size (1) does not match connection size (32) for port 'ovf_in'. The port definition is at: Source/ADD_step3.sv(22).
+   Time: 0 ps  Iteration: 0  Instance: /tb_systolic/systolic/genblk3[1]/genblk1[0]/mac_inst/add3 File: Source/sysarr_MAC.sv Line: 308
+** Warning: (vsim-3015) [PCDPC] - Port size (1) does not match connection size (32) for port 'unf_in'. The port definition is at: Source/ADD_step3.sv(23).
+   Time: 0 ps  Iteration: 0  Instance: /tb_systolic/systolic/genblk3[1]/genblk1[0]/mac_inst/add3 File: Source/sysarr_MAC.sv Line: 308
+** Warning: (vsim-3015) [PCDPC] - Port size (1) does not match connection size (32) for port 'dz'. The port definition is at: Source/ADD_step3.sv(24).
+   Time: 0 ps  Iteration: 0  Instance: /tb_systolic/systolic/genblk3[1]/genblk1[0]/mac_inst/add3 File: Source/sysarr_MAC.sv Line: 308
+** Warning: (vsim-3015) [PCDPC] - Port size (1) does not match connection size (32) for port 'inv'. The port definition is at: Source/ADD_step3.sv(25).
+   Time: 0 ps  Iteration: 0  Instance: /tb_systolic/systolic/genblk3[1]/genblk1[0]/mac_inst/add3 File: Source/sysarr_MAC.sv Line: 308
+** Warning: (vsim-3015) [PCDPC] - Port size (1) does not match connection size (32) for port 'ovf_in'. The port definition is at: Source/ADD_step3.sv(22).
+   Time: 0 ps  Iteration: 0  Instance: /tb_systolic/systolic/genblk3[1]/genblk1[1]/mac_inst/add3 File: Source/sysarr_MAC.sv Line: 308
+** Warning: (vsim-3015) [PCDPC] - Port size (1) does not match connection size (32) for port 'unf_in'. The port definition is at: Source/ADD_step3.sv(23).
+   Time: 0 ps  Iteration: 0  Instance: /tb_systolic/systolic/genblk3[1]/genblk1[1]/mac_inst/add3 File: Source/sysarr_MAC.sv Line: 308
+** Warning: (vsim-3015) [PCDPC] - Port size (1) does not match connection size (32) for port 'dz'. The port definition is at: Source/ADD_step3.sv(24).
+   Time: 0 ps  Iteration: 0  Instance: /tb_systolic/systolic/genblk3[1]/genblk1[1]/mac_inst/add3 File: Source/sysarr_MAC.sv Line: 308
+** Warning: (vsim-3015) [PCDPC] - Port size (1) does not match connection size (32) for port 'inv'. The port definition is at: Source/ADD_step3.sv(25).
+   Time: 0 ps  Iteration: 0  Instance: /tb_systolic/systolic/genblk3[1]/genblk1[1]/mac_inst/add3 File: Source/sysarr_MAC.sv Line: 308
+** Warning: (vsim-3015) [PCDPC] - Port size (1) does not match connection size (32) for port 'ovf_in'. The port definition is at: Source/ADD_step3.sv(22).
+   Time: 0 ps  Iteration: 0  Instance: /tb_systolic/systolic/genblk3[1]/genblk1[2]/mac_inst/add3 File: Source/sysarr_MAC.sv Line: 308
+** Warning: (vsim-3015) [PCDPC] - Port size (1) does not match connection size (32) for port 'unf_in'. The port definition is at: Source/ADD_step3.sv(23).
+   Time: 0 ps  Iteration: 0  Instance: /tb_systolic/systolic/genblk3[1]/genblk1[2]/mac_inst/add3 File: Source/sysarr_MAC.sv Line: 308
+** Warning: (vsim-3015) [PCDPC] - Port size (1) does not match connection size (32) for port 'dz'. The port definition is at: Source/ADD_step3.sv(24).
+   Time: 0 ps  Iteration: 0  Instance: /tb_systolic/systolic/genblk3[1]/genblk1[2]/mac_inst/add3 File: Source/sysarr_MAC.sv Line: 308
+** Warning: (vsim-3015) [PCDPC] - Port size (1) does not match connection size (32) for port 'inv'. The port definition is at: Source/ADD_step3.sv(25).
+   Time: 0 ps  Iteration: 0  Instance: /tb_systolic/systolic/genblk3[1]/genblk1[2]/mac_inst/add3 File: Source/sysarr_MAC.sv Line: 308
+** Warning: (vsim-3015) [PCDPC] - Port size (1) does not match connection size (32) for port 'ovf_in'. The port definition is at: Source/ADD_step3.sv(22).
+   Time: 0 ps  Iteration: 0  Instance: /tb_systolic/systolic/genblk3[1]/genblk1[3]/mac_inst/add3 File: Source/sysarr_MAC.sv Line: 308
+** Warning: (vsim-3015) [PCDPC] - Port size (1) does not match connection size (32) for port 'unf_in'. The port definition is at: Source/ADD_step3.sv(23).
+   Time: 0 ps  Iteration: 0  Instance: /tb_systolic/systolic/genblk3[1]/genblk1[3]/mac_inst/add3 File: Source/sysarr_MAC.sv Line: 308
+** Warning: (vsim-3015) [PCDPC] - Port size (1) does not match connection size (32) for port 'dz'. The port definition is at: Source/ADD_step3.sv(24).
+   Time: 0 ps  Iteration: 0  Instance: /tb_systolic/systolic/genblk3[1]/genblk1[3]/mac_inst/add3 File: Source/sysarr_MAC.sv Line: 308
+** Warning: (vsim-3015) [PCDPC] - Port size (1) does not match connection size (32) for port 'inv'. The port definition is at: Source/ADD_step3.sv(25).
+   Time: 0 ps  Iteration: 0  Instance: /tb_systolic/systolic/genblk3[1]/genblk1[3]/mac_inst/add3 File: Source/sysarr_MAC.sv Line: 308
+** Warning: (vsim-3015) [PCDPC] - Port size (1) does not match connection size (32) for port 'ovf_in'. The port definition is at: Source/ADD_step3.sv(22).
+   Time: 0 ps  Iteration: 0  Instance: /tb_systolic/systolic/genblk3[2]/genblk1[0]/mac_inst/add3 File: Source/sysarr_MAC.sv Line: 308
+** Warning: (vsim-3015) [PCDPC] - Port size (1) does not match connection size (32) for port 'unf_in'. The port definition is at: Source/ADD_step3.sv(23).
+   Time: 0 ps  Iteration: 0  Instance: /tb_systolic/systolic/genblk3[2]/genblk1[0]/mac_inst/add3 File: Source/sysarr_MAC.sv Line: 308
+** Warning: (vsim-3015) [PCDPC] - Port size (1) does not match connection size (32) for port 'dz'. The port definition is at: Source/ADD_step3.sv(24).
+   Time: 0 ps  Iteration: 0  Instance: /tb_systolic/systolic/genblk3[2]/genblk1[0]/mac_inst/add3 File: Source/sysarr_MAC.sv Line: 308
+** Warning: (vsim-3015) [PCDPC] - Port size (1) does not match connection size (32) for port 'inv'. The port definition is at: Source/ADD_step3.sv(25).
+   Time: 0 ps  Iteration: 0  Instance: /tb_systolic/systolic/genblk3[2]/genblk1[0]/mac_inst/add3 File: Source/sysarr_MAC.sv Line: 308
+** Warning: (vsim-3015) [PCDPC] - Port size (1) does not match connection size (32) for port 'ovf_in'. The port definition is at: Source/ADD_step3.sv(22).
+   Time: 0 ps  Iteration: 0  Instance: /tb_systolic/systolic/genblk3[2]/genblk1[1]/mac_inst/add3 File: Source/sysarr_MAC.sv Line: 308
+** Warning: (vsim-3015) [PCDPC] - Port size (1) does not match connection size (32) for port 'unf_in'. The port definition is at: Source/ADD_step3.sv(23).
+   Time: 0 ps  Iteration: 0  Instance: /tb_systolic/systolic/genblk3[2]/genblk1[1]/mac_inst/add3 File: Source/sysarr_MAC.sv Line: 308
+** Warning: (vsim-3015) [PCDPC] - Port size (1) does not match connection size (32) for port 'dz'. The port definition is at: Source/ADD_step3.sv(24).
+   Time: 0 ps  Iteration: 0  Instance: /tb_systolic/systolic/genblk3[2]/genblk1[1]/mac_inst/add3 File: Source/sysarr_MAC.sv Line: 308
+** Warning: (vsim-3015) [PCDPC] - Port size (1) does not match connection size (32) for port 'inv'. The port definition is at: Source/ADD_step3.sv(25).
+   Time: 0 ps  Iteration: 0  Instance: /tb_systolic/systolic/genblk3[2]/genblk1[1]/mac_inst/add3 File: Source/sysarr_MAC.sv Line: 308
+** Warning: (vsim-3015) [PCDPC] - Port size (1) does not match connection size (32) for port 'ovf_in'. The port definition is at: Source/ADD_step3.sv(22).
+   Time: 0 ps  Iteration: 0  Instance: /tb_systolic/systolic/genblk3[2]/genblk1[2]/mac_inst/add3 File: Source/sysarr_MAC.sv Line: 308
+** Warning: (vsim-3015) [PCDPC] - Port size (1) does not match connection size (32) for port 'unf_in'. The port definition is at: Source/ADD_step3.sv(23).
+   Time: 0 ps  Iteration: 0  Instance: /tb_systolic/systolic/genblk3[2]/genblk1[2]/mac_inst/add3 File: Source/sysarr_MAC.sv Line: 308
+** Warning: (vsim-3015) [PCDPC] - Port size (1) does not match connection size (32) for port 'dz'. The port definition is at: Source/ADD_step3.sv(24).
+   Time: 0 ps  Iteration: 0  Instance: /tb_systolic/systolic/genblk3[2]/genblk1[2]/mac_inst/add3 File: Source/sysarr_MAC.sv Line: 308
+** Warning: (vsim-3015) [PCDPC] - Port size (1) does not match connection size (32) for port 'inv'. The port definition is at: Source/ADD_step3.sv(25).
+   Time: 0 ps  Iteration: 0  Instance: /tb_systolic/systolic/genblk3[2]/genblk1[2]/mac_inst/add3 File: Source/sysarr_MAC.sv Line: 308
+** Warning: (vsim-3015) [PCDPC] - Port size (1) does not match connection size (32) for port 'ovf_in'. The port definition is at: Source/ADD_step3.sv(22).
+   Time: 0 ps  Iteration: 0  Instance: /tb_systolic/systolic/genblk3[2]/genblk1[3]/mac_inst/add3 File: Source/sysarr_MAC.sv Line: 308
+** Warning: (vsim-3015) [PCDPC] - Port size (1) does not match connection size (32) for port 'unf_in'. The port definition is at: Source/ADD_step3.sv(23).
+   Time: 0 ps  Iteration: 0  Instance: /tb_systolic/systolic/genblk3[2]/genblk1[3]/mac_inst/add3 File: Source/sysarr_MAC.sv Line: 308
+** Warning: (vsim-3015) [PCDPC] - Port size (1) does not match connection size (32) for port 'dz'. The port definition is at: Source/ADD_step3.sv(24).
+   Time: 0 ps  Iteration: 0  Instance: /tb_systolic/systolic/genblk3[2]/genblk1[3]/mac_inst/add3 File: Source/sysarr_MAC.sv Line: 308
+** Warning: (vsim-3015) [PCDPC] - Port size (1) does not match connection size (32) for port 'inv'. The port definition is at: Source/ADD_step3.sv(25).
+   Time: 0 ps  Iteration: 0  Instance: /tb_systolic/systolic/genblk3[2]/genblk1[3]/mac_inst/add3 File: Source/sysarr_MAC.sv Line: 308
+** Warning: (vsim-3015) [PCDPC] - Port size (1) does not match connection size (32) for port 'ovf_in'. The port definition is at: Source/ADD_step3.sv(22).
+   Time: 0 ps  Iteration: 0  Instance: /tb_systolic/systolic/genblk3[3]/genblk1[0]/mac_inst/add3 File: Source/sysarr_MAC.sv Line: 308
+** Warning: (vsim-3015) [PCDPC] - Port size (1) does not match connection size (32) for port 'unf_in'. The port definition is at: Source/ADD_step3.sv(23).
+   Time: 0 ps  Iteration: 0  Instance: /tb_systolic/systolic/genblk3[3]/genblk1[0]/mac_inst/add3 File: Source/sysarr_MAC.sv Line: 308
+** Warning: (vsim-3015) [PCDPC] - Port size (1) does not match connection size (32) for port 'dz'. The port definition is at: Source/ADD_step3.sv(24).
+   Time: 0 ps  Iteration: 0  Instance: /tb_systolic/systolic/genblk3[3]/genblk1[0]/mac_inst/add3 File: Source/sysarr_MAC.sv Line: 308
+** Warning: (vsim-3015) [PCDPC] - Port size (1) does not match connection size (32) for port 'inv'. The port definition is at: Source/ADD_step3.sv(25).
+   Time: 0 ps  Iteration: 0  Instance: /tb_systolic/systolic/genblk3[3]/genblk1[0]/mac_inst/add3 File: Source/sysarr_MAC.sv Line: 308
+** Warning: (vsim-3015) [PCDPC] - Port size (1) does not match connection size (32) for port 'ovf_in'. The port definition is at: Source/ADD_step3.sv(22).
+   Time: 0 ps  Iteration: 0  Instance: /tb_systolic/systolic/genblk3[3]/genblk1[1]/mac_inst/add3 File: Source/sysarr_MAC.sv Line: 308
+** Warning: (vsim-3015) [PCDPC] - Port size (1) does not match connection size (32) for port 'unf_in'. The port definition is at: Source/ADD_step3.sv(23).
+   Time: 0 ps  Iteration: 0  Instance: /tb_systolic/systolic/genblk3[3]/genblk1[1]/mac_inst/add3 File: Source/sysarr_MAC.sv Line: 308
+** Warning: (vsim-3015) [PCDPC] - Port size (1) does not match connection size (32) for port 'dz'. The port definition is at: Source/ADD_step3.sv(24).
+   Time: 0 ps  Iteration: 0  Instance: /tb_systolic/systolic/genblk3[3]/genblk1[1]/mac_inst/add3 File: Source/sysarr_MAC.sv Line: 308
+** Warning: (vsim-3015) [PCDPC] - Port size (1) does not match connection size (32) for port 'inv'. The port definition is at: Source/ADD_step3.sv(25).
+   Time: 0 ps  Iteration: 0  Instance: /tb_systolic/systolic/genblk3[3]/genblk1[1]/mac_inst/add3 File: Source/sysarr_MAC.sv Line: 308
+** Warning: (vsim-3015) [PCDPC] - Port size (1) does not match connection size (32) for port 'ovf_in'. The port definition is at: Source/ADD_step3.sv(22).
+   Time: 0 ps  Iteration: 0  Instance: /tb_systolic/systolic/genblk3[3]/genblk1[2]/mac_inst/add3 File: Source/sysarr_MAC.sv Line: 308
+** Warning: (vsim-3015) [PCDPC] - Port size (1) does not match connection size (32) for port 'unf_in'. The port definition is at: Source/ADD_step3.sv(23).
+   Time: 0 ps  Iteration: 0  Instance: /tb_systolic/systolic/genblk3[3]/genblk1[2]/mac_inst/add3 File: Source/sysarr_MAC.sv Line: 308
+** Warning: (vsim-3015) [PCDPC] - Port size (1) does not match connection size (32) for port 'dz'. The port definition is at: Source/ADD_step3.sv(24).
+   Time: 0 ps  Iteration: 0  Instance: /tb_systolic/systolic/genblk3[3]/genblk1[2]/mac_inst/add3 File: Source/sysarr_MAC.sv Line: 308
+** Warning: (vsim-3015) [PCDPC] - Port size (1) does not match connection size (32) for port 'inv'. The port definition is at: Source/ADD_step3.sv(25).
+   Time: 0 ps  Iteration: 0  Instance: /tb_systolic/systolic/genblk3[3]/genblk1[2]/mac_inst/add3 File: Source/sysarr_MAC.sv Line: 308
+** Warning: (vsim-3015) [PCDPC] - Port size (1) does not match connection size (32) for port 'ovf_in'. The port definition is at: Source/ADD_step3.sv(22).
+   Time: 0 ps  Iteration: 0  Instance: /tb_systolic/systolic/genblk3[3]/genblk1[3]/mac_inst/add3 File: Source/sysarr_MAC.sv Line: 308
+** Warning: (vsim-3015) [PCDPC] - Port size (1) does not match connection size (32) for port 'unf_in'. The port definition is at: Source/ADD_step3.sv(23).
+   Time: 0 ps  Iteration: 0  Instance: /tb_systolic/systolic/genblk3[3]/genblk1[3]/mac_inst/add3 File: Source/sysarr_MAC.sv Line: 308
+** Warning: (vsim-3015) [PCDPC] - Port size (1) does not match connection size (32) for port 'dz'. The port definition is at: Source/ADD_step3.sv(24).
+   Time: 0 ps  Iteration: 0  Instance: /tb_systolic/systolic/genblk3[3]/genblk1[3]/mac_inst/add3 File: Source/sysarr_MAC.sv Line: 308
+** Warning: (vsim-3015) [PCDPC] - Port size (1) does not match connection size (32) for port 'inv'. The port definition is at: Source/ADD_step3.sv(25).
+   Time: 0 ps  Iteration: 0  Instance: /tb_systolic/systolic/genblk3[3]/genblk1[3]/mac_inst/add3 File: Source/sysarr_MAC.sv Line: 308
+** Warning: (vsim-3015) [PCDPC] - Port size (1) does not match connection size (32) for port 'ovf_in'. The port definition is at: Source/ADD_step3.sv(22).
+   Time: 0 ps  Iteration: 0  Instance: /tb_systolic/systolic/genblk4[0]/add_inst/add3 File: Source/sysarr_add.sv Line: 131
+** Warning: (vsim-3015) [PCDPC] - Port size (1) does not match connection size (32) for port 'unf_in'. The port definition is at: Source/ADD_step3.sv(23).
+   Time: 0 ps  Iteration: 0  Instance: /tb_systolic/systolic/genblk4[0]/add_inst/add3 File: Source/sysarr_add.sv Line: 131
+** Warning: (vsim-3015) [PCDPC] - Port size (1) does not match connection size (32) for port 'dz'. The port definition is at: Source/ADD_step3.sv(24).
+   Time: 0 ps  Iteration: 0  Instance: /tb_systolic/systolic/genblk4[0]/add_inst/add3 File: Source/sysarr_add.sv Line: 131
+** Warning: (vsim-3015) [PCDPC] - Port size (1) does not match connection size (32) for port 'inv'. The port definition is at: Source/ADD_step3.sv(25).
+   Time: 0 ps  Iteration: 0  Instance: /tb_systolic/systolic/genblk4[0]/add_inst/add3 File: Source/sysarr_add.sv Line: 131
+** Warning: (vsim-3015) [PCDPC] - Port size (1) does not match connection size (32) for port 'ovf_in'. The port definition is at: Source/ADD_step3.sv(22).
+   Time: 0 ps  Iteration: 0  Instance: /tb_systolic/systolic/genblk4[1]/add_inst/add3 File: Source/sysarr_add.sv Line: 131
+** Warning: (vsim-3015) [PCDPC] - Port size (1) does not match connection size (32) for port 'unf_in'. The port definition is at: Source/ADD_step3.sv(23).
+   Time: 0 ps  Iteration: 0  Instance: /tb_systolic/systolic/genblk4[1]/add_inst/add3 File: Source/sysarr_add.sv Line: 131
+** Warning: (vsim-3015) [PCDPC] - Port size (1) does not match connection size (32) for port 'dz'. The port definition is at: Source/ADD_step3.sv(24).
+   Time: 0 ps  Iteration: 0  Instance: /tb_systolic/systolic/genblk4[1]/add_inst/add3 File: Source/sysarr_add.sv Line: 131
+** Warning: (vsim-3015) [PCDPC] - Port size (1) does not match connection size (32) for port 'inv'. The port definition is at: Source/ADD_step3.sv(25).
+   Time: 0 ps  Iteration: 0  Instance: /tb_systolic/systolic/genblk4[1]/add_inst/add3 File: Source/sysarr_add.sv Line: 131
+** Warning: (vsim-3015) [PCDPC] - Port size (1) does not match connection size (32) for port 'ovf_in'. The port definition is at: Source/ADD_step3.sv(22).
+   Time: 0 ps  Iteration: 0  Instance: /tb_systolic/systolic/genblk4[2]/add_inst/add3 File: Source/sysarr_add.sv Line: 131
+** Warning: (vsim-3015) [PCDPC] - Port size (1) does not match connection size (32) for port 'unf_in'. The port definition is at: Source/ADD_step3.sv(23).
+   Time: 0 ps  Iteration: 0  Instance: /tb_systolic/systolic/genblk4[2]/add_inst/add3 File: Source/sysarr_add.sv Line: 131
+** Warning: (vsim-3015) [PCDPC] - Port size (1) does not match connection size (32) for port 'dz'. The port definition is at: Source/ADD_step3.sv(24).
+   Time: 0 ps  Iteration: 0  Instance: /tb_systolic/systolic/genblk4[2]/add_inst/add3 File: Source/sysarr_add.sv Line: 131
+** Warning: (vsim-3015) [PCDPC] - Port size (1) does not match connection size (32) for port 'inv'. The port definition is at: Source/ADD_step3.sv(25).
+   Time: 0 ps  Iteration: 0  Instance: /tb_systolic/systolic/genblk4[2]/add_inst/add3 File: Source/sysarr_add.sv Line: 131
+** Warning: (vsim-3015) [PCDPC] - Port size (1) does not match connection size (32) for port 'ovf_in'. The port definition is at: Source/ADD_step3.sv(22).
+   Time: 0 ps  Iteration: 0  Instance: /tb_systolic/systolic/genblk4[3]/add_inst/add3 File: Source/sysarr_add.sv Line: 131
+** Warning: (vsim-3015) [PCDPC] - Port size (1) does not match connection size (32) for port 'unf_in'. The port definition is at: Source/ADD_step3.sv(23).
+   Time: 0 ps  Iteration: 0  Instance: /tb_systolic/systolic/genblk4[3]/add_inst/add3 File: Source/sysarr_add.sv Line: 131
+** Warning: (vsim-3015) [PCDPC] - Port size (1) does not match connection size (32) for port 'dz'. The port definition is at: Source/ADD_step3.sv(24).
+   Time: 0 ps  Iteration: 0  Instance: /tb_systolic/systolic/genblk4[3]/add_inst/add3 File: Source/sysarr_add.sv Line: 131
+** Warning: (vsim-3015) [PCDPC] - Port size (1) does not match connection size (32) for port 'inv'. The port definition is at: Source/ADD_step3.sv(25).
+   Time: 0 ps  Iteration: 0  Instance: /tb_systolic/systolic/genblk4[3]/add_inst/add3 File: Source/sysarr_add.sv Line: 131
+Compiling /tmp/337ta03@ececomp5.ecn.purdue.edu_dpi_172789/linux_x86_64_gcc-7.4.0/exportwrapper.c
+# Loading /tmp/337ta03@ececomp5.ecn.purdue.edu_dpi_172789/linux_x86_64_gcc-7.4.0/vsim_auto_compile.so
+** Note: (vsim-8716) Reusing existing debug database vsim.dbg.
+add wave -position insertpoint sim:/tb_systolic/systolic_if/*
+add wave -position insertpoint sim:/tb_systolic/systolic/*
+add wave -position insertpoint sim:/tb_systolic/systolic/control_unit_if/*
+restart
+** Note: (vsim-12125) Error and warning message counts have been reset to '0' because of 'restart'.
+** Note: (vsim-8009) Loading existing optimized design _opt
+Loading work.sys_arr_pkg(fast)
+Loading work.uvm_pkg(fast)
+Loading work.tb_systolic_sv_unit(fast)
+Loading work.tb_systolic(fast)
+Loading work.systolic_array_if(fast__2)
+Loading work.systolic_array(fast)
+Loading work.systolic_array_control_unit_if(fast__1)
+Loading work.sysarr_control_unit_sv_unit(fast)
+Loading work.sysarr_control_unit(fast)
+Loading work.sysarr_FIFO_sv_unit(fast)
+Loading work.sysarr_FIFO(fast)
+Loading work.sysarr_MAC_sv_unit(fast)
+Loading work.sysarr_MAC(fast)
+Loading work.MUL_step1(fast)
+Loading work.mul_multicycle(fast)
+Loading work.adder_5b(fast)
+Loading work.ADD_step1(fast)
+Loading work.ADD_step2(fast)
+Loading work.u_to_s(fast)
+Loading work.adder_13b(fast)
+Loading work.s_to_u(fast)
+Loading work.ADD_step3(fast)
+Loading work.left_shift(fast)
+Loading work.sysarr_add_sv_unit(fast)
+Loading work.sysarr_add(fast)
+Loading work.sysarr_OUT_FIFO_sv_unit(fast)
+Loading work.sysarr_OUT_FIFO(fast)
+Loading work.systolic_array_if(fast)
+Loading work.systolic_array_MAC_if(fast__1)
+Loading work.systolic_array_add_if(fast__1)
+Loading work.systolic_array_FIFO_if(fast__1)
+Loading work.systolic_array_OUT_FIFO_if(fast__1)
+** Warning: (vsim-3015) [PCDPC] - Port size (1) does not match connection size (32) for port 'ovf_in'. The port definition is at: Source/ADD_step3.sv(22).
+   Time: 0 ps  Iteration: 0  Instance: /tb_systolic/systolic/genblk3[0]/genblk1[0]/mac_inst/add3 File: Source/sysarr_MAC.sv Line: 308
+** Warning: (vsim-3015) [PCDPC] - Port size (1) does not match connection size (32) for port 'unf_in'. The port definition is at: Source/ADD_step3.sv(23).
+   Time: 0 ps  Iteration: 0  Instance: /tb_systolic/systolic/genblk3[0]/genblk1[0]/mac_inst/add3 File: Source/sysarr_MAC.sv Line: 308
+** Warning: (vsim-3015) [PCDPC] - Port size (1) does not match connection size (32) for port 'dz'. The port definition is at: Source/ADD_step3.sv(24).
+   Time: 0 ps  Iteration: 0  Instance: /tb_systolic/systolic/genblk3[0]/genblk1[0]/mac_inst/add3 File: Source/sysarr_MAC.sv Line: 308
+** Warning: (vsim-3015) [PCDPC] - Port size (1) does not match connection size (32) for port 'inv'. The port definition is at: Source/ADD_step3.sv(25).
+   Time: 0 ps  Iteration: 0  Instance: /tb_systolic/systolic/genblk3[0]/genblk1[0]/mac_inst/add3 File: Source/sysarr_MAC.sv Line: 308
+** Warning: (vsim-3015) [PCDPC] - Port size (1) does not match connection size (32) for port 'ovf_in'. The port definition is at: Source/ADD_step3.sv(22).
+   Time: 0 ps  Iteration: 0  Instance: /tb_systolic/systolic/genblk3[0]/genblk1[1]/mac_inst/add3 File: Source/sysarr_MAC.sv Line: 308
+** Warning: (vsim-3015) [PCDPC] - Port size (1) does not match connection size (32) for port 'unf_in'. The port definition is at: Source/ADD_step3.sv(23).
+   Time: 0 ps  Iteration: 0  Instance: /tb_systolic/systolic/genblk3[0]/genblk1[1]/mac_inst/add3 File: Source/sysarr_MAC.sv Line: 308
+** Warning: (vsim-3015) [PCDPC] - Port size (1) does not match connection size (32) for port 'dz'. The port definition is at: Source/ADD_step3.sv(24).
+   Time: 0 ps  Iteration: 0  Instance: /tb_systolic/systolic/genblk3[0]/genblk1[1]/mac_inst/add3 File: Source/sysarr_MAC.sv Line: 308
+** Warning: (vsim-3015) [PCDPC] - Port size (1) does not match connection size (32) for port 'inv'. The port definition is at: Source/ADD_step3.sv(25).
+   Time: 0 ps  Iteration: 0  Instance: /tb_systolic/systolic/genblk3[0]/genblk1[1]/mac_inst/add3 File: Source/sysarr_MAC.sv Line: 308
+** Warning: (vsim-3015) [PCDPC] - Port size (1) does not match connection size (32) for port 'ovf_in'. The port definition is at: Source/ADD_step3.sv(22).
+   Time: 0 ps  Iteration: 0  Instance: /tb_systolic/systolic/genblk3[0]/genblk1[2]/mac_inst/add3 File: Source/sysarr_MAC.sv Line: 308
+** Warning: (vsim-3015) [PCDPC] - Port size (1) does not match connection size (32) for port 'unf_in'. The port definition is at: Source/ADD_step3.sv(23).
+   Time: 0 ps  Iteration: 0  Instance: /tb_systolic/systolic/genblk3[0]/genblk1[2]/mac_inst/add3 File: Source/sysarr_MAC.sv Line: 308
+** Warning: (vsim-3015) [PCDPC] - Port size (1) does not match connection size (32) for port 'dz'. The port definition is at: Source/ADD_step3.sv(24).
+   Time: 0 ps  Iteration: 0  Instance: /tb_systolic/systolic/genblk3[0]/genblk1[2]/mac_inst/add3 File: Source/sysarr_MAC.sv Line: 308
+** Warning: (vsim-3015) [PCDPC] - Port size (1) does not match connection size (32) for port 'inv'. The port definition is at: Source/ADD_step3.sv(25).
+   Time: 0 ps  Iteration: 0  Instance: /tb_systolic/systolic/genblk3[0]/genblk1[2]/mac_inst/add3 File: Source/sysarr_MAC.sv Line: 308
+** Warning: (vsim-3015) [PCDPC] - Port size (1) does not match connection size (32) for port 'ovf_in'. The port definition is at: Source/ADD_step3.sv(22).
+   Time: 0 ps  Iteration: 0  Instance: /tb_systolic/systolic/genblk3[0]/genblk1[3]/mac_inst/add3 File: Source/sysarr_MAC.sv Line: 308
+** Warning: (vsim-3015) [PCDPC] - Port size (1) does not match connection size (32) for port 'unf_in'. The port definition is at: Source/ADD_step3.sv(23).
+   Time: 0 ps  Iteration: 0  Instance: /tb_systolic/systolic/genblk3[0]/genblk1[3]/mac_inst/add3 File: Source/sysarr_MAC.sv Line: 308
+** Warning: (vsim-3015) [PCDPC] - Port size (1) does not match connection size (32) for port 'dz'. The port definition is at: Source/ADD_step3.sv(24).
+   Time: 0 ps  Iteration: 0  Instance: /tb_systolic/systolic/genblk3[0]/genblk1[3]/mac_inst/add3 File: Source/sysarr_MAC.sv Line: 308
+** Warning: (vsim-3015) [PCDPC] - Port size (1) does not match connection size (32) for port 'inv'. The port definition is at: Source/ADD_step3.sv(25).
+   Time: 0 ps  Iteration: 0  Instance: /tb_systolic/systolic/genblk3[0]/genblk1[3]/mac_inst/add3 File: Source/sysarr_MAC.sv Line: 308
+** Warning: (vsim-3015) [PCDPC] - Port size (1) does not match connection size (32) for port 'ovf_in'. The port definition is at: Source/ADD_step3.sv(22).
+   Time: 0 ps  Iteration: 0  Instance: /tb_systolic/systolic/genblk3[1]/genblk1[0]/mac_inst/add3 File: Source/sysarr_MAC.sv Line: 308
+** Warning: (vsim-3015) [PCDPC] - Port size (1) does not match connection size (32) for port 'unf_in'. The port definition is at: Source/ADD_step3.sv(23).
+   Time: 0 ps  Iteration: 0  Instance: /tb_systolic/systolic/genblk3[1]/genblk1[0]/mac_inst/add3 File: Source/sysarr_MAC.sv Line: 308
+** Warning: (vsim-3015) [PCDPC] - Port size (1) does not match connection size (32) for port 'dz'. The port definition is at: Source/ADD_step3.sv(24).
+   Time: 0 ps  Iteration: 0  Instance: /tb_systolic/systolic/genblk3[1]/genblk1[0]/mac_inst/add3 File: Source/sysarr_MAC.sv Line: 308
+** Warning: (vsim-3015) [PCDPC] - Port size (1) does not match connection size (32) for port 'inv'. The port definition is at: Source/ADD_step3.sv(25).
+   Time: 0 ps  Iteration: 0  Instance: /tb_systolic/systolic/genblk3[1]/genblk1[0]/mac_inst/add3 File: Source/sysarr_MAC.sv Line: 308
+** Warning: (vsim-3015) [PCDPC] - Port size (1) does not match connection size (32) for port 'ovf_in'. The port definition is at: Source/ADD_step3.sv(22).
+   Time: 0 ps  Iteration: 0  Instance: /tb_systolic/systolic/genblk3[1]/genblk1[1]/mac_inst/add3 File: Source/sysarr_MAC.sv Line: 308
+** Warning: (vsim-3015) [PCDPC] - Port size (1) does not match connection size (32) for port 'unf_in'. The port definition is at: Source/ADD_step3.sv(23).
+   Time: 0 ps  Iteration: 0  Instance: /tb_systolic/systolic/genblk3[1]/genblk1[1]/mac_inst/add3 File: Source/sysarr_MAC.sv Line: 308
+** Warning: (vsim-3015) [PCDPC] - Port size (1) does not match connection size (32) for port 'dz'. The port definition is at: Source/ADD_step3.sv(24).
+   Time: 0 ps  Iteration: 0  Instance: /tb_systolic/systolic/genblk3[1]/genblk1[1]/mac_inst/add3 File: Source/sysarr_MAC.sv Line: 308
+** Warning: (vsim-3015) [PCDPC] - Port size (1) does not match connection size (32) for port 'inv'. The port definition is at: Source/ADD_step3.sv(25).
+   Time: 0 ps  Iteration: 0  Instance: /tb_systolic/systolic/genblk3[1]/genblk1[1]/mac_inst/add3 File: Source/sysarr_MAC.sv Line: 308
+** Warning: (vsim-3015) [PCDPC] - Port size (1) does not match connection size (32) for port 'ovf_in'. The port definition is at: Source/ADD_step3.sv(22).
+   Time: 0 ps  Iteration: 0  Instance: /tb_systolic/systolic/genblk3[1]/genblk1[2]/mac_inst/add3 File: Source/sysarr_MAC.sv Line: 308
+** Warning: (vsim-3015) [PCDPC] - Port size (1) does not match connection size (32) for port 'unf_in'. The port definition is at: Source/ADD_step3.sv(23).
+   Time: 0 ps  Iteration: 0  Instance: /tb_systolic/systolic/genblk3[1]/genblk1[2]/mac_inst/add3 File: Source/sysarr_MAC.sv Line: 308
+** Warning: (vsim-3015) [PCDPC] - Port size (1) does not match connection size (32) for port 'dz'. The port definition is at: Source/ADD_step3.sv(24).
+   Time: 0 ps  Iteration: 0  Instance: /tb_systolic/systolic/genblk3[1]/genblk1[2]/mac_inst/add3 File: Source/sysarr_MAC.sv Line: 308
+** Warning: (vsim-3015) [PCDPC] - Port size (1) does not match connection size (32) for port 'inv'. The port definition is at: Source/ADD_step3.sv(25).
+   Time: 0 ps  Iteration: 0  Instance: /tb_systolic/systolic/genblk3[1]/genblk1[2]/mac_inst/add3 File: Source/sysarr_MAC.sv Line: 308
+** Warning: (vsim-3015) [PCDPC] - Port size (1) does not match connection size (32) for port 'ovf_in'. The port definition is at: Source/ADD_step3.sv(22).
+   Time: 0 ps  Iteration: 0  Instance: /tb_systolic/systolic/genblk3[1]/genblk1[3]/mac_inst/add3 File: Source/sysarr_MAC.sv Line: 308
+** Warning: (vsim-3015) [PCDPC] - Port size (1) does not match connection size (32) for port 'unf_in'. The port definition is at: Source/ADD_step3.sv(23).
+   Time: 0 ps  Iteration: 0  Instance: /tb_systolic/systolic/genblk3[1]/genblk1[3]/mac_inst/add3 File: Source/sysarr_MAC.sv Line: 308
+** Warning: (vsim-3015) [PCDPC] - Port size (1) does not match connection size (32) for port 'dz'. The port definition is at: Source/ADD_step3.sv(24).
+   Time: 0 ps  Iteration: 0  Instance: /tb_systolic/systolic/genblk3[1]/genblk1[3]/mac_inst/add3 File: Source/sysarr_MAC.sv Line: 308
+** Warning: (vsim-3015) [PCDPC] - Port size (1) does not match connection size (32) for port 'inv'. The port definition is at: Source/ADD_step3.sv(25).
+   Time: 0 ps  Iteration: 0  Instance: /tb_systolic/systolic/genblk3[1]/genblk1[3]/mac_inst/add3 File: Source/sysarr_MAC.sv Line: 308
+** Warning: (vsim-3015) [PCDPC] - Port size (1) does not match connection size (32) for port 'ovf_in'. The port definition is at: Source/ADD_step3.sv(22).
+   Time: 0 ps  Iteration: 0  Instance: /tb_systolic/systolic/genblk3[2]/genblk1[0]/mac_inst/add3 File: Source/sysarr_MAC.sv Line: 308
+** Warning: (vsim-3015) [PCDPC] - Port size (1) does not match connection size (32) for port 'unf_in'. The port definition is at: Source/ADD_step3.sv(23).
+   Time: 0 ps  Iteration: 0  Instance: /tb_systolic/systolic/genblk3[2]/genblk1[0]/mac_inst/add3 File: Source/sysarr_MAC.sv Line: 308
+** Warning: (vsim-3015) [PCDPC] - Port size (1) does not match connection size (32) for port 'dz'. The port definition is at: Source/ADD_step3.sv(24).
+   Time: 0 ps  Iteration: 0  Instance: /tb_systolic/systolic/genblk3[2]/genblk1[0]/mac_inst/add3 File: Source/sysarr_MAC.sv Line: 308
+** Warning: (vsim-3015) [PCDPC] - Port size (1) does not match connection size (32) for port 'inv'. The port definition is at: Source/ADD_step3.sv(25).
+   Time: 0 ps  Iteration: 0  Instance: /tb_systolic/systolic/genblk3[2]/genblk1[0]/mac_inst/add3 File: Source/sysarr_MAC.sv Line: 308
+** Warning: (vsim-3015) [PCDPC] - Port size (1) does not match connection size (32) for port 'ovf_in'. The port definition is at: Source/ADD_step3.sv(22).
+   Time: 0 ps  Iteration: 0  Instance: /tb_systolic/systolic/genblk3[2]/genblk1[1]/mac_inst/add3 File: Source/sysarr_MAC.sv Line: 308
+** Warning: (vsim-3015) [PCDPC] - Port size (1) does not match connection size (32) for port 'unf_in'. The port definition is at: Source/ADD_step3.sv(23).
+   Time: 0 ps  Iteration: 0  Instance: /tb_systolic/systolic/genblk3[2]/genblk1[1]/mac_inst/add3 File: Source/sysarr_MAC.sv Line: 308
+** Warning: (vsim-3015) [PCDPC] - Port size (1) does not match connection size (32) for port 'dz'. The port definition is at: Source/ADD_step3.sv(24).
+   Time: 0 ps  Iteration: 0  Instance: /tb_systolic/systolic/genblk3[2]/genblk1[1]/mac_inst/add3 File: Source/sysarr_MAC.sv Line: 308
+** Warning: (vsim-3015) [PCDPC] - Port size (1) does not match connection size (32) for port 'inv'. The port definition is at: Source/ADD_step3.sv(25).
+   Time: 0 ps  Iteration: 0  Instance: /tb_systolic/systolic/genblk3[2]/genblk1[1]/mac_inst/add3 File: Source/sysarr_MAC.sv Line: 308
+** Warning: (vsim-3015) [PCDPC] - Port size (1) does not match connection size (32) for port 'ovf_in'. The port definition is at: Source/ADD_step3.sv(22).
+   Time: 0 ps  Iteration: 0  Instance: /tb_systolic/systolic/genblk3[2]/genblk1[2]/mac_inst/add3 File: Source/sysarr_MAC.sv Line: 308
+** Warning: (vsim-3015) [PCDPC] - Port size (1) does not match connection size (32) for port 'unf_in'. The port definition is at: Source/ADD_step3.sv(23).
+   Time: 0 ps  Iteration: 0  Instance: /tb_systolic/systolic/genblk3[2]/genblk1[2]/mac_inst/add3 File: Source/sysarr_MAC.sv Line: 308
+** Warning: (vsim-3015) [PCDPC] - Port size (1) does not match connection size (32) for port 'dz'. The port definition is at: Source/ADD_step3.sv(24).
+   Time: 0 ps  Iteration: 0  Instance: /tb_systolic/systolic/genblk3[2]/genblk1[2]/mac_inst/add3 File: Source/sysarr_MAC.sv Line: 308
+** Warning: (vsim-3015) [PCDPC] - Port size (1) does not match connection size (32) for port 'inv'. The port definition is at: Source/ADD_step3.sv(25).
+   Time: 0 ps  Iteration: 0  Instance: /tb_systolic/systolic/genblk3[2]/genblk1[2]/mac_inst/add3 File: Source/sysarr_MAC.sv Line: 308
+** Warning: (vsim-3015) [PCDPC] - Port size (1) does not match connection size (32) for port 'ovf_in'. The port definition is at: Source/ADD_step3.sv(22).
+   Time: 0 ps  Iteration: 0  Instance: /tb_systolic/systolic/genblk3[2]/genblk1[3]/mac_inst/add3 File: Source/sysarr_MAC.sv Line: 308
+** Warning: (vsim-3015) [PCDPC] - Port size (1) does not match connection size (32) for port 'unf_in'. The port definition is at: Source/ADD_step3.sv(23).
+   Time: 0 ps  Iteration: 0  Instance: /tb_systolic/systolic/genblk3[2]/genblk1[3]/mac_inst/add3 File: Source/sysarr_MAC.sv Line: 308
+** Warning: (vsim-3015) [PCDPC] - Port size (1) does not match connection size (32) for port 'dz'. The port definition is at: Source/ADD_step3.sv(24).
+   Time: 0 ps  Iteration: 0  Instance: /tb_systolic/systolic/genblk3[2]/genblk1[3]/mac_inst/add3 File: Source/sysarr_MAC.sv Line: 308
+** Warning: (vsim-3015) [PCDPC] - Port size (1) does not match connection size (32) for port 'inv'. The port definition is at: Source/ADD_step3.sv(25).
+   Time: 0 ps  Iteration: 0  Instance: /tb_systolic/systolic/genblk3[2]/genblk1[3]/mac_inst/add3 File: Source/sysarr_MAC.sv Line: 308
+** Warning: (vsim-3015) [PCDPC] - Port size (1) does not match connection size (32) for port 'ovf_in'. The port definition is at: Source/ADD_step3.sv(22).
+   Time: 0 ps  Iteration: 0  Instance: /tb_systolic/systolic/genblk3[3]/genblk1[0]/mac_inst/add3 File: Source/sysarr_MAC.sv Line: 308
+** Warning: (vsim-3015) [PCDPC] - Port size (1) does not match connection size (32) for port 'unf_in'. The port definition is at: Source/ADD_step3.sv(23).
+   Time: 0 ps  Iteration: 0  Instance: /tb_systolic/systolic/genblk3[3]/genblk1[0]/mac_inst/add3 File: Source/sysarr_MAC.sv Line: 308
+** Warning: (vsim-3015) [PCDPC] - Port size (1) does not match connection size (32) for port 'dz'. The port definition is at: Source/ADD_step3.sv(24).
+   Time: 0 ps  Iteration: 0  Instance: /tb_systolic/systolic/genblk3[3]/genblk1[0]/mac_inst/add3 File: Source/sysarr_MAC.sv Line: 308
+** Warning: (vsim-3015) [PCDPC] - Port size (1) does not match connection size (32) for port 'inv'. The port definition is at: Source/ADD_step3.sv(25).
+   Time: 0 ps  Iteration: 0  Instance: /tb_systolic/systolic/genblk3[3]/genblk1[0]/mac_inst/add3 File: Source/sysarr_MAC.sv Line: 308
+** Warning: (vsim-3015) [PCDPC] - Port size (1) does not match connection size (32) for port 'ovf_in'. The port definition is at: Source/ADD_step3.sv(22).
+   Time: 0 ps  Iteration: 0  Instance: /tb_systolic/systolic/genblk3[3]/genblk1[1]/mac_inst/add3 File: Source/sysarr_MAC.sv Line: 308
+** Warning: (vsim-3015) [PCDPC] - Port size (1) does not match connection size (32) for port 'unf_in'. The port definition is at: Source/ADD_step3.sv(23).
+   Time: 0 ps  Iteration: 0  Instance: /tb_systolic/systolic/genblk3[3]/genblk1[1]/mac_inst/add3 File: Source/sysarr_MAC.sv Line: 308
+** Warning: (vsim-3015) [PCDPC] - Port size (1) does not match connection size (32) for port 'dz'. The port definition is at: Source/ADD_step3.sv(24).
+   Time: 0 ps  Iteration: 0  Instance: /tb_systolic/systolic/genblk3[3]/genblk1[1]/mac_inst/add3 File: Source/sysarr_MAC.sv Line: 308
+** Warning: (vsim-3015) [PCDPC] - Port size (1) does not match connection size (32) for port 'inv'. The port definition is at: Source/ADD_step3.sv(25).
+   Time: 0 ps  Iteration: 0  Instance: /tb_systolic/systolic/genblk3[3]/genblk1[1]/mac_inst/add3 File: Source/sysarr_MAC.sv Line: 308
+** Warning: (vsim-3015) [PCDPC] - Port size (1) does not match connection size (32) for port 'ovf_in'. The port definition is at: Source/ADD_step3.sv(22).
+   Time: 0 ps  Iteration: 0  Instance: /tb_systolic/systolic/genblk3[3]/genblk1[2]/mac_inst/add3 File: Source/sysarr_MAC.sv Line: 308
+** Warning: (vsim-3015) [PCDPC] - Port size (1) does not match connection size (32) for port 'unf_in'. The port definition is at: Source/ADD_step3.sv(23).
+   Time: 0 ps  Iteration: 0  Instance: /tb_systolic/systolic/genblk3[3]/genblk1[2]/mac_inst/add3 File: Source/sysarr_MAC.sv Line: 308
+** Warning: (vsim-3015) [PCDPC] - Port size (1) does not match connection size (32) for port 'dz'. The port definition is at: Source/ADD_step3.sv(24).
+   Time: 0 ps  Iteration: 0  Instance: /tb_systolic/systolic/genblk3[3]/genblk1[2]/mac_inst/add3 File: Source/sysarr_MAC.sv Line: 308
+** Warning: (vsim-3015) [PCDPC] - Port size (1) does not match connection size (32) for port 'inv'. The port definition is at: Source/ADD_step3.sv(25).
+   Time: 0 ps  Iteration: 0  Instance: /tb_systolic/systolic/genblk3[3]/genblk1[2]/mac_inst/add3 File: Source/sysarr_MAC.sv Line: 308
+** Warning: (vsim-3015) [PCDPC] - Port size (1) does not match connection size (32) for port 'ovf_in'. The port definition is at: Source/ADD_step3.sv(22).
+   Time: 0 ps  Iteration: 0  Instance: /tb_systolic/systolic/genblk3[3]/genblk1[3]/mac_inst/add3 File: Source/sysarr_MAC.sv Line: 308
+** Warning: (vsim-3015) [PCDPC] - Port size (1) does not match connection size (32) for port 'unf_in'. The port definition is at: Source/ADD_step3.sv(23).
+   Time: 0 ps  Iteration: 0  Instance: /tb_systolic/systolic/genblk3[3]/genblk1[3]/mac_inst/add3 File: Source/sysarr_MAC.sv Line: 308
+** Warning: (vsim-3015) [PCDPC] - Port size (1) does not match connection size (32) for port 'dz'. The port definition is at: Source/ADD_step3.sv(24).
+   Time: 0 ps  Iteration: 0  Instance: /tb_systolic/systolic/genblk3[3]/genblk1[3]/mac_inst/add3 File: Source/sysarr_MAC.sv Line: 308
+** Warning: (vsim-3015) [PCDPC] - Port size (1) does not match connection size (32) for port 'inv'. The port definition is at: Source/ADD_step3.sv(25).
+   Time: 0 ps  Iteration: 0  Instance: /tb_systolic/systolic/genblk3[3]/genblk1[3]/mac_inst/add3 File: Source/sysarr_MAC.sv Line: 308
+** Warning: (vsim-3015) [PCDPC] - Port size (1) does not match connection size (32) for port 'ovf_in'. The port definition is at: Source/ADD_step3.sv(22).
+   Time: 0 ps  Iteration: 0  Instance: /tb_systolic/systolic/genblk4[0]/add_inst/add3 File: Source/sysarr_add.sv Line: 131
+** Warning: (vsim-3015) [PCDPC] - Port size (1) does not match connection size (32) for port 'unf_in'. The port definition is at: Source/ADD_step3.sv(23).
+   Time: 0 ps  Iteration: 0  Instance: /tb_systolic/systolic/genblk4[0]/add_inst/add3 File: Source/sysarr_add.sv Line: 131
+** Warning: (vsim-3015) [PCDPC] - Port size (1) does not match connection size (32) for port 'dz'. The port definition is at: Source/ADD_step3.sv(24).
+   Time: 0 ps  Iteration: 0  Instance: /tb_systolic/systolic/genblk4[0]/add_inst/add3 File: Source/sysarr_add.sv Line: 131
+** Warning: (vsim-3015) [PCDPC] - Port size (1) does not match connection size (32) for port 'inv'. The port definition is at: Source/ADD_step3.sv(25).
+   Time: 0 ps  Iteration: 0  Instance: /tb_systolic/systolic/genblk4[0]/add_inst/add3 File: Source/sysarr_add.sv Line: 131
+** Warning: (vsim-3015) [PCDPC] - Port size (1) does not match connection size (32) for port 'ovf_in'. The port definition is at: Source/ADD_step3.sv(22).
+   Time: 0 ps  Iteration: 0  Instance: /tb_systolic/systolic/genblk4[1]/add_inst/add3 File: Source/sysarr_add.sv Line: 131
+** Warning: (vsim-3015) [PCDPC] - Port size (1) does not match connection size (32) for port 'unf_in'. The port definition is at: Source/ADD_step3.sv(23).
+   Time: 0 ps  Iteration: 0  Instance: /tb_systolic/systolic/genblk4[1]/add_inst/add3 File: Source/sysarr_add.sv Line: 131
+** Warning: (vsim-3015) [PCDPC] - Port size (1) does not match connection size (32) for port 'dz'. The port definition is at: Source/ADD_step3.sv(24).
+   Time: 0 ps  Iteration: 0  Instance: /tb_systolic/systolic/genblk4[1]/add_inst/add3 File: Source/sysarr_add.sv Line: 131
+** Warning: (vsim-3015) [PCDPC] - Port size (1) does not match connection size (32) for port 'inv'. The port definition is at: Source/ADD_step3.sv(25).
+   Time: 0 ps  Iteration: 0  Instance: /tb_systolic/systolic/genblk4[1]/add_inst/add3 File: Source/sysarr_add.sv Line: 131
+** Warning: (vsim-3015) [PCDPC] - Port size (1) does not match connection size (32) for port 'ovf_in'. The port definition is at: Source/ADD_step3.sv(22).
+   Time: 0 ps  Iteration: 0  Instance: /tb_systolic/systolic/genblk4[2]/add_inst/add3 File: Source/sysarr_add.sv Line: 131
+** Warning: (vsim-3015) [PCDPC] - Port size (1) does not match connection size (32) for port 'unf_in'. The port definition is at: Source/ADD_step3.sv(23).
+   Time: 0 ps  Iteration: 0  Instance: /tb_systolic/systolic/genblk4[2]/add_inst/add3 File: Source/sysarr_add.sv Line: 131
+** Warning: (vsim-3015) [PCDPC] - Port size (1) does not match connection size (32) for port 'dz'. The port definition is at: Source/ADD_step3.sv(24).
+   Time: 0 ps  Iteration: 0  Instance: /tb_systolic/systolic/genblk4[2]/add_inst/add3 File: Source/sysarr_add.sv Line: 131
+** Warning: (vsim-3015) [PCDPC] - Port size (1) does not match connection size (32) for port 'inv'. The port definition is at: Source/ADD_step3.sv(25).
+   Time: 0 ps  Iteration: 0  Instance: /tb_systolic/systolic/genblk4[2]/add_inst/add3 File: Source/sysarr_add.sv Line: 131
+** Warning: (vsim-3015) [PCDPC] - Port size (1) does not match connection size (32) for port 'ovf_in'. The port definition is at: Source/ADD_step3.sv(22).
+   Time: 0 ps  Iteration: 0  Instance: /tb_systolic/systolic/genblk4[3]/add_inst/add3 File: Source/sysarr_add.sv Line: 131
+** Warning: (vsim-3015) [PCDPC] - Port size (1) does not match connection size (32) for port 'unf_in'. The port definition is at: Source/ADD_step3.sv(23).
+   Time: 0 ps  Iteration: 0  Instance: /tb_systolic/systolic/genblk4[3]/add_inst/add3 File: Source/sysarr_add.sv Line: 131
+** Warning: (vsim-3015) [PCDPC] - Port size (1) does not match connection size (32) for port 'dz'. The port definition is at: Source/ADD_step3.sv(24).
+   Time: 0 ps  Iteration: 0  Instance: /tb_systolic/systolic/genblk4[3]/add_inst/add3 File: Source/sysarr_add.sv Line: 131
+** Warning: (vsim-3015) [PCDPC] - Port size (1) does not match connection size (32) for port 'inv'. The port definition is at: Source/ADD_step3.sv(25).
+   Time: 0 ps  Iteration: 0  Instance: /tb_systolic/systolic/genblk4[3]/add_inst/add3 File: Source/sysarr_add.sv Line: 131
+# Loading /tmp/337ta03@ececomp5.ecn.purdue.edu_dpi_172789/linux_x86_64_gcc-7.4.0/vsim_auto_compile.so
+** Note: (vsim-8716) Reusing existing debug database vsim.dbg.
+run -all
+UVM_INFO /package/eda/mg/questa2021.4/questasim/verilog_src/uvm-1.2/src/base/uvm_root.svh(392) @ 0: reporter [UVM/RELNOTES] 
+----------------------------------------------------------------
+UVM-1.2
+(C) 2007-2014 Mentor Graphics Corporation
+(C) 2007-2014 Cadence Design Systems, Inc.
+(C) 2006-2014 Synopsys, Inc.
+(C) 2011-2013 Cypress Semiconductor Corp.
+(C) 2013-2014 NVIDIA Corporation
+----------------------------------------------------------------
+
+  ***********       IMPORTANT RELEASE NOTES         ************
+
+  You are using a version of the UVM library that has been compiled
+  with `UVM_NO_DEPRECATED undefined.
+  See http://www.eda.org/svdb/view.php?id=3313 for more details.
+
+  You are using a version of the UVM library that has been compiled
+  with `UVM_OBJECT_DO_NOT_NEED_CONSTRUCTOR undefined.
+  See http://www.eda.org/svdb/view.php?id=3770 for more details.
+
+      (Specify +UVM_NO_RELNOTES to turn off this notice)
+
+UVM_INFO /package/eda/mg/questa2021.4/questasim/verilog_src/uvm-1.2/src/base/uvm_root.svh(453) @ 0: reporter [NO_DPI_TSTNAME] UVM_NO_DPI defined--getting UVM_TESTNAME directly, without DPI
+UVM_INFO @ 0: reporter [RNTST] Running test test...
+UVM_INFO /package/eda/mg/questa2021.4/questasim/verilog_src/uvm-1.2/src/base/uvm_traversal.svh(279) @ 0: reporter [UVM/COMP/NAMECHECK] This implementation of the component name checks requires DPI to be enabled
+                   0 Starting sequence run_phase
+UVM_INFO UVM_component/driver.svh(26) @ 0: uvm_test_top.env.agt.drv [Driver] In Driver
+UVM_INFO UVM_component/driver.svh(30) @ 0: uvm_test_top.env.agt.drv [Driver] Got item
+UVM_INFO UVM_component/driver.svh(32) @ 0: uvm_test_top.env.agt.drv [Driver] Wait for reset over
+UVM_INFO UVM_component/driver.svh(26) @ 870: uvm_test_top.env.agt.drv [Driver] In Driver
+UVM_INFO UVM_component/sequence.svh(26) @ 870: uvm_test_top.env.agt.sqr@@seq [Driver] finish_11
+UVM_INFO UVM_component/driver.svh(30) @ 870: uvm_test_top.env.agt.drv [Driver] Got item
+UVM_INFO UVM_component/driver.svh(32) @ 870: uvm_test_top.env.agt.drv [Driver] Wait for reset over
+UVM_INFO UVM_component/driver.svh(26) @ 1750: uvm_test_top.env.agt.drv [Driver] In Driver
+UVM_INFO UVM_component/sequence.svh(36) @ 1750: uvm_test_top.env.agt.sqr@@seq [Driver] finish_12
+UVM_INFO UVM_component/driver.svh(30) @ 1750: uvm_test_top.env.agt.drv [Driver] Got item
+UVM_INFO UVM_component/driver.svh(32) @ 1750: uvm_test_top.env.agt.drv [Driver] Wait for reset over
+UVM_INFO UVM_component/driver.svh(26) @ 2630: uvm_test_top.env.agt.drv [Driver] In Driver
+UVM_INFO UVM_component/sequence.svh(46) @ 2630: uvm_test_top.env.agt.sqr@@seq [Driver] finish_21
+UVM_INFO UVM_component/driver.svh(30) @ 2630: uvm_test_top.env.agt.drv [Driver] Got item
+UVM_INFO UVM_component/driver.svh(32) @ 2630: uvm_test_top.env.agt.drv [Driver] Wait for reset over
+UVM_INFO UVM_component/driver.svh(26) @ 3510: uvm_test_top.env.agt.drv [Driver] In Driver
+UVM_INFO UVM_component/sequence.svh(56) @ 3510: uvm_test_top.env.agt.sqr@@seq [Driver] finish_22
+UVM_INFO UVM_component/test.svh(36) @ 103510: uvm_test_top [test] end run_phase
+UVM_INFO /package/eda/mg/questa2021.4/questasim/verilog_src/uvm-1.2/src/base/uvm_objection.svh(1270) @ 103510: reporter [TEST_DONE] 'run' phase is ready to proceed to the 'extract' phase
+UVM_INFO /package/eda/mg/questa2021.4/questasim/verilog_src/uvm-1.2/src/base/uvm_report_server.svh(847) @ 103510: reporter [UVM/REPORT/SERVER] 
+--- UVM Report Summary ---
+
+** Report counts by severity
+UVM_INFO :   23
+UVM_WARNING :    0
+UVM_ERROR :    0
+UVM_FATAL :    0
+** Report counts by id
+[Driver]    17
+[NO_DPI_TSTNAME]     1
+[RNTST]     1
+[TEST_DONE]     1
+[UVM/COMP/NAMECHECK]     1
+[UVM/RELNOTES]     1
+[test]     1
+
+** Note: $finish    : /package/eda/mg/questa2021.4/questasim/verilog_src/uvm-1.2/src/base/uvm_root.svh(517)
+   Time: 103510 ps  Iteration: 68  Instance: /tb_systolic
+1
+Break in Task uvm_pkg/uvm_root::run_test at /package/eda/mg/questa2021.4/questasim/verilog_src/uvm-1.2/src/base/uvm_root.svh line 517

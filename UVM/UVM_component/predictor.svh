@@ -116,7 +116,7 @@ class predictor extends uvm_subscriber#(transaction);
 endfunction
 
 
-  function void write(transaction t);
+  function void write(transaction t);/*
     output_tx = transaction#(4)::type_id::create("output_tx", this); 
     output_tx.copy(t);
 
@@ -203,7 +203,7 @@ endfunction
     end
 
     // Send expected output to scoreboard
-    pred_ap.write(output_tx);
+    pred_ap.write(output_tx);*/
   endfunction: write
 
 endclass: predictor

@@ -1,46 +1,62 @@
+`ifndef SEQ_SVH
+`define SEQ_SVH
 import uvm_pkg::*;
 `include "uvm_macros.svh"
 `include "transaction.svh"
 
-class systolic_sequence extends uvm_sequence#(transaction);
-  `uvm_object_utils(systolic_sequence)
+class sa_gemm_seq extends uvm_sequence #(transaction);
+  `uvm_object_utils(sa_gemm_seq)
 
-  function new(string name = "");
+  function
+    new(string name="sa_gemm_seq");
     super.new(name);
-  endfunction: new
+  endfunction
 
   task body();
-    
-    transaction req_item;
-    req_item = transaction#(4)::type_id::create("req_item");
-    `uvm_info ("Sequence", $sformatf ("Before Start Item"), UVM_NONE)
-    // Pass matrices
-    
-    repeat(2) begin
-      `uvm_info ("Sequence", $sformatf ("Before Start Item"), UVM_NONE)
-      start_item(req_item);
-      `uvm_info ("Sequence", $sformatf ("After Start Item"), UVM_NONE)
-      if(!req_item.randomize()) begin
-        `uvm_fatal("Sequence", "Not able to randomize")
-      end
-      else begin
-        `uvm_info ("Sequence", $sformatf ("Randomise Succesful"), UVM_NONE)
-  
-      end
-      finish_item(req_item);
-      `uvm_info ("Sequence", $sformatf ("Randomise Succesful"), UVM_NONE)
-    end
+    transaction t = transaction::type_id::create("t");
 
-  
-    // // repeat randomized test cases
-    // repeat(25) begin
-    //   start_item(req_item);
-    //   if(!req_item.randomize()) begin
-    //     `uvm_fatal("Sequence", "Not able to randomize")
-    //   end
-    //   finish_item(req_item);
-    // end
-  endtask: body
+    start_item(t);
+    assert(t.randomize() with{
+      phase_kind == PH_INPUT;
+      out_of_order_flag == 0;
+      pause_flag == 0;
+      n_empty == 0;
+    });
+    finish_item(t);
+      `uvm_info ("Driver", $sformatf ("finish_11"), UVM_NONE)
+
+    start_item(t);
+    assert(t.randomize() with{
+      phase_kind == PH_IANDSUM;
+      out_of_order_flag == 0;
+      pause_flag == 0;
+      n_empty == 0;
+    });
+    finish_item(t);
+      `uvm_info ("Driver", $sformatf ("finish_12"), UVM_NONE)
+
+    start_item(t);
+    assert(t.randomize() with{
+      phase_kind == PH_INPUT;
+      out_of_order_flag == 0;
+      pause_flag == 0;
+      n_empty == 0;
+    });
+    finish_item(t);
+      `uvm_info ("Driver", $sformatf ("finish_21"), UVM_NONE)
+
+    start_item(t);
+    assert(t.randomize() with{
+      phase_kind == PH_IANDSUM;
+      out_of_order_flag == 0;
+      pause_flag == 0;
+      n_empty == 0;
+    });
+    finish_item(t);
+      `uvm_info ("Driver", $sformatf ("finish_22"), UVM_NONE)
+
+
+  endtask
 endclass
 
-
+`endif

@@ -1,0 +1,78 @@
+# Current time Fri Oct 31 14:53:30 2025
+# Program = vsim
+# Id = "2021.4"
+# Version = "2021.10"
+# Date = "Oct 13 2021"
+# Platform = "linux_x86_64"
+# Signature = 1b982dbb9a4f11c9c04324db1a232ab9
+# 0    0x00007fefe8b0ae8c: '/package/eda/mg/questa2021.4/questasim/verilog_src/uvm-1.2/src/base/uvm_port_base.svh:432'
+# 1    0x00007fefe8b0dafc: '/package/eda/mg/questa2021.4/questasim/verilog_src/uvm-1.2/src/base/uvm_port_base.svh:432'
+# 2    0x00007fefe8ba2d71: 'UVM_component/environment.svh:28'
+# 3    0x00007fefe867507f: '/package/eda/mg/questa2021.4/questasim/verilog_src/uvm-1.2/src/base/uvm_common_phases.svh:111'
+# 4    0x00007fefe86701c8: '/package/eda/mg/questa2021.4/questasim/verilog_src/uvm-1.2/src/base/uvm_bottomup_phase.svh:108'
+# 5    0x00007fefe866f718: '/package/eda/mg/questa2021.4/questasim/verilog_src/uvm-1.2/src/base/uvm_bottomup_phase.svh:81'
+# 6    0x00007fefe866ed72: '/package/eda/mg/questa2021.4/questasim/verilog_src/uvm-1.2/src/base/uvm_bottomup_phase.svh:61'
+# 7    0x00007fefe866ed72: '/package/eda/mg/questa2021.4/questasim/verilog_src/uvm-1.2/src/base/uvm_bottomup_phase.svh:61'
+# 8    0x00007fefe864a52f: '/package/eda/mg/questa2021.4/questasim/verilog_src/uvm-1.2/src/base/uvm_phase.svh:1390'
+# 9    0x00007fefe86467cc: '/package/eda/mg/questa2021.4/questasim/verilog_src/uvm-1.2/src/base/uvm_phase.svh:2213'
+# 10   0x00000000035000a2: '<unknown (@0x35000a2)>'
+# 11   0x00000000006af22c: '<unknown (@0x6af22c)>'
+# 12   0x00000000004ca20d: '<unknown (@0x4ca20d)>'
+# 13   0x00000000006f03f3: '<unknown (@0x6f03f3)>'
+# 14   0x0000000000c1f585: '<unknown (@0xc1f585)>'
+# 15   0x0000000000c246ab: '<unknown (@0xc246ab)>'
+# 16   0x0000000000c2640e: '<unknown (@0xc2640e)>'
+# 17   0x0000000000ef7b0d: '<unknown (@0xef7b0d)>'
+# 18   0x00000000039ac90d: '<unknown (@0x39ac90d)>'
+# 19   0x00000000039b0d66: '<unknown (@0x39b0d66)>'
+# 20   0x00000000039b2451: '<unknown (@0x39b2451)>'
+# 21   0x00000000039b27b6: '<unknown (@0x39b27b6)>'
+# 22   0x000000000117fd59: '<unknown (@0x117fd59)>'
+# 23   0x0000000003a526bf: '<unknown (@0x3a526bf)>'
+# 24   0x0000000003aa6237: '<unknown (@0x3aa6237)>'
+# 25   0x0000000003a69127: '<unknown (@0x3a69127)>'
+# 26   0x0000000003a69409: '<unknown (@0x3a69409)>'
+# 27   0x0000000003848a6d: '<unknown (@0x3848a6d)>'
+# 28   0x0000000000be9efc: '<unknown (@0xbe9efc)>'
+# End of Stack Trace
+
+
+# Current time Fri Oct 31 14:53:46 2025
+# Program = vsim
+# Id = "2021.4"
+# Version = "2021.10"
+# Date = "Oct 13 2021"
+# Platform = "linux_x86_64"
+# Signature = 1b982dbb9a4f11c9c04324db1a232ab9
+# 0    0x00007fefe9b5fbec: '/package/eda/mg/questa2021.4/questasim/verilog_src/uvm-1.2/src/base/uvm_port_base.svh:432'
+# 1    0x00007fefe9b6285c: '/package/eda/mg/questa2021.4/questasim/verilog_src/uvm-1.2/src/base/uvm_port_base.svh:432'
+# 2    0x00007fefe9bf87d1: 'UVM_component/environment.svh:28'
+# 3    0x00007fefe96c9a3f: '/package/eda/mg/questa2021.4/questasim/verilog_src/uvm-1.2/src/base/uvm_common_phases.svh:111'
+# 4    0x00007fefe96c4b88: '/package/eda/mg/questa2021.4/questasim/verilog_src/uvm-1.2/src/base/uvm_bottomup_phase.svh:108'
+# 5    0x00007fefe96c40d8: '/package/eda/mg/questa2021.4/questasim/verilog_src/uvm-1.2/src/base/uvm_bottomup_phase.svh:81'
+# 6    0x00007fefe96c3732: '/package/eda/mg/questa2021.4/questasim/verilog_src/uvm-1.2/src/base/uvm_bottomup_phase.svh:61'
+# 7    0x00007fefe96c3732: '/package/eda/mg/questa2021.4/questasim/verilog_src/uvm-1.2/src/base/uvm_bottomup_phase.svh:61'
+# 8    0x00007fefe96af0df: '/package/eda/mg/questa2021.4/questasim/verilog_src/uvm-1.2/src/base/uvm_phase.svh:1390'
+# 9    0x00007fefe96ab37c: '/package/eda/mg/questa2021.4/questasim/verilog_src/uvm-1.2/src/base/uvm_phase.svh:2213'
+# 10   0x00000000035000a2: '<unknown (@0x35000a2)>'
+# 11   0x00000000006af22c: '<unknown (@0x6af22c)>'
+# 12   0x00000000004ca20d: '<unknown (@0x4ca20d)>'
+# 13   0x00000000006f03f3: '<unknown (@0x6f03f3)>'
+# 14   0x0000000000c1f585: '<unknown (@0xc1f585)>'
+# 15   0x0000000000c246ab: '<unknown (@0xc246ab)>'
+# 16   0x0000000000c2640e: '<unknown (@0xc2640e)>'
+# 17   0x0000000000ef7b0d: '<unknown (@0xef7b0d)>'
+# 18   0x00000000039ac90d: '<unknown (@0x39ac90d)>'
+# 19   0x00000000039b0d66: '<unknown (@0x39b0d66)>'
+# 20   0x00000000039b2451: '<unknown (@0x39b2451)>'
+# 21   0x00000000039b27b6: '<unknown (@0x39b27b6)>'
+# 22   0x000000000117fd59: '<unknown (@0x117fd59)>'
+# 23   0x0000000003a526bf: '<unknown (@0x3a526bf)>'
+# 24   0x0000000003aa6237: '<unknown (@0x3aa6237)>'
+# 25   0x0000000003a69127: '<unknown (@0x3a69127)>'
+# 26   0x0000000003a69409: '<unknown (@0x3a69409)>'
+# 27   0x0000000003848a6d: '<unknown (@0x3848a6d)>'
+# 28   0x0000000000be9efc: '<unknown (@0xbe9efc)>'
+# End of Stack Trace
+
+

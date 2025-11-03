@@ -14,6 +14,8 @@ module systolic_array(
     input logic clk, nRST,
     systolic_array_if.memory_array memory
 );
+parameter DW = 16;
+parameter N = 4;
     // Input to systolic array
     logic [DW*N-1:0] top_input;
     // logic [DW*N-1:0] weights_input;
