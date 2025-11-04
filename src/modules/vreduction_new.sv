@@ -16,8 +16,6 @@ module vreduction #(
     localparam int PIPE_STAGES = 2 + 2*LEVELS + LEVELS - 1;
     import vector_pkg::*;
 
-    logic [15:0] tree_data_out;
-    logic tree_valid_out;
     reduction_tree #(
         .LANES(LANES)
     ) reduction_tree (
@@ -30,32 +28,18 @@ module vreduction #(
         .valid_out(tree_valid_out)
     );
 
-    // Register tree outputs to align with FIFO read delay
-    logic [15:0] tree_data_delayed;
-    logic tree_valid_delayed;
-    
-    always_ff @(posedge CLK or negedge nRST) begin
-        if (!nRST) begin
-            tree_data_delayed <= '0;
-            tree_valid_delayed <= 1'b0;
-        end else begin
-            tree_data_delayed <= tree_data_out;
-            tree_valid_delayed <= tree_valid_out;
-        end
-    end
-
     //fifo for the input vector
-    logic [NUM_ELEMENTS-1:0][15:0] vector_fifo_out;
+    logic [15:0][NUM_ELEMENTS] vector_fifo_out;
     logic vector_fifo_full, vector_fifo_empty;
     sync_fifo #(
-        .FIFODEPTH(4),
+        .FIFODEPTH(PIPE_STAGES),
         .DATAWIDTH(16 * NUM_ELEMENTS)
     ) vector_fifo (
         .CLK(CLK),
         .nRST(nRST),
         .wr_en(vruif.input_valid),
         .din(vruif.vector_input),
-        .shift(tree_valid_out),  // Use non-delayed for shifting
+        .shift(tree_valid_out),
         .dout(vector_fifo_out),
         .empty(vector_fifo_empty),
         .full(vector_fifo_full)
@@ -67,22 +51,22 @@ module vreduction #(
     logic signals_fifo_full, signals_fifo_empty;
 
     sync_fifo #(
-        .FIFODEPTH(4),
-        .DATAWIDTH(7)   s
+        .FIFODEPTH(PIPE_STAGES),
+        .DATAWIDTH(7)
     ) signals_fifo (
         .CLK(CLK),
         .nRST(nRST),
         .wr_en(vruif.input_valid),
         .din({vruif.imm,vruif.broadcast,vruif.clear}),
-        .shift(tree_valid_out),  // Use non-delayed for shifting
+        .shift(tree_valid_out),
         .dout({imm_final,broadcast_final,clear_final}),
         .empty(signals_fifo_empty),
         .full(signals_fifo_full)
     );
 
-    logic [15:0] final_value;
-    assign final_value = tree_data_delayed;  // Use delayed version
-    logic [NUM_ELEMENTS-1:0][15:0] final_vector;
+    logic[15:0] final_value;
+    assign final_value = tree_data_out;
+    logic [15:0][NUM_ELEMENTS-1:0] final_vector;
 
     always_comb begin
         for (int i = 0; i < NUM_ELEMENTS; i++) begin
@@ -98,7 +82,7 @@ module vreduction #(
         end
     end
 
-    logic [NUM_ELEMENTS-1:0][15:0] registered_output;
+    logic [15:0][NUM_ELEMENTS-1:0] registered_output;
     logic   registered_valid;
 
     always_ff @(posedge CLK or negedge nRST) begin
@@ -109,7 +93,7 @@ module vreduction #(
         end else begin
             for (int i = 0; i < NUM_ELEMENTS; i++)
                 registered_output[i] <= final_vector[i];
-            registered_valid <= tree_valid_delayed;  // Use delayed version
+            registered_valid <= tree_valid_out;
         end
     end
 

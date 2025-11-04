@@ -6,7 +6,7 @@ module reduction_tree #(
 ) (
     input  logic CLK,
     input  logic nRST,
-    input  logic [15:0] data_in [LANES-1:0],
+    input  logic [LANES-1:0][15:0] data_in,  // Packed input: LANES elements of 16 bits each
     input  logic [1:0]  alu_op,
     input  logic        valid_in,
     output logic [15:0] data_out,

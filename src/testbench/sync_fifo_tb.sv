@@ -1,0 +1,2 @@
+module sync_fifo_tb();
+endmodule

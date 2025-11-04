@@ -7,7 +7,7 @@ module reduction_tree_tb;
     // Signals
     logic CLK;
     logic nRST;
-    logic [15:0] data_in [LANES-1:0];
+    logic [LANES-1:0][15:0] data_in;  // Packed: LANES elements of 16 bits each
     logic [1:0]  alu_op;
     logic        valid_in;
     logic [15:0] data_out;
@@ -34,7 +34,7 @@ module reduction_tree_tb;
         nRST = 0;
         alu_op = 2'b10; // Sum operation
         valid_in = 0;
-        data_in = '{default: 16'h0000};
+        data_in = '0;
 
         // Apply reset
         #12;
@@ -49,25 +49,25 @@ module reduction_tree_tb;
         // Vector 1: Mixed values
         valid_in = 1;
         alu_op = 2'b10; // VR_SUM
-        data_in = '{16'h3C00,16'h4000,16'h4200,16'h4400,16'h4500,16'h4600,16'h4700,16'h4800,
-                    16'h4880,16'h4900,16'h4980,16'h4A00,16'h4A80,16'h4B00,16'h4B80,16'h4C00};
+        data_in = {16'h4C00,16'h4B80,16'h4B00,16'h4A80,16'h4A00,16'h4980,16'h4900,16'h4880,
+                   16'h4800,16'h4700,16'h4600,16'h4500,16'h4400,16'h4200,16'h4000,16'h3C00};
         @(posedge CLK);
 
         // Vector 2: All 2.0
-        data_in = '{16'h4000,16'h4000,16'h4000,16'h4000,16'h4000,16'h4000,16'h4000,16'h4000,
-                    16'h4000,16'h4000,16'h4000,16'h4000,16'h4000,16'h4000,16'h4000,16'h4000};
+        data_in = {16'h4000,16'h4000,16'h4000,16'h4000,16'h4000,16'h4000,16'h4000,16'h4000,
+                   16'h4000,16'h4000,16'h4000,16'h4000,16'h4000,16'h4000,16'h4000,16'h4000};
         @(posedge CLK);
 
         // Vector 3: Mixed for MAX
         alu_op = 2'b00; // VR_MAX
-        data_in = '{16'h3C00,16'h4000,16'h4200,16'h4400,16'h4500,16'h4600,16'h4700,16'h4800,
-                    16'h4880,16'h4900,16'h4980,16'h4A00,16'h4A80,16'h4B00,16'h4B80,16'h4C00};
+        data_in = {16'h4C00,16'h4B80,16'h4B00,16'h4A80,16'h4A00,16'h4980,16'h4900,16'h4880,
+                   16'h4800,16'h4700,16'h4600,16'h4500,16'h4400,16'h4200,16'h4000,16'h3C00};
         @(posedge CLK);
 
         // Vector 4: Mixed for MIN
         alu_op = 2'b01; // VR_MIN
-        data_in = '{16'h3C00,16'h4000,16'h4200,16'h4400,16'h4500,16'h4600,16'h4700,16'h4800,
-                    16'h4880,16'h4900,16'h4980,16'h4A00,16'h4A80,16'h4B00,16'h4B80,16'h4C00};
+        data_in = {16'h4C00,16'h4B80,16'h4B00,16'h4A80,16'h4A00,16'h4980,16'h4900,16'h4880,
+                   16'h4800,16'h4700,16'h4600,16'h4500,16'h4400,16'h4200,16'h4000,16'h3C00};
         @(posedge CLK);
 
         // Stop sending inputs
