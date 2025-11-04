@@ -192,18 +192,18 @@ module cbg_benes #(
     endgenerate
 
     logic [8-1:0] first, last;
-    int block_size_sub;
-    int num_blocks_sub;
+    logic[TAGWIDTH-1 : 0] block_size_sub;
+    logic[TAGWIDTH-2 : 0] num_blocks_sub;
 
-    int offset_first;
-    int offset_last;
+    logic[TAGWIDTH-2 : 0] offset_first;
+    logic[TAGWIDTH-2 : 0] offset_last;
 
     always_comb begin
         first = 0;
         last = BITWIDTH-1;
 
         for(int level = 0; level < TAGWIDTH; level++) begin
-            block_size_sub = SIZE >> level;   // size of each block
+            block_size_sub = SIZE >> (level + 1);   // size of each block
             num_blocks_sub = 1 << level;  // number of blocks
             
             if(level == TAGWIDTH-1) begin
@@ -213,13 +213,15 @@ module cbg_benes #(
                 end
             end
             else begin
-                for(int sub_idx = 0; sub_idx < block_size_sub/2; sub_idx++) begin
+                for(int sub_idx = 0; sub_idx < block_size_sub; sub_idx++) begin
                     for(int block = 0; block < num_blocks_sub; block++) begin
-                        offset_first = (block * block_size_sub/2) + sub_idx;
+                        offset_first = (block * block_size_sub) + sub_idx;
                         offset_last = (SIZE/2 - 1) - offset_first;
 
                         ctrl[first] = f[level][offset_first];
                         ctrl[last] = l[level][offset_last];
+                        // ctrl[level * SIZE/2 + sub_idx * block_size_sub + block] = f[level][offset_first];
+                        // ctrl[last] = l[level][offset_last];
 
                         first = first + 1;
                         last = last - 1;
