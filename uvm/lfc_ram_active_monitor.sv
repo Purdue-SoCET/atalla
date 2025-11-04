@@ -7,8 +7,8 @@ import uvm_pkg::*;
 `include "lfc_if.sv"
 
 // --- Replace these with your real types if needed ---
-typedef virtual lfc_if lfc_ram_vif_t;   // TODO: interface
-//typedef lfc_cpu_item       cpu_txn_t;       // TODO: sequence_item
+typedef virtual lfc_if lfc_ram_vif_t;
+//typedef lfc_cpu_item       cpu_txn_t;
 
 class lfc_ram_active_monitor extends uvm_monitor;
   `uvm_component_utils(lfc_ram_active_monitor)
@@ -41,9 +41,9 @@ class lfc_ram_active_monitor extends uvm_monitor;
     forever begin
       // TODO: sample at @(posedge vif.clk); create cpu_txn_t t; lfc_ap.write(t);
       //@(posedge $urandom); // placeholder to avoid zero-delay loop
-      lfc_transaction tx;
+      lfc_ram_transaction tx;
       repeat(4) @(posedge vif.clk); // 4 clock edges before input is sent from driver
-      tx = transaction::type_id::create("tx");
+      tx = lfc_ram_transaction::type_id::create("tx");
       tx.ram_mem_data = vif.ram_mem_data;
       tx.ram_mem_complete = vif.ram_mem_complete;
       lfc_ap.write(tx);

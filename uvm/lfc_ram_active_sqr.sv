@@ -21,7 +21,7 @@ class lfc_ram_active_sqr extends uvm_sequencer#(lfc_ram_transaction);
 
     function void connect_phase(uvm_phase phase);
         super.connect_phase(phase);
-        `uvm_info("RAM_SQR", "Connect Phase", UVM_HIGH)=
+        `uvm_info("RAM_SQR", "Connect Phase", UVM_HIGH)
     endfunction
 
 endclass

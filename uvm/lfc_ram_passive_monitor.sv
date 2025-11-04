@@ -7,7 +7,7 @@ import uvm_pkg::*;
 `include "lfc_if.sv"
 
 // --- Replace these with your real types if needed ---
-typedef virtual lfc_if.ram lfc_ram_vif_t;
+typedef virtual lfc_if.ram lfc_ram_vif_t1;
 //typedef lfc_cpu_item       cpu_txn_t;
 
 class lfc_ram_passive_monitor extends uvm_monitor;
@@ -17,7 +17,7 @@ class lfc_ram_passive_monitor extends uvm_monitor;
   //uvm_analysis_port #(cpu_txn_t) ap;
 
   // optional: virtual interface handle
-  lfc_ram_vif_t vif;
+  lfc_ram_vif_t1 vif;
 
   uvm_analysis_port#(lfc_ram_transaction) result_ap;
 
@@ -30,7 +30,7 @@ class lfc_ram_passive_monitor extends uvm_monitor;
     super.build_phase(phase);
     //ap = new("ap", this);
     // optional: get VIF from config_db
-    if(!uvm_config_db#(lfc_ram_vif_t)::get(this, "", "lfc_vif", vif)) begin    // change "lfc_vif" to ram modport
+    if(!uvm_config_db#(lfc_ram_vif_t1)::get(this, "", "lfc_vif", vif)) begin    // change "lfc_vif" to ram modport
       `uvm_fatal("Monitor", "No virtual interface specified for this monitor instance")
     end
   endfunction
@@ -38,8 +38,8 @@ class lfc_ram_passive_monitor extends uvm_monitor;
   // minimal placeholder; add your sampling here
   virtual task run_phase(uvm_phase phase);
     super.run_phase(phase);
-    lfc_ram_transaction tr;
   forever begin
+    lfc_ram_transaction tr;
     @(posedge vif.clk);
     for (int i = 0; i < vif.NUM_BANKS; i++) begin
       if (vif.ram_mem_REN[i] || vif.ram_mem_WEN[i]) begin
@@ -60,4 +60,4 @@ class lfc_ram_passive_monitor extends uvm_monitor;
 
 endclass
 
-`endif // LFC_CPU_ACTIVE_MONITOR_SVH
+`endif

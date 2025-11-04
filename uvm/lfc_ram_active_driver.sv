@@ -7,7 +7,7 @@ class ram_model;
   parameter int NUM_BANKS = 4;
   bit [31:0] mem [longint unsigned];  // key = {bank, addr}
 
-  pure function longint unsigned flat_addr(int bank, bit [31:0] addr);
+  function longint unsigned flat_addr(int bank, bit [31:0] addr);
     return (longint'(bank) << 32) | addr;
   endfunction
 
@@ -33,8 +33,8 @@ endclass
 
 
 
-class lfc_cpu_passive_driver extends uvm_driver#(lfc_cpu_transaction);
-    `uvm_component_utils(lfc_cpu_passive_driver)
+class lfc_ram_active_driver extends uvm_driver#(lfc_cpu_transaction);
+    `uvm_component_utils(lfc_ram_active_driver)
 
     virtual lfc_if vif;
     ram_model m_ram;

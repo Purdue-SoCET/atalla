@@ -12,10 +12,11 @@ INFO: [VRFC 10-2263] Analyzing SystemVerilog file "C:/Users/socce/SoCET/tensor-c
 INFO: [VRFC 10-2263] Analyzing SystemVerilog file "C:/Users/socce/SoCET/tensor-core/uvm/lfc_cpu_passive_agent.sv" into library xil_defaultlib
 INFO: [VRFC 10-2263] Analyzing SystemVerilog file "C:/Users/socce/SoCET/tensor-core/uvm/lfc_predictor.sv" into library xil_defaultlib
 INFO: [VRFC 10-2263] Analyzing SystemVerilog file "C:/Users/socce/SoCET/tensor-core/uvm/lfc_ram_active_agent.sv" into library xil_defaultlib
-ERROR: [VRFC 10-4982] syntax error near 'function' [C:/Users/socce/SoCET/tensor-core/uvm/lfc_ram_active_driver.sv:10]
-ERROR: [VRFC 10-8549] SystemVerilog keyword 'function' used in incorrect context [C:/Users/socce/SoCET/tensor-core/uvm/lfc_ram_active_driver.sv:10]
-ERROR: [VRFC 10-4982] syntax error near 'return' [C:/Users/socce/SoCET/tensor-core/uvm/lfc_ram_active_driver.sv:11]
-ERROR: [VRFC 10-8549] SystemVerilog keyword 'return' used in incorrect context [C:/Users/socce/SoCET/tensor-core/uvm/lfc_ram_active_driver.sv:11]
-ERROR: [VRFC 10-2989] 'transaction' is not declared [C:/Users/socce/SoCET/tensor-core/uvm/lfc_ram_active_monitor.sv:46]
-ERROR: [VRFC 10-4982] syntax error near '=' [C:/Users/socce/SoCET/tensor-core/uvm/lfc_ram_active_sqr.sv:24]
-ERROR: [VRFC 10-2989] 'lfc_ram_active_driver' is not declared [C:/Users/socce/SoCET/tensor-core/uvm/lfc_ram_active_agent.sv:19]
+INFO: [VRFC 10-2263] Analyzing SystemVerilog file "C:/Users/socce/SoCET/tensor-core/uvm/lfc_ram_passive_agent.sv" into library xil_defaultlib
+INFO: [VRFC 10-2263] Analyzing SystemVerilog file "C:/Users/socce/SoCET/tensor-core/uvm/tb_top.sv" into library xil_defaultlib
+WARNING: [VRFC 10-8725] `include directive is not isolated on its own line [C:/Users/socce/SoCET/tensor-core/uvm/../src/modules/lockup_free_cache.sv:1]
+WARNING: [VRFC 10-2502] extra semicolon in $unit (global) scope [C:/Users/socce/SoCET/tensor-core/uvm/../src/modules/lockup_free_cache.sv:1]
+INFO: [VRFC 10-311] analyzing module lockup_free_cache
+ERROR: [VRFC 10-4982] syntax error near '=' [C:/Users/socce/SoCET/tensor-core/uvm/lfc_environment.sv:16]
+ERROR: [VRFC 10-8522] the number of actual arguments '2' differs from the number of formal arguments '3' for macro 'uvm_info' [C:/Users/socce/SoCET/tensor-core/uvm/test.sv:18]
+ERROR: [VRFC 10-4982] syntax error near '`' [C:/Users/socce/SoCET/tensor-core/uvm/test.sv:37]
