@@ -43,6 +43,7 @@ module systolic_array(
     sysarr_control_unit cu_inst(
         .clk(clk),
         .nRST(nRST),
+        .stall_sa(memory.stall_sa),
         .cu(control_unit_if.control_unit)
     );
 
@@ -158,6 +159,7 @@ module systolic_array(
                 assign mac_ifs[m*N + n].in_value = MAC_inputs[m][n];
                 assign mac_ifs[m*N + n].weight_en = weight_enables[m][n];
                 assign mac_ifs[m*N + n].MAC_shift = control_unit_if.MAC_shift;
+                assign mac_ifs[m*N + n].stall_sa = memory.stall_sa;
                 if (m == 0) begin : no_accumulate
                     assign mac_ifs[m*N + n].in_accumulate = '0;
                 end else begin : accumulation_blk

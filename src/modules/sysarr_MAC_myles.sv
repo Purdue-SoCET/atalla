@@ -29,6 +29,11 @@ module sysarr_MAC_myles(input logic clk, input logic nRST, systolic_array_MAC_if
             weight <= '0;
             mac_if.weight_next_en <= 0;
             latched_weight_passon <= 0;
+        end else if (mac_if.stall_sa == 1'b1) begin
+            input_x <= input_x;
+            weight <= weight;
+            mac_if.weight_next_en <= mac_if.weight_next_en;
+            latched_weight_passon <= latched_weight_passon;
         end else begin
             input_x <= nxt_input_x;
             weight <= nxt_weight;
@@ -61,6 +66,9 @@ module sysarr_MAC_myles(input logic clk, input logic nRST, systolic_array_MAC_if
     always_ff @(posedge clk, negedge nRST) begin
         if(nRST == 1'b0) begin
             run_latched <= 1'b0;
+        end
+        else if (mac_if.stall_sa == 1'b1) begin
+            run_latched <= run_latched;   // hold during stall
         end
         else if (mac_if.start) begin
             run_latched <= 1'b1;          // set wins if both true
@@ -119,6 +127,8 @@ module sysarr_MAC_myles(input logic clk, input logic nRST, systolic_array_MAC_if
     always_ff @(posedge clk, negedge nRST) begin
         if(nRST == 1'b0)
             start_passthrough_0 <= 0;
+        else if (mac_if.stall_sa == 1'b1)
+            start_passthrough_0 <= start_passthrough_0;
         else
             start_passthrough_0 <= mac_if.start | (start_passthrough_0 & mul_stall);
     end
@@ -132,6 +142,14 @@ module sysarr_MAC_myles(input logic clk, input logic nRST, systolic_array_MAC_if
             mul_product_in <= 0;
             start_passthrough_1 <= 0;
             mul_round_loss_s2 <= 0;
+        end
+        else if (mac_if.stall_sa == 1'b1) begin
+            mul_fp1_head_s2_in <= mul_fp1_head_s2_in;
+            mul_fp2_head_s2_in <= mul_fp2_head_s2_in;
+            mul_carryout_in <= mul_carryout_in;
+            mul_product_in  <= mul_product_in;
+            start_passthrough_1 <= start_passthrough_1;
+            mul_round_loss_s2 <= mul_round_loss_s2;
         end
         else if(run) begin
             if(mul_stall)
@@ -197,6 +215,11 @@ module sysarr_MAC_myles(input logic clk, input logic nRST, systolic_array_MAC_if
             mul_result_latched <= 0;
             in_accumulate_latched <= 0;
         end
+        else if (mac_if.stall_sa == 1'b1) begin
+            start_passthrough_2a <= start_passthrough_2a;
+            mul_result_latched <= mul_result_latched;
+            in_accumulate_latched <= in_accumulate_latched;
+        end
         else begin
             start_passthrough_2a <= start_passthrough_1;
             mul_result_latched <= mul_result;
@@ -224,7 +247,22 @@ module sysarr_MAC_myles(input logic clk, input logic nRST, systolic_array_MAC_if
         .out_valid(vaddsub_valid)
     );
 
-    // Output assignment - check for overflow
-    assign mac_if.out_accumulate = vaddsub_ovf ? 16'b0111110000000000 : vaddsub_out;
+    // Final output register with stall hold
+    logic [15:0] out_accumulate_reg;
+    always_ff @(posedge clk, negedge nRST) begin
+        if(nRST == 1'b0) begin
+            out_accumulate_reg <= '0;
+        end
+        else if (mac_if.stall_sa == 1'b1) begin
+            out_accumulate_reg <= out_accumulate_reg;  // hold during stall
+        end
+        else if (vaddsub_valid) begin
+            out_accumulate_reg <= vaddsub_ovf ? 16'b0111110000000000 : vaddsub_out;
+        end
+        // else hold previous value
+    end
+
+    // Output assignment
+    assign mac_if.out_accumulate = out_accumulate_reg;
 
 endmodule

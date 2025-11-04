@@ -17,6 +17,8 @@ module sysarr_MAC(
     always_ff @(posedge clk, negedge nRST) begin
         if(nRST == 1'b0)begin
             input_x <= '0;
+        end else if (mac.stall_sa == 1'b1) begin
+            input_x <= input_x;  // hold during stall
         end else begin
             input_x <= nxt_input_x;
         end 

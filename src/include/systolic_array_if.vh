@@ -15,6 +15,7 @@ interface systolic_array_if;
   logic out_en;
   logic drained;          // Indicates the systolic array is fully drained
   logic fifo_has_space;   // Indicates FIFO has space for another GEMM
+  logic stall_sa;         // Stall signal for systolic array
   logic [$clog2(N)-1:0] row_in_en;          // Row enable for inputs/weights & partial sums
   logic [$clog2(N)-1:0] row_ps_en;          // Row enable for partial sums
   logic [$clog2(N)-1:0] row_out;            // Which row the systolic array is outputing
@@ -25,13 +26,13 @@ interface systolic_array_if;
   // Memory Ports
   //memory to systolic array
   modport memory_array (  
-    input  weight_en, input_en, partial_en, row_in_en, row_ps_en, array_in, array_in_partials,
+    input  weight_en, input_en, partial_en, row_in_en, row_ps_en, array_in, array_in_partials, stall_sa,
     output drained, fifo_has_space, row_out, array_output, out_en
   );
   //systolic array to memory
   modport array_memory(   
     input drained, fifo_has_space, row_out, array_output, out_en,
-    output weight_en, input_en, partial_en, row_in_en, row_ps_en, array_in, array_in_partials
+    output weight_en, input_en, partial_en, row_in_en, row_ps_en, array_in, array_in_partials, stall_sa
   );
 endinterface
 
