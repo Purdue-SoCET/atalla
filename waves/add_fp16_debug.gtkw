@@ -1,0 +1,37 @@
+[*]
+[*] GTKWave Analyzer v3.3.125 (w)1999-2025 BSI
+[*] Tue Nov  4 16:42:02 2025
+[*]
+[dumpfile] "/home/vinay/tensorcore/atalla/waves/add_fp16_waves.vcd"
+[dumpfile_mtime] "Tue Nov  4 16:33:22 2025"
+[dumpfile_size] 9932
+[savefile] "/home/vinay/tensorcore/atalla/waves/add_fp16_debug.gtkw"
+[timestart] 0
+[size] 2560 1458
+[pos] -781 -430
+*-9.600000 1595 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1
+[treeopen] add_fp16_tb_individual.
+[sst_width] 278
+[signals_width] 150
+[sst_expanded] 1
+[sst_vpaned_height] 456
+@22
+add_fp16_tb_individual.tb_a[15:0]
+add_fp16_tb_individual.tb_b[15:0]
+add_fp16_tb_individual.tb_result[15:0]
+@28
+add_fp16_tb_individual.bob.overflow
+@800022
+add_fp16_tb_individual.bob.exp_max_l[4:0]
+@28
+(0)add_fp16_tb_individual.bob.exp_max_l[4:0]
+(1)add_fp16_tb_individual.bob.exp_max_l[4:0]
+(2)add_fp16_tb_individual.bob.exp_max_l[4:0]
+(3)add_fp16_tb_individual.bob.exp_max_l[4:0]
+(4)add_fp16_tb_individual.bob.exp_max_l[4:0]
+@1001200
+-group_end
+@23
+add_fp16_tb_individual.bob.exp_out[5:0]
+[pattern_trace] 1
+[pattern_trace] 0

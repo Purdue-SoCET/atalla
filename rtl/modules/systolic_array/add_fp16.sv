@@ -186,7 +186,7 @@ logic [5:0] u_result;
 logic [4:0] exp_minus_shift_amount;
 
 always_comb begin
-    u_exp1           = {1'b0, exp_max_l};
+    u_exp1           = {1'b0, (normalized_mantissa_sum == 0 ? 5'b0 : exp_max_l)};
     u_shifted_amount = {1'b0, norm_shift};
     u_result         = u_exp1 - u_shifted_amount;
 end
@@ -196,7 +196,7 @@ assign exp_minus_shift_amount = u_result[4:0];
 
 // step 7: Rounding.
 reg [11:0] round_this;
-logic [4:0] exp_out;
+logic [5:0] exp_out;            // 6th bit is to check for overflow.
 
 always_comb begin
     // ovf = 0;
@@ -207,7 +207,7 @@ always_comb begin
         // if ((exp_max == 5'b11110) && (~unf_in)) ovf = 1;
     end else begin
         round_this = normalized_mantissa_sum[11:0];
-        exp_out    = exp_minus_shift_amount;
+        exp_out    = {1'b0,exp_minus_shift_amount};
         // if (({1'b0, exp_max} < {1'b0,norm_shift}) && (~ovf_in)) unf = 1;
     end
 end
@@ -232,7 +232,26 @@ logic round_flag;               // I added this. --Vinay 1/31/2025. Verilator wo
         end
     end
 
-    assign fp_out = {result_sign, exp_out, rounded_fraction};
+    logic overflow, zero;
+    logic [4:0] exp_out_final;
+    logic [9:0] rounded_fraction_final;
+    always_comb begin
+        overflow = exp_out[5] | &exp_out[4:0];
+        // zero = ~(|normalized_mantissa_sum);
+
+        casez(overflow)
+            1'b0: begin
+                exp_out_final = exp_out[4:0];
+                rounded_fraction_final = rounded_fraction;
+            end
+            1'b1: begin
+                exp_out_final = 5'b11111;
+                rounded_fraction_final = 10'b0;
+            end
+        endcase
+    end
+
+    assign fp_out = {result_sign, exp_out_final, rounded_fraction_final};
     // assign ovf = 0;
     // assign unf = 0;
     // assign output_ready = 1;

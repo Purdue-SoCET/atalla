@@ -8,7 +8,7 @@
 
 
 /* verilator lint_off UNUSEDSIGNAL */
-module add_fp16_tb;
+module add_fp16_tb_full;
 
     // Parameters
     localparam PERIOD = 2;
@@ -222,7 +222,7 @@ initial begin
 // initial begin
     #10ns;
 
-    fd = $fopen("tb/unit/systolic_array/random_cases.csv", "r");
+    fd = $fopen("tb/unit/systolic_array/adder_testcases.csv", "r");
     if (fd == 0) begin
         $fatal("ERROR: Could not open random_cases.csv");
     end

@@ -1,0 +1,2023 @@
+Passed 1 + 1 = 2 | A=3c00 B=3c00 Got=4000 Exp=4000
+Passed (-3) + 2 = -1 | A=c200 B=4000 Got=bc00 Exp=bc00
+Passed +0 + +0 | A=0000 B=0000 Got=0000 Exp=0000
+Passed +0 + -0 | A=0000 B=8000 Got=0000 Exp=0000
+Passed +x + 0 | A=3c00 B=0000 Got=3c00 Exp=3c00
+Passed +Inf + finite | A=7c00 B=3c00 Got=7c00 Exp=7c00
+Passed +Inf + +Inf | A=7c00 B=7c00 Got=7c00 Exp=7c00
+Passed -Inf + -Inf | A=fc00 B=fc00 Got=fc00 Exp=fc00
+Failed Test for +Inf + -Inf = NaN: A=7c00 B=fc00 Got=0000 Exp=7d00
+Failed Test for NaN + 1 = NaN: A=7d00 B=3c00 Got=7c00 Exp=7d00
+Passed subnormal + 1 ≈ 1 | A=0001 B=3c00 Got=3c00 Exp=3c00
+Failed Test for subnormal + subnormal: A=0001 B=0001 Got=5c00 Exp=0000
+Passed large_x + subnormal ≈ large_x | A=4000 B=0001 Got=4000 Exp=4000
+Passed overflow: max + max = +Inf | A=7bff B=7bff Got=7c00 Exp=7c00
+Passed overflow: -max + -max = -Inf | A=fbff B=fbff Got=fc00 Exp=fc00
+Passed +x + (-x) = +0 | A=4200 B=c200 Got=0000 Exp=0000
+Passed +a + +b = + | A=4000 B=4000 Got=4400 Exp=4400
+Passed -a + -b = - | A=c000 B=c000 Got=c400 Exp=c400
+Opened random_cases.csv for reading.
+Pass: A=eb43  B=5335  SUB=0 → eb26
+Pass: A=06ca  B=ddc5  SUB=0 → ddc5
+Pass: A=a807  B=7bd9  SUB=0 → 7bd9
+Pass: A=3389  B=835b  SUB=0 → 3389
+Pass: A=0623  B=1416  SUB=0 → 1478
+Pass: A=19d9  B=c32d  SUB=0 → c32c
+Fail: A=fd23  B=1517  SUB=0 → Got=fc00  Exp=ff23
+Fail: A=c168  B=35b5  SUB=0 → Got=c0b2  Exp=c0b1
+Pass: A=9ea3  B=4e5e  SUB=0 → 4e5e
+Pass: A=54b6  B=09e4  SUB=0 → 54b6
+Pass: A=6d9f  B=b537  SUB=0 → 6d9f
+Pass: A=c26e  B=17ad  SUB=0 → c26d
+Pass: A=c221  B=092a  SUB=0 → c221
+Pass: A=ddba  B=341a  SUB=0 → ddb9
+Pass: A=2713  B=0a37  SUB=0 → 271f
+Fail: A=90b8  B=317e  SUB=0 → Got=317a  Exp=3179
+Fail: A=aa27  B=0322  SUB=0 → Got=aa26  Exp=aa25
+Pass: A=5fe9  B=df35  SUB=0 → 51a0
+Pass: A=caf5  B=6be3  SUB=0 → 6bdc
+Pass: A=81e2  B=c016  SUB=0 → c016
+Pass: A=6b5b  B=d89c  SUB=0 → 6b11
+Pass: A=74da  B=aaae  SUB=0 → 74da
+Fail: A=2da9  B=c496  SUB=0 → Got=c480  Exp=c47f
+Pass: A=b124  B=75b8  SUB=0 → 75b8
+Pass: A=a093  B=e2b1  SUB=0 → e2b1
+Pass: A=bbea  B=9a34  SUB=0 → bbf0
+Pass: A=6b7e  B=e73a  SUB=0 → 67c2
+Pass: A=a8be  B=3bcc  SUB=0 → 3b80
+Fail: A=a1b8  B=fc12  SUB=0 → Got=fc00  Exp=fe12
+Pass: A=be87  B=afea  SUB=0 → bf06
+Pass: A=f560  B=eb97  SUB=0 → f653
+Pass: A=b49b  B=03cd  SUB=0 → b49b
+Pass: A=04a7  B=c6b5  SUB=0 → c6b5
+Pass: A=41cc  B=3ea2  SUB=0 → 448e
+Pass: A=d83b  B=7650  SUB=0 → 7648
+Pass: A=8e5b  B=332c  SUB=0 → 3329
+Pass: A=018d  B=445a  SUB=0 → 445a
+Pass: A=089c  B=5c57  SUB=0 → 5c57
+Pass: A=9ee3  B=86a5  SUB=0 → 9efe
+Fail: A=d479  B=ff41  SUB=0 → Got=fc00  Exp=ff41
+Pass: A=d046  B=f92e  SUB=0 → f92f
+Pass: A=f101  B=1e13  SUB=0 → f101
+Pass: A=4c2d  B=6fbb  SUB=0 → 6fbf
+Pass: A=5294  B=9b25  SUB=0 → 5294
+Pass: A=6ad0  B=30bb  SUB=0 → 6ad0
+Pass: A=ab68  B=ad65  SUB=0 → b08c
+Pass: A=cdde  B=6e39  SUB=0 → 6e33
+Pass: A=209e  B=f915  SUB=0 → f915
+Pass: A=485d  B=e062  SUB=0 → e051
+Pass: A=1a8f  B=852c  SUB=0 → 1a66
+Pass: A=2008  B=f99a  SUB=0 → f99a
+Pass: A=3017  B=129c  SUB=0 → 301e
+Fail: A=5c16  B=7e93  SUB=0 → Got=7c00  Exp=7e93
+Fail: A=6ada  B=772a  SUB=0 → Got=7802  Exp=7803
+Pass: A=e684  B=314a  SUB=0 → e684
+Fail: A=7ffb  B=4a2d  SUB=0 → Got=7c00  Exp=7ffb
+Pass: A=8759  B=e471  SUB=0 → e471
+Pass: A=ca9d  B=f934  SUB=0 → f934
+Pass: A=8ee8  B=ac40  SUB=0 → ac47
+Pass: A=e497  B=2df7  SUB=0 → e497
+Pass: A=93a1  B=7668  SUB=0 → 7668
+Pass: A=b1bd  B=428c  SUB=0 → 4230
+Pass: A=f9d0  B=b12e  SUB=0 → f9d0
+Pass: A=e658  B=e57b  SUB=0 → e9ea
+Pass: A=8c8e  B=40f4  SUB=0 → 40f4
+Pass: A=3aba  B=f6cb  SUB=0 → f6cb
+Pass: A=d3a5  B=d070  SUB=0 → d60a
+Pass: A=c904  B=c678  SUB=0 → cc20
+Pass: A=1559  B=499a  SUB=0 → 499a
+Pass: A=3d92  B=ac75  SUB=0 → 3d4b
+Pass: A=06b1  B=7be7  SUB=0 → 7be7
+Pass: A=13d2  B=b87d  SUB=0 → b87b
+Pass: A=956c  B=1c53  SUB=0 → 19f0
+Pass: A=1605  B=e75e  SUB=0 → e75e
+Pass: A=88bc  B=c73f  SUB=0 → c73f
+Pass: A=43fd  B=301f  SUB=0 → 441f
+Pass: A=b95e  B=31e1  SUB=0 → b7cc
+Pass: A=445f  B=cd7b  SUB=0 → cc63
+Pass: A=1fce  B=e256  SUB=0 → e256
+Pass: A=631a  B=5436  SUB=0 → 63a1
+Pass: A=f2f0  B=4e2b  SUB=0 → f2ed
+Pass: A=41fb  B=e1e9  SUB=0 → e1e3
+Fail: A=bce9  B=6b14  SUB=0 → Got=6b14  Exp=6b13
+Pass: A=7a64  B=9103  SUB=0 → 7a64
+Pass: A=233c  B=dd3c  SUB=0 → dd3c
+Pass: A=d854  B=3b7a  SUB=0 → d84d
+Pass: A=21d0  B=b63b  SUB=0 → b60c
+Pass: A=69b9  B=2031  SUB=0 → 69b9
+Pass: A=769f  B=033f  SUB=0 → 769f
+Pass: A=c985  B=03f8  SUB=0 → c985
+Pass: A=3a93  B=ef8e  SUB=0 → ef8e
+Pass: A=eb28  B=93a1  SUB=0 → eb28
+Pass: A=6ad9  B=8b80  SUB=0 → 6ad9
+Fail: A=ddf7  B=fd6e  SUB=0 → Got=fc00  Exp=ff6e
+Pass: A=d6f4  B=a61c  SUB=0 → d6f4
+Fail: A=f888  B=cc50  SUB=0 → Got=f888  Exp=f889
+Pass: A=f774  B=e1c2  SUB=0 → f7a2
+Pass: A=0b6f  B=646a  SUB=0 → 646a
+Fail: A=7cd0  B=3daf  SUB=0 → Got=7c00  Exp=7ed0
+Pass: A=44da  B=15a9  SUB=0 → 44da
+Pass: A=96e8  B=1772  SUB=0 → 0850
+Pass: A=58fa  B=2365  SUB=0 → 58fa
+Fail: A=f94e  B=cd49  SUB=0 → Got=f94e  Exp=f94f
+Pass: A=7652  B=047b  SUB=0 → 7652
+Pass: A=5f92  B=0fef  SUB=0 → 5f92
+Pass: A=bac3  B=ed3d  SUB=0 → ed3d
+Pass: A=564c  B=6180  SUB=0 → 624a
+Pass: A=2e07  B=e17a  SUB=0 → e17a
+Pass: A=c98e  B=8c5c  SUB=0 → c98e
+Pass: A=c897  B=91e3  SUB=0 → c897
+Fail: A=2a95  B=8152  SUB=0 → Got=2a95  Exp=2a94
+Pass: A=4661  B=5241  SUB=0 → 530d
+Pass: A=085f  B=605f  SUB=0 → 605f
+Fail: A=f41a  B=fd6f  SUB=0 → Got=fc00  Exp=ff6f
+Fail: A=7d58  B=b449  SUB=0 → Got=7c00  Exp=7f58
+Pass: A=eaeb  B=a100  SUB=0 → eaeb
+Pass: A=87d0  B=788b  SUB=0 → 788b
+Pass: A=4ed8  B=2545  SUB=0 → 4ed9
+Pass: A=afcb  B=81b2  SUB=0 → afcb
+Pass: A=d503  B=d306  SUB=0 → d843
+Pass: A=cf1a  B=c3ed  SUB=0 → d00c
+Pass: A=401c  B=0149  SUB=0 → 401c
+Pass: A=e2fe  B=33fa  SUB=0 → e2fe
+Pass: A=296b  B=cb82  SUB=0 → cb7d
+Pass: A=c05f  B=d9b3  SUB=0 → d9c4
+Pass: A=d401  B=08b2  SUB=0 → d401
+Fail: A=7bc3  B=fe31  SUB=0 → Got=f89f  Exp=fe31
+Pass: A=9878  B=2dcd  SUB=0 → 2da9
+Pass: A=d51d  B=fb3d  SUB=0 → fb40
+Pass: A=5e96  B=83f8  SUB=0 → 5e96
+Fail: A=fb26  B=7d15  SUB=0 → Got=7608  Exp=7f15
+Pass: A=a146  B=bb8a  SUB=0 → bb9f
+Pass: A=7411  B=fba5  SUB=0 → f99c
+Pass: A=c0c0  B=7a70  SUB=0 → 7a70
+Pass: A=4acf  B=2863  SUB=0 → 4ad3
+Fail: A=7d45  B=cf1f  SUB=0 → Got=7c00  Exp=7f45
+Pass: A=2890  B=c1b0  SUB=0 → c19e
+Pass: A=63da  B=9f03  SUB=0 → 63da
+Pass: A=a705  B=c504  SUB=0 → c50b
+Pass: A=57ee  B=5f4f  SUB=0 → 60a5
+Pass: A=5e6e  B=44d4  SUB=0 → 5e81
+Pass: A=f4f7  B=937b  SUB=0 → f4f7
+Pass: A=ce55  B=3cec  SUB=0 → ce06
+Pass: A=9029  B=e669  SUB=0 → e669
+Pass: A=a55c  B=4436  SUB=0 → 4431
+Pass: A=f131  B=8f42  SUB=0 → f131
+Pass: A=c732  B=5023  SUB=0 → 4e7a
+Fail: A=7cb0  B=9720  SUB=0 → Got=7c00  Exp=7eb0
+Pass: A=2566  B=9c1f  SUB=0 → 245e
+Fail: A=fa55  B=fcd2  SUB=0 → Got=fc00  Exp=fed2
+Pass: A=4e35  B=1851  SUB=0 → 4e35
+Pass: A=5bf2  B=7603  SUB=0 → 7613
+Pass: A=af1b  B=db11  SUB=0 → db12
+Pass: A=ad83  B=ba1e  SUB=0 → bace
+Fail: A=87ab  B=7cb7  SUB=0 → Got=7c00  Exp=7eb7
+Pass: A=94a2  B=b673  SUB=0 → b678
+Pass: A=e7cc  B=77ff  SUB=0 → 7782
+Pass: A=a38c  B=3125  SUB=0 → 30ac
+Pass: A=07c4  B=4266  SUB=0 → 4266
+Fail: A=3e88  B=7d92  SUB=0 → Got=7c00  Exp=7f92
+Pass: A=738c  B=c367  SUB=0 → 738c
+Pass: A=a5e2  B=7456  SUB=0 → 7456
+Pass: A=3f29  B=c895  SUB=0 → c760
+Fail: A=1d19  B=432a  SUB=0 → Got=432c  Exp=432d
+Pass: A=0bb9  B=3a5f  SUB=0 → 3a5f
+Pass: A=15da  B=1c36  SUB=0 → 1dac
+Pass: A=1fe5  B=abad  SUB=0 → aab0
+Pass: A=78a2  B=2bb8  SUB=0 → 78a2
+Pass: A=4167  B=4a1e  SUB=0 → 4b78
+Pass: A=2574  B=13ba  SUB=0 → 25b2
+Pass: A=1ab4  B=d4cd  SUB=0 → d4cd
+Pass: A=d36b  B=8cc6  SUB=0 → d36b
+Pass: A=70dd  B=80b1  SUB=0 → 70dd
+Pass: A=8051  B=ca69  SUB=0 → ca69
+Pass: A=eb1d  B=2488  SUB=0 → eb1d
+Pass: A=4447  B=a9b2  SUB=0 → 443c
+Pass: A=1232  B=e3e3  SUB=0 → e3e3
+Pass: A=9f29  B=1935  SUB=0 → 9c8e
+Pass: A=6e0f  B=8b2b  SUB=0 → 6e0f
+Pass: A=b22f  B=bd78  SUB=0 → be3e
+Pass: A=38b6  B=f999  SUB=0 → f999
+Pass: A=aedb  B=3b41  SUB=0 → 3a66
+Pass: A=6243  B=f0e2  SUB=0 → f07e
+Pass: A=3c96  B=d3ed  SUB=0 → d3c8
+Pass: A=5391  B=ae1e  SUB=0 → 538e
+Pass: A=d547  B=2905  SUB=0 → d546
+Pass: A=001a  B=c074  SUB=0 → c074
+Pass: A=ab90  B=41b4  SUB=0 → 4196
+Fail: A=9fee  B=83c5  SUB=0 → Got=9ff6  Exp=9ffd
+Pass: A=e9f7  B=a938  SUB=0 → e9f7
+Pass: A=347d  B=258e  SUB=0 → 34d6
+Pass: A=f1b6  B=c75f  SUB=0 → f1b7
+Pass: A=564c  B=66eb  SUB=0 → 6750
+Pass: A=8f88  B=65ba  SUB=0 → 65ba
+Fail: A=566e  B=7e4d  SUB=0 → Got=7c00  Exp=7e4d
+Pass: A=1884  B=1e1e  SUB=0 → 2030
+Pass: A=559f  B=a02b  SUB=0 → 559f
+Fail: A=5405  B=e32c  SUB=0 → Got=e2ac  Exp=e2ab
+Pass: A=b75a  B=9cce  SUB=0 → b76d
+Pass: A=2ff0  B=6c75  SUB=0 → 6c75
+Fail: A=dd16  B=7f67  SUB=0 → Got=7c00  Exp=7f67
+Pass: A=8fd3  B=bc6c  SUB=0 → bc6c
+Pass: A=ad28  B=0588  SUB=0 → ad27
+Pass: A=93f1  B=1c2c  SUB=0 → 1a5c
+Pass: A=19ef  B=e609  SUB=0 → e609
+Pass: A=628d  B=a751  SUB=0 → 628d
+Pass: A=7411  B=8b34  SUB=0 → 7411
+Pass: A=c639  B=7300  SUB=0 → 72ff
+Pass: A=9002  B=cc2f  SUB=0 → cc2f
+Pass: A=aeca  B=f70a  SUB=0 → f70a
+Pass: A=1347  B=73e5  SUB=0 → 73e5
+Pass: A=662e  B=87f4  SUB=0 → 662e
+Fail: A=e965  B=4b88  SUB=0 → Got=e95e  Exp=e95d
+Pass: A=6204  B=7ace  SUB=0 → 7ae6
+Fail: A=7e8a  B=8e55  SUB=0 → Got=7c00  Exp=7e8a
+Pass: A=5208  B=957b  SUB=0 → 5208
+Pass: A=d96a  B=4b65  SUB=0 → d8f4
+Fail: A=00f7  B=1182  SUB=0 → Got=1191  Exp=11a1
+Pass: A=a2cd  B=b8b0  SUB=0 → b8cb
+Fail: A=58f9  B=b29f  SUB=0 → Got=58f8  Exp=58f7
+Pass: A=6935  B=0721  SUB=0 → 6935
+Pass: A=50f3  B=87b7  SUB=0 → 50f3
+Pass: A=79cc  B=375e  SUB=0 → 79cc
+Pass: A=1ff4  B=73a6  SUB=0 → 73a6
+Pass: A=bd22  B=3d30  SUB=0 → 2300
+Pass: A=fbdc  B=4a4c  SUB=0 → fbdc
+Pass: A=bf26  B=c35a  SUB=0 → c576
+Pass: A=4a05  B=3da2  SUB=0 → 4ab9
+Pass: A=aaa3  B=6434  SUB=0 → 6434
+Pass: A=6b8d  B=20a1  SUB=0 → 6b8d
+Fail: A=03db  B=9a2c  SUB=0 → Got=9a1d  Exp=9a0d
+Pass: A=32ed  B=bf5a  SUB=0 → be7c
+Pass: A=a5fa  B=cb68  SUB=0 → cb6b
+Pass: A=7bb0  B=25f4  SUB=0 → 7bb0
+Pass: A=0453  B=bf06  SUB=0 → bf06
+Pass: A=da15  B=2bb1  SUB=0 → da15
+Fail: A=35f6  B=7d38  SUB=0 → Got=7c00  Exp=7f38
+Pass: A=627e  B=59d4  SUB=0 → 63f3
+Pass: A=0a0e  B=0896  SUB=0 → 0d52
+Fail: A=de80  B=b14e  SUB=0 → Got=de80  Exp=de81
+Pass: A=92d2  B=a7f0  SUB=0 → a813
+Pass: A=37ac  B=983f  SUB=0 → 37a4
+Pass: A=9ba6  B=709b  SUB=0 → 709b
+Pass: A=26be  B=a7f1  SUB=0 → 9ccc
+Pass: A=7b63  B=8dbb  SUB=0 → 7b63
+Pass: A=8d24  B=0ef2  SUB=0 → 0738
+Pass: A=b93a  B=20ee  SUB=0 → b926
+Pass: A=6404  B=0f4f  SUB=0 → 6404
+Pass: A=4e49  B=d8eb  SUB=0 → d822
+Fail: A=7f1d  B=083d  SUB=0 → Got=7c00  Exp=7f1d
+Pass: A=daea  B=35dd  SUB=0 → dae7
+Pass: A=1978  B=9823  SUB=0 → 1154
+Pass: A=8712  B=32c3  SUB=0 → 32c2
+Pass: A=3c82  B=3c55  SUB=0 → 406c
+Pass: A=8a90  B=10c0  SUB=0 → 0e38
+Pass: A=2856  B=0f74  SUB=0 → 2865
+Pass: A=9f49  B=277f  SUB=0 → 25ad
+Fail: A=3695  B=d803  SUB=0 → Got=d400  Exp=d7ff
+Pass: A=5458  B=afff  SUB=0 → 5456
+Pass: A=1733  B=61d2  SUB=0 → 61d2
+Pass: A=364f  B=1962  SUB=0 → 365a
+Pass: A=8351  B=53f6  SUB=0 → 53f6
+Pass: A=5127  B=3d4b  SUB=0 → 5151
+Pass: A=d5af  B=53f4  SUB=0 → ced4
+Pass: A=a68e  B=807c  SUB=0 → a68e
+Pass: A=0799  B=9acb  SUB=0 → 9a8e
+Pass: A=69de  B=e386  SUB=0 → 67f9
+Pass: A=c5d2  B=acbf  SUB=0 → c5e5
+Fail: A=dd28  B=fe47  SUB=0 → Got=fc00  Exp=fe47
+Pass: A=e5fb  B=c40c  SUB=0 → e5ff
+Pass: A=d2a7  B=47cb  SUB=0 → d1ae
+Pass: A=a22e  B=97f9  SUB=0 → a32d
+Pass: A=0a99  B=259f  SUB=0 → 25ac
+Pass: A=cd05  B=4bd5  SUB=0 → c46a
+Pass: A=8662  B=b1d3  SUB=0 → b1d4
+Pass: A=77a2  B=13a2  SUB=0 → 77a2
+Pass: A=1a62  B=c43f  SUB=0 → c43e
+Pass: A=dd96  B=6b82  SUB=0 → 6acf
+Pass: A=e964  B=5ea6  SUB=0 → e88f
+Pass: A=9544  B=0cb0  SUB=0 → 9418
+Pass: A=44dc  B=ac04  SUB=0 → 44cc
+Pass: A=282d  B=2a28  SUB=0 → 2d2a
+Pass: A=9ce2  B=2417  SUB=0 → 21bd
+Pass: A=b260  B=8dcf  SUB=0 → b263
+Pass: A=73ff  B=af31  SUB=0 → 73ff
+Pass: A=de1b  B=dccb  SUB=0 → e173
+Fail: A=d428  B=a91e  SUB=0 → Got=d428  Exp=d429
+Pass: A=12a2  B=f640  SUB=0 → f640
+Pass: A=8da9  B=ee33  SUB=0 → ee33
+Pass: A=b1ec  B=f378  SUB=0 → f378
+Pass: A=1939  B=da7b  SUB=0 → da7b
+Pass: A=8410  B=9b16  SUB=0 → 9b36
+Fail: A=830e  B=1ee5  SUB=0 → Got=1edf  Exp=1ed9
+Fail: A=5562  B=fe53  SUB=0 → Got=fc00  Exp=fe53
+Pass: A=62a6  B=2e3a  SUB=0 → 62a6
+Pass: A=e308  B=cd75  SUB=0 → e334
+Pass: A=cfe1  B=2120  SUB=0 → cfe0
+Pass: A=be35  B=1512  SUB=0 → be34
+Pass: A=8129  B=c1ae  SUB=0 → c1ae
+Pass: A=0131  B=322e  SUB=0 → 322e
+Pass: A=6e8b  B=0a56  SUB=0 → 6e8b
+Pass: A=62ec  B=2ceb  SUB=0 → 62ec
+Pass: A=636a  B=9df9  SUB=0 → 636a
+Pass: A=b0fe  B=162f  SUB=0 → b0f2
+Pass: A=b2c1  B=fb84  SUB=0 → fb84
+Pass: A=1755  B=1d34  SUB=0 → 1f09
+Pass: A=7044  B=f698  SUB=0 → f476
+Pass: A=1cd7  B=56df  SUB=0 → 56df
+Pass: A=50df  B=53ca  SUB=0 → 5654
+Pass: A=9900  B=39e8  SUB=0 → 39e3
+Pass: A=4485  B=70eb  SUB=0 → 70ec
+Pass: A=90d2  B=a2bb  SUB=0 → a308
+Pass: A=8c6e  B=27f0  SUB=0 → 27de
+Pass: A=2f83  B=158f  SUB=0 → 2f99
+Pass: A=8355  B=f390  SUB=0 → f390
+Pass: A=7405  B=f8f4  SUB=0 → f5e3
+Pass: A=8d3d  B=78f9  SUB=0 → 78f9
+Pass: A=db07  B=652a  SUB=0 → 6449
+Pass: A=7399  B=33eb  SUB=0 → 7399
+Pass: A=b006  B=06a2  SUB=0 → b005
+Pass: A=f43f  B=f395  SUB=0 → f805
+Pass: A=1c33  B=a473  SUB=0 → a2cc
+Pass: A=b641  B=b42b  SUB=0 → b936
+Pass: A=eff8  B=c7b9  SUB=0 → effa
+Pass: A=6bbf  B=64b2  SUB=0 → 6d0c
+Fail: A=ffc2  B=4f33  SUB=0 → Got=fc00  Exp=ffc2
+Pass: A=7209  B=28e9  SUB=0 → 7209
+Pass: A=1056  B=d0d8  SUB=0 → d0d8
+Pass: A=3d6c  B=c841  SUB=0 → c727
+Pass: A=35ea  B=7008  SUB=0 → 7008
+Pass: A=8690  B=bd40  SUB=0 → bd40
+Pass: A=9dcb  B=e809  SUB=0 → e809
+Pass: A=d1a4  B=7790  SUB=0 → 778d
+Pass: A=6a8f  B=4bde  SUB=0 → 6a97
+Pass: A=6dd3  B=8fc3  SUB=0 → 6dd3
+Pass: A=3940  B=b408  SUB=0 → 3678
+Pass: A=6437  B=93f7  SUB=0 → 6437
+Pass: A=ec76  B=4b53  SUB=0 → ec72
+Fail: A=fc93  B=070d  SUB=0 → Got=fc00  Exp=fe93
+Pass: A=9059  B=765d  SUB=0 → 765d
+Fail: A=6615  B=7e90  SUB=0 → Got=7c00  Exp=7e90
+Pass: A=43ac  B=aa6e  SUB=0 → 4392
+Pass: A=86b9  B=c424  SUB=0 → c424
+Pass: A=eba1  B=8e85  SUB=0 → eba1
+Pass: A=93e7  B=ea4f  SUB=0 → ea4f
+Pass: A=16e0  B=5543  SUB=0 → 5543
+Pass: A=90b2  B=8674  SUB=0 → 9180
+Pass: A=7704  B=475c  SUB=0 → 7704
+Fail: A=2241  B=c92f  SUB=0 → Got=c92e  Exp=c92d
+Pass: A=d3fa  B=f99d  SUB=0 → f99f
+Pass: A=8668  B=9cf2  SUB=0 → 9d0c
+Pass: A=2c56  B=4795  SUB=0 → 47a6
+Pass: A=14bb  B=d69b  SUB=0 → d69b
+Pass: A=ac51  B=fb35  SUB=0 → fb35
+Pass: A=18d0  B=4621  SUB=0 → 4622
+Pass: A=5620  B=97a4  SUB=0 → 5620
+Fail: A=4618  B=7e2e  SUB=0 → Got=7c00  Exp=7e2e
+Pass: A=396e  B=cd61  SUB=0 → cd36
+Fail: A=01e5  B=2634  SUB=0 → Got=2635  Exp=2636
+Pass: A=1a69  B=1bbf  SUB=0 → 1f14
+Pass: A=ed95  B=1e8c  SUB=0 → ed95
+Pass: A=687b  B=c157  SUB=0 → 687a
+Pass: A=1b6d  B=c34e  SUB=0 → c34c
+Pass: A=3e9f  B=a15e  SUB=0 → 3e94
+Pass: A=f12d  B=4f97  SUB=0 → f129
+Fail: A=8436  B=b1c0  SUB=0 → Got=b1c0  Exp=b1c1
+Pass: A=d44e  B=96b8  SUB=0 → d44e
+Fail: A=8873  B=7c24  SUB=0 → Got=7c00  Exp=7e24
+Pass: A=ec06  B=4890  SUB=0 → ec04
+Pass: A=43b4  B=bebd  SUB=0 → 4056
+Pass: A=c2ab  B=cb90  SUB=0 → cc9d
+Pass: A=1b61  B=f31e  SUB=0 → f31e
+Pass: A=94ef  B=5917  SUB=0 → 5917
+Fail: A=7cc9  B=35f8  SUB=0 → Got=7c00  Exp=7ec9
+Pass: A=8f92  B=8c35  SUB=0 → 91e4
+Fail: A=a140  B=fdd7  SUB=0 → Got=fc00  Exp=ffd7
+Pass: A=2bd5  B=8e84  SUB=0 → 2bc8
+Pass: A=d4ef  B=e857  SUB=0 → e87e
+Pass: A=697b  B=6bdd  SUB=0 → 6eac
+Pass: A=e0ab  B=8804  SUB=0 → e0ab
+Pass: A=6bdb  B=d15d  SUB=0 → 6bc6
+Pass: A=1cb9  B=d9d6  SUB=0 → d9d6
+Pass: A=cc5e  B=ef39  SUB=0 → ef3d
+Fail: A=abc8  B=a0c5  SUB=0 → Got=ac7c  Exp=ac7d
+Fail: A=18f9  B=7c37  SUB=0 → Got=7c00  Exp=7e37
+Pass: A=5424  B=e198  SUB=0 → e114
+Pass: A=a2bf  B=f078  SUB=0 → f078
+Pass: A=27a0  B=6a94  SUB=0 → 6a94
+Pass: A=538b  B=37fb  SUB=0 → 539b
+Pass: A=df55  B=1125  SUB=0 → df55
+Pass: A=5fd3  B=e1ef  SUB=0 → dc0b
+Pass: A=e7fb  B=d9ee  SUB=0 → e85c
+Pass: A=1230  B=606c  SUB=0 → 606c
+Pass: A=844f  B=12d1  SUB=0 → 1247
+Pass: A=52b4  B=dbd9  SUB=0 → da2c
+Fail: A=3e59  B=9b1e  SUB=0 → Got=3e56  Exp=3e55
+Pass: A=a253  B=b2af  SUB=0 → b314
+Pass: A=199e  B=e5da  SUB=0 → e5da
+Pass: A=7369  B=a109  SUB=0 → 7369
+Pass: A=c543  B=5e50  SUB=0 → 5e3b
+Pass: A=73df  B=c6da  SUB=0 → 73de
+Pass: A=f0c2  B=a53e  SUB=0 → f0c2
+Fail: A=fed1  B=d847  SUB=0 → Got=fc00  Exp=fed1
+Pass: A=0318  B=4eba  SUB=0 → 4eba
+Pass: A=b099  B=79ce  SUB=0 → 79ce
+Pass: A=58ef  B=c30b  SUB=0 → 58d3
+Pass: A=9cef  B=5ac4  SUB=0 → 5ac4
+Pass: A=a8f8  B=e714  SUB=0 → e714
+Pass: A=680f  B=22fd  SUB=0 → 680f
+Pass: A=2ffc  B=6bfe  SUB=0 → 6bfe
+Pass: A=2876  B=f2cc  SUB=0 → f2cc
+Pass: A=aa94  B=2229  SUB=0 → a90a
+Pass: A=1741  B=43d3  SUB=0 → 43d4
+Pass: A=5f09  B=743b  SUB=0 → 7457
+Fail: A=8870  B=b566  SUB=0 → Got=b566  Exp=b567
+Pass: A=2fcb  B=5e26  SUB=0 → 5e26
+Pass: A=7afb  B=dd13  SUB=0 → 7af1
+Pass: A=21f8  B=5d59  SUB=0 → 5d59
+Fail: A=397c  B=0d99  SUB=0 → Got=397c  Exp=397d
+Pass: A=b278  B=3080  SUB=0 → abe0
+Pass: A=3677  B=dde2  SUB=0 → dde0
+Fail: A=7f18  B=586a  SUB=0 → Got=7c00  Exp=7f18
+Pass: A=0d7f  B=c16f  SUB=0 → c16f
+Pass: A=0a6a  B=53a2  SUB=0 → 53a2
+Pass: A=b9fe  B=eeda  SUB=0 → eeda
+Pass: A=83ef  B=4645  SUB=0 → 4645
+Pass: A=a9a2  B=3b5a  SUB=0 → 3b00
+Pass: A=3143  B=0503  SUB=0 → 3144
+Pass: A=08cb  B=53b1  SUB=0 → 53b1
+Pass: A=ac16  B=cf00  SUB=0 → cf04
+Pass: A=6dc2  B=7b6e  SUB=0 → 7c00
+Pass: A=4684  B=9e1a  SUB=0 → 4682
+Fail: A=077c  B=7f32  SUB=0 → Got=7c00  Exp=7f32
+Pass: A=43dc  B=afcb  SUB=0 → 439e
+Pass: A=bda5  B=b175  SUB=0 → be54
+Pass: A=eacf  B=c52f  SUB=0 → ead2
+Pass: A=1e8c  B=7b76  SUB=0 → 7b76
+Fail: A=5a98  B=7b00  SUB=0 → Got=7b06  Exp=7b07
+Pass: A=1194  B=9572  SUB=0 → 9150
+Pass: A=4f87  B=066a  SUB=0 → 4f87
+Pass: A=7878  B=f5c6  SUB=0 → 7254
+Fail: A=282d  B=91e2  SUB=0 → Got=2816  Exp=2815
+Pass: A=e04e  B=2b7c  SUB=0 → e04e
+Pass: A=8eb3  B=ba64  SUB=0 → ba65
+Pass: A=4936  B=b205  SUB=0 → 491e
+Pass: A=8bef  B=0983  SUB=0 → 84d8
+Pass: A=c4b7  B=25fa  SUB=0 → c4b1
+Pass: A=0ffc  B=e056  SUB=0 → e056
+Pass: A=f157  B=448a  SUB=0 → f156
+Pass: A=328d  B=c386  SUB=0 → c31d
+Pass: A=0cf7  B=c953  SUB=0 → c953
+Pass: A=16e5  B=7a56  SUB=0 → 7a56
+Pass: A=6e6e  B=28d5  SUB=0 → 6e6e
+Pass: A=1c9c  B=5991  SUB=0 → 5991
+Pass: A=d112  B=2663  SUB=0 → d111
+Pass: A=651b  B=6ce0  SUB=0 → 6e27
+Pass: A=3ea9  B=4a4e  SUB=0 → 4b23
+Pass: A=62a4  B=97e1  SUB=0 → 62a4
+Pass: A=dc11  B=b8f6  SUB=0 → dc13
+Pass: A=b391  B=aa4f  SUB=0 → b492
+Pass: A=090e  B=b111  SUB=0 → b110
+Pass: A=6228  B=6053  SUB=0 → 653e
+Pass: A=7226  B=f059  SUB=0 → 6b34
+Fail: A=bdae  B=fc79  SUB=0 → Got=fc00  Exp=fe79
+Fail: A=34e0  B=63c0  SUB=0 → Got=63c0  Exp=63c1
+Pass: A=3998  B=bffd  SUB=0 → bd31
+Pass: A=c5f3  B=2675  SUB=0 → c5ed
+Pass: A=e5cc  B=f394  SUB=0 → f427
+Pass: A=1ab6  B=55c7  SUB=0 → 55c7
+Pass: A=47ca  B=2932  SUB=0 → 47d4
+Pass: A=4a5e  B=f01a  SUB=0 → f018
+Pass: A=f92c  B=8add  SUB=0 → f92c
+Pass: A=c4c8  B=0faa  SUB=0 → c4c8
+Fail: A=fdf8  B=b686  SUB=0 → Got=fc00  Exp=fff8
+Pass: A=3746  B=9477  SUB=0 → 3742
+Pass: A=3669  B=e9a8  SUB=0 → e9a8
+Pass: A=c58e  B=abff  SUB=0 → c59e
+Pass: A=60d2  B=854a  SUB=0 → 60d2
+Pass: A=8a43  B=dc6f  SUB=0 → dc6f
+Pass: A=3737  B=d405  SUB=0 → d3fc
+Pass: A=8756  B=ce57  SUB=0 → ce57
+Pass: A=e5e1  B=512a  SUB=0 → e5b8
+Pass: A=63d1  B=87d6  SUB=0 → 63d1
+Pass: A=0a58  B=2876  SUB=0 → 287c
+Pass: A=19cc  B=9649  SUB=0 → 154f
+Pass: A=6c2a  B=53d0  SUB=0 → 6c3a
+Pass: A=fa3b  B=2ab5  SUB=0 → fa3b
+Pass: A=f1cb  B=35ce  SUB=0 → f1cb
+Pass: A=b5e4  B=3f22  SUB=0 → 3da9
+Pass: A=9823  B=3650  SUB=0 → 3648
+Pass: A=5577  B=beb6  SUB=0 → 555c
+Pass: A=df03  B=b3c1  SUB=0 → df04
+Pass: A=19cb  B=79ef  SUB=0 → 79ef
+Fail: A=015e  B=7e8e  SUB=0 → Got=7c00  Exp=7e8e
+Pass: A=b965  B=f57b  SUB=0 → f57b
+Fail: A=ec18  B=fed1  SUB=0 → Got=fc00  Exp=fed1
+Pass: A=43b6  B=fab0  SUB=0 → fab0
+Fail: A=86c7  B=2f5d  SUB=0 → Got=2f5c  Exp=2f5b
+Pass: A=6626  B=0e34  SUB=0 → 6626
+Pass: A=5ea5  B=8bc4  SUB=0 → 5ea5
+Pass: A=274f  B=5eec  SUB=0 → 5eec
+Pass: A=6d99  B=94b9  SUB=0 → 6d99
+Pass: A=7a7a  B=46ce  SUB=0 → 7a7a
+Fail: A=3a06  B=8c54  SUB=0 → Got=3a06  Exp=3a05
+Fail: A=d500  B=7f9e  SUB=0 → Got=7c00  Exp=7f9e
+Pass: A=21ea  B=fb61  SUB=0 → fb61
+Pass: A=2482  B=abe0  SUB=0 → a99f
+Pass: A=2f80  B=42e9  SUB=0 → 4325
+Pass: A=cc59  B=3b3d  SUB=0 → cc1f
+Pass: A=850f  B=20c4  SUB=0 → 20ba
+Pass: A=0590  B=8de4  SUB=0 → 8c80
+Fail: A=fc87  B=af2d  SUB=0 → Got=fc00  Exp=fe87
+Pass: A=c337  B=1ef0  SUB=0 → c334
+Pass: A=09bf  B=a4e6  SUB=0 → a4db
+Pass: A=d48b  B=3c19  SUB=0 → d47b
+Pass: A=ee9c  B=357c  SUB=0 → ee9c
+Pass: A=cd9f  B=a896  SUB=0 → cda1
+Pass: A=e0fa  B=e468  SUB=0 → e6e5
+Pass: A=3dc8  B=e985  SUB=0 → e984
+Pass: A=2ac0  B=f37d  SUB=0 → f37d
+Pass: A=6e6b  B=38ea  SUB=0 → 6e6b
+Pass: A=90be  B=287b  SUB=0 → 2868
+Pass: A=bbce  B=ed63  SUB=0 → ed63
+Pass: A=5527  B=0608  SUB=0 → 5527
+Pass: A=bfb2  B=e943  SUB=0 → e944
+Pass: A=a0f8  B=cbdf  SUB=0 → cbe0
+Pass: A=b9ca  B=50a7  SUB=0 → 5090
+Pass: A=cd1c  B=0717  SUB=0 → cd1c
+Pass: A=d5c7  B=18f6  SUB=0 → d5c7
+Pass: A=0ba4  B=d2d4  SUB=0 → d2d4
+Pass: A=4dc7  B=5125  SUB=0 → 5404
+Pass: A=b8f5  B=c978  SUB=0 → c9c7
+Fail: A=0500  B=8620  SUB=0 → Got=fc00  Exp=8120
+Pass: A=b0b7  B=9574  SUB=0 → b0c2
+Fail: A=8112  B=a26e  SUB=0 → Got=a26f  Exp=a270
+Fail: A=9359  B=3473  SUB=0 → Got=3470  Exp=346f
+Pass: A=96ac  B=a488  SUB=0 → a4f3
+Pass: A=37ca  B=a0b7  SUB=0 → 37a4
+Pass: A=471a  B=6278  SUB=0 → 6286
+Pass: A=77e3  B=2118  SUB=0 → 77e3
+Pass: A=c767  B=2c2a  SUB=0 → c756
+Pass: A=d823  B=33a9  SUB=0 → d821
+Pass: A=f5cb  B=c3a0  SUB=0 → f5cb
+Fail: A=ad27  B=7e0c  SUB=0 → Got=7c00  Exp=7e0c
+Pass: A=aec6  B=384f  SUB=0 → 36ec
+Pass: A=1373  B=5fb8  SUB=0 → 5fb8
+Pass: A=8bbf  B=731e  SUB=0 → 731e
+Pass: A=631d  B=275d  SUB=0 → 631d
+Pass: A=1d3f  B=5c7e  SUB=0 → 5c7e
+Pass: A=8d37  B=851e  SUB=0 → 8e7e
+Pass: A=6fcb  B=c5ec  SUB=0 → 6fca
+Pass: A=9807  B=4c85  SUB=0 → 4c85
+Pass: A=330d  B=c928  SUB=0 → c90c
+Pass: A=6808  B=81c0  SUB=0 → 6808
+Pass: A=78a4  B=a279  SUB=0 → 78a4
+Pass: A=bd17  B=f4af  SUB=0 → f4af
+Pass: A=627a  B=5ade  SUB=0 → 6419
+Pass: A=876c  B=88bc  SUB=0 → 8c39
+Pass: A=972b  B=06ff  SUB=0 → 96bb
+Pass: A=b668  B=0517  SUB=0 → b668
+Pass: A=e504  B=eb41  SUB=0 → ece2
+Pass: A=197e  B=2463  SUB=0 → 2513
+Fail: A=c2cd  B=a5d1  SUB=0 → Got=c2d8  Exp=c2d9
+Pass: A=c058  B=a973  SUB=0 → c06e
+Pass: A=c944  B=c079  SUB=0 → ca62
+Pass: A=c6dd  B=ccb8  SUB=0 → ce6f
+Pass: A=d28a  B=a01e  SUB=0 → d28a
+Pass: A=5ed4  B=bd83  SUB=0 → 5ece
+Pass: A=0c6b  B=6351  SUB=0 → 6351
+Pass: A=0a29  B=3c56  SUB=0 → 3c56
+Pass: A=7724  B=6a47  SUB=0 → 77ed
+Pass: A=d3df  B=cf53  SUB=0 → d5c4
+Pass: A=9ed4  B=76b7  SUB=0 → 76b7
+Pass: A=2f8b  B=edc4  SUB=0 → edc4
+Pass: A=ddda  B=06cc  SUB=0 → ddda
+Pass: A=1516  B=eee7  SUB=0 → eee7
+Pass: A=a5df  B=8641  SUB=0 → a5e5
+Pass: A=85a9  B=3a5c  SUB=0 → 3a5c
+Pass: A=bcce  B=e2e7  SUB=0 → e2e9
+Pass: A=d74f  B=a434  SUB=0 → d74f
+Fail: A=71e0  B=5fd3  SUB=0 → Got=721e  Exp=721f
+Pass: A=7089  B=9d16  SUB=0 → 7089
+Pass: A=b2f8  B=2aa2  SUB=0 → b150
+Pass: A=7840  B=eca4  SUB=0 → 7757
+Pass: A=633f  B=f78a  SUB=0 → f750
+Pass: A=3d4c  B=40c1  SUB=0 → 4367
+Pass: A=f4cd  B=2206  SUB=0 → f4cd
+Pass: A=ca5b  B=2959  SUB=0 → ca56
+Pass: A=4ee3  B=fb38  SUB=0 → fb37
+Pass: A=c75d  B=632f  SUB=0 → 6320
+Pass: A=302b  B=f96d  SUB=0 → f96d
+Pass: A=0c48  B=0d52  SUB=0 → 10cd
+Pass: A=440f  B=aa8f  SUB=0 → 4402
+Pass: A=c9d9  B=ae56  SUB=0 → c9e6
+Pass: A=d26b  B=a229  SUB=0 → d26b
+Pass: A=a1a6  B=66c1  SUB=0 → 66c1
+Pass: A=6c8d  B=9593  SUB=0 → 6c8d
+Pass: A=72bc  B=4355  SUB=0 → 72bc
+Pass: A=f436  B=6e1f  SUB=0 → f15c
+Pass: A=9b6e  B=97d6  SUB=0 → 9dac
+Pass: A=3e8e  B=5a83  SUB=0 → 5a90
+Fail: A=ebf0  B=d4a7  SUB=0 → Got=ec0a  Exp=ec0b
+Pass: A=0192  B=5c62  SUB=0 → 5c62
+Pass: A=fb80  B=c330  SUB=0 → fb80
+Pass: A=a2a3  B=ab47  SUB=0 → ac78
+Pass: A=6faf  B=f2e1  SUB=0 → ee13
+Pass: A=46cc  B=9c31  SUB=0 → 46cb
+Pass: A=d829  B=92af  SUB=0 → d829
+Pass: A=1e77  B=8c35  SUB=0 → 1e34
+Pass: A=b26f  B=d04d  SUB=0 → d053
+Pass: A=96f4  B=facf  SUB=0 → facf
+Pass: A=8ea1  B=d75a  SUB=0 → d75a
+Fail: A=a387  B=0150  SUB=0 → Got=a386  Exp=a384
+Fail: A=b5e5  B=7e4b  SUB=0 → Got=7c00  Exp=7e4b
+Pass: A=ba7d  B=0e16  SUB=0 → ba7c
+Pass: A=67ab  B=0d39  SUB=0 → 67ab
+Pass: A=8503  B=2fbe  SUB=0 → 2fbd
+Pass: A=b2cb  B=323e  SUB=0 → a468
+Pass: A=5725  B=6a30  SUB=0 → 6a69
+Pass: A=da95  B=4e6a  SUB=0 → d9c8
+Pass: A=799a  B=befc  SUB=0 → 799a
+Pass: A=070e  B=4be1  SUB=0 → 4be1
+Pass: A=d9f3  B=76f3  SUB=0 → 76e7
+Pass: A=add2  B=2b7e  SUB=0 → a826
+Pass: A=8f03  B=9ffa  SUB=0 → a035
+Pass: A=f686  B=a82d  SUB=0 → f686
+Fail: A=07af  B=7cf5  SUB=0 → Got=7c00  Exp=7ef5
+Pass: A=ac8a  B=b0ae  SUB=0 → b2f3
+Pass: A=e669  B=252d  SUB=0 → e669
+Pass: A=f0c1  B=2e8a  SUB=0 → f0c1
+Pass: A=7b39  B=b456  SUB=0 → 7b39
+Pass: A=3107  B=6c71  SUB=0 → 6c71
+Pass: A=f1e6  B=d1b8  SUB=0 → f1ec
+Pass: A=b205  B=8403  SUB=0 → b206
+Pass: A=cc92  B=2c33  SUB=0 → cc8e
+Pass: A=c89e  B=c13f  SUB=0 → c9ee
+Pass: A=3cde  B=1468  SUB=0 → 3cdf
+Pass: A=4e0b  B=25df  SUB=0 → 4e0c
+Pass: A=4fcc  B=8406  SUB=0 → 4fcc
+Pass: A=b54a  B=681d  SUB=0 → 681d
+Pass: A=a859  B=69bd  SUB=0 → 69bd
+Pass: A=99e7  B=3b84  SUB=0 → 3b7e
+Pass: A=f258  B=2686  SUB=0 → f258
+Pass: A=36bd  B=488d  SUB=0 → 48c3
+Pass: A=8bd4  B=281c  SUB=0 → 2814
+Pass: A=6e8f  B=6c81  SUB=0 → 7188
+Pass: A=648c  B=4803  SUB=0 → 6494
+Pass: A=cdaa  B=d922  SUB=0 → d9d7
+Pass: A=2cb0  B=0bb1  SUB=0 → 2cb4
+Pass: A=c73e  B=f976  SUB=0 → f976
+Pass: A=d9a9  B=a02b  SUB=0 → d9a9
+Pass: A=857e  B=b72f  SUB=0 → b72f
+Pass: A=29a5  B=e1ed  SUB=0 → e1ed
+Pass: A=6e76  B=bfdc  SUB=0 → 6e76
+Pass: A=c6a4  B=c063  SUB=0 → c86b
+Pass: A=b39f  B=82e8  SUB=0 → b39f
+Pass: A=dd6f  B=2ed7  SUB=0 → dd6f
+Pass: A=e6f1  B=4c72  SUB=0 → e6df
+Pass: A=690f  B=3b6a  SUB=0 → 690f
+Pass: A=db96  B=1a8a  SUB=0 → db96
+Pass: A=5987  B=5ec7  SUB=0 → 60c5
+Pass: A=d94a  B=d984  SUB=0 → dd67
+Pass: A=b503  B=1397  SUB=0 → b4ff
+Fail: A=14e1  B=23e1  SUB=0 → Got=243e  Exp=243f
+Fail: A=b6aa  B=0953  SUB=0 → Got=b6aa  Exp=b6a9
+Pass: A=6889  B=a0a5  SUB=0 → 6889
+Pass: A=3fb5  B=1317  SUB=0 → 3fb6
+Fail: A=8350  B=9546  SUB=0 → Got=9560  Exp=957b
+Pass: A=5550  B=8587  SUB=0 → 5550
+Pass: A=1eb4  B=33da  SUB=0 → 3408
+Pass: A=52c8  B=68d5  SUB=0 → 68f0
+Pass: A=6a6e  B=d449  SUB=0 → 6a4c
+Pass: A=246c  B=4bed  SUB=0 → 4bef
+Pass: A=cb99  B=255c  SUB=0 → cb96
+Pass: A=a433  B=4692  SUB=0 → 468e
+Pass: A=973c  B=2242  SUB=0 → 215a
+Pass: A=5211  B=78a0  SUB=0 → 78a2
+Pass: A=142f  B=bba7  SUB=0 → bba5
+Pass: A=f816  B=e2b3  SUB=0 → f831
+Pass: A=9b5e  B=71b5  SUB=0 → 71b5
+Pass: A=b581  B=edcf  SUB=0 → edcf
+Pass: A=d185  B=252b  SUB=0 → d184
+Pass: A=f8d0  B=f762  SUB=0 → fc00
+Pass: A=bdd6  B=de6c  SUB=0 → de72
+Pass: A=0f94  B=6c9f  SUB=0 → 6c9f
+Pass: A=5436  B=cada  SUB=0 → 52b6
+Fail: A=bca7  B=6b96  SUB=0 → Got=6b96  Exp=6b95
+Pass: A=ac50  B=b9fa  SUB=0 → ba84
+Pass: A=0870  B=0e1c  SUB=0 → 102a
+Pass: A=f69e  B=b4f0  SUB=0 → f69e
+Pass: A=c46b  B=d89a  SUB=0 → d8bd
+Pass: A=70c3  B=90c9  SUB=0 → 70c3
+Pass: A=b7ba  B=eee3  SUB=0 → eee3
+Pass: A=5b4e  B=8cec  SUB=0 → 5b4e
+Pass: A=d1df  B=8202  SUB=0 → d1df
+Pass: A=67be  B=78e1  SUB=0 → 791f
+Pass: A=b83f  B=8a8c  SUB=0 → b83f
+Fail: A=cf0b  B=fe1d  SUB=0 → Got=fc00  Exp=fe1d
+Pass: A=6d75  B=9100  SUB=0 → 6d75
+Pass: A=784d  B=45fc  SUB=0 → 784d
+Pass: A=2e55  B=d08c  SUB=0 → d089
+Pass: A=86f1  B=6261  SUB=0 → 6261
+Fail: A=e768  B=55ea  SUB=0 → Got=e70a  Exp=e709
+Pass: A=13d9  B=f596  SUB=0 → f596
+Pass: A=e3d7  B=f5db  SUB=0 → f61a
+Pass: A=b19a  B=1ceb  SUB=0 → b173
+Fail: A=fae1  B=6a79  SUB=0 → Got=fa7a  Exp=fa79
+Pass: A=dae4  B=6609  SUB=0 → 652c
+Fail: A=88c4  B=7f59  SUB=0 → Got=7c00  Exp=7f59
+Pass: A=bcad  B=8e9e  SUB=0 → bcad
+Pass: A=5d91  B=e43d  SUB=0 → e1b2
+Fail: A=bdec  B=d603  SUB=0 → Got=d61a  Exp=d61b
+Pass: A=8d26  B=405d  SUB=0 → 405d
+Fail: A=01a0  B=00cd  SUB=0 → Got=7c00  Exp=026d
+Pass: A=dee3  B=397f  SUB=0 → dee0
+Pass: A=b968  B=3d18  SUB=0 → 38c8
+Pass: A=9bba  B=b64d  SUB=0 → b65c
+Pass: A=d63a  B=b3b4  SUB=0 → d63e
+Fail: A=94d1  B=8264  SUB=0 → Got=94e4  Exp=94f7
+Pass: A=7560  B=6a31  SUB=0 → 7626
+Pass: A=50d3  B=a1a3  SUB=0 → 50d3
+Pass: A=bbc5  B=d104  SUB=0 → d123
+Pass: A=8dd0  B=71f4  SUB=0 → 71f4
+Pass: A=6d22  B=cd6f  SUB=0 → 6d1d
+Pass: A=2804  B=33e4  SUB=0 → 3472
+Pass: A=5b13  B=77c8  SUB=0 → 77d6
+Pass: A=5b26  B=670c  SUB=0 → 67f1
+Pass: A=6197  B=020a  SUB=0 → 6197
+Pass: A=be99  B=ac3f  SUB=0 → bedd
+Pass: A=0219  B=3775  SUB=0 → 3775
+Pass: A=cfd3  B=98ce  SUB=0 → cfd3
+Pass: A=1fe2  B=6e93  SUB=0 → 6e93
+Pass: A=0230  B=48af  SUB=0 → 48af
+Fail: A=7c95  B=c2eb  SUB=0 → Got=7c00  Exp=7e95
+Pass: A=a4c5  B=c49d  SUB=0 → c4a2
+Pass: A=7404  B=32a7  SUB=0 → 7404
+Pass: A=ad6f  B=657a  SUB=0 → 657a
+Pass: A=2f50  B=55bc  SUB=0 → 55be
+Pass: A=9b3c  B=4402  SUB=0 → 4401
+Pass: A=0cf1  B=4402  SUB=0 → 4402
+Fail: A=956b  B=bbe8  SUB=0 → Got=bbea  Exp=bbeb
+Pass: A=bed3  B=5073  SUB=0 → 503c
+Pass: A=97f6  B=0d7f  SUB=0 → 9696
+Pass: A=ec73  B=6c64  SUB=0 → d380
+Pass: A=ecfa  B=a716  SUB=0 → ecfa
+Pass: A=e05b  B=1672  SUB=0 → e05b
+Pass: A=a9e0  B=1718  SUB=0 → a9a7
+Pass: A=0d4e  B=f91c  SUB=0 → f91c
+Pass: A=650d  B=23fa  SUB=0 → 650d
+Pass: A=2e22  B=b711  SUB=0 → b588
+Pass: A=3119  B=e8c2  SUB=0 → e8c2
+Pass: A=558e  B=0456  SUB=0 → 558e
+Fail: A=fe32  B=7852  SUB=0 → Got=fc00  Exp=fe32
+Pass: A=40a4  B=13d4  SUB=0 → 40a4
+Pass: A=bf03  B=d5cc  SUB=0 → d5e8
+Pass: A=39d7  B=a2fe  SUB=0 → 39bb
+Pass: A=3a1d  B=14f5  SUB=0 → 3a1f
+Pass: A=53f4  B=2abc  SUB=0 → 53f6
+Pass: A=5a76  B=6631  SUB=0 → 6700
+Pass: A=3015  B=6e09  SUB=0 → 6e09
+Pass: A=1bb2  B=a666  SUB=0 → a570
+Pass: A=2f25  B=2fce  SUB=0 → 337a
+Pass: A=75ec  B=5ec1  SUB=0 → 7607
+Pass: A=7425  B=a687  SUB=0 → 7425
+Pass: A=4739  B=8263  SUB=0 → 4739
+Pass: A=9e14  B=7217  SUB=0 → 7217
+Pass: A=b3b1  B=caf5  SUB=0 → cb14
+Pass: A=27ee  B=0cfa  SUB=0 → 2801
+Pass: A=875e  B=ef6e  SUB=0 → ef6e
+Pass: A=3a75  B=32aa  SUB=0 → 3c10
+Pass: A=938c  B=24ca  SUB=0 → 248e
+Pass: A=4923  B=88c3  SUB=0 → 4923
+Fail: A=8462  B=03c4  SUB=0 → Got=8100  Exp=809e
+Pass: A=86e3  B=b40e  SUB=0 → b40e
+Pass: A=8d55  B=dd98  SUB=0 → dd98
+Pass: A=35f8  B=226e  SUB=0 → 362b
+Fail: A=0b55  B=15f2  SUB=0 → Got=16dc  Exp=16dd
+Pass: A=d600  B=059b  SUB=0 → d600
+Pass: A=508c  B=04be  SUB=0 → 508c
+Pass: A=e040  B=b9da  SUB=0 → e041
+Pass: A=ab9e  B=f07b  SUB=0 → f07b
+Pass: A=d64b  B=3dcd  SUB=0 → d634
+Pass: A=ef9c  B=af94  SUB=0 → ef9c
+Pass: A=8404  B=efd6  SUB=0 → efd6
+Fail: A=1756  B=011d  SUB=0 → Got=175f  Exp=1768
+Pass: A=e801  B=6574  SUB=0 → e11c
+Pass: A=3617  B=bc5f  SUB=0 → b9b2
+Pass: A=c605  B=2020  SUB=0 → c603
+Fail: A=7fb1  B=e03d  SUB=0 → Got=7c00  Exp=7fb1
+Pass: A=6f10  B=981f  SUB=0 → 6f10
+Fail: A=7e1b  B=df72  SUB=0 → Got=7c00  Exp=7e1b
+Pass: A=bf39  B=a436  SUB=0 → bf4a
+Fail: A=5636  B=36b4  SUB=0 → Got=563c  Exp=563d
+Pass: A=d5fa  B=20af  SUB=0 → d5fa
+Pass: A=bb06  B=5750  SUB=0 → 5742
+Pass: A=3942  B=a0bd  SUB=0 → 392f
+Pass: A=8f21  B=885a  SUB=0 → 90a7
+Fail: A=7507  B=ceaf  SUB=0 → Got=7506  Exp=7505
+Pass: A=5c38  B=3a8c  SUB=0 → 5c3b
+Pass: A=080a  B=d22d  SUB=0 → d22d
+Pass: A=c7dd  B=9b86  SUB=0 → c7de
+Pass: A=bf51  B=b144  SUB=0 → bffa
+Pass: A=c98c  B=fa99  SUB=0 → fa99
+Pass: A=6c01  B=c7af  SUB=0 → 6bfe
+Pass: A=8e81  B=8fb1  SUB=0 → 9319
+Pass: A=e5de  B=ea37  SUB=0 → ec93
+Pass: A=0db5  B=4e09  SUB=0 → 4e09
+Fail: A=0244  B=07ac  SUB=0 → Got=0867  Exp=08f8
+Pass: A=8000  B=f489  SUB=0 → f489
+Pass: A=8fb2  B=3788  SUB=0 → 3786
+Fail: A=43d9  B=d175  SUB=0 → Got=d0f8  Exp=d0f7
+Pass: A=b977  B=4a59  SUB=0 → 4a02
+Fail: A=bbe5  B=22e2  SUB=0 → Got=bbca  Exp=bbc9
+Pass: A=f7a2  B=e98a  SUB=0 → f82a
+Pass: A=71d5  B=a9e8  SUB=0 → 71d5
+Pass: A=d228  B=2ac1  SUB=0 → d226
+Pass: A=5c95  B=34d1  SUB=0 → 5c96
+Pass: A=5646  B=60c0  SUB=0 → 6189
+Fail: A=4fd9  B=5b72  SUB=0 → Got=5c36  Exp=5c37
+Pass: A=8778  B=b294  SUB=0 → b295
+Pass: A=1a34  B=2614  SUB=0 → 26da
+Fail: A=2826  B=5654  SUB=0 → Got=5654  Exp=5655
+Pass: A=3237  B=3336  SUB=0 → 36b6
+Pass: A=775f  B=0d9e  SUB=0 → 775f
+Pass: A=a98e  B=3bf3  SUB=0 → 3b9a
+Pass: A=ece8  B=e5f1  SUB=0 → ee64
+Pass: A=f18b  B=61ee  SUB=0 → f12c
+Fail: A=ecbf  B=ff98  SUB=0 → Got=fc00  Exp=ff98
+Pass: A=9dfe  B=0f43  SUB=0 → 9d8a
+Pass: A=c9ea  B=20a7  SUB=0 → c9e9
+Pass: A=44cc  B=beea  SUB=0 → 4223
+Pass: A=e1e6  B=9eb1  SUB=0 → e1e6
+Pass: A=6987  B=94bf  SUB=0 → 6987
+Pass: A=5d88  B=6018  SUB=0 → 62dc
+Pass: A=1de9  B=e397  SUB=0 → e397
+Fail: A=fd9c  B=4294  SUB=0 → Got=fc00  Exp=ff9c
+Pass: A=be8f  B=9bf4  SUB=0 → be93
+Pass: A=3aa2  B=adbe  SUB=0 → 39ea
+Pass: A=4cbc  B=aed2  SUB=0 → 4cb5
+Fail: A=8fdb  B=9dad  SUB=0 → Got=9e2a  Exp=9e2b
+Pass: A=fb79  B=9a5a  SUB=0 → fb79
+Fail: A=8b2c  B=7d66  SUB=0 → Got=7c00  Exp=7f66
+Pass: A=74a9  B=5724  SUB=0 → 74b0
+Pass: A=6804  B=39bb  SUB=0 → 6804
+Pass: A=f3c0  B=adc8  SUB=0 → f3c0
+Pass: A=0e61  B=e213  SUB=0 → e213
+Pass: A=e9ef  B=0b0a  SUB=0 → e9ef
+Pass: A=8381  B=e9ff  SUB=0 → e9ff
+Pass: A=5e58  B=3bfe  SUB=0 → 5e5c
+Pass: A=60d6  B=6ebb  SUB=0 → 6f56
+Pass: A=747e  B=107e  SUB=0 → 747e
+Pass: A=cde0  B=118c  SUB=0 → cde0
+Fail: A=a17f  B=952d  SUB=0 → Got=a224  Exp=a225
+Pass: A=8b8f  B=8fce  SUB=0 → 91cb
+Pass: A=32fc  B=9726  SUB=0 → 32ee
+Pass: A=a7fb  B=a8bb  SUB=0 → ac5c
+Pass: A=138b  B=86d3  SUB=0 → 12b1
+Pass: A=56c1  B=fb1f  SUB=0 → fb1c
+Pass: A=22fe  B=3eba  SUB=0 → 3ec8
+Pass: A=e6fa  B=c381  SUB=0 → e6fe
+Pass: A=2dfb  B=beaa  SUB=0 → be4a
+Pass: A=5ec2  B=61bd  SUB=0 → 648f
+Pass: A=6a75  B=9be9  SUB=0 → 6a75
+Fail: A=ff78  B=4058  SUB=0 → Got=fc00  Exp=ff78
+Pass: A=881f  B=d6d4  SUB=0 → d6d4
+Pass: A=65c6  B=c9ef  SUB=0 → 65ba
+Pass: A=b509  B=1df5  SUB=0 → b4f1
+Fail: A=28c4  B=7c91  SUB=0 → Got=7c00  Exp=7e91
+Pass: A=b3e7  B=9fe1  SUB=0 → b413
+Fail: A=0d40  B=81cb  SUB=0 → Got=0d07  Exp=0ccd
+Pass: A=0b34  B=4327  SUB=0 → 4327
+Pass: A=2389  B=9182  SUB=0 → 2331
+Pass: A=d4c5  B=e663  SUB=0 → e6af
+Pass: A=5c5b  B=5d91  SUB=0 → 60f6
+Pass: A=5d47  B=97e9  SUB=0 → 5d47
+Pass: A=e3a7  B=31fd  SUB=0 → e3a7
+Pass: A=6342  B=1a4d  SUB=0 → 6342
+Fail: A=7cbf  B=a10b  SUB=0 → Got=7c00  Exp=7ebf
+Pass: A=fa04  B=f8b7  SUB=0 → fc00
+Pass: A=0747  B=d584  SUB=0 → d584
+Pass: A=2f2c  B=dc75  SUB=0 → dc75
+Fail: A=1540  B=7ec0  SUB=0 → Got=7c00  Exp=7ec0
+Pass: A=e1aa  B=2eb0  SUB=0 → e1aa
+Pass: A=0f73  B=d07f  SUB=0 → d07f
+Pass: A=0ac0  B=fb0f  SUB=0 → fb0f
+Pass: A=022a  B=7a3e  SUB=0 → 7a3e
+Pass: A=8c33  B=2c64  SUB=0 → 2c60
+Pass: A=68fd  B=f714  SUB=0 → f674
+Pass: A=2908  B=1940  SUB=0 → 295c
+Pass: A=3004  B=02bf  SUB=0 → 3004
+Pass: A=634d  B=d461  SUB=0 → 62c1
+Fail: A=70c0  B=dc54  SUB=0 → Got=709e  Exp=709d
+Pass: A=aa36  B=eb90  SUB=0 → eb90
+Pass: A=831f  B=4d6b  SUB=0 → 4d6b
+Fail: A=a331  B=0282  SUB=0 → Got=a32e  Exp=a32c
+Fail: A=9b39  B=bdef  SUB=0 → Got=bdf2  Exp=bdf3
+Pass: A=ed15  B=b706  SUB=0 → ed15
+Pass: A=767b  B=cdee  SUB=0 → 767a
+Pass: A=8c78  B=771e  SUB=0 → 771e
+Fail: A=b315  B=1e74  SUB=0 → Got=b2e2  Exp=b2e1
+Pass: A=10b9  B=6795  SUB=0 → 6795
+Pass: A=bed0  B=ac42  SUB=0 → bf14
+Pass: A=071c  B=ac7a  SUB=0 → ac78
+Pass: A=1a69  B=d248  SUB=0 → d248
+Pass: A=4180  B=0e12  SUB=0 → 4180
+Pass: A=85c1  B=7546  SUB=0 → 7546
+Pass: A=2d23  B=f1e9  SUB=0 → f1e9
+Pass: A=ea64  B=5d2b  SUB=0 → e9bf
+Pass: A=6d41  B=14a6  SUB=0 → 6d41
+Pass: A=b112  B=453b  SUB=0 → 4512
+Pass: A=6331  B=18b1  SUB=0 → 6331
+Pass: A=383d  B=586b  SUB=0 → 586f
+Pass: A=c2a3  B=be09  SUB=0 → c4d4
+Pass: A=1fbc  B=6f63  SUB=0 → 6f63
+Fail: A=f940  B=cc7e  SUB=0 → Got=f940  Exp=f941
+Pass: A=c7a4  B=6cc4  SUB=0 → 6cc2
+Pass: A=ca0e  B=104d  SUB=0 → ca0e
+Pass: A=2548  B=6300  SUB=0 → 6300
+Pass: A=e32c  B=0399  SUB=0 → e32c
+Pass: A=d397  B=7bcb  SUB=0 → 7bc9
+Pass: A=2f51  B=388e  SUB=0 → 3978
+Pass: A=d975  B=0be9  SUB=0 → d975
+Pass: A=14f8  B=0aae  SUB=0 → 15ce
+Pass: A=3c4b  B=d596  SUB=0 → d585
+Pass: A=4fc9  B=2cb6  SUB=0 → 4fce
+Pass: A=c303  B=048d  SUB=0 → c303
+Pass: A=82b9  B=61b7  SUB=0 → 61b7
+Pass: A=2101  B=5e15  SUB=0 → 5e15
+Pass: A=eda4  B=0438  SUB=0 → eda4
+Pass: A=3a9b  B=292a  SUB=0 → 3aee
+Pass: A=4787  B=20dd  SUB=0 → 4789
+Pass: A=f676  B=2480  SUB=0 → f676
+Pass: A=e2d2  B=62fa  SUB=0 → 4d00
+Pass: A=cf39  B=24a4  SUB=0 → cf38
+Pass: A=5551  B=b076  SUB=0 → 554f
+Pass: A=e717  B=08bc  SUB=0 → e717
+Pass: A=772c  B=d478  SUB=0 → 7728
+Pass: A=ae8f  B=891d  SUB=0 → ae92
+Pass: A=137b  B=b8b0  SUB=0 → b8ae
+Pass: A=83dc  B=c0a8  SUB=0 → c0a8
+Fail: A=7fb8  B=08f4  SUB=0 → Got=7c00  Exp=7fb8
+Fail: A=d8b7  B=f8e6  SUB=0 → Got=f8ea  Exp=f8eb
+Pass: A=124f  B=786a  SUB=0 → 786a
+Fail: A=7dd5  B=94c3  SUB=0 → Got=7c00  Exp=7fd5
+Fail: A=141b  B=c0b0  SUB=0 → Got=c0b0  Exp=c0af
+Fail: A=45d9  B=7cc3  SUB=0 → Got=7c00  Exp=7ec3
+Pass: A=358c  B=82d9  SUB=0 → 358c
+Pass: A=386d  B=c472  SUB=0 → c3c9
+Pass: A=2f59  B=b899  SUB=0 → b75c
+Pass: A=a8e2  B=1ad7  SUB=0 → a875
+Pass: A=4ca8  B=eb11  SUB=0 → eb08
+Pass: A=9225  B=0b82  SUB=0 → 9044
+Pass: A=8004  B=cbf0  SUB=0 → cbf0
+Pass: A=11ca  B=db11  SUB=0 → db11
+Pass: A=2503  B=184a  SUB=0 → 258c
+Fail: A=0eea  B=ffea  SUB=0 → Got=fc00  Exp=ffea
+Fail: A=fcf1  B=12d8  SUB=0 → Got=fc00  Exp=fef1
+Fail: A=a929  B=0112  SUB=0 → Got=a929  Exp=a928
+Pass: A=a489  B=76b2  SUB=0 → 76b2
+Pass: A=15a4  B=69bd  SUB=0 → 69bd
+Pass: A=5b4f  B=dd4a  SUB=0 → d68a
+Pass: A=a072  B=a4bd  SUB=0 → a6f6
+Pass: A=782c  B=55d8  SUB=0 → 782f
+Pass: A=1be8  B=753d  SUB=0 → 753d
+Pass: A=8d0d  B=c108  SUB=0 → c108
+Pass: A=f776  B=5656  SUB=0 → f770
+Pass: A=b753  B=0bf8  SUB=0 → b752
+Pass: A=ed4b  B=644b  SUB=0 → ec38
+Pass: A=f81c  B=d69f  SUB=0 → f81f
+Pass: A=889b  B=e8a5  SUB=0 → e8a5
+Pass: A=0899  B=d223  SUB=0 → d223
+Pass: A=0db0  B=7b18  SUB=0 → 7b18
+Fail: A=77a5  B=7ca1  SUB=0 → Got=7c00  Exp=7ea1
+Fail: A=2c2b  B=46fe  SUB=0 → Got=470e  Exp=470f
+Pass: A=73b5  B=1b01  SUB=0 → 73b5
+Pass: A=2eeb  B=0740  SUB=0 → 2eed
+Fail: A=e07b  B=7235  SUB=0 → Got=71ee  Exp=71ed
+Pass: A=91b6  B=1317  SUB=0 → 0984
+Pass: A=5e48  B=48e6  SUB=0 → 5e6f
+Pass: A=4383  B=05fc  SUB=0 → 4383
+Fail: A=eea6  B=7d46  SUB=0 → Got=7c00  Exp=7f46
+Pass: A=baf2  B=4554  SUB=0 → 4476
+Pass: A=9510  B=9a03  SUB=0 → 9c46
+Pass: A=22d2  B=d0d1  SUB=0 → d0d1
+Pass: A=24e4  B=59da  SUB=0 → 59da
+Fail: A=dc64  B=b93f  SUB=0 → Got=dc66  Exp=dc67
+Pass: A=5170  B=4105  SUB=0 → 51c0
+Pass: A=9474  B=1b01  SUB=0 → 18c7
+Pass: A=d883  B=f07b  SUB=0 → f08d
+Pass: A=d194  B=08ff  SUB=0 → d194
+Pass: A=7755  B=07e2  SUB=0 → 7755
+Fail: A=b1ab  B=a05a  SUB=0 → Got=b1f0  Exp=b1f1
+Pass: A=6afd  B=805c  SUB=0 → 6afd
+Pass: A=8f09  B=d4a5  SUB=0 → d4a5
+Fail: A=1824  B=3182  SUB=0 → Got=3192  Exp=3193
+Pass: A=72b5  B=709f  SUB=0 → 75aa
+Fail: A=82a9  B=922a  SUB=0 → Got=9254  Exp=927f
+Fail: A=7ec1  B=294f  SUB=0 → Got=7c00  Exp=7ec1
+Pass: A=593b  B=53b0  SUB=0 → 5b27
+Pass: A=75f5  B=5a30  SUB=0 → 7601
+Pass: A=b565  B=1478  SUB=0 → b561
+Pass: A=b6de  B=e86c  SUB=0 → e86c
+Pass: A=d64c  B=afc8  SUB=0 → d64e
+Pass: A=318d  B=39c3  SUB=0 → 3b26
+Pass: A=edf2  B=31d6  SUB=0 → edf2
+Fail: A=ffcd  B=4c82  SUB=0 → Got=fc00  Exp=ffcd
+Pass: A=82d1  B=c861  SUB=0 → c861
+Pass: A=c261  B=c32a  SUB=0 → c6c6
+Pass: A=2955  B=74cf  SUB=0 → 74cf
+Pass: A=729d  B=e666  SUB=0 → 71d0
+Fail: A=4653  B=fc27  SUB=0 → Got=fc00  Exp=fe27
+Pass: A=78eb  B=44ec  SUB=0 → 78eb
+Pass: A=1edb  B=8fa2  SUB=0 → 1e61
+Pass: A=d642  B=c6e3  SUB=0 → d6b0
+Fail: A=3c49  B=7f4a  SUB=0 → Got=7c00  Exp=7f4a
+Fail: A=00ff  B=116f  SUB=0 → Got=117f  Exp=118f
+Fail: A=d24a  B=b45d  SUB=0 → Got=d252  Exp=d253
+Pass: A=c382  B=f8a2  SUB=0 → f8a2
+Pass: A=ba56  B=0ef6  SUB=0 → ba55
+Pass: A=9970  B=a2a7  SUB=0 → a402
+Pass: A=b668  B=6662  SUB=0 → 6662
+Pass: A=b1cb  B=f358  SUB=0 → f358
+Pass: A=223d  B=d616  SUB=0 → d616
+Pass: A=6916  B=5386  SUB=0 → 6934
+Pass: A=3638  B=1d11  SUB=0 → 364c
+Pass: A=1618  B=c5b4  SUB=0 → c5b4
+Pass: A=3624  B=3944  SUB=0 → 3c2b
+Pass: A=9a5f  B=92b2  SUB=0 → 9c06
+Pass: A=e766  B=4722  SUB=0 → e75f
+Pass: A=6a77  B=334c  SUB=0 → 6a77
+Pass: A=21ad  B=8c02  SUB=0 → 218d
+Pass: A=5234  B=58ee  SUB=0 → 5a7b
+Pass: A=ae57  B=9ddd  SUB=0 → aeb5
+Pass: A=2c72  B=bb9b  SUB=0 → bb0d
+Pass: A=1885  B=ed78  SUB=0 → ed78
+Pass: A=3978  B=ad83  SUB=0 → 38c8
+Pass: A=96cc  B=0904  SUB=0 → 962c
+Pass: A=d2e6  B=911c  SUB=0 → d2e6
+Pass: A=b2fe  B=e3a5  SUB=0 → e3a5
+Pass: A=e076  B=c513  SUB=0 → e080
+Pass: A=d778  B=ea50  SUB=0 → ea8c
+Pass: A=128d  B=69fd  SUB=0 → 69fd
+Pass: A=c8d7  B=c457  SUB=0 → cb02
+Pass: A=e45c  B=74e5  SUB=0 → 749f
+Pass: A=d312  B=2b08  SUB=0 → d310
+Pass: A=cb4c  B=a1c6  SUB=0 → cb4d
+Pass: A=cdc8  B=c982  SUB=0 → d044
+Pass: A=1702  B=4613  SUB=0 → 4613
+Pass: A=c7d9  B=4395  SUB=0 → c40e
+Pass: A=c8cd  B=cbca  SUB=0 → ce4c
+Fail: A=2dba  B=7dee  SUB=0 → Got=7c00  Exp=7fee
+Pass: A=e991  B=1b43  SUB=0 → e991
+Pass: A=1ec0  B=58bf  SUB=0 → 58bf
+Pass: A=d014  B=9900  SUB=0 → d014
+Fail: A=0620  B=8765  SUB=0 → Got=fc00  Exp=8145
+Pass: A=68ae  B=e002  SUB=0 → 675b
+Pass: A=f32e  B=0334  SUB=0 → f32e
+Pass: A=b24d  B=3b20  SUB=0 → 398d
+Pass: A=d181  B=5741  SUB=0 → 5480
+Pass: A=7777  B=f27d  SUB=0 → 7438
+Pass: A=7aa9  B=2fe1  SUB=0 → 7aa9
+Pass: A=0eec  B=2151  SUB=0 → 2188
+Pass: A=0e1c  B=4ea7  SUB=0 → 4ea7
+Pass: A=a1ed  B=d062  SUB=0 → d062
+Pass: A=8d68  B=b0ed  SUB=0 → b0f0
+Pass: A=2906  B=8f06  SUB=0 → 28f8
+Pass: A=6161  B=37b4  SUB=0 → 6162
+Pass: A=c559  B=8fba  SUB=0 → c559
+Fail: A=e435  B=f911  SUB=0 → Got=f932  Exp=f933
+Pass: A=fa84  B=a428  SUB=0 → fa84
+Pass: A=1878  B=3746  SUB=0 → 374f
+Pass: A=5373  B=387b  SUB=0 → 5385
+Fail: A=fc74  B=7a38  SUB=0 → Got=f560  Exp=fe74
+Pass: A=ef4c  B=560f  SUB=0 → ef34
+Pass: A=cd7e  B=8090  SUB=0 → cd7e
+Pass: A=0571  B=62b2  SUB=0 → 62b2
+Pass: A=54b9  B=16b4  SUB=0 → 54b9
+Pass: A=4485  B=6383  SUB=0 → 638c
+Pass: A=dff5  B=b30c  SUB=0 → dff6
+Fail: A=4a3d  B=7d82  SUB=0 → Got=7c00  Exp=7f82
+Pass: A=d24f  B=1247  SUB=0 → d24f
+Pass: A=22b0  B=488e  SUB=0 → 4890
+Pass: A=5263  B=ead0  SUB=0 → eab6
+Pass: A=4b2e  B=0a8a  SUB=0 → 4b2e
+Pass: A=70bc  B=4a64  SUB=0 → 70be
+Pass: A=4605  B=0a5a  SUB=0 → 4605
+Fail: A=8189  B=9039  SUB=0 → Got=9052  Exp=906a
+Pass: A=ea1c  B=d672  SUB=0 → ea50
+Pass: A=2a36  B=c6ec  SUB=0 → c6e0
+Pass: A=cac6  B=2f78  SUB=0 → cab7
+Fail: A=42a8  B=fe6f  SUB=0 → Got=fc00  Exp=fe6f
+Pass: A=3adf  B=8af6  SUB=0 → 3adf
+Fail: A=c6a8  B=7c1a  SUB=0 → Got=7c00  Exp=7e1a
+Pass: A=8e63  B=7220  SUB=0 → 7220
+Pass: A=067c  B=6301  SUB=0 → 6301
+Pass: A=a374  B=04b2  SUB=0 → a36b
+Pass: A=9c47  B=bf54  SUB=0 → bf58
+Pass: A=2d02  B=c198  SUB=0 → c170
+Pass: A=80dc  B=c9fe  SUB=0 → c9fe
+Pass: A=f68b  B=a84a  SUB=0 → f68b
+Pass: A=e62e  B=f5cb  SUB=0 → f62e
+Pass: A=b227  B=da8c  SUB=0 → da8e
+Pass: A=5df0  B=072a  SUB=0 → 5df0
+Pass: A=b8c7  B=4fd8  SUB=0 → 4fb2
+Fail: A=830a  B=82e5  SUB=0 → Got=81ef  Exp=85ef
+Pass: A=3de3  B=687d  SUB=0 → 687e
+Pass: A=4663  B=dbcd  SUB=0 → db9a
+Pass: A=7b91  B=a38a  SUB=0 → 7b91
+Pass: A=4b70  B=91ed  SUB=0 → 4b70
+Pass: A=7064  B=be3d  SUB=0 → 7064
+Pass: A=e48e  B=b16d  SUB=0 → e48e
+Pass: A=214d  B=a41c  SUB=0 → 9dd6
+Fail: A=ff55  B=5a94  SUB=0 → Got=fc00  Exp=ff55
+Pass: A=b277  B=b11b  SUB=0 → b5c9
+Pass: A=99a3  B=43cc  SUB=0 → 43cb
+Fail: A=4e11  B=7d15  SUB=0 → Got=7c00  Exp=7f15
+Pass: A=083f  B=ec8e  SUB=0 → ec8e
+Pass: A=bebb  B=4c1b  SUB=0 → 4b5f
+Pass: A=57d2  B=924d  SUB=0 → 57d2
+Pass: A=b5a0  B=cf9d  SUB=0 → cfb4
+Pass: A=9bdd  B=0da7  SUB=0 → 9b28
+Fail: A=0321  B=8cf2  SUB=0 → Got=8c8e  Exp=8c2a
+Pass: A=587a  B=e0e2  SUB=0 → df87
+Pass: A=2dcf  B=a45c  SUB=0 → 2cb8
+Pass: A=9d90  B=d4e7  SUB=0 → d4e7
+Pass: A=00f7  B=6480  SUB=0 → 6480
+Pass: A=0975  B=e41f  SUB=0 → e41f
+Pass: A=2b6f  B=f76a  SUB=0 → f76a
+Pass: A=f330  B=2b7a  SUB=0 → f330
+Pass: A=8687  B=c007  SUB=0 → c007
+Pass: A=95c1  B=355e  SUB=0 → 3558
+Pass: A=8ded  B=606a  SUB=0 → 606a
+Pass: A=efce  B=8b0b  SUB=0 → efce
+Pass: A=0eb7  B=a613  SUB=0 → a5f8
+Pass: A=cd6c  B=b0be  SUB=0 → cd75
+Pass: A=5afc  B=c5b8  SUB=0 → 5ace
+Pass: A=30ed  B=fb64  SUB=0 → fb64
+Pass: A=9bfa  B=6e13  SUB=0 → 6e13
+Pass: A=1f1c  B=a6d5  SUB=0 → a50e
+Fail: A=de97  B=fc78  SUB=0 → Got=fc00  Exp=fe78
+Pass: A=65d8  B=5aa0  SUB=0 → 66ac
+Fail: A=bea0  B=5dea  SUB=0 → Got=5de4  Exp=5de3
+Fail: A=a536  B=3444  SUB=0 → Got=33e2  Exp=33e1
+Pass: A=3219  B=54a3  SUB=0 → 54a6
+Pass: A=a478  B=72b6  SUB=0 → 72b6
+Pass: A=2a91  B=fa66  SUB=0 → fa66
+Pass: A=2d71  B=ae82  SUB=0 → a444
+Fail: A=cfcd  B=7d00  SUB=0 → Got=7c00  Exp=7f00
+Pass: A=3270  B=900b  SUB=0 → 326c
+Pass: A=2ac9  B=9453  SUB=0 → 2aa6
+Pass: A=429b  B=4867  SUB=0 → 4a0e
+Pass: A=ea21  B=be96  SUB=0 → ea22
+Pass: A=c22f  B=8e29  SUB=0 → c22f
+Pass: A=bc99  B=3df5  SUB=0 → 3570
+Pass: A=41a6  B=6b2a  SUB=0 → 6b2b
+Pass: A=6d8d  B=a25c  SUB=0 → 6d8d
+Pass: A=48ae  B=0d22  SUB=0 → 48ae
+Pass: A=37bc  B=35f4  SUB=0 → 3ad8
+Pass: A=4f5e  B=beef  SUB=0 → 4eef
+Pass: A=eaf3  B=2436  SUB=0 → eaf3
+Pass: A=aaf9  B=d1cc  SUB=0 → d1ce
+Pass: A=98e8  B=faba  SUB=0 → faba
+Pass: A=4190  B=2b59  SUB=0 → 41ad
+Pass: A=3012  B=df23  SUB=0 → df22
+Fail: A=a8e4  B=015e  SUB=0 → Got=a8e4  Exp=a8e3
+Pass: A=1b58  B=05b0  SUB=0 → 1b86
+Pass: A=9dc4  B=611e  SUB=0 → 611e
+Pass: A=3d00  B=bf96  SUB=0 → b92c
+Pass: A=b926  B=f8b0  SUB=0 → f8b0
+Pass: A=f790  B=0e6f  SUB=0 → f790
+Pass: A=5975  B=4950  SUB=0 → 59ca
+Pass: A=418e  B=3b99  SUB=0 → 4374
+Pass: A=45d4  B=05e9  SUB=0 → 45d4
+Pass: A=9324  B=39a5  SUB=0 → 39a3
+Fail: A=8402  B=feea  SUB=0 → Got=fc00  Exp=feea
+Pass: A=040d  B=8b93  SUB=0 → 898c
+Pass: A=1dd5  B=3189  SUB=0 → 31b8
+Pass: A=90d7  B=235b  SUB=0 → 230e
+Pass: A=d66b  B=361b  SUB=0 → d665
+Pass: A=bbaa  B=3a5d  SUB=0 → b134
+Pass: A=eb24  B=37f6  SUB=0 → eb24
+Pass: A=5625  B=8ceb  SUB=0 → 5625
+Pass: A=124b  B=1319  SUB=0 → 16b2
+Pass: A=172c  B=1385  SUB=0 → 1977
+Pass: A=155c  B=5e97  SUB=0 → 5e97
+Pass: A=8f56  B=5925  SUB=0 → 5925
+Pass: A=a350  B=b402  SUB=0 → b43c
+Fail: A=cdb7  B=6f85  SUB=0 → Got=6f80  Exp=6f7f
+Pass: A=2b8f  B=fb3e  SUB=0 → fb3e
+Pass: A=d126  B=0008  SUB=0 → d126
+Fail: A=fcab  B=5c92  SUB=0 → Got=fc00  Exp=feab
+Fail: A=b33c  B=0d59  SUB=0 → Got=b33a  Exp=b339
+Pass: A=170b  B=7a83  SUB=0 → 7a83
+Fail: A=be43  B=32dd  SUB=0 → Got=bd68  Exp=bd67
+Fail: A=8463  B=8329  SUB=0 → Got=85f8  Exp=878c
+Pass: A=34fa  B=cb26  SUB=0 → cafe
+Pass: A=a2cb  B=43a5  SUB=0 → 439e
+Pass: A=ac47  B=a8af  SUB=0 → ae9e
+Pass: A=9397  B=462c  SUB=0 → 462c
+Pass: A=697a  B=63bf  SUB=0 → 6b6a
+Pass: A=de8d  B=2596  SUB=0 → de8d
+Pass: A=9457  B=0846  SUB=0 → 939c
+Pass: A=02e9  B=b1cd  SUB=0 → b1cd
+Pass: A=6795  B=170b  SUB=0 → 6795
+Pass: A=a360  B=c034  SUB=0 → c03b
+Pass: A=34bf  B=f492  SUB=0 → f492
+Pass: A=b19b  B=8c61  SUB=0 → b19d
+Pass: A=3e5c  B=e333  SUB=0 → e330
+Pass: A=06e4  B=c1c7  SUB=0 → c1c7
+Pass: A=ab7e  B=11ec  SUB=0 → ab66
+Pass: A=8cdb  B=5a70  SUB=0 → 5a70
+Pass: A=5e7c  B=4494  SUB=0 → 5e8e
+Pass: A=91cf  B=390c  SUB=0 → 390b
+Fail: A=a46b  B=0bce  SUB=0 → Got=a45c  Exp=a45b
+Pass: A=b462  B=3fcc  SUB=0 → 3eb4
+Pass: A=3fe7  B=1584  SUB=0 → 3fe8
+Fail: A=6614  B=7e9f  SUB=0 → Got=7c00  Exp=7e9f
+Fail: A=f513  B=ff41  SUB=0 → Got=fc00  Exp=ff41
+Fail: A=40a1  B=7de3  SUB=0 → Got=7c00  Exp=7fe3
+Pass: A=f876  B=beb9  SUB=0 → f876
+Pass: A=2c4d  B=257c  SUB=0 → 2dac
+Pass: A=396d  B=e263  SUB=0 → e262
+Pass: A=1300  B=0601  SUB=0 → 13c0
+Fail: A=dbf7  B=bb86  SUB=0 → Got=dbfe  Exp=dbff
+Pass: A=57df  B=2263  SUB=0 → 57df
+Pass: A=6961  B=ccf3  SUB=0 → 6957
+Pass: A=c839  B=4fa8  SUB=0 → 4d8c
+Pass: A=eb5a  B=68a6  SUB=0 → e568
+Pass: A=1f48  B=5154  SUB=0 → 5154
+Pass: A=0952  B=9bfc  SUB=0 → 9ba7
+Pass: A=21cb  B=238c  SUB=0 → 26ac
+Fail: A=b771  B=7ff4  SUB=0 → Got=7c00  Exp=7ff4
+Pass: A=61d1  B=2684  SUB=0 → 61d1
+Pass: A=1618  B=7866  SUB=0 → 7866
+Pass: A=c3b6  B=c208  SUB=0 → c6df
+Pass: A=9a51  B=9320  SUB=0 → 9c0c
+Pass: A=c911  B=8791  SUB=0 → c911
+Pass: A=114a  B=05ba  SUB=0 → 1201
+Fail: A=7e75  B=04c3  SUB=0 → Got=7c00  Exp=7e75
+Fail: A=973b  B=fe2d  SUB=0 → Got=fc00  Exp=fe2d
+Pass: A=11af  B=ee59  SUB=0 → ee59
+Pass: A=97d6  B=0b94  SUB=0 → 96e4
+Pass: A=a8fb  B=c0da  SUB=0 → c0ee
+Fail: A=abaf  B=0b8c  SUB=0 → Got=aba8  Exp=aba7
+Pass: A=3ce4  B=0184  SUB=0 → 3ce4
+Fail: A=fc9f  B=7432  SUB=0 → Got=fb25  Exp=fe9f
+Pass: A=622a  B=5b10  SUB=0 → 63ee
+Pass: A=ab57  B=0f26  SUB=0 → ab49
+Pass: A=a66e  B=0a27  SUB=0 → a662
+Pass: A=bec6  B=d2a2  SUB=0 → d2d8
+Pass: A=442a  B=5559  SUB=0 → 559c
+Pass: A=de20  B=b9e3  SUB=0 → de23
+Pass: A=e272  B=41ab  SUB=0 → e26c
+Pass: A=910c  B=57e9  SUB=0 → 57e9
+Pass: A=0038  B=a777  SUB=0 → a777
+Pass: A=929c  B=408f  SUB=0 → 408f
+Pass: A=f21e  B=10db  SUB=0 → f21e
+Pass: A=5cc0  B=ec77  SUB=0 → ec2b
+Pass: A=9955  B=6f81  SUB=0 → 6f81
+Pass: A=618d  B=c53f  SUB=0 → 6183
+Pass: A=9ae1  B=d556  SUB=0 → d556
+Pass: A=485b  B=9c18  SUB=0 → 485a
+Pass: A=e33c  B=58f7  SUB=0 → e1fe
+Pass: A=eb83  B=cc8a  SUB=0 → eb8c
+Fail: A=02f0  B=0605  SUB=0 → Got=077d  Exp=087a
+Pass: A=0b7c  B=ced6  SUB=0 → ced6
+Pass: A=2f18  B=8834  SUB=0 → 2f16
+Pass: A=d4b3  B=e24f  SUB=0 → e2e5
+Pass: A=9bf9  B=d246  SUB=0 → d246
+Pass: A=d6a1  B=e254  SUB=0 → e328
+Pass: A=ccba  B=b7ef  SUB=0 → ccda
+Pass: A=100b  B=8bef  SUB=0 → 0c1e
+Pass: A=5eb4  B=ece2  SUB=0 → ec77
+Pass: A=1576  B=258b  SUB=0 → 25e2
+Pass: A=e20a  B=e5ef  SUB=0 → e87a
+Pass: A=cea4  B=d24c  SUB=0 → d4cf
+Fail: A=c9b2  B=7d20  SUB=0 → Got=7c00  Exp=7f20
+Pass: A=f7b6  B=88a6  SUB=0 → f7b6
+Pass: A=4930  B=d75b  SUB=0 → d6b5
+Pass: A=9df0  B=aa86  SUB=0 → ab44
+Pass: A=6b3a  B=ef78  SUB=0 → ebb6
+Pass: A=3dd3  B=7268  SUB=0 → 7268
+Fail: A=8ee5  B=b58d  SUB=0 → Got=b58e  Exp=b58f
+Pass: A=6c94  B=e9ec  SUB=0 → 6678
+Fail: A=8ac1  B=fe2d  SUB=0 → Got=fc00  Exp=fe2d
+Pass: A=3d83  B=7a7b  SUB=0 → 7a7b
+Pass: A=4e2e  B=0716  SUB=0 → 4e2e
+Pass: A=0485  B=6fac  SUB=0 → 6fac
+Pass: A=f331  B=ebbc  SUB=0 → f490
+Fail: A=5424  B=7d23  SUB=0 → Got=7c00  Exp=7f23
+Fail: A=0a83  B=8b8f  SUB=0 → Got=8030  Exp=8218
+Pass: A=a1d9  B=0a3a  SUB=0 → a1c0
+Pass: A=7705  B=b25d  SUB=0 → 7705
+Pass: A=b900  B=b0d5  SUB=0 → ba35
+Pass: A=1fd2  B=2752  SUB=0 → 28a3
+Pass: A=5601  B=0b9b  SUB=0 → 5601
+Pass: A=bdd4  B=15e9  SUB=0 → bdd3
+Pass: A=713a  B=3fcd  SUB=0 → 713a
+Pass: A=8855  B=a725  SUB=0 → a72e
+Pass: A=9681  B=da2c  SUB=0 → da2c
+Fail: A=9d2b  B=80f4  SUB=0 → Got=9d2d  Exp=9d2f
+Pass: A=d500  B=4dc9  SUB=0 → d31c
+Pass: A=3a2b  B=1371  SUB=0 → 3a2d
+Pass: A=946a  B=a36a  SUB=0 → a3f7
+Pass: A=5904  B=9e81  SUB=0 → 5904
+Pass: A=6d9f  B=361d  SUB=0 → 6d9f
+Pass: A=933a  B=31f7  SUB=0 → 31f0
+Pass: A=c44f  B=9526  SUB=0 → c44f
+Pass: A=8770  B=ef47  SUB=0 → ef47
+Pass: A=a4f8  B=a97a  SUB=0 → abf6
+Pass: A=426b  B=2e06  SUB=0 → 429b
+Pass: A=9da8  B=fb4b  SUB=0 → fb4b
+Pass: A=fa65  B=33e0  SUB=0 → fa65
+Fail: A=024f  B=7c17  SUB=0 → Got=7c00  Exp=7e17
+Pass: A=61fa  B=5f2b  SUB=0 → 64c8
+Fail: A=7f9f  B=9c2d  SUB=0 → Got=7c00  Exp=7f9f
+Pass: A=b303  B=a933  SUB=0 → b428
+Pass: A=0ac1  B=ab3c  SUB=0 → ab35
+Pass: A=4306  B=b263  SUB=0 → 42a0
+Fail: A=f1aa  B=4477  SUB=0 → Got=f1aa  Exp=f1a9
+Pass: A=be6d  B=8963  SUB=0 → be6d
+Pass: A=34c4  B=9368  SUB=0 → 34c0
+Pass: A=d2e0  B=d012  SUB=0 → d579
+Pass: A=ae5f  B=0520  SUB=0 → ae5e
+Pass: A=43f7  B=0f65  SUB=0 → 43f7
+Pass: A=113d  B=c035  SUB=0 → c035
+Fail: A=2b98  B=c909  SUB=0 → Got=c902  Exp=c901
+Pass: A=756a  B=912b  SUB=0 → 756a
+Pass: A=c8a2  B=2fc2  SUB=0 → c892
+Pass: A=06b8  B=bf7e  SUB=0 → bf7e
+Pass: A=da4d  B=0af9  SUB=0 → da4d
+Pass: A=157a  B=ae29  SUB=0 → ae13
+Pass: A=6ebb  B=3744  SUB=0 → 6ebb
+Pass: A=5831  B=48e3  SUB=0 → 587f
+Pass: A=8caa  B=494d  SUB=0 → 494d
+Pass: A=9a84  B=4ba2  SUB=0 → 4ba2
+Pass: A=34f6  B=37fe  SUB=0 → 3a7a
+Pass: A=4675  B=f8bb  SUB=0 → f8bb
+Pass: A=2b3f  B=9152  SUB=0 → 2b2a
+Pass: A=2994  B=d0c3  SUB=0 → d0c2
+Pass: A=80b8  B=7072  SUB=0 → 7072
+Pass: A=6c5a  B=0c73  SUB=0 → 6c5a
+Pass: A=5eba  B=5141  SUB=0 → 5f62
+Pass: A=206e  B=749d  SUB=0 → 749d
+Pass: A=f714  B=dad6  SUB=0 → f722
+Pass: A=a1b2  B=06bd  SUB=0 → a1a5
+Pass: A=715c  B=b01e  SUB=0 → 715c
+Pass: A=d4cf  B=717e  SUB=0 → 7174
+Pass: A=e12b  B=16ed  SUB=0 → e12b
+Pass: A=4cc7  B=51eb  SUB=0 → 5427
+Pass: A=9a88  B=3db4  SUB=0 → 3db1
+Pass: A=b3b2  B=2efd  SUB=0 → b034
+Pass: A=5669  B=a5b9  SUB=0 → 5669
+Pass: A=2b8c  B=2e36  SUB=0 → 30fe
+Pass: A=4d86  B=d6dd  SUB=0 → d57c
+Pass: A=ae1b  B=c090  SUB=0 → c0c1
+Pass: A=014d  B=bd74  SUB=0 → bd74
+Pass: A=1eed  B=388f  SUB=0 → 389d
+Pass: A=58ef  B=cc30  SUB=0 → 5869
+Fail: A=bca4  B=1945  SUB=0 → Got=bca2  Exp=bca1
+Fail: A=34ec  B=fdcd  SUB=0 → Got=fc00  Exp=ffcd
+Pass: A=26e4  B=22b9  SUB=0 → 2920
+Pass: A=c9bf  B=948b  SUB=0 → c9bf
+Pass: A=35fe  B=1f82  SUB=0 → 361c
+Pass: A=b939  B=0b12  SUB=0 → b939
+Pass: A=18f9  B=6c7c  SUB=0 → 6c7c
+Pass: A=b137  B=3628  SUB=0 → 3319
+Fail: A=8484  B=7e50  SUB=0 → Got=7c00  Exp=7e50
+Pass: A=79ad  B=22b4  SUB=0 → 79ad
+Pass: A=c307  B=c5f7  SUB=0 → c8bd
+Pass: A=2073  B=e8f4  SUB=0 → e8f4
+Pass: A=ad59  B=f8c0  SUB=0 → f8c0
+Pass: A=1af5  B=b0f1  SUB=0 → b0d5
+Pass: A=a0db  B=db37  SUB=0 → db37
+Pass: A=8d53  B=1408  SUB=0 → 1166
+Pass: A=4012  B=72f9  SUB=0 → 72f9
+Pass: A=f6a9  B=3f6e  SUB=0 → f6a9
+Fail: A=7e9f  B=0372  SUB=0 → Got=7c00  Exp=7e9f
+Pass: A=be1d  B=9eee  SUB=0 → be24
+Pass: A=8dbf  B=5d65  SUB=0 → 5d65
+Pass: A=079c  B=9f3c  SUB=0 → 9f1e
+Pass: A=5499  B=dc45  SUB=0 → da3e
+Pass: A=09be  B=5bdb  SUB=0 → 5bdb
+Pass: A=10d3  B=250b  SUB=0 → 2532
+Fail: A=602e  B=ff1c  SUB=0 → Got=fc00  Exp=ff1c
+Fail: A=0c58  B=7cce  SUB=0 → Got=7c00  Exp=7ece
+Pass: A=f02f  B=b3b9  SUB=0 → f02f
+Pass: A=20a7  B=e7d1  SUB=0 → e7d1
+Pass: A=f0bf  B=ba23  SUB=0 → f0bf
+Pass: A=2ba5  B=b26f  SUB=0 → b086
+Fail: A=ffb6  B=6179  SUB=0 → Got=fc00  Exp=ffb6
+Pass: A=5f01  B=a112  SUB=0 → 5f01
+Pass: A=9583  B=e325  SUB=0 → e325
+Fail: A=fc77  B=cbf2  SUB=0 → Got=fc00  Exp=fe77
+Pass: A=9f20  B=8ef0  SUB=0 → 9f8f
+Pass: A=75d4  B=556b  SUB=0 → 75d9
+Pass: A=545e  B=d1a0  SUB=0 → 4e38
+Pass: A=71bb  B=0732  SUB=0 → 71bb
+Pass: A=5e8b  B=bc8d  SUB=0 → 5e86
+Fail: A=bc83  B=28b1  SUB=0 → Got=bc5e  Exp=bc5d
+Pass: A=ba95  B=d09e  SUB=0 → d0b8
+Pass: A=230e  B=547c  SUB=0 → 547c
+Fail: A=05de  B=87dc  SUB=0 → Got=fc00  Exp=81fe
+Fail: A=e190  B=fce3  SUB=0 → Got=fc00  Exp=fee3
+Pass: A=2a00  B=2f64  SUB=0 → 3132
+Pass: A=dc70  B=4873  SUB=0 → dc4c
+Pass: A=ae10  B=2d3f  SUB=0 → a288
+Pass: A=f060  B=db0c  SUB=0 → f07c
+Pass: A=5622  B=c68e  SUB=0 → 55b9
+Fail: A=108f  B=82f6  SUB=0 → Got=1060  Exp=1030
+Pass: A=0b04  B=07ad  SUB=0 → 0d6d
+Pass: A=12c6  B=9d33  SUB=0 → 9c5a
+Pass: A=681e  B=2041  SUB=0 → 681e
+Pass: A=2592  B=eef0  SUB=0 → eef0
+Pass: A=97d7  B=5490  SUB=0 → 5490
+Fail: A=c833  B=ddbb  SUB=0 → Got=dddc  Exp=dddd
+Pass: A=8e61  B=7a0d  SUB=0 → 7a0d
+Pass: A=cadb  B=09d3  SUB=0 → cadb
+Fail: A=224a  B=4b57  SUB=0 → Got=4b58  Exp=4b59
+Pass: A=dc5a  B=e91b  SUB=0 → e9a6
+Pass: A=d6bb  B=ebb3  SUB=0 → ebe9
+Pass: A=082d  B=f0a1  SUB=0 → f0a1
+Pass: A=e678  B=1cb2  SUB=0 → e678
+Pass: A=5dcd  B=0eca  SUB=0 → 5dcd
+Pass: A=0a9c  B=24d4  SUB=0 → 24e1
+Pass: A=db2b  B=c8f4  SUB=0 → db7a
+Pass: A=3ff0  B=180a  SUB=0 → 3ff2
+Pass: A=a0c5  B=c3dc  SUB=0 → c3e1
+Pass: A=aa83  B=7605  SUB=0 → 7605
+Pass: A=d403  B=7522  SUB=0 → 751e
+Fail: A=cd4b  B=26c2  SUB=0 → Got=cd4a  Exp=cd49
+Pass: A=6f79  B=08ad  SUB=0 → 6f79
+Pass: A=34b1  B=92bf  SUB=0 → 34ae
+Pass: A=8b7e  B=6c90  SUB=0 → 6c90
+Pass: A=2353  B=da6f  SUB=0 → da6f
+Pass: A=b84e  B=8729  SUB=0 → b84e
+Pass: A=543b  B=7a07  SUB=0 → 7a09
+Pass: A=4129  B=a58a  SUB=0 → 411e
+Pass: A=6a14  B=3f56  SUB=0 → 6a15
+Pass: A=3561  B=95dd  SUB=0 → 355b
+Pass: A=2ebf  B=8ce8  SUB=0 → 2eba
+Pass: A=f2a2  B=cd97  SUB=0 → f2a5
+Pass: A=c3af  B=4e12  SUB=0 → 4d1c
+Fail: A=9557  B=0092  SUB=0 → Got=9552  Exp=954e
+Pass: A=398c  B=b0a5  SUB=0 → 3863
+Pass: A=5ba5  B=a3dc  SUB=0 → 5ba5
+Fail: A=4f63  B=2da8  SUB=0 → Got=4f68  Exp=4f69
+Pass: A=bc99  B=dcbb  SUB=0 → dcc0
+Pass: A=9d49  B=d298  SUB=0 → d298
+Pass: A=3c35  B=f8ed  SUB=0 → f8ed
+Pass: A=10ec  B=15cc  SUB=0 → 1821
+Pass: A=9e8b  B=5989  SUB=0 → 5989
+Pass: A=bb80  B=c2ef  SUB=0 → c468
+Pass: A=3694  B=27ff  SUB=0 → 3714
+Pass: A=23e2  B=ba8c  SUB=0 → ba6c
+Fail: A=cc08  B=feda  SUB=0 → Got=fc00  Exp=feda
+Pass: A=b1fc  B=c812  SUB=0 → c82a
+Pass: A=26d9  B=8849  SUB=0 → 26d0
+Pass: A=bce1  B=d532  SUB=0 → d546
+Pass: A=a0ee  B=6a2a  SUB=0 → 6a2a
+Pass: A=3aed  B=7892  SUB=0 → 7892
+Pass: A=ebd1  B=675e  SUB=0 → e822
+Pass: A=7b95  B=5812  SUB=0 → 7b99
+Pass: A=d268  B=0eac  SUB=0 → d268
+Pass: A=dfd2  B=a2ea  SUB=0 → dfd2
+Pass: A=c488  B=911a  SUB=0 → c488
+Pass: A=ea2c  B=c3fa  SUB=0 → ea2e
+Pass: A=a5a6  B=5ea5  SUB=0 → 5ea5
+Pass: A=6ffb  B=59c0  SUB=0 → 7014
+Pass: A=e06e  B=3ac0  SUB=0 → e06c
+Pass: A=d7f6  B=1887  SUB=0 → d7f6
+Fail: A=a634  B=cd41  SUB=0 → Got=cd42  Exp=cd43
+Pass: A=d343  B=5d1f  SUB=0 → 5c37
+Fail: A=907d  B=7f0b  SUB=0 → Got=7c00  Exp=7f0b
+Pass: A=e60b  B=054b  SUB=0 → e60b
+Pass: A=6f8e  B=f481  SUB=0 → f13b
+Pass: A=1bca  B=90d2  SUB=0 → 1a96
+Fail: A=fefe  B=736d  SUB=0 → Got=fc00  Exp=fefe
+Pass: A=6cd4  B=26c8  SUB=0 → 6cd4
+Pass: A=3c97  B=2b96  SUB=0 → 3cd4
+Pass: A=e210  B=62c6  SUB=0 → 55b0
+Pass: A=f7c6  B=71ee  SUB=0 → f4cf
+Pass: A=c225  B=3445  SUB=0 → c19c
+Pass: A=b1de  B=a8ed  SUB=0 → b319
+Pass: A=e8a5  B=908e  SUB=0 → e8a5
+Pass: A=c214  B=f9f1  SUB=0 → f9f1
+Pass: A=afbf  B=2b93  SUB=0 → abeb
+Pass: A=ed41  B=7ad2  SUB=0 → 7a2a
+Pass: A=95fb  B=fb10  SUB=0 → fb10
+Fail: A=82e4  B=25fa  SUB=0 → Got=25f9  Exp=25f7
+Fail: A=4aee  B=a50d  SUB=0 → Got=4aec  Exp=4aeb
+Pass: A=9678  B=c769  SUB=0 → c769
+Pass: A=0016  B=bd50  SUB=0 → bd50
+Fail: A=becd  B=c945  SUB=0 → Got=ca1e  Exp=ca1f
+Pass: A=e6bd  B=4a0d  SUB=0 → e6b1
+Pass: A=c7aa  B=cebc  SUB=0 → d053
+Pass: A=cd79  B=d087  SUB=0 → d344
+Pass: A=29a7  B=d843  SUB=0 → d843
+Pass: A=b267  B=e593  SUB=0 → e593
+Pass: A=8cfb  B=308d  SUB=0 → 308b
+Pass: A=c634  B=5e04  SUB=0 → 5deb
+Pass: A=efcd  B=f24e  SUB=0 → f51a
+Pass: A=e254  B=4b5c  SUB=0 → e237
+Pass: A=44cf  B=b5cd  SUB=0 → 4472
+Pass: A=6a86  B=f888  SUB=0 → f820
+Fail: A=614b  B=d15b  SUB=0 → Got=60f6  Exp=60f5
+Pass: A=91a4  B=5060  SUB=0 → 5060
+Pass: A=8b25  B=df65  SUB=0 → df65
+Pass: A=0ad5  B=4411  SUB=0 → 4411
+Pass: A=f09d  B=2810  SUB=0 → f09d
+Pass: A=5dc0  B=e60b  SUB=0 → e49b
+Pass: A=efd7  B=239a  SUB=0 → efd7
+Pass: A=205b  B=6ca4  SUB=0 → 6ca4
+Pass: A=e938  B=9aa5  SUB=0 → e938
+Fail: A=80b7  B=147c  SUB=0 → Got=1476  Exp=1471
+Pass: A=d548  B=6526  SUB=0 → 64d2
+Pass: A=64ec  B=a638  SUB=0 → 64ec
+Pass: A=0ae3  B=f3a7  SUB=0 → f3a7
+Fail: A=208c  B=fd10  SUB=0 → Got=fc00  Exp=ff10
+Pass: A=d6e8  B=740a  SUB=0 → 7403
+Pass: A=13f7  B=33f5  SUB=0 → 33fd
+Fail: A=aa47  B=7d34  SUB=0 → Got=7c00  Exp=7f34
+Pass: A=f309  B=53d7  SUB=0 → f301
+Pass: A=e186  B=46b5  SUB=0 → e179
+Pass: A=07b1  B=2127  SUB=0 → 2136
+Pass: A=e81d  B=fae9  SUB=0 → fb2b
+Pass: A=7110  B=9ff4  SUB=0 → 7110
+Pass: A=9d6b  B=1256  SUB=0 → 9ca0
+Pass: A=279c  B=59ea  SUB=0 → 59ea
+Pass: A=2fe6  B=3084  SUB=0 → 343c
+Pass: A=c202  B=2a16  SUB=0 → c1ea
+Pass: A=83b7  B=e4bf  SUB=0 → e4bf
+Pass: A=9845  B=7109  SUB=0 → 7109
+Pass: A=25fc  B=eedc  SUB=0 → eedc
+Pass: A=33bd  B=a9f1  SUB=0 → 3241
+Fail: A=5055  B=ffe1  SUB=0 → Got=fc00  Exp=ffe1
+Pass: A=d814  B=d086  SUB=0 → d936
+Pass: A=9a2e  B=2c9f  SUB=0 → 2c6e
+Pass: A=fbd4  B=8c13  SUB=0 → fbd4
+Pass: A=2a73  B=7371  SUB=0 → 7371
+Fail: A=b3e6  B=7c9d  SUB=0 → Got=7c00  Exp=7e9d
+Pass: A=49a8  B=f6b1  SUB=0 → f6b0
+Pass: A=d961  B=1581  SUB=0 → d961
+Pass: A=52b5  B=ab8b  SUB=0 → 52b3
+Pass: A=e559  B=0f60  SUB=0 → e559
+Pass: A=e21f  B=9a17  SUB=0 → e21f
+Pass: A=f9bc  B=1dce  SUB=0 → f9bc
+Pass: A=5f20  B=040d  SUB=0 → 5f20
+Pass: A=29cf  B=d769  SUB=0 → d768
+Pass: A=6c25  B=a646  SUB=0 → 6c25
+Pass: A=f869  B=2a13  SUB=0 → f869
+Pass: A=9751  B=3c38  SUB=0 → 3c36
+Pass: A=2a7c  B=dece  SUB=0 → dece
+Pass: A=9a20  B=d051  SUB=0 → d051
+Pass: A=5faf  B=b153  SUB=0 → 5fae
+Pass: A=5900  B=6f60  SUB=0 → 6f88
+Pass: A=ddaa  B=a8e9  SUB=0 → ddaa
+Pass: A=3edf  B=38e5  SUB=0 → 40a9
+Pass: A=f685  B=aefc  SUB=0 → f685
+Pass: A=e064  B=187a  SUB=0 → e064
+Pass: A=e308  B=f79b  SUB=0 → f7d3
+Pass: A=17ef  B=e6f7  SUB=0 → e6f7
+Pass: A=989a  B=c9fc  SUB=0 → c9fc
+Pass: A=c23c  B=380e  SUB=0 → c138
+Pass: A=6594  B=8f39  SUB=0 → 6594
+Pass: A=e8e0  B=57c1  SUB=0 → e8a2
+Fail: A=ff37  B=5872  SUB=0 → Got=fc00  Exp=ff37
+Pass: A=823e  B=ebbf  SUB=0 → ebbf
+Pass: A=e2cd  B=e18c  SUB=0 → e62c
+Pass: A=8f70  B=e6a5  SUB=0 → e6a5
+Pass: A=565e  B=8c9c  SUB=0 → 565e
+Fail: A=1af1  B=015d  SUB=0 → Got=1af6  Exp=1afc
+Pass: A=0865  B=4aa3  SUB=0 → 4aa3
+Pass: A=42a5  B=4903  SUB=0 → 4aac
+Pass: A=75f5  B=1ef6  SUB=0 → 75f5
+Pass: A=9893  B=8fc9  SUB=0 → 998c
+Pass: A=0d5e  B=4b00  SUB=0 → 4b00
+Pass: A=6e83  B=da97  SUB=0 → 6e4e
+Pass: A=c1da  B=5f60  SUB=0 → 5f54
+Pass: A=bfff  B=5c7a  SUB=0 → 5c72
+Pass: A=d437  B=05fb  SUB=0 → d437
+Pass: A=aee9  B=2bfd  SUB=0 → a9d5
+Pass: A=720b  B=050f  SUB=0 → 720b
+Pass: A=6f97  B=0a1c  SUB=0 → 6f97
+Pass: A=acc8  B=c46c  SUB=0 → c47f
+Fail: A=fef6  B=28f8  SUB=0 → Got=fc00  Exp=fef6
+Pass: A=1704  B=a2b3  SUB=0 → a1d2
+Pass: A=1685  B=8dec  SUB=0 → 150a
+Pass: A=debf  B=3b83  SUB=0 → debb
+Pass: A=b074  B=75ce  SUB=0 → 75ce
+Pass: A=175c  B=a741  SUB=0 → a6cb
+Fail: A=c6c8  B=19fd  SUB=0 → Got=c6c8  Exp=c6c7
+Pass: A=02bb  B=e98b  SUB=0 → e98b
+Pass: A=9f6e  B=512d  SUB=0 → 512d
+Pass: A=1b6f  B=53d7  SUB=0 → 53d7
+Fail: A=fc66  B=5cfc  SUB=0 → Got=fc00  Exp=fe66
+Pass: A=b3d9  B=ce80  SUB=0 → ce90
+Pass: A=3774  B=5366  SUB=0 → 5375
+Pass: A=3164  B=9ac5  SUB=0 → 3149
+Pass: A=89e1  B=c716  SUB=0 → c716
+Pass: A=6f2d  B=4993  SUB=0 → 6f30
+Pass: A=6d06  B=e06c  SUB=0 → 6c78
+Pass: A=a579  B=863a  SUB=0 → a57f
+Pass: A=4140  B=834b  SUB=0 → 4140
+Pass: A=c9e5  B=92a2  SUB=0 → c9e5
+Pass: A=b26d  B=a781  SUB=0 → b35d
+Pass: A=5497  B=c944  SUB=0 → 53dd
+Pass: A=44db  B=b99e  SUB=0 → 4427
+Pass: A=1045  B=da85  SUB=0 → da85
+Fail: A=46d0  B=e389  SUB=0 → Got=e37c  Exp=e37b
+Pass: A=e063  B=e3f8  SUB=0 → e62e
+Fail: A=41b2  B=d687  SUB=0 → Got=d65a  Exp=d659
+Pass: A=b8bb  B=83c7  SUB=0 → b8bb
+Pass: A=b9f4  B=140c  SUB=0 → b9f2
+Pass: A=4d15  B=6935  SUB=0 → 693f
+Pass: A=4775  B=cd1f  SUB=0 → ca84
+Pass: A=12d3  B=e9c3  SUB=0 → e9c3
+Pass: A=deea  B=a1da  SUB=0 → deea
+Pass: A=5fa3  B=1b3d  SUB=0 → 5fa3
+Pass: A=8bec  B=5fbd  SUB=0 → 5fbd
+Pass: A=8528  B=48ab  SUB=0 → 48ab
+Pass: A=2d58  B=1bd0  SUB=0 → 2d96
+Pass: A=5c4d  B=5c55  SUB=0 → 6051
+Pass: A=5278  B=802a  SUB=0 → 5278
+Pass: A=a9d8  B=a9e8  SUB=0 → ade0
+Pass: A=07b2  B=2991  SUB=0 → 2995
+Pass: A=bd30  B=25e7  SUB=0 → bd18
+Fail: A=7dc7  B=8e02  SUB=0 → Got=7c00  Exp=7fc7
+Pass: A=2353  B=0018  SUB=0 → 2353
+Pass: A=24c6  B=a368  SUB=0 → 1c48
+Pass: A=381b  B=a5c0  SUB=0 → 37da
+Pass: A=0521  B=c6fd  SUB=0 → c6fd
+Pass: A=2ba6  B=875c  SUB=0 → 2ba2
+Pass: A=2856  B=4aec  SUB=0 → 4af0
+Pass: A=6f71  B=93fc  SUB=0 → 6f71
+Fail: A=9171  B=826b  SUB=0 → Got=9198  Exp=91be
+Pass: A=5136  B=834c  SUB=0 → 5136
+Pass: A=c1d7  B=5d9e  SUB=0 → 5d92
+Fail: A=d70d  B=c276  SUB=0 → Got=d740  Exp=d741
+Pass: A=dcb6  B=e8e3  SUB=0 → e97a
+Pass: A=6afd  B=9410  SUB=0 → 6afd
+Pass: A=63ca  B=fbd3  SUB=0 → fbb4
+Pass: A=c642  B=3af7  SUB=0 → c563
+Pass: A=bfdb  B=de9f  SUB=0 → dea7
+Pass: A=1974  B=66f4  SUB=0 → 66f4
+Pass: A=5eb0  B=5033  SUB=0 → 5f36
+Pass: A=4c9f  B=a95b  SUB=0 → 4c9c
+Pass: A=0c57  B=042b  SUB=0 → 0d62
+Pass: A=6c94  B=0bbd  SUB=0 → 6c94
+Pass: A=099e  B=68e4  SUB=0 → 68e4
+Fail: A=75d2  B=fc5e  SUB=0 → Got=f9d3  Exp=fe5e
+Pass: A=e0c9  B=ae92  SUB=0 → e0c9
+Pass: A=96f6  B=d3a1  SUB=0 → d3a1
+Pass: A=6c77  B=9b51  SUB=0 → 6c77
+Fail: A=26e1  B=193d  SUB=0 → Got=2788  Exp=2789
+Pass: A=f2fe  B=617c  SUB=0 → f2a6
+Pass: A=8c6e  B=b095  SUB=0 → b097
+Pass: A=88cd  B=c002  SUB=0 → c002
+Pass: A=50a9  B=d3dd  SUB=0 → ce68
+Pass: A=c893  B=26da  SUB=0 → c890
+Pass: A=8f05  B=14c3  SUB=0 → 1204
+Pass: A=d799  B=3eff  SUB=0 → d77d
+Pass: A=4773  B=e854  SUB=0 → e850
+Fail: A=a158  B=46e8  SUB=0 → Got=46e6  Exp=46e5
+Pass: A=080b  B=a7b9  SUB=0 → a7b1
+Pass: A=2efa  B=d77c  SUB=0 → d77a
+Pass: A=9d28  B=1f93  SUB=0 → 18d6
+Pass: A=4908  B=090c  SUB=0 → 4908
+Pass: A=2b7e  B=b348  SUB=0 → b168
+Pass: A=fb61  B=c61c  SUB=0 → fb61
+Pass: A=f9e7  B=38f9  SUB=0 → f9e7
+Pass: A=9504  B=480f  SUB=0 → 480f
+Pass: A=7340  B=27d9  SUB=0 → 7340
+Fail: A=a092  B=cef2  SUB=0 → Got=cef2  Exp=cef3
+Pass: A=c5cf  B=c807  SUB=0 → caee
+Pass: A=fa8a  B=e627  SUB=0 → fabb
+Pass: A=e55f  B=0b96  SUB=0 → e55f
+Pass: A=a0a6  B=2e40  SUB=0 → 2dab
+Pass: A=ee3d  B=991b  SUB=0 → ee3d
+Pass: A=e474  B=89a2  SUB=0 → e474
+Pass: A=41da  B=7966  SUB=0 → 7966
+Pass: A=164a  B=9225  SUB=0 → 126f
+Pass: A=e265  B=62d8  SUB=0 → 5330
+Pass: A=de3c  B=e6c3  SUB=0 → e829
+Pass: A=c12a  B=8ec4  SUB=0 → c12a
+Pass: A=108d  B=f710  SUB=0 → f710
+Fail: A=7e60  B=36db  SUB=0 → Got=7c00  Exp=7e60
+Pass: A=98be  B=6020  SUB=0 → 6020
+Pass: A=ee3e  B=91d5  SUB=0 → ee3e
+Pass: A=08b8  B=64a0  SUB=0 → 64a0
+Pass: A=a914  B=e280  SUB=0 → e280
+Fail: A=20fc  B=7e4d  SUB=0 → Got=7c00  Exp=7e4d
+Pass: A=767b  B=b314  SUB=0 → 767b
+Pass: A=d3b2  B=a065  SUB=0 → d3b2
+Fail: A=5175  B=7cb4  SUB=0 → Got=7c00  Exp=7eb4
+Pass: A=5785  B=02a0  SUB=0 → 5785
+Pass: A=c8f2  B=f2fa  SUB=0 → f2fb
+Pass: A=ec64  B=6467  SUB=0 → ea94
+Pass: A=534f  B=4c49  SUB=0 → 54ba
+Pass: A=f3db  B=6ee0  SUB=0 → f06b
+Pass: A=6927  B=086f  SUB=0 → 6927
+Pass: A=f8b3  B=9568  SUB=0 → f8b3
+Pass: A=22cb  B=e994  SUB=0 → e994
+Fail: A=8027  B=7e36  SUB=0 → Got=7c00  Exp=7e36
+Pass: A=89e8  B=957c  SUB=0 → 9639
+Pass: A=bb13  B=d214  SUB=0 → d230
+Pass: A=dac4  B=0c04  SUB=0 → dac4
+Fail: A=6a50  B=fff2  SUB=0 → Got=fc00  Exp=fff2
+Pass: A=5bff  B=227c  SUB=0 → 5bff
+Pass: A=1b4c  B=701e  SUB=0 → 701e
+Pass: A=2e4e  B=7bd0  SUB=0 → 7bd0
+Pass: A=9129  B=c2fb  SUB=0 → c2fb
+Pass: A=c35b  B=61cc  SUB=0 → 61c5
+Fail: A=3d61  B=fe56  SUB=0 → Got=fc00  Exp=fe56
+Pass: A=d76b  B=713b  SUB=0 → 712c
+Pass: A=08bb  B=3e04  SUB=0 → 3e04
+Pass: A=2cce  B=f74f  SUB=0 → f74f
+Pass: A=1502  B=67b2  SUB=0 → 67b2
+Pass: A=4a7a  B=8996  SUB=0 → 4a7a
+Pass: A=a582  B=52e9  SUB=0 → 52e8
+Pass: A=ccdc  B=c857  SUB=0 → cf08
+Pass: A=9f7e  B=732b  SUB=0 → 732b
+Pass: A=c7fa  B=9d25  SUB=0 → c7fb
+Pass: A=914b  B=c382  SUB=0 → c382
+Pass: A=f37b  B=ed1c  SUB=0 → f504
+Pass: A=c378  B=b60e  SUB=0 → c41d
+Pass: A=a2f1  B=e3be  SUB=0 → e3be
+Pass: A=6256  B=1098  SUB=0 → 6256
+Pass: A=e495  B=780c  SUB=0 → 77cf
+Pass: A=1b7c  B=3444  SUB=0 → 3453
+Pass: A=3f54  B=a3ab  SUB=0 → 3f45
+Pass: A=1248  B=0e9f  SUB=0 → 14cc
+Pass: A=2501  B=dd6f  SUB=0 → dd6f
+Pass: A=db8a  B=af1c  SUB=0 → db8b
+Pass: A=e28f  B=bb54  SUB=0 → e291
+Pass: A=910d  B=bfd9  SUB=0 → bfda
+Pass: A=a698  B=484a  SUB=0 → 4847
+Pass: A=ce6a  B=5134  SUB=0 → 4bfc
+Pass: A=9836  B=28f2  SUB=0 → 28af
+Pass: A=a05e  B=5664  SUB=0 → 5664
+Pass: A=d02c  B=5a70  SUB=0 → 5965
+Pass: A=2289  B=56bb  SUB=0 → 56bb
+Pass: A=eb4e  B=7028  SUB=0 → 6ca9
+Pass: A=1a57  B=3a77  SUB=0 → 3a7d
+Pass: A=5d1e  B=04a6  SUB=0 → 5d1e
+Pass: A=5346  B=62de  SUB=0 → 6352
+Pass: A=b4eb  B=ca8f  SUB=0 → cab6
+Pass: A=4df4  B=2a4d  SUB=0 → 4df7
+Pass: A=9f66  B=53d1  SUB=0 → 53d1
+Pass: A=923e  B=a2b7  SUB=0 → a31b
+Pass: A=c452  B=3828  SUB=0 → c39a
+Pass: A=47ca  B=dc73  SUB=0 → dc54
+Pass: A=85a5  B=999f  SUB=0 → 99cc
+Pass: A=462e  B=b823  SUB=0 → 45aa
+Pass: A=56a9  B=586b  SUB=0 → 5bc0
+Fail: A=271a  B=9769  SUB=0 → Got=26a4  Exp=26a3
+Pass: A=affb  B=a876  SUB=0 → b11b
+Fail: A=fcca  B=e101  SUB=0 → Got=fc00  Exp=feca
+Pass: A=5ef3  B=0dcc  SUB=0 → 5ef3
+Pass: A=36fb  B=906c  SUB=0 → 36f9
+Pass: A=0412  B=91de  SUB=0 → 915c
+Pass: A=5311  B=ed13  SUB=0 → ed05
+Pass: A=9764  B=aede  SUB=0 → aefc
+Pass: A=0c76  B=63bd  SUB=0 → 63bd
+Pass: A=92bb  B=25b2  SUB=0 → 257c
+Pass: A=c01a  B=46e7  SUB=0 → 44da
+Pass: A=3e58  B=06a2  SUB=0 → 3e58
+Pass: A=6fbd  B=3233  SUB=0 → 6fbd
+Fail: A=fd1c  B=b3e4  SUB=0 → Got=fc00  Exp=ff1c
+Fail: A=c623  B=ffe2  SUB=0 → Got=fc00  Exp=ffe2
+Pass: A=c6f1  B=0ec7  SUB=0 → c6f1
+Fail: A=7e0e  B=c9fe  SUB=0 → Got=7c00  Exp=7e0e
+Pass: A=a3ea  B=7ab5  SUB=0 → 7ab5
+Pass: A=c8b6  B=2d1a  SUB=0 → c8ac
+Pass: A=8c09  B=1254  SUB=0 → 1050
+Pass: A=cd64  B=17dc  SUB=0 → cd64
+Fail: A=fc6b  B=8155  SUB=0 → Got=fc00  Exp=fe6b
+Pass: A=77ef  B=b5e9  SUB=0 → 77ef
+Pass: A=a36c  B=9ab6  SUB=0 → a48d
+Fail: A=1709  B=022a  SUB=0 → Got=171a  Exp=172c
+Pass: A=de71  B=b859  SUB=0 → de73
+Pass: A=348e  B=f6d2  SUB=0 → f6d2
+Fail: A=4c24  B=7c46  SUB=0 → Got=7c00  Exp=7e46
+Pass: A=8d6c  B=776f  SUB=0 → 776f
+Pass: A=faeb  B=b460  SUB=0 → faeb
+Fail: A=8dd8  B=7d94  SUB=0 → Got=7c00  Exp=7f94
+Fail: A=7ffa  B=2e49  SUB=0 → Got=7c00  Exp=7ffa
+Pass: A=c499  B=cf48  SUB=0 → d037
+Fail: A=9956  B=467c  SUB=0 → Got=467c  Exp=467b
+Pass: A=7054  B=b976  SUB=0 → 7054
+Pass: A=0f70  B=c0aa  SUB=0 → c0aa
+Pass: A=6a87  B=ba6c  SUB=0 → 6a87
+Pass: A=c9fa  B=30b9  SUB=0 → c9e7
+Pass: A=bc0c  B=2bc3  SUB=0 → bb9c
+Pass: A=5150  B=46a9  SUB=0 → 5225
+Fail: A=7d23  B=974a  SUB=0 → Got=7c00  Exp=7f23
+Fail: A=a954  B=0155  SUB=0 → Got=a954  Exp=a953
+Pass: A=67c4  B=5c88  SUB=0 → 6873
+Pass: A=8864  B=7a87  SUB=0 → 7a87
+Fail: A=e2e7  B=7875  SUB=0 → Got=785a  Exp=7859
+Fail: A=fe95  B=bf6e  SUB=0 → Got=fc00  Exp=fe95
+Pass: A=b42d  B=39e8  SUB=0 → 37a3
+Fail: A=fe6a  B=2a6f  SUB=0 → Got=fc00  Exp=fe6a
+Pass: A=aca9  B=2a4a  SUB=0 → a610
+Pass: A=d3a3  B=8d6d  SUB=0 → d3a3
+Pass: A=1403  B=6197  SUB=0 → 6197
+Fail: A=8b1d  B=1655  SUB=0 → Got=1572  Exp=1571
+Pass: A=82b2  B=29e5  SUB=0 → 29e4
+Pass: A=fb57  B=cb21  SUB=0 → fb57
+Pass: A=f977  B=027a  SUB=0 → f977
+Pass: A=d1c5  B=43e1  SUB=0 → d147
+Pass: A=a99e  B=5061  SUB=0 → 5060
+Pass: A=75a1  B=5809  SUB=0 → 75a9
+Pass: A=7174  B=ac19  SUB=0 → 7174
+Pass: A=4572  B=570f  SUB=0 → 5766
+Pass: A=c579  B=939c  SUB=0 → c579
+Pass: A=f53a  B=4bb0  SUB=0 → f539
+Pass: A=98e2  B=70d5  SUB=0 → 70d5
+Fail: A=988d  B=7e66  SUB=0 → Got=7c00  Exp=7e66
+Pass: A=90b7  B=3d99  SUB=0 → 3d98
+Pass: A=f353  B=76b7  SUB=0 → 721b
+Pass: A=36e4  B=f09a  SUB=0 → f09a
+Pass: A=4f6c  B=13e0  SUB=0 → 4f6c
+Pass: A=222d  B=eddc  SUB=0 → eddc
+Pass: A=073e  B=6a51  SUB=0 → 6a51
+Pass: A=f732  B=ad2a  SUB=0 → f732
+Fail: A=b820  B=0cf1  SUB=0 → Got=b820  Exp=b81f
+Pass: A=34a9  B=b85b  SUB=0 → b40d
+Pass: A=4260  B=1219  SUB=0 → 4260
+Pass: A=a31c  B=b928  SUB=0 → b944
+Pass: A=ef4b  B=454c  SUB=0 → ef4a
+Pass: A=1c1c  B=89e4  SUB=0 → 1bda
+Pass: A=db9b  B=0d8e  SUB=0 → db9b
+Pass: A=bcfa  B=5a04  SUB=0 → 59fa
+Pass: A=0e9b  B=758d  SUB=0 → 758d
+Pass: A=f301  B=308e  SUB=0 → f301
+Pass: A=f3a3  B=863d  SUB=0 → f3a3
+Pass: A=2c38  B=9fb4  SUB=0 → 2b7a
+Pass: A=2e29  B=f8a0  SUB=0 → f8a0
+Pass: A=4141  B=af01  SUB=0 → 4109
+Pass: A=811e  B=3a37  SUB=0 → 3a37
+Pass: A=f718  B=7634  SUB=0 → eb20
+Pass: A=afaa  B=18a0  SUB=0 → af85
+Fail: A=f2cc  B=c599  SUB=0 → Got=f2cc  Exp=f2cd
+Pass: A=1e35  B=c3c6  SUB=0 → c3c3
+Pass: A=6aa0  B=9080  SUB=0 → 6aa0
+Fail: A=70c6  B=e389  SUB=0 → Got=704e  Exp=704d
+Pass: A=93fe  B=39db  SUB=0 → 39d9
+Pass: A=77b2  B=11f1  SUB=0 → 77b2
+Pass: A=e7c7  B=99db  SUB=0 → e7c7
+Pass: A=ea8c  B=c7a0  SUB=0 → ea90
+Pass: A=0d0f  B=06a4  SUB=0 → 0eb8
+Pass: A=8f3e  B=c55c  SUB=0 → c55c
+Pass: A=1c13  B=864a  SUB=0 → 1bf4
+Pass: A=7b39  B=0d80  SUB=0 → 7b39
+Pass: A=6388  B=a664  SUB=0 → 6388
+Pass: A=43a2  B=7802  SUB=0 → 7802
+Pass: A=e3ae  B=3694  SUB=0 → e3ad
+Pass: A=3d1d  B=63df  SUB=0 → 63e2
+Pass: A=0a38  B=6e56  SUB=0 → 6e56
+Fail: A=a34a  B=afa4  SUB=0 → Got=b046  Exp=b047
+Pass: A=1e87  B=8777  SUB=0 → 1e69
+Pass: A=a578  B=d908  SUB=0 → d908
+Pass: A=cf80  B=63b2  SUB=0 → 6376
+Pass: A=1260  B=2c93  SUB=0 → 2ca0
+Pass: A=70ed  B=3f05  SUB=0 → 70ed
+Fail: A=bc58  B=5a58  SUB=0 → Got=5a50  Exp=5a4f
+Fail: A=fdcc  B=0346  SUB=0 → Got=fc00  Exp=ffcc
+Pass: A=bec6  B=1de5  SUB=0 → bec0
+Pass: A=4ba2  B=6e6b  SUB=0 → 6e6f
+Pass: A=b27d  B=8066  SUB=0 → b27d
+Pass: A=8eaa  B=5c3e  SUB=0 → 5c3e
+Pass: A=a7f5  B=34ab  SUB=0 → 342c
+Pass: A=4524  B=5999  SUB=0 → 59c2
+Pass: A=5b3c  B=10dc  SUB=0 → 5b3c
+Pass: A=3261  B=cd2a  SUB=0 → cd1d
+Pass: A=d1b5  B=540d  SUB=0 → 4cca
+Pass: A=334c  B=57a8  SUB=0 → 57ac
+Pass: A=78a0  B=4688  SUB=0 → 78a0
+Pass: A=c108  B=4dd4  SUB=0 → 4d33
+Pass: A=bedf  B=8bf6  SUB=0 → bedf
+Pass: A=d140  B=65d0  SUB=0 → 65a6
+Pass: A=636d  B=1cdd  SUB=0 → 636d
+Pass: A=93d5  B=67f0  SUB=0 → 67f0
+Pass: A=533d  B=452e  SUB=0 → 53e3
+Fail: A=7f94  B=357e  SUB=0 → Got=7c00  Exp=7f94
+Pass: A=744c  B=2959  SUB=0 → 744c
+Pass: A=e266  B=e77e  SUB=0 → e958
+Pass: A=f6ce  B=1392  SUB=0 → f6ce
+Pass: A=25f1  B=9b04  SUB=0 → 2510
+Pass: A=a019  B=e8ec  SUB=0 → e8ec
+Pass: A=f44e  B=987f  SUB=0 → f44e
+Pass: A=fa2a  B=b512  SUB=0 → fa2a
+Pass: A=4df5  B=693d  SUB=0 → 6949
+Pass: A=b7ce  B=d4c9  SUB=0 → d4d1
+Fail: A=811c  B=05c8  SUB=0 → Got=053a  Exp=04ac
+Fail: A=99ff  B=bffd  SUB=0 → Got=bc00  Exp=c000
+Pass: A=ee39  B=5255  SUB=0 → ee2c
+Pass: A=ec5a  B=0534  SUB=0 → ec5a
+Fail: A=88ca  B=7e4e  SUB=0 → Got=7c00  Exp=7e4e
+Pass: A=7237  B=f256  SUB=0 → dbc0
+Pass: A=38c9  B=0efa  SUB=0 → 38ca
+Fail: A=b367  B=fc54  SUB=0 → Got=fc00  Exp=fe54
+Pass: A=813a  B=f0cc  SUB=0 → f0cc
+Pass: A=2c2a  B=157d  SUB=0 → 2c40
+Pass: A=fab2  B=02f7  SUB=0 → fab2
+Pass: A=d848  B=b352  SUB=0 → d84a
+Pass: A=5aa8  B=56e4  SUB=0 → 5d0d
+Pass: A=d500  B=78dd  SUB=0 → 78da
+Pass: A=aa3b  B=27a1  SUB=0 → a4d5
+Pass: A=abd6  B=f980  SUB=0 → f980
+Pass: A=e88a  B=b1a5  SUB=0 → e88a
+Pass: A=f7c3  B=1e7d  SUB=0 → f7c3
+Pass: A=8e26  B=6764  SUB=0 → 6764
+Pass: A=c0cc  B=72b0  SUB=0 → 72b0
+Pass: A=b615  B=24fd  SUB=0 → b5c5
+Pass: A=ae43  B=39c9  SUB=0 → 3901
+Pass: A=f930  B=8ef1  SUB=0 → f930
+Fail: A=4fb8  B=4535  SUB=0 → Got=5082  Exp=5083
+Pass: A=6038  B=dc49  SUB=0 → 5c27
+Fail: A=bf8b  B=7ff5  SUB=0 → Got=7c00  Exp=7ff5
+Pass: A=d5f1  B=9817  SUB=0 → d5f1
+Pass: A=4e6e  B=bb77  SUB=0 → 4e32
+Pass: A=a5d7  B=0a59  SUB=0 → a5ca
+Pass: A=143f  B=57ac  SUB=0 → 57ac
+Pass: A=9eb3  B=d0c0  SUB=0 → d0c0
+Pass: A=37b9  B=2b90  SUB=0 → 3856
+Pass: A=2480  B=9dea  SUB=0 → 220b
+Fail: A=f41e  B=5b4e  SUB=0 → Got=f410  Exp=f40f
+Pass: A=6f49  B=bd3c  SUB=0 → 6f49
+Pass: A=0b61  B=378f  SUB=0 → 3790
+Pass: A=9a0f  B=57fe  SUB=0 → 57fe
+Pass: A=406e  B=e4ee  SUB=0 → e4ec
+Pass: A=e354  B=3063  SUB=0 → e354
+Pass: A=b4ab  B=de3c  SUB=0 → de3d
+Fail: A=80d6  B=8c2a  SUB=0 → Got=8c45  Exp=8c60
+Pass: A=6950  B=7b07  SUB=0 → 7b5c
+Pass: A=f61c  B=b4ca  SUB=0 → f61c
+Pass: A=54df  B=47e5  SUB=0 → 555d
+Pass: A=b914  B=93bc  SUB=0 → b916
+Pass: A=d49c  B=4608  SUB=0 → d43c
+Pass: A=c64a  B=4cdb  SUB=0 → 4a91
+Pass: A=1981  B=2022  SUB=0 → 2182
+Pass: A=5931  B=4240  SUB=0 → 594a
+Pass: A=ef74  B=d58c  SUB=0 → ef8a
+Pass: A=60d5  B=26e8  SUB=0 → 60d5
+Pass: A=09ff  B=e7db  SUB=0 → e7db
+Pass: A=9d46  B=e2c5  SUB=0 → e2c5
+Pass: A=6ca3  B=37d1  SUB=0 → 6ca3
+Pass: A=898b  B=bf66  SUB=0 → bf66
+Pass: A=6a86  B=c415  SUB=0 → 6a84
+Pass: A=9020  B=6b2f  SUB=0 → 6b2f
+Pass: A=752c  B=5af3  SUB=0 → 753a
+Pass: A=6d30  B=046f  SUB=0 → 6d30
+Pass: A=88cb  B=1d0d  SUB=0 → 1ce7
+Pass: A=048a  B=88ec  SUB=0 → 854e
+Pass: A=02c1  B=3206  SUB=0 → 3206
+Pass: A=f220  B=920d  SUB=0 → f220
+Pass: A=9cca  B=a649  SUB=0 → a77c
+Pass: A=65d3  B=452f  SUB=0 → 65d8
+Pass: A=f8bc  B=51a6  SUB=0 → f8bb
+Pass: A=3117  B=260e  SUB=0 → 31d9
+Pass: A=9364  B=493c  SUB=0 → 493c
+Pass: A=9c95  B=16a6  SUB=0 → 99d7
+Pass: A=6a57  B=4190  SUB=0 → 6a58
+Fail: A=f841  B=7f8f  SUB=0 → Got=7c00  Exp=7f8f
+Pass: A=4fa1  B=4276  SUB=0 → 5038
+Pass: A=7537  B=a0d2  SUB=0 → 7537
+Pass: A=e435  B=62b2  SUB=0 → dae0
+Pass: A=f7ac  B=2e5c  SUB=0 → f7ac
+Pass: A=540a  B=5aed  SUB=0 → 5c79
+Pass: A=edde  B=be4a  SUB=0 → edde
+Pass: A=b631  B=7890  SUB=0 → 7890
+Pass: A=3783  B=e415  SUB=0 → e415
+Fail: A=ff28  B=ebea  SUB=0 → Got=fc00  Exp=ff28
+Pass: A=9f36  B=7bb2  SUB=0 → 7bb2
+Pass: A=daf8  B=01c6  SUB=0 → daf8
+Pass: A=74b4  B=c78c  SUB=0 → 74b4
+Pass: A=3f64  B=7109  SUB=0 → 7109
+Pass: A=1805  B=1160  SUB=0 → 195d
+Fail: A=7e93  B=4a18  SUB=0 → Got=7c00  Exp=7e93
+Pass: A=d4e2  B=9bf2  SUB=0 → d4e2
+Pass: A=5a97  B=2b3f  SUB=0 → 5a97
+Pass: A=4f20  B=36b4  SUB=0 → 4f3b
+Pass: A=0979  B=a5f2  SUB=0 → a5e7
+Fail: A=1606  B=7d54  SUB=0 → Got=7c00  Exp=7f54
+Pass: A=2c46  B=8980  SUB=0 → 2c43
+Pass: A=ca0a  B=b69e  SUB=0 → ca3f
+Pass: A=98e3  B=bb70  SUB=0 → bb75
+Pass: A=45d2  B=c122  SUB=0 → 4282
+Pass: A=c2db  B=e0d4  SUB=0 → e0db
+Pass: A=6101  B=8859  SUB=0 → 6101
+Pass: A=6d09  B=34b8  SUB=0 → 6d09
+Pass: A=c437  B=d4e1  SUB=0 → d524
+Pass: A=1eba  B=32b6  SUB=0 → 32ec
+Pass: A=4179  B=2c69  SUB=0 → 419c
+Pass: A=a034  B=a132  SUB=0 → a4b3
+Pass: A=69ca  B=022f  SUB=0 → 69ca
+Pass: A=b1d8  B=cf02  SUB=0 → cf0e
+Pass: A=97f8  B=ece5  SUB=0 → ece5
+- tb/unit/systolic_array/add_fp16_tb_full.sv:264: Verilog $finish
+- S i m u l a t i o n   R e p o r t: Verilator 5.033 devel
+- Verilator: $finish at 12us; walltime 0.020 s; speed 590.199 us/s
+- Verilator: cpu 0.021 s on 1 threads; alloced 153 MB
