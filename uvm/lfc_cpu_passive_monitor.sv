@@ -5,6 +5,7 @@
 import uvm_pkg::*;
 `include "uvm_macros.svh"
 `include "lfc_if.sv"
+`include "lfc_cpu_transaction.sv"
 
 // --- Replace these with your real types if needed ---
 //typedef virtual lfc_if lfc_cpu_vif_t; 

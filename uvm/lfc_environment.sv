@@ -1,12 +1,12 @@
 import uvm_pkg::*;
 `include "uvm_macros.svh"
+`include "lfc_scoreboard.sv"
 `include "lfc_cpu_active_agent.sv"
 `include "lfc_cpu_passive_agent.sv"
 `include "lfc_ram_active_agent.sv"
 `include "lfc_ram_passive_agent.sv"
 `include "lfc_if.sv"
 `include "lfc_predictor.sv"
-`include "lfc_scoreboard.sv"
 `include "lfc_cpu_transaction.sv"
 `include "lfc_ram_transaction.sv"
 

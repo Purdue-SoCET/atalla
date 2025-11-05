@@ -2,9 +2,13 @@ import uvm_pkg::*;
 `include "uvm_macros.svh"
 `include "lfc_cpu_transaction.sv"
 `include "lfc_ram_transaction.sv"
+`include "lfc_if.sv"
 
 class lfc_predictor extends uvm_subscriber#(lfc_cpu_transaction, lfc_ram_transaction);
     `uvm_component_utils(lfc_predictor)
+
+    parameter NUM_BANKS = 4;
+    parameter UUID_SIZE = 4;
 
     uvm_analysis_port#(lfc_cpu_transaction) pred_cpu_ap;
     uvm_analysis_port#(lfc_ram_transaction) pred_ram_ap;
