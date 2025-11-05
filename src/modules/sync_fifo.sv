@@ -13,6 +13,7 @@ module sync_fifo #(parameter FIFODEPTH=8, DATAWIDTH=16) // DATAWIDTH = word size
 
   logic [$clog2(FIFODEPTH)-1:0]   wptr;
   logic [$clog2(FIFODEPTH)-1:0]   rptr;
+  logic [$clog2(FIFODEPTH):0]     count; // Counter to track number of entries
 
   logic [FIFODEPTH-1:0][DATAWIDTH-1:0] fifo; // *packed* array
 
@@ -24,7 +25,11 @@ module sync_fifo #(parameter FIFODEPTH=8, DATAWIDTH=16) // DATAWIDTH = word size
     else begin
       if (wr_en & !full) begin
         fifo[wptr] <= din;
-        wptr <= wptr + 1;
+        // Rollover pointer when it reaches FIFODEPTH
+        if (wptr == FIFODEPTH - 1)
+          wptr <= '0;
+        else
+          wptr <= wptr + 1;
       end
     end
   end
@@ -43,11 +48,28 @@ module sync_fifo #(parameter FIFODEPTH=8, DATAWIDTH=16) // DATAWIDTH = word size
     end else begin
       dout <= fifo[rptr]; // do not block data based on shifting (rd_en)
       if (shift & !empty) begin
-        rptr <= rptr + 1;
+        // Rollover pointer when it reaches FIFODEPTH
+        if (rptr == FIFODEPTH - 1)
+          rptr <= '0;
+        else
+          rptr <= rptr + 1;
       end
     end
   end
 
-  assign full  = (wptr + 1) == rptr;
-  assign empty = wptr == rptr;
+  // Counter-based full/empty detection
+  always_ff @(posedge CLK or negedge nRST) begin
+    if (!nRST) begin
+      count <= '0;
+    end else begin
+      case ({wr_en & !full, shift & !empty})
+        2'b10: count <= count + 1; // Write only
+        2'b01: count <= count - 1; // Read only
+        default: count <= count;    // Both or neither
+      endcase
+    end
+  end
+
+  assign full  = (count == FIFODEPTH);
+  assign empty = (count == 0);
 endmodule
