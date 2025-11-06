@@ -1,3 +1,6 @@
+`ifndef LFC_ENVIRONMENT_SV
+`define LFC_ENVIRONMENT_SV
+
 import uvm_pkg::*;
 `include "uvm_macros.svh"
 `include "lfc_scoreboard.sv"
@@ -61,3 +64,5 @@ class lfc_environment extends uvm_env;
   endfunction
 
 endclass
+
+`endif

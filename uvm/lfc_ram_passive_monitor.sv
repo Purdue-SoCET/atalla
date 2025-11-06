@@ -1,6 +1,6 @@
 // lfc_ram_passive_monitor.svh
-`ifndef LFC_RAM_PASSIVE_MONITOR_SVH
-`define LFC_RAM_PASSIVE_MONITOR_SVH
+`ifndef LFC_RAM_PASSIVE_MONITOR_SV
+`define LFC_RAM_PASSIVE_MONITOR_SV
 
 import uvm_pkg::*;
 `include "uvm_macros.svh"

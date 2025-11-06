@@ -1,6 +1,6 @@
 // lfc_ram_active_monitor.svh
-`ifndef LFC_RAM_ACTIVE_MONITOR_SVH
-`define LFC_RAM_ACTIVE_MONITOR_SVH
+`ifndef LFC_RAM_ACTIVE_MONITOR_SV
+`define LFC_RAM_ACTIVE_MONITOR_SV
 
 import uvm_pkg::*;
 `include "uvm_macros.svh"
@@ -53,4 +53,4 @@ class lfc_ram_active_monitor extends uvm_monitor;
 
 endclass
 
-`endif // LFC_CPU_ACTIVE_MONITOR_SVH
+`endif // LFC_CPU_ACTIVE_MONITOR_SV

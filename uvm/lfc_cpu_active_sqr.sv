@@ -1,5 +1,5 @@
-`ifndef LFC_CPU_ACTIVE_SQR_SVH
-`define LFC_CPU_ACTIVE_SQR_SVH
+`ifndef LFC_CPU_ACTIVE_SQR_SV
+`define LFC_CPU_ACTIVE_SQR_SV
 
 `include "uvm_macros.svh"
 `include "lfc_cpu_transaction.sv"

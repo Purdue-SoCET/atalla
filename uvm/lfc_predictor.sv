@@ -1,3 +1,6 @@
+`ifndef LFC_PREDICTOR_SV
+`define LFC_PREDICTOR_SV
+
 import uvm_pkg::*;
 `include "uvm_macros.svh"
 `include "lfc_cpu_transaction.sv"
@@ -18,8 +21,8 @@ class lfc_predictor extends uvm_subscriber#(lfc_cpu_transaction, lfc_ram_transac
 
     // uvm_tlm_analysis_fifo#(lfc_cpu_transaction) expected_MSHR;
     int MSHR_occupancy = 0;
-    logic [31:0] data_model [31:0];
-    logic data_is_in_cache [31:0];
+    logic [31:0] data_model [0:31];
+    logic data_is_in_cache [31:0] = 32'b0;
     
 
     function new(string name, uvm_component parent = null);
@@ -43,10 +46,11 @@ class lfc_predictor extends uvm_subscriber#(lfc_cpu_transaction, lfc_ram_transac
 
         if (cpu_t.hit) begin //  cache hit
             if (cpu_t.mem_in_rw_mode) begin // write
-                data_model[cpu_t.mem_in_addr] = output_cpu_tx.mem_in_store_value;
+                data_model[cpu_t.mem_in_addr] = cpu_t.mem_in_store_value;
                 data_is_in_cache[cpu_t.mem_in_addr] = 1'b1;
             end else begin // read
-                    cpu_t.hit_load = data_model[cpu_t.mem_in_addr];
+                cpu_t.hit_load = data_model[cpu_t.mem_in_addr];
+                `uvm_info("predictor", $sformatf("if hit and doing read:    %0d", cpu_t.hit_load), UVM_NONE)
             end
         end
         
@@ -76,3 +80,5 @@ class lfc_predictor extends uvm_subscriber#(lfc_cpu_transaction, lfc_ram_transac
 
 
 endclass: lfc_predictor
+
+`endif

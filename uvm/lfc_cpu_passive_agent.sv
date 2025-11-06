@@ -1,3 +1,6 @@
+`ifndef LFC_CPU_PASSIVE_AGENT_SV
+`define LFC_CPU_PASSIVE_AGENT_SV
+
 import uvm_pkg::*;
 `include "uvm_macros.svh"
 //`include "lfc_cpu_passive_monitor.sv"
@@ -15,3 +18,5 @@ class lfc_cpu_passive_agent extends uvm_agent;
     endfunction
 
 endclass
+
+`endif

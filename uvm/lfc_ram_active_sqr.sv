@@ -1,5 +1,5 @@
-`ifndef LFC_RAM_ACTIVE_SQR_SVH
-`define LFC_RAM_ACTIVE_SQR_SVH
+`ifndef LFC_RAM_ACTIVE_SQR_SV
+`define LFC_RAM_ACTIVE_SQR_SV
 
 `include "uvm_macros.svh"
 `include "lfc_ram_transaction.sv"

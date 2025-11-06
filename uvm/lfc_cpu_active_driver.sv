@@ -1,3 +1,6 @@
+`ifndef LFC_CPU_ACTIVE_DRIVER_SV
+`define LFC_CPU_ACTIVE_DRIVER_SV
+
 import uvm_pkg::*;
 `include "uvm_macros.svh"
 `include "lfc_if.sv"
@@ -45,3 +48,5 @@ class lfc_cpu_active_driver extends uvm_driver#(lfc_cpu_transaction);
     endtask
 
 endclass
+
+`endif

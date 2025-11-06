@@ -1,3 +1,6 @@
+`ifndef LFC_RAM_ACTIVE_AGENT_SV
+`define LFC_RAM_ACTIVE_AGENT_SV
+
 import uvm_pkg::*;
 `include "uvm_macros.svh"
 `include "lfc_ram_active_driver.sv"
@@ -25,3 +28,5 @@ class lfc_ram_active_agent extends uvm_agent;
     endfunction
 
 endclass
+
+`endif

@@ -1,6 +1,6 @@
 // lfc_cpu_active_monitor.svh
-`ifndef LFC_CPU_ACTIVE_MONITOR_SVH
-`define LFC_CPU_ACTIVE_MONITOR_SVH
+`ifndef LFC_CPU_ACTIVE_MONITOR_SV
+`define LFC_CPU_ACTIVE_MONITOR_SV
 
 import uvm_pkg::*;
 `include "uvm_macros.svh"

@@ -1,3 +1,6 @@
+`ifndef LFC_RAM_ACTIVE_DRIVER_SV
+`define LFC_RAM_ACTIVE_DRIVER_SV
+
 import uvm_pkg::*;
 `include "uvm_macros.svh"
 `include "lfc_if.sv"
@@ -111,3 +114,5 @@ class lfc_ram_active_driver extends uvm_driver#(lfc_cpu_transaction);
     endtask
 
 endclass
+
+`endif

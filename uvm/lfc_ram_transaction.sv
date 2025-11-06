@@ -1,5 +1,5 @@
-`ifndef LFC_RAM_TRANSACTION_SVH
-`define LFC_RAM_TRANSACTION_SVH
+`ifndef LFC_RAM_TRANSACTION_SV
+`define LFC_RAM_TRANSACTION_SV
 
 import uvm_pkg::*;
 `include "uvm_macros.svh"
