@@ -7,7 +7,8 @@ import uvm_pkg::*;
 `include "lfc_ram_transaction.sv"
 `include "lfc_if.sv"
 
-class lfc_predictor extends uvm_subscriber#(lfc_cpu_transaction, lfc_ram_transaction);
+// class lfc_predictor extends uvm_subscriber#(lfc_cpu_transaction, lfc_ram_transaction);
+class lfc_predictor extends uvm_component#(lfc_cpu_transaction, lfc_ram_transaction);
     `uvm_component_utils(lfc_predictor)
 
     parameter NUM_BANKS = 4;
@@ -22,7 +23,7 @@ class lfc_predictor extends uvm_subscriber#(lfc_cpu_transaction, lfc_ram_transac
     // uvm_tlm_analysis_fifo#(lfc_cpu_transaction) expected_MSHR;
     int MSHR_occupancy = 0;
     logic [31:0] data_model [0:31];
-    logic data_is_in_cache [31:0] = 32'b0;
+    logic [31:0] data_is_in_cache = 32'b0;
     
 
     function new(string name, uvm_component parent = null);
