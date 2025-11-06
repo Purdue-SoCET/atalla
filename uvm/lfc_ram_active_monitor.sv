@@ -40,8 +40,6 @@ class lfc_ram_active_monitor extends uvm_monitor;
   virtual task run_phase(uvm_phase phase);
     super.run_phase(phase);
     forever begin
-      // TODO: sample at @(posedge vif.clk); create cpu_txn_t t; lfc_ap.write(t);
-      //@(posedge $urandom); // placeholder to avoid zero-delay loop
       lfc_ram_transaction tx;
       repeat(4) @(posedge vif.clk); // 4 clock edges before input is sent from driver
       tx = lfc_ram_transaction::type_id::create("tx");

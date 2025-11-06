@@ -60,7 +60,9 @@ class lfc_environment extends uvm_env;
     cpu_passive_agent.mon.result_ap.connect(sb.actual_cpu_export);
     pred.pred_cpu_ap.connect(sb.expected_cpu_export);
 
-    // TODO: connect the ram signals
+    ram_active_agent.mon.lfc_ap.connect(pred.analysis_export);
+    ram_passive_agent.mon.result_ap.connect(sb.actual_ram_export);
+    pred.pred_ram_ap.connect(sb.expected_ram_export);
   endfunction
 
 endclass

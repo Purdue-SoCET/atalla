@@ -6,9 +6,8 @@ sv xil_defaultlib  --include "D:/2025.1/Vivado/data/rsb/busdef" --include "../..
 "../../../../../uvm/lfc_cpu_active_agent.sv" \
 "../../../../../uvm/lfc_cpu_passive_monitor.sv" \
 "../../../../../uvm/lfc_cpu_passive_agent.sv" \
-"../../../../../uvm/lfc_predictor.sv" \
-"../../../../../uvm/lfc_ram_active_agent.sv" \
-"../../../../../uvm/lfc_ram_passive_agent.sv" \
+"../../../../../uvm/lfc_environment.sv" \
+"../../../../../uvm/lfc_if.sv" \
 "../../../../../uvm/tb_top.sv" \
 
 # compile glbl module
