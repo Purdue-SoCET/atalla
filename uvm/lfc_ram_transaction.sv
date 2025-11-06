@@ -31,7 +31,7 @@ class lfc_ram_transaction #(parameter NUM_BANKS = 4) extends uvm_sequence_item;
         super.new(name);
     endfunction
 
-    function int input_equal(transaction tx);
+    function int input_equal(lfc_ram_transaction tx);
         int result;
         if((ram_mem_data == tx.ram_mem_data) && (ram_mem_complete == tx.ram_mem_complete)) begin
             result = 1;

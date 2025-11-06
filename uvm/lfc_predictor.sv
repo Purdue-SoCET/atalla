@@ -17,6 +17,9 @@ class lfc_predictor extends uvm_component#(lfc_cpu_transaction, lfc_ram_transact
     uvm_analysis_port#(lfc_cpu_transaction) pred_cpu_ap;
     uvm_analysis_port#(lfc_ram_transaction) pred_ram_ap;
 
+    uvm_analysis_export#(lfc_cpu_transaction) pred_cpu_aep;
+    uvm_analysis_export#(lfc_ram_transaction) pred_ram_aep;
+
     lfc_cpu_transaction output_cpu_tx;
     lfc_ram_transaction output_ram_tx;
 

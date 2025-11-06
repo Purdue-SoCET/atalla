@@ -56,11 +56,11 @@ class lfc_environment extends uvm_env;
   endfunction
 
   function void connect_phase(uvm_phase phase);
-    cpu_active_agent.mon.lfc_ap.connect(pred.analysis_export);
+    cpu_active_agent.mon.lfc_ap.connect(pred.pred_cpu_aep);
     cpu_passive_agent.mon.result_ap.connect(sb.actual_cpu_export);
     pred.pred_cpu_ap.connect(sb.expected_cpu_export);
 
-    ram_active_agent.mon.lfc_ap.connect(pred.analysis_export);
+    ram_active_agent.mon.lfc_ap.connect(pred.pred_ram_aep);
     ram_passive_agent.mon.result_ap.connect(sb.actual_ram_export);
     pred.pred_ram_ap.connect(sb.expected_ram_export);
   endfunction
