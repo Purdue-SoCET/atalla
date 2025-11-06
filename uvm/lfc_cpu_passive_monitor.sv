@@ -37,12 +37,12 @@ class lfc_cpu_passive_monitor extends uvm_monitor;
     end
   endfunction
 
-  int loop_counter;
+  int has_run_once;
   virtual task run_phase(uvm_phase phase);
     super.run_phase(phase);
     prev_tx = lfc_cpu_transaction::type_id::create("prev_tx");
     
-    loop_counter = 0;
+    has_run_once = 0;
     forever begin
         lfc_cpu_transaction tx;
         @(posedge vif.clk);
@@ -56,7 +56,7 @@ class lfc_cpu_passive_monitor extends uvm_monitor;
         tx.uuid_block = vif.uuid_block;
         tx.dp_out_flushed = vif.dp_out_flushed;
 
-        if(!tx.stall && loop_counter > 0) begin
+        if(!tx.stall && has_run_once > 0) begin
           if(tx.hit == 1 && prev_tx.hit == 0) begin // if new hit, send to scoreboad
             result_ap.write(tx);
           end 
@@ -69,7 +69,7 @@ class lfc_cpu_passive_monitor extends uvm_monitor;
         end
 
         prev_tx.copy(tx); // check for hit on every clock cycle
-        loop_counter++;
+        if(has_run_once == 0) has_run_once++;
     end
   endtask
 

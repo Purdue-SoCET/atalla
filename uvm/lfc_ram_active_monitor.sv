@@ -19,6 +19,7 @@ class lfc_ram_active_monitor extends uvm_monitor;
 
   // optional: virtual interface handle
   lfc_cpu_vif_t vif;
+  lfc_ram_transaction prev_tx;
 
   uvm_analysis_port#(lfc_ram_transaction) lfc_ap;
 
@@ -36,16 +37,26 @@ class lfc_ram_active_monitor extends uvm_monitor;
     end
   endfunction
 
-  // minimal placeholder; add your sampling here
+  int has_run_once;
   virtual task run_phase(uvm_phase phase);
     super.run_phase(phase);
+    prev_tx = lfc_ram_transaction::type_id::create("prev_tx");
+
+    has_run_once = 0;
     forever begin
       lfc_ram_transaction tx;
-      repeat(4) @(posedge vif.clk); // 4 clock edges before input is sent from driver
+      @(posedge vif.clk);
       tx = lfc_ram_transaction::type_id::create("tx");
+
       tx.ram_mem_data = vif.ram_mem_data;
       tx.ram_mem_complete = vif.ram_mem_complete;
-      lfc_ap.write(tx);
+
+      if(has_run_once > 0) begin // avoids an uninstantiated comparison
+        if(tx.equal(prev.tx)) lfc_ap.write(tx);
+      end
+
+      prev_tx.copy(tx);
+      if (has_run_once == 0) has_run_once++;
     end
   endtask
 
