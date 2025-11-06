@@ -1,10 +1,13 @@
+`ifndef LFC_SCOREBOARD_SV
+`define LFC_SCOREBOARD_SV
+
 import uvm_pkg::*;
 `include "uvm_macros.svh"
 `include "lfc_cpu_transaction.sv"
 `include "lfc_ram_transaction.sv"
 
-class scoreboard extends uvm_scoreboard;
-    `uvm_component_utils(scoreboard)
+class lfc_scoreboard extends uvm_scoreboard;
+    `uvm_component_utils(lfc_scoreboard)
 
     // Analysis exports
     uvm_analysis_export#(lfc_cpu_transaction) expected_cpu_export;
@@ -69,4 +72,6 @@ class scoreboard extends uvm_scoreboard;
         `uvm_info("Scoreboard", $sformatf("Mismatches: %0d", m_mismatches), UVM_NONE)
     endfunction: report_phase
 
-endclass: scoreboard
+endclass: lfc_scoreboard
+
+`endif
