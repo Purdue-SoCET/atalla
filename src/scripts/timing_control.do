@@ -13,13 +13,17 @@ add wave -noupdate -expand -group {Time Signals} /timing_control_tb/tb_timif/tWR
 add wave -noupdate -expand -group {Time Signals} /timing_control_tb/tb_timif/tRD_done
 add wave -noupdate -expand -group {Time Signals} /timing_control_tb/tb_timif/tPRE_done
 add wave -noupdate -expand -group {Time Signals} /timing_control_tb/tb_timif/tREF_done
-add wave -noupdate -expand -group {Time Signals} /timing_control_tb/DUT/wr_en
+add wave -noupdate -expand -group {Time Signals} /timing_control_tb/tb_timif/wr_en
+add wave -noupdate -expand -group {Time Signals} /timing_control_tb/tb_timif/rd_en
 add wave -noupdate -expand -group {Time Signals} /timing_control_tb/tb_timif/rf_req
 add wave -noupdate -expand -group {Expected Time Signals} /timing_control_tb/tb_expected_timif/tACT_done
 add wave -noupdate -expand -group {Expected Time Signals} /timing_control_tb/tb_expected_timif/tWR_done
 add wave -noupdate -expand -group {Expected Time Signals} /timing_control_tb/tb_expected_timif/tRD_done
 add wave -noupdate -expand -group {Expected Time Signals} /timing_control_tb/tb_expected_timif/tPRE_done
 add wave -noupdate -expand -group {Expected Time Signals} /timing_control_tb/tb_expected_timif/tREF_done
+add wave -noupdate -expand -group {Expected Time Signals} /timing_control_tb/tb_expected_timif/wr_en
+add wave -noupdate -expand -group {Expected Time Signals} /timing_control_tb/tb_expected_timif/rd_en
+add wave -noupdate -expand -group {Expected Time Signals} /timing_control_tb/tb_expected_timif/clear
 add wave -noupdate -expand -group {Expected Time Signals} /timing_control_tb/tb_expected_timif/rf_req
 add wave -noupdate -expand -group {Counter Signals} /timing_control_tb/DUT/time_counter/enable
 add wave -noupdate -expand -group {Counter Signals} /timing_control_tb/DUT/time_counter/count_load
@@ -48,4 +52,4 @@ configure wave -griddelta 40
 configure wave -timeline 0
 configure wave -timelineunits ns
 update
-WaveRestoreZoom {0 ns} {751 ns}
+WaveRestoreZoom {5207 ns} {5958 ns}

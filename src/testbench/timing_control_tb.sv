@@ -127,6 +127,14 @@ module timing_control_tb ();
                 $display("Incorrect 'tREF_done' output during %s test case", tb_test_case);
             end
 
+            if (tb_expected_timif.wr_en == tb_timif.wr_en) begin
+                $display("Correct 'wr_en' output during %s test case", tb_test_case);
+            end
+            else begin
+                tb_mismatch = 1'b1;
+                $display("Incorrect 'wr_en' output during %s test case", tb_test_case);
+            end
+
             // if (tb_expected_timif.rf_req == tb_timif. rf_req) begin
             //     $display("Correct 'rf_req' output during %s test case", tb_test_case);
             // end
@@ -190,7 +198,9 @@ module timing_control_tb ();
         tb_expected_timif.tRD_done  = 1'b0;          
         tb_expected_timif.tPRE_done = 1'b0;         
         tb_expected_timif.tREF_done = 1'b0;         
-        tb_expected_timif.rf_req    = 1'b0;   
+        tb_expected_timif.rf_req    = 1'b0; 
+        tb_expected_timif.wr_en     = 1'b0;
+        tb_expected_timif.rd_en     = 1'b0;  
 
         @(posedge tb_CLK)
         check_output();
@@ -252,7 +262,12 @@ module timing_control_tb ();
 
         @(posedge tb_CLK)
         tb_cfsmif.cmd_state = WRITING;            // state changed after pos edge
+        
         repeat (tWL - 1) @(posedge tb_CLK);           // wr_en should go high
+        @(negedge tb_CLK)
+        tb_expected_timif.wr_en = 1'b1;
+        check_output();
+
         repeat (tBURST) @(posedge tb_CLK);        // waiting for timer to finish counting
 
         @(negedge tb_CLK)
@@ -260,7 +275,13 @@ module timing_control_tb ();
         check_output();
 
         @(posedge tb_CLK)
+        tb_cfsmif.cmd_state = IDLE; 
+        tb_expected_timif.wr_en = 1'b0;     // wr_en should go low
         tb_expected_timif.tWR_done = 1'b0; // clearing expected value signal
+        
+        @(negedge tb_CLK)
+        check_output();
+        
 
         #(tb_CLK * 3);
 
