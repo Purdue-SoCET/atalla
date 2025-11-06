@@ -52,7 +52,7 @@ class lfc_ram_active_monitor extends uvm_monitor;
       tx.ram_mem_complete = vif.ram_mem_complete;
 
       if(has_run_once > 0) begin // avoids an uninstantiated comparison
-        if(tx.equal(prev.tx)) lfc_ap.write(tx);
+        if(tx.equal(prev_tx)) lfc_ap.write(tx);
       end
 
       prev_tx.copy(tx);
