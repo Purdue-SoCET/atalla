@@ -5,5 +5,24 @@ Running: D:/2025.1/Vivado/bin/unwrapped/win64.o/xelab.exe --incr --debug typical
 Using 2 slave threads.
 Starting static elaboration
 Pass Through NonSizing Optimizer
-ERROR: [VRFC 10-900] incompatible complex type assignment [C:/Users/socce/SoCET/tensor-core/uvm/lfc_ram_active_agent.sv:27]
+ERROR: [VRFC 10-2991] 'bank_id' is not declared under prefix 'tr' [C:/Users/socce/SoCET/tensor-core/uvm/lfc_ram_active_driver.sv:76]
+ERROR: [VRFC 10-2991] 'write' is not declared under prefix 'tr' [C:/Users/socce/SoCET/tensor-core/uvm/lfc_ram_active_driver.sv:77]
+ERROR: [VRFC 10-2991] 'addr' is not declared under prefix 'tr' [C:/Users/socce/SoCET/tensor-core/uvm/lfc_ram_active_driver.sv:78]
+ERROR: [VRFC 10-2991] 'data' is not declared under prefix 'tr' [C:/Users/socce/SoCET/tensor-core/uvm/lfc_ram_active_driver.sv:79]
+ERROR: [VRFC 10-2991] 'data' is not declared under prefix 'tr' [C:/Users/socce/SoCET/tensor-core/uvm/lfc_ram_active_driver.sv:83]
+ERROR: [VRFC 10-2991] 'addr' is not declared under prefix 'tr' [C:/Users/socce/SoCET/tensor-core/uvm/lfc_ram_active_driver.sv:91]
+ERROR: [VRFC 10-2991] 'bank_id' is not declared under prefix 'tr' [C:/Users/socce/SoCET/tensor-core/uvm/lfc_ram_active_driver.sv:95]
+ERROR: [VRFC 10-2991] 'write' is not declared under prefix 'tr' [C:/Users/socce/SoCET/tensor-core/uvm/lfc_ram_active_driver.sv:96]
+ERROR: [VRFC 10-2991] 'addr' is not declared under prefix 'tr' [C:/Users/socce/SoCET/tensor-core/uvm/lfc_ram_active_driver.sv:97]
+ERROR: [VRFC 10-2991] 'data' is not declared under prefix 'tr' [C:/Users/socce/SoCET/tensor-core/uvm/lfc_ram_active_driver.sv:98]
+ERROR: [VRFC 10-2991] 'addr' is not declared under prefix 'tr' [C:/Users/socce/SoCET/tensor-core/uvm/lfc_ram_active_driver.sv:99]
+ERROR: [VRFC 10-2991] 'addr' is not declared under prefix 'tr' [C:/Users/socce/SoCET/tensor-core/uvm/lfc_ram_active_driver.sv:110]
+ERROR: [VRFC 10-2991] 'equal' is not declared under prefix 'tx' [C:/Users/socce/SoCET/tensor-core/uvm/lfc_ram_active_monitor.sv:55]
+ERROR: [VRFC 10-2989] 'prev' is not declared [C:/Users/socce/SoCET/tensor-core/uvm/lfc_ram_active_monitor.sv:55]
+ERROR: [VRFC 10-2991] 'bank' is not declared under prefix 'tr' [C:/Users/socce/SoCET/tensor-core/uvm/lfc_ram_passive_monitor.sv:47]
+ERROR: [VRFC 10-2991] 'addr' is not declared under prefix 'tr' [C:/Users/socce/SoCET/tensor-core/uvm/lfc_ram_passive_monitor.sv:48]
+ERROR: [VRFC 10-2991] 'data' is not declared under prefix 'tr' [C:/Users/socce/SoCET/tensor-core/uvm/lfc_ram_passive_monitor.sv:49]
+ERROR: [VRFC 10-2991] 'write' is not declared under prefix 'tr' [C:/Users/socce/SoCET/tensor-core/uvm/lfc_ram_passive_monitor.sv:50]
+ERROR: [VRFC 10-2991] 'addr' is not declared under prefix 'tr' [C:/Users/socce/SoCET/tensor-core/uvm/lfc_ram_passive_monitor.sv:55]
+INFO: [VRFC 10-10021] Sorry, too many errors..
 ERROR: [XSIM 43-3322] Static elaboration of top level Verilog design unit(s) in library work failed.
