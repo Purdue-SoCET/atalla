@@ -70,9 +70,9 @@ class lfc_predictor extends uvm_component#(lfc_cpu_transaction, lfc_ram_transact
         end
 
         if (MSHR_occupancy > 8) begin // overflow of MSHR buffer
-            output_cpu.stall = 1;
+            cpu_t.stall = 1;
         end else begin
-            output_cpu_tx.stall = 0;
+            cpu_t.stall = 0;
         end
 
         pred_cpu_ap.write(output_cpu_tx);
