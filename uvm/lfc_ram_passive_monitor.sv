@@ -38,24 +38,40 @@ class lfc_ram_passive_monitor extends uvm_monitor;
   // minimal placeholder; add your sampling here
   virtual task run_phase(uvm_phase phase);
     super.run_phase(phase);
-  forever begin
-    lfc_ram_transaction tr;
-    @(posedge vif.clk);
-    for (int i = 0; i < vif.NUM_BANKS; i++) begin
-      if (vif.ram_mem_REN[i] || vif.ram_mem_WEN[i]) begin
-        tr = lfc_ram_transaction::type_id::create($sformatf("tr_bank%0d", i));  // create transaction per bank
-        tr.bank  = i;
-        tr.addr  = vif.ram_mem_addr[i];
-        tr.data  = vif.ram_mem_store[i];
-        tr.write = vif.ram_mem_WEN[i];
-        result_ap.write(tr);
-        `uvm_info(get_type_name(),
-          $sformatf("Captured RAM TXN: bank=%0d addr=0x%0h data=0x%0h write=%0b",
-                    i, tr.addr, tr.data, tr.write),
-          UVM_LOW)
+
+    forever begin
+      @(posedge vif.clk);
+
+      for (int b = 0; b < vif.NUM_BANKS; b++) begin
+        // sample read or write
+        if (vif.ram_mem_REN[b] || vif.ram_mem_WEN[b]) begin
+          lfc_ram_transaction tr;
+          tr = lfc_ram_transaction::type_id::create($sformatf("ram_tr_bank%0d", b));
+
+          // capture from interface
+          tr.ram_mem_REN[b]   = vif.ram_mem_REN[b];
+          tr.ram_mem_WEN[b]   = vif.ram_mem_WEN[b];
+          tr.ram_mem_addr[b]  = vif.ram_mem_addr[b];
+          tr.ram_mem_store[b] = vif.ram_mem_store[b];
+          tr.ram_mem_data[b]  = vif.ram_mem_data[b];
+          tr.ram_mem_complete[b] = vif.ram_mem_complete[b];
+
+          // send to scoreboard or subscribers
+          result_ap.write(tr);
+
+          `uvm_info("RAM_MON",
+            $sformatf("Captured bank=%0d REN=%0b WEN=%0b addr=0x%08h store=0x%08h data=0x%08h complete=%0b",
+                      b,
+                      vif.ram_mem_REN[b],
+                      vif.ram_mem_WEN[b],
+                      vif.ram_mem_addr[b],
+                      vif.ram_mem_store[b],
+                      vif.ram_mem_data[b],
+                      vif.ram_mem_complete[b]),
+            UVM_LOW)
+        end
       end
     end
-  end
   endtask
 
 endclass
