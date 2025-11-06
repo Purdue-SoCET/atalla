@@ -20,7 +20,7 @@ class test extends uvm_test;
         seq = lfc_basic_sequence::type_id::create("seq", this);
 
         // Retrieve and send interface down
-        if (!uvm_config_db#(virtual lfc_if)::get(this, "", "lfc_if", vif)) begin
+        if (!uvm_config_db#(virtual lfc_if)::get(this, "", "lfc_vif", vif)) begin
             `uvm_fatal("Test", "No virtual interface for this test")
         end
         uvm_config_db#(virtual lfc_if)::set(this, "env.cpu_active_ag.*", "lfc_if", vif);
