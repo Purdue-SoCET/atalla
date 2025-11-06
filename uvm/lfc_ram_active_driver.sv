@@ -38,80 +38,88 @@ endclass
 
 
 class lfc_ram_active_driver extends uvm_driver#(lfc_ram_transaction);
-    `uvm_component_utils(lfc_ram_active_driver)
+  `uvm_component_utils(lfc_ram_active_driver)
 
-    virtual lfc_if vif;
-    ram_model m_ram;
-    localparam int MEM_LATENCY = 5; // latency in cycles if we need this
+  virtual lfc_if vif;
+  ram_model m_ram;
+  localparam int MEM_LATENCY = 5;
 
-    function new(string name, uvm_component parent);
-        super.new(name, parent);
-    endfunction
+  function new(string name, uvm_component parent);
+    super.new(name, parent);
+  endfunction
 
-    function void build_phase(uvm_phase phase);
-        super.build_phase(phase);
-        if(!uvm_config_db#(virtual lfc_if)::get(this, "", "lfc_vif", vif)) begin
-            `uvm_fatal("Driver", "No virtual interface specified for this test instance");
-        end
-    endfunction
+  function void build_phase(uvm_phase phase);
+    super.build_phase(phase);
+    if (!uvm_config_db#(virtual lfc_if)::get(this, "", "lfc_vif", vif)) begin
+      `uvm_fatal("Driver", "No virtual interface specified for this test instance");
+    end
+  endfunction
 
-    task DUT_reset();
-        @(posedge vif.clk);
-        vif.n_rst = 0;
-        @(posedge vif.clk);
-        vif.n_rst = 1;
-        @(posedge vif.clk);
-    endtask
+  task DUT_reset();
+    @(posedge vif.clk);
+    vif.n_rst = 0;
+    @(posedge vif.clk);
+    vif.n_rst = 1;
+    @(posedge vif.clk);
+  endtask
 
-    virtual task run_phase(uvm_phase phase);
+
+  virtual task run_phase(uvm_phase phase);
     lfc_ram_transaction tr;
     @(posedge vif.n_rst);
 
     forever begin
-        //  bank REN/WEN
-        @(posedge vif.clk);
-        for (int b = 0; b < vif.NUM_BANKS; b++) begin
+      @(posedge vif.clk);
+
+      for (int b = 0; b < vif.NUM_BANKS; b++) begin
+        // ---------- READ ----------
         if (vif.ram_mem_REN[b]) begin
-            tr = lfc_ram_transaction::type_id::create($sformatf("READ_bank%0d", b));
-            tr.bank_id = b;
-            tr.write   = 0;
-            tr.addr    = vif.ram_mem_addr[b];
-            tr.data    = m_ram.read(b, tr.addr);
+          tr = lfc_ram_transaction::type_id::create($sformatf("READ_bank%0d", b));
 
-            // simulate delay - returning data
-            repeat (MEM_LATENCY) @(posedge vif.clk);
-            vif.ram_mem_data[b]     = tr.data;
-            vif.ram_mem_complete[b] = 1'b1;
-            @(posedge vif.clk);
-            vif.ram_mem_complete[b] = 1'b0;
+          // capture from interface
+          tr.ram_mem_REN[b]   = 1;
+          tr.ram_mem_addr[b]  = vif.ram_mem_addr[b];
+          tr.ram_mem_data[b]  = m_ram.read(b, vif.ram_mem_addr[b]);
 
-            `uvm_info("RAM_DRV",
+          // simulate latency
+          repeat (MEM_LATENCY) @(posedge vif.clk);
+          vif.ram_mem_data[b]     = tr.ram_mem_data[b];
+          vif.ram_mem_complete[b] = 1'b1;
+          @(posedge vif.clk);
+          vif.ram_mem_complete[b] = 1'b0;
+
+          `uvm_info("RAM_DRV",
             $sformatf("READ bank=%0d addr=0x%08h data=0x%08h",
-                        b, tr.addr, tr.data),
+                      b, vif.ram_mem_addr[b], tr.ram_mem_data[b]),
             UVM_MEDIUM)
         end
+
+        // ---------- WRITE ----------
         else if (vif.ram_mem_WEN[b]) begin
-            tr = lfc_ram_transaction::type_id::create($sformatf("WRITE_bank%0d", b));
-            tr.bank_id = b;
-            tr.write   = 1;
-            tr.addr    = vif.ram_mem_addr[b];
-            tr.data    = vif.ram_mem_store[b];
-            m_ram.write(b, tr.addr, tr.data);
+          tr = lfc_ram_transaction::type_id::create($sformatf("WRITE_bank%0d", b));
 
-            // simulate write done
-            repeat (MEM_LATENCY) @(posedge vif.clk);
-            vif.ram_mem_complete[b] = 1'b1;
-            @(posedge vif.clk);
-            vif.ram_mem_complete[b] = 1'b0;
+          // capture from interface
+          tr.ram_mem_WEN[b]   = 1;
+          tr.ram_mem_addr[b]  = vif.ram_mem_addr[b];
+          tr.ram_mem_store[b] = vif.ram_mem_store[b];
 
-            `uvm_info("RAM_DRV",
+          // write to model
+          m_ram.write(b, vif.ram_mem_addr[b], vif.ram_mem_store[b]);
+
+          // simulate latency
+          repeat (MEM_LATENCY) @(posedge vif.clk);
+          vif.ram_mem_complete[b] = 1'b1;
+          @(posedge vif.clk);
+          vif.ram_mem_complete[b] = 1'b0;
+
+          `uvm_info("RAM_DRV",
             $sformatf("WRITE bank=%0d addr=0x%08h data=0x%08h",
-                        b, tr.addr, tr.data),
+                      b, vif.ram_mem_addr[b], vif.ram_mem_store[b]),
             UVM_MEDIUM)
         end
-        end
+      end
     end
-    endtask
+  endtask
 
 endclass
 
