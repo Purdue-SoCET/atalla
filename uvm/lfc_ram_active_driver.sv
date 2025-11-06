@@ -37,7 +37,7 @@ endclass
 
 
 
-class lfc_ram_active_driver extends uvm_driver#(lfc_cpu_transaction);
+class lfc_ram_active_driver extends uvm_driver#(lfc_ram_transaction);
     `uvm_component_utils(lfc_ram_active_driver)
 
     virtual lfc_if vif;
