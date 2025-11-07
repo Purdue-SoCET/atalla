@@ -44,13 +44,13 @@ module cbg_benes #(
     logic [TAGWIDTH-1:0] subM_r_1_pipe [SIZE-1:0];
     logic [TAGWIDTH-1:0] L2_pipe [SIZE-1:0];
 
-    always_ff @(posedge clk, negedge n_rst) begin
+    always_ff @(posedge clk, negedge n_rst) begin : pipeline_ff
         for(int i = 0; i < SIZE; i++) begin
             if(!n_rst) begin
                 d0_1_pipe[i] <= 0;
                 c1_pipe[i] <= 0;
                 subM_r_1_pipe[i] <= 0;
-                L2_pipe[i] <= 0;        
+                L2_pipe[i] <= 0;
             end
             else begin
                 d0_1_pipe[i] <= d[0][1][i];
@@ -60,6 +60,7 @@ module cbg_benes #(
             end
         end
     end
+
     always_comb begin : range32_logic
         for(int i = 0; i < SIZE; i++) begin
             range32[i] = i;
