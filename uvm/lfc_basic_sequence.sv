@@ -1,86 +1,67 @@
+`ifndef LFC_BASIC_SEQUENCE_SV
+`define LFC_BASIC_SEQUENCE_SV
+
 import uvm_pkg::*;
 `include "uvm_macros.svh"
-//---------------------------------------------
-// seq_in: Defines the transaction (sequence item)
-//---------------------------------------------
-class seq_in extends uvm_sequence_item;
-  `uvm_object_utils(seq_in) // Register with the UVM factory for create()/print()/copy()
-
-  // --------------------------------------------
-  // Transaction fields (randomizable by default)
-  // --------------------------------------------
-  rand bit [31:0] addr;  // Address for read/write operation
-  rand bit [31:0] data;  // Data to be written or read
-  rand bit        write; // 1 = write transaction, 0 = read transaction
-
-  // --------------------------------------------
-  // Constructor
-  // --------------------------------------------
-  function new(string name = "seq_in");
-    super.new(name);
-  endfunction
-
-  // --------------------------------------------
-  // Convert item fields to a printable string
-  // Useful for logging and debugging
-  // --------------------------------------------
-  function string convert2string();
-    return $sformatf("addr=0x%0h data=0x%0h write=%0b", addr, data, write);
-  endfunction
-endclass
+`include "lfc_cpu_transaction.sv"
 
 
+// class seq_in extends uvm_sequence_item;
+//   `uvm_object_utils(seq_in) // Register with the UVM factory for create()/print()/copy()
 
-//---------------------------------------------
-// basic_seq: Defines a simple sequence that sends one transaction
-//---------------------------------------------
-class lfc_basic_sequence extends uvm_sequence #(seq_in);
-  `uvm_object_utils(lfc_basic_sequence) // Register with UVM factory
+//   // --------------------------------------------
+//   // Transaction fields (randomizable by default)
+//   // --------------------------------------------
+//   rand bit [31:0] addr;  // Address for read/write operation
+//   rand bit [31:0] data;  // Data to be written or read
+//   rand bit        write; // 1 = write transaction, 0 = read transaction
 
-  // --------------------------------------------
-  // Constructor
-  // --------------------------------------------
+//   // --------------------------------------------
+//   // Constructor
+//   // --------------------------------------------
+//   function new(string name = "seq_in");
+//     super.new(name);
+//   endfunction
+
+//   // --------------------------------------------
+//   // Convert item fields to a printable string
+//   // Useful for logging and debugging
+//   // --------------------------------------------
+//   function string convert2string();
+//     return $sformatf("addr=0x%0h data=0x%0h write=%0b", addr, data, write);
+//   endfunction
+// endclass
+
+
+
+class lfc_basic_sequence extends uvm_sequence#(lfc_cpu_transaction);
+  `uvm_object_utils(lfc_basic_sequence)
+
   function new(string name = "lfc_basic_sequence");
     super.new(name);
   endfunction
 
-  // --------------------------------------------
-  // Main sequence body
-  // This is where the actual stimulus generation happens
-  // --------------------------------------------
   virtual task body();
-    seq_in req; // Declare a handle for the request item
-
-    // Print info message when sequence starts
+    lfc_cpu_transaction req;
     `uvm_info(get_type_name(), "Starting lfc_basic_sequence...", UVM_MEDIUM)
 
-    // Create a new sequence item using the factory
-    req = seq_in::type_id::create("req");
+    req = lfc_cpu_transaction::type_id::create("req");
 
-    // Assign specific values to the transaction fields
-    req.addr  = 32'h1000;       // Target address
-    req.data  = 32'hDEADBEEF;   // Write data
-    req.write = 1'b1;           // Indicate write transaction
+    req.n_rst             = 1'b1; //added
+    req.mem_in_addr       = 32'h1000;
+    req.mem_in_rw_mode    = 1'b1;        // 1 = write, 0 = read
+    req.mem_in_store_value= 32'hDEADBEEF;
+    req.dp_in_halt        = 1'b0;
 
-    // --------------------------------------------
-    // Send the item to the driver via sequencer
-    // --------------------------------------------
-    start_item(req);   // Handshake: request driver to get ready
-    finish_item(req);  // Send item data to the driver
+    start_item(req);
+    finish_item(req);
 
-    // Log transaction details after completion
-    `uvm_info(get_type_name(), {"lfc_basic_sequence completed: ", req.convert2string()}, UVM_LOW)
-  endtask
-
-
-  // --------------------------------------------
-  // Static helper task for convenience
-  // Allows starting this sequence directly on a sequencer
-  // Example: lfc_basic_sequence::send(my_seqr);
-  // --------------------------------------------
-  static task send(uvm_sequencer #(seq_in) seqr);
-    lfc_basic_sequence seq;
-    seq = lfc_basic_sequence::type_id::create("seq");
-    seq.start(seqr); // Run the sequence on the provided sequencer
+    `uvm_info(get_type_name(),
+      $sformatf("Completed: addr=0x%0h data=0x%0h", req.mem_in_addr, req.mem_in_store_value),
+      UVM_LOW)
   endtask
 endclass
+
+
+
+`endif // LFC_BASIC_SEQUENCE_SV
