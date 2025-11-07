@@ -16,7 +16,7 @@ module cbg_benes_tb;
 
 
     initial begin
-        clk = 0;
+        clk = 1;
         perm = {5'd14, 5'd22, 5'd25, 5'd11, 5'd21, 5'd6, 5'd15, 5'd5, 5'd30, 5'd23, 5'd18, 5'd28, 5'd19, 5'd17, 5'd31, 5'd12, 5'd26, 5'd16, 5'd13, 5'd3, 5'd9, 5'd8, 5'd0, 5'd1, 5'd10, 5'd20, 5'd7, 5'd4, 5'd29, 5'd2, 5'd24, 5'd27};
         // perm = {5'd27, 5'd5'd24, 5'd2, 5'd29, 5'd4, 5'd7, 5'd20, 5'd10, 5'd1, 5'd0, 5'd8, 5'd9, 5'd3, 5'd13, 5'd16, 5'd26,
         //                 5'd12, 5'd31, 5'd17, 5'd19, 5'd28, 5'd18, 5'd23, 5'd30, 5'd5, 5'd15, 5'd6, 5'd21, 5'd11, 5'd25, 5'd22, 5'd14};
@@ -24,6 +24,18 @@ module cbg_benes_tb;
         n_rst = 0;
         #(PERIOD);
         n_rst = 1;
+        #(PERIOD);
+        #(PERIOD);
+        #(PERIOD);
+        #(PERIOD);
+        #(PERIOD);
+        for (int i = 0; i < BITWIDTH; i++) begin
+            if(exp_ctrl[i] != ctrl[i]) begin
+                $display("WRONG bit %d not equal. Expected: %d, output: %d", i, exp_ctrl[i], ctrl[i]);
+            end
+        end
+        perm = {2, 1, 12, 29, 19, 11, 17, 27, 14, 10, 13, 3, 16, 4, 9, 0, 7, 23, 20, 5, 26, 6, 31, 18, 8, 21, 30, 25, 15, 24, 22, 28};
+        exp_ctrl = 144'b101101001111101110001000010111000110110011000101001101101111111110111110010011110111000100000000001011000000000000110110100001001101001111001000;
         #(PERIOD);
         #(PERIOD);
         #(PERIOD);
