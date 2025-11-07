@@ -47,10 +47,13 @@ class lfc_environment extends uvm_env;
   endfunction
 
   function void build_phase(uvm_phase phase);
+    super.build_phase(phase);
+
     cpu_active_agent = lfc_cpu_active_agent::type_id::create("cpu_active_agent", this);
     cpu_passive_agent = lfc_cpu_passive_agent::type_id::create("cpu_passive_agent", this);
     ram_active_agent = lfc_ram_active_agent::type_id::create("ram_active_agent", this);
     ram_passive_agent = lfc_ram_passive_agent::type_id::create("ram_passive_agent", this);
+    
     pred = lfc_predictor::type_id::create("lfc_predictor", this);
     sb = lfc_scoreboard::type_id::create("lfc_scoreboard", this);
   endfunction

@@ -36,6 +36,9 @@ class lfc_predictor extends uvm_component#(lfc_cpu_transaction, lfc_ram_transact
     function void build_phase(uvm_phase phase);
         pred_cpu_ap = new("pred_cpu_ap", this);
         pred_ram_ap = new("pred_ram_ap", this);
+
+        pred_cpu_aep = new("pred_cpu_aep", this);
+        pred_ram_aep = new("pred_ram_aep", this);
     endfunction: build_phase
 
     function void write(lfc_cpu_transaction cpu_t, lfc_ram_transaction ram_t);

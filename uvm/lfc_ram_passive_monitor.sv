@@ -7,7 +7,7 @@ import uvm_pkg::*;
 `include "lfc_if.sv"
 
 // --- Replace these with your real types if needed ---
-typedef virtual lfc_if.ram lfc_ram_vif_t1;
+typedef virtual lfc_if lfc_ram_vif_t1;   // remove ram port to test
 //typedef lfc_cpu_item       cpu_txn_t;
 
 class lfc_ram_passive_monitor extends uvm_monitor;
