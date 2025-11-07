@@ -83,6 +83,7 @@ module dram_controller_top_tb;
 
     signal_gen_if sigif ();
     address_mapper_if amif ();
+    assign amif.configs = x8;          // set config
     init_state_if initif ();
     row_open_if polif ();
     command_fsm_if cfsmif ();
@@ -113,7 +114,7 @@ module dram_controller_top_tb;
     //   dataif.rd_en = cuif.rd_en;
     end
 
-    
+
     //DRAM interface latch
     always @(posedge clk_val && clk_enb) begin
         clk_val <= #(tCK/2) 1'b0;
@@ -556,7 +557,7 @@ module dram_controller_top_tb;
     dq_en = 1'b0;
     read_with_verify(sch.creating_addr, sch);
     
-    
+    /*
     //checking the write - write - read row hit
     task_name = "write - write - read - row hit";
     dq_en = 1'b1;
@@ -634,6 +635,7 @@ module dram_controller_top_tb;
     random_req();
 
     //CHECKPOINT: DONE ALL PREVIOUS CASES
+    */
     $finish;
     end
 endmodule

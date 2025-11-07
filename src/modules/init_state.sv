@@ -150,7 +150,7 @@ module init_state (
                 if (timing_flag) begin
                     timing_clear = 1;
                     n_init_valid = 1;
-                    n_state = IDLE;
+                    //n_state = IDLE;
                     n_timing_cnt_en = 1'b0;
                 end 
             end

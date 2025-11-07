@@ -66,6 +66,9 @@ module control_unit (
 
         // Assign row policy signals
         polif.row_resolve  = cfsmif.row_resolve;
-        polif.req_en       = cuif.dREN || cuif.dWEN;       
+        polif.req_en       = cuif.dREN || cuif.dWEN;  
+
+        // Assign timing signals
+        cuif.rf_req = timif.rf_req;     
     end
 endmodule

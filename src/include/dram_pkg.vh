@@ -21,7 +21,7 @@ package dram_pkg;
 
     // TIMING PARAMETERS
     parameter tRCD = 10;
-    parameter tAL = 1;
+    parameter tAL = 0;
     parameter tCL = 10;
     parameter tBURST = 4;
     parameter tCWL = 10;
