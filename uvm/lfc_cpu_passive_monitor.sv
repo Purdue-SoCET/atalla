@@ -43,10 +43,12 @@ class lfc_cpu_passive_monitor extends uvm_monitor;
     prev_tx = lfc_cpu_transaction::type_id::create("prev_tx");
     
     has_run_once = 0;
+    `uvm_info("CPU_MON", "Entered run_phase of CPU monitor", UVM_LOW) // debuggin this cuz idk what's happening here 
     forever begin
         lfc_cpu_transaction tx;
         @(posedge vif.clk);
         tx = lfc_cpu_transaction::type_id::create("tx");
+        `uvm_info("CPU_MON", $sformatf("Sampled: uuid=%0d stall=%0b hit=%0b flushed=%0b", tx.mem_out_uuid, tx.stall, tx.hit, tx.dp_out_flushed), UVM_LOW)  //debug
 
         tx.mem_out_uuid = vif.mem_out_uuid;
         tx.stall = vif.stall;
@@ -58,11 +60,14 @@ class lfc_cpu_passive_monitor extends uvm_monitor;
 
         if(!tx.stall && has_run_once > 0) begin
           if(tx.hit == 1 && prev_tx.hit == 0) begin // if new hit, send to scoreboad
+            `uvm_info("CPU_MON", $sformatf("Writing to scoreboard: uuid=%0d stall=%0b hit=%0b flushed=%0b", tx.mem_out_uuid, tx.stall, tx.hit, tx.dp_out_flushed), UVM_LOW)
             result_ap.write(tx);
           end 
 
           for(int i = 0; i < tx.NUM_BANKS; i++) begin
             if(tx.block_status[i] && !prev_tx.block_status[i]) begin // uuid is valid, new cache miss, send to scoreboad
+              `uvm_info("CPU_MON", $sformatf("Writing to scoreboard: uuid=%0d stall=%0b hit=%0b flushed=%0b", tx.mem_out_uuid, tx.stall, tx.hit, tx.dp_out_flushed), UVM_LOW)
+
               result_ap.write(tx);
             end
           end
