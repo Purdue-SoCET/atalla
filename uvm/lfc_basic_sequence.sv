@@ -6,34 +6,6 @@ import uvm_pkg::*;
 `include "lfc_cpu_transaction.sv"
 
 
-// class seq_in extends uvm_sequence_item;
-//   `uvm_object_utils(seq_in) // Register with the UVM factory for create()/print()/copy()
-
-//   // --------------------------------------------
-//   // Transaction fields (randomizable by default)
-//   // --------------------------------------------
-//   rand bit [31:0] addr;  // Address for read/write operation
-//   rand bit [31:0] data;  // Data to be written or read
-//   rand bit        write; // 1 = write transaction, 0 = read transaction
-
-//   // --------------------------------------------
-//   // Constructor
-//   // --------------------------------------------
-//   function new(string name = "seq_in");
-//     super.new(name);
-//   endfunction
-
-//   // --------------------------------------------
-//   // Convert item fields to a printable string
-//   // Useful for logging and debugging
-//   // --------------------------------------------
-//   function string convert2string();
-//     return $sformatf("addr=0x%0h data=0x%0h write=%0b", addr, data, write);
-//   endfunction
-// endclass
-
-
-
 class lfc_basic_sequence extends uvm_sequence#(lfc_cpu_transaction);
   `uvm_object_utils(lfc_basic_sequence)
 

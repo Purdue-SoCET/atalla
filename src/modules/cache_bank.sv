@@ -146,6 +146,7 @@ module cache_bank (
 
     always_comb begin : cache_controller_logic
         count_flush = 1'b0; 
+        flushed = 1'b0;
         scheduler_uuid_out = '0; 
         ram_mem_REN = 1'b0; 
         ram_mem_WEN = 1'b0; 

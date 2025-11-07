@@ -38,45 +38,42 @@ class lfc_cpu_passive_monitor extends uvm_monitor;
   endfunction
 
   int has_run_once;
-  virtual task run_phase(uvm_phase phase);
-    super.run_phase(phase);
-    prev_tx = lfc_cpu_transaction::type_id::create("prev_tx");
-    
-    has_run_once = 0;
-    `uvm_info("CPU_MON", "Entered run_phase of CPU monitor", UVM_LOW) // debuggin this cuz idk what's happening here 
-    forever begin
-        lfc_cpu_transaction tx;
-        @(posedge vif.clk);
-        tx = lfc_cpu_transaction::type_id::create("tx");
-        `uvm_info("CPU_MON", $sformatf("Sampled: uuid=%0d stall=%0b hit=%0b flushed=%0b", tx.mem_out_uuid, tx.stall, tx.hit, tx.dp_out_flushed), UVM_LOW)  //debug
+ virtual task run_phase(uvm_phase phase);
+  super.run_phase(phase);
+  prev_tx = lfc_cpu_transaction::type_id::create("prev_tx");
+  has_run_once = 0;
 
-        tx.mem_out_uuid = vif.mem_out_uuid;
-        tx.stall = vif.stall;
-        tx.hit = vif.hit;
-        tx.hit_load = vif.hit_load;
-        tx.block_status = vif.block_status;
-        tx.uuid_block = vif.uuid_block;
-        tx.dp_out_flushed = vif.dp_out_flushed;
+  `uvm_info("CPU_MON", "Entered run_phase of CPU monitor", UVM_LOW)
 
-        if(!tx.stall && has_run_once > 0) begin
-          if(tx.hit == 1 && prev_tx.hit == 0) begin // if new hit, send to scoreboad
-            `uvm_info("CPU_MON", $sformatf("Writing to scoreboard: uuid=%0d stall=%0b hit=%0b flushed=%0b", tx.mem_out_uuid, tx.stall, tx.hit, tx.dp_out_flushed), UVM_LOW)
-            result_ap.write(tx);
-          end 
+  forever begin
+    lfc_cpu_transaction tx;
+    @(posedge vif.clk);
+    tx = lfc_cpu_transaction::type_id::create("tx");
 
-          for(int i = 0; i < tx.NUM_BANKS; i++) begin
-            if(tx.block_status[i] && !prev_tx.block_status[i]) begin // uuid is valid, new cache miss, send to scoreboad
-              `uvm_info("CPU_MON", $sformatf("Writing to scoreboard: uuid=%0d stall=%0b hit=%0b flushed=%0b", tx.mem_out_uuid, tx.stall, tx.hit, tx.dp_out_flushed), UVM_LOW)
+    tx.mem_out_uuid     = vif.mem_out_uuid;
+    tx.stall            = vif.stall;
+    tx.hit              = vif.hit;
+    tx.hit_load         = vif.hit_load;
+    tx.block_status     = vif.block_status;
+    tx.uuid_block       = vif.uuid_block;
+    tx.dp_out_flushed   = vif.dp_out_flushed;
 
-              result_ap.write(tx);
-            end
-          end
-        end
+    `uvm_info("CPU_MON", $sformatf("Sampled: uuid=%0d stall=%0b hit=%0b flushed=%0b",
+                  tx.mem_out_uuid, tx.stall, tx.hit, tx.dp_out_flushed), UVM_LOW)
 
-        prev_tx.copy(tx); // check for hit on every clock cycle
-        if(has_run_once == 0) has_run_once++;
+    if (has_run_once > 0 && vif.n_rst) begin
+      if (!$isunknown(tx.stall) && !$isunknown(tx.hit)) begin
+        result_ap.write(tx);
+        `uvm_info("CPU_MON", $sformatf("Sent tx: uuid=%0h stall=%0b hit=%0b flushed=%0b",
+                    tx.mem_out_uuid, tx.stall, tx.hit, tx.dp_out_flushed), UVM_LOW)
+      end
     end
-  endtask
+
+    prev_tx.copy(tx);
+    if (has_run_once == 0) has_run_once++;
+  end
+endtask
+
 
 endclass
 
