@@ -1,8 +1,8 @@
 /*  Akshath Raghav Ravikiran - araviki@purdue.edu */
 
-import scpad_pkg::*;
+module scpad_cntrl #(parameter logic [scpad_pkg::SCPAD_ID_WIDTH-1:0] IDX = '0) (scpad_if.sram_ctrl srif);
 
-module scpad_cntrl #(parameter logic [SCPAD_ID_WIDTH-1:0] IDX = '0) (scpad_if.sram_ctrl srif);
+    import scpad_pkg::*;
 
     logic wr_fifo_empty; 
     logic rd_fifo_empty; 

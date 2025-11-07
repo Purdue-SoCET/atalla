@@ -44,8 +44,18 @@ module dram_write_latch ( // UUID now needs to have 3 lower bits for an offest s
         dr_wr_l.dram_write_req_latched = 1'b0;
         nxt_dram_write_latch = dram_write_latch;
 
+        if(dram_write_latch.valid == 1'b1) begin
+            dr_wr_l.dram_write_req = dram_write_latch;
+            if(request_completed_counter == dr_wr_l.num_request) begin
+                dr_wr_l.dram_write_latch_busy = 1'b0;
+                dr_wr_l.dram_write_req_latched = 1'b1;
+                nxt_request_completed_counter = 0;
+                nxt_dram_write_latch = 0;
+            end
+        end
+
         if(dr_wr_l.dram_be_stall == 1'b0) begin
-            if(dr_wr_l.dram_write == 1'b1 && dr_wr_l.dram_valid == 1'b1 && request_completed_counter != dr_wr_l.num_request) begin
+            if(dr_wr_l.dram_write == 1'b1 && dr_wr_l.dram_valid == 1'b1) begin
                 dr_wr_l.dram_write_latch_busy = 1'b1;
                 nxt_dram_write_latch.valid = 1'b1;
                 if(request_completed_counter[2:0] == 3'b000) begin
@@ -68,16 +78,6 @@ module dram_write_latch ( // UUID now needs to have 3 lower bits for an offest s
                 nxt_dram_write_latch.dram_addr = {dr_wr_l.dram_addr[DRAM_ADDR_WIDTH-1:5], request_completed_counter[2:0], 2'b00};
                 nxt_dram_write_latch.dram_vector_mask = dr_wr_l.dram_vector_mask;
                 nxt_request_completed_counter = request_completed_counter + 1;
-            end
-
-            if(dram_write_latch.valid == 1'b1) begin
-                dr_wr_l.dram_write_req = dram_write_latch;
-                if(request_completed_counter == dr_wr_l.num_request) begin
-                    dr_wr_l.dram_write_latch_busy = 1'b0;
-                    dr_wr_l.dram_write_req_latched = 1'b1;
-                    nxt_request_completed_counter = 0;
-                    nxt_dram_write_latch = 0;
-                end
             end
 
             

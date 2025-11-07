@@ -27,6 +27,10 @@ interface scpad_if (input logic clk, input logic n_rst);
     req_t  be_req  [NUM_SCPADS];
     res_t  be_res  [NUM_SCPADS];
 
+    // Swizzle
+    swizz_req_t swizz_req;
+    swizz_res_t swizz_res;
+
     // Vector <=> Frontend 
     logic fe_vec_stall [NUM_SCPADS];
     req_t  vec_req  [NUM_SCPADS];
@@ -77,22 +81,28 @@ interface scpad_if (input logic clk, input logic n_rst);
 
     // Scheduler <=> Backend
     modport backend_sched (
-        input clk, n_rst, sched_req,
+        input  clk, n_rst, sched_req,
         output sched_res
     );
 
     // Backend <=> Body
     modport backend_body (
-        input clk, n_rst, 
+        input  clk, n_rst, 
         input  be_stall, be_res, 
         output be_req
     );
 
     // Backend <=> DRAM
     modport backend_dram (
-        input clk, n_rst, 
+        input  clk, n_rst, 
         output be_dram_req, be_dram_stall,
-        input dram_be_res, dram_be_stall
+        input  dram_be_res, dram_be_stall
+    );
+
+    // Swizzle
+    modport swizzle (
+        input  swizz_req,
+        output swizz_res
     );
 
     // Vec. Core <=> Frontend 
@@ -149,9 +159,7 @@ interface scpad_if (input logic clk, input logic n_rst);
         input fe_req, be_req,
         // Outputs toward Body
         output head_stomach_req
-
     );
-
 
     // Tail (Resp Arb/Demux back to FE/BE) per scratchpad
     // Won't stall. 

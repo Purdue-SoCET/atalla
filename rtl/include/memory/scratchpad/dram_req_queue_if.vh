@@ -18,7 +18,7 @@ interface dram_req_queue_if;
     logic dram_queue_full, dram_be_stall, sram_res_valid, burst_complete;
     logic transaction_complete, initial_request_done;
 
-    modport baceknd_dram_req_queue ( 
+    modport backend_dram_req_queue ( 
         input dram_addr, id, sub_id, dram_vector_mask, sram_rdata, sram_res_valid, num_request, sched_valid,
         input sched_write,       // scheduler write = 1 means it's a scpad store aka we need to do a dram write.
         input be_stall, initial_request_done,

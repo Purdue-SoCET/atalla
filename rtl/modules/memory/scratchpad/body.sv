@@ -2,9 +2,10 @@
 
 `include "scpad_pkg.sv"
 `include "scpad_if.sv"
-import scpad_pkg::*;
 
-module body #(parameter logic [SCPAD_ID_WIDTH-1:0] IDX = '0) (scpad_if.spad_body bif); 
+module body #(parameter logic [scpad_pkg::SCPAD_ID_WIDTH-1:0] IDX = '0) (scpad_if.spad_body bif); 
+
+    import scpad_pkg::*;
 
     head #(.IDX(IDX)) head (.hif(bif));
 
@@ -45,7 +46,7 @@ module body #(parameter logic [SCPAD_ID_WIDTH-1:0] IDX = '0) (scpad_if.spad_body
         end
     endgenerate
 
-    rxbar #(.IDX(IDX)) rxbar (.wif(bif));
+    rxbar #(.IDX(IDX)) rxbar (.rif(bif));
 
     tail #(.IDX(IDX)) tail (.tif(bif));
 

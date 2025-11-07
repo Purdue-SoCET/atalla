@@ -1,8 +1,12 @@
 /*  Akshath Raghav Ravikiran - araviki@purdue.edu */
 
-import scpad_pkg::*;
+`include "scpad_pkg.sv"
+`include "scpad_if.sv"
 
-module head #(parameter logic [SCPAD_ID_WIDTH-1:0] IDX = '0) (scpad_if.spad_head hif);
+
+module head #(parameter logic [scpad_pkg::SCPAD_ID_WIDTH-1:0] IDX = '0) (scpad_if.spad_head hif);
+
+    import scpad_pkg::*;
 
     // Stalls
     logic downstream_stall;

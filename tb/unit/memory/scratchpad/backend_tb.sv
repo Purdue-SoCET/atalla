@@ -32,7 +32,7 @@ module backend_tb;
 
     always #(CLK_PERIOD/2) clk = ~clk;
 
-    scpad_if bif(clk, n_rst);
+    scpad_if be_tb_if(clk, n_rst);
 
     // module backend #(parameter logic [SCPAD_ID_WIDTH-1:0] IDX = '0) (
     // scpad_if.backend_sched bshif, 
@@ -41,10 +41,34 @@ module backend_tb;
     // );
     
     backend #(.IDX(0)) DUT (
-    .bshif(bif),   // scpad_if.backend_sched
-    .bbif (bif),   // scpad_if.backend_body
-    .bdrif(bif)    // scpad_if.backend_dram
+    .bshif(be_tb_if),   // scpad_if.backend_sched
+    .bbif (be_tb_if),   // scpad_if.backend_body
+    .bdrif(be_tb_if)    // scpad_if.backend_dram
     );
+
+    // modport spad_head (
+    //     input clk, n_rst, 
+    //     // Downstream backpressure
+    //     input w_stall, r_stall,
+    //     // Header backpresssure. 
+    //     output fe_stall, be_stall,
+    //     // Inputs from FE and BE
+    //     input fe_req, be_req,
+    //     // Outputs toward Body
+    //     output head_stomach_req
+
+    // );
+
+    // head #(.IDX(0)) tb_head (.hif(be_tb_if));
+    // assign bif.fe_req[0]  = '0;
+    // assign bif.w_stall[0] = 1'b0;
+    // assign bif.r_stall[0] = 1'b0;
+
+    // body #(.IDX(0)) tb_body (.bif(be_tb_if)); 
+
+    // tail #(.IDX(0)) tb_tail (.tif(be_tb_if));
+
+
 
     initial begin
         n_rst = 0;
@@ -61,11 +85,11 @@ module backend_tb;
     //     $dumpvars(0);
     // end 
 
-    test PROG (.bif(bif)); 
+    test PROG (.be_tb_if(be_tb_if)); 
 
-    initial begin
-        #(10_000 * CLK_PERIOD) $fatal(1, "[TB] Timeout");
-    end
+    // initial begin
+    //     #(10_000 * CLK_PERIOD) $fatal(1, "[TB] Timeout");
+    // end
 
 endmodule
 
@@ -78,7 +102,7 @@ endmodule
 //         output sched_req, be_res, dram_be_res
 //     );
 
-program test (scpad_if.backend_tb bif);
+program test (scpad_if.backend_tb be_tb_if);
     localparam CLK_PERIOD = 10;
     import scpad_pkg::*;
 
@@ -96,74 +120,94 @@ program test (scpad_if.backend_tb bif);
         logic [SCPAD_ID_WIDTH-1:0] scpad_id
    );
    begin
-        bif.sched_req[scpad_id].valid = valid;
-        bif.sched_req[scpad_id].write = write;
-        bif.sched_req[scpad_id].spad_addr = spad_addr;
-        bif.sched_req[scpad_id].dram_addr = dram_addr;
-        bif.sched_req[scpad_id].num_rows = num_rows;
-        bif.sched_req[scpad_id].num_cols = num_cols;
-        bif.sched_req[scpad_id].scpad_id = scpad_id;
+        be_tb_if.sched_req[scpad_id].valid = valid;
+        be_tb_if.sched_req[scpad_id].write = write;
+        be_tb_if.sched_req[scpad_id].spad_addr = spad_addr;
+        be_tb_if.sched_req[scpad_id].dram_addr = dram_addr;
+        be_tb_if.sched_req[scpad_id].num_rows = num_rows;
+        be_tb_if.sched_req[scpad_id].num_cols = num_cols;
+        be_tb_if.sched_req[scpad_id].scpad_id = scpad_id;
     end
    endtask
 
    task dram_results();
     begin
-        // Hard-coded 32 * 8 entries for now
-        for (int i = 0; i < 257; i++) begin
+        automatic int chunks = (be_tb_if.sched_req[0].num_cols + 1 + 3) / 4;  // ceil(num_cols/4)
+        for (int i = 0; i < (chunks * (be_tb_if.sched_req[0].num_rows + 1) + 1); i++) begin
         // Mirror request → response
-        bif.dram_be_res[0].valid = bif.be_dram_req[0].valid;
-        bif.dram_be_res[0].write = bif.be_dram_req[0].write;
-        bif.dram_be_res[0].id    = bif.be_dram_req[0].id;
+        be_tb_if.dram_be_res[0].valid = be_tb_if.be_dram_req[0].valid;
+        be_tb_if.dram_be_res[0].write = be_tb_if.be_dram_req[0].write;
+        be_tb_if.dram_be_res[0].id    = be_tb_if.be_dram_req[0].id;
         // Return a dummy data pattern (can be 'i' or a hash of addr/id)
-        bif.dram_be_res[0].rdata = {16'(i), 16'(i), 16'(i), 16'(i)};
+        be_tb_if.dram_be_res[0].rdata = {16'(i), 16'(i), 16'(i), 16'(i)};
         #(CLK_PERIOD);
         end
+        be_tb_if.dram_be_res[0].valid = 0;
+        be_tb_if.dram_be_res[0].write = 0;
+        be_tb_if.dram_be_res[0].id    = 0;
+        be_tb_if.dram_be_res[0].rdata = 0;
         #(CLK_PERIOD/2);
-        bif.sched_req[0].valid = 1'b0;
+        be_tb_if.sched_req[0].valid = 1'b0;
         #(CLK_PERIOD/2);
         #(CLK_PERIOD);
     end
     endtask
 
-    task sram_results();
-    begin
-        // Hard-coded 32 entries for now
-        for (int i = 0; i < 32; i++) begin
-        // Mirror request → response
-        bif.be_res[0].valid = bif.be_req[0].valid;
-        bif.be_res[0].write = ~bif.be_req[0].write;
-        // Return a dummy data pattern (can be 'i' or a hash of addr/id)
-        bif.be_res[0].rdata = 512'(i);
-        #(CLK_PERIOD);
-        end
-        #(CLK_PERIOD/2);
-        bif.sched_req[0].valid = 1'b0;
-        #(CLK_PERIOD/2);
-        #(CLK_PERIOD);
+    task sram_results(
+        logic valid,
+        logic write,
+        scpad_data_t rdata
+   );
+   begin
+        be_tb_if.be_res[0].valid = valid;
+        be_tb_if.be_res[0].write = write;
+        be_tb_if.be_res[0].rdata = spad_addr;
     end
+   endtask
+
+    task scpad_load_all_dims(); // purely simulating the request for now
+        begin
+            for (int i = 0; i < 32; i++) begin
+                for (int j = 0; j < 32; j++) begin
+                    // valid, write, spad_addr, dram_addr, num_rows, num_cols, scpad_id
+                    schedule_request(1'b1, 1'b0, 20'd0, 32'd0, 5'(i), 5'(j), 1'b0);
+                    dram_results();
+                end
+            end
+        end
+    endtask
+
+    task scpad_store_all_dims();
+        begin
+            for (int i = 0; i < 32; i++) begin
+                for (int j = 0; j < 32; j++) begin
+                    // valid, write, spad_addr, dram_addr, num_rows, num_cols, scpad_id
+                    schedule_request(1'b1, 1'b0, 20'd0, 32'd0, 5'(i), 5'(j), 1'b0);
+                    sram_results()
+                    #(CLK_PERIOD * 2);
+                end
+            end
+        end
     endtask
 
     initial begin
-        bif.be_stall[0] = 'b0;
-        bif.dram_be_stall[0] = 'b0;
-        bif.sched_req[0] = 'b0;
-        bif.be_res[0] = 'b0;
-        bif.dram_be_res[0] = 'b0;
-        bif.be_stall[1] = 'b0;
-        bif.dram_be_stall[1] = 'b0;
-        bif.sched_req[1] = 'b0;
-        bif.be_res[1] = 'b0;
-        bif.dram_be_res[1] = 'b0;
+        be_tb_if.dram_be_stall[0] = 'b0;
+        be_tb_if.sched_req[0] = 'b0;
+        be_tb_if.dram_be_res[0] = 'b0;
+        be_tb_if.be_stall[0] = 'b0;
+        be_tb_if.dram_be_stall[1] = 'b0;
+        be_tb_if.sched_req[1] = 'b0;
+        be_tb_if.dram_be_res[1] = 'b0;
+        be_tb_if.be_stall[1] = 'b0;
         #(CLK_PERIOD * 5);
 
-        // schedule_request(1'b1, 1'b0, 20'd0, 32'd0, 5'd31, 5'd31, 1'b0); // simulate a normal scpad load, dram read -> sram_write
+        scpad_load_all_dims();
+        // schedule_request(1'b1, 1'b0, 20'd0, 32'd0, 5'd0, 5'd1, 1'b0); // invalid request after normal request
         // dram_results();
-        // #(CLK_PERIOD * 2);
-        // schedule_request(1'b0, 1'b0, 20'd0, 32'd0, 5'd31, 5'd31, 1'b0); // invalid request after normal request
-        // #(CLK_PERIOD*5);
-        schedule_request(1'b1, 1'b1, 20'd0, 32'd0, 5'd31, 5'd31, 1'b0); // simulate a normal scpad write, sram read -> dram_write
-        sram_results();
-        #(CLK_PERIOD * 2); // 32 = num_cols
+        #(CLK_PERIOD*5);
+        // schedule_request(1'b1, 1'b1, 20'd0, 32'd0, 5'd31, 5'd31, 1'b0); // simulate a normal scpad write, sram read -> dram_write
+        // #(CLK_PERIOD * 8 * 32); // 32 = num_cols
+        // schedule_request(1'b0, 1'b0, 20'd0, 32'd0, 5'd31, 5'd31, 1'b0);
         // schedule_request(1'b0, 1'b0, 20'd0, 32'd0, 5'd31, 5'd31, 1'b0); // invalid request after normal request
         // #(CLK_PERIOD*5);
         // schedule_request(1'b1, 1'b1, 20'd0, 32'd0, 5'd11, 5'd4, 1'b0); // simulate worst case scpad load, dram read -> sram_write
