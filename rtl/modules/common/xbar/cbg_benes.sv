@@ -44,6 +44,14 @@ module cbg_benes #(
     logic [TAGWIDTH-1:0] subM_r_1_pipe [SIZE-1:0];
     logic [TAGWIDTH-1:0] L2_pipe [SIZE-1:0];
 
+    logic [CTRL_WIDTH : 0] first, last;
+    logic [TAGWIDTH-1 : 0] block_size_sub;
+    logic [TAGWIDTH-2 : 0] num_blocks_sub;
+
+    logic [TAGWIDTH-2 : 0] offset_first;
+    logic [TAGWIDTH-2 : 0] offset_last;
+    logic [BITWIDTH-1 : 0] ctrl_temp;
+
     always_ff @(posedge clk, negedge n_rst) begin : pipeline_ff
         for(int i = 0; i < SIZE; i++) begin
             if(!n_rst) begin
@@ -51,12 +59,14 @@ module cbg_benes #(
                 c1_pipe[i] <= 0;
                 subM_r_1_pipe[i] <= 0;
                 L2_pipe[i] <= 0;
+                ctrl <= 0;
             end
             else begin
                 d0_1_pipe[i] <= d[0][1][i];
                 c1_pipe[i] <= c[1][i];
                 subM_r_1_pipe[i] <= subM_rearranged[1][i];
                 L2_pipe[i] <= L[2][i];
+                ctrl <= ctrl_temp;
             end
         end
     end
@@ -216,12 +226,6 @@ module cbg_benes #(
         end
     endgenerate
 
-    logic [CTRL_WIDTH : 0] first, last;
-    logic [TAGWIDTH-1 : 0] block_size_sub;
-    logic [TAGWIDTH-2 : 0] num_blocks_sub;
-
-    logic [TAGWIDTH-2 : 0] offset_first;
-    logic [TAGWIDTH-2 : 0] offset_last;
 
     always_comb begin
         first = 0;
@@ -233,7 +237,7 @@ module cbg_benes #(
             
             if(level == TAGWIDTH-1) begin
                 for(int sub_idx = 0; sub_idx < SIZE >> 1; sub_idx++) begin
-                    ctrl[first] = f[TAGWIDTH-1][sub_idx];
+                    ctrl_temp[first] = f[TAGWIDTH-1][sub_idx];
                     first = first + 1;
                 end
             end
@@ -243,8 +247,8 @@ module cbg_benes #(
                         offset_first = (block * block_size_sub) + sub_idx;
                         offset_last = (SIZE/2 - 1) - offset_first;
 
-                        ctrl[first] = f[level][offset_first];
-                        ctrl[last] = l[level][offset_last];
+                        ctrl_temp[first] = f[level][offset_first];
+                        ctrl_temp[last] = l[level][offset_last];
                         // ctrl[level * SIZE/2 + sub_idx * block_size_sub + block] = f[level][offset_first];
                         // ctrl[last] = l[level][offset_last];
 
