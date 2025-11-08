@@ -2,8 +2,10 @@ module cbg_benes #(
     parameter int SIZE = 32,
     localparam int TAGWIDTH = $clog2(SIZE),
     localparam int STAGES = (2 * TAGWIDTH) - 1, 
-    localparam int BITWIDTH = STAGES * (SIZE >> 1)
+    localparam int BITWIDTH = STAGES * (SIZE >> 1),
+    localparam int CTRL_WIDTH = $clog2(((STAGES + 1) >> 1) * (SIZE >> 1))
 ) (
+    input logic clk, n_rst,
     input logic [TAGWIDTH-1:0] perm [SIZE-1:0],
     output logic [BITWIDTH-1:0] ctrl
 );
@@ -37,7 +39,37 @@ module cbg_benes #(
     logic [TAGWIDTH-1:0] subM [TAGWIDTH-1:0] [SIZE-1:0];
     logic [TAGWIDTH-1:0] subM_rearranged [TAGWIDTH-1:0] [SIZE-1:0];
 
-    // logic [TAGWIDTH-1:0] block_perm [TAGWIDTH-1:0] [SIZE-1:0];
+    logic [TAGWIDTH-1:0] d0_1_pipe [SIZE-1:0];
+    logic [TAGWIDTH-1:0] c1_pipe [SIZE-1:0];
+    logic [TAGWIDTH-1:0] subM_r_1_pipe [SIZE-1:0];
+    logic [TAGWIDTH-1:0] L2_pipe [SIZE-1:0];
+
+    logic [CTRL_WIDTH : 0] first, last;
+    logic [TAGWIDTH-1 : 0] block_size_sub;
+    logic [TAGWIDTH-2 : 0] num_blocks_sub;
+
+    logic [TAGWIDTH-2 : 0] offset_first;
+    logic [TAGWIDTH-2 : 0] offset_last;
+    logic [BITWIDTH-1 : 0] ctrl_temp;
+
+    always_ff @(posedge clk, negedge n_rst) begin : pipeline_ff
+        for(int i = 0; i < SIZE; i++) begin
+            if(!n_rst) begin
+                d0_1_pipe[i] <= 0;
+                c1_pipe[i] <= 0;
+                subM_r_1_pipe[i] <= 0;
+                L2_pipe[i] <= 0;
+                ctrl <= 0;
+            end
+            else begin
+                d0_1_pipe[i] <= d[0][1][i];
+                c1_pipe[i] <= c[1][i];
+                subM_r_1_pipe[i] <= subM_rearranged[1][i];
+                L2_pipe[i] <= L[2][i];
+                ctrl <= ctrl_temp;
+            end
+        end
+    end
 
     always_comb begin : range32_logic
         for(int i = 0; i < SIZE; i++) begin
@@ -53,7 +85,7 @@ module cbg_benes #(
             
             logic [TAGWIDTH-1:0] block_perm [SIZE-1:0];
             
-            assign block_perm = (level==0) ? perm : subM_rearranged[level-1];
+            assign block_perm = (level==0) ? perm : (level==2) ? subM_r_1_pipe : subM_rearranged[level-1];
 
             for (genvar block = 0; block < num_blocks; block++) begin : blocks
                 localparam int offset_lower = block * block_size;
@@ -102,12 +134,11 @@ module cbg_benes #(
                         .c(r[level][offset_upper:offset_lower]), 
                         .out(u[level][offset_upper:offset_lower])
                     );
-                    
                     // for loop
-                    for(loop = 0; loop < TAGWIDTH-2; loop++) begin
+                    for(loop = 0; loop < TAGWIDTH-2-level; loop++) begin
                         if(loop == 0) begin
                             composeinv #(.SIZE(block_size), .TAGWIDTH(TAGWIDTH)) cinv_cp (
-                                .pi(c[level][offset_upper:offset_lower]), 
+                                .pi((level==1) ? c1_pipe[offset_upper:offset_lower] : c[level][offset_upper:offset_lower]), 
                                 .c(u[level][offset_upper:offset_lower]), 
                                 .out(cp[level][loop][offset_upper:offset_lower])
                             );
@@ -123,13 +154,13 @@ module cbg_benes #(
                             );
 
                             find_min #(.SIZE(block_size), .TAGWIDTH(TAGWIDTH)) min_d (
-                                .in({c[level][offset_upper:offset_lower], cp[level][loop][offset_upper:offset_lower]}),
+                                .in({(level==1) ? c1_pipe[offset_upper:offset_lower] : c[level][offset_upper:offset_lower], cp[level][loop][offset_upper:offset_lower]}),
                                 .out(d[level][loop][offset_upper:offset_lower])
                             );
                         end
                         else begin
                             composeinv #(.SIZE(block_size), .TAGWIDTH(TAGWIDTH)) cinv_cp (
-                                .pi(d[level][loop-1][offset_upper:offset_lower]), 
+                                .pi((level==0 && loop==2) ? d0_1_pipe[offset_upper:offset_lower] : d[level][loop-1][offset_upper:offset_lower]), 
                                 .c(w[level][loop-1][offset_upper:offset_lower]), 
                                 .out(cp[level][loop][offset_upper:offset_lower])
                             );
@@ -145,7 +176,7 @@ module cbg_benes #(
                             );
 
                             find_min #(.SIZE(block_size), .TAGWIDTH(TAGWIDTH)) min_d (
-                                .in({d[level][loop-1][offset_upper:offset_lower], cp[level][loop][offset_upper:offset_lower]}),
+                                .in({((level==0 && loop==2) ? d0_1_pipe[offset_upper:offset_lower] : d[level][loop-1][offset_upper:offset_lower]), cp[level][loop][offset_upper:offset_lower]}),
                                 .out(d[level][loop][offset_upper:offset_lower])
                             );
                         end
@@ -153,9 +184,14 @@ module cbg_benes #(
 
                     for(i = 0; i < block_size; i++) begin
                         if(i < block_size/2) begin
-                            assign f[level][block_size/2*block+i] = d[level][TAGWIDTH-2-1][block_size*block+2*i] % 2;
+                            if(level < 3) begin
+                                localparam int final_loop = TAGWIDTH - 3 - level;
+                                assign f[level][block_size/2*block+i] = d[level][final_loop][block_size*block+2*i] % 2;
+                            end
+                            else begin
+                                assign f[level][block_size/2*block+i] = c[level][block_size*block+2*i] % 2;
+                            end
                         end
-                        
                         assign F[level][block_size*block+i] = i ^ f[level][block_size/2*block + (i/2)];
                     end
 
@@ -174,14 +210,13 @@ module cbg_benes #(
 
                     composeinv #(.SIZE(block_size), .TAGWIDTH(TAGWIDTH)) cinv_M (
                         .pi(fpi[level][offset_upper:offset_lower]), 
-                        .c(L[level][offset_upper:offset_lower]), 
+                        .c((level==2) ? L2_pipe[offset_upper:offset_lower] : L[level][offset_upper:offset_lower]), 
                         .out(M[level][offset_upper:offset_lower])
                     );
                     for(genvar half = 0; half < 2; half++) begin
                         for(j = 0; j < block_size/2; j++) begin
                             assign subM[level][j+block_size*block+block_size/2*half] = M[level][2*j+half+block_size*block]/2;
                         end
-                        // subM = [[M[2*j+e]//2 for j in range(n//2)] for e in range(2)]
                         localparam int dest_lower = (block*block_size/2) + (SIZE/2 * half);
                         localparam int source_lower = (block*block_size) + (block_size/2 * half);
                         assign subM_rearranged[level][dest_lower+block_size/2-1:dest_lower] = subM[level][source_lower+block_size/2-1:source_lower];
@@ -191,12 +226,6 @@ module cbg_benes #(
         end
     endgenerate
 
-    logic [8-1:0] first, last;
-    logic[TAGWIDTH-1 : 0] block_size_sub;
-    logic[TAGWIDTH-2 : 0] num_blocks_sub;
-
-    logic[TAGWIDTH-2 : 0] offset_first;
-    logic[TAGWIDTH-2 : 0] offset_last;
 
     always_comb begin
         first = 0;
@@ -208,7 +237,7 @@ module cbg_benes #(
             
             if(level == TAGWIDTH-1) begin
                 for(int sub_idx = 0; sub_idx < SIZE >> 1; sub_idx++) begin
-                    ctrl[first] = f[TAGWIDTH-1][sub_idx];
+                    ctrl_temp[first] = f[TAGWIDTH-1][sub_idx];
                     first = first + 1;
                 end
             end
@@ -218,8 +247,8 @@ module cbg_benes #(
                         offset_first = (block * block_size_sub) + sub_idx;
                         offset_last = (SIZE/2 - 1) - offset_first;
 
-                        ctrl[first] = f[level][offset_first];
-                        ctrl[last] = l[level][offset_last];
+                        ctrl_temp[first] = f[level][offset_first];
+                        ctrl_temp[last] = l[level][offset_last];
                         // ctrl[level * SIZE/2 + sub_idx * block_size_sub + block] = f[level][offset_first];
                         // ctrl[last] = l[level][offset_last];
 
