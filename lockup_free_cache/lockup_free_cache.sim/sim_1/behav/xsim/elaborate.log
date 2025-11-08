@@ -5,7 +5,20 @@ Running: D:/2025.1/Vivado/bin/unwrapped/win64.o/xelab.exe --incr --debug typical
 Using 2 slave threads.
 Starting static elaboration
 Pass Through NonSizing Optimizer
-ERROR: [VRFC 10-2991] 'input_equal' is not declared under prefix 'tx' [C:/Users/socce/SoCET/tensor-core/uvm/lfc_ram_active_monitor.sv:55]
-ERROR: [VRFC 10-2991] 'analysis_export' is not declared under prefix 'pred' [C:/Users/socce/SoCET/tensor-core/uvm/lfc_environment.sv:59]
-ERROR: [VRFC 10-2991] 'analysis_export' is not declared under prefix 'pred' [C:/Users/socce/SoCET/tensor-core/uvm/lfc_environment.sv:63]
-ERROR: [XSIM 43-3322] Static elaboration of top level Verilog design unit(s) in library work failed.
+Completed static elaboration
+Starting simulation data flow analysis
+WARNING: [XSIM 43-4468] File : /proj/primebuilds/9999.0_PRIME_0428_0031/installs/data/system_verilog/uvm_1.2/xlnx_uvm_package.sv, Line : 25994, RANDC variable size more than 8 bits. This will be treated as a RAND variable instead.
+WARNING: [XSIM 43-4100] "C:/Users/socce/SoCET/tensor-core/lockup_free_cache/lockup_free_cache.sim/sim_1/behav/xsim/glbl.v" Line 6. Module glbl has a timescale but at least one module in design doesn't have timescale.
+WARNING: [XSIM 43-4100] "C:/Users/socce/SoCET/tensor-core/lockup_free_cache/lockup_free_cache.sim/sim_1/behav/xsim/glbl.v" Line 6. Module glbl has a timescale but at least one module in design doesn't have timescale.
+Completed simulation data flow analysis
+Time Resolution for simulation is 1ps
+Compiling package xil_defaultlib.$unit_cache_bank_sv_1109608344
+Compiling package uvm.uvm_pkg
+Compiling package std.std
+Compiling module xil_defaultlib.lfc_if_default
+Compiling module xil_defaultlib.cache_mshr_buffer
+Compiling module xil_defaultlib.cache_bank
+Compiling module xil_defaultlib.lockup_free_cache_default
+Compiling module xil_defaultlib.tb_top
+Compiling module xil_defaultlib.glbl
+Built simulation snapshot tb_top_behav
