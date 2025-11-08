@@ -17,12 +17,12 @@ module swizzle (
         for (int bank_id = 0; bank_id < NUM_COLS; bank_id++) begin
             if (swizz.row_or_col) begin // row-major read
                 abs_row = swizz.spad_addr + swizz.row_id;
-                swizz.xbar_desc.valid_mask[bank_id] = (bank_id < swizz.num_cols);
+                swizz.xbar_desc.valid_mask[bank_id] = (bank_id <= swizz.num_cols);
                 swizz.xbar_desc.shift_mask[bank_id] = COL_IDX_WIDTH'((bank_id ^ (abs_row & (NUM_COLS-1))) & (NUM_COLS-1));
                 swizz.xbar_desc.slot_mask[bank_id]  = abs_row;
             end else begin
                 abs_row = swizz.spad_addr + ROW_IDX_WIDTH'(bank_id);
-                swizz.xbar_desc.valid_mask[bank_id] = (bank_id < swizz.num_rows);
+                swizz.xbar_desc.valid_mask[bank_id] = (bank_id <= swizz.num_rows);
                 swizz.xbar_desc.shift_mask[bank_id] = COL_IDX_WIDTH'((swizz.col_id ^ (abs_row & (NUM_COLS-1))) & (NUM_COLS-1));
                 swizz.xbar_desc.slot_mask[bank_id]  = abs_row;
             end

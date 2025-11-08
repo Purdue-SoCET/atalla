@@ -45,7 +45,7 @@ module backend #(parameter logic [scpad_pkg::SCPAD_ID_WIDTH-1:0] IDX = '0) (
 
     swizzle swizzle_metadata(baddr);
     assign baddr.row_or_col = 1'b1; // Should always be 1'b1;
-    assign baddr.spad_addr = {bshif.sched_req[IDX].spad_addr[19:5], 5'b00000}; // ignore lower 5 bits, as spad moves 32 addresses per row, always.
+    assign baddr.spad_addr = bshif.sched_req[IDX].spad_addr; 
     assign baddr.num_rows = bshif.sched_req[IDX].num_rows;
     assign baddr.num_cols = bshif.sched_req[IDX].num_cols;
     assign baddr.row_id = be_id;  // no matter which orientation we are in the      
@@ -68,7 +68,7 @@ module backend #(parameter logic [scpad_pkg::SCPAD_ID_WIDTH-1:0] IDX = '0) (
     sram_write_latch be_sr_wr_latch(bshif.clk, bshif.n_rst, sr_wr_l);
     assign sr_wr_l.dram_id = bdrif.dram_be_res[IDX].id;
     assign sr_wr_l.dram_res_valid = bdrif.dram_be_res[IDX].valid;
-    assign sr_wr_l.spad_addr = {bshif.sched_req[IDX].spad_addr[19:5] + be_id, 5'b00000};
+    assign sr_wr_l.spad_addr = bshif.sched_req[IDX].spad_addr + {be_id, 5'b00000};
     assign sr_wr_l.xbar = baddr.xbar_desc;
     assign sr_wr_l.dram_rddata = bdrif.dram_be_res[IDX].rdata;
     assign sr_wr_l.num_request = num_request;
@@ -76,11 +76,6 @@ module backend #(parameter logic [scpad_pkg::SCPAD_ID_WIDTH-1:0] IDX = '0) (
     // output sram_write_req, sram_write_req_latched
 
     dram_write_latch dr_wr_latch(bshif.clk, bshif.n_rst, dr_wr_l);
-    assign dr_wr_l.dram_addr = {bshif.sched_req[IDX].dram_addr[DRAM_ADDR_WIDTH-1:5] + schedule_request_counter, 5'b00000};
-    assign dr_wr_l.dram_vector_mask = dram_vector_mask;
-    assign dr_wr_l.dram_valid = be_dr_req_q.dram_req.valid;
-    assign dr_wr_l.dram_write = be_dr_req_q.dram_req.write;
-    assign dr_wr_l.sram_rddata = be_dr_req_q.dram_req.wdata;
     assign dr_wr_l.num_request = num_request;
     assign dr_wr_l.be_stall = bbif.be_stall[IDX];
     assign dr_wr_l.dram_be_stall = bdrif.dram_be_stall[IDX];
@@ -88,7 +83,11 @@ module backend #(parameter logic [scpad_pkg::SCPAD_ID_WIDTH-1:0] IDX = '0) (
 
     always_comb begin
         num_request = 0;
-        be_id = bdrif.dram_be_res[IDX].id[7:3];
+        be_id = 0;
+        nxt_sub_uuid = sub_uuid;
+        nxt_uuid = uuid;
+        dram_vector_mask = 0;
+
         bbif.be_req[IDX].valid = 1'b0;
         bbif.be_req[IDX].write = 1'b0;
         bbif.be_req[IDX].spad_addr = 0;
@@ -101,131 +100,155 @@ module backend #(parameter logic [scpad_pkg::SCPAD_ID_WIDTH-1:0] IDX = '0) (
         bbif.be_req[IDX].wdata = 0;
         nxt_sched_res_valid = 1'b0;
         nxt_initial_request_done = initial_request_done; 
-        
-        
-        if(bshif.sched_req[IDX].num_cols > 27) begin // need to determine num_packets so we can invalidate unneeded ones.
-            num_request = 7;
-        end else if(bshif.sched_req[IDX].num_cols > 23) begin
-            num_request = 6;
-        end else if(bshif.sched_req[IDX].num_cols > 19) begin
-            num_request = 5;
-        end else if(bshif.sched_req[IDX].num_cols > 15) begin
-            num_request = 4;
-        end else if(bshif.sched_req[IDX].num_cols > 11) begin
-            num_request = 3;
-        end else if(bshif.sched_req[IDX].num_cols > 7) begin
-            num_request = 2;
-        end else if(bshif.sched_req[IDX].num_cols > 3) begin
-            num_request = 1;
-        end
 
-        if(bshif.sched_req[IDX].valid && (uuid == bshif.sched_req[IDX].num_rows) && (sub_uuid == num_request)) begin
-            nxt_initial_request_done = 1'b1; 
-        end
-
-        nxt_sub_uuid = sub_uuid;
-        nxt_uuid = uuid;
-        dram_vector_mask = 4'b1111; // dram_vector_mask can be a static 8 bytes unless you want to get rid of padding
-        
-        // sched_write == 1'b0  scpad load, dram read to a sram write.
-        if(bshif.sched_req[IDX].num_cols == 5'b11111) begin
-            be_dr_req_q.dram_addr = ({bshif.sched_req[IDX].dram_addr[DRAM_ADDR_WIDTH-1:5] + uuid, sub_uuid, 2'b00});
-        end else begin 
-            be_dr_req_q.dram_addr = ({bshif.sched_req[IDX].dram_addr[DRAM_ADDR_WIDTH-1:5], sub_uuid, 2'b00}) + uuid * (bshif.sched_req[IDX].num_cols + 1);
-        end
-        be_dr_req_q.id = uuid;
-        be_dr_req_q.sub_id = sub_uuid;
-
-
-        // This causes questasim to never stop
-        be_dr_req_q.sram_rdata = bbif.be_res[IDX].rdata;
-        be_dr_req_q.sram_res_valid = bbif.be_res[IDX].valid;
-
-        // be_dr_req_q.sram_rdata = 0;
-        // be_dr_req_q.sram_res_valid = 0;
-        
-
-        if(sub_uuid == num_request) begin  // if you want to add exactly the amount of dram_vector_mask with no padding
-            if(bshif.sched_req[IDX].num_cols[1:0] == 2'b00) begin
-                dram_vector_mask = 4'b0001;
-            end else if(bshif.sched_req[IDX].num_cols[1:0] == 2'b01) begin
-                dram_vector_mask = 4'b0011;
-            end else if(bshif.sched_req[IDX].num_cols[1:0] == 2'b10) begin
-                dram_vector_mask = 4'b0111;
-            end
-        end
-
-        be_dr_req_q.dram_vector_mask = dram_vector_mask;
-
-        if(be_dr_req_q.burst_complete == 1'b1) begin
-            nxt_sub_uuid = sub_uuid + 1;
-            if(sub_uuid == num_request) begin
-                nxt_sub_uuid = 0;
-                nxt_uuid = uuid + 1;
-            end
-        end
-
-        nxt_schedule_request_counter = schedule_request_counter;
-
-        if(sr_wr_l.sram_write_req_latched == 1'b1) begin // be_stall is checked in sram latch 
-            bbif.be_req[IDX].valid = sr_wr_l.sram_write_req.valid;
-            bbif.be_req[IDX].write = 1'b1;
-            bbif.be_req[IDX].spad_addr = sr_wr_l.sram_write_req.spad_addr;
-            bbif.be_req[IDX].wdata = sr_wr_l.sram_write_req.wdata;
-            bbif.be_req[IDX].xbar = sr_wr_l.sram_write_req.xbar;
-            nxt_schedule_request_counter = schedule_request_counter + 1;
-        end
-
-        bdrif.be_dram_req[IDX].valid = be_dr_req_q.dram_req.valid;
-        bdrif.be_dram_req[IDX].write = 1'b0;
-        bdrif.be_dram_req[IDX].id = be_dr_req_q.dram_req.id;
-        bdrif.be_dram_req[IDX].dram_addr = be_dr_req_q.dram_req.dram_addr;
-        bdrif.be_dram_req[IDX].dram_vector_mask = be_dr_req_q.dram_req.dram_vector_mask;
+        bdrif.be_dram_req[IDX].valid = 0;
+        bdrif.be_dram_req[IDX].write = 0;
+        bdrif.be_dram_req[IDX].id = 0;
+        bdrif.be_dram_req[IDX].dram_addr = 0;
+        bdrif.be_dram_req[IDX].dram_vector_mask = 0;
         bdrif.be_dram_req[IDX].wdata = 0;
-        bdrif.be_dram_stall[IDX] = bbif.be_stall[IDX];
+        bdrif.be_dram_stall[IDX] = 0;
 
-        if(bshif.sched_req[IDX].write == 1'b1) begin // sched write == 1'b1, scpad store, sram read to a dram write.
-            be_id = uuid;
-            
-            if(bbif.be_stall[IDX] == 1'b0) begin
-                bbif.be_req[IDX].valid = 1'b1 && !initial_request_done;
-                bbif.be_req[IDX].write = 1'b0;
-                bbif.be_req[IDX].spad_addr = {bshif.sched_req[IDX].spad_addr[19:5] + uuid, 5'b00000};
-                bbif.be_req[IDX].num_rows = bshif.sched_req[IDX].num_rows;
-                bbif.be_req[IDX].num_cols = bshif.sched_req[IDX].num_cols;
-                bbif.be_req[IDX].row_id = uuid;
-                bbif.be_req[IDX].col_id = uuid;
-                bbif.be_req[IDX].row_or_col = 1'b1;
-                bbif.be_req[IDX].xbar = baddr.xbar_desc;
-                bbif.be_req[IDX].wdata = 0;
-                nxt_uuid = initial_request_done ? uuid : uuid + 1;
+        dr_wr_l.dram_addr = 0;
+        dr_wr_l.dram_vector_mask = 0;
+        dr_wr_l.dram_valid = 0;
+        dr_wr_l.dram_write = 0;
+        dr_wr_l.sram_rddata = 0;
+
+        be_dr_req_q.sram_res_valid = 0;
+        be_dr_req_q.sram_rdata = 0;
+        
+        
+        if(bshif.sched_req[IDX].valid == 1'b1) begin
+
+            be_id = bdrif.dram_be_res[IDX].id[7:3];
+
+            if(bshif.sched_req[IDX].num_cols > 27) begin // need to determine num_packets so we can invalidate unneeded ones.
+                num_request = 7;
+            end else if(bshif.sched_req[IDX].num_cols > 23) begin
+                num_request = 6;
+            end else if(bshif.sched_req[IDX].num_cols > 19) begin
+                num_request = 5;
+            end else if(bshif.sched_req[IDX].num_cols > 15) begin
+                num_request = 4;
+            end else if(bshif.sched_req[IDX].num_cols > 11) begin
+                num_request = 3;
+            end else if(bshif.sched_req[IDX].num_cols > 7) begin
+                num_request = 2;
+            end else if(bshif.sched_req[IDX].num_cols > 3) begin
+                num_request = 1;
             end
 
-            if(dr_wr_l.dram_write_req_latched == 1'b1) begin
-                nxt_sub_uuid = sub_uuid + 1;
-                if(sub_uuid == num_request) begin
-                    nxt_sub_uuid = 0;
-                    nxt_schedule_request_counter = schedule_request_counter + 1;
+            if(bshif.sched_req[IDX].valid && (uuid == bshif.sched_req[IDX].num_rows) && (sub_uuid == num_request)) begin
+                nxt_initial_request_done = 1'b1; 
+            end
+
+            dram_vector_mask = 4'b1111; // dram_vector_mask can be a static 8 bytes unless you want to get rid of padding
+            
+            // sched_write == 1'b0  scpad load, dram read to a sram write.
+            if(bshif.sched_req[IDX].num_cols == 5'b11111) begin
+                be_dr_req_q.dram_addr = bshif.sched_req[IDX].dram_addr + {uuid, sub_uuid, 2'b00};
+            end else begin 
+                be_dr_req_q.dram_addr = bshif.sched_req[IDX].dram_addr + uuid * (bshif.sched_req[IDX].num_cols + 1) + {sub_uuid, 2'b00};
+            end
+            be_dr_req_q.id = uuid;
+            be_dr_req_q.sub_id = sub_uuid;
+
+            if(sub_uuid == num_request) begin  // if you want to add exactly the amount of dram_vector_mask with no padding
+                if(bshif.sched_req[IDX].num_cols[1:0] == 2'b00) begin
+                    dram_vector_mask = 4'b0001;
+                end else if(bshif.sched_req[IDX].num_cols[1:0] == 2'b01) begin
+                    dram_vector_mask = 4'b0011;
+                end else if(bshif.sched_req[IDX].num_cols[1:0] == 2'b10) begin
+                    dram_vector_mask = 4'b0111;
                 end
             end
 
-            bdrif.be_dram_req[IDX].valid = dr_wr_l.dram_write_req.valid;
-            bdrif.be_dram_req[IDX].write = dr_wr_l.dram_write_req.valid;
-            bdrif.be_dram_req[IDX].id = 0; // doesn't matter it's just a write
-            bdrif.be_dram_req[IDX].dram_addr = dr_wr_l.dram_write_req.dram_addr;
-            bdrif.be_dram_req[IDX].dram_vector_mask = dr_wr_l.dram_write_req.dram_vector_mask;
-            bdrif.be_dram_req[IDX].wdata = dr_wr_l.dram_write_req.wdata;
-            bdrif.be_dram_stall[IDX] = 0; // backend won't have to stall dram in a scpad store. This is because there are no hazards created in backend that would necessitate pausing dram writes.
-        end
+            be_dr_req_q.dram_vector_mask = dram_vector_mask;
 
-        if(bshif.sched_req[IDX].valid && (schedule_request_counter == bshif.sched_req[IDX].num_rows) && ((dr_wr_l.dram_write_req_latched == 1'b1) || (sr_wr_l.sram_write_req_latched == 1'b1))) begin
-            nxt_sched_res_valid = 1'b1;
-            nxt_uuid = 0;
-            nxt_sub_uuid = 0;
-            nxt_schedule_request_counter = 0;
-            nxt_initial_request_done = 0;
+            if(be_dr_req_q.burst_complete == 1'b1) begin
+                nxt_sub_uuid = sub_uuid + 1;
+                if(sub_uuid == num_request) begin
+                    nxt_sub_uuid = 0;
+                    nxt_uuid = uuid + 1;
+                end
+            end
+
+            nxt_schedule_request_counter = schedule_request_counter;
+
+            if(sr_wr_l.sram_write_req_latched == 1'b1) begin // be_stall is checked in sram latch 
+                bbif.be_req[IDX].valid = sr_wr_l.sram_write_req.valid;
+                bbif.be_req[IDX].write = 1'b1;
+                bbif.be_req[IDX].spad_addr = sr_wr_l.sram_write_req.spad_addr;
+                bbif.be_req[IDX].wdata = sr_wr_l.sram_write_req.wdata;
+                bbif.be_req[IDX].xbar = sr_wr_l.sram_write_req.xbar;
+                nxt_schedule_request_counter = schedule_request_counter + 1;
+            end
+
+            if(bshif.sched_req[IDX].write == 1'b0) begin
+                bdrif.be_dram_req[IDX].valid = be_dr_req_q.dram_req.valid;
+                bdrif.be_dram_req[IDX].write = 1'b0;
+                bdrif.be_dram_req[IDX].id = be_dr_req_q.dram_req.id;
+                bdrif.be_dram_req[IDX].dram_addr = be_dr_req_q.dram_req.dram_addr;
+                bdrif.be_dram_req[IDX].dram_vector_mask = be_dr_req_q.dram_req.dram_vector_mask;
+                bdrif.be_dram_req[IDX].wdata = 0;
+                bdrif.be_dram_stall[IDX] = bbif.be_stall[IDX];
+            end else begin // sched write == 1'b1, scpad store, sram read to a dram write.
+                be_id = uuid;
+                
+                if(bbif.be_stall[IDX] == 1'b0) begin
+                    bbif.be_req[IDX].valid = 1'b1 && !initial_request_done;
+                    bbif.be_req[IDX].write = 1'b0;
+                    bbif.be_req[IDX].spad_addr = bshif.sched_req[IDX].spad_addr + {uuid, 5'b00000};
+                    bbif.be_req[IDX].num_rows = bshif.sched_req[IDX].num_rows;
+                    bbif.be_req[IDX].num_cols = bshif.sched_req[IDX].num_cols;
+                    bbif.be_req[IDX].row_id = uuid;
+                    bbif.be_req[IDX].col_id = uuid;
+                    bbif.be_req[IDX].row_or_col = 1'b1;
+                    bbif.be_req[IDX].xbar = baddr.xbar_desc;
+                    bbif.be_req[IDX].wdata = 0;
+                    nxt_uuid = initial_request_done ? uuid : uuid + 1;
+                end
+
+                if(be_dr_req_q.transaction_complete == 1'b1) begin
+                    nxt_schedule_request_counter = schedule_request_counter + 1;
+                end
+                
+                be_dr_req_q.sram_res_valid = bbif.be_res[IDX].valid;
+                be_dr_req_q.sram_rdata = bbif.be_res[IDX].rdata;
+
+                // dr_wr_l.dram_addr = {bshif.sched_req[IDX].dram_addr[DRAM_ADDR_WIDTH-1:5] + schedule_request_counter, 5'b00000};
+                // dr_wr_l.dram_vector_mask = be_dr_req_q.dram_vector_mask;
+                // dr_wr_l.dram_valid = be_dr_req_q.dram_req.valid;
+                // dr_wr_l.dram_write = be_dr_req_q.dram_req.write;
+                // dr_wr_l.sram_rddata = be_dr_req_q.dram_req.wdata;
+                
+                bdrif.be_dram_req[IDX].valid = be_dr_req_q.dram_req.valid;
+                bdrif.be_dram_req[IDX].write = be_dr_req_q.dram_req.write;
+                bdrif.be_dram_req[IDX].id = be_dr_req_q.dram_req.id;
+                if(bshif.sched_req[IDX].num_cols == 5'b11111) begin
+                    bdrif.be_dram_req[IDX].dram_addr = bshif.sched_req[IDX].dram_addr + {schedule_request_counter, sub_uuid, 2'b00};
+                end else begin 
+                    bdrif.be_dram_req[IDX].dram_addr = bshif.sched_req[IDX].dram_addr + schedule_request_counter * (bshif.sched_req[IDX].num_cols + 1) + {sub_uuid, 2'b00};
+                end
+                // bdrif.be_dram_req[IDX].dram_addr = be_dr_req_q.dram_req.dram_addr;
+                bdrif.be_dram_req[IDX].dram_vector_mask = dram_vector_mask;
+                bdrif.be_dram_req[IDX].wdata = be_dr_req_q.dram_req.wdata;
+                bdrif.be_dram_stall[IDX] = 0;
+
+                if((uuid == bshif.sched_req[IDX].num_rows)) begin
+                    nxt_initial_request_done = 1'b1; 
+                end
+            end
+
+            if(bshif.sched_req[IDX].valid && (schedule_request_counter == bshif.sched_req[IDX].num_rows) && ((be_dr_req_q.transaction_complete == 1'b1) || (sr_wr_l.sram_write_req_latched == 1'b1))) begin
+                nxt_sched_res_valid = 1'b1;
+                nxt_uuid = 0;
+                nxt_sub_uuid = 0;
+                nxt_schedule_request_counter = 0;
+                nxt_initial_request_done = 0;
+            end
         end
-        
     end
 
 endmodule

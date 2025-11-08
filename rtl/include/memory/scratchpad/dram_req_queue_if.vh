@@ -13,6 +13,7 @@ interface dram_req_queue_if;
     logic [DRAM_ID_WIDTH-1:0]   id;
     logic [2:0]   sub_id, num_request;
     logic [DRAM_VECTOR_MASK-1:0]   dram_vector_mask;
+    logic [MAX_DRAM_BUS_BITS-1:0] dram_req_wdata;
     scpad_data_t sram_rdata;
     logic be_stall, sched_valid;
     logic dram_queue_full, dram_be_stall, sram_res_valid, burst_complete;

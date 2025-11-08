@@ -91,6 +91,15 @@ package scpad_pkg;
         logic [DRAM_ADDR_WIDTH-1:0]  dram_addr;
         logic [DRAM_VECTOR_MASK-1:0] dram_vector_mask;
         scpad_data_t wdata;
+    } dram_req_q_t;
+
+    typedef struct packed {
+        logic valid; 
+        logic write;
+        logic [DRAM_ID_WIDTH-1:0]    id;
+        logic [DRAM_ADDR_WIDTH-1:0]  dram_addr;
+        logic [DRAM_VECTOR_MASK-1:0] dram_vector_mask;
+        logic [MAX_DRAM_BUS_BITS-1:0] wdata;
     } dram_req_t;
 
     typedef struct packed {
