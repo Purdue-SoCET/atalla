@@ -16,7 +16,7 @@
 
 module dram_request_queue ( // UUID now needs to have 3 lower bits for an offest since dram can only handle 64 bits at a time
     input logic clk, n_rst, 
-    dram_req_queue_if.baceknd_dram_req_queue be_dr_req_q
+    dram_req_queue_if.backend_dram_req_queue be_dr_req_q
 );
     import scpad_pkg::*;
 
@@ -33,7 +33,7 @@ module dram_request_queue ( // UUID now needs to have 3 lower bits for an offest
     dram_req_t nxt_dram_head_latch_set, nxt_dram_tail_latch_set;
 
     logic [5-1:0] fifo_head, nxt_fifo_head, fifo_tail, nxt_fifo_tail;
-    logic [3:0] request_completed_counter, nxt_request_completed_counter;
+    logic [2:0] request_completed_counter, nxt_request_completed_counter;
     logic nxt_transaction_complete;
     
     always_ff @(posedge clk, negedge n_rst) begin
@@ -96,11 +96,13 @@ module dram_request_queue ( // UUID now needs to have 3 lower bits for an offest
             nxt_fifo_head = fifo_head + 1;
         end
 
-        if(request_completed_counter == be_dr_req_q.num_request) begin
-            nxt_transaction_complete = 1'b1;
-            nxt_request_completed_counter = 0;
+        if(be_dr_req_q.burst_complete == 1'b1) begin
+            if(request_completed_counter == be_dr_req_q.num_request) begin
+                nxt_transaction_complete = 1'b1;
+                nxt_request_completed_counter = 0;
+            end
         end
-
+        
         if(fifo_tail + 1 == fifo_head) begin 
             nxt_dram_tail_latch_set = dram_req_latch_block[fifo_tail];
             nxt_fifo_tail = fifo_tail;

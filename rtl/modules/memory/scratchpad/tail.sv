@@ -1,8 +1,12 @@
 /*  Akshath Raghav Ravikiran - araviki@purdue.edu */
 
-import scpad_pkg::*;
+`include "scpad_pkg.sv"
+`include "scpad_if.sv"
 
-module tail #(parameter logic [SCPAD_ID_WIDTH-1:0] IDX = '0) (scpad_if.spad_tail tif);
+
+module tail #(parameter logic [scpad_pkg::SCPAD_ID_WIDTH-1:0] IDX = '0) (scpad_if.spad_tail tif);
+
+    import scpad_pkg::*;
 
     sel_res_t res_q;
 

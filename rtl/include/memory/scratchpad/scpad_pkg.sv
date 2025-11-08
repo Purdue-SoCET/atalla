@@ -125,7 +125,7 @@ package scpad_pkg;
     typedef struct packed {
         logic valid;
         logic write; 
-        logic [SCPAD_ADDR_WIDTH-1:0] addr;
+        logic [SCPAD_ADDR_WIDTH-1:0] spad_addr;
         logic [MAX_DIM_WIDTH-1:0] num_rows;
         logic [MAX_DIM_WIDTH-1:0] num_cols;
         logic [MAX_DIM_WIDTH-1:0] row_id;
@@ -157,6 +157,19 @@ package scpad_pkg;
         scpad_data_t rdata;
     } sel_res_t;
 
+    // Swizzle Input
+    typedef struct packed {
+        logic row_or_col; 
+        logic [SCPAD_ADDR_WIDTH-1:0] spad_addr;
+        logic [MAX_DIM_WIDTH-1:0]    num_rows;
+        logic [MAX_DIM_WIDTH-1:0]    num_cols;
+        logic [MAX_DIM_WIDTH-1:0]    row_id;
+        logic [MAX_DIM_WIDTH-1:0]    num_rocol_idws;
+    } swizz_req_t;
+
+    typedef struct packed {
+        xbar_desc_t xbar_desc;
+    } swizz_res_t;
 
 endpackage
 

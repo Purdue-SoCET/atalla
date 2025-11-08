@@ -9,9 +9,8 @@ import xbar_pkg::*;
 module batcher #(
     parameter int SIZE = `BATCHER_SIZE,
     parameter int DWIDTH = `BATCHER_DWIDTH,
-
     parameter int TAGWIDTH = $clog2(SIZE),
-    parameter int STAGES   = (TAGWIDTH * (TAGWIDTH + 1)) / 2,
+    parameter int STAGES = (TAGWIDTH * (TAGWIDTH + 1)) / 2,
 
     parameter logic [STAGES-2:0] REGISTER_MASK = `BATCHER_REGISTER_MASK
 ) (xbar_if.xbar xif);
@@ -19,7 +18,7 @@ module batcher #(
     logic [TAGWIDTH-1:0] shift_in [1:STAGES][SIZE];
     logic [DWIDTH-1:0] data_in  [1:STAGES][SIZE];
     logic [TAGWIDTH-1:0] shift_out [1:STAGES][SIZE];
-    logic [DWIDTH-1:0] data_out  [1:STAGES][SIZE];
+    logic [DWIDTH-1:0] data_out [1:STAGES][SIZE];
 
 	logic [TAGWIDTH-1:0] shift_latch [1:STAGES][SIZE]; 
 	logic [DWIDTH-1:0] data_latch [1:STAGES][SIZE]; 
@@ -44,10 +43,10 @@ module batcher #(
             end
         end
     end
+    
 
     generate
         genvar ii, s;
-
         for (ii = 0; ii < SIZE; ii++) begin
             assign data_in[1][ii] = xif.in[ii].din;
             assign shift_in[1][ii] = xif.in[ii].shift;

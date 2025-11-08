@@ -44,6 +44,12 @@ module sram_write_latch ( // UUID now needs to have 3 lower bits for an offest s
         sr_wr_l.sram_write_req_latched = 1'b0;
         sr_wr_l.sram_write_req = 0;
 
+        if((sr_wr_l.be_stall == 1'b0) && (sram_write_latch.valid == 1'b1)) begin
+            sr_wr_l.sram_write_req = sram_write_latch;
+            sr_wr_l.sram_write_req_latched = 1'b1;
+            nxt_sram_write_latch = 0;
+        end
+
         if(sr_wr_l.dram_res_valid) begin
             nxt_sram_write_latch.valid = ((request_completed_counter) == sr_wr_l.num_request) ? 1'b1 : 1'b0;
             if(sr_wr_l.dram_id[2:0] == 3'b000) begin
@@ -71,12 +77,6 @@ module sram_write_latch ( // UUID now needs to have 3 lower bits for an offest s
                 nxt_request_completed_counter = 0;
             end
         end
-
-        if((sr_wr_l.be_stall == 1'b0) && (sram_write_latch.valid == 1'b1)) begin
-            sr_wr_l.sram_write_req = sram_write_latch;
-            sr_wr_l.sram_write_req_latched = 1'b1;
-        end
-
         
     end
 

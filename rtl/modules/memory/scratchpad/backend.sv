@@ -21,10 +21,9 @@ module backend #(parameter logic [scpad_pkg::SCPAD_ID_WIDTH-1:0] IDX = '0) (
     logic [DRAM_VECTOR_MASK-1:0] dram_vector_mask;
     logic nxt_sched_res_valid;
     logic initial_request_done, nxt_initial_request_done;
-    
 
     always_ff @(posedge bshif.clk, negedge bshif.n_rst ) begin
-        if(!bshif.n_rst) begin
+        if(!bshif.n_rst || bshif.sched_res[IDX].valid) begin
             uuid <= 'b0;
             sub_uuid <= 'b0;
             bshif.sched_res[IDX].valid <= 'b0;
@@ -46,7 +45,7 @@ module backend #(parameter logic [scpad_pkg::SCPAD_ID_WIDTH-1:0] IDX = '0) (
 
     swizzle swizzle_metadata(baddr);
     assign baddr.row_or_col = 1'b1; // Should always be 1'b1;
-    assign baddr.spad_addr = {bshif.sched_req[IDX].spad_addr[19:5], 5'b00000}; // ignore lower 5 bits
+    assign baddr.spad_addr = {bshif.sched_req[IDX].spad_addr[19:5], 5'b00000}; // ignore lower 5 bits, as spad moves 32 addresses per row, always.
     assign baddr.num_rows = bshif.sched_req[IDX].num_rows;
     assign baddr.num_cols = bshif.sched_req[IDX].num_cols;
     assign baddr.row_id = be_id;  // no matter which orientation we are in the      
@@ -92,7 +91,7 @@ module backend #(parameter logic [scpad_pkg::SCPAD_ID_WIDTH-1:0] IDX = '0) (
         be_id = bdrif.dram_be_res[IDX].id[7:3];
         bbif.be_req[IDX].valid = 1'b0;
         bbif.be_req[IDX].write = 1'b0;
-        bbif.be_req[IDX].addr = 0;
+        bbif.be_req[IDX].spad_addr = 0;
         bbif.be_req[IDX].num_rows = 0;
         bbif.be_req[IDX].num_cols = 0;
         bbif.be_req[IDX].row_id = 0;
@@ -104,7 +103,7 @@ module backend #(parameter logic [scpad_pkg::SCPAD_ID_WIDTH-1:0] IDX = '0) (
         nxt_initial_request_done = initial_request_done; 
         
         
-        if(bshif.sched_req[IDX].num_cols > 27) begin // need to determine num_packets so we can invalidate unneeded ones. Will always do 8 burst though
+        if(bshif.sched_req[IDX].num_cols > 27) begin // need to determine num_packets so we can invalidate unneeded ones.
             num_request = 7;
         end else if(bshif.sched_req[IDX].num_cols > 23) begin
             num_request = 6;
@@ -138,17 +137,20 @@ module backend #(parameter logic [scpad_pkg::SCPAD_ID_WIDTH-1:0] IDX = '0) (
         be_dr_req_q.sub_id = sub_uuid;
 
 
-        
+        // This causes questasim to never stop
         be_dr_req_q.sram_rdata = bbif.be_res[IDX].rdata;
         be_dr_req_q.sram_res_valid = bbif.be_res[IDX].valid;
+
+        // be_dr_req_q.sram_rdata = 0;
+        // be_dr_req_q.sram_res_valid = 0;
         
 
         if(sub_uuid == num_request) begin  // if you want to add exactly the amount of dram_vector_mask with no padding
-            if((bshif.sched_req[IDX].num_cols[1:0] & 2'b11) == 2'b00) begin
+            if(bshif.sched_req[IDX].num_cols[1:0] == 2'b00) begin
                 dram_vector_mask = 4'b0001;
-            end else if((bshif.sched_req[IDX].num_cols[1:0] & 2'b11) == 2'b01) begin
+            end else if(bshif.sched_req[IDX].num_cols[1:0] == 2'b01) begin
                 dram_vector_mask = 4'b0011;
-            end else if((bshif.sched_req[IDX].num_cols[1:0] & 2'b11) == 2'b10) begin
+            end else if(bshif.sched_req[IDX].num_cols[1:0] == 2'b10) begin
                 dram_vector_mask = 4'b0111;
             end
         end
@@ -168,7 +170,7 @@ module backend #(parameter logic [scpad_pkg::SCPAD_ID_WIDTH-1:0] IDX = '0) (
         if(sr_wr_l.sram_write_req_latched == 1'b1) begin // be_stall is checked in sram latch 
             bbif.be_req[IDX].valid = sr_wr_l.sram_write_req.valid;
             bbif.be_req[IDX].write = 1'b1;
-            bbif.be_req[IDX].addr = sr_wr_l.sram_write_req.spad_addr;
+            bbif.be_req[IDX].spad_addr = sr_wr_l.sram_write_req.spad_addr;
             bbif.be_req[IDX].wdata = sr_wr_l.sram_write_req.wdata;
             bbif.be_req[IDX].xbar = sr_wr_l.sram_write_req.xbar;
             nxt_schedule_request_counter = schedule_request_counter + 1;
@@ -188,7 +190,7 @@ module backend #(parameter logic [scpad_pkg::SCPAD_ID_WIDTH-1:0] IDX = '0) (
             if(bbif.be_stall[IDX] == 1'b0) begin
                 bbif.be_req[IDX].valid = 1'b1 && !initial_request_done;
                 bbif.be_req[IDX].write = 1'b0;
-                bbif.be_req[IDX].addr = {bshif.sched_req[IDX].spad_addr[19:5] + uuid, 5'b00000};
+                bbif.be_req[IDX].spad_addr = {bshif.sched_req[IDX].spad_addr[19:5] + uuid, 5'b00000};
                 bbif.be_req[IDX].num_rows = bshif.sched_req[IDX].num_rows;
                 bbif.be_req[IDX].num_cols = bshif.sched_req[IDX].num_cols;
                 bbif.be_req[IDX].row_id = uuid;
@@ -214,7 +216,6 @@ module backend #(parameter logic [scpad_pkg::SCPAD_ID_WIDTH-1:0] IDX = '0) (
             bdrif.be_dram_req[IDX].dram_vector_mask = dr_wr_l.dram_write_req.dram_vector_mask;
             bdrif.be_dram_req[IDX].wdata = dr_wr_l.dram_write_req.wdata;
             bdrif.be_dram_stall[IDX] = 0; // backend won't have to stall dram in a scpad store. This is because there are no hazards created in backend that would necessitate pausing dram writes.
-
         end
 
         if(bshif.sched_req[IDX].valid && (schedule_request_counter == bshif.sched_req[IDX].num_rows) && ((dr_wr_l.dram_write_req_latched == 1'b1) || (sr_wr_l.sram_write_req_latched == 1'b1))) begin

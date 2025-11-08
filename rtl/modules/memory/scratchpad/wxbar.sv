@@ -2,9 +2,9 @@
 
 `include "xbar_if.sv"
 
-import scpad_pkg::*;
+module wxbar #(parameter logic [scpad_pkg::SCPAD_ID_WIDTH-1:0] IDX = '0) (scpad_if.xbar_w wif); 
 
-module wxbar #(parameter logic [SCPAD_ID_WIDTH-1:0] IDX = '0) (scpad_if.xbar_w wif); 
+    import scpad_pkg::*;
 
     typedef struct packed {
         logic valid;
