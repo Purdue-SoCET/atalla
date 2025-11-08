@@ -1,13 +1,13 @@
-module cbg_benes #(
+module cabbage #(
     parameter int SIZE = 32,
     localparam int TAGWIDTH = $clog2(SIZE),
     localparam int STAGES = (2 * TAGWIDTH) - 1, 
     localparam int BITWIDTH = STAGES * (SIZE >> 1)
 ) (
+    input clk, n_rst, 
     input logic [TAGWIDTH-1:0] perm [SIZE-1:0],
     output logic [BITWIDTH-1:0] ctrl
 );
-    // SIGNALS FOR N=32 
 
     logic [TAGWIDTH-1:0] range32  [SIZE-1:0];
     logic [TAGWIDTH-1:0] p     [TAGWIDTH-1:0] [SIZE-1:0];

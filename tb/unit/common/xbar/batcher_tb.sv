@@ -7,8 +7,6 @@ module batcher_tb;
 
   import xbar_pkg::*;
 
-  // Don't change for this testbench. REGISTER_MASKs can only get used for SIZE = 32. 
-  // Read xbar_pkg.sv notes, if you want to understand more. 
   localparam int SIZE = 32; 
 
   localparam int DWIDTH = 16;
@@ -73,6 +71,7 @@ module batcher_tb;
     errors = 0;
 
     xif.en = 1'b1;
+    
     // Steam all stages and fill up. 
     for (int t = 0; t < N_REQS; t++) begin
       // Retire after pipeline fills
