@@ -20,6 +20,7 @@ module cache_mshr_buffer (
     assign next_uuid = (uuid == UUID_MAX) ? 8'd0 : (uuid + 1);
 
     always_comb begin
+        uuid_out = '0;
         mshr_new_miss.valid = miss;
         if ((secondary_misses == 0) && miss) begin
             mshr_new_miss.uuid = next_uuid;

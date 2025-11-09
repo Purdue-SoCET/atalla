@@ -53,6 +53,7 @@ class lfc_ram_active_driver extends uvm_driver#(lfc_ram_transaction);
     if (!uvm_config_db#(virtual lfc_if)::get(this, "", "lfc_vif", vif)) begin
       `uvm_fatal("Driver", "No virtual interface specified for this test instance");
     end
+    m_ram = new(); // create RAM model   
   endfunction
 
   task DUT_reset();
