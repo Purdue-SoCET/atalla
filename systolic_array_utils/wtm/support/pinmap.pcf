@@ -1,0 +1,134 @@
+# ECE270 breakout board pinmap (rev 2)
+
+set_io --warn-no-port hwclk J3
+
+set_io --warn-no-port pb[20] A11
+
+set_io --warn-no-port pb[19] A10
+set_io --warn-no-port pb[18] C9
+set_io --warn-no-port pb[17] A9
+set_io --warn-no-port pb[16] B9
+
+set_io --warn-no-port pb[15] B8
+set_io --warn-no-port pb[14] A7
+set_io --warn-no-port pb[13] B7
+set_io --warn-no-port pb[12] C7
+
+set_io --warn-no-port pb[11] A6
+set_io --warn-no-port pb[10] C6
+set_io --warn-no-port pb[9] B6
+set_io --warn-no-port pb[8] A5
+
+set_io --warn-no-port pb[7] B5
+set_io --warn-no-port pb[6] B4
+set_io --warn-no-port pb[5] A2
+set_io --warn-no-port pb[4] A1
+
+set_io --warn-no-port pb[3] C5
+set_io --warn-no-port pb[2] C4
+set_io --warn-no-port pb[1] B3
+set_io --warn-no-port pb[0] C3
+
+set_io --warn-no-port ss0[0] D2 # A
+set_io --warn-no-port ss0[1] C1 # B
+set_io --warn-no-port ss0[2] C2 # C
+set_io --warn-no-port ss0[3] F2 # D
+set_io --warn-no-port ss0[4] G1 # E
+set_io --warn-no-port ss0[5] E2 # F
+set_io --warn-no-port ss0[6] F1 # G
+set_io --warn-no-port ss0[7] B1 # DP
+
+set_io --warn-no-port ss1[0] J2 # A
+set_io --warn-no-port ss1[1] J1 # B
+set_io --warn-no-port ss1[2] H2 # C
+set_io --warn-no-port ss1[3] M1 # D
+set_io --warn-no-port ss1[4] L3 # E
+set_io --warn-no-port ss1[5] L1 # F
+set_io --warn-no-port ss1[6] K3 # G
+set_io --warn-no-port ss1[7] G2 # DP
+
+set_io --warn-no-port ss2[0] P1 # A
+set_io --warn-no-port ss2[1] P2 # B
+set_io --warn-no-port ss2[2] N3 # C
+set_io --warn-no-port ss2[3] T14 # D
+set_io --warn-no-port ss2[4] T15 # E
+set_io --warn-no-port ss2[5] T16 # F
+set_io --warn-no-port ss2[6] R16 # G
+set_io --warn-no-port ss2[7] N2 # DP
+
+set_io --warn-no-port ss3[0] N10 # A
+set_io --warn-no-port ss3[1] M11 # B
+set_io --warn-no-port ss3[2] N12 # C
+set_io --warn-no-port ss3[3] P9 # D
+set_io --warn-no-port ss3[4] T10 # E
+set_io --warn-no-port ss3[5] R10 # F
+set_io --warn-no-port ss3[6] T11 # G
+set_io --warn-no-port ss3[7] P13 # DP
+
+set_io --warn-no-port ss4[0] T6 # A
+set_io --warn-no-port ss4[1] R6 # B
+set_io --warn-no-port ss4[2] T7 # C
+set_io --warn-no-port ss4[3] T3 # D
+set_io --warn-no-port ss4[4] R3 # E
+set_io --warn-no-port ss4[5] R4 # F
+set_io --warn-no-port ss4[6] T5 # G
+set_io --warn-no-port ss4[7] T8 # DP
+
+set_io --warn-no-port ss5[0] R15 # A
+set_io --warn-no-port ss5[1] T1 # B
+set_io --warn-no-port ss5[2] T2 # C
+set_io --warn-no-port ss5[3] L16 # D
+set_io --warn-no-port ss5[4] N16 # E
+set_io --warn-no-port ss5[5] M15 # F
+set_io --warn-no-port ss5[6] P16 # G
+set_io --warn-no-port ss5[7] B11 # DP
+
+set_io --warn-no-port ss6[0] K14 # A
+set_io --warn-no-port ss6[1] J14 # B
+set_io --warn-no-port ss6[2] K15 # C
+set_io --warn-no-port ss6[3] G15 # D
+set_io --warn-no-port ss6[4] J15 # E
+set_io --warn-no-port ss6[5] H14 # F
+set_io --warn-no-port ss6[6] G14 # G
+set_io --warn-no-port ss6[7] K16 # DP
+
+set_io --warn-no-port ss7[0] F16 # A
+set_io --warn-no-port ss7[1] E14 # B
+set_io --warn-no-port ss7[2] G16 # C
+set_io --warn-no-port ss7[3] B16 # D
+set_io --warn-no-port ss7[4] D16 # E
+set_io --warn-no-port ss7[5] D14 # F
+set_io --warn-no-port ss7[6] E16 # G
+set_io --warn-no-port ss7[7] F15 # DP
+
+set_io --warn-no-port left[7] C16
+set_io --warn-no-port left[6] D15
+set_io --warn-no-port left[5] H16
+set_io --warn-no-port left[4] F14
+set_io --warn-no-port left[3] M16
+set_io --warn-no-port left[2] P15
+set_io --warn-no-port left[1] R2
+set_io --warn-no-port left[0] R5
+
+set_io --warn-no-port right[7] P10
+set_io --warn-no-port right[6] T13
+set_io --warn-no-port right[5] R1
+set_io --warn-no-port right[4] M2
+set_io --warn-no-port right[3] K1
+set_io --warn-no-port right[2] H1
+set_io --warn-no-port right[1] D1
+set_io --warn-no-port right[0] B2
+
+set_io --warn-no-port red P8
+set_io --warn-no-port green T9
+set_io --warn-no-port blue R9
+
+# Pins for the serial interface.
+# Necessarily using these for ECE 270
+set_io Rx B10
+set_io Tx B12
+#set_io DSRn B14
+#set_io RTSn B13
+set_io DCDn B15
+set_io CTSn A15
+#set_io DTRn A16

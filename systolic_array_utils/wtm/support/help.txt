@@ -1,0 +1,35 @@
++-------------------+---------------------------+-----------------------------------------------------------------------------------------------+
+|      FUNCTION     |         USE CASE          |       EXPLANATION                                                                             |
++-------------------+---------------------------+-----------------------------------------------------------------------------------------------+
+|     make cram     |    quick FPGA testing     |Programs the volatile configuration RAM in the FPGA. Program is lost when FPGA loses power.    |
++-------------------+---------------------------+-----------------------------------------------------------------------------------------------+
+|    make flash     |permenant FPGA programming |Programs the non-volatile flash chip on the FPGA board. Program is not lost with loss of power.|
++-------------------+---------------------------+-----------------------------------------------------------------------------------------------+
+|make sim_<name>_src|  behavioral verification  |Compiles (but does not synthesize!) your code and runs your testbench.                         |
++-------------------+---------------------------+-----------------------------------------------------------------------------------------------+
+|make sim_<name>_syn| cell-level verification   |Compiles and synthesizes your your code and runs your testbench on the synthesized design.     |
++-------------------+---------------------------+-----------------------------------------------------------------------------------------------+
+| make vlint_<name> | check for errors in code  |Compiles your code ONLY                                                                        |
++-------------------+---------------------------+-----------------------------------------------------------------------------------------------+
+|     make time     | check timing of top-level |Compiles, synthesizes, and checks timing of your FPGA top-level code                           |
++-------------------+---------------------------+-----------------------------------------------------------------------------------------------+
+|    make cells     |    schematic display      |Displays a schematic of the modules/gates that make up the top level of your design.           |
++-------------------+---------------------------+-----------------------------------------------------------------------------------------------+
+| make cells_<mod>  |    schematic display      |Displays a schematic of the logic gates and flip-flops for module <mod>         .              |
++-------------------+---------------------------+-----------------------------------------------------------------------------------------------+
+|  make fpga-cells  | syn'ed schematic display  |Displays a schematic of the ice40-specific LUTs and flip-flops that make up your design.       |
++-------------------+---------------------------+-----------------------------------------------------------------------------------------------+
+|    make clean     |remove all temporary files|Removes all logs and temporary files. Does not need to be used under normal circumstances       |
++-------------------+--------------------------+------------------------------------------------------------------------------------------------+
+Replace <name>/<mod> with the name of your module.
+
+Required naming convention:
+If the source module's name is "test":
+Source file name: test.sv (must be in "source" folder)
+Testbench file name: test_tb.sv (must be in "testbench" folder)
+Dump file name: test.vcd (specified in your testbench code)
+
+Example usage:
+To compile code and check for syntax errors: make vlint_test
+To testbench and see waveforms: make sim_test_src
+To compile, synthesize, and program your top level to FPGA: make cram (the top file must be called top.sv)

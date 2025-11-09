@@ -1,0 +1,22 @@
+Flowtool
+Copyright 2016 Cadence Design Systems Inc.  All rights reserved worldwide
+
+Command:   -reset -to synthesis
+Directory: /home/asicfab/a/pan453/tensor-core/systolic_array_utils/wtm
+Script:    run_flow.tcl
+Version:   v21.12-s019_1, built 12/20/2022 05:13 PST
+Date:      Sun Nov 02 14:38:04 2025
+
+ERROR: ERROR: read_flow filename not found: /home/asicfab/a/pan453/tensor-core/systolic_array_utils/wtm/run_flow.tcl
+    while executing
+"error "ERROR: read_flow filename not found: $file""
+    (procedure "::flowkit::generic.read_flow" line 13)
+    invoked from within
+"::flowkit::generic.read_flow $debug $no_check $script_files"
+    (procedure "parse_argv" line 486)
+    invoked from within
+"parse_argv $argv"
+    (procedure "main" line 29)
+    invoked from within
+"main {*}$args"
+Flow failed
