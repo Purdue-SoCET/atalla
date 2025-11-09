@@ -21,7 +21,7 @@ module sysarr_control_unit(
     logic [$clog2(N)-1:0] curr_input_row;   // current input row to check
     logic partial_loading;      // only continue with execution if partial row is loaded
     logic [$clog2(N)-1:0] curr_partial_row; // current partial row to check
-    logic output_loading;       // an iteration is creating the output 
+    logic output_loading;       // we are creating the output 
     logic [N-1:0] in_data_loaded;       // registers for saving what input rows we have loaded so far
     logic [N-1:0] ps_data_loaded;       // registers for saving what partials rows we have loaded so far
     logic [N-1:0] nxt_in_data_loaded;
@@ -35,6 +35,7 @@ module sysarr_control_unit(
     logic MAC_ready;
     logic nxt_MAC_ready;
     integer a,b,f,i,j,k,l,m,n;
+    // we have space for another instruction to start loading in inputs 
     assign cu.iteration = iteration;
 
     always_comb begin : input_buses // if we are receiving inputs tell the fifos where to load them :D
@@ -73,6 +74,7 @@ module sysarr_control_unit(
         end 
     end
     
+    // check control unit draw.io
     always_comb begin
         nxt_iteration = iteration;
         nxt_iteration_full = iteration_full;
@@ -84,8 +86,9 @@ module sysarr_control_unit(
                 end
             end
         end
+        // needs to be much more complicated
         for (j = 0; j < 3; j++)begin // iteration counting logic
-            if (nxt_iteration_full[j] && nxt_MAC_start)begin // increment if there is an iteration counter in this slot and a mac cycle is about to start
+            if (nxt_iteration_full[j] && nxt_MAC_start)begin // if there is an iteration counter in this slot and a mac cycle is about to start
                 nxt_iteration[j] = iteration[j] + 1;
                 if (iteration[j] == 3*N-1) begin // this iteration is done
                     nxt_iteration[j] = 0;
@@ -103,12 +106,14 @@ module sysarr_control_unit(
         cu.MAC_shift = '0;
         for (f = 0; f < N; f++)begin
             for (a = 0; a < 3; a++) begin
-                if (iteration_full[a] && ((f < iteration[a]) && (f + N >= iteration[a])))begin // input needs shifting
+                if (iteration_full[a] && ((f < iteration[a]) && (f + N >= iteration[a])))begin
+                    //5,8 0 6,9 1 7,10 2 8,11 3 iteration_start,iteration_end, f
                     cu.in_fifo_shift[f] = nxt_MAC_start;
                 end
             end
+            // if (output_loading) begin  // shift each  fifo n times
             for (b = 0; b < 3; b++) begin
-                if (iteration_full[b] && ((f + N < iteration[b]) && (f + 2 * N >= iteration[b])))begin // ps needs shifting
+                if (iteration_full[b] && ((f + N < iteration[b]) && (f + 2 * N >= iteration[b])))begin
                     cu.ps_fifo_shift[f] = nxt_MAC_start;
                 end
             end
@@ -192,8 +197,7 @@ module sysarr_control_unit(
             end
         end
         for (m = 0; m < 3; m++)begin
-            // if (iteration_full[m] && iteration[m] <= (2 * N - 1) && iteration[m] > N)begin
-            if (iteration_full[m] && iteration[m] <= 2 * N  && iteration[m] > N)begin
+            if (iteration_full[m] && iteration[m] <= 2 * N && iteration[m] > N)begin
                 partial_loading = 1'b1;
                 /* verilator lint_off WIDTHTRUNC */
                 curr_partial_row = iteration[m] - (N + 1);
@@ -209,14 +213,8 @@ module sysarr_control_unit(
         end
     end
     // tells the memory subsystem if the input fifo has space for another gemm
-    // LIMITATION: does not work unless we have separate input and partial sum fifo_has_spaces
-    // always_comb begin
-    //     cu.fifo_has_space = '0;
-    //     if (input_loading == 1'b0 && (iteration_full[0] + iteration_full[1] + iteration_full[2]) < 3)begin
-    //         cu.fifo_has_space = 1'b1;
-    //     end
-    // end
-    assign cu.fifo_has_space = input_loading == 1'b0 && partial_loading == 1'b0;
+    // if any iteration slot is still in the backend of the fifos then there is no space
+    assign cu.fifo_has_space = input_loading == 1'b0 & partial_loading == 1'b0;
     logic fulll /*verilator public*/;
     always_comb begin
         nxt_MAC_start = 1'b0;

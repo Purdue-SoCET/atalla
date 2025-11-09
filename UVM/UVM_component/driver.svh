@@ -39,11 +39,67 @@ class driver extends uvm_driver#(transaction);
       vif.array_in         <= '0;
       vif.array_in_partials<= '0;
       repeat(4)@(posedge vif.clk); // for reset logic
+/*
+      vif.array_in         <= 64'd114514;
+      vif.array_in_partials<= 64'd114514;
+      vif.input_en         <= 0;
+      vif.partial_en       <= 0;
+      vif.row_in_en        <= 2'd3;
+      vif.row_ps_en        <= '0;
+      vif.weight_en        <= 1;
+      @(posedge vif.clk);
+      vif.row_in_en        <= 2'd2;
+      @(posedge vif.clk);
+      vif.row_in_en        <= 2'd1;
+      @(posedge vif.clk);
+      vif.row_in_en        <= 2'd0;
+      @(posedge vif.clk);
+      vif.array_in         <= 64'd1919;
+      vif.input_en         <= 1;
+      vif.partial_en       <= 1;
+      vif.weight_en        <= 0;
+      vif.row_in_en        <= 2'd0;
+      vif.row_ps_en        <= 2'd0;
+      @(posedge vif.clk);
+      vif.input_en         <= 0;
+      vif.partial_en       <= 0;
+      vif.row_in_en        <= 2'd0;
+      vif.row_ps_en        <= 2'd0;
+      @(posedge vif.clk);
+      vif.input_en         <= 1;
+      vif.partial_en       <= 1;
+      vif.row_in_en        <= 2'd1;
+      vif.row_ps_en        <= 2'd1;
+      @(posedge vif.clk);
+      vif.input_en         <= 0;
+      vif.partial_en       <= 0;
+      vif.row_in_en        <= 2'd0;
+      vif.row_ps_en        <= 2'd0;
+      @(posedge vif.clk);
+      vif.input_en         <= 1;
+      vif.partial_en       <= 1;
+      vif.row_in_en        <= 2'd2;
+      vif.row_ps_en        <= 2'd2;
+      @(posedge vif.clk);
+      vif.input_en         <= 0;
+      vif.partial_en       <= 0;
+      vif.row_in_en        <= 2'd0;
+      vif.row_ps_en        <= 2'd0;
+      @(posedge vif.clk);
+      vif.input_en         <= 1;
+      vif.partial_en       <= 1;
+      vif.row_in_en        <= 2'd3;
+      vif.row_ps_en        <= 2'd3;
+      @(posedge vif.clk);
+      vif.input_en         <= 0;
+      vif.partial_en       <= 0;
+      vif.row_in_en        <= 2'd0;
+      vif.row_ps_en        <= 2'd0;
+*/
 
       foreach (req_item.plan[i]) begin
         transaction_elem e = req_item.plan[i];
         repeat (e.pre_idle_cycles)
-        @(posedge vif.clk);
         @(posedge vif.clk);
 
         if(req_item.phase_kind == PH_INPUT) begin
@@ -60,6 +116,14 @@ class driver extends uvm_driver#(transaction);
             vif.array_in_partials  <= e.data; 
             vif.input_en  <= 1;
             vif.partial_en<= 1;
+        end else begin
+            vif.weight_en <= 0;
+            vif.row_in_en <= 0;
+            vif.row_ps_en <= 0;
+            vif.array_in  <= 1; 
+            vif.array_in_partials  <= 0; 
+            vif.input_en  <= 0;
+            vif.partial_en<= 0;
         end
 
       @(posedge vif.clk);
@@ -69,9 +133,10 @@ class driver extends uvm_driver#(transaction);
 
       end
 
-      repeat(30)@(posedge vif.clk);
+      repeat(5)@(posedge vif.clk);
       seq_item_port.item_done();
 end
+  repeat(30)@(posedge vif.clk);
   endtask: run_phase
 
 endclass: driver

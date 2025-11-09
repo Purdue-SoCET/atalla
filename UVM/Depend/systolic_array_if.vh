@@ -31,6 +31,33 @@ interface systolic_array_if(input logic clk);
     input drained, fifo_has_space, row_out, array_output, out_en,
     output weight_en, input_en, partial_en, row_in_en, row_ps_en, array_in, array_in_partials
   );
-endinterface
 
+  property p_weight_en_hold_32;
+    @(posedge clk)
+      $rose(weight_en) |-> weight_en[*32];
+  endproperty
+  assert property (p_weight_en_hold_32)
+    $display("SVA pass: weight_en length");
+  else
+    $error("SVA fail: weight_en length");
+
+  property p_partial_en_hold_32;
+    @(posedge clk)
+      $rose(partial_en) |-> partial_en[*32];
+  endproperty
+  assert property (p_partial_en_hold_32)
+    $display("SVA pass: partial_en length");
+  else
+    $error("SVA fail: partial_en length");
+
+  property p_partial_to_out_within_2000;
+    @(posedge clk)
+      $rose(partial_en) |-> ##[1:2000] out_en;
+  endproperty
+  assert property (p_partial_to_out_within_2000)
+    $display("SVA pass: deteced the output");
+  else
+    $error("SVA fail: deteced the output");
+
+endinterface
 `endif

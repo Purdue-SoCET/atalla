@@ -50,7 +50,7 @@ class transaction extends uvm_sequence_item;
 
   function void build_plan();
     plan.delete();
-    for (int a=0; a<=sys_arr_pkg::SIZE; a++) begin
+    for (int a=0; a<sys_arr_pkg::SIZE; a++) begin
       transaction_elem e = transaction_elem::type_id::create($sformatf("elem_addr%0d", a));
       e.en = 1;
       e.addr = a;
@@ -60,13 +60,15 @@ class transaction extends uvm_sequence_item;
       plan.push_back(e);
     end
 
-    for (int k=0; k<int'(n_empty); k++) begin
-      transaction_elem z = transaction_elem::type_id::create($sformatf("elem_hole%0d", k));
-      z.en = 0;
-      z.addr = 0;
-      z.pre_idle_cycles = 0;
-      void'(z.randomize());
-      plan.push_back(z);
+    if(n_empty != 0)begin
+      for (int k=0; k<int'(n_empty); k++) begin
+        transaction_elem z = transaction_elem::type_id::create($sformatf("elem_hole%0d", k));
+        z.en = 0;
+        z.addr = 0;
+        z.pre_idle_cycles = 0;
+        void'(z.randomize());
+        plan.push_back(z);
+      end
     end
 
     if (out_of_order_flag) begin

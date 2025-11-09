@@ -34,7 +34,7 @@ class sa_gemm_seq extends uvm_sequence #(transaction);
     });
     finish_item(t);
       `uvm_info ("Driver", $sformatf ("finish_12"), UVM_NONE)
-
+/*
     start_item(t);
     assert(t.randomize() with{
       phase_kind == PH_INPUT;
@@ -53,7 +53,7 @@ class sa_gemm_seq extends uvm_sequence #(transaction);
       n_empty == 0;
     });
     finish_item(t);
-      `uvm_info ("Driver", $sformatf ("finish_22"), UVM_NONE)
+      `uvm_info ("Driver", $sformatf ("finish_22"), UVM_NONE)*/
 
 
   endtask

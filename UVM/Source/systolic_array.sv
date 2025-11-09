@@ -14,8 +14,6 @@ module systolic_array(
     input logic clk, nRST,
     systolic_array_if.memory_array memory
 );
-parameter DW = 16;
-parameter N = 4;
     // Input to systolic array
     logic [DW*N-1:0] top_input;
     // logic [DW*N-1:0] weights_input;
@@ -30,9 +28,8 @@ parameter N = 4;
     logic [DW-1:0] nxt_MAC_outputs [N-1:0][N-1:0];
     // Partial Sum adder inputs
     logic [DW-1:0] ps_add_inputs [N-1:0];
-    logic start;
-    logic nxt_start;
-    logic nxt_drained;
+    // Weight Registers
+    // logic [DW*N-1:0] weights [N-1:0];
 
     // Generate variables
     genvar /*i,*/j,l,m,n,o,p;
@@ -203,25 +200,11 @@ parameter N = 4;
     endgenerate
     // output time :D
     integer q;
-    always_ff @(posedge clk, negedge nRST) begin
-        if(nRST == 1'b0)begin
-            memory.drained <= 1'b1;
-            start <= 1'b1;
-        end else begin
-            memory.drained <= nxt_drained && (control_unit_if.MAC_value_ready || start);
-            start <= nxt_start;
-        end 
-    end
-    always_comb begin
-        nxt_start = start;
-        if (memory.input_en)begin
-            nxt_start = 1'b0;
-        end
-    end
+
     always_comb begin
         memory.out_en = 1'b0;
         memory.row_out = '0;
-        nxt_drained = 1'b1;
+        memory.drained = 1'b1;
         row_out = '0;
         memory.array_output = '0;
         for (q = 0; q < 3; q++)begin
@@ -234,7 +217,7 @@ parameter N = 4;
                 memory.array_output = current_out[row_out];
             end
             if (control_unit_if.iteration[q] > 0)begin
-                nxt_drained = 1'b0;
+                memory.drained = 1'b0;
             end
         end
     end
