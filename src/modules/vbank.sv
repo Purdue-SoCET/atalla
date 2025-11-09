@@ -2,7 +2,7 @@ module vbank #(
    parameter INDEX_WIDTH = 8,
    parameter NUM_ELEMENTS = 32,
    parameter DATA_WIDTH = 16,
-   parameter NUM_ROWS = 32
+   parameter NUM_ROWS = 64
 )(
   input  logic clk,
 

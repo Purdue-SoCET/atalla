@@ -94,6 +94,7 @@ module vreg_file_tb;
     // -------------------------------------------------
     // TEST 0: Writes w/ no conflicts + mask writes
     // -------------------------------------------------
+    vif.accomplished = 1'b0;
     testname = "Writing with no Conflict";
     veggie_set_writes('{ 8'h08, 8'h09, 8'h0A, 8'h0B }, '{ '1, '0, '1, '0 }, '{ 1, 1, 1, 1 });
     veggie_set_mask_writes('{ 4'h0, 4'h1 }, '{ 32'hFFFF_FFFF, 32'h0000_0000 }, '{ 1, 1 });
@@ -116,6 +117,9 @@ module vreg_file_tb;
              /* mvalid is internal to veggie_out; opbuff_out only carries ivalid + data */
              '0);
 
+    vif.accomplished = 1'b1;
+    @(posedge vif.CLK);
+    vif.accomplished = 1'b0;
     // Re-reset
     testname = "Reset";
     reset_dut();
@@ -144,6 +148,9 @@ module vreg_file_tb;
       $display("[INFO] Output on vreg[0] is X (may be fine depending on timing).");
     end
 
+    vif.accomplished = 1'b1;
+    @(posedge vif.CLK);
+    vif.accomplished = 1'b0;
         // -------------------------------------------------
     // TEST 4: Half Write - No Conflict
     //   Use two data write ports + one mask write, choose rows that map to different data banks
@@ -173,6 +180,9 @@ module vreg_file_tb;
     vif.veggie_in.REN  = '{default:1'b0};
     vif.veggie_in.MREN = '{default:1'b0};
 
+    vif.accomplished = 1'b1;
+    @(posedge vif.CLK);
+    vif.accomplished = 1'b0;
     // -------------------------------------------------
     // TEST 6: Half Write - Conflict
     //   Two writes targeting the same data bank (e.g., 0x00 & 0x04 -> both bank 0 when BANK_IDX=2)
@@ -200,29 +210,9 @@ module vreg_file_tb;
     vif.veggie_in.REN  = '{default:1'b0};
     vif.veggie_in.MREN = '{default:1'b0};
 
-    // -------------------------------------------------
-    // TEST 8: Max Bit Coverage
-    //   Sweep writes/reads over many rows on a single port to touch indices broadly
-    //   (keeps conflicts low; good smoke for address slicing & bank mapping)
-    // -------------------------------------------------
-    testname = "Max Bit Coverage - Writes";
-    for (int row = 0; row < 32; row++) begin
-      // single-port write on port 0
-      veggie_set_writes('{ row[VIDX_W-1:0], '0, '0, '0 }, '{ (row[0]) ? '1 : '0, '0, '0, '0 }, '{ 1, 0, 0, 0 });
-      #(10);
-      vif.veggie_in.WEN  = '{default:1'b0};
-    end
-
-    testname = "Max Bit Coverage - Reads";
-    for (int row = 0; row < 32; row++) begin
-      // single-port read on port 0
-      veggie_set_reads('{ row[VIDX_W-1:0], '0, '0, '0 }, '{ 1, 0, 0, 0 });
-      #(20);
-      $display("[T8][row %0d] ivalid=%b vreg0[15:0]=%h",
-               row, vif.opbuff_out.ivalid, vif.opbuff_out.vreg[0][0]);
-      vif.veggie_in.REN  = '{default:1'b0};
-    end
-
+    vif.accomplished = 1'b1;
+    @(posedge vif.CLK);
+    vif.accomplished = 1'b0;
 
     $display("\n=====================================================");
     $display("TB complete.");

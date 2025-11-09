@@ -18,7 +18,7 @@ module vreg_file (
     vif.opbuff_in.dvalid = vif.veggie_out.dvalid;
     vif.opbuff_in.vmask  = vif.veggie_out.vmask;
     vif.opbuff_in.mvalid = vif.veggie_out.mvalid;
-    vif.opbuff_in.ready  = vif.iready;
+    vif.opbuff_in.ready  = vif.veggie_out.ready;
 
     vif.vrf_ready        = vif.veggie_out.ready;
   end
@@ -26,6 +26,7 @@ module vreg_file (
   op_buffer u_op_buffer (
     .CLK (vif.CLK),
     .nRST(vif.nRST),
+    .accomplished(vif.accomplished),
     .vif (vif.op_buffer) 
   );
 

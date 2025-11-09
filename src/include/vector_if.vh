@@ -39,12 +39,13 @@ interface vector_if;
 
   // VRF Signals
   logic iready;               // consumer-ready into the buffer (driven by top)
-  logic vrf_ready;            // surfaced VRF ready (driven by wrapper from veggie_out.ready)
-/*
+  logic vrf_ready;            // surfaced VRF ready (driven by wrapper from veggie_out.ready)\
+  logic accomplished;        // indicates operation is complet
+
   // Lane Signals 
   lane_in_t lane_in;
   lane_out_t lane_out;
-  */
+
   // Mask Unit Signals
   masku_in_t masku_in;
   masku_out_t masku_out;
@@ -77,14 +78,15 @@ interface vector_if;
     output opbuff_out,
     output vrf_ready
   );
-  /*
+
   // Lane
   modport lane (
-    input logic CLK, nRST,
+    input CLK, nRST,
     input lane_in,
     output lane_out
   );  
 
+  /*
   modport seq_alu (
     input alut_in,
     output alut_out

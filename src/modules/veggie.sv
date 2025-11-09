@@ -100,7 +100,7 @@ module veggie #(
                 bank_mrpend_nxt = bank_mrreqs;
                 bank_mwpend_nxt = bank_mwreqs;
 
-                vif.veggie_out.ready = 1'b1;
+                vif.veggie_out.ready = 1'b1; //conflict;
                 //conflict = |{<<{bank_rpend_nxt, bank_wpend_nxt, bank_mrpend_nxt, bank_mwpend_nxt}};
                 state_nxt = (conflict) ? CONFLICT : READY;
             end

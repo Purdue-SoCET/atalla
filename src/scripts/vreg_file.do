@@ -5,7 +5,7 @@ add wave -noupdate /vreg_file_tb/vif/nRST
 add wave -noupdate /vreg_file_tb/#ublk#188361714#83/testname
 add wave -noupdate -expand -group I/O /vreg_file_tb/vif/veggie_in
 add wave -noupdate -expand -group I/O /vreg_file_tb/vif/veggie_out
-add wave -noupdate -expand -group I/O /vreg_file_tb/vif/opbuff_out
+add wave -noupdate -expand -group I/O -expand -subitemconfig {/vreg_file_tb/vif/opbuff_out.vreg -expand /vreg_file_tb/vif/opbuff_out.vmask -expand /vreg_file_tb/vif/opbuff_out.ivalid -expand} /vreg_file_tb/vif/opbuff_out
 add wave -noupdate -expand -group DBANK0 {/vreg_file_tb/dut/veggie/DATA_BANK_GEN[0]/DBANKi_db/mem}
 add wave -noupdate -expand -group MBANK0 {/vreg_file_tb/dut/veggie/MASK_BANK_GEN[0]/MBANKi_mb/mem}
 add wave -noupdate -expand -group {Conflict Mgmt} /vreg_file_tb/dut/veggie/vs_bnum
@@ -32,8 +32,17 @@ add wave -noupdate -expand -group {Conflict Mgmt} /vreg_file_tb/dut/veggie/read_
 add wave -noupdate -expand -group {Conflict Mgmt} /vreg_file_tb/dut/veggie/mread_grants
 add wave -noupdate -expand -group {Conflict Mgmt} /vreg_file_tb/dut/veggie/conflict
 add wave -noupdate -expand -group {Conflict Mgmt} /vreg_file_tb/dut/veggie/state
+add wave -noupdate -expand -group {OP Buff} /vreg_file_tb/dut/u_op_buffer/CLK
+add wave -noupdate -expand -group {OP Buff} /vreg_file_tb/dut/u_op_buffer/nRST
+add wave -noupdate -expand -group {OP Buff} /vreg_file_tb/dut/u_op_buffer/vmask_tmp
+add wave -noupdate -expand -group {OP Buff} /vreg_file_tb/dut/u_op_buffer/vreg_tmp
+add wave -noupdate -expand -group {OP Buff} /vreg_file_tb/dut/u_op_buffer/dready
+add wave -noupdate -expand -group {OP Buff} /vreg_file_tb/dut/u_op_buffer/mready
+add wave -noupdate /vreg_file_tb/dut/u_op_buffer/no_conflict
+add wave -noupdate /vreg_file_tb/dut/u_op_buffer/done
+add wave -noupdate /vreg_file_tb/dut/u_op_buffer/ivalid_pt
 TreeUpdate [SetDefaultTree]
-WaveRestoreCursors {{Cursor 1} {152 ns} 0}
+WaveRestoreCursors {{Cursor 1} {427 ns} 0}
 quietly wave cursor active 1
 configure wave -namecolwidth 150
 configure wave -valuecolwidth 100
@@ -49,4 +58,4 @@ configure wave -griddelta 40
 configure wave -timeline 0
 configure wave -timelineunits ns
 update
-WaveRestoreZoom {0 ns} {362 ns}
+WaveRestoreZoom {266 ns} {628 ns}

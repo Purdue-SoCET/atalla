@@ -13,6 +13,8 @@ package vector_pkg;
     parameter SLICE_ID_W = $clog2(SLICE_W);
     parameter VL_W = $clog2(VLMAX);
 
+    parameter LANE_ISSUE_BW = 2;
+
     // Other Parameters
     parameter NUM_ELEMENTS = 32;
     parameter ESZ = 16; // Element Size
@@ -83,8 +85,9 @@ package vector_pkg;
         logic [9:0] frac;
     } fp16_t; 
 
-    typedef fp16_t [SLICE_W-1:0] slice_t;
-    typedef fp16_t [VLMAX-1:0] vreg_t;
+    typedef fp16_t [SLICE_W-1:0] slice_vt;
+    typedef logic  [SLICE_W-1:0] slice_mt;
+    typedef fp16_t [VLMAX-1:0]   vreg_t;
 
     typedef enum logic [5:0] {
         VALU_ADD       = 6'h00,
@@ -205,6 +208,38 @@ package vector_pkg;
     } masku_out_t;
 
     // Lane Structs --------------------------------------------------------------------
+    typedef enum logic [2:0] {
+        ALU  = 3'b000,
+        EXP  = 3'b001,
+        SQRT = 3'b010,
+        MUL  = 3'b011,
+        DIV  = 3'b100
+    } fu_t;
+
+    typedef struct packed {
+        vsel_t vd;
+        logic mask;
+        sqrt_in_t sqrt_in;
+    } lane_sqrt_in_t;
+
+    typedef struct packed {
+        logic[LANE_ISSUE_BW-1:0] rm;
+        fu_t[LANE_ISSUE_BW-1:0] valid_in; // From SB theres valid data
+        fu_t[LANE_ISSUE_BW-1:0] ready_in; // From wb
+        slice_vt[LANE_ISSUE_BW-1:0] v1;
+        slice_vt[LANE_ISSUE_BW-1:0] v2; // VS and VI typed come broadcasted
+        vsel_t[LANE_ISSUE_BW-1:0] vd; // Pass through
+        slice_mt[LANE_ISSUE_BW-1:0] vmask; 
+        opcode_t[LANE_ISSUE_BW-1:0] vop; // change to umop
+    } lane_in_t;
+
+    typedef struct packed {
+        slice_vt result;
+        fu_t ready_o; // to SB
+        fu_t valid_o; // for WB buffer
+        fp16_t rval; // TO rtree for rm mode
+        vsel_t vd;
+    } lane_out_t;
     /*
     typedef enum logic [2:0] {
         ALLU = 3'b000,
@@ -212,7 +247,7 @@ package vector_pkg;
         SQRT = 3'b010,
         MUL  = 3'b011,
         DIV  = 3'b100
-    } ready_t;
+    } fu_t;
 
     typedef struct packed {
         logic vm; // vector mask en
@@ -230,7 +265,7 @@ package vector_pkg;
 
     typedef struct packed {
         slice_t result;
-        ready_t ready; // to SB
+        fu_t ready; // to SB
         fp16_t reduction; // TO rtree for rm mode
         lane_id_t lane_id;
         vsel_t vd;
