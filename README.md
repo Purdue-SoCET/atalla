@@ -1,6 +1,9 @@
 # UVM---Tensor-Core
 
 ## Current Status
+- !!!Use the <br>
+$make run <br>
+in the /UVM folder. <br>
 ✅ Systolic Array functionality verified. <br>
 ✅ Randomly transaction. <br>
 ✅ Basic UVM platform. <br>
