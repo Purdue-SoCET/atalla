@@ -5,7 +5,7 @@ class VectorRegisterFile:
     Each vector register is a list of 32 elements, with each element being 16 bits wide.
     Register v0 is hardwired to a vector of zeros.
     """
-    def __init__(self, num_regs=32, vec_len=32):
+    def __init__(self, num_regs=256, vec_len=16):
         """
         Initialize the vector register file.
         
