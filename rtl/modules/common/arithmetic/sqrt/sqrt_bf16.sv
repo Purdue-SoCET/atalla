@@ -2,46 +2,42 @@
 `include "sqrt_fp16_if.sv"
 
 /* 
-Fp16 sqaure root module.
+BF16 sqaure root module.
 Written by Jacob Walter
 
 Notes about design:
-Uses a piecewise linear algorithim and gaurentees 2 ULP
-14 cycles i think
+Uses a piecewise linear algorithim and gaurentees X ULP
+X Cycles
 all subnormal values are treated as 0
 complaint with IEE 754
 
-Lint/compile command: make lint folder=/common/arithmetic/sqrt_fp16
-Running tests (no gui): make test folder=/common/arithmetic/sqrt_fp16 tb_file=sqrt_fp16_tb.sv
-Running tests (gui): make test folder=/common/arithmetic/sqrt_fp16 tb_file=sqrt_fp16_tb.sv GUI=ON
+Lint/compile command: make lint folder=/common/arithmetic/sqrt
+Running tests (no gui): make test folder=/common/arithmetic/sqrt tb_file=sqrt_bf16_tb.sv
+Running tests (gui): make test folder=/common/arithmetic/sqrt tb_file=sqrt_bf16_tb.sv GUI=ON
 */
 
 
-
-module sqrt_fp16 (
-    input  logic        CLK,
-    input  logic        nRST,
+module sqrt_bf16 (
+    input logic         CLK,
+    input logic         nRST,
     sqrt_if.srif        srif
-);    
-    localparam logic [15:0] normal_slopes [0:15] = '{
-        16'h37FE, 16'h37AA, 16'h3773, 16'h373F,
-        16'h3711, 16'h36E3, 16'h36BB, 16'h369B,
-        16'h3679, 16'h3655, 16'h3634, 16'h3615,
-        16'h35FD, 16'h35E5, 16'h35C9, 16'h35AD
+);
+
+    localparam logic [15:0] slope_lut [0:7] = '{
+        16'h3EF8, 16'h3EEB, 16'h3EDF, 16'h3ED5,
+        16'h3ECC, 16'h3EC5, 16'h3EBE, 16'h3EB7
     };
-    
-    localparam logic [15:0] normal_intercepts [0:15] = '{
-        16'h3800, 16'h382C, 16'h384C, 16'h386B,
-        16'h3887, 16'h38A5, 16'h38C1, 16'h38D8,
-        16'h38F2, 16'h390E, 16'h3928, 16'h3943,
-        16'h3958, 16'h396E, 16'h3988, 16'h39A3
+
+    localparam logic [15:0] intercept_lut [0:7] = '{
+        16'h3F03, 16'h3F0B, 16'h3F12, 16'h3F19,
+        16'h3F1F, 16'h3F26, 16'h3F2C, 16'h3F32
     };
 
     import vector_pkg::*;
     localparam MULT_LATENCY = 3;
     localparam ADD_LATENCY = 2;
-    localparam EXP_W = 5;
-    localparam FRAC_W = 10;
+    localparam EXP_W = 8;
+    localparam FRAC_W = 7;
 
     //input signals for latching
     logic sign, sign_n;
@@ -63,8 +59,8 @@ module sqrt_fp16 (
     logic [15:0] third_mult_result;
     
     //exponent handling signals
-    logic [5:0] exp_biased_comb;
-    logic [5:0] exp_biased_reg;
+    logic [EXP_W:0] exp_biased_comb;
+    logic [EXP_W:0] exp_biased_reg;
 
     //critical path helpers
     logic [15:0] mul_out_reg;
@@ -94,16 +90,15 @@ module sqrt_fp16 (
             valid <= valid_n;
         end   
     end
-    
-    
+
     //input determination
     always_comb begin
         if (srif.in.valid_in & srif.out.ready_in) begin
             sign_n = srif.in.operand[15];
-            exp_n = srif.in.operand[14:10];
-            frac_n = srif.in.operand[9:0];
-            slope_n = normal_slopes[srif.in.operand[9:6]];
-            intercept_n = normal_intercepts[srif.in.operand[9:6]];
+            exp_n = srif.in.operand[14:7];
+            frac_n = srif.in.operand[6:0];
+            slope_n = normal_slopes[srif.in.operand[6:4]];
+            intercept_n = normal_intercepts[srif.in.operand[6:4]];
             valid_n = 'b1;
         end
         else begin
@@ -130,10 +125,9 @@ module sqrt_fp16 (
 
     assign srif.out.ready_in = ready_input_reg;
 
-    //multiplier logic
     logic [15:0] mul_a, mul_b, mul_out;
     logic mul_done, mul_start;
-    mul_fp16 mul1 (.clk(CLK), .nRST(nRST), .start(mul_start), .a(mul_a), .b(mul_b), .result(mul_out), .done(mul_done));
+    mul_bf16 mul1 (.clk(CLK), .nRST(nRST), .start(mul_start), .a(mul_a), .b(mul_b), .result(mul_out), .done(mul_done));
 
     //critical path helper, maybe can go unsure at the moment
     always_ff @(posedge CLK, negedge nRST) begin
@@ -161,7 +155,7 @@ module sqrt_fp16 (
         end
         else begin
             mul_start = valid;
-            mul_a = {1'b0, 5'd15, frac};
+            mul_a = {1'b0, 8'd127, frac};
             mul_b = slope;
         end
     end
@@ -169,17 +163,12 @@ module sqrt_fp16 (
     //adder logic
     logic [15:0] add_out;
     logic add_start;
-    
-    add_fp16 add1 (
-        .clk(CLK), 
-        .nRST(nRST), 
-        .start(add_start),
-        .fp1_in(mul_out_reg),
-        .fp2_in(intercept),
-        .fp_out(add_out)
-    );
-    
+
+    //BF16 ADDER GOES HERE
+
+
     assign add_start = mul_done_reg & !second_pass & !third_pass;
+
 
     // Register adder output, maybe can go
     always_ff @(posedge CLK, negedge nRST) begin
@@ -195,7 +184,7 @@ module sqrt_fp16 (
             adder_valid_shift <= '0;
         else
             adder_valid_shift <= {adder_valid_shift[ADD_LATENCY-2:0], add_start};
-    end
+    end     
 
     //pass logic
     always_ff @(posedge CLK or negedge nRST) begin
@@ -232,13 +221,13 @@ module sqrt_fp16 (
     end
 
     // exponent computation
-    logic signed [5:0] exp_unbiased;
-    logic signed [5:0] exp_half;
+    logic signed [EXP_W:0] exp_unbiased;
+    logic signed [EXP_W:0] exp_half;
 
     always_comb begin
-        exp_unbiased = exp - 6'd15;    
+        exp_unbiased = exp - 8'd127;    
         exp_half     = exp_unbiased >>> 1; 
-        exp_biased_comb = exp_half + 6'd15;
+        exp_biased_comb = exp_half + 8'd127;
     end
     
     // Register exp_biased at the end of second pass
@@ -284,12 +273,11 @@ module sqrt_fp16 (
         special_flag   = 1'b0;
         special_result = 16'h0000;
 
-        input_is_zero      = (exp == 5'b0)     && (frac == 10'b0);
+        input_is_zero      = (exp == 8'b0)     && (frac == 7'b0);
         input_is_neg_zero  = input_is_zero     &&  sign;
-        input_is_inf       = (exp == 5'b11111) && (frac == 10'b0);
-        input_is_nan       = (exp == 5'b11111) && (frac != 10'b0);
-        input_is_subnormal = (exp == 5'b0)     && (frac != 10'b0);
-
+        input_is_inf       = (exp == 8'b11111111) && (frac == 7'b0);
+        input_is_nan       = (exp == 8'b11111111) && (frac != 7'b0);
+        input_is_subnormal = (exp == 8'b0)     && (frac != 7'b0);
         if (input_is_neg_zero) begin
             special_flag   = 1'b1;
             special_result = 16'h8000;
@@ -353,5 +341,4 @@ module sqrt_fp16 (
     //final output
     assign srif.out.valid_out = output_held || valid_data_out_internal;
     assign srif.out.result = output_held ? output_held_val : result_internal;
-
 endmodule
