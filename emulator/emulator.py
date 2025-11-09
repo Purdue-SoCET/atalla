@@ -129,14 +129,14 @@ def main():
         print(f"[DECODE] {decoded_inst}")
 
         # 5. Execute
-        execute(decoded_inst, regs)
+        execute(decoded_inst, sregs)
 
         # 6. Advance Program Counter
         pc += 4  # Move to the next 4-byte instruction
 
     # Dump scalar regs to output file
     out_regs_file = "output_regs.txt"
-    regs.dump_to_file(out_regs_file)
+    sregs.dump_to_file(out_regs_file)
     print(f"\n[INFO] Wrote final register state to '{out_regs_file}'.")
 
     # Dump regs to terminal
