@@ -1,7 +1,7 @@
 class VectorRegisterFile:
     """
     Simple vector register file model.
-    Stores 32 vector registers (v0-v31) as a dictionary.
+    Stores 256 vector registers (v0-v255) as a dictionary.
     Each vector register is a list of 32 elements, with each element being 16 bits wide.
     Register v0 is hardwired to a vector of zeros.
     """
