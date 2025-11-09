@@ -172,8 +172,7 @@ program test (scpad_if.backend_tb bif);
             while(1) begin
                 #(CLK_PERIOD/2);
                 if(bif.sched_res[0].valid == 1'b1) begin
-                    bif.sched_req[0].valid = 1'b0;
-                    bif.sched_req[0].write = 1'b0;
+                    schedule_request(1'b0, 1'b0, 20'd0, 32'd0, 5'b0, 5'b0, 1'b0);
                     #(CLK_PERIOD/2);
                     break;
                 end
@@ -231,24 +230,24 @@ program test (scpad_if.backend_tb bif);
         bif.be_res[1] = 0;
         #(CLK_PERIOD * 5);
 
-        // scpad_load_all_dims();
-        scpad_store_all_dims();
-        // schedule_request(1'b1, 1'b0, 20'd0, 32'd0, 5'd0, 5'd1, 1'b0); // invalid request after normal request
+        scpad_load_all_dims();
+        // scpad_store_all_dims();
+        // schedule_request(1'b1, 1'b0, 20'd0, 32'd0, 5'd0, 5'd0, 1'b0); // invalid request after normal request
         // dram_results();
-        schedule_request(1'b1, 1'b1, 20'd0, 32'd0, 5'd0, 5'd4, 1'b0);
-        #(CLK_PERIOD);
-        bif.be_res[0].valid = 1'b1;
-        bif.be_res[0].write = 1'b1;
-        bif.be_res[0].rdata = {64'd64, 64'd64, 64'd64, 64'd64, 64'd64, 64'd64, 64'd64, 64'd64};
-        #(CLK_PERIOD);
-        bif.be_res[0].valid = 1'b0;
-        bif.be_res[0].write = 1'b0;
-        bif.be_res[0].rdata = 0;
-        #(CLK_PERIOD * 2);
-        #(CLK_PERIOD * 0.5);
-        schedule_request(1'b0, 1'b0, 20'd0, 32'd0, 5'd31, 5'd31, 1'b0);
-        #(CLK_PERIOD * 0.5);
-        #(CLK_PERIOD * 5);
+        // schedule_request(1'b1, 1'b1, 20'd0, 32'd0, 5'd0, 5'd4, 1'b0);
+        // #(CLK_PERIOD);
+        // bif.be_res[0].valid = 1'b1;
+        // bif.be_res[0].write = 1'b1;
+        // bif.be_res[0].rdata = {64'd64, 64'd64, 64'd64, 64'd64, 64'd64, 64'd64, 64'd64, 64'd64};
+        // #(CLK_PERIOD);
+        // bif.be_res[0].valid = 1'b0;
+        // bif.be_res[0].write = 1'b0;
+        // bif.be_res[0].rdata = 0;
+        // #(CLK_PERIOD * 2);
+        // #(CLK_PERIOD * 0.5);
+        // schedule_request(1'b0, 1'b0, 20'd0, 32'd0, 5'd31, 5'd31, 1'b0);
+        // #(CLK_PERIOD * 0.5);
+        // #(CLK_PERIOD * 5);
         // schedule_request(1'b1, 1'b1, 20'd0, 32'd0, 5'd0, 5'd0, 1'b0);
         // #(CLK_PERIOD);
         // bif.be_res[0].valid = 1'b1;

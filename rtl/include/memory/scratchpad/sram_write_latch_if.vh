@@ -7,13 +7,13 @@
 interface sram_write_latch_if;
     import scpad_pkg::*;
 
-    logic [7:0] dram_id;
+    logic [DRAM_ID_WIDTH-1:0] dram_id;
     xbar_desc_t xbar;
-    logic [2:0] num_request; // max number of request is 8 because (32*16)/64 = 8
+    logic [MAX_REQ_WIDTH-1:0] num_request; // max number of request is 8 because (32*16)/64 = 8
     sram_write_req_t sram_write_req;
     logic dram_res_valid;
     logic be_stall;
-    logic [63:0] dram_rddata; // DRAM BUS can only send 64 bits at a time.
+    logic [MAX_DRAM_BUS_BITS-1:0] dram_rddata; // DRAM BUS can only send 64 bits at a time.
     logic sram_write_req_latched;
     logic [SCPAD_ADDR_WIDTH-1:0] spad_addr;
 

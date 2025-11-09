@@ -5,12 +5,12 @@ add wave -noupdate /backend_tb/PROG/bif/n_rst
 add wave -noupdate -expand -group Scheduler -color Magenta /backend_tb/DUT/bshif/sched_req
 add wave -noupdate -expand -group Scheduler -color Magenta /backend_tb/DUT/bshif/sched_res
 add wave -noupdate -expand -group Body /backend_tb/DUT/bshif/be_stall
-add wave -noupdate -expand -group Body -expand -subitemconfig {{/backend_tb/DUT/bshif/be_req[0]} -expand} /backend_tb/DUT/bshif/be_req
+add wave -noupdate -expand -group Body -subitemconfig {{/backend_tb/DUT/bshif/be_req[0]} -expand} /backend_tb/DUT/bshif/be_req
 add wave -noupdate -expand -group Body /backend_tb/DUT/bshif/be_res
 add wave -noupdate -expand -group DRAM -color Yellow /backend_tb/DUT/bshif/dram_be_stall
 add wave -noupdate -expand -group DRAM -color Yellow /backend_tb/DUT/bshif/be_dram_stall
 add wave -noupdate -expand -group DRAM -color Yellow /backend_tb/DUT/bshif/be_dram_req
-add wave -noupdate -expand -group DRAM -color Yellow -expand -subitemconfig {{/backend_tb/DUT/bshif/dram_be_res[0]} {-color Yellow -height 16 -expand} {/backend_tb/DUT/bshif/dram_be_res[0].valid} {-color Yellow -height 16} {/backend_tb/DUT/bshif/dram_be_res[0].write} {-color Yellow -height 16} {/backend_tb/DUT/bshif/dram_be_res[0].id} {-color Yellow -height 16} {/backend_tb/DUT/bshif/dram_be_res[0].rdata} {-color Yellow -height 16} {/backend_tb/DUT/bshif/dram_be_res[1]} {-color Yellow -height 16}} /backend_tb/DUT/bshif/dram_be_res
+add wave -noupdate -expand -group DRAM -color Yellow -subitemconfig {{/backend_tb/DUT/bshif/dram_be_res[0]} {-color Yellow -height 16 -expand} {/backend_tb/DUT/bshif/dram_be_res[0].valid} {-color Yellow -height 16} {/backend_tb/DUT/bshif/dram_be_res[0].write} {-color Yellow -height 16} {/backend_tb/DUT/bshif/dram_be_res[0].id} {-color Yellow -height 16} {/backend_tb/DUT/bshif/dram_be_res[0].rdata} {-color Yellow -height 16} {/backend_tb/DUT/bshif/dram_be_res[1]} {-color Yellow -height 16}} /backend_tb/DUT/bshif/dram_be_res
 add wave -noupdate -expand -group Swizzle /backend_tb/DUT/swizzle_metadata/swizz/row_or_col
 add wave -noupdate -expand -group Swizzle /backend_tb/DUT/swizzle_metadata/swizz/spad_addr
 add wave -noupdate -expand -group Swizzle -radix unsigned /backend_tb/DUT/swizzle_metadata/swizz/num_rows
@@ -48,13 +48,6 @@ add wave -noupdate -expand -group SRAM_WRITE_REQUEST_LATCH /backend_tb/DUT/be_sr
 add wave -noupdate -expand -group SRAM_WRITE_REQUEST_LATCH /backend_tb/DUT/be_sr_wr_latch/nxt_sram_write_latch
 add wave -noupdate -expand -group SRAM_WRITE_REQUEST_LATCH /backend_tb/DUT/be_sr_wr_latch/request_completed_counter
 add wave -noupdate -expand -group SRAM_WRITE_REQUEST_LATCH /backend_tb/DUT/be_sr_wr_latch/nxt_request_completed_counter
-add wave -noupdate -expand -group DRAM_WRITE_REQUEST_LATCH /backend_tb/DUT/dr_wr_l/num_request
-add wave -noupdate -expand -group DRAM_WRITE_REQUEST_LATCH /backend_tb/DUT/dr_wr_l/dram_write_req_latched
-add wave -noupdate -expand -group DRAM_WRITE_REQUEST_LATCH /backend_tb/DUT/dr_wr_latch/dram_write_latch
-add wave -noupdate -expand -group DRAM_WRITE_REQUEST_LATCH /backend_tb/DUT/dr_wr_latch/nxt_dram_write_latch
-add wave -noupdate -expand -group DRAM_WRITE_REQUEST_LATCH /backend_tb/DUT/dr_wr_latch/request_completed_counter
-add wave -noupdate -expand -group DRAM_WRITE_REQUEST_LATCH /backend_tb/DUT/dr_wr_latch/nxt_request_completed_counter
-add wave -noupdate /backend_tb/PROG/bif/sched_req
 TreeUpdate [SetDefaultTree]
 WaveRestoreCursors {{Cursor 1} {141 ps} 0}
 quietly wave cursor active 1
@@ -72,4 +65,4 @@ configure wave -griddelta 40
 configure wave -timeline 0
 configure wave -timelineunits ps
 update
-WaveRestoreZoom {19 ps} {445 ps}
+WaveRestoreZoom {811166 ps} {811592 ps}

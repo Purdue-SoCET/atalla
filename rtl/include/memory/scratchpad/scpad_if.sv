@@ -18,6 +18,14 @@ interface scpad_if (input logic clk, input logic n_rst);
     dram_req_t be_dram_req [NUM_SCPADS];
     dram_res_t dram_be_res [NUM_SCPADS];
 
+    // Internal Backend <=> DRAM Req Queue
+    be_dram_request_queue_in_t  be_dr_req_q_in;
+    be_dram_request_queue_out_t be_dr_req_q_out;
+
+    // Internal Backend <=> SRAM Write Latch
+    be_sram_write_latch_in_t  sr_wr_l_in;
+    be_sram_write_latch_out_t sr_wr_l_out;
+
     // Scheduler <=> Backend 
     sched_req_t sched_req [NUM_SCPADS];
     sched_res_t sched_res [NUM_SCPADS];
@@ -97,6 +105,20 @@ interface scpad_if (input logic clk, input logic n_rst);
         input  clk, n_rst, 
         output be_dram_req, be_dram_stall,
         input  dram_be_res, dram_be_stall
+    );
+
+    // Backend <=> DRAM Request Queue
+    modport backend_dram_req_queue (
+        input clk, n_rst,
+        input be_dr_req_q_in,
+        output be_dr_req_q_out
+    );
+
+    // Backend <=> SRAM Write Latch
+    modport sram_write_latch (
+        input clk, n_rst,
+        input sr_wr_l_in, 
+        output sr_wr_l_out
     );
 
     // Swizzle
