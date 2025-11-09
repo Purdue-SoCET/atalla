@@ -13,7 +13,7 @@ module backend #(parameter logic [scpad_pkg::SCPAD_ID_WIDTH-1:0] IDX = '0) (
     import scpad_pkg::*;
 
     localparam int BURST_COLS = 4;
-    localparam int BURST_WIDTH  = 2;  // log2(BURST_COLS)
+    localparam int BURST_WIDTH  = 2;
 
     logic [MAX_DIM_WIDTH-1:0] be_id, uuid, nxt_uuid, schedule_request_counter, nxt_schedule_request_counter;
     logic [MAX_REQ_WIDTH-1:0] sub_uuid, nxt_sub_uuid, num_request;
@@ -38,8 +38,6 @@ module backend #(parameter logic [scpad_pkg::SCPAD_ID_WIDTH-1:0] IDX = '0) (
     end
 
     scpad_if be_internal(bbif.clk, bbif.n_rst);
-    // dram_req_queue_if be_internal();
-    // sram_write_latch_if sr_wr_l();
 
     swizzle swizzle_metadata(.swizz(be_internal));
     assign be_internal.swizz_req.row_or_col = 1'b1; 
@@ -88,7 +86,7 @@ module backend #(parameter logic [scpad_pkg::SCPAD_ID_WIDTH-1:0] IDX = '0) (
         if(bshif.sched_req[IDX].valid == 1'b1) begin
             be_id = bdrif.dram_be_res[IDX].id[7:3];
             
-            num_request = MAX_REQ_WIDTH'(bshif.sched_req[IDX].num_cols >> BURST_WIDTH);  // saturate (optional)
+            num_request = MAX_REQ_WIDTH'(bshif.sched_req[IDX].num_cols >> BURST_WIDTH);
 
             if((uuid == bshif.sched_req[IDX].num_rows) && (sub_uuid == num_request)) begin
                 nxt_initial_request_done = 1'b1; 
