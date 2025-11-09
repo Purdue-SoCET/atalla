@@ -26,7 +26,9 @@ class lfc_wr_sequence extends uvm_sequence#(lfc_cpu_transaction);
     `uvm_info(get_type_name(), "Starting write transactions...", UVM_MEDIUM)
     addrs_idx = 0;
     repeat(NUM_TRANSACTIONS) begin // write transactions
+        $display("***wr_sequence Before start item1");
         start_item(req);
+        $display("***wr_sequence After start item1");
         if(!req.randomize()) begin
             `uvm_fatal("lfc_wr_sequence", "Not able to randomize")
         end
@@ -38,7 +40,7 @@ class lfc_wr_sequence extends uvm_sequence#(lfc_cpu_transaction);
         finish_item(req);
 
         `uvm_info(get_type_name(),
-        $sformatf("Completed: addr=0x%0h data=0x%0h", req.mem_in_addr, req.mem_in_store_value),
+        $sformatf("Write Completed: addr=0x%0h data=0x%0h", req.mem_in_addr, req.mem_in_store_value),
         UVM_LOW)
 
         addrs_idx++;
@@ -47,7 +49,9 @@ class lfc_wr_sequence extends uvm_sequence#(lfc_cpu_transaction);
     `uvm_info(get_type_name(), "Starting read transactions...", UVM_MEDIUM)
     addrs_idx = 0;
     repeat(NUM_TRANSACTIONS) begin // read transactions
+        $display("***wr_sequence Before start item2");
         start_item(req);
+        $display("***wr_sequence After start item2");
         if(!req.randomize()) begin
             `uvm_fatal("lfc_wr_sequence", "Not able to randomize")
         end
@@ -59,7 +63,7 @@ class lfc_wr_sequence extends uvm_sequence#(lfc_cpu_transaction);
         finish_item(req);
 
         `uvm_info(get_type_name(),
-        $sformatf("Completed: addr=0x%0h data=0x%0h", req.mem_in_addr, req.mem_in_store_value),
+        $sformatf("Read Completed: addr=0x%0h data=0x%0h", req.mem_in_addr, req.mem_in_store_value),
         UVM_LOW)
 
         addrs_idx++;

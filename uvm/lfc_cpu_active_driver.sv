@@ -33,9 +33,9 @@ class lfc_cpu_active_driver extends uvm_driver#(lfc_cpu_transaction);
     task run_phase(uvm_phase phase);
         lfc_cpu_transaction req_item;
 
+        DUT_reset(); // 3 clock cycles
         forever begin
             seq_item_port.get_next_item(req_item);
-            DUT_reset(); // 3 clock cycles
             vif.mem_in = req_item.mem_in; // not random
             vif.mem_in_addr = req_item.mem_in_addr;
             vif.mem_in_rw_mode = req_item.mem_in_rw_mode; // not random
