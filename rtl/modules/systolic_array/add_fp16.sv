@@ -247,22 +247,20 @@ reg  [11:0] round_this;
 logic [5:0] exp_out;                  // 6th bit = overflow check
 logic       underflow_to_sub;
 logic [4:0] sub_shift_amt;            // up to 13 is enough; use 5 bits
+logic [12:0] subnormal_shifted;       // intermediate for subnormal shift
 
 always_comb begin
-    // Determine if exponent underflows below 1 after normalization
-    // (remember: exp_max_l is EFFECTIVE exponent; norm_shift is [3:0])
     underflow_to_sub = (exp_max_l <= norm_shift);
     sub_shift_amt    = 5'(1 + norm_shift) - exp_max_l; // valid only if underflow_to_sub
+    subnormal_shifted = normalized_mantissa_sum >> sub_shift_amt;
     
     if (mantissa_overflow) begin
         // normal overflow path (same as before)
         round_this = mantissa_sum[12:1];
         exp_out    = exp_max_l + 1;    // still effective-encoded
     end else if (underflow_to_sub && (normalized_mantissa_sum != 13'b0)) begin
-        // Create a SUBNORMAL result: exponent field = 0, shift significand more.
-        // normalized_mantissa_sum is 1.xxx00 (13 bits). Shift right by sub_shift_amt.
-        // This keeps G/R bits in round_this[1:0].
-        round_this = (normalized_mantissa_sum >> sub_shift_amt)[11:0];
+
+        round_this = subnormal_shifted[11:0];
         exp_out    = 6'd0;             // exponent field == 0 (subnormal)
     end else begin
         // Normal path (no overflow, no subnormal underflow)
