@@ -8,42 +8,90 @@ module add_fp16(input logic clk, nRST, start,
                 // output logic ovf, unf, output_ready);
 
 
+// --- Special-case decode (IEEE 754 binary16) ---
+logic s1, s2;
+logic [4:0] e1, e2;
+logic [9:0] f1, f2;
+
+assign s1 = fp1_in[15];
+assign e1 = fp1_in[14:10];
+assign f1 = fp1_in[9:0];
+
+assign s2 = fp2_in[15];
+assign e2 = fp2_in[14:10];
+assign f2 = fp2_in[9:0];
+
+logic is_nan1, is_nan2, is_inf1, is_inf2, is_sub1, is_sub2, is_zero1, is_zero2;
+assign is_nan1  = (e1 == 5'h1F) && (f1 != 0);
+assign is_nan2  = (e2 == 5'h1F) && (f2 != 0);
+assign is_inf1  = (e1 == 5'h1F) && (f1 == 0);
+assign is_inf2  = (e2 == 5'h1F) && (f2 == 0);
+assign is_zero1 = (e1 == 5'h00) && (f1 == 0);
+assign is_zero2 = (e2 == 5'h00) && (f2 == 0);
+assign is_sub1  = (e1 == 5'h00) && (f1 != 0);
+assign is_sub2  = (e2 == 5'h00) && (f2 != 0);
+
+// NaN/Inf result selection (combinational "early-out")
+logic        use_special;
+logic [15:0] special_result;
+
+always_comb begin
+  use_special   = 1'b0;
+  special_result = 16'h7E00; // default quiet-NaN (qNaN)
+  
+  // NaN: if any NaN or (+Inf)+(-Inf) or (-Inf)+(+Inf)
+  if (is_nan1 || is_nan2) begin
+    use_special    = 1'b1;
+    special_result = 16'h7E00;               // qNaN
+  end else if (is_inf1 && is_inf2 && (s1 ^ s2)) begin
+    use_special    = 1'b1;
+    special_result = 16'h7E00;               // Inf - Inf => NaN
+  end else if (is_inf1 && !is_inf2) begin
+    use_special    = 1'b1;
+    special_result = {s1, 5'h1F, 10'b0};     // Inf +/- finite => Inf
+  end else if (!is_inf1 && is_inf2) begin
+    use_special    = 1'b1;
+    special_result = {s2, 5'h1F, 10'b0};     // finite +/- Inf => Inf
+  end
+end
 
 
-// step 1: Compare exponents to determine which mantissa to shift for normalization.
+// step 1: Compare EFFECTIVE exponents (subnormals use 1) for alignment.
+logic [4:0] e1_eff, e2_eff;
+assign e1_eff = (e1 == 5'b0) ? 5'd1 : e1;
+assign e2_eff = (e2 == 5'b0) ? 5'd1 : e2;
+
 logic [4:0] smaller_exponent;
 logic [4:0] larger_exponent;
 logic exp_select;
 
-// i hope the case where the two exponents are equal isn't an issue?
 always_comb begin
-    if(fp1_in[14:10] < fp2_in[14:10]) begin     // fp2 has a bigger exponent.
-        smaller_exponent = fp1_in[14:10];
-        larger_exponent = fp2_in[14:10];
-        exp_select = 1'b0;
-    end
-    else begin                                  // fp1 has a bigger exponent.
-        smaller_exponent = fp2_in[14:10];
-        larger_exponent = fp1_in[14:10];
-        exp_select = 1'b1;
+    if (e1_eff < e2_eff) begin               // fp2 has bigger effective exponent
+        smaller_exponent = e1_eff;
+        larger_exponent  = e2_eff;
+        exp_select       = 1'b0;             // shift fp1
+    end else begin                            // fp1 has bigger or equal effective exponent
+        smaller_exponent = e2_eff;
+        larger_exponent  = e1_eff;
+        exp_select       = 1'b1;             // shift fp2
     end
 end
 
 
-// step 2: Handle implicit mantissa bit for value == 0 case
-    logic frac_leading_bit_fp1;
-    logic frac_leading_bit_fp2;
-    always_comb begin
-        if(fp1_in[14:10] == 5'b0)
-            frac_leading_bit_fp1 = 1'b0;
-        else
-            frac_leading_bit_fp1 = 1'b1;
+// step 2: Handle implicit mantissa bit (0 for subnormals, 1 for normals)
+logic frac_leading_bit_fp1;
+logic frac_leading_bit_fp2;
+always_comb begin
+    if(e1 == 5'b0)
+        frac_leading_bit_fp1 = 1'b0;
+    else
+        frac_leading_bit_fp1 = 1'b1;
 
-        if(fp2_in[14:10] == 5'b0)
-            frac_leading_bit_fp2 = 1'b0;
-        else
-            frac_leading_bit_fp2 = 1'b1;
-    end
+    if(e2 == 5'b0)
+        frac_leading_bit_fp2 = 1'b0;
+    else
+        frac_leading_bit_fp2 = 1'b1;
+end
 
 // step 3: Mantissa normalization. Shift the mantissa of the number with a smaller exponent to the right, by whatever the difference in exponents was.
 // aka, divide the mantissa so you can increase the exponent to match the larger one.
@@ -70,7 +118,7 @@ always_comb begin
         sign_shifted = fp1_in[15];
         frac_not_shifted = {frac_leading_bit_fp2, fp2_in[9:0], 2'b00};
         sign_not_shifted = fp2_in[15];
-        exp_max = fp2_in[14:10];
+        exp_max = e2_eff;  // larger EFFECTIVE exponent
     end
 
     else begin                                      // fp1 had a bigger exponent: shift fp2.
@@ -84,7 +132,7 @@ always_comb begin
         sign_shifted = fp2_in[15];
         frac_not_shifted = {frac_leading_bit_fp1, fp1_in[9:0], 2'b00};
         sign_not_shifted = fp1_in[15];
-        exp_max = fp1_in[14:10];
+        exp_max = e1_eff;  // larger EFFECTIVE exponent
     end
 end
 
@@ -194,21 +242,32 @@ assign exp_minus_shift_amount = u_result[4:0];
 //------------------------------------------------------------------------------------
 
 
-// step 7: Rounding.
-reg [11:0] round_this;
-logic [5:0] exp_out;            // 6th bit is to check for overflow.
+// step 7: Rounding (+ handle underflow-to-subnormal)
+reg  [11:0] round_this;
+logic [5:0] exp_out;                  // 6th bit = overflow check
+logic       underflow_to_sub;
+logic [4:0] sub_shift_amt;            // up to 13 is enough; use 5 bits
 
 always_comb begin
-    // ovf = 0;
-    // unf = 0;
-    if (mantissa_overflow == 1) begin
-        round_this = mantissa_sum[12:1];            // i forgot why we dont use the normalized sum here
-        exp_out    = exp_max_l + 1;
-        // if ((exp_max == 5'b11110) && (~unf_in)) ovf = 1;
+    // Determine if exponent underflows below 1 after normalization
+    // (remember: exp_max_l is EFFECTIVE exponent; norm_shift is [3:0])
+    underflow_to_sub = (exp_max_l <= norm_shift);
+    sub_shift_amt    = 5'(1 + norm_shift) - exp_max_l; // valid only if underflow_to_sub
+    
+    if (mantissa_overflow) begin
+        // normal overflow path (same as before)
+        round_this = mantissa_sum[12:1];
+        exp_out    = exp_max_l + 1;    // still effective-encoded
+    end else if (underflow_to_sub && (normalized_mantissa_sum != 13'b0)) begin
+        // Create a SUBNORMAL result: exponent field = 0, shift significand more.
+        // normalized_mantissa_sum is 1.xxx00 (13 bits). Shift right by sub_shift_amt.
+        // This keeps G/R bits in round_this[1:0].
+        round_this = (normalized_mantissa_sum >> sub_shift_amt)[11:0];
+        exp_out    = 6'd0;             // exponent field == 0 (subnormal)
     end else begin
+        // Normal path (no overflow, no subnormal underflow)
         round_this = normalized_mantissa_sum[11:0];
-        exp_out    = {1'b0,exp_minus_shift_amount};
-        // if (({1'b0, exp_max} < {1'b0,norm_shift}) && (~ovf_in)) unf = 1;
+        exp_out    = {1'b0, (exp_max_l - norm_shift)}; // encoded exponent field
     end
 end
 
@@ -251,7 +310,9 @@ logic round_flag;               // I added this. --Vinay 1/31/2025. Verilator wo
         endcase
     end
 
-    assign fp_out = {result_sign, exp_out_final, rounded_fraction_final};
+    logic [15:0] fp_core_out;
+    assign fp_core_out = {result_sign, exp_out_final, rounded_fraction_final};
+    assign fp_out      = use_special ? special_result : fp_core_out;
     // assign ovf = 0;
     // assign unf = 0;
     // assign output_ready = 1;
