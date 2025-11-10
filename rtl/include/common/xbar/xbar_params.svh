@@ -14,5 +14,15 @@
     `ifndef BATCHER_REGISTER_MASK
         `define BATCHER_REGISTER_MASK 14'b11111111111111
     `endif
+
+    `ifndef BENES_SIZE
+        `define BENES_SIZE 32
+    `endif
+    `ifndef BENES_DWIDTH
+        `define BENES_DWIDTH 16
+    `endif
+    `ifndef BENES_REGISTER_MASK
+        `define BENES_REGISTER_MASK 8'b11111111
+    `endif
     
 `endif
