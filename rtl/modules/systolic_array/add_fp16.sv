@@ -236,7 +236,7 @@ logic round_flag;               // I added this. --Vinay 1/31/2025. Verilator wo
     logic [4:0] exp_out_final;
     logic [9:0] rounded_fraction_final;
     always_comb begin
-        overflow = exp_out[5] | &exp_out[4:0];
+        overflow = (exp_out > 6'd30);
         // zero = ~(|normalized_mantissa_sum);
 
         casez(overflow)

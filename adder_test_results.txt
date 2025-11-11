@@ -2019,5 +2019,5 @@ Pass: A=b1d8  B=cf02  SUB=0 → cf0e
 Pass: A=97f8  B=ece5  SUB=0 → ece5
 - tb/unit/systolic_array/add_fp16_tb_full.sv:264: Verilog $finish
 - S i m u l a t i o n   R e p o r t: Verilator 5.033 devel
-- Verilator: $finish at 12us; walltime 0.020 s; speed 590.199 us/s
-- Verilator: cpu 0.021 s on 1 threads; alloced 153 MB
+- Verilator: $finish at 12us; walltime 0.021 s; speed 557.880 us/s
+- Verilator: cpu 0.022 s on 1 threads; alloced 153 MB
