@@ -2,13 +2,10 @@
 vector_lanes.py
 Functional emulator for a vector-lane Functional Unit (FU) operating on BF16 vectors.
 
-Style & conventions:
-- Single-file, testable module.
-- BF16 semantics only (no FP32 support).
-- Vector length (VL) default 32. Resource counts parameterized.
+Note:
+- Vector length (VL) default 32. FU counts parameterized.
 - Operations: add, sub, mul, div, exp, sqrt, reductions (sum, max, min).
-- When resource count < VL, processing is partitioned into chunks of size `resource_count`
-  and executed sequentially to emulate limited parallelism (functional correctness preserved).
+- When resource count < VL, processing is partitioned into chunks of size `resource_count` and executed sequentially
 """
 
 import numpy as np
