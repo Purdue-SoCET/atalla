@@ -143,7 +143,6 @@ class VectorLanes:
         L = a.size
         out = np.empty_like(a, dtype=np.float32)
 
-        # Operands are quantized per-lane before operation to emulate BF16 operand precision
         # We process in chunks of `resources`
         for s, e in iterate_chunks(L, resources):
             a_chunk = self._q(a[s:e])
