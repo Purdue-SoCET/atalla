@@ -1,7 +1,7 @@
 import numpy as np
 import struct
 
-# --- BF16 helpers (simulate bf16 by truncating float32 mantissa) ---
+# BF16 helpers (simulate bf16 by truncating float32 mantissa)
 def float32_to_bf16_array(x: np.ndarray) -> np.ndarray:
     """Convert float32 numpy array to simulated bf16 stored as float32 values
     (i.e., values rounded/truncated to BF16 precision but stored in float32 dtype)."""
@@ -15,7 +15,7 @@ def float32_to_bf16_array(x: np.ndarray) -> np.ndarray:
 
 def bf16_round(x: np.ndarray) -> np.ndarray:
     """Round to nearest BF16 (implementing round-to-nearest-even)."""
-    # Adapted approach: add 0x00007FFF + ((u >> 16) & 1) for tie-to-even rounding then zero lower 16 bits.
+    # Add 0x00007FFF + ((u >> 16) & 1) for tie-to-even rounding then zero lower 16 bits.
     x_f32 = x.astype(np.float32)
     u = x_f32.view(np.uint32)
     lsb = (u >> 16) & 1
@@ -27,7 +27,7 @@ def bf16_round(x: np.ndarray) -> np.ndarray:
 def to_bf16(x: np.ndarray, rounding=True) -> np.ndarray:
     return bf16_round(x) if rounding else float32_to_bf16_array(x)
 
-# --- Systolic array emulation ---
+# Systolic array (A and B inputs, C output)
 def systolic_mm(A: np.ndarray, B: np.ndarray, tile=32, bf16_rounding=True):
     """
     Multiply A @ B using a functional 32x32 systolic-array style tiling.
@@ -36,11 +36,10 @@ def systolic_mm(A: np.ndarray, B: np.ndarray, tile=32, bf16_rounding=True):
     - tile: PE array size (32)
     Returns: C (M, N) using simulated BF16 arithmetic inside the systolic tiles,
              accumulating in BF16 (partial sums stored in BF16-emulated float32)
-    Notes:
-      - Emulates: PEs store weight tile (B_tile) in BF16; activations streamed in BF16.
-      - Multiply-accumulate done in BF16 precision (i.e., operands are cast to bf16, multiply
-        in float32 but operands truncated to bf16 first, and result truncated back to bf16
-        after accumulation step).
+    Emulates: PEs store weight tile (B_tile).
+    MAC done in BF16 precision (i.e., operands are cast to bf16, multiply
+    in float32 but operands truncated to bf16 first, and result truncated back to bf16
+    after accumulation step).
     """
     M, K = A.shape
     K2, N = B.shape
@@ -68,18 +67,13 @@ def systolic_mm(A: np.ndarray, B: np.ndarray, tile=32, bf16_rounding=True):
                 # For each row in A tile (i0:i1), we stream A values across the k-block
                 A_block = A[i0:i1, k0:k1].astype(np.float32)
                 A_block_bf16 = to_bf16(A_block, rounding=bf16_rounding)
+                # Contribution of this Kth block: psum += A_block @ B_tile
 
-                # Now compute contribution of this K-block:
-                # Equivalent to: psum += A_block @ B_tile  but with BF16 semantics
-                # We'll do the small matrix multiply with bf16 operand rounding:
-                # multiply in float32, then accumulate into psum with bf16 rounding after accumulation step.
-
-                # Compute local product in float32 (operands already BF16-quantized)
+                # Local product
                 local_prod = A_block_bf16 @ B_tile_bf16  # shape (i1-i0, j1-j0)
 
-                # Emulate BF16 accumulation: cast local_prod to bf16 then add to psum (both truncated)
+                # Accumulation: add local product to psum
                 local_prod_bf16 = to_bf16(local_prod, rounding=bf16_rounding)
-                # also cast existing psum to bf16 before addition (to emulate bf16 accumulator)
                 psum_bf16 = to_bf16(psum, rounding=bf16_rounding)
                 psum = to_bf16(psum_bf16 + local_prod_bf16, rounding=bf16_rounding)
 
