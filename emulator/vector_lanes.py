@@ -1,5 +1,5 @@
 """
-vector_lanes_emu.py
+vector_lanes.py
 Functional emulator for a vector-lane Functional Unit (FU) operating on BF16 vectors.
 
 Style & conventions:
