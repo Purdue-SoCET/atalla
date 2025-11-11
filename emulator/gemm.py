@@ -1,5 +1,5 @@
 """
-systolic_array_emu.py
+gemm.py
 Functional 2D systolic-array style matrix multiply emulator (BF16 semantics).
 Consistent module style for hardware functional emulation framework.
 """
