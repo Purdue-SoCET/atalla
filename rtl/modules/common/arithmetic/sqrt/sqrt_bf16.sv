@@ -1,5 +1,5 @@
 `include "sqrt_types.vh"
-`include "sqrt_fp16_if.sv"
+`include "sqrt_if.sv"
 
 /* 
 BF16 sqaure root module.
@@ -23,17 +23,16 @@ module sqrt_bf16 (
     sqrt_if.srif        srif
 );
 
-    localparam logic [15:0] slope_lut [0:7] = '{
+    localparam logic [15:0] normal_slopes [0:7] = '{
         16'h3EF8, 16'h3EEB, 16'h3EDF, 16'h3ED5,
         16'h3ECC, 16'h3EC5, 16'h3EBE, 16'h3EB7
     };
 
-    localparam logic [15:0] intercept_lut [0:7] = '{
+    localparam logic [15:0] normal_intercepts [0:7] = '{
         16'h3F03, 16'h3F0B, 16'h3F12, 16'h3F19,
         16'h3F1F, 16'h3F26, 16'h3F2C, 16'h3F32
     };
 
-    import vector_pkg::*;
     localparam MULT_LATENCY = 3;
     localparam ADD_LATENCY = 2;
     localparam EXP_W = 8;
@@ -145,12 +144,12 @@ module sqrt_bf16 (
     always_comb begin
         if (third_pass) begin
             mul_start = third_mul_enable;
-            mul_a = {1'b0, exp_biased_reg[4:0], 10'b0};
+            mul_a = {1'b0, exp_biased_reg[7:0], 7'b0};
             mul_b = second_mult_latched;
         end
         else if (second_pass) begin
             mul_start = adder_valid_shift[ADD_LATENCY-1];
-            mul_a = exp[0] ? 16'h3c00 : 16'h3da8;
+            mul_a = exp[0] ? 16'h3f80 : 16'h3FB5;
             mul_b = adder_out_reg;
         end
         else begin
@@ -164,7 +163,14 @@ module sqrt_bf16 (
     logic [15:0] add_out;
     logic add_start;
 
-    //BF16 ADDER GOES HERE
+    add_bf16 add1 (
+        .clk(CLK), 
+        .nRST(nRST), 
+        .start(add_start),
+        .bf1_in(mul_out_reg),
+        .bf2_in(intercept),
+        .bf_out(add_out)
+    );
 
 
     assign add_start = mul_done_reg & !second_pass & !third_pass;
@@ -233,7 +239,7 @@ module sqrt_bf16 (
     // Register exp_biased at the end of second pass
     always_ff @(posedge CLK or negedge nRST) begin
         if (!nRST)
-            exp_biased_reg <= 6'sd0;
+            exp_biased_reg <= 8'd0;
         else if (mul_done_reg && second_pass)
             exp_biased_reg <= exp_biased_comb;
     end
@@ -284,15 +290,15 @@ module sqrt_bf16 (
         end
         else if (sign) begin
             special_flag   = 1'b1;
-            special_result = 16'h7d00;
+            special_result = 16'h7fc0;
         end
         else if (input_is_inf) begin
             special_flag   = 1'b1;
-            special_result = 16'h7c00;
+            special_result = 16'h7F80;
         end
         else if (input_is_nan) begin
             special_flag   = 1'b1;
-            special_result = 16'h7d00;
+            special_result = 16'h7fc0;
         end
         else if (input_is_subnormal || input_is_zero) begin
             special_flag   = 1'b1;

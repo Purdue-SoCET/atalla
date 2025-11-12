@@ -1,4 +1,4 @@
-`include "sqrt_if.vh"
+`include "sqrt_if.sv"
 `include "vector_types.vh"
 `include "sqrt_types.vh"
 `timescale 1 ns / 1 ns

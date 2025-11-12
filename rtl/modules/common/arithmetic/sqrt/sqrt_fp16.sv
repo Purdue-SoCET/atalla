@@ -1,5 +1,5 @@
 `include "sqrt_types.vh"
-`include "sqrt_fp16_if.sv"
+`include "sqrt_if.sv"
 
 /* 
 Fp16 sqaure root module.
@@ -37,7 +37,6 @@ module sqrt_fp16 (
         16'h3958, 16'h396E, 16'h3988, 16'h39A3
     };
 
-    import vector_pkg::*;
     localparam MULT_LATENCY = 3;
     localparam ADD_LATENCY = 2;
     localparam EXP_W = 5;
