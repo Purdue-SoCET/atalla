@@ -2,13 +2,10 @@
 
 // This module probably CANNOT handle subtraction!
 
-module add_bf16(input logic clk, nRST, start,
+module add_bf16(input logic clk, nRST, 
                 input logic [15:0] bf1_in, bf2_in,
                 output logic [15:0] bf_out,
                 output logic overflow, underflow, invalid);
-
-
-
 
 // Special cases detection
 logic is_nan1, is_nan2, is_inf1, is_inf2;
@@ -76,7 +73,7 @@ always_comb begin
         // So, i think i can make a shifter that only shifts by the lower 4 bits of exp_diff, and if we had to shift by more than that, just hard code a zero as the output.
         // QUESTION: does this mean i need to turn on an underflow flag?
 
-        if(exp_diff[8]) begin
+        if(exp_diff[7]) begin
             frac_shifted = 10'b0;
         end
         else begin
@@ -90,7 +87,7 @@ always_comb begin
     end
 
     else begin                                      // bf1 had a bigger exponent: shift bf2.
-        if(exp_diff[8]) begin
+        if(exp_diff[7]) begin
             frac_shifted = 10'b0;
         end
         else begin
@@ -130,7 +127,7 @@ end
 // register values here, before addition
 logic[9:0] smaller_mantissa_l, larger_mantissa_l;
 logic larger_mantissa_sign_l, sign_shifted_l, sign_not_shifted_l, signs_differ_l;
-logic[4:0] exp_max_l;
+logic[7:0] exp_max_l;
 
 
 always_ff @(posedge clk, negedge nRST) begin
@@ -181,6 +178,8 @@ always_comb begin
 end
 
 // Overflow/Underflow detection
+logic [7:0] exp_minus_shift_amount;
+
 always_comb begin
     // Overflow: If exponent becomes all 1's after normalization
     overflow = (exp_max_l == 8'hFF) || 
@@ -219,11 +218,11 @@ left_shift normalizer(.fraction(mantissa_sum[9:0]), .result(normalized_mantissa_
 logic [8:0] u_exp1, u_exp2;
 logic [7:0] u_shifted_amount;
 logic [8:0] u_result;
-logic [7:0] exp_minus_shift_amount;
+
 
 always_comb begin
     u_exp1           = {1'b0, exp_max_l};
-    u_shifted_amount = {1'b0, norm_shift};
+    u_shifted_amount = {1'b0, {3'b0, norm_shift}};
     u_result         = u_exp1 - u_shifted_amount;
 end
 assign exp_minus_shift_amount = u_result[7:0];
@@ -249,29 +248,45 @@ always_comb begin
 end
 
 logic [15:0] round_out;
-logic round_flag;               // I added this. --Vinay 1/31/2025. Verilator wouldn't compile without it.
+logic round_flag;               // retained: indicates rounding increment occurred
+// Adjusted rounding result width to 7 bits (BF16 fraction) and compute
+// an exponent adjustment if rounding carries into the exponent.
+logic [6:0] rounded_fraction;
+logic [7:0] exp_out_adj;
 
     // Rounding mode used: Round to Nearest, Tie to Even
     logic G;
     logic R;
     assign G = round_this[1];
     assign R = round_this[0];
-    logic [9:0] rounded_fraction;
+
+    // Compute rounding for 7-bit fraction: bits [8:2] are the candidate
+    // fraction; bits [1:0] are guard/round, and bit [2] used earlier is
+    // treated as sticky in the original layout. Use an 8-bit sum so we can
+    // detect carry into exponent.
+    logic [7:0] round_sum;
     always_comb begin
-        if(G & (R | round_this[2])) begin // sticky: G & (R | rounding_loss | round_this[2])
-            rounded_fraction = round_this[8:2] + 1;
+        // Default
+        round_flag = 0;
+        round_sum = {1'b0, round_this[8:2]}; // 8-bit with zero MSB
+
+        // if (G & (R | round_this[2])) begin
+        if (G & (R | sticky_bit)) begin
+            // increment candidate fraction (round up)
+            round_sum = round_sum + 8'd1;
             round_flag = 1;
         end
-        else begin
-            rounded_fraction = round_this[8:2];
-            round_flag = 0;
-        end
+
+        // rounded_fraction is the lower 7 bits; if MSB of round_sum is set,
+        // we carried into the exponent and must bump it.
+        rounded_fraction = round_sum[6:0];
+        exp_out_adj = exp_out + {7'b0, round_sum[7]};
     end
 
-    assign bf_out = {result_sign, exp_out, rounded_fraction};
-
-    // assign ovf = 0;
-    // assign unf = 0;
-    // assign output_ready = 1;
+    // Final output packing: sign(1) + exponent(8) + fraction(7) = 16 bits
+    assign bf_out = {result_sign, exp_out_adj, rounded_fraction};
 
 endmodule
+
+
+

@@ -36,7 +36,6 @@ module add_bf16_tb;
     add_bf16 bob (
         .clk(tb_clk),
         .nRST(tb_nrst),
-        .start(tb_start),
         .bf1_in(tb_a),
         .bf2_in(tb_b),
         .bf_out(tb_result),
@@ -45,9 +44,9 @@ module add_bf16_tb;
         .invalid(tb_invalid)
     );
 
-    logic [15:0] test_set1[9:0];
-    logic [15:0] test_set2[9:0];
-    logic [15:0] test_set3[9:0];
+    logic [15:0] test_set1[13:0];
+    logic [15:0] test_set2[13:0];
+    logic [15:0] expected_out[13:0];
 
     
     // Test sequence
@@ -60,50 +59,80 @@ module add_bf16_tb;
         tb_nrst = 1;
 
         // Test case 1: Normal addition (1.5 + 2.5 = 4.0)
-        test_set1[0] = 16'h3FC0; // 1.5 in BF16
-        test_set2[0] = 16'h4040; // 2.5 in BF16
+        test_set1[0] = 16'h3FC0;  // 1.5 in BF16
+        test_set2[0] = 16'h4020;  // 2.5 in BF16
+        expected_out[0] = 16'h4080; // Expected: 4.0 in BF16
         
         // Test case 2: Overflow case (maximum normal number + large positive)
-        test_set1[1] = 16'h7F7F; // Near max BF16 value
-        test_set2[1] = 16'h7F00; // Large positive number
+        test_set1[1] = 16'h7F7F;  // Near max BF16 value (~3.39e38)
+        test_set2[1] = 16'h7F00;  // Large positive number (~3.39e38)
+        expected_out[1] = 16'h7F80; // Expected: overflow to +infinity (0x7F80)
         
-        // Test case 3: Different exponent (1024 + 1 = 1025)
-        test_set1[2] = 16'h6400; // 1024
-        test_set2[2] = 16'h3F80; // 1.0
+        // Test case 3: Different exponent (1024.0 + 1.0 = 1025.0)
+        test_set1[2] = 16'h6400;  // 1024.0 (exponent=128)
+        test_set2[2] = 16'h3F80;  // 1.0 (exponent=127)
+        expected_out[2] = 16'h6401; // Expected: 1025.0
         
-        // Test case 4: Subtraction with different exponents
-        test_set1[3] = 16'h4200; // 32.0
-        test_set2[3] = 16'h3F00; // 0.5
+        // Test case 4: Addition with different exponents (32.0 + 0.5 = 32.5)
+        test_set1[3] = 16'h4200;  // 32.0 (exponent=132)
+        test_set2[3] = 16'h3F00;  // 0.5 (exponent=126)
+        expected_out[3] = 16'h4204; // Expected: 32.5
         
-        // Test case 5: Adding very small to large number
-        test_set1[4] = 16'h7000; // Large number
-        test_set2[4] = 16'h3000; // Very small number
+        // Test case 5: Adding very small to large number (1e8 + 1e-8 ≈ 1e8)
+        test_set1[4] = 16'h7000;  // Large number (~1.5e9)
+        test_set2[4] = 16'h3000;  // Very small number (~5.9e-39)
+        expected_out[4] = 16'h7000; // Expected: large number (small is lost due to precision)
         
-        // Test case 6: Near zero result (1.0 - 1.0)
-        test_set1[5] = 16'h3F80; // 1.0
-        test_set2[5] = 16'hBF80; // -1.0
+        // Test case 6: Near zero result (1.0 + (-1.0) = 0.0)
+        test_set1[5] = 16'h3F80;  // 1.0
+        test_set2[5] = 16'hBF80;  // -1.0
+        expected_out[5] = 16'h0000; // Expected: 0.0
         
         // Test case 7: Negative overflow (-max - max)
-        test_set1[6] = 16'hFF7F; // -max
-        test_set2[6] = 16'hFF7F; // -max
+        test_set1[6] = 16'hFF7F;  // -max (~-3.39e38)
+        test_set2[6] = 16'hFF7F;  // -max (~-3.39e38)
+        expected_out[6] = 16'hFF80; // Expected: overflow to -infinity (0xFF80)
         
-        // Test case 8: Adding numbers with same exponents
-        test_set1[7] = 16'h4100; // 8.0
-        test_set2[7] = 16'h4100; // 8.0
+        // Test case 8: Adding numbers with same exponents (8.0 + 8.0 = 16.0)
+        test_set1[7] = 16'h4100;  // 8.0 (exponent=129)
+        test_set2[7] = 16'h4100;  // 8.0 (exponent=129)
+        expected_out[7] = 16'h4180; // Expected: 16.0
         
-        // Test case 9: Mixed signs with larger magnitude negative
-        test_set1[8] = 16'hC000; // -2.0
-        test_set2[8] = 16'h3F80; // 1.0
+        // Test case 9: Mixed signs with larger magnitude negative (-2.0 + 1.0 = -1.0)
+        test_set1[8] = 16'hC000;  // -2.0
+        test_set2[8] = 16'h3F80;  // 1.0
+        expected_out[8] = 16'hBF80; // Expected: -1.0
         
-        // Test case 10: Adding denormalized numbers
-        test_set1[9] = 16'h0080; // Small denorm
-        test_set2[9] = 16'h0080; // Small denorm
+        // Test case 10: Adding denormalized numbers (2*min_normal ≈ 2*1.17e-38)
+        test_set1[9] = 16'h0080;  // Minimum normal BF16 (~1.17e-38)
+        test_set2[9] = 16'h0080;  // Minimum normal BF16
+        expected_out[9] = 16'h0100; // Expected: 2*min_normal
+        
+        // Test case 11: Positive infinity + finite number = infinity
+        test_set1[10] = 16'h7F80; // +Infinity
+        test_set2[10] = 16'h4080; // 4.0
+        expected_out[10] = 16'h7F80; // Expected: +infinity
+        
+        // Test case 12: Positive infinity + negative infinity = NaN (invalid)
+        test_set1[11] = 16'h7F80; // +Infinity
+        test_set2[11] = 16'hFF80; // -Infinity
+        expected_out[11] = 16'h7FC0; // Expected: NaN (or result depends on implementation)
+        
+        // Test case 13: Zero + zero = zero
+        test_set1[12] = 16'h0000; // 0.0
+        test_set2[12] = 16'h0000; // 0.0
+        expected_out[12] = 16'h0000; // Expected: 0.0
+        
+        // Test case 14: Negative zero + positive zero (should be 0.0)
+        test_set1[13] = 16'h8000; // -0.0
+        test_set2[13] = 16'h0000; // +0.0
+        expected_out[13] = 16'h0000; // Expected: 0.0
 
         @(posedge tb_clk);
         tb_start = 0;
 
-        // Test pattern 2: Continuous stream of instructions
-        for(i = 0; i < 10; i++) begin
+        // Test pattern: Continuous stream of instructions with all 14 test cases
+        for(i = 0; i < 14; i++) begin
             tb_start = 1'b0;
             tb_a = test_set1[i];
             tb_b = test_set2[i];
@@ -112,25 +141,27 @@ module add_bf16_tb;
             tb_start = 1'b0;
             #CLK_PERIOD;
             
-            // Print test case results
+            // Print test case results with expected output
+            $display("========================================");
             $display("Test Case %0d:", i);
-            $display("Input A: %h (%b)", tb_a, tb_a);
-            $display("Input B: %h (%b)", tb_b, tb_b);
-            $display("Result:  %h (%b)", tb_result, tb_result);
+            $display("Input A:       %h", tb_a);
+            $display("Input B:       %h", tb_b);
+            $display("Expected Out:  %h", expected_out[i]);
+            $display("Actual Result: %h", tb_result);
+            $display("Match: %s", (tb_result == expected_out[i]) ? "PASS" : "FAIL");
             $display("Flags - Overflow: %b, Underflow: %b, Invalid: %b", 
                     tb_overflow, tb_underflow, tb_invalid);
-            $display("----------------------------------------");
+            $display("========================================");
             
-            // Expected overflow cases
-            if (i == 1 || i == 6) begin // Test cases 2 and 7
+            // Check for expected overflow cases
+            if (i == 1 || i == 6) begin // Test cases 2 and 7 (overflow cases)
                 if (!tb_overflow)
-                    $display("ERROR: Expected overflow flag for test case %0d", i);
+                    $display("WARNING: Expected overflow flag for test case %0d", i);
             end
             
             #CLK_PERIOD;
         end
         #CLK_PERIOD;
-        // @(negedge tb_done);
         $finish;
     end
 
