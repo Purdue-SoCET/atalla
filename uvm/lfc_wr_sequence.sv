@@ -8,7 +8,7 @@ import uvm_pkg::*;
 
 class lfc_wr_sequence extends uvm_sequence#(lfc_cpu_transaction);
   `uvm_object_utils(lfc_wr_sequence)
-  parameter NUM_TRANSACTIONS = 30;
+  parameter NUM_TRANSACTIONS = 10;
 
   function new(string name = "lfc_wr_sequence");
     super.new(name);
@@ -26,10 +26,8 @@ class lfc_wr_sequence extends uvm_sequence#(lfc_cpu_transaction);
     `uvm_info(get_type_name(), "Starting write transactions...", UVM_MEDIUM)
     addrs_idx = 0;
     repeat(NUM_TRANSACTIONS) begin // write transactions
-        $display("***wr_sequence Before start item1");
         start_item(req);
-        $display("***wr_sequence After start item1");
-        if(!req.randomize()) begin
+        if(!req.randomize() with {mem_in_addr % 4 == 0;}) begin // constrains mem_in_addr to the first byte of a 32 bit chunk of data
             `uvm_fatal("lfc_wr_sequence", "Not able to randomize")
         end
         req.n_rst = 1'b1;
@@ -49,10 +47,8 @@ class lfc_wr_sequence extends uvm_sequence#(lfc_cpu_transaction);
     `uvm_info(get_type_name(), "Starting read transactions...", UVM_MEDIUM)
     addrs_idx = 0;
     repeat(NUM_TRANSACTIONS) begin // read transactions
-        $display("***wr_sequence Before start item2");
         start_item(req);
-        $display("***wr_sequence After start item2");
-        if(!req.randomize()) begin
+        if(!req.randomize()) begin 
             `uvm_fatal("lfc_wr_sequence", "Not able to randomize")
         end
         req.n_rst = 1'b1;

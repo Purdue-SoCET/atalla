@@ -52,10 +52,10 @@ class lfc_scoreboard extends uvm_scoreboard;
     task run_phase(uvm_phase phase);
         //TODO elaborate comparison logic
     
-        lfc_cpu_transaction expected_tx, actual_tx;
+        lfc_cpu_transaction exp_tx, act_tx;
         forever begin
-            expected_cpu_fifo.get(expected_tx);
-            actual_cpu_fifo.get(actual_tx);
+            expected_cpu_fifo.get(exp_tx);
+            actual_cpu_fifo.get(act_tx);
             if (exp_tx == null || act_tx == null) begin
               `uvm_error("SCOREBOARD", "Received null transaction")
               continue;
