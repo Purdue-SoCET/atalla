@@ -16,3 +16,22 @@
   CREATE_STREAM @170000 {NAME:wr_seq T:Transactions SCOPE:uvm_test_top.env.cpu_active_agent.sqr STREAM:1388}
   CREATE_STREAM @0 {NAME:basic_seq T:Transactions SCOPE:uvm_test_top.env.cpu_active_agent.sqr STREAM:1187}
   CREATE_STREAM @170000 {NAME:wr_seq T:Transactions SCOPE:uvm_test_top.env.cpu_active_agent.sqr STREAM:1388}
+  CREATE_STREAM @0 {NAME:basic_seq T:Transactions SCOPE:uvm_test_top.env.cpu_active_agent.sqr STREAM:1187}
+  CREATE_STREAM @170000 {NAME:wr_seq T:Transactions SCOPE:uvm_test_top.env.cpu_active_agent.sqr STREAM:1388}
+  CREATE_STREAM @0 {NAME:basic_seq T:Transactions SCOPE:uvm_test_top.env.cpu_active_agent.sqr STREAM:1187}
+  CREATE_STREAM @170000 {NAME:wr_seq T:Transactions SCOPE:uvm_test_top.env.cpu_active_agent.sqr STREAM:1388}
+  CREATE_STREAM @0 {NAME:basic_seq T:Transactions SCOPE:uvm_test_top.env.cpu_active_agent.sqr STREAM:1187}
+  CREATE_STREAM @170000 {NAME:wr_seq T:Transactions SCOPE:uvm_test_top.env.cpu_active_agent.sqr STREAM:1388}
+  CREATE_STREAM @0 {NAME:basic_seq T:Transactions SCOPE:uvm_test_top.env.cpu_active_agent.sqr STREAM:1187}
+  CREATE_STREAM @170000 {NAME:wr_seq T:Transactions SCOPE:uvm_test_top.env.cpu_active_agent.sqr STREAM:1444}
+  CREATE_STREAM @0 {NAME:basic_seq T:Transactions SCOPE:uvm_test_top.env.cpu_active_agent.sqr STREAM:1187}
+  CREATE_STREAM @170000 {NAME:wr_seq T:Transactions SCOPE:uvm_test_top.env.cpu_active_agent.sqr STREAM:1444}
+  CREATE_STREAM @0 {NAME:basic_seq T:Transactions SCOPE:uvm_test_top.env.cpu_active_agent.sqr STREAM:1187}
+  CREATE_STREAM @170000 {NAME:wr_seq T:Transactions SCOPE:uvm_test_top.env.cpu_active_agent.sqr STREAM:1444}
+  CREATE_STREAM @0 {NAME:basic_seq T:Transactions SCOPE:uvm_test_top.env.cpu_active_agent.sqr STREAM:1187}
+  CREATE_STREAM @0 {NAME:basic_seq T:Transactions SCOPE:uvm_test_top.env.cpu_active_agent.sqr STREAM:1187}
+  CREATE_STREAM @170000 {NAME:wr_seq T:Transactions SCOPE:uvm_test_top.env.cpu_active_agent.sqr STREAM:1430}
+  CREATE_STREAM @0 {NAME:basic_seq T:Transactions SCOPE:uvm_test_top.env.cpu_active_agent.sqr STREAM:1187}
+  CREATE_STREAM @170000 {NAME:wr_seq T:Transactions SCOPE:uvm_test_top.env.cpu_active_agent.sqr STREAM:1454}
+  CREATE_STREAM @0 {NAME:basic_seq T:Transactions SCOPE:uvm_test_top.env.cpu_active_agent.sqr STREAM:1187}
+  CREATE_STREAM @170000 {NAME:wr_seq T:Transactions SCOPE:uvm_test_top.env.cpu_active_agent.sqr STREAM:1412}

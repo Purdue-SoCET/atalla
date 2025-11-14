@@ -40,7 +40,7 @@ class lfc_cpu_active_monitor extends uvm_monitor;
     super.run_phase(phase);
     forever begin
       lfc_cpu_transaction tx;
-      repeat(4) @(posedge vif.clk); // 4 clock edges before input is sent from driver
+      @(posedge vif.clk); // 4 clock edges before input is sent from driver
       tx = lfc_cpu_transaction::type_id::create("tx");
       tx.mem_in = vif.mem_in;
       tx.mem_in_addr = vif.mem_in_addr;

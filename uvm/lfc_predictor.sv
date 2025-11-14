@@ -52,6 +52,7 @@ class lfc_predictor extends uvm_component#(lfc_cpu_transaction, lfc_ram_transact
         out_cpu = lfc_cpu_transaction#(NUM_BANKS, UUID_SIZE)::type_id::create("out_cpu");
         out_cpu.copy(cpu_t);
 
+        out_cpu.mem_out_uuid = 0; // value for write, should look into default read value
         out_cpu.hit = data_is_in_cache[cpu_t.mem_in_addr];
         if (out_cpu.hit) begin
         if (cpu_t.mem_in_rw_mode)

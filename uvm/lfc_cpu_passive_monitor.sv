@@ -57,17 +57,37 @@ class lfc_cpu_passive_monitor extends uvm_monitor;
     tx.block_status     = vif.block_status;
     tx.uuid_block       = vif.uuid_block;
     tx.dp_out_flushed   = vif.dp_out_flushed;
-
-    `uvm_info("CPU_MON", $sformatf("Sampled: uuid=%0d stall=%0b hit=%0b flushed=%0b",
+    
+    `uvm_info("CPU_PASSIVE_MON", $sformatf("Sampled: uuid=%0d stall=%0b hit=%0b flushed=%0b",
                   tx.mem_out_uuid, tx.stall, tx.hit, tx.dp_out_flushed), UVM_LOW)
 
     if (has_run_once > 0 && vif.n_rst) begin
-      if (!$isunknown(tx.stall) && !$isunknown(tx.hit)) begin
+      if(vif.mem_in_rw_mode == 1) begin // write
+        `uvm_info("CPU_PASSIVE_MON", $sformatf("Sent write tx: uuid=%0h stall=%0b hit=%0b flushed=%0b",
+                      tx.mem_out_uuid, tx.stall, tx.hit, tx.dp_out_flushed), UVM_LOW)
         result_ap.write(tx);
-        `uvm_info("CPU_MON", $sformatf("Sent tx: uuid=%0h stall=%0b hit=%0b flushed=%0b",
+      end else begin
+        if(tx.hit == 1 && prev_tx.hit == 0) begin // if new hit, send to scoreboad
+              `uvm_info("CPU_PASSIVE_MON", $sformatf("Sent read tx: uuid=%0h stall=%0b hit=%0b flushed=%0b",
                     tx.mem_out_uuid, tx.stall, tx.hit, tx.dp_out_flushed), UVM_LOW)
-      end
+              result_ap.write(tx);
+            end 
+
+            for(int i = 0; i < tx.NUM_BANKS; i++) begin
+              if(tx.block_status[i] && !prev_tx.block_status[i]) begin // uuid is valid, new cache miss, send to scoreboad
+                `uvm_info("CPU_PASSIVE_MON", $sformatf("Sent read tx: uuid=%0h stall=%0b hit=%0b flushed=%0b",
+                    tx.mem_out_uuid, tx.stall, tx.hit, tx.dp_out_flushed), UVM_LOW)
+                result_ap.write(tx);
+              end
+            end
+          end
     end
+
+      /*if (!$isunknown(tx.stall) && !$isunknown(tx.hit)) begin
+        result_ap.write(tx);
+        `uvm_info("CPU_PASSIVE_MON", $sformatf("Sent tx: uuid=%0h stall=%0b hit=%0b flushed=%0b",
+                    tx.mem_out_uuid, tx.stall, tx.hit, tx.dp_out_flushed), UVM_LOW)
+      end*/
 
     prev_tx.copy(tx);
     if (has_run_once == 0) has_run_once++;

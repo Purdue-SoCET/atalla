@@ -33,7 +33,8 @@ class lfc_ram_transaction #(parameter NUM_BANKS = 4) extends uvm_sequence_item;
 
     function int input_equal(lfc_ram_transaction tx);
         int result;
-        if((ram_mem_data == tx.ram_mem_data) && (ram_mem_complete == tx.ram_mem_complete)) begin
+        if(((ram_mem_data == tx.ram_mem_data) && (ram_mem_complete == tx.ram_mem_complete)) || 
+            ($isunknown(ram_mem_data) && $isunknown(ram_mem_complete))) begin
             result = 1;
         end
         else begin

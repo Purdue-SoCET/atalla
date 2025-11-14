@@ -70,6 +70,7 @@ class lfc_scoreboard extends uvm_scoreboard;
                 `uvm_warning("SCOREBOARD", $sformatf("Skipping exp_tx with unknown UUID: %0d", exp_tx.mem_out_uuid))
                 continue;
             end
+
             // UUID match check
             if (exp_tx.mem_out_uuid !== act_tx.mem_out_uuid) begin
                 m_mismatches++;
@@ -91,8 +92,8 @@ class lfc_scoreboard extends uvm_scoreboard;
 
     function void report_phase(uvm_phase phase);
     // TODO elaborate reporting
-        `uvm_info("Scoreboard", $sformatf("Matches:    %0d", m_matches), UVM_NONE)
-        `uvm_info("Scoreboard", $sformatf("Mismatches: %0d", m_mismatches), UVM_NONE)
+        uvm_report_info("Scoreboard", $sformatf("Matches:    %0d", m_matches));
+        uvm_report_info("Scoreboard", $sformatf("Mismatches: %0d", m_mismatches));
     endfunction: report_phase
 
 endclass: lfc_scoreboard

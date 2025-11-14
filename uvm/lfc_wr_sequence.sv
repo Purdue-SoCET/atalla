@@ -38,7 +38,7 @@ class lfc_wr_sequence extends uvm_sequence#(lfc_cpu_transaction);
         finish_item(req);
 
         `uvm_info(get_type_name(),
-        $sformatf("Write Completed: addr=0x%0h data=0x%0h", req.mem_in_addr, req.mem_in_store_value),
+        $sformatf("Write %0d Completed: addr=0x%0h data=0x%0h", addrs_idx + 1, req.mem_in_addr, req.mem_in_store_value),
         UVM_LOW)
 
         addrs_idx++;
@@ -59,7 +59,7 @@ class lfc_wr_sequence extends uvm_sequence#(lfc_cpu_transaction);
         finish_item(req);
 
         `uvm_info(get_type_name(),
-        $sformatf("Read Completed: addr=0x%0h data=0x%0h", req.mem_in_addr, req.mem_in_store_value),
+        $sformatf("Read %0d Completed: addr=0x%0h data=0x%0h", addrs_idx + 1, req.mem_in_addr, req.mem_in_store_value),
         UVM_LOW)
 
         addrs_idx++;
