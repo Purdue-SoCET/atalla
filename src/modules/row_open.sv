@@ -34,12 +34,12 @@ module row_open # (
         if (!nRST) begin
             reg_f <= 0;
             //pol_if.row_stat <= 0;
-            pol_if.row_conflict <= 0;
+            //pol_if.row_conflict <= 0;
             
         end else begin
             reg_f <= nreg_f;
             //pol_if.row_stat <= nrow_stat;
-            pol_if.row_conflict <= nrow_conflict;
+            //pol_if.row_conflict <= nrow_conflict;
         end
     end
 
@@ -80,6 +80,7 @@ module row_open # (
         
     always_comb begin : ROW_STATUS_BLOCK
         pol_if.row_stat = 2'b00;
+        pol_if.row_conflict = '0;
 
         if (reg_f[ptr].valid && reg_f[ptr].row == amif.row) begin
             pol_if.row_stat = 2'b01; //HIT
@@ -87,6 +88,7 @@ module row_open # (
 
         else if (reg_f[ptr].valid) begin
             pol_if.row_stat = 2'b11; //CONFLICT
+            pol_if.row_conflict = reg_f[ptr].row;
             
             if (pol_if.row_resolve) begin
                 pol_if.row_stat = 2'b00; //IDLE

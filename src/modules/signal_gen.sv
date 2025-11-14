@@ -159,7 +159,8 @@ module signal_gen #(
         end
 
         ACTIVATE: begin
-            if (issue && !cuif.rf_req) begin
+            // if (issue && !cuif.rf_req) begin
+            if (issue) begin
                 // cmd_addr = cmd_t'({2'b0, cuif.row[16], cuif.row[15], cuif.row[14]});
                 cmd_addr = cmd_t'({2'b0, 1'b0, 1'b0, cuif.row[14]});
                 mysig.BG      = cuif.BG;
@@ -169,7 +170,8 @@ module signal_gen #(
         end
 
         WRITE: begin
-            if (issue && !cuif.rf_req) begin
+            // if (issue && !cuif.rf_req) begin
+            if (issue) begin
                 cmd_addr   = WRITE_CMD;
                 mysig.BG        = cuif.BG;
                 mysig.BA        = cuif.bank;
@@ -181,7 +183,8 @@ module signal_gen #(
         end
 
         READ: begin
-            if (issue && !cuif.rf_req) begin
+            // if (issue && !cuif.rf_req) begin
+            if (issue) begin
                 cmd_addr   = READ_CMD;
                 mysig.BG        = cuif.BG;
                 mysig.BA        = cuif.bank;

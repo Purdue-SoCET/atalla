@@ -567,7 +567,6 @@ module dram_controller_top_tb;
     repeat(10) @(posedge CLK);
     read_with_verify(prev_addr, sch);
     
-    /*
     //Case wait for refreshing refresh everything
     task_name = "refresh 150 cycles";
     repeat(150) @(posedge CLK);
@@ -579,7 +578,6 @@ module dram_controller_top_tb;
     // 2. Row policy is updated
     read_with_verify(prev_addr, sch);
 
-    
     //Test case: Testing row miss case with 3 consecutive writes of random address
     task_name = "3 consectutive writing";
     dq_en = 1'b1;
@@ -592,6 +590,7 @@ module dram_controller_top_tb;
     end
     repeat(10) @(posedge CLK);
 
+    
     //2 consectutive
     sch.randomize();
     sch.gen_addr("row miss", prev_addr);
@@ -611,7 +610,7 @@ module dram_controller_top_tb;
     end
     repeat(10) @(posedge CLK);
 
-
+    
     //After that we use the last consecutive write to test the conflict case
     task_name = "Test row conflict write row hit read";
     don_t_write = 1'b1;
@@ -635,7 +634,7 @@ module dram_controller_top_tb;
     random_req();
 
     //CHECKPOINT: DONE ALL PREVIOUS CASES
-    */
+    /**/
     $finish;
     end
 endmodule

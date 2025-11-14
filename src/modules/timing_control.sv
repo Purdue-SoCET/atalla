@@ -36,11 +36,13 @@ module timing_control (
 
     always_comb begin
         timif.tACT_done = 1'b0;
-        timif.tWR_done = 1'b0;
+        timif.tWRITE_done = 1'b0;
         timif.tRD_done = 1'b0;
         timif.tPRE_done = 1'b0;
         timif.tREF_done = 1'b0;
-        timif.tWRITE_WAIT_done = 1'b0;
+        timif.tWR_done = 1'b0;
+        timif.tWTR_done = 1'b0;
+        timif.tRAS_done = 1'b0;
         
         time_counter_en = 1'b0;
         time_load = '0;
@@ -51,25 +53,29 @@ module timing_control (
             ACTIVATE : begin
                 time_counter_en = 1'b1;
                 
-                if (timif.rf_req == 1'b1) begin         // ACT -> PRE time for refresh requests
-                    time_load = tRAS;
-                end
+                // if (timif.rf_req == 1'b1) begin         // ACT -> PRE time for refresh requests
+                //     time_load = tRAS;
+                // end
 
-                else begin                              // ACT -> READ/WRITE time
-                    time_load = tRCD - tAL;             // tAL = 0 if AL command not set. Only tRCD is a safer option
-                end
+                // else begin                              // ACT -> READ/WRITE time
+                //     time_load = tRCD - tAL;             // tAL = 0 if AL command not set. Only tRCD is a safer option
+                // end
 
                 // TODO for consecutive commands
                 // tRRD for consecutive activates
                 // tFAW for 4 consecutive activates with tRRD_s? (Need to check if only tRRD_s or tRRD_l as well)
                 // tRC for ACT -> ACT / REF commands to same bank
+
+                time_load = tRAS;
                 
             end
 
             ACTIVATING : begin
-                if (time_count_done == 1'b1) begin
+                if (time_count <= tRAS - (tRCD - tAL)) begin
                     timif.tACT_done = 1'b1;
                 end
+
+                timif.tRAS_done = time_count_done;
             end
 
             READ : begin
@@ -93,7 +99,7 @@ module timing_control (
 
             WRITE : begin
                 time_counter_en = 1'b1;
-                time_load = tWL + tBURST;
+                time_load = tWL + tBURST + tWR;
 
                 // TODO for consecutive writes
                 // tCCD_S = diff BG
@@ -101,17 +107,26 @@ module timing_control (
             end
 
             WRITING : begin
-                if (time_count <= tBURST) begin
+                if (time_count <= tBURST + tWR) begin
                     timif.wr_en = 1'b1;
                 end
-	                
-                if (time_count_done == 1'b1) begin
-	                timif.tWR_done = 1'b1;
+
+                if (time_count <= tWR) begin
+                    timif.tWRITE_done = 1'b1;
                 end
+                
+                if (time_count <= (tWR - tWTR)) begin
+                    timif.tWTR_done = 1'b1;
+                end
+	                
+	            timif.tWR_done = time_count_done;
             end
 
+            /*
             WAIT_AFTER_WRITE : begin
                 time_counter_en = 1'b1;
+                time_load = tWR;
+
                 if (timif.rf_req == 1'b1) begin
                     time_load = tWR - 1;            // -1 because we spend 1 cycle for WRITE -> WAIT_AFTER_WRITE
                 end
@@ -126,6 +141,7 @@ module timing_control (
 	                timif.tWRITE_WAIT_done = 1'b1;
                 end
             end
+            */
 
             PRECHARGE : begin
                 time_counter_en = 1'b1;
@@ -133,6 +149,12 @@ module timing_control (
             end
 
             PRECHARGING : begin
+                if (time_count_done == 1'b1) begin
+                    timif.tPRE_done = 1'b1;
+                end
+            end
+
+            PRECHARGING_ALL : begin
                 if (time_count_done == 1'b1) begin
                     timif.tPRE_done = 1'b1;
                 end
@@ -152,7 +174,7 @@ module timing_control (
         endcase
     end
 
-    assign timif.clear = timif.tRD_done || timif.tWR_done;
+    assign timif.clear = timif.tRD_done || timif.tWRITE_done;
 
     //////////// REFRESH ////////////
     logic [N-1:0] refresh_limit, next_refresh_limit;
@@ -179,7 +201,8 @@ module timing_control (
         
         next_refresh_limit = refresh_limit;
 
-        if (cfsmif.cmd_state == REFRESH || cfsmif.cmd_state == REFRESHING) begin
+        // if (cfsmif.cmd_state == REFRESH || cfsmif.cmd_state == REFRESHING) begin
+        if (cfsmif.cmd_state == REFRESH) begin
             if (refresh_count < tREFI) begin
                 next_refresh_limit = tREFI;
             end
@@ -194,7 +217,10 @@ module timing_control (
         // Set the refresh counter to 0 in the REFRESH state.
         // Otherwise, the refresh counter is always incrementing.
 
-        next_refresh_count = refresh_count + 1;
+        next_refresh_count = refresh_count;
+        if (cfsmif.init_done == 1'b1) begin
+            next_refresh_count = refresh_count + 1;
+        end
         if (cfsmif.cmd_state == REFRESH || cfsmif.cmd_state == REFRESHING) begin
             next_refresh_count = '0;
         end
@@ -209,7 +235,7 @@ module timing_control (
         end
 
         // disabling rf_req for testing control unit
-        timif.rf_req = 1'b0;
+        // timif.rf_req = 1'b0;
     end 
 
     flex_counter #(.N(N)) time_counter (.clk(clk), .nRST(nRST), .enable(time_counter_en),

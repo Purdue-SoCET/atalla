@@ -147,12 +147,6 @@ add wave -noupdate -expand -group {cmd fsm} /dram_controller_top_tb/cfsmif/dREN
 add wave -noupdate -expand -group {cmd fsm} /dram_controller_top_tb/cfsmif/dWEN
 add wave -noupdate -expand -group {cmd fsm} /dram_controller_top_tb/cfsmif/init_done
 add wave -noupdate -expand -group {cmd fsm} /dram_controller_top_tb/cfsmif/init_req
-add wave -noupdate -expand -group {cmd fsm} /dram_controller_top_tb/cfsmif/tACT_done
-add wave -noupdate -expand -group {cmd fsm} /dram_controller_top_tb/cfsmif/tWR_done
-add wave -noupdate -expand -group {cmd fsm} /dram_controller_top_tb/cfsmif/tRD_done
-add wave -noupdate -expand -group {cmd fsm} /dram_controller_top_tb/cfsmif/tPRE_done
-add wave -noupdate -expand -group {cmd fsm} /dram_controller_top_tb/cfsmif/tREF_done
-add wave -noupdate -expand -group {cmd fsm} /dram_controller_top_tb/cfsmif/rf_req
 add wave -noupdate -expand -group {cmd fsm} /dram_controller_top_tb/cfsmif/row_resolve
 add wave -noupdate -expand -group {cmd fsm} /dram_controller_top_tb/cfsmif/ram_wait
 add wave -noupdate -expand -group {cmd fsm} /dram_controller_top_tb/cfsmif/cmd_state
@@ -160,21 +154,34 @@ add wave -noupdate -expand -group {cmd fsm} /dram_controller_top_tb/cfsmif/ncmd_
 add wave -noupdate -expand -group {timing control} /dram_controller_top_tb/timif/tACT_done
 add wave -noupdate -expand -group {timing control} /dram_controller_top_tb/timif/tWR_done
 add wave -noupdate -expand -group {timing control} /dram_controller_top_tb/timif/tRD_done
+add wave -noupdate -expand -group {timing control} /dram_controller_top_tb/timif/tWRITE_done
+add wave -noupdate -expand -group {timing control} /dram_controller_top_tb/timif/tWTR_done
 add wave -noupdate -expand -group {timing control} /dram_controller_top_tb/timif/tPRE_done
 add wave -noupdate -expand -group {timing control} /dram_controller_top_tb/timif/tREF_done
-add wave -noupdate -expand -group {timing control} /dram_controller_top_tb/timif/tWRITE_WAIT_done
 add wave -noupdate -expand -group {timing control} /dram_controller_top_tb/timif/rf_req
 add wave -noupdate -expand -group {timing control} /dram_controller_top_tb/timif/wr_en
 add wave -noupdate -expand -group {timing control} /dram_controller_top_tb/timif/rd_en
 add wave -noupdate -expand -group {timing control} /dram_controller_top_tb/timif/clear
-add wave -noupdate -expand -group {timing counters} /dram_controller_top_tb/DUT/control_unit/timing_control/time_load
-add wave -noupdate -expand -group {timing counters} /dram_controller_top_tb/DUT/control_unit/timing_control/time_count
-add wave -noupdate -expand -group {timing counters} /dram_controller_top_tb/DUT/control_unit/timing_control/time_counter_en
-add wave -noupdate -expand -group {timing counters} /dram_controller_top_tb/DUT/control_unit/timing_control/time_count_done
-add wave -noupdate -expand -group {timing counters} /dram_controller_top_tb/DUT/control_unit/timing_control/refresh_limit
-add wave -noupdate -expand -group {timing counters} /dram_controller_top_tb/DUT/control_unit/timing_control/next_refresh_limit
-add wave -noupdate -expand -group {timing counters} /dram_controller_top_tb/DUT/control_unit/timing_control/refresh_count
-add wave -noupdate -expand -group {timing counters} /dram_controller_top_tb/DUT/control_unit/timing_control/next_refresh_count
+add wave -noupdate -expand -group {cfsm edges} /dram_controller_top_tb/DUT/control_unit/command_fsm/prev_dREN
+add wave -noupdate -expand -group {cfsm edges} /dram_controller_top_tb/DUT/control_unit/command_fsm/prev_dWEN
+add wave -noupdate -expand -group {cfsm edges} /dram_controller_top_tb/DUT/control_unit/command_fsm/dREN_edge
+add wave -noupdate -expand -group {cfsm edges} /dram_controller_top_tb/DUT/control_unit/command_fsm/dWEN_edge
+add wave -noupdate -expand -group {cfsm edges} /dram_controller_top_tb/DUT/control_unit/command_fsm/dREN_edge_hold
+add wave -noupdate -expand -group {cfsm edges} /dram_controller_top_tb/DUT/control_unit/command_fsm/dWEN_edge_hold
+add wave -noupdate -expand -group {cfsm edges} /dram_controller_top_tb/DUT/control_unit/command_fsm/n_dREN_edge_hold
+add wave -noupdate -expand -group {cfsm edges} /dram_controller_top_tb/DUT/control_unit/command_fsm/n_dWEN_edge_hold
+add wave -noupdate -expand -group {cfsm edges} /dram_controller_top_tb/DUT/control_unit/command_fsm/prev_tWRITE_done
+add wave -noupdate -expand -group {cfsm edges} /dram_controller_top_tb/DUT/control_unit/command_fsm/prev_tRD_done
+add wave -noupdate -expand -group {cfsm edges} /dram_controller_top_tb/DUT/control_unit/command_fsm/tWRITE_done_edge
+add wave -noupdate -expand -group {cfsm edges} /dram_controller_top_tb/DUT/control_unit/command_fsm/tRD_done_edge
+add wave -noupdate -expand -group {timing counters} -radix unsigned /dram_controller_top_tb/DUT/control_unit/timing_control/time_load
+add wave -noupdate -expand -group {timing counters} -radix unsigned /dram_controller_top_tb/DUT/control_unit/timing_control/time_count
+add wave -noupdate -expand -group {timing counters} -radix unsigned /dram_controller_top_tb/DUT/control_unit/timing_control/time_counter_en
+add wave -noupdate -expand -group {timing counters} -radix unsigned /dram_controller_top_tb/DUT/control_unit/timing_control/time_count_done
+add wave -noupdate -expand -group {timing counters} -radix unsigned /dram_controller_top_tb/DUT/control_unit/timing_control/refresh_limit
+add wave -noupdate -expand -group {timing counters} -radix unsigned /dram_controller_top_tb/DUT/control_unit/timing_control/next_refresh_limit
+add wave -noupdate -expand -group {timing counters} -radix unsigned /dram_controller_top_tb/DUT/control_unit/timing_control/refresh_count
+add wave -noupdate -expand -group {timing counters} -radix unsigned /dram_controller_top_tb/DUT/control_unit/timing_control/next_refresh_count
 add wave -noupdate -group {control unit} /dram_controller_top_tb/cuif/dWEN
 add wave -noupdate -group {control unit} /dram_controller_top_tb/cuif/dREN
 add wave -noupdate -group {control unit} /dram_controller_top_tb/cuif/ram_wait
@@ -252,12 +259,12 @@ add wave -noupdate -group edge_det_if /dram_controller_top_tb/DUT/data_transfer/
 add wave -noupdate -group edge_det_if /dram_controller_top_tb/DUT/data_transfer/myedge/sync_out
 add wave -noupdate -group edge_det_if /dram_controller_top_tb/DUT/data_transfer/myedge/edge_flag
 TreeUpdate [SetDefaultTree]
-WaveRestoreCursors {{Cursor 1} {0 ps} 0}
+WaveRestoreCursors {{Cursor 1} {3540750 ps} 0}
 quietly wave cursor active 1
-configure wave -namecolwidth 433
+configure wave -namecolwidth 198
 configure wave -valuecolwidth 100
 configure wave -justifyvalue left
-configure wave -signalnamewidth 0
+configure wave -signalnamewidth 1
 configure wave -snapdistance 10
 configure wave -datasetprefix 0
 configure wave -rowmargin 4
@@ -268,4 +275,4 @@ configure wave -griddelta 40
 configure wave -timeline 0
 configure wave -timelineunits ns
 update
-WaveRestoreZoom {3816726 ps} {4115962 ps}
+WaveRestoreZoom {3409960 ps} {3991588 ps}

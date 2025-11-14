@@ -33,8 +33,8 @@ package dram_pkg;
     parameter tRL = tAL + tCL;        // Read Latency
     parameter tWL = tAL + tCWL;       // Write Latency
     parameter MAX_tREFRESH_LIMIT = 9 * tREFI;
-    parameter tWR = 12;
-    parameter tWTR = 12;
+    parameter tWR = 13;
+    parameter tWTR = 5;
 
     //INITIALIZE TIMING PARAMETERS
     parameter tRESET        = 80;
@@ -76,10 +76,9 @@ package dram_pkg;
         ACTIVATING,
         WRITE,
         WRITING,
-        WAIT_AFTER_WRITE,
-        WAITING_AFTER_WRITE,
         PRECHARGE,
         PRECHARGING,
+        PRECHARGING_ALL,
         READ,
         READING,
         REFRESH,
