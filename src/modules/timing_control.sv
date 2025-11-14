@@ -52,20 +52,6 @@ module timing_control (
         case (cfsmif.cmd_state)
             ACTIVATE : begin
                 time_counter_en = 1'b1;
-                
-                // if (timif.rf_req == 1'b1) begin         // ACT -> PRE time for refresh requests
-                //     time_load = tRAS;
-                // end
-
-                // else begin                              // ACT -> READ/WRITE time
-                //     time_load = tRCD - tAL;             // tAL = 0 if AL command not set. Only tRCD is a safer option
-                // end
-
-                // TODO for consecutive commands
-                // tRRD for consecutive activates
-                // tFAW for 4 consecutive activates with tRRD_s? (Need to check if only tRRD_s or tRRD_l as well)
-                // tRC for ACT -> ACT / REF commands to same bank
-
                 time_load = tRAS;
                 
             end
@@ -81,10 +67,6 @@ module timing_control (
             READ : begin
                 time_counter_en = 1'b1;
                 time_load = tRL + tBURST;
-
-                // TODO for consecutive reads
-                // tCCD_S = diff BG
-                // tCCD_L = same BG
             end
 
             READING : begin
@@ -100,10 +82,6 @@ module timing_control (
             WRITE : begin
                 time_counter_en = 1'b1;
                 time_load = tWL + tBURST + tWR;
-
-                // TODO for consecutive writes
-                // tCCD_S = diff BG
-                // tCCD_L = same BG
             end
 
             WRITING : begin
@@ -121,27 +99,6 @@ module timing_control (
 	                
 	            timif.tWR_done = time_count_done;
             end
-
-            /*
-            WAIT_AFTER_WRITE : begin
-                time_counter_en = 1'b1;
-                time_load = tWR;
-
-                if (timif.rf_req == 1'b1) begin
-                    time_load = tWR - 1;            // -1 because we spend 1 cycle for WRITE -> WAIT_AFTER_WRITE
-                end
-
-                else if (cfsmif.dREN == 1'b1) begin
-                    time_load = tWTR - 1;
-                end
-            end
-
-            WAITING_AFTER_WRITE : begin
-                if (time_count_done == 1'b1) begin
-	                timif.tWRITE_WAIT_done = 1'b1;
-                end
-            end
-            */
 
             PRECHARGE : begin
                 time_counter_en = 1'b1;
@@ -201,7 +158,6 @@ module timing_control (
         
         next_refresh_limit = refresh_limit;
 
-        // if (cfsmif.cmd_state == REFRESH || cfsmif.cmd_state == REFRESHING) begin
         if (cfsmif.cmd_state == REFRESH) begin
             if (refresh_count < tREFI) begin
                 next_refresh_limit = tREFI;

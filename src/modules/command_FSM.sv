@@ -121,12 +121,6 @@ module command_FSM (
             end
 
             IDLE: begin
-                // if (timif.rf_req) mycmd.ncmd_state = PRECHARGE;
-                // else if (mycmd.dWEN || mycmd.dREN) begin
-                //     if (polif.row_stat == HIT) mycmd.ncmd_state = mycmd.dWEN ? WRITE : READ;
-                //     else if(polif.row_stat == CONFLICT) mycmd.ncmd_state = PRECHARGE;
-                //     else if (polif.row_stat == MISS) mycmd.ncmd_state = ACTIVATE;
-                // end
                 if (timif.rf_req) begin
                     mycmd.ncmd_state = REFRESH;
                 end
@@ -137,8 +131,6 @@ module command_FSM (
             end
 
             ACTIVATE: begin
-                // if (timif.rf_req) begin mycmd.ncmd_state = PRECHARGE;end
-                // else begin mycmd.ncmd_state = ACTIVATING; end
                 mycmd.ncmd_state = ACTIVATING;
             end
 
@@ -152,38 +144,23 @@ module command_FSM (
                 end
             end
 
-            // WRITE: begin mycmd.ncmd_state = timif.rf_req ? PRECHARGE : WRITING; end
-            // READ : begin mycmd.ncmd_state = timif.rf_req ? PRECHARGE : READING; end
             WRITE: begin mycmd.ncmd_state = WRITING; end
             READ : begin mycmd.ncmd_state = READING; end
             
             WRITING: begin
                 if (tWRITE_done_edge) begin
-                    //mycmd.ram_wait = 1'b0;
                     nram_wait = 1'b0;
                 end
                 
                 if (timif.tWRITE_done) begin
-                    /* Old logic begin
-                    if (timif.rf_req) begin mycmd.ncmd_state = WAIT_AFTER_WRITE; end
-                   
-                    else begin
-                        mycmd.ncmd_state = IDLE;
-                    end 
-                    Old logic end */
-                    
-                    // if (dWEN_edge && polif.row_stat == HIT) begin
-                    // if (mycmd.dWEN && polif.row_stat == HIT) begin
                     if (dWEN_edge_hold && polif.row_stat == HIT) begin
                         mycmd.ncmd_state = WRITE;
                     end
-                    // if ((dREN_edge || dWEN_edge) && polif.row_stat != HIT && timif.tWR_done) begin
-                    // if ((mycmd.dREN || mycmd.dWEN) && polif.row_stat != HIT && timif.tWR_done) begin
+                    
                     if ((dREN_edge_hold || dWEN_edge_hold) && polif.row_stat != HIT && timif.tWR_done) begin
                         mycmd.ncmd_state = PRECHARGE;
                     end
-                    // if (dREN_edge && polif.row_stat == HIT && timif.tWTR_done) begin
-                    // if (mycmd.dREN && polif.row_stat == HIT && timif.tWTR_done) begin
+                   
                     if (dREN_edge_hold && polif.row_stat == HIT && timif.tWTR_done) begin
                         mycmd.ncmd_state = READ;
                     end
@@ -193,20 +170,6 @@ module command_FSM (
                 end
             end
 
-            // WAIT_AFTER_WRITE: begin mycmd.ncmd_state = WAITING_AFTER_WRITE; end
-
-            // WAITING_AFTER_WRITE: begin
-            //     if (timif.tWRITE_WAIT_done) begin
-            //         if ((mycmd.dWEN || mycmd.dREN) && (polif.row_stat != HIT)) begin
-            //             mycmd.ncmd_state = PRECHARGE;
-            //         end
-
-            //         if (mycmd.dREN && (polif.row_stat == HIT)) begin
-            //             mycmd.ncmd_state = READ;
-            //         end
-            //     end
-            // end
-
             READING: begin
                 if (tRD_done_edge) begin
                     //mycmd.ram_wait = 1'b0;
@@ -214,21 +177,16 @@ module command_FSM (
                 end
                 
                 if (timif.tRD_done) begin
-                    // if ((dWEN_edge || dREN_edge) && polif.row_stat != HIT) begin
-                    // if ((mycmd.dWEN || mycmd.dREN) && polif.row_stat != HIT) begin
+                    
                     if ((dWEN_edge_hold || dREN_edge_hold) && polif.row_stat != HIT) begin 
                         mycmd.ncmd_state = PRECHARGE; 
                     end
                     
                     else if (polif.row_stat == HIT) begin
-                        // if (dREN_edge) begin
-                        // if (mycmd.dREN) begin
                         if (dREN_edge_hold) begin
                             mycmd.ncmd_state = READ;
                         end
 
-                        //if (dWEN_edge) begin
-                        // if (mycmd.dWEN) begin
                         if (dWEN_edge_hold) begin
                             mycmd.ncmd_state = WRITE;
                         end
@@ -237,14 +195,6 @@ module command_FSM (
                     if (timif.rf_req) begin
                         mycmd.ncmd_state = PRECHARGE;
                     end
-                    // else if (mycmd.dWEN || mycmd.dREN) begin
-                    //     if (polif.row_stat == HIT) mycmd.ncmd_state = mycmd.dWEN ? WRITE : READ;
-                    //     else if(polif.row_stat == CONFLICT) mycmd.ncmd_state = PRECHARGE;
-                    //     else if (polif.row_stat == MISS) mycmd.ncmd_state = ACTIVATE;
-                    // end
-                    // else begin
-                    //     mycmd.ncmd_state = IDLE;
-                    // end 
                 end 
             end
 
