@@ -1,9 +1,9 @@
 `timescale 1ns/1ps
 // need to add description
 
-module mul_bf16(input logic clk, input logic nRST, input logic start, input logic [15:0] a, b, output logic [15:0] result, output logic done);
+module mul_fp16_singlecycle(input logic clk, input logic nRST, input logic start, input logic [15:0] a, b, output logic [15:0] result, output logic done);
 
-    logic lat1_ready;               // Signals to denote when the value is ready at each stage of the multiply unit pipeline.
+    logic lat1_ready, lat2_ready;               // Signals to denote when the value is ready at each stage of the multiply unit pipeline.
     assign done = lat1_ready;                   // Mul result is ready when the value-latch register is ready - everything downstream of that is combinational.
     // Register 1: Latches input values.
     // Register 2: Latches mantissa multiplication output before going into exponent addition logic.
@@ -37,14 +37,14 @@ module mul_bf16(input logic clk, input logic nRST, input logic start, input logi
     logic frac_leading_bit_fp1;
     logic frac_leading_bit_fp2;
     always_comb begin
-        if(a_latched[14:7] == 8'b0)begin
+        if(a_latched[14:10] == 5'b0)begin
             frac_leading_bit_fp1 = 1'b0;
         end
         else begin
             frac_leading_bit_fp1 = 1'b1;
         end
 
-        if(b_latched[14:7] == 8'b0)begin
+        if(b_latched[14:10] == 5'b0)begin
             frac_leading_bit_fp2 = 1'b0;
         end
         else begin
@@ -54,18 +54,19 @@ module mul_bf16(input logic clk, input logic nRST, input logic start, input logi
 
     // Step 1.2: Multiply mantissae.
     // With a wallace tree multiplier, this takes two clock cycles (contains one latch in it).
-    // logic mul_ready;
-    logic [9:0] mul_product;
+    logic mul_ready;
+    logic [12:0] mul_product;
     logic mul_carryout;
     logic mul_round_loss;
 
-    wallacetree_8b wallaca (
-        .a({frac_leading_bit_fp1, a_latched[6:0]}),
-        .b({frac_leading_bit_fp2, b_latched[6:0]}),
+    wallacetree_11b wallaca (
+        .a({frac_leading_bit_fp1, a_latched[9:0]}),
+        .b({frac_leading_bit_fp2, b_latched[9:0]}),
         .result(mul_product),
         .overflow(mul_carryout),
         .round_loss(mul_round_loss)
     );
+
 
     // Step 2: Exponent addition, result rounding. All combinational, result is ready in this cycle.
     
@@ -74,12 +75,12 @@ module mul_bf16(input logic clk, input logic nRST, input logic start, input logi
     assign mul_sign_result = a_latched[15] ^ b_latched[15];
 
     // Step 2.2: Add exponent bits, taking into account overflow from mantissa multiplication
-    logic [7:0] exp_sum;
+    logic [4:0] exp_sum;
     logic mul_ovf, mul_unf;
-    adder_8b add_EXPs (
+    adder_5b add_EXPs (
         .carry(mul_carryout),
-        .exp1 (a_latched[14:7]),
-        .exp2 (b_latched[14:7]),
+        .exp1 (a_latched[14:10]),
+        .exp2 (b_latched[14:10]),
         .sum  (exp_sum),
         .ovf  (mul_ovf),
         .unf  (mul_unf)
@@ -88,22 +89,24 @@ module mul_bf16(input logic clk, input logic nRST, input logic start, input logi
     // Step 2.3: Shift multiply product bits if an overflow occurred during mantissa multiplication (exponent was incremented, now divide mantissa by 2 to match)
     // logic [15:0] mul_result; 
                // this variable will hold the final multiplication result
-    logic [8:0] mul_frac_product;
-    assign mul_frac_product = mul_carryout ? mul_product[9:1] : mul_product[8:0];
+    logic [11:0] mul_frac_product;
+    assign mul_frac_product = mul_carryout ? mul_product[12:1] : mul_product[11:0];
 
     // Step 2.4: Rounding.
-    // this logic could potentially result in an edge case where if the mul significand is all 1's, rounding will cause it to become 0
-    logic [7:0] mul_significand_rounded;        // 8th bit will indicate overflow from rounding
+    // edit 11/02/25: Fixed this! this logic could potentially result in an edge case where if the mul significand is all 1's, rounding will cause it to become 0
+    logic [10:0] mul_significand_rounded;       // 11th bit will indicate overflow.
     always_comb begin
         if(mul_frac_product[1] & (mul_frac_product[0] | mul_round_loss | mul_frac_product[2]))
-            mul_significand_rounded = {1'b0, mul_frac_product[8:2]} + 1;
+            mul_significand_rounded = {1'b0, mul_frac_product[11:2]} + 1;
         else
-            mul_significand_rounded = {1'b0, mul_frac_product[8:2]};
+            mul_significand_rounded = {1'b0, mul_frac_product[11:2]};
+
     end
 
     // Concatenation to produce final result.
-    logic [7:0] mul_final_exp;
-    assign mul_final_exp = (mul_product == 0) ? 0 : mul_significand_rounded[7] ? exp_sum + 1 : exp_sum;
-    assign result = {mul_sign_result, mul_final_exp, mul_significand_rounded[6:0]};
+    logic [4:0] mul_final_exp;
+    // if significand rounding overflowed, increase the exponent
+    assign mul_final_exp = (mul_product == 0) ? 0 : mul_significand_rounded[10] ? exp_sum + 1 : exp_sum;
+    assign result = {mul_sign_result, mul_final_exp, mul_significand_rounded[9:0]};
 
 endmodule

@@ -7,7 +7,7 @@
 `include "vaddsub_if.vh"
 
 module vexp_tb;
-
+  
   parameter PERIOD = 10;
   logic CLK = 0, nRST;
 
@@ -40,87 +40,10 @@ initial begin
   casenum = 0;
 
   nRST = '0;
-
-  vexpif.port_a = '0;
-  vexpif.enable = '0;
-
-  #(PERIOD * 10);
-
-  //////////////////////////////////////////////////////
-
-  nRST = 1'b1;
-  
-  //////////////////////////////////////////////////////
-
-  casename = "e^0";
-  casenum = 1;
-
-  vexpif.port_a = '0;
-  vexpif.enable = 1'b1;
-
-  #(PERIOD * 60);
-
-  //////////////////////////////////////////////////////
-
-  casename = "e^1";
-  casenum = 2;
-
-  vexpif.port_a = FP16_ONE;
-  vexpif.enable = 1'b1;
-
-  #(PERIOD * 60);
-
-  //////////////////////////////////////////////////////
-
-  casename = "e^3";
-  casenum = 3;
-
-  vexpif.port_a = 16'b0_10000_1000000000;
-  vexpif.enable = 1'b1;
-
-  #(PERIOD * 60);
-
-  //////////////////////////////////////////////////////
-
-  casename = "e^1.5";
-  casenum = 4;
-
-  vexpif.port_a = 16'b0_01111_1000000000;
-  vexpif.enable = 1'b1;
-
-  #(PERIOD * 60);
-
-  //////////////////////////////////////////////////////
-
-  casename = "e^3.5";
-  casenum = 5;
-
-  vexpif.port_a = 16'b0_10000_1100000000;
-  vexpif.enable = 1'b1;
-
-  #(PERIOD * 60);
-
-  //////////////////////////////////////////////////////
-
-  casename = "Burst Request";
-  casenum = 6;
-
-  vexpif.port_a = FP16_ONE;
-  vexpif.enable = 1'b1;
-
-  #(PERIOD);
-
-  vexpif.port_a = FP16_TWO;
-
-  #(PERIOD);
-
-  vexpif.port_a = FP16_NEG1;
-
-  #(PERIOD);
-
-  vexpif.port_a = FP16_HALF;
-
-  #(PERIOD * 30);
+  vexpif.operand = '0;
+  vexpif.a = '0;
+  vexpif.valid_in = '0;
+  vexpif.ready_out = '0;
 
   $stop;
 

@@ -12,18 +12,18 @@ interface vexp_if;
     import vector_pkg::*;
 
     //Inputs for Vector Exp Module
-    logic[15:0] port_a, out;
-    logic enable;
+    logic [15:0] operand, result, a;
+    logic valid_in, valid_out, ready_in, ready_out;
 
     
     modport vexp (
-        input port_a, enable,
-        output out //neg
+        input operand, a, valid_in, ready_out,
+        output result, valid_out, ready_in
     );
 
     modport tb (
-        input out, //neg,
-        output port_a, enable
+        input result, valid_out, ready_in,
+        output operand, a, valid_in, ready_out
     );
 
 endinterface
