@@ -143,29 +143,38 @@ add wave -noupdate -group {row policy} /dram_controller_top_tb/polif/req_en
 add wave -noupdate -group {row policy} /dram_controller_top_tb/polif/refresh
 add wave -noupdate -group {row policy} /dram_controller_top_tb/polif/row_resolve
 add wave -noupdate -group {row policy} /dram_controller_top_tb/polif/row_stat
-add wave -noupdate -group {cmd fsm} /dram_controller_top_tb/cfsmif/dREN
-add wave -noupdate -group {cmd fsm} /dram_controller_top_tb/cfsmif/dWEN
-add wave -noupdate -group {cmd fsm} /dram_controller_top_tb/cfsmif/init_done
-add wave -noupdate -group {cmd fsm} /dram_controller_top_tb/cfsmif/init_req
-add wave -noupdate -group {cmd fsm} /dram_controller_top_tb/cfsmif/tACT_done
-add wave -noupdate -group {cmd fsm} /dram_controller_top_tb/cfsmif/tWR_done
-add wave -noupdate -group {cmd fsm} /dram_controller_top_tb/cfsmif/tRD_done
-add wave -noupdate -group {cmd fsm} /dram_controller_top_tb/cfsmif/tPRE_done
-add wave -noupdate -group {cmd fsm} /dram_controller_top_tb/cfsmif/tREF_done
-add wave -noupdate -group {cmd fsm} /dram_controller_top_tb/cfsmif/rf_req
-add wave -noupdate -group {cmd fsm} /dram_controller_top_tb/cfsmif/row_resolve
-add wave -noupdate -group {cmd fsm} /dram_controller_top_tb/cfsmif/ram_wait
-add wave -noupdate -group {cmd fsm} /dram_controller_top_tb/cfsmif/cmd_state
-add wave -noupdate -group {cmd fsm} /dram_controller_top_tb/cfsmif/ncmd_state
-add wave -noupdate -group {timing control} /dram_controller_top_tb/timif/tACT_done
-add wave -noupdate -group {timing control} /dram_controller_top_tb/timif/tWR_done
-add wave -noupdate -group {timing control} /dram_controller_top_tb/timif/tRD_done
-add wave -noupdate -group {timing control} /dram_controller_top_tb/timif/tPRE_done
-add wave -noupdate -group {timing control} /dram_controller_top_tb/timif/tREF_done
-add wave -noupdate -group {timing control} /dram_controller_top_tb/timif/rf_req
-add wave -noupdate -group {timing control} /dram_controller_top_tb/timif/wr_en
-add wave -noupdate -group {timing control} /dram_controller_top_tb/timif/rd_en
-add wave -noupdate -group {timing control} /dram_controller_top_tb/timif/clear
+add wave -noupdate -expand -group {cmd fsm} /dram_controller_top_tb/cfsmif/dREN
+add wave -noupdate -expand -group {cmd fsm} /dram_controller_top_tb/cfsmif/dWEN
+add wave -noupdate -expand -group {cmd fsm} /dram_controller_top_tb/cfsmif/init_done
+add wave -noupdate -expand -group {cmd fsm} /dram_controller_top_tb/cfsmif/init_req
+add wave -noupdate -expand -group {cmd fsm} /dram_controller_top_tb/cfsmif/tACT_done
+add wave -noupdate -expand -group {cmd fsm} /dram_controller_top_tb/cfsmif/tWR_done
+add wave -noupdate -expand -group {cmd fsm} /dram_controller_top_tb/cfsmif/tRD_done
+add wave -noupdate -expand -group {cmd fsm} /dram_controller_top_tb/cfsmif/tPRE_done
+add wave -noupdate -expand -group {cmd fsm} /dram_controller_top_tb/cfsmif/tREF_done
+add wave -noupdate -expand -group {cmd fsm} /dram_controller_top_tb/cfsmif/rf_req
+add wave -noupdate -expand -group {cmd fsm} /dram_controller_top_tb/cfsmif/row_resolve
+add wave -noupdate -expand -group {cmd fsm} /dram_controller_top_tb/cfsmif/ram_wait
+add wave -noupdate -expand -group {cmd fsm} /dram_controller_top_tb/cfsmif/cmd_state
+add wave -noupdate -expand -group {cmd fsm} /dram_controller_top_tb/cfsmif/ncmd_state
+add wave -noupdate -expand -group {timing control} /dram_controller_top_tb/timif/tACT_done
+add wave -noupdate -expand -group {timing control} /dram_controller_top_tb/timif/tWR_done
+add wave -noupdate -expand -group {timing control} /dram_controller_top_tb/timif/tRD_done
+add wave -noupdate -expand -group {timing control} /dram_controller_top_tb/timif/tPRE_done
+add wave -noupdate -expand -group {timing control} /dram_controller_top_tb/timif/tREF_done
+add wave -noupdate -expand -group {timing control} /dram_controller_top_tb/timif/tWRITE_WAIT_done
+add wave -noupdate -expand -group {timing control} /dram_controller_top_tb/timif/rf_req
+add wave -noupdate -expand -group {timing control} /dram_controller_top_tb/timif/wr_en
+add wave -noupdate -expand -group {timing control} /dram_controller_top_tb/timif/rd_en
+add wave -noupdate -expand -group {timing control} /dram_controller_top_tb/timif/clear
+add wave -noupdate -expand -group {timing counters} /dram_controller_top_tb/DUT/control_unit/timing_control/time_load
+add wave -noupdate -expand -group {timing counters} /dram_controller_top_tb/DUT/control_unit/timing_control/time_count
+add wave -noupdate -expand -group {timing counters} /dram_controller_top_tb/DUT/control_unit/timing_control/time_counter_en
+add wave -noupdate -expand -group {timing counters} /dram_controller_top_tb/DUT/control_unit/timing_control/time_count_done
+add wave -noupdate -expand -group {timing counters} /dram_controller_top_tb/DUT/control_unit/timing_control/refresh_limit
+add wave -noupdate -expand -group {timing counters} /dram_controller_top_tb/DUT/control_unit/timing_control/next_refresh_limit
+add wave -noupdate -expand -group {timing counters} /dram_controller_top_tb/DUT/control_unit/timing_control/refresh_count
+add wave -noupdate -expand -group {timing counters} /dram_controller_top_tb/DUT/control_unit/timing_control/next_refresh_count
 add wave -noupdate -group {control unit} /dram_controller_top_tb/cuif/dWEN
 add wave -noupdate -group {control unit} /dram_controller_top_tb/cuif/dREN
 add wave -noupdate -group {control unit} /dram_controller_top_tb/cuif/ram_wait
@@ -259,4 +268,4 @@ configure wave -griddelta 40
 configure wave -timeline 0
 configure wave -timelineunits ns
 update
-WaveRestoreZoom {47664726 ps} {47963962 ps}
+WaveRestoreZoom {3816726 ps} {4115962 ps}

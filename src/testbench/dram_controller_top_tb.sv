@@ -552,12 +552,11 @@ module dram_controller_top_tb;
     writing_1(sch.creating_addr, dt_class);
     repeat (50) @(posedge CLK);
 
-    
     task_name = "Reading_Cycle";
     dq_en = 1'b0;
     read_with_verify(sch.creating_addr, sch);
     
-    /*
+    
     //checking the write - write - read row hit
     task_name = "write - write - read - row hit";
     dq_en = 1'b1;
@@ -568,7 +567,7 @@ module dram_controller_top_tb;
     repeat(10) @(posedge CLK);
     read_with_verify(prev_addr, sch);
     
-
+    /*
     //Case wait for refreshing refresh everything
     task_name = "refresh 150 cycles";
     repeat(150) @(posedge CLK);
@@ -580,6 +579,7 @@ module dram_controller_top_tb;
     // 2. Row policy is updated
     read_with_verify(prev_addr, sch);
 
+    
     //Test case: Testing row miss case with 3 consecutive writes of random address
     task_name = "3 consectutive writing";
     dq_en = 1'b1;

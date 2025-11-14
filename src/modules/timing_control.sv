@@ -14,12 +14,33 @@ module timing_control (
     logic [N-1:0] time_load, time_count;
     logic time_counter_en, time_count_done;
 
+    // dREN and dWEN edge detect
+    logic prev_dREN, prev_dWEN;
+    logic dREN_edge, dWEN_edge;
+
+    always_ff @(posedge clk, negedge nRST) begin : EDGE_DET_REG
+        if (~nRST) begin
+            prev_dREN <= 1'b0;
+            prev_dWEN <= 1'b0;
+        end
+        else begin
+            prev_dREN <= cfsmif.dREN;
+            prev_dWEN <= cfsmif.dWEN;
+        end
+    end
+
+    always_comb begin : EDGE_DET_COMB
+        dREN_edge = cfsmif.dREN && (~prev_dREN);
+        dWEN_edge = cfsmif.dWEN && (~prev_dWEN);
+    end
+
     always_comb begin
         timif.tACT_done = 1'b0;
         timif.tWR_done = 1'b0;
         timif.tRD_done = 1'b0;
         timif.tPRE_done = 1'b0;
         timif.tREF_done = 1'b0;
+        timif.tWRITE_WAIT_done = 1'b0;
         
         time_counter_en = 1'b0;
         time_load = '0;
@@ -86,6 +107,23 @@ module timing_control (
 	                
                 if (time_count_done == 1'b1) begin
 	                timif.tWR_done = 1'b1;
+                end
+            end
+
+            WAIT_AFTER_WRITE : begin
+                time_counter_en = 1'b1;
+                if (timif.rf_req == 1'b1) begin
+                    time_load = tWR - 1;            // -1 because we spend 1 cycle for WRITE -> WAIT_AFTER_WRITE
+                end
+
+                else if (cfsmif.dREN == 1'b1) begin
+                    time_load = tWTR - 1;
+                end
+            end
+
+            WAITING_AFTER_WRITE : begin
+                if (time_count_done == 1'b1) begin
+	                timif.tWRITE_WAIT_done = 1'b1;
                 end
             end
 
