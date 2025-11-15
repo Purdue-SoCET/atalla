@@ -8,7 +8,7 @@ module sqrt_bf16_tb;
     import sqrt_pkg::*;
     
     localparam MULT_LATENCY = 2;
-    localparam int MAX_ULP_TOL = 2;
+    localparam int MAX_ULP_TOL = 1;
 
     // Signals
     logic CLK, nRST;

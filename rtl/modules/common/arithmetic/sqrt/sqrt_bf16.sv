@@ -165,8 +165,7 @@ module sqrt_bf16 (
 
     add_bf16 add1 (
         .clk(CLK), 
-        .nRST(nRST), 
-        .start(add_start),
+        .nRST(nRST),
         .bf1_in(mul_out_reg),
         .bf2_in(intercept),
         .bf_out(add_out)
