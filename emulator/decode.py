@@ -102,16 +102,14 @@ OPCODES = {
 
     # ---------------- VS-Type ----------------
     0b0111000: ("shift.vs","VS"),  # vector lane shift scalar reg
-
-    #TODO - ask vec team about missing opcodes
-    # 80: ("add.vs", "VS"),
-    # 81: ("sub.vs", "VS"),
-    # 82: ("mul.vs", "VS"),
-    # 83: ("div.vs", "VS"),
-    # 84: ("mgt.vs", "VS"),
-    # 85: ("mlt.vs", "VS"),
-    # 86: ("meq.vs", "VS"),
-    # 87: ("mneqi.vs","VS"),
+    0b1010000: ("add.vs", "VS"),
+    0b1010001: ("sub.vs", "VS"),
+    0b1010010: ("mul.vs", "VS"),
+    0b1010011: ("div.vs", "VS"),
+    0b1010100: ("mgt.vs", "VS"),
+    0b1010101: ("mlt.vs", "VS"),
+    0b1010110: ("meq.vs", "VS"),
+    0b1010111: ("mneqi.vs","VS"),
 
     # ---------------- Mask/Move ----------------
     0b1001011: ("mv.mts", "MTS"),
@@ -370,7 +368,8 @@ def sign_extend(value, bits):
 # --------------------------------------------
 if __name__ == "__main__":
     # Example: 160-bit packet (0 - and.s (x3 = x3 & x3) | 1 - and.s (x3 = x3 & x3) | 2 - and.s (x3 = x3 & x3) | 3 - and.s (x3 = x3 & x3))
-    packet = int("0000000001100000011000000110000001110000000000000110000001100000011000000111000000000000011000000110000001100000011100000000000001100000011000000110000001110000", 2)
+    packet = int("00000000000000000000000000000000001111010 00000000000000000000000000000000000000110 00000000011000000110000001100000011100000000000001100000011000000110000001110000", 2)
     decoded = decode_packet(packet)
+    print(decoded)
     for i, d in enumerate(decoded):
         print(f"Instruction {i}: {d}")
