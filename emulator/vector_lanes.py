@@ -163,6 +163,93 @@ class VectorLanes:
             r = np.sqrt(a_clip.astype(np.float32))
             out[s:e] = self._q(r)
         return out
+    
+    def add_scalar(self, a: np.ndarray, s: float) -> np.ndarray:
+        return self._elementwise_op(a, np.array([s], dtype=np.float32),
+                                    lambda x, y: x + y, self.adders)
+
+    def sub_scalar(self, a: np.ndarray, s: float) -> np.ndarray:
+        # elementwise: a - s
+        return self._elementwise_op(a, np.array([s], dtype=np.float32),
+                                    lambda x, y: x - y, self.adders)
+
+    def scalar_sub(self, s: float, a: np.ndarray) -> np.ndarray:
+        # scalar - vector
+        return self._elementwise_op(np.array([s], dtype=np.float32), a,
+                                    lambda x, y: x - y, self.adders)
+
+    def mul_scalar(self, a: np.ndarray, s: float) -> np.ndarray:
+        return self._elementwise_op(a, np.array([s], dtype=np.float32),
+                                    lambda x, y: x * y, self.multipliers)
+
+    def div_scalar(self, a: np.ndarray, s: float, eps: float = 1e-6) -> np.ndarray:
+        # a / s
+        return self._elementwise_op(a, np.array([s], dtype=np.float32),
+                                    lambda x, y: x / (np.where(np.abs(y) < eps,
+                                                               np.sign(y)*eps + eps, y)),
+                                    self.dividers)
+
+    def scalar_div(self, s: float, a: np.ndarray, eps: float = 1e-6) -> np.ndarray:
+        # s / a
+        return self._elementwise_op(np.array([s], dtype=np.float32), a,
+                                    lambda x, y: x / (np.where(np.abs(y) < eps,
+                                                               np.sign(y)*eps + eps, y)),
+                                    self.dividers)
+
+    # --------------------------------------------------------
+    # Vector << scalar   and   Vector >> scalar (logical shifts)
+    # --------------------------------------------------------
+    def shl_scalar(self, a: np.ndarray, s: int) -> np.ndarray:
+        a = self._ensure_vec(a)
+        out = np.empty_like(a, dtype=np.float32)
+
+        for start, end in iterate_chunks(a.size, self.adders):
+            a_chunk = self._q(a[start:end])
+            bits = bf16_to_uint16_bits(a_chunk)
+            shifted = (bits.astype(np.uint16) << np.uint16(s)).astype(np.uint16)
+            out[start:end] = uint16_bits_to_bf16(shifted)
+
+        return out
+
+    def shr_scalar(self, a: np.ndarray, s: int) -> np.ndarray:
+        a = self._ensure_vec(a)
+        out = np.empty_like(a, dtype=np.float32)
+
+        for start, end in iterate_chunks(a.size, self.adders):
+            a_chunk = self._q(a[start:end])
+            bits = bf16_to_uint16_bits(a_chunk)
+            shifted = (bits.astype(np.uint16) >> np.uint16(s)).astype(np.uint16)
+            out[start:end] = uint16_bits_to_bf16(shifted)
+
+        return out
+    
+    # --------------------------------------------------------
+    # Vector–Vector comparison ops
+    # Output: BF16 1.0 (true) or 0.0 (false)
+    # --------------------------------------------------------
+    def cmp_gt(self, a: np.ndarray, b: np.ndarray) -> np.ndarray:
+        a = self._ensure_vec(a)
+        b = self._ensure_vec(b)
+        mask = (a > b).astype(np.float32)
+        return self._q(mask)
+
+    def cmp_lt(self, a: np.ndarray, b: np.ndarray) -> np.ndarray:
+        a = self._ensure_vec(a)
+        b = self._ensure_vec(b)
+        mask = (a < b).astype(np.float32)
+        return self._q(mask)
+
+    def cmp_eq(self, a: np.ndarray, b: np.ndarray) -> np.ndarray:
+        a = self._ensure_vec(a)
+        b = self._ensure_vec(b)
+        mask = (a == b).astype(np.float32)
+        return self._q(mask)
+
+    def cmp_neq(self, a: np.ndarray, b: np.ndarray) -> np.ndarray:
+        a = self._ensure_vec(a)
+        b = self._ensure_vec(b)
+        mask = (a != b).astype(np.float32)
+        return self._q(mask)
 
     # ---- reductions ----
     def reduce_sum(self, a: np.ndarray) -> np.ndarray:

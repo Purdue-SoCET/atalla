@@ -70,6 +70,26 @@ class ScalarALU:
         return res
 
     # -------------------------
+    # Comparison ops (INT32)
+    # -------------------------
+    def slt(self, a, b) -> np.ndarray:
+        """
+        Signed comparison: result[i] = 1 if a[i] < b[i] (signed), else 0
+        """
+        a_i32 = self._broadcast_scalar(a).astype(np.int32)
+        b_i32 = self._broadcast_scalar(b).astype(np.int32)
+        return (a_i32 < b_i32).astype(np.int32)
+
+    def sltu(self, a, b) -> np.ndarray:
+        """
+        Unsigned comparison: compare as uint32.
+        result[i] = 1 if a_u32[i] < b_u32[i] (unsigned), else 0
+        """
+        a_u32 = self._broadcast_scalar(a).astype(np.uint32)
+        b_u32 = self._broadcast_scalar(b).astype(np.uint32)
+        return (a_u32 < b_u32).astype(np.int32)
+
+    # -------------------------
     # Bitwise ops (INT32)
     # -------------------------
     def bit_or(self, a, b) -> np.ndarray:
@@ -154,6 +174,10 @@ class ScalarALU:
             return self.srl(a, b)
         elif op == "sra":
             return self.sra(a, b)
+        elif op == "slt":
+            return self.slt(a, b)
+        elif op == "sltu":
+            return self.sltu(a, b)
         else:
             raise ValueError(f"Unknown scalar ALU op '{op}'")
 
