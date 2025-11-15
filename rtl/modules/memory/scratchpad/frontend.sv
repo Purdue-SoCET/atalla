@@ -53,3 +53,9 @@ module frontend #(parameter logic [SCPAD_ID_WIDTH-1:0] IDX = '0) (scpad_if.front
     );
 
 endmodule
+
+`ifndef SYNTHESIS
+
+
+
+`endif 

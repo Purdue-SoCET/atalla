@@ -53,3 +53,9 @@ module wxbar #(parameter logic [scpad_pkg::SCPAD_ID_WIDTH-1:0] IDX = '0) (scpad_
     endgenerate
 
 endmodule
+
+`ifndef SYNTHESIS
+
+
+
+`endif 

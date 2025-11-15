@@ -47,3 +47,9 @@ module head #(parameter logic [scpad_pkg::SCPAD_ID_WIDTH-1:0] IDX = '0) (scpad_i
     assign hif.be_stall[IDX] = downstream_stall || (be_v && pipe_busy);
 
 endmodule
+
+`ifndef SYNTHESIS
+
+
+
+`endif 
