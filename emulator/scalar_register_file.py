@@ -1,4 +1,4 @@
-class RegisterFile:
+class ScalarRegisterFile:
     """
     Simple register file model.
     Stores 32 registers (x0-x31) as a dictionary: {reg_num: data}.

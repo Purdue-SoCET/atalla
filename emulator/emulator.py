@@ -8,10 +8,12 @@ Loads memory contents from an input file, prints them, and writes them back out.
 # Support both package and standalone execution
 try:
     from .memory import Memory
-    from .scalar_register_file import RegisterFile
+    from .scalar_register_file import ScalarRegisterFile
+    from .vector_register_file import VectorRegisterFile
 except ImportError:
     from memory import Memory
-    from scalar_register_file import RegisterFile
+    from scalar_register_file import ScalarRegisterFile
+    from vector_register_file import VectorRegisterFile
 
 def decode(instruction):
     """
@@ -104,7 +106,8 @@ def main():
         print(f"0x{addr:08X}: 0x{mem.read(addr):08X}")
 
     # Initialize Registers and Program Counter
-    regs = RegisterFile()  # <-- This works because you imported it
+    sregs = ScalarRegisterFile()
+    vregs = VectorRegisterFile()
     pc = 0x00000000  # Program Counter, starts at address 0
 
     print("\n--- Starting Simulation ---")
@@ -126,14 +129,14 @@ def main():
         print(f"[DECODE] {decoded_inst}")
 
         # 5. Execute
-        execute(decoded_inst, regs)
+        execute(decoded_inst, sregs)
 
         # 6. Advance Program Counter
         pc += 4  # Move to the next 4-byte instruction
 
     # Dump scalar regs to output file
     out_regs_file = "output_regs.txt"
-    regs.dump_to_file(out_regs_file)
+    sregs.dump_to_file(out_regs_file)
     print(f"\n[INFO] Wrote final register state to '{out_regs_file}'.")
 
     # Dump regs to terminal
