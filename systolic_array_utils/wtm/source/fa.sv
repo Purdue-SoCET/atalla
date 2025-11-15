@@ -1,3 +1,4 @@
+`timescale 1ns/1ps
 `default_nettype none
 module fa (
   input logic a, b, cin,
