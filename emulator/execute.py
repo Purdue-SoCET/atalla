@@ -30,7 +30,7 @@ from move import MoveConvertUnit
 # ============================================================
 
 MNEMONIC_SCALAR = {
-    "add.s": "add",
+    "addi.s": "add",
     "sub.s": "sub",
     "mul.s": "mul",
     "div.s": "div",

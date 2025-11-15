@@ -10,143 +10,271 @@ try:
     from .memory import Memory
     from .scalar_register_file import ScalarRegisterFile
     from .vector_register_file import VectorRegisterFile
+    from .decode import decode_packet
+    from .execute import ExecuteUnit
 except ImportError:
     from memory import Memory
     from scalar_register_file import ScalarRegisterFile
     from vector_register_file import VectorRegisterFile
-
-def decode(instruction):
-    """
-    Decodes a 32-bit instruction based on the custom 7-8-8-8 format:
-    Bits 31:     Unused
-    Bits 30-23:  rs2 / immediate (8 bits)
-    Bits 22-15:  rs1 (8 bits)
-    Bits 14-7:   rd (8 bits)
-    Bits 6-0:    opcode (7 bits)
-    """
-    opcode = instruction & 0x7F       # bits 6:0
-    rd = (instruction >> 7) & 0xFF    # bits 14:7
-    rs1 = (instruction >> 15) & 0xFF  # bits 22:15
-    
-    # This field is used for both rs2 and the immediate
-    field4 = (instruction >> 23) & 0xFF # bits 30:23
-    
-    # --- Instruction Set ---
-    # We will invent opcodes for this example.
-    
-    # Opcode 0x01: 'ADD' (R-type) uses rd, rs1, rs2
-    if opcode == 0x01:
-        return {
-            'name': 'ADD',
-            'rd': rd,
-            'rs1': rs1,
-            'rs2': field4  # Use field4 as rs2
-        }
-
-    # Opcode 0x02: 'ADDI' (I-type) uses rd, rs1, imm
-    elif opcode == 0x02:
-        # We need to sign-extend the 8-bit immediate
-        imm = field4
-        if (imm & 0x80):  # if 7th bit (MSB) is 1
-            imm = imm - 0x100  # Compute two's complement (e.g., 0xFF becomes -1)
-            
-        return {
-            'name': 'ADDI',
-            'rd': rd,
-            'rs1': rs1,
-            'imm': imm  # Use field4 as immediate
-        }
-    
-    # Fallback for any other opcode
-    return {
-        'name': 'UNKNOWN',
-        'opcode': opcode
-    }
-
-def execute(decoded_inst, regs):
-    """
-    Executes the logic for a decoded instruction.
-    Updates the 'regs' (RegisterFile) object.
-    """
-    name = decoded_inst['name']
-
-    if name == 'ADD':
-        rd = decoded_inst['rd']
-        rs1_val = regs.read(decoded_inst['rs1'])
-        rs2_val = regs.read(decoded_inst['rs2'])
-        
-        result = rs1_val + rs2_val
-        regs.write(rd, result)
-        print(f"[EXEC] ADD x{rd}, x{decoded_inst['rs1']}, x{decoded_inst['rs2']}  (Result: 0x{result:08X})")
-
-    elif name == 'ADDI':
-        rd = decoded_inst['rd']
-        rs1_val = regs.read(decoded_inst['rs1'])
-        imm_val = decoded_inst['imm']
-
-        result = rs1_val + imm_val
-        regs.write(rd, result)
-        print(f"[EXEC] ADDI x{rd}, x{decoded_inst['rs1']}, {imm_val}  (Result: 0x{result:08X})")
-        
-    elif name == 'UNKNOWN':
-        print(f"[ERROR] Unknown instruction with opcode 0x{decoded_inst['opcode']:X}")
-
+    from decode import decode_packet
+    from execute import ExecuteUnit
 
 def main():
     mem_file = "mem.txt"
     out_file = "output_mem.txt"
+    out_reg_file = "output_regs.txt"
 
     # Load memory
     mem = Memory(mem_file)
-    print(f"[INFO] Loaded {len(mem)} memory entries from '{mem_file}'.")
+    #print(f"[INFO] Loaded {len(mem)} memory entries from '{mem_file}'.")
 
     # Print all loaded memory entries
-    print("\n--- Memory Contents ---")
-    for addr in sorted(mem.mem.keys()):
-        print(f"0x{addr:08X}: 0x{mem.read(addr):08X}")
+    print("\n--- Inst Mem Contents ---")
+    for addr in sorted(mem.instr_mem.keys()):
+        print(f"0x{addr:08X}: 0x{mem.read_instr(addr):08X}")
+
+    print("\n--- Data Mem Contents ---")
+    for addr in sorted(mem.data_mem.keys()):
+        print(f"0x{addr:08X}: 0x{mem.read_data(addr):08X}")
 
     # Initialize Registers and Program Counter
     sregs = ScalarRegisterFile()
+    mregs = ScalarRegisterFile(num_regs=2)
     vregs = VectorRegisterFile()
     pc = 0x00000000  # Program Counter, starts at address 0
 
-    print("\n--- Starting Simulation ---")
+    #eecute object
+    EU = ExecuteUnit()
 
-    # 2. Main Simulation Loop
-    while True:
-        # 3. Fetch
-        instruction_word = mem.read(pc)
+
+    halt = False
+    while(not(halt)):
+        dec_packet = decode_packet(mem.read_instr(pc))
+        print(pc)
+        print(mem.read_instr(pc))
+        print(dec_packet)
+        br = False
         
-        if instruction_word == 0:
-            print(f"\n[INFO] Reached end of program (instruction is 0x0 at 0x{pc:08X}). Halting.")
-            break
+
+        for inst in dec_packet:
+            m = inst['mnemonic']
+            if(m == "nop.s" or m == "barrier.s"):
+                continue
+            elif(m == "halt.s"):
+                halt = True
+            elif(m == "jal" or m == "jalr" or inst['type'] == "BR"):
+                br = True
+                if(m == "jal"):
+                    brtarg = pc + (inst['imm'])
+                    sregs.write(inst['rd'], pc + 20)
+                elif(m == "jalr"):
+                    brtarg = sregs.read(inst['rs1']) + (inst['imm'])
+                    sregs.write(inst['rd'], pc + 20)
+                elif(m == "beq.s"):
+                    sregs.write(inst['rs1'], sregs.read(inst['rs1']) + inst['incr_imm'])
+                    if(sregs.read(inst['rs1']) == sregs.read(inst['rs2'])):
+                        brtarg = pc + (inst['imm'])
+                    else:
+                        brtarg = pc + 20
+                elif(m == "bne.s"):
+                    sregs.write(inst['rs1'], sregs.read(inst['rs1']) + inst['incr_imm'])
+                    if(sregs.read(inst['rs1']) != sregs.read(inst['rs2'])):
+                        brtarg = pc + (inst['imm'])
+                    else:
+                        brtarg = pc + 20
+                elif(m == "blt.s"):
+                    sregs.write(inst['rs1'], sregs.read(inst['rs1']) + inst['incr_imm'])
+                    if(sregs.read(inst['rs1']) < sregs.read(inst['rs2'])):
+                        brtarg = pc + (inst['imm'])
+                    else:
+                        brtarg = pc + 20
+                elif(m == "bge.s"):
+                    sregs.write(inst['rs1'], sregs.read(inst['rs1']) + inst['incr_imm'])
+                    if(sregs.read(inst['rs1']) >= sregs.read(inst['rs2'])):
+                        brtarg = pc + (inst['imm'])
+                    else:
+                        brtarg = pc + 20
+                elif(m == "bgt.s"):
+                    sregs.write(inst['rs1'], sregs.read(inst['rs1']) + inst['incr_imm'])
+                    if(sregs.read(inst['rs1']) > sregs.read(inst['rs2'])):
+                        brtarg = pc + (inst['imm'])
+                    else:
+                        brtarg = pc + 20
+                elif(m == "ble.s"):
+                    sregs.write(inst['rs1'], sregs.read(inst['rs1']) + inst['incr_imm'])
+                    if(sregs.read(inst['rs1']) <= sregs.read(inst['rs2'])):
+                        brtarg = pc + (inst['imm'])
+                    else:
+                        brtarg = pc + 20
+            elif(m == "lw.s"):
+                sregs.write(inst['rd'], mem.read_data(sregs.read(inst['rs1']) + inst['imm']))
+            elif(m == "sw.s"):
+                mem.write_data(sregs.read(inst['rs1']) + inst['imm'], inst['rd'])
+            #vector load/store here
+
+            #spad movement here
+            elif(m == "lui.s"):
+                mem.write_data(inst['rd'], (inst['imm']<<7))
+            elif(m == "mv.mts"):
+                sregs.write(inst['rd'], mregs.read(inst['vms']))
+            elif(m == "mv.stm"):
+                mregs.write(inst['vmd'], sregs.read(inst['rs1']))
+            elif m in ("add.s", "addi.s", "add.bf"):
+                if(m == "add.s" or m == "add.bf"):
+                    src1 = sregs.read(inst['rs1'])
+                    src2 = sregs.read(inst['rs2'])
+                else:
+                    src1 = sregs.read(inst['rs1'])
+                    src2 = inst['imm']
+                WBdata = EU.execute(m, sA=src1, sB=src2)
+                sregs.write(inst['rd'], WBdata)
+            elif m in ("sub.s", "subi.s", "sub.bf"):
+                if(m == "sub.s" or m == "sub.bf"):
+                    src1 = sregs.read(inst['rs1'])
+                    src2 = sregs.read(inst['rs2'])
+                else:
+                    src1 = sregs.read(inst['rs1'])
+                    src2 = inst['imm']
+                WBdata = EU.execute(m, sA=src1, sB=src2)
+                sregs.write(inst['rd'], WBdata)
+            elif m in ("mul.s", "muli.s", "mul.bf"):
+                if(m == "mul.s" or m == "mul.bf"):
+                    src1 = sregs.read(inst['rs1'])
+                    src2 = sregs.read(inst['rs2'])
+                else:
+                    src1 = sregs.read(inst['rs1'])
+                    src2 = inst['imm']
+                WBdata = EU.execute(m, sA=src1, sB=src2)
+                sregs.write(inst['rd'], WBdata)
+            elif m in ("div.s", "divi.s", "div.bf"):
+                if(m == "div.s" or m == "div.bf"):
+                    src1 = sregs.read(inst['rs1'])
+                    src2 = sregs.read(inst['rs2'])
+                else:
+                    src1 = sregs.read(inst['rs1'])
+                    src2 = inst['imm']
+                WBdata = EU.execute(m, sA=src1, sB=src2)
+                sregs.write(inst['rd'], WBdata)
+            elif m in ("mod.s", "modi.s"):
+                if(m == "mod.s"):
+                    src1 = sregs.read(inst['rs1'])
+                    src2 = sregs.read(inst['rs2'])
+                else:
+                    src1 = sregs.read(inst['rs1'])
+                    src2 = inst['imm']
+                WBdata = EU.execute(m, sA=src1, sB=src2)
+                sregs.write(inst['rd'], WBdata)
+            elif m in ("or.s", "ori.s"):
+                if(m == "or.s"):
+                    src1 = sregs.read(inst['rs1'])
+                    src2 = sregs.read(inst['rs2'])
+                else:
+                    src1 = sregs.read(inst['rs1'])
+                    src2 = inst['imm']
+                WBdata = EU.execute(m, sA=src1, sB=src2)
+                sregs.write(inst['rd'], WBdata)
+            elif m in ("and.s", "andi.s"):
+                if(m == "and.s"):
+                    src1 = sregs.read(inst['rs1'])
+                    src2 = sregs.read(inst['rs2'])
+                else:
+                    src1 = sregs.read(inst['rs1'])
+                    src2 = inst['imm']
+                WBdata = EU.execute(m, sA=src1, sB=src2)
+                sregs.write(inst['rd'], WBdata)
+            elif m in ("xor.s", "xori.s"):
+                if(m == "xor.s"):
+                    src1 = sregs.read(inst['rs1'])
+                    src2 = sregs.read(inst['rs2'])
+                else:
+                    src1 = sregs.read(inst['rs1'])
+                    src2 = inst['imm']
+                WBdata = EU.execute(m, sA=src1, sB=src2)
+                sregs.write(inst['rd'], WBdata)
+            elif m in ("sll.s", "slli.s"):
+                if(m == "sll.s"):
+                    src1 = sregs.read(inst['rs1'])
+                    src2 = sregs.read(inst['rs2'])
+                else:
+                    src1 = sregs.read(inst['rs1'])
+                    src2 = inst['imm']
+                WBdata = EU.execute(m, sA=src1, sB=src2)
+                sregs.write(inst['rd'], WBdata)
+            elif m in ("srl.s", "srli.s"):
+                if(m == "srl.s"):
+                    src1 = sregs.read(inst['rs1'])
+                    src2 = sregs.read(inst['rs2'])
+                else:
+                    src1 = sregs.read(inst['rs1'])
+                    src2 = inst['imm']
+                WBdata = EU.execute(m, sA=src1, sB=src2)
+                sregs.write(inst['rd'], WBdata)
+            elif m in ("sra.s", "srai.s"):
+                if(m == "sra.s"):
+                    src1 = sregs.read(inst['rs1'])
+                    src2 = sregs.read(inst['rs2'])
+                else:
+                    src1 = sregs.read(inst['rs1'])
+                    src2 = inst['imm']
+                WBdata = EU.execute(m, sA=src1, sB=src2)
+                sregs.write(inst['rd'], WBdata)
+            elif m in ("slt.s", "slti.s", "slt.bf"):
+                if(m == "slt.s" or m == "slt.bf"):
+                    src1 = sregs.read(inst['rs1'])
+                    src2 = sregs.read(inst['rs2'])
+                else:
+                    src1 = sregs.read(inst['rs1'])
+                    src2 = inst['imm']
+                WBdata = EU.execute(m, sA=src1, sB=src2)
+                sregs.write(inst['rd'], WBdata)
+            elif m in ("sltu.s", "sltui.s", "sltu.bf"):
+                if(m == "sltu.s" or m == "sltu.bf"):
+                    src1 = sregs.read(inst['rs1'])
+                    src2 = sregs.read(inst['rs2'])
+                else:
+                    src1 = sregs.read(inst['rs1'])
+                    src2 = inst['imm']
+                WBdata = EU.execute(m, sA=src1, sB=src2)
+                sregs.write(inst['rd'], WBdata)
+            elif m == "stbf.s":
+                src1 = sregs.read(inst['rs1'])
+                WBdata = EU.execute(m, sA=src1, sB=src2)
+                sregs.write(inst['rd'], WBdata)
+            elif m == "bfts.s":
+                src1 = sregs.read(inst['rs1'])
+                WBdata = EU.execute(m, sA=src1, sB=src2)
+                sregs.write(inst['rd'], WBdata)
+            elif m.endswith(".vv"):
+                src1 = sregs.read(inst['vs1'])
+                src2 = sregs.read(inst['vs2'])
+                WBdata = EU.execute(m, vA=src1, vB=src2)
+                sregs.write(inst['rd'], WBdata)
+            # ---------------- VI (Vector-Immediate) ----------------
+            elif m.endswith(".vi"):
+                src1 = sregs.read(inst['vs1'])
+                src2 = inst['imm']
+                WBdata = EU.execute(m, vA=src1, vB=src2)
+                sregs.write(inst['rd'], WBdata)
+            # ---------------- VS (Vector-Scalar) ----------------
+            elif m.endswith(".vs"):
+                src1 = sregs.read(inst['vs1'])
+                src2 = sregs.read(inst['rs1'])
+                WBdata = EU.execute(m, vA=src1, vB=src2)
+                sregs.write(inst['rd'], WBdata)
+
+            # ---------------- UNKNOWN ----------------
+            else:
+                raise ValueError(f"Unknown mnemonic: {m}")
+            
         
-        print(f"\n--- PC: 0x{pc:08X} ---")
-        print(f"[FETCH] Read 0x{instruction_word:08X}")
+        if(br):
+            pc = brtarg
+        else:
+            pc = pc + 20
 
-        # 4. Decode
-        decoded_inst = decode(instruction_word)
-        print(f"[DECODE] {decoded_inst}")
-
-        # 5. Execute
-        execute(decoded_inst, sregs)
-
-        # 6. Advance Program Counter
-        pc += 4  # Move to the next 4-byte instruction
-
-    # Dump scalar regs to output file
-    out_regs_file = "output_regs.txt"
-    sregs.dump_to_file(out_regs_file)
-    print(f"\n[INFO] Wrote final register state to '{out_regs_file}'.")
-
-    # Dump regs to terminal
-    # print("\n--- Final Register State ---")
-    # print(regs)
-
-    # Write new data
-    # mem.write(0x10, 0xCAFEBABE)
 
     # Dump memory to output file
+    #sregs.dump_to_file(out_reg_file)
     mem.dump_to_file(out_file)
     print(f"\n[INFO] Wrote updated memory to '{out_file}'.")
 
