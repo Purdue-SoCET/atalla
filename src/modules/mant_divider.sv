@@ -1,18 +1,21 @@
-module int_divider #(
-    parameter SIZE = 23,
-    parameter SKIP = 11
+module mant_divider #(
+    parameter MANT_WIDTH = 10
 )(
     input logic CLK, nRST, en,
-    input logic [SIZE-1:0] x, y,
-    output logic [SIZE-1:0] result,
+    input logic [MANT_WIDTH:0] x, y,
+    output logic [MANT_WIDTH+2:0] result,
     output logic done
 );
+
+localparam A_WIDTH = MANT_WIDTH * 2 + 3;
 
 typedef enum logic {IDLE, DIV} state_t;
 state_t state, next_state;
 
-logic [SIZE:0] q, next_q, a, next_a, m, next_m;
-logic [$clog2(SIZE - SKIP):0] n, next_n;
+logic [MANT_WIDTH+2:0] q, next_q;
+logic [A_WIDTH:0] a, next_a;
+logic [MANT_WIDTH:0] m, next_m;
+logic [$clog2(MANT_WIDTH+2):0] n, next_n;
 always_ff @(posedge CLK) begin
     if (~nRST) begin
         state <= IDLE;
@@ -29,7 +32,6 @@ always_ff @(posedge CLK) begin
     end
 end
 
-logic [SIZE:0] init_q, init_a;
 always_comb begin
     next_state = state;
     next_q = q;
@@ -40,26 +42,23 @@ always_comb begin
         IDLE: begin
             if (en) begin
                 next_state = DIV;
-                init_q = {1'b0, x} << SKIP;
                 next_m = {1'b0, y};
-                init_a = x[SIZE-1 -: SKIP-1];
-                next_n = SIZE - SKIP - 1;
+                next_n = MANT_WIDTH + 1;
                 // Do first iteration immediately
-                next_a = init_a[SIZE] ? {init_a[SIZE-1:0], init_q[SIZE]} + next_m
-                                      : {init_a[SIZE-1:0], init_q[SIZE]} - next_m;
-                next_q = {init_q[SIZE-1:0], ~next_a[SIZE]};
+                next_a = x - next_m;
+                next_q = {1'b0, ~next_a[A_WIDTH]};
             end
         end
         DIV: begin
-            next_a = a[SIZE] ? {a[SIZE-1:0], q[SIZE]} + m : {a[SIZE-1:0], q[SIZE]} - m;
-            next_q = {q[SIZE-1:0], ~next_a[SIZE]};
+            next_a = a[A_WIDTH] ? {a[A_WIDTH-1:0], q[MANT_WIDTH+2]} + m : {a[A_WIDTH-1:0], q[MANT_WIDTH+2]} - m;
+            next_q = {q[MANT_WIDTH+1:0], ~next_a[A_WIDTH]};
             next_n = n - 1;
             if (n == 0) next_state = IDLE;
         end
     endcase
 end
 
-assign result = next_q[SIZE-1:0];
+assign result = next_q[MANT_WIDTH+2:0];
 assign done = (state == DIV && n == 0);
 
 endmodule

@@ -7,8 +7,8 @@ module vdiv
     vdiv_if.div divif
 );
 
-localparam int EXP_WIDTH = divif.EXP_WIDTH;
-localparam int MANT_WIDTH = divif.MANT_WIDTH;
+parameter int EXP_WIDTH = divif.EXP_WIDTH;
+parameter int MANT_WIDTH = divif.MANT_WIDTH;
 
 // Sequential logic to pulse done for 1 cycle
 logic done, skip_divider, en_divider, is_ovf, is_sub, first_cycle;
@@ -63,18 +63,24 @@ localparam int bias = (1 << (EXP_WIDTH - 1)) - 1;
 logic [EXP_WIDTH:0] exp;
 assign exp = exp_a - exp_b + bias;
 
-// Compute raw quotient
-logic [MANT_WIDTH*2+2:0] quotient;
-int_divider #(.SIZE(MANT_WIDTH*2+3), .SKIP(MANT_WIDTH+1)) divider (
+// int_divider #(.SIZE(MANT_WIDTH*2+3), .SKIP(MANT_WIDTH+1)) divider (
+//     .CLK(CLK), .nRST(nRST), .en(en_divider && !skip_divider),
+//     .x({divif.in.operand1[MANT_WIDTH+:EXP_WIDTH] != 0, mant_a, {(MANT_WIDTH+2){1'b0}}}),
+//     .y({{(MANT_WIDTH + 2){1'b0}}, exp_b != 0, mant_b}),
+//     .result(quotient), .done(done)
+// );
+
+// Use optimized mantissa divider (unused reg space removed)
+logic [MANT_WIDTH+2:0] quotient;
+mant_divider #(.MANT_WIDTH(MANT_WIDTH)) divider_2 (
     .CLK(CLK), .nRST(nRST), .en(en_divider && !skip_divider),
-    .x({divif.in.operand1[MANT_WIDTH+:EXP_WIDTH] != 0, mant_a, {(MANT_WIDTH+2){1'b0}}}),
-    .y({{(MANT_WIDTH + 2){1'b0}}, exp_b != 0, mant_b}),
+    .x({divif.in.operand1[MANT_WIDTH+:EXP_WIDTH] != 0, mant_a}),
+    .y({exp_b != 0, mant_b}),
     .result(quotient), .done(done)
 );
 
 // Normalize exponent and quotient, set rounding bit
-logic [MANT_WIDTH-1:0] mant, final_mant;
-logic round_bit;
+logic [MANT_WIDTH-1:0] final_mant;
 logic [EXP_WIDTH:0] exp_norm;
 logic [EXP_WIDTH-1:0] final_exp;
 always_comb begin
