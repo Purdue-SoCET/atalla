@@ -203,6 +203,8 @@ def decode_instruction(instr):
             "rs2": get_bits(instr, 30, 23)
         })
 
+
+#TODO: check whether to << 2 or nah
     elif instr_type == "I":
         # I-Type: rd 7-14, rs1 15-22, imm12 23-34
         decoded.update({
@@ -213,12 +215,13 @@ def decode_instruction(instr):
 
     elif instr_type == "BR":
         # BR-Type: incr-imm7 7-13, i1 14, rs1 15-22, rs2 23-30, imm9 31-39
+        imm1 = get_bits(instr, 14, 14)
+        imm9 = get_bits(instr, 39, 31)
         decoded.update({
-            "incr_imm7": get_bits(instr, 13, 7),
-            "i1": get_bits(instr, 14, 14),
+            "incr_imm": get_bits(instr, 13, 7),
             "rs1": get_bits(instr, 22, 15),
             "rs2": get_bits(instr, 30, 23),
-            "imm10": sign_extend((get_bits(instr, 13, 7) << 3) | get_bits(instr, 39, 31), 10)
+            "imm": sign_extend((((imm1 << 9) | imm9) << 2), 10) #shift left to word align
         })
 
     elif instr_type == "M":
@@ -233,7 +236,7 @@ def decode_instruction(instr):
         # MI-Type: rd 7-14, imm25 15-39
         decoded.update({
             "rd":  get_bits(instr, 14, 7),
-            "imm": sign_extend(get_bits(instr, 39, 15), 25)
+            "imm": sign_extend(get_bits(instr, 39, 15) << 2, 25) #shift left to word align
         })
 
     elif instr_type == "S":
@@ -261,12 +264,13 @@ def decode_instruction(instr):
 
     elif instr_type == "VI":
         # VI-Type: vd 7-14, vs1 15-22, imm8 23-30, mask 31-34, imm5 35-39
+        imm8 = get_bits(instr, 30, 23)
+        imm5 = get_bits(instr, 39, 35)
         decoded.update({
             "vd": get_bits(instr, 14, 7),
             "vs1": get_bits(instr, 22, 15),
-            "imm8": get_bits(instr, 30, 23),
             "mask": get_bits(instr, 34, 31),
-            "imm5": get_bits(instr, 39, 35)
+            "imm": (imm8 < 5) | imm5
         })
 
     elif instr_type == "VM":
@@ -368,7 +372,7 @@ def sign_extend(value, bits):
 # --------------------------------------------
 if __name__ == "__main__":
     # Example: 160-bit packet (0 - and.s (x3 = x3 & x3) | 1 - and.s (x3 = x3 & x3) | 2 - and.s (x3 = x3 & x3) | 3 - and.s (x3 = x3 & x3))
-    packet = int("00000000000000000000000000000000001111010 00000000000000000000000000000000000000110 00000000011000000110000001100000011100000000000001100000011000000110000001110000", 2)
+    packet = int("0000000000000000000000000110000001110000 000000000110000001100000011000000111000000000000011000000110000001100000011100000000000001100000011000000110000001110000", 2)
     decoded = decode_packet(packet)
     print(decoded)
     for i, d in enumerate(decoded):
