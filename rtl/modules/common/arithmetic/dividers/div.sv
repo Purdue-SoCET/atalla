@@ -1,10 +1,10 @@
 /* FU Vector Divide Code */
-`include "vdiv_if.vh"
+`include "div_if.vh"
 
-module vdiv
+module div
 (
     input logic CLK, nRST,
-    vdiv_if.div divif
+    div_if.div divif
 );
 
 parameter int EXP_WIDTH = divif.EXP_WIDTH;
@@ -63,7 +63,7 @@ localparam int bias = (1 << (EXP_WIDTH - 1)) - 1;
 logic [EXP_WIDTH:0] exp;
 assign exp = exp_a - exp_b + bias;
 
-// int_divider #(.SIZE(MANT_WIDTH*2+3), .SKIP(MANT_WIDTH+1)) divider (
+// int_div #(.SIZE(MANT_WIDTH*2+3), .SKIP(MANT_WIDTH+1)) divider (
 //     .CLK(CLK), .nRST(nRST), .en(en_divider && !skip_divider),
 //     .x({divif.in.operand1[MANT_WIDTH+:EXP_WIDTH] != 0, mant_a, {(MANT_WIDTH+2){1'b0}}}),
 //     .y({{(MANT_WIDTH + 2){1'b0}}, exp_b != 0, mant_b}),
@@ -72,7 +72,7 @@ assign exp = exp_a - exp_b + bias;
 
 // Use optimized mantissa divider (unused reg space removed)
 logic [MANT_WIDTH+2:0] quotient;
-mant_divider #(.MANT_WIDTH(MANT_WIDTH)) divider_2 (
+mant_div #(.MANT_WIDTH(MANT_WIDTH)) m_div (
     .CLK(CLK), .nRST(nRST), .en(en_divider && !skip_divider),
     .x({divif.in.operand1[MANT_WIDTH+:EXP_WIDTH] != 0, mant_a}),
     .y({exp_b != 0, mant_b}),
@@ -121,7 +121,7 @@ endmodule
 
 
 // Submodule: Integer divider modified for mantissa division
-module mant_divider #(
+module mant_div #(
     parameter MANT_WIDTH = 10
 )(
     input logic CLK, nRST, en,

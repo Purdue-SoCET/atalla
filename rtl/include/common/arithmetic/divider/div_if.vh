@@ -1,7 +1,7 @@
-`ifndef VDIV_IF_VH
-`define VDIV_IF_VH
+`ifndef DIV_IF_VH
+`define DIV_IF_VH
 
-interface vdiv_if #(
+interface div_if #(
   parameter int EXP_WIDTH = 8,
   parameter int MANT_WIDTH = 7
 );
@@ -12,15 +12,15 @@ interface vdiv_if #(
     logic valid_in, ready_out;
     logic [WIDTH:0] operand1;
     logic [WIDTH:0] operand2;
-  } vdiv_in_t;
+  } div_in_t;
 
   typedef struct packed {
     logic valid_out, ready_in;
     logic [WIDTH:0] result;
-  } vdiv_out_t;
+  } div_out_t;
 
-  vdiv_in_t  in;
-  vdiv_out_t out;
+  div_in_t  in;
+  div_out_t out;
 
   modport div (
     input  in,

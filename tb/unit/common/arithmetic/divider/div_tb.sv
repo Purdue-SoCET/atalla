@@ -1,7 +1,7 @@
-`include "vdiv_if.vh"
+`include "div_if.vh"
 `timescale 1 ns / 1 ns
 
-module vdiv_tb;
+module div_tb;
   //-----------------------------------------------
   // Configuration Parameters
   //-----------------------------------------------
@@ -33,12 +33,12 @@ module vdiv_tb;
   //-----------------------------------------------
   // Interface and DUT instantiation
   //-----------------------------------------------
-  vdiv_if #(
+  div_if #(
     .EXP_WIDTH(EXP_WIDTH),
     .MANT_WIDTH(MANT_WIDTH)
   ) divif();
 
-  vdiv DUT (
+  div DUT (
     .CLK(CLK),
     .nRST(nRST),
     .divif(divif)
@@ -298,23 +298,23 @@ module vdiv_tb;
     // Run all test categories (adjust filenames for BF16 if needed)
     if (EXP_WIDTH == 5 && MANT_WIDTH == 10) begin
       // FP16 test files
-      run_file_tests("tb/unit/vector/test_cases/vdiv_fp16_normal_tests_10K.csv", "NORMAL_TESTS");
+      run_file_tests("tb/unit/vector/test_cases/div_fp16_normal_tests_10K.csv", "NORMAL_TESTS");
       normal_tests = errors;
 
-      run_file_tests("tb/unit/vector/test_cases/vdiv_fp16_subnormal_input_tests_10K.csv", "SUBNORMAL_INPUT_TESTS");
+      run_file_tests("tb/unit/vector/test_cases/div_fp16_subnormal_input_tests_10K.csv", "SUBNORMAL_INPUT_TESTS");
       subnormal_input_tests = errors - normal_tests;
 
-      run_file_tests("tb/unit/vector/test_cases/vdiv_fp16_subnormal_output_tests_10K.csv", "SUBNORMAL_OUTPUT_TESTS");
+      run_file_tests("tb/unit/vector/test_cases/div_fp16_subnormal_output_tests_10K.csv", "SUBNORMAL_OUTPUT_TESTS");
       subnormal_output_tests = errors - normal_tests - subnormal_input_tests;
     end else if (EXP_WIDTH == 8 && MANT_WIDTH == 7) begin
       // BF16 test files (if available)
-      run_file_tests("tb/unit/vector/test_cases/vdiv_bf16_normal_tests_10K.csv", "BF16_NORMAL_TESTS");
+      run_file_tests("tb/unit/vector/test_cases/div_bf16_normal_tests_10K.csv", "BF16_NORMAL_TESTS");
       normal_tests = errors;
 
-      run_file_tests("tb/unit/vector/test_cases/vdiv_bf16_subnormal_input_tests_10K.csv", "BF16_SUBNORMAL_INPUT_TESTS");
+      run_file_tests("tb/unit/vector/test_cases/div_bf16_subnormal_input_tests_10K.csv", "BF16_SUBNORMAL_INPUT_TESTS");
       subnormal_input_tests = errors - normal_tests;
 
-      run_file_tests("tb/unit/vector/test_cases/vdiv_bf16_subnormal_output_tests_10K.csv", "BF16_SUBNORMAL_OUTPUT_TESTS");
+      run_file_tests("tb/unit/vector/test_cases/div_bf16_subnormal_output_tests_10K.csv", "BF16_SUBNORMAL_OUTPUT_TESTS");
       subnormal_output_tests = errors - normal_tests - subnormal_input_tests;
     end else begin
       $display("INFO: No file-based tests available for this custom format");
