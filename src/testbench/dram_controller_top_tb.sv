@@ -498,7 +498,7 @@ module dram_controller_top_tb;
     //1000 request come one by one
     task random_req();
         bit wr_or_rd; 
-        for (int i = 0; i < 1000; i++) begin
+        for (int i = 0; i < 1000000; i++) begin
             task_name = $sformatf("Task random -%0d", i);
             wr_or_rd = $urandom_range(0,1); // simple 0/1;
             if (wr_or_rd) begin

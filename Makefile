@@ -36,7 +36,7 @@ icache:
 #     run -all
 
 %:
-	vlog -sv +incdir+./src/include +incdir+./src/modules ./src/testbench/$*_tb.sv ./src/modules/$*.sv ./src/modules/flex_counter.sv
+	vlog -sv +define+DDR4_4G_X8 +define+FIXED_1333 +incdir+./src/include +incdir+./protected_modelsim $(DRAM_define) ./src/testbench/$*_tb.sv ./src/modules/$*.sv $(MODULES)
 	vsim $(SIMTERM) -voptargs="+acc" work.$*_tb -do $(SIMDO)
 
 %.wav:
