@@ -32,7 +32,7 @@ module addr_mapper #(
             //TODO: The address mapper is ok we we need to make somechange 
             // {amif.rank, amif.row, amif.bank, amif.BG[1], amif.col[9:3], amif.BG[0], amif.col[2:0], amif.offset} = amif.address;
             //The offset of the burst can use to mux to give back to data transfer, but writing, we want to ensure that it start with 0 first
-            {amif.rank, amif.row, amif.bank, amif.BG[1], amif.col[9:3], amif.BG[0], amif.col[2:0], amif.offset} = {amif.address[30:6],3'b0,amif.address[1:0]};
+            {amif.rank, amif.row, amif.bank, amif.BG[1], amif.col[9:3], amif.BG[0], amif.col[2:0], amif.offset} = {amif.address[31],amif.address[30:5],3'b0,amif.address[1:0]};
         end
         // x16 has only 1 BG bit (2 BGs) 
         else if (amif.configs == x16) begin
