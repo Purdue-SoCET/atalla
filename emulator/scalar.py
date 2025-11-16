@@ -7,8 +7,6 @@ All operations are strictly INT32.
 """
 
 import numpy as np
-from typing import List, Optional
-
 
 class ScalarALU:
     """
@@ -194,10 +192,11 @@ def scalar_alu_execute(op: str, a, b, num_lanes: int = 32) -> np.ndarray:
 # Smoke test
 # -----------------------------------
 if __name__ == "__main__":
-    alu = ScalarALU(num_lanes=4)
-    print("add:", alu.add([1, 2, 3, 4], 10))
-    print("bit_and:", alu.bit_and([1,2,3,4], [3,3,3,3]))
-    print("not:", alu.bit_not([0, -1, 5, 7]))
-    print("shl:", alu.shl([1,2,3,4], 2))
-    print("srl:", alu.srl([0x80000000, 1, 2, 3], 1))
-    print("sra:", alu.sra([-2, -4, 8, 16], 1))
+    alu = ScalarALU(num_lanes=1)
+    print("add:", alu.add(4, 10))
+    print(type(alu.add(1, 10)))
+    print("bit_and:", alu.bit_and(3, 3))
+    print("not:", alu.bit_not(7))
+    print("shl:", alu.shl(1, 2))
+    print("srl:", alu.srl(0x8000, 1))
+    print("sra:", alu.sra(-2, 1))
