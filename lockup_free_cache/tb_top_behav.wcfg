@@ -1,0 +1,140 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<wave_config>
+   <wave_state>
+   </wave_state>
+   <db_ref_list>
+      <db_ref path="tb_top_behav.wdb" id="1">
+         <top_modules>
+            <top_module name="\$unit_cache_bank_sv_1109608344 " />
+            <top_module name="glbl" />
+            <top_module name="std" />
+            <top_module name="tb_top" />
+            <top_module name="uvm_pkg" />
+         </top_modules>
+      </db_ref>
+   </db_ref_list>
+   <zoom_setting>
+      <ZoomStartTime time="124.945 ns"></ZoomStartTime>
+      <ZoomEndTime time="552.137 ns"></ZoomEndTime>
+      <Cursor1Time time="244.832 ns"></Cursor1Time>
+   </zoom_setting>
+   <column_width_setting>
+      <NameColumnWidth column_width="248"></NameColumnWidth>
+      <ValueColumnWidth column_width="109"></ValueColumnWidth>
+   </column_width_setting>
+   <WVObjectSize size="4" />
+   <wvobject fp_name="/tb_top/clk" type="logic">
+      <obj_property name="ElementShortName">clk</obj_property>
+      <obj_property name="ObjectShortName">clk</obj_property>
+   </wvobject>
+   <wvobject fp_name="/tb_top/n_rst" type="logic">
+      <obj_property name="ElementShortName">n_rst</obj_property>
+      <obj_property name="ObjectShortName">n_rst</obj_property>
+   </wvobject>
+   <wvobject fp_name="group45" type="group">
+      <obj_property name="label">Top Level</obj_property>
+      <obj_property name="DisplayName">label</obj_property>
+      <obj_property name="isExpanded"></obj_property>
+      <wvobject fp_name="group46" type="group">
+         <obj_property name="label">CPU Inputs</obj_property>
+         <obj_property name="DisplayName">label</obj_property>
+         <obj_property name="isExpanded"></obj_property>
+         <wvobject fp_name="/tb_top/mem_in" type="logic">
+            <obj_property name="ElementShortName">mem_in</obj_property>
+            <obj_property name="ObjectShortName">mem_in</obj_property>
+         </wvobject>
+         <wvobject fp_name="/tb_top/mem_in_addr" type="array">
+            <obj_property name="ElementShortName">mem_in_addr[31:0]</obj_property>
+            <obj_property name="ObjectShortName">mem_in_addr[31:0]</obj_property>
+         </wvobject>
+         <wvobject fp_name="/tb_top/mem_in_rw_mode" type="logic">
+            <obj_property name="ElementShortName">mem_in_rw_mode</obj_property>
+            <obj_property name="ObjectShortName">mem_in_rw_mode</obj_property>
+         </wvobject>
+         <wvobject fp_name="/tb_top/mem_in_store_value" type="array">
+            <obj_property name="ElementShortName">mem_in_store_value[31:0]</obj_property>
+            <obj_property name="ObjectShortName">mem_in_store_value[31:0]</obj_property>
+         </wvobject>
+         <wvobject fp_name="/tb_top/dp_in_halt" type="logic">
+            <obj_property name="ElementShortName">dp_in_halt</obj_property>
+            <obj_property name="ObjectShortName">dp_in_halt</obj_property>
+         </wvobject>
+      </wvobject>
+      <wvobject fp_name="group47" type="group">
+         <obj_property name="label">CPU Outputs</obj_property>
+         <obj_property name="DisplayName">label</obj_property>
+         <obj_property name="isExpanded"></obj_property>
+         <wvobject fp_name="/tb_top/mem_out_uuid" type="array">
+            <obj_property name="ElementShortName">mem_out_uuid[3:0]</obj_property>
+            <obj_property name="ObjectShortName">mem_out_uuid[3:0]</obj_property>
+         </wvobject>
+         <wvobject fp_name="/tb_top/stall" type="logic">
+            <obj_property name="ElementShortName">stall</obj_property>
+            <obj_property name="ObjectShortName">stall</obj_property>
+         </wvobject>
+         <wvobject fp_name="/tb_top/hit" type="logic">
+            <obj_property name="ElementShortName">hit</obj_property>
+            <obj_property name="ObjectShortName">hit</obj_property>
+         </wvobject>
+         <wvobject fp_name="/tb_top/hit_load" type="array">
+            <obj_property name="ElementShortName">hit_load[31:0]</obj_property>
+            <obj_property name="ObjectShortName">hit_load[31:0]</obj_property>
+         </wvobject>
+         <wvobject fp_name="/tb_top/block_status" type="array">
+            <obj_property name="ElementShortName">block_status[3:0]</obj_property>
+            <obj_property name="ObjectShortName">block_status[3:0]</obj_property>
+         </wvobject>
+         <wvobject fp_name="/tb_top/uuid_block" type="array">
+            <obj_property name="ElementShortName">uuid_block[3:0][3:0]</obj_property>
+            <obj_property name="ObjectShortName">uuid_block[3:0][3:0]</obj_property>
+         </wvobject>
+         <wvobject fp_name="/tb_top/dp_out_flushed" type="logic">
+            <obj_property name="ElementShortName">dp_out_flushed</obj_property>
+            <obj_property name="ObjectShortName">dp_out_flushed</obj_property>
+         </wvobject>
+      </wvobject>
+      <wvobject fp_name="group48" type="group">
+         <obj_property name="label">RAM Inputs</obj_property>
+         <obj_property name="DisplayName">label</obj_property>
+         <obj_property name="isExpanded"></obj_property>
+         <wvobject fp_name="/tb_top/ram_mem_data" type="array">
+            <obj_property name="ElementShortName">ram_mem_data[3:0][31:0]</obj_property>
+            <obj_property name="ObjectShortName">ram_mem_data[3:0][31:0]</obj_property>
+         </wvobject>
+         <wvobject fp_name="/tb_top/ram_mem_complete" type="array">
+            <obj_property name="ElementShortName">ram_mem_complete[3:0]</obj_property>
+            <obj_property name="ObjectShortName">ram_mem_complete[3:0]</obj_property>
+         </wvobject>
+      </wvobject>
+      <wvobject fp_name="group49" type="group">
+         <obj_property name="label">RAM Outputs</obj_property>
+         <obj_property name="DisplayName">label</obj_property>
+         <obj_property name="isExpanded"></obj_property>
+         <wvobject fp_name="/tb_top/ram_mem_REN" type="array">
+            <obj_property name="ElementShortName">ram_mem_REN[3:0]</obj_property>
+            <obj_property name="ObjectShortName">ram_mem_REN[3:0]</obj_property>
+         </wvobject>
+         <wvobject fp_name="/tb_top/ram_mem_WEN" type="array">
+            <obj_property name="ElementShortName">ram_mem_WEN[3:0]</obj_property>
+            <obj_property name="ObjectShortName">ram_mem_WEN[3:0]</obj_property>
+         </wvobject>
+         <wvobject fp_name="/tb_top/ram_mem_addr" type="array">
+            <obj_property name="ElementShortName">ram_mem_addr[3:0][31:0]</obj_property>
+            <obj_property name="ObjectShortName">ram_mem_addr[3:0][31:0]</obj_property>
+         </wvobject>
+         <wvobject fp_name="/tb_top/ram_mem_store" type="array">
+            <obj_property name="ElementShortName">ram_mem_store[3:0][31:0]</obj_property>
+            <obj_property name="ObjectShortName">ram_mem_store[3:0][31:0]</obj_property>
+         </wvobject>
+      </wvobject>
+   </wvobject>
+   <wvobject fp_name="group51" type="group">
+      <obj_property name="label">Top Level Internal</obj_property>
+      <obj_property name="DisplayName">label</obj_property>
+      <obj_property name="isExpanded"></obj_property>
+      <wvobject fp_name="/tb_top/DUT/hit_return_load" type="array">
+         <obj_property name="ElementShortName">hit_return_load[3:0][31:0]</obj_property>
+         <obj_property name="ObjectShortName">hit_return_load[3:0][31:0]</obj_property>
+      </wvobject>
+   </wvobject>
+</wave_config>
