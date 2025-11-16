@@ -10,12 +10,7 @@ interface systolic_array_MAC_if;
 
   // Signals
   /* verilator lint_off UNUSEDSIGNAL */
-  logic start;          // MAC unit start signal
-  /* verilator lint_off UNUSEDSIGNAL */
-  /* verilator lint_off UNUSEDSIGNAL */
-  logic [$clog2(MUL_LEN+ADD_LEN):0]count;     // Count for Mulitplier to execute correct number of cycles
-  /* verilator lint_off UNUSEDSIGNAL */
-  // logic [DW-1:0] weight;                    // Input weight value to be pre-loaded
+  logic start;          // MAC unit start signal                  // Input weight value to be pre-loaded
   logic [DW-1:0] in_value;                  // Input value to be multiplied
   logic MAC_shift;                              // shift the input to the next array
   logic [DW-1:0] in_pass;                   // Input value to be passed to next MAC
@@ -24,6 +19,7 @@ interface systolic_array_MAC_if;
   logic value_ready;                            // This signal goes high when an operation is *not* in progress, i.e the op is done
   logic weight_en;                          // switches the input bus between weights and inputs.
   logic weight_next_en;
+  logic stall;
 
   // These two exist purely for debugging
   /* verilator lint_off UNUSEDSIGNAL */

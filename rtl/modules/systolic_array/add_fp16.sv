@@ -7,9 +7,6 @@ module add_fp16(input logic clk, nRST, start,
                 output logic [15:0] fp_out );
                 // output logic ovf, unf, output_ready);
 
-
-
-
 // step 1: Compare exponents to determine which mantissa to shift for normalization.
 logic [4:0] smaller_exponent;
 logic [4:0] larger_exponent;

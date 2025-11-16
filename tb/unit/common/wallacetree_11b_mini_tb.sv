@@ -1,5 +1,5 @@
-// Malcolm McClymont's 8 bit wallace tree from ECE 559
-// re-used here to test 8 bit wallace tree for BF16 multiplier.
+// Malcolm McClymont's wallace tree multiplier test bench from ECE 559
+// re-used here to test 11 bit wallace tree for FP16 multiplier.
 
 // to run this: verilator --binary -j 0 -Wall -Wno-fatal wallacetree_8b_tb -Imodules -Itestbench -Iinclude --hierarchical --trace; ./obj_dir/Vwallacetree_8b_tb; gtkwave waves/wallacetree_8b_waves.vcd --save=waves/wallacetree_8b_debug.gtkw
 
