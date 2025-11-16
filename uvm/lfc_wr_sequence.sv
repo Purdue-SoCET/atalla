@@ -48,10 +48,11 @@ class lfc_wr_sequence extends uvm_sequence#(lfc_cpu_transaction);
     addrs_idx = 0;
     repeat(NUM_TRANSACTIONS) begin // read transactions
         start_item(req);
-        if(!req.randomize()) begin 
+        /*if(!req.randomize()) begin 
             `uvm_fatal("lfc_wr_sequence", "Not able to randomize")
-        end
+        end*/
         req.n_rst = 1'b1;
+        req.mem_in_store_value = 'd0;
         req.mem_in_rw_mode = 1'b0; // 1 for write, 0 for read
         req.mem_in = 1'b1; // understanding is that this is 1 for a read??
         req.dp_in_halt = 1'b0;

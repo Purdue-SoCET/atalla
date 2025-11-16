@@ -1,0 +1,157 @@
+Time resolution is 1 ps
+UVM_INFO D:/2025.1/Vivado/data/system_verilog/uvm_1.2/xlnx_uvm_package.sv(18601) @ 0: reporter [UVM/RELNOTES] 
+----------------------------------------------------------------
+UVM-1.2
+(C) 2007-2014 Mentor Graphics Corporation
+(C) 2007-2014 Cadence Design Systems, Inc.
+(C) 2006-2014 Synopsys, Inc.
+(C) 2011-2013 Cypress Semiconductor Corp.
+(C) 2013-2014 NVIDIA Corporation
+----------------------------------------------------------------
+
+  ***********       IMPORTANT RELEASE NOTES         ************
+
+  You are using a version of the UVM library that has been compiled
+  with `UVM_NO_DEPRECATED undefined.
+
+  You are using a version of the UVM library that has been compiled
+  with `UVM_OBJECT_DO_NOT_NEED_CONSTRUCTOR undefined.
+
+      (Specify +UVM_NO_RELNOTES to turn off this notice)
+
+UVM_INFO @ 0: reporter [RNTST] Running test test...
+UVM_INFO C:/Users/socce/SoCET/tensor-core/uvm/test.sv(20) @ 0: uvm_test_top [Test] Build Phase
+UVM_INFO D:/2025.1/Vivado/data/system_verilog/uvm_1.2/xlnx_uvm_package.sv(20867) @ 0: reporter [UVM/COMP/NAMECHECK] This implementation of the component name checks requires DPI to be enabled
+                   0 Starting sequence run_phase
+UVM_INFO C:/Users/socce/SoCET/tensor-core/uvm/lfc_cpu_passive_monitor.sv(46) @ 0: uvm_test_top.env.cpu_passive_agent.mon [CPU_MON] Entered run_phase of CPU monitor
+UVM_INFO C:/Users/socce/SoCET/tensor-core/uvm/lfc_basic_sequence.sv(18) @ 0: uvm_test_top.env.cpu_active_agent.sqr@@basic_seq [lfc_basic_sequence] Starting lfc_basic_sequence...
+UVM_INFO C:/Users/socce/SoCET/tensor-core/uvm/lfc_cpu_passive_monitor.sv(62) @ 10000: uvm_test_top.env.cpu_passive_agent.mon [CPU_PASSIVE_MON] Sampled: uuid=x stall=0 hit=0 flushed=0
+UVM_INFO C:/Users/socce/SoCET/tensor-core/uvm/lfc_cpu_passive_monitor.sv(62) @ 30000: uvm_test_top.env.cpu_passive_agent.mon [CPU_PASSIVE_MON] Sampled: uuid=x stall=0 hit=0 flushed=0
+UVM_INFO C:/Users/socce/SoCET/tensor-core/uvm/lfc_cpu_passive_monitor.sv(62) @ 50000: uvm_test_top.env.cpu_passive_agent.mon [CPU_PASSIVE_MON] Sampled: uuid=x stall=0 hit=0 flushed=0
+UVM_INFO C:/Users/socce/SoCET/tensor-core/uvm/lfc_cpu_passive_monitor.sv(62) @ 70000: uvm_test_top.env.cpu_passive_agent.mon [CPU_PASSIVE_MON] Sampled: uuid=0 stall=0 hit=0 flushed=0
+UVM_INFO C:/Users/socce/SoCET/tensor-core/uvm/lfc_cpu_passive_monitor.sv(67) @ 70000: uvm_test_top.env.cpu_passive_agent.mon [CPU_PASSIVE_MON] Sent write tx: uuid=0 stall=0 hit=0 flushed=0
+UVM_INFO C:/Users/socce/SoCET/tensor-core/uvm/lfc_basic_sequence.sv(33) @ 70000: uvm_test_top.env.cpu_active_agent.sqr@@basic_seq [lfc_basic_sequence] Completed: addr=0x1000 data=0xdeadbeef
+UVM_INFO C:/Users/socce/SoCET/tensor-core/uvm/lfc_scoreboard.sv(88) @ 70000: uvm_test_top.env.lfc_scoreboard [SCOREBOARD] STALL match (uuid=0): stall=0
+UVM_INFO C:/Users/socce/SoCET/tensor-core/uvm/lfc_cpu_passive_monitor.sv(62) @ 90000: uvm_test_top.env.cpu_passive_agent.mon [CPU_PASSIVE_MON] Sampled: uuid=0 stall=0 hit=0 flushed=0
+UVM_INFO C:/Users/socce/SoCET/tensor-core/uvm/lfc_cpu_passive_monitor.sv(67) @ 90000: uvm_test_top.env.cpu_passive_agent.mon [CPU_PASSIVE_MON] Sent write tx: uuid=0 stall=0 hit=0 flushed=0
+UVM_INFO C:/Users/socce/SoCET/tensor-core/uvm/lfc_scoreboard.sv(88) @ 90000: uvm_test_top.env.lfc_scoreboard [SCOREBOARD] STALL match (uuid=0): stall=0
+UVM_INFO C:/Users/socce/SoCET/tensor-core/uvm/lfc_cpu_passive_monitor.sv(62) @ 110000: uvm_test_top.env.cpu_passive_agent.mon [CPU_PASSIVE_MON] Sampled: uuid=0 stall=0 hit=0 flushed=0
+UVM_INFO C:/Users/socce/SoCET/tensor-core/uvm/lfc_cpu_passive_monitor.sv(67) @ 110000: uvm_test_top.env.cpu_passive_agent.mon [CPU_PASSIVE_MON] Sent write tx: uuid=0 stall=0 hit=0 flushed=0
+UVM_INFO C:/Users/socce/SoCET/tensor-core/uvm/lfc_scoreboard.sv(88) @ 110000: uvm_test_top.env.lfc_scoreboard [SCOREBOARD] STALL match (uuid=0): stall=0
+UVM_INFO C:/Users/socce/SoCET/tensor-core/uvm/lfc_cpu_passive_monitor.sv(62) @ 130000: uvm_test_top.env.cpu_passive_agent.mon [CPU_PASSIVE_MON] Sampled: uuid=0 stall=0 hit=0 flushed=0
+UVM_INFO C:/Users/socce/SoCET/tensor-core/uvm/lfc_cpu_passive_monitor.sv(67) @ 130000: uvm_test_top.env.cpu_passive_agent.mon [CPU_PASSIVE_MON] Sent write tx: uuid=0 stall=0 hit=0 flushed=0
+UVM_INFO C:/Users/socce/SoCET/tensor-core/uvm/lfc_scoreboard.sv(88) @ 130000: uvm_test_top.env.lfc_scoreboard [SCOREBOARD] STALL match (uuid=0): stall=0
+UVM_INFO C:/Users/socce/SoCET/tensor-core/uvm/lfc_cpu_passive_monitor.sv(62) @ 150000: uvm_test_top.env.cpu_passive_agent.mon [CPU_PASSIVE_MON] Sampled: uuid=0 stall=0 hit=0 flushed=0
+UVM_INFO C:/Users/socce/SoCET/tensor-core/uvm/lfc_cpu_passive_monitor.sv(67) @ 150000: uvm_test_top.env.cpu_passive_agent.mon [CPU_PASSIVE_MON] Sent write tx: uuid=0 stall=0 hit=0 flushed=0
+UVM_INFO C:/Users/socce/SoCET/tensor-core/uvm/lfc_scoreboard.sv(88) @ 150000: uvm_test_top.env.lfc_scoreboard [SCOREBOARD] STALL match (uuid=0): stall=0
+UVM_INFO C:/Users/socce/SoCET/tensor-core/uvm/lfc_cpu_passive_monitor.sv(62) @ 170000: uvm_test_top.env.cpu_passive_agent.mon [CPU_PASSIVE_MON] Sampled: uuid=0 stall=0 hit=0 flushed=0
+UVM_INFO C:/Users/socce/SoCET/tensor-core/uvm/lfc_cpu_passive_monitor.sv(67) @ 170000: uvm_test_top.env.cpu_passive_agent.mon [CPU_PASSIVE_MON] Sent write tx: uuid=0 stall=0 hit=0 flushed=0
+UVM_INFO C:/Users/socce/SoCET/tensor-core/uvm/lfc_scoreboard.sv(88) @ 170000: uvm_test_top.env.lfc_scoreboard [SCOREBOARD] STALL match (uuid=0): stall=0
+UVM_INFO C:/Users/socce/SoCET/tensor-core/uvm/lfc_wr_sequence.sv(22) @ 170000: uvm_test_top.env.cpu_active_agent.sqr@@wr_seq [lfc_wr_sequence] Starting lfc_wr_sequence...
+UVM_INFO C:/Users/socce/SoCET/tensor-core/uvm/lfc_wr_sequence.sv(26) @ 170000: uvm_test_top.env.cpu_active_agent.sqr@@wr_seq [lfc_wr_sequence] Starting write transactions...
+UVM_INFO C:/Users/socce/SoCET/tensor-core/uvm/lfc_cpu_passive_monitor.sv(62) @ 190000: uvm_test_top.env.cpu_passive_agent.mon [CPU_PASSIVE_MON] Sampled: uuid=0 stall=0 hit=0 flushed=0
+UVM_INFO C:/Users/socce/SoCET/tensor-core/uvm/lfc_cpu_passive_monitor.sv(67) @ 190000: uvm_test_top.env.cpu_passive_agent.mon [CPU_PASSIVE_MON] Sent write tx: uuid=0 stall=0 hit=0 flushed=0
+UVM_INFO C:/Users/socce/SoCET/tensor-core/uvm/lfc_wr_sequence.sv(42) @ 190000: uvm_test_top.env.cpu_active_agent.sqr@@wr_seq [lfc_wr_sequence] Write 1 Completed: addr=0x3b843874 data=0xbf76ed24
+UVM_INFO C:/Users/socce/SoCET/tensor-core/uvm/lfc_scoreboard.sv(88) @ 190000: uvm_test_top.env.lfc_scoreboard [SCOREBOARD] STALL match (uuid=0): stall=0
+UVM_INFO C:/Users/socce/SoCET/tensor-core/uvm/lfc_cpu_passive_monitor.sv(62) @ 210000: uvm_test_top.env.cpu_passive_agent.mon [CPU_PASSIVE_MON] Sampled: uuid=0 stall=0 hit=0 flushed=0
+UVM_INFO C:/Users/socce/SoCET/tensor-core/uvm/lfc_cpu_passive_monitor.sv(67) @ 210000: uvm_test_top.env.cpu_passive_agent.mon [CPU_PASSIVE_MON] Sent write tx: uuid=0 stall=0 hit=0 flushed=0
+UVM_INFO C:/Users/socce/SoCET/tensor-core/uvm/lfc_wr_sequence.sv(42) @ 210000: uvm_test_top.env.cpu_active_agent.sqr@@wr_seq [lfc_wr_sequence] Write 2 Completed: addr=0x2525fd60 data=0xee0c3b57
+UVM_INFO C:/Users/socce/SoCET/tensor-core/uvm/lfc_scoreboard.sv(88) @ 210000: uvm_test_top.env.lfc_scoreboard [SCOREBOARD] STALL match (uuid=0): stall=0
+UVM_INFO C:/Users/socce/SoCET/tensor-core/uvm/lfc_cpu_passive_monitor.sv(62) @ 230000: uvm_test_top.env.cpu_passive_agent.mon [CPU_PASSIVE_MON] Sampled: uuid=0 stall=0 hit=0 flushed=0
+UVM_INFO C:/Users/socce/SoCET/tensor-core/uvm/lfc_cpu_passive_monitor.sv(67) @ 230000: uvm_test_top.env.cpu_passive_agent.mon [CPU_PASSIVE_MON] Sent write tx: uuid=0 stall=0 hit=0 flushed=0
+UVM_INFO C:/Users/socce/SoCET/tensor-core/uvm/lfc_wr_sequence.sv(42) @ 230000: uvm_test_top.env.cpu_active_agent.sqr@@wr_seq [lfc_wr_sequence] Write 3 Completed: addr=0x71f8b8ac data=0xda571bba
+UVM_ERROR C:/Users/socce/SoCET/tensor-core/uvm/lfc_scoreboard.sv(85) @ 230000: uvm_test_top.env.lfc_scoreboard [SCOREBOARD] STALL mismatch (uuid=0): Expected 1, Got 0
+UVM_INFO C:/Users/socce/SoCET/tensor-core/uvm/lfc_cpu_passive_monitor.sv(62) @ 250000: uvm_test_top.env.cpu_passive_agent.mon [CPU_PASSIVE_MON] Sampled: uuid=0 stall=0 hit=0 flushed=0
+UVM_INFO C:/Users/socce/SoCET/tensor-core/uvm/lfc_cpu_passive_monitor.sv(67) @ 250000: uvm_test_top.env.cpu_passive_agent.mon [CPU_PASSIVE_MON] Sent write tx: uuid=0 stall=0 hit=0 flushed=0
+UVM_INFO C:/Users/socce/SoCET/tensor-core/uvm/lfc_wr_sequence.sv(42) @ 250000: uvm_test_top.env.cpu_active_agent.sqr@@wr_seq [lfc_wr_sequence] Write 4 Completed: addr=0x7ef43b58 data=0x98e00af
+UVM_ERROR C:/Users/socce/SoCET/tensor-core/uvm/lfc_scoreboard.sv(85) @ 250000: uvm_test_top.env.lfc_scoreboard [SCOREBOARD] STALL mismatch (uuid=0): Expected 1, Got 0
+UVM_INFO C:/Users/socce/SoCET/tensor-core/uvm/lfc_cpu_passive_monitor.sv(62) @ 270000: uvm_test_top.env.cpu_passive_agent.mon [CPU_PASSIVE_MON] Sampled: uuid=0 stall=0 hit=0 flushed=0
+UVM_INFO C:/Users/socce/SoCET/tensor-core/uvm/lfc_cpu_passive_monitor.sv(67) @ 270000: uvm_test_top.env.cpu_passive_agent.mon [CPU_PASSIVE_MON] Sent write tx: uuid=0 stall=0 hit=0 flushed=0
+UVM_INFO C:/Users/socce/SoCET/tensor-core/uvm/lfc_wr_sequence.sv(42) @ 270000: uvm_test_top.env.cpu_active_agent.sqr@@wr_seq [lfc_wr_sequence] Write 5 Completed: addr=0x3d74abe0 data=0xf09dd0fe
+UVM_ERROR C:/Users/socce/SoCET/tensor-core/uvm/lfc_scoreboard.sv(85) @ 270000: uvm_test_top.env.lfc_scoreboard [SCOREBOARD] STALL mismatch (uuid=0): Expected 1, Got 0
+UVM_INFO C:/Users/socce/SoCET/tensor-core/uvm/lfc_cpu_passive_monitor.sv(62) @ 290000: uvm_test_top.env.cpu_passive_agent.mon [CPU_PASSIVE_MON] Sampled: uuid=0 stall=0 hit=0 flushed=0
+UVM_INFO C:/Users/socce/SoCET/tensor-core/uvm/lfc_cpu_passive_monitor.sv(67) @ 290000: uvm_test_top.env.cpu_passive_agent.mon [CPU_PASSIVE_MON] Sent write tx: uuid=0 stall=0 hit=0 flushed=0
+UVM_INFO C:/Users/socce/SoCET/tensor-core/uvm/lfc_wr_sequence.sv(42) @ 290000: uvm_test_top.env.cpu_active_agent.sqr@@wr_seq [lfc_wr_sequence] Write 6 Completed: addr=0x404ac164 data=0x9044c2d
+UVM_ERROR C:/Users/socce/SoCET/tensor-core/uvm/lfc_scoreboard.sv(85) @ 290000: uvm_test_top.env.lfc_scoreboard [SCOREBOARD] STALL mismatch (uuid=0): Expected 1, Got 0
+UVM_INFO C:/Users/socce/SoCET/tensor-core/uvm/lfc_cpu_passive_monitor.sv(62) @ 310000: uvm_test_top.env.cpu_passive_agent.mon [CPU_PASSIVE_MON] Sampled: uuid=0 stall=0 hit=0 flushed=0
+UVM_INFO C:/Users/socce/SoCET/tensor-core/uvm/lfc_cpu_passive_monitor.sv(67) @ 310000: uvm_test_top.env.cpu_passive_agent.mon [CPU_PASSIVE_MON] Sent write tx: uuid=0 stall=0 hit=0 flushed=0
+UVM_INFO C:/Users/socce/SoCET/tensor-core/uvm/lfc_wr_sequence.sv(42) @ 310000: uvm_test_top.env.cpu_active_agent.sqr@@wr_seq [lfc_wr_sequence] Write 7 Completed: addr=0x3f42c94 data=0xa192be2c
+UVM_ERROR C:/Users/socce/SoCET/tensor-core/uvm/lfc_scoreboard.sv(85) @ 310000: uvm_test_top.env.lfc_scoreboard [SCOREBOARD] STALL mismatch (uuid=0): Expected 1, Got 0
+UVM_INFO C:/Users/socce/SoCET/tensor-core/uvm/lfc_cpu_passive_monitor.sv(62) @ 330000: uvm_test_top.env.cpu_passive_agent.mon [CPU_PASSIVE_MON] Sampled: uuid=0 stall=0 hit=0 flushed=0
+UVM_INFO C:/Users/socce/SoCET/tensor-core/uvm/lfc_cpu_passive_monitor.sv(67) @ 330000: uvm_test_top.env.cpu_passive_agent.mon [CPU_PASSIVE_MON] Sent write tx: uuid=0 stall=0 hit=0 flushed=0
+UVM_INFO C:/Users/socce/SoCET/tensor-core/uvm/lfc_wr_sequence.sv(42) @ 330000: uvm_test_top.env.cpu_active_agent.sqr@@wr_seq [lfc_wr_sequence] Write 8 Completed: addr=0xd606b5c data=0x2ab18a26
+UVM_ERROR C:/Users/socce/SoCET/tensor-core/uvm/lfc_scoreboard.sv(85) @ 330000: uvm_test_top.env.lfc_scoreboard [SCOREBOARD] STALL mismatch (uuid=0): Expected 1, Got 0
+UVM_INFO C:/Users/socce/SoCET/tensor-core/uvm/lfc_cpu_passive_monitor.sv(62) @ 350000: uvm_test_top.env.cpu_passive_agent.mon [CPU_PASSIVE_MON] Sampled: uuid=0 stall=0 hit=0 flushed=0
+UVM_INFO C:/Users/socce/SoCET/tensor-core/uvm/lfc_cpu_passive_monitor.sv(67) @ 350000: uvm_test_top.env.cpu_passive_agent.mon [CPU_PASSIVE_MON] Sent write tx: uuid=0 stall=0 hit=0 flushed=0
+UVM_INFO C:/Users/socce/SoCET/tensor-core/uvm/lfc_wr_sequence.sv(42) @ 350000: uvm_test_top.env.cpu_active_agent.sqr@@wr_seq [lfc_wr_sequence] Write 9 Completed: addr=0x6d2ffe70 data=0x2026646d
+UVM_ERROR C:/Users/socce/SoCET/tensor-core/uvm/lfc_scoreboard.sv(85) @ 350000: uvm_test_top.env.lfc_scoreboard [SCOREBOARD] STALL mismatch (uuid=0): Expected 1, Got 0
+UVM_INFO C:/Users/socce/SoCET/tensor-core/uvm/lfc_cpu_passive_monitor.sv(62) @ 370000: uvm_test_top.env.cpu_passive_agent.mon [CPU_PASSIVE_MON] Sampled: uuid=0 stall=0 hit=0 flushed=0
+UVM_INFO C:/Users/socce/SoCET/tensor-core/uvm/lfc_cpu_passive_monitor.sv(67) @ 370000: uvm_test_top.env.cpu_passive_agent.mon [CPU_PASSIVE_MON] Sent write tx: uuid=0 stall=0 hit=0 flushed=0
+UVM_INFO C:/Users/socce/SoCET/tensor-core/uvm/lfc_wr_sequence.sv(42) @ 370000: uvm_test_top.env.cpu_active_agent.sqr@@wr_seq [lfc_wr_sequence] Write 10 Completed: addr=0x2c92bd8 data=0xb40de13d
+UVM_INFO C:/Users/socce/SoCET/tensor-core/uvm/lfc_wr_sequence.sv(47) @ 370000: uvm_test_top.env.cpu_active_agent.sqr@@wr_seq [lfc_wr_sequence] Starting read transactions...
+UVM_ERROR C:/Users/socce/SoCET/tensor-core/uvm/lfc_scoreboard.sv(85) @ 370000: uvm_test_top.env.lfc_scoreboard [SCOREBOARD] STALL mismatch (uuid=0): Expected 1, Got 0
+UVM_INFO C:/Users/socce/SoCET/tensor-core/uvm/lfc_cpu_passive_monitor.sv(62) @ 390000: uvm_test_top.env.cpu_passive_agent.mon [CPU_PASSIVE_MON] Sampled: uuid=1 stall=0 hit=0 flushed=0
+UVM_INFO C:/Users/socce/SoCET/tensor-core/uvm/lfc_wr_sequence.sv(64) @ 390000: uvm_test_top.env.cpu_active_agent.sqr@@wr_seq [lfc_wr_sequence] Read 1 Completed: addr=0x3b843874 data=0x0
+UVM_INFO C:/Users/socce/SoCET/tensor-core/uvm/lfc_cpu_passive_monitor.sv(62) @ 410000: uvm_test_top.env.cpu_passive_agent.mon [CPU_PASSIVE_MON] Sampled: uuid=1 stall=0 hit=0 flushed=0
+UVM_INFO C:/Users/socce/SoCET/tensor-core/uvm/lfc_wr_sequence.sv(64) @ 410000: uvm_test_top.env.cpu_active_agent.sqr@@wr_seq [lfc_wr_sequence] Read 2 Completed: addr=0x2525fd60 data=0x0
+UVM_INFO C:/Users/socce/SoCET/tensor-core/uvm/lfc_cpu_passive_monitor.sv(62) @ 430000: uvm_test_top.env.cpu_passive_agent.mon [CPU_PASSIVE_MON] Sampled: uuid=2 stall=0 hit=0 flushed=0
+UVM_INFO C:/Users/socce/SoCET/tensor-core/uvm/lfc_wr_sequence.sv(64) @ 430000: uvm_test_top.env.cpu_active_agent.sqr@@wr_seq [lfc_wr_sequence] Read 3 Completed: addr=0x71f8b8ac data=0x0
+UVM_INFO C:/Users/socce/SoCET/tensor-core/uvm/lfc_cpu_passive_monitor.sv(62) @ 450000: uvm_test_top.env.cpu_passive_agent.mon [CPU_PASSIVE_MON] Sampled: uuid=1 stall=0 hit=0 flushed=0
+UVM_INFO C:/Users/socce/SoCET/tensor-core/uvm/lfc_wr_sequence.sv(64) @ 450000: uvm_test_top.env.cpu_active_agent.sqr@@wr_seq [lfc_wr_sequence] Read 4 Completed: addr=0x7ef43b58 data=0x0
+UVM_INFO C:/Users/socce/SoCET/tensor-core/uvm/lfc_cpu_passive_monitor.sv(62) @ 470000: uvm_test_top.env.cpu_passive_agent.mon [CPU_PASSIVE_MON] Sampled: uuid=3 stall=0 hit=0 flushed=0
+UVM_INFO C:/Users/socce/SoCET/tensor-core/uvm/lfc_wr_sequence.sv(64) @ 470000: uvm_test_top.env.cpu_active_agent.sqr@@wr_seq [lfc_wr_sequence] Read 5 Completed: addr=0x3d74abe0 data=0x0
+UVM_INFO C:/Users/socce/SoCET/tensor-core/uvm/lfc_cpu_passive_monitor.sv(62) @ 490000: uvm_test_top.env.cpu_passive_agent.mon [CPU_PASSIVE_MON] Sampled: uuid=4 stall=0 hit=0 flushed=0
+UVM_INFO C:/Users/socce/SoCET/tensor-core/uvm/lfc_wr_sequence.sv(64) @ 490000: uvm_test_top.env.cpu_active_agent.sqr@@wr_seq [lfc_wr_sequence] Read 6 Completed: addr=0x404ac164 data=0x0
+UVM_INFO C:/Users/socce/SoCET/tensor-core/uvm/lfc_cpu_passive_monitor.sv(62) @ 510000: uvm_test_top.env.cpu_passive_agent.mon [CPU_PASSIVE_MON] Sampled: uuid=2 stall=0 hit=0 flushed=0
+UVM_INFO C:/Users/socce/SoCET/tensor-core/uvm/lfc_wr_sequence.sv(64) @ 510000: uvm_test_top.env.cpu_active_agent.sqr@@wr_seq [lfc_wr_sequence] Read 7 Completed: addr=0x3f42c94 data=0x0
+UVM_INFO C:/Users/socce/SoCET/tensor-core/uvm/lfc_cpu_passive_monitor.sv(62) @ 530000: uvm_test_top.env.cpu_passive_agent.mon [CPU_PASSIVE_MON] Sampled: uuid=3 stall=0 hit=0 flushed=0
+UVM_INFO C:/Users/socce/SoCET/tensor-core/uvm/lfc_wr_sequence.sv(64) @ 530000: uvm_test_top.env.cpu_active_agent.sqr@@wr_seq [lfc_wr_sequence] Read 8 Completed: addr=0xd606b5c data=0x0
+UVM_INFO C:/Users/socce/SoCET/tensor-core/uvm/lfc_cpu_passive_monitor.sv(62) @ 550000: uvm_test_top.env.cpu_passive_agent.mon [CPU_PASSIVE_MON] Sampled: uuid=2 stall=0 hit=0 flushed=0
+UVM_INFO C:/Users/socce/SoCET/tensor-core/uvm/lfc_wr_sequence.sv(64) @ 550000: uvm_test_top.env.cpu_active_agent.sqr@@wr_seq [lfc_wr_sequence] Read 9 Completed: addr=0x6d2ffe70 data=0x0
+UVM_INFO C:/Users/socce/SoCET/tensor-core/uvm/lfc_cpu_passive_monitor.sv(62) @ 570000: uvm_test_top.env.cpu_passive_agent.mon [CPU_PASSIVE_MON] Sampled: uuid=4 stall=0 hit=0 flushed=0
+UVM_INFO C:/Users/socce/SoCET/tensor-core/uvm/lfc_ram_passive_monitor.sv(71) @ 570000: uvm_test_top.env.ram_passive_agent.mon [RAM_MON] Captured bank=3 REN=1 WEN=0 addr=0x3b843810 store=0x00000000 data=0xxxxxxxxx complete=x
+UVM_INFO C:/Users/socce/SoCET/tensor-core/uvm/lfc_wr_sequence.sv(64) @ 570000: uvm_test_top.env.cpu_active_agent.sqr@@wr_seq [lfc_wr_sequence] Read 10 Completed: addr=0x2c92bd8 data=0x0
+UVM_INFO C:/Users/socce/SoCET/tensor-core/uvm/lfc_ram_passive_monitor.sv(71) @ 590000: uvm_test_top.env.ram_passive_agent.mon [RAM_MON] Captured bank=2 REN=1 WEN=0 addr=0x2525fc50 store=0x00000000 data=0xxxxxxxxx complete=x
+UVM_INFO C:/Users/socce/SoCET/tensor-core/uvm/lfc_ram_passive_monitor.sv(71) @ 590000: uvm_test_top.env.ram_passive_agent.mon [RAM_MON] Captured bank=3 REN=1 WEN=0 addr=0x3b843810 store=0x00000000 data=0xxxxxxxxx complete=x
+UVM_INFO C:/Users/socce/SoCET/tensor-core/uvm/lfc_cpu_passive_monitor.sv(62) @ 590000: uvm_test_top.env.cpu_passive_agent.mon [CPU_PASSIVE_MON] Sampled: uuid=4 stall=1 hit=0 flushed=0
+UVM_INFO C:/Users/socce/SoCET/tensor-core/uvm/lfc_cpu_passive_monitor.sv(62) @ 610000: uvm_test_top.env.cpu_passive_agent.mon [CPU_PASSIVE_MON] Sampled: uuid=0 stall=0 hit=0 flushed=0
+UVM_INFO C:/Users/socce/SoCET/tensor-core/uvm/lfc_ram_passive_monitor.sv(71) @ 610000: uvm_test_top.env.ram_passive_agent.mon [RAM_MON] Captured bank=2 REN=1 WEN=0 addr=0x2525fc50 store=0x00000000 data=0xxxxxxxxx complete=x
+UVM_INFO C:/Users/socce/SoCET/tensor-core/uvm/lfc_ram_passive_monitor.sv(71) @ 610000: uvm_test_top.env.ram_passive_agent.mon [RAM_MON] Captured bank=3 REN=1 WEN=0 addr=0x3b843810 store=0x00000000 data=0xxxxxxxxx complete=x
+UVM_INFO C:/Users/socce/SoCET/tensor-core/uvm/lfc_ram_passive_monitor.sv(71) @ 630000: uvm_test_top.env.ram_passive_agent.mon [RAM_MON] Captured bank=1 REN=1 WEN=0 addr=0x7ef438d0 store=0x00000000 data=0xxxxxxxxx complete=x
+UVM_INFO C:/Users/socce/SoCET/tensor-core/uvm/lfc_ram_passive_monitor.sv(71) @ 630000: uvm_test_top.env.ram_passive_agent.mon [RAM_MON] Captured bank=2 REN=1 WEN=0 addr=0x2525fc50 store=0x00000000 data=0xxxxxxxxx complete=x
+UVM_INFO C:/Users/socce/SoCET/tensor-core/uvm/lfc_ram_passive_monitor.sv(71) @ 630000: uvm_test_top.env.ram_passive_agent.mon [RAM_MON] Captured bank=3 REN=1 WEN=0 addr=0x3b843810 store=0x00000000 data=0xxxxxxxxx complete=x
+UVM_INFO C:/Users/socce/SoCET/tensor-core/uvm/lfc_cpu_passive_monitor.sv(62) @ 630000: uvm_test_top.env.cpu_passive_agent.mon [CPU_PASSIVE_MON] Sampled: uuid=5 stall=0 hit=0 flushed=0
+UVM_INFO C:/Users/socce/SoCET/tensor-core/uvm/lfc_cpu_passive_monitor.sv(62) @ 650000: uvm_test_top.env.cpu_passive_agent.mon [CPU_PASSIVE_MON] Sampled: uuid=5 stall=0 hit=0 flushed=0
+UVM_INFO C:/Users/socce/SoCET/tensor-core/uvm/lfc_ram_passive_monitor.sv(71) @ 650000: uvm_test_top.env.ram_passive_agent.mon [RAM_MON] Captured bank=1 REN=1 WEN=0 addr=0x7ef438d0 store=0x00000000 data=0xxxxxxxxx complete=x
+UVM_INFO C:/Users/socce/SoCET/tensor-core/uvm/lfc_ram_passive_monitor.sv(71) @ 650000: uvm_test_top.env.ram_passive_agent.mon [RAM_MON] Captured bank=2 REN=1 WEN=0 addr=0x2525fc50 store=0x00000000 data=0xxxxxxxxx complete=x
+UVM_INFO C:/Users/socce/SoCET/tensor-core/uvm/lfc_ram_passive_monitor.sv(71) @ 650000: uvm_test_top.env.ram_passive_agent.mon [RAM_MON] Captured bank=3 REN=1 WEN=0 addr=0x3b843810 store=0x00000000 data=0xxxxxxxxx complete=x
+UVM_INFO C:/Users/socce/SoCET/tensor-core/uvm/lfc_ram_passive_monitor.sv(71) @ 670000: uvm_test_top.env.ram_passive_agent.mon [RAM_MON] Captured bank=1 REN=1 WEN=0 addr=0x7ef438d0 store=0x00000000 data=0xxxxxxxxx complete=x
+UVM_INFO C:/Users/socce/SoCET/tensor-core/uvm/lfc_ram_passive_monitor.sv(71) @ 670000: uvm_test_top.env.ram_passive_agent.mon [RAM_MON] Captured bank=2 REN=1 WEN=0 addr=0x2525fc50 store=0x00000000 data=0xxxxxxxxx complete=x
+UVM_INFO C:/Users/socce/SoCET/tensor-core/uvm/lfc_ram_passive_monitor.sv(71) @ 670000: uvm_test_top.env.ram_passive_agent.mon [RAM_MON] Captured bank=3 REN=1 WEN=0 addr=0x3b843810 store=0x00000000 data=0xxxxxxxxx complete=x
+UVM_INFO C:/Users/socce/SoCET/tensor-core/uvm/lfc_cpu_passive_monitor.sv(62) @ 670000: uvm_test_top.env.cpu_passive_agent.mon [CPU_PASSIVE_MON] Sampled: uuid=0 stall=0 hit=0 flushed=0
+UVM_INFO D:/2025.1/Vivado/data/system_verilog/uvm_1.2/xlnx_uvm_package.sv(19968) @ 670000: reporter [TEST_DONE] 'run' phase is ready to proceed to the 'extract' phase
+UVM_INFO @ 670000: uvm_test_top.env.lfc_scoreboard [Scoreboard] Matches:    8
+UVM_INFO @ 670000: uvm_test_top.env.lfc_scoreboard [Scoreboard] Mismatches: 8
+UVM_INFO D:/2025.1/Vivado/data/system_verilog/uvm_1.2/xlnx_uvm_package.sv(13673) @ 670000: reporter [UVM/REPORT/SERVER] 
+--- UVM Report Summary ---
+
+** Report counts by severity
+UVM_INFO :  105
+UVM_WARNING :    0
+UVM_ERROR :    8
+UVM_FATAL :    0
+** Report counts by id
+[CPU_MON]     1
+[CPU_PASSIVE_MON]    50
+[RAM_MON]    14
+[RNTST]     1
+[SCOREBOARD]    16
+[Scoreboard]     2
+[TEST_DONE]     1
+[Test]     1
+[UVM/COMP/NAMECHECK]     1
+[UVM/RELNOTES]     1
+[lfc_basic_sequence]     2
+[lfc_wr_sequence]    23
+
+$finish called at time : 670 ns : File "D:/2025.1/Vivado/data/system_verilog/uvm_1.2/xlnx_uvm_package.sv" Line 18699
