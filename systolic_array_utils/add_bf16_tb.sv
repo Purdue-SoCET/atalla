@@ -70,9 +70,16 @@ module add_bf16_tb;
         tb_nrst = 1;
 
         /* 
+
         I'm revamping this TB to have more comprehensive test cases for BF16 addition
         I honestly don't want to change the way tasks are structured here so imma just
         follow the same format as before but with correct BF16 values and expected outputs
+
+        ***Current Concern: We havent reclarified how we are rounding again,
+            back in fp16, we did DAZ/FTZ. Looking at googles TPU doc, it seems like
+            they do use FTZ for BF16 as well, but not DAZ. 
+            They also mention round to nearest even, which i believe we are trying to currently support
+            So imma assume FTZ and round to nearest even for now***
 
         To whom ir may concern please note that some of the previous test cases had incorrect expected outputs
         for BF16 addition, so I've corrected those as well.
@@ -289,7 +296,7 @@ module add_bf16_tb;
         expected_out[idx] = 16'h0100; // Expected: 2*min_normal
         idx++;
 
-        // Test case 18: Testing subnormals (should auto go to zero with DAZ)
+        // Test case 18: Testing subnormals (should result in a subnormal, which FTZ to 0)
         // This TB is correct vals.
 
         // Warning!: RTL is currently failing this case! 
@@ -297,7 +304,7 @@ module add_bf16_tb;
 
         test_set1[idx] = 16'h0001; // Smallest subnormal
         test_set2[idx] = 16'h0001; // Smallest subnormal
-        expected_out[idx] = POS_ZERO; // Expected: 0.0 due to DAZ
+        expected_out[idx] = POS_ZERO; // Expected: 0.0 due to FTZ
         idx++;
 
         // Test case 19: Adding two numbers of opposite sign but close magnitudes that result in subnormal (should underflow to zero, ie FTZ behavior)
