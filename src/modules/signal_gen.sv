@@ -261,7 +261,16 @@ module signal_gen #(
                 cmd_addr    = PRECHARGE_CMD;
                 mysig.BG         = mysig.BG0;
                 mysig.BA         = mysig.BA0;
-                mysig.ADDR[10]   = mysig.ref_re ? 1'b1 : 1'b0;
+                mysig.ADDR[10]   = 1'b0;
+            end
+        end
+
+        PRECHARGE_RE: begin
+            if (issue) begin
+                cmd_addr    = PRECHARGE_CMD;
+                mysig.BG         = mysig.BG0;
+                mysig.BA         = mysig.BA0;
+                mysig.ADDR[10]   = 1'b1;
             end
         end
 

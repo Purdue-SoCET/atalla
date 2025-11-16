@@ -53,7 +53,6 @@ module timing_signal (
             end
 
             ACTIVATING : begin
-
                 if ((time_count_done == tRAS - 12 + 1) && (!timif.rf_req)) begin
                     clear = 1;
                     timif.tACT_done = 1'b1;

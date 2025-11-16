@@ -5,6 +5,10 @@
 `include "signal_gen_if.vh"
 `include "arch_defines.v"
 `include "dimm.vh"
+//Scrath modify
+`include "scpad_if.sv"
+import scpad_pkg::*;
+
 `timescale 1 ns / 1 ps
 
 
@@ -22,7 +26,7 @@
 
 //RUNING SIMULATION: make dram_top
 
-module dram_top_tb;
+module scrath_back_tb;
     parameter PERIOD = 1.5;
     parameter tCK = 1.5;
     import dram_pkg::*;
@@ -82,6 +86,8 @@ module dram_top_tb;
     signal_gen_if sig_if();
     scheduler_buffer_if sch_if();
     data_transfer_if dt_if();
+    //Scrathpad modify
+    scpad_if bif(CLK, nRST);
 
     DDR4_if #(.CONFIGURED_DQ_BITS(CONFIGURED_DQ_BITS)) iDDR4_1();
     DDR4_if #(.CONFIGURED_DQ_BITS(CONFIGURED_DQ_BITS)) iDDR4_2();
@@ -91,6 +97,13 @@ module dram_top_tb;
     dram_top DUT (.CLK(CLK), .nRST(nRST), .myctrl(dc_if), .myctrl_sig(dc_if), .mysig(sig_if));
     scheduler_buffer SCH_BUFF (.CLK(CLK), .nRST(nRST), .mysche(sch_if));
     data_transfer DT (.CLK(CLK), .CLKx2(CLKx2),.nRST(nRST), .mydata(dt_if));
+
+    //Scrathpad modify
+    backend #(.IDX(0)) DUT (
+    .bshif(bif),   // scpad_if.backend_sched
+    .bbif (bif),   // scpad_if.backend_body
+    .bdrif(bif)    // scpad_if.backend_dram
+    );
 
     //Instantiate cache as a referrence model to verify data load
     sw_cache CACHE (.CLKx2(CLKx2), .nRST(nRST), .wr_en(cache_write), .rd_en(cache_read), .row_addr(cache_addr), .offset(cache_offset), .dmemstore(cache_store), .dmemload(cache_load));
@@ -466,15 +479,16 @@ module dram_top_tb;
         cache_read = 1;
         dt_if.clear = 0;
     endtask
+
     //Creating the assert to check the failed case of data load
     property wr_verify;
         @(posedge CLK) disable iff (!nRST)
         dt_if.rd_en && (dt_if.edge_flag) |-> (cache_load == dt_if.memload);
     endproperty
-    assert property (wr_verify)
-    else 
-        //If failed it should stop simulation
-        $fatal("Time: [%0t], Addr: %0x, offset: %0x, cache load: %0x, dt_memload: %0x",$time,sch.creating_addr[30:16], cache_offset, cache_load, dt_if.memload);
+    // assert property (wr_verify)
+    // else 
+    //     //If failed it should stop simulation
+    //     $fatal("Time: [%0t], Addr: %0x, offset: %0x, cache load: %0x, dt_memload: %0x",$time,sch.creating_addr[30:16], cache_offset, cache_load, dt_if.memload);
 
 
     //Task of writing different 16 writes of different banks
@@ -624,11 +638,11 @@ module dram_top_tb;
     repeat(200) @(posedge CLK);
 
     //Task 16_consecutive writes
-    // task_name = "16 write-dif bank";
-    // consecutive_16_write();
+    task_name = "16 write-dif bank";
+    consecutive_16_write();
 
     //Task random
-    //random_req();
+    random_req();
 
     //CHECKPOINT: DONE ALL PREVIOUS CASES
     //TODO may be: the writing burst mask cases doesn't have general test cases

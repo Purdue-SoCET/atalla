@@ -22,34 +22,76 @@ package dram_pkg;
     parameter ADDR_BITS    = 14; //TODO: Need to take a look for ROW/COL/ADDR interface
 
     // TIMING PARAMETERS for x8
-    parameter tRCD = 10;
-    parameter tAL = 1;
-    parameter tCL = 10;
-    parameter tBURST = 4;
-    parameter tCWL = 10;
-    // parameter tREFI = 96000; //The actual value is ___, but we put __ for observing
-    parameter tREFI = 250; //The actual value is ___, but we put __ for observing
-    parameter tRP = 10;
-    // parameter tRFC = 10;
-    parameter tRFC = 172;  //This is not the actual __ value, but we put it for solving timing constraint
-    parameter tRAS = 45; //tns 1.5ns -> 25 cycles
-    parameter tRC = tRAS + tRP;
-    parameter tRL = tAL + tCL;        // Read Latency
-
-    //Tri debug
-
-    parameter tWR = 12;//tWR should be 10 but work for 12 //tCK 1.5ns -> 10, tCK 1.25ns 12 cycles, tCK 0.833ns 18 cycles
-    parameter tWL = tAL + tCWL;       // Write Latency
-
-    //INITIALIZE TIME
-    parameter tRESET        = 80;
-    parameter tPWUP         = 80;
-    parameter tRESETCKE     = 80;
-    parameter tPDc          = 3;
-    parameter tXPR          = 217;
-    parameter tDLLKc        = 597;
-    parameter tZQinitc      = 1024;
-    parameter tMOD          = 25;
+    `ifdef TS_1500
+        parameter tRCD = 10;
+        parameter tRAS = 35;
+        parameter tRP = 20;
+        parameter tRC = tRAS + tRP;
+        parameter tAL = 0;
+        parameter tCL = 10;
+        parameter tBURST = 4;
+        parameter tCWL = 11; 
+        parameter tREFI = 250; //The actual value is ___, but we put __ for observing
+        parameter tRFC = 172;  //This is not the actual __ value, but we put it for solving timing constraint
+        parameter tRL = tAL + tCL;        // Read Latency
+        parameter tWR = 12;//tWR should be 10 but work for 12 //tCK 1.5ns -> 10, tCK 1.25ns 12 cycles, tCK 0.833ns 18 cycles
+        parameter tWL = tAL + tCWL;       // Write Latency
+        //INITIALIZE TIME
+        parameter tRESET        = 80;
+        parameter tPWUP         = 80;
+        parameter tRESETCKE     = 80;
+        parameter tPDc          = 3;
+        parameter tXPR          = 217;
+        parameter tDLLKc        = 597;
+        parameter tZQinitc      = 1024;
+        parameter tMOD          = 25;
+    `elsif TS_1250
+        parameter tRCD = 10;
+        parameter tAL = 1;
+        parameter tCL = 10;
+        parameter tBURST = 4;
+        parameter tCWL = 10;
+        parameter tREFI = 250; //The actual value is ___, but we put __ for observing
+        parameter tRP = 10;
+        parameter tRFC = 172;  //This is not the actual __ value, but we put it for solving timing constraint
+        parameter tRAS = 45; //tns 1.5ns -> 25 cycles
+        parameter tRC = tRAS + tRP;
+        parameter tRL = tAL + tCL;        // Read Latency
+        parameter tWR = 12;//tWR should be 10 but work for 12 //tCK 1.5ns -> 10, tCK 1.25ns 12 cycles, tCK 0.833ns 18 cycles
+        parameter tWL = tAL + tCWL;       // Write Latency
+        //INITIALIZE TIME
+        parameter tRESET        = 80;
+        parameter tPWUP         = 80;
+        parameter tRESETCKE     = 80;
+        parameter tPDc          = 3;
+        parameter tXPR          = 217;
+        parameter tDLLKc        = 597;
+        parameter tZQinitc      = 1024;
+        parameter tMOD          = 25;
+    `else
+        parameter tRCD = 10;
+        parameter tAL = 1;
+        parameter tCL = 10;
+        parameter tBURST = 4;
+        parameter tCWL = 10;
+        parameter tREFI = 250; //The actual value is ___, but we put __ for observing
+        parameter tRP = 10;
+        parameter tRFC = 172;  //This is not the actual __ value, but we put it for solving timing constraint
+        parameter tRAS = 45; //tns 1.5ns -> 25 cycles
+        parameter tRC = tRAS + tRP;
+        parameter tRL = tAL + tCL;        // Read Latency
+        parameter tWR = 12;//tWR should be 10 but work for 12 //tCK 1.5ns -> 10, tCK 1.25ns 12 cycles, tCK 0.833ns 18 cycles
+        parameter tWL = tAL + tCWL;       // Write Latency
+        //INITIALIZE TIME
+        parameter tRESET        = 80;
+        parameter tPWUP         = 80;
+        parameter tRESETCKE     = 80;
+        parameter tPDc          = 3;
+        parameter tXPR          = 217;
+        parameter tDLLKc        = 597;
+        parameter tZQinitc      = 1024;
+        parameter tMOD          = 25;
+    `endif
 
     // word_t
     typedef logic [WORD_W-1:0] word_t;
@@ -82,6 +124,8 @@ package dram_pkg;
         WRITING,
         PRECHARGE,
         PRECHARGING,
+        PRECHARGE_RE,
+        PRECHARGING_RE,
         READ,
         READING,
         REFRESH,

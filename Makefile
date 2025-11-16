@@ -2,8 +2,10 @@ SCRDIR = /home/asicfab/a/than0/tensor-core/src/scripts
 SIMTIME = 100us             # Default simulation run time
 
 SCRDIR = ./src/modules
-
+SCRATHPAD_SRC_DIR = ./src/scrathpad/src
+SCRATHPAD_INCLUDE = ./src/scrathpad/include
 EXTRA_dram_top = $(wildcard $(SCRDIR)/*.sv)
+EXTRA_scrathpad = $(wildcard $(SCRATHPAD_SRC_DIR)/*.sv)
 DRAM_define = ./src/arch_defines.v ./src/dimm.vh ./src/arch_package.sv ./src/proj_package.sv ./src/interface.sv ./src/ddr4_model.svp
 
 # modelsim viewing options
@@ -29,7 +31,13 @@ fc:
 
 dram_top:
 	vlib work
-	vlog +cover -work work +acc -l vcs.log -sv +incdir+./src/include +define+DDR4_4G_X8 $(DRAM_define) $(EXTRA_dram_top) ./src/testbench/dram_top_tb.sv
+	vlog +cover -work work +acc -l vcs.log -sv +incdir+./src/include +define+DDR4_4G_X8 +define+TS_1500 $(DRAM_define) $(EXTRA_dram_top) ./src/testbench/dram_top_tb.sv
+	vsim -coverage -do ./src/scripts/dram_top_tb.do dram_top_tb
+	run -all
+
+dram_scrath:
+	vlib work
+	vlog +cover -work work +acc -l vcs.log -sv +incdir+./src/include +incdir+$(SCRATHPAD_INCLUDE) +define+DDR4_4G_X8 +define+TS_1500 $(DRAM_define) $(EXTRA_dram_top) $(EXTRA_scrathpad) ./src/testbench/dram_top_tb.sv
 	vsim -coverage -do ./src/scripts/dram_top_tb.do dram_top_tb
 	run -all
 

@@ -1,0 +1,2 @@
+var g_data = {"37":{"cvpc":[{"h":["sch_point",4,1,38],"sc":[5,327],"cov":[3,3,100.00],"opts":{"goal":"100"}}],"cvg":["/dram_top_tb/sche_trans/sch_group",1],"cvgdata":[3,3,0,0]}};
+processCoverpointsData(g_data);

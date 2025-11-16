@@ -35,7 +35,7 @@ module timing_signal (
         case (cfsmif.cmd_state)
             ACTIVATE : begin
                 time_counter_en = 1'b1;
-                time_load = tRAS;
+                time_load = tRC;
                 
                 // if (timif.rf_req == 1'b1) begin         // ACT -> PRE time for refresh requests
                 //     time_load = tRAS;
@@ -54,7 +54,7 @@ module timing_signal (
 
             ACTIVATING : begin
 
-                if ((time_count_done == tRAS - 12 + 1) && (!timif.rf_req)) begin
+                if ((time_count_done == tRC - 12 + 1) && (!timif.rf_req)) begin
                     clear = 1;
                     timif.tACT_done = 1'b1;
                 end 
@@ -118,6 +118,17 @@ module timing_signal (
             end
 
             PRECHARGING : begin
+                if (time_count_done == 1'b1) begin
+                    timif.tPRE_done = 1'b1;
+                end
+            end
+
+            PRECHARGE_RE : begin
+                time_counter_en = 1'b1;
+                time_load = tRP;
+            end
+
+            PRECHARGING_RE : begin
                 if (time_count_done == 1'b1) begin
                     timif.tPRE_done = 1'b1;
                 end

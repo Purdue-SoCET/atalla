@@ -54,7 +54,8 @@ module command_FSM (
 
             IDLE: begin
                 if (mycmd.rf_req) begin
-                    mycmd.ncmd_state = (mycmd.all_row_closed) ? REFRESH : PRECHARGE;
+                    // mycmd.ncmd_state = (mycmd.all_row_closed) ? REFRESH : PRECHARGE;
+                    mycmd.ncmd_state = PRECHARGE_RE;
                 end
                 else if (mycmd.dWEN || mycmd.dREN) begin
                     if (mycmd.row_stat == HIT) mycmd.ncmd_state = mycmd.dWEN ? WRITE : READ;
@@ -64,23 +65,24 @@ module command_FSM (
             end
 
             ACTIVATE: begin
-                if (mycmd.rf_req) begin mycmd.ncmd_state = (mycmd.all_row_closed) ? REFRESH : PRECHARGE; end
+                // if (mycmd.rf_req) begin mycmd.ncmd_state = (mycmd.all_row_closed) ? REFRESH : PRECHARGE; end
+                if (mycmd.rf_req) begin mycmd.ncmd_state = PRECHARGE_RE; end
                 else begin mycmd.ncmd_state = ACTIVATING; end
             end
 
             ACTIVATING: begin
                 if (mycmd.tACT_done) begin
-                    mycmd.ncmd_state = mycmd.rf_req ? PRECHARGE : mycmd.dWEN ? WRITE : READ;
+                    mycmd.ncmd_state = mycmd.rf_req ? PRECHARGE_RE : mycmd.dWEN ? WRITE : READ;
                 end
             end
 
-            WRITE: begin mycmd.ncmd_state = mycmd.rf_req ? PRECHARGE : WRITING; end
-            READ : begin mycmd.ncmd_state = mycmd.rf_req ? PRECHARGE : READING; end
+            WRITE: begin mycmd.ncmd_state = mycmd.rf_req ? PRECHARGE_RE : WRITING; end
+            READ : begin mycmd.ncmd_state = mycmd.rf_req ? PRECHARGE_RE : READING; end
             
             WRITING: begin
                 if (mycmd.tWR_done) begin
                     nram_wait = 1'b0;
-                    if (mycmd.rf_req) begin mycmd.ncmd_state = PRECHARGE; end
+                    if (mycmd.rf_req) begin mycmd.ncmd_state = PRECHARGE_RE; end
                     //TODO Discuss this with Dhruv
                     // else if (mycmd.dWEN || mycmd.dREN) begin
                     //     if (mycmd.row_stat == HIT) mycmd.ncmd_state = mycmd.dWEN ? WRITE : READ;
@@ -96,9 +98,9 @@ module command_FSM (
             READING: begin
                 if (mycmd.tRD_done) begin
                     nram_wait = 1'b0;
-                    if (mycmd.rf_req) begin mycmd.ncmd_state = PRECHARGE; end
+                    if (mycmd.rf_req) begin mycmd.ncmd_state = PRECHARGE_RE; end
                     //TODO Discuss this with Dhruv
-                    // else if (mycmd.dWEN || mycmd.dREN) begin
+                    // else if [(mycmd.dWEN || mycmd.dREN) begin
                     //     if (mycmd.row_stat == HIT) mycmd.ncmd_state = mycmd.dWEN ? WRITE : READ;
                     //     else if(mycmd.row_stat == CONFLICT) mycmd.ncmd_state = PRECHARGE;
                     //     else if (mycmd.row_stat == MISS) mycmd.ncmd_state = ACTIVATE;
@@ -116,9 +118,22 @@ module command_FSM (
             PRECHARGING: begin
                 if (mycmd.tPRE_done) begin
                     mycmd.row_resolve = 1'b1;
-                    mycmd.ncmd_state = mycmd.rf_req ? REFRESH : IDLE;
+                    if (mycmd.rf_req) begin
+                        mycmd.ncmd_state = PRECHARGE_RE;    
+                    end else begin
+                        mycmd.ncmd_state = IDLE;
+                    end
                 end
+            end
 
+            PRECHARGE_RE: begin
+                mycmd.ncmd_state = PRECHARGING_RE;
+            end
+
+            PRECHARGING_RE: begin
+                if (mycmd.tPRE_done) begin
+                    mycmd.ncmd_state = REFRESH;
+                end
             end
         endcase
     end
