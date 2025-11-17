@@ -235,8 +235,12 @@ add wave -noupdate -expand -group cache_debug /dram_top_tb/dt_if/DQ
 add wave -noupdate -expand -group cache_debug /dram_top_tb/CACHE/dmemload
 add wave -noupdate -expand -group cache_debug /dram_top_tb/prev_addr
 add wave -noupdate /dram_top_tb/random_req/wr_or_rd
+add wave -noupdate /dram_top_tb/cache_valid
+add wave -noupdate /dram_top_tb/cache_validin
+add wave -noupdate /dram_top_tb/cache_BG
+add wave -noupdate /dram_top_tb/cache_bank
 TreeUpdate [SetDefaultTree]
-WaveRestoreCursors {{Cursor 1} {14169739 ps} 0}
+WaveRestoreCursors {{Cursor 1} {156246498 ps} 0}
 quietly wave cursor active 1
 configure wave -namecolwidth 150
 configure wave -valuecolwidth 369
@@ -252,4 +256,4 @@ configure wave -griddelta 40
 configure wave -timeline 0
 configure wave -timelineunits ps
 update
-WaveRestoreZoom {12776824 ps} {21390307 ps}
+WaveRestoreZoom {28141539 ps} {28288054 ps}

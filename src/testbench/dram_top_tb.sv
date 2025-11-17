@@ -54,7 +54,10 @@ module dram_top_tb;
     logic cache_write;
     logic cache_read;
     logic cache_valid;
+    logic cache_validin;
+    logic [2:0] cache_BG, cache_bank;
     logic [ROW_BITS-1:0] cache_addr;
+    logic [COLUMN_BITS-1:0] cache_col_addr;
     logic [2:0] cache_offset;
     logic [63:0] cache_store;
     logic [63:0] cache_load;
@@ -94,7 +97,7 @@ module dram_top_tb;
     data_transfer DT (.CLK(CLK), .CLKx2(CLKx2),.nRST(nRST), .mydata(dt_if));
 
     //Instantiate cache as a referrence model to verify data load
-    sw_cache CACHE (.CLKx2(CLKx2), .nRST(nRST), .wr_en(cache_write), .rd_en(cache_read), .row_addr(cache_addr), .offset(cache_offset), .dmemstore(cache_store), .dmemload(cache_load), .valid(cache_valid));
+    sw_cache_16bank CACHE (.CLKx2(CLKx2), .nRST(nRST), .bank(cache_bank) ,.BG(cache_BG), .wr_en(cache_write), .rd_en(cache_read), .row_addr(cache_addr), .col_addr(cache_col_addr), .offset(cache_offset), .dmemstore(cache_store), .dmemload(cache_load), .valid(cache_valid));
 
     //Scheduler interface with the 
     always_comb begin
@@ -369,14 +372,14 @@ module dram_top_tb;
                 creating_addr[30:16] = row;
                 creating_addr[15:14] = 2'b00;
                 creating_addr[13] = 1'b0;
-                creating_addr[12:6] = col[9:3];
+                creating_addr[12:6] = 7'b01;
                 creating_addr[5] = 1'b0;
                 creating_addr[4:2] = col[2:0];
                 creating_addr[1:0] = offset;
             end else if (testcase == "row hit") begin
                 creating_addr = prev_addr;
             end else begin
-                creating_addr = {rank, row, bank, BG[1], col[9:3], BG[0], col[2:0], offset};
+                creating_addr = {rank, row, bank, BG[1], 7'b01, BG[0], col[2:0], offset};
             end
         endfunction
     endclass
@@ -488,10 +491,10 @@ module dram_top_tb;
         @(posedge CLK) disable iff (!nRST)
         dt_if.rd_en && (dt_if.edge_flag) |-> (((cache_load == dt_if.memload) && cache_valid) || (!cache_valid));
     endproperty
-    assert property (wr_verify);
-    // else 
-    //     //If failed it should stop simulation
-    //     $fatal("Time: [%0t], Addr: %0x, offset: %0x, cache load: %0x, dt_memload: %0x",$time,sch.creating_addr[30:16], cache_offset, cache_load, dt_if.memload);
+    assert property (wr_verify)
+    else 
+        //If failed it should stop simulation
+        $fatal("Time: [%0t], Addr: %0x, offset: %0x, cache load: %0x, dt_memload: %0x",$time,sch.creating_addr[30:16], cache_offset, cache_load, dt_if.memload);
 
 
     //Task of writing different 16 writes of different banks
@@ -513,19 +516,27 @@ module dram_top_tb;
         bit wr_or_rd; 
         sch.addr_row_conflict.constraint_mode(0);
         sch.addr_rank.constraint_mode(1);
-        for (int i = 0; i < 1000; i++) begin
+        for (int i = 0; i < 100000; i++) begin
             task_name = $sformatf("Task random -%0d", i);
             wr_or_rd = $urandom_range(0,1); // simple 0/1;
             if (wr_or_rd) begin
                 dq_en = 1'b1;
                 sch.randomize();
                 sch.gen_addr("row miss", prev_addr);
+                cache_BG   = {sch.creating_addr[13],sch.creating_addr[5]};
+                cache_bank = {sch.creating_addr[15:14]};
+                cache_col_addr = {sch.creating_addr[12:6]};
                 writing_1(sch.creating_addr, dt_class);
                 while (dc_if.ram_wait) begin
                     @(posedge CLK);
                 end
             end else begin
                 dq_en = 1'b0;
+                sch.randomize();
+                sch.gen_addr("row miss", prev_addr);
+                cache_BG   = {sch.creating_addr[13],sch.creating_addr[5]};
+                cache_bank = {sch.creating_addr[15:14]};
+                cache_col_addr = {sch.creating_addr[12:6]};
                 read_with_verify(sch.creating_addr, sch);
             end 
         end
@@ -536,7 +547,7 @@ module dram_top_tb;
         bit wr_or_rd;
         sch.addr_row_conflict.constraint_mode(0);
         sch.addr_rank.constraint_mode(1); 
-        for (int i = 0; i < 1000; i++) begin
+        for (int i = 0; i < 100000; i++) begin
             task_name = $sformatf("Task best case -%0d", i);
             wr_or_rd = $urandom_range(0,1); // simple 0/1;
             if (wr_or_rd) begin
@@ -559,13 +570,16 @@ module dram_top_tb;
         bit wr_or_rd; 
         sch.addr_row_conflict.constraint_mode(1);
         sch.addr_rank.constraint_mode(0);
-        for (int i = 0; i < 1000; i++) begin
+        for (int i = 0; i < 100000; i++) begin
             task_name = $sformatf("Task worst case -%0d", i);
             wr_or_rd = $urandom_range(0,1); // simple 0/1;
             if (wr_or_rd) begin
                 dq_en = 1'b1;
                 sch.randomize();
                 sch.gen_addr("row conflict", prev_addr);
+                cache_BG   = {sch.creating_addr[13],sch.creating_addr[5]};
+                cache_bank = {sch.creating_addr[15:14]};
+                cache_col_addr = {sch.creating_addr[12:6]};
                 writing_1(sch.creating_addr, dt_class);
                 while (dc_if.ram_wait) begin
                     @(posedge CLK);
@@ -574,6 +588,9 @@ module dram_top_tb;
                 dq_en = 1'b0;
                 sch.randomize();
                 sch.gen_addr("row conflict", prev_addr);
+                cache_BG   = {sch.creating_addr[13],sch.creating_addr[5]};
+                cache_bank = {sch.creating_addr[15:14]};
+                cache_col_addr = {sch.creating_addr[12:6]};
                 read_with_verify(sch.creating_addr, sch);
             end 
         end
@@ -581,6 +598,9 @@ module dram_top_tb;
     endtask
 
     initial begin
+      time t_start1, t_end1;
+      time t_start2, t_end2;
+      time t_start3, t_end3;
       iDDR4_1.CK = 2'b01;
       clk_enb = 1'b1;
       clk_val = 1'b1;  
@@ -698,9 +718,25 @@ module dram_top_tb;
     // consecutive_16_write();
 
     //Average case
+     // Average case
+    t_start1 = $time;
     random_req();
+    t_end1 = $time;
+    
+
+    // Best case
+    t_start2 = $time;
     best_case();
+    t_end2 = $time;
+    
+
+    // Worst case
+    t_start3 = $time;
     worst_case();
+    t_end3 = $time;
+    $display("Average case time: %0t", (t_end1 - t_start1));
+    $display("Best case time:    %0t", (t_end2 - t_start2));
+    $display("Worst case time:   %0t", (t_end3 - t_start3));
     
     
 
@@ -713,13 +749,65 @@ endmodule
 
 //Reference cache for verification
 //Use to store 64byte of data in different rows
-module sw_cache #( parameter ROW_BITS = 15)
+module sw_cache_16bank #( parameter ROW_BITS = 15, parameter COLUMN_BITS = 7) (
+    input logic CLKx2,
+    input logic nRST,
+    input logic wr_en,
+    input logic rd_en,
+    input logic [1:0] BG,
+    input logic [1:0] bank,
+    input logic [ROW_BITS-1:0] row_addr,
+    input logic [COLUMN_BITS-1:0] col_addr,
+    input logic [2:0] offset,
+    input logic [63:0] dmemstore,
+    output logic [63:0] dmemload,
+    output logic valid
+);
+    wire  [63:0] dmemload_allbanks [15:0];
+    wire  valid_allbanks[15:0];
+    logic [15:0] valid_in_allbanks;
+
+    assign dmemload = (dmemload_allbanks[{BG,bank}]);
+    assign valid = valid_allbanks[{BG,bank}];
+
+    sw_cache u0  (.CLKx2(CLKx2), .valid_in(valid_in_allbanks[0] ), .nRST(nRST), .wr_en(wr_en), .rd_en(rd_en), .row_addr(row_addr), .col_addr(col_addr),.offset(offset), .dmemstore(dmemstore), .dmemload(dmemload_allbanks[0]),  .valid(valid_allbanks[0]));
+    sw_cache u1  (.CLKx2(CLKx2), .valid_in(valid_in_allbanks[1] ), .nRST(nRST), .wr_en(wr_en), .rd_en(rd_en), .row_addr(row_addr), .col_addr(col_addr),.offset(offset), .dmemstore(dmemstore), .dmemload(dmemload_allbanks[1]),  .valid(valid_allbanks[1]));
+    sw_cache u2  (.CLKx2(CLKx2), .valid_in(valid_in_allbanks[2] ), .nRST(nRST), .wr_en(wr_en), .rd_en(rd_en), .row_addr(row_addr), .col_addr(col_addr),.offset(offset), .dmemstore(dmemstore), .dmemload(dmemload_allbanks[2]),  .valid(valid_allbanks[2]));
+    sw_cache u3  (.CLKx2(CLKx2), .valid_in(valid_in_allbanks[3] ), .nRST(nRST), .wr_en(wr_en), .rd_en(rd_en), .row_addr(row_addr), .col_addr(col_addr),.offset(offset), .dmemstore(dmemstore), .dmemload(dmemload_allbanks[3]),  .valid(valid_allbanks[3]));
+    sw_cache u4  (.CLKx2(CLKx2), .valid_in(valid_in_allbanks[4] ), .nRST(nRST), .wr_en(wr_en), .rd_en(rd_en), .row_addr(row_addr), .col_addr(col_addr),.offset(offset), .dmemstore(dmemstore), .dmemload(dmemload_allbanks[4]),  .valid(valid_allbanks[4]));
+    sw_cache u5  (.CLKx2(CLKx2), .valid_in(valid_in_allbanks[5] ), .nRST(nRST), .wr_en(wr_en), .rd_en(rd_en), .row_addr(row_addr), .col_addr(col_addr),.offset(offset), .dmemstore(dmemstore), .dmemload(dmemload_allbanks[5]),  .valid(valid_allbanks[5]));
+    sw_cache u6  (.CLKx2(CLKx2), .valid_in(valid_in_allbanks[6] ), .nRST(nRST), .wr_en(wr_en), .rd_en(rd_en), .row_addr(row_addr), .col_addr(col_addr),.offset(offset), .dmemstore(dmemstore), .dmemload(dmemload_allbanks[6]),  .valid(valid_allbanks[6]));
+    sw_cache u7  (.CLKx2(CLKx2), .valid_in(valid_in_allbanks[7] ), .nRST(nRST), .wr_en(wr_en), .rd_en(rd_en), .row_addr(row_addr), .col_addr(col_addr),.offset(offset), .dmemstore(dmemstore), .dmemload(dmemload_allbanks[7]),  .valid(valid_allbanks[7]));
+    sw_cache u8  (.CLKx2(CLKx2), .valid_in(valid_in_allbanks[8] ), .nRST(nRST), .wr_en(wr_en), .rd_en(rd_en), .row_addr(row_addr), .col_addr(col_addr),.offset(offset), .dmemstore(dmemstore), .dmemload(dmemload_allbanks[8]),  .valid(valid_allbanks[8]));
+    sw_cache u9  (.CLKx2(CLKx2), .valid_in(valid_in_allbanks[9] ), .nRST(nRST), .wr_en(wr_en), .rd_en(rd_en), .row_addr(row_addr), .col_addr(col_addr),.offset(offset), .dmemstore(dmemstore), .dmemload(dmemload_allbanks[9]),  .valid(valid_allbanks[9]));
+    sw_cache u10 (.CLKx2(CLKx2), .valid_in(valid_in_allbanks[10]), .nRST(nRST), .wr_en(wr_en), .rd_en(rd_en), .row_addr(row_addr), .col_addr(col_addr),.offset(offset), .dmemstore(dmemstore), .dmemload(dmemload_allbanks[10]), .valid(valid_allbanks[10]));
+    sw_cache u11 (.CLKx2(CLKx2), .valid_in(valid_in_allbanks[11]), .nRST(nRST), .wr_en(wr_en), .rd_en(rd_en), .row_addr(row_addr), .col_addr(col_addr),.offset(offset), .dmemstore(dmemstore), .dmemload(dmemload_allbanks[11]), .valid(valid_allbanks[11]));
+    sw_cache u12 (.CLKx2(CLKx2), .valid_in(valid_in_allbanks[12]), .nRST(nRST), .wr_en(wr_en), .rd_en(rd_en), .row_addr(row_addr), .col_addr(col_addr),.offset(offset), .dmemstore(dmemstore), .dmemload(dmemload_allbanks[12]), .valid(valid_allbanks[12]));
+    sw_cache u13 (.CLKx2(CLKx2), .valid_in(valid_in_allbanks[13]), .nRST(nRST), .wr_en(wr_en), .rd_en(rd_en), .row_addr(row_addr), .col_addr(col_addr),.offset(offset), .dmemstore(dmemstore), .dmemload(dmemload_allbanks[13]), .valid(valid_allbanks[13]));
+    sw_cache u14 (.CLKx2(CLKx2), .valid_in(valid_in_allbanks[14]), .nRST(nRST), .wr_en(wr_en), .rd_en(rd_en), .row_addr(row_addr), .col_addr(col_addr),.offset(offset), .dmemstore(dmemstore), .dmemload(dmemload_allbanks[14]), .valid(valid_allbanks[14]));
+    sw_cache u15 (.CLKx2(CLKx2), .valid_in(valid_in_allbanks[15]), .nRST(nRST), .wr_en(wr_en), .rd_en(rd_en), .row_addr(row_addr), .col_addr(col_addr),.offset(offset), .dmemstore(dmemstore), .dmemload(dmemload_allbanks[15]), .valid(valid_allbanks[15]));
+
+    always_comb begin
+        valid_in_allbanks = '0;
+        valid_in_allbanks[{BG, bank}] = 1;
+    end
+
+
+endmodule
+
+
+module sw_cache 
+#( parameter ROW_BITS = 15,
+    parameter COLUMN_BITS = 7)
+
 (
     input logic CLKx2,
     input logic nRST,
     input logic wr_en,
     input logic rd_en,
+    input logic valid_in, 
     input logic [ROW_BITS-1:0] row_addr,
+    input logic [COLUMN_BITS-1:0] col_addr,
     input logic [2:0] offset,
     input logic [63:0] dmemstore,
     output logic [63:0] dmemload,
@@ -730,22 +818,24 @@ module sw_cache #( parameter ROW_BITS = 15)
         logic [7:0][63:0] arr;
     } data_8bytes;
 
-    data_8bytes sw_cache [2**ROW_BITS-1:0];
-    logic valid_trk [2**ROW_BITS-1:0];
+    data_8bytes [2**(ROW_BITS)-1:0] sw_cache ;
+    logic [2**(ROW_BITS)-1:0]valid_trk;
 
     always_ff @(posedge CLKx2, negedge nRST) begin
         if(!nRST) begin
-            for (int i = 0; i < 2**ROW_BITS; i++) begin
-                valid_trk[i] <= 1'b0;
-                for (int j = 0; j < 8; j++) begin
-                    sw_cache[i].arr[j] <= 0;
-                end
-            end
+            valid_trk <= '0;
+            sw_cache <= '0;
+            // for (int i = 0; i < 2**(ROW_BITS); i++) begin
+                
+            //     for (int j = 0; j < 8; j++) begin
+                    
+            //     end
+            // end
             
         end else begin
-            if (wr_en) begin
-                sw_cache[row_addr].arr[offset][63:0] <= dmemstore;
-                valid_trk[row_addr] <= 1'b1;
+            if (wr_en && valid_in) begin
+                sw_cache[{row_addr}].arr[offset][63:0] <= dmemstore;
+                valid_trk[{row_addr}] <= 1'b1;
             end
         end
     end
@@ -753,9 +843,9 @@ module sw_cache #( parameter ROW_BITS = 15)
     always_comb begin
         dmemload = 0;
         valid = 0;
-        if (rd_en) begin
-            dmemload = sw_cache[row_addr].arr[offset][63:0];
-            valid = valid_trk[row_addr];
+        if (rd_en && valid_in) begin
+            dmemload = sw_cache[{row_addr}].arr[offset][63:0];
+            valid = valid_trk[{row_addr}];
         end
     end
 endmodule
