@@ -11,7 +11,7 @@ import sys_arr_pkg::*;
 /* verilator lint_off IMPORTSTAR */
 `timescale 1 ns / 1 ns
 
-module systolic_array_tb();
+module systolic_array_top_tb();
   // clk/reset
   logic tb_nRST;
 
@@ -165,6 +165,20 @@ task get_m_output;
     end
   endtask
 
+  // Helper task to wait for array to drain (no more active computations)
+  task wait_for_drained;
+    int flag;
+    begin
+      flag = 1;
+      while (flag == 1) begin
+        @(posedge tb_clk);
+        if (memory_if.drained == 1'b1) begin
+          flag = 0;
+        end
+      end
+    end
+  endtask
+
   // Instantiate the DUT
   systolic_array DUT (
     .clk    (tb_clk),
@@ -201,10 +215,9 @@ task get_m_output;
     end
   end
   // Test Stimulus
-   int flag;
   initial begin
     $dumpfile("dump.vcd");  // For VCD format
-    $dumpvars(0, systolic_array_tb);
+    $dumpvars(0, systolic_array_top_tb);
     memory_if.weight_en = '0;
     memory_if.input_en = '0;
     memory_if.partial_en = '0;
@@ -222,52 +235,37 @@ task get_m_output;
     sysarr_dump_file = $fopen(output_filename, "w");
 
     reset();
+    
+    // ========== Test 1: Legacy behavior with 1-cycle spacing ==========
+    $display("=== Test 1: Legacy mode with delay(1) ===");
     get_matrices(.weights(loaded_weights));
     get_m_output();
     if (loaded_weights == 1)begin
       // LOAD WEIGHTS
       load_weights();
     end
-    load_in_ps (.delay(1)); //delay was 1
+    load_in_ps (.delay(1)); // Legacy: 1-cycle bubble between rows
+    wait_for_drained();
+    $display("Test 1 complete - array drained: %d", memory_if.drained);
 
-    flag = 1;
-    while (flag == 1) begin
-      @(posedge tb_clk);
-      if (memory_if.fifo_has_space == 1'b1)begin
-        flag = 0;
-      end
-    end
-    // repeat(N*N) @(posedge tb_clk); // last output drain
+    // ========== Test 2: Streaming mode with back-to-back rows ==========
+    $display("=== Test 2: Full streaming mode with delay(0) ===");
     get_matrices(.weights(loaded_weights));
-    load_in_ps (.delay(1));
-    flag = 1;
-    while (flag == 1) begin
-      @(posedge tb_clk);
-      if (memory_if.drained == 1'b1)begin
-        flag = 0;
-      end
-    end
-    $display("array should be drained %d", memory_if.drained);
-    $display("fifos should have space  %d", memory_if.fifo_has_space);
+    load_in_ps (.delay(0)); // Streaming: one row per cycle, no bubbles
+    wait_for_drained();
+    $display("Test 2 complete - array drained: %d", memory_if.drained);
 
+    // ========== Test 3: Another streaming run with weight reload ==========
+    $display("=== Test 3: Streaming mode with weight reload ===");
     get_matrices(.weights(loaded_weights));
-    get_m_output();
     if (loaded_weights == 1)begin
       // LOAD WEIGHTS
       @(posedge tb_clk)           // Without this, fp6dub test case fails.
       load_weights();
     end
-    load_in_ps (.delay(1)); //delay was 1
-
-    flag = 1;
-    while (flag == 1) begin
-      @(posedge tb_clk);
-      if (memory_if.drained == 1'b1)begin
-        flag = 0;
-      end
-    end
-    $display("array should be drained %d", memory_if.drained);
-    $display("fifos should have space  %d", memory_if.fifo_has_space);
+    load_in_ps (.delay(0)); // Streaming: max throughput
+    wait_for_drained();
+    $display("Test 3 complete - array drained: %d", memory_if.drained);
     
     $fclose(file);
     $fclose(out_file);

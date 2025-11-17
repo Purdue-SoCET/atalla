@@ -10,7 +10,7 @@ import sys_arr_pkg::*;
 /* verilator lint_off IMPORTSTAR */
 
 
-module systolic_array(
+module systolic_array_top(
     input logic clk, nRST,
     systolic_array_if.memory_array memory
 );
