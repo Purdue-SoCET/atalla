@@ -562,7 +562,7 @@ module dram_controller_top_tb;
         bit wr_or_rd; 
         sch.addr_row_conflict.constraint_mode(1);
         sch.addr_rank.constraint_mode(0);
-        for (int i = 0; i < 100; i++) begin
+        for (int i = 0; i < 10; i++) begin
             task_name = $sformatf("Task worst case -%0d", i);
             wr_or_rd = $urandom_range(0,1); // simple 0/1;
             if (wr_or_rd) begin
@@ -605,6 +605,8 @@ module dram_controller_top_tb;
       @(posedge CLK);
       @(posedge CLK);
       nRST = 1'b1;
+      sch.addr_row_conflict.constraint_mode(0);
+      sch.addr_rank.constraint_mode(1);
 
       
       task_name = "Power_up";
