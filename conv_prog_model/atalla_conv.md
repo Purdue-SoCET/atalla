@@ -30,13 +30,12 @@ Goal: Development of a Convolution Library for Atalla
 5. Convolution function 
     - Construction of Toeplitz matrix
     - Initially we planned to use if statements for creating masks, for example:
-    ```if(i>=0 && i <3){ //i is thread_id
-    }```
+    ```if(i>=0 && i <3){ //i is thread_id }```
     - But it doesn't work with Atalla because we dont have thread ID.
     - Hence, we'll pass in values of the mask instead of the number of elements.
     - We will follow something similar to RISCV Vector instructions.
-    - Explicit mask creation - because no thread id - RVV
-    - If there are uneven number of elements (given 32 max elements in the vector), we will take the remainder (Total_Elements % Vector_Length) and compute that remainder first, and then loop through the rest using a full mask.
+    - Using explicit masking (RVV style) rather than thread-based conditionals.
+    - If there are uneven number of elements (given 32 max elements in the vector), we will take the remainder    ```(Total_Elements % Vector_Length)``` and compute that remainder first, and then loop through the rest using a full mask.
 6. Execution: gemmv
 
 ## Further optimizations
@@ -45,6 +44,6 @@ Goal: Development of a Convolution Library for Atalla
 3. Loop unrolling / Software pipelining
 
 ## Timeline
-Week 13-14: Finish basic convolution library (skeleton & naive implementation) & golden model
-Week 15: Implement support for arbitary input/output channels, kernels, dilation, stride
+Week 13-14: Finish basic convolution library (skeleton & naive implementation) & golden model  
+Week 15: Implement support for arbitary input/output channels, kernels, dilation, stride  
 Week 16: Final Report
