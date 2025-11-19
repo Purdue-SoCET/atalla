@@ -2,14 +2,17 @@
 
 // This module probably CANNOT handle subtraction!
 
-module add_bf16(input logic clk, nRST, 
+module addsub_bf16(input logic clk, nRST, 
                 input logic [15:0] bf1_in, bf2_in,
+                input logic op, // 0 for add, 1 for sub
                 output logic [15:0] bf_out,
                 output logic overflow, underflow, invalid);
 
 // Special cases detection
 logic is_nan1, is_nan2, is_inf1, is_inf2;
 logic sticky_bit;
+
+assign bf2_in[15] = op ? ~bf2_in[15] : bf2_in[15]; // if subtraction, flip sign of bf2_in
 
 always_comb begin
     // Check for NaN (all 1s in exponent and non-zero mantissa)
