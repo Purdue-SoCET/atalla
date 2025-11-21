@@ -39,11 +39,14 @@ Goal: Development of a Convolution Library for Atalla
 6. Execution: gemmv
 
 ## Further optimizations
-1. Support for arbitary input/output channels, kernels
-2. Support for arbitary dilation, stride
+1. Support for arbitary input channels, kernels
+2. Support for arbitary dilation, stride, padding
 3. Loop unrolling / Software pipelining
 
 ## Timeline
 Week 13-14: Finish basic convolution library (skeleton & naive implementation) & golden model  
-Week 15: Implement support for arbitary input/output channels, kernels, dilation, stride  
+Week 15: Implement support for arbitary input channels, kernels, stride  
 Week 16: Final Report
+
+## Current progress
+- As of 11/21 Friday - my convolution library works with fixed kernel size 3x3, fixed input size (32,64,96,128,1024,...), variable input channel, stride = 1, no dilation and padding
