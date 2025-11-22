@@ -1,3 +1,10 @@
+/*
+  Saandiya
+  mohan76@purdue.edu
+
+  Atalla Convolution Library Header V1
+*/
+
 #ifndef CONV_LIB_H
 #define CONV_LIB_H
 
