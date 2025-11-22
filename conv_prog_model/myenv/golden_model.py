@@ -1,3 +1,10 @@
+# /**
+#   Saandiya
+#   mohan76@purdue.edu
+
+#   Atalla Convolution Golden Model V1
+# */
+
 import numpy as np
 import torch
 import torch.nn.functional as F

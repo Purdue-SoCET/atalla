@@ -1,3 +1,11 @@
+/**
+  Saandiya
+  mohan76@purdue.edu
+
+  Atalla Convolution Library Main V2
+* @brief Has Golden model to verify Atalla outputs
+*/
+
 #include "conv_lib.h"
 #include <stdio.h>
 #include <stdlib.h>

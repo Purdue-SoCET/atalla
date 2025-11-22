@@ -49,4 +49,8 @@ Week 15: Implement support for arbitary input channels, kernels, stride
 Week 16: Final Report
 
 ## Current progress
-- As of 11/21 Friday - my convolution library works with fixed kernel size 3x3, fixed input size (32,64,96,128,1024,...), variable input channel, stride = 1, no dilation and padding
+- As of 11/21 Friday - My convolution library works with variable input size, variable input channels, variable kernel size, variable stride, no dilation and padding. Updated conv intrinsic can be found here:
+    - Header file: https://github.com/Purdue-SoCET/atalla/blob/tensor_compute_accelerator_saandiya/conv_prog_model/conv_lib.h
+    - Conv Library: https://github.com/Purdue-SoCET/atalla/blob/tensor_compute_accelerator_saandiya/conv_prog_model/conv_lib.c
+    - Main file (contains golden model to compare against): https://github.com/Purdue-SoCET/atalla/blob/tensor_compute_accelerator_saandiya/conv_prog_model/main.c
+

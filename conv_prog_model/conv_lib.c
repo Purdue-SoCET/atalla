@@ -1,5 +1,9 @@
-/* Version 3: 
-Supports variable input size, variable input channels, variable kernel size, variable stride, no dilation and padding.
+/**
+  Saandiya
+  mohan76@purdue.edu
+
+  Atalla Convolution Library V3
+* @brief Supports variable input size, variable input channels, variable kernel size, variable stride, no dilation and padding.
 */
 
 #include "conv_lib.h"
