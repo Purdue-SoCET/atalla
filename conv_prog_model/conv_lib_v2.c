@@ -1,7 +1,9 @@
-/* Version 3: 
-Supports variable input size, variable input channels, variable kernel size, variable stride, no dilation and padding.
-*/
+/* Version 2: Supports variable input size, variable input channels
 
+This version works with kernel size 3x3, fixed input size (32,64,96,128,1024,...), variable input channel, stride =1, 
+no dilation and padding. This also works with variable kernel size as long as input size <= 32x32. 
+The change from conv_lib_start is this supports multi input channels.
+*/
 #include "conv_lib.h"
 #include <stdlib.h>
 #include <string.h>
@@ -12,28 +14,20 @@ Supports variable input size, variable input channels, variable kernel size, var
 #define SA_TM 32 
 #define SA_TN 32 
 #define SA_TK 32 
-#define SCPAD_DIM 32
+#define MAX_SPATIAL_TILE_DIM 64
 
 /*
 ================================================================================
- VECTOR CORE SIMULATION FUNCTIONS (Explicit Mask, Shift, Add)
+ VECTOR CORE SIMULATION FUNCTIONS
 ================================================================================
 */
-
-/**
- * @brief Simulates `mset.vi`. Creates a mask for the valid window (e.g. 111000...).
- */
-static void sim_vector_create_window_mask(bool* mask, int vector_len, int window_size) {
+static void sim_vector_create_window_mask(bool* mask, int vector_len, int window_size, int shift_offset) {
     for (int i = 0; i < vector_len; i++) {
-        // Window is always at index 0 because we align the LOAD address.
-        mask[i] = (i < window_size);
+        int logical_pos = i - shift_offset;
+        mask[i] = (logical_pos >= 0 && logical_pos < window_size);
     }
 }
 
-/**
- * @brief Simulates `shift.vs`. 
- * Left = Align (move to index 0). Right = Place (move to flat index).
- */
 static void sim_vector_shift(float* v_reg, int vector_len, int shift_amt, bool direction_left) {
     float temp[SA_TK]; 
     memset(temp, 0, vector_len * sizeof(float));
@@ -47,32 +41,19 @@ static void sim_vector_shift(float* v_reg, int vector_len, int shift_amt, bool d
     memcpy(v_reg, temp, vector_len * sizeof(float));
 }
 
-/**
- * @brief Simulates applying a mask. Zeros out masked elements.
- */
 static void sim_vector_mask_apply(float* v_reg, int vector_len, bool* mask) {
     for (int i = 0; i < vector_len; i++) {
         if (!mask[i]) v_reg[i] = 0.0f;
     }
 }
 
-/**
- * @brief Simulates `vadd.vv`. Accumulates result.
- */
 static void sim_vector_add(float* dest, float* src, int vector_len) {
-    for (int i = 0; i < vector_len; i++) {
-        dest[i] += src[i];
-    }
+    for (int i = 0; i < vector_len; i++) dest[i] += src[i];
 }
 
-/**
- * Loads a contiguous row from sc_RAW.
- */
-static void sim_vector_load_row_safe(float* v_reg, float* sc_RAW, int start_idx, int vector_len, int valid_pixels_remaining) {
+static void sim_vector_load_row(float* v_reg, float* sc_RAW, int start_idx, int vector_len, int max_idx) {
     for (int i = 0; i < vector_len; i++) {
-        // If we are within the valid width of the current row, load data.
-        // Otherwise, load padding 0 (do NOT wrap to next row).
-        if (i < valid_pixels_remaining) {
+        if (start_idx + i < max_idx) {
             v_reg[i] = sc_RAW[start_idx + i];
         } else {
             v_reg[i] = 0.0f;
@@ -82,7 +63,7 @@ static void sim_vector_load_row_safe(float* v_reg, float* sc_RAW, int start_idx,
 
 /*
 ================================================================================
- LEVEL 1: Standard Functions
+ LEVEL 1 & 2
 ================================================================================
 */
 static float* flatten_kernels_to_B_matrix(KernelTensor* kernels) {
@@ -127,11 +108,6 @@ static void load_spatial_tile(
     }
 }
 
-/*
-================================================================================
- LEVEL 2: Vector Transform (Mask -> Shift -> Add)
-================================================================================
-*/
 static void im2col_transform_scpad(
     float* sc_A, float* sc_RAW, ConvParams* params,
     int K_h, int K_w, int C_in,
@@ -142,13 +118,12 @@ static void im2col_transform_scpad(
 {
     int K_flat_size = C_in * K_h * K_w;
     int spatial_kernel_size = K_h * K_w;
+    int sc_raw_size = C_in * T_h * T_w;
 
-    // Temp registers
     bool v_mask[SA_TK];
     float v_row[SA_TK];   
     float v_accum[SA_TK]; 
 
-    // Loop over M (Patches)
     for (int m = 0; m < TM; m++) {
         int global_patch_idx = i_start + m;
         if (global_patch_idx >= (O_h * O_w) || m >= M_limit_in_tile) {
@@ -176,42 +151,27 @@ static void im2col_transform_scpad(
             if (tile_c < 0) continue;
 
             for (int kh = 0; kh < K_h; kh++) {
-                // 1. Calculate Aligned Load Address
-                // Point directly to the start of the window (local_w_start)
-                int row_idx_in_scraw = tile_c * (T_h * T_w) + (local_h_start + kh) * T_w;
-                int load_addr = row_idx_in_scraw + local_w_start;
+                int row_start_offset = tile_c * (T_h * T_w) + (local_h_start + kh) * T_w;
+                
+                sim_vector_load_row(v_row, sc_RAW, row_start_offset + local_w_start, TK, sc_raw_size);
 
-                // 2. Boundary Check
-                // How many valid pixels remain in this row starting from local_w_start?
-                // If local_w_start = 30 and T_w = 32, we have 2 valid pixels (30, 31).
-                // Any load beyond that must be 0.
-                int valid_pixels = T_w - local_w_start;
-                if (valid_pixels < 0) valid_pixels = 0;
-
-                // 3. LOAD (Hardware: load from scpad)
-                sim_vector_load_row_safe(v_row, sc_RAW, load_addr, TK, valid_pixels);
-
-                // 4. MASK (Hardware: mset.vi)
-                // Since we aligned the load, the data starts at index 0. Mask the first K_w elements.
-                sim_vector_create_window_mask(v_mask, TK, K_w);
+                sim_vector_create_window_mask(v_mask, TK, K_w, 0);
                 sim_vector_mask_apply(v_row, TK, v_mask);
                 
-                // 5. PLACE SHIFT (Hardware: shift.vs)
-                // Shift the window to its final position in the flat kernel vector.
+                sim_vector_shift(v_row, TK, 0, true); 
+
                 int global_k_index = c * spatial_kernel_size + kh * K_w;
                 int placement_shift = global_k_index - k_start;
 
                 if (placement_shift >= 0) {
                     if (placement_shift < TK) {
-                        sim_vector_shift(v_row, TK, placement_shift, false); // Shift Right
+                        sim_vector_shift(v_row, TK, placement_shift, false);
                         sim_vector_add(v_accum, v_row, TK);
                     }
                 } else {
-                    // Straddle Case: Row started in previous vector chunk.
-                    // Shift Left to bring the tail end to the front.
                     int left_shift_amt = -placement_shift;
                     if (left_shift_amt < K_w) { 
-                        sim_vector_shift(v_row, TK, left_shift_amt, true); // Shift Left
+                        sim_vector_shift(v_row, TK, left_shift_amt, true);
                         sim_vector_add(v_accum, v_row, TK);
                     }
                 }
@@ -254,20 +214,23 @@ void conv2d_nchw(TensorNCHW* output, TensorNCHW* input, KernelTensor* kernel, Co
     int N = kernel->cout; int K = kernel->cin * kernel->kh * kernel->kw; 
     int TM = SA_TM, TN = SA_TN, TK = SA_TK;
 
-    int T_h = SCPAD_DIM; // 32
-    int T_w = SCPAD_DIM; // 32
+    int BLK_H = 32; 
+    int BLK_W = 32; 
 
-    // Calculate Output Block Size fitting in 32x32 Input
     int K_eff_h = (kernel->kh - 1) * params->dilation + 1;
     int K_eff_w = (kernel->kw - 1) * params->dilation + 1;
+    // Fix: Add +4 padding to required width/height to prevent boundary off-by-one issues
+    int T_h_req = (BLK_H - 1) * params->stride + K_eff_h + 4;
+    int T_w_req = (BLK_W - 1) * params->stride + K_eff_w + 4;
+    int T_h = (T_h_req > 32) ? T_h_req : 32;
+    int T_w = (T_w_req > 32) ? T_w_req : 32;
     
-    // Equation for 32x32 Scratchpad limit
-    int BLK_H = (T_h - K_eff_h) / params->stride + 1; //step size calculation
-    int BLK_W = (T_w - K_eff_w) / params->stride + 1;
-    if (BLK_H < 1) BLK_H = 1;
-    if (BLK_W < 1) BLK_W = 1;
+    // Ensure we don't exceed MAX, but MAX is 64 so 38 (34+4) fits easily.
+    if (T_h > MAX_SPATIAL_TILE_DIM || T_w > MAX_SPATIAL_TILE_DIM) return;
 
     float* B_matrix = flatten_kernels_to_B_matrix(kernel);
+    
+    // Fix: Heap allocate sc_RAW to prevent stack overflow/corruption on large tiles
     float* sc_RAW = (float*)malloc(kernel->cin * T_h * T_w * sizeof(float));
     if (!sc_RAW) { free(B_matrix); return; }
 
@@ -275,67 +238,32 @@ void conv2d_nchw(TensorNCHW* output, TensorNCHW* input, KernelTensor* kernel, Co
     float sc_B[TK * TN]; 
     float sc_C[TM * TN];
 
-    int patches_per_block = BLK_H * BLK_W;
-
-    for (int h_out = 0; h_out < O_h; h_out += BLK_H) { //overlapping tile logic
+    for (int h_out = 0; h_out < O_h; h_out += BLK_H) {
         for (int w_out = 0; w_out < O_w; w_out += BLK_W) {
             
-            int in_h = h_out * params->stride - params->padding; // Calculate Start Address
+            int in_h = h_out * params->stride - params->padding;
             int in_w = w_out * params->stride - params->padding;
 
-            load_spatial_tile(sc_RAW, input, kernel->cin, T_h, T_w, 0, in_h, in_w); //32x32 tiles
+            load_spatial_tile(sc_RAW, input, kernel->cin, T_h, T_w, 0, in_h, in_w);
 
             for (int j = 0; j < N; j += TN) {
                 
-                // Process patches in batches of TM (32)
-                for (int ii = 0; ii < patches_per_block; ii += TM) {
-                    int patches_remaining = patches_per_block - ii;
-                    int current_batch_size = (patches_remaining > TM) ? TM : patches_remaining;
+                for (int r = 0; r < BLK_H; r++) {
+                    if (h_out + r >= O_h) break;
+
+                    int current_patch_global = (h_out + r) * O_w + w_out;
+                    int valid_width = (w_out + BLK_W > O_w) ? (O_w - w_out) : BLK_W;
 
                     memset(sc_C, 0, TM * TN * sizeof(float));
 
                     for (int k = 0; k < K; k += TK) {
                         load_b_tile(sc_B, B_matrix, K, N, k, j, TK, TN);
-                        
-                        // Fill sc_A row-by-row for valid patches
-                        for (int m = 0; m < current_batch_size; m++) {
-                            int local_patch_idx = ii + m; 
-                            int r_local = local_patch_idx / BLK_W;
-                            int c_local = local_patch_idx % BLK_W;
-                            int current_patch_global = (h_out + r_local) * O_w + (w_out + c_local);
-
-                            // Skip if this patch in the block is outside the image
-                            if ((h_out + r_local) >= O_h || (w_out + c_local) >= O_w) {
-                                memset(&sc_A[m * TK], 0, TK * sizeof(float));
-                                continue;
-                            }
-
-                            // Call vector transform for THIS specific patch 'm'
-                            im2col_transform_scpad(&sc_A[m * TK], sc_RAW, params, kernel->kh, kernel->kw, kernel->cin, 
-                                                 O_h, O_w, current_patch_global, k, 
-                                                 1, TK, T_h, T_w, 0, in_h, in_w, 1);
-                        }
-                        // gemm.vv
+                        im2col_transform_scpad(sc_A, sc_RAW, params, kernel->kh, kernel->kw, kernel->cin, 
+                                             O_h, O_w, current_patch_global, k, TM, TK, T_h, T_w, 
+                                             0, in_h, in_w, valid_width);
                         atallax_gemmv(sc_C, sc_A, sc_B, TM, TN, TK);
                     }
-                    
-                    // Store results
-                    for (int m = 0; m < current_batch_size; m++) {
-                         int local_patch_idx = ii + m; 
-                         int r_local = local_patch_idx / BLK_W;
-                         int c_local = local_patch_idx % BLK_W;
-                         int current_patch_global = (h_out + r_local) * O_w + (w_out + c_local);
-                         
-                         if ((h_out + r_local) >= O_h || (w_out + c_local) >= O_w) continue;
-                         
-                         int p_idx = current_patch_global;
-                         for (int c = 0; c < TN; c++) {
-                             int ch = j + c;
-                             if (ch < output->c) {
-                                 output->data[ch * output->h * output->w + p_idx] = sc_C[m * TN + c];
-                             }
-                         }
-                    }
+                    store_c_tile(output, sc_C, O_h, O_w, current_patch_global, j, TM, TN);
                 }
             }
         }
