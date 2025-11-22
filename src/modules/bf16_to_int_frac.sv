@@ -1,101 +1,135 @@
-// bfloat16 input: [15]=sign, [14:7]=exp (bias=127), [6:0]=mant
-// Outputs: integer as 32-bit uint, fractional part as fp16
+// bfloat16 layout: [15]=sign, [14:7]=exp (bias=127), [6:0]=mant
+// Outputs:
+//   int_u32   = floor(x) as 32-bit unsigned integer
+//   frac_bf16 = fractional part (x - floor(x)) as bfloat16
 module bf16_to_int_frac (
   input  logic [15:0] bf16_in,
   output logic [31:0] int_u32,
-  output logic [15:0] frac_fp16
+  output logic [15:0] frac_bf16
 );
 
-  // ---- small leading-zero counter for up-to-7-bit values ----
-  function automatic logic [2:0] lzc7(input logic [6:0] x);
-    casez (x)
-      7'b1??????: lzc7 = 3'd0;
-      7'b01?????: lzc7 = 3'd1;
-      7'b001????: lzc7 = 3'd2;
-      7'b0001???: lzc7 = 3'd3;
-      7'b00001??: lzc7 = 3'd4;
-      7'b000001?: lzc7 = 3'd5;
-      7'b0000001: lzc7 = 3'd6;
-      default:     lzc7 = 3'd7; // x==0
-    endcase
+  // ------------------------------------------------------------
+  // helpers
+  // ------------------------------------------------------------
+
+  // find MSB position in 8-bit value; returns -1 if x == 0
+  function automatic int msb_pos8 (input logic [7:0] x);
+    begin
+      unique casez (x)
+        8'b1???????: msb_pos8 = 7;
+        8'b01??????: msb_pos8 = 6;
+        8'b001?????: msb_pos8 = 5;
+        8'b0001????: msb_pos8 = 4;
+        8'b00001???: msb_pos8 = 3;
+        8'b000001??: msb_pos8 = 2;
+        8'b0000001?: msb_pos8 = 1;
+        8'b00000001: msb_pos8 = 0;
+        default:      msb_pos8 = -1; // x == 0
+      endcase
+    end
   endfunction
 
-  // ---- unpack bf16 ----
-  logic [7:0] exp_f;
-  logic [6:0] mant_f;
-  logic [7:0] sig8;      // 1.mant (8 bits)
-  integer     E;         // unbiased exponent
+  // Convert a fixed-point fraction N / 2^s (0 <= N < 256) into bfloat16.
+  // Only handles magnitudes < 1.0. If it would be subnormal, returns 0.
+  function automatic logic [15:0] fixed_frac_to_bf16 (
+    input logic [7:0] N,
+    input int         s
+  );
+    logic [15:0] res;
+    int   k;
+    int   Efrac;
+    logic [7:0] norm;
+    logic [7:0] exp_b;
 
-  always_comb begin
-    exp_f = bf16_in[14:7];
-    mant_f= bf16_in[6:0];
-    sig8  = {1'b1, mant_f};        // normalized only (assumed)
-    E     = integer'(exp_f) - 127;
-  end
-
-  // ---- split into integer + remainder (fixed-point) ----
-  logic [6:0] rem7;      // remainder bits (≤7 bits when E>=0)
-  logic [2:0] rem_len;   // number of valid bits in rem7 (1..7), or 0 when none
-  integer     s;         // denominator power for the remainder: 2^s
-
-  always_comb begin
-    if (E >= 7) begin
-      // all fractional bits shifted out → purely integer
-      int_u32 = {24'b0, sig8} << (E - 7);
-      rem7    = 7'd0;
-      rem_len = 3'd0;
-      s       = 0;
-    end else if (E >= 0) begin
-      s       = 7 - E;                     // 1..7
-      int_u32 = ({24'b0, sig8}) >> s;
-      // remainder = lower s bits of sig8 (width up to 7)
-      rem7    = (s < 7) ? {sig8[s-1:0], {(7-s){1'b0}}} : sig8[6:0];
-      // compute significant-bit length b for rem7
-      rem_len = (rem7 == 0) ? 3'd0 : (3'(7) - lzc7(rem7)); // b in 1..7
-    end else begin
-      // 0 <= x < 1 → integer=0; fraction uses the whole significand
-      int_u32 = 32'd0;
-      s       = 7 - E;                     // ≥8
-      // use all 8 bits of sig8 as the numerator; store top 7 into rem7 and note b=8
-      rem7    = sig8[6:0];                 // lower 7 bits (MSB=1 sits in sig8[7])
-      rem_len = 3'd7;                      // we'll treat b=8 explicitly below
-    end
-  end
-
-  // ---- pack fractional part into fp16 (no subnormals; drop to 0 if needed) ----
-  always_comb begin
-    if ((E >= 7) || ((E >= 0) && (rem_len == 0))) begin
-      // no fractional part
-      frac_fp16 = 16'h0000;
-    end else begin
-      // Determine numerator bit-length b and the raw remainder bits R
-      // Case A: E >= 0 → R has rem_len (1..7) bits significant, b=rem_len, value = R / 2^s
-      // Case B: E < 0  → use the full 8-bit sig8 as numerator, b=8, value = sig8 / 2^s
-      int  b;
-      logic [10:0] Rext;  // R left-extended to align MSB to bit (b-1)
-      if (E >= 0) begin
-        b    = rem_len;                         // 1..7
-        Rext = { { (11-7){1'b0} }, rem7 };      // rem7 in lower 7 bits
-        // shift left so MSB of R lands at position (b-1)
-        if (b < 7) Rext = Rext << (7 - b);
+    begin
+      if (N == 8'd0) begin
+        res = 16'h0000;
       end else begin
-        b    = 8;                               // full sig8 precision
-        Rext = { { (11-8){1'b0} }, sig8 };      // put 8-bit numerator
+        // N = (1.xxx...) * 2^k
+        k = msb_pos8(N);          // 0..7
+
+        // fraction = N / 2^s = (1.xxx) * 2^(k - s)
+        Efrac = k - s;            // unbiased exponent
+
+        // bfloat16 normalized min exponent is -126
+        if (Efrac < -126) begin
+          res = 16'h0000;         // too small → flush to 0 (no subnormals)
+        end else begin
+          // normalize: put MSB of N at bit7
+          norm  = N << (7 - k);   // norm[7] == 1
+          // bias exponent (bf16 bias = 127)
+          exp_b = 8'(Efrac + 127);
+
+          // pack: sign=0, exponent=exp_b, mantissa = norm[6:0]
+          res = {1'b0, exp_b, norm[6:0]};
+        end
       end
 
-      // True exponent for the fractional value:
-      // value = (R / 2^(b-1)) * 2^(b-1 - s)  with hidden-1 normalization
-      // Efrac = b - s - 1
-      int Efrac = b - s - 1;
+      fixed_frac_to_bf16 = res;
+    end
+  endfunction
 
-      // fp16 normalized if Efrac >= -14
-      if (Efrac < -14) begin
-        frac_fp16 = 16'h0000;                   // would be subnormal → 0
-      end else begin
-        // Build fp16 significand: place MSB of R at bit10 => shift left by (11 - b)
-        logic [10:0] sig11 = Rext << (11 - b);  // b in {1..8}
-        logic [4:0]  exp16 = 5'((Efrac + 15));  // stored exponent
-        frac_fp16 = {1'b0, exp16, sig11[9:0]};  // truncate (no rounding)
+  // ------------------------------------------------------------
+  // main logic
+  // ------------------------------------------------------------
+
+  logic       sign;
+  logic [7:0] exp_f;
+  logic [6:0] mant_f;
+  logic [7:0] sig8;   // 1.mant as 8-bit integer
+  int         E;      // unbiased exponent
+
+  logic [7:0] N;      // numerator of fractional part
+  int         s;      // denominator power-of-two: 2^s
+
+  always_comb begin
+    // unpack
+    sign   = bf16_in[15];
+    exp_f  = bf16_in[14:7];
+    mant_f = bf16_in[6:0];
+
+    // defaults
+    int_u32   = 32'd0;
+    frac_bf16 = 16'h0000;
+    sig8      = 8'd0;
+    E         = 0;
+    N         = 8'd0;
+    s         = 0;
+
+    // only handle non-negative, normalized inputs to keep logic small
+    if ((sign == 1'b1) || (exp_f == 8'd0)) begin
+      int_u32   = 32'd0;
+      frac_bf16 = 16'h0000;
+    end else begin
+      sig8 = {1'b1, mant_f};          // normalized significand (8 bits)
+      E    = int'(exp_f) - 127;       // unbiased exponent
+
+      if (E >= 7) begin
+        // all bits contribute to integer → no fractional part
+        // x = sig8 * 2^(E - 7)
+        int_u32   = {24'b0, sig8} << (E - 7);
+        frac_bf16 = 16'h0000;
+      end
+      else if (E >= 0) begin
+        // 0 <= E <= 6 → mixed integer + fraction
+        // x = sig8 * 2^(E - 7) = integer + N/2^s
+        s       = 7 - E;                      // 1..7
+        int_u32 = ({24'b0, sig8}) >> s;       // floor(x)
+
+        // remainder N = sig8 & ((1<<s) - 1)
+        N       = sig8 & ((8'h1 << s) - 1);
+
+        frac_bf16 = fixed_frac_to_bf16(N, s);
+      end
+      else begin
+        // E < 0 → 0 <= x < 1: integer part is 0, fraction is whole value
+        int_u32 = 32'd0;
+
+        // x = sig8 * 2^(E - 7) = sig8 / 2^s with s = 7 - E (>=8)
+        s       = 7 - E;
+        N       = sig8;
+
+        frac_bf16 = fixed_frac_to_bf16(N, s);
       end
     end
   end

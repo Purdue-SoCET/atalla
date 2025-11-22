@@ -1,81 +1,61 @@
 onerror {resume}
 quietly WaveActivateNextPane {} 0
-add wave -noupdate -radix binary /vexp_tb/dut/CLK
-add wave -noupdate -radix binary /vexp_tb/dut/nRST
-add wave -noupdate -expand -group {VExp Internal Signals} -color Yellow -radix binary /vexp_tb/dut/ONE
-add wave -noupdate -expand -group {VExp Internal Signals} -color Yellow -radix binary /vexp_tb/dut/ONE_SIXTH
-add wave -noupdate -expand -group {VExp Internal Signals} -color Yellow -radix binary /vexp_tb/dut/mul1_start
-add wave -noupdate -expand -group {VExp Internal Signals} -color Yellow -radix binary /vexp_tb/dut/mul1_done
-add wave -noupdate -expand -group {VExp Internal Signals} -color Yellow -radix binary /vexp_tb/dut/mul1_a
-add wave -noupdate -expand -group {VExp Internal Signals} -color Yellow -radix binary /vexp_tb/dut/mul1_b
-add wave -noupdate -expand -group {VExp Internal Signals} -color Yellow -radix binary /vexp_tb/dut/mul1_out
-add wave -noupdate -expand -group {VExp Internal Signals} -color Yellow -radix binary /vexp_tb/dut/mul2_start
-add wave -noupdate -expand -group {VExp Internal Signals} -color Yellow -radix binary /vexp_tb/dut/mul2_done
-add wave -noupdate -expand -group {VExp Internal Signals} -color Yellow -radix binary /vexp_tb/dut/mul2_a
-add wave -noupdate -expand -group {VExp Internal Signals} -color Yellow -radix binary /vexp_tb/dut/mul2_b
-add wave -noupdate -expand -group {VExp Internal Signals} -color Yellow -radix binary /vexp_tb/dut/mul2_out
-add wave -noupdate -expand -group {VExp Internal Signals} -color Yellow -radix binary /vexp_tb/dut/mul3_start
-add wave -noupdate -expand -group {VExp Internal Signals} -color Yellow -radix binary /vexp_tb/dut/mul3_done
-add wave -noupdate -expand -group {VExp Internal Signals} -color Yellow -radix binary /vexp_tb/dut/mul3_a
-add wave -noupdate -expand -group {VExp Internal Signals} -color Yellow -radix binary /vexp_tb/dut/mul3_b
-add wave -noupdate -expand -group {VExp Internal Signals} -color Yellow -radix binary /vexp_tb/dut/mul3_out
-add wave -noupdate -expand -group {VExp Internal Signals} -color Yellow -radix binary /vexp_tb/dut/mul4_start
-add wave -noupdate -expand -group {VExp Internal Signals} -color Yellow -radix binary /vexp_tb/dut/mul4_done
-add wave -noupdate -expand -group {VExp Internal Signals} -color Yellow -radix binary /vexp_tb/dut/mul4_a
-add wave -noupdate -expand -group {VExp Internal Signals} -color Yellow -radix binary /vexp_tb/dut/mul4_b
-add wave -noupdate -expand -group {VExp Internal Signals} -color Yellow -radix binary /vexp_tb/dut/mul4_out
-add wave -noupdate -expand -group {VExp Internal Signals} -color Yellow -radix binary /vexp_tb/dut/r_bits
-add wave -noupdate -expand -group {VExp Internal Signals} -color Yellow -radix binary /vexp_tb/dut/s1_sum_comb
-add wave -noupdate -expand -group {VExp Internal Signals} -color Yellow -radix binary /vexp_tb/dut/s1_sum_q
-add wave -noupdate -expand -group {VExp Internal Signals} -color Yellow -radix binary /vexp_tb/dut/s1_r2_q
-add wave -noupdate -expand -group {VExp Internal Signals} -color Yellow -radix binary /vexp_tb/dut/s1_v_q
-add wave -noupdate -expand -group {VExp Internal Signals} -color Yellow -radix binary /vexp_tb/dut/r2_over_2
-add wave -noupdate -expand -group {VExp Internal Signals} -color Yellow -radix binary /vexp_tb/dut/s2_sum_comb
-add wave -noupdate -expand -group {VExp Internal Signals} -color Yellow -radix binary /vexp_tb/dut/s2_sum_q
-add wave -noupdate -expand -group {VExp Internal Signals} -color Yellow -radix binary /vexp_tb/dut/s2_r3_q
-add wave -noupdate -expand -group {VExp Internal Signals} -color Yellow -radix binary /vexp_tb/dut/s2_v_q
-add wave -noupdate -expand -group {VExp Internal Signals} -color Yellow -radix binary /vexp_tb/dut/s3_sum_comb
-add wave -noupdate -expand -group {VExp Internal Signals} -color Yellow -radix binary /vexp_tb/dut/s3_sum_q
-add wave -noupdate -expand -group {VExp Internal Signals} -color Yellow -radix binary /vexp_tb/dut/s3_v_q
-add wave -noupdate -expand -group {VExp Internal Signals} -color Yellow -radix binary /vexp_tb/dut/poweroftwo
-add wave -noupdate -color Yellow -radix binary /vexp_tb/dut/fp1
-add wave -noupdate -expand -group {VExp Signals} -color Cyan -radix binary /vexp_tb/vexpif/port_a
-add wave -noupdate -expand -group {VExp Signals} -color Cyan -radix binary /vexp_tb/vexpif/out
-add wave -noupdate -expand -group {VExp Signals} -color Cyan /vexp_tb/vexpif/enable
-add wave -noupdate -expand -group {TB Signals} -color Magenta /vexp_tb/FP16_P0
-add wave -noupdate -expand -group {TB Signals} -color Magenta /vexp_tb/FP16_N0
-add wave -noupdate -expand -group {TB Signals} -color Magenta /vexp_tb/FP16_ONE
-add wave -noupdate -expand -group {TB Signals} -color Magenta /vexp_tb/FP16_NEG1
-add wave -noupdate -expand -group {TB Signals} -color Magenta /vexp_tb/FP16_TWO
-add wave -noupdate -expand -group {TB Signals} -color Magenta /vexp_tb/FP16_HALF
-add wave -noupdate -expand -group {TB Signals} -color Magenta /vexp_tb/FP16_PINF
-add wave -noupdate -expand -group {TB Signals} -color Magenta /vexp_tb/FP16_NINF
-add wave -noupdate -expand -group {TB Signals} -color Magenta /vexp_tb/FP16_QNAN
-add wave -noupdate -expand -group {TB Signals} -color Magenta -radix decimal /vexp_tb/casenum
-add wave -noupdate -expand -group {TB Signals} -color Magenta /vexp_tb/casename
-add wave -noupdate -expand -group {VAS 1} -color Magenta -radix binary /vexp_tb/dut/vaddsubif1/port_a
-add wave -noupdate -expand -group {VAS 1} -color Magenta -radix binary /vexp_tb/dut/vaddsubif1/port_b
-add wave -noupdate -expand -group {VAS 1} -color Magenta -radix binary /vexp_tb/dut/vaddsubif1/out
-add wave -noupdate -expand -group {VAS 1} /vexp_tb/dut/vaddsubif1/sub
-add wave -noupdate -expand -group {VAS 1} /vexp_tb/dut/vaddsubif1/enable
-add wave -noupdate -expand -group {VAS 1} /vexp_tb/dut/vaddsubif1/overflow
-add wave -noupdate -expand -group {VAS 2} -color Magenta -radix binary /vexp_tb/dut/vaddsubif2/port_a
-add wave -noupdate -expand -group {VAS 2} -color Magenta -radix binary /vexp_tb/dut/vaddsubif2/port_b
-add wave -noupdate -expand -group {VAS 2} -color Magenta -radix binary /vexp_tb/dut/vaddsubif2/out
-add wave -noupdate -expand -group {VAS 2} /vexp_tb/dut/vaddsubif2/sub
-add wave -noupdate -expand -group {VAS 2} /vexp_tb/dut/vaddsubif2/enable
-add wave -noupdate -expand -group {VAS 2} /vexp_tb/dut/vaddsubif2/overflow
-add wave -noupdate -expand -group {VAS 3} -color Magenta -radix binary /vexp_tb/dut/vaddsubif3/port_a
-add wave -noupdate -expand -group {VAS 3} -color Magenta -radix binary /vexp_tb/dut/vaddsubif3/port_b
-add wave -noupdate -expand -group {VAS 3} -color Magenta -radix binary /vexp_tb/dut/vaddsubif3/out
-add wave -noupdate -expand -group {VAS 3} /vexp_tb/dut/vaddsubif3/sub
-add wave -noupdate -expand -group {VAS 3} /vexp_tb/dut/vaddsubif3/enable
-add wave -noupdate -expand -group {VAS 3} /vexp_tb/dut/vaddsubif3/overflow
+add wave -noupdate -expand -group {TB Signals} /vexp_tb/CLK
+add wave -noupdate -expand -group {TB Signals} /vexp_tb/nRST
+add wave -noupdate -expand -group {TB Signals} /vexp_tb/casenum
+add wave -noupdate -expand -group {TB Signals} /vexp_tb/casename
+add wave -noupdate -expand -group {VEXP Signals} /vexp_tb/vexpif/operand
+add wave -noupdate -expand -group {VEXP Signals} /vexp_tb/vexpif/result
+add wave -noupdate -expand -group {VEXP Signals} /vexp_tb/vexpif/valid_in
+add wave -noupdate -expand -group {VEXP Signals} /vexp_tb/vexpif/valid_out
+add wave -noupdate -expand -group {VEXP Signals} /vexp_tb/vexpif/ready_in
+add wave -noupdate -expand -group {VEXP Signals} /vexp_tb/vexpif/ready_out
+add wave -noupdate -expand -group FSM /vexp_tb/dut/BF16_FSM/operand
+add wave -noupdate -expand -group FSM /vexp_tb/dut/BF16_FSM/valid_in
+add wave -noupdate -expand -group FSM /vexp_tb/dut/BF16_FSM/mul_out
+add wave -noupdate -expand -group FSM /vexp_tb/dut/BF16_FSM/add_out
+add wave -noupdate -expand -group FSM /vexp_tb/dut/BF16_FSM/int_part
+add wave -noupdate -expand -group FSM /vexp_tb/dut/BF16_FSM/fraction
+add wave -noupdate -expand -group FSM /vexp_tb/dut/BF16_FSM/mul_a
+add wave -noupdate -expand -group FSM /vexp_tb/dut/BF16_FSM/mul_b
+add wave -noupdate -expand -group FSM /vexp_tb/dut/BF16_FSM/mul_valid_in
+add wave -noupdate -expand -group FSM /vexp_tb/dut/BF16_FSM/add_a
+add wave -noupdate -expand -group FSM /vexp_tb/dut/BF16_FSM/add_b
+add wave -noupdate -expand -group FSM /vexp_tb/dut/BF16_FSM/sub
+add wave -noupdate -expand -group FSM /vexp_tb/dut/BF16_FSM/x_div_ln2
+add wave -noupdate -expand -group FSM /vexp_tb/dut/BF16_FSM/result
+add wave -noupdate -expand -group FSM /vexp_tb/dut/BF16_FSM/current_state
+add wave -noupdate -expand -group FSM /vexp_tb/dut/BF16_FSM/next_state
+add wave -noupdate -expand -group FSM /vexp_tb/dut/BF16_FSM/t
+add wave -noupdate -expand -group FSM /vexp_tb/dut/BF16_FSM/r
+add wave -noupdate -expand -group FSM /vexp_tb/dut/BF16_FSM/r1
+add wave -noupdate -expand -group FSM /vexp_tb/dut/BF16_FSM/r_ln2
+add wave -noupdate -expand -group FSM /vexp_tb/dut/BF16_FSM/x_div_ln2_out
+add wave -noupdate -expand -group FSM /vexp_tb/dut/BF16_FSM/one_over_ln2
+add wave -noupdate -expand -group FSM /vexp_tb/dut/BF16_FSM/ln2
+add wave -noupdate -expand -group FSM /vexp_tb/dut/BF16_FSM/ln2_squared_div2
+add wave -noupdate -expand -group FSM /vexp_tb/dut/BF16_FSM/ln2_cubed_div6
+add wave -noupdate -expand -group FSM /vexp_tb/dut/BF16_FSM/ln2_quartic_div24
+add wave -noupdate -expand -group FSM /vexp_tb/dut/BF16_FSM/one
+add wave -noupdate -expand -group FSM /vexp_tb/dut/BF16_FSM/zero
+add wave -noupdate -expand -group FSM /vexp_tb/dut/BF16_FSM/e_biased
+add wave -noupdate -expand -group FSM /vexp_tb/dut/BF16_FSM/sum
+add wave -noupdate -expand -group ADDER /vexp_tb/dut/BF16_ADDER/bf1_in
+add wave -noupdate -expand -group ADDER /vexp_tb/dut/BF16_ADDER/bf2_in
+add wave -noupdate -expand -group ADDER /vexp_tb/dut/BF16_ADDER/op
+add wave -noupdate -expand -group ADDER /vexp_tb/dut/BF16_ADDER/bf_out
+add wave -noupdate -expand -group MULTIPLIER /vexp_tb/dut/BF16_MULTIPLIER/start
+add wave -noupdate -expand -group MULTIPLIER /vexp_tb/dut/BF16_MULTIPLIER/a
+add wave -noupdate -expand -group MULTIPLIER /vexp_tb/dut/BF16_MULTIPLIER/b
+add wave -noupdate -expand -group MULTIPLIER /vexp_tb/dut/BF16_MULTIPLIER/result
+add wave -noupdate -expand -group CONVERTER /vexp_tb/dut/BF16_CONVERTER/bf16_in
+add wave -noupdate -expand -group CONVERTER /vexp_tb/dut/BF16_CONVERTER/int_u32
+add wave -noupdate -expand -group CONVERTER /vexp_tb/dut/BF16_CONVERTER/frac_bf16
 TreeUpdate [SetDefaultTree]
-WaveRestoreCursors {{Cursor 1} {2202872 ps} 0}
+WaveRestoreCursors {{Cursor 1} {71800 ps} 0}
 quietly wave cursor active 1
 configure wave -namecolwidth 150
-configure wave -valuecolwidth 154
+configure wave -valuecolwidth 100
 configure wave -justifyvalue left
 configure wave -signalnamewidth 1
 configure wave -snapdistance 10
@@ -88,4 +68,4 @@ configure wave -griddelta 40
 configure wave -timeline 0
 configure wave -timelineunits ns
 update
-WaveRestoreZoom {292766 ps} {2616170 ps}
+WaveRestoreZoom {625 ps} {77594 ps}

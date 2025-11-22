@@ -1,5 +1,5 @@
 # SCRDIR = /home/asicfab/a/saha56/tensor-core/src/waves
-SCRDIR = /home/asicfab/a/cyjohnso/tensor-core/src/scripts
+SCRDIR = /home/asicfab/a/cyjohnso/tensor-core
 # SCRDIR = /home/asicfab/a/wong371/william_pr/tensor-core/src/scripts
 
 SOURCE_FILES = \
@@ -153,6 +153,13 @@ vexp.wav:
 		./src/modules/fa.sv \
 		./src/modules/ha.sv \
 		./src/modules/vexp.sv \
+		./src/modules/vexp_fsm_bf16.sv \
+		./src/modules/bf16_to_int_frac.sv \
+		./src/modules/mul_bf16.sv \
+		./src/modules/adder_8b.sv \
+		./src/modules/wallacetree_8b.sv \
+		./src/modules/addsub_bf16.sv \
+		./src/modules/left_shift.sv \
 		./src/testbench/vexp_tb.sv
 
 	vsim -voptargs="+acc" work.vexp_tb -do "do $(abspath $(SCRDIR)/vexp.do); run $(SIMTIME);" -suppress 2275

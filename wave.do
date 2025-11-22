@@ -1,55 +1,47 @@
 onerror {resume}
 quietly WaveActivateNextPane {} 0
-add wave -noupdate /system_tb/CLK
-add wave -noupdate /system_tb/nRST
-add wave -noupdate -divider {Instruction Operations}
-add wave -noupdate -expand -group icache-datapath /system_tb/dcif/ihit
-add wave -noupdate -expand -group icache-datapath /system_tb/dcif/imemREN
-add wave -noupdate -expand -group icache-datapath /system_tb/dcif/imemload
-add wave -noupdate -expand -group icache-datapath /system_tb/dcif/imemaddr
-add wave -noupdate -expand -group icache-arbiter /system_tb/acif/iREN
-add wave -noupdate -expand -group icache-arbiter /system_tb/DUT/MS/ARB/acif/ramREN
-add wave -noupdate -expand -group icache-arbiter /system_tb/DUT/MS/ARB/acif/ramaddr
-add wave -noupdate -expand -group icache-arbiter /system_tb/acif/iload
-add wave -noupdate -expand -group icache-arbiter /system_tb/DUT/MS/ARB/icache_load
-add wave -noupdate -expand -group icache-arbiter /system_tb/DUT/MS/ARB/arbiter_state
-add wave -noupdate -expand -group icache-arbiter /system_tb/DUT/MS/ARB/next_arbiter_state
-add wave -noupdate -expand -group icache-arbiter /system_tb/acif/iaddr
-add wave -noupdate -divider {Scalar Operations}
-add wave -noupdate -expand -group datapath /system_tb/DUT/dcif/dhit
-add wave -noupdate -expand -group datapath /system_tb/DUT/dcif/dmemREN
-add wave -noupdate -expand -group datapath /system_tb/DUT/dcif/dmemWEN
-add wave -noupdate -expand -group datapath /system_tb/DUT/dcif/dmemload
-add wave -noupdate -expand -group datapath /system_tb/DUT/dcif/dmemstore
-add wave -noupdate -expand -group datapath /system_tb/DUT/dcif/dmemaddr
-add wave -noupdate -group dcache /system_tb/DUT/acif/dREN
-add wave -noupdate -group dcache /system_tb/DUT/acif/dWEN
-add wave -noupdate -group dcache /system_tb/DUT/acif/load_done
-add wave -noupdate -group dcache /system_tb/DUT/acif/store_done
-add wave -noupdate -group dcache /system_tb/DUT/acif/daddr
-add wave -noupdate -group dcache /system_tb/DUT/acif/dload
-add wave -noupdate -group dcache /system_tb/DUT/acif/dstore
-add wave -noupdate -group dcache /system_tb/DUT/MS/DCACHE/dcache_format
-add wave -noupdate -group dcache /system_tb/DUT/MS/DCACHE/dcache
-add wave -noupdate -group dcache /system_tb/DUT/MS/DCACHE/next_dcache
-add wave -noupdate -group dcache /system_tb/DUT/MS/DCACHE/hit_count
-add wave -noupdate -group dcache /system_tb/DUT/MS/DCACHE/dcache_state
-add wave -noupdate -group dcache /system_tb/DUT/MS/DCACHE/next_dcache_state
-add wave -noupdate -expand -group arbiter /system_tb/DUT/acif/dREN
-add wave -noupdate -expand -group arbiter /system_tb/DUT/acif/dWEN
-add wave -noupdate -expand -group arbiter /system_tb/DUT/acif/daddr
-add wave -noupdate -expand -group arbiter /system_tb/DUT/acif/dload
-add wave -noupdate -expand -group arbiter /system_tb/DUT/acif/dstore
-add wave -noupdate -expand -group arbiter /system_tb/DUT/MS/ARB/arbiter_state
-add wave -noupdate -expand -group arbiter /system_tb/DUT/MS/ARB/next_arbiter_state
-add wave -noupdate -expand -group ram /system_tb/DUT/acif/ramWEN
-add wave -noupdate -expand -group ram /system_tb/DUT/acif/ramREN
-add wave -noupdate -expand -group ram /system_tb/DUT/acif/ramaddr
-add wave -noupdate -expand -group ram /system_tb/DUT/acif/ramstore
-add wave -noupdate -expand -group ram /system_tb/DUT/MS/ARB/dcache_load
-add wave -noupdate -divider {Matrix Operations}
+add wave -noupdate -radix binary /vexp_tb/dut/CLK
+add wave -noupdate -radix binary /vexp_tb/dut/nRST
+add wave -noupdate -expand -group {VEXP Signals} /vexp_tb/casenum
+add wave -noupdate -expand -group {VEXP Signals} /vexp_tb/casename
+add wave -noupdate -expand -group {VEXP Signals} /vexp_tb/vexpif/valid_in
+add wave -noupdate -expand -group {VEXP Signals} /vexp_tb/vexpif/operand
+add wave -noupdate -expand -group {VEXP Signals} /vexp_tb/vexpif/ready_in
+add wave -noupdate -expand -group {VEXP Signals} /vexp_tb/vexpif/result
+add wave -noupdate -expand -group {VEXP Signals} /vexp_tb/vexpif/valid_out
+add wave -noupdate -expand -group {VEXP Signals} /vexp_tb/vexpif/ready_out
+add wave -noupdate -expand -group {Adder Signals} /vexp_tb/dut/vaddsubif/port_a
+add wave -noupdate -expand -group {Adder Signals} /vexp_tb/dut/vaddsubif/port_b
+add wave -noupdate -expand -group {Adder Signals} /vexp_tb/dut/vaddsubif/out
+add wave -noupdate -expand -group {Adder Signals} /vexp_tb/dut/vaddsubif/sub
+add wave -noupdate -expand -group {Adder Signals} /vexp_tb/dut/vaddsubif/enable
+add wave -noupdate -expand -group {Adder Signals} /vexp_tb/dut/vaddsubif/overflow
+add wave -noupdate -expand -group {VEXP Internal Signals} /vexp_tb/dut/FSM/operand
+add wave -noupdate -expand -group {VEXP Internal Signals} /vexp_tb/dut/FSM/valid_in
+add wave -noupdate -expand -group {VEXP Internal Signals} /vexp_tb/dut/FSM/mul_out
+add wave -noupdate -expand -group {VEXP Internal Signals} /vexp_tb/dut/FSM/add_out
+add wave -noupdate -expand -group {VEXP Internal Signals} /vexp_tb/dut/FSM/int_part
+add wave -noupdate -expand -group {VEXP Internal Signals} /vexp_tb/dut/FSM/fraction
+add wave -noupdate -expand -group {VEXP Internal Signals} /vexp_tb/dut/FSM/mul_a
+add wave -noupdate -expand -group {VEXP Internal Signals} /vexp_tb/dut/FSM/mul_b
+add wave -noupdate -expand -group {VEXP Internal Signals} /vexp_tb/dut/FSM/mul_valid_in
+add wave -noupdate -expand -group {VEXP Internal Signals} /vexp_tb/dut/FSM/add_a
+add wave -noupdate -expand -group {VEXP Internal Signals} /vexp_tb/dut/FSM/add_b
+add wave -noupdate -expand -group {VEXP Internal Signals} /vexp_tb/dut/FSM/add_valid_in
+add wave -noupdate -expand -group {VEXP Internal Signals} /vexp_tb/dut/FSM/sub
+add wave -noupdate -expand -group {VEXP Internal Signals} /vexp_tb/dut/FSM/x_div_ln2
+add wave -noupdate -expand -group {VEXP Internal Signals} /vexp_tb/dut/FSM/result
+add wave -noupdate -expand -group {VEXP Internal Signals} /vexp_tb/dut/FSM/current_state
+add wave -noupdate -expand -group {VEXP Internal Signals} /vexp_tb/dut/FSM/next_state
+add wave -noupdate -expand -group {VEXP Internal Signals} /vexp_tb/dut/FSM/t
+add wave -noupdate -expand -group {VEXP Internal Signals} /vexp_tb/dut/FSM/r
+add wave -noupdate -expand -group {VEXP Internal Signals} /vexp_tb/dut/FSM/r1
+add wave -noupdate -expand -group {VEXP Internal Signals} /vexp_tb/dut/FSM/r_ln2
+add wave -noupdate -expand -group {VEXP Internal Signals} /vexp_tb/dut/FSM/x_div_ln2_out
+add wave -noupdate -expand -group {VEXP Internal Signals} /vexp_tb/dut/FSM/e_biased
+add wave -noupdate -expand -group {VEXP Internal Signals} /vexp_tb/dut/FSM/sum
 TreeUpdate [SetDefaultTree]
-WaveRestoreCursors {{Cursor 1} {52 ns} 0}
+WaveRestoreCursors {{Cursor 1} {196743 ps} 0}
 quietly wave cursor active 1
 configure wave -namecolwidth 150
 configure wave -valuecolwidth 100
@@ -65,4 +57,4 @@ configure wave -griddelta 40
 configure wave -timeline 0
 configure wave -timelineunits ns
 update
-WaveRestoreZoom {51 ns} {54 ns}
+WaveRestoreZoom {0 ps} {284800 ps}

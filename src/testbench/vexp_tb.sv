@@ -16,20 +16,10 @@ module vexp_tb;
   vexp_if vexpif();
 
   vexp dut (
-  .CLK   (CLK),
-  .nRST  (nRST),
-  .vexpif(vexpif)
+    .CLK   (CLK),
+    .nRST  (nRST),
+    .vexpif(vexpif)
   );
-
-  localparam logic [15:0] FP16_P0   = 16'h0000; // +0
-  localparam logic [15:0] FP16_N0   = 16'h8000; // -0
-  localparam logic [15:0] FP16_ONE  = 16'h3C00; // +1
-  localparam logic [15:0] FP16_NEG1 = 16'hBC00; // -1
-  localparam logic [15:0] FP16_TWO  = 16'h4000; // +2
-  localparam logic [15:0] FP16_HALF = 16'h3800; // +0.5
-  localparam logic [15:0] FP16_PINF = 16'h7C00; // +Inf
-  localparam logic [15:0] FP16_NINF = 16'hFC00; // -Inf
-  localparam logic [15:0] FP16_QNAN = 16'h7E00; // qNaN
 
   int casenum;
   string casename;
@@ -41,9 +31,23 @@ initial begin
 
   nRST = '0;
   vexpif.operand = '0;
-  vexpif.a = '0;
   vexpif.valid_in = '0;
   vexpif.ready_out = '0;
+
+  #(PERIOD * 5);
+
+  //////////////////////////
+  nRST = 1;
+  
+  casename = "e^1";
+  casenum = 1;
+  
+  nRST = 1;
+  vexpif.operand = 16'h3F80;
+  vexpif.valid_in = 1;
+  vexpif.ready_out = 1;
+
+  #(PERIOD * 20);
 
   $stop;
 
