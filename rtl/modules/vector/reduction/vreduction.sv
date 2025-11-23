@@ -2,10 +2,8 @@
 `include "vreduction_alu_if.vh"
 
 module vreduction #(
-    parameter int EXP_W = 5,
-    parameter int FRAC_W = 10,
-    parameter int LANES = 16
-
+    parameter int LANES = 16,
+    parameter int FIFO_DEPTH = 4
 )(
     input logic CLK, nRST,
     vreduction_if.ruif vruif
@@ -13,19 +11,44 @@ module vreduction #(
 
     localparam int LEVELS = $clog2(LANES);  
     import vector_pkg::*;
+    import reduction_pkg::*;
+
+    // Counter to track in-flight operations
+    logic [$clog2(FIFO_DEPTH+1)-1:0] inflight_count;
+    logic can_accept_new;
+    
+    // Internal handshake signals
+    logic internal_valid_in;
+    logic internal_ready_out;
+    
+    assign can_accept_new = (inflight_count < FIFO_DEPTH);
+    assign internal_ready_out = can_accept_new;
+    assign internal_valid_in = vruif.in.valid_in && vruif.in.ready_out && can_accept_new;
+    
+    // Track in-flight operations
+    always_ff @(posedge CLK or negedge nRST) begin
+        if (!nRST) begin
+            inflight_count <= '0;
+        end else begin
+            case ({internal_valid_in, vruif.out.valid_out && vruif.out.ready_in})
+                2'b10: inflight_count <= inflight_count + 1;  // New input, no output
+                2'b01: inflight_count <= inflight_count - 1;  // Output, no new input
+                default: inflight_count <= inflight_count;     // Both or neither
+            endcase
+        end
+    end
 
     logic [15:0] tree_data_out;
     logic tree_valid_out;
+    
     reduction_tree #(
         .LANES(LANES)
-        .EXP_W(EXP_W),
-        .FRAC_W(FRAC_W)
     ) reduction_tree (
         .CLK(CLK),
         .nRST(nRST),
-        .data_in(vruif.lane_input),
-        .alu_op(vruif.reduction_type),
-        .valid_in(vruif.input_valid),
+        .data_in(vruif.in.lane_input),
+        .alu_op(vruif.in.reduction_type),
+        .valid_in(internal_valid_in),
         .data_out(tree_data_out),
         .valid_out(tree_valid_out)
     );
@@ -44,44 +67,45 @@ module vreduction #(
         end
     end
 
-    //fifo for the input vector
+    // FIFO for the input vector
     logic [NUM_ELEMENTS-1:0][15:0] vector_fifo_out;
     logic vector_fifo_full, vector_fifo_empty;
+    
     sync_fifo #(
-        .FIFODEPTH(4),
+        .FIFODEPTH(FIFO_DEPTH),
         .DATAWIDTH(16 * NUM_ELEMENTS)
     ) vector_fifo (
         .CLK(CLK),
         .nRST(nRST),
-        .wr_en(vruif.input_valid),
-        .din(vruif.vector_input),
-        .shift(tree_valid_out),  // Use non-delayed for shifting
+        .wr_en(internal_valid_in),
+        .din(vruif.in.vector_input),
+        .shift(tree_valid_out),
         .dout(vector_fifo_out),
         .empty(vector_fifo_empty),
         .full(vector_fifo_full)
     );
 
-    //signals fifo
+    // Signals FIFO
     logic [4:0] imm_final;
     logic broadcast_final, clear_final;
     logic signals_fifo_full, signals_fifo_empty;
 
     sync_fifo #(
-        .FIFODEPTH(4),
-        .DATAWIDTH(7)   s
+        .FIFODEPTH(FIFO_DEPTH),
+        .DATAWIDTH(7)
     ) signals_fifo (
         .CLK(CLK),
         .nRST(nRST),
-        .wr_en(vruif.input_valid),
-        .din({vruif.imm,vruif.broadcast,vruif.clear}),
-        .shift(tree_valid_out),  // Use non-delayed for shifting
-        .dout({imm_final,broadcast_final,clear_final}),
+        .wr_en(internal_valid_in),
+        .din({vruif.in.imm, vruif.in.broadcast, vruif.in.clear}),
+        .shift(tree_valid_out),
+        .dout({imm_final, broadcast_final, clear_final}),
         .empty(signals_fifo_empty),
         .full(signals_fifo_full)
     );
 
     logic [15:0] final_value;
-    assign final_value = tree_data_delayed;  // Use delayed version
+    assign final_value = tree_data_delayed;
     logic [NUM_ELEMENTS-1:0][15:0] final_vector;
 
     always_comb begin
@@ -98,25 +122,35 @@ module vreduction #(
         end
     end
 
-    logic [NUM_ELEMENTS-1:0][15:0] registered_output;
-    logic   registered_valid;
-
+    // Output stage with valid/ready handshaking
+    logic [NUM_ELEMENTS-1:0][15:0] output_buffer;
+    logic output_buffer_valid;
+    logic output_consumed;
+    
+    assign output_consumed = vruif.out.valid_out && vruif.out.ready_in;
+    
     always_ff @(posedge CLK or negedge nRST) begin
         if (!nRST) begin
             for (int i = 0; i < NUM_ELEMENTS; i++)
-                registered_output[i] <= '{default: '0};
-            registered_valid <= 1'b0;
+                output_buffer[i] <= '{default: '0};
+            output_buffer_valid <= 1'b0;
         end else begin
-            for (int i = 0; i < NUM_ELEMENTS; i++)
-                registered_output[i] <= final_vector[i];
-            registered_valid <= tree_valid_delayed;  // Use delayed version
+            if (!output_buffer_valid || output_consumed) begin
+                // Load new data when buffer is empty or being consumed
+                for (int i = 0; i < NUM_ELEMENTS; i++)
+                    output_buffer[i] <= final_vector[i];
+                output_buffer_valid <= tree_valid_delayed;
+            end
+            // If buffer has data and it's not consumed, hold it
         end
     end
 
+    // Output assignments
     always_comb begin
         for (int i = 0; i < NUM_ELEMENTS; i++)
-            vruif.vector_output[i] = registered_output[i];
-        vruif.output_valid = registered_valid;
+            vruif.out.vector_output[i] = output_buffer[i];
+        vruif.out.valid_out = output_buffer_valid;
+        vruif.out.ready_in = internal_ready_out;
     end
     
 endmodule

@@ -2,10 +2,7 @@
 `include "vector_if.vh"
 `include "vaddsub_if.vh"
 
-module vaddsub #(
-  parameter int EXP_W = 5,
-  parameter int FRAC_W = 10
-) (
+module vaddsub(
   input  logic              CLK, 
   input  logic              nRST,
   vaddsub_if.vaddsub        vaddsubif 
@@ -15,7 +12,8 @@ module vaddsub #(
 
 
   //Format Selection
-
+  localparam int EXP_W  = 5;
+  localparam int FRAC_W = 10;
 
   // Derived Parameters
   localparam int SIG_W   = FRAC_W + 1;

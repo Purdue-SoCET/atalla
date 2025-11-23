@@ -1,27 +1,17 @@
-`include "vector_types.vh"
+`include "reduction_types.vh"
 `include "vaddsub_if.vh"
 `include "vreduction_alu_if.vh"
 
-module vreduction_alu #(
-    parameter int EXP_W = 5,
-    parameter int FRAC_W = 10
-) (
+module vreduction_alu (
     input logic CLK,
     input logic nRST,
     vreduction_alu_if.vralu vraluif
 );
 
-import vector_pkg::*;
+import reduction_pkg::*;
 
 vaddsub_if as_if ();
-vaddsub #(
-    .EXP_W(EXP_W),
-    .FRAC_W(FRAC_W)
-) adder (
-    CLK,
-    nRST,
-    as_if
-);
+vaddsub adder (CLK, nRST, as_if);
 
 // Pipeline registers to match the 2-cycle adder latency
 logic [15:0] value_a_s1, value_a_s2;

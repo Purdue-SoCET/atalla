@@ -2,9 +2,7 @@
 `include "vreduction_alu_if.vh"
 
 module reduction_tree #(
-    parameter LANES = 16,        // Must be power of 2
-    parameter EXP_W = 5,
-    parameter FRAC_W = 10
+    parameter LANES = 16        // Must be power of 2
 ) (
     input  logic CLK,
     input  logic nRST,
@@ -55,10 +53,7 @@ module reduction_tree #(
                 assign vralu_if.value_b = tree_data[level][0][2*lane + 1];
                 assign vralu_if.alu_op  = tree_op[level][0];
 
-                vreduction_alu #(
-                    .EXP_W(EXP_W),
-                    .FRAC_W(FRAC_W)
-                ) alu_inst (
+                vreduction_alu alu_inst (
                     .CLK(CLK),
                     .nRST(nRST),
                     .vraluif(vralu_if.vralu)

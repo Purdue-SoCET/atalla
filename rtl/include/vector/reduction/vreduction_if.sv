@@ -6,7 +6,7 @@
 interface vreduction_if #(
 );
     import reduction_pkg::*;
-
+    
     reduction_if_in_t in;
     reduction_if_out_t out;
     
