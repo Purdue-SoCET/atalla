@@ -217,12 +217,6 @@ package vector_pkg;
     } fu_t;
 
     typedef struct packed {
-        vsel_t vd;
-        logic mask;
-        sqrt_in_t sqrt_in;
-    } lane_sqrt_in_t;
-
-    typedef struct packed {
         logic[LANE_ISSUE_BW-1:0] rm;
         fu_t[LANE_ISSUE_BW-1:0] valid_in; // From SB theres valid data
         fu_t[LANE_ISSUE_BW-1:0] ready_in; // From wb
