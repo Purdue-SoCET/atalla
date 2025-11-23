@@ -11,20 +11,21 @@ module addsub_bf16(input logic clk, nRST,
 // Special cases detection
 logic is_nan1, is_nan2, is_inf1, is_inf2;
 logic sticky_bit;
+logic [15:0] bf2_eff;
 
-assign bf2_in[15] = op ? ~bf2_in[15] : bf2_in[15]; // if subtraction, flip sign of bf2_in
+assign bf2_eff = {op ? ~bf2_in[15] : bf2_in[15], bf2_in[14:0]};
 
 always_comb begin
     // Check for NaN (all 1s in exponent and non-zero mantissa)
     is_nan1 = &bf1_in[14:7] && |bf1_in[6:0];
-    is_nan2 = &bf2_in[14:7] && |bf2_in[6:0];
+    is_nan2 = &bf2_eff[14:7] && |bf2_eff[6:0];
     
     // Check for infinity (all 1s in exponent and zero mantissa)
     is_inf1 = &bf1_in[14:7] && ~|bf1_in[6:0];
-    is_inf2 = &bf2_in[14:7] && ~|bf2_in[6:0];
+    is_inf2 = &bf2_eff[14:7] && ~|bf2_eff[6:0];
     
     // Set invalid flag for NaN inputs or inf-inf with same signs
-    invalid = is_nan1 || is_nan2 || (is_inf1 && is_inf2 && (bf1_in[15] != bf2_in[15]));
+    invalid = is_nan1 || is_nan2 || (is_inf1 && is_inf2 && (bf1_in[15] != bf2_eff[15]));
 end
 
 // step 1: Compare exponents to determine which mantissa to shift for normalization.
@@ -33,13 +34,13 @@ logic [7:0] larger_exponent;
 logic exp_select;
 
 always_comb begin
-    if(bf1_in[14:7] < bf2_in[14:7]) begin     // bf2 has a bigger exponent.
+    if(bf1_in[14:7] < bf2_eff[14:7]) begin     // bf2 has a bigger exponent.
         smaller_exponent = bf1_in[14:7];
-        larger_exponent = bf2_in[14:7];
+        larger_exponent = bf2_eff[14:7];
         exp_select = 1'b0;
     end
     else begin                                  // bf1 has a bigger exponent.
-        smaller_exponent = bf2_in[14:7];
+        smaller_exponent = bf2_eff[14:7];
         larger_exponent = bf1_in[14:7];
         exp_select = 1'b1;
     end
@@ -55,7 +56,7 @@ end
         else
             frac_leading_bit_bf1 = 1'b1;
 
-        if(bf2_in[14:7] == 8'b0)
+        if(bf2_eff[14:7] == 8'b0)
             frac_leading_bit_bf2 = 1'b0;
         else
             frac_leading_bit_bf2 = 1'b1;
@@ -84,9 +85,9 @@ always_comb begin
         end
         // rounding_loss = |({frac_leading_bit_bf1, floating_point1_in[9:0], 2'b00} & ((1 << unsigned_exp_diff) - 1));    // chatgpt gave me this - sticky 
         sign_shifted = bf1_in[15];
-        frac_not_shifted = {frac_leading_bit_bf2, bf2_in[6:0], 2'b00};
-        sign_not_shifted = bf2_in[15];
-        exp_max = bf2_in[14:7];
+        frac_not_shifted = {frac_leading_bit_bf2, bf2_eff[6:0], 2'b00};
+        sign_not_shifted = bf2_eff[15];
+        exp_max = bf2_eff[14:7];
     end
 
     else begin                                      // bf1 had a bigger exponent: shift bf2.
@@ -94,10 +95,10 @@ always_comb begin
             frac_shifted = 10'b0;
         end
         else begin
-            frac_shifted = {frac_leading_bit_bf2, bf2_in[6:0], 2'b00} >> exp_diff[3:0];
+            frac_shifted = {frac_leading_bit_bf2, bf2_eff[6:0], 2'b00} >> exp_diff[3:0];
         end
         // rounding_loss = |({frac_leading_bit_bf2, floating_point2_in[9:0], 2'b00} & ((1 << unsigned_exp_diff) - 1));
-        sign_shifted = bf2_in[15];
+        sign_shifted = bf2_eff[15];
         frac_not_shifted = {frac_leading_bit_bf1, bf1_in[6:0], 2'b00};
         sign_not_shifted = bf1_in[15];
         exp_max = bf1_in[14:7];
@@ -176,7 +177,7 @@ always_comb begin
     if (exp_select == 0) begin
         sticky_bit = |(({frac_leading_bit_bf1, bf1_in[6:0], 2'b00} & ((1 << exp_diff) - 1)));
     end else begin
-        sticky_bit = |(({frac_leading_bit_bf2, bf2_in[6:0], 2'b00} & ((1 << exp_diff) - 1)));
+        sticky_bit = |(({frac_leading_bit_bf2, bf2_eff[6:0], 2'b00} & ((1 << exp_diff) - 1)));
     end
 end
 

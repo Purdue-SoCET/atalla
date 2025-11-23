@@ -34,20 +34,84 @@ initial begin
   vexpif.valid_in = '0;
   vexpif.ready_out = '0;
 
-  #(PERIOD * 5);
+  #(PERIOD * 1);
 
   //////////////////////////
   nRST = 1;
+  /////////////////////////
   
   casename = "e^1";
   casenum = 1;
-  
-  nRST = 1;
+
   vexpif.operand = 16'h3F80;
   vexpif.valid_in = 1;
   vexpif.ready_out = 1;
 
-  #(PERIOD * 20);
+  #(PERIOD * 13);
+
+  vexpif.valid_in = 0;
+
+  #(PERIOD * 1);
+
+  ////////////////////////////
+
+  casename = "e^2.5";
+  casenum = 2;
+
+  vexpif.operand = 16'h4020;
+  vexpif.valid_in = 1;
+  vexpif.ready_out = 1;
+
+  #(PERIOD * 13);
+
+  vexpif.valid_in = 0;
+
+  #(PERIOD * 1);
+
+  ////////////////////////////
+
+  casename = "e^8.9";
+  casenum = 3;
+
+  vexpif.operand = 16'h410e;
+  vexpif.valid_in = 1;
+  vexpif.ready_out = 1;
+
+  #(PERIOD * 13);
+
+  vexpif.valid_in = 0;
+
+  #(PERIOD * 1);
+
+  ////////////////////////////
+
+  casename = "e^-1";
+  casenum = 4;
+
+  vexpif.operand = 16'hBF80;
+  vexpif.valid_in = 1;
+  vexpif.ready_out = 1;
+
+  #(PERIOD * 13);
+
+  vexpif.valid_in = 0;
+
+  #(PERIOD * 1);
+
+  ////////////////////////////
+
+  casename = "e^-2.5";
+  casenum = 4;
+
+  vexpif.operand = 16'hC020;
+  vexpif.valid_in = 1;
+  vexpif.ready_out = 1;
+
+  #(PERIOD * 13);
+
+  vexpif.valid_in = 0;
+
+  #(PERIOD * 1);
 
   $stop;
 

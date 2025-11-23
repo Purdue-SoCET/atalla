@@ -17,9 +17,13 @@ module vexp (
                  add_a, add_b,
                  fraction,   //fraction output from converter
                  x_div_ln2, //output from FSM to go to converter
+                 x_div_ln2_abs,
                  result;             //result signal
 
     logic mul_valid_in, /*add_valid_in*/ sub, overflow, underflow, invalid;
+
+    assign x_div_ln2_abs = {1'b0, x_div_ln2[14:0]};   // clear sign bit → |z|
+
 
     // assign add_result = vaddsubif.out;
     // assign vaddsubif.port_a = add_a;
@@ -58,7 +62,7 @@ module vexp (
             .bf1_in(add_a), .bf2_in(add_b), .op(sub),
 
             //outputs
-            .bf_out(add_out), .overflow(overflow), .underflow(underflow),
+            .bf_out(add_result), .overflow(overflow), .underflow(underflow),
             .invalid(invalid));
 
         mul_bf16 BF16_MULTIPLIER 
@@ -67,7 +71,7 @@ module vexp (
             .result(mul_result), .done(done));    
             
         bf16_to_int_frac BF16_CONVERTER 
-            (.bf16_in(x_div_ln2), .int_u32(int_part), .frac_bf16(fraction));
+            (.bf16_in(x_div_ln2_abs), .int_u32(int_part), .frac_bf16(fraction));
 
         //instantiating the adder for bf16
 
