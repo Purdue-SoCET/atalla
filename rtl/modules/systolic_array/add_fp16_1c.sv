@@ -2,10 +2,8 @@
 
 // This module probably CANNOT handle subtraction!
 
-module add_fp16(input logic clk, nRST, start, stall,
-                input logic [15:0] fp1_in, fp2_in,
-                output logic [15:0] fp_out,
-                output logic done);
+module add_fp16_1c(input logic [15:0] fp1_in, fp2_in,
+                output logic [15:0] fp_out);
                 // output logic ovf, unf, output_ready);
 
 // step 1: Compare exponents to determine which mantissa to shift for normalization.
@@ -110,58 +108,58 @@ always_comb begin
 end
 
 // register values here, before addition
-logic[12:0] smaller_mantissa_l, larger_mantissa_l;
-logic larger_mantissa_sign_l, sign_shifted_l, sign_not_shifted_l, signs_differ_l;
-logic[4:0] exp_max_l;
+// logic[12:0] smaller_mantissa_l, larger_mantissa_l;
+// logic larger_mantissa_sign_l, sign_shifted_l, sign_not_shifted_l, signs_differ_l;
+// logic[4:0] exp_max_l;
 
 
-always_ff @(posedge clk, negedge nRST) begin
-    if(nRST == 1'b0) begin
-        smaller_mantissa_l <= 0;
-        larger_mantissa_l <= 0;
-        exp_max_l <= 0;
-        larger_mantissa_sign_l <= 0;
-        signs_differ_l <= 0;
-        sign_shifted_l <= 0;
-        sign_not_shifted_l <= 0;
-        done <= 0;
-    end
-    else begin
-        if(stall) begin
-            smaller_mantissa_l <= smaller_mantissa_l;
-            larger_mantissa_l <= larger_mantissa_l;
-            exp_max_l <= exp_max_l;
-            larger_mantissa_sign_l <= larger_mantissa_sign_l;
-            signs_differ_l <= signs_differ_l;
-            sign_shifted_l <= sign_shifted_l;
-            sign_not_shifted_l <= sign_not_shifted_l;
-            done <= done;
-        end
-        else begin
-            smaller_mantissa_l <= smaller_mantissa;
-            larger_mantissa_l <= larger_mantissa;
-            exp_max_l <= exp_max;
-            larger_mantissa_sign_l <= larger_mantissa_sign;
-            signs_differ_l <= signs_differ;
-            sign_shifted_l <= sign_shifted;
-            sign_not_shifted_l <= sign_not_shifted;
-            done <= start;
-        end
-    end
-end
+// always_ff @(posedge clk, negedge nRST) begin
+//     if(nRST == 1'b0) begin
+//         smaller_mantissa_l <= 0;
+//         larger_mantissa_l <= 0;
+//         exp_max_l <= 0;
+//         larger_mantissa_sign_l <= 0;
+//         signs_differ_l <= 0;
+//         sign_shifted_l <= 0;
+//         sign_not_shifted_l <= 0;
+//         done <= 0;
+//     end
+//     else begin
+//         if(stall) begin
+//             smaller_mantissa_l <= smaller_mantissa_l;
+//             larger_mantissa_l <= larger_mantissa_l;
+//             exp_max_l <= exp_max_l;
+//             larger_mantissa_sign_l <= larger_mantissa_sign_l;
+//             signs_differ_l <= signs_differ_l;
+//             sign_shifted_l <= sign_shifted_l;
+//             sign_not_shifted_l <= sign_not_shifted_l;
+//             done <= done;
+//         end
+//         else begin
+//             smaller_mantissa_l <= smaller_mantissa;
+//             larger_mantissa_l <= larger_mantissa;
+//             exp_max_l <= exp_max;
+//             larger_mantissa_sign_l <= larger_mantissa_sign;
+//             signs_differ_l <= signs_differ;
+//             sign_shifted_l <= sign_shifted;
+//             sign_not_shifted_l <= sign_not_shifted;
+//             done <= start;
+//         end
+//     end
+// end
 
 always_comb begin
     // logic: If the signs of the input operands are the same, simply add the two together.
     // The sign of the result will be the sign of both the inputs.
     // If one is positive and the other is negative, the result is the larger value minus the smaller value (using absolute value)
     // and the sign will be the sign of the larger operand.
-    if(!signs_differ_l) begin
-        mantissa_sum = smaller_mantissa_l + larger_mantissa_l;
-        result_sign = sign_shifted_l & sign_not_shifted_l;
+    if(!signs_differ) begin
+        mantissa_sum = smaller_mantissa + larger_mantissa;
+        result_sign = sign_shifted & sign_not_shifted;
     end
     else begin
-        mantissa_sum = larger_mantissa_l - smaller_mantissa_l;
-        result_sign = larger_mantissa_sign_l;
+        mantissa_sum = larger_mantissa - smaller_mantissa;
+        result_sign = larger_mantissa_sign;
     end
 
     mantissa_overflow = mantissa_sum[13];
@@ -198,7 +196,7 @@ logic [5:0] u_result;
 logic [4:0] exp_minus_shift_amount;
 
 always_comb begin
-    u_exp1           = {1'b0, (normalized_mantissa_sum == 0 ? 5'b0 : exp_max_l)};
+    u_exp1           = {1'b0, (normalized_mantissa_sum == 0 ? 5'b0 : exp_max)};
     u_shifted_amount = {1'b0, norm_shift};
     u_result         = u_exp1 - u_shifted_amount;
 end
@@ -215,7 +213,7 @@ always_comb begin
     // unf = 0;
     if (mantissa_overflow == 1) begin
         round_this = mantissa_sum[12:1];            // i forgot why we dont use the normalized sum here
-        exp_out    = exp_max_l + 1;
+        exp_out    = exp_max + 1;
         // if ((exp_max == 5'b11110) && (~unf_in)) ovf = 1;
     end else begin
         round_this = normalized_mantissa_sum[11:0];

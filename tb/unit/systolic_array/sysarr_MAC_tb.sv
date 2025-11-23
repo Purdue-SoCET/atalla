@@ -31,7 +31,7 @@ module sysarr_MAC_tb;
     // sysarr_control_unit_if instance
     systolic_array_MAC_if mac_if();
 
-    sysarr_MAC_1CM dut (.clk(tb_clk), .nRST(tb_nrst), .mac_if(mac_if.MAC));
+    sysarr_MAC_fp16 dut (.clk(tb_clk), .nRST(tb_nrst), .mac_if(mac_if.MAC));
 
     logic [15:0] test_inputs[9:0];
     logic [15:0] test_weights[9:0];
@@ -41,7 +41,7 @@ module sysarr_MAC_tb;
     // Test sequence
     initial begin
         // Initialize interface signals
-        $dumpfile("waves.vcd");
+        $dumpfile("waves/sysarr_MAC_fp16_waves.vcd");
         $dumpvars();
         tb_nrst = 0;
         #CLK_PERIOD;
@@ -82,28 +82,47 @@ module sysarr_MAC_tb;
 
         @(posedge tb_clk);
         mac_if.start = 0;
+        mac_if.stall = 0;
 
 
 
+        // for(i = 0; i < 10; i++) begin
+        //    mac_if.weight_en = 1'b0;
+        //    #CLK_PERIOD;
+        //    mac_if.in_value = test_weights[i];
+        //    mac_if.weight_en = 1'b1;
+        //    #CLK_PERIOD;
+        //    mac_if.weight_en = 1'b0;
+        //    mac_if.in_accumulate = test_ps[i];
+        //    mac_if.in_value = test_inputs[i];
+        //    mac_if.MAC_shift = 1'b1;
+        //    #CLK_PERIOD;
+        //    mac_if.MAC_shift = 1'b0;
+        //    mac_if.start = 1'b1;
+        //    #CLK_PERIOD;
+        //    mac_if.start = 1'b0;
+        //    @(posedge mac_if.value_ready);
+        //    $display("Input: %h   Weight: %h   in_acc: %h    MAC Unit Output: %h", test_inputs[i], test_weights[i], test_ps[i], mac_if.out_accumulate);
+        //    #CLK_PERIOD;
+        //    #CLK_PERIOD;
+        // end
+
+    // load one weight in
+        mac_if.in_value = test_weights[0];
+        mac_if.weight_en = 1'b1;
+        #CLK_PERIOD;
+        mac_if.weight_en = 1'b0;
+        mac_if.MAC_shift = 1'b1;
+        #CLK_PERIOD;
+
+    // test pattern 2: value every cycle. Read outputs on waves
         for(i = 0; i < 10; i++) begin
-           mac_if.weight_en = 1'b0;
-           #CLK_PERIOD;
-           mac_if.in_value = test_weights[i];
-           mac_if.weight_en = 1'b1;
-           #CLK_PERIOD;
-           mac_if.weight_en = 1'b0;
-           mac_if.in_accumulate = test_ps[i];
-           mac_if.in_value = test_inputs[i];
-           mac_if.MAC_shift = 1'b1;
-           #CLK_PERIOD;
-           mac_if.MAC_shift = 1'b0;
-           mac_if.start = 1'b1;
-           #CLK_PERIOD;
-           mac_if.start = 1'b0;
-           @(posedge mac_if.value_ready);
-           $display("Input: %h   Weight: %h   in_acc: %h    MAC Unit Output: %h", test_inputs[i], test_weights[i], test_ps[i], mac_if.out_accumulate);
-           #CLK_PERIOD;
-           #CLK_PERIOD;
+            mac_if.MAC_shift = 1'b1;
+
+            mac_if.in_value = test_inputs[i];
+            mac_if.in_accumulate = test_ps[i];
+            mac_if.start = 1'b1;
+            #CLK_PERIOD;
         end
         $finish;
     end

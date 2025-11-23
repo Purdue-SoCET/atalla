@@ -1,232 +1,65 @@
 [*]
-[*] GTKWave Analyzer v3.3.120 (w)1999-2024 BSI
-[*] Sun Feb 23 21:11:43 2025
+[*] GTKWave Analyzer v3.3.125 (w)1999-2025 BSI
+[*] Fri Nov 21 08:39:48 2025
 [*]
-[dumpfile] "/home/vinay/tensorcore/tensor-core/src/waves.vcd"
-[dumpfile_mtime] "Sun Feb 23 21:10:56 2025"
-[dumpfile_size] 12082
-[savefile] "/home/vinay/tensorcore/tensor-core/src/mac_debug.gtkw"
-[timestart] 2866
-[size] 2560 1458
-[pos] 77 68
-*-10.500000 6603 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1
-[treeopen] MAC_unit_tb.
-[treeopen] MAC_unit_tb.dut.
-[treeopen] MAC_unit_tb.dut.mul1.
+[dumpfile] "/home/vinay/tensorcore/atalla/waves/sysarr_MAC_fp16_waves.vcd"
+[dumpfile_mtime] "Fri Nov 21 06:42:07 2025"
+[dumpfile_size] 54636
+[savefile] "/home/vinay/tensorcore/atalla/waves/mac_debug.gtkw"
+[timestart] 2715
+[size] 1832 2102
+[pos] -1 -1
+*-9.900000 4684 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1
+[treeopen] sysarr_MAC_tb.
+[treeopen] sysarr_MAC_tb.dut.
+[treeopen] sysarr_MAC_tb.dut.radish.
+[treeopen] sysarr_MAC_tb.dut.turnip.
 [sst_width] 278
-[signals_width] 289
+[signals_width] 246
 [sst_expanded] 1
-[sst_vpaned_height] 882
-@c00022
-MAC_unit_tb.dut.mul1.fp1_in[15:0]
-@28
-(0)MAC_unit_tb.dut.mul1.fp1_in[15:0]
-(1)MAC_unit_tb.dut.mul1.fp1_in[15:0]
-(2)MAC_unit_tb.dut.mul1.fp1_in[15:0]
-(3)MAC_unit_tb.dut.mul1.fp1_in[15:0]
-(4)MAC_unit_tb.dut.mul1.fp1_in[15:0]
-(5)MAC_unit_tb.dut.mul1.fp1_in[15:0]
-(6)MAC_unit_tb.dut.mul1.fp1_in[15:0]
-(7)MAC_unit_tb.dut.mul1.fp1_in[15:0]
-(8)MAC_unit_tb.dut.mul1.fp1_in[15:0]
-(9)MAC_unit_tb.dut.mul1.fp1_in[15:0]
-(10)MAC_unit_tb.dut.mul1.fp1_in[15:0]
-(11)MAC_unit_tb.dut.mul1.fp1_in[15:0]
-(12)MAC_unit_tb.dut.mul1.fp1_in[15:0]
-(13)MAC_unit_tb.dut.mul1.fp1_in[15:0]
-(14)MAC_unit_tb.dut.mul1.fp1_in[15:0]
-(15)MAC_unit_tb.dut.mul1.fp1_in[15:0]
-@1401200
--group_end
-@c00022
-MAC_unit_tb.dut.mul1.fp2_in[15:0]
-@28
-(0)MAC_unit_tb.dut.mul1.fp2_in[15:0]
-(1)MAC_unit_tb.dut.mul1.fp2_in[15:0]
-(2)MAC_unit_tb.dut.mul1.fp2_in[15:0]
-(3)MAC_unit_tb.dut.mul1.fp2_in[15:0]
-(4)MAC_unit_tb.dut.mul1.fp2_in[15:0]
-(5)MAC_unit_tb.dut.mul1.fp2_in[15:0]
-(6)MAC_unit_tb.dut.mul1.fp2_in[15:0]
-(7)MAC_unit_tb.dut.mul1.fp2_in[15:0]
-(8)MAC_unit_tb.dut.mul1.fp2_in[15:0]
-(9)MAC_unit_tb.dut.mul1.fp2_in[15:0]
-(10)MAC_unit_tb.dut.mul1.fp2_in[15:0]
-(11)MAC_unit_tb.dut.mul1.fp2_in[15:0]
-(12)MAC_unit_tb.dut.mul1.fp2_in[15:0]
-(13)MAC_unit_tb.dut.mul1.fp2_in[15:0]
-(14)MAC_unit_tb.dut.mul1.fp2_in[15:0]
-(15)MAC_unit_tb.dut.mul1.fp2_in[15:0]
-@1401200
--group_end
-@28
-MAC_unit_tb.dut.mul1.carry_out
-MAC_unit_tb.dut.mul1.sign1
-MAC_unit_tb.dut.mul1.sign2
-MAC_unit_tb.dut.mul_carryout_in
-@c00022
-MAC_unit_tb.dut.mul_exp1_in[4:0]
-@28
-(0)MAC_unit_tb.dut.mul_exp1_in[4:0]
-(1)MAC_unit_tb.dut.mul_exp1_in[4:0]
-(2)MAC_unit_tb.dut.mul_exp1_in[4:0]
-(3)MAC_unit_tb.dut.mul_exp1_in[4:0]
-(4)MAC_unit_tb.dut.mul_exp1_in[4:0]
-@1401200
--group_end
-@c00022
-MAC_unit_tb.dut.mul_exp2_in[4:0]
-@28
-(0)MAC_unit_tb.dut.mul_exp2_in[4:0]
-(1)MAC_unit_tb.dut.mul_exp2_in[4:0]
-(2)MAC_unit_tb.dut.mul_exp2_in[4:0]
-(3)MAC_unit_tb.dut.mul_exp2_in[4:0]
-(4)MAC_unit_tb.dut.mul_exp2_in[4:0]
-@1401200
--group_end
+[sst_vpaned_height] 880
 @22
-MAC_unit_tb.dut.mul_product_in[12:0]
+sysarr_MAC_tb.dut.turnip.fp1_in[15:0]
 @28
-MAC_unit_tb.dut.mul_sign1_in
-MAC_unit_tb.dut.mul_sign2_in
-MAC_unit_tb.dut.mul_ovf
-MAC_unit_tb.dut.mul_sign_result
-MAC_unit_tb.dut.mul_unf
-@c00022
-MAC_unit_tb.mac_if.in_accumulate[15:0]
-@28
-(0)MAC_unit_tb.mac_if.in_accumulate[15:0]
-(1)MAC_unit_tb.mac_if.in_accumulate[15:0]
-(2)MAC_unit_tb.mac_if.in_accumulate[15:0]
-(3)MAC_unit_tb.mac_if.in_accumulate[15:0]
-(4)MAC_unit_tb.mac_if.in_accumulate[15:0]
-(5)MAC_unit_tb.mac_if.in_accumulate[15:0]
-(6)MAC_unit_tb.mac_if.in_accumulate[15:0]
-(7)MAC_unit_tb.mac_if.in_accumulate[15:0]
-(8)MAC_unit_tb.mac_if.in_accumulate[15:0]
-(9)MAC_unit_tb.mac_if.in_accumulate[15:0]
-(10)MAC_unit_tb.mac_if.in_accumulate[15:0]
-(11)MAC_unit_tb.mac_if.in_accumulate[15:0]
-(12)MAC_unit_tb.mac_if.in_accumulate[15:0]
-(13)MAC_unit_tb.mac_if.in_accumulate[15:0]
-(14)MAC_unit_tb.mac_if.in_accumulate[15:0]
-(15)MAC_unit_tb.mac_if.in_accumulate[15:0]
-@1401200
--group_end
+sysarr_MAC_tb.dut.turnip.exp_select
 @22
-MAC_unit_tb.dut.add1.exp_max[4:0]
-MAC_unit_tb.dut.add1.frac_not_shifted[12:0]
-MAC_unit_tb.dut.add1.frac_shifted[12:0]
+sysarr_MAC_tb.dut.turnip.fp2_in[15:0]
+sysarr_MAC_tb.dut.turnip.fp_out[15:0]
 @28
-MAC_unit_tb.dut.add1.sign_not_shifted
-MAC_unit_tb.dut.add1.sign_shifted
+sysarr_MAC_tb.mac_if.start
+sysarr_MAC_tb.tb_nrst
+sysarr_MAC_tb.tb_clk
+sysarr_MAC_tb.mac_if.value_ready
 @22
-MAC_unit_tb.dut.add1.cmp_exponents.u_diff[4:0]
-MAC_unit_tb.dut.add2.sum[12:0]
+sysarr_MAC_tb.mac_if.in_value[15:0]
+sysarr_MAC_tb.dut.weight[15:0]
+sysarr_MAC_tb.dut.mul_result[15:0]
+sysarr_MAC_tb.dut.mul_result_latched[15:0]
 @28
-MAC_unit_tb.dut.add2.carry_out
+sysarr_MAC_tb.dut.mul_ready
 @22
-MAC_unit_tb.dut.add3.floating_point_out[15:0]
-MAC_unit_tb.dut.add3.exponent_max_in[4:0]
-MAC_unit_tb.dut.add3.exponent[4:0]
-MAC_unit_tb.dut.add_exp_max_s3_in[4:0]
-MAC_unit_tb.dut.add_exp_max_s2_out[4:0]
-MAC_unit_tb.dut.add2.exp_max_in[4:0]
+sysarr_MAC_tb.dut.input_x[15:0]
+sysarr_MAC_tb.dut.turnip.fp1_in[15:0]
+sysarr_MAC_tb.dut.turnip.fp2_in[15:0]
+sysarr_MAC_tb.dut.turnip.fp_out[15:0]
+sysarr_MAC_tb.mac_if.in_accumulate[15:0]
+sysarr_MAC_tb.mac_if.out_accumulate[15:0]
 @28
-MAC_unit_tb.dut.run
-MAC_unit_tb.dut.mac_if.start
-@29
-MAC_unit_tb.dut.mac_if.MAC_shift
-@28
-MAC_unit_tb.dut.clk
-@c00022
-MAC_unit_tb.dut.mul_result[15:0]
-@28
-(0)MAC_unit_tb.dut.mul_result[15:0]
-(1)MAC_unit_tb.dut.mul_result[15:0]
-(2)MAC_unit_tb.dut.mul_result[15:0]
-(3)MAC_unit_tb.dut.mul_result[15:0]
-(4)MAC_unit_tb.dut.mul_result[15:0]
-(5)MAC_unit_tb.dut.mul_result[15:0]
-(6)MAC_unit_tb.dut.mul_result[15:0]
-(7)MAC_unit_tb.dut.mul_result[15:0]
-(8)MAC_unit_tb.dut.mul_result[15:0]
-(9)MAC_unit_tb.dut.mul_result[15:0]
-(10)MAC_unit_tb.dut.mul_result[15:0]
-(11)MAC_unit_tb.dut.mul_result[15:0]
-(12)MAC_unit_tb.dut.mul_result[15:0]
-(13)MAC_unit_tb.dut.mul_result[15:0]
-(14)MAC_unit_tb.dut.mul_result[15:0]
-(15)MAC_unit_tb.dut.mul_result[15:0]
-@1401200
--group_end
+sysarr_MAC_tb.dut.turnip.start
 @22
-MAC_unit_tb.dut.accumulate_result[15:0]
-@c00022
-MAC_unit_tb.dut.mul1.MUL.frac_in1[12:0]
+sysarr_MAC_tb.dut.turnip.larger_exponent[4:0]
+sysarr_MAC_tb.dut.turnip.exp_max[4:0]
+sysarr_MAC_tb.dut.turnip.exp_max_l[4:0]
+sysarr_MAC_tb.dut.turnip.larger_mantissa[12:0]
+sysarr_MAC_tb.dut.turnip.frac_not_shifted[12:0]
+@23
+sysarr_MAC_tb.dut.turnip.larger_mantissa_l[12:0]
 @28
-(0)MAC_unit_tb.dut.mul1.MUL.frac_in1[12:0]
-(1)MAC_unit_tb.dut.mul1.MUL.frac_in1[12:0]
-(2)MAC_unit_tb.dut.mul1.MUL.frac_in1[12:0]
-(3)MAC_unit_tb.dut.mul1.MUL.frac_in1[12:0]
-(4)MAC_unit_tb.dut.mul1.MUL.frac_in1[12:0]
-(5)MAC_unit_tb.dut.mul1.MUL.frac_in1[12:0]
-(6)MAC_unit_tb.dut.mul1.MUL.frac_in1[12:0]
-(7)MAC_unit_tb.dut.mul1.MUL.frac_in1[12:0]
-(8)MAC_unit_tb.dut.mul1.MUL.frac_in1[12:0]
-(9)MAC_unit_tb.dut.mul1.MUL.frac_in1[12:0]
-(10)MAC_unit_tb.dut.mul1.MUL.frac_in1[12:0]
-(11)MAC_unit_tb.dut.mul1.MUL.frac_in1[12:0]
-(12)MAC_unit_tb.dut.mul1.MUL.frac_in1[12:0]
-@1401200
--group_end
+sysarr_MAC_tb.dut.turnip.stall
 @22
-MAC_unit_tb.dut.mul1.MUL.frac_in2[12:0]
-MAC_unit_tb.dut.mul1.MUL.frac_out[12:0]
-MAC_unit_tb.dut.mul1.MUL.frac_out_26b[25:0]
-@28
-MAC_unit_tb.dut.mul1.MUL.overflow
-@c00022
-MAC_unit_tb.dut.mul1.product[12:0]
-@28
-(0)MAC_unit_tb.dut.mul1.product[12:0]
-(1)MAC_unit_tb.dut.mul1.product[12:0]
-(2)MAC_unit_tb.dut.mul1.product[12:0]
-(3)MAC_unit_tb.dut.mul1.product[12:0]
-(4)MAC_unit_tb.dut.mul1.product[12:0]
-(5)MAC_unit_tb.dut.mul1.product[12:0]
-(6)MAC_unit_tb.dut.mul1.product[12:0]
-(7)MAC_unit_tb.dut.mul1.product[12:0]
-(8)MAC_unit_tb.dut.mul1.product[12:0]
-(9)MAC_unit_tb.dut.mul1.product[12:0]
-(10)MAC_unit_tb.dut.mul1.product[12:0]
-(11)MAC_unit_tb.dut.mul1.product[12:0]
-(12)MAC_unit_tb.dut.mul1.product[12:0]
-@1401200
--group_end
-@28
-MAC_unit_tb.dut.mul2.carry
-@800022
-MAC_unit_tb.dut.mul_sum_exp[4:0]
-@28
-(0)MAC_unit_tb.dut.mul_sum_exp[4:0]
-(1)MAC_unit_tb.dut.mul_sum_exp[4:0]
-(2)MAC_unit_tb.dut.mul_sum_exp[4:0]
-(3)MAC_unit_tb.dut.mul_sum_exp[4:0]
-(4)MAC_unit_tb.dut.mul_sum_exp[4:0]
-@1001200
--group_end
-@c00022
-MAC_unit_tb.dut.mul1.exp2[4:0]
-@28
-(0)MAC_unit_tb.dut.mul1.exp2[4:0]
-(1)MAC_unit_tb.dut.mul1.exp2[4:0]
-(2)MAC_unit_tb.dut.mul1.exp2[4:0]
-(3)MAC_unit_tb.dut.mul1.exp2[4:0]
-(4)MAC_unit_tb.dut.mul1.exp2[4:0]
-@1401200
--group_end
-@22
-MAC_unit_tb.dut.mul1.exp1[4:0]
+sysarr_MAC_tb.dut.turnip.smaller_mantissa[12:0]
+sysarr_MAC_tb.dut.turnip.frac_shifted[12:0]
+sysarr_MAC_tb.dut.turnip.smaller_mantissa_l[12:0]
+sysarr_MAC_tb.dut.turnip.mantissa_sum[13:0]
 [pattern_trace] 1
 [pattern_trace] 0

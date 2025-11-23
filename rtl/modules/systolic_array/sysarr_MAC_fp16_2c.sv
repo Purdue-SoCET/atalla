@@ -27,7 +27,7 @@ https://www.veripool.org/ftp/verilator_doc.pdf
 `include "systolic_array_MAC_if.vh"
 `timescale 1ns/1ps
 
-module sysarr_MAC_fp16(input logic clk, input logic nRST, systolic_array_MAC_if.MAC mac_if);
+module sysarr_MAC_fp16_2c(input logic clk, input logic nRST, systolic_array_MAC_if.MAC mac_if);
     logic [DW-1:0] input_x;
     logic [DW-1:0] nxt_input_x;
     // logic [DW-1:0] in_accumulate_latched, nxt_in_accumulate_latched;
@@ -119,7 +119,8 @@ end
         end
     end
 
-    add_fp16 turnip (.clk(clk), .nRST(nRST), .start(mul_ready), .stall(mac_if.stall), .fp1_in(mul_result_latched), .fp2_in (mac_if.in_accumulate), .fp_out(mac_if.out_accumulate), .done(mac_if.value_ready));
+    add_fp16_1c turnip (.fp1_in(mul_result_latched), .fp2_in (mac_if.in_accumulate), .fp_out(mac_if.out_accumulate));
+    assign value_ready = mul_ready;
 
 endmodule
 

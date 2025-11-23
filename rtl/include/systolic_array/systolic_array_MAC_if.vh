@@ -29,7 +29,7 @@ interface systolic_array_MAC_if;
 
   // MAC Port for Array
   modport MAC(
-    input  start, count, /* weight, */ in_value, MAC_shift, in_accumulate, weight_en,
+    input  start, stall, /* weight, */ in_value, MAC_shift, in_accumulate, weight_en,
     output out_accumulate, in_pass, value_ready, weight_next_en//, weight_read, mul_result_read
   );
 endinterface
