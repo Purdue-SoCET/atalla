@@ -14,15 +14,15 @@
       </db_ref>
    </db_ref_list>
    <zoom_setting>
-      <ZoomStartTime time="124.945 ns"></ZoomStartTime>
-      <ZoomEndTime time="552.137 ns"></ZoomEndTime>
-      <Cursor1Time time="244.832 ns"></Cursor1Time>
+      <ZoomStartTime time="0.000 ns"></ZoomStartTime>
+      <ZoomEndTime time="1,000.001 ns"></ZoomEndTime>
+      <Cursor1Time time="684.350 ns"></Cursor1Time>
    </zoom_setting>
    <column_width_setting>
-      <NameColumnWidth column_width="248"></NameColumnWidth>
-      <ValueColumnWidth column_width="109"></ValueColumnWidth>
+      <NameColumnWidth column_width="250"></NameColumnWidth>
+      <ValueColumnWidth column_width="290"></ValueColumnWidth>
    </column_width_setting>
-   <WVObjectSize size="4" />
+   <WVObjectSize size="5" />
    <wvobject fp_name="/tb_top/clk" type="logic">
       <obj_property name="ElementShortName">clk</obj_property>
       <obj_property name="ObjectShortName">clk</obj_property>
@@ -46,6 +46,8 @@
          <wvobject fp_name="/tb_top/mem_in_addr" type="array">
             <obj_property name="ElementShortName">mem_in_addr[31:0]</obj_property>
             <obj_property name="ObjectShortName">mem_in_addr[31:0]</obj_property>
+            <obj_property name="CustomSignalColor">#00FFFF</obj_property>
+            <obj_property name="UseCustomSignalColor">true</obj_property>
          </wvobject>
          <wvobject fp_name="/tb_top/mem_in_rw_mode" type="logic">
             <obj_property name="ElementShortName">mem_in_rw_mode</obj_property>
@@ -54,6 +56,8 @@
          <wvobject fp_name="/tb_top/mem_in_store_value" type="array">
             <obj_property name="ElementShortName">mem_in_store_value[31:0]</obj_property>
             <obj_property name="ObjectShortName">mem_in_store_value[31:0]</obj_property>
+            <obj_property name="CustomSignalColor">#00FFFF</obj_property>
+            <obj_property name="UseCustomSignalColor">true</obj_property>
          </wvobject>
          <wvobject fp_name="/tb_top/dp_in_halt" type="logic">
             <obj_property name="ElementShortName">dp_in_halt</obj_property>
@@ -67,18 +71,26 @@
          <wvobject fp_name="/tb_top/mem_out_uuid" type="array">
             <obj_property name="ElementShortName">mem_out_uuid[3:0]</obj_property>
             <obj_property name="ObjectShortName">mem_out_uuid[3:0]</obj_property>
+            <obj_property name="CustomSignalColor">#FFD700</obj_property>
+            <obj_property name="UseCustomSignalColor">true</obj_property>
          </wvobject>
          <wvobject fp_name="/tb_top/stall" type="logic">
             <obj_property name="ElementShortName">stall</obj_property>
             <obj_property name="ObjectShortName">stall</obj_property>
+            <obj_property name="CustomSignalColor">#FFD700</obj_property>
+            <obj_property name="UseCustomSignalColor">true</obj_property>
          </wvobject>
          <wvobject fp_name="/tb_top/hit" type="logic">
             <obj_property name="ElementShortName">hit</obj_property>
             <obj_property name="ObjectShortName">hit</obj_property>
+            <obj_property name="CustomSignalColor">#FFD700</obj_property>
+            <obj_property name="UseCustomSignalColor">true</obj_property>
          </wvobject>
          <wvobject fp_name="/tb_top/hit_load" type="array">
             <obj_property name="ElementShortName">hit_load[31:0]</obj_property>
             <obj_property name="ObjectShortName">hit_load[31:0]</obj_property>
+            <obj_property name="CustomSignalColor">#FFD700</obj_property>
+            <obj_property name="UseCustomSignalColor">true</obj_property>
          </wvobject>
          <wvobject fp_name="/tb_top/block_status" type="array">
             <obj_property name="ElementShortName">block_status[3:0]</obj_property>
@@ -113,18 +125,30 @@
          <wvobject fp_name="/tb_top/ram_mem_REN" type="array">
             <obj_property name="ElementShortName">ram_mem_REN[3:0]</obj_property>
             <obj_property name="ObjectShortName">ram_mem_REN[3:0]</obj_property>
+            <obj_property name="WaveformStyle">STYLE_DIGITAL</obj_property>
+            <obj_property name="CustomSignalColor">#FF00FF</obj_property>
+            <obj_property name="UseCustomSignalColor">true</obj_property>
          </wvobject>
          <wvobject fp_name="/tb_top/ram_mem_WEN" type="array">
             <obj_property name="ElementShortName">ram_mem_WEN[3:0]</obj_property>
             <obj_property name="ObjectShortName">ram_mem_WEN[3:0]</obj_property>
+            <obj_property name="WaveformStyle">STYLE_DIGITAL</obj_property>
+            <obj_property name="CustomSignalColor">#FF00FF</obj_property>
+            <obj_property name="UseCustomSignalColor">true</obj_property>
          </wvobject>
          <wvobject fp_name="/tb_top/ram_mem_addr" type="array">
             <obj_property name="ElementShortName">ram_mem_addr[3:0][31:0]</obj_property>
             <obj_property name="ObjectShortName">ram_mem_addr[3:0][31:0]</obj_property>
+            <obj_property name="WaveformStyle">STYLE_DIGITAL</obj_property>
+            <obj_property name="CustomSignalColor">#FF00FF</obj_property>
+            <obj_property name="UseCustomSignalColor">true</obj_property>
          </wvobject>
          <wvobject fp_name="/tb_top/ram_mem_store" type="array">
             <obj_property name="ElementShortName">ram_mem_store[3:0][31:0]</obj_property>
             <obj_property name="ObjectShortName">ram_mem_store[3:0][31:0]</obj_property>
+            <obj_property name="WaveformStyle">STYLE_DIGITAL</obj_property>
+            <obj_property name="CustomSignalColor">#FF00FF</obj_property>
+            <obj_property name="UseCustomSignalColor">true</obj_property>
          </wvobject>
       </wvobject>
    </wvobject>
@@ -135,6 +159,76 @@
       <wvobject fp_name="/tb_top/DUT/hit_return_load" type="array">
          <obj_property name="ElementShortName">hit_return_load[3:0][31:0]</obj_property>
          <obj_property name="ObjectShortName">hit_return_load[3:0][31:0]</obj_property>
+      </wvobject>
+      <wvobject fp_name="/tb_top/DUT/bank_hit" type="array">
+         <obj_property name="ElementShortName">bank_hit[3:0]</obj_property>
+         <obj_property name="ObjectShortName">bank_hit[3:0]</obj_property>
+      </wvobject>
+      <wvobject fp_name="/tb_top/DUT/hit_check" type="array">
+         <obj_property name="ElementShortName">hit_check[3:0]</obj_property>
+         <obj_property name="ObjectShortName">hit_check[3:0]</obj_property>
+         <obj_property name="isExpanded"></obj_property>
+      </wvobject>
+   </wvobject>
+   <wvobject fp_name="group129" type="group">
+      <obj_property name="label">Cache Bank Signals</obj_property>
+      <obj_property name="DisplayName">label</obj_property>
+      <obj_property name="isExpanded"></obj_property>
+      <wvobject fp_name="/tb_top/DUT/\BANK_GEN[0].u_cache_bank /bank" type="array">
+         <obj_property name="ElementShortName">bank[15:0][3:0]</obj_property>
+         <obj_property name="ObjectShortName">bank[15:0][3:0]</obj_property>
+      </wvobject>
+      <wvobject fp_name="/tb_top/DUT/\BANK_GEN[0].u_cache_bank /instr_valid" type="logic">
+         <obj_property name="ElementShortName">instr_valid</obj_property>
+         <obj_property name="ObjectShortName">instr_valid</obj_property>
+      </wvobject>
+      <wvobject fp_name="/tb_top/DUT/\BANK_GEN[0].u_cache_bank /scheduler_hit" type="logic">
+         <obj_property name="ElementShortName">scheduler_hit</obj_property>
+         <obj_property name="ObjectShortName">scheduler_hit</obj_property>
+         <obj_property name="CustomSignalColor">#FFA500</obj_property>
+         <obj_property name="UseCustomSignalColor">true</obj_property>
+      </wvobject>
+      <wvobject fp_name="/tb_top/DUT/\BANK_GEN[1].u_cache_bank /bank" type="array">
+         <obj_property name="ElementShortName">bank[15:0][3:0]</obj_property>
+         <obj_property name="ObjectShortName">bank[15:0][3:0]</obj_property>
+      </wvobject>
+      <wvobject fp_name="/tb_top/DUT/\BANK_GEN[1].u_cache_bank /instr_valid" type="logic">
+         <obj_property name="ElementShortName">instr_valid</obj_property>
+         <obj_property name="ObjectShortName">instr_valid</obj_property>
+      </wvobject>
+      <wvobject fp_name="/tb_top/DUT/\BANK_GEN[1].u_cache_bank /scheduler_hit" type="logic">
+         <obj_property name="ElementShortName">scheduler_hit</obj_property>
+         <obj_property name="ObjectShortName">scheduler_hit</obj_property>
+         <obj_property name="CustomSignalColor">#FFA500</obj_property>
+         <obj_property name="UseCustomSignalColor">true</obj_property>
+      </wvobject>
+      <wvobject fp_name="/tb_top/DUT/\BANK_GEN[2].u_cache_bank /bank" type="array">
+         <obj_property name="ElementShortName">bank[15:0][3:0]</obj_property>
+         <obj_property name="ObjectShortName">bank[15:0][3:0]</obj_property>
+      </wvobject>
+      <wvobject fp_name="/tb_top/DUT/\BANK_GEN[2].u_cache_bank /instr_valid" type="logic">
+         <obj_property name="ElementShortName">instr_valid</obj_property>
+         <obj_property name="ObjectShortName">instr_valid</obj_property>
+      </wvobject>
+      <wvobject fp_name="/tb_top/DUT/\BANK_GEN[2].u_cache_bank /scheduler_hit" type="logic">
+         <obj_property name="ElementShortName">scheduler_hit</obj_property>
+         <obj_property name="ObjectShortName">scheduler_hit</obj_property>
+         <obj_property name="CustomSignalColor">#FFA500</obj_property>
+         <obj_property name="UseCustomSignalColor">true</obj_property>
+      </wvobject>
+      <wvobject fp_name="/tb_top/DUT/\BANK_GEN[3].u_cache_bank /bank" type="array">
+         <obj_property name="ElementShortName">bank[15:0][3:0]</obj_property>
+         <obj_property name="ObjectShortName">bank[15:0][3:0]</obj_property>
+      </wvobject>
+      <wvobject fp_name="/tb_top/DUT/\BANK_GEN[3].u_cache_bank /instr_valid" type="logic">
+         <obj_property name="ElementShortName">instr_valid</obj_property>
+         <obj_property name="ObjectShortName">instr_valid</obj_property>
+      </wvobject>
+      <wvobject fp_name="/tb_top/DUT/\BANK_GEN[3].u_cache_bank /scheduler_hit" type="logic">
+         <obj_property name="ElementShortName">scheduler_hit</obj_property>
+         <obj_property name="ObjectShortName">scheduler_hit</obj_property>
+         <obj_property name="CustomSignalColor">#FFA500</obj_property>
+         <obj_property name="UseCustomSignalColor">true</obj_property>
       </wvobject>
    </wvobject>
 </wave_config>

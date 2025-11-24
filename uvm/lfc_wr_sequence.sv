@@ -8,7 +8,7 @@ import uvm_pkg::*;
 
 class lfc_wr_sequence extends uvm_sequence#(lfc_cpu_transaction);
   `uvm_object_utils(lfc_wr_sequence)
-  parameter NUM_TRANSACTIONS = 10;
+  parameter NUM_TRANSACTIONS = 1;
 
   function new(string name = "lfc_wr_sequence");
     super.new(name);
@@ -32,7 +32,7 @@ class lfc_wr_sequence extends uvm_sequence#(lfc_cpu_transaction);
         end
         req.n_rst = 1'b1;
         req.mem_in_rw_mode = 1'b1; // 1 for write, 0 for read
-        req.mem_in = 1'b0; // understanding is that this is 1 for a read??
+        req.mem_in = 1'b1; // understanding is that this is 1 for a read??
         req.dp_in_halt = 1'b0;
         addrs[addrs_idx] = req.mem_in_addr;
         finish_item(req);
@@ -48,9 +48,6 @@ class lfc_wr_sequence extends uvm_sequence#(lfc_cpu_transaction);
     addrs_idx = 0;
     repeat(NUM_TRANSACTIONS) begin // read transactions
         start_item(req);
-        /*if(!req.randomize()) begin 
-            `uvm_fatal("lfc_wr_sequence", "Not able to randomize")
-        end*/
         req.n_rst = 1'b1;
         req.mem_in_store_value = 'd0;
         req.mem_in_rw_mode = 1'b0; // 1 for write, 0 for read

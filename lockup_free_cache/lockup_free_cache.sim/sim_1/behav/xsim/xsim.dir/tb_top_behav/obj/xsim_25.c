@@ -110,7 +110,7 @@ namespace XILINX_DPI {
 		DPIAllocateDPIScopes(1) ;
 		DPISetDPIScopeFunctionName(0, "m__uvm_report_dpi") ;
 		DPISetDPIScopeHierarchy(0, "uvm_pkg") ;
-		DPIRelocateDPIScopeIP(0, (char*)(0x507090)) ;
+		DPIRelocateDPIScopeIP(0, (char*)(0x507668)) ;
 		DPIAddDPIScopeAccessibleFunction(0, 0) ;
 	}
 
@@ -153,7 +153,7 @@ extern "C" {
 		int callingProcessOffset = topOffset() ;
 		char* SP ;
 		void* oldSPcontext = DPIGetCurrentContext();
-		SP = DPIInitializeFunction(IP + 418032, 176, 1005896) ;
+		SP = DPIInitializeFunction(IP + 418032, 176, 568992) ;
 		char driver0[32] ;
 		for(int i = 0 ; i < 32 ; ++i) driver0[i] = 0 ;
 		char driver1[32] ;
