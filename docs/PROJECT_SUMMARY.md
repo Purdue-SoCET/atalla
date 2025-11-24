@@ -26,7 +26,7 @@
 
 ### 2. 工艺目标
 - 当前: MIT Lincoln Lab 90nm
-- 即将升级: TSMC 65nm
+- 计划升级: TSMC 65nm
 
 ---
 
@@ -189,7 +189,7 @@ parameter NUM_SCPADS = 2                   // 2个实例
 ## 综合报告数据 (Synthesis Results)
 
 ### Batcher排序网络 (参考)
-- **工艺**: 假设为MIT LL 90nm
+- **工艺**: 基于MIT LL 90nm
 - **时钟周期**: 3000ps (333MHz)
 - **关键路径余量**: 1580.8ps
 - **Cell面积**: 209,874.867 μm²
@@ -223,4 +223,4 @@ parameter NUM_SCPADS = 2                   // 2个实例
 
 ---
 
-*文档生成时间: 2025年*
+*文档生成时间: 2025年11月*
