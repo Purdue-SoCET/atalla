@@ -128,9 +128,23 @@ GEMM  = 7'b1110011  // 通用矩阵乘法
 - **TPU v1**: 固定功能的矩阵运算单元，依赖主机CPU调度
 - **Atalla**: 集成RISC-V兼容的可编程调度器核心，支持自定义ISA扩展，可在片上进行细粒度任务调度
 
-### 2. 灵活的内存层次
-- **TPU**: 统一缓冲区(Unified Buffer)设计
-- **Atalla**: 多Scratchpad + 多级缓存 + 可配置交叉开关网络，支持更灵活的数据流模式
+### 2. 灵活的内存层次与Scratchpad设计
+
+#### Google TPU的内存设计
+- **TPU v1**: 使用统一缓冲区(Unified Buffer)设计，24MB SRAM作为单一的片上存储
+- **TPU v1特点**: 固定的数据流模式，主要针对输入激活值存储
+- **注意**: TPU的Unified Buffer本质上也是一种Scratchpad，但设计相对简单
+
+#### Atalla Scratchpad的创新点
+- **多实例架构**: 支持多个独立Scratchpad实例(默认2个)，可并行访问
+- **Swizzle数据重排**: 内置硬件Swizzle单元，支持行/列访问模式的无冲突转换
+  ```
+  row_or_col模式: 支持行优先或列优先访问
+  shift_mask: 基于XOR的bank地址映射，避免bank冲突
+  ```
+- **可配置交叉开关**: 集成Benes/Batcher网络，支持任意数据重排
+- **前端/后端分离**: 三段式架构(Frontend + Backend + Body)解耦调度器请求与DRAM访问
+- **灵活的DRAM接口**: 后端支持burst传输，自动处理地址对齐和数据打包
 
 ### 3. 开放的硬件-软件协同设计
 - **TPU**: 闭源硬件，仅开放API接口
@@ -217,6 +231,13 @@ parameter NUM_SCPADS = 2                   // 2个实例
 
 ### Q: 为什么需要自定义ISA扩展？
 **A**: 标准RISC-V ISA缺乏对矩阵运算的原生支持，我们添加了LD_M/ST_M/GEMM指令，允许调度器核心直接控制矩阵单元，减少软件开销。
+
+### Q: Google TPU有Scratchpad吗？Atalla的Scratchpad有什么特别之处？
+**A**: 是的，Google TPU v1使用24MB的Unified Buffer，本质上也是一种Scratchpad设计。但Atalla的Scratchpad有以下创新：
+1. **多实例并行**: 支持2个独立Scratchpad实例，可同时读写
+2. **硬件Swizzle单元**: 内置基于XOR的bank地址映射，实现行/列访问模式的无冲突转换
+3. **可配置交叉开关**: 集成Benes/Batcher排列网络，支持任意数据重排
+4. **前后端解耦**: Frontend处理调度器请求，Backend处理DRAM burst传输，提高吞吐量
 
 ### Q: 与商业AI加速器相比，学术项目的价值在哪？
 **A**: 完全开源允许深入研究每个设计决策，适合探索新的架构思想。我们可以灵活修改任何组件，不受商业限制，这对于学术研究和教育都有重要价值。
