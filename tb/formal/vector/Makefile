@@ -25,9 +25,15 @@ TB_DIR = .
 VERILATOR = verilator
 VERILATOR_FLAGS = --cc --exe --build -Wall
 VERILATOR_FLAGS += --trace
+VERILATOR_FLAGS += -Wno-DECLFILENAME -Wno-TIMESCALEMOD -Wno-UNUSEDSIGNAL
+VERILATOR_FLAGS += -Wno-UNUSEDPARAM -Wno-PINMISSING -Wno-UNDRIVEN -Wno-WIDTHEXPAND
 
 # Pass C++ compiler flags to Verilator (for testbench compilation)
-VERILATOR_FLAGS += -CFLAGS "-I$(INCLUDE_DIR) -std=c++17 -g -Wall -Wextra"
+# Use $(CURDIR) to get absolute path to current directory
+VERILATOR_FLAGS += -CFLAGS "-I$(CURDIR)/$(INCLUDE_DIR) -std=c++17 -g -Wall -Wextra"
+
+# Link VCD tracing library
+VERILATOR_FLAGS += -LDFLAGS "-lz"
 
 # RTL include directories
 VERILATOR_FLAGS += -I$(RTL_INCLUDE)
@@ -35,14 +41,19 @@ VERILATOR_FLAGS += -I$(RTL_INCLUDE)/common/arithmetic/divider
 VERILATOR_FLAGS += -I$(RTL_INCLUDE)/common/arithmetic/sqrt
 VERILATOR_FLAGS += -I$(RTL_INCLUDE)/vector
 
-TOP_MODULE = vector_top
+TOP_MODULE = sqrt_bf16_wrapper
 VERILATOR_OBJ_DIR = obj_dir_verilator
+VERILATOR_LOG = verilator_build.log
 
 # RTL sources
 RTL_SOURCES = $(shell find $(RTL_MODULES)/common/arithmetic -name "*.sv")
-RTL_SOURCES += $(wildcard $(RTL_MODULES)/vector/*.sv)
+#RTL_SOURCES += $(wildcard $(RTL_MODULES)/vector/*.sv)
 
-TB_SOURCES = $(wildcard $(SRC_DIR)/*.cpp)
+# VERILATOR TESTBENCH SOURCES - ONLY these files, NOT the _test.cpp files
+TB_SOURCES = $(SRC_DIR)/testbench.cpp
+TB_SOURCES += $(SRC_DIR)/scratchpad.cpp
+TB_SOURCES += $(SRC_DIR)/sysarr.cpp
+# DO NOT include sysarr_test.cpp or scratch_test.cpp here!
 
 # Verilate the design
 verilate:
@@ -50,7 +61,7 @@ verilate:
 		--top-module $(TOP_MODULE) \
 		--Mdir $(VERILATOR_OBJ_DIR) \
 		$(RTL_SOURCES) \
-		$(TB_SOURCES)
+		$(TB_SOURCES) 2>&1 | tee $(VERILATOR_LOG)
 
 # Run verilated simulation
 run_verilator: verilate
@@ -73,4 +84,4 @@ compile_scratch: $(OBJ_DIR)/sysarr.o $(OBJ_DIR)/scratch_test.o $(OBJ_DIR)/scratc
 	$(CXX) $(CXXFLAGS) $^ -o $(SCRATCH_EXE)
 
 clean:
-	rm -rf $(OBJ_DIR) $(BIN_DIR) $(VERILATOR_OBJ_DIR)
+	rm -rf $(OBJ_DIR) $(BIN_DIR) $(VERILATOR_OBJ_DIR) $(VERILATOR_LOG)
