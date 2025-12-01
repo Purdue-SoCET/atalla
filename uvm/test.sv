@@ -32,6 +32,7 @@ class test extends uvm_test;
     endfunction
 
     task run_phase(uvm_phase phase);
+        // uvm_root::set_timeout(2000ns, 1);
         phase.raise_objection(this, "Starting sequence in main phase");
         $display("%t Starting sequence run_phase", $time);
         basic_seq.start(env.cpu_active_agent.sqr);
