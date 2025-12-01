@@ -15,12 +15,12 @@
    </db_ref_list>
    <zoom_setting>
       <ZoomStartTime time="0.000 ns"></ZoomStartTime>
-      <ZoomEndTime time="1,000.001 ns"></ZoomEndTime>
-      <Cursor1Time time="684.350 ns"></Cursor1Time>
+      <ZoomEndTime time="816.310 ns"></ZoomEndTime>
+      <Cursor1Time time="172.532 ns"></Cursor1Time>
    </zoom_setting>
    <column_width_setting>
       <NameColumnWidth column_width="250"></NameColumnWidth>
-      <ValueColumnWidth column_width="290"></ValueColumnWidth>
+      <ValueColumnWidth column_width="286"></ValueColumnWidth>
    </column_width_setting>
    <WVObjectSize size="5" />
    <wvobject fp_name="/tb_top/clk" type="logic">
@@ -178,6 +178,10 @@
          <obj_property name="ElementShortName">bank[15:0][3:0]</obj_property>
          <obj_property name="ObjectShortName">bank[15:0][3:0]</obj_property>
       </wvobject>
+      <wvobject fp_name="/tb_top/DUT/\BANK_GEN[0].u_cache_bank /curr_state" type="array">
+         <obj_property name="ElementShortName">curr_state[3:0]</obj_property>
+         <obj_property name="ObjectShortName">curr_state[3:0]</obj_property>
+      </wvobject>
       <wvobject fp_name="/tb_top/DUT/\BANK_GEN[0].u_cache_bank /instr_valid" type="logic">
          <obj_property name="ElementShortName">instr_valid</obj_property>
          <obj_property name="ObjectShortName">instr_valid</obj_property>
@@ -191,6 +195,10 @@
       <wvobject fp_name="/tb_top/DUT/\BANK_GEN[1].u_cache_bank /bank" type="array">
          <obj_property name="ElementShortName">bank[15:0][3:0]</obj_property>
          <obj_property name="ObjectShortName">bank[15:0][3:0]</obj_property>
+      </wvobject>
+      <wvobject fp_name="/tb_top/DUT/\BANK_GEN[1].u_cache_bank /curr_state" type="array">
+         <obj_property name="ElementShortName">curr_state[3:0]</obj_property>
+         <obj_property name="ObjectShortName">curr_state[3:0]</obj_property>
       </wvobject>
       <wvobject fp_name="/tb_top/DUT/\BANK_GEN[1].u_cache_bank /instr_valid" type="logic">
          <obj_property name="ElementShortName">instr_valid</obj_property>
@@ -206,6 +214,10 @@
          <obj_property name="ElementShortName">bank[15:0][3:0]</obj_property>
          <obj_property name="ObjectShortName">bank[15:0][3:0]</obj_property>
       </wvobject>
+      <wvobject fp_name="/tb_top/DUT/\BANK_GEN[2].u_cache_bank /curr_state" type="array">
+         <obj_property name="ElementShortName">curr_state[3:0]</obj_property>
+         <obj_property name="ObjectShortName">curr_state[3:0]</obj_property>
+      </wvobject>
       <wvobject fp_name="/tb_top/DUT/\BANK_GEN[2].u_cache_bank /instr_valid" type="logic">
          <obj_property name="ElementShortName">instr_valid</obj_property>
          <obj_property name="ObjectShortName">instr_valid</obj_property>
@@ -219,6 +231,10 @@
       <wvobject fp_name="/tb_top/DUT/\BANK_GEN[3].u_cache_bank /bank" type="array">
          <obj_property name="ElementShortName">bank[15:0][3:0]</obj_property>
          <obj_property name="ObjectShortName">bank[15:0][3:0]</obj_property>
+      </wvobject>
+      <wvobject fp_name="/tb_top/DUT/\BANK_GEN[3].u_cache_bank /curr_state" type="array">
+         <obj_property name="ElementShortName">curr_state[3:0]</obj_property>
+         <obj_property name="ObjectShortName">curr_state[3:0]</obj_property>
       </wvobject>
       <wvobject fp_name="/tb_top/DUT/\BANK_GEN[3].u_cache_bank /instr_valid" type="logic">
          <obj_property name="ElementShortName">instr_valid</obj_property>

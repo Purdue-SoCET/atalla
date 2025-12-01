@@ -8,7 +8,7 @@ import uvm_pkg::*;
 
 class lfc_wr_sequence extends uvm_sequence#(lfc_cpu_transaction);
   `uvm_object_utils(lfc_wr_sequence)
-  parameter NUM_TRANSACTIONS = 1;
+  parameter NUM_TRANSACTIONS = 4;
 
   function new(string name = "lfc_wr_sequence");
     super.new(name);
@@ -43,7 +43,7 @@ class lfc_wr_sequence extends uvm_sequence#(lfc_cpu_transaction);
 
         addrs_idx++;
     end
-
+/*
     `uvm_info(get_type_name(), "Starting read transactions...", UVM_MEDIUM)
     addrs_idx = 0;
     repeat(NUM_TRANSACTIONS) begin // read transactions
@@ -61,7 +61,7 @@ class lfc_wr_sequence extends uvm_sequence#(lfc_cpu_transaction);
         UVM_LOW)
 
         addrs_idx++;
-    end
+    end*/
 
   endtask
 endclass
