@@ -43,6 +43,7 @@ class lfc_cpu_active_driver extends uvm_driver#(lfc_cpu_transaction);
             vif.dp_in_halt = req_item.dp_in_halt; // not random
             #(0.2ns);
             @(posedge vif.clk);
+            vif.mem_in = 1'b0;
             seq_item_port.item_done();
         end
     endtask
