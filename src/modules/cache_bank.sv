@@ -171,19 +171,19 @@ module cache_bank (
                     $display("i = %d", i);
                     if(bank[set_index][i].valid) $display("bank[set_index][i].valid == 1");
                     if(bank[set_index][i].tag == mem_instr_in.addr.tag) $display("bank[set_index][i].tag == mem_instr_in.addr.tag");
-                    // delete this
+                    // TODO: delete this
 
                     if (bank[set_index][i].valid && (bank[set_index][i].tag == mem_instr_in.addr.tag)) begin
                         
                         // UVM debug
                         $display("mem_instr_in.rw_mode = %d", mem_instr_in.rw_mode);
-                        // delete this
+                        // TODO: delete this
 
                         if (mem_instr_in.rw_mode) begin
                             
                             // UVM debug
                             $display("mem_instr_in.store_value = %h", mem_instr_in.store_value);
-                            // delete this
+                            // TODO: delete this
 
                             next_bank[set_index][i].block[mem_instr_in.addr.block_offset] = mem_instr_in.store_value;
                             next_bank[set_index][i].dirty = 1;
