@@ -33,6 +33,11 @@ setup:
 	python3 scripts/setup.py
 	@echo "[setup] done"
 
+## Example: 
+## 		make run FILE=./scripts/xbar/benes_rom/verify.tcl
+run:
+	vsim -c -do "source $(FILE)"
+
 # Usage: make lint folder=/sub/dir [file=name.sv[,name2.sv,...]] [include=/foo/bar,/baz/qux ...]
 ## Example: 
 ##  make lint folder=/memory/scratchpad 

@@ -13,7 +13,7 @@ module benes #(
     parameter int TAGWIDTH = $clog2(SIZE),
     parameter int STAGES = (2 * TAGWIDTH) - 1, 
     parameter int HALF = (SIZE >> 1),
-    parameter int BITWIDTH = STAGES * HALF
+    parameter int BITWIDTH = STAGES * HALF,
 
     parameter logic [STAGES-2:0] REGISTER_MASK = `BENES_REGISTER_MASK
 ) (
