@@ -238,29 +238,30 @@ def main():
                 sregs.write(inst['rd'], WBdata)
             elif m == "stbf.s":
                 src1 = sregs.read(inst['rs1'])
-                WBdata = EU.execute(m, sA=src1, sB=src2)
-                sregs.write(inst['rd'], WBdata)
+                #WBdata = EU.execute(m, sA=src1, sB=src2)
+                #sregs.write(inst['rd'], WBdata)
             elif m == "bfts.s":
                 src1 = sregs.read(inst['rs1'])
-                WBdata = EU.execute(m, sA=src1, sB=src2)
-                sregs.write(inst['rd'], WBdata)
+                #WBdata = EU.execute(m, sA=src1, sB=src2)
+                #sregs.write(inst['rd'], WBdata)
+            # ---------------- Vv (Vector-Immediate) ----------------
             elif m.endswith(".vv"):
-                src1 = sregs.read(inst['vs1'])
-                src2 = sregs.read(inst['vs2'])
+                src1 = vregs.read(inst['vs1'])
+                src2 = vregs.read(inst['vs2'])
                 WBdata = EU.execute(m, vA=src1, vB=src2)
-                sregs.write(inst['rd'], WBdata)
+                vregs.write(inst['vd'], WBdata)
             # ---------------- VI (Vector-Immediate) ----------------
             elif m.endswith(".vi"):
                 src1 = sregs.read(inst['vs1'])
                 src2 = inst['imm']
-                WBdata = EU.execute(m, vA=src1, vB=src2)
-                sregs.write(inst['rd'], WBdata)
+                WBdata = EU.execute(m, vA=src1, sA=src2)
+                vregs.write(inst['rd'], WBdata)
             # ---------------- VS (Vector-Scalar) ----------------
             elif m.endswith(".vs"):
-                src1 = sregs.read(inst['vs1'])
+                src1 = vregs.read(inst['vs1'])
                 src2 = sregs.read(inst['rs1'])
-                WBdata = EU.execute(m, vA=src1, vB=src2)
-                sregs.write(inst['rd'], WBdata)
+                WBdata = EU.execute(m, vA=src1, sA=src2)
+                vregs.write(inst['rd'], WBdata)
 
             # ---------------- UNKNOWN ----------------
             else:
