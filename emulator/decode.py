@@ -67,6 +67,7 @@ def decode_instruction(instr):
     """
     # All instructions: opcode = bits 0-6
     opcode = get_bits(instr, 6, 0)
+    opcode = reverse_bits(opcode, 7)
     # print("opcode: " + str(bin(opcode)))
     if opcode not in OPCODES:
         return {"opcode": opcode, "type": "UNKNOWN", "raw": instr}
@@ -251,7 +252,7 @@ def sign_extend(value, bits):
 # --------------------------------------------
 if __name__ == "__main__":
     # Example: 160-bit packet (0 - and.s (x3 = x3 & x3) | 1 - and.s (x3 = x3 & x3) | 2 - and.s (x3 = x3 & x3) | 3 - and.s (x3 = x3 & x3))
-    packet = int("0000000001100000011000000110000001110000000000000110000001100000011000000111000000000000011000000110000001100000011100000000000001100000011000000110000001110000", 2)
+    packet = int("0000000001100000011000000110000000000111000000000110000001100000011000000000011100000000011000000110000001100000000001110000000001100000011000000110000000000111", 2)
     decoded = decode_packet(packet)
     for i, d in enumerate(decoded):
         print(f"Instruction {i}: {d}")
