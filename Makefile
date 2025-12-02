@@ -6,7 +6,7 @@ SHELL := /bin/bash
 TOPDIR     := .
 INCDIRROOT := $(TOPDIR)/rtl/include
 SCRIPTROOT := $(TOPDIR)/scripts
-WAVEROOT := $(TOPDIR)/waves
+WAVEROOT   := $(TOPDIR)/waves
 MODROOT    := $(TOPDIR)/rtl/modules
 TBROOT     := $(TOPDIR)/tb
 UVMTESTROOT  := $(TBROOT)/uvm
@@ -25,6 +25,37 @@ VLIB ?= vlib
 VLOG ?= vlog
 VSIM ?= vsim
 GUI ?= OFF
+
+# --- Pattern Rules for Module Testing ---
+## Usage: make module_name.sim  (headless simulation)
+##        make module_name.wav  (simulation with GUI and waveforms)
+## Example: make batcher.sim, make lane_sequencer.wav
+
+.PHONY: %.sim %.wav
+
+%.sim:
+	@$(MAKE) test tb_file=$*_tb.sv GUI=OFF
+
+%.wav:
+	@$(MAKE) test tb_file=$*_tb.sv GUI=ON
+
+# --- My Custom Test Shortcuts ---
+
+.PHONY: test_lane_sequencer test_veggie test_veggie_gui
+
+test_lane_sequencer:
+	@echo "--- Running Lane Sequencer Test ---"
+	@$(MAKE) test folder=/vector tb_file=lane_sequencer_tb.sv GUI=$(GUI)
+
+test_veggie:
+	@echo "--- Running Veggie Test ---"
+	@$(MAKE) test folder=/vector tb_file=veggie_tb.sv GUI=$(GUI)
+
+test_veggie_gui:
+	@echo "--- Running Veggie Test (GUI) ---"
+	@$(MAKE) test folder=/vector tb_file=veggie_tb.sv GUI=ON
+
+# --- End My Custom Test Shortcuts ---
 
 .PHONY: setup lint test clean_lib
 
@@ -94,63 +125,73 @@ lint:
 # Similar to above! 
 ## Example: 
 ##  make test folder=/common/xbar tb_file=batcher_xbar_tb.sv
+##  make test tb_file=lane_sequencer_tb.sv folder=/vector
 test:
-	@if [ -z "$(folder)" ] || [ -z "$(tb_file)" ]; then \
-	  echo "Usage: make $@ folder=/sub/dir tb_file=tb_top.sv [include=/foo,/bar]"; exit 1; \
+	@if [ -z "$(tb_file)" ]; then \
+	  echo "Usage: make $@ tb_file=tb_top.sv [folder=/sub/dir] [include=/foo,/bar] [GUI=ON/OFF]"; exit 1; \
 	fi; \
-	
-	[ -d "$(INCDIRROOT)$(folder)" ] || { echo "[$@] Not found: $(INCDIRROOT)$(folder)"; exit 2; }; \
-	[ -d "$(MODROOT)$(folder)" ]   || { echo "[$@] Not found: $(MODROOT)$(folder)"; exit 2; }; \
-	[ -d "$(UNITTESTROOT)$(folder)" ]    || { echo "[$@] Not found: $(UNITTESTROOT)$(folder)"; exit 2; }; \
 	\
-	INCSRCS=$$(find "$(INCDIRROOT)$(folder)" -type f -name '*.sv' -print 2>/dev/null | sort); \
-
-	MODSRCS=$$(if [ -n "$(file)" ]; then \
-	  SR=""; \
-	  for f in $$(echo "$(file)" | tr ',' ' '); do \
-	    P="$(MODROOT)$(folder)/$$f"; [ -f "$$P" ] || { echo "[$@] Not found: $$P"; exit 3; }; SR="$$SR $$P"; \
-	  done; echo "$$SR"; \
+	TB_CAND=""; \
+	if [ -n "$(folder)" ]; then \
+	  TB_CAND="$(UNITTESTROOT)$(folder)/$(tb_file)"; \
+	  [ -f "$$TB_CAND" ] || TB_CAND=""; \
+	fi; \
+	\
+	if [ -z "$$TB_CAND" ]; then \
+	  TB_CAND=$$(find "$(UNITTESTROOT)" -name "$(tb_file)" -type f | head -1); \
+	  [ -f "$$TB_CAND" ] || { echo "[$@] tb_file not found: $(tb_file)"; exit 3; }; \
+	fi; \
+	\
+	TB_DIR=$$(dirname "$$TB_CAND"); \
+	TB_BASENAME=$$(basename "$$TB_CAND"); \
+	TB_TOP="$${TB_BASENAME%.*}"; \
+	\
+	TB_RELPATH=$$(echo "$$TB_DIR" | sed "s|$(UNITTESTROOT)||"); \
+	\
+	# Limit include-side sources to 'common' and the TB's own include subtree
+	# when we have a TB_RELPATH (e.g., /vector, /memory/scratchpad, etc.).
+	# This avoids compiling unrelated caches/scratchpad packages for a pure
+	# vector test like lane_sequencer_tb.
+	if [ -n "$$TB_RELPATH" ] && [ "$$TB_RELPATH" != "/" ]; then \
+	  INCSRCS=$$(find "$(INCDIRROOT)/common" "$(INCDIRROOT)$$TB_RELPATH" -type f -name '*.sv' -print 2>/dev/null | sort); \
 	else \
-	  find "$(MODROOT)$(folder)" -type f -name '*.sv' -print 2>/dev/null | sort; \
-	fi); \
-	TBSRCS=$$(find "$(UNITTESTROOT)$(folder)" -type f -name '*.sv' -print 2>/dev/null | sort); \
-	[ -n "$$INCSRCS" ] || { echo "[$@] No .sv under $(INCDIRROOT)$(folder)"; exit 4; }; \
-	[ -n "$$MODSRCS" ] || { echo "[$@] No .sv under $(MODROOT)$(folder)"; exit 4; }; \
-	[ -n "$$TBSRCS"  ] || { echo "[$@] No .sv under $(UNITTESTROOT)$(folder)"; exit 4; }; \
+	  INCSRCS=$$(find "$(INCDIRROOT)" -type f -name '*.sv' -print 2>/dev/null | sort); \
+	fi; \
 	\
-
+	if [ -n "$$TB_RELPATH" ] && [ "$$TB_RELPATH" != "/" ]; then \
+	  MODSRCS=$$(find "$(MODROOT)$$TB_RELPATH" -type f -name '*.sv' -print 2>/dev/null | sort); \
+	else \
+	  MODSRCS=$$(find "$(MODROOT)" -type f -name '*.sv' -print 2>/dev/null | sort); \
+	fi; \
+	\
+	TBSRCS=$$(find "$$TB_DIR" -type f -name '*.sv' -print 2>/dev/null | sort); \
+	\
 	ALLSRCS="$$INCSRCS $$MODSRCS $$TBSRCS"; \
 	PKGS=$$(printf '%s\n' $$ALLSRCS | grep -E '_pkg\.sv$$' || true); \
 	OTHERS=$$(printf '%s\n' $$ALLSRCS | grep -Ev '_pkg\.sv$$' || true); \
 	ORDERED_SRCS="$$PKGS $$OTHERS"; \
-
+	\
 	BASE_INCS="+incdir+$(INCDIRROOT) +incdir+$(MODROOT) +incdir+$(UNITTESTROOT)"; \
-	INCDIRS_INC=$$(find "$(INCDIRROOT)$(folder)" -type d -print 2>/dev/null | sed 's/^/+incdir+/'); \
-	INCDIRS_MOD=$$(find "$(MODROOT)$(folder)"   -type d -print 2>/dev/null | sed 's/^/+incdir+/'); \
-	INCDIRS_TB=$$(find "$(UNITTESTROOT)$(folder)"     -type d -print 2>/dev/null | sed 's/^/+incdir+/'); \
-
+	INCDIRS_ALL=$$(find "$(INCDIRROOT)" "$(MODROOT)" "$(UNITTESTROOT)" -type d -print 2>/dev/null | sed 's/^/+incdir+/'); \
+	\
 	EXTRA_INCS=""; \
 	if [ -n "$(include)" ]; then \
 	  for p in $$(echo "$(include)" | tr ',' ' '); do \
 	    [ -d "$(INCDIRROOT)$$p" ] && EXTRA_INCS="$$EXTRA_INCS $$(find "$(INCDIRROOT)$$p" -type d -print 2>/dev/null | sed 's/^/+incdir+/')"; \
 	    [ -d "$(MODROOT)$$p" ]    && EXTRA_INCS="$$EXTRA_INCS $$(find "$(MODROOT)$$p"    -type d -print 2>/dev/null | sed 's/^/+incdir+/')"; \
-	    [ -d "$(UNITTESTROOT)$$p" ]     && EXTRA_INCS="$$EXTRA_INCS $$(find "$(UNITTESTROOT)$$p"     -type d -print 2>/dev/null | sed 's/^/+incdir+/')"; \
 	  done; \
 	fi; \
-	INCFLAGS="$$BASE_INCS $$INCDIRS_INC $$INCDIRS_MOD $$INCDIRS_TB $$EXTRA_INCS"; \
-
-	TB_CAND="$(UNITTESTROOT)$(folder)/$(tb_file)"; \
-	[ -f "$$TB_CAND" ] || { echo "[$@] tb_file not found: $$TB_CAND"; exit 3; }; \
-	TB_BASENAME=$$(basename "$$TB_CAND"); \
-	TB_TOP="$${TB_BASENAME%.*}"; \
-
+	INCFLAGS="$$BASE_INCS $$INCDIRS_ALL $$EXTRA_INCS"; \
+	\
 	[ -d work ] || $(VLIB) work; \
-	echo "[$@] compiling (in-order):"; printf '  %s\n' $$ORDERED_SRCS; \
+	echo "[$@] compiling testbench: $$TB_TOP"; \
+	echo "[$@] testbench directory: $$TB_DIR"; \
+	echo "[$@] source files:"; printf '  %s\n' $$ORDERED_SRCS; \
 	$(VLOG) -sv -mfcu -work work +acc $$INCFLAGS $$ORDERED_SRCS; \
-
-	@if [ "$(GUI)" = "ON" ]; then \
+	if [ "$(GUI)" = "ON" ]; then \
 		echo "[$@] launching vsim GUI on work.$$TB_TOP"; \
-		$(VSIM) -coverage -voptargs="+acc" work.$$TB_TOP -do "view objects; do $$WAVEROOT/$$TB_TOP.do; run -all;" -onfinish stop; \
+		$(VSIM) -coverage -voptargs="+acc" work.$$TB_TOP \
+		  -do "view objects; do $(WAVEROOT)/$$TB_TOP.do; run -all;" -onfinish stop; \
 	else \
 		echo "[$@] launching vsim on work.$$TB_TOP"; \
 		$(VSIM) -coverage -c -voptargs="+acc"  work.$$TB_TOP -do "run -all"; \
@@ -158,4 +199,3 @@ test:
 
 clean:
 	rm -rf $(SCRATCH) transcript vsim.wlf work modelsim.ini
-

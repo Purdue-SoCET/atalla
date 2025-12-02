@@ -2,7 +2,7 @@
 `ifndef VECTOR_IF_VH
 `define VECTOR_IF_VH
 
-`include "vector_types.vh"
+`include "vector_pkg.vh"
 
 interface vector_if;
   import vector_pkg::*;

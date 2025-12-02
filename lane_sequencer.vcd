@@ -1,0 +1,101 @@
+$date
+	Fri Nov 28 23:32:50 2025
+$end
+$version
+	QuestaSim Version 2021.4
+$end
+$timescale
+	1ps
+$end
+
+$scope module lane_sequencer_tb $end
+$var reg 1 ! CLK $end
+$var reg 1 " nRST $end
+
+$scope module dut $end
+$var wire 1 # CLK $end
+$var wire 1 $ nRST $end
+$var reg 1 % a $end
+$upscope $end
+$upscope $end
+$enddefinitions $end
+#0
+$dumpvars
+0!
+0"
+0%
+0$
+0#
+$end
+#5000
+1!
+1#
+#10000
+0!
+0#
+#15000
+1!
+1#
+#20000
+1"
+0!
+1$
+0#
+#25000
+1!
+1#
+1%
+#30000
+0!
+0#
+#35000
+1!
+1#
+#40000
+0!
+0#
+#45000
+1!
+1#
+#50000
+0!
+0#
+#55000
+1!
+1#
+#60000
+0!
+0#
+#65000
+1!
+1#
+#70000
+0!
+0#
+#75000
+1!
+1#
+#80000
+0!
+0#
+#85000
+1!
+1#
+#90000
+0!
+0#
+#95000
+1!
+1#
+#100000
+0!
+0#
+#105000
+1!
+1#
+#110000
+0!
+0#
+#115000
+1!
+1#

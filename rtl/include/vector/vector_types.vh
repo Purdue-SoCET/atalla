@@ -1,5 +1,5 @@
-`ifndef VECTOR_PKG_VH
-`define VECTOR_PKG_VH
+`ifndef VECTOR_TYPES_VH
+`define VECTOR_TYPES_VH
 
 package vector_pkg;
 
@@ -217,12 +217,6 @@ package vector_pkg;
     } fu_t;
 
     typedef struct packed {
-        vsel_t vd;
-        logic mask;
-        sqrt_in_t sqrt_in;
-    } lane_sqrt_in_t;
-
-    typedef struct packed {
         logic[LANE_ISSUE_BW-1:0] rm;
         fu_t[LANE_ISSUE_BW-1:0] valid_in; // From SB theres valid data
         fu_t[LANE_ISSUE_BW-1:0] ready_in; // From wb
@@ -234,13 +228,48 @@ package vector_pkg;
     } lane_in_t;
 
     typedef struct packed {
-        slice_vt result;
+        fp16_t result;
         fu_t ready_o; // to SB
         fu_t valid_o; // for WB buffer
         fp16_t rval; // TO rtree for rm mode
         vsel_t vd;
     } lane_out_t;
+
+    typedef struct packed {
+        slice_vt   v1;
+        slice_vt   v2;
+        slice_mt   vmask;
+        vsel_t     vd;
+        opcode_t   vop;
+        logic      rm;
+        logic      valid;
+        logic      ready;
+    } lane_seq_in_t;
+
+    typedef struct packed {
+        fp16_t      v1_elem;
+        fp16_t      v2_elem;
+        logic       mask_bit;
+        vsel_t      vd;
+        opcode_t    vop;
+        logic       rm;
+        slice_idx_t elem_idx;
+        logic       valid;
+        logic        lane_ready;
+    } lane_seq_out_t;
+    
     /*
+    typedef struct packed {
+        fp16_t     v1_elem;
+        fp16_t     v2_elem;
+        logic      mask_bit;
+        vsel_t     vd;
+        opcode_t   vop;
+        logic      rm;
+    } lane_seq_out_t;
+    */
+
+        /*
     typedef enum logic [2:0] {
         ALLU = 3'b000,
         EXP  = 3'b001,
