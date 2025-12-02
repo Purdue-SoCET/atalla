@@ -24,6 +24,7 @@ class lfc_basic_sequence extends uvm_sequence#(lfc_cpu_transaction);
     req.mem_in_rw_mode    = 1'b1;        // 1 = write, 0 = read
     req.mem_in_store_value= 32'hDEADBEEF;
     req.dp_in_halt        = 1'b0;
+    req.mem_in = 1'b1;    // will stuck all
 
     start_item(req);
     finish_item(req);
