@@ -15,12 +15,12 @@
    </db_ref_list>
    <zoom_setting>
       <ZoomStartTime time="0.000 ns"></ZoomStartTime>
-      <ZoomEndTime time="798.092 ns"></ZoomEndTime>
-      <Cursor1Time time="172.532 ns"></Cursor1Time>
+      <ZoomEndTime time="3,022.109 ns"></ZoomEndTime>
+      <Cursor1Time time="2,108.483 ns"></Cursor1Time>
    </zoom_setting>
    <column_width_setting>
       <NameColumnWidth column_width="250"></NameColumnWidth>
-      <ValueColumnWidth column_width="282"></ValueColumnWidth>
+      <ValueColumnWidth column_width="278"></ValueColumnWidth>
    </column_width_setting>
    <WVObjectSize size="5" />
    <wvobject fp_name="/tb_top/clk" type="logic">
@@ -168,7 +168,6 @@
       <wvobject fp_name="/tb_top/DUT/hit_check" type="array">
          <obj_property name="ElementShortName">hit_check[3:0]</obj_property>
          <obj_property name="ObjectShortName">hit_check[3:0]</obj_property>
-         <obj_property name="isExpanded"></obj_property>
       </wvobject>
    </wvobject>
    <wvobject fp_name="group129" type="group">
