@@ -36,7 +36,9 @@ class lfc_cpu_active_driver extends uvm_driver#(lfc_cpu_transaction);
         DUT_reset(); // 3 clock cycles
         forever begin
             seq_item_port.get_next_item(req_item);
-            vif.mem_in = req_item.mem_in; // not random
+
+            
+            vif.mem_in = 1'b1; // not random
             vif.mem_in_addr = req_item.mem_in_addr;
             vif.mem_in_rw_mode = req_item.mem_in_rw_mode; // not random
             vif.mem_in_store_value = req_item.mem_in_store_value;
@@ -44,6 +46,14 @@ class lfc_cpu_active_driver extends uvm_driver#(lfc_cpu_transaction);
             #(0.2ns);
             @(posedge vif.clk);
             vif.mem_in = 1'b0;
+            #(700ns);
+            @(posedge vif.clk);
+            @(posedge vif.clk);
+            @(posedge vif.clk);
+            @(posedge vif.clk);
+            @(posedge vif.clk);
+            @(posedge vif.clk);
+            @(posedge vif.clk);
             seq_item_port.item_done();
         end
     endtask
