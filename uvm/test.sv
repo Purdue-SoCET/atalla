@@ -39,6 +39,11 @@ class test extends uvm_test;
         //#1000ns;
         wr_seq.start(env.cpu_active_agent.sqr);
         #1000ns;
+<<<<<<< HEAD
+=======
+        // wr_seq.start(env.cpu_active_agent.sqr);
+        // #1000ns;
+>>>>>>> 013d5691c3da919abdaf1fc15e4a701103770218
         phase.drop_objection(this, "Finished in main phase");
     endtask
 
