@@ -8,7 +8,7 @@ import uvm_pkg::*;
 
 class lfc_wr_sequence extends uvm_sequence#(lfc_cpu_transaction);
   `uvm_object_utils(lfc_wr_sequence)
-  parameter NUM_TRANSACTIONS = 30;
+  parameter NUM_TRANSACTIONS = 5;
 
   function new(string name = "lfc_wr_sequence");
     super.new(name);

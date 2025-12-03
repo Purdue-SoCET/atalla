@@ -60,6 +60,9 @@ class lfc_ram_active_driver extends uvm_driver#(lfc_ram_transaction);
     lfc_ram_transaction tr;
     @(posedge vif.n_rst);
 
+    vif.ram_mem_data = '0;
+    vif.ram_mem_complete = '0;
+
     forever begin
       @(posedge vif.clk);
 

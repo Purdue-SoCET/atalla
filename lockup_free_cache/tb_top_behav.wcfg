@@ -14,13 +14,13 @@
       </db_ref>
    </db_ref_list>
    <zoom_setting>
-      <ZoomStartTime time="0.000 ns"></ZoomStartTime>
-      <ZoomEndTime time="3,022.109 ns"></ZoomEndTime>
-      <Cursor1Time time="2,108.483 ns"></Cursor1Time>
+      <ZoomStartTime time="1,575.000 ns"></ZoomStartTime>
+      <ZoomEndTime time="11,025.001 ns"></ZoomEndTime>
+      <Cursor1Time time="9,450.000 ns"></Cursor1Time>
    </zoom_setting>
    <column_width_setting>
       <NameColumnWidth column_width="250"></NameColumnWidth>
-      <ValueColumnWidth column_width="278"></ValueColumnWidth>
+      <ValueColumnWidth column_width="274"></ValueColumnWidth>
    </column_width_setting>
    <WVObjectSize size="5" />
    <wvobject fp_name="/tb_top/clk" type="logic">
@@ -129,6 +129,10 @@
             <obj_property name="WaveformStyle">STYLE_DIGITAL</obj_property>
             <obj_property name="CustomSignalColor">#FF00FF</obj_property>
             <obj_property name="UseCustomSignalColor">true</obj_property>
+         </wvobject>
+         <wvobject fp_name="/tb_top/lfc_interface/ram/ram_mem_REN" type="array">
+            <obj_property name="ElementShortName">ram_mem_REN[3:0]</obj_property>
+            <obj_property name="ObjectShortName">ram_mem_REN[3:0]</obj_property>
          </wvobject>
          <wvobject fp_name="/tb_top/ram_mem_WEN" type="array">
             <obj_property name="ElementShortName">ram_mem_WEN[3:0]</obj_property>
