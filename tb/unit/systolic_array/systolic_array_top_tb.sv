@@ -179,8 +179,8 @@ task get_m_output;
     end
   endtask
 
-  // Instantiate the DUT
-  systolic_array DUT (
+  // Instantiate the DUT - using systolic_array_top with 2-cycle MAC
+  systolic_array_top DUT (
     .clk    (tb_clk),
     .nRST   (tb_nRST),
     .memory (memory_if.memory_array)
@@ -225,6 +225,7 @@ task get_m_output;
     memory_if.row_ps_en = '0;
     memory_if.array_in = '0;
     memory_if.array_in_partials = '0;
+    memory_if.stall_sa = '0;  // No stalling for basic test
     loaded_weights = 0;
     
     // any file
@@ -236,34 +237,41 @@ task get_m_output;
 
     reset();
     
-    // ========== Test 1: Legacy behavior with 1-cycle spacing ==========
-    $display("=== Test 1: Legacy mode with delay(1) ===");
+    // ========== Test 1: Streaming mode with back-to-back inputs ==========
+    // systolic_array_top is designed for streaming - no input FIFOs
+    $display("=== Test 1: Streaming mode - immediate computation ===");
+    $display("NOTE: Using 2-cycle MAC (sysarr_MAC_fp16_2c)");
+    $display("      Expect 2 extra cycles latency vs old MAC");
+    get_matrices(.weights(loaded_weights));
+    get_m_output();
+    if (loaded_weights == 1)begin
+      // LOAD WEIGHTS - stream them in directly
+      load_weights();
+    end
+    // Stream inputs with no delay - computation starts immediately
+    load_in_ps (.delay(0)); 
+    wait_for_drained();
+    $display("Test 1 complete - array drained: %d", memory_if.drained);
+
+    // ========== Test 2: Second matrix multiply ==========
+    $display("=== Test 2: Second streaming computation ===");
+    get_matrices(.weights(loaded_weights));
+    // Stream inputs immediately - no buffering needed
+    load_in_ps (.delay(0)); 
+    wait_for_drained();
+    $display("Test 2 complete - array drained: %d", memory_if.drained);
+
+    // ========== Test 3: Third run with weight reload ==========
+    $display("=== Test 3: Streaming with weight reload ===");
     get_matrices(.weights(loaded_weights));
     get_m_output();
     if (loaded_weights == 1)begin
       // LOAD WEIGHTS
+      @(posedge tb_clk)
       load_weights();
     end
-    load_in_ps (.delay(1)); // Legacy: 1-cycle bubble between rows
-    wait_for_drained();
-    $display("Test 1 complete - array drained: %d", memory_if.drained);
-
-    // ========== Test 2: Streaming mode with back-to-back rows ==========
-    $display("=== Test 2: Full streaming mode with delay(0) ===");
-    get_matrices(.weights(loaded_weights));
-    load_in_ps (.delay(0)); // Streaming: one row per cycle, no bubbles
-    wait_for_drained();
-    $display("Test 2 complete - array drained: %d", memory_if.drained);
-
-    // ========== Test 3: Another streaming run with weight reload ==========
-    $display("=== Test 3: Streaming mode with weight reload ===");
-    get_matrices(.weights(loaded_weights));
-    if (loaded_weights == 1)begin
-      // LOAD WEIGHTS
-      @(posedge tb_clk)           // Without this, fp6dub test case fails.
-      load_weights();
-    end
-    load_in_ps (.delay(0)); // Streaming: max throughput
+    // Max throughput streaming
+    load_in_ps (.delay(0)); 
     wait_for_drained();
     $display("Test 3 complete - array drained: %d", memory_if.drained);
     
