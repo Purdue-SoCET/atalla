@@ -1,4 +1,4 @@
-`include "vector_types.vh"
+//`include "vector_pkg.vh"
 import vector_pkg::*;
 
 // ----------------------------------------
@@ -36,7 +36,7 @@ module lane_sequencer (
         lane_out = '0;
 
         lane_out.elem_idx = elem_idx_q;
-
+        
         // Metadata passthrough
         lane_out.vd  = reg_slice.vd;
         lane_out.vop = reg_slice.vop;

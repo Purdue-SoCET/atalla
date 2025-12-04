@@ -1,175 +1,229 @@
-// Vector Lane Module ============================================
-// Author: Joseph Ghanem
-// Email: jghanem@purdue.edu
-// Vector Lane
-// Issue Length = 1
-// Commit Length = 1
-// ========================================================================
+`timescale 1ns/1ps
+
 `include "vector_if.vh"
 `include "vector_pkg.vh"
 
-module lane #(
-)(
-    input logic CLK, nRST,
-    vector_if.lane lif
-); 
+module lane_tb;
     import vector_pkg::*;
-    import sqrt_pkg::*;
 
     // ------------------------------------------------------------
-    // SQRT interface + BF16 SQRT FU
+    // Clock / Reset
     // ------------------------------------------------------------
-    sqrt_if sqrt_bus();
+    logic CLK;
+    logic nRST;
 
-    sqrt_bf16 u_sqrt_bf16 (
-        .CLK  (CLK),
-        .nRST (nRST),
-        .srif (sqrt_bus)
-    );
+    localparam int CLK_PERIOD = 10;
 
-    // ------------------------------------------------------------
-    // SQRT sequencer side
-    // ------------------------------------------------------------
-
-    // Per-issue-slot inputs produced by sequencer
-    lane_sqrt_in_t lane_sqrt_in [LANE_ISSUE_BW];
-
-    // Element index into the slice (0 .. SLICE_W-1)
-    logic [SLICE_ID_W-1:0] sqrt_elem_idx;
-
-    // Input handshake: element is accepted when the FU takes it
-    wire sqrt_elem_accepted = sqrt_bus.in.valid_in && sqrt_bus.in.ready_out;
-
-    // Instantiate generic lane_sequencer for SQRT
-    lane_sequencer #(
-        .FU_KIND      (3'b010),  // SQRT
-        .USE_V2       (1'b0),
-        .lane_fu_in_t (lane_sqrt_in_t)
-    ) u_lane_seq_sqrt (
-        .CLK             (CLK),
-        .nRST            (nRST),
-        .lane_in         (lif.lane_in),      // <-- change if your lane_in name differs
-        .lane_fu_in      (lane_sqrt_in),
-        .elem_idx        (sqrt_elem_idx),
-        .fu_elem_accepted(sqrt_elem_accepted)
-    );
-
-    // ------------------------------------------------------------
-    // FU stage: drive scalar sqrt_bf16 from sequencer outputs
-    // ------------------------------------------------------------
-
-    // For now, only use issue slot 0 for SQRT
-    localparam int SQRT_SLOT = 0;
-
-    // Always ready to consume SQRT results for now
-    assign sqrt_bus.out.ready_in = 1'b1;
-
-    always_comb begin
-        // Default: no request to SQRT
-        sqrt_bus.in.operand   = '0;
-        sqrt_bus.in.valid_in  = 1'b0;
-        // NOTE: ready_out is driven *by* sqrt_bf16, so we do NOT assign it here.
-
-        // If this slot has a SQRT op and this element is active, fire it
-        if (lane_sqrt_in[SQRT_SLOT].mask &&
-            lane_sqrt_in[SQRT_SLOT].fu_in.valid_data_in[sqrt_elem_idx]) begin
-
-            sqrt_bus.in.operand  = lane_sqrt_in[SQRT_SLOT].fu_in.input_val[sqrt_elem_idx];
-            sqrt_bus.in.valid_in = 1'b1;
-        end
+    // Clock generation
+    initial begin
+        CLK = 1'b0;
+        forever #(CLK_PERIOD/2) CLK = ~CLK;
     end
 
+    // Reset generation
+    initial begin
+        nRST = 1'b0;
+        #(5*CLK_PERIOD);
+        nRST = 1'b1;
+    end
 
-    /*
-    import vector_pkg::*;
-    
-    logic [SLICE_ID_W:0] alu_iter, exp_iter, sqrt_iter, mul_iter, div_iter;
+    // ------------------------------------------------------------
+    // Interface + DUT
+    // ------------------------------------------------------------
 
-    // Pipeline Interface Instantiation
-    // sqrt_in, sqrt_out
-    vector_if.sequence_alu seq_alu ();
-    vector_if.alu_wb alu_wb ();
+    vector_if lane_if();
 
-    // ALU Sequence Stage
-    assign alu_valid = ((alu_global_idx < lif.lane_in.vl) || (lif.lane_in.vm && lif.lane_in.vmask[alu_iter]));
-    assign alu_iter = (salu.alu_iter_o) ? salu.alu_iter_o + 1: `0;
-    assign alu_global_idx = lif.lane_in.global_idx + alu_iter;
+    assign lane_if.CLK  = CLK;
+    assign lane_if.nRST = nRST;
 
-    // Lane ALU Execute stage
-    sequence_ex alu (
-        iter, valid, global_idx, alu_in
+    lane dut (
+        .CLK (CLK),
+        .nRST(nRST),
+        .lif (lane_if.lane)
     );
 
-    alu alu (CLK, nRST, alu_in);
-    assign alu_ready = (salu.alu_iter_o == SLICE_W-1);
-    assign lif.lane_out.reduction = (lif.lane_in.rm && alu_ready) ? alu.reduction : 0;
+    localparam int FU_SQRT = SQRT;
 
+    // ------------------------------------------------------------
+    // Scoreboard / helper state
+    // ------------------------------------------------------------
+    int expected_results;
+    int seen_results;
 
-    // SQRT =============================================================
-    sqrt_if.srif srif ();
-    
-    lane_sqrt_in_t [SLICE_W-1:0] lane_sqrt_in;
-    sqrt_out_t [SLICE_W-1:0] sqrt_out;
+    typedef struct packed {
+        vsel_t      vd;
+        slice_idx_t elem_idx;
+    } obs_t;
 
-    // SQRT Sequence Stage
-    always_comb begin
-        for (int i = 0; i < LANE_ISSUE_BW; i++) begin
-            if (lif.lane_in.valid_in[i] == SQRT) begin
-                for(int j = 0; j < SLICE_W; j++) begin
-                    lane_sqrt_in.sqrt_in.input_val[j] =  lif.lane_in.v1[i][j];
-                    lane_sqrt_in.sqrt_in.valid_data_in[j] = lif.lane_in.mask[i][j];
-                    lane_sqrt_in.mask[j] = lif.lane_in.mask[i][j];
-                    lane_sqrt_in.vd[j] = lif.lane_in.vd[i][j];
-                end
+    obs_t observed[$];
+    obs_t tmp_obs;
+
+    int i;
+    int idx_counts[SLICE_W];
+
+    // ------------------------------------------------------------
+    // WB always ready (for SQRT only)
+    // ------------------------------------------------------------
+    initial begin
+        lane_if.lane_in = '0;
+
+        forever begin
+            @(posedge CLK);
+            if (!nRST) begin
+                lane_if.lane_in.ready_in <= '0;
             end else begin
-                lane_sqrt_in.sqrt_in.input_val[j] = '0;
-                lane_sqrt_in.sqrt_in.valid_data_in[j] = '0;
-                lane_sqrt_in.mask[j] = '0;
-                lane_sqrt_in.vd[j] = '0;
+                lane_if.lane_in.ready_in <= '0;
+                lane_if.lane_in.ready_in[FU_SQRT] <= 1'b1; // WB always ready for SQRT
             end
         end
     end
 
-    assign sqrt_iter = (srif.sqrt_out.valid_data_out && sqrt_iter != SLICE_W-1) ? sqrt.sqrt_iter_o + 1: sqrt_iter;
-    latch sr_sx (CLK, nRST, sqrt_in[sqrt_iter], sx_o);
+    // ------------------------------------------------------------
+    // Capture outputs whenever SQRT has a valid result
+    // ------------------------------------------------------------
+    always @(posedge CLK) begin
+        if (!nRST) begin
+            seen_results <= 0;
+            observed.delete();
+        end else begin
+            if (lane_if.lane_out.valid_o[FU_SQRT]) begin
+                seen_results <= seen_results + 1;
 
-    // SQRT Execute Stage
-    srif.sqrt_in = sx_o.sqrt_in;
-    sqrt sqrt (CLK, nRST, srif);
+                tmp_obs.vd       = lane_if.lane_out.vd[FU_SQRT];
+                tmp_obs.elem_idx = lane_if.lane_out.elem_idx[FU_SQRT];
+                observed.push_back(tmp_obs);
 
-    // Send to WB arbiter
-    
+                $display("[%0t] SQRT result: result=%h vd=%0d elem_idx=%0d",
+                         $time,
+                         lane_if.lane_out.result[FU_SQRT],
+                         tmp_obs.vd, tmp_obs.elem_idx);
+            end
+        end
+    end
 
+    // ------------------------------------------------------------
+    // Task: drive one SQRT slice
+    // ------------------------------------------------------------
+    task automatic drive_sqrt_slice(
+        input slice_vt    slice_v1,
+        input slice_vt    slice_v2,
+        input slice_mt    slice_mask,
+        input vsel_t      vd_tag,
+        input opcode_t    op
+    );
+        @(posedge CLK);
+        wait (lane_if.lane_out.ready_o[FU_SQRT] && nRST);
 
+        @(posedge CLK);
+        lane_if.lane_in.v1[FU_SQRT]       <= slice_v1;
+        lane_if.lane_in.v2[FU_SQRT]       <= slice_v2;
+        lane_if.lane_in.vmask[FU_SQRT]    <= slice_mask;
+        lane_if.lane_in.vd[FU_SQRT]       <= vd_tag;
+        lane_if.lane_in.vop[FU_SQRT]      <= op;
+        lane_if.lane_in.rm[FU_SQRT]       <= '0;
+        lane_if.lane_in.valid_in[FU_SQRT] <= 1'b1;
 
-    // to WB arbiter
-    // send ready, iter, gloval_idx, vd, result
+        @(posedge CLK);
+        lane_if.lane_in.valid_in[FU_SQRT] <= 1'b0;
+    endtask
 
-    // WB Arbiter
-    
+    // ------------------------------------------------------------
+    // Test sequences
+    // ------------------------------------------------------------
+    initial begin : main_test
+        string   testname;
+        slice_vt v1, v2;
+        slice_mt mask;
+        vsel_t   vd;
+        opcode_t op;
+        int      cycles;           // <--- used for wait loops
+        int      MAX_CYCLES = 500; // generous timeout per test
 
-    /*
-    counter_exp
-    pipeline_exp
-    exp
-    pipeline_exp_wb
+        // Wait for reset deassert
+        @(posedge nRST);
+        @(posedge CLK);
 
-    counter_sqrt
-    pipeline_sqrt
-    sqrt
-    pipeline_sqrt_wb
+        // -----------------------------
+        // TEST 1: All elements unmasked
+        // -----------------------------
+        $display("\n=== TEST 1: All elements unmasked ===");
+        testname = "TEST 1 UNMASKED ELEMENTS";
 
-    counter_mul
-    pipeline_mul
-    mul
-    pipeline_mul_wb
+        for (i = 0; i < SLICE_W; i++) begin
+            v1[i]   = fp16_t'(i);
+            v2[i]   = '0;
+            mask[i] = 1'b1;
+        end
+        vd = vsel_t'(3);
+        op = '0; // adjust if you have a real SQRT opcode
 
-    counter_div
-    pipeline_div
-    div
-    pipeline_div_wb
+        expected_results = SLICE_W;
+        seen_results     = 0;
+        observed.delete();
 
-    wb_arbiter inpute GVLS
-    */
-    
+        drive_sqrt_slice(v1, v2, mask, vd, op);
+
+        // Wait until we've seen all expected results or timeout
+        cycles = 0;
+        while (seen_results < expected_results && cycles < MAX_CYCLES) begin
+            @(posedge CLK);
+            cycles++;
+        end
+
+        if (seen_results !== expected_results) begin
+            $error("TEST 1 FAILED: expected %0d results, saw %0d (after %0d cycles)",
+                   expected_results, seen_results, cycles);
+        end else begin
+            $display("TEST 1 PASSED: saw %0d results as expected (in %0d cycles).",
+                     seen_results, cycles);
+        end
+
+        // -----------------------------
+        // TEST 2: Masked elements
+        // -----------------------------
+        $display("\n=== TEST 2: Masked elements ===");
+        testname = "TEST 2 MASKED ELEMENTS";
+
+        for (i = 0; i < SLICE_W; i++) begin
+            v1[i]   = fp16_t'(i+10);
+            v2[i]   = '0;
+            mask[i] = (i % 2);  // active on odd indices
+        end
+        vd = vsel_t'(5);
+        op = '0;
+
+        expected_results = 0;
+        for (i = 0; i < SLICE_W; i++)
+            if (mask[i]) expected_results++;
+
+        seen_results = 0;
+        observed.delete();
+
+        drive_sqrt_slice(v1, v2, mask, vd, op);
+
+        cycles = 0;
+        while (seen_results < expected_results && cycles < MAX_CYCLES) begin
+            @(posedge CLK);
+            cycles++;
+        end
+
+        if (seen_results !== expected_results) begin
+            $error("TEST 2 FAILED: expected %0d results, saw %0d (after %0d cycles)",
+                   expected_results, seen_results, cycles);
+        end else begin
+            $display("TEST 2 PASSED: saw %0d results as expected (in %0d cycles).",
+                     seen_results, cycles);
+        end
+
+        $display("\nObserved elem_idx for TEST 2:");
+        for (i = 0; i < observed.size(); i++) begin
+            $display("  result %0d: vd=%0d elem_idx=%0d",
+                     i, observed[i].vd, observed[i].elem_idx);
+        end
+
+        $display("\nAll tests done.");
+        #100;
+        $finish;
+    end
+
 endmodule

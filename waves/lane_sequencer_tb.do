@@ -4,7 +4,7 @@ add wave -noupdate /lane_sequencer_tb/CLK
 add wave -noupdate /lane_sequencer_tb/lane_in
 add wave -noupdate /lane_sequencer_tb/lane_out
 add wave -noupdate /lane_sequencer_tb/nRST
-add wave -noupdate /lane_sequencer_tb/#ublk#41060786#623/testname
+add wave sim:/lane_sequencer_tb/*
 TreeUpdate [SetDefaultTree]
 WaveRestoreCursors {{Cursor 1} {36704849141 ps} 0}
 quietly wave cursor active 1

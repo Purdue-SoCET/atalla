@@ -13,7 +13,8 @@ package vector_pkg;
     parameter SLICE_ID_W = $clog2(SLICE_W);
     parameter VL_W = $clog2(VLMAX);
 
-    parameter LANE_ISSUE_BW = 2;
+    parameter LANE_FU_COUNT = 5; // How many FUs per lane
+    parameter LANE_FU_ID_W  = $clog2(LANE_FU_COUNT);
 
     // Other Parameters
     parameter NUM_ELEMENTS = 32;
@@ -85,7 +86,6 @@ package vector_pkg;
         logic [9:0] frac;
     } fp16_t; 
 
-    typedef fp16_t [SLICE_W-1:0] slice_t;
     typedef fp16_t [SLICE_W-1:0] slice_vt;
     typedef logic  [SLICE_W-1:0] slice_mt;
     typedef fp16_t [VLMAX-1:0]   vreg_t;
@@ -151,8 +151,8 @@ package vector_pkg;
     typedef struct packed {
         vreg_t[READ_PORTS-1:0] vreg;
         logic [READ_PORTS-1:0] dvalid;
-        vmask_t[1:0] vmask;
-        logic [1:0] mvalid;
+        vmask_t[MASK_PORTS-1:0] vmask;
+        logic [MASK_PORTS-1:0] mvalid;
         logic ready; // to SB
     } veggie_out_t;
 
@@ -160,7 +160,7 @@ package vector_pkg;
         vreg_t[READ_PORTS-1:0] vreg;
         vmask_t[MASK_PORTS-1:0] vmask;
         logic [MASK_PORTS-1:0] ivalid; // ASSUMING NUM MASKS = INSTR BW
-    } opbuff_out_t;
+    } opbuff_out_t; 
 
     typedef struct {
         logic REN;
@@ -170,7 +170,7 @@ package vector_pkg;
         vsel_t vd;
         vreg_t vdata;
     } bank_in_t;
-
+ 
     typedef struct {
         logic      MWEN;    // 1 bit
         logic      MREN;    // 1 bit
@@ -209,7 +209,7 @@ package vector_pkg;
     } masku_out_t;
 
     // Lane Structs --------------------------------------------------------------------
-    typedef enum logic [2:0] {
+    typedef enum logic [LANE_FU_ID_W-1:0] {
         ALU  = 3'b000,
         EXP  = 3'b001,
         SQRT = 3'b010,
@@ -217,30 +217,36 @@ package vector_pkg;
         DIV  = 3'b100
     } fu_t;
 
+    // Structure to hold the data we need to recover at Writeback
     typedef struct packed {
-        logic[LANE_ISSUE_BW-1:0] rm;
-        fu_t[LANE_ISSUE_BW-1:0] valid_in; // From SB theres valid data
-        fu_t[LANE_ISSUE_BW-1:0] ready_in; // From wb
-        slice_vt[LANE_ISSUE_BW-1:0] v1;
-        slice_vt[LANE_ISSUE_BW-1:0] v2; // VS and VI typed come broadcasted
-        vsel_t[LANE_ISSUE_BW-1:0] vd; // Pass through
-        slice_mt[LANE_ISSUE_BW-1:0] vmask; 
-        opcode_t[LANE_ISSUE_BW-1:0] vop; // change to umop
+        vsel_t vd;
+        slice_idx_t elem_idx; // Add this if you need element index later
+    } meta_t;
+
+    typedef struct packed {
+        logic[LANE_FU_COUNT-1:0] rm;
+        logic[LANE_FU_COUNT-1:0] valid_in; // From SB theres valid data
+        logic[LANE_FU_COUNT-1:0] ready_in; // From wb
+        slice_vt[LANE_FU_COUNT-1:0] v1;
+        slice_vt[LANE_FU_COUNT-1:0] v2; // VS and VI typed come broadcasted
+        vsel_t[LANE_FU_COUNT-1:0] vd; // Pass through
+        slice_mt[LANE_FU_COUNT-1:0] vmask; 
+        opcode_t[LANE_FU_COUNT-1:0] vop; // change to umop
     } lane_in_t;
 
     typedef struct packed {
-        slice_vt result;
-        fu_t ready_o; // to SB
-        fu_t valid_o; // for WB buffer
-        fp16_t rval; // TO rtree for rm mode
-        vsel_t vd;
+        fp16_t[LANE_FU_COUNT-1:0] result;
+        logic[LANE_FU_COUNT-1:0] ready_o; // to SB
+        logic[LANE_FU_COUNT-1:0] valid_o; // for WB buffer
+        fp16_t[LANE_FU_COUNT-1:0] rval; // TO rtree for rm mode
+        vsel_t[LANE_FU_COUNT-1:0] vd;
+        slice_idx_t [LANE_FU_COUNT-1:0] elem_idx; 
     } lane_out_t;
 
-    // Lane Sequencer Input/Output Types
     typedef struct packed {
-        fp16_t [SLICE_W-1:0] v1;
-        fp16_t [SLICE_W-1:0] v2;
-        logic [SLICE_W-1:0] vmask;
+        slice_vt   v1;
+        slice_vt   v2;
+        slice_mt   vmask;
         vsel_t     vd;
         opcode_t   vop;
         logic      rm;
@@ -257,7 +263,50 @@ package vector_pkg;
         logic       rm;
         slice_idx_t elem_idx;
         logic       valid;
-        logic       lane_ready;
+        logic        lane_ready;
     } lane_seq_out_t;
+    
+    /*
+    typedef struct packed {
+        fp16_t     v1_elem;
+        fp16_t     v2_elem;
+        logic      mask_bit;
+        vsel_t     vd;
+        opcode_t   vop;
+        logic      rm;
+    } lane_seq_out_t;
+    */
+
+        /*
+    typedef enum logic [2:0] {
+        ALLU = 3'b000,
+        EXP  = 3'b001,
+        SQRT = 3'b010,
+        MUL  = 3'b011,
+        DIV  = 3'b100
+    } fu_t;
+
+    typedef struct packed {
+        logic vm; // vector mask en
+        logic rm;
+        logic flush; // Needed?
+        slice_t v1;
+        slice_t v2; // If imm, will be broadcasted. Better to do while generating mask?
+        vsel_t vd;
+        slice_t vmask;
+        opcode_t vop;
+        lane_id_t lane_id;
+        vl_t global_idx;
+        vl_t vl; 
+    } lane_in_t;
+
+    typedef struct packed {
+        slice_t result;
+        fu_t ready; // to SB
+        fp16_t reduction; // TO rtree for rm mode
+        lane_id_t lane_id;
+        vsel_t vd;
+    } lane_out_t;
+    */
 endpackage
 `endif

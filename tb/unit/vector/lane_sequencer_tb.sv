@@ -1,7 +1,7 @@
 `timescale 1ns/1ps
 
-`include "vector_types.vh"
-`include "sqrt_types.vh"
+//`include "vector_pkg.vh"
+//`include "sqrt_types.vh"
 
 module lane_sequencer_tb;
     import vector_pkg::*;
