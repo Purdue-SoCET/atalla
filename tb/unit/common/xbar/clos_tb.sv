@@ -2,24 +2,24 @@
 
 module clos_tb;
     localparam int PERIOD = 10;
-    localparam int SIZE = 32;
-    localparam int DWIDTH = 16;
-    localparam int TAGWIDTH = $clog2(SIZE);
+    localparam int CLOS_SIZE = 32;
+    localparam int CLOS_DWIDTH = 16;
+    localparam int TAGWIDTH = $clog2(CLOS_SIZE);
 
     logic clk, n_rst;
-    logic [DWIDTH-1:0]   in   [SIZE-1:0];
-    logic [TAGWIDTH-1:0] perm [SIZE-1:0];
-    logic [DWIDTH-1:0]   out  [SIZE-1:0];
+    logic [CLOS_DWIDTH-1:0]   in   [CLOS_SIZE-1:0];
+    logic [TAGWIDTH-1:0] perm [CLOS_SIZE-1:0];
+    logic [CLOS_DWIDTH-1:0]   out  [CLOS_SIZE-1:0];
 
     initial clk = 1'b0;
     always  #5 clk = ~clk;
 
-    xbar_if #(.SIZE(SIZE), .DWIDTH(DWIDTH)) xif (.clk(clk), .n_rst(n_rst));
-    clos #(.SIZE(SIZE), .DWIDTH(DWIDTH), .IM_OM_NUM(8), .CM_NUM(4)) DUT (xif);
+    xbar_if #(.SIZE(CLOS_SIZE), .DWIDTH(CLOS_DWIDTH)) xif (.clk(clk), .n_rst(n_rst));
+    clos #(.CLOS_SIZE(CLOS_SIZE), .CLOS_DWIDTH(CLOS_DWIDTH), .IM_OM_NUM(8), .CM_NUM(4)) DUT (xif);
 
     integer i;
     logic [15:0] val;
-    logic [DWIDTH-1:0] exp_out [SIZE-1:0];
+    logic [CLOS_DWIDTH-1:0] exp_out [CLOS_SIZE-1:0];
 
     initial begin
         n_rst = 0;

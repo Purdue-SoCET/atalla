@@ -1,5 +1,5 @@
-set TB_FILE ./tb/unit/common/xbar/benes_rom_tb.sv
-set TB_TOP benes_rom_tb
+set TB_FILE ./tb/unit/common/xbar/clos_tb.sv
+set TB_TOP clos_tb
 
 if {![info exists TB_FILE]} {
     puts "ERROR: TB_FILE not set. Use:  vsim -c -do \"set TB_FILE <path>; set TB_TOP <top>; do test.tcl\""
@@ -19,9 +19,13 @@ set INC_FLAGS [list \
 ]
 
 set DESIGN_SRCS [list \
-    ./rtl/modules/common/xbar/benes.sv \
-    ./rtl/modules/common/memory/rom_bank.sv \
+    ./rtl/include/common/xbar/xbar_if.sv \
+    ./rtl/include/common/xbar/xbar_params.svh \
+    ./rtl/include/common/xbar/xbar_pkg.sv \
+    ./rtl/modules/common/xbar/param_switch.sv \
+    ./rtl/modules/common/xbar/clos.sv \
 ]
+
 
 set SRC_FILES [concat $DESIGN_SRCS [list $TB_FILE]]
 

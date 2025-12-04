@@ -24,5 +24,12 @@
     `ifndef BENES_REGISTER_MASK
         `define BENES_REGISTER_MASK 8'b11111111
     `endif
-    
+
+    `ifndef CLOS_SIZE
+        `define CLOS_SIZE 32
+    `endif
+    `ifndef CLOS_DWIDTH
+        `define CLOS_DWIDTH 16
+    `endif
+
 `endif

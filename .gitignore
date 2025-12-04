@@ -9,3 +9,5 @@ vsim.*
 
 !.gitignore
 !.gitmodules
+
+__pycache__

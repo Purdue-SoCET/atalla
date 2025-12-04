@@ -1,39 +1,42 @@
+/*  Haejune Kwon - kwon196@purdue.edu */
+/*  Akshath Raghav Ravikiran - araviki@purdue.edu */
+
 `include "xbar_params.svh"
 `include "xbar_if.sv"
 
 import xbar_pkg::*;
 
 module clos #(
-    parameter int SIZE = 32,
-    parameter int DWIDTH = 16,
+    parameter int CLOS_SIZE = 32,
+    parameter int CLOS_DWIDTH = 16,
     parameter int IM_OM_NUM = 8,
     parameter int CM_NUM = 4,
-    
-    localparam int TAGWIDTH = $clog2(SIZE),
 
-    localparam int IM_OM_SIZE = SIZE / IM_OM_NUM,       // 8
+    localparam int TAGWIDTH = $clog2(CLOS_SIZE),
+
+    localparam int IM_OM_SIZE = CLOS_SIZE / IM_OM_NUM,       // 8
     localparam int IM_OM_NUM_TAG = $clog2(IM_OM_NUM),   // 2
     localparam int IM_OM_SIZE_TAG = $clog2(IM_OM_SIZE), // 3
 
-    localparam int CM_SIZE = SIZE / CM_NUM,             // 8
+    localparam int CM_SIZE = CLOS_SIZE / CM_NUM,             // 8
     localparam int CM_SIZE_TAG = $clog2(CM_SIZE)        // 3
 ) (
     xbar_if.xbar xif
 );
-    logic [DWIDTH-1:0] input_module   [IM_OM_NUM-1:0][IM_OM_SIZE-1:0];
-    logic [DWIDTH-1:0] center_module     [CM_NUM-1:0][CM_SIZE-1:0];
-    logic [DWIDTH-1:0] output_module  [IM_OM_NUM-1:0][IM_OM_SIZE-1:0];
+    logic [CLOS_DWIDTH-1:0] input_module   [IM_OM_NUM-1:0][IM_OM_SIZE-1:0];
+    logic [CLOS_DWIDTH-1:0] center_module     [CM_NUM-1:0][CM_SIZE-1:0];
+    logic [CLOS_DWIDTH-1:0] output_module  [IM_OM_NUM-1:0][IM_OM_SIZE-1:0];
 
-    logic [DWIDTH-1:0] n_center_module [CM_NUM-1:0]     [CM_SIZE-1:0];
-    logic [DWIDTH-1:0] n_output_module [IM_OM_NUM-1:0]  [IM_OM_SIZE-1:0];
+    logic [CLOS_DWIDTH-1:0] n_center_module [CM_NUM-1:0]     [CM_SIZE-1:0];
+    logic [CLOS_DWIDTH-1:0] n_output_module [IM_OM_NUM-1:0]  [IM_OM_SIZE-1:0];
 
     logic [TAGWIDTH-1:0] input_perm    [IM_OM_NUM-1:0] [IM_OM_SIZE-1:0];
     logic [TAGWIDTH-1:0] center_perm      [CM_NUM-1:0] [CM_SIZE-1:0];
     logic [TAGWIDTH-1:0] output_perm   [IM_OM_NUM-1:0] [IM_OM_SIZE-1:0];
-    logic [TAGWIDTH-1:0] out_perm [SIZE-1:0];
+    logic [TAGWIDTH-1:0] out_perm [CLOS_SIZE-1:0];
 
-    logic [DWIDTH-1:0] n_center_perm  [CM_NUM-1:0]     [CM_SIZE-1:0];
-    logic [DWIDTH-1:0] n_output_perm  [IM_OM_NUM-1:0]  [IM_OM_SIZE-1:0];
+    logic [CLOS_DWIDTH-1:0] n_center_perm  [CM_NUM-1:0]     [CM_SIZE-1:0];
+    logic [CLOS_DWIDTH-1:0] n_output_perm  [IM_OM_NUM-1:0]  [IM_OM_SIZE-1:0];
 
     logic [IM_OM_SIZE_TAG-1:0] lsb [IM_OM_NUM-1:0] [IM_OM_SIZE-1:0];
 
@@ -70,14 +73,13 @@ module clos #(
     
     genvar i, j;
     generate
-        
         for (i = 0; i < IM_OM_NUM; i++) begin
             for (j = 0; j < IM_OM_SIZE; j++) begin
                 assign input_module[i][j] = xif.in[i * IM_OM_SIZE + j].din;
                 assign input_perm[i][j]   = xif.in[i * IM_OM_SIZE + j].shift;
                 assign lsb[i][j] = output_perm[i][j][1:0];
             end
-            param_switch #(.N_IN(IM_OM_SIZE), .N_OUT(IM_OM_SIZE), .DATA_W(DWIDTH)
+            param_switch #(.N_IN(IM_OM_SIZE), .N_OUT(IM_OM_SIZE), .DATA_W(CLOS_DWIDTH)
             ) out_switch (
                 .in_data(output_module[i]),
                 .sel_in(lsb[i]),
@@ -99,11 +101,10 @@ module clos #(
         end
     endgenerate
 
-    logic [SIZE-1:0] num_counter [IM_OM_NUM-1:0];
+    logic [CLOS_SIZE-1:0] num_counter [IM_OM_NUM-1:0];
     logic [IM_OM_NUM_TAG-1:0] om_dest;
 
     always_comb begin : n_center_comb
-
         for (int i = 0; i < IM_OM_NUM; i++) begin
             num_counter[i] = 0;
         end

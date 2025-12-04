@@ -62,8 +62,8 @@ class AddressBlock:
 
 def permutation_for_shape(rows: int, cols: int):
     lane_bank, _, _ = AddressBlock._col_lane(
-        base_row=rows - 1,
-        col_id=cols - 1,
+        base_row=rows,
+        col_id=cols,
         rows=rows,
     )
     pi = list(lane_bank)
@@ -75,20 +75,23 @@ def dump_controlbits_mem(filename: str):
     cb_len = len(controlbits(list(range(NUM_BANKS))))
     assert cb_len == 144
 
-    hex_width = (cb_len + 3) // 4 # 36 hex digits
+    hex_width = (cb_len + 3) // 4 
 
     with open(filename, "w") as f:
         for row_idx in range(NUM_BANKS):   
-            rows = row_idx + 1
+            rows = row_idx
             for col_idx in range(NUM_BANKS):  
-                cols = col_idx + 1
+                cols = col_idx
 
                 pi = permutation_for_shape(rows, cols)
-                cbits = controlbits(pi)  # list of 144 bits (0/1)
+                cbits = controlbits(pi)  
 
-                bitstring = "".join(str(b) for b in cbits)
+                if rows == 5 and cols == 7:
+                    print(pi)
+                    print(cbits)
+
+                bitstring = "".join(str(b) for b in reversed(cbits))
                 value = int(bitstring, 2)
-
                 f.write(f"{value:0{hex_width}X}\n")
 
     print(f"Wrote {filename} with 1024 lines of {cb_len}-bit control words.")
