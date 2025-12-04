@@ -90,7 +90,7 @@ module systolic_array_top(
     generate
         for (m = 0; m < N; m++) begin : mac_row_gen
             for (n = 0; n < N; n++) begin : mac_col_gen
-                sysarr_MAC mac_inst (
+                sysarr_MAC_fp16_2c mac_inst (
                     .clk(clk),
                     .nRST(nRST),
                     .mac_if(mac_ifs[m*N + n].MAC)
@@ -105,9 +105,9 @@ module systolic_array_top(
                 assign mac_ifs[m*N + n].MAC_shift = control_unit_if.MAC_shift;
                 assign mac_ifs[m*N + n].stall_sa = memory.stall_sa;
                 
-                // Top row (m==0): no accumulation from previous row
+                // Top row (m==0): connect psum buffer to adder input
                 if (m == 0) begin : no_accumulate
-                    assign mac_ifs[m*N + n].in_accumulate = '0;
+                    assign mac_ifs[m*N + n].in_accumulate = psum_buffer_inputs[n];
                 end else begin : accumulation_blk
                     // Accumulate from previous row
                     assign mac_ifs[m*N + n].in_accumulate = MAC_outputs[m-1][n];
