@@ -24,9 +24,6 @@ tb/unit/systolic_array/systolic_array_top_tb.sv
 +incdir+rtl/include/systolic_array/
 +incdir+rtl/modules/systolic_array/
 
-// Timing support
---timing
-
 // Warnings
 --Wall
 --assert
