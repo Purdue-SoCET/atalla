@@ -27,11 +27,6 @@ tb/unit/systolic_array/systolic_array_top_tb.sv
 // Warnings
 --Wall
 --assert
--Wno-TIMESCALEMOD
--Wno-BLKSEQ
--Wno-WIDTHTRUNC
--Wno-WIDTHEXPAND
--Wno-UNUSEDSIGNAL
 
 // Waveform tracing
 --trace
