@@ -1,5 +1,4 @@
 `include "reduction_types.vh"
-`include "vaddsub_if.vh"
 `include "vreduction_alu_if.vh"
 
 module vreduction_alu (
@@ -10,8 +9,23 @@ module vreduction_alu (
 
 import reduction_pkg::*;
 
-vaddsub_if as_if ();
-vaddsub adder (CLK, nRST, as_if);
+// Signals for addsub_bf16
+logic [15:0] bf1_in, bf2_in, bf_out;
+logic op;  // 0 for add, 1 for sub
+logic overflow, underflow, invalid;
+
+// Instantiate addsub_bf16 instead of vaddsub
+addsub_bf16 adder (
+    .clk(CLK),
+    .nRST(nRST),
+    .bf1_in(bf1_in),
+    .bf2_in(bf2_in),
+    .op(op),
+    .bf_out(bf_out),
+    .overflow(overflow),
+    .underflow(underflow),
+    .invalid(invalid)
+);
 
 // Pipeline registers to match the 2-cycle adder latency
 logic [15:0] value_a_s1, value_a_s2;
@@ -19,23 +33,22 @@ logic [15:0] value_b_s1, value_b_s2;
 logic [1:0] alu_op_s1, alu_op_s2;
 logic any_nan_s1, any_nan_s2;
 
-//nan detection
+// NaN detection
 logic a_is_nan, b_is_nan, any_nan;
 
 always_comb begin
-    a_is_nan = (&vraluif.value_a[14:10]) && (|vraluif.value_a[9:0]);
-    b_is_nan = (&vraluif.value_b[14:10]) && (|vraluif.value_b[9:0]);
+    a_is_nan = (&vraluif.value_a[14:7]) && (|vraluif.value_a[6:0]);
+    b_is_nan = (&vraluif.value_b[14:7]) && (|vraluif.value_b[6:0]);
     any_nan = a_is_nan | b_is_nan;
 end
 
 // Stage 0: Adder/subtractor control
 always_comb begin
-    as_if.port_a = vraluif.value_a;
-    as_if.port_b = vraluif.value_b;
-    as_if.enable = 1'b1;
+    bf1_in = vraluif.value_a;
+    bf2_in = vraluif.value_b;
     
     // For MIN/MAX, we need to subtract to compare
-    as_if.sub = (vraluif.alu_op == VR_MIN || vraluif.alu_op == VR_MAX);
+    op = (vraluif.alu_op == VR_MIN || vraluif.alu_op == VR_MAX) ? 1'b1 : 1'b0;
 end
 
 // Pipeline Stage 1: Register inputs
@@ -68,19 +81,19 @@ always_ff @(posedge CLK or negedge nRST) begin
     end
 end
 
-
+// Output multiplexing based on operation
 always_comb begin
     if (any_nan_s2) begin
-        // If any input was NaN, output NaN
-        vraluif.value_out = 16'h7D00;
+        // If any input was NaN, output NaN (BF16 NaN format)
+        vraluif.value_out = 16'h7FC0;
     end
     else if (alu_op_s2 == VR_SUM) begin
         // For SUM, use the adder result directly
-        vraluif.value_out = as_if.out;
+        vraluif.value_out = bf_out;
     end
     else if (alu_op_s2 == VR_MIN) begin
         // For MIN: if (a-b) is negative, a is smaller
-        if (as_if.out[15]) begin
+        if (bf_out[15]) begin
             vraluif.value_out = value_a_s2;
         end else begin
             vraluif.value_out = value_b_s2;
@@ -88,7 +101,7 @@ always_comb begin
     end
     else if (alu_op_s2 == VR_MAX) begin
         // For MAX: if (a-b) is negative, b is larger
-        if (as_if.out[15]) begin
+        if (bf_out[15]) begin
             vraluif.value_out = value_b_s2;
         end else begin
             vraluif.value_out = value_a_s2;

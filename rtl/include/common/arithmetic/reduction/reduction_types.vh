@@ -1,9 +1,10 @@
 `ifndef REDUCTION_TYPES_H
 `define REDUCTION_TYPES_H
 
-package reduction_pkg
+package reduction_pkg;
 
     parameter LANES = 16;
+    parameter NUM_ELEMENTS = 32;
 
     typedef struct packed {
         logic [NUM_ELEMENTS-1:0][15:0] vector_input;
@@ -24,8 +25,6 @@ package reduction_pkg
         VR_SUM = 2'b10,
         VR_SUB = 2'b11
     } reduction_op;
-
-
 
 endpackage
 

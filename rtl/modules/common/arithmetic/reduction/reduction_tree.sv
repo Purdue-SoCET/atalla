@@ -1,4 +1,3 @@
-`include "vector_types.vh"
 `include "vreduction_alu_if.vh"
 
 module reduction_tree #(
@@ -12,8 +11,6 @@ module reduction_tree #(
     output logic [15:0] data_out,
     output logic        valid_out
 );
-
-    import vector_pkg::*;
 
     localparam TREE_DEPTH = $clog2(LANES);
     localparam ALU_LATENCY = 2;

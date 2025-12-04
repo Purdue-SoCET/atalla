@@ -1,11 +1,9 @@
 `ifndef VREDUCTION_ALU_IF_VH
 `define VREDUCTION_ALU_IF_VH
-`include "vector_types.vh"
 
 interface vreduction_alu_if;
-    import vector_pkg::*;
 
-    fp16_t value_a, value_b, value_out;
+    logic [15:0] value_a, value_b, value_out;
     logic [1:0] alu_op;
 
     modport vralu (
