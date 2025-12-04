@@ -179,7 +179,7 @@ task get_m_output;
     end
   endtask
 
-  // Instantiate the DUT - using systolic_array_top with 2-cycle MAC
+  // Instantiate the DUT - using systolic_array_top with 2-cycle MAC ;D
   systolic_array_top DUT (
     .clk    (tb_clk),
     .nRST   (tb_nRST),
@@ -237,11 +237,9 @@ task get_m_output;
 
     reset();
     
-    // ========== Test 1: Streaming mode with back-to-back inputs ==========
-    // systolic_array_top is designed for streaming - no input FIFOs
-    $display("=== Test 1: Streaming mode - immediate computation ===");
-    $display("NOTE: Using 2-cycle MAC (sysarr_MAC_fp16_2c)");
-    $display("      Expect 2 extra cycles latency vs old MAC");
+    // test 1: streaming mode with back-to-back inputs 
+    // note - systolic_array_top is designed for streaming - no input FIFOs
+    $display("test 1: Streaming mode - immediate computation");
     get_matrices(.weights(loaded_weights));
     get_m_output();
     if (loaded_weights == 1)begin
@@ -251,18 +249,18 @@ task get_m_output;
     // Stream inputs with no delay - computation starts immediately
     load_in_ps (.delay(0)); 
     wait_for_drained();
-    $display("Test 1 complete - array drained: %d", memory_if.drained);
+    $display("test 1 complete - array drained: %d", memory_if.drained);
 
-    // ========== Test 2: Second matrix multiply ==========
-    $display("=== Test 2: Second streaming computation ===");
+    // test 2: second matrix multiply 
+    $display("test 2: Second streaming computation");
     get_matrices(.weights(loaded_weights));
-    // Stream inputs immediately - no buffering needed
+    // stream inputs immediately !
     load_in_ps (.delay(0)); 
     wait_for_drained();
-    $display("Test 2 complete - array drained: %d", memory_if.drained);
+    $display("test 2 complete - array drained: %d", memory_if.drained);
 
-    // ========== Test 3: Third run with weight reload ==========
-    $display("=== Test 3: Streaming with weight reload ===");
+    // test 3: third run with weight reload
+    $display("test 3: Streaming with weight reload");
     get_matrices(.weights(loaded_weights));
     get_m_output();
     if (loaded_weights == 1)begin
@@ -273,7 +271,7 @@ task get_m_output;
     // Max throughput streaming
     load_in_ps (.delay(0)); 
     wait_for_drained();
-    $display("Test 3 complete - array drained: %d", memory_if.drained);
+    $display("test 3 complete - array drained: %d", memory_if.drained);
     
     $fclose(file);
     $fclose(out_file);
