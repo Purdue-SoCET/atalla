@@ -1,6 +1,7 @@
 // /*  Haejune Kwon - kwon196@purdue.edu */
 // /*  Akshath Raghav Ravikiran - araviki@purdue.edu */
 
+`include "xbar_params.svh"
 `include "xbar_if.sv"
 
 import xbar_pkg::*;
@@ -19,9 +20,9 @@ module benes #(
     xbar_if.xbar xif,
     input logic [BITWIDTH-1:0] control_bit
 );
-    logic [DWIDTH-1:0] out_latch [STAGES][SIZE];
-    logic [DWIDTH-1:0] in_latch [STAGES][SIZE];
-    logic [DWIDTH-1:0] reg_latch [STAGES-1][SIZE];
+    logic [DWIDTH-1:0] out_latch [STAGES-1:0][SIZE-1:0];
+    logic [DWIDTH-1:0] in_latch [STAGES-1:0][SIZE-1:0];
+    logic [DWIDTH-1:0] reg_latch [STAGES-1-1:0][SIZE-1:0];
 
     always_ff @(posedge xif.clk, negedge xif.n_rst) begin
         if (!xif.n_rst) begin
@@ -32,7 +33,7 @@ module benes #(
             end
         end else begin
             for (int s = 0; s < STAGES-1; s++) begin
-                if (REGISTER_MASK[s]) begin
+                if (REGISTER_MASK[s] && xif.en) begin
                     for (int i = 0; i < SIZE; i++) begin
                         reg_latch[s][i] <= out_latch[s][i];
                     end

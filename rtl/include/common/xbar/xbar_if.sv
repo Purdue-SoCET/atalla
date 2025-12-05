@@ -20,7 +20,7 @@ interface xbar_if #(
     
     modport xbar (
         input clk, n_rst,
-        input en, in, 
+        input en, in,
         output out
     );
 

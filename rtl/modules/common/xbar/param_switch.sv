@@ -8,9 +8,6 @@ module param_switch #(
   output logic [DATA_W-1:0]       out_data [N_OUT-1:0] 
 );
 
-  // genvar o;
-  // generate
-  // endgenerate
   always_comb begin
     for (int o = 0; o < N_OUT; o++) begin : g_out
       out_data[sel_in[o]] = in_data[o];
