@@ -15,8 +15,8 @@ interface xbar_if #(
     } group_t;
 
     logic en;
-    group_t in [SIZE-1:0]; 
-    logic [DWIDTH-1:0] out [SIZE-1:0]; 
+    group_t in [SIZE]; 
+    logic [DWIDTH-1:0] out [SIZE]; 
     
     modport xbar (
         input clk, n_rst,

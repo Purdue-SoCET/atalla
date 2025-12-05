@@ -3,10 +3,13 @@
 `ifndef SCPAD_PKG_SV
 `define SCPAD_PKG_SV
 
+
 package scpad_pkg;
+
     `include "scpad_params.svh"
     `include "xbar_params.svh"
-    
+    `include "xbar_pkg.sv"
+
     //////////////////////////////////////////////////////////////////////
     ///////////////////////// Derived Parameters /////////////////////////
     //////////////////////////////////////////////////////////////////////
@@ -27,6 +30,7 @@ package scpad_pkg;
 
     localparam int ROW_IDX_WIDTH  = $clog2(SRAM_HEIGHT);
     localparam int COL_IDX_WIDTH = $clog2(NUM_COLS);
+    localparam int ROM_ID_WIDTH = (2*COL_IDX_WIDTH - 1);
 
     localparam int ROW_SHIFT = $clog2(ROW_BYTES);    
     localparam int ELEM_SHIFT = $clog2(ELEM_BYTES);        
@@ -119,6 +123,7 @@ package scpad_pkg;
         slot_mask_t slot_mask;
         shift_mask_t shift_mask;
         mask_t valid_mask;
+        logic [ROM_ID_WIDTH-1:0] rom_id;
     } xbar_desc_t;
 
     typedef struct packed {
@@ -167,11 +172,11 @@ package scpad_pkg;
     // Swizzle Input
     typedef struct packed {
         logic row_or_col; 
-        logic [SCPAD_ADDR_WIDTH-1:0] spad_addr;
-        logic [MAX_DIM_WIDTH-1:0]    num_rows;
-        logic [MAX_DIM_WIDTH-1:0]    num_cols;
-        logic [MAX_DIM_WIDTH-1:0]    row_id;
-        logic [MAX_DIM_WIDTH-1:0]    col_id;
+        logic [SCPAD_ADDR_WIDTH-1:0] spad_addr; // technically base_row; always starting of row=0,col=0
+        logic [MAX_DIM_WIDTH-1:0] num_rows;
+        logic [MAX_DIM_WIDTH-1:0] num_cols;
+        logic [MAX_DIM_WIDTH-1:0] row_id;
+        logic [MAX_DIM_WIDTH-1:0] col_id;
     } swizz_req_t;
 
     // Swizzle Output

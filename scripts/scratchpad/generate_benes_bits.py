@@ -3,7 +3,6 @@ NUM_BANKS = 32
 def composeinv(c, pi):
     return [y for x, y in sorted(zip(pi, c))]
 
-
 def controlbits(pi):
     n = len(pi)
     m = 1

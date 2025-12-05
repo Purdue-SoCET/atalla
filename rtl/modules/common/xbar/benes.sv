@@ -1,7 +1,6 @@
 // /*  Haejune Kwon - kwon196@purdue.edu */
 // /*  Akshath Raghav Ravikiran - araviki@purdue.edu */
 
-`include "xbar_params.svh"
 `include "xbar_if.sv"
 
 import xbar_pkg::*;
@@ -58,7 +57,7 @@ module benes #(
                 for (j = 0; j < SIZE; j += 2) begin 
                     localparam int ctrl = (0 * HALF) + (j/2); // base 0
                     crossover_switch #(.SIZE(DWIDTH)) u_sw (
-                        .din({xif.in[j], xif.in[j+1]}),
+                        .din({xif.in[j].din, xif.in[j+1].din}),
                         .cntrl(control_bit[ctrl]),
                         .dout({out_latch[0][j], out_latch[0][j+1]})
                     );
