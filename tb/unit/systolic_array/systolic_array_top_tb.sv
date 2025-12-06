@@ -91,6 +91,7 @@ module systolic_array_top_tb();
   task get_matrices(output int weights);
     begin
       int iterations;
+      int rc;
       $display("In get matrices task");
       weights = 0;
       which = 0;
@@ -111,13 +112,16 @@ module systolic_array_top_tb();
         for (i = 0; i < N; i = i + 1) begin
           for (j = 0; j < N; j = j + 1) begin
             if (which == 1)begin
-              $fscanf(file, "%x ", temp_weights[i][j]);
+              rc = $fscanf(file, "%x ", temp_weights[i][j]);
+              if (rc != 1) $display("WARN: fscanf weights[%0d][%0d] rc=%0d", i, j, rc);
               // $display("i just read in weight %x", temp_weights[i][j]);
             end else if (which == 2) begin
-              $fscanf(file, "%x ", temp_inputs[i][j]);
+              rc = $fscanf(file, "%x ", temp_inputs[i][j]);
+              if (rc != 1) $display("WARN: fscanf inputs[%0d][%0d] rc=%0d", i, j, rc);
               // $display("i just read in input %x", temp_inputs[i][j]);
             end else begin
-              $fscanf(file, "%x ", temp_partials[i][j]);
+              rc = $fscanf(file, "%x ", temp_partials[i][j]);
+              if (rc != 1) $display("WARN: fscanf partials[%0d][%0d] rc=%0d", i, j, rc);
               // $display("i just read in partial %x", temp_partials[i][j]);
             end
           end  
@@ -130,6 +134,15 @@ module systolic_array_top_tb();
         m_inputs[i] = {>>{temp_inputs[i]}};
         m_partials[i] = {>>{temp_partials[i]}};
       end
+      
+      // Verify matrices are non-zero
+      $display("=== Matrix Data Verification ===");
+      for (i = 0; i < N; i++) begin
+        $display("Row %0d weights: %h", i, m_weights[i]);
+        $display("Row %0d inputs : %h", i, m_inputs[i]);
+        $display("Row %0d partial: %h", i, m_partials[i]);
+      end
+      $display("================================");
     end
   endtask
 
