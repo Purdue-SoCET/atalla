@@ -11,7 +11,7 @@ xrun \
   rtl/modules/systolic_array/ADD_step1.sv \
   rtl/modules/systolic_array/ADD_step2.sv \
   rtl/modules/systolic_array/ADD_step3.sv \
-  rtl/modules/systolic_array/wallacetree_11b.sv \
+  rtl/modules/common/general/wallacetree_11b.sv \
   rtl/modules/mul_wallacetree_singlecycle.sv \
   rtl/modules/u_to_s.sv \
   rtl/modules/s_to_u.sv \
