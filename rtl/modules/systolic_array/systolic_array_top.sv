@@ -210,6 +210,7 @@ module systolic_array_top(
     end
 
     // Output generation and drained signal
+    // DEBUG: Read directly from MAC outputs to see if they're computing
     integer q;
     always_comb begin
         memory.out_en = 1'b0;
@@ -227,7 +228,8 @@ module systolic_array_top(
                 /* verilator lint_off WIDTHTRUNC */
                 memory.out_en = 1'b1;
                 memory.row_out = row_out;
-                memory.array_output = current_out[row_out];
+                // DEBUG: Read directly from bottom row of MACs instead of output FIFOs
+                memory.array_output = {MAC_outputs[N-1][N-1], MAC_outputs[N-1][N-2], MAC_outputs[N-1][N-3], MAC_outputs[N-1][0]};
             end
             if (iteration[q] > 0) begin
                 memory.drained = 1'b0;
