@@ -37,10 +37,28 @@ module systolic_array_top(
     // Instantiate Output Fifos
     systolic_array_OUT_FIFO_if out_fifos_ifs[N-1:0] (); 
     
-    // Simple control logic - start computation when data arrives
-    // For streaming mode: computation starts immediately
-    assign MAC_start = memory.weight_en | memory.input_en;
-    assign MAC_shift = memory.input_en;
+    // Control logic for streaming mode
+    logic mac_computing;
+    
+    // Track when MACs should be computing
+    always_ff @(posedge clk, negedge nRST) begin
+        if (!nRST) begin
+            mac_computing <= 1'b0;
+        end else begin
+            // Start computing when inputs arrive
+            if (memory.input_en) begin
+                mac_computing <= 1'b1;
+            end
+            // Stop after outputs are done
+            else if (iteration[0] >= 3*N) begin
+                mac_computing <= 1'b0;
+            end
+        end
+    end
+    
+    // MAC control signals
+    assign MAC_start = mac_computing;  // Keep MACs running while computing
+    assign MAC_shift = memory.input_en;  // Shift when loading new inputs
     assign add_start = mac_ifs[0].value_ready;  // Start adders when MACs are ready
     assign memory.fifo_has_space = 1'b1;  // Always ready in streaming mode
     
