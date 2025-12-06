@@ -171,11 +171,11 @@ module systolic_array_top(
     endgenerate
 
     // Iteration tracking for output timing
-    integer q;
+    integer i;
     always_ff @(posedge clk, negedge nRST) begin
         if (!nRST) begin
-            for (q = 0; q < 3; q++) begin
-                iteration[q] <= '0;
+            for (i = 0; i < 3; i++) begin
+                iteration[i] <= '0;
             end
         end else if (!memory.stall_sa) begin
             // Track iterations for each computation stream
@@ -190,6 +190,7 @@ module systolic_array_top(
     end
 
     // Output generation and drained signal
+    integer q;
     always_comb begin
         memory.out_en = 1'b0;
         memory.row_out = '0;
