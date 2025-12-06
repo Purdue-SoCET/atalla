@@ -1,7 +1,6 @@
 // 2-24-2025: changed to read in hex fp16's instead of ints from data input file
 
 `include "systolic_array_if.vh"
-`include "systolic_array_control_unit_if.vh"
 `include "systolic_array_MAC_if.vh"
 `include "systolic_array_add_if.vh"
 `include "systolic_array_FIFO_if.vh"
@@ -257,9 +256,9 @@ task get_m_output;
       systolic_array_top_tb.memory_if.array_output,
       systolic_array_top_tb.memory_if.weight_en,
       systolic_array_top_tb.memory_if.array_in,
-      systolic_array_top_tb.DUT.control_unit_if.MAC_start,
-      systolic_array_top_tb.DUT.control_unit_if.MAC_value_ready,
-      systolic_array_top_tb.DUT.control_unit_if.iteration
+      systolic_array_top_tb.DUT.MAC_start,
+      systolic_array_top_tb.DUT.mac_ifs[0].value_ready,
+      systolic_array_top_tb.DUT.iteration
     );
     memory_if.weight_en = '0;
     memory_if.input_en = '0;
