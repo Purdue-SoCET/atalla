@@ -21,29 +21,14 @@ module systolic_array_top(
     // Partial sum buffer inputs (connected to top row adders)
     logic [DW-1:0] psum_buffer_inputs [N-1:0];
 
-    // Control signals (generated locally, no separate control unit)
-    logic MAC_start, nxt_MAC_start;
+    // Local control signals (previously from control unit)
+    logic MAC_start;
     logic MAC_shift;
     logic add_start;
-    logic out_fifo_shift;
-    
-    // Output signals
-    logic [$clog2(N)-1:0] row_out;
-    logic [N-1:0][DW*N-1:0] current_out;
-    
-    // Iteration tracking (up to 3 concurrent operations)
     logic [$clog2(3*N)-1:0] iteration [2:0];
-    logic [$clog2(3*N)-1:0] nxt_iteration [2:0];
-    logic [2:0] iteration_full, nxt_iteration_full;
-    
-    // State tracking
-    logic start_flag;
-    logic first_mac, nxt_first_mac;
-    logic MAC_ready, nxt_MAC_ready;
     
     // Generate variables
     genvar j,m,n,o,p;
-    integer i, k;
 
     // Instantiate MAC unit interfaces
     systolic_array_MAC_if mac_ifs[N*N-1:0] (); 
@@ -52,11 +37,30 @@ module systolic_array_top(
     // Instantiate Output Fifos
     systolic_array_OUT_FIFO_if out_fifos_ifs[N-1:0] (); 
     
-    // Start flag: triggers when first input row loads
-    assign start_flag = memory.input_en && (memory.row_in_en == 0) && !memory.stall_sa;
+    // Control logic for streaming mode
+    logic mac_computing;
     
-    // Always has space in streaming mode (no FIFOs to fill)
-    assign memory.fifo_has_space = 1'b1;
+    // Track when MACs should be computing
+    always_ff @(posedge clk, negedge nRST) begin
+        if (!nRST) begin
+            mac_computing <= 1'b0;
+        end else begin
+            // Start computing when inputs arrive
+            if (memory.input_en) begin
+                mac_computing <= 1'b1;
+            end
+            // Stop after outputs are done
+            else if (iteration[0] >= 3*N) begin
+                mac_computing <= 1'b0;
+            end
+        end
+    end
+    
+    // MAC control signals
+    assign MAC_start = mac_computing;  // Keep MACs running while computing
+    assign MAC_shift = memory.input_en;  // Shift when loading new inputs
+    assign add_start = mac_ifs[0].value_ready;  // Start adders when MACs are ready
+    assign memory.fifo_has_space = 1'b1;  // Always ready in streaming mode
     
     // Direct input connection - take values immediately from array_in
     // Each row gets its corresponding slice of the input bus
@@ -78,98 +82,11 @@ module systolic_array_top(
         end
     endgenerate
 
-    // ========================================================================
-    // CONTROL LOGIC (replaces separate control unit for streaming mode)
-    // ========================================================================
+    // MAC Generation
+    // Register MAC unit mac_if.out_accumulate outputs before connecting to unit below
+    // this used to use control unit value_ready signal, now it uses value_ready from MAC units
     
-    // Iteration tracking
-    always_ff @(posedge clk, negedge nRST) begin
-        if (!nRST) begin
-            iteration <= '{default: '0};
-            iteration_full <= '0;
-        end else begin
-            iteration <= nxt_iteration;
-            iteration_full <= nxt_iteration_full;
-        end 
-    end
-    
-    always_comb begin
-        nxt_iteration = iteration;
-        nxt_iteration_full = iteration_full;
-        
-        // Start new iteration when first input row loads
-        if (start_flag) begin
-            for (i = 0; i < 3; i++) begin
-                if (iteration_full[i] == 1'b0) begin
-                    nxt_iteration_full[i] = 1'b1;
-                    break;
-                end
-            end
-        end
-        
-        // Increment active iterations
-        for (k = 0; k < 3; k++) begin
-            if (nxt_iteration_full[k] && nxt_MAC_start) begin
-                nxt_iteration[k] = iteration[k] + 1;
-                if (iteration[k] == 3*N-1) begin
-                    nxt_iteration[k] = 0;
-                    nxt_iteration_full[k] = 0;
-                end
-            end
-        end
-    end
-    
-    // MAC control
-    always_ff @(posedge clk, negedge nRST) begin
-        if (!nRST) begin
-            MAC_start <= '0;
-            first_mac <= '0;
-            MAC_ready <= 1'b1;
-        end else begin
-            MAC_start <= nxt_MAC_start;
-            first_mac <= nxt_first_mac;
-            MAC_ready <= nxt_MAC_ready;
-        end 
-    end
-    
-    always_comb begin
-        nxt_MAC_start = 1'b0;
-        nxt_first_mac = first_mac;
-        nxt_MAC_ready = MAC_ready;
-        
-        // Set first_mac flag when weights are loaded
-        if (memory.weight_en) begin
-            nxt_first_mac = 1'b1;
-        end
-        
-        // MAC becomes ready when computation completes
-        if (mac_ifs[0].value_ready == 1'b1) begin
-            nxt_MAC_ready = 1'b1;
-        end
-        
-        // Start MACs when iteration is active and MAC is ready
-        if (|iteration_full && (MAC_ready == 1'b1 || mac_ifs[0].value_ready)) begin
-            // In streaming mode, data arrives directly - just start computing
-            nxt_MAC_start = 1'b1;
-            nxt_MAC_ready = 1'b0;
-        end else if (first_mac == 1'b1 && start_flag) begin
-            // First MAC cycle after weights loaded
-            nxt_MAC_start = 1'b1;
-            nxt_first_mac = 1'b0;
-            nxt_MAC_ready = 1'b0;
-        end
-        
-        // Handle stall
-        nxt_MAC_start &= ~memory.stall_sa;
-        nxt_MAC_ready |= memory.stall_sa;
-    end
-    
-    // Shift and adder control
-    assign MAC_shift = MAC_start && |iteration_full;
-    assign add_start = (iteration[0] > N) && MAC_start;  // Start adders after data propagates
-    assign out_fifo_shift = add_ifs[0].value_ready;
-     
-    // Extract value_ready signals into 2D array
+    // Extract value_ready signals into a 2D array for easier indexing
     logic value_ready_array [N-1:0][N-1:0];
     generate
         for (m = 0; m < N; m++) begin : vr_row
@@ -181,25 +98,16 @@ module systolic_array_top(
     
     integer z, y;
     always_ff @(posedge clk, negedge nRST) begin
-        if (!nRST) begin
-            for (z = 0; z < N; z++) begin
-                for (y = 0; y < N; y++) begin
+        if(nRST == 1'b0)begin
+            for (z = 0; z < N; z++)begin
+                for (y = 0; y < N; y++)begin
                     MAC_outputs[z][y] <= '0;
                 end
             end
         end else begin
-            // Top row always updates (no dependency)
-            MAC_outputs[0] <= nxt_MAC_outputs[0];
-            
-            // Rows 1-N: update only when previous row has valid data
-            for (z = 1; z < N; z++) begin
-                for (y = 0; y < N; y++) begin
-                    if (value_ready_array[z-1][y]) begin
-                        MAC_outputs[z][y] <= nxt_MAC_outputs[z][y];
-                    end
-                    // else hold current value
-                end
-            end
+            // Temporarily disable value_ready gating to debug
+            // Update all MAC outputs every cycle
+            MAC_outputs <= nxt_MAC_outputs;
         end 
     end
 
@@ -211,7 +119,7 @@ module systolic_array_top(
                     .nRST(nRST),
                     .mac_if(mac_ifs[m*N + n].MAC)
                 );
-                // Connect MAC control signals
+                // Start computation immediately when data arrives
                 assign mac_ifs[m*N + n].start = MAC_start;
                 assign mac_ifs[m*N + n].in_value = MAC_inputs[m][n];
                 assign mac_ifs[m*N + n].weight_en = weight_enables[m][n];
@@ -253,7 +161,13 @@ module systolic_array_top(
         end
     endgenerate
 
-    // Output Fifo Generation    
+    // Output Fifo Generation
+    logic [$clog2(N)-1:0] row_out;
+    logic [N-1:0][DW*N-1:0] current_out;
+    logic out_fifo_shift;
+    
+    assign out_fifo_shift = add_ifs[0].value_ready;  // Shift output FIFOs when adders produce results
+    
     generate
         for (p = 0; p < N; p++) begin
             sysarr_OUT_FIFO o_fifo (
@@ -267,6 +181,34 @@ module systolic_array_top(
         end
     endgenerate
 
+    // Iteration tracking for output timing
+    // Tracks cycles since computation started to determine when outputs are ready
+    integer i;
+    always_ff @(posedge clk, negedge nRST) begin
+        if (!nRST) begin
+            for (i = 0; i < 3; i++) begin
+                iteration[i] <= '0;
+            end
+        end else if (!memory.stall_sa) begin
+            // Start or restart iteration counter when loading new data
+            if (memory.weight_en || memory.input_en) begin
+                if (iteration[0] == 0 || iteration[0] >= 3*N) begin
+                    iteration[0] <= 1;
+                end else begin
+                    iteration[0] <= iteration[0] + 1;
+                end
+            end 
+            // Continue counting while data is in pipeline
+            else if (iteration[0] > 0 && iteration[0] < 3*N) begin
+                iteration[0] <= iteration[0] + 1;
+            end
+            // Reset after all outputs produced
+            else if (iteration[0] >= 3*N) begin
+                iteration[0] <= '0;
+            end
+        end
+    end
+
     // Output generation and drained signal
     integer q;
     always_comb begin
@@ -276,10 +218,12 @@ module systolic_array_top(
         row_out = '0;
         memory.array_output = '0;
         
+        // Generate outputs when iteration count indicates data has propagated through array
+        // First output ready at iteration 2*N, then one per cycle
         for (q = 0; q < 3; q++) begin
-            if (iteration[q] >= 2*N && mac_ifs[0].value_ready == 1'b1) begin
+            if (iteration[q] >= 2*N && iteration[q] < 3*N) begin
                 /* verilator lint_off WIDTHTRUNC */
-                row_out = iteration[q] - 2 * N;
+                row_out = iteration[q] - 2*N;
                 /* verilator lint_off WIDTHTRUNC */
                 memory.out_en = 1'b1;
                 memory.row_out = row_out;
