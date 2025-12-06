@@ -11,6 +11,9 @@ xrun \
   rtl/modules/systolic_array/ADD_step1.sv \
   rtl/modules/systolic_array/ADD_step2.sv \
   rtl/modules/systolic_array/ADD_step3.sv \
+  rtl/modules/u_to_s.sv \
+  rtl/modules/s_to_u.sv \
+  rtl/modules/common/general/adder_13b.sv \
   -incdir rtl/include/systolic_array \
   -incdir rtl/modules/systolic_array \
   -incdir tb/unit/systolic_array \
