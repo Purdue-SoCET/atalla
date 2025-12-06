@@ -1,4 +1,3 @@
-#!/bin/bash
 xrun \
   tb/unit/systolic_array/systolic_array_top_tb.sv \
   rtl/modules/systolic_array/systolic_array_top.sv \
