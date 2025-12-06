@@ -105,16 +105,9 @@ module systolic_array_top(
                 end
             end
         end else begin
-            MAC_outputs[0] <= nxt_MAC_outputs[0];            // Top most row has no stall condition
-            for (z = 1; z < N; z++) begin                    // Row Z
-                for (y = 0; y < N; y++) begin                // Column Y - count
-                    if (value_ready_array[z-1][y]) begin   // Update only if a value is ready
-                        MAC_outputs[z][y] <= nxt_MAC_outputs[z][y];
-                    end else begin
-                        MAC_outputs[z][y] <= MAC_outputs[z][y];
-                    end
-                end
-            end
+            // Temporarily disable value_ready gating to debug
+            // Update all MAC outputs every cycle
+            MAC_outputs <= nxt_MAC_outputs;
         end 
     end
 
