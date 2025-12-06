@@ -27,6 +27,10 @@ module systolic_array_top(
     logic add_start;
     logic out_fifo_shift;
     
+    // Output signals
+    logic [$clog2(N)-1:0] row_out;
+    logic [N-1:0][DW*N-1:0] current_out;
+    
     // Iteration tracking (up to 3 concurrent operations)
     logic [$clog2(3*N)-1:0] iteration [2:0];
     logic [$clog2(3*N)-1:0] nxt_iteration [2:0];
@@ -250,10 +254,6 @@ module systolic_array_top(
     endgenerate
 
     // Output Fifo Generation
-    logic [$clog2(N)-1:0] row_out;
-    logic [N-1:0][DW*N-1:0] current_out;
-    logic out_fifo_shift;
-    
     assign out_fifo_shift = add_ifs[0].value_ready;  // Shift output FIFOs when adders produce results
     
     generate
@@ -270,9 +270,6 @@ module systolic_array_top(
     endgenerate
 
     // Output generation and drained signal
-    logic [$clog2(N)-1:0] row_out;
-    logic [N-1:0][DW*N-1:0] current_out;
-    
     integer q;
     always_comb begin
         memory.out_en = 1'b0;
