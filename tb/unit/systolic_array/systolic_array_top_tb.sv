@@ -167,14 +167,19 @@ task get_m_output;
 
   // Helper task to wait for array to drain (no more active computations)
   task wait_for_drained;
-    int flag;
+    int cycles;
     begin
-      flag = 1;
-      while (flag == 1) begin
+      cycles = 0;
+      while (memory_if.drained !== 1'b1 && cycles < 100000) begin
         @(posedge tb_clk);
-        if (memory_if.drained == 1'b1) begin
-          flag = 0;
-        end
+        cycles++;
+      end
+      if (memory_if.drained !== 1'b1) begin
+        $display("ERROR: timeout waiting for drained after %0d cycles", cycles);
+        $display("  out_en=%b, row_out=%0d", memory_if.out_en, memory_if.row_out);
+        $stop;
+      end else begin
+        $display("Array drained after %0d cycles", cycles);
       end
     end
   endtask
@@ -185,6 +190,14 @@ task get_m_output;
     .nRST   (tb_nRST),
     .memory (memory_if.memory_array)
   );
+
+  // Debug monitoring
+  always @(posedge tb_clk) begin
+    if (memory_if.out_en)
+      $display("[%0t] out_en=1 row_out=%0d", $time, memory_if.row_out);
+    if (memory_if.drained)
+      $display("[%0t] drained=1", $time);
+  end
 
   always @(posedge tb_clk) begin
     if (memory_if.out_en == 1'b1)begin
@@ -217,7 +230,20 @@ task get_m_output;
   // Test Stimulus
   initial begin
     $dumpfile("dump.vcd");  // For VCD format
-    $dumpvars(0, systolic_array_top_tb);
+    // Dump only key signals to keep VCD size manageable
+    $dumpvars(0,
+      systolic_array_top_tb.tb_clk,
+      systolic_array_top_tb.tb_nRST,
+      systolic_array_top_tb.memory_if.drained,
+      systolic_array_top_tb.memory_if.out_en,
+      systolic_array_top_tb.memory_if.row_out,
+      systolic_array_top_tb.memory_if.array_output,
+      systolic_array_top_tb.memory_if.weight_en,
+      systolic_array_top_tb.memory_if.array_in,
+      systolic_array_top_tb.DUT.control_unit_if.MAC_start,
+      systolic_array_top_tb.DUT.control_unit_if.MAC_value_ready,
+      systolic_array_top_tb.DUT.control_unit_if.iteration
+    );
     memory_if.weight_en = '0;
     memory_if.input_en = '0;
     memory_if.partial_en = '0;
