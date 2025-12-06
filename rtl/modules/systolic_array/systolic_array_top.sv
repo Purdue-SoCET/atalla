@@ -103,7 +103,7 @@ module systolic_array_top(
                 assign mac_ifs[m*N + n].in_value = MAC_inputs[m][n];
                 assign mac_ifs[m*N + n].weight_en = weight_enables[m][n];
                 assign mac_ifs[m*N + n].MAC_shift = control_unit_if.MAC_shift;
-                assign mac_ifs[m*N + n].stall_sa = memory.stall_sa;
+                assign mac_ifs[m*N + n].stall = memory.stall_sa;
                 
                 // Top row (m==0): connect psum buffer to adder input
                 if (m == 0) begin : no_accumulate
