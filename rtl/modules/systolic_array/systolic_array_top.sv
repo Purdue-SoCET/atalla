@@ -210,7 +210,7 @@ module systolic_array_top(
         // Generate outputs when iteration count indicates data has propagated through array
         // First output ready at iteration 2*N, then one per cycle
         for (q = 0; q < 3; q++) begin
-            if (iteration[q] >= 2*N && mac_ifs[0].value_ready) begin
+            if (iteration[q] >= 2*N && iteration[q] < 3*N) begin
                 /* verilator lint_off WIDTHTRUNC */
                 row_out = iteration[q] - 2*N;
                 /* verilator lint_off WIDTHTRUNC */
