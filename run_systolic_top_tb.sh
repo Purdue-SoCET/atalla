@@ -1,0 +1,20 @@
+#!/bin/bash
+xrun \
+  tb/unit/systolic_array/systolic_array_top_tb.sv \
+  rtl/modules/systolic_array/systolic_array_top.sv \
+  rtl/modules/systolic_array/sysarr_control_unit.sv \
+  rtl/modules/systolic_array/sysarr_MAC_fp16_2c.sv \
+  rtl/modules/systolic_array/sysarr_add.sv \
+  rtl/modules/systolic_array/sysarr_OUT_FIFO.sv \
+  rtl/modules/systolic_array/mul_fp16_nolatch.sv \
+  rtl/modules/systolic_array/add_fp16_1c.sv \
+  rtl/modules/systolic_array/left_shift.sv \
+  -incdir rtl/include/systolic_array \
+  -incdir rtl/modules/common/ \
+  -incdir rtl/modules/common/general \
+  -incdir rtl/modules/systolic_array \
+  -incdir rtl/include/common \
+  -incdir rtl/include/systolic_array \
+  -incdir tb/unit/common \
+  -incdir tb/unit/systolic_array \
+  -gui -access +rwc
