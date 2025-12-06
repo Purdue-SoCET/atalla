@@ -8,12 +8,10 @@ xrun \
   rtl/modules/systolic_array/mul_fp16_nolatch.sv \
   rtl/modules/systolic_array/add_fp16_1c.sv \
   rtl/modules/systolic_array/left_shift.sv \
+  rtl/modules/systolic_array/ADD_step1.sv \
+  rtl/modules/systolic_array/ADD_step2.sv \
+  rtl/modules/systolic_array/ADD_step3.sv \
   -incdir rtl/include/systolic_array \
-  -incdir rtl/modules/common/ \
-  -incdir rtl/modules/common/general \
   -incdir rtl/modules/systolic_array \
-  -incdir rtl/include/common \
-  -incdir rtl/include/systolic_array \
-  -incdir tb/unit/common \
   -incdir tb/unit/systolic_array \
   -gui -access +rwc
