@@ -217,25 +217,38 @@ task get_m_output;
 
   always @(posedge tb_clk) begin
     if (memory_if.out_en == 1'b1)begin
-      $display("output row is %d", memory_if.row_out);
-      if (m_outputs[memory_if.row_out] != memory_if.array_output)begin
-        $display("Output incorrect\n");
-        $display("Our Output is");
-        for (y = 0; y < N; y++)begin
-          $write("%x, ", memory_if.array_output[(y+1)*DW-1-:DW]);
-        end
-        $display("");
+      $display("========================================");
+      $display("OUTPUT ROW %0d", memory_if.row_out);
+      $display("========================================");
+      
+      // Print actual output from systolic array
+      $write("Systolic Array Output: ");
+      for (y = 0; y < N; y++)begin
+        $write("%h ", memory_if.array_output[(y+1)*DW-1-:DW]);
       end
+      $display("");
+      
+      // Print expected output
+      $write("Expected Output:       ");
+      for (z = 0; z < N; z++)begin
+        $write("%h ", m_outputs[memory_if.row_out][(z+1)*DW-1-:DW]);
+      end
+      $display("");
+      
+      // Check if correct
+      if (m_outputs[memory_if.row_out] != memory_if.array_output)begin
+        $display(">>> MISMATCH! Output is INCORRECT <<<");
+      end else begin
+        $display(">>> MATCH! Output is CORRECT <<<");
+      end
+      $display("");
+      
+      // Still write to file for comparison script
       for (y = 0; y < N-1; y++)begin
           $fwrite(sysarr_dump_file, "%x ", memory_if.array_output[(y+1)*DW-1-:DW]);
       end
       $fwrite(sysarr_dump_file, "%x\n", memory_if.array_output[(N)*DW-1-:DW]);
-      // $fwrite(sysarr_dump_file, "\n");
-      $display("Correct Output is");
-      for (z = 0; z < N; z++)begin
-          $write("%x ", m_outputs[memory_if.row_out][(z+1)*DW-1-:DW]);
-      end
-      $display("");
+      
       /* verilator lint_off WIDTHEXPAND */
       if (memory_if.row_out == N-1)begin
       /* verilator lint_off WIDTHEXPAND */

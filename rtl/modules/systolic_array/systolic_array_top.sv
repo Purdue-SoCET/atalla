@@ -171,36 +171,29 @@ module systolic_array_top(
     endgenerate
 
     // Iteration tracking for output timing
-    // Track when computation is active and count cycles
-    logic computation_active;
-    logic [$clog2(3*N)-1:0] cycle_count;
-    
+    // Tracks cycles since computation started to determine when outputs are ready
     integer i;
     always_ff @(posedge clk, negedge nRST) begin
         if (!nRST) begin
-            computation_active <= 1'b0;
-            cycle_count <= '0;
             for (i = 0; i < 3; i++) begin
                 iteration[i] <= '0;
             end
         end else if (!memory.stall_sa) begin
-            // Start counting when we see weight or input enable
+            // Start or restart iteration counter when loading new data
             if (memory.weight_en || memory.input_en) begin
-                computation_active <= 1'b1;
-                cycle_count <= 1;
-                iteration[0] <= 1;
-            end 
-            // Continue counting while active
-            else if (computation_active) begin
-                if (cycle_count < 3*N) begin
-                    cycle_count <= cycle_count + 1;
-                    iteration[0] <= iteration[0] + 1;
+                if (iteration[0] == 0 || iteration[0] >= 3*N) begin
+                    iteration[0] <= 1;
                 end else begin
-                    // Computation complete, reset
-                    computation_active <= 1'b0;
-                    cycle_count <= '0;
-                    iteration[0] <= '0;
+                    iteration[0] <= iteration[0] + 1;
                 end
+            end 
+            // Continue counting while data is in pipeline
+            else if (iteration[0] > 0 && iteration[0] < 3*N) begin
+                iteration[0] <= iteration[0] + 1;
+            end
+            // Reset after all outputs produced
+            else if (iteration[0] >= 3*N) begin
+                iteration[0] <= '0;
             end
         end
     end
@@ -214,21 +207,20 @@ module systolic_array_top(
         row_out = '0;
         memory.array_output = '0;
         
-        // Check if we have valid outputs based on iteration count
-        if (iteration[0] >= 2*N && iteration[0] < 3*N) begin
-            /* verilator lint_off WIDTHTRUNC */
-            row_out = iteration[0] - 2 * N;
-            /* verilator lint_off WIDTHTRUNC */
-            if (mac_ifs[0].value_ready) begin
+        // Generate outputs when iteration count indicates data has propagated through array
+        // First output ready at iteration 2*N, then one per cycle
+        for (q = 0; q < 3; q++) begin
+            if (iteration[q] >= 2*N && mac_ifs[0].value_ready) begin
+                /* verilator lint_off WIDTHTRUNC */
+                row_out = iteration[q] - 2*N;
+                /* verilator lint_off WIDTHTRUNC */
                 memory.out_en = 1'b1;
                 memory.row_out = row_out;
                 memory.array_output = current_out[row_out];
             end
-        end
-        
-        // Drained is low when computation is active
-        if (computation_active) begin
-            memory.drained = 1'b0;
+            if (iteration[q] > 0) begin
+                memory.drained = 1'b0;
+            end
         end
     end
 endmodule
