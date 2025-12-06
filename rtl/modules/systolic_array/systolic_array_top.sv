@@ -253,9 +253,7 @@ module systolic_array_top(
         end
     endgenerate
 
-    // Output Fifo Generation
-    assign out_fifo_shift = add_ifs[0].value_ready;  // Shift output FIFOs when adders produce results
-    
+    // Output Fifo Generation    
     generate
         for (p = 0; p < N; p++) begin
             sysarr_OUT_FIFO o_fifo (
