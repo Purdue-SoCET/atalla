@@ -74,6 +74,8 @@ module systolic_array_top(
     endgenerate
 
     // MAC Generation
+    // Register MAC unit mac_if.out_accumulate outputs before connecting to unit below
+    // this used to use control unit value_ready signal, now it uses value_ready from MAC units
     integer z,y;
     always_ff @(posedge clk, negedge nRST) begin
         if(nRST == 1'b0)begin
@@ -82,8 +84,17 @@ module systolic_array_top(
                     MAC_outputs[z][y] <= '0;
                 end
             end
-        end else if (control_unit_if.MAC_value_ready == 1'b1)begin
-            MAC_outputs <= nxt_MAC_outputs;
+        end else begin
+            MAC_outputs[0] <= nxt_MAC_outputs[0];            // Top most row has no stall condition
+            for (z = 1; z < N; z++) begin                    // Row Z
+                for (y = 0; y < N; y++) begin                // Column Y - count
+                    if (mac_ifs[(z-1)*N + y].value_ready) begin   // Update only if a value is ready
+                        MAC_outputs[z][y] <= nxt_MAC_outputs[z][y];
+                    end else begin
+                        MAC_outputs[z][y] <= MAC_outputs[z][y];
+                    end
+                end
+            end
         end 
     end
 
