@@ -162,20 +162,24 @@ task get_m_output;
   endtask
 
   task load_weights();
+    $display("[%0t] Loading weights...", $time);
     for (r = N-1; r >= 0; r--)begin
       /* verilator lint_off WIDTHTRUNC */
       row_load(.rtype(2'b00), .rinnum(r), .rpsnum('0), .rinput(m_weights[r]), .rpartial('0));
       /* verilator lint_off WIDTHTRUNC */
     end
+    $display("[%0t] Weights loaded", $time);
   endtask
 
   task load_in_ps(input int delay);
+    $display("[%0t] Loading inputs and partials with delay=%0d...", $time, delay);
     for (in = 0; in < N; in++)begin
       /* verilator lint_off WIDTHTRUNC */
       row_load(.rtype(2'b11), .rinnum(in), .rpsnum(in), .rinput(m_inputs[in]), .rpartial(m_partials[in]));
       /* verilator lint_off WIDTHTRUNC */
       repeat(delay) @(posedge tb_clk); // everyone else iteration delay
     end
+    $display("[%0t] Inputs and partials loaded", $time);
   endtask
 
   // Helper task to wait for array to drain (no more active computations)
