@@ -1,6 +1,8 @@
 `ifndef SYSTOLIC_ARRAY_IF_VH
 `define SYSTOLIC_ARRAY_IF_VH
 
+`timescale 1ns/1ps
+
 `include "sys_arr_pkg.vh"
 /* verilator lint_off IMPORTSTAR */
 import sys_arr_pkg::*;
