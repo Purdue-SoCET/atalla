@@ -163,6 +163,7 @@ task load_weights();
             weight_column[(r_idx+1)*DW-1 -: DW] = temp_weights[r_idx][c];
         end
         
+        $display("[%0t] Loading weight column %0d: %h", $time, c, weight_column);
         sa_interface.sa_array_in = weight_column;
         sa_interface.sa_weight_en = 1'b1;
         @(posedge tb_clk);
