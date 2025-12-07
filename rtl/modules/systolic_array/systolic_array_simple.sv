@@ -59,7 +59,10 @@ module systolic_array_simple(
     // NOTE: The column ordering is REVERSED!! No idea why, but the leftmost column of MAC units has column index 0.
     // MAC_shift must also be active during weight loading so weights propagate across columns
     logic MAC_shifts_0;
+    logic MAC_input_shift_0;  // MAC shift signal for input data only (not weights)
     assign MAC_shifts_0 = !(buffer_empty) || gsau_if.sa_weight_en;
+    assign MAC_input_shift_0 = !(buffer_empty);  // Only active when input buffer has data
+    
     logic [N-2:0] MAC_shifts_remaining;                       // I run a whole column of MAC units in sync. Technically you don't need to, but I am too sleepy to optimize that.
     // assign MAC_shifts[N-1] = !(buffer_empty);              // Whenever there is data in the buffer, MACs must go on.
     always_ff @(posedge clk, negedge nRST) begin
@@ -77,8 +80,8 @@ module systolic_array_simple(
     end
 
     // Read data from the buffer (what this actually does is increment the buffer's read_pointer) whenever there is data
-    // except when the array is stalled. 
-    assign read_from_buffer = MAC_shifts_0 & ~sysarr_stall;
+    // except when the array is stalled. Only read during input processing, not during weight loading.
+    assign read_from_buffer = MAC_input_shift_0 & ~sysarr_stall;
 
     // Similar logic for weight enables. Again, handling a whole column of weight_en's at once.
     // Nevermind we don't need this, the MAC units already have a weight_next_en signal.
@@ -99,9 +102,6 @@ module systolic_array_simple(
     // Except, turn all starts off if the array needs to stall. (Might not be necessary either? Idk it's 4:28am.)
     // IMPORTANT: Do NOT start MAC computation during weight loading - only during input processing
     logic [N-1:0] MAC_starts;
-    logic MAC_input_shift_0;  // MAC shift signal for input data only (not weights)
-    assign MAC_input_shift_0 = !(buffer_empty);  // Only active when input buffer has data
-    
     logic [N-2:0] MAC_input_shifts_remaining;
     always_ff @(posedge clk, negedge nRST) begin
         if(nRST == 1'b0) begin
