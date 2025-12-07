@@ -28,6 +28,7 @@ module systolic_array_top(
     logic [$clog2(3*N)-1:0] iteration;
     logic mac_computing;
     logic bottom_row_ready;
+    logic value_ready_array [N-1:0][N-1:0];
     
     // Generate variables
     genvar j,m,n,o,p;
@@ -87,7 +88,7 @@ module systolic_array_top(
     // this used to use control unit value_ready signal, now it uses value_ready from MAC units
     
     // Extract value_ready signals into a 2D array for easier indexing
-    logic value_ready_array [N-1:0][N-1:0];
+
     generate
         for (m = 0; m < N; m++) begin : vr_row
             for (n = 0; n < N; n++) begin : vr_col
