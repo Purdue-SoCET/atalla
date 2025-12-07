@@ -115,10 +115,21 @@ module systolic_array_simple(
 
     systolic_array_MAC_if mac_ifs[N*N-1:0] (); 
 
-    // do something for partial sums (buffer?) here
-    // TESTING: No partial sums yet, so assigning this to zero.
-    // logic [DW-1 : 0] psum_buffer_inputs [N-1:0];
-    // assign psum_buffer_inputs = '0;
+    // Partial sum buffer - stores and delivers partial sum columns synchronized with output production
+    logic [N*DW-1:0] psum_column;
+    logic psum_buffer_has_space;
+    logic psum_buffer_empty;
+    
+    sysarr_psum_buffer psum_buffer (
+        .clk(clk),
+        .nRST(nRST),
+        .psum_in(gsau_if.sa_array_in_partials),     // Partial sum input from GSAU interface
+        .psum_out(psum_column),                      // Partial sum output to top row MACs
+        .write_en(gsau_if.sa_partial_en),           // Write enable from GSAU
+        .read_en(first_column_MAC_readies[0]),      // Read when output column is ready
+        .has_space(psum_buffer_has_space),
+        .empty(psum_buffer_empty)
+    );
 
     // Register MAC unit mac_if.out_accumulate outputs before connecting to unit below
     // this used to use control unit value_ready signal, now it uses value_ready from MAC units directly.
@@ -186,9 +197,11 @@ module systolic_array_simple(
 
                 assign mac_ifs[m*N + n].stall_sa = sysarr_stall;
                 
-                // Top row (m==0): connect psum buffer to adder input
-                if (m == 0) begin : no_accumulate
-                    assign mac_ifs[m*N + n].in_accumulate = '0;// psum_buffer_inputs[n];
+                // Top row (m==0): connect psum buffer output to adder input
+                if (m == 0) begin : psum_accumulate
+                    // Route partial sum column to top row MAC units
+                    // If psum buffer is empty, use zero (graceful degradation per design doc)
+                    assign mac_ifs[m*N + n].in_accumulate = psum_buffer_empty ? '0 : psum_column[DW*n +: DW];
                 end else begin : accumulation_blk
                     // Accumulate from previous row
                     assign mac_ifs[m*N + n].in_accumulate = MAC_outputs[m-1][n];
@@ -255,6 +268,10 @@ module systolic_array_simple(
     end
 
     assign gsau_if.sa_out_valid = out_buffer[N-1][N*DW];
+    
+    // Connect output bus to output buffer contents
+    // Extract output column from out_buffer[N-1] - the lower DW*N bits contain the data
+    assign gsau_if.sa_array_output = out_buffer[N-1][DW*N-1:0];
 
     // "Output buffer is filled" logic. When the output buffer is full, if data is not read out, the systolic array must stall so that the values in the buffer are not lost.
     always_ff @(posedge clk, negedge nRST) begin
