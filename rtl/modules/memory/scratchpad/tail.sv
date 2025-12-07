@@ -8,28 +8,28 @@ module tail #(parameter logic [scpad_pkg::SCPAD_ID_WIDTH-1:0] IDX = '0) (scpad_i
 
     import scpad_pkg::*;
 
-    sel_res_t res_q;
-
-    latch #(.T(sel_res_t)) u_latch_wr (.clk(tif.clk), .n_rst(tif.n_rst), .en(tif.stomach_tail_res[IDX].valid), .in(tif.stomach_tail_res[IDX]), .out(res_q));
-
+    // Combinational routing - no latch needed
+    // Route response to FE or BE based on src field
     always_comb begin
         tif.fe_res[IDX] = '0;
         tif.be_res[IDX] = '0;
 
-        if (res_q.valid && !res_q.write) begin
-            case (res_q.src)
+        if (tif.stomach_tail_res[IDX].valid && !tif.stomach_tail_res[IDX].write) begin
+            // Read response - route to correct destination with data
+            case (tif.stomach_tail_res[IDX].src)
                 SRC_FE: begin
                     tif.fe_res[IDX].valid = 1'b1;
-                    tif.fe_res.rdata[IDX] = res_q.rdata[IDX];
+                    tif.fe_res[IDX].rdata = tif.stomach_tail_res[IDX].rdata;
                 end
                 SRC_BE: begin
                     tif.be_res[IDX].valid = 1'b1;
-                    tif.be_res.rdata[IDX] = res_q.rdata[IDX];
+                    tif.be_res[IDX].rdata = tif.stomach_tail_res[IDX].rdata;
                 end
             endcase
         end
-        else if (res_q.valid && res_q.write) begin
-            case (res_q.src)
+        else if (tif.stomach_tail_res[IDX].valid && tif.stomach_tail_res[IDX].write) begin
+            // Write response - just signal completion
+            case (tif.stomach_tail_res[IDX].src)
                 SRC_FE: tif.fe_res[IDX].valid = 1'b1;
                 SRC_BE: tif.be_res[IDX].valid = 1'b1;
             endcase
@@ -42,4 +42,4 @@ endmodule
 
 
 
-`endif 
+`endif

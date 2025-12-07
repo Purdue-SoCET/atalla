@@ -1,0 +1,40 @@
+# Current time Sat Dec  6 20:00:03 2025
+# Program = vsim
+# Id = "2021.4"
+# Version = "2021.10"
+# Date = "Oct 13 2021"
+# Platform = "linux_x86_64"
+# Signature = 1b982dbb9a4f11c9c04324db1a232ab9
+# 0    0x000000000113681b: '<unknown (@0x113681b)>'
+# 1    0x0000000001136af4: '<unknown (@0x1136af4)>'
+# 2    0x0000000001136e52: '<unknown (@0x1136e52)>'
+# 3    0x00007fefe4486db1: './rtl/modules/memory/scratchpad/body.sv:44'
+# 4    0x000000000075a558: '<unknown (@0x75a558)>'
+# 5    0x000000000097a707: '<unknown (@0x97a707)>'
+# 6    0x000000000097b099: '<unknown (@0x97b099)>'
+# 7    0x00007fefe430416e: './rtl/modules/memory/scratchpad/scratchpad.sv:15'
+# 8    0x000000000075a558: '<unknown (@0x75a558)>'
+# 9    0x000000000097a707: '<unknown (@0x97a707)>'
+# 10   0x000000000097b099: '<unknown (@0x97b099)>'
+# 11   0x00007fefe42f56fd: './tb/unit/memory/scratchpad/scratchpad_tb.sv:8'
+# 12   0x000000000075a558: '<unknown (@0x75a558)>'
+# 13   0x0000000000967ae5: '<unknown (@0x967ae5)>'
+# 14   0x0000000000a23b68: '<unknown (@0xa23b68)>'
+# 15   0x0000000000a0c997: '<unknown (@0xa0c997)>'
+# 16   0x0000000000a0e59c: '<unknown (@0xa0e59c)>'
+# 17   0x0000000000efdd19: '<unknown (@0xefdd19)>'
+# 18   0x0000000000ef7b0d: '<unknown (@0xef7b0d)>'
+# 19   0x00000000039ac90d: '<unknown (@0x39ac90d)>'
+# 20   0x00000000039b0d66: '<unknown (@0x39b0d66)>'
+# 21   0x00000000039b2451: '<unknown (@0x39b2451)>'
+# 22   0x00000000039b27b6: '<unknown (@0x39b27b6)>'
+# 23   0x000000000117fd59: '<unknown (@0x117fd59)>'
+# 24   0x0000000003a526bf: '<unknown (@0x3a526bf)>'
+# 25   0x0000000003aa6237: '<unknown (@0x3aa6237)>'
+# 26   0x0000000003a69127: '<unknown (@0x3a69127)>'
+# 27   0x0000000003a69409: '<unknown (@0x3a69409)>'
+# 28   0x0000000003848a6d: '<unknown (@0x3848a6d)>'
+# 29   0x0000000000be9efc: '<unknown (@0xbe9efc)>'
+# End of Stack Trace
+
+

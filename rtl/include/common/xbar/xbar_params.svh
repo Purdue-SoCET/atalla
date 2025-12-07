@@ -1,5 +1,8 @@
 /*  Akshath Raghav Ravikiran - araviki@purdue.edu */
 
+`ifndef XBAR_PARAMS_SVH
+`define XBAR_PARAMS_SVH
+
 parameter int unsigned NAIVE_LATENCY = 1;
 parameter int unsigned BENES_LATENCY = 9;
 parameter int unsigned BATCHER_LATENCY = 5;
@@ -30,3 +33,5 @@ parameter int unsigned BATCHER_LATENCY = 5;
 `ifndef CLOS_DWIDTH
     `define CLOS_DWIDTH 16
 `endif
+
+`endif // XBAR_PARAMS_SVH

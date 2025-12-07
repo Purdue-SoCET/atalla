@@ -22,7 +22,7 @@ module backend #(parameter logic [scpad_pkg::SCPAD_ID_WIDTH-1:0] IDX = '0) (
     logic initial_request_done, nxt_initial_request_done;
 
     always_ff @(posedge bshif.clk, negedge bshif.n_rst ) begin
-        if(!bshif.n_rst || bshif.sched_res[IDX].valid) begin
+        if(!bshif.n_rst) begin
             uuid <= 'b0;
             sub_uuid <= 'b0;
             bshif.sched_res[IDX].valid <= 'b0;
@@ -75,6 +75,7 @@ module backend #(parameter logic [scpad_pkg::SCPAD_ID_WIDTH-1:0] IDX = '0) (
 
         nxt_sched_res_valid = 1'b0;
         nxt_initial_request_done = initial_request_done; 
+        nxt_schedule_request_counter = schedule_request_counter;
 
         bdrif.be_dram_req[IDX] = 0;
         bdrif.be_dram_stall[IDX] = 0;
@@ -83,12 +84,12 @@ module backend #(parameter logic [scpad_pkg::SCPAD_ID_WIDTH-1:0] IDX = '0) (
         be_internal.be_dr_req_q_in.sram_rdata = 0;
         
         
-        if(bshif.sched_req[IDX].valid == 1'b1) begin
+        if(bshif.sched_req[IDX].valid == 1'b1 && bshif.sched_res[IDX].valid == 1'b0) begin
             be_id = bdrif.dram_be_res[IDX].id[7:3];
             
             num_request = MAX_REQ_WIDTH'(bshif.sched_req[IDX].num_cols >> BURST_WIDTH);
-
-            if((uuid == bshif.sched_req[IDX].num_rows) && (sub_uuid == num_request)) begin
+            
+            if((uuid == bshif.sched_req[IDX].num_rows) && (sub_uuid == num_request) && (bshif.sched_req[IDX].write == 1'b0)) begin
                 nxt_initial_request_done = 1'b1; 
             end
 
@@ -119,11 +120,11 @@ module backend #(parameter logic [scpad_pkg::SCPAD_ID_WIDTH-1:0] IDX = '0) (
                 nxt_sub_uuid = sub_uuid + 1;
                 if(sub_uuid == num_request) begin
                     nxt_sub_uuid = 0;
-                    nxt_uuid = uuid + 1;
+                    if(bshif.sched_req[IDX].write == 1'b0) begin 
+                        nxt_uuid = uuid + 1;
+                    end
                 end
             end
-
-            nxt_schedule_request_counter = schedule_request_counter;
 
             if(be_internal.sr_wr_l_out.sram_write_req_latched == 1'b1) begin
                 bbif.be_req[IDX].valid = be_internal.sr_wr_l_out.sram_write_req.valid;
@@ -140,7 +141,7 @@ module backend #(parameter logic [scpad_pkg::SCPAD_ID_WIDTH-1:0] IDX = '0) (
             bdrif.be_dram_req[IDX].dram_addr = be_internal.be_dr_req_q_out.dram_req.dram_addr;
             bdrif.be_dram_req[IDX].dram_vector_mask = be_internal.be_dr_req_q_out.dram_req.dram_vector_mask;
             bdrif.be_dram_req[IDX].wdata = 0;
-            bdrif.be_dram_stall[IDX] = bbif.be_stall[IDX];
+            bdrif.be_dram_stall[IDX] = be_internal.sr_wr_l_out.latch_full;
 
             if(bshif.sched_req[IDX].write == 1'b1) begin
                 be_id = uuid;
@@ -157,6 +158,10 @@ module backend #(parameter logic [scpad_pkg::SCPAD_ID_WIDTH-1:0] IDX = '0) (
                     bbif.be_req[IDX].xbar = be_internal.swizz_res.xbar_desc;
                     bbif.be_req[IDX].wdata = 0;
                     nxt_uuid = initial_request_done ? uuid : uuid + 1;
+                    
+                    if((uuid == bshif.sched_req[IDX].num_rows)) begin
+                        nxt_initial_request_done = 1'b1; 
+                    end
                 end
 
                 if(be_internal.be_dr_req_q_out.transaction_complete == 1'b1) begin
@@ -179,10 +184,6 @@ module backend #(parameter logic [scpad_pkg::SCPAD_ID_WIDTH-1:0] IDX = '0) (
                 bdrif.be_dram_req[IDX].dram_vector_mask = dram_vector_mask;
                 bdrif.be_dram_req[IDX].wdata = be_internal.be_dr_req_q_out.dram_req.wdata;
                 bdrif.be_dram_stall[IDX] = 0;
-
-                if((uuid == bshif.sched_req[IDX].num_rows)) begin
-                    nxt_initial_request_done = 1'b1; 
-                end
             end
 
             if((schedule_request_counter == bshif.sched_req[IDX].num_rows) && ((be_internal.be_dr_req_q_out.transaction_complete == 1'b1) || (be_internal.sr_wr_l_out.sram_write_req_latched == 1'b1))) begin
@@ -196,9 +197,3 @@ module backend #(parameter logic [scpad_pkg::SCPAD_ID_WIDTH-1:0] IDX = '0) (
     end
 
 endmodule
-
-`ifndef SYNTHESIS
-
-
-
-`endif 

@@ -4,10 +4,10 @@
 /*  Julio Hernandez - herna628@purdue.edu */
 /*  Akshath Raghav Ravikiran - araviki@purdue.edu */
 
-module dram_request_queue (scpad_if.backend_dram_req_queue be_dr_req_q);
+module dram_request_queue #(parameter int DEPTH = 32) (scpad_if.backend_dram_req_queue be_dr_req_q);
     import scpad_pkg::*;
 
-    dram_req_q_t [NUM_ROWS-1:0] dram_req_latch_block; 
+    dram_req_q_t [DEPTH-1:0] dram_req_latch_block; 
     dram_req_q_t nxt_dram_head_latch_set, nxt_dram_tail_latch_set;
 
     logic [MAX_DIM_WIDTH-1:0] fifo_head, nxt_fifo_head, fifo_tail, nxt_fifo_tail;
@@ -86,7 +86,7 @@ module dram_request_queue (scpad_if.backend_dram_req_queue be_dr_req_q);
                 be_dr_req_q.be_dr_req_q_out.dram_req.id = 0;
                 be_dr_req_q.be_dr_req_q_out.dram_req.dram_addr = dram_req_latch_block[fifo_head].dram_addr;
                 be_dr_req_q.be_dr_req_q_out.dram_req.dram_vector_mask = dram_req_latch_block[fifo_head].dram_vector_mask;
-                be_dr_req_q.be_dr_req_q_out.dram_req.wdata = {<<ELEM_BITS{ dram_req_latch_block[fifo_head].wdata[({DRAM_VECTOR_MASK_LANES_SHIFT'(0), request_completed_counter[MAX_REQ_WIDTH-1:0]} << DRAM_VECTOR_MASK_LANES_SHIFT) +: DRAM_VECTOR_MASK_LANES] }};
+                be_dr_req_q.be_dr_req_q_out.dram_req.wdata = dram_req_latch_block[fifo_head].wdata[({DRAM_VECTOR_MASK_LANES_SHIFT'(0), request_completed_counter[MAX_REQ_WIDTH-1:0]} << DRAM_VECTOR_MASK_LANES_SHIFT) +: DRAM_VECTOR_MASK_LANES];
 
 
                 nxt_dram_head_latch_set = dram_req_latch_block[fifo_head];

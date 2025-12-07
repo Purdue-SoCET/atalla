@@ -58,6 +58,7 @@ interface scpad_if (input logic clk, input logic n_rst);
     sel_req_t xbar_cntrl_req [NUM_SCPADS]; // into body fifo 
     sel_req_t cntrl_spad_req [NUM_SCPADS]; // into spad 
     sel_res_t spad_xbar_req [NUM_SCPADS]; // into rd xbar
+    xbar_desc_t spad_xbar_desc [NUM_SCPADS]; // tracked xbar descriptor for un-swizzle (from body.sv)
     sel_res_t stomach_tail_res [NUM_SCPADS]; // into tail 
 
     // Spad Done.
@@ -154,6 +155,7 @@ interface scpad_if (input logic clk, input logic n_rst);
         input clk, n_rst, 
         input r_stall,
         input spad_xbar_req,
+        input spad_xbar_desc,  // tracked xbar descriptor for un-swizzle
         output stomach_tail_res
     );
 
@@ -304,6 +306,22 @@ interface scpad_if (input logic clk, input logic n_rst);
         output fe_req, be_req
     );
 
+    // Scratchpad TB - full access for testing
+    modport scratchpad_tb (
+        input clk, n_rst,
+        // Vector Core interface
+        output vec_req,
+        input fe_vec_stall, vec_res,
+        // Scheduler interface  
+        output sched_req,
+        input sched_res,
+        // DRAM interface
+        input be_dram_req, be_dram_stall,
+        output dram_be_stall, dram_be_res,
+        // Body interface - all these are OUTPUTS from DUT, TB only observes
+        input be_stall, be_res, be_req
+    );
+
 endinterface
 
-`endif 
+`endif

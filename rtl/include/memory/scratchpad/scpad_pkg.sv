@@ -8,7 +8,6 @@ package scpad_pkg;
 
     `include "scpad_params.svh"
     `include "xbar_params.svh"
-    `include "xbar_pkg.sv"
 
     //////////////////////////////////////////////////////////////////////
     ///////////////////////// Derived Parameters /////////////////////////
@@ -223,6 +222,7 @@ package scpad_pkg;
     typedef struct packed {
         sram_write_req_t sram_write_req;
         logic sram_write_req_latched;
+        logic latch_full;  // Latch has valid data but can't drain due to
     } be_sram_write_latch_out_t;
 
 endpackage

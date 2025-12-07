@@ -33,7 +33,9 @@ module sram_write_latch (scpad_if.sram_write_latch sr_wr_l);
             nxt_sram_write_latch = 0;
         end
 
-        if(sr_wr_l.sr_wr_l_in.dram_res_valid) begin
+        sr_wr_l.sr_wr_l_out.latch_full = sram_write_latch.valid && sr_wr_l.sr_wr_l_in.be_stall;
+
+        if(sr_wr_l.sr_wr_l_in.dram_res_valid == 1'b1 && sr_wr_l.sr_wr_l_out.latch_full == 1'b0) begin
             nxt_sram_write_latch.valid = ((request_completed_counter) == sr_wr_l.sr_wr_l_in.num_request) ? 1'b1 : 1'b0;
             nxt_sram_write_latch.wdata[({DRAM_VECTOR_MASK_LANES_SHIFT'(0), sr_wr_l.sr_wr_l_in.dram_id[MAX_REQ_WIDTH-1:0]} << DRAM_VECTOR_MASK_LANES_SHIFT) +: DRAM_VECTOR_MASK_LANES] = sr_wr_l.sr_wr_l_in.dram_rddata;
             nxt_sram_write_latch.spad_addr = sr_wr_l.sr_wr_l_in.spad_addr;
