@@ -1,9 +1,3 @@
-// ------------------------------------------------------------
-// lane_fu_pt.sv
-// Metadata sync pipeline between sequencer (issue) and FU (wb).
-// Uses the shared sync_fifo (unchanged).
-// ------------------------------------------------------------
-
 module lane_fu_pt #(
     parameter int DATA_W  = 16,
     parameter int LATENCY = 8  // FU pipeline latency (or higher)
@@ -35,23 +29,18 @@ module lane_fu_pt #(
     // ---------------------------------------------------------
     // Push / Pop Conditions
     // ---------------------------------------------------------
-
-    // Push when the sequencer fires and FU is conceptually ready.
-    // The FIFO itself still guards with !full internally.
-    assign push = issue_valid && fu_ready;
-
-    // Pop when FU result is valid and WB is ready, BUT do not pop empty.
-    // This prevents reading an uninitialized dout.
-    assign pop  = wb_valid && wb_ready && !fifo_empty;
-
-    // Backpressure to sequencer: ready when FIFO has space.
+    // Backpressure: FU must be ready *and* FIFO must have space
     assign sync_ready = fu_ready && !fifo_full;
+
+    // Push exactly when an element is truly accepted at the FU input
+    assign push = issue_valid && sync_ready;
+
+    // Pop exactly when a result is truly accepted at WB
+    assign pop  = wb_valid && wb_ready && !fifo_empty;
 
     // ---------------------------------------------------------
     // FIFO Instantiation
-    //   Uses your shared sync_fifo exactly as defined.
-//   Port order: (rstn, clk, wr_en, rd_en, din, dout, empty, full)
-// ---------------------------------------------------------
+    // ---------------------------------------------------------
     sync_fifo #(
         .DEPTH  (FIFO_DEPTH),
         .DWIDTH (DATA_W)

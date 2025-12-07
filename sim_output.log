@@ -1,0 +1,4 @@
+[test] vector TB detected -> compiling all vector + sqrt + adders + multipliers + dividers + general modules
+[test] Running generic simulation script...
+/bin/bash: line 75: vsim: command not found
+make: *** [Makefile:87: test] Error 127

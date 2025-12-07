@@ -1,0 +1,7 @@
+make[1]: Entering directory '/home/asicfab/a/jghanem/atalla'
+[test] vector TB detected -> compiling all vector + sqrt + adders + multipliers + dividers + general modules
+[test] Running generic simulation script...
+/bin/bash: line 75: vsim: command not found
+make[1]: *** [Makefile:87: test] Error 127
+make[1]: Leaving directory '/home/asicfab/a/jghanem/atalla'
+make: *** [Makefile:36: lane.sim] Error 2

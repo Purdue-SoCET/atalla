@@ -118,13 +118,14 @@ test:
 	MODSRCS=""; \
 	MOD_SEARCH_PATH="$(MODROOT)$$TB_RELPATH"; \
 	\
-	# For vector unit tests (tb/unit/vector/*), compile the whole vector + sqrt + adders + multipliers + general subsystem \
+	# For vector unit tests (tb/unit/vector/*), compile the whole vector + sqrt + adders + multipliers + dividers + general subsystem \
 	if [ "$$TB_RELPATH" = "/vector" ]; then \
-	  echo "[$@] vector TB detected -> compiling all vector + sqrt + adders + multipliers + general modules"; \
+	  echo "[$@] vector TB detected -> compiling all vector + sqrt + adders + multipliers + dividers + general modules"; \
 	  MOD_SEARCH_PATH="$(MODROOT)/vector \
 	                    $(MODROOT)/common/arithmetic/sqrt \
 	                    $(MODROOT)/common/arithmetic/adders \
 	                    $(MODROOT)/common/arithmetic/mutlipliers \
+	                    $(MODROOT)/common/arithmetic/dividers \
 	                    $(MODROOT)/common/general"; \
 	  MODSRCS=$$(find $$MOD_SEARCH_PATH -type f -name '*.sv' ! -name '*_pkg.sv' -print 2>/dev/null | sort); \
 	else \

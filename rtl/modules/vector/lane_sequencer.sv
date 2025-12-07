@@ -10,7 +10,6 @@ module lane_sequencer (
     input  lane_seq_in_t   lane_in,
     output lane_seq_out_t  lane_out
 );
-
     // FSM states
     typedef enum logic { IDLE, BUSY } state_t;
     state_t     state, next_state;
@@ -26,7 +25,10 @@ module lane_sequencer (
     logic          lane_ready;
 
     // Element is accepted when we are asserting valid and consumer is ready
-    assign elem_accepted = lane_out.valid && lane_in.ready;
+    //assign elem_accepted = lane_out.valid && lane_in.ready;
+    //assign elem_accepted = lane_out.valid && lane_in.ready && lane_out.mask_bit;
+    assign elem_accepted = (state == BUSY) && lane_out.valid && lane_in.ready;
+
 
     // -----------------------------
     // Datapath: build lane_out
@@ -67,17 +69,21 @@ module lane_sequencer (
         end else begin
             state <= next_state;
 
-            // Latch slice on IDLE -> BUSY
-            if (state == IDLE && next_state == BUSY) begin
-                reg_slice  <= lane_in;
+            if (state == IDLE) begin
+                // Always park at element 0 when idle
                 elem_idx_q <= '0;
+
+                // Only (re)latch slice when we actually start BUSY
+                if (next_state == BUSY) begin
+                    reg_slice <= lane_in;
+                end
             end
-            // Advance element index when FU accepts element
             else if (state == BUSY && elem_accepted) begin
                 elem_idx_q <= elem_idx_next;
             end
         end
     end
+
 
     // -----------------------------
     // Combinational: FSM + lane_ready

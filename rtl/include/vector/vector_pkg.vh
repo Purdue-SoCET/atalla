@@ -221,6 +221,7 @@ package vector_pkg;
     typedef struct packed {
         vsel_t vd;
         slice_idx_t elem_idx; // Add this if you need element index later
+        logic [7:0] dbg_seq;  // Debug sequence number for tracing
     } meta_t;
 
     typedef struct packed {
