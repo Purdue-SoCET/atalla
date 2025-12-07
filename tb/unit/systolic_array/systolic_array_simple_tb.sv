@@ -145,11 +145,22 @@ task get_m_output;
 endtask
 
 // Load weights - column by column for systolic_array_simple
+// Each cycle loads one column of the weight matrix (all rows for that column)
 task load_weights();
+    int c, r_idx;
+    logic [(N*DW)-1:0] weight_column;
     $display("[%0t] Loading weights...", $time);
-    for (r = 0; r < N; r++) begin
-        // Build column from all rows
-        sa_interface.sa_array_in = m_weights[r];
+    
+    // Load N columns of weights
+    for (c = 0; c < N; c++) begin
+        // Build weight column: extract column c from all rows
+        weight_column = '0;
+        for (r_idx = 0; r_idx < N; r_idx++) begin
+            // temp_weights[r_idx][c] is the weight at row r_idx, column c
+            weight_column[((N-r_idx)*DW)-1 -: DW] = temp_weights[r_idx][c];
+        end
+        
+        sa_interface.sa_array_in = weight_column;
         sa_interface.sa_weight_en = 1'b1;
         @(posedge tb_clk);
     end
