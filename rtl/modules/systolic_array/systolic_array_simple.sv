@@ -9,26 +9,19 @@
 // We output one column of the output at a time - this means that we need a column of the partial sums
 
 `timescale 1ns / 1ps
-
-
 `include "gsau_control_unit_if.vh"
-
 `include "systolic_array_MAC_if.vh"
-
 `include "sys_arr_pkg.vh"
 /* verilator lint_off IMPORTSTAR */
 import sys_arr_pkg::*;
 /* verilator lint_off IMPORTSTAR */
 
 
-//
-
-
 module systolic_array_simple(
     input logic clk, nRST,
     gsau_control_unit_if.systolic_array gsau_if
 );
-    // Forward declarations for signals used before their main definition
+    // forward declarations for signals used before their main definition
     logic [DW-1:0] MAC_outputs [N-1:0][N-1:0];
     logic [DW-1:0] nxt_MAC_outputs [N-1:0][N-1:0];
     logic [N-1:0] first_column_MAC_readies;
@@ -132,20 +125,22 @@ module systolic_array_simple(
         end
     end
 
-    
-
-
     // MAC Unit inputs/outputs latched within systolic array
     // (MAC_outputs, nxt_MAC_outputs, first_column_MAC_readies declared at top of module)
 
     systolic_array_MAC_if mac_ifs[N*N-1:0] ();
 
-    // Partial sum buffer - stores and delivers partial sum columns synchronized with output production
+
+    // psum buffer logic : i have it so the psum enters at the top row with the computation and it propagates 
+    // down through all of the rows. Im pretty sure that a partial sum column is needed at the same time that 
+    // the input column first element reaches the first mac (mac[0][0]) currently i have it read the psum buffer
+    // whenever a new inut column enters.
+    // psum buffer - stores and delivers partial sum columns synchronized with output production
     logic [N*DW-1:0] psum_column;
     logic psum_buffer_has_space;
     logic psum_buffer_empty;
     
-    sysarr_psum_buffer psum_buffer (
+    sysarr_psum_buffer bokchoy (
         .clk(clk),
         .nRST(nRST),
         .psum_in(gsau_if.sa_array_in_partials),     // Partial sum input from GSAU interface
@@ -176,7 +171,6 @@ module systolic_array_simple(
             end
         end 
     end
-
 
 
     // MAC inputs (input_x).
@@ -285,13 +279,9 @@ module systolic_array_simple(
         // I append an extra bit to the top of to_output_buffer to signify that the item in that row of the output buffer is actually a real value, and not the result of a MAC unit computing 0*0 because it does not yet have inputs. 
         // To know if the output buffer is full, I check the MSB of the lowermost row of the buffer.
         if(first_column_MAC_readies[0]) begin
-            // Shift buffer: move each row up and insert new data at bottom
-            for (int i = N-1; i > 0; i--) begin
-                next_out_buffer[i] = out_buffer[i-1];
-            end
-            next_out_buffer[0] = {1'b1, to_output_buffer};
+            next_out_buffer = {out_buffer[N-2:0], {1'b1,to_output_buffer}};
         end
-        if(gsau_if.sa_output_ready & ~first_column_MAC_readies[0]) begin
+        if(gsau_if.sa_output_ready & ~first_column_MAC_readies[0]) begin //out_buffer[N-1][N*DW]) begin
             next_out_buffer[N-1][N*DW] = 1'b0;
         end
     end
@@ -302,8 +292,6 @@ module systolic_array_simple(
     // - Element 0 comes from out_buffer[N-1] 
     // - Element 1 comes from out_buffer[N-2] 
     // - Element k comes from out_buffer[N-1-k]
-    // Each out_buffer[i] is a packed (DW*N):0 value containing all 4 elements plus valid bit
-    // We need to extract element d from buffer row (N-1-d)
     
     genvar d;
     generate
@@ -321,5 +309,4 @@ module systolic_array_simple(
             sysarr_stall <= (sysarr_stall | next_out_buffer[N-1][N*DW]) & ~gsau_if.sa_output_ready;
         end
     end
-
 endmodule
