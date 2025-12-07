@@ -28,7 +28,7 @@ module systolic_array_simple(
     input logic clk, nRST,
     gsau_control_unit_if.systolic_array gsau_if
 );
-    // Forward declarations for signals used before their main definition
+        // forward declarations
     logic [DW-1:0] MAC_outputs [N-1:0][N-1:0];
     logic [DW-1:0] nxt_MAC_outputs [N-1:0][N-1:0];
     logic [N-1:0] first_column_MAC_readies;
@@ -140,7 +140,7 @@ module systolic_array_simple(
 
     systolic_array_MAC_if mac_ifs[N*N-1:0] ();
 
-    // Partial sum buffer - stores and delivers partial sum columns synchronized with output production
+    // psum r - stores and delivers partial sum columns synchronized with output production
     logic [N*DW-1:0] psum_column;
     logic psum_buffer_has_space;
     logic psum_buffer_empty;
@@ -148,9 +148,9 @@ module systolic_array_simple(
     sysarr_psum_buffer psum_buffer (
         .clk(clk),
         .nRST(nRST),
-        .psum_in(gsau_if.sa_array_in_partials),     // Partial sum input from GSAU interface
-        .psum_out(psum_column),                      // Partial sum output to top row MACs
-        .write_en(gsau_if.sa_partial_en),           // Write enable from GSAU
+        .psum_in(gsau_if.sa_array_in_partials),     // psum input from GSAU interface
+        .psum_out(psum_column),                      // psum  output to top row MACs
+        .write_en(gsau_if.sa_partial_en),           // wen from GSAU
         .read_en(first_column_MAC_readies[0]),      // Read when output column is ready
         .has_space(psum_buffer_has_space),
         .empty(psum_buffer_empty)
@@ -176,8 +176,6 @@ module systolic_array_simple(
             end
         end 
     end
-
-
 
     // MAC inputs (input_x).
     // Access column wise. Column 1 gets data from input buffer, remaining col N gets input from col N-1's mac_if.in_pass.
