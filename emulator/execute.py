@@ -44,6 +44,12 @@ MNEMONIC_SCALAR = {
     "sra.s": "sra",
     "slt.s":  "slt",
     "sltu.s": "sltu",
+    "add.bf": "addbf",
+    "sub.bf": "subbf",
+    "mul.bf": "mulbf",
+    "div.bf": "divbf",
+    "slt.bf": "sltbf",
+    "sltu.bf": "sltubf",
     "addi.s": "add",
     "subi.s": "sub",
     "muli.s": "mul",
@@ -57,6 +63,10 @@ MNEMONIC_SCALAR = {
     "srai.s": "sra",
     "slti.s":  "slt",
     "sltui.s": "sltu",
+    "mgt.vv": "sgtu",
+    "mlt.vv": "sltu",
+    "meq.vv": "sequ",
+    "mneq.vv": "sneu"
 }
 
 MNEMONIC_VECTOR = {
@@ -64,40 +74,47 @@ MNEMONIC_VECTOR = {
     "sub.vv": "sub",
     "mul.vv": "mul",
     "div.vv": "div",
+    "and.vv": "bw_and",
+    "or.vv":  "bw_or",
+    "xor.vv": "bw_xor",
 
+    "addi.vi": "add_scalar",
+    "subi.vi": "sub_scalar",
+    "muli.vi": "mul_scalar",
+    "divi.vi": "div_scalar",
+    "expi.vi":  "exp",
+    "sqrti.vi": "sqrt",
+    "not.vi":  "bw_not",
+    "lshift.vi": "shl_scalar",
+    "rshift.vi": "shr_scalar",
+
+    "rsum.vi":  "reduce_sum",
+    "rmin.vi":  "reduce_min",
+    "rmax.vi":  "reduce_max",
+
+    "lshift.vs": "shl_scalar",
+    "rshift.vs": "shr_scalar",
     "add.vs": "add_scalar",
     "sub.vs": "sub_scalar",
     "rsub.vs": "scalar_sub",
     "mul.vs": "mul_scalar",
     "div.vs": "div_scalar",
     "rdiv.vs": "scalar_div",
-
-    "and.vv": "bw_and",
-    "or.vv":  "bw_or",
-    "xor.vv": "bw_xor",
-    "not.v":  "bw_not",
-
-    "shl.vs": "shl_scalar",
-    "shr.vs": "shr_scalar",
-
+    
     "gt.vv":  "cmp_gt",
     "lt.vv":  "cmp_lt",
     "eq.vv":  "cmp_eq",
-    "neq.vv": "cmp_neq",
-
-    "sum.v":  "reduce_sum",
-    "exp.v":  "exp",
-    "sqrt.v": "sqrt",
+    "neq.vv": "cmp_neq"
 }
 
 MNEMONIC_MATMUL = {
-    "mm.vv": "matmul"
+    "gemm.vv": "matmul"
 }
 
 MNEMONIC_MOVECON = {
     "stbf.s": "int32_to_bf16",
     "bfts.s": "bf16_to_int32",
-    "mov.vs": "vector_extract",        # vA + index → scalar
+    "mov.vs": "vector_extract",       # vA + index → scalar
     "mov.ss": "scalar_broadcast",     # sA → VL-length vector
 }
 
@@ -147,63 +164,14 @@ class ExecuteUnit:
         # =======================================================
         if instr in MNEMONIC_SCALAR:
             op = MNEMONIC_SCALAR[instr]
-
-            if op == "add":  return self.scalar.add(sA, sB)
-            if op == "sub":  return self.scalar.sub(sA, sB)
-            if op == "mul":  return self.scalar.mul(sA, sB)
-            if op == "div":  return self.scalar.div(sA, sB)
-            if op == "mod":  return self.scalar.mod(sA, sB)
-
-            if op == "or":   return self.scalar.bit_or(sA, sB)
-            if op == "and":  return self.scalar.bit_and(sA, sB)
-            if op == "xor":  return self.scalar.bit_xor(sA, sB)
-            if op == "not":  return self.scalar.bit_not(sA)
-
-            if op == "shl":  return self.scalar.shl(sA, sB)
-            if op == "srl":  return self.scalar.srl(sA, sB)
-            if op == "sra":  return self.scalar.sra(sA, sB)
-
-            if op == "slt":  return self.scalar.slt(sA, sB)
-            if op == "sltu": return self.scalar.sltu(sA, sB)
-
-            raise ValueError(f"Unhandled scalar op '{instr}'")
+            return self.scalar.execute(op, sA, sB)
 
         # =======================================================
         # VECTOR
         # =======================================================
         if instr in MNEMONIC_VECTOR:
             op = MNEMONIC_VECTOR[instr]
-
-            if op == "add":           return self.vec.add(vA, vB)
-            if op == "sub":           return self.vec.sub(vA, vB)
-            if op == "mul":           return self.vec.mul(vA, vB)
-            if op == "div":           return self.vec.div(vA, vB)
-
-            if op == "add_scalar":    return self.vec.add_scalar(vA, sA)
-            if op == "sub_scalar":    return self.vec.sub_scalar(vA, sA)
-            if op == "scalar_sub":    return self.vec.scalar_sub(sA, vA)
-            if op == "mul_scalar":    return self.vec.mul_scalar(vA, sA)
-            if op == "div_scalar":    return self.vec.div_scalar(vA, sA)
-            if op == "scalar_div":    return self.vec.scalar_div(sA, vA)
-
-            if op == "bw_and":        return self.vec.bitwise_and(vA, vB)
-            if op == "bw_or":         return self.vec.bitwise_or(vA, vB)
-            if op == "bw_xor":        return self.vec.bitwise_xor(vA, vB)
-            if op == "bw_not":        return self.vec.bitwise_not(vA)
-
-            if op == "shl_scalar":    return self.vec.shl_scalar(vA, int(sA))
-            if op == "shr_scalar":    return self.vec.shr_scalar(vA, int(sA))
-
-            if op == "cmp_gt":        return self.vec.cmp_gt(vA, vB)
-            if op == "cmp_lt":        return self.vec.cmp_lt(vA, vB)
-            if op == "cmp_eq":        return self.vec.cmp_eq(vA, vB)
-            if op == "cmp_neq":       return self.vec.cmp_neq(vA, vB)
-
-            if op == "reduce_sum":    return self.vec.reduce_sum(vA)
-            if op == "exp":           return self.vec.exp(vA)
-            if op == "sqrt":          return self.vec.sqrt(vA)
-
-            raise ValueError(f"Unhandled vector op '{instr}'")
+            return self.vec.execute(op, vA, vB, sA)
 
         # =======================================================
         # MATMUL
@@ -219,20 +187,17 @@ class ExecuteUnit:
 
             if op == "int32_to_bf16":
                 return self.mov.int32_to_bf16(sA)
-
             if op == "bf16_to_int32":
                 return self.mov.bf16_to_int32(vA)
-
             if op == "vector_extract":
                 if index is None:
                     raise ValueError("mov.vs requires index= argument")
                 return self.mov.vector_extract(vA, index)
-
             if op == "scalar_broadcast":
                 target_vl = out_vl if out_vl is not None else self.vl
                 return self.mov.scalar_broadcast_to_vector(sA, VL=target_vl)
-
             raise ValueError(f"Unhandled move/convert op '{instr}'")
+        
 
         raise ValueError(f"Unknown instruction mnemonic '{instr}'")        
 
@@ -256,7 +221,7 @@ if __name__ == "__main__":
     print("xor.s   =", EU.execute("xor.s", sA=0b1010, sB=0b1100))
     print("not.s   =", EU.execute("not.s", sA=0b00001111))
 
-    print("shl.s   =", EU.execute("shl.s", sA=5,  sB=1))
+    print("sll.s   =", EU.execute("sll.s", sA=5,  sB=1))
     print("srl.s   =", EU.execute("srl.s", sA=8,  sB=1))
     print("sra.s   =", EU.execute("sra.s", sA=-8, sB=1))
 
@@ -290,19 +255,21 @@ if __name__ == "__main__":
     print("and.vv        =", EU.execute("and.vv", vA=vA.view(np.int32), vB=vB.view(np.int32)))
     print("or.vv         =", EU.execute("or.vv",  vA=vA.view(np.int32), vB=vB.view(np.int32)))
     print("xor.vv        =", EU.execute("xor.vv", vA=vA.view(np.int32), vB=vB.view(np.int32)))
-    print("not.v         =", EU.execute("not.v",  vA=vA.view(np.int32)))
+    print("not.vi         =", EU.execute("not.vi",  vA=vA.view(np.int32)))
 
-    print("shl.vs        =", EU.execute("shl.vs", vA=vA.view(np.int32), sA=1))
-    print("shr.vs        =", EU.execute("shr.vs", vA=vA.view(np.int32), sA=1))
+    print("lshift.vs        =", EU.execute("lshift.vs", vA=vA.view(np.int32), sA=1))
+    print("rshift.vs        =", EU.execute("rshift.vs", vA=vA.view(np.int32), sA=1))
 
     print("gt.vv         =", EU.execute("gt.vv", vA=vA, vB=vB))
     print("lt.vv         =", EU.execute("lt.vv", vA=vA, vB=vB))
     print("eq.vv         =", EU.execute("eq.vv", vA=vA, vB=vA))
     print("neq.vv        =", EU.execute("neq.vv", vA=vA, vB=vA+1))
 
-    print("sum.v         =", EU.execute("sum.v", vA=vA))
-    print("exp.v         =", EU.execute("exp.v", vA=np.ones(32, dtype=np.float32)))
-    print("sqrt.v        =", EU.execute("sqrt.v", vA=np.arange(32, dtype=np.float32)))
+    print("rsum.vi         =", EU.execute("rsum.vi", vA=vA))
+    print("rmin.vi         =", EU.execute("rmin.vi", vA=vA))
+    print("rmax.vi         =", EU.execute("rmax.vi", vA=vA))
+    print("expi.vi         =", EU.execute("expi.vi", vA=np.ones(32, dtype=np.float32)))
+    print("sqrti.vi        =", EU.execute("sqrti.vi", vA=np.arange(32, dtype=np.float32)))
 
 
     print("\n====================================================")
@@ -310,7 +277,7 @@ if __name__ == "__main__":
     print("====================================================")
     A = np.eye(32, dtype=np.float32)
     B = np.random.randn(32, 32).astype(np.float32)
-    print("mm.vv shape    =", EU.execute("mm.vv", A=A, B=B).shape)
+    print("gemm.vv shape    =", EU.execute("gemm.vv", A=A, B=B).shape)
 
 
     print("\n====================================================")
