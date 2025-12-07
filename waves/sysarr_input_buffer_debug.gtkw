@@ -1,0 +1,44 @@
+[*]
+[*] GTKWave Analyzer v3.3.125 (w)1999-2025 BSI
+[*] Sun Dec  7 00:55:29 2025
+[*]
+[dumpfile] "/home/vinay/tensorcore/atalla/waves/sysarr_input_buffer_waves.vcd"
+[dumpfile_mtime] "Sun Dec  7 00:48:03 2025"
+[dumpfile_size] 5393
+[savefile] "/home/vinay/tensorcore/atalla/waves/sysarr_input_buffer_debug.gtkw"
+[timestart] 0
+[size] 2560 1458
+[pos] 103 91
+*-3.605816 91 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1
+[treeopen] sysarr_input_buffer_tb.
+[sst_width] 278
+[signals_width] 246
+[sst_expanded] 1
+[sst_vpaned_height] 390
+@28
+sysarr_input_buffer_tb.tb_has_space
+@22
+sysarr_input_buffer_tb.tb_in[63:0]
+@28
+sysarr_input_buffer_tb.tb_nrst
+@22
+sysarr_input_buffer_tb.tb_out[63:0]
+@29
+sysarr_input_buffer_tb.DUT.next_read_pointer[1:0]
+@28
+sysarr_input_buffer_tb.DUT.read_pointer[1:0]
+sysarr_input_buffer_tb.DUT.read_en
+sysarr_input_buffer_tb.tb_read_en
+sysarr_input_buffer_tb.tb_write_en
+sysarr_input_buffer_tb.tb_clk
+@22
+sysarr_input_buffer_tb.DUT.buffer_contents[0][0][15:0]
+sysarr_input_buffer_tb.DUT.buffer_contents[0][1][15:0]
+sysarr_input_buffer_tb.DUT.buffer_contents[0][2][15:0]
+sysarr_input_buffer_tb.DUT.buffer_contents[0][3][15:0]
+sysarr_input_buffer_tb.DUT.buffer_contents[1][0][15:0]
+sysarr_input_buffer_tb.DUT.buffer_contents[1][1][15:0]
+sysarr_input_buffer_tb.DUT.buffer_contents[1][2][15:0]
+sysarr_input_buffer_tb.DUT.buffer_contents[1][3][15:0]
+[pattern_trace] 1
+[pattern_trace] 0
