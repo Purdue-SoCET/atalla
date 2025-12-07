@@ -141,8 +141,6 @@ always begin
         join_any
         disable fork;
         
-        sa_interface.sa_output_ready <= 1'b1;
-        
         $display("========================================");
         $display("OUTPUT COLUMN %0d", output_count);
         $display("========================================");
@@ -188,9 +186,13 @@ always begin
         endcase
         $display("========================================\n");
         
-        #CLK_PERIOD;
+        // Assert output_ready to acknowledge and clear the output
+        @(posedge tb_clk);
+        sa_interface.sa_output_ready <= 1'b1;
         @(posedge tb_clk);
         sa_interface.sa_output_ready <= 1'b0;
+        
+        // Give a cycle for the array to unstall
         #CLK_PERIOD;
     end
 
