@@ -97,7 +97,26 @@ module systolic_array_simple(
     // Because of the GSAU design expecting computation to start immediately, it's likely possible to get rid of MAC_starts at all.
     // But for now since the MAC units expect the start signal, we just start each MAC unit (or, column of MAC units) one cycle after they got a value shifted in.
     // Except, turn all starts off if the array needs to stall. (Might not be necessary either? Idk it's 4:28am.)
+    // IMPORTANT: Do NOT start MAC computation during weight loading - only during input processing
     logic [N-1:0] MAC_starts;
+    logic MAC_input_shift_0;  // MAC shift signal for input data only (not weights)
+    assign MAC_input_shift_0 = !(buffer_empty);  // Only active when input buffer has data
+    
+    logic [N-2:0] MAC_input_shifts_remaining;
+    always_ff @(posedge clk, negedge nRST) begin
+        if(nRST == 1'b0) begin
+            MAC_input_shifts_remaining[N-2:0] <= '0;
+        end
+        else begin
+            if(sysarr_stall) begin
+                MAC_input_shifts_remaining <= MAC_input_shifts_remaining;
+            end
+            else begin
+                MAC_input_shifts_remaining[N-2:0] <= {MAC_input_shift_0, MAC_input_shifts_remaining[N-2:1]};
+            end
+        end
+    end
+    
     always_ff @(posedge clk, negedge nRST) begin
         if(nRST == 1'b0) begin
             MAC_starts <= '0;
@@ -107,7 +126,8 @@ module systolic_array_simple(
                 MAC_starts <= '0;
             end
             else begin
-                MAC_starts <= {MAC_shifts_0, MAC_shifts_remaining};
+                // Use input-only shift signals for MAC_starts to avoid starting during weight loading
+                MAC_starts <= {MAC_input_shift_0, MAC_input_shifts_remaining};
             end
         end
     end
