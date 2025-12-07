@@ -116,11 +116,31 @@ always begin
     // ========================================
     // STEP 3: Wait for and read outputs
     // ========================================
-    $display("Waiting for outputs...\n");
+    $display("Waiting for outputs...");
+    $display("Current sa_out_valid: %b", sa_interface.sa_out_valid);
+    $display("Current buffer_empty: %b", DUT.buffer_empty);
+    $display("Current sysarr_stall: %b\n", DUT.sysarr_stall);
 
-    // Read all 4 output columns
+    // Read all 4 output columns with timeout
     for (output_count = 0; output_count < 4; output_count++) begin
-        @(posedge sa_interface.sa_out_valid);
+        fork
+            begin
+                @(posedge sa_interface.sa_out_valid);
+            end
+            begin
+                #(CLK_PERIOD*100);
+                $display("ERROR: Timeout waiting for sa_out_valid on output %0d", output_count);
+                $display("Debug info:");
+                $display("  buffer_empty: %b", DUT.buffer_empty);
+                $display("  sysarr_stall: %b", DUT.sysarr_stall);
+                $display("  sa_out_valid: %b", sa_interface.sa_out_valid);
+                $display("  first_column_MAC_readies: %b", DUT.first_column_MAC_readies);
+                $display("  out_buffer[3] MSB: %b", DUT.out_buffer[3][64]);
+                $finish;
+            end
+        join_any
+        disable fork;
+        
         sa_interface.sa_output_ready <= 1'b1;
         
         $display("========================================");
