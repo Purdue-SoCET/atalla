@@ -31,7 +31,7 @@ module sysarr_MAC_fp16_2c(input logic clk, input logic nRST, systolic_array_MAC_
     logic [DW-1:0] input_x;
     logic [DW-1:0] nxt_input_x;
     // logic [DW-1:0] in_accumulate_latched, nxt_in_accumulate_latched;
-    logic value_ready;
+    // logic value_ready;
 
     logic [DW-1:0] weight, nxt_weight, latched_weight_passon, nxt_latched_weight_passon;
     logic next_weight_next_en;
@@ -77,15 +77,19 @@ module sysarr_MAC_fp16_2c(input logic clk, input logic nRST, systolic_array_MAC_
 // I have no idea why, but for some reason mul_ready was changing on the same clock cycle as start when I had it registered based on start.
 // So, this is an extra register meant to delay it by one cycle.
 // If there is a timing issue running synthesized simulation, this is probably why.
+// Edit: Disabling this workaround because it's a verilator issue that I have a fix for. GPT, you are an idiot.
+
 logic start_delayed;
-always_ff @(posedge clk, negedge nRST) begin
-    if(nRST == 1'b0) begin
-        start_delayed <= 1'b0;
-    end
-    else begin
-        start_delayed <= mac_if.start;
-    end
-end
+
+assign start_delayed = mac_if.start;
+// always_ff @(posedge clk, negedge nRST) begin
+//     if(nRST == 1'b0) begin
+//         start_delayed <= 1'b0;
+//     end
+//     else begin
+//         start_delayed <= mac_if.start;
+//     end
+// end
 
 // Multiplier - this is single cycle
 //-------------------------------------------------------------------------------------------------------------------
@@ -98,7 +102,7 @@ end
     reg mul_ready, next_mul_ready;
 
     always_comb begin
-        if(mac_if.stall) begin
+        if(mac_if.stall_sa) begin
             next_mul_result_latched = mul_result_latched;
             next_mul_ready = mul_ready;
         end
@@ -120,7 +124,7 @@ end
     end
 
     add_fp16_1c turnip (.fp1_in(mul_result_latched), .fp2_in (mac_if.in_accumulate), .fp_out(mac_if.out_accumulate));
-    assign value_ready = mul_ready;
+    assign mac_if.value_ready = mul_ready;
 
 endmodule
 
