@@ -115,6 +115,9 @@ module systolic_array_simple(
 
     systolic_array_MAC_if mac_ifs[N*N-1:0] (); 
 
+    // Declare first_column_MAC_readies early so it can be used by psum_buffer
+    logic [N-1:0] first_column_MAC_readies;
+
     // Partial sum buffer - stores and delivers partial sum columns synchronized with output production
     logic [N*DW-1:0] psum_column;
     logic psum_buffer_has_space;
@@ -223,7 +226,7 @@ module systolic_array_simple(
     // but their values are still garbage, until the value from the top left corner accumulates down to the bottom left corner.
     // This one column tall shift register is how I track when the first valid number enters the output buffer's input port - by waiting until the top left corner MAC unit's value_ready propagates down the column.
     
-    logic [N-1:0] first_column_MAC_readies;
+    // first_column_MAC_readies declared earlier for psum_buffer use
 
     always_ff @(posedge clk, negedge nRST) begin
         if(nRST == 1'b0) begin
