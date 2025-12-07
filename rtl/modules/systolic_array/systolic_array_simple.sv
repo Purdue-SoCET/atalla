@@ -294,9 +294,17 @@ module systolic_array_simple(
 
     assign gsau_if.sa_out_valid = out_buffer[N-1][N*DW];
     
-    // Connect output bus to output buffer contents
-    // Extract output column from out_buffer[N-1] - the lower DW*N bits contain the data
-    assign gsau_if.sa_array_output = out_buffer[N-1][DW*N-1:0];
+    // diagonnal read unstagger 
+    // - Element 0 comes from out_buffer[N-1] 
+    // - Element 1 comes from out_buffer[N-2] 
+    // - Element k comes from out_buffer[N-1-k]
+    
+    genvar d;
+    generate
+        for (d = 0; d < N; d++) begin : unstagger_diagonal
+            assign gsau_if.sa_array_output[DW*d +: DW] = out_buffer[N-1-d][DW*d +: DW];
+        end
+    endgenerate
 
     // "Output buffer is filled" logic. When the output buffer is full, if data is not read out, the systolic array must stall so that the values in the buffer are not lost.
     always_ff @(posedge clk, negedge nRST) begin
