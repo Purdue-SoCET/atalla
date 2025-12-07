@@ -1,4 +1,4 @@
-`timescale 1ns / 1 ns
+`timescale 1ns / 1ps
 
 `include "sys_arr_pkg.vh"
 /* verilator lint_off IMPORTSTAR */
