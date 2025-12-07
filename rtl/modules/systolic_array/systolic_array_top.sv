@@ -26,6 +26,8 @@ module systolic_array_top(
     logic MAC_shift;
     logic add_start;
     logic [$clog2(3*N)-1:0] iteration;
+    logic mac_computing;
+    logic bottom_row_ready;
     
     // Generate variables
     genvar j,m,n,o,p;
@@ -35,10 +37,7 @@ module systolic_array_top(
     // Instantiate partial sum adder interfaces
     systolic_array_add_if add_ifs[N-1:0] (); 
     // Instantiate Output Fifos
-    systolic_array_OUT_FIFO_if out_fifos_ifs[N-1:0] (); 
-    
-    // Control logic for streaming mode
-    logic mac_computing;
+    systolic_array_OUT_FIFO_if out_fifos_ifs[N-1:0] ();  
     
     // Track when MACs should be computing
     always_ff @(posedge clk, negedge nRST) begin
@@ -58,8 +57,9 @@ module systolic_array_top(
     
     // MAC control signals
     assign MAC_start = mac_computing;  // Keep MACs running while computing
-    assign MAC_shift = memory.input_en;  // Shift when loading new inputs
-    assign add_start = mac_ifs[0].value_ready;  // Start adders when MACs are ready
+    assign MAC_shift = memory.input_en || memory.weight_en;  // Shift when loading new inputs
+    assign bottom_row_ready = |value_ready_array[N-1];
+    assign add_start = bottom_row_ready;  // Start adders when MACs are ready
     assign memory.fifo_has_space = 1'b1;  // Always ready in streaming mode
     
     // Direct input connection - take values immediately from array_in
@@ -238,5 +238,4 @@ module systolic_array_top(
         memory.drained = 1'b0;
     end
 end
-
 endmodule
