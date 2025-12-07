@@ -1,4 +1,906 @@
+make[1]: Entering directory '/home/asicfab/a/jghanem/atalla'
 [test] vector TB detected -> compiling all vector + sqrt + adders + multipliers + dividers + general modules
 [test] Running generic simulation script...
-/bin/bash: line 75: vsim: command not found
-make: *** [Makefile:87: test] Error 127
+Reading pref.tcl
+
+# 2022.4_5
+
+# set batch_mode 1
+# 1
+#  set WAVE_ROOT ./waves
+# ./waves
+#  set TB_NAME lane_tb
+# lane_tb
+#  set SRCS {./rtl/include/common/xbar/xbar_pkg.sv
+# ./rtl/include/vector/sys_arr_pkg.vh
+# ./rtl/include/vector/vector_pkg.vh ./rtl/include/common/arithmetic/sqrt/sqrt_if.sv
+# ./rtl/include/common/xbar/xbar_if.sv ./rtl/modules/common/arithmetic/adders/add_bf16.sv
+# ./rtl/modules/common/arithmetic/adders/adder_5b.sv
+# ./rtl/modules/common/arithmetic/adders/adder_8b.sv
+# ./rtl/modules/common/arithmetic/adders/add_fp16.sv
+# ./rtl/modules/common/arithmetic/adders/left_shift.sv
+# ./rtl/modules/common/arithmetic/dividers/div.sv
+# ./rtl/modules/common/arithmetic/mutlipliers/fa.sv
+# ./rtl/modules/common/arithmetic/mutlipliers/ha.sv
+# ./rtl/modules/common/arithmetic/mutlipliers/mul_bf16_fu.sv
+# ./rtl/modules/common/arithmetic/mutlipliers/mul_bf16.sv
+# ./rtl/modules/common/arithmetic/mutlipliers/mul_fp16.sv
+# ./rtl/modules/common/arithmetic/mutlipliers/mul_wallacetree.sv
+# ./rtl/modules/common/arithmetic/mutlipliers/wallacetree_8b.sv
+# ./rtl/modules/common/arithmetic/sqrt/sqrt_bf16.sv
+# ./rtl/modules/common/arithmetic/sqrt/sqrt_fp16.sv
+# ./rtl/modules/common/general/buffer_module.sv
+# ./rtl/modules/common/general/demux.sv
+# ./rtl/modules/common/general/fifo.sv
+# ./rtl/modules/common/general/flex_counter.sv
+# ./rtl/modules/common/general/latch.sv
+# ./rtl/modules/common/general/mux.sv
+# ./rtl/modules/common/general/nbit_stp_shiftreg.sv
+# ./rtl/modules/vector/gsau_control_unit.sv
+# ./rtl/modules/vector/lane_fu_pt.sv
+# ./rtl/modules/vector/lane_sequencer.sv
+# ./rtl/modules/vector/lane.sv
+# ./rtl/modules/vector/masku.sv
+# ./rtl/modules/vector/op_buffer.sv
+# ./rtl/modules/vector/rom.sv
+# ./rtl/modules/vector/vbank.sv
+# ./rtl/modules/vector/vdiv.sv
+# ./rtl/modules/vector/veggie.sv
+# ./rtl/modules/vector/vreg_file.sv ./tb/unit/vector/lane_tb.sv}
+# ./rtl/include/common/xbar/xbar_pkg.sv
+# ./rtl/include/vector/sys_arr_pkg.vh
+# ./rtl/include/vector/vector_pkg.vh ./rtl/include/common/arithmetic/sqrt/sqrt_if.sv
+# ./rtl/include/common/xbar/xbar_if.sv ./rtl/modules/common/arithmetic/adders/add_bf16.sv
+# ./rtl/modules/common/arithmetic/adders/adder_5b.sv
+# ./rtl/modules/common/arithmetic/adders/adder_8b.sv
+# ./rtl/modules/common/arithmetic/adders/add_fp16.sv
+# ./rtl/modules/common/arithmetic/adders/left_shift.sv
+# ./rtl/modules/common/arithmetic/dividers/div.sv
+# ./rtl/modules/common/arithmetic/mutlipliers/fa.sv
+# ./rtl/modules/common/arithmetic/mutlipliers/ha.sv
+# ./rtl/modules/common/arithmetic/mutlipliers/mul_bf16_fu.sv
+# ./rtl/modules/common/arithmetic/mutlipliers/mul_bf16.sv
+# ./rtl/modules/common/arithmetic/mutlipliers/mul_fp16.sv
+# ./rtl/modules/common/arithmetic/mutlipliers/mul_wallacetree.sv
+# ./rtl/modules/common/arithmetic/mutlipliers/wallacetree_8b.sv
+# ./rtl/modules/common/arithmetic/sqrt/sqrt_bf16.sv
+# ./rtl/modules/common/arithmetic/sqrt/sqrt_fp16.sv
+# ./rtl/modules/common/general/buffer_module.sv
+# ./rtl/modules/common/general/demux.sv
+# ./rtl/modules/common/general/fifo.sv
+# ./rtl/modules/common/general/flex_counter.sv
+# ./rtl/modules/common/general/latch.sv
+# ./rtl/modules/common/general/mux.sv
+# ./rtl/modules/common/general/nbit_stp_shiftreg.sv
+# ./rtl/modules/vector/gsau_control_unit.sv
+# ./rtl/modules/vector/lane_fu_pt.sv
+# ./rtl/modules/vector/lane_sequencer.sv
+# ./rtl/modules/vector/lane.sv
+# ./rtl/modules/vector/masku.sv
+# ./rtl/modules/vector/op_buffer.sv
+# ./rtl/modules/vector/rom.sv
+# ./rtl/modules/vector/vbank.sv
+# ./rtl/modules/vector/vdiv.sv
+# ./rtl/modules/vector/veggie.sv
+# ./rtl/modules/vector/vreg_file.sv ./tb/unit/vector/lane_tb.sv
+#  set INCS {+incdir+./rtl/include +incdir+./rtl/modules +incdir+./tb/unit +incdir+./rtl/include
+# +incdir+./rtl/include/common
+# +incdir+./rtl/include/common/xbar
+# +incdir+./rtl/include/common/arithmetic
+# +incdir+./rtl/include/common/arithmetic/sqrt
+# +incdir+./rtl/include/common/arithmetic/divider
+# +incdir+./rtl/include/common/arithmetic/multipliers
+# +incdir+./rtl/include/memory
+# +incdir+./rtl/include/memory/caches
+# +incdir+./rtl/include/memory/scratchpad
+# +incdir+./rtl/include/scheduler
+# +incdir+./rtl/include/systolic_array
+# +incdir+./rtl/include/vector
+# +incdir+./rtl/modules
+# +incdir+./rtl/modules/common
+# +incdir+./rtl/modules/common/arithmetic
+# +incdir+./rtl/modules/common/arithmetic/adders
+# +incdir+./rtl/modules/common/arithmetic/mutlipliers
+# +incdir+./rtl/modules/common/arithmetic/sqrt
+# +incdir+./rtl/modules/common/arithmetic/dividers
+# +incdir+./rtl/modules/common/general
+# +incdir+./rtl/modules/common/memory
+# +incdir+./rtl/modules/common/xbar
+# +incdir+./rtl/modules/memory
+# +incdir+./rtl/modules/memory/caches
+# +incdir+./rtl/modules/memory/scratchpad
+# +incdir+./rtl/modules/scheduler
+# +incdir+./rtl/modules/systolic_array
+# +incdir+./rtl/modules/vector
+# +incdir+./tb/unit
+# +incdir+./tb/unit/common
+# +incdir+./tb/unit/common/xbar
+# +incdir+./tb/unit/common/arithmetic
+# +incdir+./tb/unit/common/arithmetic/sqrt
+# +incdir+./tb/unit/memory
+# +incdir+./tb/unit/memory/caches
+# +incdir+./tb/unit/memory/scratchpad
+# +incdir+./tb/unit/scheduler
+# +incdir+./tb/unit/systolic_array
+# +incdir+./tb/unit/vector
+# +incdir+./tb/unit/vector/test_cases}
+# +incdir+./rtl/include +incdir+./rtl/modules +incdir+./tb/unit +incdir+./rtl/include
+# +incdir+./rtl/include/common
+# +incdir+./rtl/include/common/xbar
+# +incdir+./rtl/include/common/arithmetic
+# +incdir+./rtl/include/common/arithmetic/sqrt
+# +incdir+./rtl/include/common/arithmetic/divider
+# +incdir+./rtl/include/common/arithmetic/multipliers
+# +incdir+./rtl/include/memory
+# +incdir+./rtl/include/memory/caches
+# +incdir+./rtl/include/memory/scratchpad
+# +incdir+./rtl/include/scheduler
+# +incdir+./rtl/include/systolic_array
+# +incdir+./rtl/include/vector
+# +incdir+./rtl/modules
+# +incdir+./rtl/modules/common
+# +incdir+./rtl/modules/common/arithmetic
+# +incdir+./rtl/modules/common/arithmetic/adders
+# +incdir+./rtl/modules/common/arithmetic/mutlipliers
+# +incdir+./rtl/modules/common/arithmetic/sqrt
+# +incdir+./rtl/modules/common/arithmetic/dividers
+# +incdir+./rtl/modules/common/general
+# +incdir+./rtl/modules/common/memory
+# +incdir+./rtl/modules/common/xbar
+# +incdir+./rtl/modules/memory
+# +incdir+./rtl/modules/memory/caches
+# +incdir+./rtl/modules/memory/scratchpad
+# +incdir+./rtl/modules/scheduler
+# +incdir+./rtl/modules/systolic_array
+# +incdir+./rtl/modules/vector
+# +incdir+./tb/unit
+# +incdir+./tb/unit/common
+# +incdir+./tb/unit/common/xbar
+# +incdir+./tb/unit/common/arithmetic
+# +incdir+./tb/unit/common/arithmetic/sqrt
+# +incdir+./tb/unit/memory
+# +incdir+./tb/unit/memory/caches
+# +incdir+./tb/unit/memory/scratchpad
+# +incdir+./tb/unit/scheduler
+# +incdir+./tb/unit/systolic_array
+# +incdir+./tb/unit/vector
+# +incdir+./tb/unit/vector/test_cases
+#  do ./scripts/run_sim.tcl
+------------------------------------------
+run_sim.tcl: starting
+  TB_NAME   = lane_tb
+  WAVE_ROOT = ./waves
+------------------------------------------
+# QuestaSim vmap 2022.4_5 Lib Mapping Utility 2024.06 Jun 21 2024
+# vmap work work 
+# Modifying modelsim.ini
+==========================================
+Compiling Source Files...
+==========================================
+Top Module: lane_tb
+Package files:
+  /home/asicfab/a/jghanem/atalla/rtl/include/common/xbar/xbar_pkg.sv
+  /home/asicfab/a/jghanem/atalla/rtl/include/vector/sys_arr_pkg.vh
+  /home/asicfab/a/jghanem/atalla/rtl/include/vector/vector_pkg.vh
+Non-package files:
+  /home/asicfab/a/jghanem/atalla/rtl/include/common/arithmetic/sqrt/sqrt_if.sv
+  /home/asicfab/a/jghanem/atalla/rtl/include/common/xbar/xbar_if.sv
+  /home/asicfab/a/jghanem/atalla/rtl/modules/common/arithmetic/adders/add_bf16.sv
+  /home/asicfab/a/jghanem/atalla/rtl/modules/common/arithmetic/adders/adder_5b.sv
+  /home/asicfab/a/jghanem/atalla/rtl/modules/common/arithmetic/adders/adder_8b.sv
+  /home/asicfab/a/jghanem/atalla/rtl/modules/common/arithmetic/adders/add_fp16.sv
+  /home/asicfab/a/jghanem/atalla/rtl/modules/common/arithmetic/adders/left_shift.sv
+  /home/asicfab/a/jghanem/atalla/rtl/modules/common/arithmetic/dividers/div.sv
+  /home/asicfab/a/jghanem/atalla/rtl/modules/common/arithmetic/mutlipliers/fa.sv
+  /home/asicfab/a/jghanem/atalla/rtl/modules/common/arithmetic/mutlipliers/ha.sv
+  /home/asicfab/a/jghanem/atalla/rtl/modules/common/arithmetic/mutlipliers/mul_bf16_fu.sv
+  /home/asicfab/a/jghanem/atalla/rtl/modules/common/arithmetic/mutlipliers/mul_bf16.sv
+  /home/asicfab/a/jghanem/atalla/rtl/modules/common/arithmetic/mutlipliers/mul_fp16.sv
+  /home/asicfab/a/jghanem/atalla/rtl/modules/common/arithmetic/mutlipliers/mul_wallacetree.sv
+  /home/asicfab/a/jghanem/atalla/rtl/modules/common/arithmetic/mutlipliers/wallacetree_8b.sv
+  /home/asicfab/a/jghanem/atalla/rtl/modules/common/arithmetic/sqrt/sqrt_bf16.sv
+  /home/asicfab/a/jghanem/atalla/rtl/modules/common/arithmetic/sqrt/sqrt_fp16.sv
+  /home/asicfab/a/jghanem/atalla/rtl/modules/common/general/buffer_module.sv
+  /home/asicfab/a/jghanem/atalla/rtl/modules/common/general/demux.sv
+  /home/asicfab/a/jghanem/atalla/rtl/modules/common/general/fifo.sv
+  /home/asicfab/a/jghanem/atalla/rtl/modules/common/general/flex_counter.sv
+  /home/asicfab/a/jghanem/atalla/rtl/modules/common/general/latch.sv
+  /home/asicfab/a/jghanem/atalla/rtl/modules/common/general/mux.sv
+  /home/asicfab/a/jghanem/atalla/rtl/modules/common/general/nbit_stp_shiftreg.sv
+  /home/asicfab/a/jghanem/atalla/rtl/modules/vector/gsau_control_unit.sv
+  /home/asicfab/a/jghanem/atalla/rtl/modules/vector/lane_fu_pt.sv
+  /home/asicfab/a/jghanem/atalla/rtl/modules/vector/lane_sequencer.sv
+  /home/asicfab/a/jghanem/atalla/rtl/modules/vector/lane.sv
+  /home/asicfab/a/jghanem/atalla/rtl/modules/vector/masku.sv
+  /home/asicfab/a/jghanem/atalla/rtl/modules/vector/op_buffer.sv
+  /home/asicfab/a/jghanem/atalla/rtl/modules/vector/rom.sv
+  /home/asicfab/a/jghanem/atalla/rtl/modules/vector/vbank.sv
+  /home/asicfab/a/jghanem/atalla/rtl/modules/vector/vdiv.sv
+  /home/asicfab/a/jghanem/atalla/rtl/modules/vector/veggie.sv
+  /home/asicfab/a/jghanem/atalla/rtl/modules/vector/vreg_file.sv
+  /home/asicfab/a/jghanem/atalla/tb/unit/vector/lane_tb.sv
+------------------------------------------
+Compiling package files...
+------------------------------------------
+# QuestaSim vlog 2022.4_5 Compiler 2024.06 Jun 21 2024
+# Start time: 00:26:14 on Dec 07,2025
+# vlog -sv -mfcu "+incdir+./rtl/include" "+incdir+./rtl/modules" "+incdir+./tb/unit" "+incdir+./rtl/include" "+incdir+./rtl/include/common" "+incdir+./rtl/include/common/xbar" "+incdir+./rtl/include/common/arithmetic" "+incdir+./rtl/include/common/arithmetic/sqrt" "+incdir+./rtl/include/common/arithmetic/divider" "+incdir+./rtl/include/common/arithmetic/multipliers" "+incdir+./rtl/include/memory" "+incdir+./rtl/include/memory/caches" "+incdir+./rtl/include/memory/scratchpad" "+incdir+./rtl/include/scheduler" "+incdir+./rtl/include/systolic_array" "+incdir+./rtl/include/vector" "+incdir+./rtl/modules" "+incdir+./rtl/modules/common" "+incdir+./rtl/modules/common/arithmetic" "+incdir+./rtl/modules/common/arithmetic/adders" "+incdir+./rtl/modules/common/arithmetic/mutlipliers" "+incdir+./rtl/modules/common/arithmetic/sqrt" "+incdir+./rtl/modules/common/arithmetic/dividers" "+incdir+./rtl/modules/common/general" "+incdir+./rtl/modules/common/memory" "+incdir+./rtl/modules/common/xbar" "+incdir+./rtl/modules/memory" "+incdir+./rtl/modules/memory/caches" "+incdir+./rtl/modules/memory/scratchpad" "+incdir+./rtl/modules/scheduler" "+incdir+./rtl/modules/systolic_array" "+incdir+./rtl/modules/vector" "+incdir+./tb/unit" "+incdir+./tb/unit/common" "+incdir+./tb/unit/common/xbar" "+incdir+./tb/unit/common/arithmetic" "+incdir+./tb/unit/common/arithmetic/sqrt" "+incdir+./tb/unit/memory" "+incdir+./tb/unit/memory/caches" "+incdir+./tb/unit/memory/scratchpad" "+incdir+./tb/unit/scheduler" "+incdir+./tb/unit/systolic_array" "+incdir+./tb/unit/vector" "+incdir+./tb/unit/vector/test_cases" ./rtl/include/common/xbar/xbar_pkg.sv ./rtl/include/vector/sys_arr_pkg.vh ./rtl/include/vector/vector_pkg.vh 
+# -- Compiling package xbar_pkg
+# -- Compiling package sys_arr_pkg
+# -- Compiling package vector_pkg
+# 
+# Top level modules:
+# 	--none--
+# End time: 00:26:14 on Dec 07,2025, Elapsed time: 0:00:00
+# Errors: 0, Warnings: 0
+------------------------------------------
+Compiling DUT + TB files...
+------------------------------------------
+# QuestaSim vlog 2022.4_5 Compiler 2024.06 Jun 21 2024
+# Start time: 00:26:14 on Dec 07,2025
+# vlog -sv "+incdir+./rtl/include" "+incdir+./rtl/modules" "+incdir+./tb/unit" "+incdir+./rtl/include" "+incdir+./rtl/include/common" "+incdir+./rtl/include/common/xbar" "+incdir+./rtl/include/common/arithmetic" "+incdir+./rtl/include/common/arithmetic/sqrt" "+incdir+./rtl/include/common/arithmetic/divider" "+incdir+./rtl/include/common/arithmetic/multipliers" "+incdir+./rtl/include/memory" "+incdir+./rtl/include/memory/caches" "+incdir+./rtl/include/memory/scratchpad" "+incdir+./rtl/include/scheduler" "+incdir+./rtl/include/systolic_array" "+incdir+./rtl/include/vector" "+incdir+./rtl/modules" "+incdir+./rtl/modules/common" "+incdir+./rtl/modules/common/arithmetic" "+incdir+./rtl/modules/common/arithmetic/adders" "+incdir+./rtl/modules/common/arithmetic/mutlipliers" "+incdir+./rtl/modules/common/arithmetic/sqrt" "+incdir+./rtl/modules/common/arithmetic/dividers" "+incdir+./rtl/modules/common/general" "+incdir+./rtl/modules/common/memory" "+incdir+./rtl/modules/common/xbar" "+incdir+./rtl/modules/memory" "+incdir+./rtl/modules/memory/caches" "+incdir+./rtl/modules/memory/scratchpad" "+incdir+./rtl/modules/scheduler" "+incdir+./rtl/modules/systolic_array" "+incdir+./rtl/modules/vector" "+incdir+./tb/unit" "+incdir+./tb/unit/common" "+incdir+./tb/unit/common/xbar" "+incdir+./tb/unit/common/arithmetic" "+incdir+./tb/unit/common/arithmetic/sqrt" "+incdir+./tb/unit/memory" "+incdir+./tb/unit/memory/caches" "+incdir+./tb/unit/memory/scratchpad" "+incdir+./tb/unit/scheduler" "+incdir+./tb/unit/systolic_array" "+incdir+./tb/unit/vector" "+incdir+./tb/unit/vector/test_cases" ./rtl/include/common/arithmetic/sqrt/sqrt_if.sv ./rtl/include/common/xbar/xbar_if.sv ./rtl/modules/common/arithmetic/adders/add_bf16.sv ./rtl/modules/common/arithmetic/adders/adder_5b.sv ./rtl/modules/common/arithmetic/adders/adder_8b.sv ./rtl/modules/common/arithmetic/adders/add_fp16.sv ./rtl/modules/common/arithmetic/adders/left_shift.sv ./rtl/modules/common/arithmetic/dividers/div.sv ./rtl/modules/common/arithmetic/mutlipliers/fa.sv ./rtl/modules/common/arithmetic/mutlipliers/ha.sv ./rtl/modules/common/arithmetic/mutlipliers/mul_bf16_fu.sv ./rtl/modules/common/arithmetic/mutlipliers/mul_bf16.sv ./rtl/modules/common/arithmetic/mutlipliers/mul_fp16.sv ./rtl/modules/common/arithmetic/mutlipliers/mul_wallacetree.sv ./rtl/modules/common/arithmetic/mutlipliers/wallacetree_8b.sv ./rtl/modules/common/arithmetic/sqrt/sqrt_bf16.sv ./rtl/modules/common/arithmetic/sqrt/sqrt_fp16.sv ./rtl/modules/common/general/buffer_module.sv ./rtl/modules/common/general/demux.sv ./rtl/modules/common/general/fifo.sv ./rtl/modules/common/general/flex_counter.sv ./rtl/modules/common/general/latch.sv ./rtl/modules/common/general/mux.sv ./rtl/modules/common/general/nbit_stp_shiftreg.sv ./rtl/modules/vector/gsau_control_unit.sv ./rtl/modules/vector/lane_fu_pt.sv ./rtl/modules/vector/lane_sequencer.sv ./rtl/modules/vector/lane.sv ./rtl/modules/vector/masku.sv ./rtl/modules/vector/op_buffer.sv ./rtl/modules/vector/rom.sv ./rtl/modules/vector/vbank.sv ./rtl/modules/vector/vdiv.sv ./rtl/modules/vector/veggie.sv ./rtl/modules/vector/vreg_file.sv ./tb/unit/vector/lane_tb.sv 
+# -- Compiling package sqrt_pkg
+# -- Compiling interface sqrt_if
+# -- Importing package sqrt_pkg
+# -- Compiling interface xbar_if
+# -- Importing package xbar_pkg
+# -- Compiling module add_bf16
+# -- Compiling module adder_5b
+# -- Compiling module adder_8b
+# -- Compiling module add_fp16
+# -- Compiling module left_shift
+# -- Compiling interface div_if
+# -- Compiling module div
+# -- Compiling module mant_div
+# -- Compiling module fa
+# -- Compiling module ha
+# -- Compiling interface mul_if
+# -- Compiling module mul_bf16_fu
+# -- Compiling module mul_bf16
+# -- Compiling module mul_fp16
+# -- Compiling module mul_wallacetree
+# -- Compiling module wallacetree_8b
+# -- Compiling package sqrt_pkg
+# ** Warning: ** while parsing file included at ./rtl/modules/common/arithmetic/sqrt/sqrt_bf16.sv(1)
+# ** at ./rtl/include/common/arithmetic/sqrt/sqrt_types.vh(4): (vlog-2275) Existing package 'sqrt_pkg' at line 4 will be overwritten.
+# -- Compiling interface sqrt_if
+# ** Warning: ** while parsing file included at ./rtl/modules/common/arithmetic/sqrt/sqrt_bf16.sv(2)
+# ** at ./rtl/include/common/arithmetic/sqrt/sqrt_if.sv(5): (vlog-2275) Existing interface 'sqrt_if' at line 5 will be overwritten.
+# -- Compiling module sqrt_bf16
+# -- Compiling package sqrt_pkg
+# ** Warning: ** while parsing file included at ./rtl/modules/common/arithmetic/sqrt/sqrt_fp16.sv(1)
+# ** at ./rtl/include/common/arithmetic/sqrt/sqrt_types.vh(4): (vlog-2275) Existing package 'sqrt_pkg' at line 4 will be overwritten.
+# -- Compiling interface sqrt_if
+# ** Warning: ** while parsing file included at ./rtl/modules/common/arithmetic/sqrt/sqrt_fp16.sv(2)
+# ** at ./rtl/include/common/arithmetic/sqrt/sqrt_if.sv(5): (vlog-2275) Existing interface 'sqrt_if' at line 5 will be overwritten.
+# -- Compiling module sqrt_fp16
+# -- Compiling module buffer_module
+# -- Compiling module demux
+# -- Compiling module sync_fifo
+# -- Compiling module flex_counter
+# -- Compiling module latch
+# -- Compiling module mux
+# -- Compiling package isa_pkg
+# -- Compiling package datapath_pkg
+# -- Importing package isa_pkg
+# -- Compiling interface btb_if
+# -- Importing package datapath_pkg
+# -- Compiling module nbit_stp_shiftreg
+# -- Compiling package sys_arr_pkg
+# -- Compiling package vector_pkg
+# -- Compiling interface gsau_control_unit_if
+# -- Importing package vector_pkg
+# -- Importing package sys_arr_pkg
+# -- Compiling module gsau_control_unit
+# -- Compiling module lane_fu_pt
+# ** Warning: ./rtl/modules/vector/lane_sequencer.sv(10): (vlog-13314) Defaulting port 'lane_in' kind to 'var' rather than 'wire' due to default compile option setting of -svinputport=relaxed.
+# ** Warning: ./rtl/modules/vector/lane_sequencer.sv(2): (vlog-13233) Design unit "lane_sequencer_sv_unit" already exists and will be overwritten. Design unit compiled with different set of options.
+# -- Compiling package lane_sequencer_sv_unit
+# -- Compiling module lane_sequencer
+# ** Warning: ./rtl/modules/vector/lane_sequencer.sv(10): (vlog-13314) Defaulting port 'lane_in' kind to 'var' rather than 'wire' due to default compile option setting of -svinputport=relaxed.
+# -- Compiling package vector_pkg
+# ** Warning: ** while parsing file included at ./rtl/modules/vector/lane.sv(5)
+# ** while parsing file included at ./rtl/include/vector/vector_if.vh(5)
+# ** at ./rtl/include/vector/vector_pkg.vh(4): (vlog-2275) Existing package 'vector_pkg' at line 4 will be overwritten.
+# -- Compiling interface vector_if
+# -- Compiling interface div_if
+# ** Warning: ** while parsing file included at ./rtl/modules/vector/lane.sv(7)
+# ** at ./rtl/include/common/arithmetic/divider/div_if.vh(4): (vlog-2275) Existing interface 'div_if' at line 4 will be overwritten.
+# -- Compiling module lane
+# -- Compiling package vector_pkg
+# ** Warning: ** while parsing file included at ./rtl/modules/vector/masku.sv(6)
+# ** while parsing file included at ./rtl/include/vector/vector_if.vh(5)
+# ** at ./rtl/include/vector/vector_pkg.vh(4): (vlog-2275) Existing package 'vector_pkg' at line 4 will be overwritten.
+# -- Compiling interface vector_if
+# ** Warning: ** while parsing file included at ./rtl/modules/vector/masku.sv(6)
+# ** at ./rtl/include/vector/vector_if.vh(7): (vlog-2275) Existing interface 'vector_if' at line 7 will be overwritten.
+# -- Compiling module masku
+# -- Compiling package vector_pkg
+# ** Warning: ** while parsing file included at ./rtl/modules/vector/op_buffer.sv(6)
+# ** while parsing file included at ./rtl/include/vector/vector_if.vh(5)
+# ** at ./rtl/include/vector/vector_pkg.vh(4): (vlog-2275) Existing package 'vector_pkg' at line 4 will be overwritten.
+# -- Compiling interface vector_if
+# ** Warning: ** while parsing file included at ./rtl/modules/vector/op_buffer.sv(6)
+# ** at ./rtl/include/vector/vector_if.vh(7): (vlog-2275) Existing interface 'vector_if' at line 7 will be overwritten.
+# -- Compiling module op_buffer
+# -- Compiling module rom
+# -- Compiling module vbank
+# -- Compiling interface vdiv_if
+# -- Compiling module vdiv
+# -- Compiling module mant_divider
+# -- Compiling package vector_pkg
+# ** Warning: ** while parsing file included at ./rtl/modules/vector/veggie.sv(6)
+# ** while parsing file included at ./rtl/include/vector/vector_if.vh(5)
+# ** at ./rtl/include/vector/vector_pkg.vh(4): (vlog-2275) Existing package 'vector_pkg' at line 4 will be overwritten.
+# -- Compiling interface vector_if
+# ** Warning: ** while parsing file included at ./rtl/modules/vector/veggie.sv(6)
+# ** at ./rtl/include/vector/vector_if.vh(7): (vlog-2275) Existing interface 'vector_if' at line 7 will be overwritten.
+# -- Compiling module veggie
+# -- Compiling package vector_pkg
+# ** Warning: ** while parsing file included at ./rtl/modules/vector/vreg_file.sv(2)
+# ** while parsing file included at ./rtl/include/vector/vector_if.vh(5)
+# ** at ./rtl/include/vector/vector_pkg.vh(4): (vlog-2275) Existing package 'vector_pkg' at line 4 will be overwritten.
+# -- Compiling interface vector_if
+# ** Warning: ** while parsing file included at ./rtl/modules/vector/vreg_file.sv(2)
+# ** at ./rtl/include/vector/vector_if.vh(7): (vlog-2275) Existing interface 'vector_if' at line 7 will be overwritten.
+# -- Compiling module vreg_file
+# -- Compiling package vector_pkg
+# ** Warning: ** while parsing file included at ./tb/unit/vector/lane_tb.sv(3)
+# ** while parsing file included at ./rtl/include/vector/vector_if.vh(5)
+# ** at ./rtl/include/vector/vector_pkg.vh(4): (vlog-2275) Existing package 'vector_pkg' at line 4 will be overwritten.
+# -- Compiling interface vector_if
+# ** Warning: ** while parsing file included at ./tb/unit/vector/lane_tb.sv(3)
+# ** at ./rtl/include/vector/vector_if.vh(7): (vlog-2275) Existing interface 'vector_if' at line 7 will be overwritten.
+# -- Compiling module lane_tb
+# 
+# Top level modules:
+# 	sqrt_fp16
+# 	buffer_module
+# 	demux
+# 	flex_counter
+# 	latch
+# 	mux
+# 	nbit_stp_shiftreg
+# 	gsau_control_unit
+# 	masku
+# 	rom
+# 	vdiv
+# 	vreg_file
+# 	lane_tb
+# End time: 00:26:14 on Dec 07,2025, Elapsed time: 0:00:00
+# Errors: 0, Warnings: 19
+==========================================
+Loading Simulation...
+==========================================
+# vsim -voptargs=""+acc"" work.lane_tb 
+# Start time: 00:26:14 on Dec 07,2025
+# ** Note: (vsim-3812) Design is being optimized...
+# ** Warning: (vopt-10587) Some optimizations are turned off because the +acc switch is in effect. This will cause your simulation to run slowly. Please use -access/-debug to maintain needed visibility.
+# ** Warning: ./rtl/modules/common/arithmetic/sqrt/sqrt_bf16.sv(166): (vopt-2685) [TFMPC] - Too few port connections for 'add1'.  Expected 8, found 5.
+# ** Warning: ./rtl/modules/common/arithmetic/sqrt/sqrt_bf16.sv(166): (vopt-2718) [TFMPC] - Missing connection for port 'invalid'.
+# ** Warning: ./rtl/modules/common/arithmetic/sqrt/sqrt_bf16.sv(166): (vopt-2718) [TFMPC] - Missing connection for port 'underflow'.
+# ** Warning: ./rtl/modules/common/arithmetic/sqrt/sqrt_bf16.sv(166): (vopt-2718) [TFMPC] - Missing connection for port 'overflow'.
+# ** Warning: ./rtl/modules/vector/lane_sequencer.sv(10): (vopt-13314) Defaulting port 'lane_in' kind to 'var' rather than 'wire' due to default compile option setting of -svinputport=relaxed.
+# ** Note: (vsim-12126) Error and warning message counts have been restored: Errors=0, Warnings=6.
+# //  Questa Sim
+# //  Version 2022.4_5 linux Jun 21 2024
+# //
+# //  Copyright 1991-2024 Mentor Graphics Corporation
+# //  All Rights Reserved.
+# //
+# //  QuestaSim and its associated documentation contain trade
+# //  secrets and commercial or financial information that are the property of
+# //  Mentor Graphics Corporation and are privileged, confidential,
+# //  and exempt from disclosure under the Freedom of Information Act,
+# //  5 U.S.C. Section 552. Furthermore, this information
+# //  is prohibited from disclosure under the Trade Secrets Act,
+# //  18 U.S.C. Section 1905.
+# //
+# Loading sv_std.std
+# Loading work.vector_pkg(fast)
+# Loading work.lane_tb(fast)
+# Loading work.vector_if(fast__1)
+# Loading work.lane(fast)
+# Loading work.sqrt_pkg(fast)
+# Loading work.sqrt_if(fast__1)
+# Loading work.lane_sequencer_sv_unit(fast)
+# Loading work.lane_sequencer(fast)
+# Loading work.sqrt_bf16(fast)
+# Loading work.mul_bf16(fast)
+# Loading work.wallacetree_8b(fast)
+# Loading work.ha(fast)
+# Loading work.fa(fast)
+# Loading work.adder_8b(fast)
+# Loading work.add_bf16(fast)
+# Loading work.left_shift(fast)
+# Loading work.lane_fu_pt(fast)
+# Loading work.sync_fifo(fast)
+# Loading work.div_if(fast__1)
+# Loading work.div(fast)
+# Loading work.mant_div(fast)
+# Loading work.lane_fu_pt(fast__1)
+# Loading work.mul_if(fast__1)
+# Loading work.mul_bf16_fu(fast)
+# Loading work.lane_fu_pt(fast__2)
+# Loading work.sync_fifo(fast__1)
+Running in Batch Mode...
+# 
+# === TEST 1: All elements unmasked ===
+# [225000] TEST 1: SQRT result result=0000 vd=3 elem_idx=0
+# [345000] TEST 1: SQRT result result=0000 vd=3 elem_idx=1
+# TEST 1 PASSED (results=2, cycles=27)
+# 
+# === TEST 2: Masked elements ===
+# [535000] TEST 2: SQRT result result=0000 vd=5 elem_idx=1
+# TEST 2 PASSED (results=1, cycles=16)
+# 
+# (SQRT Directed tests) All observed results have correct vd/idx and no drops.
+# 
+# 
+# ********** SQRT TESTS COMPLETE, STARTING DIV TESTS **********
+# 
+# 
+# === Starting DIV Tests ===
+# DIV ready_o = 1
+# 
+# === TEST 1_DIV: All elements unmasked ===
+# [815000] TEST 1_DIV: DIV result result=7e00 vd=17 elem_idx=0
+# [935000] TEST 1_DIV: DIV result result=7e00 vd=17 elem_idx=1
+# TEST 1_DIV PASSED (results=2, cycles=27)
+# 
+# === TEST 2_DIV: Masked elements ===
+# [1125000] TEST 2_DIV: DIV result result=7e00 vd=19 elem_idx=1
+# TEST 2_DIV PASSED (results=1, cycles=16)
+# 
+# (DIV Directed tests) All observed results have correct vd/idx and no drops.
+# 
+# 
+# ********** DIV DIRECTED TESTS COMPLETE **********
+# 
+# 
+# === TEST 3: Upstream Starvation (random gaps) ===
+# [1205000] TB ACTIVE SLICE s=1 vd=7 MASK=11
+# [1275000] TB ACTIVE SLICE s=2 vd=7 MASK=11
+# [1665000] TB ACTIVE SLICE s=4 vd=7 MASK=01
+# [1725000] TB ACTIVE SLICE s=5 vd=7 MASK=01
+# [1755000] TB ACTIVE SLICE s=6 vd=7 MASK=10
+# [1875000] TB ACTIVE SLICE s=7 vd=7 MASK=10
+# [2135000] TB ACTIVE SLICE s=9 vd=7 MASK=10
+# ** Error: TEST 3 FAILED (errors=0, results=0, remaining=9)
+#    Time: 2195 ns  Scope: lane_tb.main_test File: ./tb/unit/vector/lane_tb.sv Line: 994
+# 
+# === TEST 4: Heavy WB Backpressure ===
+# [2195000] TB ACTIVE SLICE s=0 vd=9 MASK=10
+# [2225000] TB ACTIVE SLICE s=1 vd=9 MASK=01
+# ** Error: [TEST 4] VD mismatch: exp=9 got=7 (elem_idx=1)
+#    Time: 2235 ns  Scope: lane_tb.random_monitor File: ./tb/unit/vector/lane_tb.sv Line: 650
+# [2235000] TEST 4: SQRT result result=20d3 vd=7 elem_idx=1
+# ** Error: [TEST 4] VD mismatch: exp=9 got=7 (elem_idx=1)
+#    Time: 2345 ns  Scope: lane_tb.random_monitor File: ./tb/unit/vector/lane_tb.sv Line: 650
+# ** Error: [TEST 4] IDX mismatch: exp=0 got=1 (vd=7)
+#    Time: 2345 ns  Scope: lane_tb.random_monitor File: ./tb/unit/vector/lane_tb.sv Line: 657
+# [2345000] TEST 4: SQRT result result=20d6 vd=7 elem_idx=1
+# [2475000] TB ACTIVE SLICE s=3 vd=9 MASK=11
+# [2515000] TB ACTIVE SLICE s=4 vd=9 MASK=11
+# [2985000] TB ACTIVE SLICE s=7 vd=9 MASK=01
+# [3025000] TB ACTIVE SLICE s=8 vd=9 MASK=01
+# [3075000] TB ACTIVE SLICE s=9 vd=9 MASK=10
+# ** Error: TEST 4 FAILED (errors=3, results=2, remaining=7)
+#    Time: 3195 ns  Scope: lane_tb.main_test File: ./tb/unit/vector/lane_tb.sv Line: 1018
+# 
+# === TEST 5: All-zero masks (multiple slices) ===
+# ** Error: [TEST 5] Unexpected result under all-zero mask
+#    Time: 3295 ns  Scope: lane_tb.main_test File: ./tb/unit/vector/lane_tb.sv Line: 1050
+# ** Error: [TEST 5] Unexpected result under all-zero mask
+#    Time: 3415 ns  Scope: lane_tb.main_test File: ./tb/unit/vector/lane_tb.sv Line: 1050
+# ** Error: TEST 5 FAILED (errors=2, results=2, remaining=0)
+#    Time: 2003195 ns  Scope: lane_tb.main_test File: ./tb/unit/vector/lane_tb.sv Line: 1061
+# 
+# === TEST 7: Long random run ===
+# ** Error: TEST 7 FAILED (errors=0, results=0, remaining=88)
+#    Time: 2013905 ns  Scope: lane_tb.main_test File: ./tb/unit/vector/lane_tb.sv Line: 1087
+# 
+# === TEST 3_DIV: Upstream Starvation (random gaps) ===
+# [TB] TEST 3_DIV using max_cycles=2000000
+# [2014075000] TEST 3_DIV: DIV result result=7e00 vd=21 elem_idx=0
+# [2014195000] TEST 3_DIV: DIV result result=7e00 vd=21 elem_idx=1
+# [2014315000] TEST 3_DIV: DIV result result=7e00 vd=21 elem_idx=1
+# [2014435000] TEST 3_DIV: DIV result result=7e00 vd=21 elem_idx=1
+# [2014555000] TEST 3_DIV: DIV result result=7e00 vd=21 elem_idx=1
+# [2014675000] TEST 3_DIV: DIV result result=7e00 vd=21 elem_idx=0
+# [2014795000] TEST 3_DIV: DIV result result=7e00 vd=21 elem_idx=1
+# [2014915000] TEST 3_DIV: DIV result result=7e00 vd=21 elem_idx=0
+# [2015035000] TEST 3_DIV: DIV result result=7e00 vd=21 elem_idx=0
+# [2015155000] TEST 3_DIV: DIV result result=7e00 vd=21 elem_idx=0
+# TEST 3_DIV PASSED (errors=0, results=10, expected=10)
+# 
+# === TEST 4_DIV: Heavy WB Backpressure ===
+# [TB] TEST 4_DIV using max_cycles=2000000
+# [2015575000] TEST 4_DIV: DIV result result=7e00 vd=23 elem_idx=0
+# [2015675000] TEST 4_DIV: DIV result result=7e00 vd=23 elem_idx=1
+# [2015815000] TEST 4_DIV: DIV result result=7e00 vd=23 elem_idx=0
+# [2015955000] TEST 4_DIV: DIV result result=7e00 vd=23 elem_idx=1
+# [2016045000] TEST 4_DIV: DIV result result=7e00 vd=23 elem_idx=0
+# [2016125000] TEST 4_DIV: DIV result result=7e00 vd=23 elem_idx=1
+# [2016295000] TEST 4_DIV: DIV result result=7e00 vd=23 elem_idx=1
+# [2016405000] TEST 4_DIV: DIV result result=7e00 vd=23 elem_idx=0
+# [2016495000] TEST 4_DIV: DIV result result=7e00 vd=23 elem_idx=1
+# [2016615000] TEST 4_DIV: DIV result result=7e00 vd=23 elem_idx=0
+# [2016735000] TEST 4_DIV: DIV result result=7e00 vd=23 elem_idx=1
+# [2016855000] TEST 4_DIV: DIV result result=7e00 vd=23 elem_idx=1
+# [2016975000] TEST 4_DIV: DIV result result=7e00 vd=23 elem_idx=0
+# TEST 4_DIV PASSED (errors=0, results=13, expected=13)
+# 
+# === TEST 5_DIV: All-zero masks (multiple slices) ===
+# TEST 5_DIV PASSED (no DIV results, as expected)
+# 
+# === TEST 7_DIV: Long random run ===
+# [TB] TEST 7_DIV using max_cycles=2000000
+# [4017365000] TEST 7_DIV: DIV result result=7e00 vd=27 elem_idx=1
+# [4017485000] TEST 7_DIV: DIV result result=7e00 vd=27 elem_idx=0
+# [4017595000] TEST 7_DIV: DIV result result=7e00 vd=27 elem_idx=1
+# [4017785000] TEST 7_DIV: DIV result result=7e00 vd=27 elem_idx=0
+# [4017875000] TEST 7_DIV: DIV result result=7e00 vd=27 elem_idx=1
+# [4017995000] TEST 7_DIV: DIV result result=7e00 vd=27 elem_idx=1
+# [4018115000] TEST 7_DIV: DIV result result=7e00 vd=27 elem_idx=0
+# [4018235000] TEST 7_DIV: DIV result result=7e00 vd=27 elem_idx=1
+# [4018355000] TEST 7_DIV: DIV result result=7e00 vd=27 elem_idx=0
+# [4018545000] TEST 7_DIV: DIV result result=7e00 vd=27 elem_idx=0
+# [4018635000] TEST 7_DIV: DIV result result=7e00 vd=27 elem_idx=1
+# [4018755000] TEST 7_DIV: DIV result result=7e00 vd=27 elem_idx=0
+# [4018865000] TEST 7_DIV: DIV result result=7e00 vd=27 elem_idx=0
+# [4019015000] TEST 7_DIV: DIV result result=7e00 vd=27 elem_idx=1
+# [4019105000] TEST 7_DIV: DIV result result=7e00 vd=27 elem_idx=1
+# [4019225000] TEST 7_DIV: DIV result result=7e00 vd=27 elem_idx=0
+# [4019345000] TEST 7_DIV: DIV result result=7e00 vd=27 elem_idx=0
+# [4019475000] TEST 7_DIV: DIV result result=7e00 vd=27 elem_idx=1
+# [4019595000] TEST 7_DIV: DIV result result=7e00 vd=27 elem_idx=0
+# [4019705000] TEST 7_DIV: DIV result result=7e00 vd=27 elem_idx=0
+# [4019825000] TEST 7_DIV: DIV result result=7e00 vd=27 elem_idx=1
+# [4019965000] TEST 7_DIV: DIV result result=7e00 vd=27 elem_idx=0
+# [4020075000] TEST 7_DIV: DIV result result=7e00 vd=27 elem_idx=1
+# [4020185000] TEST 7_DIV: DIV result result=7e00 vd=27 elem_idx=0
+# [4020345000] TEST 7_DIV: DIV result result=7e00 vd=27 elem_idx=0
+# [4020425000] TEST 7_DIV: DIV result result=7e00 vd=27 elem_idx=1
+# [4020545000] TEST 7_DIV: DIV result result=7e00 vd=27 elem_idx=0
+# [4020665000] TEST 7_DIV: DIV result result=7e00 vd=27 elem_idx=0
+# [4020785000] TEST 7_DIV: DIV result result=7e00 vd=27 elem_idx=1
+# [4020905000] TEST 7_DIV: DIV result result=7e00 vd=27 elem_idx=0
+# [4021035000] TEST 7_DIV: DIV result result=7e00 vd=27 elem_idx=0
+# [4021185000] TEST 7_DIV: DIV result result=7e00 vd=27 elem_idx=0
+# [4021265000] TEST 7_DIV: DIV result result=7e00 vd=27 elem_idx=1
+# [4021395000] TEST 7_DIV: DIV result result=7e00 vd=27 elem_idx=0
+# [4021525000] TEST 7_DIV: DIV result result=7e00 vd=27 elem_idx=1
+# [4021625000] TEST 7_DIV: DIV result result=7e00 vd=27 elem_idx=0
+# [4021745000] TEST 7_DIV: DIV result result=7e00 vd=27 elem_idx=0
+# [4021865000] TEST 7_DIV: DIV result result=7e00 vd=27 elem_idx=1
+# [4021985000] TEST 7_DIV: DIV result result=7e00 vd=27 elem_idx=1
+# [4022125000] TEST 7_DIV: DIV result result=7e00 vd=27 elem_idx=0
+# [4022245000] TEST 7_DIV: DIV result result=7e00 vd=27 elem_idx=1
+# [4022355000] TEST 7_DIV: DIV result result=7e00 vd=27 elem_idx=0
+# [4022565000] TEST 7_DIV: DIV result result=7e00 vd=27 elem_idx=1
+# [4022625000] TEST 7_DIV: DIV result result=7e00 vd=27 elem_idx=0
+# [4022745000] TEST 7_DIV: DIV result result=7e00 vd=27 elem_idx=0
+# [4022865000] TEST 7_DIV: DIV result result=7e00 vd=27 elem_idx=1
+# [4022985000] TEST 7_DIV: DIV result result=7e00 vd=27 elem_idx=1
+# [4023105000] TEST 7_DIV: DIV result result=7e00 vd=27 elem_idx=0
+# [4023235000] TEST 7_DIV: DIV result result=7e00 vd=27 elem_idx=1
+# [4023345000] TEST 7_DIV: DIV result result=7e00 vd=27 elem_idx=0
+# [4023465000] TEST 7_DIV: DIV result result=7e00 vd=27 elem_idx=1
+# [4023605000] TEST 7_DIV: DIV result result=7e00 vd=27 elem_idx=0
+# [4023765000] TEST 7_DIV: DIV result result=7e00 vd=27 elem_idx=1
+# [4023865000] TEST 7_DIV: DIV result result=7e00 vd=27 elem_idx=0
+# [4024025000] TEST 7_DIV: DIV result result=7e00 vd=27 elem_idx=0
+# [4024085000] TEST 7_DIV: DIV result result=7e00 vd=27 elem_idx=1
+# [4024215000] TEST 7_DIV: DIV result result=7e00 vd=27 elem_idx=0
+# [4024325000] TEST 7_DIV: DIV result result=7e00 vd=27 elem_idx=0
+# [4024445000] TEST 7_DIV: DIV result result=7e00 vd=27 elem_idx=0
+# [4024575000] TEST 7_DIV: DIV result result=7e00 vd=27 elem_idx=0
+# [4024695000] TEST 7_DIV: DIV result result=7e00 vd=27 elem_idx=1
+# [4024815000] TEST 7_DIV: DIV result result=7e00 vd=27 elem_idx=0
+# [4024945000] TEST 7_DIV: DIV result result=7e00 vd=27 elem_idx=0
+# [4025045000] TEST 7_DIV: DIV result result=7e00 vd=27 elem_idx=1
+# [4025185000] TEST 7_DIV: DIV result result=7e00 vd=27 elem_idx=0
+# [4025285000] TEST 7_DIV: DIV result result=7e00 vd=27 elem_idx=1
+# [4025435000] TEST 7_DIV: DIV result result=7e00 vd=27 elem_idx=0
+# [4025535000] TEST 7_DIV: DIV result result=7e00 vd=27 elem_idx=1
+# [4025695000] TEST 7_DIV: DIV result result=7e00 vd=27 elem_idx=0
+# [4025795000] TEST 7_DIV: DIV result result=7e00 vd=27 elem_idx=1
+# [4025915000] TEST 7_DIV: DIV result result=7e00 vd=27 elem_idx=1
+# [4026025000] TEST 7_DIV: DIV result result=7e00 vd=27 elem_idx=0
+# [4026155000] TEST 7_DIV: DIV result result=7e00 vd=27 elem_idx=0
+# [4026265000] TEST 7_DIV: DIV result result=7e00 vd=27 elem_idx=1
+# [4026385000] TEST 7_DIV: DIV result result=7e00 vd=27 elem_idx=0
+# [4026515000] TEST 7_DIV: DIV result result=7e00 vd=27 elem_idx=1
+# [4026655000] TEST 7_DIV: DIV result result=7e00 vd=27 elem_idx=1
+# [4026775000] TEST 7_DIV: DIV result result=7e00 vd=27 elem_idx=1
+# [4026915000] TEST 7_DIV: DIV result result=7e00 vd=27 elem_idx=0
+# [4027015000] TEST 7_DIV: DIV result result=7e00 vd=27 elem_idx=0
+# [4027165000] TEST 7_DIV: DIV result result=7e00 vd=27 elem_idx=0
+# [4027285000] TEST 7_DIV: DIV result result=7e00 vd=27 elem_idx=1
+# [4027405000] TEST 7_DIV: DIV result result=7e00 vd=27 elem_idx=0
+# [4027535000] TEST 7_DIV: DIV result result=7e00 vd=27 elem_idx=1
+# [4027645000] TEST 7_DIV: DIV result result=7e00 vd=27 elem_idx=1
+# [4027765000] TEST 7_DIV: DIV result result=7e00 vd=27 elem_idx=0
+# [4027885000] TEST 7_DIV: DIV result result=7e00 vd=27 elem_idx=0
+# [4028005000] TEST 7_DIV: DIV result result=7e00 vd=27 elem_idx=1
+# [4028155000] TEST 7_DIV: DIV result result=7e00 vd=27 elem_idx=0
+# [4028265000] TEST 7_DIV: DIV result result=7e00 vd=27 elem_idx=1
+# [4028415000] TEST 7_DIV: DIV result result=7e00 vd=27 elem_idx=0
+# [4028535000] TEST 7_DIV: DIV result result=7e00 vd=27 elem_idx=0
+# [4028655000] TEST 7_DIV: DIV result result=7e00 vd=27 elem_idx=1
+# [4028785000] TEST 7_DIV: DIV result result=7e00 vd=27 elem_idx=0
+# [4028925000] TEST 7_DIV: DIV result result=7e00 vd=27 elem_idx=0
+# [4029005000] TEST 7_DIV: DIV result result=7e00 vd=27 elem_idx=1
+# [4029125000] TEST 7_DIV: DIV result result=7e00 vd=27 elem_idx=1
+# TEST 7_DIV PASSED (errors=0, results=97, expected=97)
+# 
+# ********** STARTING MUL TESTS **********
+# 
+# 
+# === TEST 1_MUL: All elements unmasked ===
+# [4029415000] TEST 1_MUL: MUL result result=0000 vd=29 elem_idx=0
+# [4029455000] TEST 1_MUL: MUL result result=0000 vd=29 elem_idx=1
+# TEST 1_MUL PASSED (results=2, cycles=10)
+# 
+# === TEST 2_MUL: Partial mask ===
+# [4029655000] TEST 2_MUL: MUL result result=4080 vd=30 elem_idx=1
+# TEST 2_MUL PASSED (results=1, cycles=7)
+# 
+# === TEST 3_MUL: Upstream Starvation (random gaps) ===
+# [TB] TEST 3_MUL using max_cycles=200000
+# [4029755000] TB ACTIVE SLICE s=0 vd=31 MASK=01
+# [4029815000] TB ACTIVE SLICE s=1 vd=31 MASK=10
+# [4029845000] TEST 3_MUL: MUL result result=4618 vd=31 elem_idx=0
+# [4029915000] TEST 3_MUL: MUL result result=0000 vd=31 elem_idx=1
+# [4029955000] TB ACTIVE SLICE s=4 vd=31 MASK=11
+# [4030005000] TB ACTIVE SLICE s=5 vd=31 MASK=11
+# [4030065000] TEST 3_MUL: MUL result result=46b1 vd=31 elem_idx=0
+# [4030105000] TEST 3_MUL: MUL result result=4466 vd=31 elem_idx=1
+# [4030105000] TB ACTIVE SLICE s=6 vd=31 MASK=01
+# [4030145000] TEST 3_MUL: MUL result result=4509 vd=31 elem_idx=0
+# [4030185000] TEST 3_MUL: MUL result result=42c1 vd=31 elem_idx=1
+# [4030225000] TEST 3_MUL: MUL result result=43c7 vd=31 elem_idx=0
+# [4030265000] TB ACTIVE SLICE s=9 vd=31 MASK=11
+# [4030375000] TEST 3_MUL: MUL result result=4490 vd=31 elem_idx=0
+# [4030415000] TEST 3_MUL: MUL result result=43b0 vd=31 elem_idx=1
+# TEST 3_MUL PASSED (errors=0, results=9, expected=9)
+# 
+# === TEST 4_MUL: Heavy WB Backpressure ===
+# [TB] TEST 4_MUL using max_cycles=200000
+# [4030645000] TB ACTIVE SLICE s=1 vd=33 MASK=10
+# [4030695000] TB ACTIVE SLICE s=2 vd=33 MASK=10
+# [4030745000] TB ACTIVE SLICE s=3 vd=33 MASK=10
+# [4030785000] TEST 4_MUL: MUL result result=44d9 vd=33 elem_idx=1
+# [4030795000] TB ACTIVE SLICE s=4 vd=33 MASK=11
+# [4030845000] TB ACTIVE SLICE s=5 vd=33 MASK=01
+# [4030875000] TEST 4_MUL: MUL result result=452e vd=33 elem_idx=1
+# [4030885000] TEST 4_MUL: MUL result result=452e vd=33 elem_idx=1
+# ** Error: [TEST 4_MUL] IDX mismatch: exp=0 got=1 (vd=33)
+#    Time: 4030935 ns  Scope: lane_tb.random_monitor_mul File: ./tb/unit/vector/lane_tb.sv Line: 902
+# [4030935000] TEST 4_MUL: MUL result result=460d vd=33 elem_idx=1
+# [4030975000] TB ACTIVE SLICE s=6 vd=33 MASK=01
+# ** Error: [TEST 4_MUL] IDX mismatch: exp=1 got=0 (vd=33)
+#    Time: 4031045 ns  Scope: lane_tb.random_monitor_mul File: ./tb/unit/vector/lane_tb.sv Line: 902
+# [4031045000] TEST 4_MUL: MUL result result=420b vd=33 elem_idx=0
+# ** Error: [TEST 4_MUL] IDX mismatch: exp=0 got=1 (vd=33)
+#    Time: 4031065 ns  Scope: lane_tb.random_monitor_mul File: ./tb/unit/vector/lane_tb.sv Line: 902
+# [4031065000] TEST 4_MUL: MUL result result=420b vd=33 elem_idx=1
+# [4031095000] TB ACTIVE SLICE s=7 vd=33 MASK=10
+# [4031105000] TEST 4_MUL: MUL result result=45c0 vd=33 elem_idx=0
+# [4031145000] TB ACTIVE SLICE s=8 vd=33 MASK=11
+# ** Error: [TEST 4_MUL] IDX mismatch: exp=1 got=0 (vd=33)
+#    Time: 4031175 ns  Scope: lane_tb.random_monitor_mul File: ./tb/unit/vector/lane_tb.sv Line: 902
+# [4031175000] TEST 4_MUL: MUL result result=440f vd=33 elem_idx=0
+# [4031195000] TB ACTIVE SLICE s=9 vd=33 MASK=11
+# ** Error: [TEST 4_MUL] IDX mismatch: exp=0 got=1 (vd=33)
+#    Time: 4031225 ns  Scope: lane_tb.random_monitor_mul File: ./tb/unit/vector/lane_tb.sv Line: 902
+# [4031225000] TEST 4_MUL: MUL result result=45b4 vd=33 elem_idx=1
+# ** Error: [TEST 4_MUL] IDX mismatch: exp=1 got=0 (vd=33)
+#    Time: 4031255 ns  Scope: lane_tb.random_monitor_mul File: ./tb/unit/vector/lane_tb.sv Line: 902
+# [4031255000] TEST 4_MUL: MUL result result=4394 vd=33 elem_idx=0
+# ** Error: [TEST 4_MUL] IDX mismatch: exp=0 got=1 (vd=33)
+#    Time: 4031295 ns  Scope: lane_tb.random_monitor_mul File: ./tb/unit/vector/lane_tb.sv Line: 902
+# [4031295000] TEST 4_MUL: MUL result result=4291 vd=33 elem_idx=1
+# ** Error: [TEST 4_MUL] IDX mismatch: exp=1 got=0 (vd=33)
+#    Time: 4031405 ns  Scope: lane_tb.random_monitor_mul File: ./tb/unit/vector/lane_tb.sv Line: 902
+# [4031405000] TEST 4_MUL: MUL result result=4630 vd=33 elem_idx=0
+# ** Error: TEST 4_MUL FAILED (errors=8, results=12, expected=12, remaining=0)
+#    Time: 4031405 ns  Scope: lane_tb.main_test File: ./tb/unit/vector/lane_tb.sv Line: 1472
+# 
+# === TEST 5_MUL: All-zero masks (multiple slices) ===
+# TEST 5_MUL PASSED (no MUL results, as expected)
+# 
+# === TEST 7_MUL: Long random run ===
+# [TB] TEST 7_MUL using max_cycles=2000000
+# [6031905000] TEST 7_MUL: MUL result result=44c2 vd=37 elem_idx=1
+# [6031945000] TEST 7_MUL: MUL result result=41cf vd=37 elem_idx=0
+# [6031995000] TEST 7_MUL: MUL result result=44db vd=37 elem_idx=0
+# [6032065000] TEST 7_MUL: MUL result result=445b vd=37 elem_idx=1
+# [6032135000] TEST 7_MUL: MUL result result=44f3 vd=37 elem_idx=0
+# [6032155000] TEST 7_MUL: MUL result result=42d9 vd=37 elem_idx=1
+# [6032245000] TEST 7_MUL: MUL result result=4449 vd=37 elem_idx=0
+# [6032315000] TEST 7_MUL: MUL result result=4230 vd=37 elem_idx=1
+# [6032345000] TEST 7_MUL: MUL result result=452d vd=37 elem_idx=0
+# [6032395000] TEST 7_MUL: MUL result result=42a7 vd=37 elem_idx=0
+# [6032445000] TEST 7_MUL: MUL result result=4723 vd=37 elem_idx=1
+# [6032575000] TEST 7_MUL: MUL result result=449a vd=37 elem_idx=0
+# ** Error: [TEST 7_MUL] IDX mismatch: exp=1 got=0 (vd=37)
+#    Time: 6032585 ns  Scope: lane_tb.random_monitor_mul File: ./tb/unit/vector/lane_tb.sv Line: 902
+# [6032585000] TEST 7_MUL: MUL result result=4470 vd=37 elem_idx=0
+# ** Error: [TEST 7_MUL] IDX mismatch: exp=0 got=1 (vd=37)
+#    Time: 6032595 ns  Scope: lane_tb.random_monitor_mul File: ./tb/unit/vector/lane_tb.sv Line: 902
+# [6032595000] TEST 7_MUL: MUL result result=4470 vd=37 elem_idx=1
+# ** Error: [TEST 7_MUL] IDX mismatch: exp=1 got=0 (vd=37)
+#    Time: 6032675 ns  Scope: lane_tb.random_monitor_mul File: ./tb/unit/vector/lane_tb.sv Line: 902
+# [6032675000] TEST 7_MUL: MUL result result=4588 vd=37 elem_idx=0
+# ** Error: [TEST 7_MUL] IDX mismatch: exp=0 got=1 (vd=37)
+#    Time: 6032785 ns  Scope: lane_tb.random_monitor_mul File: ./tb/unit/vector/lane_tb.sv Line: 902
+# [6032785000] TEST 7_MUL: MUL result result=416b vd=37 elem_idx=1
+# [6032795000] TEST 7_MUL: MUL result result=416b vd=37 elem_idx=1
+# ** Error: [TEST 7_MUL] Unexpected result: queue empty
+#    Time: 6032805 ns  Scope: lane_tb.random_monitor_mul File: ./tb/unit/vector/lane_tb.sv Line: 889
+# [6032845000] TEST 7_MUL: MUL result result=42f1 vd=37 elem_idx=1
+# [6032945000] TEST 7_MUL: MUL result result=4538 vd=37 elem_idx=1
+# [6033055000] TEST 7_MUL: MUL result result=45ef vd=37 elem_idx=1
+# [6033065000] TEST 7_MUL: MUL result result=45ef vd=37 elem_idx=1
+# ** Error: [TEST 7_MUL] Unexpected result: queue empty
+#    Time: 6033095 ns  Scope: lane_tb.random_monitor_mul File: ./tb/unit/vector/lane_tb.sv Line: 889
+# [6033115000] TEST 7_MUL: MUL result result=4091 vd=37 elem_idx=1
+# [6033215000] TEST 7_MUL: MUL result result=42b3 vd=37 elem_idx=1
+# ** Error: [TEST 7_MUL] IDX mismatch: exp=0 got=1 (vd=37)
+#    Time: 6033265 ns  Scope: lane_tb.random_monitor_mul File: ./tb/unit/vector/lane_tb.sv Line: 902
+# [6033265000] TEST 7_MUL: MUL result result=42a6 vd=37 elem_idx=1
+# ** Error: [TEST 7_MUL] IDX mismatch: exp=1 got=0 (vd=37)
+#    Time: 6033305 ns  Scope: lane_tb.random_monitor_mul File: ./tb/unit/vector/lane_tb.sv Line: 902
+# [6033305000] TEST 7_MUL: MUL result result=456f vd=37 elem_idx=0
+# [6033375000] TEST 7_MUL: MUL result result=442e vd=37 elem_idx=1
+# ** Error: [TEST 7_MUL] IDX mismatch: exp=0 got=1 (vd=37)
+#    Time: 6033455 ns  Scope: lane_tb.random_monitor_mul File: ./tb/unit/vector/lane_tb.sv Line: 902
+# [6033455000] TEST 7_MUL: MUL result result=4231 vd=37 elem_idx=1
+# [6033495000] TEST 7_MUL: MUL result result=479e vd=37 elem_idx=0
+# ** Error: [TEST 7_MUL] IDX mismatch: exp=1 got=0 (vd=37)
+#    Time: 6033555 ns  Scope: lane_tb.random_monitor_mul File: ./tb/unit/vector/lane_tb.sv Line: 902
+# [6033555000] TEST 7_MUL: MUL result result=4794 vd=37 elem_idx=0
+# [6033605000] TEST 7_MUL: MUL result result=43af vd=37 elem_idx=1
+# ** Error: [TEST 7_MUL] IDX mismatch: exp=0 got=1 (vd=37)
+#    Time: 6033625 ns  Scope: lane_tb.random_monitor_mul File: ./tb/unit/vector/lane_tb.sv Line: 902
+# [6033625000] TEST 7_MUL: MUL result result=437d vd=37 elem_idx=1
+# ** Error: [TEST 7_MUL] IDX mismatch: exp=1 got=0 (vd=37)
+#    Time: 6033685 ns  Scope: lane_tb.random_monitor_mul File: ./tb/unit/vector/lane_tb.sv Line: 902
+# [6033685000] TEST 7_MUL: MUL result result=4311 vd=37 elem_idx=0
+# ** Error: [TEST 7_MUL] IDX mismatch: exp=0 got=1 (vd=37)
+#    Time: 6033795 ns  Scope: lane_tb.random_monitor_mul File: ./tb/unit/vector/lane_tb.sv Line: 902
+# [6033795000] TEST 7_MUL: MUL result result=4196 vd=37 elem_idx=1
+# ** Error: [TEST 7_MUL] IDX mismatch: exp=1 got=0 (vd=37)
+#    Time: 6033815 ns  Scope: lane_tb.random_monitor_mul File: ./tb/unit/vector/lane_tb.sv Line: 902
+# [6033815000] TEST 7_MUL: MUL result result=43c5 vd=37 elem_idx=0
+# [6033895000] TEST 7_MUL: MUL result result=45a0 vd=37 elem_idx=1
+# ** Error: [TEST 7_MUL] IDX mismatch: exp=0 got=1 (vd=37)
+#    Time: 6033955 ns  Scope: lane_tb.random_monitor_mul File: ./tb/unit/vector/lane_tb.sv Line: 902
+# [6033955000] TEST 7_MUL: MUL result result=4209 vd=37 elem_idx=1
+# ** Error: [TEST 7_MUL] IDX mismatch: exp=1 got=0 (vd=37)
+#    Time: 6033985 ns  Scope: lane_tb.random_monitor_mul File: ./tb/unit/vector/lane_tb.sv Line: 902
+# [6033985000] TEST 7_MUL: MUL result result=42ce vd=37 elem_idx=0
+# [6034015000] TEST 7_MUL: MUL result result=44c6 vd=37 elem_idx=1
+# [6034065000] TEST 7_MUL: MUL result result=4481 vd=37 elem_idx=1
+# ** Error: [TEST 7_MUL] IDX mismatch: exp=0 got=1 (vd=37)
+#    Time: 6034115 ns  Scope: lane_tb.random_monitor_mul File: ./tb/unit/vector/lane_tb.sv Line: 902
+# [6034115000] TEST 7_MUL: MUL result result=4585 vd=37 elem_idx=1
+# [6034215000] TEST 7_MUL: MUL result result=424e vd=37 elem_idx=0
+# [6034275000] TEST 7_MUL: MUL result result=446d vd=37 elem_idx=0
+# ** Error: [TEST 7_MUL] IDX mismatch: exp=1 got=0 (vd=37)
+#    Time: 6034325 ns  Scope: lane_tb.random_monitor_mul File: ./tb/unit/vector/lane_tb.sv Line: 902
+# [6034325000] TEST 7_MUL: MUL result result=44bc vd=37 elem_idx=0
+# ** Error: [TEST 7_MUL] IDX mismatch: exp=0 got=1 (vd=37)
+#    Time: 6034365 ns  Scope: lane_tb.random_monitor_mul File: ./tb/unit/vector/lane_tb.sv Line: 902
+# [6034365000] TEST 7_MUL: MUL result result=4209 vd=37 elem_idx=1
+# ** Error: [TEST 7_MUL] IDX mismatch: exp=1 got=0 (vd=37)
+#    Time: 6034405 ns  Scope: lane_tb.random_monitor_mul File: ./tb/unit/vector/lane_tb.sv Line: 902
+# [6034405000] TEST 7_MUL: MUL result result=43ef vd=37 elem_idx=0
+# ** Error: [TEST 7_MUL] IDX mismatch: exp=0 got=1 (vd=37)
+#    Time: 6034445 ns  Scope: lane_tb.random_monitor_mul File: ./tb/unit/vector/lane_tb.sv Line: 902
+# [6034445000] TEST 7_MUL: MUL result result=443b vd=37 elem_idx=1
+# ** Error: [TEST 7_MUL] IDX mismatch: exp=1 got=0 (vd=37)
+#    Time: 6034485 ns  Scope: lane_tb.random_monitor_mul File: ./tb/unit/vector/lane_tb.sv Line: 902
+# [6034485000] TEST 7_MUL: MUL result result=44a4 vd=37 elem_idx=0
+# ** Error: [TEST 7_MUL] IDX mismatch: exp=0 got=1 (vd=37)
+#    Time: 6034545 ns  Scope: lane_tb.random_monitor_mul File: ./tb/unit/vector/lane_tb.sv Line: 902
+# [6034545000] TEST 7_MUL: MUL result result=4509 vd=37 elem_idx=1
+# ** Error: [TEST 7_MUL] IDX mismatch: exp=1 got=0 (vd=37)
+#    Time: 6034575 ns  Scope: lane_tb.random_monitor_mul File: ./tb/unit/vector/lane_tb.sv Line: 902
+# [6034575000] TEST 7_MUL: MUL result result=4508 vd=37 elem_idx=0
+# ** Error: [TEST 7_MUL] IDX mismatch: exp=0 got=1 (vd=37)
+#    Time: 6034605 ns  Scope: lane_tb.random_monitor_mul File: ./tb/unit/vector/lane_tb.sv Line: 902
+# [6034605000] TEST 7_MUL: MUL result result=442c vd=37 elem_idx=1
+# ** Error: [TEST 7_MUL] IDX mismatch: exp=1 got=0 (vd=37)
+#    Time: 6034645 ns  Scope: lane_tb.random_monitor_mul File: ./tb/unit/vector/lane_tb.sv Line: 902
+# [6034645000] TEST 7_MUL: MUL result result=43ea vd=37 elem_idx=0
+# ** Error: [TEST 7_MUL] IDX mismatch: exp=0 got=1 (vd=37)
+#    Time: 6034685 ns  Scope: lane_tb.random_monitor_mul File: ./tb/unit/vector/lane_tb.sv Line: 902
+# [6034685000] TEST 7_MUL: MUL result result=4351 vd=37 elem_idx=1
+# [6034785000] TEST 7_MUL: MUL result result=4653 vd=37 elem_idx=0
+# ** Error: [TEST 7_MUL] IDX mismatch: exp=1 got=0 (vd=37)
+#    Time: 6034855 ns  Scope: lane_tb.random_monitor_mul File: ./tb/unit/vector/lane_tb.sv Line: 902
+# [6034855000] TEST 7_MUL: MUL result result=441a vd=37 elem_idx=0
+# [6034895000] TEST 7_MUL: MUL result result=4302 vd=37 elem_idx=1
+# ** Error: [TEST 7_MUL] Unexpected result: queue empty
+#    Time: 6034915 ns  Scope: lane_tb.random_monitor_mul File: ./tb/unit/vector/lane_tb.sv Line: 889
+# [6035055000] TEST 7_MUL: MUL result result=4584 vd=37 elem_idx=0
+# [6035095000] TEST 7_MUL: MUL result result=45af vd=37 elem_idx=1
+# [6035145000] TEST 7_MUL: MUL result result=42c1 vd=37 elem_idx=0
+# [6035175000] TEST 7_MUL: MUL result result=43bf vd=37 elem_idx=1
+# [6035245000] TEST 7_MUL: MUL result result=4598 vd=37 elem_idx=0
+# ** Error: [TEST 7_MUL] IDX mismatch: exp=1 got=0 (vd=37)
+#    Time: 6035255 ns  Scope: lane_tb.random_monitor_mul File: ./tb/unit/vector/lane_tb.sv Line: 902
+# [6035255000] TEST 7_MUL: MUL result result=4590 vd=37 elem_idx=0
+# [6035295000] TEST 7_MUL: MUL result result=4590 vd=37 elem_idx=1
+# ** Error: [TEST 7_MUL] IDX mismatch: exp=0 got=1 (vd=37)
+#    Time: 6035305 ns  Scope: lane_tb.random_monitor_mul File: ./tb/unit/vector/lane_tb.sv Line: 902
+# [6035305000] TEST 7_MUL: MUL result result=44f4 vd=37 elem_idx=1
+# ** Error: [TEST 7_MUL] Unexpected result: queue empty
+#    Time: 6035325 ns  Scope: lane_tb.random_monitor_mul File: ./tb/unit/vector/lane_tb.sv Line: 889
+# [6035405000] TEST 7_MUL: MUL result result=43d0 vd=37 elem_idx=0
+# ** Error: [TEST 7_MUL] IDX mismatch: exp=1 got=0 (vd=37)
+#    Time: 6035445 ns  Scope: lane_tb.random_monitor_mul File: ./tb/unit/vector/lane_tb.sv Line: 902
+# [6035445000] TEST 7_MUL: MUL result result=4486 vd=37 elem_idx=0
+# ** Error: [TEST 7_MUL] IDX mismatch: exp=0 got=1 (vd=37)
+#    Time: 6035485 ns  Scope: lane_tb.random_monitor_mul File: ./tb/unit/vector/lane_tb.sv Line: 902
+# [6035485000] TEST 7_MUL: MUL result result=4441 vd=37 elem_idx=1
+# ** Error: [TEST 7_MUL] IDX mismatch: exp=1 got=0 (vd=37)
+#    Time: 6035535 ns  Scope: lane_tb.random_monitor_mul File: ./tb/unit/vector/lane_tb.sv Line: 902
+# [6035535000] TEST 7_MUL: MUL result result=444d vd=37 elem_idx=0
+# ** Error: [TEST 7_MUL] IDX mismatch: exp=0 got=1 (vd=37)
+#    Time: 6035595 ns  Scope: lane_tb.random_monitor_mul File: ./tb/unit/vector/lane_tb.sv Line: 902
+# [6035595000] TEST 7_MUL: MUL result result=4467 vd=37 elem_idx=1
+# ** Error: [TEST 7_MUL] Unexpected result: queue empty
+#    Time: 6035635 ns  Scope: lane_tb.random_monitor_mul File: ./tb/unit/vector/lane_tb.sv Line: 889
+# [6035775000] TEST 7_MUL: MUL result result=44b4 vd=37 elem_idx=1
+# [6035815000] TEST 7_MUL: MUL result result=4629 vd=37 elem_idx=0
+# [6035865000] TEST 7_MUL: MUL result result=4336 vd=37 elem_idx=0
+# [6035895000] TEST 7_MUL: MUL result result=44d5 vd=37 elem_idx=1
+# [6035945000] TEST 7_MUL: MUL result result=4619 vd=37 elem_idx=1
+# [6035995000] TEST 7_MUL: MUL result result=448c vd=37 elem_idx=0
+# [6036035000] TEST 7_MUL: MUL result result=424e vd=37 elem_idx=0
+# [6036085000] TEST 7_MUL: MUL result result=43c4 vd=37 elem_idx=1
+# [6036285000] TEST 7_MUL: MUL result result=4690 vd=37 elem_idx=1
+# [6036325000] TEST 7_MUL: MUL result result=42a9 vd=37 elem_idx=0
+# [6036375000] TEST 7_MUL: MUL result result=4531 vd=37 elem_idx=1
+# [6036435000] TEST 7_MUL: MUL result result=4422 vd=37 elem_idx=1
+# [6036475000] TEST 7_MUL: MUL result result=443e vd=37 elem_idx=1
+# [6036515000] TEST 7_MUL: MUL result result=409a vd=37 elem_idx=1
+# [6036555000] TEST 7_MUL: MUL result result=435d vd=37 elem_idx=0
+# [6036595000] TEST 7_MUL: MUL result result=46b6 vd=37 elem_idx=1
+# [6036645000] TEST 7_MUL: MUL result result=44df vd=37 elem_idx=0
+# [6036725000] TEST 7_MUL: MUL result result=47c3 vd=37 elem_idx=0
+# [6036775000] TEST 7_MUL: MUL result result=42a2 vd=37 elem_idx=0
+# [6036835000] TEST 7_MUL: MUL result result=443f vd=37 elem_idx=0
+# [6036885000] TEST 7_MUL: MUL result result=439d vd=37 elem_idx=1
+# [6036945000] TEST 7_MUL: MUL result result=4640 vd=37 elem_idx=1
+# [6036965000] TEST 7_MUL: MUL result result=43f6 vd=37 elem_idx=0
+# [6037075000] TEST 7_MUL: MUL result result=4628 vd=37 elem_idx=0
+# [6037115000] TEST 7_MUL: MUL result result=41e4 vd=37 elem_idx=1
+# [6037155000] TEST 7_MUL: MUL result result=42e0 vd=37 elem_idx=1
+# [6037185000] TEST 7_MUL: MUL result result=4437 vd=37 elem_idx=0
+# [6037225000] TEST 7_MUL: MUL result result=4754 vd=37 elem_idx=1
+# [6037275000] TEST 7_MUL: MUL result result=43bb vd=37 elem_idx=1
+# [6037315000] TEST 7_MUL: MUL result result=440b vd=37 elem_idx=0
+# [6037365000] TEST 7_MUL: MUL result result=4497 vd=37 elem_idx=1
+# [6037445000] TEST 7_MUL: MUL result result=44b9 vd=37 elem_idx=0
+# [6037495000] TEST 7_MUL: MUL result result=434f vd=37 elem_idx=0
+# [6037555000] TEST 7_MUL: MUL result result=43d3 vd=37 elem_idx=1
+# [6037675000] TEST 7_MUL: MUL result result=41d9 vd=37 elem_idx=1
+# [6037695000] TEST 7_MUL: MUL result result=41d9 vd=37 elem_idx=0
+# [6037745000] TEST 7_MUL: MUL result result=44a9 vd=37 elem_idx=1
+# ** Error: TEST 7_MUL FAILED (errors=37, results=105, expected=105, remaining=0)
+#    Time: 6037745 ns  Scope: lane_tb.main_test File: ./tb/unit/vector/lane_tb.sv Line: 1563
+# 
+# ========================================
+# TOTAL ERRORS ACROSS ALL TESTS: 52
+# ========================================
+# 
+# ** Note: $finish    : ./tb/unit/vector/lane_tb.sv(1576)
+#    Time: 6037745 ns  Iteration: 1  Instance: /lane_tb
+# End time: 00:26:17 on Dec 07,2025, Elapsed time: 0:00:03
+# Errors: 56, Warnings: 6
+make[1]: Leaving directory '/home/asicfab/a/jghanem/atalla'

@@ -329,6 +329,120 @@ module lane (
         end
     end
 
+    // ============================================================
+    // MUL PIPELINE
+    // ============================================================
+
+    lane_seq_in_t  mul_seq_in;
+    lane_seq_out_t mul_seq_out;
+
+    meta_t mul_meta_in;
+    meta_t mul_meta_out;
+    logic  mul_sync_ready;
+
+    mul_if mul_bus();
+
+    logic mul_fire_valid;
+    assign mul_fire_valid = mul_seq_out.valid && mul_seq_out.mask_bit && mul_sync_ready;
+
+    logic       mul_hold_valid;
+    logic [15:0] mul_hold_result;
+    vsel_t      mul_hold_vd;
+    slice_idx_t mul_hold_elem;
+
+    // Sequencer setup
+    always_comb begin
+        mul_seq_in = '0;
+
+        mul_seq_in.v1    = lif.lane_in.v1[MUL];
+        mul_seq_in.v2    = lif.lane_in.v2[MUL];
+        mul_seq_in.vmask = lif.lane_in.vmask[MUL];
+        mul_seq_in.vd    = lif.lane_in.vd[MUL];
+        mul_seq_in.vop   = lif.lane_in.vop[MUL];
+        mul_seq_in.rm    = lif.lane_in.rm[MUL];
+        mul_seq_in.valid = lif.lane_in.valid_in[MUL];
+
+        if (mul_seq_out.mask_bit)
+            mul_seq_in.ready = mul_sync_ready;
+        else
+            mul_seq_in.ready = 1'b1;
+    end
+
+    lane_sequencer u_seq_mul (
+        .CLK     (CLK),
+        .nRST    (nRST),
+        .lane_in (mul_seq_in),
+        .lane_out(mul_seq_out)
+    );
+
+    // MUL FU wrapper
+    mul_bf16_fu u_mul (
+        .CLK (CLK),
+        .nRST(nRST),
+        .m_if(mul_bus)
+    );
+
+    // Drive MUL input side
+    always_comb begin
+        mul_bus.in.operand1  = mul_seq_out.v1_elem;
+        mul_bus.in.operand2  = mul_seq_out.v2_elem;
+        mul_bus.in.valid_in  = mul_fire_valid && mul_sync_ready;
+        mul_bus.in.ready_out = (!mul_hold_valid || lif.lane_in.ready_in[MUL]);
+    end
+
+    // Intermediate WB alignment (just like SQRT/DIV)
+    logic        mul_valid_wb;
+    logic [15:0] mul_result_wb;
+
+    always_ff @(posedge CLK or negedge nRST) begin
+        if (!nRST) begin
+            mul_valid_wb  <= 1'b0;
+            mul_result_wb <= '0;
+        end else begin
+            mul_valid_wb  <= mul_bus.out.valid_out;
+            mul_result_wb <= mul_bus.out.result;
+        end
+    end
+
+    // Metadata sync (lane_fu_pt)
+    assign mul_meta_in.vd       = mul_seq_out.vd;
+    assign mul_meta_in.elem_idx = mul_seq_out.elem_idx;
+    assign mul_meta_in.dbg_seq  = '0; // or add a dbg counter like DIV
+
+    lane_fu_pt #(
+        .DATA_W ($bits(meta_t)),
+        .LATENCY(2)  // MUL wrapper: 1 cycle for core + 1 for alignment = 2 total
+    ) u_mul_sync (
+        .CLK        (CLK),
+        .nRST       (nRST),
+        .issue_valid(mul_fire_valid),
+        .fu_ready   (mul_bus.out.ready_in),  // FU signals when ready for input
+        .meta_in    (mul_meta_in),
+        .sync_ready (mul_sync_ready),
+        .wb_valid   (mul_bus.out.valid_out),
+        .wb_ready   (mul_bus.in.ready_out),  // WB backpressure from lane
+        .meta_out   (mul_meta_out)
+    );
+
+    // Hold buffer & WB
+    always_ff @(posedge CLK or negedge nRST) begin
+        if (!nRST) begin
+            mul_hold_valid  <= 1'b0;
+            mul_hold_result <= '0;
+            mul_hold_vd     <= '0;
+            mul_hold_elem   <= '0;
+        end else begin
+            if (mul_valid_wb) begin
+                mul_hold_valid  <= 1'b1;
+                mul_hold_result <= mul_result_wb;
+                mul_hold_vd     <= mul_meta_out.vd;
+                mul_hold_elem   <= mul_meta_out.elem_idx;
+            end else if (mul_hold_valid && lif.lane_in.ready_in[MUL]) begin
+                mul_hold_valid <= 1'b0;
+            end
+        end
+    end
+
     // ------------------------------------------------------------
     // DIV: Debug Instrumentation
     // ------------------------------------------------------------
@@ -407,6 +521,63 @@ module lane (
     end
 `endif
 
+`ifdef MUL_DEBUG
+    initial $display("[%0t] MUL_DEBUG is ON in %m", $time);
+    // Track when MUL FU actually accepts input
+    always_ff @(posedge CLK) begin
+        if (nRST && mul_bus.in.valid_in && mul_bus.out.ready_in) begin
+            $display("[%0t] MUL_ACCEPT  vd=%0d elem=%0d mask=%b  v1=%h v2=%h",
+                     $time,
+                     mul_seq_out.vd,
+                     mul_seq_out.elem_idx,
+                     mul_seq_out.mask_bit,
+                     mul_seq_out.v1_elem,
+                     mul_seq_out.v2_elem);
+        end
+    end
+
+    // Track when we *intend* to issue (sequencer fire)
+    always_ff @(posedge CLK) begin
+        if (nRST && mul_fire_valid && mul_sync_ready) begin
+            $display("[%0t] MUL_ISSUE   vd=%0d elem=%0d mask=%b",
+                     $time,
+                     mul_seq_out.vd,
+                     mul_seq_out.elem_idx,
+                     mul_seq_out.mask_bit);
+        end
+    end
+
+    // Track FU producing an output (pre-align)
+    always_ff @(posedge CLK) begin
+        if (nRST && mul_bus.out.valid_out && mul_bus.in.ready_out) begin
+            $display("[%0t] MUL_FU_OUT  result=%h",
+                     $time, mul_bus.out.result);
+        end
+    end
+
+    // Track when metadata + result enter hold buffer (aligned stage)
+    always_ff @(posedge CLK) begin
+        if (nRST && mul_valid_wb) begin
+            $display("[%0t] MUL_HOLD_IN vd=%0d elem=%0d result=%h",
+                     $time,
+                     mul_meta_out.vd,
+                     mul_meta_out.elem_idx,
+                     mul_result_wb);
+        end
+    end
+
+    // Track final writeback to lane interface
+    always_ff @(posedge CLK) begin
+        if (nRST && lif.lane_out.valid_o[MUL] && lif.lane_in.ready_in[MUL]) begin
+            $display("[%0t] MUL_WB_OUT  vd=%0d elem=%0d result=%h",
+                     $time,
+                     lif.lane_out.vd[MUL],
+                     lif.lane_out.elem_idx[MUL],
+                     lif.lane_out.result[MUL]);
+        end
+    end
+`endif
+
 
     // ============================================================
     // Lane Output Bus (Combined SQRT + DIV)
@@ -427,6 +598,14 @@ module lane (
         lif.lane_out.result[DIV]   = div_hold_result;
         lif.lane_out.vd[DIV]       = div_hold_vd;
         lif.lane_out.elem_idx[DIV] = div_hold_elem;
+
+        // MUL outputs
+        lif.lane_out.ready_o[MUL]  = mul_seq_out.lane_ready;
+        lif.lane_out.valid_o[MUL]  = mul_hold_valid;
+        lif.lane_out.result[MUL]   = mul_hold_result;
+        lif.lane_out.vd[MUL]       = mul_hold_vd;
+        lif.lane_out.elem_idx[MUL] = mul_hold_elem;
+
     end
 
 endmodule
