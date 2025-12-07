@@ -142,7 +142,7 @@ vlog:
 clean:
 	rm -rf work transcript vsim.wlf *.log *.jou *.vstf *.vcd
 
-vexp.wav:
+vexp_bf16.wav:
 	vlog -sv +incdir+./src/include \
 		./src/include/vector_if.vh \
 		./src/include/vector_types.vh \
@@ -154,15 +154,41 @@ vexp.wav:
 		./src/modules/ha.sv \
 		./src/modules/vexp.sv \
 		./src/modules/vexp_fsm_bf16.sv \
+		./src/modules/mul_fp16_singlecycle.sv \
 		./src/modules/bf16_to_int_frac.sv \
 		./src/modules/mul_bf16.sv \
 		./src/modules/adder_8b.sv \
 		./src/modules/wallacetree_8b.sv \
+		./src/modules/wallacetree_11b.sv \
 		./src/modules/addsub_bf16.sv \
-		./src/modules/left_shift.sv \
+		./src/modules/left_shift_bf16.sv \
+		./src/testbench/vexp_tb.sv \
+		./src/modules/bf16_to_fp16.sv
+
+
+	vsim -voptargs="+acc" work.vexp_tb -do "do $(abspath $(SCRDIR)/vexp_bf16.do); run $(SIMTIME);" -suppress 2275
+
+vexp_fp16.wav:
+
+	vlog -sv +incdir+./src/include \
+		./src/include/vector_if.vh \
+		./src/include/vector_types.vh \
+		./src/modules/mul_wallacetree.sv \
+		./src/modules/adder_5b.sv \
+		./src/modules/fa.sv \
+		./src/modules/ha.sv \
+		./src/modules/vexp.sv \
+		./src/modules/vexp_fsm_fp16.sv \
+		./src/modules/fp16_to_bf16_int_frac.sv \
+		./src/modules/mul_fp16_singlecycle.sv \
+		./src/modules/adder_8b.sv \
+		./src/modules/wallacetree_8b.sv \
+		./src/modules/wallacetree_11b.sv \
+		./src/modules/addsub_fp16.sv \
+		./src/modules/left_shift_fp16.sv \
 		./src/testbench/vexp_tb.sv
 
-	vsim -voptargs="+acc" work.vexp_tb -do "do $(abspath $(SCRDIR)/vexp.do); run $(SIMTIME);" -suppress 2275
+	vsim -voptargs="+acc" work.vexp_tb -do "do $(abspath $(SCRDIR)/vexp_fp16.do); run $(SIMTIME);" -suppress 2275
 
 vls.wav:
 	vlog -sv +incdir+./src/include \

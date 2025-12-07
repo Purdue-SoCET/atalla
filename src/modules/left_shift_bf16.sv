@@ -12,7 +12,7 @@
 //Outputs:
 //    result   - resulting 13 bit value with a '1' in most significance and zeros shifted in from the right
 
-module left_shift (
+module left_shift_bf16 (
     input  logic [9:0] fraction,
     output logic [9:0] result,
     output logic [3:0] shifted_amount

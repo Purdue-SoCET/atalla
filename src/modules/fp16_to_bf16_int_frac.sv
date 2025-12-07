@@ -1,13 +1,13 @@
-// bfloat16 format: [15]=sign, [14:7]=exp (bias=127), [6:0]=mant
-// Assumes bf16_in is non-negative (sign bit == 0).
-// int_u32   = floor(x)
-// frac_bf16 = fractional part in [0,1) as bf16
-module bf16_to_int_frac (
-  input  logic [15:0] bf16_in,
+// Assumes fp16_in is non-negative, normalized (sign = 0, exp != 0)
+// int_u32 = floor(x)
+// frac_bf16 = fractional part in [0,1) as bfloat16
+module fp16_to_bf16_int_frac (
+  input  logic [15:0] fp16_in,
   output logic [31:0] int_u32,
   output logic [15:0] frac_bf16
 );
 
+  localparam int FP16_BIAS = 15;
   localparam int BF16_BIAS = 127;
 
   // -------------------------------
@@ -34,7 +34,8 @@ module bf16_to_int_frac (
 
   // --------------------------------------------
   // Convert fixed-point fraction N / 2^s to bf16
-  // N: up to 11 bits, 0 <= N < 2^s
+  // N: up to 11 bits
+  // s: shift (denominator exponent)
   // --------------------------------------------
   function automatic logic [15:0] fixed_frac_to_bf16 (
     input logic [10:0] N,
@@ -47,7 +48,7 @@ module bf16_to_int_frac (
     logic [7:0]  exp_b;
     logic [6:0]  mant_b;
 
-    // for rounding
+    // extra for rounding
     logic        guard, round_bit, sticky;
     logic [6:0]  mant_rounded;
     logic [7:0]  exp_rounded;
@@ -65,7 +66,7 @@ module bf16_to_int_frac (
           // binary exponent (unbiased) is Efrac = k - s
           Efrac = k - s;
 
-          // Underflow to 0 if way too small for bf16 (no subnormals here)
+          // Underflow to 0 if way too small for bf16 (we skip full subnormal handling)
           if (Efrac < -126) begin
             res = 16'h0000;
           end else begin
@@ -75,7 +76,8 @@ module bf16_to_int_frac (
             // bf16 exponent with bias
             exp_b = BF16_BIAS + Efrac;
 
-            // norm layout:
+            // ---- Round-to-nearest-even on mantissa ----
+            // norm bits layout:
             //   norm[10] : implicit 1
             //   norm[9:3]: mantissa bits we keep (7 bits)
             //   norm[2]  : guard
@@ -89,14 +91,15 @@ module bf16_to_int_frac (
             mant_rounded = mant_b;
             exp_rounded  = exp_b;
 
-            // round-to-nearest-even
+            // round-to-nearest-even:
+            // if guard && (round_bit || sticky || LSB of mantissa)
             if (guard && (round_bit || sticky || mant_b[0])) begin
               mant_rounded = mant_b + 7'd1;
 
-              // handle mantissa overflow (1.1111111 -> 10.000000)
-              if (mant_rounded == 7'b1000000) begin
-                mant_rounded = 7'd0;
-                exp_rounded  = exp_b + 8'd1;
+              // handle mantissa overflow (e.g., 1.1111111 -> 10.000000)
+              if (mant_rounded == 7'b10000000) begin
+                mant_rounded = 7'd0;         // drop back to 0.xxx
+                exp_rounded  = exp_b + 8'd1; // bump exponent
               end
             end
 
@@ -117,55 +120,57 @@ module bf16_to_int_frac (
   // -------------------------------
   // Main logic
   // -------------------------------
-  logic [7:0] exp_b;
-  logic [6:0] mant_b;
+  logic       sign;
+  logic [4:0] exp_f;    // fp16 exponent
+  logic [9:0] mant_f;   // fp16 mantissa
 
-  logic [7:0]  sig8;        // 1.mant (8 bits)
-  int          E;           // unbiased exponent
-  int          s;           // number of fractional bits
-  logic [7:0]  frac_bits8;
-  logic [10:0] N_num;
+  logic [10:0] sig11;   // 1.mant_f
+  int          E;       // unbiased exponent for fp16
+  int          s;       // number of fractional bits
+  logic [10:0] frac_bits;
 
   always_comb begin
-    exp_b  = bf16_in[14:7];
-    mant_b = bf16_in[6:0];
+    sign   = fp16_in[15];
+    exp_f  = fp16_in[14:10];
+    mant_f = fp16_in[9:0];
 
     int_u32   = 32'd0;
     frac_bf16 = 16'h0000;
 
-    // treat zero / subnormal as 0
-    if (exp_b == 8'd0) begin
+    // handle negative, zero, or subnormal as 0 for now
+    if (sign || (exp_f == 5'd0)) begin
       int_u32   = 32'd0;
       frac_bf16 = 16'h0000;
     end else begin
-      // Build 1.mant (8 bits)
-      sig8 = {1'b1, mant_b};
+      // Build 11-bit significand (1.mant)
+      sig11 = {1'b1, mant_f};
 
       // Unbiased exponent
-      E = int'(exp_b) - BF16_BIAS;
+      E = int'(exp_f) - FP16_BIAS;
 
-      if (E >= 7) begin
-        // All bits we know about are integer bits
-        // x = sig8 * 2^(E-7)
-        int_u32   = {24'd0, sig8} << (E - 7);
+      if (E >= 10) begin
+        // All bits we know about are integer bits (no fractional bits in current precision)
+        // x = sig11 * 2^(E-10)
+        int_u32   = {21'd0, sig11} << (E - 10);
         frac_bf16 = 16'h0000;
 
       end else if (E >= 0) begin
-        // Some integer, some fraction: binary point in sig8
-        s         = 7 - E;                       // 1..7 fractional bits
-        int_u32   = ({24'd0, sig8}) >> s;        // floor
-        frac_bits8 = sig8 & ((8'h1 << s) - 1);   // remaining fraction bits
+        // Some integer, some fraction
+        // x = sig11 * 2^(E-10) -> binary point is within sig11
+        s         = 10 - E;                      // fractional bits count
+        int_u32   = ({21'd0, sig11}) >> s;       // floor
+        frac_bits = sig11 & ((11'h1 << s) - 1);  // residual fraction bits
 
-        // fraction = frac_bits / 2^s
-        N_num     = {3'b000, frac_bits8};        // extend to 11 bits
-        frac_bf16 = fixed_frac_to_bf16(N_num, s);
+        // fraction = frac_bits / 2^s -> convert to bf16
+        frac_bf16 = fixed_frac_to_bf16(frac_bits, s);
 
       end else begin
-        // E < 0: x < 1, integer part = 0, whole value is fractional
+        // E < 0: integer part is 0, whole value is fractional
+        // x = sig11 / 2^(10 - E)
         int_u32   = 32'd0;
-        s         = 7 - E;                       // >7
-        N_num     = {3'b000, sig8};
-        frac_bf16 = fixed_frac_to_bf16(N_num, s);
+        s         = 10 - E;   // denominator exponent
+        frac_bits = sig11;
+        frac_bf16 = fixed_frac_to_bf16(frac_bits, s);
       end
     end
   end
