@@ -51,6 +51,7 @@ int test_fail_count;
 int total_comparisons;
 int output_row_count;
 
+
 // Clock generation
 always begin
     tb_clk = 1'b0;
@@ -75,8 +76,7 @@ task reset;
     end
 endtask
 
-
-// Task to read matrices from file (same format as systolic_array_top_tb)
+// Task to read matrices from file
 task get_matrices(output int weights);
     begin
         int iterations;
@@ -118,7 +118,6 @@ task get_matrices(output int weights);
             m_partials[i] = {>>{temp_partials[i]}};
         end
         
-        // Verify matrices are non-zero
         $display("=== Matrix Data Verification ===");
         for (i = 0; i < N; i++) begin
             $display("Row %0d weights: %h", i, m_weights[i]);
@@ -137,137 +136,91 @@ task get_m_output;
             end
         end
         for (i = 0; i < N; i++) begin
-            /* verilator lint_off WIDTHTRUNC */
             m_outputs[i] = {>>{temp_outputs[i]}};
-            /* verilator lint_on WIDTHTRUNC */
         end
     end
 endtask
 
-// Load weights - column by column for systolic_array_simple
-// Each cycle loads one column of the weight matrix (all rows for that column)
-// The RTL indexes sa_array_in as vreg_t (fp16_t[3:0]), where index 0 is LSB
-// Weight propagation through MAC units requires keeping weight_en high for N cycles
-// so that weights can propagate from column 0 to column N-1
+
+// Load weights - all rows of each column at once
+// systolic_array_simple loads weights via sa_array_in when sa_weight_en is high
+// Weights propagate horizontally through MAC units via weight_next_en
 task load_weights();
-    int c, r_idx;
-    logic [(N*DW)-1:0] weight_column;
     $display("[%0t] Loading weights...", $time);
-    
-    // Load N columns of weights - each column needs to propagate through the array
-    // Keep weight_en high and cycle through all weight columns
-    for (c = 0; c < N; c++) begin
-        // Build weight column: extract column c from all rows
-        // RTL uses sa_array_in[j] where j=0 maps to bits [15:0], j=1 to [31:16], etc.
-        weight_column = '0;
-        for (r_idx = 0; r_idx < N; r_idx++) begin
-            // temp_weights[r_idx][c] is the weight at row r_idx, column c
-            // Place row r_idx at position r_idx in the packed array (LSB-first)
-            weight_column[(r_idx+1)*DW-1 -: DW] = temp_weights[r_idx][c];
-        end
-        
-        $display("[%0t] Loading weight column %0d: %h", $time, c, weight_column);
-        sa_interface.sa_array_in = weight_column;
+    // Load all 4 columns of weights, one column per cycle
+    // Column 0 weights go to MAC column 0, then propagate right
+    for (int c = 0; c < N; c++) begin
+        // Pack column c of weights: row 0 at LSB (sa_array_in[0]), row 3 at MSB
+        sa_interface.sa_array_in[0] = temp_weights[0][c];
+        sa_interface.sa_array_in[1] = temp_weights[1][c];
+        sa_interface.sa_array_in[2] = temp_weights[2][c];
+        sa_interface.sa_array_in[3] = temp_weights[3][c];
         sa_interface.sa_weight_en = 1'b1;
+        $display("[%0t] Loading weight col %0d: [%h, %h, %h, %h]", $time, c,
+            temp_weights[0][c], temp_weights[1][c], temp_weights[2][c], temp_weights[3][c]);
         @(posedge tb_clk);
     end
-    
-    // Keep weight_en high for N more cycles to allow weights to propagate through all columns
-    // Each cycle, the weights shift one column to the right
-    sa_interface.sa_array_in = '0;  // No new weights, just propagate existing ones
-    for (c = 0; c < N; c++) begin
-        @(posedge tb_clk);
-    end
-    
     sa_interface.sa_weight_en = 1'b0;
+    sa_interface.sa_array_in = '0;
     $display("[%0t] Weights loaded", $time);
 endtask
 
-// Load inputs column-by-column for streaming operation
-// The RTL indexes arrays as vreg_t (fp16_t[3:0]), where index 0 is LSB
+// Load inputs column-by-column into the input buffer
 task load_inputs_streaming(input int delay);
-    int c, r_idx;
-    logic [(N*DW)-1:0] bus_inputs;
-    logic [(N*DW)-1:0] bus_partials;
     $display("[%0t] Loading inputs and partials (column-streaming) with delay=%0d...", $time, delay);
     
-    // Stream N columns of data
-    for (c = 0; c < N; c++) begin
-        // Build one wide bus of N rows for this column
-        // RTL uses array[j] where j=0 maps to bits [15:0], j=1 to [31:16], etc.
-        bus_inputs = '0;
-        bus_partials = '0;
-        for (r_idx = 0; r_idx < N; r_idx++) begin
-            // Place row r_idx at position r_idx in the packed array (LSB-first)
-            bus_inputs[(r_idx+1)*DW-1 -: DW] = temp_inputs[r_idx][c];
-            bus_partials[(r_idx+1)*DW-1 -: DW] = temp_partials[r_idx][c];
-        end
-
-        // Drive into DUT for one cycle
+    for (int c = 0; c < N; c++) begin
+        // Pack column c of inputs and partials
+        sa_interface.sa_array_in[0] = temp_inputs[0][c];
+        sa_interface.sa_array_in[1] = temp_inputs[1][c];
+        sa_interface.sa_array_in[2] = temp_inputs[2][c];
+        sa_interface.sa_array_in[3] = temp_inputs[3][c];
+        
+        sa_interface.sa_array_in_partials[0] = temp_partials[0][c];
+        sa_interface.sa_array_in_partials[1] = temp_partials[1][c];
+        sa_interface.sa_array_in_partials[2] = temp_partials[2][c];
+        sa_interface.sa_array_in_partials[3] = temp_partials[3][c];
+        
         sa_interface.sa_input_en = 1'b1;
         sa_interface.sa_partial_en = 1'b1;
-        sa_interface.sa_array_in = bus_inputs;
-        sa_interface.sa_array_in_partials = bus_partials;
-
         @(posedge tb_clk);
-
-        // Clear after the cycle
+        
         sa_interface.sa_input_en = 1'b0;
         sa_interface.sa_partial_en = 1'b0;
         sa_interface.sa_array_in = '0;
         sa_interface.sa_array_in_partials = '0;
-
-        // Optional extra pipeline gap between columns
+        
         repeat (delay) @(posedge tb_clk);
     end
-
-    $display("[%0t] Inputs and partials loaded (column-streaming complete)", $time);
+    
+    $display("[%0t] Inputs and partials loaded", $time);
 endtask
 
-
-// FP16 comparison function with tolerance
-// Requirements: 1.3 - compare actual outputs to expected outputs
+// FP16 comparison with tolerance
 function automatic bit compare_fp16_with_tolerance(
     input logic [DW-1:0] actual,
     input logic [DW-1:0] expected,
     input real tolerance_percent
 );
-    // Extract FP16 components
-    logic actual_sign, expected_sign;
     logic [4:0] actual_exp, expected_exp;
     logic [9:0] actual_mant, expected_mant;
     real actual_val, expected_val, error_percent;
     
-    // Handle exact match
     if (actual == expected) return 1'b1;
-    
-    // Handle zero cases
     if ((actual[14:0] == 15'h0) && (expected[14:0] == 15'h0)) return 1'b1;
     
-    // Extract components
-    actual_sign = actual[15];
     actual_exp = actual[14:10];
     actual_mant = actual[9:0];
-    
-    expected_sign = expected[15];
     expected_exp = expected[14:10];
     expected_mant = expected[9:0];
     
-    // Convert to real for comparison (simplified)
-    if (actual_exp == 0)
-        actual_val = 0.0;
-    else
-        actual_val = (actual_sign ? -1.0 : 1.0) * (1.0 + real'(actual_mant)/1024.0) * (2.0 ** (int'(actual_exp) - 15));
+    if (actual_exp == 0) actual_val = 0.0;
+    else actual_val = (actual[15] ? -1.0 : 1.0) * (1.0 + real'(actual_mant)/1024.0) * (2.0 ** (int'(actual_exp) - 15));
     
-    if (expected_exp == 0)
-        expected_val = 0.0;
-    else
-        expected_val = (expected_sign ? -1.0 : 1.0) * (1.0 + real'(expected_mant)/1024.0) * (2.0 ** (int'(expected_exp) - 15));
+    if (expected_exp == 0) expected_val = 0.0;
+    else expected_val = (expected[15] ? -1.0 : 1.0) * (1.0 + real'(expected_mant)/1024.0) * (2.0 ** (int'(expected_exp) - 15));
     
-    // Calculate error percentage
-    if (expected_val == 0.0) begin
-        return (actual_val == 0.0);
-    end
+    if (expected_val == 0.0) return (actual_val == 0.0);
     
     error_percent = ((actual_val - expected_val) / expected_val) * 100.0;
     if (error_percent < 0) error_percent = -error_percent;
@@ -275,51 +228,44 @@ function automatic bit compare_fp16_with_tolerance(
     return (error_percent <= tolerance_percent);
 endfunction
 
-// Wait for output valid and capture results
+
+// Wait for outputs and compare
 task wait_for_outputs();
     int cycles;
     int outputs_received;
     begin
         cycles = 0;
         outputs_received = 0;
-        output_row_count = 0;
         
         while (outputs_received < N && cycles < 10000) begin
             @(posedge tb_clk);
             cycles++;
             
             if (sa_interface.sa_out_valid) begin
-                // Capture and compare output
                 $display("========================================");
                 $display("OUTPUT COLUMN %0d (cycle %0d)", outputs_received, cycles);
                 $display("========================================");
-                
-                // Print full output bus for debugging
                 $display("Raw sa_array_output: %h", sa_interface.sa_array_output);
                 
-                // Print actual output element by element
-                // sa_array_output is vreg_t = fp16_t[3:0], access as array
                 $write("Systolic Array Output: ");
                 for (y = 0; y < N; y++) begin
                     $write("%04h ", sa_interface.sa_array_output[y]);
                 end
                 $display("");
                 
-                // Print expected output
                 $write("Expected Output:       ");
                 for (z = 0; z < N; z++) begin
                     $write("%04h ", m_outputs[outputs_received][(z+1)*DW-1-:DW]);
                 end
                 $display("");
                 
-                // Compare with tolerance
-                // Cast vreg_t element (fp16_t struct) to logic[DW-1:0] for comparison
+                // Compare
                 for (z = 0; z < N; z++) begin
                     total_comparisons++;
                     if (compare_fp16_with_tolerance(
                             sa_interface.sa_array_output[z],
                             m_outputs[outputs_received][(z+1)*DW-1-:DW],
-                            1.0)) begin  // 1% tolerance
+                            1.0)) begin
                         test_pass_count++;
                     end else begin
                         test_fail_count++;
@@ -327,30 +273,28 @@ task wait_for_outputs();
                     end
                 end
                 
-                // Write to file for comparison script
+                // Write to file
                 for (y = 0; y < N-1; y++) begin
                     $fwrite(sysarr_dump_file, "%x ", sa_interface.sa_array_output[y]);
                 end
                 $fwrite(sysarr_dump_file, "%x\n", sa_interface.sa_array_output[N-1]);
                 
-                // Acknowledge output
+                // Acknowledge
                 sa_interface.sa_output_ready = 1'b1;
                 @(posedge tb_clk);
                 sa_interface.sa_output_ready = 1'b0;
                 
                 outputs_received++;
-                output_row_count++;
             end
         end
         
         if (outputs_received < N) begin
-            $display("ERROR: timeout waiting for outputs after %0d cycles (got %0d/%0d)", cycles, outputs_received, N);
+            $display("ERROR: timeout after %0d cycles (got %0d/%0d)", cycles, outputs_received, N);
         end else begin
             $display("All %0d outputs received after %0d cycles", outputs_received, cycles);
         end
     end
 endtask
-
 
 // Debug monitoring
 always @(posedge tb_clk) begin
@@ -363,7 +307,6 @@ initial begin
     $dumpfile("waves/systolic_array_simple_waves.vcd");
     $dumpvars(0, systolic_array_simple_tb);
     
-    // Initialize signals
     sa_interface.sa_array_in = '0;
     sa_interface.sa_array_in_partials = '0;
     sa_interface.sa_input_en = '0;
@@ -375,7 +318,6 @@ initial begin
     test_fail_count = 0;
     total_comparisons = 0;
     
-    // Open files
     file = $fopen(input_filename, "r");
     if (file == 0) begin
         $display("ERROR: Could not open input file: %s", input_filename);
@@ -391,9 +333,8 @@ initial begin
     
     reset();
     
-    // Test 1: First matrix multiply with distinct values
     $display("========================================");
-    $display("TEST 1: First matrix multiply");
+    $display("TEST 1: Matrix multiply");
     $display("========================================");
     get_matrices(.weights(loaded_weights));
     get_m_output();
@@ -402,20 +343,15 @@ initial begin
         load_weights();
     end
     
-    // Stream inputs
     load_inputs_streaming(.delay(0));
-    
-    // Wait for and capture outputs
     wait_for_outputs();
     
     $display("Test 1 complete");
     
-    // Close files
     $fclose(file);
     $fclose(out_file);
     $fclose(sysarr_dump_file);
     
-    // Print summary
     $display("========================================");
     $display("TEST SUMMARY");
     $display("========================================");
