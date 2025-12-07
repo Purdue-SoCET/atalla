@@ -1,0 +1,258 @@
+[*]
+[*] GTKWave Analyzer v3.3.125 (w)1999-2025 BSI
+[*] Sun Dec  7 13:28:26 2025
+[*]
+[dumpfile] "/home/vinay/tensorcore/atalla/waves/systolic_array_simple_waves.vcd"
+[dumpfile_mtime] "Sun Dec  7 13:25:47 2025"
+[dumpfile_size] 657591
+[savefile] "/home/vinay/tensorcore/atalla/waves/systolic_array_simple_debug.gtkw"
+[timestart] 76770
+[size] 2560 1458
+[pos] 337 298
+*-14.100000 181500 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1
+[treeopen] sysarr_input_buffer_tb.
+[treeopen] sysarr_input_buffer_tb.DUT.
+[treeopen] sysarr_input_buffer_tb.DUT.mac_row_gen[0].
+[treeopen] sysarr_input_buffer_tb.DUT.mac_row_gen[0].mac_col_gen[0].
+[treeopen] sysarr_input_buffer_tb.DUT.mac_row_gen[0].mac_col_gen[0].mac_inst.
+[treeopen] sysarr_input_buffer_tb.DUT.mac_row_gen[0].mac_col_gen[0].mac_inst.mac_if.
+[treeopen] sysarr_input_buffer_tb.DUT.mac_row_gen[0].mac_col_gen[1].
+[treeopen] sysarr_input_buffer_tb.DUT.mac_row_gen[0].mac_col_gen[1].mac_inst.
+[treeopen] sysarr_input_buffer_tb.DUT.mac_row_gen[0].mac_col_gen[2].
+[treeopen] sysarr_input_buffer_tb.DUT.mac_row_gen[0].mac_col_gen[3].mac_inst.
+[treeopen] sysarr_input_buffer_tb.DUT.mac_row_gen[1].
+[treeopen] sysarr_input_buffer_tb.DUT.mac_row_gen[1].mac_col_gen[0].
+[treeopen] sysarr_input_buffer_tb.DUT.mac_row_gen[1].mac_col_gen[1].
+[treeopen] sysarr_input_buffer_tb.DUT.mac_row_gen[1].mac_col_gen[2].
+[treeopen] sysarr_input_buffer_tb.DUT.mac_row_gen[1].mac_col_gen[3].
+[treeopen] sysarr_input_buffer_tb.DUT.mac_row_gen[2].
+[treeopen] sysarr_input_buffer_tb.DUT.mac_row_gen[2].mac_col_gen[0].
+[treeopen] sysarr_input_buffer_tb.DUT.mac_row_gen[2].mac_col_gen[1].
+[treeopen] sysarr_input_buffer_tb.DUT.mac_row_gen[2].mac_col_gen[2].
+[treeopen] sysarr_input_buffer_tb.DUT.mac_row_gen[2].mac_col_gen[3].
+[treeopen] sysarr_input_buffer_tb.DUT.mac_row_gen[3].
+[treeopen] sysarr_input_buffer_tb.DUT.mac_row_gen[3].mac_col_gen[0].
+[treeopen] sysarr_input_buffer_tb.DUT.mac_row_gen[3].mac_col_gen[1].
+[treeopen] sysarr_input_buffer_tb.DUT.mac_row_gen[3].mac_col_gen[2].
+[treeopen] sysarr_input_buffer_tb.DUT.mac_row_gen[3].mac_col_gen[3].
+[sst_width] 278
+[signals_width] 230
+[sst_expanded] 1
+[sst_vpaned_height] 478
+@22
+sysarr_input_buffer_tb.DUT.mac_row_gen[0].mac_col_gen[0].mac_inst.weight[15:0]
+sysarr_input_buffer_tb.DUT.mac_row_gen[0].mac_col_gen[0].mac_inst.input_x[15:0]
+@28
+sysarr_input_buffer_tb.DUT.mac_row_gen[0].mac_col_gen[0].mac_inst.mac_if.MAC_shift
+sysarr_input_buffer_tb.DUT.mac_row_gen[0].mac_col_gen[0].mac_inst.mac_if.start
+sysarr_input_buffer_tb.DUT.mac_row_gen[0].mac_col_gen[0].mac_inst.mac_if.value_ready
+@22
+sysarr_input_buffer_tb.DUT.to_output_buffer[63:0]
+@28
+sysarr_input_buffer_tb.DUT.mac_row_gen[0].mac_col_gen[0].mac_inst.start_delayed
+sysarr_input_buffer_tb.DUT.mac_row_gen[0].mac_col_gen[0].mac_inst.mul_ready
+@22
+sysarr_input_buffer_tb.DUT.mac_row_gen[0].mac_col_gen[1].mac_inst.weight[15:0]
+sysarr_input_buffer_tb.DUT.mac_row_gen[0].mac_col_gen[1].mac_inst.input_x[15:0]
+@28
+sysarr_input_buffer_tb.DUT.mac_row_gen[0].mac_col_gen[1].mac_inst.mac_if.MAC_shift
+@22
+sysarr_input_buffer_tb.DUT.mac_row_gen[0].mac_col_gen[2].mac_inst.weight[15:0]
+sysarr_input_buffer_tb.DUT.mac_row_gen[0].mac_col_gen[3].mac_inst.weight[15:0]
+sysarr_input_buffer_tb.DUT.mac_row_gen[1].mac_col_gen[0].mac_inst.weight[15:0]
+sysarr_input_buffer_tb.DUT.mac_row_gen[1].mac_col_gen[1].mac_inst.weight[15:0]
+sysarr_input_buffer_tb.DUT.mac_row_gen[1].mac_col_gen[2].mac_inst.weight[15:0]
+sysarr_input_buffer_tb.DUT.mac_row_gen[1].mac_col_gen[3].mac_inst.weight[15:0]
+sysarr_input_buffer_tb.DUT.mac_row_gen[2].mac_col_gen[0].mac_inst.weight[15:0]
+sysarr_input_buffer_tb.DUT.mac_row_gen[2].mac_col_gen[1].mac_inst.weight[15:0]
+sysarr_input_buffer_tb.DUT.mac_row_gen[2].mac_col_gen[2].mac_inst.weight[15:0]
+sysarr_input_buffer_tb.DUT.mac_row_gen[2].mac_col_gen[3].mac_inst.weight[15:0]
+sysarr_input_buffer_tb.DUT.mac_row_gen[3].mac_col_gen[0].mac_inst.weight[15:0]
+sysarr_input_buffer_tb.DUT.mac_row_gen[3].mac_col_gen[1].mac_inst.weight[15:0]
+sysarr_input_buffer_tb.DUT.mac_row_gen[3].mac_col_gen[2].mac_inst.weight[15:0]
+sysarr_input_buffer_tb.DUT.mac_row_gen[3].mac_col_gen[3].mac_inst.weight[15:0]
+@28
+sysarr_input_buffer_tb.tb_clk
+sysarr_input_buffer_tb.sa_interface.sa_weight_en
+sysarr_input_buffer_tb.sa_interface.sa_input_en
+@22
+sysarr_input_buffer_tb.sa_interface.sa_array_in[63:0]
+@28
+sysarr_input_buffer_tb.DUT.silo.has_space
+sysarr_input_buffer_tb.DUT.MAC_shifts_0
+@800028
+sysarr_input_buffer_tb.DUT.MAC_shifts_remaining[2:0]
+@28
+(0)sysarr_input_buffer_tb.DUT.MAC_shifts_remaining[2:0]
+(1)sysarr_input_buffer_tb.DUT.MAC_shifts_remaining[2:0]
+(2)sysarr_input_buffer_tb.DUT.MAC_shifts_remaining[2:0]
+@1001200
+-group_end
+@28
+sysarr_input_buffer_tb.DUT.buffer_empty
+@22
+sysarr_input_buffer_tb.DUT.input_column[63:0]
+sysarr_input_buffer_tb.DUT.MAC_outputs[0][0][15:0]
+sysarr_input_buffer_tb.DUT.MAC_outputs[0][1][15:0]
+sysarr_input_buffer_tb.DUT.MAC_outputs[0][2][15:0]
+sysarr_input_buffer_tb.DUT.MAC_outputs[0][3][15:0]
+sysarr_input_buffer_tb.DUT.MAC_outputs[1][0][15:0]
+sysarr_input_buffer_tb.DUT.MAC_outputs[1][1][15:0]
+sysarr_input_buffer_tb.DUT.MAC_outputs[1][2][15:0]
+sysarr_input_buffer_tb.DUT.MAC_outputs[1][3][15:0]
+sysarr_input_buffer_tb.DUT.MAC_outputs[2][0][15:0]
+sysarr_input_buffer_tb.DUT.MAC_outputs[2][1][15:0]
+sysarr_input_buffer_tb.DUT.MAC_outputs[2][2][15:0]
+sysarr_input_buffer_tb.DUT.MAC_outputs[2][3][15:0]
+sysarr_input_buffer_tb.DUT.MAC_outputs[3][0][15:0]
+sysarr_input_buffer_tb.DUT.MAC_outputs[3][1][15:0]
+sysarr_input_buffer_tb.DUT.MAC_outputs[3][2][15:0]
+sysarr_input_buffer_tb.DUT.MAC_outputs[3][3][15:0]
+sysarr_input_buffer_tb.DUT.MAC_inputs[0][0][15:0]
+sysarr_input_buffer_tb.DUT.MAC_inputs[0][1][15:0]
+sysarr_input_buffer_tb.DUT.MAC_inputs[0][2][15:0]
+sysarr_input_buffer_tb.DUT.MAC_inputs[0][3][15:0]
+sysarr_input_buffer_tb.DUT.MAC_inputs[1][0][15:0]
+sysarr_input_buffer_tb.DUT.MAC_inputs[1][1][15:0]
+sysarr_input_buffer_tb.DUT.MAC_inputs[1][2][15:0]
+sysarr_input_buffer_tb.DUT.MAC_inputs[1][3][15:0]
+sysarr_input_buffer_tb.DUT.MAC_inputs[2][0][15:0]
+sysarr_input_buffer_tb.DUT.MAC_inputs[2][1][15:0]
+sysarr_input_buffer_tb.DUT.MAC_inputs[2][2][15:0]
+sysarr_input_buffer_tb.DUT.MAC_inputs[2][3][15:0]
+sysarr_input_buffer_tb.DUT.MAC_inputs[3][0][15:0]
+sysarr_input_buffer_tb.DUT.MAC_inputs[3][1][15:0]
+sysarr_input_buffer_tb.DUT.MAC_inputs[3][2][15:0]
+@800022
+sysarr_input_buffer_tb.DUT.MAC_starts[3:0]
+@28
+(0)sysarr_input_buffer_tb.DUT.MAC_starts[3:0]
+(1)sysarr_input_buffer_tb.DUT.MAC_starts[3:0]
+(2)sysarr_input_buffer_tb.DUT.MAC_starts[3:0]
+(3)sysarr_input_buffer_tb.DUT.MAC_starts[3:0]
+@1001200
+-group_end
+@22
+sysarr_input_buffer_tb.DUT.MAC_inputs[3][3][15:0]
+@c00022
+#{sysarr_input_buffer_tb.DUT.weight_enables[0][0:3]} sysarr_input_buffer_tb.DUT.weight_enables[0][0] sysarr_input_buffer_tb.DUT.weight_enables[0][1] sysarr_input_buffer_tb.DUT.weight_enables[0][2] sysarr_input_buffer_tb.DUT.weight_enables[0][3]
+@28
+sysarr_input_buffer_tb.DUT.weight_enables[0][0]
+sysarr_input_buffer_tb.DUT.weight_enables[0][1]
+sysarr_input_buffer_tb.DUT.weight_enables[0][2]
+sysarr_input_buffer_tb.DUT.weight_enables[0][3]
+@1401200
+-group_end
+@c00022
+#{sysarr_input_buffer_tb.DUT.weight_enables[1][0:3]} sysarr_input_buffer_tb.DUT.weight_enables[1][0] sysarr_input_buffer_tb.DUT.weight_enables[1][1] sysarr_input_buffer_tb.DUT.weight_enables[1][2] sysarr_input_buffer_tb.DUT.weight_enables[1][3]
+@28
+sysarr_input_buffer_tb.DUT.weight_enables[1][0]
+sysarr_input_buffer_tb.DUT.weight_enables[1][1]
+sysarr_input_buffer_tb.DUT.weight_enables[1][2]
+sysarr_input_buffer_tb.DUT.weight_enables[1][3]
+@1401200
+-group_end
+@c00022
+#{sysarr_input_buffer_tb.DUT.weight_enables[2][0:3]} sysarr_input_buffer_tb.DUT.weight_enables[2][0] sysarr_input_buffer_tb.DUT.weight_enables[2][1] sysarr_input_buffer_tb.DUT.weight_enables[2][2] sysarr_input_buffer_tb.DUT.weight_enables[2][3]
+@28
+sysarr_input_buffer_tb.DUT.weight_enables[2][0]
+sysarr_input_buffer_tb.DUT.weight_enables[2][1]
+sysarr_input_buffer_tb.DUT.weight_enables[2][2]
+sysarr_input_buffer_tb.DUT.weight_enables[2][3]
+@1401200
+-group_end
+@c00022
+#{sysarr_input_buffer_tb.DUT.weight_enables[3][0:3]} sysarr_input_buffer_tb.DUT.weight_enables[3][0] sysarr_input_buffer_tb.DUT.weight_enables[3][1] sysarr_input_buffer_tb.DUT.weight_enables[3][2] sysarr_input_buffer_tb.DUT.weight_enables[3][3]
+@28
+sysarr_input_buffer_tb.DUT.weight_enables[3][0]
+sysarr_input_buffer_tb.DUT.weight_enables[3][1]
+sysarr_input_buffer_tb.DUT.weight_enables[3][2]
+sysarr_input_buffer_tb.DUT.weight_enables[3][3]
+@1401200
+-group_end
+@28
+sysarr_input_buffer_tb.DUT.mac_ifs[12].value_ready
+@22
+sysarr_input_buffer_tb.DUT.mac_ifs[12].out_accumulate[15:0]
+sysarr_input_buffer_tb.DUT.out_buffer[0][64:0]
+sysarr_input_buffer_tb.DUT.out_buffer[1][64:0]
+sysarr_input_buffer_tb.DUT.out_buffer[2][64:0]
+@c00022
+sysarr_input_buffer_tb.DUT.out_buffer[3][64:0]
+@28
+(0)sysarr_input_buffer_tb.DUT.out_buffer[3][64:0]
+(1)sysarr_input_buffer_tb.DUT.out_buffer[3][64:0]
+(2)sysarr_input_buffer_tb.DUT.out_buffer[3][64:0]
+(3)sysarr_input_buffer_tb.DUT.out_buffer[3][64:0]
+(4)sysarr_input_buffer_tb.DUT.out_buffer[3][64:0]
+(5)sysarr_input_buffer_tb.DUT.out_buffer[3][64:0]
+(6)sysarr_input_buffer_tb.DUT.out_buffer[3][64:0]
+(7)sysarr_input_buffer_tb.DUT.out_buffer[3][64:0]
+(8)sysarr_input_buffer_tb.DUT.out_buffer[3][64:0]
+(9)sysarr_input_buffer_tb.DUT.out_buffer[3][64:0]
+(10)sysarr_input_buffer_tb.DUT.out_buffer[3][64:0]
+(11)sysarr_input_buffer_tb.DUT.out_buffer[3][64:0]
+(12)sysarr_input_buffer_tb.DUT.out_buffer[3][64:0]
+(13)sysarr_input_buffer_tb.DUT.out_buffer[3][64:0]
+(14)sysarr_input_buffer_tb.DUT.out_buffer[3][64:0]
+(15)sysarr_input_buffer_tb.DUT.out_buffer[3][64:0]
+(16)sysarr_input_buffer_tb.DUT.out_buffer[3][64:0]
+(17)sysarr_input_buffer_tb.DUT.out_buffer[3][64:0]
+(18)sysarr_input_buffer_tb.DUT.out_buffer[3][64:0]
+(19)sysarr_input_buffer_tb.DUT.out_buffer[3][64:0]
+(20)sysarr_input_buffer_tb.DUT.out_buffer[3][64:0]
+(21)sysarr_input_buffer_tb.DUT.out_buffer[3][64:0]
+(22)sysarr_input_buffer_tb.DUT.out_buffer[3][64:0]
+(23)sysarr_input_buffer_tb.DUT.out_buffer[3][64:0]
+(24)sysarr_input_buffer_tb.DUT.out_buffer[3][64:0]
+(25)sysarr_input_buffer_tb.DUT.out_buffer[3][64:0]
+(26)sysarr_input_buffer_tb.DUT.out_buffer[3][64:0]
+(27)sysarr_input_buffer_tb.DUT.out_buffer[3][64:0]
+(28)sysarr_input_buffer_tb.DUT.out_buffer[3][64:0]
+(29)sysarr_input_buffer_tb.DUT.out_buffer[3][64:0]
+(30)sysarr_input_buffer_tb.DUT.out_buffer[3][64:0]
+(31)sysarr_input_buffer_tb.DUT.out_buffer[3][64:0]
+(32)sysarr_input_buffer_tb.DUT.out_buffer[3][64:0]
+(33)sysarr_input_buffer_tb.DUT.out_buffer[3][64:0]
+(34)sysarr_input_buffer_tb.DUT.out_buffer[3][64:0]
+(35)sysarr_input_buffer_tb.DUT.out_buffer[3][64:0]
+(36)sysarr_input_buffer_tb.DUT.out_buffer[3][64:0]
+(37)sysarr_input_buffer_tb.DUT.out_buffer[3][64:0]
+(38)sysarr_input_buffer_tb.DUT.out_buffer[3][64:0]
+(39)sysarr_input_buffer_tb.DUT.out_buffer[3][64:0]
+(40)sysarr_input_buffer_tb.DUT.out_buffer[3][64:0]
+(41)sysarr_input_buffer_tb.DUT.out_buffer[3][64:0]
+(42)sysarr_input_buffer_tb.DUT.out_buffer[3][64:0]
+(43)sysarr_input_buffer_tb.DUT.out_buffer[3][64:0]
+(44)sysarr_input_buffer_tb.DUT.out_buffer[3][64:0]
+(45)sysarr_input_buffer_tb.DUT.out_buffer[3][64:0]
+(46)sysarr_input_buffer_tb.DUT.out_buffer[3][64:0]
+(47)sysarr_input_buffer_tb.DUT.out_buffer[3][64:0]
+(48)sysarr_input_buffer_tb.DUT.out_buffer[3][64:0]
+(49)sysarr_input_buffer_tb.DUT.out_buffer[3][64:0]
+(50)sysarr_input_buffer_tb.DUT.out_buffer[3][64:0]
+(51)sysarr_input_buffer_tb.DUT.out_buffer[3][64:0]
+(52)sysarr_input_buffer_tb.DUT.out_buffer[3][64:0]
+(53)sysarr_input_buffer_tb.DUT.out_buffer[3][64:0]
+(54)sysarr_input_buffer_tb.DUT.out_buffer[3][64:0]
+(55)sysarr_input_buffer_tb.DUT.out_buffer[3][64:0]
+(56)sysarr_input_buffer_tb.DUT.out_buffer[3][64:0]
+(57)sysarr_input_buffer_tb.DUT.out_buffer[3][64:0]
+(58)sysarr_input_buffer_tb.DUT.out_buffer[3][64:0]
+(59)sysarr_input_buffer_tb.DUT.out_buffer[3][64:0]
+(60)sysarr_input_buffer_tb.DUT.out_buffer[3][64:0]
+(61)sysarr_input_buffer_tb.DUT.out_buffer[3][64:0]
+(62)sysarr_input_buffer_tb.DUT.out_buffer[3][64:0]
+(63)sysarr_input_buffer_tb.DUT.out_buffer[3][64:0]
+(64)sysarr_input_buffer_tb.DUT.out_buffer[3][64:0]
+@1401200
+-group_end
+@28
+sysarr_input_buffer_tb.DUT.gsau_if.sa_output_ready
+@23
+sysarr_input_buffer_tb.DUT.next_out_buffer[3][64:0]
+@28
+sysarr_input_buffer_tb.DUT.sysarr_stall
+sysarr_input_buffer_tb.DUT.gsau_if.sa_out_valid
+[pattern_trace] 1
+[pattern_trace] 0

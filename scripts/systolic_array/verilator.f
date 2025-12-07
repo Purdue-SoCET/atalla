@@ -8,8 +8,10 @@
 -Irtl/modules/systolic_array
 -Irtl/include/common
 -Irtl/include/systolic_array
+-Irtl/include/vector
 -Itb/unit/common
 -Itb/unit/systolic_array
 
 --hierarchical
 --trace
+--timing

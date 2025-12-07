@@ -19,7 +19,7 @@ interface systolic_array_MAC_if;
   logic value_ready;                            // This signal goes high when an operation is *not* in progress, i.e the op is done
   logic weight_en;                          // switches the input bus between weights and inputs.
   logic weight_next_en;
-  logic stall;
+  logic stall_sa;
 
   // These two exist purely for debugging
   /* verilator lint_off UNUSEDSIGNAL */
@@ -29,7 +29,7 @@ interface systolic_array_MAC_if;
 
   // MAC Port for Array
   modport MAC(
-    input  start, stall, /* weight, */ in_value, MAC_shift, in_accumulate, weight_en,
+    input  start, stall_sa, /* weight, */ in_value, MAC_shift, in_accumulate, weight_en,
     output out_accumulate, in_pass, value_ready, weight_next_en//, weight_read, mul_result_read
   );
 endinterface
