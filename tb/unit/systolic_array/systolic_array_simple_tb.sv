@@ -2,7 +2,7 @@
 `include "gsau_control_unit_if.vh"
 
 
-module sysarr_input_buffer_tb();
+module systolic_array_simple_tb();
 
 // Parameters
 localparam CLK_PERIOD = 10;
