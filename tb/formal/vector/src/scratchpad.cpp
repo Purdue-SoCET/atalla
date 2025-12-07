@@ -73,7 +73,6 @@ void scratchpad::tick()
          }
          else 
          {
-            // Clear valid_out signals by default each cycle
             valid_out_sp1 = 0;
             valid_out_sp2 = 0;
             rdata_sp1.setZero();
