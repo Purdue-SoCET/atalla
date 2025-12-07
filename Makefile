@@ -93,7 +93,7 @@ lint:
 	echo "[lint] compiling (in-order):"; 
 	printf '  %s\n' $$ORDERED_SRCS; 
 	
-	$(VLOG) -sv -mfcu -work work +acc $$INCFLAGS $$ORDERED_SRCS; 
+	$(VLOG) -sv -compile_uselibs -cover bs -sv -pedanticerrors -lint -mfcu -work work +acc $$INCFLAGS $$ORDERED_SRCS; 
 	echo "[lint] done"
 
 # Similar to above! 
