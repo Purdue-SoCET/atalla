@@ -59,10 +59,17 @@ module systolic_array_top(
     // MAC control signals
     assign MAC_start = mac_computing;  // Keep MACs running while computing
     assign MAC_shift = memory.input_en || memory.weight_en;  // Shift when loading new inputs
-    assign bottom_row_ready = |value_ready_array[N-1];
     assign add_start = bottom_row_ready;  // Start adders when MACs are ready
     assign memory.fifo_has_space = 1'b1;  // Always ready in streaming mode
     
+    // oring across bottom row 
+    always_comb begin
+        bottom_row_ready = 1'b0;
+        for (int c = 0; c < N; c++) begin
+            bottom_row_ready |= value_ready_array[N-1][c];
+        end
+    end
+
     // Direct input connection - take values immediately from array_in
     // Each row gets its corresponding slice of the input bus
     // Data streams in and computation starts immediately (no buffering)
