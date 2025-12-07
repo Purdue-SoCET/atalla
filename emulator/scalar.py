@@ -86,6 +86,36 @@ class ScalarALU:
         a_u32 = self._broadcast_scalar(a).astype(np.uint32)
         b_u32 = self._broadcast_scalar(b).astype(np.uint32)
         return (a_u32 < b_u32).astype(np.int32)
+    
+    # -------------------------
+    # Additional unsigned comparisons (INT32)
+    # -------------------------
+    def sgtu(self, a, b) -> np.ndarray:
+        """
+        Unsigned greater-than:
+        result[i] = 1 if a_u32 > b_u32 else 0
+        """
+        a_u32 = self._broadcast_scalar(a).astype(np.uint32)
+        b_u32 = self._broadcast_scalar(b).astype(np.uint32)
+        return (a_u32 > b_u32).astype(np.int32)
+
+    def sequ(self, a, b) -> np.ndarray:
+        """
+        Unsigned equality:
+        result[i] = 1 if a_u32 == b_u32 else 0
+        """
+        a_u32 = self._broadcast_scalar(a).astype(np.uint32)
+        b_u32 = self._broadcast_scalar(b).astype(np.uint32)
+        return (a_u32 == b_u32).astype(np.int32)
+
+    def sneu(self, a, b) -> np.ndarray:
+        """
+        Unsigned not-equal:
+        result[i] = 1 if a_u32 != b_u32 else 0
+        """
+        a_u32 = self._broadcast_scalar(a).astype(np.uint32)
+        b_u32 = self._broadcast_scalar(b).astype(np.uint32)
+        return (a_u32 != b_u32).astype(np.int32)
 
     # -------------------------
     # Bitwise ops (INT32)
@@ -143,6 +173,113 @@ class ScalarALU:
                 raise ValueError("Shift amount must be scalar or same length as operands")
         return (a_i32 >> s).astype(np.int32)
 
+    # ----------------------------------------------------
+    # BF16 conversion helpers
+    # ----------------------------------------------------
+    def _to_bf16_array(self, x):
+        """
+        Convert input to a numpy array of uint16 BF16 bit-patterns.
+        Accepts scalar float, numpy array of floats, or uint16 array.
+        """
+        if isinstance(x, (int, np.integer)):
+            raise TypeError("BF16 ops require float or BF16 inputs, not int32")
+
+        arr = np.asarray(x)
+
+        # If already uint16, assume raw BF16 bits
+        if arr.dtype == np.uint16:
+            return arr.astype(np.uint16)
+
+        # Otherwise treat as float32 input → convert to BF16
+        arr = arr.astype(np.float32)
+        return self._float32_to_bf16(arr)
+
+    def _bf16_to_float32(self, bf16_arr):
+        """
+        bf16_arr: uint16 array → convert to float32
+        """
+        bf16_arr = bf16_arr.astype(np.uint16)
+
+        # Shift into high 16 bits of uint32
+        u32 = bf16_arr.astype(np.uint32) << 16
+        return u32.view(np.float32)
+
+    def _float32_to_bf16(self, f32_arr):
+        """
+        Convert float32 array to BF16 bit-patterns (uint16) using round-to-nearest-even.
+        """
+        as_u32 = f32_arr.view(np.uint32)
+        lsb = (as_u32 >> 16) & 1             # sticky LSB for round-to-nearest-even
+        rounding_bias = 0x7FFF + lsb
+        as_u32 = as_u32 + rounding_bias
+        return (as_u32 >> 16).astype(np.uint16)
+
+    def _broadcast_bf16(self, x):
+        """
+        Broadcast BF16 scalar → lanes.
+        Preserves BF16 bit patterns exactly.
+        """
+        bf = self._to_bf16_array(x)
+        if bf.size == 1:
+            return np.full(self.num_lanes, bf.item(), dtype=np.uint16)
+        assert bf.size == self.num_lanes
+        return bf
+    
+    # ----------------------------------------------------
+    # BF16 arithmetic
+    # ----------------------------------------------------
+    def addbf(self, a, b):
+        A = self._broadcast_bf16(a)
+        B = self._broadcast_bf16(b)
+        fa = self._bf16_to_float32(A)
+        fb = self._bf16_to_float32(B)
+        return self._float32_to_bf16(fa + fb)
+
+    def subbf(self, a, b):
+        A = self._broadcast_bf16(a)
+        B = self._broadcast_bf16(b)
+        fa = self._bf16_to_float32(A)
+        fb = self._bf16_to_float32(B)
+        return self._float32_to_bf16(fa - fb)
+
+    def mulbf(self, a, b):
+        A = self._broadcast_bf16(a)
+        B = self._broadcast_bf16(b)
+        fa = self._bf16_to_float32(A)
+        fb = self._bf16_to_float32(B)
+        return self._float32_to_bf16(fa * fb)
+
+    def divbf(self, a, b):
+        A = self._broadcast_bf16(a)
+        B = self._broadcast_bf16(b)
+        fb = self._bf16_to_float32(B)
+        if np.any(fb == 0.0):
+            raise ZeroDivisionError("BF16 division by zero")
+        fa = self._bf16_to_float32(A)
+        return self._float32_to_bf16(fa / fb)
+
+    # -------------------------
+    # BF16 comparisons
+    # -------------------------
+    def sltbf(self, a, b):
+        """
+        Signed float comparison: (float32(A) < float32(B)) ? 1 : 0
+        """
+        A = self._broadcast_bf16(a)
+        B = self._broadcast_bf16(b)
+        fa = self._bf16_to_float32(A)
+        fb = self._bf16_to_float32(B)
+        return (fa < fb).astype(np.int32)
+
+    def sltubf(self, a, b):
+        """
+        Unsigned comparison on raw BF16 bit-patterns.
+        (treat BF16 as uint16 and compare)
+        """
+        A = self._broadcast_bf16(a).astype(np.uint16)
+        B = self._broadcast_bf16(b).astype(np.uint16)
+        return (A < B).astype(np.int32)
+
     # -------------------------
     # Unified dispatch interface
     # -------------------------
@@ -176,6 +313,25 @@ class ScalarALU:
             return self.slt(a, b)
         elif op == "sltu":
             return self.sltu(a, b)
+        elif op == "addbf":
+            return self.addbf(a, b)
+        elif op == "subbf":
+            return self.subbf(a, b)
+        elif op == "mulbf":
+            return self.mulbf(a, b)
+        elif op == "divbf":
+            return self.divbf(a, b)
+        elif op == "sltbf":
+            return self.sltbf(a, b)
+        elif op == "sltubf":
+            return self.sltubf(a, b)
+        elif op == "sgtu":
+            return self.sgtu(a, b)
+        elif op == "sequ":
+            return self.sequ(a, b)
+        elif op == "sneu":
+            return self.sneu(a, b)
+
         else:
             raise ValueError(f"Unknown scalar ALU op '{op}'")
 
@@ -200,3 +356,12 @@ if __name__ == "__main__":
     print("shl:", alu.shl(1, 2))
     print("srl:", alu.srl(0x8000, 1))
     print("sra:", alu.sra(-2, 1))
+    print("addbf:", alu.execute("addbf", [1.0], [2.0]))
+    print("subbf:", alu.execute("subbf", [5.5], [1.25]))
+    print("mulbf:", alu.execute("mulbf", [3.0], [4.0]))
+    print("divbf:", alu.execute("divbf", [8.0], [2.0]))
+    print("sltbf:", alu.execute("sltbf", [1.0], [2.0]))
+    print("sltubf:", alu.execute("sltubf", np.uint16([0x3f80]), np.uint16([0x4000])))
+    print("sgtu:", alu.execute("sgtu", [-1], [0])) 
+    print("sequ:", alu.execute("sequ", [10], [10]))
+    print("sneu:", alu.execute("sneu", [10], [20]))

@@ -342,6 +342,43 @@ class VectorLanes:
 
     def bitwise_not(self, a: np.ndarray) -> np.ndarray:
         return self._bitwise_elementwise(a, None, lambda x, _: np.bitwise_not(x), self.adders)
+    
+    # -------------------------
+    # Unified dispatch interface
+    # -------------------------
+    def execute(self, op: str, vA=None, vB=None, sA=None):
+        op = op.lower()
+        if op == "add":           return self.add(vA, vB)
+        if op == "sub":           return self.sub(vA, vB)
+        if op == "mul":           return self.mul(vA, vB)
+        if op == "div":           return self.div(vA, vB)
+
+        if op == "add_scalar":    return self.add_scalar(vA, sA)
+        if op == "sub_scalar":    return self.sub_scalar(vA, sA)
+        if op == "scalar_sub":    return self.scalar_sub(sA, vA)
+        if op == "mul_scalar":    return self.mul_scalar(vA, sA)
+        if op == "div_scalar":    return self.div_scalar(vA, sA)
+        if op == "scalar_div":    return self.scalar_div(sA, vA)
+
+        if op == "bw_and":        return self.bitwise_and(vA, vB)
+        if op == "bw_or":         return self.bitwise_or(vA, vB)
+        if op == "bw_xor":        return self.bitwise_xor(vA, vB)
+        if op == "bw_not":        return self.bitwise_not(vA)
+        if op == "shl_scalar":    return self.shl_scalar(vA, int(sA))
+        if op == "shr_scalar":    return self.shr_scalar(vA, int(sA))
+
+        if op == "cmp_gt":        return self.cmp_gt(vA, vB)
+        if op == "cmp_lt":        return self.cmp_lt(vA, vB)
+        if op == "cmp_eq":        return self.cmp_eq(vA, vB)
+        if op == "cmp_neq":       return self.cmp_neq(vA, vB)
+
+        if op == "reduce_sum":    return self.reduce_sum(vA)
+        if op == "reduce_min":    return self.reduce_max(vA)
+        if op == "reduce_max":    return self.reduce_min(vA)
+        if op == "exp":           return self.exp(vA)
+        if op == "sqrt":          return self.sqrt(vA)
+        else:
+            raise ValueError(f"Unknown vector op '{op}'")
 
 # -------------------------
 # Convenience functional wrapper
@@ -353,13 +390,51 @@ def make_vector_lanes(VL: int = 32, **resources) -> VectorLanes:
 # Quick smoke-test
 # -------------------------
 if __name__ == "__main__":
-    np.random.seed(1)
     VL = 8
-    vl = make_vector_lanes(VL=VL, adders=4, multipliers=4, dividers=4, exps=4, sqrts=4, reducers=4, bf16_rounding=True)
+    V = VectorLanes(VL=VL)
 
-    a = (np.random.randn(VL) * 0.1).astype(np.float32)
-    b = (np.random.randn(VL) * 0.1).astype(np.float32)
+    # test vectors
+    vA = np.array([1, 2, 3, 4, 5, 6, 7, 8], dtype=np.float32)
+    vB = np.array([8, 7, 6, 5, 4, 3, 2, 1], dtype=np.float32)
+    s  = 3.0
 
-    print("add diff vs numpy:", np.max(np.abs(vl.add(a, b) - to_bf16(a + b))))
-    print("bitwise_and bits (raw):", bf16_to_uint16_bits(vl.bitwise_and(a, b)))
-    print("bitwise_not bits (raw):", bf16_to_uint16_bits(vl.bitwise_not(a)))
+    print("===== VECTOR–VECTOR ARITHMETIC =====")
+    print("add        =", V.execute("add", vA=vA, vB=vB))
+    print("sub        =", V.execute("sub", vA=vA, vB=vB))
+    print("mul        =", V.execute("mul", vA=vA, vB=vB))
+    print("div        =", V.execute("div", vA=vA, vB=vB))
+
+    print("\n===== VECTOR–SCALAR ARITHMETIC =====")
+    print("add_scalar =", V.execute("add_scalar", vA=vA, sA=s))
+    print("sub_scalar =", V.execute("sub_scalar", vA=vA, sA=s))
+    print("scalar_sub =", V.execute("scalar_sub", vA=vA, sA=s))
+    print("mul_scalar =", V.execute("mul_scalar", vA=vA, sA=s))
+    print("div_scalar =", V.execute("div_scalar", vA=vA, sA=s))
+    print("scalar_div =", V.execute("scalar_div", vA=vA, sA=s))
+
+    print("\n===== BITWISE OPS (BF16 bit-level) =====")
+    print("bw_and     =", V.execute("bw_and", vA=vA, vB=vB))
+    print("bw_or      =", V.execute("bw_or",  vA=vA, vB=vB))
+    print("bw_xor     =", V.execute("bw_xor", vA=vA, vB=vB))
+    print("bw_not     =", V.execute("bw_not", vA=vA))
+
+    print("\n===== SHIFTS (on BF16 bit patterns) =====")
+    print("shl_scalar =", V.execute("shl_scalar", vA=vA, sA=1))
+    print("shr_scalar =", V.execute("shr_scalar", vA=vA, sA=1))
+
+    print("\n===== COMPARISONS =====")
+    print("cmp_gt     =", V.execute("cmp_gt",  vA=vA, vB=vB))
+    print("cmp_lt     =", V.execute("cmp_lt",  vA=vA, vB=vB))
+    print("cmp_eq     =", V.execute("cmp_eq",  vA=vA, vB=vA))
+    print("cmp_neq    =", V.execute("cmp_neq", vA=vA, vB=vA))
+
+    print("\n===== REDUCTIONS =====")
+    print("reduce_sum =", V.execute("reduce_sum", vA=vA))
+    print("reduce_min =", V.execute("reduce_min", vA=vA))
+    print("reduce_max =", V.execute("reduce_max", vA=vA))
+
+    print("\n===== EXP & SQRT =====")
+    print("exp        =", V.execute("exp", vA=vA))
+    print("sqrt       =", V.execute("sqrt", vA=vA))
+
+    print("\n===== ALL TESTS COMPLETED =====")
