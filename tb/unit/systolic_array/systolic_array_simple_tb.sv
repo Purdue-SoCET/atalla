@@ -146,7 +146,6 @@ endtask
 
 // Load weights - column by column for systolic_array_simple
 // Each cycle loads one column of the weight matrix (all rows for that column)
-// The RTL indexes sa_array_in as vreg_t (fp16_t[3:0]), where index 0 is LSB
 task load_weights();
     int c, r_idx;
     logic [(N*DW)-1:0] weight_column;
@@ -155,15 +154,12 @@ task load_weights();
     // Load N columns of weights
     for (c = 0; c < N; c++) begin
         // Build weight column: extract column c from all rows
-        // RTL uses sa_array_in[j] where j=0 maps to bits [15:0], j=1 to [31:16], etc.
         weight_column = '0;
         for (r_idx = 0; r_idx < N; r_idx++) begin
             // temp_weights[r_idx][c] is the weight at row r_idx, column c
-            // Place row r_idx at position r_idx in the packed array (LSB-first)
-            weight_column[(r_idx+1)*DW-1 -: DW] = temp_weights[r_idx][c];
+            weight_column[((N-r_idx)*DW)-1 -: DW] = temp_weights[r_idx][c];
         end
         
-        $display("[%0t] Loading weight column %0d: %h", $time, c, weight_column);
         sa_interface.sa_array_in = weight_column;
         sa_interface.sa_weight_en = 1'b1;
         @(posedge tb_clk);
@@ -174,7 +170,6 @@ task load_weights();
 endtask
 
 // Load inputs column-by-column for streaming operation
-// The RTL indexes arrays as vreg_t (fp16_t[3:0]), where index 0 is LSB
 task load_inputs_streaming(input int delay);
     int c, r_idx;
     logic [(N*DW)-1:0] bus_inputs;
@@ -184,13 +179,11 @@ task load_inputs_streaming(input int delay);
     // Stream N columns of data
     for (c = 0; c < N; c++) begin
         // Build one wide bus of N rows for this column
-        // RTL uses array[j] where j=0 maps to bits [15:0], j=1 to [31:16], etc.
         bus_inputs = '0;
         bus_partials = '0;
         for (r_idx = 0; r_idx < N; r_idx++) begin
-            // Place row r_idx at position r_idx in the packed array (LSB-first)
-            bus_inputs[(r_idx+1)*DW-1 -: DW] = temp_inputs[r_idx][c];
-            bus_partials[(r_idx+1)*DW-1 -: DW] = temp_partials[r_idx][c];
+            bus_inputs[((N-r_idx)*DW)-1 -: DW] = temp_inputs[r_idx][c];
+            bus_partials[((N-r_idx)*DW)-1 -: DW] = temp_partials[r_idx][c];
         end
 
         // Drive into DUT for one cycle

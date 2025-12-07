@@ -215,12 +215,10 @@ module systolic_array_simple(
                 assign mac_ifs[m*N + n].in_value = MAC_inputs[m][n];
                 assign mac_ifs[m*N + n].weight_en = weight_enables[m][n];
 
-                // MAC_shift controls input data latching
-                // Use MAC_input_shift signals (only active during input processing, not weight loading)
                 if(n == 0)
-                    assign mac_ifs[m*N + n].MAC_shift = MAC_input_shift_0;
+                    assign mac_ifs[m*N + n].MAC_shift = MAC_shifts_0;
                 else
-                    assign mac_ifs[m*N + n].MAC_shift = MAC_input_shifts_remaining[N-n-1];
+                    assign mac_ifs[m*N + n].MAC_shift = MAC_shifts_remaining[N-n-1];
 
                 assign mac_ifs[m*N + n].stall_sa = sysarr_stall;
                 
