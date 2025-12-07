@@ -1,15 +1,15 @@
 [*]
 [*] GTKWave Analyzer v3.3.125 (w)1999-2025 BSI
-[*] Sun Dec  7 13:28:26 2025
+[*] Sun Dec  7 21:29:09 2025
 [*]
 [dumpfile] "/home/vinay/tensorcore/atalla/waves/systolic_array_simple_waves.vcd"
-[dumpfile_mtime] "Sun Dec  7 13:25:47 2025"
-[dumpfile_size] 657591
+[dumpfile_mtime] "Sun Dec  7 20:36:25 2025"
+[dumpfile_size] 676910
 [savefile] "/home/vinay/tensorcore/atalla/waves/systolic_array_simple_debug.gtkw"
-[timestart] 76770
+[timestart] 50030
 [size] 2560 1458
-[pos] 337 298
-*-14.100000 181500 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1
+[pos] 415 367
+*-13.913634 113600 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1
 [treeopen] sysarr_input_buffer_tb.
 [treeopen] sysarr_input_buffer_tb.DUT.
 [treeopen] sysarr_input_buffer_tb.DUT.mac_row_gen[0].
@@ -36,9 +36,9 @@
 [treeopen] sysarr_input_buffer_tb.DUT.mac_row_gen[3].mac_col_gen[2].
 [treeopen] sysarr_input_buffer_tb.DUT.mac_row_gen[3].mac_col_gen[3].
 [sst_width] 278
-[signals_width] 230
+[signals_width] 246
 [sst_expanded] 1
-[sst_vpaned_height] 478
+[sst_vpaned_height] 425
 @22
 sysarr_input_buffer_tb.DUT.mac_row_gen[0].mac_col_gen[0].mac_inst.weight[15:0]
 sysarr_input_buffer_tb.DUT.mac_row_gen[0].mac_col_gen[0].mac_inst.input_x[15:0]
@@ -92,6 +92,30 @@ sysarr_input_buffer_tb.DUT.MAC_shifts_remaining[2:0]
 sysarr_input_buffer_tb.DUT.buffer_empty
 @22
 sysarr_input_buffer_tb.DUT.input_column[63:0]
+@28
+sysarr_input_buffer_tb.DUT.silo.read_pointer[1:0]
+sysarr_input_buffer_tb.DUT.silo.read_en
+sysarr_input_buffer_tb.DUT.silo.has_space
+@22
+sysarr_input_buffer_tb.DUT.silo.buffer_contents[0][0][15:0]
+sysarr_input_buffer_tb.DUT.silo.buffer_contents[0][1][15:0]
+sysarr_input_buffer_tb.DUT.silo.buffer_contents[0][2][15:0]
+sysarr_input_buffer_tb.DUT.silo.buffer_contents[0][3][15:0]
+sysarr_input_buffer_tb.DUT.silo.buffer_contents[1][0][15:0]
+sysarr_input_buffer_tb.DUT.silo.buffer_contents[1][1][15:0]
+sysarr_input_buffer_tb.DUT.silo.buffer_contents[1][2][15:0]
+sysarr_input_buffer_tb.DUT.silo.buffer_contents[1][3][15:0]
+sysarr_input_buffer_tb.DUT.silo.buffer_contents[2][0][15:0]
+sysarr_input_buffer_tb.DUT.silo.buffer_contents[2][1][15:0]
+sysarr_input_buffer_tb.DUT.silo.buffer_contents[2][2][15:0]
+sysarr_input_buffer_tb.DUT.silo.buffer_contents[2][3][15:0]
+sysarr_input_buffer_tb.DUT.silo.buffer_contents[3][0][15:0]
+sysarr_input_buffer_tb.DUT.silo.buffer_contents[3][1][15:0]
+sysarr_input_buffer_tb.DUT.silo.buffer_contents[3][2][15:0]
+sysarr_input_buffer_tb.DUT.silo.buffer_contents[3][3][15:0]
+@28
+sysarr_input_buffer_tb.DUT.silo.valid_cols[2:0]
+@22
 sysarr_input_buffer_tb.DUT.MAC_outputs[0][0][15:0]
 sysarr_input_buffer_tb.DUT.MAC_outputs[0][1][15:0]
 sysarr_input_buffer_tb.DUT.MAC_outputs[0][2][15:0]
@@ -249,8 +273,9 @@ sysarr_input_buffer_tb.DUT.out_buffer[3][64:0]
 -group_end
 @28
 sysarr_input_buffer_tb.DUT.gsau_if.sa_output_ready
-@23
+@22
 sysarr_input_buffer_tb.DUT.next_out_buffer[3][64:0]
+sysarr_input_buffer_tb.sa_interface.sa_array_output[63:0]
 @28
 sysarr_input_buffer_tb.DUT.sysarr_stall
 sysarr_input_buffer_tb.DUT.gsau_if.sa_out_valid

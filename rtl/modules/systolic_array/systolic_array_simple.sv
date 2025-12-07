@@ -44,9 +44,31 @@ module systolic_array_simple(
     // If we are loading weights, special data path - data should NOT go into input buffer, instead it should go straight to the MAC units to put in weights register.
     logic weight_enables [N-1:0] [N-1:0];                       // goes to mac_if.weight_en
 
-    // this will depend on the output buffer. that does not yet exist.
+    // this will depend on the output buffer
     logic sysarr_stall;
-    // assign read_from_buffer = 
+    
+    // partial sums buffer
+    logic read_from_psum_buffer;
+
+    // GSAU sends inputs and partial sums on the same clock cycle. But we need the partial sums the cycle *after* inputs because the M in MAC takes one cycle before taking A. So, register it an extra time so GSAU can continue to stuff psums ever cycle and we dont lose one
+    logic [(DW*N)-1:0] psum_glob, psum_glob_registered;
+
+    logic psum_buf_has_space, psum_buffer_empty;       // Not sure what to do with these
+
+    sysarr_input_buffer bokchoy(.clk(clk), .nRST(nRST), .in(gsau_if.sa_array_in_partials), .out(psum_glob), .write_en(gsau_if.sa_partial_en), .read_en(MAC_shifts_0 & ~sysarr_stall), .has_space(psum_buf_has_space), .empty(psum_buffer_empty));
+    always_ff @(posedge clk, negedge nRST) begin
+        if(nRST == 1'b0) begin
+            psum_glob_registered <= '0;
+        end
+        else begin
+            if(MAC_shifts_0 & ~sysarr_stall) begin
+                psum_glob_registered <= psum_glob;
+            end
+            else begin
+                psum_glob_registered <= psum_glob_registered;
+            end
+        end
+    end
 
     // Logic here: As long as the buffer has valid data, it should be sent through the systolic array, UNLESS the array needs to stall.
     // But MAC units need to shift data in first, and "Start" one clock cycle later.
@@ -188,7 +210,7 @@ module systolic_array_simple(
                 
                 // Top row (m==0): connect psum buffer to adder input
                 if (m == 0) begin : no_accumulate
-                    assign mac_ifs[m*N + n].in_accumulate = '0;// psum_buffer_inputs[n];
+                    assign mac_ifs[m*N + n].in_accumulate = psum_glob_registered[DW*n +: DW];// psum_buffer_inputs[n];
                 end else begin : accumulation_blk
                     // Accumulate from previous row
                     assign mac_ifs[m*N + n].in_accumulate = MAC_outputs[m-1][n];
@@ -255,6 +277,13 @@ module systolic_array_simple(
     end
 
     assign gsau_if.sa_out_valid = out_buffer[N-1][N*DW];
+
+    genvar d;
+    generate
+    for (d = 0; d < N; d++) begin : unstagger_diagonal
+        assign gsau_if.sa_array_output[d] = out_buffer[d][DW*d +: DW];
+    end
+    endgenerate
 
     // "Output buffer is filled" logic. When the output buffer is full, if data is not read out, the systolic array must stall so that the values in the buffer are not lost.
     always_ff @(posedge clk, negedge nRST) begin

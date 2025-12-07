@@ -53,14 +53,20 @@ always begin
 
     // At this point, weights should be all loaded in.
     // Time to start loading inputs. 
-    sa_interface.sa_input_en <= 1'b1;
-    #CLK_PERIOD;
-    #CLK_PERIOD;
-    #CLK_PERIOD;
-    #CLK_PERIOD;
-    #CLK_PERIOD;
-    #CLK_PERIOD;
 
+    sa_interface.sa_input_en <= 1'b1;
+    sa_interface.sa_array_in <= 64'h0000_3c00_4000_4200; // 0 1 2 3 
+    
+    @(posedge tb_clk);
+    sa_interface.sa_array_in <= 64'h0000_3c00_4000_4200; // 0 1 2 3 
+    
+    @(posedge tb_clk);
+    sa_interface.sa_array_in <= 64'h4400_4500_4600_4700; // 4 5 6 7 
+    
+    @(posedge tb_clk);
+    sa_interface.sa_array_in <= 64'h4400_4500_4600_4700; // 4 5 6 7
+    
+    @(posedge tb_clk);
     sa_interface.sa_input_en <= 1'b0;
 
 
