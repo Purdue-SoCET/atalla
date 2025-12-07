@@ -57,10 +57,12 @@ module systolic_array_simple(
     // But MAC units need to shift data in first, and "Start" one clock cycle later.
     // And the first column needs to start immediately, not one clock cycle later.
     // NOTE: The column ordering is REVERSED!! No idea why, but the leftmost column of MAC units has column index 0.
-    // MAC_shift must also be active during weight loading so weights propagate across columns
+    // IMPORTANT: MAC_shift must NOT be active during weight loading!
+    // The MAC unit's weight_next_en gets cleared when MAC_shift is high, which would prevent
+    // weights from propagating to the next column. Weight propagation uses weight_en/weight_next_en only.
     logic MAC_shifts_0;
     logic MAC_input_shift_0;  // MAC shift signal for input data only (not weights)
-    assign MAC_shifts_0 = !(buffer_empty) || gsau_if.sa_weight_en;
+    assign MAC_shifts_0 = !(buffer_empty) & ~gsau_if.sa_weight_en;  // Only shift inputs, not during weight loading
     assign MAC_input_shift_0 = !(buffer_empty);  // Only active when input buffer has data
     
     logic [N-2:0] MAC_shifts_remaining;                       // I run a whole column of MAC units in sync. Technically you don't need to, but I am too sleepy to optimize that.
