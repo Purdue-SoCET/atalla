@@ -1,7 +1,6 @@
 /*  Haejune Kwon - kwon196@purdue.edu */
 /*  Akshath Raghav Ravikiran - araviki@purdue.edu */
 
-`include "xbar_params.svh"
 `include "xbar_if.sv"
 
 import xbar_pkg::*;
@@ -55,7 +54,7 @@ module clos #(
                 end
             end
         end
-        else begin
+        else if (xif.en) begin
             for (int i = 0; i < CM_NUM; i++) begin
                 for (int j = 0; j < CM_SIZE; j++) begin
                     center_module[i][j] <= n_center_module[i][j];

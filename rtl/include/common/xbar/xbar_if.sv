@@ -15,12 +15,12 @@ interface xbar_if #(
     } group_t;
 
     logic en;
-    group_t in [SIZE]; 
-    logic [DWIDTH-1:0] out [SIZE]; 
+    group_t in [SIZE-1:0]; 
+    logic [DWIDTH-1:0] out [SIZE-1:0]; 
     
     modport xbar (
         input clk, n_rst,
-        input en, in, 
+        input en, in,
         output out
     );
 

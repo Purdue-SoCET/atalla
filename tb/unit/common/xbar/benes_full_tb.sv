@@ -15,7 +15,7 @@ module benes_full_tb;
     
     xbar_if #(.SIZE(SIZE), .DWIDTH(DWIDTH)) xif (.clk(clk), .n_rst(n_rst));
     benes #(.SIZE(SIZE), .DWIDTH(DWIDTH)) DUT_BENES (xif, ctrl);
-    cbg_benes #(.SIZE(SIZE)) DUT_CBG (.perm(perm), .ctrl(ctrl));
+    cabbage_pipelined #(.SIZE(SIZE)) DUT_CBG (.clk(clk), .n_rst(n_rst), .perm(perm), .ctrl(ctrl));
 
     integer i;
     logic [15:0] val;
@@ -28,9 +28,10 @@ module benes_full_tb;
 
         n_rst = 1;
         val = 16'd0;
-
+        xif.en = 1;
         for (i = 0; i < 32; i = i + 1) begin
-            xif.in[i] = val;
+            xif.in[i].din = val;
+            xif.in[i].shift = 0;
             val = val + 16'd1;
         end
         
@@ -44,16 +45,20 @@ module benes_full_tb;
         
         for (i = 0; i < 32; i = i + 1) begin
             if(xif.out[i] != exp_out[i]) begin
-                $display("wrong output for %d", i);
+                $display("!!!wrong output for %d: expected: %d, got: %d", i, exp_out[i], xif.out[i]);
             end
-            // $display("output %d: %d", i, xif.out[i]);
+            else begin
+                $display("CORRECT output for %d: expected: %d, got: %d", i, exp_out[i], xif.out[i]);
+            end
+            // $display("output %d: expected: %d, got: %d", i, exp_out[i], xif.out[i]);
         end
         for (i = 0; i < 144; i = i + 1) begin
             if(ctrl[i] != exp_ctrl[i]) begin
                 $display("wrong ctrl bit for %d", i);
             end
-            // $display("output %d: %d", i, xif.out[i]);
+            // $display("output %d: %d", i, ctrl[i]);
         end
+        
         $finish;
     end
 
