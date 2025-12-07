@@ -70,7 +70,7 @@ module systolic_array_top(
     // end
     
     // MAC control signals
-   // assign MAC_start = mac_computing;  // Keep MACs running while computing
+    // assign MAC_start = mac_computing;  // Keep MACs running while computing
     // assign MAC_shift = memory.input_en || memory.weight_en;  // Shift when loading new inputs
     // assign add_start = mac_ifs[0].value_ready;  // Start adders when MACs are ready
     // assign memory.fifo_has_space = 1'b1;  // Always ready in streaming mode
@@ -146,23 +146,22 @@ module systolic_array_top(
     //     end
     // end
 
+    // forcing outputs to come out :D! 
     always_ff @(posedge clk, negedge nRST) begin
-    if (!nRST) begin
-        for (z = 0; z < N; z++) begin
-            for (y = 0; y < N; y++) begin
-                MAC_outputs[z][y] <= '0;
+        if (!nRST) begin
+            for (z = 0; z < N; z++) begin
+                for (y = 0; y < N; y++) begin
+                    MAC_outputs[z][y] <= '0;
+                end
             end
-        end
-    end else begin
-        // DEBUG: update all MAC outputs every cycle, no value_ready gating
-        for (z = 0; z < N; z++) begin
-            for (y = 0; y < N; y++) begin
-                MAC_outputs[z][y] <= nxt_MAC_outputs[z][y];
+        end else begin
+            for (z = 0; z < N; z++) begin
+                for (y = 0; y < N; y++) begin
+                    MAC_outputs[z][y] <= nxt_MAC_outputs[z][y];
+                end
             end
         end
     end
-end
-
 
     generate
         for (m = 0; m < N; m++) begin : mac_row_gen

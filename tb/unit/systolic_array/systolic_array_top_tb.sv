@@ -181,6 +181,53 @@ task get_m_output;
     $display("[%0t] Inputs and partials loaded", $time);
   endtask
 
+  // vibe coded task to stagger the inputs lol
+  // New: column-wise streaming of inputs/partials for streaming systolic_array_top
+task load_in_ps_streaming(input int delay);
+  int c, r;
+  logic [(N*DW)-1:0] bus_inputs;
+  logic [(N*DW)-1:0] bus_partials;
+  $display("[%0t] Loading inputs and partials (column-streaming) with delay=%0d...",
+           $time, delay);
+  
+  // Stream N "columns" worth of data
+  for (c = 0; c < N; c++) begin
+    // Build one wide bus of N rows for this time step c
+    bus_inputs   = '0;
+    bus_partials = '0;
+    for (r = 0; r < N; r++) begin
+      // Match systolic_array_top slicing: row 0 is top DW bits, row N-1 is bottom
+      bus_inputs[((N-r)*DW)-1 -: DW]   = temp_inputs[r][c];
+      bus_partials[((N-r)*DW)-1 -: DW] = temp_partials[r][c];
+    end
+
+    // Drive into DUT for one cycle
+    memory_if.input_en        = 1'b1;
+    memory_if.partial_en      = 1'b1;
+    memory_if.array_in        = bus_inputs;
+    memory_if.array_in_partials = bus_partials;
+    // row_in_en / row_ps_en are ignored by streaming top, so just set to 0
+    memory_if.row_in_en       = '0;
+    memory_if.row_ps_en       = '0;
+
+    @(posedge tb_clk);
+
+    // Clear after the cycle
+    memory_if.input_en        = 1'b0;
+    memory_if.partial_en      = 1'b0;
+    memory_if.array_in        = '0;
+    memory_if.array_in_partials = '0;
+    memory_if.row_in_en       = '0;
+    memory_if.row_ps_en       = '0;
+
+    // Optional extra pipeline gap between "columns"
+    repeat (delay) @(posedge tb_clk);
+  end
+
+  $display("[%0t] Inputs and partials loaded (column-streaming complete)", $time);
+endtask
+
+
   // Helper task to wait for array to drain (no more active computations)
   task wait_for_drained;
     int cycles;
@@ -302,7 +349,7 @@ task get_m_output;
       load_weights();
     end
     // Stream inputs with no delay - computation starts immediately
-    load_in_ps (.delay(0)); 
+    load_in_ps_streaming (.delay(0)); 
     wait_for_drained();
     $display("test 1 complete - array drained: %d", memory_if.drained);
 
