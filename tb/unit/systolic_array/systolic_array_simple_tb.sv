@@ -147,12 +147,15 @@ endtask
 // Load weights - column by column for systolic_array_simple
 // Each cycle loads one column of the weight matrix (all rows for that column)
 // The RTL indexes sa_array_in as vreg_t (fp16_t[3:0]), where index 0 is LSB
+// Weight propagation through MAC units requires keeping weight_en high for N cycles
+// so that weights can propagate from column 0 to column N-1
 task load_weights();
     int c, r_idx;
     logic [(N*DW)-1:0] weight_column;
     $display("[%0t] Loading weights...", $time);
     
-    // Load N columns of weights
+    // Load N columns of weights - each column needs to propagate through the array
+    // Keep weight_en high and cycle through all weight columns
     for (c = 0; c < N; c++) begin
         // Build weight column: extract column c from all rows
         // RTL uses sa_array_in[j] where j=0 maps to bits [15:0], j=1 to [31:16], etc.
@@ -168,8 +171,15 @@ task load_weights();
         sa_interface.sa_weight_en = 1'b1;
         @(posedge tb_clk);
     end
+    
+    // Keep weight_en high for N more cycles to allow weights to propagate through all columns
+    // Each cycle, the weights shift one column to the right
+    sa_interface.sa_array_in = '0;  // No new weights, just propagate existing ones
+    for (c = 0; c < N; c++) begin
+        @(posedge tb_clk);
+    end
+    
     sa_interface.sa_weight_en = 1'b0;
-    sa_interface.sa_array_in = '0;
     $display("[%0t] Weights loaded", $time);
 endtask
 
