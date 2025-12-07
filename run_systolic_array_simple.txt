@@ -22,4 +22,6 @@ xrun \
   -incdir rtl/include/vector \
   -incdir rtl/modules/systolic_array \
   -incdir tb/unit/systolic_array \
-  -gui -access +rwc
+  -top systolic_array_simple_tb \
+  -access +rwc \
+  -run
