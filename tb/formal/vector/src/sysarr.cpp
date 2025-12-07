@@ -1,48 +1,248 @@
 #include "sysarr.hpp"
+#include <iostream>
 
-sysarr::sysarr(/* args */)
-{
+sysarr::sysarr() {
+    // Initialize matrices to zero
+    weights.setZero();
+    activations.setZero();
+    psums.setZero();
+    result.setZero();
+    
+    // Initialize counters
+    weight_col_idx = 0;
+    activation_col_idx = 0;
+    psum_row_idx = 0;
+    result_row_idx = 0;
+    
+    // Initialize state
+    state = IDLE;
+    
+    // Initialize signals
+    clk = 0;
+    rst_n = 1;
+    sa_array_in.setZero();
+    sa_array_in_partials.setZero();
+    sa_weight_en = 0;
+    sa_input_en = 0;
+    sa_partial_en = 0;
+    sa_output_ready = 0;
+    sa_array_output.setZero();
+    sa_out_valid = 0;
+    sa_ready = 1;
 }
 
-sysarr::~sysarr()
-{
+void sysarr::eval() {
+    static uint8_t last_clk = 0;
+    
+    // Rising edge detection
+    if (clk && !last_clk) {
+        if (!rst_n) {
+            // Reset
+            state = IDLE;
+            weight_col_idx = 0;
+            activation_col_idx = 0;
+            psum_row_idx = 0;
+            result_row_idx = 0;
+            sa_out_valid = 0;
+            sa_ready = 1;
+            weights.setZero();
+            activations.setZero();
+            psums.setZero();
+            result.setZero();
+        } else {
+            switch (state) {
+                case IDLE:
+                    sa_out_valid = 0;
+                    sa_ready = 1;
+                    
+                    // Check what operation to start
+                    if (sa_weight_en) {
+                        state = LOADING_WEIGHTS;
+                        weight_col_idx = 0;
+                        sa_ready = 0;
+                        std::cout << "[SysArr] Starting weight load" << std::endl;
+                    } else if (sa_input_en) {
+                        state = LOADING_ACTS;
+                        activation_col_idx = 0;
+                        sa_ready = 0;
+                        std::cout << "[SysArr] Starting activation load" << std::endl;
+                    } else if (sa_partial_en) {
+                        state = LOADING_PSUMS;
+                        psum_row_idx = 0;
+                        sa_ready = 0;
+                        std::cout << "[SysArr] Starting partial sum load" << std::endl;
+                    }
+                    break;
+                    
+                case LOADING_WEIGHTS:
+                    if (sa_weight_en) {
+                        // Load one column of weights
+                        weights.col(weight_col_idx) = sa_array_in;
+                        weight_col_idx++;
+                        
+                        if (weight_col_idx >= 32) {
+                            // All weights loaded
+                            state = IDLE;
+                            sa_ready = 1;
+                            std::cout << "[SysArr] All 32 weight columns loaded" << std::endl;
+                        }
+                    } else {
+                        // Weight enable dropped - return to idle
+                        state = IDLE;
+                        sa_ready = 1;
+                    }
+                    break;
+                    
+                case LOADING_ACTS:
+                    if (sa_input_en) {
+                        // Load one column of activations
+                        activations.col(activation_col_idx) = sa_array_in;
+                        activation_col_idx++;
+                        
+                        if (activation_col_idx >= 32) {
+                            // All activations loaded - computation happens "instantly" as data flows
+                            // In real hardware, this happens as weights shift through the array
+                            result = weights * activations + psums;
+                            psums = result;
+                            
+                            std::cout << "[SysArr] All 32 activation columns loaded" << std::endl;
+                            std::cout << "[SysArr] Computation complete (instant): result = W * A + P" << std::endl;
+                            
+                            state = OUTPUTTING;
+                            result_row_idx = 0;
+                            sa_ready = 0;
+                        }
+                    } else {
+                        // Input enable dropped - return to idle
+                        state = IDLE;
+                        sa_ready = 1;
+                    }
+                    break;
+                    
+                case LOADING_PSUMS:
+                    if (sa_partial_en) {
+                        // Load one row of partial sums (note: input is a column, we transpose it)
+                        psums.row(psum_row_idx) = sa_array_in_partials.transpose();
+                        psum_row_idx++;
+                        
+                        if (psum_row_idx >= 32) {
+                            // All psums loaded
+                            state = IDLE;
+                            sa_ready = 1;
+                            std::cout << "[SysArr] All 32 partial sum rows loaded" << std::endl;
+                        }
+                    } else {
+                        // Partial enable dropped - return to idle
+                        state = IDLE;
+                        sa_ready = 1;
+                    }
+                    break;
+                    
+                case COMPUTING:
+                    // Perform computation (takes 1 cycle)
+                    result = weights * activations + psums;
+                    
+                    // Update partial sums for next operation
+                    psums = result;
+                    
+                    std::cout << "[SysArr] Computation complete: result = W * A + P" << std::endl;
+                    
+                    // Move to output state
+                    state = OUTPUTTING;
+                    result_row_idx = 0;
+                    sa_ready = 0;
+                    break;
+                    
+                case OUTPUTTING:
+                    if (sa_output_ready) {
+                        // Output one row per cycle
+                        sa_array_output = result.row(result_row_idx).transpose();
+                        sa_out_valid = 1;
+                        result_row_idx++;
+                        
+                        if (result_row_idx >= 32) {
+                            // All outputs sent
+                            state = IDLE;
+                            sa_ready = 1;
+                            sa_out_valid = 0;
+                            std::cout << "[SysArr] All 32 result rows output" << std::endl;
+                        }
+                    } else {
+                        sa_out_valid = 0;
+                    }
+                    break;
+            }
+        }
+    }
+    
+    last_clk = clk;
 }
 
-
-
-void sysarr::load_weight_vec(Eigen::Matrix<Eigen::bfloat16, 32, 1> weight_vec)
-{
-    weights.col(weights_idx++) = weight_vec;
-    calculate();
-}
-
-void sysarr::load_activation_vec(Eigen::Matrix<Eigen::bfloat16, 32, 1> act_vec)
-{
-    activations.col(activations_idx++) = act_vec;
-    calculate();
-}
-
-void sysarr::load_psum_vec(Eigen::Matrix<Eigen::bfloat16, 1, 32> psum_vec)
-{
-    psums.row(psums_idx++) = psum_vec;
-    if (psums_idx == 32)
-    {
-        psums_idx = 0;
+// Helper functions for simplified testbench (non-cycle-accurate)
+void sysarr::load_weight_vec(const Eigen::Matrix<Eigen::bfloat16, 32, 1>& col) {
+    weights.col(weight_col_idx) = col;
+    weight_col_idx++;
+    
+    if (weight_col_idx >= 32) {
+        weight_col_idx = 0;
+        std::cout << "[SysArr] All 32 weight columns loaded" << std::endl;
     }
 }
 
-void sysarr::calculate()
-{
-    if (weights_idx == 32 && activations_idx == 32)
-    {
-        psums = weights * activations + psums;
-        wb_buffer = psums;
-        weights_idx = 0;
-        activations_idx = 0;
+void sysarr::load_activation_vec(const Eigen::Matrix<Eigen::bfloat16, 32, 1>& col) {
+    activations.col(activation_col_idx) = col;
+    activation_col_idx++;
+    
+    if (activation_col_idx >= 32) {
+        activation_col_idx = 0;
+        std::cout << "[SysArr] All 32 activation columns loaded" << std::endl;
+        
+        // Compute result
+        result = weights * activations + psums;
+        
+        // Update partial sums for next operation
+        psums = result;
+        
+        std::cout << "[SysArr] Computation complete: result = W * A + P" << std::endl;
     }
 }
 
-Eigen::Matrix<Eigen::bfloat16, 1, 32> sysarr::writeback_to_veggie(int idx)
-{
-    return wb_buffer.row(idx);
+void sysarr::load_psum_vec(const Eigen::Matrix<Eigen::bfloat16, 1, 32>& row) {
+    psums.row(psum_row_idx) = row;
+    psum_row_idx++;
+    
+    if (psum_row_idx >= 32) {
+        psum_row_idx = 0;
+        std::cout << "[SysArr] All 32 partial sum rows loaded" << std::endl;
+    }
+}
+
+Eigen::Matrix<Eigen::bfloat16, 1, 32> sysarr::read_result_vec(int row_idx) {
+    if (row_idx < 0 || row_idx >= 32) {
+        std::cerr << "[SysArr] Error: Invalid row index " << row_idx << std::endl;
+        return Eigen::Matrix<Eigen::bfloat16, 1, 32>::Zero();
+    }
+    return result.row(row_idx);
+}
+
+void sysarr::clear_psums() {
+    psums.setZero();
+    psum_row_idx = 0;
+    std::cout << "[SysArr] Partial sums cleared" << std::endl;
+}
+
+const char* sysarr::get_state_name() const {
+    switch (state) {
+        case IDLE: return "IDLE";
+        case LOADING_WEIGHTS: return "LOADING_WEIGHTS";
+        case LOADING_ACTS: return "LOADING_ACTS";
+        case LOADING_PSUMS: return "LOADING_PSUMS";
+        case COMPUTING: return "COMPUTING";
+        case OUTPUTTING: return "OUTPUTTING";
+        default: return "UNKNOWN";
+    }
+}
+
+sysarr::~sysarr() {
+    // Cleanup if needed
 }
