@@ -270,9 +270,10 @@ task wait_for_outputs();
                 $display("Raw sa_array_output: %h", sa_interface.sa_array_output);
                 
                 // Print actual output element by element
+                // sa_array_output is vreg_t = fp16_t[3:0], access as array
                 $write("Systolic Array Output: ");
                 for (y = 0; y < N; y++) begin
-                    $write("%04h ", sa_interface.sa_array_output[(y+1)*DW-1-:DW]);
+                    $write("%04h ", sa_interface.sa_array_output[y]);
                 end
                 $display("");
                 
@@ -284,10 +285,11 @@ task wait_for_outputs();
                 $display("");
                 
                 // Compare with tolerance
+                // Cast vreg_t element (fp16_t struct) to logic[DW-1:0] for comparison
                 for (z = 0; z < N; z++) begin
                     total_comparisons++;
                     if (compare_fp16_with_tolerance(
-                            sa_interface.sa_array_output[(z+1)*DW-1-:DW],
+                            sa_interface.sa_array_output[z],
                             m_outputs[outputs_received][(z+1)*DW-1-:DW],
                             1.0)) begin  // 1% tolerance
                         test_pass_count++;
@@ -299,9 +301,9 @@ task wait_for_outputs();
                 
                 // Write to file for comparison script
                 for (y = 0; y < N-1; y++) begin
-                    $fwrite(sysarr_dump_file, "%x ", sa_interface.sa_array_output[(y+1)*DW-1-:DW]);
+                    $fwrite(sysarr_dump_file, "%x ", sa_interface.sa_array_output[y]);
                 end
-                $fwrite(sysarr_dump_file, "%x\n", sa_interface.sa_array_output[(N)*DW-1-:DW]);
+                $fwrite(sysarr_dump_file, "%x\n", sa_interface.sa_array_output[N-1]);
                 
                 // Acknowledge output
                 sa_interface.sa_output_ready = 1'b1;
