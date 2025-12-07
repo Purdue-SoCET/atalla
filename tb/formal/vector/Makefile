@@ -85,3 +85,4 @@ compile_scratch: $(OBJ_DIR)/sysarr.o $(OBJ_DIR)/scratch_test.o $(OBJ_DIR)/scratc
 
 clean:
 	rm -rf $(OBJ_DIR) $(BIN_DIR) $(VERILATOR_OBJ_DIR) $(VERILATOR_LOG)
+	rm *.txt
