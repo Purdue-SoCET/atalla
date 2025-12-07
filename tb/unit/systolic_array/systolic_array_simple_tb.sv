@@ -1,7 +1,6 @@
 `timescale 1ns / 1ps
 `include "gsau_control_unit_if.vh"
 
-
 module sysarr_input_simple_tb();
 
 // Parameters
@@ -39,57 +38,46 @@ always begin
     sa_interface.sa_partial_en <= '0;
     sa_interface.sa_output_ready <= '0;
 
-
     tb_nrst <= 0;
     #CLK_PERIOD;
     tb_nrst <= 1;
     #CLK_PERIOD;
 
-    @(posedge tb_clk);
+    @(posedge tb_clk); // all ones all hail wtm
+    sa_interface.sa_array_in <= 64'h3c00_3c00_3c00_3c00;
     sa_interface.sa_weight_en <= 1'b1;
-    sa_interface.sa_array_in <= 64'h4200_4000_3c00_0000;  // 0, 1, 2, 3
-    
-    @(posedge tb_clk);
-    sa_interface.sa_array_in <= 64'h4200_4000_3c00_0000;  // 0, 1, 2, 3
-    
-    @(posedge tb_clk);
-    sa_interface.sa_array_in <= 64'h4200_4000_3c00_0000;  // 0, 1, 2, 3
-    
-    @(posedge tb_clk);
-    sa_interface.sa_array_in <= 64'h4200_4000_3c00_0000;  // 0, 1, 2, 3
-    
-    @(posedge tb_clk);
+    #(CLK_PERIOD*4);
     sa_interface.sa_weight_en <= 1'b0;
- 
 
-    // At this point, weights should be all loaded in.
-    // Time to start loading inputs. 
+    // input loading 
+    @(posedge tb_clk);
     sa_interface.sa_input_en <= 1'b1;
-    #CLK_PERIOD;
-    #CLK_PERIOD;
-    #CLK_PERIOD;
-    #CLK_PERIOD;
-    #CLK_PERIOD;
-    #CLK_PERIOD;
-
+    sa_interface.sa_array_in <= 64'h4200_4000_3c00_0000; // 0 1 2 3 
+    
+    @(posedge tb_clk);
+    sa_interface.sa_array_in <= 64'h4200_4000_3c00_0000; // 0 1 2 3 
+    
+    @(posedge tb_clk);
+    sa_interface.sa_array_in <= 64'h4700_4600_4500_4400; // 4 5 6 7 
+    
+    @(posedge tb_clk);
+    sa_interface.sa_array_in <= 64'h4700_4600_4500_4400; // 4 5 6 7
+    
+    @(posedge tb_clk);
     sa_interface.sa_input_en <= 1'b0;
-
-
 
     @(posedge sa_interface.sa_out_valid);
     sa_interface.sa_output_ready <= 1'b1;
-
-    // #CLK_PERIOD;
+    
     #CLK_PERIOD;
-    @(posedge tb_clk)
+    @(posedge tb_clk);
     sa_interface.sa_output_ready <= 1'b0;
 
-
     #(CLK_PERIOD*8);
-
-
 
     $finish;
 end
 
 endmodule
+
+// expected outputs: [0,1,2,3], [0,1,2,3], [4,5,6,7], [4,5,6,7]
