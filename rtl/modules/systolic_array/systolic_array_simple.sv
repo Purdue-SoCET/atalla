@@ -57,14 +57,8 @@ module systolic_array_simple(
     // But MAC units need to shift data in first, and "Start" one clock cycle later.
     // And the first column needs to start immediately, not one clock cycle later.
     // NOTE: The column ordering is REVERSED!! No idea why, but the leftmost column of MAC units has column index 0.
-    // IMPORTANT: MAC_shift must NOT be active during weight loading!
-    // The MAC unit's weight_next_en gets cleared when MAC_shift is high, which would prevent
-    // weights from propagating to the next column. Weight propagation uses weight_en/weight_next_en only.
     logic MAC_shifts_0;
-    logic MAC_input_shift_0;  // MAC shift signal for input data only (not weights)
-    assign MAC_shifts_0 = !(buffer_empty) & ~gsau_if.sa_weight_en;  // Only shift inputs, not during weight loading
-    assign MAC_input_shift_0 = !(buffer_empty);  // Only active when input buffer has data
-    
+    assign MAC_shifts_0 = !(buffer_empty);
     logic [N-2:0] MAC_shifts_remaining;                       // I run a whole column of MAC units in sync. Technically you don't need to, but I am too sleepy to optimize that.
     // assign MAC_shifts[N-1] = !(buffer_empty);              // Whenever there is data in the buffer, MACs must go on.
     always_ff @(posedge clk, negedge nRST) begin
@@ -82,8 +76,8 @@ module systolic_array_simple(
     end
 
     // Read data from the buffer (what this actually does is increment the buffer's read_pointer) whenever there is data
-    // except when the array is stalled. Only read during input processing, not during weight loading.
-    assign read_from_buffer = MAC_input_shift_0 & ~sysarr_stall;
+    // except when the array is stalled. 
+    assign read_from_buffer = MAC_shifts_0 & ~sysarr_stall;
 
     // Similar logic for weight enables. Again, handling a whole column of weight_en's at once.
     // Nevermind we don't need this, the MAC units already have a weight_next_en signal.
@@ -102,23 +96,7 @@ module systolic_array_simple(
     // Because of the GSAU design expecting computation to start immediately, it's likely possible to get rid of MAC_starts at all.
     // But for now since the MAC units expect the start signal, we just start each MAC unit (or, column of MAC units) one cycle after they got a value shifted in.
     // Except, turn all starts off if the array needs to stall. (Might not be necessary either? Idk it's 4:28am.)
-    // IMPORTANT: Do NOT start MAC computation during weight loading - only during input processing
     logic [N-1:0] MAC_starts;
-    logic [N-2:0] MAC_input_shifts_remaining;
-    always_ff @(posedge clk, negedge nRST) begin
-        if(nRST == 1'b0) begin
-            MAC_input_shifts_remaining[N-2:0] <= '0;
-        end
-        else begin
-            if(sysarr_stall) begin
-                MAC_input_shifts_remaining <= MAC_input_shifts_remaining;
-            end
-            else begin
-                MAC_input_shifts_remaining[N-2:0] <= {MAC_input_shift_0, MAC_input_shifts_remaining[N-2:1]};
-            end
-        end
-    end
-    
     always_ff @(posedge clk, negedge nRST) begin
         if(nRST == 1'b0) begin
             MAC_starts <= '0;
@@ -128,8 +106,7 @@ module systolic_array_simple(
                 MAC_starts <= '0;
             end
             else begin
-                // Use input-only shift signals for MAC_starts to avoid starting during weight loading
-                MAC_starts <= {MAC_input_shift_0, MAC_input_shifts_remaining};
+                MAC_starts <= {MAC_shifts_0, MAC_shifts_remaining};
             end
         end
     end
@@ -217,12 +194,10 @@ module systolic_array_simple(
                 assign mac_ifs[m*N + n].in_value = MAC_inputs[m][n];
                 assign mac_ifs[m*N + n].weight_en = weight_enables[m][n];
 
-                // MAC_shift controls input data latching
-                // Use MAC_input_shift signals (only active during input processing, not weight loading)
                 if(n == 0)
-                    assign mac_ifs[m*N + n].MAC_shift = MAC_input_shift_0;
+                    assign mac_ifs[m*N + n].MAC_shift = MAC_shifts_0;
                 else
-                    assign mac_ifs[m*N + n].MAC_shift = MAC_input_shifts_remaining[N-n-1];
+                    assign mac_ifs[m*N + n].MAC_shift = MAC_shifts_remaining[N-n-1];
 
                 assign mac_ifs[m*N + n].stall_sa = sysarr_stall;
                 
