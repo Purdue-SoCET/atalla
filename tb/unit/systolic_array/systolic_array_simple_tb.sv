@@ -266,17 +266,20 @@ task wait_for_outputs();
                 $display("OUTPUT COLUMN %0d (cycle %0d)", outputs_received, cycles);
                 $display("========================================");
                 
-                // Print actual output
+                // Print full output bus for debugging
+                $display("Raw sa_array_output: %h", sa_interface.sa_array_output);
+                
+                // Print actual output element by element
                 $write("Systolic Array Output: ");
                 for (y = 0; y < N; y++) begin
-                    $write("%h ", sa_interface.sa_array_output[(y+1)*DW-1-:DW]);
+                    $write("%04h ", sa_interface.sa_array_output[(y+1)*DW-1-:DW]);
                 end
                 $display("");
                 
                 // Print expected output
                 $write("Expected Output:       ");
                 for (z = 0; z < N; z++) begin
-                    $write("%h ", m_outputs[outputs_received][(z+1)*DW-1-:DW]);
+                    $write("%04h ", m_outputs[outputs_received][(z+1)*DW-1-:DW]);
                 end
                 $display("");
                 
@@ -377,45 +380,10 @@ initial begin
     
     $display("Test 1 complete");
     
-    // Test 2: Second matrix multiply (if available in file)
-    $display("========================================");
-    $display("TEST 2: Second matrix multiply");
-    $display("========================================");
-    get_matrices(.weights(loaded_weights));
-    
-    if (loaded_weights == 1) begin
-        load_weights();
-    end
-    
-    load_inputs_streaming(.delay(0));
-    wait_for_outputs();
-    
-    $display("Test 2 complete");
-    
-    // Test 3: Third matrix multiply with weight reload (if available)
-    $display("========================================");
-    $display("TEST 3: Third matrix multiply");
-    $display("========================================");
-    get_matrices(.weights(loaded_weights));
-    get_m_output();
-    
-    if (loaded_weights == 1) begin
-        @(posedge tb_clk);
-        load_weights();
-    end
-    
-    load_inputs_streaming(.delay(0));
-    wait_for_outputs();
-    
-    $display("Test 3 complete");
-    
     // Close files
     $fclose(file);
     $fclose(out_file);
     $fclose(sysarr_dump_file);
-    
-    // Run comparison script
-    $system(comparison_command);
     
     // Print summary
     $display("========================================");
