@@ -1,6 +1,8 @@
-// Partial sum buffer for systolic array. Stores and delivers partial sum columns
+// psum for systolic array. stores and delivers psum columns
 // synchronized with output column production.
-// Unlike sysarr_input_buffer, this buffer does NOT stagger - it's a simple circular buffer.
+// unlike input, this buffer does NOT stagger - it's a simple circular buffer.
+
+// just modified input_buffer.sv code (removed staggering) 
 
 `timescale 1ns / 1ps
 
