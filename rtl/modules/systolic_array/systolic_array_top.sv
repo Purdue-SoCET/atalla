@@ -38,38 +38,50 @@ module systolic_array_top(
     // Instantiate partial sum adder interfaces
     systolic_array_add_if add_ifs[N-1:0] (); 
     // Instantiate Output Fifos
-    systolic_array_OUT_FIFO_if out_fifos_ifs[N-1:0] ();  
+    systolic_array_OUT_FIFO_if out_fifos_ifs[N-1:0] (); 
+
+    //please give me outputs  
+        // Always let MACs run
+        assign MAC_start = 1'b1;
+
+        // Always shift MACs every cycle
+        assign MAC_shift = 1'b1;
+
+        // Always let adders run
+        assign add_start = 1'b1;
+
+        // In streaming mode, memory side is always ready
+        assign memory.fifo_has_space = 1'b1; 
     
-    // Track when MACs should be computing
-    always_ff @(posedge clk, negedge nRST) begin
-        if (!nRST) begin
-            mac_computing <= 1'b0;
-        end else begin
-            // Start computing when inputs arrive
-            if (memory.input_en) begin
-                mac_computing <= 1'b1;
-            end
-            // Stop after outputs are done
-            else if (iteration >= 3*N) begin
-                mac_computing <= 1'b0;
-            end
-        end
-    end
+    // // Track when MACs should be computing
+    // always_ff @(posedge clk, negedge nRST) begin
+    //     if (!nRST) begin
+    //         mac_computing <= 1'b0;
+    //     end else begin
+    //         // Start computing when inputs arrive
+    //         if (memory.input_en) begin
+    //             mac_computing <= 1'b1;
+    //         end
+    //         // Stop after outputs are done
+    //         else if (iteration >= 3*N) begin
+    //             mac_computing <= 1'b0;
+    //         end
+    //     end
+    // end
     
     // MAC control signals
    // assign MAC_start = mac_computing;  // Keep MACs running while computing
-    assign MAC_start =1'b1;
-    assign MAC_shift = memory.input_en || memory.weight_en;  // Shift when loading new inputs
-    assign add_start = mac_ifs[0].value_ready;  // Start adders when MACs are ready
-    assign memory.fifo_has_space = 1'b1;  // Always ready in streaming mode
+    // assign MAC_shift = memory.input_en || memory.weight_en;  // Shift when loading new inputs
+    // assign add_start = mac_ifs[0].value_ready;  // Start adders when MACs are ready
+    // assign memory.fifo_has_space = 1'b1;  // Always ready in streaming mode
     
     // oring across bottom row 
-    always_comb begin
-        bottom_row_ready = 1'b0;
-        for (int c = 0; c < N; c++) begin
-            bottom_row_ready |= value_ready_array[N-1][c];
-        end
-    end
+    // always_comb begin
+    //     bottom_row_ready = 1'b0;
+    //     for (int c = 0; c < N; c++) begin
+    //         bottom_row_ready |= value_ready_array[N-1][c];
+    //     end
+    // end
 
     // Direct input connection - take values immediately from array_in
     // Each row gets its corresponding slice of the input bus
@@ -107,32 +119,50 @@ module systolic_array_top(
     
     integer z, y;
 
-    always_ff @(posedge clk, negedge nRST) begin
-        if (nRST == 1'b0) begin
-            for (z = 0; z < N; z++) begin
-                for (y = 0; y < N; y++) begin
-                    MAC_outputs[z][y] <= '0;
-                end
-            end
-        end else begin
-            // Top row always updates
-            for (y = 0; y < N; y++) begin
-                MAC_outputs[0][y] <= nxt_MAC_outputs[0][y];
-            end
+    // always_ff @(posedge clk, negedge nRST) begin
+    //     if (nRST == 1'b0) begin
+    //         for (z = 0; z < N; z++) begin
+    //             for (y = 0; y < N; y++) begin
+    //                 MAC_outputs[z][y] <= '0;
+    //             end
+    //         end
+    //     end else begin
+    //         // Top row always updates
+    //         for (y = 0; y < N; y++) begin
+    //             MAC_outputs[0][y] <= nxt_MAC_outputs[0][y];
+    //         end
 
-            // Rows 1..N-1 only update when the MAC above has a valid value
-            for (z = 1; z < N; z++) begin
-                for (y = 0; y < N; y++) begin
-                    if (value_ready_array[z-1][y]) begin
-                        MAC_outputs[z][y] <= nxt_MAC_outputs[z][y];
-                    end else begin
-                        // Hold previous value
-                        MAC_outputs[z][y] <= MAC_outputs[z][y];
-                    end
-                end
+    //         // Rows 1..N-1 only update when the MAC above has a valid value
+    //         for (z = 1; z < N; z++) begin
+    //             for (y = 0; y < N; y++) begin
+    //                 if (value_ready_array[z-1][y]) begin
+    //                     MAC_outputs[z][y] <= nxt_MAC_outputs[z][y];
+    //                 end else begin
+    //                     // Hold previous value
+    //                     MAC_outputs[z][y] <= MAC_outputs[z][y];
+    //                 end
+    //             end
+    //         end
+    //     end
+    // end
+
+    always_ff @(posedge clk, negedge nRST) begin
+    if (!nRST) begin
+        for (z = 0; z < N; z++) begin
+            for (y = 0; y < N; y++) begin
+                MAC_outputs[z][y] <= '0;
+            end
+        end
+    end else begin
+        // DEBUG: update all MAC outputs every cycle, no value_ready gating
+        for (z = 0; z < N; z++) begin
+            for (y = 0; y < N; y++) begin
+                MAC_outputs[z][y] <= nxt_MAC_outputs[z][y];
             end
         end
     end
+end
+
 
     generate
         for (m = 0; m < N; m++) begin : mac_row_gen
