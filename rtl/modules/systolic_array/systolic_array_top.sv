@@ -45,7 +45,7 @@ module systolic_array_top(
         assign MAC_start = 1'b1;
 
         // Always shift MACs every cycle
-        assign MAC_shift = 1'b1;
+        //assign MAC_shift = 1'b1;
 
         // Always let adders run
         assign add_start = 1'b1;
@@ -69,7 +69,7 @@ module systolic_array_top(
     
     // MAC control signals
     // assign MAC_start = mac_computing;  // Keep MACs running while computing
-    // assign MAC_shift = memory.input_en || memory.weight_en;  // Shift when loading new inputs
+    assign MAC_shift = memory.input_en || memory.weight_en;  // Shift when loading new inputs
     // assign add_start = mac_ifs[0].value_ready;  // Start adders when MACs are ready
     // assign memory.fifo_has_space = 1'b1;  // Always ready in streaming mode
     
