@@ -25,7 +25,7 @@ module systolic_array_top(
     logic MAC_start;
     logic MAC_shift;
     logic add_start;
-    logic [$clog2(3*N)-1:0] iteration [2:0];
+    logic [$clog2(3*N)-1:0] iteration;
     
     // Generate variables
     genvar j,m,n,o,p;
@@ -50,7 +50,7 @@ module systolic_array_top(
                 mac_computing <= 1'b1;
             end
             // Stop after outputs are done
-            else if (iteration[0] >= 3*N) begin
+            else if (iteration >= 3*N) begin
                 mac_computing <= 1'b0;
             end
         end
@@ -97,18 +97,32 @@ module systolic_array_top(
     endgenerate
     
     integer z, y;
+
     always_ff @(posedge clk, negedge nRST) begin
-        if(nRST == 1'b0)begin
-            for (z = 0; z < N; z++)begin
-                for (y = 0; y < N; y++)begin
+        if (nRST == 1'b0) begin
+            for (z = 0; z < N; z++) begin
+                for (y = 0; y < N; y++) begin
                     MAC_outputs[z][y] <= '0;
                 end
             end
         end else begin
-            // Temporarily disable value_ready gating to debug
-            // Update all MAC outputs every cycle
-            MAC_outputs <= nxt_MAC_outputs;
-        end 
+            // Top row always updates
+            for (y = 0; y < N; y++) begin
+                MAC_outputs[0][y] <= nxt_MAC_outputs[0][y];
+            end
+
+            // Rows 1..N-1 only update when the MAC above has a valid value
+            for (z = 1; z < N; z++) begin
+                for (y = 0; y < N; y++) begin
+                    if (value_ready_array[z-1][y]) begin
+                        MAC_outputs[z][y] <= nxt_MAC_outputs[z][y];
+                    end else begin
+                        // Hold previous value
+                        MAC_outputs[z][y] <= MAC_outputs[z][y];
+                    end
+                end
+            end
+        end
     end
 
     generate
@@ -181,57 +195,48 @@ module systolic_array_top(
         end
     endgenerate
 
-    // Iteration tracking for output timing
-    // Tracks cycles since computation started to determine when outputs are ready
-    integer i;
+    // single interation counter instead of an array
     always_ff @(posedge clk, negedge nRST) begin
         if (!nRST) begin
-            for (i = 0; i < 3; i++) begin
-                iteration[i] <= '0;
-            end
+            iteration <= '0;
         end else if (!memory.stall_sa) begin
             // Start or restart iteration counter when loading new data
             if (memory.weight_en || memory.input_en) begin
-                if (iteration[0] == 0 || iteration[0] >= 3*N) begin
-                    iteration[0] <= 1;
-                end else begin
-                    iteration[0] <= iteration[0] + 1;
-                end
+                if (iteration == 0 || iteration >= 3*N)
+                    iteration <= 1;
+                else
+                    iteration <= iteration + 1;
             end 
             // Continue counting while data is in pipeline
-            else if (iteration[0] > 0 && iteration[0] < 3*N) begin
-                iteration[0] <= iteration[0] + 1;
+            else if (iteration > 0 && iteration < 3*N) begin
+                iteration <= iteration + 1;
             end
             // Reset after all outputs produced
-            else if (iteration[0] >= 3*N) begin
-                iteration[0] <= '0;
+            else if (iteration >= 3*N) begin
+                iteration <= '0;
             end
         end
     end
 
     // Output generation and drained signal
-    integer q;
-    always_comb begin
-        memory.out_en = 1'b0;
-        memory.row_out = '0;
-        memory.drained = 1'b1;
-        row_out = '0;
-        memory.array_output = '0;
-        
-        // Generate outputs when iteration count indicates data has propagated through array
-        // First output ready at iteration 2*N, then one per cycle
-        for (q = 0; q < 3; q++) begin
-            if (iteration[q] >= 2*N && iteration[q] < 3*N) begin
-                /* verilator lint_off WIDTHTRUNC */
-                row_out = iteration[q] - 2*N;
-                /* verilator lint_off WIDTHTRUNC */
-                memory.out_en = 1'b1;
-                memory.row_out = row_out;
-                memory.array_output = current_out[row_out];
-            end
-            if (iteration[q] > 0) begin
-                memory.drained = 1'b0;
-            end
-        end
+   always_comb begin
+    memory.out_en = 1'b0;
+    memory.row_out = '0;
+    memory.drained = 1'b1;
+    row_out = '0;
+    memory.array_output = '0;
+
+    // Single counter version
+    if (iteration >= 2*N && iteration < 3*N) begin
+        row_out = iteration - 2*N;
+        memory.out_en = 1'b1;
+        memory.row_out = row_out;
+        memory.array_output = current_out[row_out];
     end
+
+    if (iteration > 0) begin
+        memory.drained = 1'b0;
+    end
+end
+
 endmodule
