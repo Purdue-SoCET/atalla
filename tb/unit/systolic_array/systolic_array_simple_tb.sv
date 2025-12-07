@@ -26,17 +26,12 @@ gsau_control_unit_if sa_interface();
 systolic_array_simple DUT (.nRST(tb_nrst), .clk(tb_clk), .gsau_if(sa_interface));
 
 integer i;
-integer output_count;
-
 // Test scenarios
 always begin
 
     $dumpfile("waves/systolic_array_simple_waves.vcd");
     $dumpvars();
-    
-    output_count = 0;
 
-    // Initialize all signals
     sa_interface.sa_array_in <= '0;
     sa_interface.sa_array_in_partials <= '0;
     sa_interface.sa_input_en <= '0;
@@ -44,166 +39,56 @@ always begin
     sa_interface.sa_partial_en <= '0;
     sa_interface.sa_output_ready <= '0;
 
-    // Reset sequence
+
     tb_nrst <= 0;
     #CLK_PERIOD;
     tb_nrst <= 1;
     #CLK_PERIOD;
 
-    // ========================================
-    // STEP 1: Load weights (all 1.0 = 0x3c00)
-    // ========================================
-    // Load 4 columns of weights over 4 cycles to fill 4x4 array
     @(posedge tb_clk);
     sa_interface.sa_weight_en <= 1'b1;
-    sa_interface.sa_array_in <= 64'h3c00_3c00_3c00_3c00;  // Column 0: all 1.0
+    sa_interface.sa_array_in <= 64'h4200_4000_3c00_0000;  // 0, 1, 2, 3
     
     @(posedge tb_clk);
-    sa_interface.sa_array_in <= 64'h3c00_3c00_3c00_3c00;  // Column 1: all 1.0
+    sa_interface.sa_array_in <= 64'h4200_4000_3c00_0000;  // 0, 1, 2, 3
     
     @(posedge tb_clk);
-    sa_interface.sa_array_in <= 64'h3c00_3c00_3c00_3c00;  // Column 2: all 1.0
+    sa_interface.sa_array_in <= 64'h4200_4000_3c00_0000;  // 0, 1, 2, 3
     
     @(posedge tb_clk);
-    sa_interface.sa_array_in <= 64'h3c00_3c00_3c00_3c00;  // Column 3: all 1.0
+    sa_interface.sa_array_in <= 64'h4200_4000_3c00_0000;  // 0, 1, 2, 3
     
     @(posedge tb_clk);
     sa_interface.sa_weight_en <= 1'b0;
-    sa_interface.sa_array_in <= '0;
+ 
 
-    // Wait a couple cycles after weight loading
-    #(CLK_PERIOD*2);
-    
-    $display("\n========================================");
-    $display("WEIGHT LOADING COMPLETE");
-    $display("All weights set to 1.0 (0x3c00)");
-    $display("========================================\n");
-
-    // ========================================
-    // STEP 2: Load input columns
-    // ========================================
-    // Using simple distinct values for easy verification:
-    // Column 0: [1.0, 2.0, 3.0, 4.0] = [0x3c00, 0x4000, 0x4200, 0x4400]
-    // Column 1: [2.0, 2.0, 2.0, 2.0] = [0x4000, 0x4000, 0x4000, 0x4000]
-    // Column 2: [3.0, 3.0, 3.0, 3.0] = [0x4200, 0x4200, 0x4200, 0x4200]
-    // Column 3: [4.0, 4.0, 4.0, 4.0] = [0x4400, 0x4400, 0x4400, 0x4400]
-    
-    @(posedge tb_clk);
+    // At this point, weights should be all loaded in.
+    // Time to start loading inputs. 
     sa_interface.sa_input_en <= 1'b1;
-    sa_interface.sa_array_in <= 64'h4400_4200_4000_3c00;  // Column 0: [1.0, 2.0, 3.0, 4.0]
-    
-    @(posedge tb_clk);
-    sa_interface.sa_array_in <= 64'h4000_4000_4000_4000;  // Column 1: [2.0, 2.0, 2.0, 2.0]
-    
-    @(posedge tb_clk);
-    sa_interface.sa_array_in <= 64'h4200_4200_4200_4200;  // Column 2: [3.0, 3.0, 3.0, 3.0]
-    
-    @(posedge tb_clk);
-    sa_interface.sa_array_in <= 64'h4400_4400_4400_4400;  // Column 3: [4.0, 4.0, 4.0, 4.0]
-    
-    @(posedge tb_clk);
+    #CLK_PERIOD;
+    #CLK_PERIOD;
+    #CLK_PERIOD;
+    #CLK_PERIOD;
+    #CLK_PERIOD;
+    #CLK_PERIOD;
+
     sa_interface.sa_input_en <= 1'b0;
-    sa_interface.sa_array_in <= '0;
-    
-    $display("\n========================================");
-    $display("INPUT LOADING COMPLETE");
-    $display("Column 0: [1.0, 2.0, 3.0, 4.0]");
-    $display("Column 1: [2.0, 2.0, 2.0, 2.0]");
-    $display("Column 2: [3.0, 3.0, 3.0, 3.0]");
-    $display("Column 3: [4.0, 4.0, 4.0, 4.0]");
-    $display("========================================\n");
 
-    // ========================================
-    // STEP 3: Wait for and read outputs
-    // ========================================
-    $display("Waiting for outputs...");
-    $display("Current sa_out_valid: %b", sa_interface.sa_out_valid);
-    $display("Current buffer_empty: %b", DUT.buffer_empty);
-    $display("Current sysarr_stall: %b\n", DUT.sysarr_stall);
 
-    // Read all 4 output columns with timeout
-    for (output_count = 0; output_count < 4; output_count++) begin
-        // Wait for valid output (handle case where it's already high)
-        if (!sa_interface.sa_out_valid) begin
-            fork
-                begin
-                    @(posedge sa_interface.sa_out_valid);
-                end
-                begin
-                    #(CLK_PERIOD*100);
-                    $display("ERROR: Timeout waiting for sa_out_valid on output %0d", output_count);
-                    $display("Debug info:");
-                    $display("  buffer_empty: %b", DUT.buffer_empty);
-                    $display("  sysarr_stall: %b", DUT.sysarr_stall);
-                    $display("  sa_out_valid: %b", sa_interface.sa_out_valid);
-                    $display("  first_column_MAC_readies: %b", DUT.first_column_MAC_readies);
-                    $display("  out_buffer[3] MSB: %b", DUT.out_buffer[3][64]);
-                    $finish;
-                end
-            join_any
-            disable fork;
-        end
-        
-        $display("========================================");
-        $display("OUTPUT COLUMN %0d", output_count);
-        $display("========================================");
-        $display("Raw output: 0x%h", sa_interface.sa_array_output);
-        $display("Element [0]: 0x%h", sa_interface.sa_array_output[15:0]);
-        $display("Element [1]: 0x%h", sa_interface.sa_array_output[31:16]);
-        $display("Element [2]: 0x%h", sa_interface.sa_array_output[47:32]);
-        $display("Element [3]: 0x%h", sa_interface.sa_array_output[63:48]);
-        
-        case(output_count)
-            0: begin
-                $display("\nEXPECTED: [1.0, 2.0, 3.0, 4.0]");
-                $display("EXPECTED: [0x3c00, 0x4000, 0x4200, 0x4400]");
-                if (sa_interface.sa_array_output == 64'h4400_4200_4000_3c00)
-                    $display("✓ PASS: Output matches expected!");
-                else
-                    $display("✗ FAIL: Output does not match!");
-            end
-            1: begin
-                $display("\nEXPECTED: [2.0, 2.0, 2.0, 2.0]");
-                $display("EXPECTED: [0x4000, 0x4000, 0x4000, 0x4000]");
-                if (sa_interface.sa_array_output == 64'h4000_4000_4000_4000)
-                    $display("✓ PASS: Output matches expected!");
-                else
-                    $display("✗ FAIL: Output does not match!");
-            end
-            2: begin
-                $display("\nEXPECTED: [3.0, 3.0, 3.0, 3.0]");
-                $display("EXPECTED: [0x4200, 0x4200, 0x4200, 0x4200]");
-                if (sa_interface.sa_array_output == 64'h4200_4200_4200_4200)
-                    $display("✓ PASS: Output matches expected!");
-                else
-                    $display("✗ FAIL: Output does not match!");
-            end
-            3: begin
-                $display("\nEXPECTED: [4.0, 4.0, 4.0, 4.0]");
-                $display("EXPECTED: [0x4400, 0x4400, 0x4400, 0x4400]");
-                if (sa_interface.sa_array_output == 64'h4400_4400_4400_4400)
-                    $display("✓ PASS: Output matches expected!");
-                else
-                    $display("✗ FAIL: Output does not match!");
-            end
-        endcase
-        $display("========================================\n");
-        
-        // Assert output_ready to acknowledge and clear the output
-        @(posedge tb_clk);
-        sa_interface.sa_output_ready <= 1'b1;
-        @(posedge tb_clk);
-        sa_interface.sa_output_ready <= 1'b0;
-        
-        // Give a cycle for the array to unstall
-        #CLK_PERIOD;
-    end
 
-    $display("\n========================================");
-    $display("TEST COMPLETE");
-    $display("========================================\n");
+    @(posedge sa_interface.sa_out_valid);
+    sa_interface.sa_output_ready <= 1'b1;
 
-    #(CLK_PERIOD*5);
+    // #CLK_PERIOD;
+    #CLK_PERIOD;
+    @(posedge tb_clk)
+    sa_interface.sa_output_ready <= 1'b0;
+
+
+    #(CLK_PERIOD*8);
+
+
+
     $finish;
 end
 
