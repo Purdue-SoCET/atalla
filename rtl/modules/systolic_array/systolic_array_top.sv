@@ -53,16 +53,14 @@ module systolic_array_top(
         // In streaming mode, memory side is always ready
         assign memory.fifo_has_space = 1'b1; 
     
-    // // Track when MACs should be computing
+    // // track when MACs should be computing
     // always_ff @(posedge clk, negedge nRST) begin
     //     if (!nRST) begin
     //         mac_computing <= 1'b0;
     //     end else begin
-    //         // Start computing when inputs arrive
     //         if (memory.input_en) begin
     //             mac_computing <= 1'b1;
     //         end
-    //         // Stop after outputs are done
     //         else if (iteration >= 3*N) begin
     //             mac_computing <= 1'b0;
     //         end
@@ -234,27 +232,50 @@ module systolic_array_top(
     endgenerate
 
     // single interation counter instead of an array
+
+    localparam int PIPE_LAT = 4;
+    // always_ff @(posedge clk, negedge nRST) begin
+    //     if (!nRST) begin
+    //         iteration <= '0;
+    //     end else if (!memory.stall_sa) begin
+    //         // Start or restart iteration counter when loading new data
+    //         if (memory.weight_en || memory.input_en) begin
+    //             if (iteration == 0 || iteration >= 3*N)
+    //                 iteration <= 1;
+    //             else
+    //                 iteration <= iteration + 1;
+    //         end 
+    //         // Continue counting while data is in pipeline
+    //         else if (iteration > 0 && iteration < 3*N) begin
+    //             iteration <= iteration + 1;
+    //         end
+    //         // Reset after all outputs produced
+    //         else if (iteration >= 3*N) begin
+    //             iteration <= '0;
+    //         end
+    //     end
+    // end
+
+    // alt iteration counter with +4 cycle latency (to test)
     always_ff @(posedge clk, negedge nRST) begin
-        if (!nRST) begin
-            iteration <= '0;
-        end else if (!memory.stall_sa) begin
-            // Start or restart iteration counter when loading new data
-            if (memory.weight_en || memory.input_en) begin
-                if (iteration == 0 || iteration >= 3*N)
-                    iteration <= 1;
-                else
-                    iteration <= iteration + 1;
-            end 
-            // Continue counting while data is in pipeline
-            else if (iteration > 0 && iteration < 3*N) begin
+    if (!nRST) begin
+        iteration <= '0;
+    end else if (!memory.stall_sa) begin
+        if (memory.weight_en || memory.input_en) begin
+            if (iteration == 0 || iteration >= (3*N + PIPE_LAT))
+                iteration <= 1;
+            else
                 iteration <= iteration + 1;
-            end
-            // Reset after all outputs produced
-            else if (iteration >= 3*N) begin
-                iteration <= '0;
-            end
+        end 
+        else if (iteration > 0 && iteration < (3*N + PIPE_LAT)) begin
+            iteration <= iteration + 1;
+        end
+        else if (iteration >= (3*N + PIPE_LAT)) begin
+            iteration <= '0;
         end
     end
+end
+
 
     // Output generation and drained signal
    always_comb begin
@@ -265,8 +286,8 @@ module systolic_array_top(
     memory.array_output = '0;
 
     // Single counter version
-    if (iteration >= 2*N && iteration < 3*N) begin
-        row_out = iteration - 2*N;
+    if (iteration >= (2*N + PIPE_LAT) && iteration < (3*N + PIPE_LAT)) begin
+        row_out = iteration - (2*N + PIPE_LAT);
         memory.out_en = 1'b1;
         memory.row_out = row_out;
         memory.array_output = current_out[row_out];
