@@ -28,6 +28,11 @@ module systolic_array_simple(
     input logic clk, nRST,
     gsau_control_unit_if.systolic_array gsau_if
 );
+    // Forward declarations for signals used before their main definition
+    logic [DW-1:0] MAC_outputs [N-1:0][N-1:0];
+    logic [DW-1:0] nxt_MAC_outputs [N-1:0][N-1:0];
+    logic [N-1:0] first_column_MAC_readies;
+
     logic [(DW*N)-1:0] to_output_buffer;
     genvar q;
     for(q = 0; q < N; q++)
@@ -110,13 +115,9 @@ module systolic_array_simple(
 
 
     // MAC Unit inputs/outputs latched within systolic array
-    logic [DW-1:0] MAC_outputs [N-1:0][N-1:0];
-    logic [DW-1:0] nxt_MAC_outputs [N-1:0][N-1:0];
+    // (MAC_outputs, nxt_MAC_outputs, first_column_MAC_readies declared at top of module)
 
-    systolic_array_MAC_if mac_ifs[N*N-1:0] (); 
-
-    // Declare first_column_MAC_readies early so it can be used by psum_buffer
-    logic [N-1:0] first_column_MAC_readies;
+    systolic_array_MAC_if mac_ifs[N*N-1:0] ();
 
     // Partial sum buffer - stores and delivers partial sum columns synchronized with output production
     logic [N*DW-1:0] psum_column;
