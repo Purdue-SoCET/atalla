@@ -1,6 +1,7 @@
 `ifndef VALU_IF_VH
 `define VALU_IF_VH
 
+
 interface valu_if;
 
     logic [15:0] operand1, operand2, result;

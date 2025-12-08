@@ -1,13 +1,13 @@
-`include "reduction_types.vh"
+`include "vector_types.vh"
 `include "valu_if.vh"
 
 module valu (
     input  logic CLK,
     input  logic nRST,
-    valu_if.valu valuif
+    valu_if.valu alu
 );
 
-import reduction_pkg::*;
+import vector_pkg::*;
 
 
 logic [15:0] bf1_in, bf2_in, bf_out;
@@ -26,7 +26,6 @@ addsub_bf16 adder (
     .invalid(invalid)
 );
 
-
 logic [15:0] value_a_s1, value_b_s1;
 logic [15:0] value_a_s2, value_b_s2;
 
@@ -34,32 +33,32 @@ logic [1:0] alu_op_s1, alu_op_s2;
 
 logic any_nan_s1, any_nan_s2;
 
-
+logic valid_s1, valid_s2;
 
 logic fire_in, fire_out;
 
-// ready_in is high when we are not holding a valid output
-assign valuif.ready_in = !valuif.valid_out;
+// Accept new input only when not holding unconsumed result
+assign alu.out.ready_in = !alu.out.valid_out;
 
-assign fire_in  = valuif.valid_in  & valuif.ready_in;
-assign fire_out = valuif.valid_out & valuif.ready_out;
+assign fire_in  = alu.in.valid_in  & alu.out.ready_in;
+assign fire_out = alu.out.valid_out & alu.in.ready_out;
 
 logic a_is_nan_raw, b_is_nan_raw, any_nan_raw;
 
 always_comb begin
-    a_is_nan_raw = (&valuif.operand1[14:7]) && (|valuif.operand1[6:0]);
-    b_is_nan_raw = (&valuif.operand2[14:7]) && (|valuif.operand2[6:0]);
+    a_is_nan_raw = (&alu.in.operand1[14:7]) && (|alu.in.operand1[6:0]);
+    b_is_nan_raw = (&alu.in.operand2[14:7]) && (|alu.in.operand2[6:0]);
     any_nan_raw  = a_is_nan_raw | b_is_nan_raw;
 
-    // adder inputs driven from stage-1 registers (so adder receives registered values)
+    // adder inputs driven from stage-1 registers
     bf1_in = value_a_s1;
     bf2_in = value_b_s1;
 
-    op = (valuif.alu_op == VR_SUB ||
-          valuif.alu_op == VR_MIN ||
-          valuif.alu_op == VR_MAX);
+    // use registered opcode so adder sees same control as operands
+    op = (alu_op_s1 == VR_SUB ||
+          alu_op_s1 == VR_MIN ||
+          alu_op_s1 == VR_MAX);
 end
-
 
 always_ff @(posedge CLK or negedge nRST) begin
     if (!nRST) begin
@@ -70,9 +69,9 @@ always_ff @(posedge CLK or negedge nRST) begin
         valid_s1   <= 1'b0;
     end else begin
         if (fire_in) begin
-            value_a_s1 <= valuif.operand1;
-            value_b_s1 <= valuif.operand2;
-            alu_op_s1  <= valuif.alu_op;
+            value_a_s1 <= alu.in.operand1;
+            value_b_s1 <= alu.in.operand2;
+            alu_op_s1  <= alu.in.alu_op;
             any_nan_s1 <= any_nan_raw;
         end
         valid_s1 <= fire_in;
@@ -115,21 +114,20 @@ logic [15:0] result_reg;
 
 always_ff @(posedge CLK or negedge nRST) begin
     if (!nRST) begin
-        valuif.valid_out <= 1'b0;
-        result_reg       <= 16'h0000;
+        alu.out.valid_out <= 1'b0;
+        result_reg        <= 16'h0000;
     end else begin
-        // If downstream accepted the result, clear valid_out
-        if (valuif.valid_out && valuif.ready_out) begin
-            valuif.valid_out <= 1'b0;
-        end
-        if (valid_s2 && !valuif.valid_out) begin
-            result_reg       <= result_next;
-            valuif.valid_out <= 1'b1;
+        if (alu.out.valid_out && alu.in.ready_out)
+            alu.out.valid_out <= 1'b0;
+
+        if (valid_s2 && !alu.out.valid_out) begin
+            result_reg        <= result_next;
+            alu.out.valid_out <= 1'b1;
         end
     end
 end
 
-// Drive interface result from registered output
-assign valuif.result = result_reg;
+// Drive result
+assign alu.out.result = result_reg;
 
 endmodule
