@@ -36,7 +36,8 @@ module lane_fu_pt #(
     assign push = issue_valid && sync_ready;
 
     // Pop exactly when a result is truly accepted at WB
-    assign pop  = wb_valid && wb_ready && !fifo_empty;
+    //assign pop  = wb_valid && wb_ready && !fifo_empty;
+    assign pop = wb_valid && wb_ready;
 
     // ---------------------------------------------------------
     // FIFO Instantiation

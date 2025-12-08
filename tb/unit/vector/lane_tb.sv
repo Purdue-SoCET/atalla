@@ -70,6 +70,7 @@ module lane_tb;
     bit   dir_monitor_en_div;
 
     // Driver-done flags for random tests
+    bit   driver_done_sqrt;
     bit   driver_done_div;
     bit   driver_done_mul;
 
@@ -521,6 +522,8 @@ module lane_tb;
         obs_t    item;
 
         total_expected = 0;
+        // NEW: mark that the SQRT driver is active
+        driver_done_sqrt = 1'b0;
 
         for (s = 0; s < num_slices; s++) begin
             // Random data
@@ -553,6 +556,9 @@ module lane_tb;
                 repeat ($urandom_range(4,1)) @(posedge CLK);
             end
         end
+
+        // NEW: signal that no more SQRT slices will be issued
+        driver_done_sqrt = 1'b1;
     endtask
 
     // ------------------------------------------------------------
@@ -671,8 +677,13 @@ module lane_tb;
                 end
             end
 
-            // Stop early if scoreboard is drained and WB is not stalled
-            if (exp_q.size() == 0 && lane_if.lane_in.ready_in[FU_SQRT]) begin
+            // Stop early only if:
+            //  - scoreboard is drained
+            //  - WB not stalled
+            //  - driver is done issuing all SQRT slices
+            if (exp_q.size() == 0 &&
+                lane_if.lane_in.ready_in[FU_SQRT] &&
+                driver_done_sqrt) begin
                 break;
             end
         end

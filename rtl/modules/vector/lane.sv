@@ -34,7 +34,7 @@ module lane (
     logic sqrt_fire_valid;
     assign sqrt_fire_valid = sqrt_seq_out.valid && sqrt_seq_out.mask_bit && sqrt_sync_ready;
 
-    // SQRT hold buffer signals (declared early for use in FU backpressure)
+    // SQRT hold buffer (single-entry, matching DIV pattern)
     logic       sqrt_hold_valid;
     fp16_t      sqrt_hold_result;
     vsel_t      sqrt_hold_vd;
@@ -89,26 +89,15 @@ module lane (
         // FU input valid: active element and metadata FIFO has space.
         sqrt_bus.in.valid_in = sqrt_fire_valid && sqrt_sync_ready;
 
-        // Writeback-side ready: backpressure to FU when hold buffer is full
-        // This prevents FU from producing results that can't be accepted
+        // Writeback-side ready: backpressure when hold buffer is full
         sqrt_bus.in.ready_out = (!sqrt_hold_valid || lif.lane_in.ready_in[SQRT]);
     end
 
     // ------------------------------------------------------------
-    // SQRT: Intermediate Stage - Align FU outputs
+    // SQRT: Retire signal
     // ------------------------------------------------------------
-    logic  sqrt_valid_wb;
-    fp16_t sqrt_result_wb;
-
-    always_ff @(posedge CLK or negedge nRST) begin
-        if (!nRST) begin
-            sqrt_valid_wb  <= 1'b0;
-            sqrt_result_wb <= '0;
-        end else begin
-            sqrt_valid_wb  <= sqrt_bus.out.valid_out;
-            sqrt_result_wb <= sqrt_bus.out.result;
-        end
-    end
+    logic sqrt_retire;
+    assign sqrt_retire = sqrt_bus.out.valid_out && sqrt_bus.in.ready_out;
 
     // ------------------------------------------------------------
     // SQRT: Metadata Sync Unit (lane_fu_pt)
@@ -131,19 +120,16 @@ module lane (
         .sync_ready (sqrt_sync_ready),
 
         // Output Side (Writeback)
-        // Pop FIFO when FU produces result and it can be accepted
-        // This ensures metadata is available (registered) when sqrt_valid_wb asserts
-        .wb_valid   (sqrt_bus.out.valid_out),
-        .wb_ready   (sqrt_bus.in.ready_out),  // Aligned with FU backpressure
+        // Pop FIFO on retire event
+        .wb_valid   (sqrt_retire),
+        .wb_ready   (sqrt_bus.in.ready_out),
         .meta_out   (sqrt_meta_out)
     );
 
     // ------------------------------------------------------------
     // SQRT: Hold Buffer & Writeback Logic
     // ------------------------------------------------------------
-    // Result-holding logic
-    // FU backpressure ensures results only arrive when hold buffer can accept
-    // So we can safely capture whenever sqrt_valid_wb is asserted
+    // Capture on retire event (matching DIV pattern)
     always_ff @(posedge CLK or negedge nRST) begin
         if (!nRST) begin
             sqrt_hold_valid  <= 1'b0;
@@ -151,20 +137,19 @@ module lane (
             sqrt_hold_vd     <= '0;
             sqrt_hold_elem   <= '0;
         end else begin
-            // Capture new FU result + metadata when available
-            if (sqrt_valid_wb) begin
+            // Capture when FU result is retired
+            if (sqrt_retire) begin
                 sqrt_hold_valid  <= 1'b1;
-                sqrt_hold_result <= sqrt_result_wb;
+                sqrt_hold_result <= sqrt_bus.out.result;
                 sqrt_hold_vd     <= sqrt_meta_out.vd;
                 sqrt_hold_elem   <= sqrt_meta_out.elem_idx;
             end
-            // Once WB accepts it (and no new result arriving), drop valid
+            // Clear when downstream consumes
             else if (sqrt_hold_valid && lif.lane_in.ready_in[SQRT]) begin
                 sqrt_hold_valid <= 1'b0;
             end
         end
     end
-
 
     // ============================================================
     // DIV PIPELINE
@@ -252,20 +237,11 @@ module lane (
     end
 
     // ------------------------------------------------------------
-    // DIV: Intermediate Stage - Align FU outputs
+    // DIV: Retire Signal - No WB Stage Needed
     // ------------------------------------------------------------
-    logic  div_valid_wb;
-    fp16_t div_result_wb;
-
-    always_ff @(posedge CLK or negedge nRST) begin
-        if (!nRST) begin
-            div_valid_wb  <= 1'b0;
-            div_result_wb <= '0;
-        end else begin
-            div_valid_wb  <= div_bus.out.valid_out;
-            div_result_wb <= div_bus.out.result;
-        end
-    end
+    // Retire event: FU result accepted by WB path (valid && ready handshake)
+    logic div_retire;
+    assign div_retire = div_bus.out.valid_out && div_bus.in.ready_out;
 
     // ------------------------------------------------------------
     // DIV: Metadata Sync Unit (lane_fu_pt)
@@ -298,14 +274,16 @@ module lane (
         .sync_ready (div_sync_ready),
 
         // Output Side (Writeback)
-        .wb_valid   (div_bus.out.valid_out),
-        .wb_ready   (div_bus.in.ready_out),
+        // Pop FIFO on retire event (same cycle as FU output acceptance)
+        .wb_valid   (div_retire),                 // Use retire directly
+        .wb_ready   (div_bus.in.ready_out),       // FU backpressure
         .meta_out   (div_meta_out)
     );
 
     // ------------------------------------------------------------
     // DIV: Hold Buffer & Writeback Logic
     // ------------------------------------------------------------
+    // Capture directly on retire event (same cycle as FU output + metadata pop)
     always_ff @(posedge CLK or negedge nRST) begin
         if (!nRST) begin
             div_hold_valid   <= 1'b0;
@@ -314,11 +292,11 @@ module lane (
             div_hold_elem    <= '0;
             div_hold_dbg_seq <= '0;
         end else begin
-            // Capture new FU result + metadata when available
-            if (div_valid_wb) begin
+            // Capture new FU result + metadata when retire happens
+            if (div_retire) begin
                 div_hold_valid   <= 1'b1;
-                div_hold_result  <= div_result_wb;
-                div_hold_vd      <= div_meta_out.vd;
+                div_hold_result  <= div_bus.out.result;       // Direct from FU
+                div_hold_vd      <= div_meta_out.vd;           // FIFO output
                 div_hold_elem    <= div_meta_out.elem_idx;
                 div_hold_dbg_seq <= div_meta_out.dbg_seq;
             end
@@ -390,21 +368,16 @@ module lane (
         mul_bus.in.ready_out = (!mul_hold_valid || lif.lane_in.ready_in[MUL]);
     end
 
-    // Intermediate WB alignment (just like SQRT/DIV)
-    logic        mul_valid_wb;
-    logic [15:0] mul_result_wb;
+    // ------------------------------------------------------------
+    // MUL: Retire Signal - No WB Stage Needed
+    // ------------------------------------------------------------
+    // Retire event: FU result accepted by WB path (valid && ready handshake)
+    logic mul_retire;
+    assign mul_retire = mul_bus.out.valid_out && mul_bus.in.ready_out;
 
-    always_ff @(posedge CLK or negedge nRST) begin
-        if (!nRST) begin
-            mul_valid_wb  <= 1'b0;
-            mul_result_wb <= '0;
-        end else begin
-            mul_valid_wb  <= mul_bus.out.valid_out;
-            mul_result_wb <= mul_bus.out.result;
-        end
-    end
-
-    // Metadata sync (lane_fu_pt)
+    // ------------------------------------------------------------
+    // MUL: Metadata Sync (lane_fu_pt)
+    // ------------------------------------------------------------
     assign mul_meta_in.vd       = mul_seq_out.vd;
     assign mul_meta_in.elem_idx = mul_seq_out.elem_idx;
     assign mul_meta_in.dbg_seq  = '0; // or add a dbg counter like DIV
@@ -419,12 +392,16 @@ module lane (
         .fu_ready   (mul_bus.out.ready_in),  // FU signals when ready for input
         .meta_in    (mul_meta_in),
         .sync_ready (mul_sync_ready),
-        .wb_valid   (mul_bus.out.valid_out),
-        .wb_ready   (mul_bus.in.ready_out),  // WB backpressure from lane
+        // Pop FIFO on retire event (same cycle as FU output acceptance)
+        .wb_valid   (mul_retire),                 // Use retire directly
+        .wb_ready   (mul_bus.in.ready_out),       // WB backpressure from lane
         .meta_out   (mul_meta_out)
     );
 
-    // Hold buffer & WB
+    // ------------------------------------------------------------
+    // MUL: Hold Buffer & Writeback Logic
+    // ------------------------------------------------------------
+    // Capture directly on retire event (same cycle as FU output + metadata pop)
     always_ff @(posedge CLK or negedge nRST) begin
         if (!nRST) begin
             mul_hold_valid  <= 1'b0;
@@ -432,12 +409,15 @@ module lane (
             mul_hold_vd     <= '0;
             mul_hold_elem   <= '0;
         end else begin
-            if (mul_valid_wb) begin
+            // Capture new FU result + metadata when retire happens
+            if (mul_retire) begin
                 mul_hold_valid  <= 1'b1;
-                mul_hold_result <= mul_result_wb;
-                mul_hold_vd     <= mul_meta_out.vd;
+                mul_hold_result <= mul_bus.out.result;        // Direct from FU
+                mul_hold_vd     <= mul_meta_out.vd;            // FIFO output
                 mul_hold_elem   <= mul_meta_out.elem_idx;
-            end else if (mul_hold_valid && lif.lane_in.ready_in[MUL]) begin
+            end
+            // Once WB accepts it (and no new result arriving), drop valid
+            else if (mul_hold_valid && lif.lane_in.ready_in[MUL]) begin
                 mul_hold_valid <= 1'b0;
             end
         end
@@ -585,8 +565,8 @@ module lane (
     always_comb begin
         lif.lane_out = '0;
 
-        // SQRT outputs
-        lif.lane_out.ready_o[SQRT] = sqrt_seq_out.lane_ready;
+        // SQRT outputs - from hold buffer
+        lif.lane_out.ready_o[SQRT]  = sqrt_seq_out.lane_ready;
         lif.lane_out.valid_o[SQRT]  = sqrt_hold_valid;
         lif.lane_out.result[SQRT]   = sqrt_hold_result;
         lif.lane_out.vd[SQRT]       = sqrt_hold_vd;

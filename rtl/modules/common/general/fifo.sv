@@ -7,7 +7,7 @@ module sync_fifo #(
 ) (
     input rstn, clk, wr_en, rd_en, 
     input [DWIDTH-1:0] din, 	
-    output reg [DWIDTH-1:0] dout, 	
+    output logic [DWIDTH-1:0] dout, 	
     output  empty,  full 			
 );
     reg [$clog2(DEPTH)-1:0]   wptr;
@@ -31,12 +31,13 @@ module sync_fifo #(
             rptr <= 0;
         end else begin
             if (rd_en & !empty) begin
-                dout <= fifo[rptr];
                 rptr <= rptr + 1;
             end
         end
     end
 
+    // Combinational output: always show head of FIFO
+    assign dout  = fifo[rptr];
     assign full  = (wptr + 1) == rptr;
     assign empty = wptr == rptr;
 endmodule

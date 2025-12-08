@@ -69,7 +69,7 @@ if {[llength $pkg_files] > 0} {
     puts "Compiling package files..."
     puts "------------------------------------------"
 
-    if {[catch {vlog -sv -mfcu {*}$INCS {*}$pkg_files} errMsg]} {
+    if {[catch {vlog -sv -mfcu +define+SQRT_DEBUG {*}$INCS {*}$pkg_files} errMsg]} {
         puts "ERROR: Package compilation failed!"
         puts "Error details:"
         puts $errMsg
@@ -86,7 +86,7 @@ if {[llength $other_files] > 0} {
     puts "------------------------------------------"
 
     # No -mfcu here so small edits recompile faster
-    if {[catch {vlog -sv {*}$INCS {*}$other_files} errMsg]} {
+    if {[catch {vlog -sv +define+SQRT_DEBUG {*}$INCS {*}$other_files} errMsg]} {
         puts "ERROR: Compilation Failed!"
         puts "Error details:"
         puts $errMsg
