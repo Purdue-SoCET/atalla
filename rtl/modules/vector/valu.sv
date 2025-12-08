@@ -1,4 +1,4 @@
-`include "vector_types.vh"
+`include "vector_pkg.vh"
 `include "valu_if.vh"
 
 module valu (
