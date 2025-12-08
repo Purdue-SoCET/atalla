@@ -36,8 +36,24 @@ module lane_fu_pt #(
     assign push = issue_valid && sync_ready;
 
     // Pop exactly when a result is truly accepted at WB
-    //assign pop  = wb_valid && wb_ready && !fifo_empty;
-    assign pop = wb_valid && wb_ready;
+    assign pop  = wb_valid && wb_ready && !fifo_empty;
+
+    // Debug counters (always enabled for debugging)
+    int push_cnt, pop_cnt;
+    always_ff @(posedge CLK or negedge nRST) begin
+        if (!nRST) begin
+            push_cnt <= 0;
+            pop_cnt  <= 0;
+        end else begin
+            if (push) push_cnt <= push_cnt + 1;
+            if (pop)  pop_cnt  <= pop_cnt + 1;
+        end
+    end
+    
+    // Print at end of simulation
+    final begin
+        $display("[%m] FIFO_COUNTS: push=%0d pop=%0d", push_cnt, pop_cnt);
+    end
 
     // ---------------------------------------------------------
     // FIFO Instantiation

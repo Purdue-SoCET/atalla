@@ -266,6 +266,8 @@ package vector_pkg;
         logic       valid;
         logic        lane_ready;
     } lane_seq_out_t;
+
+    // Result Collector --------------------------------------------------------------------
     
     /*
     typedef struct packed {

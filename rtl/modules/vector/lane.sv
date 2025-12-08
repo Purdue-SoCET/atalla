@@ -392,9 +392,9 @@ module lane (
         .fu_ready   (mul_bus.out.ready_in),  // FU signals when ready for input
         .meta_in    (mul_meta_in),
         .sync_ready (mul_sync_ready),
-        // Pop FIFO on retire event (same cycle as FU output acceptance)
-        .wb_valid   (mul_retire),                 // Use retire directly
-        .wb_ready   (mul_bus.in.ready_out),       // WB backpressure from lane
+        // Use retire signal to ensure metadata pops in sync with hold buffer capture
+        .wb_valid   (mul_retire),
+        .wb_ready   (mul_bus.in.ready_out),
         .meta_out   (mul_meta_out)
     );
 
@@ -421,6 +421,25 @@ module lane (
                 mul_hold_valid <= 1'b0;
             end
         end
+    end
+
+    // ------------------------------------------------------------
+    // MUL: Debug Counters (always enabled for debugging)
+    // ------------------------------------------------------------
+    int mul_issue_cnt, mul_wb_cnt;
+    always_ff @(posedge CLK or negedge nRST) begin
+        if (!nRST) begin
+            mul_issue_cnt <= 0;
+            mul_wb_cnt    <= 0;
+        end else begin
+            if (mul_fire_valid && mul_sync_ready) mul_issue_cnt <= mul_issue_cnt + 1;
+            if (lif.lane_out.valid_o[MUL] && lif.lane_in.ready_in[MUL]) mul_wb_cnt <= mul_wb_cnt + 1;
+        end
+    end
+    
+    // Print counts at end of simulation
+    final begin
+        $display("[%m] MUL_COUNTS: issue=%0d wb=%0d", mul_issue_cnt, mul_wb_cnt);
     end
 
     // ------------------------------------------------------------
