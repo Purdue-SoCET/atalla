@@ -30,4 +30,4 @@ nop.s|nop.s|nop.s|nop.s
 nop.s|nop.s|nop.s|nop.s
 nop.s|nop.s|nop.s|nop.s
 nop.s|nop.s|nop.s|nop.s
-divi.vi,2,1,0,0,0;|nop.s|nop.s|nop.s
+divi.vi,2,1,0,0,0|nop.s|nop.s|nop.s
