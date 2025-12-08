@@ -7,8 +7,6 @@ interface valu_if #(
     parameter int MANT_WIDTH = 7
 );
     localparam int WIDTH = EXP_WIDTH + MANT_WIDTH;
-
-    import vector_pkg::*;
     
     // Input signals (from producer to VALU)
     struct packed {
@@ -27,7 +25,7 @@ interface valu_if #(
     } out;
     
     // Modport for VALU module
-    modport valuif (
+    modport valu_if (
         input  in,
         output out
     );
