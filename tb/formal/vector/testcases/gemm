@@ -95,7 +95,6 @@ nop.s|nop.s|nop.s|lw.vi,0,29,0,0,0
 nop.s|nop.s|nop.s|lw.vi,0,30,0,0,0
 nop.s|nop.s|nop.s|lw.vi,0,31,0,0,0
 nop.s|nop.s|nop.s|gemm.vv,65,32,0,0,1
-nop.s|nop.s|nop.s|gemm.vv,65,32,0,0,1
 nop.s|nop.s|nop.s|gemm.vv,66,33,0,0,1
 nop.s|nop.s|nop.s|gemm.vv,67,34,0,0,1
 nop.s|nop.s|nop.s|gemm.vv,68,35,0,0,1
