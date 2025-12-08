@@ -2,91 +2,132 @@
 `include "valu_if.vh"
 
 module valu (
-    input logic CLK,
-    input logic nRST,
-    valu_if.valu valuif
+    input  logic CLK,
+    input  logic nRST,
+    valu_if.valu alu
 );
 
-// import vector_pkg::*;
-typedef enum logic [1:0] {
-    VALU_ADD = 2'b00,
-    VALU_SUB = 2'b01,
-    VALU_GT  = 2'b10,
-    VALU_LT  = 2'b11
-} valu_op_t;
+import vector_pkg::*;
 
-parameter int EXP_WIDTH = valuif.EXP_WIDTH;
-parameter int MANT_WIDTH = valuif.MANT_WIDTH;
-parameter int WIDTH = EXP_WIDTH + MANT_WIDTH;
 
 logic [15:0] bf1_in, bf2_in, bf_out;
+logic op;
 logic overflow, underflow, invalid;
-addsub_bf16 adder (.clk(CLK), .nRST(nRST), .bf1_in(bf1_in), .bf2_in(bf2_in), .bf_out(bf_out),
-               .overflow(overflow), .underflow(underflow), .invalid(invalid));
 
-// Handshake logic
-logic next_valid_out;
-always_ff @(posedge CLK, negedge nRST) begin
-    if (~nRST) begin
-        valuif.out.valid_out <= 1'b0;
-        valuif.out.ready_in <= 1'b0;
-        next_valid_out <= 1'b0;
+addsub_bf16 adder (
+    .clk(CLK),
+    .nRST(nRST),
+    .bf1_in(bf1_in),
+    .bf2_in(bf2_in),
+    .op(op),
+    .bf_out(bf_out),
+    .overflow(overflow),
+    .underflow(underflow),
+    .invalid(invalid)
+);
+
+logic [15:0] value_a_s1, value_b_s1;
+logic [15:0] value_a_s2, value_b_s2;
+
+logic [1:0] alu_op_s1, alu_op_s2;
+
+logic any_nan_s1, any_nan_s2;
+
+logic valid_s1, valid_s2;
+
+logic fire_in, fire_out;
+
+// Accept new input only when not holding unconsumed result
+assign alu.out.ready_in = !alu.out.valid_out;
+
+assign fire_in  = alu.in.valid_in  & alu.out.ready_in;
+assign fire_out = alu.out.valid_out & alu.in.ready_out;
+
+logic a_is_nan_raw, b_is_nan_raw, any_nan_raw;
+
+always_comb begin
+    a_is_nan_raw = (&alu.in.operand1[14:7]) && (|alu.in.operand1[6:0]);
+    b_is_nan_raw = (&alu.in.operand2[14:7]) && (|alu.in.operand2[6:0]);
+    any_nan_raw  = a_is_nan_raw | b_is_nan_raw;
+
+    // adder inputs driven from stage-1 registers
+    bf1_in = value_a_s1;
+    bf2_in = value_b_s1;
+
+    // use registered opcode so adder sees same control as operands
+    op = (alu_op_s1 == VR_SUB ||
+          alu_op_s1 == VR_MIN ||
+          alu_op_s1 == VR_MAX);
+end
+
+always_ff @(posedge CLK or negedge nRST) begin
+    if (!nRST) begin
+        value_a_s1 <= '0;
+        value_b_s1 <= '0;
+        alu_op_s1  <= 2'b00;
+        any_nan_s1 <= 1'b0;
+        valid_s1   <= 1'b0;
     end else begin
-        if (valuif.in.valid_in) next_valid_out <= 1'b1;
-        else next_valid_out <= 1'b0;
-        valuif.out.valid_out <= next_valid_out;
-        valuif.out.ready_in <= 1'b1;
+        if (fire_in) begin
+            value_a_s1 <= alu.in.operand1;
+            value_b_s1 <= alu.in.operand2;
+            alu_op_s1  <= alu.in.alu_op;
+            any_nan_s1 <= any_nan_raw;
+        end
+        valid_s1 <= fire_in;
     end
 end
 
-// NaN detection
-logic a_is_nan, b_is_nan;
-always_comb begin
-    a_is_nan = (&valuif.in.operand1[WIDTH-1 -: EXP_WIDTH]) && (|valuif.in.operand1[MANT_WIDTH-1:0]);
-    b_is_nan = (&valuif.in.operand2[WIDTH-1 -: EXP_WIDTH]) && (|valuif.in.operand2[MANT_WIDTH-1:0]);
-end
-
-// Register inputs and output
-logic any_nan;
-logic [15:0] operand1, operand2;
-logic [1:0] alu_op;
-logic [15:0] next_result;
-always_ff @(posedge CLK, negedge nRST) begin
-    if (~nRST) begin
-        any_nan <= 1'b0;
-        operand1 <= 0;
-        operand2 <= 0;
-        alu_op <= 0;
-        valuif.out.result <= 0;
+always_ff @(posedge CLK or negedge nRST) begin
+    if (!nRST) begin
+        value_a_s2 <= '0;
+        value_b_s2 <= '0;
+        alu_op_s2  <= 2'b00;
+        any_nan_s2 <= 1'b0;
+        valid_s2   <= 1'b0;
     end else begin
-        any_nan <= a_is_nan | b_is_nan;
-        operand1 <= valuif.in.operand1;
-        operand2 <= valuif.in.operand2;
-        alu_op <= valuif.in.alu_op;
-        valuif.out.result <= next_result;
+        value_a_s2 <= value_a_s1;
+        value_b_s2 <= value_b_s1;
+        alu_op_s2  <= alu_op_s1;
+        any_nan_s2 <= any_nan_s1;
+        valid_s2   <= valid_s1;
     end
 end
 
-// Adder control
-logic sub;
-always_comb begin
-    sub = (valuif.in.alu_op != VALU_ADD);
-    bf1_in = valuif.in.operand1;
-    bf2_in = sub ? {~valuif.in.operand2[WIDTH], valuif.in.operand2[WIDTH-1:0]} : valuif.in.operand2;
-end
+logic [15:0] result_next;
 
 always_comb begin
-    if (any_nan) begin
-        next_result = {1'b0, {EXP_WIDTH{1'b1}}, 1'b1, {(MANT_WIDTH-1){1'b0}}};
-    end else begin
-        case (alu_op)
-            VALU_ADD: next_result = bf_out;
-            VALU_SUB: next_result = bf_out;
-            VALU_GT: next_result = bf_out[WIDTH] ? operand1 : operand2;
-            VALU_LT: next_result = bf_out[WIDTH] ? operand2 : operand1;
-            default: next_result = 0;
+    if (any_nan_s2) begin
+        result_next = 16'h7FC0; // canonical BF16 qNaN
+    end
+    else begin
+        case (alu_op_s2)
+            VR_SUM, VR_SUB: result_next = bf_out;
+            VR_MIN:         result_next = (bf_out[15] ? value_a_s2 : value_b_s2);
+            VR_MAX:         result_next = (bf_out[15] ? value_b_s2 : value_a_s2);
+            default:        result_next = 16'h0000;
         endcase
     end
 end
+
+logic [15:0] result_reg;
+
+always_ff @(posedge CLK or negedge nRST) begin
+    if (!nRST) begin
+        alu.out.valid_out <= 1'b0;
+        result_reg        <= 16'h0000;
+    end else begin
+        if (alu.out.valid_out && alu.in.ready_out)
+            alu.out.valid_out <= 1'b0;
+
+        if (valid_s2 && !alu.out.valid_out) begin
+            result_reg        <= result_next;
+            alu.out.valid_out <= 1'b1;
+        end
+    end
+end
+
+// Drive result
+assign alu.out.result = result_reg;
 
 endmodule
