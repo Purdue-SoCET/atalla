@@ -86,9 +86,11 @@ package vector_pkg;
     typedef fp16_t [SLICE_W-1:0] slice_t;
     typedef fp16_t [VLMAX-1:0] vreg_t;
 
-    typedef enum logic [5:0] {
-        VALU_ADD       = 6'h00,
-        VALU_SUB       = 6'h01
+    typedef enum logic [1:0] {
+        VR_MAX = 2'b00,
+        VR_MIN = 2'b01,
+        VR_SUM = 2'b10,
+        VR_SUB = 2'b11
     } valu_op_t;
 
     // TOP LEVEL CONTROL SIGNALS

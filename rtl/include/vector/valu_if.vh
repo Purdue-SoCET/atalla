@@ -27,7 +27,7 @@ interface valu_if #(
     } out;
     
     // Modport for VALU module
-    modport valu (
+    modport valuif (
         input  in,
         output out
     );
