@@ -34,7 +34,16 @@ nop.s|nop.s|nop.s|nop.s
 nop.s|nop.s|nop.s|nop.s
 nop.s|nop.s|nop.s|nop.s
 nop.s|nop.s|nop.s|nop.s
-rmax.vi,3,2,1,0,0|nop.s|nop.s|nop.s
+rmax.vi,4,2,1,0,0|nop.s|nop.s|nop.s
+nop.s|nop.s|nop.s|nop.s
+nop.s|nop.s|nop.s|nop.s
+nop.s|nop.s|nop.s|nop.s
+nop.s|nop.s|nop.s|nop.s
+nop.s|nop.s|nop.s|nop.s
+nop.s|nop.s|nop.s|nop.s
+nop.s|nop.s|nop.s|nop.s
+nop.s|nop.s|nop.s|nop.s
+add.vv,4,4,3,0,0
 nop.s|nop.s|nop.s|nop.s
 nop.s|nop.s|nop.s|nop.s
 nop.s|nop.s|nop.s|nop.s
@@ -44,8 +53,4 @@ nop.s|nop.s|nop.s|nop.s
 nop.s|nop.s|nop.s|nop.s
 nop.s|nop.s|nop.s|nop.s
 nop.s|nop.s|nop.s|nop.s
-nop.s|nop.s|nop.s|nop.s
-nop.s|nop.s|nop.s|nop.s
-nop.s|nop.s|nop.s|nop.s
-nop.s|nop.s|nop.s|nop.s
-rmax.vi,4,3,64,0,0|nop.s|nop.s|nop.s
+rmax.vi,5,4,64,0,0|nop.s|nop.s|nop.s
