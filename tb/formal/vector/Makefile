@@ -11,6 +11,7 @@ OBJS := $(patsubst $(SRC_DIR)/%.cpp,$(OBJ_DIR)/%.o,$(SRCS))
 
 SYSARR_EXE = $(BIN_DIR)/sysarr_test
 SCRATCH_EXE = $(BIN_DIR)/scratch_test
+SCHED_EXE = $(BIN_DIR)/schedular_test
 
 .PHONY: compile_sysarr compile_scratch verilate run_verilator clean
 
@@ -83,6 +84,8 @@ compile_sysarr: $(OBJ_DIR)/sysarr.o $(OBJ_DIR)/sysarr_test.o $(OBJ_DIR)/scratchp
 compile_scratch: $(OBJ_DIR)/sysarr.o $(OBJ_DIR)/scratch_test.o $(OBJ_DIR)/scratchpad.o | $(BIN_DIR)
 	$(CXX) $(CXXFLAGS) $^ -o $(SCRATCH_EXE)
 
+compile_schedular: $(OBJ_DIR)/sysarr.o $(OBJ_DIR)/schedular.o $(OBJ_DIR)/schedular_test.o $(OBJ_DIR)/scratchpad.o | $(BIN_DIR)
+	$(CXX) $(CXXFLAGS) $^ -o $(SCHED_EXE)
 clean:
 	rm -rf $(OBJ_DIR) $(BIN_DIR) $(VERILATOR_OBJ_DIR) $(VERILATOR_LOG)
 	rm *.txt
