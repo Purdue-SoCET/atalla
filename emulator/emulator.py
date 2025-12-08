@@ -12,12 +12,16 @@ try:
     from .vector_register_file import VectorRegisterFile
     from .decode import decode_packet
     from .execute import ExecuteUnit
+    from .scpad import Scratchpad
+    from .scpad_ls import *
 except ImportError:
     from memory import Memory
     from scalar_register_file import ScalarRegisterFile
     from vector_register_file import VectorRegisterFile
     from decode import decode_packet
     from execute import ExecuteUnit
+    from scpad import Scratchpad
+    from scpad_ls import *
 
 def main():
     mem_file = "mem.txt"
@@ -46,6 +50,9 @@ def main():
     #eecute object
     EU = ExecuteUnit()
 
+    #Scratchpad object
+    SP0 = Scratchpad(slots_per_bank=8)
+    SP1 = Scratchpad(slots_per_bank=8)
 
     halt = False
     while(not(halt)):
@@ -111,6 +118,19 @@ def main():
             elif(m == "sw.s"):
                 mem.write_data(sregs.read(inst['rs1']) + inst['imm'], inst['rd'])
             #vector load/store here
+
+            #scpad load/store here
+            elif(m == "scpad.ld"):
+                if inst['sid'] == 0:
+                    sdma_load(gmem=mem, scpad=SP0, gmem_base=inst['rs2'], scpad_base_row=inst['rs1/rd1'], tile_id="A", NR=inst['num_rows'], NC=inst['num_cols'])
+                elif inst['sid'] == 1:
+                    sdma_load(gmem=mem, scpad=SP0, gmem_base=inst['rs2'], scpad_base_row=inst['rs1/rd1'], tile_id="A", NR=inst['num_rows'], NC=inst['num_cols'])
+
+            elif(m == "scpad.st"):
+                if inst['sid'] == 0:
+                    sdma_store(gmem=mem, scpad=SP0, scpad_base_row=0, gmem_base=32, tile_id="A", NR=4, NC=4)
+                elif inst['sid'] == 1:
+                    sdma_store(gmem=mem, scpad=SP1, scpad_base_row=0, gmem_base=32, tile_id="A", NR=4, NC=4)
 
             #spad movement here
             elif(m == "lui.s"):
