@@ -20,13 +20,13 @@ sysarr::sysarr() {
     // Initialize signals
     clk = 0;
     rst_n = 1;
-    sa_array_in.setZero();
-    sa_array_in_partials.setZero();
+    std::fill(std::begin(sa_array_in),std::end(sa_array_in), 0);
+    std::fill(std::begin(sa_array_in_partials),std::end(sa_array_in_partials), 0);
     sa_weight_en = 0;
     sa_input_en = 0;
     sa_partial_en = 0;
     sa_output_ready = 0;
-    sa_array_output.setZero();
+    std::fill(std::begin(sa_array_output),std::end(sa_array_output), 0);
     sa_out_valid = 0;
     sa_ready = 1;
 }
@@ -38,17 +38,24 @@ void sysarr::eval() {
     if (clk && !last_clk) {
         if (!rst_n) {
             // Reset
-            state = IDLE;
-            weight_col_idx = 0;
-            activation_col_idx = 0;
-            psum_row_idx = 0;
-            result_row_idx = 0;
-            sa_out_valid = 0;
-            sa_ready = 1;
             weights.setZero();
             activations.setZero();
             psums.setZero();
             result.setZero();
+            weight_col_idx = 0;
+            activation_col_idx = 0;
+            psum_row_idx = 0;
+            result_row_idx = 0;
+            state = IDLE;
+            std::fill(std::begin(sa_array_in),std::end(sa_array_in), 0);
+            std::fill(std::begin(sa_array_in_partials),std::end(sa_array_in_partials), 0);
+            sa_weight_en = 0;
+            sa_input_en = 0;
+            sa_partial_en = 0;
+            sa_output_ready = 0;
+            std::fill(std::begin(sa_array_output),std::end(sa_array_output), 0);
+            sa_out_valid = 0;
+            sa_ready = 1;
         } else {
             switch (state) {
                 case IDLE:
@@ -74,7 +81,9 @@ void sysarr::eval() {
                 case LOADING_WEIGHTS:
                     if (sa_weight_en) {
                         // Load one column of weights
-                        weights.col(weight_col_idx) = sa_array_in;
+                        for (int i = 0; i < weights.rows(); i++) {
+                            weights(i, weight_col_idx) = std::bit_cast<Eigen::bfloat16>(sa_array_in[i]);
+                        }
                         weight_col_idx++;
                         
                         if (weight_col_idx >= 32) {
@@ -92,7 +101,11 @@ void sysarr::eval() {
                 case LOADING_ACTS:
                     if (sa_input_en) {
                         // Load one column of activations
-                        activations.col(activation_col_idx) = sa_array_in;
+                        for (int i = 0; i < activations.rows(); i++)
+                        {
+                            activations(i, activation_col_idx) = std::bit_cast<Eigen::bfloat16>(sa_array_in[i]);
+                        }
+
                         activation_col_idx++;
                         
                         if (activation_col_idx >= 32) {
@@ -116,7 +129,12 @@ void sysarr::eval() {
                 case LOADING_PSUMS:
                     if (sa_partial_en) {
                         // Load one row of partial sums (note: input is a column, we transpose it)
-                        psums.row(psum_row_idx) = sa_array_in_partials.transpose();
+                        Eigen::Matrix<Eigen::bfloat16, 32, 1> temp;
+                        for (int i = 0; i < activations.rows(); i++)
+                        {
+                            temp[i] = std::bit_cast<Eigen::bfloat16>(sa_array_in_partials[i]);
+                        }
+                        psums.row(psum_row_idx) = temp.transpose();
                         psum_row_idx++;
                         
                         if (psum_row_idx >= 32) {
@@ -147,7 +165,12 @@ void sysarr::eval() {
                 case OUTPUTTING:
                     if (sa_output_ready) {
                         // Output one row per cycle
-                        sa_array_output = result.row(result_row_idx).transpose();
+                        Eigen::Matrix<Eigen::bfloat16, 32, 1> temp;
+                        temp = result.row(result_row_idx).transpose();
+                        for (int i = 0; i < activations.rows(); i++)
+                        {
+                            sa_array_output[i] = std::bit_cast<uint16_t>(temp[i]);
+                        }
                         sa_out_valid = 1;
                         result_row_idx++;
                         

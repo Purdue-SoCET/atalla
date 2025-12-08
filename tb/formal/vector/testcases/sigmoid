@@ -15,7 +15,7 @@ nop.s|nop.s|nop.s|nop.s
 nop.s|nop.s|nop.s|nop.s
 nop.s|nop.s|nop.s|nop.s
 nop.s|nop.s|nop.s|nop.s
-expi.vi,1,0,0,0,0||nop.s|nop.s|nop.s
+expi.vi,1,0,0,0,0|nop.s|nop.s|nop.s
 nop.s|nop.s|nop.s|nop.s
 nop.s|nop.s|nop.s|nop.s
 nop.s|nop.s|nop.s|nop.s
@@ -33,6 +33,7 @@ nop.s|nop.s|nop.s|nop.s
 nop.s|nop.s|nop.s|nop.s
 nop.s|nop.s|nop.s|nop.s
 addi.vi,2,5,1,0,0|nop.s|nop.s|nop.s
+nop.s|nop.s|nop.s|nop.s
 addi.vi,3,1,1,0,0|nop.s|nop.s|nop.s
 nop.s|nop.s|nop.s|nop.s
 nop.s|nop.s|nop.s|nop.s
