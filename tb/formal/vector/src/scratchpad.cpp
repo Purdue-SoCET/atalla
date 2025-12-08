@@ -24,13 +24,13 @@ scratchpad::scratchpad()
     row_id_sp2 = 0;
     row_or_col_sp1 = 0;
     row_or_col_sp2 = 0;
-    wdata_sp1.setZero();
-    wdata_sp2.setZero();
+    std::fill(std::begin(wdata_sp1),std::end(wdata_sp1), 0);
+    std::fill(std::begin(wdata_sp2),std::end(wdata_sp2), 0);
 
     valid_out_sp1 = 0;
     valid_out_sp2 = 0;
-    rdata_sp1.setZero();
-    rdata_sp2.setZero();
+    std::fill(std::begin(rdata_sp1),std::end(rdata_sp1), 0);
+    std::fill(std::begin(rdata_sp2),std::end(rdata_sp2), 0);
 }
 
 void scratchpad::tick()
@@ -63,32 +63,36 @@ void scratchpad::tick()
             row_id_sp2 = 0;
             row_or_col_sp1 = 0;
             row_or_col_sp2 = 0;
-            wdata_sp1.setZero();
-            wdata_sp2.setZero();
-
+            std::fill(std::begin(wdata_sp1),std::end(wdata_sp1), 0);
+            std::fill(std::begin(wdata_sp2),std::end(wdata_sp2), 0);
             valid_out_sp1 = 0;
             valid_out_sp2 = 0;
-            rdata_sp1.setZero();
-            rdata_sp2.setZero();
+            std::fill(std::begin(rdata_sp1),std::end(rdata_sp1), 0);
+            std::fill(std::begin(rdata_sp2),std::end(rdata_sp2), 0);
          }
          else 
          {
             valid_out_sp1 = 0;
             valid_out_sp2 = 0;
-            rdata_sp1.setZero();
-            rdata_sp2.setZero();
+            std::fill(std::begin(rdata_sp1),std::end(rdata_sp1), 0);
+            std::fill(std::begin(rdata_sp2),std::end(rdata_sp2), 0);
 
             if (valid_in_sp1)
             {
                if (write_sp1)
                {
-                   if (row_or_col_sp1){
-                       load_col(1, sp_addr_sp1, col_id_sp1, num_rows_sp1, wdata_sp1);
-                   }
-                   else
-                   {
-                       load_row(1, sp_addr_sp1, row_id_sp1, num_cols_sp1, wdata_sp1);
-                   }
+                    Eigen::Matrix<Eigen::bfloat16, 32, 1> wdata_sp1_cast;
+                    for (int i = 0; i < wdata_sp1_cast.rows(); i++)
+                    {
+                        wdata_sp1_cast[i] = std::bit_cast<Eigen::bfloat16>(wdata_sp1[i]);
+                    }
+                    if (row_or_col_sp1){
+                        load_col(1, sp_addr_sp1, col_id_sp1, num_rows_sp1, wdata_sp1_cast);
+                    }
+                    else
+                    {
+                        load_row(1, sp_addr_sp1, row_id_sp1, num_cols_sp1, wdata_sp1_cast);
+                    }
                }
                else
                {
@@ -111,13 +115,18 @@ void scratchpad::tick()
             {
                if (write_sp2)
                {
-                   if (row_or_col_sp2){
-                       load_col(2, sp_addr_sp2, col_id_sp2, num_rows_sp2, wdata_sp2);
-                   }
-                   else
-                   {
-                       load_row(2, sp_addr_sp2, row_id_sp2, num_cols_sp2, wdata_sp2);
-                   }
+                    Eigen::Matrix<Eigen::bfloat16, 32, 1> wdata_sp2_cast;
+                    for (int i = 0; i < wdata_sp2_cast.rows(); i++)
+                    {
+                        wdata_sp2_cast[i] = std::bit_cast<Eigen::bfloat16>(wdata_sp2[i]);
+                    }
+                    if (row_or_col_sp2){
+                       load_col(2, sp_addr_sp2, col_id_sp2, num_rows_sp2, wdata_sp2_cast);
+                    }
+                    else
+                    {
+                        load_row(2, sp_addr_sp2, row_id_sp2, num_cols_sp2, wdata_sp2_cast);
+                    }
                }
                else
                {
@@ -140,21 +149,27 @@ void scratchpad::tick()
             //latency handling
             if (!read_completion_cycles_sp1.empty() && read_completion_cycles_sp1.front() == cycle_count)
             {
-               rdata_sp1 = wb_queue_sp1.front();
-               valid_out_sp1 = 1;  // Signal valid data available
-               wb_queue_sp1.pop();
-               read_completion_cycles_sp1.pop();
+                for (int i = 0; i < rdata_sp1.size(); i++)
+                {
+                    rdata_sp1[i] = std::bit_cast<uint16_t>(wb_queue_sp1.front()[i]);
+                }
+                valid_out_sp1 = 1;  // Signal valid data available
+                wb_queue_sp1.pop();
+                read_completion_cycles_sp1.pop();
             }
             if (!read_completion_cycles_sp2.empty() && read_completion_cycles_sp2.front() == cycle_count)
             {
-               rdata_sp2 = wb_queue_sp2.front();
-               valid_out_sp2 = 1;  // Signal valid data available
-               wb_queue_sp2.pop();
-               read_completion_cycles_sp2.pop();
+                for (int i = 0; i < rdata_sp2.size(); i++)
+                {
+                    rdata_sp2[i] = std::bit_cast<uint16_t>(wb_queue_sp2.front()[i]);
+                }
+                valid_out_sp2 = 1;  // Signal valid data available
+                wb_queue_sp2.pop();
+                read_completion_cycles_sp2.pop();
             }
          }
 
-         cycle_count++;
+        cycle_count++;
     }
     last_clk = clk;
 }

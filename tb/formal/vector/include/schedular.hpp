@@ -9,6 +9,7 @@
 #include <sstream>
 #include <fstream>
 #include <array>
+#include <algorithm>
 
 class schedular
 {
@@ -19,19 +20,7 @@ public:
     //control signals
     //all 4 wide for ease of indexing
     //structure is LANE||LANE||SP||SP/GSAU
-    std::array<uint8_t, 4> vd;
-    std::array<uint8_t, 4> vs1;
-    std::array<uint8_t, 4> vs2;
-    std::array<uint8_t, 4> mask;
-    std::array<uint8_t, 4> sac;
-    std::array<uint8_t, 4> rs1;
-    std::array<uint8_t, 4> imm8;
-    std::array<uint8_t, 4> imm5;
-    std::array<uint8_t, 4> num_cols;
-    std::array<uint8_t, 4> num_rows;
-    std::array<uint8_t, 4> sid;
-    std::array<uint8_t, 4> rc;
-    std::array<uint8_t, 4> rc_id;
+    std::array<uint64_t, 4> binary_packets;
 
     typedef enum instr_type_t
     {

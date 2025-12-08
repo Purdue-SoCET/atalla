@@ -2,7 +2,9 @@
 
 schedular::schedular()
 {
-    
+    std::fill(std::begin(binary_packets), std::end(binary_packets), 0);
+    clk = 0;
+    rst_n = 0;
 }
 
 schedular::~schedular()

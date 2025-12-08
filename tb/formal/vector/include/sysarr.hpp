@@ -5,6 +5,9 @@
 #include <Eigen/src/Core/arch/Default/BFloat16.h>
 #include <Eigen/Dense>
 #include <cstdint>
+#include <bit>
+#include <array>
+#include <algorithm>
 
 class sysarr
 {
@@ -31,15 +34,15 @@ public:
     uint8_t rst_n;
     
     // Input signals
-    Eigen::Matrix<Eigen::bfloat16, 32, 1> sa_array_in;          // Weight or activation input vector
-    Eigen::Matrix<Eigen::bfloat16, 32, 1> sa_array_in_partials; // Partial sum input vector
+    std::array<uint16_t, 32> sa_array_in;          // Weight or activation input vector
+    std::array<uint16_t, 32> sa_array_in_partials; // Partial sum input vector
     uint8_t sa_weight_en;      // Enable weight loading
     uint8_t sa_input_en;       // Enable activation loading
     uint8_t sa_partial_en;     // Enable partial sum loading
     uint8_t sa_output_ready;   // Ready to accept output
     
     // Output signals
-    Eigen::Matrix<Eigen::bfloat16, 32, 1> sa_array_output;  // Output vector
+    std::array<uint16_t, 32> sa_array_output;  // Output vector
     uint8_t sa_out_valid;      // Output valid flag
     uint8_t sa_ready;          // Ready to accept new inputs
     
