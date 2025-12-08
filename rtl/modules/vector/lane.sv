@@ -3,17 +3,25 @@
 // Lane wrapper: lane_sequencer + sqrt_bf16 + div + metadata sync FIFO
 // ------------------------------------------------------------
 `include "vector_if.vh"
-`include "vector_types.vh"
+`include "vector_pkg.vh"
 `include "div_if.vh"
 
-module lane (
+module lane #(
+    parameter int LANE_ID = 0   // unique per lane instance
+) (
     input  logic        CLK,
     input  logic        nRST,
     vector_if.lane      lif
 );
     import vector_pkg::*;
 
-    // ============================================================
+    // Common constants for last-element detection
+    localparam int SLICE_W       = $bits(slice_idx_t);
+    localparam int ELEM_PER_LANE = 1 << SLICE_W;
+    localparam int LAST_LANE     = NUM_LANES-1;
+    localparam int LAST_ELEM     = ELEM_PER_LANE-1;
+
+        // ============================================================
     // SQRT PIPELINE
     // ============================================================
 
@@ -39,6 +47,7 @@ module lane (
     fp16_t      sqrt_hold_result;
     vsel_t      sqrt_hold_vd;
     slice_idx_t sqrt_hold_elem;
+    logic       sqrt_hold_last;
 
     // ------------------------------------------------------------
     // SQRT: Sequencer Setup
@@ -102,8 +111,13 @@ module lane (
     // ------------------------------------------------------------
     // SQRT: Metadata Sync Unit (lane_fu_pt)
     // ------------------------------------------------------------
+    // SQRT metadata
     assign sqrt_meta_in.vd       = sqrt_seq_out.vd;
     assign sqrt_meta_in.elem_idx = sqrt_seq_out.elem_idx;
+    // Last element when this lane is the last lane and this slice is the last
+    assign sqrt_meta_in.last     =
+        (LANE_ID == LAST_LANE) &&
+        (sqrt_seq_out.elem_idx == LAST_ELEM);
     assign sqrt_meta_in.dbg_seq  = '0;  // No debug for SQRT
 
     lane_fu_pt #(
@@ -136,6 +150,7 @@ module lane (
             sqrt_hold_result <= '0;
             sqrt_hold_vd     <= '0;
             sqrt_hold_elem   <= '0;
+            sqrt_hold_last  <= 1'b0; 
         end else begin
             // Capture when FU result is retired
             if (sqrt_retire) begin
@@ -143,10 +158,12 @@ module lane (
                 sqrt_hold_result <= sqrt_bus.out.result;
                 sqrt_hold_vd     <= sqrt_meta_out.vd;
                 sqrt_hold_elem   <= sqrt_meta_out.elem_idx;
+                sqrt_hold_last   <= sqrt_meta_out.last;  
             end
             // Clear when downstream consumes
             else if (sqrt_hold_valid && lif.lane_in.ready_in[SQRT]) begin
                 sqrt_hold_valid <= 1'b0;
+                sqrt_hold_last  <= 1'b0; 
             end
         end
     end
@@ -181,6 +198,7 @@ module lane (
     vsel_t      div_hold_vd;
     slice_idx_t div_hold_elem;
     logic [7:0] div_hold_dbg_seq;
+    logic       div_hold_last;
 
     // ------------------------------------------------------------
     // DIV: Sequencer Setup
@@ -258,6 +276,9 @@ module lane (
 
     assign div_meta_in.vd       = div_seq_out.vd;
     assign div_meta_in.elem_idx = div_seq_out.elem_idx;
+    assign div_meta_in.last     =
+        (LANE_ID == LAST_LANE) &&
+        (div_seq_out.elem_idx == LAST_ELEM);
     assign div_meta_in.dbg_seq  = div_dbg_seq_cnt;
 
     lane_fu_pt #(
@@ -291,6 +312,7 @@ module lane (
             div_hold_vd      <= '0;
             div_hold_elem    <= '0;
             div_hold_dbg_seq <= '0;
+            div_hold_last  <= 1'b0; 
         end else begin
             // Capture new FU result + metadata when retire happens
             if (div_retire) begin
@@ -299,10 +321,12 @@ module lane (
                 div_hold_vd      <= div_meta_out.vd;           // FIFO output
                 div_hold_elem    <= div_meta_out.elem_idx;
                 div_hold_dbg_seq <= div_meta_out.dbg_seq;
+                div_hold_last    <= div_meta_out.last; 
             end
             // Once WB accepts it (and no new result arriving), drop valid
             else if (div_hold_valid && lif.lane_in.ready_in[DIV]) begin
                 div_hold_valid <= 1'b0;
+                div_hold_last  <= 1'b0; 
             end
         end
     end
@@ -327,6 +351,7 @@ module lane (
     logic [15:0] mul_hold_result;
     vsel_t      mul_hold_vd;
     slice_idx_t mul_hold_elem;
+    logic        mul_hold_last;  
 
     // Sequencer setup
     always_comb begin
@@ -380,6 +405,9 @@ module lane (
     // ------------------------------------------------------------
     assign mul_meta_in.vd       = mul_seq_out.vd;
     assign mul_meta_in.elem_idx = mul_seq_out.elem_idx;
+    assign mul_meta_in.last     =
+        (LANE_ID == LAST_LANE) &&
+        (mul_seq_out.elem_idx == LAST_ELEM);
     assign mul_meta_in.dbg_seq  = '0; // or add a dbg counter like DIV
 
     lane_fu_pt #(
@@ -408,6 +436,7 @@ module lane (
             mul_hold_result <= '0;
             mul_hold_vd     <= '0;
             mul_hold_elem   <= '0;
+            mul_hold_last   <= 1'b0; 
         end else begin
             // Capture new FU result + metadata when retire happens
             if (mul_retire) begin
@@ -415,10 +444,12 @@ module lane (
                 mul_hold_result <= mul_bus.out.result;        // Direct from FU
                 mul_hold_vd     <= mul_meta_out.vd;            // FIFO output
                 mul_hold_elem   <= mul_meta_out.elem_idx;
+                mul_hold_last   <= mul_meta_out.last; 
             end
             // Once WB accepts it (and no new result arriving), drop valid
             else if (mul_hold_valid && lif.lane_in.ready_in[MUL]) begin
                 mul_hold_valid <= 1'b0;
+                mul_hold_last  <= 1'b0;    
             end
         end
     end
@@ -590,6 +621,7 @@ module lane (
         lif.lane_out.result[SQRT]   = sqrt_hold_result;
         lif.lane_out.vd[SQRT]       = sqrt_hold_vd;
         lif.lane_out.elem_idx[SQRT] = sqrt_hold_elem;
+        lif.lane_out.last[SQRT]     = sqrt_hold_last;
 
         // DIV outputs
         lif.lane_out.ready_o[DIV] = div_seq_out.lane_ready;
@@ -597,6 +629,7 @@ module lane (
         lif.lane_out.result[DIV]   = div_hold_result;
         lif.lane_out.vd[DIV]       = div_hold_vd;
         lif.lane_out.elem_idx[DIV] = div_hold_elem;
+        lif.lane_out.last[DIV]     = div_hold_last;
 
         // MUL outputs
         lif.lane_out.ready_o[MUL]  = mul_seq_out.lane_ready;
@@ -604,6 +637,7 @@ module lane (
         lif.lane_out.result[MUL]   = mul_hold_result;
         lif.lane_out.vd[MUL]       = mul_hold_vd;
         lif.lane_out.elem_idx[MUL] = mul_hold_elem;
+        lif.lane_out.last[MUL]     = mul_hold_last;
 
     end
 

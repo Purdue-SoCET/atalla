@@ -4,6 +4,9 @@
 package vector_pkg;
 
     // Vector ISA ----------------------------------------------------------------------
+    // Top Level Parameters
+    parameter LANE_ISSUE_W = 2;
+    
     // LANE VARIABLES
     parameter NUM_LANES = 16;
     parameter LANE_ID_W = $clog2(NUM_LANES);
@@ -220,7 +223,8 @@ package vector_pkg;
     // Structure to hold the data we need to recover at Writeback
     typedef struct packed {
         vsel_t vd;
-        slice_idx_t elem_idx; // Add this if you need element index later
+        slice_idx_t elem_idx;
+        logic last;           // NEW: marks last element of the vector
         logic [7:0] dbg_seq;  // Debug sequence number for tracing
     } meta_t;
 
@@ -242,6 +246,7 @@ package vector_pkg;
         fp16_t[LANE_FU_COUNT-1:0] rval; // TO rtree for rm mode
         vsel_t[LANE_FU_COUNT-1:0] vd;
         slice_idx_t [LANE_FU_COUNT-1:0] elem_idx; 
+        logic       [LANE_FU_COUNT-1:0] last;
     } lane_out_t;
 
     typedef struct packed {
@@ -268,7 +273,43 @@ package vector_pkg;
     } lane_seq_out_t;
 
     // Result Collector --------------------------------------------------------------------
+    typedef struct packed {
+        fp16_t     [NUM_LANES-1:0][LANE_FU_COUNT-1:0] result;
+        logic      [NUM_LANES-1:0][LANE_FU_COUNT-1:0] ready_in;  // from WB buffer
+        logic      [NUM_LANES-1:0][LANE_FU_COUNT-1:0] valid_in;  // from Lanes
+        vsel_t     [NUM_LANES-1:0][LANE_FU_COUNT-1:0] vd;
+        slice_idx_t[NUM_LANES-1:0][LANE_FU_COUNT-1:0] elem_idx; 
+        logic      [NUM_LANES-1:0][LANE_FU_COUNT-1:0] last;      // NEW: meta.last
+    } result_collector_in_t;
+
+    typedef struct packed {
+        vreg_t[LANE_FU_COUNT-1:0] result;
+        logic [LANE_FU_COUNT-1:0] ready_in;  // to Lanes (broadcast per FU)
+        logic [LANE_FU_COUNT-1:0] valid_o;   // to WB Buffer
+        vsel_t[LANE_FU_COUNT-1:0] vd;
+    } result_collector_out_t;
+
+
     
+/*
+    typedef struct packed {
+        logic[LANE_ISSUE_W-1:0]    rm;
+        logic[LANE_ISSUE_W-1:0]    valid_in; // From SB theres valid data
+        logic[LANE_ISSUE_W-1:0]    ready_in; // From wb
+        vreg_t[LANE_ISSUE_W-1:0]   v1;
+        vreg_t[LANE_ISSUE_W-1:0]   v2; // VS and VI typed come broadcasted
+        vsel_t[LANE_ISSUE_W-1:0]   vd; // Pass through
+        vmask_t[LANE_ISSUE_W-1:0]  vmask; 
+        opcode_t[LANE_ISSUE_W-1:0] vop; // change to umop
+        fu_t[LANE_ISSUE_W-1:0]     fu_sel;
+    } vector_in_t;
+
+    typedef struct packed {
+        vreg_t[LANE_FU_COUNT-1:0] result;
+        logic [LANE_FU_COUNT-1:0] valid_o;   // to WB Buffer
+        vsel_t[LANE_FU_COUNT-1:0] vd;
+    } vector_out_t;
+
     /*
     typedef struct packed {
         fp16_t     v1_elem;

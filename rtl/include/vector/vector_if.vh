@@ -49,6 +49,11 @@ interface vector_if;
   // Mask Unit Signals
   masku_in_t masku_in;
   masku_out_t masku_out;
+
+  // Result Collector Signals
+  result_collector_in_t rc_in;
+  result_collector_out_t rc_out;
+
 /* 
   modport vector (
     input control, r1, imm, vd, v1, v2, vmask, col, row, row_id,
@@ -86,21 +91,19 @@ interface vector_if;
     output lane_out
   );  
 
-  /*
-  modport seq_alu (
-    input alut_in,
-    output alut_out
-  );
-  modport alu_wb (
-    input aluwb_in,
-    output aluwb_out
-  );
-*/
+  // Mask Unit
   modport masku (
     input CLK, nRST,
     input masku_in,
     output masku_out
   );
+
+  // Result Collector
+  modport result_collector (
+    input CLK, nRST,
+    input rc_in,
+    output rc_out
+  );  
 
 endinterface
 
