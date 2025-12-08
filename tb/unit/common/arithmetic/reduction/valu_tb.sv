@@ -1,140 +1,160 @@
 `timescale 1ns/1ps
-
-`include "valu_if.vh"
 `include "reduction_types.vh"
+`include "valu_if.vh"
 
 module valu_tb;
+
+    // ------------------------------------------------------
+    // Clock / Reset
+    // ------------------------------------------------------
     import reduction_pkg::*;
-    // ============================================================
-    // Clock + Reset
-    // ============================================================
-    logic CLK = 0;
+    logic clk = 0;
+    always #5 clk = ~clk;
+
     logic nRST = 0;
 
-    always #5 CLK = ~CLK;   // 100 MHz
+    // ------------------------------------------------------
+    // Interface
+    // ------------------------------------------------------
+    valu_if valuif();
 
-    // ============================================================
-    // Interface + DUT
-    // ============================================================
-    valu_if vif();
-
+    // ------------------------------------------------------
+    // DUT
+    // ------------------------------------------------------
     valu dut (
-        .CLK(CLK),
+        .CLK(clk),
         .nRST(nRST),
-        .valuif(vif)
+        .alu(valuif)
     );
 
-    // ============================================================
-    // BF16 constants for testing
-    // ============================================================
-    localparam BF16_POS_ZERO = 16'h0000;
-    localparam BF16_NEG_ZERO = 16'h8000;
+    // ------------------------------------------------------
+    // Utility: BF16 helper for testbench
+    // ------------------------------------------------------
+    function automatic logic [15:0] bf16(real r);
+        shortreal sr;
+        logic [31:0] sr_bits;
+        sr = r;
+        sr_bits = $shortrealtobits(sr);  // convert shortreal to 32-bit logic
+        bf16 = sr_bits[31:16];           // upper 16 bits = BF16
+    endfunction
 
-    localparam BF16_INF      = 16'h7F80;
-    localparam BF16_NINF     = 16'hFF80;
+    // ------------------------------------------------------
+    // Simple drive tasks
+    // ------------------------------------------------------
+    task automatic issue_op(
+        input logic [15:0] a,
+        input logic [15:0] b,
+        input logic [1:0]  op
+    );
+        // Wait until DUT is ready
+        @(posedge clk);
+        while (!valuif.out.ready_in)
+            @(posedge clk);
 
-    localparam BF16_CANON_NAN= 16'h7FC0;
+        valuif.in.operand1 = a;
+        valuif.in.operand2 = b;
+        valuif.in.alu_op   = op;
+        valuif.in.valid_in = 1;
 
-    localparam BF16_ONE      = 16'h3F80;
-    localparam BF16_TWO      = 16'h4000;
-    localparam BF16_TEN      = 16'h4120;
+        @(posedge clk);
+        valuif.in.valid_in = 0;
 
-    localparam BF16_BIG      = 16'h7F7F;  // largest finite
+        // Issue every other cycle → insert bubble
+    endtask
 
-    // ============================================================
-    // Handshake-based send task
-    // ============================================================
-    task send_op(
-    input logic [15:0] a,
-    input logic [15:0] b,
-    input logic [1:0]  op,
-    input string       name
-);
-    begin
-        // Wait until VALU is ready (every other cycle)
-        while (!vif.ready_in)
-            @(posedge CLK);
+    task automatic hold_output(int cycles);
+        $display("[%0t] *** HOLDING OUTPUT for %0d cycles ***",
+                 $time, cycles);
+        valuif.in.ready_out = 0;
+        repeat(cycles) @(posedge clk);
+        valuif.in.ready_out = 1;
+        $display("[%0t] *** RELEASE OUTPUT ***", $time);
+    endtask
 
-        // Drive request
-        vif.operand1 = a;
-        vif.operand2 = b;
-        vif.alu_op   = op;
-        vif.valid_in = 1;
-
-        @(posedge CLK);
-        vif.valid_in = 0;   // Fire single cycle
-
-        // Wait for result
-        while (!vif.valid_out)
-            @(posedge CLK);
-
-        $display("[%0t] %-12s A=%h B=%h → Result=%h",
-            $time, name, a, b, vif.result);
-
-        // Consume result
-        vif.ready_out = 1;
-        @(posedge CLK);
-        vif.ready_out = 0;
-
-        // *** IMPORTANT ***
-        // VALU needs 1 bubble cycle before accepting new input
-        @(posedge CLK);   // enforce "every other cycle"
+    // ------------------------------------------------------
+    // Output monitor
+    // ------------------------------------------------------
+    always @(posedge clk) begin
+        if (valuif.out.valid_out) begin
+            $display("[%0t] OUT result=%h  (ready_in=%0b)",
+                      $time, valuif.out.result, valuif.out.ready_in);
+        end
     end
-endtask
 
-    // ============================================================
-    // BF16 test vectors
-    // ============================================================
+    // ------------------------------------------------------
+    // MAIN TEST
+    // ------------------------------------------------------
     initial begin
-        $display("==== Starting VALU BF16 Testbench ====");
+        $display("==== Starting VALU Testbench ====");
 
-        // Init interface
-        vif.valid_in  = 0;
-        vif.ready_out = 0;
-        vif.operand1  = 0;
-        vif.operand2  = 0;
-        vif.alu_op    = 0;
+        // --------------------------------------------------
+        // Initialize interface signals
+        // --------------------------------------------------
+        valuif.in.operand1  = 0;
+        valuif.in.operand2  = 0;
+        valuif.in.alu_op    = 0;
+        valuif.in.valid_in  = 0;
+        valuif.in.ready_out = 1;  // default ready
 
-        // Reset
-        repeat (5) @(posedge CLK);
+        // --------------------------------------------------
+        // Apply reset
+        // --------------------------------------------------
+        repeat (5) @(posedge clk);
         nRST = 1;
-        repeat (5) @(posedge CLK);
+        repeat (2) @(posedge clk);
 
-        // ========================================================
-        // SUM Tests
-        // ========================================================
-        send_op(BF16_ONE, BF16_ONE, VR_SUM, "SUM 1+1");
-        send_op(BF16_TEN, BF16_TWO, VR_SUM, "SUM 10+2");
-        send_op(BF16_POS_ZERO, BF16_NEG_ZERO, VR_SUM, "SUM +0 + -0");
-        send_op(BF16_INF, BF16_TWO, VR_SUM, "SUM inf + 2");
-        send_op(BF16_CANON_NAN, BF16_ONE, VR_SUM, "SUM NaN input");
+        // --------------------------------------------------
+        // SUM tests
+        // --------------------------------------------------
+        issue_op(bf16(1.0), bf16(1.0), SUM);
+        issue_op(bf16(10.0), bf16(2.0), SUM);
+        issue_op(16'h0000, 16'h8000, SUM);     // +0 + -0
+        issue_op(16'h7F80, bf16(2.0), SUM);    // inf + 2
+        issue_op(16'h7FC0, bf16(1.0), SUM);    // NaN + x
 
-        // ========================================================
-        // SUB Tests
-        // ========================================================
-        send_op(BF16_TEN, BF16_TWO, VR_SUB, "SUB 10-2");
-        send_op(BF16_ONE, BF16_TWO, VR_SUB, "SUB 1-2");
-        send_op(BF16_INF, BF16_INF, VR_SUB, "SUB inf - inf (NaN)");
-        send_op(BF16_CANON_NAN, BF16_TEN, VR_SUB, "SUB NaN input");
+        // --------------------------------------------------
+        // SUB tests
+        // --------------------------------------------------
+        issue_op(bf16(10.0), bf16(2.0), SUB);
+        issue_op(bf16(1.0),  bf16(2.0), SUB);
+        issue_op(16'h7F80, 16'h7F80, SUB);     // inf - inf
+        issue_op(16'h7FC0, bf16(1.0), SUB);    // NaN - x
 
-        // ========================================================
-        // MIN Tests
-        // ========================================================
-        send_op(BF16_ONE, BF16_TWO, VR_MIN, "MIN 1 vs 2");
-        send_op(BF16_NEG_ZERO, BF16_POS_ZERO, VR_MIN, "MIN -0 vs +0");
-        send_op(BF16_BIG, BF16_TWO, VR_MIN, "MIN max vs 2");
-        send_op(BF16_CANON_NAN, BF16_TWO, VR_MIN, "MIN NaN input");
+        // --------------------------------------------------
+        // MIN tests
+        // --------------------------------------------------
+        issue_op(bf16(1.0), bf16(2.0), MIN);
+        issue_op(16'h8000, 16'h0000, MIN);     // -0 vs +0
+        issue_op(16'h7F7F, bf16(2.0), MIN);    // max vs 2
+        issue_op(16'h7FC0, bf16(2.0), MIN);    // NaN input
 
-        // ========================================================
-        // MAX Tests
-        // ========================================================
-        send_op(BF16_ONE, BF16_TWO, VR_MAX, "MAX 1 vs 2");
-        send_op(BF16_BIG, BF16_TEN, VR_MAX, "MAX max vs 10");
-        send_op(BF16_NEG_ZERO, BF16_POS_ZERO, VR_MAX, "MAX -0 vs +0");
-        send_op(BF16_CANON_NAN, BF16_ONE, VR_MAX, "MAX NaN input");
+        // --------------------------------------------------
+        // MAX tests
+        // --------------------------------------------------
+        issue_op(bf16(1.0), bf16(2.0), MAX);
+        issue_op(16'h7F7F, bf16(10.0), MAX);   // max vs 10
+        issue_op(16'h8000, 16'h0000, MAX);     // -0 vs +0
+        issue_op(16'h7FC0, bf16(1.0), MAX);    // NaN input
 
-        // End simulation
-        $display("==== VALU BF16 Testbench Complete ====");
+        // --------------------------------------------------
+        // BACKPRESSURE TEST
+        // --------------------------------------------------
+        $display("\n==== Starting Backpressure Test ====\n");
+
+        issue_op(bf16(3.0), bf16(4.0), SUM);
+
+        // Stall output for 6 cycles
+        hold_output(6);
+
+        // Issue more ops after stall
+        issue_op(bf16(5.0), bf16(6.0), SUM);
+        issue_op(bf16(7.0), bf16(8.0), SUM);
+
+        // --------------------------------------------------
+        // Done
+        // --------------------------------------------------
+        repeat (20) @(posedge clk);
+        $display("==== VALU Testbench Complete ====");
         $finish;
     end
 

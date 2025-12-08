@@ -1,13 +1,13 @@
-`include "vector_types.vh"
+`include "reduction_types.vh"
 `include "valu_if.vh"
 
 module valu (
     input  logic CLK,
     input  logic nRST,
-    valu_if.valu alu
+    valu_if.valu_if alu
 );
 
-import vector_pkg::*;
+import reduction_pkg::*;
 
 
 logic [15:0] bf1_in, bf2_in, bf_out;
@@ -38,7 +38,7 @@ logic valid_s1, valid_s2;
 logic fire_in, fire_out;
 
 // Accept new input only when not holding unconsumed result
-assign alu.out.ready_in = !alu.out.valid_out;
+assign alu.out.ready_in = alu.in.ready_out;
 
 assign fire_in  = alu.in.valid_in  & alu.out.ready_in;
 assign fire_out = alu.out.valid_out & alu.in.ready_out;
@@ -55,9 +55,9 @@ always_comb begin
     bf2_in = value_b_s1;
 
     // use registered opcode so adder sees same control as operands
-    op = (alu_op_s1 == VR_SUB ||
-          alu_op_s1 == VR_MIN ||
-          alu_op_s1 == VR_MAX);
+    op = (alu_op_s1 == SUB ||
+          alu_op_s1 == MIN ||
+          alu_op_s1 == MAX);
 end
 
 always_ff @(posedge CLK or negedge nRST) begin
@@ -102,9 +102,9 @@ always_comb begin
     end
     else begin
         case (alu_op_s2)
-            VR_SUM, VR_SUB: result_next = bf_out;
-            VR_MIN:         result_next = (bf_out[15] ? value_a_s2 : value_b_s2);
-            VR_MAX:         result_next = (bf_out[15] ? value_b_s2 : value_a_s2);
+            SUM, SUB: result_next = bf_out;
+            MIN:         result_next = (bf_out[15] ? value_a_s2 : value_b_s2);
+            MAX:         result_next = (bf_out[15] ? value_b_s2 : value_a_s2);
             default:        result_next = 16'h0000;
         endcase
     end
