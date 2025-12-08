@@ -9,6 +9,29 @@ module valu (
 
 import reduction_pkg::*;
 
+function automatic logic bf16_gt (
+    input logic [15:0] a,
+    input logic [15:0] b
+);
+    // detect NaNs
+    logic a_nan = (&a[14:7]) && (|a[6:0]);
+    logic b_nan = (&b[14:7]) && (|b[6:0]);
+
+    if (a_nan || b_nan)
+        return 1'b0; // don't claim a > b if NaN present
+
+    // Different signs: positive is always greater
+    if (a[15] != b[15])
+        return (b[15] == 1'b1);  // a is positive → a > b
+
+    // Same sign:
+    if (a[15] == 1'b0)
+        // both positive → compare normally
+        return (a[14:0] > b[14:0]);
+    else
+        // both negative → reversed comparison
+        return (a[14:0] < b[14:0]);
+endfunction
 
 logic [15:0] bf1_in, bf2_in, bf_out;
 logic op;
@@ -101,11 +124,31 @@ always_comb begin
         result_next = 16'h7FC0; // canonical BF16 qNaN
     end
     else begin
-        case (alu_op_s2)
-            SUM, SUB: result_next = bf_out;
-            MIN:         result_next = (bf_out[15] ? value_a_s2 : value_b_s2);
-            MAX:         result_next = (bf_out[15] ? value_b_s2 : value_a_s2);
-            default:        result_next = 16'h0000;
+        unique case (alu_op_s2)
+
+            SUM, SUB: begin
+                // use adder output
+                result_next = bf_out;
+            end
+
+            MIN: begin
+                // if a > b → min is b
+                result_next = bf16_gt(value_a_s2, value_b_s2)
+                               ? value_b_s2 
+                               : value_a_s2;
+            end
+
+            MAX: begin
+                // if a > b → max is a
+                result_next = bf16_gt(value_a_s2, value_b_s2)
+                               ? value_a_s2 
+                               : value_b_s2;
+            end
+
+            default: begin
+                result_next = 16'h0000;
+            end
+
         endcase
     end
 end

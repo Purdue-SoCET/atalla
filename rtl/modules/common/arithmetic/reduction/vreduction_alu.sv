@@ -2,19 +2,53 @@
 `include "vreduction_alu_if.vh"
 
 module vreduction_alu (
-    input logic CLK,
-    input logic nRST,
+    input  logic CLK,
+    input  logic nRST,
     vreduction_alu_if.vralu vraluif
 );
 
 import reduction_pkg::*;
 
-// Signals for addsub_bf16
+function automatic logic bf16_gt(input logic [15:0] a, b);
+    // Extract fields
+    logic sa, sb;
+    logic [7:0] ea, eb;
+    logic [6:0] ma, mb;
+
+    sa = a[15];
+    sb = b[15];
+    ea = a[14:7];
+    eb = b[14:7];
+    ma = a[6:0];
+    mb = b[6:0];
+
+    // Signed zero check
+    if ((ea == 0 && ma == 0) && (eb == 0 && mb == 0))
+        return 1'b0;
+
+    // Different signs → easy
+    if (sa != sb)
+        return sb;   // if b has sign=1 → a > b
+
+    // Same sign → compare fields
+    if (sa == 1'b0) begin
+        // Positive: normal ordering
+        if (ea != eb) return (ea > eb);
+        else return (ma > mb);
+    end else begin
+        // Negative: reversed ordering
+        if (ea != eb) return (ea < eb);
+        else return (ma < mb);
+    end
+endfunction
+
+
+// Signals for addsub_bf16 (adder-only)
 logic [15:0] bf1_in, bf2_in, bf_out;
-logic op;  // 0 for add, 1 for sub
+logic op;  
 logic overflow, underflow, invalid;
 
-// Instantiate addsub_bf16 instead of vaddsub
+// Instantiate your BF16 adder (used ONLY for SUM)
 addsub_bf16 adder (
     .clk(CLK),
     .nRST(nRST),
@@ -27,13 +61,13 @@ addsub_bf16 adder (
     .invalid(invalid)
 );
 
-// Pipeline registers to match the 2-cycle adder latency
+// Pipeline regs
 logic [15:0] value_a_s1, value_a_s2;
 logic [15:0] value_b_s1, value_b_s2;
-logic [1:0] alu_op_s1, alu_op_s2;
+logic [1:0]  alu_op_s1, alu_op_s2;
 logic any_nan_s1, any_nan_s2;
 
-// NaN detection
+// NaN detect
 logic a_is_nan, b_is_nan, any_nan;
 
 always_comb begin
@@ -42,16 +76,14 @@ always_comb begin
     any_nan = a_is_nan | b_is_nan;
 end
 
-// Stage 0: Adder/subtractor control
+// Stage 0: Adder only for SUM
 always_comb begin
     bf1_in = vraluif.value_a;
     bf2_in = vraluif.value_b;
-    
-    // For MIN/MAX, we need to subtract to compare
-    op = (vraluif.alu_op == VR_MIN || vraluif.alu_op == VR_MAX) ? 1'b1 : 1'b0;
+    op = 1'b0;          // Your adder only supports add
 end
 
-// Pipeline Stage 1: Register inputs
+// Pipeline stage 1
 always_ff @(posedge CLK or negedge nRST) begin
     if (!nRST) begin
         value_a_s1 <= '0;
@@ -66,7 +98,7 @@ always_ff @(posedge CLK or negedge nRST) begin
     end
 end
 
-// Pipeline Stage 2: Register again to align with adder output
+// Pipeline stage 2
 always_ff @(posedge CLK or negedge nRST) begin
     if (!nRST) begin
         value_a_s2 <= '0;
@@ -81,31 +113,25 @@ always_ff @(posedge CLK or negedge nRST) begin
     end
 end
 
-// Output multiplexing based on operation
+// Final output
 always_comb begin
     if (any_nan_s2) begin
-        // If any input was NaN, output NaN (BF16 NaN format)
         vraluif.value_out = 16'h7FC0;
     end
-    else if (alu_op_s2 == VR_SUM) begin
-        // For SUM, use the adder result directly
+    else if (alu_op_s2 == SUM) begin
         vraluif.value_out = bf_out;
     end
-    else if (alu_op_s2 == VR_MIN) begin
-        // For MIN: if (a-b) is negative, a is smaller
-        if (bf_out[15]) begin
+    else if (alu_op_s2 == MIN) begin
+        if (bf16_gt(value_a_s2, value_b_s2))
+            vraluif.value_out = value_b_s2;  // a>b → b is smaller
+        else
             vraluif.value_out = value_a_s2;
-        end else begin
-            vraluif.value_out = value_b_s2;
-        end
     end
-    else if (alu_op_s2 == VR_MAX) begin
-        // For MAX: if (a-b) is negative, b is larger
-        if (bf_out[15]) begin
+    else if (alu_op_s2 == MAX) begin
+        if (bf16_gt(value_a_s2, value_b_s2))
+            vraluif.value_out = value_a_s2;  // a>b → a is larger
+        else
             vraluif.value_out = value_b_s2;
-        end else begin
-            vraluif.value_out = value_a_s2;
-        end
     end
     else begin
         vraluif.value_out = 16'h0000;
