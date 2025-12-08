@@ -1043,6 +1043,168 @@ program test (
         test_load_with_dram_stall();
         test_store_with_be_stall();
         test_store_with_dram_stall();
+        
+        $display("\n======== FIFO FULL TESTS ========\n");
+        test_store_fifo_full();
+        test_load_fifo_full();
+    endtask
+
+    // STORE with extended DRAM stall to fill the request queue (FIFO full condition)
+    // This tests lines 112-120 in dram_request_queue.sv where fifo_tail + 1 == fifo_head
+    // Based on test_store_with_dram_stall but with longer stall to ensure queue fills
+    task automatic test_store_fifo_full();
+        automatic int num_rows = 31;   // 32 rows
+        automatic int num_cols = 31;   // 32 cols = 8 chunks per row
+        automatic int chunks_per_row = (num_cols + 1 + 3) / 4;  // 8 chunks per row
+        automatic int total_dram_writes = chunks_per_row * (num_rows + 1);  // 256 total
+        automatic int dram_write_count = 0;
+        automatic int stall_after_writes = 2;  // Stall early
+        automatic int stall_cycles = 50;       // Hold stall long enough to fill queue (depth=32)
+        automatic int stall_counter = 0;
+        automatic logic stall_done = 0;
+        automatic int timeout = 0;
+        
+        current_test_type = "STORE_FIFO_FULL";
+        current_num_rows = num_rows;
+        current_num_cols = num_cols;
+        
+        schedule_request(1'b1, 1'b1, 20'd0, 32'd0, 5'(num_rows), 5'(num_cols), 1'b0);
+        bif.dram_be_stall[0] = 1'b0;
+        bif.be_res[0] = '0;
+        
+        // Enable the FF-based SRAM model
+        sram_stall_test_active = 1;
+        
+        // Main loop
+        timeout = 0;
+        while (timeout < 1000) begin
+            @(posedge bif.clk);
+            #1;
+            
+            // Wire the FF model outputs to be_res
+            bif.be_res[0].valid = sram_resp_valid_reg;
+            for (int i = 0; i < 32; i++)
+                bif.be_res[0].rdata[i] = 16'((sram_resp_row_reg * 32) + i + 1);
+            
+            // Track DRAM writes
+            if (bif.be_dram_req[0].valid && bif.be_dram_req[0].write) begin
+                dram_write_count++;
+            end
+            
+            // Stall state machine - stall early, hold long to fill queue
+            if (!stall_done) begin
+                if (!bif.dram_be_stall[0] && dram_write_count >= stall_after_writes) begin
+                    bif.dram_be_stall[0] = 1'b1;
+                    stall_counter = 0;
+                end else if (bif.dram_be_stall[0]) begin
+                    stall_counter++;
+                    if (stall_counter >= stall_cycles) begin
+                        bif.dram_be_stall[0] = 1'b0;
+                        stall_done = 1;
+                    end
+                end
+            end
+            
+            // Check exit condition
+            if (bif.sched_res[0].valid) break;
+            
+            timeout++;
+        end
+        
+        // Cleanup
+        sram_stall_test_active = 0;
+        bif.be_res[0] = '0;
+        bif.dram_be_stall[0] = 1'b0;
+        schedule_request(1'b0, 1'b0, 20'd0, 32'd0, 5'b0, 5'b0, 1'b0);
+        #(CLK_PERIOD * 2);
+        
+        total_tests++;
+        if (dram_write_count == total_dram_writes)
+            report_success($sformatf("FIFO full tested, %0d DRAM writes, stall=%0d cycles", dram_write_count, stall_cycles));
+        else
+            report_error($sformatf("DRAM writes=%0d/%0d", dram_write_count, total_dram_writes));
+    endtask
+
+    // LOAD with DRAM stalled to fill the request queue (FIFO full condition on read path)
+    // Backend sends DRAM read requests, but DRAM is stalled so they queue up
+    // This tests the same fifo_full condition but for LOAD operations
+    task automatic test_load_fifo_full();
+        automatic int num_rows = 31;   // 32 rows
+        automatic int num_cols = 31;   // 32 cols = 8 chunks per row = 256 total requests
+        automatic int chunks_per_row = (num_cols + 1 + 3) / 4;
+        automatic int total_requests = chunks_per_row * (num_rows + 1);
+        automatic int sram_rows_received = 0;
+        automatic int stall_after_reqs = 2;   // Stall early
+        automatic int stall_cycles = 50;      // Hold stall long enough to fill queue
+        automatic int stall_counter = 0;
+        automatic logic stall_done = 0;
+        automatic int dram_req_count = 0;
+        automatic int timeout = 0;
+        
+        current_test_type = "LOAD_FIFO_FULL";
+        current_num_rows = num_rows;
+        current_num_cols = num_cols;
+        
+        schedule_request(1'b1, 1'b0, 20'd0, 32'd0, 5'(num_rows), 5'(num_cols), 1'b0);
+        bif.dram_be_stall[0] = 1'b0;
+        bif.dram_be_res[0] = '0;
+        
+        // Enable the FF-based DRAM model
+        dram_stall_test_active = 1;
+        
+        // Main loop
+        timeout = 0;
+        while (timeout < 1500) begin
+            @(posedge bif.clk);
+            #1;
+            
+            // Wire the FF model outputs to dram_be_res
+            bif.dram_be_res[0].valid = dram_resp_valid_reg;
+            bif.dram_be_res[0].id = dram_resp_id_reg;
+            bif.dram_be_res[0].rdata = resp_rdata;
+            
+            // Count DRAM requests from backend
+            if (bif.be_dram_req[0].valid && !bif.be_dram_req[0].write) begin
+                dram_req_count++;
+            end
+            
+            // Count SRAM writes
+            if (bif.be_req[0].valid && bif.be_req[0].write) begin
+                sram_rows_received++;
+            end
+            
+            // Stall state machine - stall dram_be_stall to fill the request queue
+            if (!stall_done) begin
+                if (!bif.dram_be_stall[0] && dram_req_count >= stall_after_reqs) begin
+                    bif.dram_be_stall[0] = 1'b1;
+                    stall_counter = 0;
+                end else if (bif.dram_be_stall[0]) begin
+                    stall_counter++;
+                    if (stall_counter >= stall_cycles) begin
+                        bif.dram_be_stall[0] = 1'b0;
+                        stall_done = 1;
+                    end
+                end
+            end
+            
+            // Check exit condition
+            if (bif.sched_res[0].valid) break;
+            
+            timeout++;
+        end
+        
+        // Cleanup
+        dram_stall_test_active = 0;
+        bif.dram_be_res[0] = '0;
+        bif.dram_be_stall[0] = 1'b0;
+        schedule_request(1'b0, 1'b0, 20'd0, 32'd0, 5'b0, 5'b0, 1'b0);
+        #(CLK_PERIOD * 2);
+        
+        total_tests++;
+        if (sram_rows_received == (num_rows + 1))
+            report_success($sformatf("FIFO full tested, %0d DRAM reqs, %0d SRAM writes", dram_req_count, sram_rows_received));
+        else
+            report_error($sformatf("SRAM writes=%0d/%0d, DRAM reqs=%0d", sram_rows_received, num_rows + 1, dram_req_count));
     endtask
 
     task automatic print_summary();
