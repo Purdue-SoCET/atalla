@@ -21,6 +21,17 @@ VLOG ?= vlog
 VSIM ?= vsim
 GUI ?= OFF
 
+# --- Coverage Controls ---
+COVERAGE ?= OFF           # set to ON to enable coverage
+VLOG_FLAGS ?=
+VSIM_FLAGS ?=
+
+ifeq ($(COVERAGE),ON)
+  # Typical Questa coverage switches; tweak if your flow uses different ones
+  VLOG_FLAGS += -cover bcesft
+  VSIM_FLAGS += -coverage
+endif
+
 # --- Target-Specific Variable Mappings ---
 # Define specific DUT files for specific tests here
 lane_sequencer.sim lane_sequencer.wav: dut := lane_sequencer.sv,lane.sv
@@ -39,7 +50,7 @@ lane.sim lane.wav: dut := lane.sv,lane_fu_pt.sv,sqrt_bf16.sv,mul_bf16.sv,add_bf1
 	@$(MAKE) test tb_file=$*_tb.sv GUI=ON dut=$(dut)
 
 # --- Custom Test Shortcuts ---
-.PHONY: test_lane_sequencer test_veggie test_lane
+.PHONY: test_lane_sequencer test_veggie test_lane cov_gsau
 
 test_lane_sequencer:
 	@$(MAKE) lane_sequencer.sim
@@ -49,6 +60,15 @@ test_veggie:
 
 test_lane:
 	@$(MAKE) lane.sim
+
+# Example dedicated coverage compile for another design tree
+cov_gsau:
+	$(VLOG) $(VLOG_FLAGS) \
+	  ./src/modules/simple_systolic_model.sv \
+	  ./src/include/gsau_control_unit_if.vh \
+	  ./src/testbench/gsau_control_unit_tb.sv \
+	  ./src/modules/gsau_control_unit.sv \
+	  ./src/modules/sync_fifo.sv
 
 # --- Targets ---
 
@@ -80,7 +100,7 @@ lint:
 	MOD_INCS=$$(find "$$NOW_SEARCH_IN_MODULES" -type d -print 2>/dev/null | sed 's/^/+incdir+/'); \
 	INC_INCS=$$(find "$(INCDIRROOT)$(folder)" -type d -print 2>/dev/null | sed 's/^/+incdir+/'); \
 	echo "[lint] compiling..."; \
-	$(VLOG) -sv -mfcu -work work +acc $$BASE_INCS $$MOD_INCS $$INC_INCS $$PKGS $$OTHERS; \
+	$(VLOG) $(VLOG_FLAGS) -sv -mfcu -work work +acc $$BASE_INCS $$MOD_INCS $$INC_INCS $$PKGS $$OTHERS; \
 	echo "[lint] done"
 
 test:
@@ -157,9 +177,23 @@ test:
 	\
 	echo "[$@] Running generic simulation script..."; \
 	if [ "$(GUI)" = "ON" ]; then \
-		$(VSIM) -voptargs="+acc" -do "set batch_mode 0; set WAVE_ROOT $(WAVEROOT); set TB_NAME $$TB_TOP; set SRCS {$$ORDERED_SRCS}; set INCS {$$ALL_INCS}; do $(SCRIPTROOT)/run_sim.tcl"; \
+		$(VSIM) $(VSIM_FLAGS) -voptargs="+acc" \
+		  -do "set batch_mode 0; \
+		       set WAVE_ROOT $(WAVEROOT); \
+		       set TB_NAME $$TB_TOP; \
+		       set SRCS {$$ORDERED_SRCS}; \
+		       set INCS {$$ALL_INCS}; \
+		       set VLOG_FLAGS {$(VLOG_FLAGS)}; \
+		       do $(SCRIPTROOT)/run_sim.tcl"; \
 	else \
-		$(VSIM) -c -voptargs="+acc" -do "set batch_mode 1; set WAVE_ROOT $(WAVEROOT); set TB_NAME $$TB_TOP; set SRCS {$$ORDERED_SRCS}; set INCS {$$ALL_INCS}; do $(SCRIPTROOT)/run_sim.tcl"; \
+		$(VSIM) -c $(VSIM_FLAGS) -voptargs="+acc" \
+		  -do "set batch_mode 1; \
+		       set WAVE_ROOT $(WAVEROOT); \
+		       set TB_NAME $$TB_TOP; \
+		       set SRCS {$$ORDERED_SRCS}; \
+		       set INCS {$$ALL_INCS}; \
+		       set VLOG_FLAGS {$(VLOG_FLAGS)}; \
+		       do $(SCRIPTROOT)/run_sim.tcl"; \
 	fi
 	
 clean:

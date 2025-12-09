@@ -1,4 +1,3 @@
-
 // Fancy left shifter used for floating-point addition.
 
 //By            : Joe Nasti

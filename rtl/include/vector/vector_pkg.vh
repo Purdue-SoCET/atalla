@@ -93,9 +93,11 @@ package vector_pkg;
     typedef logic  [SLICE_W-1:0] slice_mt;
     typedef fp16_t [VLMAX-1:0]   vreg_t;
 
-    typedef enum logic [5:0] {
-        VALU_ADD       = 6'h00,
-        VALU_SUB       = 6'h01
+    typedef enum logic [1:0] {
+        VR_MAX = 2'b00,
+        VR_MIN = 2'b01,
+        VR_SUM = 2'b10,
+        VR_SUB = 2'b11
     } valu_op_t;
 
     // TOP LEVEL CONTROL SIGNALS
@@ -213,7 +215,7 @@ package vector_pkg;
 
     // Lane Structs --------------------------------------------------------------------
     typedef enum logic [LANE_FU_ID_W-1:0] {
-        ALU  = 3'b000,
+        VALU  = 3'b000,
         EXP  = 3'b001,
         SQRT = 3'b010,
         MUL  = 3'b011,

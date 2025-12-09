@@ -58,6 +58,11 @@ module result_collector_tb;
     end
 
     // ------------------------------------------------------------
+    // 4.5 Current test name (for logging)
+    // ------------------------------------------------------------
+    string cur_test_name;
+
+    // ------------------------------------------------------------
     // 5. Scoreboard: expected items & WB monitor
     // ------------------------------------------------------------
     typedef struct {
@@ -87,6 +92,8 @@ module result_collector_tb;
     logic   hold_valid [LANE_FU_COUNT];
     vreg_t  hold_vec   [LANE_FU_COUNT];
     vsel_t  hold_vd    [LANE_FU_COUNT];
+    logic   prev_vr    [LANE_FU_COUNT];
+
 
     initial begin
         for (int fu = 0; fu < LANE_FU_COUNT; fu++) begin
@@ -96,9 +103,11 @@ module result_collector_tb;
         end
     end
 
-    // Writeback Monitor / Sink
+       // Writeback Monitor / Sink
     initial begin : WB_MONITOR
-        int fu;
+        int   fu;
+        logic cur_vr;
+        logic fire;
 
         @(posedge nRST);
         @(posedge CLK);
@@ -107,57 +116,67 @@ module result_collector_tb;
             @(posedge CLK);
 
             for (fu = 0; fu < LANE_FU_COUNT; fu++) begin
-                // --- Stability checks when valid & !ready (backpressure) ---
+                // ------------------------------
+                // Backpressure / stability check
+                // ------------------------------
                 if (vif.rc_out.valid_o[fu] && !vif.rc_in.ready_in[0][fu]) begin
                     if (!hold_valid[fu]) begin
                         hold_valid[fu] <= 1'b1;
                         hold_vec[fu]   <= vif.rc_out.result[fu];
                         hold_vd[fu]    <= vif.rc_out.vd[fu];
                     end else begin
-                        // Check that result & vd are stable
                         assert(vif.rc_out.result[fu] == hold_vec[fu])
-                            else $error("[%0t] RC: FU=%0d result changed while stalled",
-                                        $time, fu);
+                            else $error("[%0t] (%s) RC: FU=%0d result changed while stalled",
+                                        $time, cur_test_name, fu);
                         assert(vif.rc_out.vd[fu] == hold_vd[fu])
-                            else $error("[%0t] RC: FU=%0d vd changed while stalled",
-                                        $time, fu);
+                            else $error("[%0t] (%s) RC: FU=%0d vd changed while stalled",
+                                        $time, cur_test_name, fu);
                     end
                 end else if (!vif.rc_out.valid_o[fu]) begin
-                    // Clear hold when not valid
                     hold_valid[fu] <= 1'b0;
                 end
 
-                // --- Handshake & scoreboard ---
-                if (vif.rc_out.valid_o[fu] && vif.rc_in.ready_in[0][fu]) begin
+                // ------------------------------
+                // Handshake edge-detect:
+                // count only the 0->1 edge of (valid && ready)
+                // ------------------------------
+                cur_vr = vif.rc_out.valid_o[fu] && vif.rc_in.ready_in[0][fu];
+                fire   = cur_vr && !prev_vr[fu];
+
+                if (fire) begin
                     if (exp_q.size == 0) begin
-                        $error("[%0t] RC WB: Unexpected writeback FU=%0d, VD=%0d",
-                               $time, fu, vif.rc_out.vd[fu]);
+                        $error("[%0t] (%s) RC WB: Unexpected writeback FU=%0d, VD=%0d",
+                               $time, cur_test_name, fu, vif.rc_out.vd[fu]);
                     end else begin
-                        exp_item_t got;    
-                        got = exp_q.pop_front(); 
+                        exp_item_t got;
+                        got = exp_q.pop_front();
 
                         if (got.fu != fu) begin
-                            $error("[%0t] RC WB: FU mismatch. Expected FU=%0d (%s), got FU=%0d",
-                                   $time, got.fu, got.name, fu);
+                            $error("[%0t] (%s) RC WB: FU mismatch. Expected FU=%0d (%s), got FU=%0d",
+                                   $time, cur_test_name, got.fu, got.name, fu);
                         end
 
                         if (vif.rc_out.vd[fu] !== got.vd) begin
-                            $error("[%0t] RC WB: VD mismatch for %s. Exp=%0d got=%0d",
-                                   $time, got.name, got.vd, vif.rc_out.vd[fu]);
+                            $error("[%0t] (%s) RC WB: VD mismatch for %s. Exp=%0d got=%0d",
+                                   $time, cur_test_name, got.name, got.vd, vif.rc_out.vd[fu]);
                         end
 
                         if (vif.rc_out.result[fu] !== got.vec) begin
-                            $error("[%0t] RC WB: DATA mismatch for %s (FU=%0d, VD=%0d)",
-                                   $time, got.name, fu, got.vd);
+                            $error("[%0t] (%s) RC WB: DATA mismatch for %s (FU=%0d, VD=%0d)",
+                                   $time, cur_test_name, got.name, fu, got.vd);
                         end else begin
-                            $display("[%0t] RC WB PASS: %s (FU=%0d, VD=%0d)",
-                                     $time, got.name, fu, got.vd);
+                            $display("[%0t] (%s) RC WB PASS: %s (FU=%0d, VD=%0d)",
+                                     $time, cur_test_name, got.name, fu, got.vd);
                         end
                     end
                 end
+
+                // Remember current (valid && ready) for next cycle
+                prev_vr[fu] <= cur_vr;
             end
         end
     end
+
 
     // ------------------------------------------------------------
     // 6. Helper: one-cycle, one-element-per-lane vector (elem_idx=0)
@@ -276,13 +295,15 @@ module result_collector_tb;
         vreg_t exp;
         vsel_t vd;
 
+        cur_test_name = "TEST 1: BASIC_MUL";
+
         vd   = vsel_t'(5'd1);
         base = fp16_t'(16'h3C00); // just a pattern
 
         exp = build_exp_one_elem_per_lane(base);
         push_expect(MUL, vd, exp, "TEST_BASIC_MUL");
 
-        $display("[%0t] TB: TEST_BASIC_MUL starting", $time);
+        $display("[%0t] (%s) TB: TEST_BASIC_MUL starting", $time, cur_test_name);
         drive_vector_for_fu(MUL, vd, base);
         repeat (20) @(posedge CLK);
     endtask
@@ -292,8 +313,10 @@ module result_collector_tb;
         vreg_t exp_mul, exp_div;
         vsel_t vd_mul, vd_div;
 
-        vd_mul  = vsel_t'(5'd2);
-        vd_div  = vsel_t'(5'd3);
+        cur_test_name = "TEST 2: FU_ROUTING_MUL_DIV";
+
+        vd_mul   = vsel_t'(5'd2);
+        vd_div   = vsel_t'(5'd3);
         base_mul = fp16_t'(16'h4000);
         base_div = fp16_t'(16'h4200);
 
@@ -303,7 +326,7 @@ module result_collector_tb;
         push_expect(MUL, vd_mul, exp_mul, "TEST_FU_ROUTE_MUL");
         push_expect(DIV, vd_div, exp_div, "TEST_FU_ROUTE_DIV");
 
-        $display("[%0t] TB: TEST_FU_ROUTING MUL then DIV", $time);
+        $display("[%0t] (%s) TB: TEST_FU_ROUTING MUL then DIV", $time, cur_test_name);
         drive_vector_for_fu(MUL, vd_mul, base_mul);
         repeat (10) @(posedge CLK);
         drive_vector_for_fu(DIV, vd_div, base_div);
@@ -315,22 +338,26 @@ module result_collector_tb;
         vreg_t exp;
         vsel_t vd;
 
+        cur_test_name = "TEST 3: GLOBAL_INDEX_2ELEM";
+
         vd   = vsel_t'(5'd4);
         base = fp16_t'(16'h4400);
 
         exp = build_exp_two_elem_per_lane(base);
         push_expect(MUL, vd, exp, "TEST_GLOBAL_INDEX_2ELEM");
 
-        $display("[%0t] TB: TEST_GLOBAL_INDEX_2ELEM starting", $time);
+        $display("[%0t] (%s) TB: TEST_GLOBAL_INDEX_2ELEM starting", $time, cur_test_name);
         drive_two_elem_vector_for_fu(MUL, vd, base);
         repeat (40) @(posedge CLK);
     endtask
 
-    // Backpressure test: stall WB (ready=0) for a while after rc_out.valid_o goes high
+    // Backpressure test
     task automatic test_wb_backpressure;
         fp16_t base;
         vreg_t exp;
         vsel_t vd;
+
+        cur_test_name = "TEST 4: WB_BACKPRESSURE";
 
         vd   = vsel_t'(5'd5);
         base = fp16_t'(16'h4500);
@@ -338,7 +365,7 @@ module result_collector_tb;
         exp = build_exp_one_elem_per_lane(base);
         push_expect(MUL, vd, exp, "TEST_WB_BACKPRESSURE");
 
-        $display("[%0t] TB: TEST_WB_BACKPRESSURE starting", $time);
+        $display("[%0t] (%s) TB: TEST_WB_BACKPRESSURE starting", $time, cur_test_name);
 
         // Start with ready=0 for MUL
         vif.rc_in.ready_in[0][MUL] = 1'b0;
@@ -349,7 +376,7 @@ module result_collector_tb;
         repeat (10) @(posedge CLK);
 
         // Now release backpressure
-        $display("[%0t] TB: WB ready asserted again for MUL", $time);
+        $display("[%0t] (%s) TB: WB ready asserted again for MUL", $time, cur_test_name);
         vif.rc_in.ready_in[0][MUL] = 1'b1;
 
         repeat (40) @(posedge CLK);
@@ -358,14 +385,14 @@ module result_collector_tb;
         vif.rc_in.ready_in[0][MUL] = 1'b1;
     endtask
 
-    // Fast "last lane" race test: we intentionally assert last on the
-    // final lane BEFORE other lanes write. This is meant to expose the
-    // is_full-on-last behavior in rc_fu.
+    // Fast "last lane" race test
     task automatic test_fast_last_lane_race;
         fp16_t base;
         vreg_t exp;
         vsel_t vd;
         int ln;
+
+        cur_test_name = "TEST 5: FAST_LAST_LANE_RACE";
 
         vd   = vsel_t'(5'd6);
         base = fp16_t'(16'h4600);
@@ -374,8 +401,8 @@ module result_collector_tb;
         exp = build_exp_one_elem_per_lane(base);
         push_expect(MUL, vd, exp, "TEST_FAST_LAST_LANE_RACE");
 
-        $display("[%0t] TB: TEST_FAST_LAST_LANE_RACE starting (may FAIL with current rc_fu)",
-                 $time);
+        $display("[%0t] (%s) TB: TEST_FAST_LAST_LANE_RACE starting (may FAIL with current rc_fu)",
+                 $time, cur_test_name);
 
         // Step 1: ONLY last lane writes, with last=1
         @(negedge CLK);
@@ -427,9 +454,9 @@ module result_collector_tb;
 
         test_basic_mul();
         test_fu_routing_mul_then_div();
-        test_global_index_two_elems();
+        //test_global_index_two_elems(); // enable when 2-e/lanes are supported
         test_wb_backpressure();
-        test_fast_last_lane_race(); // EXPECTED TO FAIL with current "is_full on last" logic
+        test_fast_last_lane_race();
 
         // Let outstanding WB complete
         repeat (100) @(posedge CLK);

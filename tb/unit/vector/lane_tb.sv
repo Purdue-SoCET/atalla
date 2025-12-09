@@ -16,6 +16,7 @@ module lane_tb;
     localparam int FU_SQRT         = SQRT;
     localparam int FU_DIV          = DIV;
     localparam int FU_MUL          = MUL;
+    localparam int FU_VALU         = VALU;
 
     // generous limits because SQRT IP is very deep
     localparam int DIR_MAX_CYCLES  = 200_000;
@@ -73,6 +74,7 @@ module lane_tb;
     bit   driver_done_sqrt;
     bit   driver_done_div;
     bit   driver_done_mul;
+    bit   driver_done_valu; 
 
     // Current test name for printing
     string cur_test;
@@ -92,6 +94,7 @@ module lane_tb;
         lane_if.lane_in.ready_in[FU_SQRT] = 1'b1;
         lane_if.lane_in.ready_in[FU_DIV]  = 1'b1;
         lane_if.lane_in.ready_in[FU_MUL]  = 1'b1;
+        lane_if.lane_in.ready_in[FU_VALU] = 1'b1; 
     end
 
     // ------------------------------------------------------------
@@ -695,6 +698,99 @@ module lane_tb;
         end
     endtask
 
+        // ------------------------------------------------------------
+    // Random driver for tests 3, 4, 7 - VALU
+    //   (same scoreboard semantics as SQRT/DIV/MUL)
+    // ------------------------------------------------------------
+    task automatic random_driver_valu(
+        input int num_slices,
+        input int back_to_back_prob,  // 0..100
+        input vsel_t base_vd,
+        output int   total_expected
+    );
+        int s, i;
+        slice_vt v1, v2;
+        slice_mt mask;
+        opcode_t op;
+        obs_t    item;
+
+        total_expected   = 0;
+        driver_done_valu = 1'b0;   // mark driver as not done yet
+
+        for (s = 0; s < num_slices; s++) begin
+            // Random data
+            for (i = 0; i < SLICE_W; i++) begin
+                v1[i]   = fp16_t'($urandom_range(1000, 0));
+                v2[i]   = fp16_t'($urandom_range(1000, 0));
+                mask[i] = $urandom_range(1,0);
+            end
+            op = '0; // ALU will see this as a valid SUM-like op
+
+            // Enqueue expected for unmasked elements
+            for (i = 0; i < SLICE_W; i++) begin
+                if (mask[i]) begin
+                    item.vd       = base_vd;
+                    item.elem_idx = slice_idx_t'(i);
+                    exp_q.push_back(item);
+                    total_expected++;
+                end
+            end
+
+            if ((base_vd == 41 || base_vd == 43) && mask != 0) begin
+                $display("[%0t] TB ACTIVE VALU SLICE s=%0d vd=%0d MASK=%b",
+                         $time, s, base_vd, mask);
+            end
+
+            drive_valu_slice(v1, v2, mask, base_vd, op);
+
+            // Upstream starvation (gaps between slices)
+            if ($urandom_range(99,0) > back_to_back_prob) begin
+                repeat ($urandom_range(4,1)) @(posedge CLK);
+            end
+        end
+
+        driver_done_valu = 1'b1;   // mark driver as finished
+    endtask
+
+        // ------------------------------------------------------------
+    // Helper: drive one VALU slice
+    // ------------------------------------------------------------
+    task automatic drive_valu_slice(
+        input slice_vt    slice_v1,
+        input slice_vt    slice_v2,
+        input slice_mt    slice_mask,
+        input vsel_t      vd_tag,
+        input opcode_t    op    // full vop; VALU will use low bits for alu_op
+    );
+        int wait_cycles;
+        // Wait until lane is ready for a new VALU slice
+        wait_cycles = 0;
+        @(posedge CLK);
+        while (!lane_if.lane_out.ready_o[FU_VALU] && nRST && wait_cycles < 1000) begin
+            @(posedge CLK);
+            wait_cycles++;
+        end
+
+        if (wait_cycles >= 1000) begin
+            $error("drive_valu_slice: VALU lane never became ready!");
+        end
+
+        @(posedge CLK);
+        lane_if.lane_in.v1[FU_VALU]       <= slice_v1;
+        lane_if.lane_in.v2[FU_VALU]       <= slice_v2;
+        lane_if.lane_in.vmask[FU_VALU]    <= slice_mask;
+        lane_if.lane_in.vd[FU_VALU]       <= vd_tag;
+        lane_if.lane_in.vop[FU_VALU]      <= op;   // low bits drive alu_op in lane
+        lane_if.lane_in.rm[FU_VALU]       <= '0;
+        lane_if.lane_in.valid_in[FU_VALU] <= 1'b1;
+
+        // Only need to assert valid for one cycle; sequencer latches it
+        @(posedge CLK);
+        lane_if.lane_in.valid_in[FU_VALU] <= 1'b0;
+    endtask
+
+
+
     // ------------------------------------------------------------
     // Random driver for tests 3, 4, 7 - MUL
     // ------------------------------------------------------------
@@ -747,6 +843,108 @@ module lane_tb;
 
         driver_done_mul = 1'b1;   // Mark driver as finished
     endtask
+
+        // ------------------------------------------------------------
+    // Monitor for tests 3, 4, 7 with bounded runtime - VALU
+    // ------------------------------------------------------------
+    task automatic random_monitor_valu(
+        input int           max_cycles,
+        output int          seen,
+        output int          errors,
+        input  int          stall_prob, // 0..100, probability to stall WB
+        input  string       label
+    );
+        int   cycles;
+        obs_t exp;
+
+        seen   = 0;
+        errors = 0;
+        cycles = 0;
+
+`ifdef TB_DEBUG_VALU_MON
+        $display("[%0t] [VALU_MON] %s: Starting monitor, max_cycles=%0d, stall_prob=%0d%%",
+                 $time, label, max_cycles, stall_prob);
+`endif
+
+        while (cycles < max_cycles) begin
+            // Random WB backpressure on VALU (only in tests that request it)
+            if (stall_prob > 0) begin
+                if ($urandom_range(99,0) < stall_prob)
+                    lane_if.lane_in.ready_in[FU_VALU] <= 1'b0;
+                else
+                    lane_if.lane_in.ready_in[FU_VALU] <= 1'b1;
+            end
+
+            @(posedge CLK);
+            cycles++;
+
+            if (lane_if.lane_out.valid_o[FU_VALU] &&
+                lane_if.lane_in.ready_in[FU_VALU]) begin
+
+                if (exp_q.size() == 0) begin
+                    $error("[%s] Unexpected VALU result: queue empty", label);
+                    errors++;
+                end else begin
+                    exp = exp_q.pop_front();
+
+                    if (lane_if.lane_out.vd[FU_VALU] !== exp.vd) begin
+                        $error("[%s] VALU VD mismatch: exp=%0d got=%0d (elem_idx=%0d)",
+                               label, exp.vd, lane_if.lane_out.vd[FU_VALU],
+                               lane_if.lane_out.elem_idx[FU_VALU]);
+                        errors++;
+                    end
+
+                    if (lane_if.lane_out.elem_idx[FU_VALU] !== exp.elem_idx) begin
+                        $error("[%s] VALU IDX mismatch: exp=%0d got=%0d (vd=%0d)",
+                               label, exp.elem_idx,
+                               lane_if.lane_out.elem_idx[FU_VALU],
+                               lane_if.lane_out.vd[FU_VALU]);
+                        errors++;
+                    end
+
+                    $display("[%0t] %s: VALU result result=%h vd=%0d elem_idx=%0d",
+                             $time, label,
+                             lane_if.lane_out.result[FU_VALU],
+                             lane_if.lane_out.vd[FU_VALU],
+                             lane_if.lane_out.elem_idx[FU_VALU]);
+
+`ifdef TB_DEBUG_VALU_MON
+                    $display("[%0t] [VALU_MON] RESULT #%0d: vd=%0d elem_idx=%0d (remaining=%0d, cycles=%0d)",
+                             $time, seen+1, lane_if.lane_out.vd[FU_VALU],
+                             lane_if.lane_out.elem_idx[FU_VALU], exp_q.size(), cycles);
+`endif
+
+                    seen++;
+                end
+            end
+
+            // Stop early only if:
+            //  - scoreboard is drained
+            //  - WB not stalled
+            //  - driver is done issuing all VALU slices
+            if (exp_q.size() == 0 &&
+                lane_if.lane_in.ready_in[FU_VALU] &&
+                driver_done_valu) begin
+`ifdef TB_DEBUG_VALU_MON
+                $display("[%0t] [VALU_MON] EARLY EXIT: All results seen, cycles=%0d/%0d (driver_done_valu=1)",
+                         $time, cycles, max_cycles);
+`endif
+                break;
+            end
+        end
+
+`ifdef TB_DEBUG_VALU_MON
+        $display("[%0t] [VALU_MON] %s: Monitor done, cycles=%0d, seen=%0d, remaining=%0d (driver_done_valu=%0d)",
+                 $time, label, cycles, seen, exp_q.size(), driver_done_valu);
+`endif
+
+        if (cycles >= max_cycles && exp_q.size() != 0) begin
+            $error("[%s] TIMEOUT: VALU scoreboard not drained after %0d cycles (remaining=%0d)",
+                   label, max_cycles, exp_q.size());
+            errors++;
+        end
+    endtask
+
 
     // ------------------------------------------------------------
     // Monitor for tests 3, 4, 7 with bounded runtime - DIV
@@ -1577,6 +1775,328 @@ module lane_tb;
             total_errors += (errors == 0 ? 1 : errors);
         end
 
+
+                // Small drain window before VALU tests
+        repeat (20) @(posedge CLK);
+
+        // ========================================================
+        // VALU TESTS
+        // ========================================================
+        $display("\n********** STARTING VALU TESTS **********\n");
+
+        // ========================================================
+        // TEST 1_VALU: All elements unmasked
+        // ========================================================
+        cur_test = "TEST 1_VALU";
+        $display("\n=== %s: All elements unmasked ===", cur_test);
+        exp_q.delete();
+        lane_if.lane_in.ready_in[FU_VALU] <= 1'b1;
+
+        begin
+            int i;
+            slice_vt v1, v2;
+            slice_mt mask;
+            int expected_results;
+            int cycles_1valu;
+            obs_t item;
+
+            for (i = 0; i < SLICE_W; i++) begin
+                v1[i]   = fp16_t'(i + 3);
+                v2[i]   = fp16_t'(i + 7);
+                mask[i] = 1'b1;
+            end
+
+            expected_results = SLICE_W;
+
+            // Push expected results
+            for (i = 0; i < SLICE_W; i++) begin
+                item.vd       = vsel_t'(39);
+                item.elem_idx = slice_idx_t'(i);
+                exp_q.push_back(item);
+            end
+
+            drive_valu_slice(v1, v2, mask, vsel_t'(39), '0);
+
+            seen       = 0;
+            errors     = 0;
+            cycles_1valu = 0;
+
+            // Wait for all results
+            while ((seen < expected_results) && (cycles_1valu < DIR_MAX_CYCLES)) begin
+                @(posedge CLK);
+                cycles_1valu++;
+
+                if (lane_if.lane_out.valid_o[FU_VALU] &&
+                    lane_if.lane_in.ready_in[FU_VALU]) begin
+
+                    if (exp_q.size() == 0) begin
+                        $error("[%s] Unexpected VALU result: queue empty", cur_test);
+                        errors++;
+                    end else begin
+                        obs_t exp_item;
+                        exp_item = exp_q.pop_front();
+
+                        if (lane_if.lane_out.vd[FU_VALU] !== exp_item.vd ||
+                            lane_if.lane_out.elem_idx[FU_VALU] !== exp_item.elem_idx) begin
+                            $error("[%s] VALU mismatch: exp vd=%0d idx=%0d, got vd=%0d idx=%0d",
+                                   cur_test, exp_item.vd, exp_item.elem_idx,
+                                   lane_if.lane_out.vd[FU_VALU],
+                                   lane_if.lane_out.elem_idx[FU_VALU]);
+                            errors++;
+                        end
+
+                        $display("[%0t] %s: VALU result result=%h vd=%0d elem_idx=%0d",
+                                 $time, cur_test,
+                                 lane_if.lane_out.result[FU_VALU],
+                                 lane_if.lane_out.vd[FU_VALU],
+                                 lane_if.lane_out.elem_idx[FU_VALU]);
+
+                        seen++;
+                    end
+                end
+            end
+
+            if (errors == 0 && exp_q.size() == 0 && seen == expected_results) begin
+                $display("%s PASSED (results=%0d, cycles=%0d)", cur_test, seen, cycles_1valu);
+            end else begin
+                $error("%s FAILED (errors=%0d, results=%0d, expected=%0d, remaining=%0d)",
+                       cur_test, errors, seen, expected_results, exp_q.size());
+                total_errors += (errors == 0 ? 1 : errors);
+            end
+        end
+
+        repeat (10) @(posedge CLK);
+
+        // ========================================================
+        // TEST 2_VALU: Partial mask
+        // ========================================================
+        cur_test = "TEST 2_VALU";
+        $display("\n=== %s: Partial mask ===", cur_test);
+        exp_q.delete();
+        lane_if.lane_in.ready_in[FU_VALU] <= 1'b1;
+
+        begin
+            int i;
+            slice_vt v1, v2;
+            slice_mt mask;
+            int expected_results;
+            int cycles_2valu;
+            obs_t item;
+
+            for (i = 0; i < SLICE_W; i++) begin
+                v1[i]   = fp16_t'(i + 11);
+                v2[i]   = fp16_t'(i + 4);
+                mask[i] = (i % 2);  // active on odd indices
+            end
+
+            expected_results = 0;
+            for (i = 0; i < SLICE_W; i++) begin
+                if (mask[i]) begin
+                    item.vd       = vsel_t'(40);
+                    item.elem_idx = slice_idx_t'(i);
+                    exp_q.push_back(item);
+                    expected_results++;
+                end
+            end
+
+            drive_valu_slice(v1, v2, mask, vsel_t'(40), '0);
+
+            seen       = 0;
+            errors     = 0;
+            cycles_2valu = 0;
+
+            // Wait for all results
+            while ((seen < expected_results) && (cycles_2valu < DIR_MAX_CYCLES)) begin
+                @(posedge CLK);
+                cycles_2valu++;
+
+                if (lane_if.lane_out.valid_o[FU_VALU] &&
+                    lane_if.lane_in.ready_in[FU_VALU]) begin
+
+                    if (exp_q.size() == 0) begin
+                        $error("[%s] Unexpected VALU result: queue empty", cur_test);
+                        errors++;
+                    end else begin
+                        obs_t exp_item;
+                        exp_item = exp_q.pop_front();
+
+                        if (lane_if.lane_out.vd[FU_VALU] !== exp_item.vd ||
+                            lane_if.lane_out.elem_idx[FU_VALU] !== exp_item.elem_idx) begin
+                            $error("[%s] VALU mismatch: exp vd=%0d idx=%0d, got vd=%0d idx=%0d",
+                                   cur_test, exp_item.vd, exp_item.elem_idx,
+                                   lane_if.lane_out.vd[FU_VALU],
+                                   lane_if.lane_out.elem_idx[FU_VALU]);
+                            errors++;
+                        end
+
+                        $display("[%0t] %s: VALU result result=%h vd=%0d elem_idx=%0d",
+                                 $time, cur_test,
+                                 lane_if.lane_out.result[FU_VALU],
+                                 lane_if.lane_out.vd[FU_VALU],
+                                 lane_if.lane_out.elem_idx[FU_VALU]);
+
+                        seen++;
+                    end
+                end
+            end
+
+            if (errors == 0 && exp_q.size() == 0 && seen == expected_results) begin
+                $display("%s PASSED (results=%0d, cycles=%0d)", cur_test, seen, cycles_2valu);
+            end else begin
+                $error("%s FAILED (errors=%0d, results=%0d, expected=%0d, remaining=%0d)",
+                       cur_test, errors, seen, expected_results, exp_q.size());
+                total_errors += (errors == 0 ? 1 : errors);
+            end
+        end
+
+        repeat (10) @(posedge CLK);
+
+        // ========================================================
+        // TEST 3_VALU: Upstream Starvation (random gaps, WB always ready)
+        // ========================================================
+        cur_test = "TEST 3_VALU";
+        $display("\n=== %s: Upstream Starvation (random gaps) ===", cur_test);
+        exp_q.delete();
+        lane_if.lane_in.ready_in[FU_VALU] <= 1'b1;
+
+        $display("[TB] %s using max_cycles=%0d", cur_test, RAND_MAX_CYCLES);
+
+        fork
+            random_driver_valu(10, /*back_to_back_prob=*/50, vsel_t'(41), exp_total);
+            random_monitor_valu(/*max_cycles=*/RAND_MAX_CYCLES,
+                                seen, errors,
+                                /*stall_prob=*/0,
+                                cur_test);
+        join
+
+        if (errors == 0 && exp_q.size() == 0 && seen == exp_total) begin
+            $display("%s PASSED (errors=%0d, results=%0d, expected=%0d)",
+                     cur_test, errors, seen, exp_total);
+        end else begin
+            $error("%s FAILED (errors=%0d, results=%0d, expected=%0d, remaining=%0d)",
+                   cur_test, errors, seen, exp_total, exp_q.size());
+            total_errors += (errors == 0 ? 1 : errors);
+        end
+
+        repeat (20) @(posedge CLK);
+
+        // ========================================================
+        // TEST 4_VALU: Heavy Writeback Backpressure (WB stalls randomly)
+        // ========================================================
+        cur_test = "TEST 4_VALU";
+        $display("\n=== %s: Heavy WB Backpressure ===", cur_test);
+        exp_q.delete();
+
+        $display("[TB] %s using max_cycles=%0d", cur_test, RAND_MAX_CYCLES);
+
+        fork
+            random_driver_valu(10, /*back_to_back_prob=*/100, vsel_t'(43), exp_total);
+            random_monitor_valu(/*max_cycles=*/RAND_MAX_CYCLES,
+                                seen, errors,
+                                /*stall_prob=*/75,
+                                cur_test);
+        join
+
+        if (errors == 0 && exp_q.size() == 0 && seen == exp_total) begin
+            $display("%s PASSED (errors=%0d, results=%0d, expected=%0d)",
+                     cur_test, errors, seen, exp_total);
+        end else begin
+            $error("%s FAILED (errors=%0d, results=%0d, expected=%0d, remaining=%0d)",
+                   cur_test, errors, seen, exp_total, exp_q.size());
+            total_errors += (errors == 0 ? 1 : errors);
+        end
+
+        repeat (20) @(posedge CLK);
+
+        // ========================================================
+        // TEST 5_VALU: All-zero masks for multiple slices
+        //   - No results should ever be produced
+        // ========================================================
+        cur_test = "TEST 5_VALU";
+        $display("\n=== %s: All-zero masks (multiple slices) ===", cur_test);
+        exp_q.delete();
+        lane_if.lane_in.ready_in[FU_VALU] <= 1'b1;
+
+        fork
+            begin
+                int s, i;
+                slice_vt v1, v2;
+                slice_mt mask;
+
+                // 20 slices, all masked off
+                for (s = 0; s < 20; s++) begin
+                    for (i = 0; i < SLICE_W; i++) begin
+                        v1[i]   = fp16_t'($urandom_range(1000, 0));
+                        v2[i]   = fp16_t'($urandom_range(1000, 0));
+                        mask[i] = 1'b0;
+                    end
+
+                    drive_valu_slice(v1, v2, mask, vsel_t'(45), '0);
+                end
+            end
+            begin
+                int cycles_5valu;
+                seen       = 0;
+                errors     = 0;
+                cycles_5valu = 0;
+
+                // Watch for stray results for a while
+                while (cycles_5valu < RAND_MAX_CYCLES) begin
+                    @(posedge CLK);
+                    cycles_5valu++;
+
+                    if (lane_if.lane_out.valid_o[FU_VALU] &&
+                        lane_if.lane_in.ready_in[FU_VALU]) begin
+                        $error("[%s] Unexpected VALU result under all-zero mask: vd=%0d elem_idx=%0d result=%h",
+                               cur_test,
+                               lane_if.lane_out.vd[FU_VALU],
+                               lane_if.lane_out.elem_idx[FU_VALU],
+                               lane_if.lane_out.result[FU_VALU]);
+                        errors++;
+                        seen++;
+                    end
+                end
+            end
+        join
+
+        if (errors == 0 && seen == 0) begin
+            $display("%s PASSED (no VALU results, as expected)", cur_test);
+        end else begin
+            $error("%s FAILED (errors=%0d, results=%0d, remaining=%0d)",
+                   cur_test, errors, seen, exp_q.size());
+            total_errors += (errors == 0 ? 1 : errors);
+        end
+
+        repeat (20) @(posedge CLK);
+
+        // ========================================================
+        // TEST 7_VALU: Long random run (stress test)
+        // ========================================================
+        cur_test = "TEST 7_VALU";
+        $display("\n=== %s: Long random run ===", cur_test);
+        exp_q.delete();
+        lane_if.lane_in.ready_in[FU_VALU] <= 1'b1;
+
+        $display("[TB] %s using max_cycles=%0d", cur_test, 10*RAND_MAX_CYCLES);
+
+        fork
+            // 100 slices, always back-to-back (no upstream starvation here)
+            random_driver_valu(100, /*back_to_back_prob=*/100, vsel_t'(47), exp_total);
+            random_monitor_valu(/*max_cycles=*/10*RAND_MAX_CYCLES,
+                                seen, errors,
+                                /*stall_prob=*/50,
+                                cur_test);
+        join
+
+        if (errors == 0 && exp_q.size() == 0 && seen == exp_total) begin
+            $display("%s PASSED (errors=%0d, results=%0d, expected=%0d)",
+                     cur_test, errors, seen, exp_total);
+        end else begin
+            $error("%s FAILED (errors=%0d, results=%0d, expected=%0d, remaining=%0d)",
+                   cur_test, errors, seen, exp_total, exp_q.size());
+            total_errors += (errors == 0 ? 1 : errors);
+        end
+
         // Final summary
         $display("\n========================================");
         if (total_errors == 0)
@@ -1584,6 +2104,7 @@ module lane_tb;
         else
             $display("TOTAL ERRORS ACROSS ALL TESTS: %0d", total_errors);
         $display("========================================\n");
+
 
         $finish;
     end

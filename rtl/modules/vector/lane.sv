@@ -473,141 +473,172 @@ module lane #(
         $display("[%m] MUL_COUNTS: issue=%0d wb=%0d", mul_issue_cnt, mul_wb_cnt);
     end
 
+       // ============================================================
+    // VALU PIPELINE (V-ALU: add/sub/min/max bf16)
+    // ============================================================
+
     // ------------------------------------------------------------
-    // DIV: Debug Instrumentation
+    // VALU: Internal Signals & Structs
     // ------------------------------------------------------------
+    lane_seq_in_t  valu_seq_in;
+    lane_seq_out_t valu_seq_out;
+
+    meta_t valu_meta_in;
+    meta_t valu_meta_out;
+    logic  valu_sync_ready;
+
+    // VALU FU interface (bf16: 1+8+7 = 16 bits)
+    valu_if #(
+        .EXP_WIDTH (8),
+        .MANT_WIDTH(7)
+    ) valu_bus();
+
     
-`ifdef DIV_DEBUG
-    // Track when DIV FU actually accepts input (latches operands)
-    always_ff @(posedge CLK) begin
-        if (nRST && div_bus.in.valid_in && div_bus.out.ready_in) begin
-            $display("[%0t] DIV_ACCEPT   vd=%0d elem_idx=%0d mask=%b v1=%h v2=%h (FU latches operands)",
-                     $time, div_seq_out.vd, div_seq_out.elem_idx,
-                     div_seq_out.mask_bit, div_seq_out.v1_elem, div_seq_out.v2_elem);
+    // ------------------------------------------------------------
+    // VALU hold buffer signals
+    // ------------------------------------------------------------
+    logic       valu_hold_valid;
+    fp16_t      valu_hold_result;
+    vsel_t      valu_hold_vd;
+    slice_idx_t valu_hold_elem;
+    logic       valu_hold_last;
+
+    // Issue / fire conditions
+    logic valu_issue_valid;
+    logic valu_fire_valid;
+
+    // Element is "issued" whenever sequencer presents a valid, masked element
+    assign valu_issue_valid = valu_seq_out.valid && valu_seq_out.mask_bit;
+
+    // Element actually "fires" into FU only when:
+    //  - sequencer has a valid, masked element
+    //  - metadata FIFO has space (valu_sync_ready)
+    //  - FU input is ready (valu_bus.out.ready_in)
+    assign valu_fire_valid  = valu_issue_valid &&
+                              valu_sync_ready  &&
+                              valu_bus.out.ready_in;
+
+    // ------------------------------------------------------------
+    // VALU: Sequencer Setup
+    // ------------------------------------------------------------
+    always_comb begin
+        valu_seq_in = '0;
+
+        // Map inputs from lane interface for VALU FU
+        valu_seq_in.v1    = lif.lane_in.v1[VALU];
+        valu_seq_in.v2    = lif.lane_in.v2[VALU];
+        valu_seq_in.vmask = lif.lane_in.vmask[VALU];
+        valu_seq_in.vd    = lif.lane_in.vd[VALU];
+        valu_seq_in.vop   = lif.lane_in.vop[VALU];   // encodes SUM/SUB/MIN/MAX
+        valu_seq_in.rm    = lif.lane_in.rm[VALU];
+        valu_seq_in.valid = lif.lane_in.valid_in[VALU];
+
+        // READY back to the lane front-end:
+        //  - For active (unmasked) elements, we must honor both
+        //    metadata FIFO space and FU input readiness.
+        //  - For fully masked elements, we just consume them.
+        if (valu_seq_out.mask_bit) begin
+            valu_seq_in.ready = valu_sync_ready && valu_bus.out.ready_in;
+        end else begin
+            valu_seq_in.ready = 1'b1;
         end
     end
 
-    // Track DIV issue events (when fire_valid asserts)
-    always_ff @(posedge CLK) begin
-        if (nRST && div_fire_valid && div_sync_ready) begin
-            $display("[%0t] DIV_ISSUE    vd=%0d elem_idx=%0d mask=%b dbg_seq=%0d v1=%h v2=%h",
-                     $time, div_seq_out.vd, div_seq_out.elem_idx, div_seq_out.mask_bit,
-                     div_dbg_seq_cnt, div_seq_out.v1_elem, div_seq_out.v2_elem);
-        end
+    lane_sequencer u_seq_valu (
+        .CLK     (CLK),
+        .nRST    (nRST),
+        .lane_in (valu_seq_in),
+        .lane_out(valu_seq_out)
+    );
+
+    // ------------------------------------------------------------
+    // VALU: Functional Unit
+    // ------------------------------------------------------------
+    valu u_valu (
+        .CLK (CLK),
+        .nRST(nRST),
+        .alu (valu_bus)
+    );
+
+    // Drive VALU FU input side
+    always_comb begin
+        // Operands for FU come from sequencer element outputs
+        valu_bus.in.operand1 = valu_seq_out.v1_elem;
+        valu_bus.in.operand2 = valu_seq_out.v2_elem;
+
+        // ALU op (SUM/SUB/MIN/MAX), taken from vop field
+        valu_bus.in.alu_op   = valu_seq_out.vop[1:0];
+
+        // FU input valid: when we actually "fire"
+        valu_bus.in.valid_in = valu_fire_valid;
+
+        // Writeback-side ready: backpressure when hold buffer is full
+        // (only claim ready if we can eventually expose result to WB)
+        valu_bus.in.ready_out = (!valu_hold_valid || lif.lane_in.ready_in[VALU]);
     end
 
-    // Track when DIV FU produces output (before hold buffer)
-    always_ff @(posedge CLK) begin
-        if (nRST && div_bus.out.valid_out && div_bus.in.ready_out) begin
-            $display("[%0t] DIV_FU_OUT   result=%h (FU->intermediate stage)",
-                     $time, div_bus.out.result);
-        end
-    end
+    // ------------------------------------------------------------
+    // VALU: Retire Signal
+    // ------------------------------------------------------------
+    // Result retires when FU has a valid result and WB path accepts it
+    logic valu_retire;
+    assign valu_retire = valu_bus.out.valid_out && valu_bus.in.ready_out;
 
-    // Track when metadata + result enter hold buffer (intermediate stage)
-    always_ff @(posedge CLK) begin
-        if (nRST && div_valid_wb) begin
-            $display("[%0t] DIV_HOLD_IN  vd=%0d elem_idx=%0d dbg_seq=%0d result=%h",
-                     $time, div_meta_out.vd, div_meta_out.elem_idx, 
-                     div_meta_out.dbg_seq, div_result_wb);
-        end
-    end
+    // ------------------------------------------------------------
+    // VALU: Metadata Sync Unit (lane_fu_pt)
+    // ------------------------------------------------------------
+    assign valu_meta_in.vd       = valu_seq_out.vd;
+    assign valu_meta_in.elem_idx = valu_seq_out.elem_idx;
+    assign valu_meta_in.last     =
+        (LANE_ID == LAST_LANE) &&
+        (valu_seq_out.elem_idx == LAST_ELEM);
+    assign valu_meta_in.dbg_seq         = '0; // no dbg counter for VALU
 
-    // Track final writeback to lane interface
-    always_ff @(posedge CLK) begin
-        if (nRST && lif.lane_out.valid_o[DIV] && lif.lane_in.ready_in[DIV]) begin
-            $display("[%0t] DIV_WB_OUT   vd=%0d elem_idx=%0d dbg_seq=%0d result=%h",
-                     $time, lif.lane_out.vd[DIV], lif.lane_out.elem_idx[DIV],
-                     div_hold_dbg_seq, lif.lane_out.result[DIV]);
-        end
-    end
-`endif
+    lane_fu_pt #(
+        .DATA_W ($bits(meta_t)),
+        .LATENCY(4) // VALU completion latency (for FIFO sizing only)
+    ) u_valu_sync (
+        .CLK        (CLK),
+        .nRST       (nRST),
 
-    // Assertions for DIV path correctness
-    // Ensure masked elements never fire
-    always_ff @(posedge CLK) begin
-        if (nRST && div_seq_out.valid && !div_seq_out.mask_bit) begin
-            assert (!div_fire_valid) 
-                else $error("[%0t] DIV: Attempting to fire with mask_bit=0!", $time);
-            assert (!div_bus.in.valid_in)
-                else $error("[%0t] DIV: FU valid_in asserted with mask_bit=0!", $time);
-        end
-    end
+        // Input Side (Issue)
+        .issue_valid(valu_issue_valid),       // sequencer presenting an active elem
+        .fu_ready   (valu_bus.out.ready_in),  // FU actually accepted the elem
+        .meta_in    (valu_meta_in),
+        .sync_ready (valu_sync_ready),
 
-`ifdef DIV_DBG_SEQ_CHECK
-    // Optional assertion: metadata dbg_seq should increment monotonically at WB
-    // This is a debug-only check, disabled by default
-    logic [7:0] last_div_dbg_seq;
+        // Output Side (Writeback)
+        .wb_valid   (valu_retire),            // result retires
+        .wb_ready   (valu_bus.in.ready_out),  // WB backpressure to FIFO
+        .meta_out   (valu_meta_out)
+    );
+
+    // ------------------------------------------------------------
+    // VALU: Hold Buffer & Writeback Logic
+    // ------------------------------------------------------------
     always_ff @(posedge CLK or negedge nRST) begin
         if (!nRST) begin
-            last_div_dbg_seq <= '0;
-        end else if (lif.lane_out.valid_o[DIV] && lif.lane_in.ready_in[DIV]) begin
-            // Check that dbg_seq increments (allowing for wraps and initial values)
-            if (last_div_dbg_seq != 0 && div_hold_dbg_seq == last_div_dbg_seq) begin
-                $error("[%0t] DIV: dbg_seq repeated! seq=%0d", $time, last_div_dbg_seq);
+            valu_hold_valid  <= 1'b0;
+            valu_hold_result <= '0;
+            valu_hold_vd     <= '0;
+            valu_hold_elem   <= '0;
+            valu_hold_last   <= 1'b0;
+        end else begin
+            // Capture new FU result + metadata when retire happens
+            if (valu_retire) begin
+                valu_hold_valid  <= 1'b1;
+                valu_hold_result <= valu_bus.out.result;
+                valu_hold_vd     <= valu_meta_out.vd;
+                valu_hold_elem   <= valu_meta_out.elem_idx;
+                valu_hold_last   <= valu_meta_out.last;
             end
-            last_div_dbg_seq <= div_hold_dbg_seq;
+            // Once WB accepts it (and no new result arriving), drop valid
+            else if (valu_hold_valid && lif.lane_in.ready_in[VALU]) begin
+                valu_hold_valid <= 1'b0;
+                valu_hold_last  <= 1'b0;
+            end
         end
     end
-`endif
-
-`ifdef MUL_DEBUG
-    initial $display("[%0t] MUL_DEBUG is ON in %m", $time);
-    // Track when MUL FU actually accepts input
-    always_ff @(posedge CLK) begin
-        if (nRST && mul_bus.in.valid_in && mul_bus.out.ready_in) begin
-            $display("[%0t] MUL_ACCEPT  vd=%0d elem=%0d mask=%b  v1=%h v2=%h",
-                     $time,
-                     mul_seq_out.vd,
-                     mul_seq_out.elem_idx,
-                     mul_seq_out.mask_bit,
-                     mul_seq_out.v1_elem,
-                     mul_seq_out.v2_elem);
-        end
-    end
-
-    // Track when we *intend* to issue (sequencer fire)
-    always_ff @(posedge CLK) begin
-        if (nRST && mul_fire_valid && mul_sync_ready) begin
-            $display("[%0t] MUL_ISSUE   vd=%0d elem=%0d mask=%b",
-                     $time,
-                     mul_seq_out.vd,
-                     mul_seq_out.elem_idx,
-                     mul_seq_out.mask_bit);
-        end
-    end
-
-    // Track FU producing an output (pre-align)
-    always_ff @(posedge CLK) begin
-        if (nRST && mul_bus.out.valid_out && mul_bus.in.ready_out) begin
-            $display("[%0t] MUL_FU_OUT  result=%h",
-                     $time, mul_bus.out.result);
-        end
-    end
-
-    // Track when metadata + result enter hold buffer (aligned stage)
-    always_ff @(posedge CLK) begin
-        if (nRST && mul_valid_wb) begin
-            $display("[%0t] MUL_HOLD_IN vd=%0d elem=%0d result=%h",
-                     $time,
-                     mul_meta_out.vd,
-                     mul_meta_out.elem_idx,
-                     mul_result_wb);
-        end
-    end
-
-    // Track final writeback to lane interface
-    always_ff @(posedge CLK) begin
-        if (nRST && lif.lane_out.valid_o[MUL] && lif.lane_in.ready_in[MUL]) begin
-            $display("[%0t] MUL_WB_OUT  vd=%0d elem=%0d result=%h",
-                     $time,
-                     lif.lane_out.vd[MUL],
-                     lif.lane_out.elem_idx[MUL],
-                     lif.lane_out.result[MUL]);
-        end
-    end
-`endif
-
 
     // ============================================================
     // Lane Output Bus (Combined SQRT + DIV)
@@ -638,6 +669,15 @@ module lane #(
         lif.lane_out.vd[MUL]       = mul_hold_vd;
         lif.lane_out.elem_idx[MUL] = mul_hold_elem;
         lif.lane_out.last[MUL]     = mul_hold_last;
+
+        // VALU outputs
+        // Default: no VALU result
+        lif.lane_out.ready_o[VALU]  = valu_seq_out.lane_ready;
+        lif.lane_out.valid_o[VALU]  = valu_hold_valid;
+        lif.lane_out.result [VALU]  = valu_hold_result;
+        lif.lane_out.vd     [VALU]  = valu_hold_vd;
+        lif.lane_out.elem_idx[VALU] = valu_hold_elem;
+        lif.lane_out.last   [VALU]  = valu_hold_last;
 
     end
 

@@ -1,10 +1,11 @@
 # scripts/run_sim.tcl
 # Generic compilation and simulation script
 # Expects the following Tcl vars to be set by the caller (Makefile):
-#   TB_NAME   - top-level testbench module name (e.g., lane_sequencer_tb)
-#   SRCS      - list of all source files to compile (pkgs + DUT + TB)
-#   INCS      - list of +incdir+... flags
-#   WAVE_ROOT - (optional) directory containing <TB_NAME>.do wavefiles
+#   TB_NAME    - top-level testbench module name (e.g., lane_sequencer_tb)
+#   SRCS       - list of all source files to compile (pkgs + DUT + TB)
+#   INCS       - list of +incdir+... flags
+#   WAVE_ROOT  - (optional) directory containing <TB_NAME>.do wavefiles
+#   VLOG_FLAGS - optional extra vlog flags (e.g., coverage)
 
 # --- 1. Validate Inputs ---
 if {![info exists TB_NAME]} {
@@ -28,10 +29,16 @@ if {![info exists WAVE_ROOT]} {
     puts "NOTE: WAVE_ROOT not set. Defaulting to '$WAVE_ROOT'."
 }
 
+# Default VLOG_FLAGS if not provided
+if {![info exists VLOG_FLAGS]} {
+    set VLOG_FLAGS {}
+}
+
 puts "------------------------------------------"
 puts "run_sim.tcl: starting"
 puts "  TB_NAME   = $TB_NAME"
 puts "  WAVE_ROOT = $WAVE_ROOT"
+puts "  VLOG_FLAGS= $VLOG_FLAGS"
 puts "------------------------------------------"
 
 # --- 2. Setup Library (no auto-delete) ---
@@ -69,7 +76,8 @@ if {[llength $pkg_files] > 0} {
     puts "Compiling package files..."
     puts "------------------------------------------"
 
-    if {[catch {vlog -sv -mfcu +define+SQRT_DEBUG {*}$INCS {*}$pkg_files} errMsg]} {
+    # NOTE: {*}$VLOG_FLAGS expands list elements as separate args
+    if {[catch {vlog -sv {*}$VLOG_FLAGS -mfcu +define+SQRT_DEBUG {*}$INCS {*}$pkg_files} errMsg]} {
         puts "ERROR: Package compilation failed!"
         puts "Error details:"
         puts $errMsg
@@ -86,7 +94,7 @@ if {[llength $other_files] > 0} {
     puts "------------------------------------------"
 
     # No -mfcu here so small edits recompile faster
-    if {[catch {vlog -sv +define+SQRT_DEBUG {*}$INCS {*}$other_files} errMsg]} {
+    if {[catch {vlog -sv {*}$VLOG_FLAGS +define+SQRT_DEBUG {*}$INCS {*}$other_files} errMsg]} {
         puts "ERROR: Compilation Failed!"
         puts "Error details:"
         puts $errMsg
