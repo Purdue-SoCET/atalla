@@ -156,12 +156,19 @@ def decode_instruction(instr):
     elif instr_type == "VM":
         # VM-Type: vd 7-14, rs1 15-22, tile r/c count 23-27, rc 28, sp 29-30, mask 31-34, rc_id 35-39
         decoded.update({
+            # "vd": get_bits(instr, 14, 7),
+            # "rs1": get_bits(instr, 22, 15),
+            # "tile_rc": get_bits(instr, 27, 23),
+            # "rc": get_bits(instr, 28, 28),
+            # "sp": get_bits(instr, 30, 29),
+            # "mask": get_bits(instr, 34, 31),
+            # "rc_id": get_bits(instr, 39, 35)
             "vd": get_bits(instr, 14, 7),
             "rs1": get_bits(instr, 22, 15),
-            "tile_rc": get_bits(instr, 27, 23),
-            "rc": get_bits(instr, 28, 28),
-            "sp": get_bits(instr, 30, 29),
-            "mask": get_bits(instr, 34, 31),
+            "num_rows": get_bits(instr, 27, 23),
+            "num_cols": get_bits(instr, 32, 28),
+            "sid": get_bits(instr, 33, 33),
+            "rc": get_bits(instr, 34, 34),
             "rc_id": get_bits(instr, 39, 35)
         })
 

@@ -41,25 +41,79 @@ class VectorRegisterFile:
 
     def write(self, reg_num, data):
         """
-        Write a vector (list or array of data) to a register.
-        
-        Args:
-            reg_num (int): The register number to write to.
-            data (list or np.ndarray): The list or array of values to write.
-        
-        Raises:
-            ValueError: If the data is not a list/array or not of the correct vector length.
+        Write a vector to a register.
+        Handles:
+          - Hex strings (e.g., "0x3F800000")
+          - Empty strings (treated as 0)
+          - Integers (raw bits)
+          - Standard floats
         """
         # v0 cannot be written to
         if reg_num != 0:
             if not isinstance(data, (list, np.ndarray)):
                 raise ValueError(f"Data for v{reg_num} must be a list or NumPy array.")
             
-            if len(data) != self.vec_len:
-                raise ValueError(f"Data for v{reg_num} must be of length {self.vec_len}, but got {len(data)}.")
+            # --- PAD OR TRUNCATE TO MATCH VECTOR LENGTH ---
+            # If the loaded data (e.g. from SPAD banks) is shorter than vector length, 
+            # pad it with 0s.
+            if len(data) < self.vec_len:
+                # Pad with 0.0 (float) or 0 (int)
+                data = list(data) + [0] * (self.vec_len - len(data))
+            elif len(data) > self.vec_len:
+                # Truncate if too long
+                data = data[:self.vec_len]
+
+            # --- DATA CONVERSION LOGIC ---
+            clean_data = []
+            for val in data:
+                if isinstance(val, str):
+                    # 1. Handle Empty Strings (Uninitialized memory/spad)
+                    if not val.strip():
+                        clean_data.append(0.0)
+                        continue
+                        
+                    # 2. Handle Hex String "0x..." -> Integer -> Float
+                    try:
+                        int_val = int(val, 16)
+                        # Reinterpret bits as float32
+                        float_val = np.uint32(int_val).view(np.float32)
+                        clean_data.append(float_val)
+                    except ValueError:
+                        # Fallback if string is not hex (e.g. garbage data)
+                        clean_data.append(0.0)
+
+                elif isinstance(val, int):
+                    # 3. Handle Raw Bits (Integer)
+                    float_val = np.uint32(val).view(np.float32)
+                    clean_data.append(float_val)
+                else:
+                    # 4. Handle Floats
+                    clean_data.append(val)
+            
+            # Store as NumPy array
+            self.regs[reg_num] = np.array(clean_data, dtype=np.float32)
+
+    # def write(self, reg_num, data):
+    #     """
+    #     Write a vector (list or array of data) to a register.
+        
+    #     Args:
+    #         reg_num (int): The register number to write to.
+    #         data (list or np.ndarray): The list or array of values to write.
+        
+    #     Raises:
+    #         ValueError: If the data is not a list/array or not of the correct vector length.
+    #     """
+    #     # v0 cannot be written to
+    #     if reg_num != 0:
+    #         if not isinstance(data, (list, np.ndarray)):
+    #             raise ValueError(f"Data for v{reg_num} must be a list or NumPy array.")
+            
+    #         if len(data) != self.vec_len:
+    #             raise ValueError(f"Data for v{reg_num} must be of length {self.vec_len}, but got {len(data)}.")
                 
-            # Convert data to a np.float32 array and store it
-            self.regs[reg_num] = np.array(data, dtype=np.float32)
+    #         # Convert data to a np.float32 array and store it
+    #         self.regs[reg_num] = np.array(data, dtype=np.float32)
 
     def __str__(self):
         """

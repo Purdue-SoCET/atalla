@@ -53,13 +53,17 @@ def main():
     #Scratchpad object
     SP0 = Scratchpad(slots_per_bank=8)
     SP1 = Scratchpad(slots_per_bank=8)
+    tile_id0 = 0
+    tile_id1 = 0
+
 
     halt = False
     while(not(halt)):
         dec_packet = decode_packet(mem.read_instr(pc))
         print(pc)
-        print(mem.read_instr(pc))
-        print(dec_packet)
+        # print(mem.read_instr(pc))
+        for item in dec_packet:
+            print(item)
         br = False
         
 
@@ -116,21 +120,63 @@ def main():
             elif(m == "lw.s"):
                 sregs.write(inst['rd'], mem.read_data(sregs.read(inst['rs1']) + inst['imm']))
             elif(m == "sw.s"):
-                mem.write_data(sregs.read(inst['rs1']) + inst['imm'], inst['rd'])
+                # print("LOOK AT THIS")
+                # # print(sregs.read(inst['rs1']) + inst['imm'], inst['rd'])
+                # # print(sregs.read(inst['rd']), sregs.read(inst['rs1']) + inst['imm'])
+                # print(sregs.read(inst['rs1']) + inst['imm'])
+                # print(sregs.read(inst['rd']))
+
+                mem.write_data(sregs.read(inst['rs1']) + inst['imm'], sregs.read(inst['rd']))
             #vector load/store here
+            elif m == "vreg.ld":
+                # 1. Select Scratchpad based on 'sp' field (0=SP0, 1=SP1)
+                target_sp = SP1 if inst.get('sp', 0) == 1 else SP0
+                
+                # 2. Get address from Scalar Register (rs1)
+                addr = sregs.read(inst['rs1'])
+                
+                # 3. Call the interface function
+                scpad_to_vreg(
+                    scpad=target_sp,
+                    vregs=vregs,
+                    scpad_addr=addr,
+                    vd=inst['vd'],        # Destination Vector Reg
+                    rc=inst.get('rc', 0)  # 0=Row Mode, 1=Col Mode
+                )
+
+            elif m == "vreg.st":
+                # 1. Select Scratchpad
+                target_sp = SP1 if inst.get('sp', 0) == 1 else SP0
+                
+                # 2. Get address
+                addr = sregs.read(inst['rs1'])
+                
+                # 3. Call the interface function
+                vreg_to_scpad(
+                    scpad=target_sp,
+                    vregs=vregs,
+                    scpad_addr=addr,
+                    vs=inst['vd'],        # VM-type uses 'vd' field as the register index
+                    rc=inst.get('rc', 0)
+                )
 
             #scpad load/store here
+
             elif(m == "scpad.ld"):
                 if inst['sid'] == 0:
-                    sdma_load(gmem=mem, scpad=SP0, gmem_base=inst['rs2'], scpad_base_row=inst['rs1/rd1'], tile_id="A", NR=inst['num_rows'], NC=inst['num_cols'])
+                    sdma_load(gmem=mem, scpad=SP0, gmem_base=inst['rs2'], scpad_base_row=inst['rs1/rd1'], tile_id=tile_id0, NR=inst['num_rows'], NC=inst['num_cols'])
+                    tile_id0 += 1
                 elif inst['sid'] == 1:
-                    sdma_load(gmem=mem, scpad=SP0, gmem_base=inst['rs2'], scpad_base_row=inst['rs1/rd1'], tile_id="A", NR=inst['num_rows'], NC=inst['num_cols'])
+                    sdma_load(gmem=mem, scpad=SP0, gmem_base=inst['rs2'], scpad_base_row=inst['rs1/rd1'], tile_id=tile_id1, NR=inst['num_rows'], NC=inst['num_cols'])
+                    tile_id1 += 1
 
             elif(m == "scpad.st"):
                 if inst['sid'] == 0:
-                    sdma_store(gmem=mem, scpad=SP0, scpad_base_row=0, gmem_base=32, tile_id="A", NR=4, NC=4)
+                    sdma_store(gmem=mem, scpad=SP0, scpad_base_row=inst['rs1/rd1'], gmem_base=inst['rs2'], tile_id=tile_id0, NR=inst['num_rows'], NC=inst['num_cols'])
+                    tile_id0 += 1
                 elif inst['sid'] == 1:
-                    sdma_store(gmem=mem, scpad=SP1, scpad_base_row=0, gmem_base=32, tile_id="A", NR=4, NC=4)
+                    sdma_store(gmem=mem, scpad=SP1, scpad_base_row=inst['rs1/rd1'], gmem_base=inst['rs2'], tile_id=tile_id1, NR=inst['num_rows'], NC=inst['num_cols'])
+                    tile_id1 += 1
 
             #spad movement here
             elif(m == "lui.s"):
@@ -295,7 +341,8 @@ def main():
 
 
     # Dump memory to output file
-    #sregs.dump_to_file(out_reg_file)
+    sregs.dump_to_file(out_reg_file)
+    # print(sregs)
     mem.dump_to_file(out_file)
     print(f"\n[INFO] Wrote updated memory to '{out_file}'.")
 

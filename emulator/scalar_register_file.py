@@ -20,12 +20,14 @@ class ScalarRegisterFile:
             self.regs[reg_num] = data & 0xFFFFFFFF  # Mask to 32 bits
 
     def __str__(self):
-        """Helper to pretty-print the register file state."""
         s = ""
         for i in range(len(self.regs)):
-            if i % 4 == 0 and i != 0:
+            # Force cast to python int() to fix the numpy format error
+            val = int(self.read(i))
+            
+            if i % 4 == 0:
                 s += "\n"
-            s += f"x{i:<2}: 0x{self.read(i):08X}  "
+            s += f"x{i:<2}: 0x{val:08X}  "
         return s
     
     def dump_to_file(self, filename):
@@ -36,4 +38,4 @@ class ScalarRegisterFile:
             for i in range(len(self.regs)):
                 if i % 4 == 0 and i != 0:
                     f.write("\n")
-                f.write(f"x{i:<2}: 0x{self.read(i):08X}  ")
+                f.write(f"x{i:<2}: 0x{int(self.read(i)):08X}  ")

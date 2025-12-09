@@ -87,7 +87,8 @@ class Memory:
 
     def write_data(self, addr, data):
         """Write 32-bit data word."""
-        self.data_mem[addr] = data & 0xFFFFFFFF
+        addr = int(addr)
+        self.data_mem[addr] = data
 
     # ------------------------------------------------------------
     # Dump to file
@@ -108,6 +109,7 @@ class Memory:
             # Data mem
             for addr in sorted(self.data_mem.keys()):
                 val = self.data_mem[addr]
+                val = int (val)
                 f.write(f"{addr:08X}: {val:08X}\n")
 
     # ------------------------------------------------------------
