@@ -94,7 +94,9 @@ module vreduction #(
                 valid_out_reg <= 1'b1;
             end
             else begin
-                valid_out_reg <= 1'b0;
+                if (vruif.in.ready_out) begin
+                    valid_out_reg <= 1'b0;
+                end
             end
         end
     end

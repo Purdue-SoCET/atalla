@@ -266,7 +266,7 @@ def main():
     torch.manual_seed(42)
     
     # Generate test cases
-    write_testcases(num_tests_per_type=50)
+    write_testcases(num_tests_per_type=5000)
 
 if __name__ == '__main__':
     main()
