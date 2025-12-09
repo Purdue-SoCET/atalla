@@ -16,6 +16,7 @@ If any issues in this module are found, please report them to the Atalla github 
 // `include "vls_if.vh"  Old include, will need to update and change.
 // 'include
 // New interface file will be called vlsu_if.vh
+`include "vlsu_if.vh"
 
 module vLSU #(parameter FIFO_DEPTH = 13, parameter VEC_LEN = 32)(
     input  logic    CLK,
@@ -29,13 +30,6 @@ module vLSU #(parameter FIFO_DEPTH = 13, parameter VEC_LEN = 32)(
     // J put in interface signals for fifo stuff for now
 
     sync_fifo #(.FIFODEPTH(FIFO_DEPTH), .DATAWIDTH(16)) spad1_to_veggie_fifo (
-        .nRST  (nRST), .CLK(CLK),
-        .wr_en (), .shift(),
-        .din   (), .dout(),
-        .empty (), .full()
-    );
-
-    sync_fifo #(.FIFODEPTH(FIFO_DEPTH), .DATAWIDTH(16)) spad2_to_veggie_fifo (
         .nRST  (nRST), .CLK(CLK),
         .wr_en (), .shift(),
         .din   (), .dout(),
