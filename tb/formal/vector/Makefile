@@ -54,6 +54,7 @@ RTL_SOURCES = $(shell find $(RTL_MODULES)/common/arithmetic -name "*.sv")
 TB_SOURCES = $(SRC_DIR)/testbench.cpp
 TB_SOURCES += $(SRC_DIR)/scratchpad.cpp
 TB_SOURCES += $(SRC_DIR)/sysarr.cpp
+TB_SOURCES += $(SRC_DIR)/schedular.cpp
 # DO NOT include sysarr_test.cpp or scratch_test.cpp here!
 
 # Verilate the design
