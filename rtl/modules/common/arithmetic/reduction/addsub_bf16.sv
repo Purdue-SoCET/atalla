@@ -282,7 +282,7 @@ logic [7:0] exp_out_adj;
         end else if (is_inf2 | is_nan2) begin 
             bf_out = bf2_modified; 
                     // opposite with subnormal result 
-        end else if (xor_out[15] & ~|xor_out[14:7]) begin 
+        end else if (~|exp_out_adj) begin 
             bf_out = 16'h0; 
         // result after rounding 
         end else begin 
