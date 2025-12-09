@@ -25,6 +25,7 @@ package vector_pkg;
     parameter ESZ_W = $clog2(ESZ);
 
     // VEGGIE Params
+    parameter NUM_VREGS = 256;
     parameter READ_PORTS = 4;
     parameter WRITE_PORTS = 4;
     parameter MASK_PORTS = 2;
@@ -85,13 +86,13 @@ package vector_pkg;
     // Data Structures ----------------------------------------------------------------
     typedef struct packed {
         logic sign;
-        logic [4:0] exp;
-        logic [9:0] frac;
-    } fp16_t; 
+        logic [14:7] exp;
+        logic [6:0] frac;
+    } bf16_t; 
 
-    typedef fp16_t [SLICE_W-1:0] slice_vt;
+    typedef bf16_t [SLICE_W-1:0] slice_vt;
     typedef logic  [SLICE_W-1:0] slice_mt;
-    typedef fp16_t [VLMAX-1:0]   vreg_t;
+    typedef bf16_t [VLMAX-1:0]   vreg_t;
 
     typedef enum logic [1:0] {
         VR_MAX = 2'b00,
@@ -228,6 +229,7 @@ package vector_pkg;
         slice_idx_t elem_idx;
         logic last;           // NEW: marks last element of the vector
         logic [7:0] dbg_seq;  // Debug sequence number for tracing
+        logic       rm;  
     } meta_t;
 
     typedef struct packed {
@@ -242,10 +244,10 @@ package vector_pkg;
     } lane_in_t;
 
     typedef struct packed {
-        fp16_t[LANE_FU_COUNT-1:0] result;
+        bf16_t[LANE_FU_COUNT-1:0] result;
         logic[LANE_FU_COUNT-1:0] ready_o; // to SB
         logic[LANE_FU_COUNT-1:0] valid_o; // for WB buffer
-        fp16_t[LANE_FU_COUNT-1:0] rval; // TO rtree for rm mode
+        bf16_t[LANE_FU_COUNT-1:0] rval; // TO rtree for rm mode
         vsel_t[LANE_FU_COUNT-1:0] vd;
         slice_idx_t [LANE_FU_COUNT-1:0] elem_idx; 
         logic       [LANE_FU_COUNT-1:0] last;
@@ -263,8 +265,8 @@ package vector_pkg;
     } lane_seq_in_t;
 
     typedef struct packed {
-        fp16_t      v1_elem;
-        fp16_t      v2_elem;
+        bf16_t      v1_elem;
+        bf16_t      v2_elem;
         logic       mask_bit;
         vsel_t      vd;
         opcode_t    vop;
@@ -276,7 +278,7 @@ package vector_pkg;
 
     // Result Collector --------------------------------------------------------------------
     typedef struct packed {
-        fp16_t     [NUM_LANES-1:0][LANE_FU_COUNT-1:0] result;
+        bf16_t     [NUM_LANES-1:0][LANE_FU_COUNT-1:0] result;
         logic      [NUM_LANES-1:0][LANE_FU_COUNT-1:0] ready_in;  // from WB buffer
         logic      [NUM_LANES-1:0][LANE_FU_COUNT-1:0] valid_in;  // from Lanes
         vsel_t     [NUM_LANES-1:0][LANE_FU_COUNT-1:0] vd;
@@ -293,7 +295,48 @@ package vector_pkg;
 
 
     
-/*
+    // Top Level -------------------------------------------------------------------------
+    typedef struct packed {
+        // From Veggie File to GSAU
+        vreg_t    veg_vdata1;         // vs1
+        vreg_t    veg_vdata2;         // vs2
+        logic     veg_valid;
+
+        // From Scoreboard to GSAU
+        vsel_t    sb_vdst;
+        logic     sb_valid;
+        logic     sb_weight;
+
+        // From WB buffer to GSAU
+        logic     wb_output_ready;
+
+        // From Systolic Array to GSAU
+        vreg_t    sa_array_output;
+        logic     sa_out_valid;
+        logic     sa_fifo_has_space;
+    } gsau_in_t;
+
+    typedef struct packed {
+        // From GSAU to Veggie File
+        logic     veg_ready;
+
+        // From GSAU to Scoreboard
+        logic     sb_ready;
+
+        // From GSAU to WB buffer
+        vreg_t    wb_psum;
+        vsel_t    wb_wbdst;
+        logic     wb_valid;
+
+        // From GSAU to Systolic Array
+        vreg_t    sa_array_in;
+        vreg_t    sa_array_in_partials;
+        logic     sa_input_en;
+        logic     sa_weight_en;
+        logic     sa_partial_en;
+        logic     sa_output_ready;
+    } gsau_out_t;
+
     typedef struct packed {
         logic[LANE_ISSUE_W-1:0]    rm;
         logic[LANE_ISSUE_W-1:0]    valid_in; // From SB theres valid data
@@ -304,18 +347,29 @@ package vector_pkg;
         vmask_t[LANE_ISSUE_W-1:0]  vmask; 
         opcode_t[LANE_ISSUE_W-1:0] vop; // change to umop
         fu_t[LANE_ISSUE_W-1:0]     fu_sel;
+
+        gsau_in_t                     gsau;
     } vector_in_t;
 
     typedef struct packed {
+        // Lane Outputs
         vreg_t[LANE_FU_COUNT-1:0] result;
         logic [LANE_FU_COUNT-1:0] valid_o;   // to WB Buffer
         vsel_t[LANE_FU_COUNT-1:0] vd;
+
+        // Reduction Outputs
+        vreg_t reduction_result;
+        logic  reduction_valid;
+        vsel_t reduction_vd;
+
+        // GSAU
+        gsau_out_t                    gsau;
     } vector_out_t;
 
     /*
     typedef struct packed {
-        fp16_t     v1_elem;
-        fp16_t     v2_elem;
+        bf16_t     v1_elem;
+        bf16_t     v2_elem;
         logic      mask_bit;
         vsel_t     vd;
         opcode_t   vop;
@@ -349,7 +403,7 @@ package vector_pkg;
     typedef struct packed {
         slice_t result;
         fu_t ready; // to SB
-        fp16_t reduction; // TO rtree for rm mode
+        bf16_t reduction; // TO rtree for rm mode
         lane_id_t lane_id;
         vsel_t vd;
     } lane_out_t;

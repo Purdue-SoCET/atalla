@@ -276,7 +276,7 @@ module lane_tb;
         $display("\n=== %s: All elements unmasked ===", cur_test);
 
         for (i = 0; i < SLICE_W; i++) begin
-            v1[i]   = fp16_t'(i);
+            v1[i]   = bf16_t'(i);
             v2[i]   = '0;
             mask[i] = 1'b1;
         end
@@ -313,7 +313,7 @@ module lane_tb;
         $display("\n=== %s: Masked elements ===", cur_test);
 
         for (i = 0; i < SLICE_W; i++) begin
-            v1[i]   = fp16_t'(i+10);
+            v1[i]   = bf16_t'(i+10);
             v2[i]   = '0;
             mask[i] = (i % 2);  // active on odd indices
         end
@@ -381,8 +381,8 @@ module lane_tb;
         $display("\n=== %s: All elements unmasked ===", cur_test);
 
         for (i = 0; i < SLICE_W; i++) begin
-            v1[i]   = fp16_t'(i + 10);
-            v2[i]   = fp16_t'(i + 1);  // non-zero divisor
+            v1[i]   = bf16_t'(i + 10);
+            v2[i]   = bf16_t'(i + 1);  // non-zero divisor
             mask[i] = 1'b1;
         end
         vd = vsel_t'(17);
@@ -418,8 +418,8 @@ module lane_tb;
         $display("\n=== %s: Masked elements ===", cur_test);
 
         for (i = 0; i < SLICE_W; i++) begin
-            v1[i]   = fp16_t'(i + 20);
-            v2[i]   = fp16_t'(i + 1);  // non-zero divisor
+            v1[i]   = bf16_t'(i + 20);
+            v2[i]   = bf16_t'(i + 1);  // non-zero divisor
             mask[i] = (i % 2);  // active on odd indices
         end
         vd = vsel_t'(19);
@@ -457,6 +457,37 @@ module lane_tb;
         dir_monitor_en_div = 1'b0;
     endtask
 
+    task test_valu_single_vd();
+        // assume lane_if is your interface instance hooked to lane
+        // Drive reset first as usual, then:
+
+        // 1) Clear inputs
+        lane_if.lane_in = '0;
+        lane_if.lane_in.ready_in = '{default:1'b1};  // WB always ready
+
+        // 2) Issue exactly one VALU op with vd = 1, rm = 0, all-1 mask
+        @(posedge lane_if.CLK);
+        lane_if.lane_in.valid_in[VALU] <= 1'b1;
+        lane_if.lane_in.rm      [VALU] <= 1'b0;
+        lane_if.lane_in.vd      [VALU] <= vsel_t'(1);
+        lane_if.lane_in.vmask   [VALU] <= '1;
+        lane_if.lane_in.v1      [VALU] <= '{default:'0};
+        lane_if.lane_in.v2      [VALU] <= '{default:'0};
+
+        // 3) Deassert issue after one cycle
+        @(posedge lane_if.CLK);
+        lane_if.lane_in.valid_in[VALU] <= 1'b0;
+
+        // 4) Wait until the lane produces a VALU result
+        wait (lane_if.lane_out.valid_o[VALU] == 1'b1);
+
+        $display("[LANE_TB] VALU retire: vd_out=%0d, expected 1", lane_if.lane_out.vd[VALU]);
+        if (lane_if.lane_out.vd[VALU] !== vsel_t'(1)) begin
+            $error("[LANE_TB] VALU vd mismatch: got %0d, expected 1", lane_if.lane_out.vd[VALU]);
+        end
+    endtask
+
+
     // ------------------------------------------------------------
     // All-zero-mask driver (for TEST 5) - SQRT
     // ------------------------------------------------------------
@@ -472,7 +503,7 @@ module lane_tb;
         for (s = 0; s < num_slices; s++) begin
             // Arbitrary data, but mask all zeros
             for (i = 0; i < SLICE_W; i++) begin
-                v1[i]   = fp16_t'($urandom_range(1000, 0));
+                v1[i]   = bf16_t'($urandom_range(1000, 0));
                 v2[i]   = '0;
                 mask[i] = 1'b0;
             end
@@ -498,8 +529,8 @@ module lane_tb;
         for (s = 0; s < num_slices; s++) begin
             // Arbitrary data, but mask all zeros
             for (i = 0; i < SLICE_W; i++) begin
-                v1[i]   = fp16_t'($urandom_range(1000, 0));
-                v2[i]   = fp16_t'($urandom_range(1000, 1));  // non-zero divisor
+                v1[i]   = bf16_t'($urandom_range(1000, 0));
+                v2[i]   = bf16_t'($urandom_range(1000, 1));  // non-zero divisor
                 mask[i] = 1'b0;
             end
             op = '0;
@@ -531,7 +562,7 @@ module lane_tb;
         for (s = 0; s < num_slices; s++) begin
             // Random data
             for (i = 0; i < SLICE_W; i++) begin
-                v1[i]   = fp16_t'($urandom_range(1000, 0));
+                v1[i]   = bf16_t'($urandom_range(1000, 0));
                 v2[i]   = '0;
                 mask[i] = $urandom_range(1,0);
             end
@@ -585,8 +616,8 @@ module lane_tb;
         for (s = 0; s < num_slices; s++) begin
             // Random data
             for (i = 0; i < SLICE_W; i++) begin
-                v1[i]   = fp16_t'($urandom_range(1000, 0));
-                v2[i]   = fp16_t'($urandom_range(1000, 1));  // non-zero divisor
+                v1[i]   = bf16_t'($urandom_range(1000, 0));
+                v2[i]   = bf16_t'($urandom_range(1000, 1));  // non-zero divisor
                 mask[i] = $urandom_range(1,0);
             end
             op = '0;
@@ -720,8 +751,8 @@ module lane_tb;
         for (s = 0; s < num_slices; s++) begin
             // Random data
             for (i = 0; i < SLICE_W; i++) begin
-                v1[i]   = fp16_t'($urandom_range(1000, 0));
-                v2[i]   = fp16_t'($urandom_range(1000, 0));
+                v1[i]   = bf16_t'($urandom_range(1000, 0));
+                v2[i]   = bf16_t'($urandom_range(1000, 0));
                 mask[i] = $urandom_range(1,0);
             end
             op = '0; // ALU will see this as a valid SUM-like op
@@ -812,8 +843,8 @@ module lane_tb;
         for (s = 0; s < num_slices; s++) begin
             // Random data
             for (i = 0; i < SLICE_W; i++) begin
-                v1[i]   = fp16_t'($urandom_range(1000, 0));
-                v2[i]   = fp16_t'($urandom_range(1000, 0));
+                v1[i]   = bf16_t'($urandom_range(1000, 0));
+                v2[i]   = bf16_t'($urandom_range(1000, 0));
                 mask[i] = $urandom_range(1,0);
             end
             op = '0;
@@ -1479,8 +1510,8 @@ module lane_tb;
             obs_t item;
 
             for (i = 0; i < SLICE_W; i++) begin
-                v1[i]   = fp16_t'(i + 5);
-                v2[i]   = fp16_t'(i + 1);
+                v1[i]   = bf16_t'(i + 5);
+                v2[i]   = bf16_t'(i + 1);
                 mask[i] = 1'b1;
             end
 
@@ -1562,8 +1593,8 @@ module lane_tb;
             obs_t item;
 
             for (i = 0; i < SLICE_W; i++) begin
-                v1[i]   = fp16_t'(i + 10);
-                v2[i]   = fp16_t'(i + 2);
+                v1[i]   = bf16_t'(i + 10);
+                v2[i]   = bf16_t'(i + 2);
                 mask[i] = (i % 2);  // active on odd indices
             end
 
@@ -1704,8 +1735,8 @@ module lane_tb;
                 // 20 slices, all masked off
                 for (s = 0; s < 20; s++) begin
                     for (i = 0; i < SLICE_W; i++) begin
-                        v1[i]   = fp16_t'($urandom_range(1000, 0));
-                        v2[i]   = fp16_t'($urandom_range(1000, 0));
+                        v1[i]   = bf16_t'($urandom_range(1000, 0));
+                        v2[i]   = bf16_t'($urandom_range(1000, 0));
                         mask[i] = 1'b0;
                     end
 
@@ -1801,8 +1832,8 @@ module lane_tb;
             obs_t item;
 
             for (i = 0; i < SLICE_W; i++) begin
-                v1[i]   = fp16_t'(i + 3);
-                v2[i]   = fp16_t'(i + 7);
+                v1[i]   = bf16_t'(i + 3);
+                v2[i]   = bf16_t'(i + 7);
                 mask[i] = 1'b1;
             end
 
@@ -1884,8 +1915,8 @@ module lane_tb;
             obs_t item;
 
             for (i = 0; i < SLICE_W; i++) begin
-                v1[i]   = fp16_t'(i + 11);
-                v2[i]   = fp16_t'(i + 4);
+                v1[i]   = bf16_t'(i + 11);
+                v2[i]   = bf16_t'(i + 4);
                 mask[i] = (i % 2);  // active on odd indices
             end
 
@@ -2026,8 +2057,8 @@ module lane_tb;
                 // 20 slices, all masked off
                 for (s = 0; s < 20; s++) begin
                     for (i = 0; i < SLICE_W; i++) begin
-                        v1[i]   = fp16_t'($urandom_range(1000, 0));
-                        v2[i]   = fp16_t'($urandom_range(1000, 0));
+                        v1[i]   = bf16_t'($urandom_range(1000, 0));
+                        v2[i]   = bf16_t'($urandom_range(1000, 0));
                         mask[i] = 1'b0;
                     end
 
@@ -2096,6 +2127,13 @@ module lane_tb;
                    cur_test, errors, seen, exp_total, exp_q.size());
             total_errors += (errors == 0 ? 1 : errors);
         end
+
+        // ========================================================
+        // TEST 8_VALU: SINGLE VD
+        // ========================================================
+        cur_test = "TEST 8_VALU";
+        $display("\n=== %s: SINGLE VD ===", cur_test);
+        test_valu_single_vd();
 
         // Final summary
         $display("\n========================================");

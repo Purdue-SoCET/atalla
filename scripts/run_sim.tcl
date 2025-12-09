@@ -5,7 +5,7 @@
 #   SRCS       - list of all source files to compile (pkgs + DUT + TB)
 #   INCS       - list of +incdir+... flags
 #   WAVE_ROOT  - (optional) directory containing <TB_NAME>.do wavefiles
-#   VLOG_FLAGS - optional extra vlog flags (e.g., coverage)
+#   VLOG_FLAGS - optional extra vlog flags (e.g., -cover bcesft)
 
 # --- 1. Validate Inputs ---
 if {![info exists TB_NAME]} {
@@ -36,9 +36,9 @@ if {![info exists VLOG_FLAGS]} {
 
 puts "------------------------------------------"
 puts "run_sim.tcl: starting"
-puts "  TB_NAME   = $TB_NAME"
-puts "  WAVE_ROOT = $WAVE_ROOT"
-puts "  VLOG_FLAGS= $VLOG_FLAGS"
+puts "  TB_NAME    = $TB_NAME"
+puts "  WAVE_ROOT  = $WAVE_ROOT"
+puts "  VLOG_FLAGS = $VLOG_FLAGS"
 puts "------------------------------------------"
 
 # --- 2. Setup Library (no auto-delete) ---
@@ -76,7 +76,6 @@ if {[llength $pkg_files] > 0} {
     puts "Compiling package files..."
     puts "------------------------------------------"
 
-    # NOTE: {*}$VLOG_FLAGS expands list elements as separate args
     if {[catch {vlog -sv {*}$VLOG_FLAGS -mfcu +define+SQRT_DEBUG {*}$INCS {*}$pkg_files} errMsg]} {
         puts "ERROR: Package compilation failed!"
         puts "Error details:"
@@ -93,7 +92,6 @@ if {[llength $other_files] > 0} {
     puts "Compiling DUT + TB files..."
     puts "------------------------------------------"
 
-    # No -mfcu here so small edits recompile faster
     if {[catch {vlog -sv {*}$VLOG_FLAGS +define+SQRT_DEBUG {*}$INCS {*}$other_files} errMsg]} {
         puts "ERROR: Compilation Failed!"
         puts "Error details:"
@@ -104,20 +102,38 @@ if {[llength $other_files] > 0} {
     puts "WARNING: No non-package source files found. Nothing to simulate?"
 }
 
-# --- 6. Load Simulation ---
+# --- 6. Decide whether to enable coverage on vsim ---
+set enable_cov 0
+foreach fl $VLOG_FLAGS {
+    if {[string match "-cover*" $fl]} {
+        set enable_cov 1
+    }
+}
+
+puts "Coverage enabled (based on VLOG_FLAGS)? $enable_cov"
+
+# Build vsim command as a Tcl list so flags are separate args
+set vsim_cmd [list vsim]
+if {$enable_cov} {
+    lappend vsim_cmd -coverage
+}
+lappend vsim_cmd work.$TB_NAME
+
+puts "Invoking: $vsim_cmd"
+
+# --- 7. Load Simulation ---
 puts "=========================================="
 puts "Loading Simulation..."
 puts "=========================================="
 
-# You can narrow +acc later (e.g. +acc=/lane_sequencer_tb/*) if you want
-if {[catch {vsim -voptargs="+acc" work.$TB_NAME} errMsg]} {
+if {[catch {eval $vsim_cmd} errMsg]} {
     puts "ERROR: vsim failed to elaborate $TB_NAME"
     puts "Error details:"
     puts $errMsg
     if {[batch_mode]} { quit -f } else { return }
 }
 
-# --- 7. Run (Batch vs GUI) ---
+# --- 8. Run (Batch vs GUI) ---
 if {[batch_mode]} {
     puts "Running in Batch Mode..."
     run -all
@@ -141,7 +157,7 @@ if {[batch_mode]} {
     set wave_file "$WAVE_ROOT/$wave_basename.do"
     puts "Looking for wave do-file: $wave_file"
 
-    # Load do-file
+    # Load wave do-file if present
     if {[file exists $wave_file]} {
         puts "Applying wave do-file: $wave_file"
         do $wave_file
@@ -152,7 +168,6 @@ if {[batch_mode]} {
 
     wave zoom full
 
-    # AUTO RUN RESTORED
     puts "Starting simulation (GUI)..."
     run -all
     puts "Simulation finished. Inspect waves or re-run manually."

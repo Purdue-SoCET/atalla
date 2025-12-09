@@ -28,7 +28,7 @@ module result_collector_tb;
     end
 
     // Some useful locals
-    localparam int ELEM_W        = $bits(fp16_t);
+    localparam int ELEM_W        = $bits(bf16_t);
     localparam int NUM_ELEMS_MAX = VLMAX;  // Maximum elements in a vector
 
     // ------------------------------------------------------------
@@ -185,7 +185,7 @@ module result_collector_tb;
     task automatic drive_vector_for_fu(
         input int    fu_idx,
         input vsel_t dest_vd,
-        input fp16_t base_val
+        input bf16_t base_val
     );
         int ln;
 
@@ -194,7 +194,7 @@ module result_collector_tb;
             vif.rc_in.valid_in [ln][fu_idx] = 1'b1;
             vif.rc_in.vd       [ln][fu_idx] = dest_vd;
             // Simple pattern: base + lane index
-            vif.rc_in.result   [ln][fu_idx] = base_val + fp16_t'(ln);
+            vif.rc_in.result   [ln][fu_idx] = base_val + bf16_t'(ln);
             vif.rc_in.elem_idx [ln][fu_idx] = '0;                  // elem 0
             vif.rc_in.last     [ln][fu_idx] = (ln == NUM_LANES-1); // last lane
         end
@@ -215,7 +215,7 @@ module result_collector_tb;
     task automatic drive_two_elem_vector_for_fu(
         input int    fu_idx,
         input vsel_t dest_vd,
-        input fp16_t base_val
+        input bf16_t base_val
     );
         int ln;
 
@@ -224,7 +224,7 @@ module result_collector_tb;
         for (ln = 0; ln < NUM_LANES; ln++) begin
             vif.rc_in.valid_in [ln][fu_idx] = 1'b1;
             vif.rc_in.vd       [ln][fu_idx] = dest_vd;
-            vif.rc_in.result   [ln][fu_idx] = base_val + fp16_t'(ln*2 + 0);
+            vif.rc_in.result   [ln][fu_idx] = base_val + bf16_t'(ln*2 + 0);
             vif.rc_in.elem_idx [ln][fu_idx] = slice_idx_t'(0);
             vif.rc_in.last     [ln][fu_idx] = 1'b0;
         end
@@ -235,7 +235,7 @@ module result_collector_tb;
         for (ln = 0; ln < NUM_LANES; ln++) begin
             vif.rc_in.valid_in [ln][fu_idx] = 1'b1;
             vif.rc_in.vd       [ln][fu_idx] = dest_vd;
-            vif.rc_in.result   [ln][fu_idx] = base_val + fp16_t'(ln*2 + 1);
+            vif.rc_in.result   [ln][fu_idx] = base_val + bf16_t'(ln*2 + 1);
             vif.rc_in.elem_idx [ln][fu_idx] = slice_idx_t'(1);
             vif.rc_in.last     [ln][fu_idx] = (ln == NUM_LANES-1);
         end
@@ -253,13 +253,13 @@ module result_collector_tb;
     // 8. Build expected vectors for the helpers above
     // ------------------------------------------------------------
     function automatic vreg_t build_exp_one_elem_per_lane(
-        input fp16_t base_val
+        input bf16_t base_val
     );
         vreg_t exp;
         exp = '0;
 
         for (int ln = 0; ln < NUM_LANES; ln++) begin
-            fp16_t val = base_val + fp16_t'(ln);
+            bf16_t val = base_val + bf16_t'(ln);
             // gidx = { lane_bits, elem_idx(0) }
             int unsigned gidx;
             gidx = { ln[$clog2(NUM_LANES)-1:0], slice_idx_t'(0) };
@@ -270,14 +270,14 @@ module result_collector_tb;
     endfunction
 
     function automatic vreg_t build_exp_two_elem_per_lane(
-        input fp16_t base_val
+        input bf16_t base_val
     );
         vreg_t exp;
         exp = '0;
 
         for (int ln = 0; ln < NUM_LANES; ln++) begin
             for (int e = 0; e < SLICE_W; e++) begin
-                fp16_t val = base_val + fp16_t'(ln*2 + e);
+                bf16_t val = base_val + bf16_t'(ln*2 + e);
                 int unsigned gidx;
                 gidx = { ln[$clog2(NUM_LANES)-1:0], slice_idx_t'(e) };
                 exp[gidx*ELEM_W +: ELEM_W] = val;
@@ -291,14 +291,14 @@ module result_collector_tb;
     // 9. Directed Tests
     // ------------------------------------------------------------
     task automatic test_basic_mul;
-        fp16_t base;
+        bf16_t base;
         vreg_t exp;
         vsel_t vd;
 
         cur_test_name = "TEST 1: BASIC_MUL";
 
         vd   = vsel_t'(5'd1);
-        base = fp16_t'(16'h3C00); // just a pattern
+        base = bf16_t'(16'h3C00); // just a pattern
 
         exp = build_exp_one_elem_per_lane(base);
         push_expect(MUL, vd, exp, "TEST_BASIC_MUL");
@@ -309,7 +309,7 @@ module result_collector_tb;
     endtask
 
     task automatic test_fu_routing_mul_then_div;
-        fp16_t base_mul, base_div;
+        bf16_t base_mul, base_div;
         vreg_t exp_mul, exp_div;
         vsel_t vd_mul, vd_div;
 
@@ -317,8 +317,8 @@ module result_collector_tb;
 
         vd_mul   = vsel_t'(5'd2);
         vd_div   = vsel_t'(5'd3);
-        base_mul = fp16_t'(16'h4000);
-        base_div = fp16_t'(16'h4200);
+        base_mul = bf16_t'(16'h4000);
+        base_div = bf16_t'(16'h4200);
 
         exp_mul = build_exp_one_elem_per_lane(base_mul);
         exp_div = build_exp_one_elem_per_lane(base_div);
@@ -334,14 +334,14 @@ module result_collector_tb;
     endtask
 
     task automatic test_global_index_two_elems;
-        fp16_t base;
+        bf16_t base;
         vreg_t exp;
         vsel_t vd;
 
         cur_test_name = "TEST 3: GLOBAL_INDEX_2ELEM";
 
         vd   = vsel_t'(5'd4);
-        base = fp16_t'(16'h4400);
+        base = bf16_t'(16'h4400);
 
         exp = build_exp_two_elem_per_lane(base);
         push_expect(MUL, vd, exp, "TEST_GLOBAL_INDEX_2ELEM");
@@ -353,14 +353,14 @@ module result_collector_tb;
 
     // Backpressure test
     task automatic test_wb_backpressure;
-        fp16_t base;
+        bf16_t base;
         vreg_t exp;
         vsel_t vd;
 
         cur_test_name = "TEST 4: WB_BACKPRESSURE";
 
         vd   = vsel_t'(5'd5);
-        base = fp16_t'(16'h4500);
+        base = bf16_t'(16'h4500);
 
         exp = build_exp_one_elem_per_lane(base);
         push_expect(MUL, vd, exp, "TEST_WB_BACKPRESSURE");
@@ -387,7 +387,7 @@ module result_collector_tb;
 
     // Fast "last lane" race test
     task automatic test_fast_last_lane_race;
-        fp16_t base;
+        bf16_t base;
         vreg_t exp;
         vsel_t vd;
         int ln;
@@ -395,7 +395,7 @@ module result_collector_tb;
         cur_test_name = "TEST 5: FAST_LAST_LANE_RACE";
 
         vd   = vsel_t'(5'd6);
-        base = fp16_t'(16'h4600);
+        base = bf16_t'(16'h4600);
 
         // EXPECTATION: full vector with all lanes written
         exp = build_exp_one_elem_per_lane(base);
@@ -412,7 +412,7 @@ module result_collector_tb;
         end
         vif.rc_in.valid_in [NUM_LANES-1][MUL] = 1'b1;
         vif.rc_in.vd       [NUM_LANES-1][MUL] = vd;
-        vif.rc_in.result   [NUM_LANES-1][MUL] = base + fp16_t'(NUM_LANES-1);
+        vif.rc_in.result   [NUM_LANES-1][MUL] = base + bf16_t'(NUM_LANES-1);
         vif.rc_in.elem_idx [NUM_LANES-1][MUL] = '0;
         vif.rc_in.last     [NUM_LANES-1][MUL] = 1'b1;
 
@@ -423,7 +423,7 @@ module result_collector_tb;
         for (ln = 0; ln < NUM_LANES-1; ln++) begin
             vif.rc_in.valid_in [ln][MUL] = 1'b1;
             vif.rc_in.vd       [ln][MUL] = vd;
-            vif.rc_in.result   [ln][MUL] = base + fp16_t'(ln);
+            vif.rc_in.result   [ln][MUL] = base + bf16_t'(ln);
             vif.rc_in.elem_idx [ln][MUL] = '0;
             vif.rc_in.last     [ln][MUL] = 1'b0;
         end

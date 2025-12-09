@@ -24,12 +24,10 @@ GUI ?= OFF
 # --- Coverage Controls ---
 COVERAGE ?= OFF           # set to ON to enable coverage
 VLOG_FLAGS ?=
-VSIM_FLAGS ?=
 
 ifeq ($(COVERAGE),ON)
-  # Typical Questa coverage switches; tweak if your flow uses different ones
+  # Questa coverage switches
   VLOG_FLAGS += -cover bcesft
-  VSIM_FLAGS += -coverage
 endif
 
 # --- Target-Specific Variable Mappings ---
@@ -124,7 +122,6 @@ test:
 	TB_RELPATH=$$(echo "$$TB_DIR" | sed "s|$(UNITTESTROOT)||"); \
 	\
 	# 2. Identify Include Sources and PACKAGES \
-	#    Looks for .sv AND .svh AND _pkg files to ensure packages are found \
 	INCSRCS=""; \
 	if [ -n "$$TB_RELPATH" ] && [ "$$TB_RELPATH" != "/" ]; then \
 	  INCSRCS=$$(find "$(INCDIRROOT)/common" "$(INCDIRROOT)$$TB_RELPATH" -type f \( -name '*.sv' -o -name '*_pkg.sv' -o -name '*_pkg.vh' \) -print 2>/dev/null | sort); \
@@ -149,7 +146,6 @@ test:
 	                    $(MODROOT)/common/general"; \
 	  MODSRCS=$$(find $$MOD_SEARCH_PATH -type f -name '*.sv' ! -name '*_pkg.sv' -print 2>/dev/null | sort); \
 	else \
-	  # Non-vector TBs can still use dut:=... to limit scope if desired \
 	  if [ -n "$(dut)" ]; then \
 	    echo "[$@] compiling specific DUT files: $(dut)"; \
 	    for f in $$(echo "$(dut)" | tr ',' ' '); do \
@@ -177,23 +173,21 @@ test:
 	\
 	echo "[$@] Running generic simulation script..."; \
 	if [ "$(GUI)" = "ON" ]; then \
-		$(VSIM) $(VSIM_FLAGS) -voptargs="+acc" \
-		  -do "set batch_mode 0; \
-		       set WAVE_ROOT $(WAVEROOT); \
-		       set TB_NAME $$TB_TOP; \
-		       set SRCS {$$ORDERED_SRCS}; \
-		       set INCS {$$ALL_INCS}; \
-		       set VLOG_FLAGS {$(VLOG_FLAGS)}; \
-		       do $(SCRIPTROOT)/run_sim.tcl"; \
+		$(VSIM) -do "set batch_mode 0; \
+		             set WAVE_ROOT $(WAVEROOT); \
+		             set TB_NAME $$TB_TOP; \
+		             set SRCS {$$ORDERED_SRCS}; \
+		             set INCS {$$ALL_INCS}; \
+		             set VLOG_FLAGS {$(VLOG_FLAGS)}; \
+		             do $(SCRIPTROOT)/run_sim.tcl"; \
 	else \
-		$(VSIM) -c $(VSIM_FLAGS) -voptargs="+acc" \
-		  -do "set batch_mode 1; \
-		       set WAVE_ROOT $(WAVEROOT); \
-		       set TB_NAME $$TB_TOP; \
-		       set SRCS {$$ORDERED_SRCS}; \
-		       set INCS {$$ALL_INCS}; \
-		       set VLOG_FLAGS {$(VLOG_FLAGS)}; \
-		       do $(SCRIPTROOT)/run_sim.tcl"; \
+		$(VSIM) -c -do "set batch_mode 1; \
+		                set WAVE_ROOT $(WAVEROOT); \
+		                set TB_NAME $$TB_TOP; \
+		                set SRCS {$$ORDERED_SRCS}; \
+		                set INCS {$$ALL_INCS}; \
+		                set VLOG_FLAGS {$(VLOG_FLAGS)}; \
+		                do $(SCRIPTROOT)/run_sim.tcl"; \
 	fi
 	
 clean:

@@ -27,7 +27,7 @@ module result_collector (
 
             // Per-lane views for this FU
             // Note: These are unpacked arrays (memories), fitting for the loops below
-            fp16_t      lane_result   [NUM_LANES];
+            bf16_t      lane_result   [NUM_LANES];
             logic       lane_valid    [NUM_LANES];
             logic       lane_ready    [NUM_LANES];
             vsel_t      lane_vd       [NUM_LANES];
@@ -65,11 +65,6 @@ module result_collector (
                 .wb_vd        (rc_out.vd     [fu])
             );
 
-            // --------------------------------------------------------
-            // FIX IS HERE:
-            // Use streaming operator { >> {lane_ready} } to cast the 
-            // unpacked array to a packed vector before applying (&).
-            // --------------------------------------------------------
             assign rc_out.ready_in[fu] = & { >> {lane_ready} };
 
         end

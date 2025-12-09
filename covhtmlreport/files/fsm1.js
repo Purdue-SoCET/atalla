@@ -1,0 +1,2 @@
+var g_data = {"101":{"pr":"/lane_tb/dut/u_mul","fsms":[["state",10,95,[["IDLE",0,10,95,340,"                 0"],["BUSY",0,10,103,246,"                 1"],["HAVE_RES",0,10,113,131,"                 2"],["IDLE -> BUSY",1,10,97,123,0],["BUSY -> HAVE_RES",1,10,105,123,1],["BUSY -> IDLE",1,10,58,0,2],["HAVE_RES -> IDLE",1,10,115,123,3]],100.00,75.00]]}};
+processFsmData(g_data);

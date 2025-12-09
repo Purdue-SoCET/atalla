@@ -30,9 +30,14 @@ interface vector_if;
   // VALU Signals GOING TO DELETE
   vreg_t vdat1, vdat2, result;
   */
+  // Top Level SIGNALS
+  vector_in_t vector_in; 
+  vector_out_t vector_out;
+
   // VEGGIE SIGNALS
   veggie_in_t veggie_in; 
   veggie_out_t veggie_out;
+
   // Op Buffer Signal
   veggie_out_t opbuff_in;
   opbuff_out_t opbuff_out;
@@ -54,11 +59,13 @@ interface vector_if;
   result_collector_in_t rc_in;
   result_collector_out_t rc_out;
 
-/* 
+
   modport vector (
-    input control, r1, imm, vd, v1, v2, vmask, col, row, row_id,
-    output wen, vd, vdata, swizzle, col, row, datatype, row_id, error
+    input vector_in,
+    output vector_out
   );
+  
+  /*
   // Scoreboard will handle taking imm or
   modport valu (
     input vdat1, vdat2, vop, vmask,

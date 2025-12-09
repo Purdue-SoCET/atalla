@@ -14,7 +14,7 @@ module rc_fu #(
     input  logic                     nRST,
 
     // From lanes
-    input  fp16_t                    lane_result   [NUM_LANES_P],
+    input  bf16_t                    lane_result   [NUM_LANES_P],
     input  logic                     lane_valid    [NUM_LANES_P],
     output logic                     lane_ready    [NUM_LANES_P],
     input  vsel_t                    lane_vd       [NUM_LANES_P],
@@ -31,7 +31,7 @@ module rc_fu #(
     // ------------------------------------------------------------
     // Locals
     // ------------------------------------------------------------
-    localparam int ELEM_W   = $bits(fp16_t);
+    localparam int ELEM_W   = $bits(bf16_t);
     // One full vector = VLMAX elements (from vector_pkg)
     localparam int TOTAL_ELEMS = NUM_LANES_P;  // 1 element per lane in current design/tests
 

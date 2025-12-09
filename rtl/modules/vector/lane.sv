@@ -44,7 +44,7 @@ module lane #(
 
     // SQRT hold buffer (single-entry, matching DIV pattern)
     logic       sqrt_hold_valid;
-    fp16_t      sqrt_hold_result;
+    bf16_t      sqrt_hold_result;
     vsel_t      sqrt_hold_vd;
     slice_idx_t sqrt_hold_elem;
     logic       sqrt_hold_last;
@@ -194,7 +194,7 @@ module lane #(
 
     // DIV hold buffer signals (declared early for use in FU backpressure)
     logic       div_hold_valid;
-    fp16_t      div_hold_result;
+    bf16_t      div_hold_result;
     vsel_t      div_hold_vd;
     slice_idx_t div_hold_elem;
     logic [7:0] div_hold_dbg_seq;
@@ -473,8 +473,8 @@ module lane #(
         $display("[%m] MUL_COUNTS: issue=%0d wb=%0d", mul_issue_cnt, mul_wb_cnt);
     end
 
-       // ============================================================
-    // VALU PIPELINE (V-ALU: add/sub/min/max bf16)
+    // ============================================================
+    // VALU PIPELINE (V-ALU: add/sub/min/max bf16) with reduction (rm)
     // ============================================================
 
     // ------------------------------------------------------------
@@ -493,15 +493,17 @@ module lane #(
         .MANT_WIDTH(7)
     ) valu_bus();
 
-    
     // ------------------------------------------------------------
-    // VALU hold buffer signals
+    // VALU hold buffer signals (normal vector path)
     // ------------------------------------------------------------
     logic       valu_hold_valid;
-    fp16_t      valu_hold_result;
+    bf16_t      valu_hold_result;
     vsel_t      valu_hold_vd;
     slice_idx_t valu_hold_elem;
     logic       valu_hold_last;
+
+    // Reduction fire pulse (one per *full vector* per lane)
+    logic valu_reduce_fire;
 
     // Issue / fire conditions
     logic valu_issue_valid;
@@ -530,7 +532,7 @@ module lane #(
         valu_seq_in.vmask = lif.lane_in.vmask[VALU];
         valu_seq_in.vd    = lif.lane_in.vd[VALU];
         valu_seq_in.vop   = lif.lane_in.vop[VALU];   // encodes SUM/SUB/MIN/MAX
-        valu_seq_in.rm    = lif.lane_in.rm[VALU];
+        valu_seq_in.rm    = lif.lane_in.rm[VALU];    // reduction mode bit
         valu_seq_in.valid = lif.lane_in.valid_in[VALU];
 
         // READY back to the lane front-end:
@@ -573,14 +575,14 @@ module lane #(
         valu_bus.in.valid_in = valu_fire_valid;
 
         // Writeback-side ready: backpressure when hold buffer is full
-        // (only claim ready if we can eventually expose result to WB)
+        // (only claim ready if we can eventually expose result downstream)
         valu_bus.in.ready_out = (!valu_hold_valid || lif.lane_in.ready_in[VALU]);
     end
 
     // ------------------------------------------------------------
     // VALU: Retire Signal
     // ------------------------------------------------------------
-    // Result retires when FU has a valid result and WB path accepts it
+    // Result retires when FU has a valid result and downstream accepts it
     logic valu_retire;
     assign valu_retire = valu_bus.out.valid_out && valu_bus.in.ready_out;
 
@@ -592,7 +594,8 @@ module lane #(
     assign valu_meta_in.last     =
         (LANE_ID == LAST_LANE) &&
         (valu_seq_out.elem_idx == LAST_ELEM);
-    assign valu_meta_in.dbg_seq         = '0; // no dbg counter for VALU
+    assign valu_meta_in.dbg_seq  = '0;                      // no dbg counter for VALU
+    assign valu_meta_in.rm       = valu_seq_out.rm;         // carry rm as metadata
 
     lane_fu_pt #(
         .DATA_W ($bits(meta_t)),
@@ -614,7 +617,15 @@ module lane #(
     );
 
     // ------------------------------------------------------------
-    // VALU: Hold Buffer & Writeback Logic
+    // VALU: Reduction fire pulse (rm mode)
+    // ------------------------------------------------------------
+    // When rm=1 and this is the *last* element of the full vector,
+    // treat this retire as the reduction scalar for the whole vector.
+    assign valu_reduce_fire =
+        valu_retire && valu_meta_out.rm && valu_meta_out.last;
+
+    // ------------------------------------------------------------
+    // VALU: Hold Buffer (normal vector path, rm=0 only)
     // ------------------------------------------------------------
     always_ff @(posedge CLK or negedge nRST) begin
         if (!nRST) begin
@@ -624,8 +635,9 @@ module lane #(
             valu_hold_elem   <= '0;
             valu_hold_last   <= 1'b0;
         end else begin
-            // Capture new FU result + metadata when retire happens
-            if (valu_retire) begin
+            // Capture new FU result + metadata when retire happens,
+            // but ONLY for non-reduction (rm=0) ops.
+            if (valu_retire && !valu_meta_out.rm) begin
                 valu_hold_valid  <= 1'b1;
                 valu_hold_result <= valu_bus.out.result;
                 valu_hold_vd     <= valu_meta_out.vd;
@@ -671,13 +683,16 @@ module lane #(
         lif.lane_out.last[MUL]     = mul_hold_last;
 
         // VALU outputs
-        // Default: no VALU result
+        // Normal vector VALU path (rm = 0)
         lif.lane_out.ready_o[VALU]  = valu_seq_out.lane_ready;
-        lif.lane_out.valid_o[VALU]  = valu_hold_valid;
+        lif.lane_out.valid_o[VALU]  = valu_hold_valid;   // only set for rm=0
         lif.lane_out.result [VALU]  = valu_hold_result;
         lif.lane_out.vd     [VALU]  = valu_hold_vd;
         lif.lane_out.elem_idx[VALU] = valu_hold_elem;
         lif.lane_out.last   [VALU]  = valu_hold_last;
+
+        // Reduction scalar (rm = 1, last element): bypass hold buffer
+        lif.lane_out.rval[VALU]     = valu_reduce_fire ? valu_bus.out.result : '0;
 
     end
 
