@@ -95,7 +95,14 @@ schedular::instruction schedular::parse_instruction(const std::string& instr_str
 
 void schedular::tick()
 {
+    static uint8_t last_clk = 0;
 
+    if (clk && !last_clk) {
+        if (!rst_n)
+        {
+            std::fill(std::begin(binary_packets), std::end(binary_packets), 0);
+        }
+    }
 }
 
 
