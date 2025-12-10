@@ -21,11 +21,11 @@ interface shifting_unit_if;
   vreg_t                              veg_vdata;
   shift_direction_t                   direction;
   logic [$clog2(NUM_ELEMENTS)-1:0]    shift_amount;
-  logic                               input_valid;
-  logic                               output_ready;
+  logic                               valid_in;
+  logic                               ready_in;
   vreg_t                              shifted_vdata;
-  logic                               input_ready;
-  logic                               output_valid;
+  logic                               ready_out;
+  logic                               valid_out;
 
   // Connect individual signals to struct members
   always_comb begin
@@ -33,13 +33,13 @@ interface shifting_unit_if;
     inputs.veg_vdata     = veg_vdata;
     inputs.direction     = direction;
     inputs.shift_amount  = shift_amount;
-    inputs.input_valid   = input_valid;
-    inputs.output_ready  = output_ready;
+    inputs.valid_in   = valid_in;
+    inputs.ready_in  = ready_in;
     
     // Unpack output struct into individual signals
     shifted_vdata = outputs.shifted_vdata;
-    input_ready   = outputs.input_ready;
-    output_valid  = outputs.output_valid;
+    ready_out   = outputs.ready_out;
+    valid_out  = outputs.valid_out;
   end
 
   // Constants for backward compatibility with testbench
@@ -47,8 +47,8 @@ interface shifting_unit_if;
   //localparam shift_direction_t RIGHT = SHIFT_RIGHT;
 
   modport shift_u (
-    input  veg_vdata, direction, shift_amount, input_valid, output_ready, inputs,
-    output shifted_vdata, input_ready, output_valid, outputs
+    input  veg_vdata, direction, shift_amount, valid_in, ready_in, inputs,
+    output shifted_vdata, ready_out, valid_out, outputs
   );
 endinterface
 `endif // SHIFTING_UNIT_IF_VH

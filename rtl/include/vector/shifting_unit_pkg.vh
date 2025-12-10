@@ -15,14 +15,14 @@ package shifting_unit_pkg;
         vreg_t                              veg_vdata;      // [vreg bits] vector data
         shift_direction_t                   direction;      // shift direction: 0-left, 1-right
         logic [$clog2(NUM_ELEMENTS)-1:0]    shift_amount;   // amount of elements to shift
-        logic                               input_valid;    // vdata & shift is valid
-        logic                               output_ready;   // writeback arbiter is ready
+        logic                               valid_in;    // vdata & shift is valid
+        logic                               ready_in;   // writeback arbiter is ready
     } shifting_unit_inputs_t;
 
     typedef struct packed {
         vreg_t                              shifted_vdata;  // [vreg bits] shifted vector data
-        logic                               input_ready;    // shifting_unit is issuable
-        logic                               output_valid;   // shifted vector is valid
+        logic                               ready_out;    // shifting_unit is issuable
+        logic                               valid_out;   // shifted vector is valid
     } shifting_unit_outputs_t;
 
 endpackage
