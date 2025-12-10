@@ -1,7 +1,7 @@
 `ifndef SHIFTING_UNIT_PKG_VH
 `define SHIFTING_UNIT_PKG_VH
 
-`include "vector_pkg.sv"
+`include "vector_pkg.vh"
 
 package shifting_unit_pkg;
     import vector_pkg::*;

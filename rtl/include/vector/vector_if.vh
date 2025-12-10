@@ -2,7 +2,7 @@
 `ifndef VECTOR_IF_VH
 `define VECTOR_IF_VH
 
-`include "vector_types.vh"
+`include "vector_pkg.vh"
 
 interface vector_if;
   import vector_pkg::*;
@@ -30,9 +30,14 @@ interface vector_if;
   // VALU Signals GOING TO DELETE
   vreg_t vdat1, vdat2, result;
   */
+  // Top Level SIGNALS
+  vector_in_t vector_in; 
+  vector_out_t vector_out;
+
   // VEGGIE SIGNALS
   veggie_in_t veggie_in; 
   veggie_out_t veggie_out;
+
   // Op Buffer Signal
   veggie_out_t opbuff_in;
   opbuff_out_t opbuff_out;
@@ -49,11 +54,18 @@ interface vector_if;
   // Mask Unit Signals
   masku_in_t masku_in;
   masku_out_t masku_out;
-/* 
+
+  // Result Collector Signals
+  result_collector_in_t rc_in;
+  result_collector_out_t rc_out;
+
+
   modport vector (
-    input control, r1, imm, vd, v1, v2, vmask, col, row, row_id,
-    output wen, vd, vdata, swizzle, col, row, datatype, row_id, error
+    input vector_in,
+    output vector_out
   );
+  
+  /*
   // Scoreboard will handle taking imm or
   modport valu (
     input vdat1, vdat2, vop, vmask,
@@ -86,21 +98,19 @@ interface vector_if;
     output lane_out
   );  
 
-  /*
-  modport seq_alu (
-    input alut_in,
-    output alut_out
-  );
-  modport alu_wb (
-    input aluwb_in,
-    output aluwb_out
-  );
-*/
+  // Mask Unit
   modport masku (
     input CLK, nRST,
     input masku_in,
     output masku_out
   );
+
+  // Result Collector
+  modport result_collector (
+    input CLK, nRST,
+    input rc_in,
+    output rc_out
+  );  
 
 endinterface
 

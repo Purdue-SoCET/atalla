@@ -4,7 +4,7 @@
 // Banked vector register file implementation for bf16 datatype
 // ========================================================================
 `include "vector_if.vh"
-`include "vector_types.vh"
+`include "vector_pkg.vh"
 
 `define BANKNAME(P, N) P``BANK``N
 `define priority_encode(one_hot_vec, index_var) \

@@ -1,6 +1,6 @@
 // vreg_file.sv — minimal wrapper using interface modport
 `include "vector_if.vh"
-`include "vector_types.vh"
+`include "vector_pkg.vh"
 
 module vreg_file (
   vector_if vif

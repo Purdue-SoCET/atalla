@@ -4,7 +4,7 @@
 // Operand Buffer to keep read values during conflict
 // ========================================================================
 `include "vector_if.vh"
-`include "vector_types.vh"
+`include "vector_pkg.vh"
 
 module op_buffer (
     input  logic CLK, nRST, accomplished,

@@ -1,10 +1,10 @@
 /* FU Vector Divide Code */
-`include "div_if.vh"
+`include "vdiv_if.vh"
 
-module div
+module vdiv
 (
     input logic CLK, nRST,
-    div_if.div divif
+    vdiv_if.div divif
 );
 
 parameter int EXP_WIDTH = divif.EXP_WIDTH;
@@ -12,39 +12,6 @@ parameter int MANT_WIDTH = divif.MANT_WIDTH;
 
 // Sequential logic to pulse done for 1 cycle
 logic done, skip_divider, en_divider, is_ovf, is_sub, first_cycle;
-
-// ============================================================
-// Fixed-Latency Pipeline (Critical Fix)
-// ============================================================
-// DIV has variable latency: 1 cycle for NaN/Inf/Zero, 11 cycles for normal div.
-// But lane_fu_pt expects FIXED latency (LATENCY=11) for metadata alignment.
-// Solution: Delay fast-path results to match slow-path latency.
-
-localparam int PIPELINE_LATENCY = 11;  // Must match lane_fu_pt LATENCY parameter
-localparam int FAST_PATH_DELAY = PIPELINE_LATENCY - 1;  // Delay skip_divider by this many cycles
-
-// Internal result ready (before fixed-latency delay)
-logic result_ready_internal;
-
-// Delay pipeline for fast-path results
-logic [FAST_PATH_DELAY-1:0] fast_path_valid_shift;
-logic fast_path_delayed;
-
-assign result_ready_internal = done || (skip_divider && divif.in.valid_in && divif.out.ready_in);
-
-always_ff @(posedge CLK, negedge nRST) begin
-    if (~nRST) begin
-        fast_path_valid_shift <= '0;
-    end else begin
-        // Shift register: delays skip_divider results to match normal div latency
-        fast_path_valid_shift <= {fast_path_valid_shift[FAST_PATH_DELAY-2:0], 
-                                   (skip_divider && divif.in.valid_in && divif.out.ready_in)};
-    end
-end
-
-assign fast_path_delayed = fast_path_valid_shift[FAST_PATH_DELAY-1];
-
-// Handshake state machine
 always_ff @(posedge CLK, negedge nRST) begin
     if (~nRST) begin
         divif.out.valid_out <= 0;
@@ -53,81 +20,20 @@ always_ff @(posedge CLK, negedge nRST) begin
     end else begin
         if (first_cycle) divif.out.ready_in <= 1;
         first_cycle <= 0;
-        
-        // Assert valid_out after fixed latency for all operations
-        if (done || fast_path_delayed) divif.out.valid_out <= 1;
+        if (done || (skip_divider && divif.in.valid_in && divif.out.ready_in)) divif.out.valid_out <= 1;
         else if (divif.in.ready_out && divif.out.valid_out) divif.out.valid_out <= 0;
-        
         if (divif.out.valid_out && divif.in.ready_out) divif.out.ready_in <= 1;
         else if (divif.in.valid_in && divif.out.ready_in) divif.out.ready_in <= 0;
     end
 end
-
-`ifdef DIV_FU_DEBUG
-// Internal FU debugging
-always_ff @(posedge CLK) begin
-    if (nRST && divif.in.valid_in && divif.out.ready_in) begin
-        $display("[%0t] DIV_FU_ACCEPT: skip=%b ops=%h/%h", 
-                 $time, skip_divider, divif.in.operand1, divif.in.operand2);
-    end
-    if (nRST && done) begin
-        $display("[%0t] DIV_FU_DONE: mant_div completed", $time);
-    end
-    if (nRST && fast_path_delayed) begin
-        $display("[%0t] DIV_FU_FAST_DELAYED: skip_divider path delayed to 11 cycles", $time);
-    end
-    if (nRST && (done || fast_path_delayed)) begin
-        $display("[%0t] DIV_FU_VALID_OUT asserted: result=%h", $time, divif.out.result);
-    end
-end
-`endif
 assign en_divider = (divif.in.valid_in && divif.out.ready_in) || (!divif.out.ready_in && !divif.out.valid_out);
 
-// ============================================================
-// Input Latching (Critical Fix: Match SQRT Behavior)
-// ============================================================
-// Latch operands when accepting new input to prevent corruption
-// from changing input wires during multi-cycle operations.
-// This uses the exact same pattern as sqrt_bf16.
-
-localparam int OPERAND_WIDTH = 1 + EXP_WIDTH + MANT_WIDTH;
-
-// Registered operand storage
-logic [OPERAND_WIDTH-1:0] operand1_reg, operand2_reg;
-
-// Combinational operand mux (sample new or hold old)
-logic [OPERAND_WIDTH-1:0] operand1_next, operand2_next;
-
-always_comb begin
-    if (divif.in.valid_in && divif.out.ready_in) begin
-        // Sample new inputs when accepting operation
-        operand1_next = divif.in.operand1;
-        operand2_next = divif.in.operand2;
-    end else begin
-        // Hold previous registered values
-        operand1_next = operand1_reg;
-        operand2_next = operand2_reg;
-    end
-end
-
-always_ff @(posedge CLK, negedge nRST) begin
-    if (~nRST) begin
-        operand1_reg <= '0;
-        operand2_reg <= '0;
-    end else begin
-        operand1_reg <= operand1_next;
-        operand2_reg <= operand2_next;
-    end
-end
-
-// Split operands into components
-// Use the COMBINATIONAL operand1_next/operand2_next so values are available
-// immediately on the accept cycle (matching sqrt_bf16 behavior)
+// Split FP inputs into components
 logic sign_a, sign_b;
 logic [EXP_WIDTH-1:0] exp_a, exp_b;
 logic [MANT_WIDTH-1:0] mant_a, mant_b;
-assign {sign_a, exp_a, mant_a} = operand1_next;
-assign {sign_b, exp_b, mant_b} = operand2_next;
+assign {sign_a, exp_a, mant_a} = divif.in.operand1;
+assign {sign_b, exp_b, mant_b} = divif.in.operand2;
 
 // Compute sign (simple XOR)
 logic final_sign;
@@ -157,7 +63,7 @@ localparam int bias = (1 << (EXP_WIDTH - 1)) - 1;
 logic [EXP_WIDTH:0] exp;
 assign exp = exp_a - exp_b + bias;
 
-// int_div #(.SIZE(MANT_WIDTH*2+3), .SKIP(MANT_WIDTH+1)) divider (
+// int_divider #(.SIZE(MANT_WIDTH*2+3), .SKIP(MANT_WIDTH+1)) divider (
 //     .CLK(CLK), .nRST(nRST), .en(en_divider && !skip_divider),
 //     .x({divif.in.operand1[MANT_WIDTH+:EXP_WIDTH] != 0, mant_a, {(MANT_WIDTH+2){1'b0}}}),
 //     .y({{(MANT_WIDTH + 2){1'b0}}, exp_b != 0, mant_b}),
@@ -166,10 +72,10 @@ assign exp = exp_a - exp_b + bias;
 
 // Use optimized mantissa divider (unused reg space removed)
 logic [MANT_WIDTH+2:0] quotient;
-mant_div #(.MANT_WIDTH(MANT_WIDTH)) m_div (
+mant_divider #(.MANT_WIDTH(MANT_WIDTH)) divider_2 (
     .CLK(CLK), .nRST(nRST), .en(en_divider && !skip_divider),
-    .x({exp_a != 0, mant_a}),  // Use latched exp_a, not live input
-    .y({exp_b != 0, mant_b}),  // Already using latched exp_b
+    .x({divif.in.operand1[MANT_WIDTH+:EXP_WIDTH] != 0, mant_a}),
+    .y({exp_b != 0, mant_b}),
     .result(quotient), .done(done)
 );
 
@@ -215,7 +121,7 @@ endmodule
 
 
 // Submodule: Integer divider modified for mantissa division
-module mant_div #(
+module mant_divider #(
     parameter MANT_WIDTH = 10
 )(
     input logic CLK, nRST, en,

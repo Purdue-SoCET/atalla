@@ -6,8 +6,8 @@
 `ifndef SHIFTING_UNIT_IF_VH
 `define SHIFTING_UNIT_IF_VH
 
-`include "vector_pkg.sv"
-`include "shifting_unit_pkg.sv"
+`include "vector_pkg.vh"
+`include "shifting_unit_pkg.vh"
 
 interface shifting_unit_if;
   import vector_pkg::*;
