@@ -32,12 +32,13 @@ sysarr::sysarr() {
 }
 
 void sysarr::tick() {
-    static uint8_t last_clk = 0;
+   static uint8_t last_clk = 0;
     
     // Rising edge detection
     if (clk && !last_clk) {
         if (!rst_n) {
             // Reset
+            std::cout << "[SYSARR] Reset asserted" << std::endl;
             weights.setZero();
             activations.setZero();
             psums.setZero();
@@ -64,14 +65,17 @@ void sysarr::tick() {
                     
                     // Check what operation to start
                     if (sa_weight_en) {
+                        std::cout << "[SYSARR] IDLE -> LOADING_WEIGHTS" << std::endl;
                         state = LOADING_WEIGHTS;
                         weight_col_idx = 0;
                         sa_ready = 0;
                     } else if (sa_input_en) {
+                        std::cout << "[SYSARR] IDLE -> LOADING_ACTS" << std::endl;
                         state = LOADING_ACTS;
                         activation_col_idx = 0;
                         sa_ready = 0;
                     } else if (sa_partial_en) {
+                        std::cout << "[SYSARR] IDLE -> LOADING_PSUMS" << std::endl;
                         state = LOADING_PSUMS;
                         psum_row_idx = 0;
                         sa_ready = 0;
@@ -79,51 +83,77 @@ void sysarr::tick() {
                     break;
                     
                 case LOADING_WEIGHTS:
-                    if (sa_weight_en) {
+                    if (sa_weight_en && weight_col_idx < 32) {
                         // Load one column of weights
                         for (int i = 0; i < weights.rows(); i++) {
                             weights(i, weight_col_idx) = std::bit_cast<Eigen::bfloat16>(sa_array_in[i]);
                         }
+                        // Debug: print first column's first few values
+                        if (weight_col_idx == 0) {
+                            std::cout << "[SYSARR] First weight column: [0]=" << float(weights(0, 0))
+                                      << " [1]=" << float(weights(1, 0))
+                                      << " [2]=" << float(weights(2, 0)) << std::endl;
+                        }
                         weight_col_idx++;
-                        
-                        if (weight_col_idx >= 32) {
-                            // All weights loaded
+                        std::cout << "[SYSARR] Loading weights column " << (weight_col_idx-1) << "/32" << std::endl;
+                    }
+                    
+                    // Check for state transition after loading (or if already done)
+                    if (weight_col_idx >= 32) {
+                        // All weights loaded - check if we can compute
+                        if (activation_col_idx >= 32) {
+                            std::cout << "[SYSARR] LOADING_WEIGHTS -> COMPUTING (weights done, acts already loaded)" << std::endl;
+                            state = COMPUTING;
+                            sa_ready = 0;
+                        } else {
+                            std::cout << "[SYSARR] LOADING_WEIGHTS -> IDLE (weights done, waiting for acts)" << std::endl;
                             state = IDLE;
                             sa_ready = 1;
                         }
-                    } else {
-                        // Weight enable dropped - return to idle
+                    } else if (!sa_weight_en) {
+                        // Weight enable dropped before finishing - return to idle
+                        std::cout << "[SYSARR] LOADING_WEIGHTS -> IDLE (enable dropped early)" << std::endl;
                         state = IDLE;
                         sa_ready = 1;
                     }
                     break;
                     
                 case LOADING_ACTS:
-                    if (sa_input_en) {
+                    if (sa_input_en && activation_col_idx < 32) {
                         // Load one column of activations
                         for (int i = 0; i < activations.rows(); i++)
                         {
                             activations(i, activation_col_idx) = std::bit_cast<Eigen::bfloat16>(sa_array_in[i]);
                         }
-
-                        activation_col_idx++;
-                        
-                        if (activation_col_idx >= 32) {
-                            // All activations loaded - computation happens "instantly" as data flows
-                            // In real hardware, this happens as weights shift through the array
-                            result = weights * activations + psums;
-                            psums = result;
-                            
-                            
-                            state = OUTPUTTING;
-                            result_row_idx = 0;
-                            sa_ready = 0;
+                        // Debug: print first column's first few values
+                        if (activation_col_idx == 0) {
+                            std::cout << "[SYSARR] First activation column: [0]=" << float(activations(0, 0))
+                                      << " [1]=" << float(activations(1, 0))
+                                      << " [2]=" << float(activations(2, 0)) << std::endl;
                         }
-                    } else {
-                        // Input enable dropped - return to idle
+                        activation_col_idx++;
+                        std::cout << "[SYSARR] Loading activations column " << (activation_col_idx-1) << "/32" << std::endl;
+                    }
+                    
+                    // Check for state transition after loading (or if already done)
+                    if (activation_col_idx >= 32) {
+                        // All activations loaded - check if we can compute
+                        if (weight_col_idx >= 32) {
+                            std::cout << "[SYSARR] LOADING_ACTS -> COMPUTING (acts done, weights already loaded)" << std::endl;
+                            state = COMPUTING;
+                            sa_ready = 0;
+                        } else {
+                            std::cout << "[SYSARR] LOADING_ACTS -> IDLE (acts done, waiting for weights)" << std::endl;
+                            state = IDLE;
+                            sa_ready = 1;
+                        }
+                    } else if (!sa_input_en) {
+                        // Input enable dropped before finishing - return to idle
+                        std::cout << "[SYSARR] LOADING_ACTS -> IDLE (enable dropped early)" << std::endl;
                         state = IDLE;
                         sa_ready = 1;
                     }
+                    
                     break;
                     
                 case LOADING_PSUMS:
@@ -136,27 +166,37 @@ void sysarr::tick() {
                         }
                         psums.row(psum_row_idx) = temp.transpose();
                         psum_row_idx++;
+                        std::cout << "[SYSARR] Loading psums row " << (psum_row_idx-1) << "/32" << std::endl;
                         
                         if (psum_row_idx >= 32) {
                             // All psums loaded
+                            std::cout << "[SYSARR] LOADING_PSUMS -> IDLE (all psums loaded)" << std::endl;
                             state = IDLE;
                             sa_ready = 1;
                         }
                     } else {
                         // Partial enable dropped - return to idle
+                        std::cout << "[SYSARR] LOADING_PSUMS -> IDLE (enable dropped)" << std::endl;
                         state = IDLE;
                         sa_ready = 1;
                     }
                     break;
                     
                 case COMPUTING:
+                    std::cout << "[SYSARR] COMPUTING matrix multiply" << std::endl;
                     // Perform computation (takes 1 cycle)
                     result = weights * activations + psums;
+                    
+                    // Debug: print a few values
+                    std::cout << "[SYSARR] Sample result values: result(0,0)=" << float(result(0,0)) 
+                              << " result(0,1)=" << float(result(0,1)) 
+                              << " result(1,0)=" << float(result(1,0)) << std::endl;
                     
                     // Update partial sums for next operation
                     psums = result;
                     
                     // Move to output state
+                    std::cout << "[SYSARR] COMPUTING -> OUTPUTTING" << std::endl;
                     state = OUTPUTTING;
                     result_row_idx = 0;
                     sa_ready = 0;
@@ -164,21 +204,33 @@ void sysarr::tick() {
                     
                 case OUTPUTTING:
                     if (sa_output_ready) {
-                        // Output one row per cycle
-                        Eigen::Matrix<Eigen::bfloat16, 32, 1> temp;
-                        temp = result.row(result_row_idx).transpose();
-                        for (int i = 0; i < activations.rows(); i++)
-                        {
-                            sa_array_output[i] = std::bit_cast<uint16_t>(temp[i]);
-                        }
-                        sa_out_valid = 1;
-                        result_row_idx++;
-                        
+                        // Check if we've already output all rows
                         if (result_row_idx >= 32) {
-                            // All outputs sent
+                            // All outputs sent - transition to idle
+                            std::cout << "[SYSARR] OUTPUTTING -> IDLE (all outputs sent)" << std::endl;
                             state = IDLE;
                             sa_ready = 1;
                             sa_out_valid = 0;
+                        } else {
+                            // Output one row per cycle
+                            Eigen::Matrix<Eigen::bfloat16, 32, 1> temp;
+                            temp = result.row(result_row_idx).transpose();
+                            for (int i = 0; i < activations.rows(); i++)
+                            {
+                                sa_array_output[i] = std::bit_cast<uint16_t>(temp[i]);
+                            }
+                            sa_out_valid = 1;
+                            
+                            // Debug: print first few values of the row being output
+                            if (result_row_idx < 2) {
+                                std::cout << "[SYSARR] Outputting row " << result_row_idx 
+                                          << ": [0]=" << float(temp[0])
+                                          << " [1]=" << float(temp[1])
+                                          << " [2]=" << float(temp[2]) << std::endl;
+                            }
+                            
+                            std::cout << "[SYSARR] Outputting row " << result_row_idx << "/32" << std::endl;
+                            result_row_idx++;
                         }
                     } else {
                         sa_out_valid = 0;

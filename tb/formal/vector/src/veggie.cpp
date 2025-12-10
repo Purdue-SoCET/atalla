@@ -1,18 +1,8 @@
 #include "veggie.hpp"
 
-veggie::veggie()
+veggie::veggie() : vrf{}, vrmf{}
 {
-    for (uint8_t i = 0; i < vrf.size(); i++)
-    {
-        for (uint8_t j = 0; j < vrf[i].size(); i++)
-        {
-            vrf[i][j] = 0;
-        }
-    }
-    for (uint8_t i = 0; i < vrmf.size(); i++)
-    {
-        vrmf[i] = 0;
-    }
+    // Arrays are already zero-initialized by the initializer list
 }
 
 veggie::~veggie()
@@ -83,7 +73,7 @@ void veggie::tick() {
         }
         else
         {
-            //lanes
+            // LANES
             for (size_t i = 0; i < vrf_lane_wen.size(); i++) {
                 if (vrf_lane_wen[i]) {
                     write_vector(vrf_lane_vwdata[i], vrf_lane_vd[i]);
@@ -96,35 +86,9 @@ void veggie::tick() {
                 } else {
                     vfr_lane_dvalid[i] = 0;
                 }
-            for (size_t i = 0; i < vrf_sys_wen.size(); i++) {
-                    if (vrf_sys_wen[i]) {
-                        write_vector(vrf_sys_vwdata[i], vrf_sys_vd[i]);
-                    }
-                }
-                for (size_t i = 0; i < vrf_sys_ren.size(); i++) {
-                    if (vrf_sys_ren[i]) {
-                        vrf_sys_vrdata[i] = read_vector(vrf_sys_vs[i]);
-                        vfr_sys_dvalid[i] = 1;
-                    } else {
-                        vfr_sys_dvalid[i] = 0;
-                    }
-                }
-                // Scratchpad
-                for (size_t i = 0; i < vrf_sp_wen.size(); i++) {
-                    if (vrf_sp_wen[i]) {
-                        write_vector(vrf_sp_vwdata[i], vrf_sp_vd[i]);
-                    }
-                }
-                for (size_t i = 0; i < vrf_sp_ren.size(); i++) {
-                    if (vrf_sp_ren[i]) {
-                        vrf_sp_vrdata[i] = read_vector(vrf_sp_vs[i]);
-                        vfr_sp_dvalid[i] = 1;
-                    } else {
-                        vfr_sp_dvalid[i] = 0;
-                    }
-                }
             }
-            //sysarr
+            
+            // SYSARR
             for (size_t i = 0; i < vrf_sys_wen.size(); i++) {
                 if (vrf_sys_wen[i]) {
                     write_vector(vrf_sys_vwdata[i], vrf_sys_vd[i]);
@@ -138,7 +102,8 @@ void veggie::tick() {
                     vfr_sys_dvalid[i] = 0;
                 }
             }
-            // Scratchpad
+            
+            // SCRATCHPAD
             for (size_t i = 0; i < vrf_sp_wen.size(); i++) {
                 if (vrf_sp_wen[i]) {
                     write_vector(vrf_sp_vwdata[i], vrf_sp_vd[i]);
@@ -152,8 +117,9 @@ void veggie::tick() {
                     vfr_sp_dvalid[i] = 0;
                 }
             }
-            //mask
-            for (size_t i = 0; i < vrmf.size(); i++)
+            
+            // MASK
+            for (size_t i = 0; i < vmrf_mren.size(); i++)
             {
                 if (vmrf_mren[i])
                 {
@@ -165,18 +131,21 @@ void veggie::tick() {
                     vmrf_mvalid[i] = 0;
                 }
             }
-            for (size_t i = 0; i < vrmf.size(); i++)
+            for (size_t i = 0; i < vmrf_mwen.size(); i++)
             {
                 if (vmrf_mwen[i])
                 {
-                    write_mask(vmrf_wdata[i],vmrf_vd[i]);
+                    write_mask(vmrf_wdata[i], vmrf_vd[i]);
                 }
             }
-            //reduction
+            
+            // REDUCTION
             if (reduction_valid)
             {
                 write_vector(reduction_wdata, reduction_vd);
             }
         }
     }
+    
+    last_clk = clk;
 }
