@@ -1,9 +1,9 @@
 // Nikhil Vaidyanath - nvaidyan@purdue.edu
 
-`include "vector_pkg.sv"
-`include "shifting_unit_if.sv"
-`include "xbar_if.sv"
-`include "shifting_unit_pkg.sv"
+`include "vector_pkg.vh"
+`include "shifting_unit_if.vh"
+`include "xbar_if.vh"
+`include "shifting_unit_pkg.vh"
 
 module shifting_unit #(
 ) (
@@ -108,7 +108,7 @@ module shifting_unit #(
         
         // Apply mask element-wise
         for (int i = 0; i < NUM_ELEMENTS; i++) begin
-            outputs.shifted_vdata[i] = element_mask[i] ? fp16_t'(benes_out[i]) : fp16_t'(ESZ'(0));
+            outputs.shifted_vdata[i] = element_mask[i] ? bf16_t'(benes_out[i]) : bf16_t'(ESZ'(0));
         end
     end
 endmodule

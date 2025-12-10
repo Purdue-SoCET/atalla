@@ -29,18 +29,19 @@ module gsau_control_unit #(
   logic         fifo_empty, fifo_full;
 
   sync_fifo #(
-    .FIFODEPTH(FIFO_DEPTH),
-    .DATAWIDTH(ENTRY_BITS)
+    .DEPTH (FIFO_DEPTH),
+    .DWIDTH(ENTRY_BITS)
   ) rd_fifo (
-    .nRST(nRST),
-    .CLK(CLK),
+    .rstn (nRST),         // match 'rstn'
+    .clk  (CLK),          // match 'clk'
     .wr_en(fifo_wr),
-    .shift(fifo_shift),
-    .din(fifo_din),
-    .dout(fifo_dout),
+    .rd_en(fifo_shift),   // match 'rd_en'
+    .din  (fifo_din),
+    .dout (fifo_dout),
     .empty(fifo_empty),
-    .full(fifo_full)
+    .full (fifo_full)
   );
+
 
   always_comb begin
     fifo_wr        = 1'b0;
