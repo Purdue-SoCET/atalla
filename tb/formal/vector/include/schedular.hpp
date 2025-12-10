@@ -20,17 +20,18 @@ public:
     uint8_t rst_n;
 
     //ready signals from downstream
-    std::array<uint8_t, 2> lane_alu_ready;
-    std::array<uint8_t, 2> lane_exp_ready;
-    std::array<uint8_t, 2> lane_sqrt_ready;
-    std::array<uint8_t, 2> lane_mul_ready;
-    std::array<uint8_t, 2> lane_div_ready;
-    std::array<uint8_t, 2> sys_ready;
-    std::array<uint8_t, 2> sp_ready;
+    uint8_t lane_alu_ready;
+    uint8_t lane_exp_ready;
+    uint8_t lane_sqrt_ready;
+    uint8_t lane_mul_ready;
+    uint8_t lane_div_ready;
+    uint8_t sys_ready;
+    uint8_t sp_ready;
 
     //SC -> LN
     std::array<uint8_t, 2> lane_valid_in;
     uint8_t broadcast_value;
+    std::array<uint8_t, 2> broadcast_v2;
     std::array<std::array<uint16_t, 32>,2> lane_v2_broadcast;
     std::array<uint8_t, 2> lane_vd;
     std::array<uint8_t, 2> lane_op;
@@ -47,6 +48,20 @@ public:
     uint8_t sys_vd;
     uint8_t sys_valid_in;
     uint8_t sys_weight;
+    uint8_t sys_vs1;
+    uint8_t sys_vs2;
+    std::array<uint8_t, 2> sys_ren;
+
+    //SC -> SP
+    std::array<uint8_t, 2> sp_vd;
+    std::array<uint8_t, 2> sp_rs1;
+    std::array<uint8_t, 2> sp_num_cols;
+    std::array<uint8_t, 2> sp_num_rows;
+    std::array<uint8_t, 2> sp_sid;
+    std::array<uint8_t, 2> sp_rc;
+    std::array<uint8_t, 2> sp_rcid;
+    std::array<uint8_t, 2> sp_valid_in;
+
 
     //SC -> VEG
     std::array<uint8_t, 2> lane_ren;
@@ -56,6 +71,8 @@ public:
     
     std::array<uint8_t, 3> vmrf_vs;
     std::array<uint8_t, 3> vmrf_mren;
+
+    bool all_issued = false;
 
 
     typedef enum {
@@ -128,6 +145,9 @@ public:
     
     void tick();
     void dump_program_queue();
+    void reset();
+    bool all_ready();
+    void deassert_valids();
 
 private:
     std::queue<packet> inst_queue;

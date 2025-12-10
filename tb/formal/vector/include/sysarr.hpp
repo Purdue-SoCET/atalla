@@ -51,7 +51,7 @@ public:
     
     // Main evaluation function - call once per clock cycle
     // Implements cycle-accurate behavior based on control signals
-    void eval();
+    void tick();
     
     // Helper functions for simplified testbench (non-cycle-accurate mode)
     void load_weight_vec(const Eigen::Matrix<Eigen::bfloat16, 32, 1>& col);

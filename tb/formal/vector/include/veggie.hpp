@@ -12,6 +12,8 @@
 #include <algorithm>
 #include <iomanip>
 #include <cstring>
+#include <stdexcept>
+#include <filesystem>
 
 //256 by 32 memory
 //16 by 32 masks
@@ -46,14 +48,14 @@ public:
     uint8_t clk;
     uint8_t rst_n;
     std::array<uint8_t,5> vrf_lane_vd = {};
-    std::array<uint8_t,5> vrf_lane_vs = {};
-    std::array<uint8_t,5> vrf_lane_ren = {};
+    std::array<uint8_t,4> vrf_lane_vs = {};
+    std::array<uint8_t,2> vrf_lane_ren = {};
     std::array<uint8_t,5> vrf_lane_wen = {};
     std::array<std::array<uint16_t,32>,5> vrf_lane_vwdata = {}; //vdata
 
     std::array<uint8_t,1> vrf_sys_vd = {};
-    std::array<uint8_t,1> vrf_sys_vs = {};
-    std::array<uint8_t,1> vrf_sys_ren = {};
+    std::array<uint8_t,2> vrf_sys_vs = {};
+    std::array<uint8_t,2> vrf_sys_ren = {};
     std::array<uint8_t,1> vrf_sys_wen = {};
     std::array<std::array<uint16_t,32>,1> vrf_sys_vwdata = {};
 
@@ -68,8 +70,8 @@ public:
     std::array<std::array<uint16_t,32>,2> vrf_lane_vrdata = {};
     std::array<uint8_t,2> vfr_lane_dvalid = {};
 
-    std::array<std::array<uint16_t,32>,1> vrf_sys_vrdata = {};
-    std::array<uint8_t,1> vfr_sys_dvalid = {};
+    std::array<std::array<uint16_t,32>,2> vrf_sys_vrdata = {};
+    std::array<uint8_t,2> vfr_sys_dvalid = {};
     
     std::array<std::array<uint16_t,32>,2> vrf_sp_vrdata = {};
     std::array<uint8_t,2> vfr_sp_dvalid = {};
@@ -93,7 +95,30 @@ public:
     std::array<uint8_t, 8> scalars  = {0, 1, 2, 3, 4, 5, 6, 7};
 
     
+    static inline const std::string default_folder = "./results/";
 
+    void dump(const std::string& filename) const {
+        // Ensure folder exists
+        std::filesystem::create_directories(default_folder);
+
+        // Append "_results.txt" to filename
+        std::string full_path = default_folder + filename + "_results.txt";
+
+        std::ofstream out(full_path);
+        if (!out.is_open()) {
+            throw std::runtime_error("Failed to open dump file: " + full_path);
+        }
+
+        for (size_t row = 0; row < vrf.size(); row++) {
+            out << "VRF[" << row << "]: ";
+            for (size_t col = 0; col < vrf[row].size(); col++) {
+                out << vrf[row][col];
+                if (col + 1 < vrf[row].size())
+                    out << ", ";
+            }
+            out << "\n";
+        }
+    }
     
     
     

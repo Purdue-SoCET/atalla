@@ -31,7 +31,7 @@ sysarr::sysarr() {
     sa_ready = 1;
 }
 
-void sysarr::eval() {
+void sysarr::tick() {
     static uint8_t last_clk = 0;
     
     // Rising edge detection
