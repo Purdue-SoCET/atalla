@@ -4,24 +4,37 @@
 module vector_top
 (
     input logic CLK, nRST,
-    
-    // Inputs to Veggie
-
-    input veggie_in_t veggie_in,
-    input logic iready,
-    
-    // Outputs
-
-    output veggie_out_t veggie_out
-    output logic vrf_ready,
-    output logic accomplished,
-
-
+    vector_if vif()
 );
 
-import vector_pkg::*;
+    import vector_pkg::*;
 
-assign veggie_out = opbuff_in;
+    logic veggie_out_t s1_in;
+    logic veggie_out_t s1_out;
+
+
+
+    assign vif.CLK = CLK;
+    assign vif.nRST = nRST;
+
+    //Veggie
+
+    assign vif.veggie.veggie_in = scheduler.signal; //?? idk what scheduler is sending or what to call this
+    assign
+
+    assign veggie_out = opbuff_in;
+
+    //Pipeline Latch #1
+
+    always_ff @(posedge CLK, negedge nRST) begin
+    {
+        if (!nRST) begin
+            s1_out <= '0;
+        end
+        else begin
+            s1_out <= s1_in;
+        end
+    }
 
 //need connection from veggie out to opbuff in
 //need 

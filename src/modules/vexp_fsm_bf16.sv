@@ -8,25 +8,25 @@ module vexp_fsm_bf16
     input logic nRST,
     input logic [15:0] operand, //input
     input logic valid_in,
-    // input logic [15:0] mul_out_fp, mul_out_bf,
-    input logic [15:0] mul_out,
+    input logic [15:0] mul_out_fp, mul_out_bf,
+    // input logic [15:0] mul_out,
     input logic [15:0] add_out,
     input logic [31:0] int_part,
     input logic [15:0] fraction, 
-    // input logic [15:0] operand_fp16,
+    input logic [15:0] operand_fp16,
 
-    // output logic [15:0] mul_a_fp, mul_a_bf,
-    // output logic [15:0] mul_b_fp, mul_b_bf,
-    output logic [15:0] mul_a, mul_b,
-    output logic mul_valid_in,
-    // output logic mul_valid_in_fp, mul_valid_in_bf,
+    output logic [15:0] mul_a_fp, mul_a_bf,
+    output logic [15:0] mul_b_fp, mul_b_bf,
+    // output logic [15:0] mul_a, mul_b,
+    // output logic mul_valid_in,
+    output logic mul_valid_in_fp, mul_valid_in_bf,
     output logic [15:0] add_a,
     output logic [15:0] add_b,
     output logic sub,
     output logic [15:0] x_div_ln2,
     output logic [15:0] result,
-    output logic valid_out
-    // output logic [15:0] operand_bf16
+    output logic valid_out,
+    output logic [15:0] operand_bf16
 );
 
     import vector_pkg::*;
@@ -34,7 +34,7 @@ module vexp_fsm_bf16
     //FSM States
     typedef enum logic [3:0] {
         IDLE,
-        // CONV,
+        CONV,
         S1,
         S2,
         S3,
@@ -65,6 +65,7 @@ module vexp_fsm_bf16
     logic valid_in_q;
     logic start_pulse;
     logic [15:0] fraction_reg;
+    // logic [15:0] x_ln2_reg;
     // logic [15:0] conv;
     // logic [15:0] result_reg;
     // logic [15:0] result_ready;
@@ -72,8 +73,8 @@ module vexp_fsm_bf16
     logic [7:0] exp;
     logic [6:0] mant;
 
-    // assign one_over_ln2 = 16'h3DC5; //fp16
-    assign one_over_ln2 = 16'h3FB9; // 1/ln(2) bf16
+    assign one_over_ln2 = 16'h3DC5; //fp16
+    // assign one_over_ln2 = 16'h3FB9; // 1/ln(2) bf16
     assign ln2 = 16'h3F32; //ln(2)
     assign ln2_squared_div2 = 16'h3E76; //ln(2)^2/2
     assign ln2_cubed_div6 = 16'h3D63;
@@ -111,6 +112,7 @@ module vexp_fsm_bf16
         if (!nRST) begin
             int_part_reg <= '0;
             fraction_reg <= '0;
+            // x_ln2_reg <= '0;
             // result_reg <= '0;
         end
         else begin
@@ -118,6 +120,7 @@ module vexp_fsm_bf16
                 S1: begin
                     int_part_reg <= int_part;
                     fraction_reg <= fraction;
+                    // x_ln2_reg <= x_div_ln2;
                 end
                 // S12: begin
                 //     result_reg <= result_ready;
@@ -125,6 +128,7 @@ module vexp_fsm_bf16
                 default: begin
                     int_part_reg <= int_part_reg;
                     fraction_reg <= fraction_reg;
+                    // x_ln2_reg <= x_ln2_reg;
                     // result_reg <= result_reg;
                 end
             endcase
@@ -134,15 +138,15 @@ module vexp_fsm_bf16
     always_comb begin
 
         next_state = current_state;
-        // mul_valid_in_fp = 0;
-        // mul_valid_in_bf = 0;
-        // mul_a_fp = '0;
-        // mul_a_bf = '0;
-        // mul_b_fp = '0;
-        // mul_b_bf = '0;
-        mul_valid_in = 0;
-        mul_a = '0;
-        mul_b = '0;
+        mul_valid_in_fp = 0;
+        mul_valid_in_bf = 0;
+        mul_a_fp = '0;
+        mul_a_bf = '0;
+        mul_b_fp = '0;
+        mul_b_bf = '0;
+        // mul_valid_in = 0;
+        // mul_a = '0;
+        // mul_b = '0;
         
         add_a = '0;
         add_b = '0;
@@ -151,7 +155,7 @@ module vexp_fsm_bf16
         x_div_ln2 = '0;
         result = '0;
         valid_out = 0;
-        // operand_bf16 = '0;
+        operand_bf16 = '0;
 
         case (current_state)
             IDLE: begin
@@ -164,13 +168,13 @@ module vexp_fsm_bf16
                         next_state = S1;
                     end
                     else begin
-                        // operand_bf16 = operand;
-                        // next_state = CONV;
-                        mul_valid_in = 1;
-                        mul_a = operand;
-                        mul_b = one_over_ln2;
+                        operand_bf16 = operand;
+                        next_state = CONV;
+                        // mul_valid_in = 1;
+                        // mul_a = operand;
+                        // mul_b = one_over_ln2;
                         
-                        next_state = S1;
+                        next_state = CONV;
                     end
                     
                     // end
@@ -180,18 +184,18 @@ module vexp_fsm_bf16
                 end
             end
 
-            // CONV: begin
-            //     conv = operand_fp16;
+            CONV: begin
+                // conv = operand_fp16;
                 
-            //     mul_valid_in_fp = 1;
-            //     mul_a_fp = operand_fp16;
-            //     mul_b_fp = one_over_ln2;
+                mul_valid_in_fp = 1;
+                mul_a_fp = operand_fp16;
+                mul_b_fp = one_over_ln2;
 
-            //     next_state = S1;
-            // end
+                next_state = S1;
+            end
 
             S1: begin
-                x_div_ln2 = mul_out;
+                x_div_ln2 = mul_out_fp;
 
                 //moved adder signals one state earlier
                 if (exp == 8'hFF && mant != 0) begin //NaN case
@@ -249,19 +253,19 @@ module vexp_fsm_bf16
                 r = add_out;
                 r1 = add_out;
 
-                mul_valid_in = 1;
-                mul_a = r;
-                mul_b = ln2;
+                mul_valid_in_bf = 1;
+                mul_a_bf = r;
+                mul_b_bf = ln2;
 
                 next_state = S4;
             end
 
             S4: begin
-                r_ln2 = mul_out;
+                r_ln2 = mul_out_bf;
 
-                mul_valid_in = 1;
-                mul_a = r;
-                mul_b = r1;
+                mul_valid_in_bf = 1;
+                mul_a_bf = r;
+                mul_b_bf = r1;
 
                 add_a = one;
                 add_b = r_ln2;
@@ -270,11 +274,11 @@ module vexp_fsm_bf16
             end
             
             S5: begin
-                r = mul_out;
+                r = mul_out_bf;
 
-                mul_valid_in = 1;
-                mul_a = r;
-                mul_b = ln2_squared_div2;
+                mul_valid_in_bf = 1;
+                mul_a_bf = r;
+                mul_b_bf = ln2_squared_div2;
                 
                 t = add_out; //(1 + r)
 
@@ -282,11 +286,11 @@ module vexp_fsm_bf16
             end
 
             S6: begin
-                r_ln2 = mul_out;
+                r_ln2 = mul_out_bf;
 
-                mul_valid_in = 1;
-                mul_a = r;
-                mul_b = r1; //r^2
+                mul_valid_in_bf = 1;
+                mul_a_bf = r;
+                mul_b_bf = r1; //r^2
 
                 add_a = t;
                 add_b = r_ln2;
@@ -295,11 +299,11 @@ module vexp_fsm_bf16
             end
 
             S7: begin
-                r = mul_out;
+                r = mul_out_bf;
                 
-                mul_valid_in = 1;
-                mul_a = r;
-                mul_b = ln2_cubed_div6;
+                mul_valid_in_bf = 1;
+                mul_a_bf = r;
+                mul_b_bf = ln2_cubed_div6;
                 
                 t = add_out; //(1 + r + r^2)
 
@@ -307,11 +311,11 @@ module vexp_fsm_bf16
             end
 
             S8: begin
-                r_ln2 = mul_out;
+                r_ln2 = mul_out_bf;
                 
-                mul_valid_in = 1;
-                mul_a = r; //r^3
-                mul_b = r1;
+                mul_valid_in_bf = 1;
+                mul_a_bf = r; //r^3
+                mul_b_bf = r1;
 
                 add_a = t;
                 add_b = r_ln2;
@@ -320,11 +324,11 @@ module vexp_fsm_bf16
             end
 
             S9: begin
-                r = mul_out;
+                r = mul_out_bf;
                 
-                mul_valid_in = 1;
-                mul_a = r;
-                mul_b = ln2_quartic_div24;
+                mul_valid_in_bf = 1;
+                mul_a_bf = r;
+                mul_b_bf = ln2_quartic_div24;
 
                 t = add_out;
 
@@ -332,7 +336,7 @@ module vexp_fsm_bf16
             end
 
             S10: begin
-                r_ln2 = mul_out;
+                r_ln2 = mul_out_bf;
 
                 add_a = t;
                 add_b = r_ln2;
@@ -356,9 +360,9 @@ module vexp_fsm_bf16
                            (sum < 10'sd0)   ? 8'd0   :
                                              sum[7:0];
                 
-                mul_valid_in = 1;
-                mul_a = t;
-                mul_b = {1'b0, e_biased, 7'b0000000};
+                mul_valid_in_bf = 1;
+                mul_a_bf = t;
+                mul_b_bf = {1'b0, e_biased, 7'b0000000};
 
                 next_state = S12;
             end
@@ -376,7 +380,8 @@ module vexp_fsm_bf16
                 //     next_state = S12;
                 // end
 
-                result = mul_out;
+                // result = x_ln2_reg;
+                result = mul_out_bf;
                 valid_out = 1;
                 next_state = IDLE;
             end

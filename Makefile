@@ -155,7 +155,7 @@ vexp_bf16.wav:
 		./src/modules/vexp.sv \
 		./src/modules/vexp_fsm_bf16.sv \
 		./src/modules/mul_fp16_singlecycle.sv \
-		./src/modules/bf16_to_int_frac.sv \
+		./src/modules/fp16_to_bf16_int_frac.sv \
 		./src/modules/mul_bf16.sv \
 		./src/modules/adder_8b.sv \
 		./src/modules/wallacetree_8b.sv \

@@ -79,7 +79,7 @@ module bf16_to_fp16 (
                 exp_h  = e_h_unb + FP16_BIAS;
 
                 // expand mantissa: 7 bits -> 10 bits (no rounding)
-                mant_h = {mant_b, 3'b011};
+                mant_h = {mant_b, 3'b000};
 
                 fp16_next = {sign_b, exp_h, mant_h};
             end

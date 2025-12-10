@@ -1,4 +1,3 @@
-// vexp_tb.sv
 `timescale 1ns/1ps
 
 `include "vector_types.vh"
@@ -7,11 +6,12 @@
 `include "vaddsub_if.vh"
 
 module vexp_tb;
-  
-  parameter PERIOD = 10;
+  parameter PERIOD  = 10;
+  parameter LATENCY = 20;   // <-- set to your actual cycles from valid_in to result
+
   logic CLK = 0, nRST;
 
-  always #(PERIOD/2) CLK++;
+  always #(PERIOD/2) CLK = ~CLK;
 
   vexp_if vexpif();
 
@@ -21,206 +21,103 @@ module vexp_tb;
     .vexpif(vexpif)
   );
 
-  int casenum;
-  string casename;
+  // ULP function
+  function automatic int ulp_diff(input logic [15:0] a, input logic [15:0] b);
+      int ai, bi;
+      begin
+          ai = int'(a);
+          bi = int'(b);
+          if (ai > bi) ulp_diff = ai - bi;
+          else         ulp_diff = bi - ai;
+      end
+  endfunction
 
-initial begin
+  // File handles
+  integer fd_in, fd_out;
 
-  // casename = "NRST";
-  // casenum = 0;
+  // For parsing CSV
+  logic  [15:0] input_hex, golden_hex;
+  string        line;
+  int           got, count;
 
-  // nRST = '0;
-  // vexpif.operand = '0;
-  // vexpif.valid_in = '0;
-  // vexpif.ready_out = '0;
+  // For DUT result + ULP
+  logic [15:0]  dut_res;
+  int           ulp;
 
-  // #(PERIOD * 1);
+  initial begin
+    // init
+    vexpif.operand   = '0;
+    vexpif.valid_in  = 0;
+    vexpif.ready_out = 1;  // always ready
 
-  // //////////////////////////
-  // nRST = 1;
-  // /////////////////////////
-  
-  // casename = "e^1";
-  // casenum = 1;
+    // reset
+    nRST = 0;
+    repeat (5) @(posedge CLK);
+    nRST = 1;
 
-  // vexpif.operand = 16'h3C00;
-  // vexpif.valid_in = 1;
-  // vexpif.ready_out = 1;
+    // open files
+    fd_in = $fopen("vexp_truth.csv", "r");
+    if (fd_in == 0) begin
+      $fatal("ERROR: cannot open vexp_truth.csv");
+    end
 
-  // #(PERIOD * 13);
+    fd_out = $fopen("vexp_bf16_results.csv", "w");
+    if (fd_out == 0) begin
+      $fatal("ERROR: cannot open vexp_bf16_results.csv");
+    end
 
-  // vexpif.valid_in = 0;
+    // optional header
+    $fdisplay(fd_out, "input_hex,golden_hex,dut_hex,ulp_diff");
 
-  // #(PERIOD * 1);
+    // skip header from input CSV
+    void'($fgets(line, fd_in));
 
-  // ////////////////////////////
+    // main sweep loop
+    count = 0;
 
-  // casename = "e^2.5";
-  // casenum = 2;
+    while (!$feof(fd_in)) begin
+      line = "";
+      got  = $fgets(line, fd_in);
+      if (got == 0) break;
+      if (line.len() == 0) continue;
 
-  // vexpif.operand = 16'h4100;
-  // vexpif.valid_in = 1;
-  // vexpif.ready_out = 1;
+      got = $sscanf(line, "%h,%h", input_hex, golden_hex);
+      if (got != 2) continue;
 
-  // #(PERIOD * 13);
+      // drive input on next posedge
+      @(posedge CLK);
+      vexpif.operand <= input_hex;
+      vexpif.valid_in <= 1'b1; // one-cycle valid pulse
 
-  // vexpif.valid_in = 0;
+      @(posedge CLK);
+      vexpif.valid_in <= 1'b0;
 
-  // #(PERIOD * 1);
+      // wait for a clock where valid_out is high
+      do @(posedge CLK); while (vexpif.valid_out !== 1'b1);
 
-  // ////////////////////////////
+      // capture result **on that same cycle**
+      dut_res = vexpif.result;
+      ulp     = ulp_diff(dut_res, golden_hex);
 
-  // casename = "e^8.9";
-  // casenum = 3;
+      // if (input_hex == 16'h3F80) begin
+      //   $display("[%0t] DEBUG 3F80: golden=%04h dut=%04h ulp=%0d",
+      //     golden_hex, dut_res, ulp, $time);
+      // end
 
-  // vexpif.operand = 16'h4873;
-  // vexpif.valid_in = 1;
-  // vexpif.ready_out = 1;
+      // log
+      $fdisplay(fd_out, "%04h,%04h,%04h,%0d",
+                input_hex, golden_hex, dut_res, ulp);
 
-  // #(PERIOD * 13);
+      count++;
+      if ((count % 1000) == 0)
+        $display("Processed %0d cases...", count);
 
-  // vexpif.valid_in = 0;
+    end
 
-  // #(PERIOD * 1);
-
-  // ////////////////////////////
-
-  // casename = "e^-1";
-  // casenum = 4;
-
-  // vexpif.operand = 16'hBC00;
-  // vexpif.valid_in = 1;
-  // vexpif.ready_out = 1;
-
-  // #(PERIOD * 13);
-
-  // vexpif.valid_in = 0;
-
-  // #(PERIOD * 1);
-
-  // ////////////////////////////
-
-  // casename = "e^-2.5";
-  // casenum = 4;
-
-  // vexpif.operand = 16'hC100;
-  // vexpif.valid_in = 1;
-  // vexpif.ready_out = 1;
-
-  // #(PERIOD * 13);
-
-  // vexpif.valid_in = 0;
-
-  // #(PERIOD * 1);
-
-  ///////////////////////////////////
-  /////////// BF16 Tests ////////////
-  ///////////////////////////////////
-
-  casename = "NRST";
-  casenum = 0;
-
-  nRST = '0;
-  vexpif.operand = '0;
-  vexpif.valid_in = '0;
-  vexpif.ready_out = '0;
-
-  #(PERIOD * 1);
-
-  //////////////////////////
-  nRST = 1;
-  /////////////////////////
-  
-  casename = "e^1";
-  casenum = 1;
-
-  vexpif.operand = 16'h3f80;
-  vexpif.valid_in = 1;
-  vexpif.ready_out = 1;
-  
-  #(PERIOD * 1);
-  
-  vexpif.valid_in = 0;
-
-  #(PERIOD * 14);
-
-  ////////////////////////////
-
-  casename = "e^2.5";
-  casenum = 2;
-
-  vexpif.operand = 16'h4020;
-  vexpif.valid_in = 1;
-  vexpif.ready_out = 1;
-  
-  #(PERIOD * 1);
-  
-  vexpif.valid_in = 0;
-
-  #(PERIOD * 14);
-
-  ////////////////////////////
-
-  casename = "e^8.9";
-  casenum = 3;
-
-  vexpif.operand = 16'h410E;
-  vexpif.valid_in = 1;
-  vexpif.ready_out = 1;
-  
-  #(PERIOD * 1);
-  
-  vexpif.valid_in = 0;
-
-  #(PERIOD * 14);
-
-  ////////////////////////////
-
-  casename = "e^12.6";
-  casenum = 3;
-
-  vexpif.operand = 16'h414a;
-  vexpif.valid_in = 1;
-  vexpif.ready_out = 1;
-  
-  #(PERIOD * 1);
-  
-  vexpif.valid_in = 0;
-
-  #(PERIOD * 14);
-
-  ////////////////////////////
-
-  casename = "e^-1";
-  casenum = 4;
-
-  vexpif.operand = 16'hbf80;
-  vexpif.valid_in = 1;
-  vexpif.ready_out = 1;
-  
-  #(PERIOD * 1);
-  
-  vexpif.valid_in = 0;
-
-  #(PERIOD * 14);
-
-  ////////////////////////////
-
-  casename = "e^-2.5";
-  casenum = 4;
-
-  vexpif.operand = 16'hc020;
-  vexpif.valid_in = 1;
-  vexpif.ready_out = 1;
-  
-  #(PERIOD * 1);
-  
-  vexpif.valid_in = 0;
-
-  #(PERIOD * 14);
-
-  $stop;
-
-end
+      $display("Full sweep done. Total cases: %0d", count);
+      $fclose(fd_in);
+      $fclose(fd_out);
+      $stop;
+  end
 
 endmodule

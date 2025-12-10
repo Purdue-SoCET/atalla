@@ -11,22 +11,22 @@ module vexp (
     import vector_pkg::*;
 
     logic [31:0] int_part; //int output from converter
-    logic [15:0] mul_result,
-                //  mul_result_fp, mul_result_bf,
-                 //  mul_a_fp, mul_b_fp,
-                 //  mul_a_bf, mul_b_bf,
-                 mul_a, mul_b,
+    logic [15:0] /*mul_result,*/
+                  mul_result_fp, mul_result_bf,
+                  mul_a_fp, mul_b_fp,
+                  mul_a_bf, mul_b_bf,
+                //  mul_a, mul_b,
                  add_result, //output from adder
                  add_a, add_b,
                  fraction,   //fraction output from converter
                  x_div_ln2, //output from FSM to go to converter
                  x_div_ln2_abs,
-                 result;           //result signal
-                //  operand_bf16,
-                //  operand_fp16;
+                 result,           //result signal
+                 operand_bf16,
+                 operand_fp16;
                  
 
-    logic mul_valid_in, /* mul_valid_in_fp, mul_valid_in_bf, add_valid_in*/ sub, overflow, underflow, invalid, start;
+    logic /*mul_valid_in,*/ mul_valid_in_fp, mul_valid_in_bf,  /*add_valid_in*/ sub, overflow, underflow, invalid, start;
 
     assign x_div_ln2_abs = {1'b0, x_div_ln2[14:0]};   // clear sign bit → |z|
 
@@ -52,20 +52,20 @@ module vexp (
             //inputs of FSM
             (.CLK(CLK), .nRST(nRST),
             .operand(vexpif.operand), .valid_in(vexpif.valid_in),
-            .mul_out(mul_result), /*.mul_out_bf(mul_result_bf),*/ 
+            .mul_out_fp(mul_result_fp), .mul_out_bf(mul_result_bf),
             .add_out(add_result), .int_part(int_part), .fraction(fraction),
-            // .operand(vexpif.operand),
+            .operand_fp16(operand_fp16),
             
             //outputs of FSM 
-            // .mul_a_fp(mul_a_fp), .mul_b_fp(mul_b_fp), .mul_valid_in_fp(mul_valid_in_fp),
-            // .mul_a_bf(mul_a_bf), .mul_b_bf(mul_b_bf), .mul_valid_in_bf(mul_valid_in_bf),
-            .mul_a(mul_a), .mul_b(mul_b), .mul_valid_in(mul_valid_in),
+            .mul_a_fp(mul_a_fp), .mul_b_fp(mul_b_fp), .mul_valid_in_fp(mul_valid_in_fp),
+            .mul_a_bf(mul_a_bf), .mul_b_bf(mul_b_bf), .mul_valid_in_bf(mul_valid_in_bf),
+            // .mul_a(mul_a), .mul_b(mul_b), .mul_valid_in(mul_valid_in),
             .add_a(add_a), .add_b(add_b),
             .sub(sub), 
             .x_div_ln2(x_div_ln2),
             .result(vexpif.result),
-            .valid_out(vexpif.valid_out)
-            // .operand_bf16(operand_bf16)
+            .valid_out(vexpif.valid_out),
+            .operand_bf16(operand_bf16)
             );
 
         addsub_bf16 BF16_ADDER
@@ -78,25 +78,25 @@ module vexp (
             .invalid(invalid));
         
         //using fp16 for higher precision
-        // mul_fp16_singlecycle ONE_LN2_FP16_MULTIPLIER
-        //     (.clk(CLK), .nRST(nRST),
-        //     .start(mul_valid_in_fp), .a(mul_a_fp), .b(mul_b_fp),
-        //     .result(mul_result_fp), .done(done));
+        mul_fp16_singlecycle ONE_LN2_FP16_MULTIPLIER
+            (.clk(CLK), .nRST(nRST),
+            .start(mul_valid_in_fp), .a(mul_a_fp), .b(mul_b_fp),
+            .result(mul_result_fp), .done(done));
         
         mul_bf16 BF16_MULTIPLIER
             (.clk(CLK), .nRST(nRST),
-            .start(mul_valid_in), .a(mul_a), .b(mul_b),
-            .result(mul_result), .done(done));
+            .start(mul_valid_in_bf), .a(mul_a_bf), .b(mul_b_bf),
+            .result(mul_result_bf), .done(done));
             
-        // fp16_to_bf16_int_frac FP16_TO_BF16_FRACTION_CONVERTER 
-        //     (.fp16_in(x_div_ln2_abs), .int_u32(int_part), .frac_bf16(fraction));
+        fp16_to_bf16_int_frac FP16_TO_BF16_FRACTION_CONVERTER 
+            (.fp16_in(x_div_ln2_abs), .int_u32(int_part), .frac_bf16(fraction));
 
-        bf16_to_int_frac BF16_FRACTION_CONVERTER 
-            (.bf16_in(x_div_ln2_abs), .int_u32(int_part), .frac_bf16(fraction));
+        // bf16_to_int_frac BF16_FRACTION_CONVERTER 
+        //     (.bf16_in(x_div_ln2_abs), .int_u32(int_part), .frac_bf16(fraction));
 
-        // bf16_to_fp16 BF16_TO_FP16_CONVERTER
-        //     (.CLK(CLK), .nRST(nRST),
-        //     .bf16_in(operand_bf16), .fp16_out(operand_fp16));
+        bf16_to_fp16 BF16_TO_FP16_CONVERTER
+            (.CLK(CLK), .nRST(nRST),
+            .bf16_in(operand_bf16), .fp16_out(operand_fp16));
 
     // `else
         
