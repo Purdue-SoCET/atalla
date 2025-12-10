@@ -32,7 +32,7 @@ module shifting_unit #(
             outputs_q <= '0;
         end else begin
             // stall pipeline when output isn't ready
-            if (inputs.output_ready) begin
+            if (inputs.ready_in) begin
                 inputs_q <= inputs;
                 outputs_q <= outputs;
             end
@@ -40,8 +40,8 @@ module shifting_unit #(
     end
 
     always_comb begin
-        outputs.input_ready = inputs.output_ready; // needs to be comb because need to immediately apply backpressure
-        outputs.output_valid = inputs_q.input_valid;
+        sh_unit.ready_out = inputs.ready_in; // needs to be comb because need to immediately apply backpressure
+        outputs.valid_out = inputs_q.valid_in;
     end
 
     `ifndef SYNTHESIS
