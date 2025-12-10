@@ -3,7 +3,7 @@
 // Lane wrapper: lane_sequencer + sqrt_bf16 + div + metadata sync FIFO
 // ------------------------------------------------------------
 `include "vector_if.vh"
-`include "vector_pkg.vh"
+//`include "vector_pkg.vh"
 `include "div_if.vh"
 
 module lane #(

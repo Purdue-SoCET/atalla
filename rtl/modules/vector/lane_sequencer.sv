@@ -84,6 +84,31 @@ module lane_sequencer (
         end
     end
 
+    // -----------------------------
+    // Sequential: state + index + slice latch
+    // -----------------------------
+    // vd must stay constant for the whole BUSY window of a slice
+    logic [7:0] vd_snapshot;
+
+    always_ff @(posedge CLK or negedge nRST) begin
+        if (!nRST) begin
+            vd_snapshot <= '0;
+        end else begin
+            if (state == IDLE && next_state == BUSY) begin
+                vd_snapshot <= lane_in.vd;
+            end
+        end
+    end
+
+    always_ff @(posedge CLK) begin
+        if (state == BUSY && lane_out.valid) begin
+            assert (lane_out.vd == vd_snapshot)
+                else $error("[SEQ] vd changed inside slice: snapshot=%0d, now=%0d",
+                            vd_snapshot, lane_out.vd);
+        end
+    end
+
+
 
     // -----------------------------
     // Combinational: FSM + lane_ready

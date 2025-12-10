@@ -231,6 +231,53 @@ module vector_datapath (
         end
     endgenerate
 
+    // --------------------------------------------------------
+    // 3c. Compute global ready signals (Per FU)
+    // --------------------------------------------------------
+    logic [LANE_FU_COUNT-1:0][NUM_LANES-1:0] lane_ready_transposed;
+
+    genvar lg, fug;
+    generate
+    for (lg = 0; lg < NUM_LANES; lg++) begin : FLAT_READY
+        for (fug = 0; fug < LANE_FU_COUNT; fug++) begin : FLAT_READY_FU
+        assign lane_ready_transposed[fug][lg] =
+            lane_if[lg].lane_out.ready_o[fug];
+        end
+    end
+    endgenerate
+
+    logic [LANE_FU_COUNT-1:0] fu_global_ready;
+
+    always_comb begin : FU_GLOBAL_READY
+    logic all_lanes_ready;
+    //logic wb_ready;
+
+    for (int f = 0; f < LANE_FU_COUNT; f++) begin
+        all_lanes_ready = (&lane_ready_transposed[f]);
+
+        // if (f == VALU && reduction_mode) begin
+        // wb_ready = vruif.out.ready_in;
+        // end else begin
+        // wb_ready = vif.rc_out.ready_in[f];
+        // end
+
+        fu_global_ready[f] = all_lanes_ready;
+    end
+    end
+
+    always_comb begin : ISSUE_READY_OUT
+    fu_t fu_i;
+    for (int i = 0; i < LANE_ISSUE_W; i++) begin
+        fu_i = vif.vector_in.fu_sel[i];
+
+        if (!vif.vector_in.valid_in[i]) begin
+            vif.vector_out.ready_o[i] = 1'b1;
+        end else begin
+            vif.vector_out.ready_o[i] = fu_global_ready[fu_i];
+        end
+    end
+    end
+
 
     // --------------------------------------------------------
     // 4. Result Collector
