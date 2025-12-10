@@ -2,7 +2,6 @@
 
 schedular::schedular()
 {
-    std::fill(std::begin(binary_packets), std::end(binary_packets), 0);
     clk = 0;
     rst_n = 0;
 }
@@ -41,6 +40,8 @@ void schedular::parse_packet(const std::string& packet_str)
     }
     inst_queue.push(encoded_packet);
 }
+
+
 
 schedular::instruction schedular::parse_instruction(const std::string& instr_str)
 {
@@ -86,11 +87,112 @@ schedular::instruction schedular::parse_instruction(const std::string& instr_str
             std::getline(ss, token, ','); instr.rc = std::stoi(token);
             std::getline(ss, token, ','); instr.rc_id = std::stoi(token);
             break;
+        case MTS:
+            std::getline(ss, token, ','); instr.rd = std::stoi(token);
+            std::getline(ss, token, ','); instr.vms = std::stoi(token);
+            break;
+        case STM:
+            std::getline(ss, token, ','); instr.vmd = std::stoi(token);
+            std::getline(ss, token, ','); instr.rs1 = std::stoi(token);
+            break;
         case S:
             break;
     }
 
     return instr;
+}
+
+void schedular::decode(packet pkt)
+{
+    //instr 1 and 2
+    for (uint8_t i = 0; i < 2; i++)
+    {
+        instruction instr = pkt.inst[i];
+        bool add = (instr.opcode ==  50 | instr.opcode == 62 | instr.opcode == 71 | instr.opcode == 80);
+        bool subtract = (instr.opcode ==  51 | instr.opcode == 63 | instr.opcode == 81);
+        bool mult = (instr.opcode ==  52 | instr.opcode == 64 | instr.opcode == 82);
+        bool div = (instr.opcode == 53 | instr.opcode == 65 | instr.opcode == 83);
+        bool exp = instr.opcode == 66;
+        bool sqrt = instr.opcode == 67;
+        reduction_mode[i] == (instr.opcode == 71 | instr.opcode == 72 | instr.opcode == 73);
+
+        if (add)
+        {
+            alu_op[i] = 2;
+            fu_sel[i] = VALU;
+        }
+        else if (subtract)
+        {
+            alu_op[i] = 3;
+            fu_sel[i] = VALU;
+        }
+        else if (mult)
+        {
+            fu_sel[i] = MUL;
+        }
+        else if (div)
+        {
+            fu_sel[i] = DIV;
+        }
+        else if (exp)
+        {
+            fu_sel[i] = EXP;
+        }
+        else if (sqrt)
+        {
+            fu_sel[i] = SQRT;
+        }
+        else if (instr.opcode == 72)
+        {
+            fu_sel[i] = VALU;
+            alu_op[i] = 0;
+        }
+        else if (instr.opcode == 73)
+        {
+            fu_sel[i] = VALU;
+            alu_op[i] = 1;
+        }
+        
+        switch (instr.type)
+        {
+            case S:
+                lane_valid_in[i] = 0;
+            case VV:
+                lane_vd[i] = instr.vd;
+                lane_vs1[i] = instr.vs1;
+                lane_vs2[i] = instr.vs2;
+                vmrf_vs[i] = instr.mask;
+                vmrf_mren[i] = 1;
+            break;
+            case VS:
+                lane_vd[i] = instr.vd;
+                lane_vs1[i] = instr.vs1;
+                lane_rs1[i] = instr.rs1;
+                vmrf_vs[i] = instr.mask;
+                vmrf_mren[i] = 1;
+                std::fill(lane_v2_broadcast[i].begin(), lane_v2_broadcast[i].end(), broadcast_value);
+            break;
+            case VI:
+                lane_vd[i] = instr.vd;
+                lane_vs1[i] = instr.vs1;
+                vmrf_vs[i] = instr.mask;
+                vmrf_mren[i] = 1;
+                reudction_imm[i] = instr.imm8 & 0x1F;
+                clear[i] = (instr.imm8 >> 6) & 0x1;
+                broadcast[i] = (instr.imm8 >> 7) & 0x1;
+                std::fill(lane_v2_broadcast[i].begin(), lane_v2_broadcast[i].end(), (instr.imm8 << 5) | instr.imm5);
+            break;
+            
+        }
+    }
+    //end me
+    //instr 3
+    //only 4 possible operations here
+
+
+    //instr 4
+    //only 2 here
+    //its 1 AM fucking kill me please
 }
 
 void schedular::tick()
@@ -100,7 +202,11 @@ void schedular::tick()
     if (clk && !last_clk) {
         if (!rst_n)
         {
-            std::fill(std::begin(binary_packets), std::end(binary_packets), 0);
+            std::queue<packet> q;
+            std::swap(inst_queue, q); //clears the queue on reset
+        }
+        else {
+
         }
     }
 }
