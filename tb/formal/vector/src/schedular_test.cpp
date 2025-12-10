@@ -1,5 +1,6 @@
 #include "schedular.hpp"
 #include <iostream>
+#include <iomanip>
 
 int main(int argc, char* argv[])
 {
@@ -13,8 +14,8 @@ int main(int argc, char* argv[])
 
     s.load_program(program_file);
 
-    std::cout << "==== Program Queue Dump ====\n";
-    s.dump_program_queue();
+    std::cout << "==== Program Queue Binary Dump ====\n";
+    s.dump_program_queue_binary();
     std::cout << "==== End of Dump ====\n";
 
     return 0;

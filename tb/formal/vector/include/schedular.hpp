@@ -10,6 +10,8 @@
 #include <fstream>
 #include <array>
 #include <algorithm>
+#include <iomanip>
+
 
 class schedular
 {
@@ -17,10 +19,53 @@ public:
     uint8_t clk;
     uint8_t rst_n;
 
-    //control signals
-    //all 4 wide for ease of indexing
-    //structure is LANE||LANE||SP||SP/GSAU
-    std::array<uint64_t, 4> binary_packets;
+    //ready signals from downstream
+    std::array<uint8_t, 2> lane_alu_ready;
+    std::array<uint8_t, 2> lane_exp_ready;
+    std::array<uint8_t, 2> lane_sqrt_ready;
+    std::array<uint8_t, 2> lane_mul_ready;
+    std::array<uint8_t, 2> lane_div_ready;
+    std::array<uint8_t, 2> sys_ready;
+    std::array<uint8_t, 2> sp_ready;
+
+    //SC -> LN
+    std::array<uint8_t, 2> lane_valid_in;
+    uint8_t broadcast_value;
+    std::array<std::array<uint16_t, 32>,2> lane_v2_broadcast;
+    std::array<uint8_t, 2> lane_vd;
+    std::array<uint8_t, 2> lane_op;
+    std::array<uint8_t, 2> fu_sel;
+    std::array<uint8_t, 2> reduction_mode;
+    std::array<uint8_t, 2> alu_op;
+    std::array<uint8_t, 2> imm8;
+    std::array<uint8_t, 2> imm5;
+    std::array<uint8_t, 2> broadcast;
+    std::array<uint8_t, 2> clear;
+    std::array<uint8_t, 2> reudction_imm;
+
+    //SC -> SYS
+    uint8_t sys_vd;
+    uint8_t sys_valid_in;
+    uint8_t sys_weight;
+
+    //SC -> VEG
+    std::array<uint8_t, 2> lane_ren;
+    std::array<uint8_t, 2> lane_vs1;
+    std::array<uint8_t, 2> lane_vs2;
+    std::array<uint8_t, 2> lane_rs1;
+    
+    std::array<uint8_t, 3> vmrf_vs;
+    std::array<uint8_t, 3> vmrf_mren;
+
+
+    typedef enum {
+        VALU  = 000,
+        EXP  =  001,
+        SQRT =  010,
+        MUL  =  011,
+        DIV  =  100
+    } fu_t;
+    
 
     typedef enum instr_type_t
     {
@@ -29,6 +74,8 @@ public:
         VS,
         S,
         VM,
+        STM,
+        MTS
     } instr_type_t;
 
     struct instr_info {
@@ -58,6 +105,11 @@ public:
         uint8_t sid = 0;
         uint8_t rc = 0;
         uint8_t rc_id = 0;
+
+        uint8_t rd = 0;
+        uint8_t vms = 0;
+
+        uint8_t vmd = 0;
     };
 
     struct packet
@@ -72,6 +124,8 @@ public:
     void load_program(std::string file);
     instruction parse_instruction(const std::string& instr_str);
     void parse_packet(const std::string& packet);
+    void decode(packet pkt);
+    
     void tick();
     void dump_program_queue();
 
@@ -105,6 +159,8 @@ private:
         {"rmin.vi", {VI, 72}},
         {"rmax.vi", {VI, 73}},
         {"shift.vi", {VS, 74}},
+        {"mmv.mts", {MTS, 75}},
+        {"mv.stm", {STM, 76}},
         {"vreg.ld", {VM, 77}},
         {"vreg.st", {VM, 78}},
         {"vmov.vi", {VI, 79}},
