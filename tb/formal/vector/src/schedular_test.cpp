@@ -25,13 +25,13 @@ private:
     
     void set_all_ready(bool ready) {
         uint8_t val = ready ? 1 : 0;
-        dut->lane_alu_ready.fill(val);
-        dut->lane_exp_ready.fill(val);
-        dut->lane_sqrt_ready.fill(val);
-        dut->lane_mul_ready.fill(val);
-        dut->lane_div_ready.fill(val);
-        dut->sys_ready.fill(val);
-        dut->sp_ready.fill(val);
+        dut->lane_alu_ready = val;
+        dut->lane_exp_ready = val;
+        dut->lane_sqrt_ready = val;
+        dut->lane_mul_ready = val;
+        dut->lane_div_ready = val;
+        dut->sys_ready = val;
+        dut->sp_ready = val;
     }
     
     void print_state(const std::string& msg = "") {
@@ -119,7 +119,7 @@ public:
         
         // Set one unit NOT ready
         set_all_ready(true);
-        dut->lane_alu_ready[0] = 0; // One lane not ready
+        dut->lane_alu_ready = 0; // One lane not ready
         
         print_state("Before stall:");
         

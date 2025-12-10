@@ -5,21 +5,20 @@
 #include <vector>
 
 // -----------------------------------------------------------------------------
-// Helper: write a 32-element BF16 vector to a file as a single line
+// Helper: write a 32-element uint16 array to a file as a single line
 // -----------------------------------------------------------------------------
-void write_vector_line(std::ofstream &file, const Eigen::Matrix<Eigen::bfloat16, 32, 1> &vec) {
+void write_vector_line(std::ofstream &file, const std::array<uint16_t, 32> &vec) {
     for (int i = 0; i < 32; i++) {
-        file << std::setw(10) << std::fixed << std::setprecision(4)
-             << static_cast<float>(vec(i));
+        file << std::setw(10) << vec[i];
         if (i < 31) file << " ";
     }
     file << "\n";
 }
 
-// Helper: compare two vectors for equality (by float value)
-bool vec_equal(const Eigen::Matrix<Eigen::bfloat16, 32, 1>& a, const Eigen::Matrix<Eigen::bfloat16, 32, 1>& b) {
+// Helper: compare two arrays for equality
+bool vec_equal(const std::array<uint16_t, 32>& a, const std::array<uint16_t, 32>& b) {
     for (int i = 0; i < 32; ++i) {
-        if (static_cast<float>(a(i)) != static_cast<float>(b(i))) return false;
+        if (a[i] != b[i]) return false;
     }
     return true;
 }
@@ -39,10 +38,10 @@ void test_write_read_rows(scratchpad& sp) {
     }
 
     // Create test matrix (unique values starting at 0)
-    Eigen::Matrix<Eigen::bfloat16, 32, 32> test;
+    std::array<std::array<uint16_t, 32>, 32> test;
     for (int r = 0; r < 32; r++)
         for (int c = 0; c < 32; c++)
-            test(r,c) = Eigen::bfloat16(r * 32 + c);
+            test[r][c] = r * 32 + c;
 
     // --------------------------
     // WRITE ALL 32 ROWS (atomic per-row)
@@ -54,7 +53,7 @@ void test_write_read_rows(scratchpad& sp) {
         sp.row_id_sp1 = row;
         sp.num_cols_sp1 = 32;
         sp.row_or_col_sp1 = 0; // row mode
-        sp.wdata_sp1 = test.row(row).transpose();
+        sp.wdata_sp1 = test[row];
 
         sp.clk = 1; sp.tick();
         sp.clk = 0; sp.tick();
@@ -123,10 +122,10 @@ void test_write_read_cols(scratchpad& sp) {
     }
 
     // Create test matrix (unique values starting at 100)
-    Eigen::Matrix<Eigen::bfloat16, 32, 32> test;
+    std::array<std::array<uint16_t, 32>, 32> test;
     for (int r = 0; r < 32; r++)
         for (int c = 0; c < 32; c++)
-            test(r,c) = Eigen::bfloat16(100 + r * 32 + c);
+            test[r][c] = 100 + r * 32 + c;
 
     // --------------------------
     // WRITE ALL 32 COLUMNS (atomic per-column)
@@ -138,7 +137,11 @@ void test_write_read_cols(scratchpad& sp) {
         sp.col_id_sp2 = col;
         sp.num_rows_sp2 = 32;
         sp.row_or_col_sp2 = 1; // column mode
-        sp.wdata_sp2 = test.col(col);
+        
+        // Extract column col into wdata_sp2
+        for (int r = 0; r < 32; r++) {
+            sp.wdata_sp2[r] = test[r][col];
+        }
 
         sp.clk = 1; sp.tick();
         sp.clk = 0; sp.tick();
@@ -155,7 +158,7 @@ void test_write_read_cols(scratchpad& sp) {
     int received = 0;
     int safety = 5000;
 
-    Eigen::Matrix<Eigen::bfloat16, 32, 1> prev_vec; prev_vec.setZero();
+    std::array<uint16_t, 32> prev_vec = {0};
     bool have_prev = false;
 
     while ((issued < expected || received < expected) && safety-- > 0) {
@@ -221,7 +224,7 @@ void test_latency_timing(scratchpad& sp) {
     sp.row_or_col_sp1 = 0;
 
     for (int i = 0; i < 32; i++)
-        sp.wdata_sp1(i) = Eigen::bfloat16(42.0f);
+        sp.wdata_sp1[i] = 42;
 
     sp.clk = 1; sp.tick();
     sp.clk = 0; sp.tick();
@@ -258,10 +261,10 @@ void test_latency_timing(scratchpad& sp) {
 
             bool correct = true;
             for (int j = 0; j < 32; j++) {
-                float val = static_cast<float>(sp.rdata_sp1(j));
-                if (val != 42.0f) {
+                uint16_t val = sp.rdata_sp1[j];
+                if (val != 42) {
                     correct = false;
-                    log << "Data mismatch at index " << j << ": expected 42.0, got " << val << "\n";
+                    log << "Data mismatch at index " << j << ": expected 42, got " << val << "\n";
                 }
             }
 

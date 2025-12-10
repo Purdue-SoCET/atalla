@@ -440,8 +440,8 @@ bool schedular::all_ready()
         }
         else if (i == 3)
         {
-            if (instr.opcode == 77 & !sp_ready) {return false;} //veggie load
-            else if (instr.opcode == 78 & !sp_ready) {return false;}//veggie store
+            if (instr.opcode == 77 && !sp_ready) {return false;} //veggie load
+            else if (instr.opcode == 78 && !sp_ready) {return false;}//veggie store
         }
     }
     return true;
