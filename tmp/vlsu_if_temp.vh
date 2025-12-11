@@ -2,8 +2,7 @@
 `define VLSU_IF_TEMP_VH
 
 interface vlsu_if_temp();
-  // Instruction inputs (from decoder)
-  logic        valid;       // instruction valid
+  // Instruction inputs (from scheduler)
   logic        op;          // operation: 1 = load, 0 = store
   logic        sid;         // scratchpad id: 0 = SP0, 1 = SP1
   logic        rc;          // row/col selector: 0 = row, 1 = column
@@ -14,7 +13,7 @@ interface vlsu_if_temp();
   logic [7:0]  vd;          // vector destination register
 
   // vLSU signals it can accept the instruction
-  logic        ready_in;
+  logic       ready_in;
   logic       ready_out; // FIFO full signals (from internal FIFOs)
 
   // -------------------------------------------------------------------

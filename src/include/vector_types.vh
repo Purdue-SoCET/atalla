@@ -10,6 +10,7 @@ package vector_pkg;
     parameter IMM_W = 8;
     parameter DTYPE_W = 2;
     parameter INSTR_W = 32;
+    parameter NUM_SP = 2;
 
     typedef logic [OPCODE_W-1:0] opcode_t;
     typedef logic [VIDX_W-1:0] vsel_t;

@@ -24,6 +24,8 @@ module vLSU #(parameter FIFO_DEPTH = 13, parameter VEC_LEN = 32)(
     vlsu_if.vlsu      vlsuif
 );
     
+    //new thought is to create a vLSU w one fifo, instantiate 2 of the vlsu in a wrapper module that connects to both scratchpads.
+
     // Instantiate 2 Fifos here, one for Loading from Scratchpad(s) to Veggie File
     
     // Idk if FIFO empty will be a problem here
