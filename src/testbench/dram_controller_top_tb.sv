@@ -92,13 +92,22 @@ module dram_controller_top_tb;
     control_unit_if cuif ();
     data_transfer_if dataif ();
 
+    always_comb begin : DUT_SIGNAL_CONNECTIONS
+        
+    end
+
     DDR4_if #(.CONFIGURED_DQ_BITS(CONFIGURED_DQ_BITS)) iDDR4_1();
     DDR4_if #(.CONFIGURED_DQ_BITS(CONFIGURED_DQ_BITS)) iDDR4_2();
     DDR4_if #(.CONFIGURED_DQ_BITS(CONFIGURED_DQ_BITS)) iDDR4_3();
     DDR4_if #(.CONFIGURED_DQ_BITS(CONFIGURED_DQ_BITS)) iDDR4_4();
 
-    dram_controller_top DUT (.clk(CLK), .clkx2(CLKx2), .nRST(nRST), .sigif(sigif), .amif(amif), .initif(initif), .polif(polif),
-                             .cfsmif(cfsmif), .timif(timif), .cuif(cuif), .dataif(dataif));
+    data_transfer   data_transfer (.CLK(CLK), .CLKx2(CLKx2), .nRST(nRST), .cuif(cuif.data_trans), .mydata(dataif.data_trans));
+    //dram_controller_top DUT (.clk(CLK), .clkx2(CLKx2), .nRST(nRST), .sigif(sigif), .amif(amif), .initif(initif), .polif(polif),
+    //                         .cfsmif(cfsmif), .timif(timif), .cuif(cuif), .dataif(dataif));
+    dram_controller_top    DUT  (.clk(CLK), .nRST(nRST), .amif_addr_mapper(amif), .amif_row_open(amif), .initif(initif), .polif_row_open(polif), 
+                                   .polif_cmd_fsm(polif), .cfsmif_cmd_fsm(cfsmif), .cfsmif_timing_ctrl(cfsmif), .timif_row_open(timif),
+                                   .timif_cmd_fsm(timif), .timif_timing_ctrl(timif), .timif_data_trans(timif), .cuif_arb(cuif), .cuif_sig_gen(cuif),
+                                   .cuif_data_trans(cuif), .sigif_dram(sigif));
     scheduler_buffer SCH_BUFF (.CLK(CLK), .nRST(nRST), .mysche(sch_if));
 
     //Instantiate cache as a referrence model to verify data load
@@ -562,7 +571,7 @@ module dram_controller_top_tb;
         bit wr_or_rd; 
         sch.addr_row_conflict.constraint_mode(1);
         sch.addr_rank.constraint_mode(0);
-        for (int i = 0; i < 10; i++) begin
+        for (int i = 0; i < 10000; i++) begin
             task_name = $sformatf("Task worst case -%0d", i);
             wr_or_rd = $urandom_range(0,1); // simple 0/1;
             if (wr_or_rd) begin
@@ -703,11 +712,11 @@ module dram_controller_top_tb;
 
     $display("Test start time (integer): %t", $time);
     // Best case
-    //best_case();
+    best_case();
     
     
     // Worst case
-    worst_case();
+    //worst_case();
 
     //Average case
     //random_req();
