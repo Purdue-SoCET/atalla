@@ -32,6 +32,10 @@ class lfc_predictor extends uvm_component#(lfc_cpu_transaction, lfc_ram_transact
     int MSHR_occupancy = 0;
     logic [31:0] data_model [0:31];
     logic [31:0] data_is_in_cache = 32'b0;
+
+    logic [15:0] uuid_in_flight = 16'b0; // UUID allocated or not
+    logic [31:0] uuid_addr_map [15:0]; // maps UUID to the address
+    logic [UUID_SIZE-1:0] next_uuid [NUM_BANKS-1:0];
     
 
     function new(string name, uvm_component parent = null);
@@ -44,6 +48,11 @@ class lfc_predictor extends uvm_component#(lfc_cpu_transaction, lfc_ram_transact
         ram_imp = new("ram_imp", this);
         pred_cpu_ap = new("pred_cpu_ap", this);
         pred_ram_ap = new("pred_ram_ap", this);
+
+        // initialization of all of next_uuid
+        for (int i = 0; i < NUM_BANKS; i++) begin
+            next_uuid[i] = 4'b0;
+        end
     endfunction: build_phase
 
     // --------- CPU transaction analysis write method ---------
@@ -52,18 +61,47 @@ class lfc_predictor extends uvm_component#(lfc_cpu_transaction, lfc_ram_transact
         out_cpu = lfc_cpu_transaction#(NUM_BANKS, UUID_SIZE)::type_id::create("out_cpu");
         out_cpu.copy(cpu_t);
 
-        out_cpu.mem_out_uuid = 0; // TODO: this needs logic for both reads AND writes, writes to empty cache make ram calls to bring in data
+        // calculate which bank this address maps to
+        logic [3:0] bank_id;
+        bank_id = (cpu_t.mem_in_addr >> 4) % NUM_BANKS;
+
+        // check all block_status signals to see which UUIDs completed
+        for (int i = 0; i < NUM_BANKS; i++) begin
+            if (cpu_t.block_status[i]) begin
+                logic [UUID_SIZE-1:0] completed_uuid = cpu_t.uuid_block[i];
+                logic [31:0] completed_addr = uuid_addr_map[completed_uuid];
+
+                uuid_in_flight[completed_uuid] = 1'b0; // free the UUID
+                data_is_in_cache[completed_addr] = 1'b1; // data in cache now
+            end
+        end
+
         out_cpu.hit = data_is_in_cache[cpu_t.mem_in_addr];
-        if (out_cpu.hit) begin
-        if (cpu_t.mem_in_rw_mode)
-            data_model[cpu_t.mem_in_addr] = cpu_t.mem_in_store_value;
-        else
-            out_cpu.hit_load = data_model[cpu_t.mem_in_addr];
+
+        if (out_cpu.hit) begin // cache data only changes on hits, misses are sent to MSHR instead
+            if (cpu_t.mem_in_rw_mode) begin // write mode
+                data_model[cpu_t.mem_in_addr] = cpu_t.mem_in_store_value;
+            end else begin // read mode
+                out_cpu.hit_load = data_model[cpu_t.mem_in_addr];
+            end
+            out_cpu.mem_out_uuid = 4'b0; // we don't care what uuid is for hits
         end else begin
-        MSHR_occupancy++;
+            MSHR_occupancy++;
+
+            out_cpu.mem_out_uuid = next_uuid[bank_id]; // prediction of the UUID that will be assigned
+
+            uuid_in_flight[out_cpu.mem_out_uuid] = 1'b1; // mark UUID as in flight
+            uuid_addr_map[out_cpu.mem_out_uuid] = cpu_t.mem_in_addr; // track the address that corresponds to the UUID
+
+            // UUID counter increment with wraparound
+            if (next_uuid[bank_id] == 15)
+                next_uuid[bank_id] = 4'b0;
+            else
+                next_uuid[bank_id] = next_uuid[bank_id] + 1;
         end
 
         out_cpu.stall = (MSHR_occupancy > 8);
+
         pred_cpu_ap.write(out_cpu);
     endfunction
 
@@ -75,8 +113,9 @@ class lfc_predictor extends uvm_component#(lfc_cpu_transaction, lfc_ram_transact
         out_ram = lfc_ram_transaction#(NUM_BANKS)::type_id::create("out_ram");
         out_ram.copy(ram_t);
 
-        if (ram_t.ram_mem_complete && MSHR_occupancy > 0)
-        MSHR_occupancy--;
+        if (ram_t.ram_mem_complete && MSHR_occupancy > 0) begin
+            MSHR_occupancy--;
+        end
 
         pred_ram_ap.write(out_ram);
     endfunction
