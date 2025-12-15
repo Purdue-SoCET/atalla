@@ -26,6 +26,9 @@ class test extends uvm_test;
     lfc_MSHR_overflow_seq mshr_overflow_seq;
     lfc_multiple_miss_seq multiple_miss_seq;
 
+    lfc_load_hit_seq load_hit;
+    lfc_load_miss_seq load_miss;
+
     function new(string name = "test", uvm_component parent);
         super.new(name, parent);
     endfunction

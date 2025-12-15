@@ -36,6 +36,11 @@ class lfc_predictor extends uvm_component#(lfc_cpu_transaction, lfc_ram_transact
     logic [15:0] uuid_in_flight = 16'b0; // UUID allocated or not
     logic [31:0] uuid_addr_map [15:0]; // maps UUID to the address
     logic [UUID_SIZE-1:0] next_uuid [NUM_BANKS-1:0];
+
+    // temp variables
+    logic [3:0] bank_id;
+    logic [UUID_SIZE-1:0] completed_uuid;
+    logic [31:0] completed_addr;
     
 
     function new(string name, uvm_component parent = null);
@@ -62,14 +67,13 @@ class lfc_predictor extends uvm_component#(lfc_cpu_transaction, lfc_ram_transact
         out_cpu.copy(cpu_t);
 
         // calculate which bank this address maps to
-        logic [3:0] bank_id;
         bank_id = (cpu_t.mem_in_addr >> 4) % NUM_BANKS;
 
         // check all block_status signals to see which UUIDs completed
         for (int i = 0; i < NUM_BANKS; i++) begin
             if (cpu_t.block_status[i]) begin
-                logic [UUID_SIZE-1:0] completed_uuid = cpu_t.uuid_block[i];
-                logic [31:0] completed_addr = uuid_addr_map[completed_uuid];
+                completed_uuid = cpu_t.uuid_block[i];
+                completed_addr = uuid_addr_map[completed_uuid];
 
                 uuid_in_flight[completed_uuid] = 1'b0; // free the UUID
                 data_is_in_cache[completed_addr] = 1'b1; // data in cache now
