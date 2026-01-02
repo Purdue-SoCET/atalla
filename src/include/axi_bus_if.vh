@@ -5,13 +5,16 @@
 
 `include "axi_bus_pkg.vh"
 
-interface address_mapper_if;
+interface axi_bus_if;
     // import types 
     import axi_bus_pkg::*;
 
     // channel structs 
-    ar_channel_t ar_i;
-    ar_channel_t ar_o; 
+    ar_channel_t ar_sp0_i; // Scratchpad0 AR channel
+    ar_channel_t ar_sp1_i; // Scratchpad1 AR channel
+    ar_channel_t ar_d_i;   // D$ AR channel
+    ar_channel_t ar_i_i;   // I$ AR channel
+    ar_channel_t ar_o;     // Controller AR channel
     r_channel_t  r_i;
     r_channel_t  r_o;
     aw_channel_t aw_i;
@@ -22,7 +25,7 @@ interface address_mapper_if;
     b_channel_t  b_o;
 
     // read arbiter signals 
-    logic [2:0] ar_req;
+    logic sp0_req, sp1_req, d_req, i_req;
     logic [2:0] ar_grant;
 
     // write arbiter signals
@@ -30,28 +33,76 @@ interface address_mapper_if;
     logic [2:0] aw_grant;
 
     // MASTER (I$, D$, SP) <=> AR QUEUE <=> SUBORDINATE (Controller)
-    modport ar_queue (
+    // modport ar_queue (
+    //     // From Master 
+    //     input ar_i.valid, ar_i.addr, ar_i.id, ar_i.size, ar_i.len, ar_i.burst,
+
+    //     // To Master 
+    //     output ar_i.ready,
+
+    //     // From Arbiter
+    //     input ar_grant, 
+
+    //     // To Arbiter 
+    //     output ar_req,
+
+    //     // To Subordinate 
+    //     output ar_o.valid, ar_o.addr, ar_o.mid_id, ar_o.size, ar_o.len, ar_o.burst
+    // );
+
+    // MASTER <=> SP0 AR MANAGER
+    modport ar_sp0_manager (
         // From Master 
-        input ar_i.valid, ar_i.addr, ar_i.id, ar_i.size, ar_i.len, ar_i.burst,
+        input ar_sp0_i.valid, ar_sp0_i.addr, ar_sp0_i.id, ar_sp0_i.size, ar_sp0_i.len, ar_sp0_i.burst,
 
         // To Master 
-        output ar_i.ready,
+        output ar_sp0_i.ready
+    );
 
-        // From Arbiter
-        input ar_grant, 
+    // MASTER <=> SP1 AR MANAGER
+    modport ar_sp1_manager (
+        // From Master 
+        input ar_sp1_i.valid, ar_sp1_i.addr, ar_sp1_i.id, ar_sp1_i.size, ar_sp1_i.len, ar_sp1_i.burst,
 
-        // To Arbiter 
-        output ar_req,
+        // To Master 
+        output ar_sp1_i.ready
+    );
 
-        // To Subordinate 
-        output ar_o.valid, ar_o.addr, ar_o.mid_id, ar_o.size, ar_o.len, ar_o.burst
+    // MASTER <=> D$ AR MANAGER
+    modport ar_d_manager (
+        // From Master 
+        input ar_d_i.valid, ar_d_i.addr, ar_d_i.id, ar_d_i.size, ar_d_i.len, ar_d_i.burst,
+
+        // To Master 
+        output ar_d_i.ready
+    );
+
+    // MASTER <=> D$ AR MANAGER
+    modport ar_i_manager (
+        // From Master 
+        input ar_i_i.valid, ar_i_i.addr, ar_i_i.id, ar_i_i.size, ar_i_i.len, ar_i_i.burst,
+
+        // To Master 
+        output ar_i_i.ready
+    );
+
+    // AR MANAGERS <=> READ ARBITER
+    modport read_arbiter (
+        // From Manager
+        input sp0_req, sp1_req, d_req, i_req,
+
+        // From Subordinate
+        input ar_o.ready,
+
+        // To Manager 
+        output ar_grant
     );
 
     // AR QUEUE <=> AR ARBITER
-    modport ar_arb (
-        input ar_req, ar_o.ready,
-        output ar_grant
-    );
+    // modport ar_arb (
+    //     input sp0_req, sp1_req, d_req, i_req, ar_o.ready,
+    //     output ar_grant
+    // );
 
     // MASTER (D$, SP) <=> AW QUEUE <=> SUBORDINATE (Controller)
     modport aw_queue (
