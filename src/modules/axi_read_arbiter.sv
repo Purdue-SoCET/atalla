@@ -20,65 +20,69 @@ module axi_read_arbiter(
     } arbitration;
 
     arbitration state, next_state;
+    logic [2:0] next_grant_sel;
 
     always_ff @(posedge CLK, negedge nRST) begin
         if(!nRST) begin
             state <= IDLE;
+            grant_sel <= '0;
         end
         else begin 
             state <= next_state;
+            grant_sel <= next_grant_sel;
         end
     end
 
     always_comb begin : NEXT_STATE_LOGIC
         next_state = state;
-        case(state)
-            IDLE: begin
-                if      (sp0_req && ready) next_state = SP0_GRANTED;
-                else if (sp1_req && ready) next_state = SP1_GRANTED;
-                else if (d_req && ready)   next_state = D_GRANTED;
-                else if (i_req && ready)   next_state = I_GRANTED;
-                else                       next_state = IDLE;
-            end
-            SP0_GRANTED: begin
-                if      (sp1_req && ready) next_state = SP1_GRANTED;
-                else if (d_req && ready)   next_state = D_GRANTED;
-                else if (i_req && ready)   next_state = I_GRANTED;
-                else if (sp0_req && ready) next_state = SP0_GRANTED;
-                else                       next_state = IDLE;
-            end
-            SP1_GRANTED: begin
-                if      (d_req && ready)   next_state = D_GRANTED;
-                else if (i_req && ready)   next_state = I_GRANTED;
-                else if (sp0_req && ready) next_state = SP0_GRANTED;
-                else if (sp1_req && ready) next_state = SP1_GRANTED;
-                else                       next_state = IDLE;
-            end
-            D_GRANTED: begin
-                if      (i_req && ready)   next_state = I_GRANTED;
-                else if (sp0_req && ready) next_state = SP0_GRANTED;
-                else if (sp1_req && ready) next_state = SP1_GRANTED;
-                else if (d_req && ready)   next_state = D_GRANTED;
-                else                       next_state = IDLE;
-            end
-            I_GRANTED: begin
-                if      (sp0_req && ready) next_state = SP0_GRANTED;
-                else if (sp1_req && ready) next_state = SP1_GRANTED;
-                else if (d_req && ready)   next_state = D_GRANTED;
-                else if (i_req && ready)   next_state = I_GRANTED;
-                else                       next_state = IDLE;
-            end 
-        endcase
+        next_grant_sel = '0;
+        if(!sp0_req && !sp1_req && !d_req && !i_req) begin 
+            next_state = IDLE; // safe guard to return to idle if no pending requests, independent of ready
+            next_grant_sel = 3'b000;
+        end else begin 
+            case(state)
+                IDLE: begin
+                    if      (!ready)  begin next_state = IDLE;        next_grant_sel = 3'b000; end
+                    else if (sp0_req) begin next_state = SP0_GRANTED; next_grant_sel = 3'b100; end
+                    else if (sp1_req) begin next_state = SP1_GRANTED; next_grant_sel = 3'b101; end
+                    else if (d_req)   begin next_state = D_GRANTED;   next_grant_sel = 3'b110; end
+                    else if (i_req)   begin next_state = I_GRANTED;   next_grant_sel = 3'b111; end 
+                    //else              begin next_state = IDLE;        next_grant_sel = 3'b000; end
+                end
+                SP0_GRANTED: begin
+                    if      (!ready)  begin next_state = SP0_GRANTED; next_grant_sel = 3'b000; end
+                    else if (sp1_req) begin next_state = SP1_GRANTED; next_grant_sel = 3'b101; end 
+                    else if (d_req)   begin next_state = D_GRANTED;   next_grant_sel = 3'b110; end
+                    else if (i_req)   begin next_state = I_GRANTED;   next_grant_sel = 3'b111; end
+                    else if (sp0_req) begin next_state = SP0_GRANTED; next_grant_sel = 3'b100; end
+                    //else              begin next_state = IDLE;        next_grant_sel = 3'b000; end
+                end
+                SP1_GRANTED: begin
+                    if      (!ready)  begin next_state = SP1_GRANTED; next_grant_sel = 3'b001; end
+                    else if (d_req)   begin next_state = D_GRANTED;   next_grant_sel = 3'b110; end
+                    else if (i_req)   begin next_state = I_GRANTED;   next_grant_sel = 3'b111; end
+                    else if (sp0_req) begin next_state = SP0_GRANTED; next_grant_sel = 3'b100; end
+                    else if (sp1_req) begin next_state = SP1_GRANTED; next_grant_sel = 3'b101; end 
+                    //else              begin next_state = IDLE;        next_grant_sel = 3'b000; end
+                end
+                D_GRANTED: begin
+                    if      (!ready)  begin next_state = D_GRANTED;   next_grant_sel = 3'b010; end 
+                    else if (i_req)   begin next_state = I_GRANTED;   next_grant_sel = 3'b111; end 
+                    else if (sp0_req) begin next_state = SP0_GRANTED; next_grant_sel = 3'b100; end
+                    else if (sp1_req) begin next_state = SP1_GRANTED; next_grant_sel = 3'b101; end
+                    else if (d_req)   begin next_state = D_GRANTED;   next_grant_sel = 3'b110; end
+                    //else              begin next_state = IDLE;        next_grant_sel = 3'b000; end
+                end
+                I_GRANTED: begin
+                    if      (!ready)  begin next_state = I_GRANTED;   next_grant_sel = 3'b011; end
+                    else if (sp0_req) begin next_state = SP0_GRANTED; next_grant_sel = 3'b100; end
+                    else if (sp1_req) begin next_state = SP1_GRANTED; next_grant_sel = 3'b101; end
+                    else if (d_req)   begin next_state = D_GRANTED;   next_grant_sel = 3'b110; end
+                    else if (i_req)   begin next_state = I_GRANTED;   next_grant_sel = 3'b111; end
+                    //else              begin next_state = IDLE;        next_grant_sel = 3'b000; end
+                end 
+            endcase
+        end 
     end
-
-    always_comb begin : OUTPUT_LOGIC
-        grant_sel = '0;
-        case(state)
-            SP0_GRANTED: grant_sel = 3'b100;
-            SP1_GRANTED: grant_sel = 3'b101;
-            D_GRANTED:   grant_sel = 3'b110;
-            I_GRANTED:   grant_sel = 3'b111; 
-        endcase 
-    end 
-
+    
 endmodule

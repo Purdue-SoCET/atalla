@@ -1,2 +1,2 @@
-var g_data = ["","./src/include/dram_command_if.vh","./src/testbench/command_FSM_tb.sv","./src/include/command_FSM_if.vh","./src/modules/command_FSM.sv"];
+var g_data = ["","./src/testbench/axi_read_arbiter_tb.sv","./src/modules/axi_read_arbiter.sv"];
 processSrcNamesData(g_data);

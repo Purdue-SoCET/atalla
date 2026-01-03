@@ -33,6 +33,16 @@ dram_top:
 	vsim -coverage -do ./src/scripts/dram_top_tb.do dram_top_tb
 	run -all
 
+arb:
+	vlib work
+	vlog -sv ./src/testbench/axi_read_arbiter_tb.sv ./src/modules/axi_read_arbiter.sv
+	vsim $(SIMTERM) -voptargs="+acc" work.axi_read_arbiter_tb -do $(SIMDO)
+
+arb.wav:
+	vlib work
+	vlog -sv ./src/testbench/axi_read_arbiter_tb.sv ./src/modules/axi_read_arbiter.sv
+	vsim -coverage -voptargs="+acc" work.axi_read_arbiter_tb -do "do ./src/scripts/axi_read_arbiter.do; run $(SIMTIME);"
+
 # %:
 # 	vlog -sv +incdir+./src/include ./src/testbench/$*_tb.sv  ./src/modules/$*.sv
 # 	vsim $(SIMTERM) -voptargs="+acc" work.$*_tb -do $(SIMDO)

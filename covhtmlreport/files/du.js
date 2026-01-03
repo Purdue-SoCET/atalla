@@ -1,0 +1,2 @@
+var g_data = {"data":[{"n":"work.axi_read_arbiter","id":2,"zf":1,"tc":85.79,"s":100.00,"b":89.74,"fc":25.00,"fs":100.00,"ft":100.00,"t":100.00},{"n":"work.axi_read_arbiter_tb","id":1,"zf":1,"tc":100.00,"s":100.00,"t":100.00}]};
+processDuData(g_data);
