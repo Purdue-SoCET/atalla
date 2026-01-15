@@ -19,7 +19,7 @@ Perceptive readers will notice that there are no absolute rules in this guide; e
 
 - Engineers **SHALL** use spaces as tabs, with 4 spaces per tab.
 
-    VSCode can be configured to do this, but here is are some commands for a .vimrc file that enables this:
+    VSCode can be configured to do this, but here are some commands for a .vimrc file that enables this:
 
     ```
     autocmd BufNewFile,BufRead *.sv,*.v set tabstop=4
@@ -27,7 +27,7 @@ Perceptive readers will notice that there are no absolute rules in this guide; e
     autocmd BufNewFile,BufRead *.sv,*.v set expandtab
     ```
 
-- Engineers **SHALL** minimize dead (commented out) code. If large sections of code are commented out (3 or more lines) then a pointer comment should be used or the comment should be deleted.
+- Engineers **SHALL** minimize dead (commented out) code. If large sections of code are commented out (3 or more lines) then a pointer comment **SHALL** be used or the comment should be deleted.
 
 - Engineers **SHALL** consolidate code. Dead code and active code should be in separate groups, not intermixed.
 
@@ -167,6 +167,7 @@ Perceptive readers will notice that there are no absolute rules in this guide; e
 - Engineers **SHALL NOT** have any Verilator linter warnings in code within main branch
 
 - Engineers **SHALL NOT** use lint_off to disable warnings
+    - All of the Verilator warnings and their meanings can be found here: https://verilator.org/guide/latest/warnings.html
 
     For example:
 
@@ -175,7 +176,7 @@ Perceptive readers will notice that there are no absolute rules in this guide; e
         ...
 
         //Bad! Why are they getting a truncate warning?
-        //Engineer should explain this with a comment.
+        //Engineer should explain this with a comment or fix it.
 
         /* verilator lint_off WIDTHTRUNC */
         curr_input_row = iteration[l];
@@ -192,7 +193,8 @@ Perceptive readers will notice that there are no absolute rules in this guide; e
 
 For example:
 ```
-$timeformat(-9, 2, " ns"); //This will set %t to print in nanoseconds. Use -12 for ps.
+//This will set %t to print in nanoseconds. Replace -9 with -12 for ps.
+$timeformat(-9, 2, " ns"); 
 
 ...
 
@@ -250,7 +252,7 @@ mult_module M0(.a(a), .b(b), .c(c))
 ```
 - When using a for loop in synthesizable code, its intended function **SHALL** be thoroughly commented. This also applies to generate for loops.
 
-- Engineers **SHALL** only use always_comb and always_ff. Any use of always_latch should come with extensive documentation on its intended function.
+- Any use of always_latch **SHALL** come with extensive documentation on its intended function.
 
 - Functions **MAY** be used in synthesized logic, but **SHALL** only contain combinational logic.
     - SystemVerilog doesn't actually support sequential logic in functions.
@@ -294,7 +296,7 @@ For example:
     end
 ```
 
--  Any modules that are fully combinational **MAY** have the clk and n_rst input signals removed
+-  Any modules that are fully combinational **MAY** have the clk and n_rst input signals removed.
 
 ## Sequential Logic
 - Sequential elements **SHALL** only use posedge clk and negedge n_rst in their sensitivity lists.
@@ -322,7 +324,7 @@ The following SystemVerilog structures **SHALL NOT** be used:
 - Fork/join
 - Always@
 - Z-state logic/tri-state buffers
-- Classes and polymorphism SHALL be avoided. Typedef statements within packages should be used instead.
-- Any statements indicating the strength of a signal (supply1, strong1, weak1, etc.)
+- Classes and polymorphism **SHALL** be avoided. Typedef statements within packages **SHALL** be used instead.
+- Any datatypes indicating the strength of a signal (supply1, strong1, weak1, etc.)
 - Force statements
 - Triple equal signs equality operators (===)
