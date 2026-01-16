@@ -9,28 +9,30 @@
 // We output one column of the output at a time - this means that we need a column of the partial sums
 
 `timescale 1ns / 1ps
+
+
 `include "gsau_control_unit_if.vh"
+
 `include "systolic_array_MAC_if.vh"
+
 `include "sys_arr_pkg.vh"
 /* verilator lint_off IMPORTSTAR */
 import sys_arr_pkg::*;
 /* verilator lint_off IMPORTSTAR */
 
 
+//
+
+
 module systolic_array_simple(
     input logic clk, nRST,
     gsau_control_unit_if.systolic_array gsau_if
 );
-    // forward declarations for signals used before their main definition
-    logic [DW-1:0] MAC_outputs [N-1:0][N-1:0];
-    logic [DW-1:0] nxt_MAC_outputs [N-1:0][N-1:0];
-    logic [N-1:0] first_column_MAC_readies;
-
     logic [(DW*N)-1:0] to_output_buffer;
     genvar q;
     for(q = 0; q < N; q++)
     begin
-        assign to_output_buffer[DW*q +: DW] = MAC_outputs[N-1][N-1-q];
+        assign to_output_buffer[DW*q +: DW] = MAC_outputs[N-1][q];
     end
 
     // Input buffer. Feed a column into this, and it arranges it in staggered fashion. And outputs buffer_empty=0 until all written columns have been sent into the systolic array (one column needs 4 systolic array shifts)
@@ -42,20 +44,38 @@ module systolic_array_simple(
     // If we are loading weights, special data path - data should NOT go into input buffer, instead it should go straight to the MAC units to put in weights register.
     logic weight_enables [N-1:0] [N-1:0];                       // goes to mac_if.weight_en
 
-    // this will depend on the output buffer. that does not yet exist.
+    // this will depend on the output buffer
     logic sysarr_stall;
-    // assign read_from_buffer = 
+    
+    // partial sums buffer
+    logic read_from_psum_buffer;
+
+    // GSAU sends inputs and partial sums on the same clock cycle. But we need the partial sums the cycle *after* inputs because the M in MAC takes one cycle before taking A. So, register it an extra time so GSAU can continue to stuff psums ever cycle and we dont lose one
+    logic [(DW*N)-1:0] psum_glob, psum_glob_registered;
+
+    logic psum_buf_has_space, psum_buffer_empty;       // Not sure what to do with these
+
+    sysarr_input_buffer bokchoy(.clk(clk), .nRST(nRST), .in(gsau_if.sa_array_in_partials), .out(psum_glob), .write_en(gsau_if.sa_partial_en), .read_en(MAC_shifts_0 & ~sysarr_stall), .has_space(psum_buf_has_space), .empty(psum_buffer_empty));
+    always_ff @(posedge clk, negedge nRST) begin
+        if(nRST == 1'b0) begin
+            psum_glob_registered <= '0;
+        end
+        else begin
+            if(MAC_shifts_0 & ~sysarr_stall) begin
+                psum_glob_registered <= psum_glob;
+            end
+            else begin
+                psum_glob_registered <= psum_glob_registered;
+            end
+        end
+    end
 
     // Logic here: As long as the buffer has valid data, it should be sent through the systolic array, UNLESS the array needs to stall.
     // But MAC units need to shift data in first, and "Start" one clock cycle later.
     // And the first column needs to start immediately, not one clock cycle later.
     // NOTE: The column ordering is REVERSED!! No idea why, but the leftmost column of MAC units has column index 0.
-    // MAC_shift must also be active during weight loading so weights propagate across columns
     logic MAC_shifts_0;
-    logic MAC_input_shift_0;  // MAC shift signal for input data only (not weights)
-    assign MAC_shifts_0 = !(buffer_empty) || gsau_if.sa_weight_en;
-    assign MAC_input_shift_0 = !(buffer_empty);  // Only active when input buffer has data
-    
+    assign MAC_shifts_0 = !(buffer_empty);
     logic [N-2:0] MAC_shifts_remaining;                       // I run a whole column of MAC units in sync. Technically you don't need to, but I am too sleepy to optimize that.
     // assign MAC_shifts[N-1] = !(buffer_empty);              // Whenever there is data in the buffer, MACs must go on.
     always_ff @(posedge clk, negedge nRST) begin
@@ -73,8 +93,8 @@ module systolic_array_simple(
     end
 
     // Read data from the buffer (what this actually does is increment the buffer's read_pointer) whenever there is data
-    // except when the array is stalled. Only read during input processing, not during weight loading.
-    assign read_from_buffer = MAC_input_shift_0 & ~sysarr_stall;
+    // except when the array is stalled. 
+    assign read_from_buffer = MAC_shifts_0 & ~sysarr_stall;
 
     // Similar logic for weight enables. Again, handling a whole column of weight_en's at once.
     // Nevermind we don't need this, the MAC units already have a weight_next_en signal.
@@ -93,23 +113,7 @@ module systolic_array_simple(
     // Because of the GSAU design expecting computation to start immediately, it's likely possible to get rid of MAC_starts at all.
     // But for now since the MAC units expect the start signal, we just start each MAC unit (or, column of MAC units) one cycle after they got a value shifted in.
     // Except, turn all starts off if the array needs to stall. (Might not be necessary either? Idk it's 4:28am.)
-    // IMPORTANT: Do NOT start MAC computation during weight loading - only during input processing
     logic [N-1:0] MAC_starts;
-    logic [N-2:0] MAC_input_shifts_remaining;
-    always_ff @(posedge clk, negedge nRST) begin
-        if(nRST == 1'b0) begin
-            MAC_input_shifts_remaining[N-2:0] <= '0;
-        end
-        else begin
-            if(sysarr_stall) begin
-                MAC_input_shifts_remaining <= MAC_input_shifts_remaining;
-            end
-            else begin
-                MAC_input_shifts_remaining[N-2:0] <= {MAC_input_shift_0, MAC_input_shifts_remaining[N-2:1]};
-            end
-        end
-    end
-    
     always_ff @(posedge clk, negedge nRST) begin
         if(nRST == 1'b0) begin
             MAC_starts <= '0;
@@ -119,37 +123,24 @@ module systolic_array_simple(
                 MAC_starts <= '0;
             end
             else begin
-                // Use input-only shift signals for MAC_starts to avoid starting during weight loading
-                MAC_starts <= {MAC_input_shift_0, MAC_input_shifts_remaining};
+                MAC_starts <= {MAC_shifts_0, MAC_shifts_remaining};
             end
         end
     end
 
-    // MAC Unit inputs/outputs latched within systolic array
-    // (MAC_outputs, nxt_MAC_outputs, first_column_MAC_readies declared at top of module)
-
-    systolic_array_MAC_if mac_ifs[N*N-1:0] ();
-
-
-    // psum buffer logic : i have it so the psum enters at the top row with the computation and it propagates 
-    // down through all of the rows. Im pretty sure that a partial sum column is needed at the same time that 
-    // the input column first element reaches the first mac (mac[0][0]) currently i have it read the psum buffer
-    // whenever a new inut column enters.
-    // psum buffer - stores and delivers partial sum columns synchronized with output production
-    logic [N*DW-1:0] psum_column;
-    logic psum_buffer_has_space;
-    logic psum_buffer_empty;
     
-    sysarr_psum_buffer bokchoy (
-        .clk(clk),
-        .nRST(nRST),
-        .psum_in(gsau_if.sa_array_in_partials),     // Partial sum input from GSAU interface
-        .psum_out(psum_column),                      // Partial sum output to top row MACs
-        .write_en(gsau_if.sa_partial_en),           // Write enable from GSAU
-        .read_en(MAC_input_shift_0 & ~sysarr_stall), // Read when input column enters (aligned with top row)
-        .has_space(psum_buffer_has_space),
-        .empty(psum_buffer_empty)
-    );
+
+
+    // MAC Unit inputs/outputs latched within systolic array
+    logic [DW-1:0] MAC_outputs [N-1:0][N-1:0];
+    logic [DW-1:0] nxt_MAC_outputs [N-1:0][N-1:0];
+
+    systolic_array_MAC_if mac_ifs[N*N-1:0] (); 
+
+    // do something for partial sums (buffer?) here
+    // TESTING: No partial sums yet, so assigning this to zero.
+    // logic [DW-1 : 0] psum_buffer_inputs [N-1:0];
+    // assign psum_buffer_inputs = '0;
 
     // Register MAC unit mac_if.out_accumulate outputs before connecting to unit below
     // this used to use control unit value_ready signal, now it uses value_ready from MAC units directly.
@@ -171,6 +162,7 @@ module systolic_array_simple(
             end
         end 
     end
+
 
 
     // MAC inputs (input_x).
@@ -216,11 +208,9 @@ module systolic_array_simple(
 
                 assign mac_ifs[m*N + n].stall_sa = sysarr_stall;
                 
-                // Top row (m==0): connect psum buffer output to adder input
-                if (m == 0) begin : psum_accumulate
-                    // Route partial sum column to top row MAC units
-                    // If psum buffer is empty, use zero (graceful degradation per design doc)
-                    assign mac_ifs[m*N + n].in_accumulate = psum_buffer_empty ? '0 : psum_column[DW*n +: DW];
+                // Top row (m==0): connect psum buffer to adder input
+                if (m == 0) begin : no_accumulate
+                    assign mac_ifs[m*N + n].in_accumulate = psum_glob_registered[DW*n +: DW];// psum_buffer_inputs[n];
                 end else begin : accumulation_blk
                     // Accumulate from previous row
                     assign mac_ifs[m*N + n].in_accumulate = MAC_outputs[m-1][n];
@@ -242,7 +232,7 @@ module systolic_array_simple(
     // but their values are still garbage, until the value from the top left corner accumulates down to the bottom left corner.
     // This one column tall shift register is how I track when the first valid number enters the output buffer's input port - by waiting until the top left corner MAC unit's value_ready propagates down the column.
     
-    // first_column_MAC_readies declared earlier for psum_buffer use
+    logic [N-1:0] first_column_MAC_readies;
 
     always_ff @(posedge clk, negedge nRST) begin
         if(nRST == 1'b0) begin
@@ -287,17 +277,17 @@ module systolic_array_simple(
     end
 
     assign gsau_if.sa_out_valid = out_buffer[N-1][N*DW];
-    
-    // diagonnal read unstagger 
-    // - Element 0 comes from out_buffer[N-1] 
-    // - Element 1 comes from out_buffer[N-2] 
-    // - Element k comes from out_buffer[N-1-k]
-    
+
     genvar d;
     generate
-        for (d = 0; d < N; d++) begin : unstagger_diagonal
-            assign gsau_if.sa_array_output[DW*d +: DW] = out_buffer[N-1-d][DW*d +: DW];
+    for (d = 0; d < N; d++) begin : unstagger_diagonal
+        if (d < 2) begin
+            // Swap first two outputs to fix transpose
+            assign gsau_if.sa_array_output[d] = out_buffer[1-d][DW*(1-d) +: DW];
+        end else begin
+            assign gsau_if.sa_array_output[d] = out_buffer[d][DW*d +: DW];
         end
+    end
     endgenerate
 
     // "Output buffer is filled" logic. When the output buffer is full, if data is not read out, the systolic array must stall so that the values in the buffer are not lost.
@@ -309,4 +299,5 @@ module systolic_array_simple(
             sysarr_stall <= (sysarr_stall | next_out_buffer[N-1][N*DW]) & ~gsau_if.sa_output_ready;
         end
     end
+
 endmodule
