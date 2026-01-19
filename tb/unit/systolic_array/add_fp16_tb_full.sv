@@ -25,20 +25,17 @@ module add_fp16_tb_full;
     logic [15:0] tb_result;
     logic tb_done;
     logic [15:0] exp;
-    logic [15:0] tb_b_adjusted;
     
     int pass_count, fail_count;
-
-    // Handle subtraction by negating b
-    assign tb_b_adjusted = tb_sub ? {~tb_b[15], tb_b[14:0]} : tb_b;
 
     add_fp16 dut (
         .clk(tb_clk), 
         .nRST(tb_nrst), 
         .start(tb_start), 
         .stall(1'b0),
+        .sub(tb_sub),
         .fp1_in(tb_a), 
-        .fp2_in(tb_b_adjusted), 
+        .fp2_in(tb_b), 
         .fp_out(tb_result), 
         .done(tb_done)
     );
@@ -282,8 +279,7 @@ initial begin
 
     fd = $fopen("scripts/systolic_array/random_cases.csv", "r");
     if (fd == 0) begin
-        $display("ERROR: Could not open scripts/systolic_array/random_cases.csv");
-        $display("       Run: python3 scripts/systolic_array/random_fpgen.py");
+        $display("ERROR: Could not open scripts/systolic_array/random_cases.csv - run: python3 scripts/systolic_array/random_fpgen.py");
         $finish;
     end
 

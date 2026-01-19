@@ -8,6 +8,7 @@ module add_fp16 (
     input logic nRST,
     input logic start,
     input logic stall,
+    input logic sub,              // 1 for subtraction, 0 for addition
     input logic [15:0] fp1_in,
     input logic [15:0] fp2_in,
     output logic [15:0] fp_out,
@@ -15,10 +16,11 @@ module add_fp16 (
 );
 
 // DAZ: Flush subnormal inputs to signed zero at the very front
+// For subtraction, negate fp2_in by flipping its sign bit
 logic [15:0] a, b;
 always_comb begin : daz_flush
     a = fp1_in;
-    b = fp2_in;
+    b = sub ? {~fp2_in[15], fp2_in[14:0]} : fp2_in;  // Flip sign for subtraction
     
     // DAZ: exp==0 and mant!=0 -> ±0 (keep sign)
     if ((a[14:10] == 5'd0) && (a[9:0] != 10'd0)) a[14:0] = 15'd0;
