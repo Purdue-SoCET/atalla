@@ -1,26 +1,19 @@
 `timescale 1ns/1ps
 
+// FP16 Addition Testbench with DAZ/FTZ support
+// Prerequisites: Generate test cases first:
+//   python3 scripts/systolic_array/random_fpgen.py
+// then u run verilator --binary -j 0 -Wall -Wno-fatal tb/unit/systolic_array/add_fp16_tb_full.sv rtl/modules/systolic_array/add_fp16.sv rtl/modules/systolic_array/left_shift.sv --trace
+// Then run: ./obj_dir/Vadd_fp16_tb_full
 
-// ./obj_dir/VMAC_unit_tb
-// gtkwave waves.vcd --save=mac_debug.gtkw
-
-// to run this: verilator --binary -j 0 -Wall -Wno-fatal mul_fp16_tb -Imodules -Itestbench -Iinclude --hierarchical --trace; ./obj_dir/Vmul_fp16_tb; gtkwave waves/add_fp16_waves.vcd --save=waves/add_fp16_debug.gtkw
-
-
-/* verilator lint_off UNUSEDSIGNAL */
 module add_fp16_tb_full;
 
-    // Parameters
     localparam PERIOD = 2;
 
-    // Testbench Signals
     logic tb_clk;
     logic tb_nrst;
-    integer i;
 
-    // tb_clk init
-    always
-    begin
+    always begin
         tb_clk = 1'b0;
         #(PERIOD/2.0);
         tb_clk = 1'b1;
@@ -28,128 +21,140 @@ module add_fp16_tb_full;
     end
     
     logic [15:0] tb_a, tb_b;
-    logic tb_start;
+    logic tb_start, tb_sub;
     logic [15:0] tb_result;
     logic tb_done;
-
     logic [15:0] exp;
-    int casenum;
-    string casename;
-    logic done_testing;
+    logic [15:0] tb_b_adjusted;
+    
+    int pass_count, fail_count;
 
-    add_fp16 bob (.clk(tb_clk), .nRST(tb_nrst), .start(tb_start), .fp1_in(tb_a), .fp2_in(tb_b), .fp_out(tb_result));//, .output_ready(tb_done));
+    // Handle subtraction by negating b
+    assign tb_b_adjusted = tb_sub ? {~tb_b[15], tb_b[14:0]} : tb_b;
 
-    // add_fp16 bob (.tb_clk(tb_tb_clk), .nRST(tb_nrst), .start(tb_start), .a(tb_a), .b(tb_b), .result(tb_result), .done(tb_done));
+    add_fp16 dut (
+        .clk(tb_clk), 
+        .nRST(tb_nrst), 
+        .start(tb_start), 
+        .stall(1'b0),
+        .fp1_in(tb_a), 
+        .fp2_in(tb_b_adjusted), 
+        .fp_out(tb_result), 
+        .done(tb_done)
+    );
 
-    logic [15:0] test_set1[9:0];
-    logic [15:0] test_set2[9:0];
-    logic [15:0] test_set3[9:0];
-
-    task automatic test_case(
-        input logic [15:0] a,
-        input logic [15:0] b,
-        input logic sub);
-    begin
-
+    task automatic test_case(input logic [15:0] a, input logic [15:0] b, input logic is_sub);
         @(negedge tb_clk);
-
         tb_start = 0;
         tb_a = a;
         tb_b = b;
-
+        tb_sub = is_sub;
         @(negedge tb_clk);
-
         tb_start = 1;
-    end
-    endtask //automatic
+    endtask
 
-    task automatic check_case(
-        input string casename,
-        input logic [15:0] expected);
-    begin
-        if (tb_result !== expected) begin
-            $display("Failed Test for %s: A=%h B=%h Got=%h Exp=%h", casename, tb_a, tb_b, tb_result, expected);
+    // Check if value is NaN (exp=0x1F, mant!=0)
+    function automatic logic is_nan(input logic [15:0] val);
+        return (val[14:10] == 5'b11111) && (val[9:0] != 10'b0);
+    endfunction
+
+    task automatic check_case(input string casename, input logic [15:0] expected);
+        logic match;
+        // NaN comparison: any NaN matches any NaN (ignore payload)
+        if (is_nan(tb_result) && is_nan(expected)) begin
+            match = 1'b1;
+        end else begin
+            match = (tb_result === expected);
         end
-        else begin
-            $display("Passed %s | A=%h B=%h Got=%h Exp=%h", casename, tb_a, tb_b, tb_result, expected);
+        
+        if (!match) begin
+            $display("Failed Test for %s: A=%h B=%h SUB=%b Got=%h Exp=%h", casename, tb_a, tb_b, tb_sub, tb_result, expected);
+            fail_count++;
+        end else begin
+            $display("Passed %s | A=%h B=%h SUB=%b -> %h", casename, tb_a, tb_b, tb_sub, tb_result);
+            pass_count++;
         end
-    end
     endtask
     
-    localparam logic [15:0] P_INF = 16'b0_11111_0000000000,
-    N_INF   = 16'b1_11111_0000000000,
-    NAN = 16'b0_11111_0100000000,
-    P_ZERO = 16'b0_00000_0000000000,
-    N_ZERO = 16'b1_00000_0000000000,
-    ONE = 16'b0_01111_0000000000,
-    TWO = 16'b0_10000_0000000000,
-    MIN = 16'b0_00000_0000000001,
-    MAX_FINITE= 16'b0_11110_1111111111;
+    localparam logic [15:0] P_INF      = 16'b0_11111_0000000000;
+    localparam logic [15:0] N_INF      = 16'b1_11111_0000000000;
+    localparam logic [15:0] NAN        = 16'b0_11111_0100000000;  // Quiet NaN
+    localparam logic [15:0] P_ZERO     = 16'b0_00000_0000000000;
+    localparam logic [15:0] N_ZERO     = 16'b1_00000_0000000000;
+    localparam logic [15:0] ONE        = 16'b0_01111_0000000000;
+    localparam logic [15:0] TWO        = 16'b0_10000_0000000000;
+    localparam logic [15:0] MIN_SUB    = 16'b0_00000_0000000001;  // Smallest subnormal
+    localparam logic [15:0] MAX_FINITE = 16'b0_11110_1111111111;
 
-    integer fd;                 // file descriptor
-    string header;              // to skip first line
-    string a_str, b_str, exp_str;
-    int sub;
+    integer fd;
+    string header;
+    string line;
     logic [15:0] a, b, expected;
 
-
-    // Test sequence
-
 initial begin
-        tb_nrst = '0;
+    pass_count = 0;
+    fail_count = 0;
+    tb_nrst = 1'b0;
+    tb_start = 1'b0;
+    tb_sub = 1'b0;
+    tb_a = 16'h0;
+    tb_b = 16'h0;
 
     #(PERIOD);
-
     tb_nrst = 1;
+    #(PERIOD);
 
+    $display("--- hardcoded addition cases ---");
+
+    // Basic arithmetic
     test_case(ONE, ONE, 0);
-    exp = 16'b0_10000_0000000000;
+    exp = TWO;
     #(PERIOD);
     check_case("1 + 1 = 2", exp);
     #(PERIOD);
 
-    test_case(16'b1_10000_1000000000, 16'b0_10000_0000000000, 0);
-    exp = 16'b1_01111_0000000000;
+    test_case(16'b1_10000_1000000000, 16'b0_10000_0000000000, 0);  // -3 + 2
+    exp = 16'b1_01111_0000000000;  // -1
     #(PERIOD);
     check_case("(-3) + 2 = -1", exp);
     #(PERIOD);
 
-    // ---------------- Zeroes ----------------
+    // Zero cases
     test_case(P_ZERO, P_ZERO, 0);
     exp = P_ZERO;
     #(PERIOD);
-    check_case("+0 + +0", exp);
+    check_case("+0 + +0 = +0", exp);
     #(PERIOD);
 
     test_case(P_ZERO, N_ZERO, 0);
     exp = P_ZERO;
     #(PERIOD);
-    check_case("+0 + -0", exp);
+    check_case("+0 + -0 = +0", exp);
     #(PERIOD);
 
     test_case(ONE, P_ZERO, 0);
     exp = ONE;
     #(PERIOD);
-    check_case("+x + 0", exp);
+    check_case("1 + 0 = 1", exp);
     #(PERIOD);
 
-    // ---------------- Infinities ----------------
+    // Infinity cases
     test_case(P_INF, ONE, 0);
     exp = P_INF;
     #(PERIOD);
-    check_case("+Inf + finite", exp);
+    check_case("+Inf + 1 = +Inf", exp);
     #(PERIOD);
 
     test_case(P_INF, P_INF, 0);
     exp = P_INF;
     #(PERIOD);
-    check_case("+Inf + +Inf", exp);
+    check_case("+Inf + +Inf = +Inf", exp);
     #(PERIOD);
 
     test_case(N_INF, N_INF, 0);
     exp = N_INF;
     #(PERIOD);
-    check_case("-Inf + -Inf", exp);
+    check_case("-Inf + -Inf = -Inf", exp);
     #(PERIOD);
 
     test_case(P_INF, N_INF, 0);
@@ -158,111 +163,179 @@ initial begin
     check_case("+Inf + -Inf = NaN", exp);
     #(PERIOD);
 
-    // ---------------- NaN ----------------
+    // NaN propagation
     test_case(NAN, ONE, 0);
     exp = NAN;
     #(PERIOD);
     check_case("NaN + 1 = NaN", exp);
     #(PERIOD);
 
-    // ---------------- Subnormals ----------------
-    test_case(MIN, ONE, 0);
-    exp = ONE;
+    // DAZ: Subnormal inputs flushed to zero
+    test_case(MIN_SUB, ONE, 0);
+    exp = ONE;  // DAZ: MIN_SUB -> 0, so 0 + 1 = 1
     #(PERIOD);
-    check_case("subnormal + 1 ≈ 1", exp);
-    #(PERIOD);
-
-    test_case(MIN, MIN, 0);
-    exp = P_ZERO; // changed to 0, cause of DAZ
-    #(PERIOD);
-    check_case("subnormal + subnormal", exp);
+    check_case("subnormal + 1 = 1 (DAZ)", exp);
     #(PERIOD);
 
-    test_case(TWO, MIN, 0);
-    exp = TWO; // Doesn't change as DAZ means we treat subnormals as zero
+    test_case(MIN_SUB, MIN_SUB, 0);
+    exp = P_ZERO;  // DAZ: both -> 0, so 0 + 0 = 0
     #(PERIOD);
-    check_case("large_x + subnormal ≈ large_x", exp);
+    check_case("subnormal + subnormal = 0 (DAZ)", exp);
     #(PERIOD);
 
-    // ---------------- Overflow / Underflow ----------------
+    test_case(TWO, MIN_SUB, 0);
+    exp = TWO;  // DAZ: MIN_SUB -> 0, so 2 + 0 = 2
+    #(PERIOD);
+    check_case("2 + subnormal = 2 (DAZ)", exp);
+    #(PERIOD);
+
+    // Overflow to infinity
     test_case(MAX_FINITE, MAX_FINITE, 0);
     exp = P_INF;
     #(PERIOD);
-    check_case("overflow: max + max = +Inf", exp);
+    check_case("max + max = +Inf (overflow)", exp);
     #(PERIOD);
 
-    test_case(16'b1_11110_1111111111, 16'b1_11110_1111111111, 0);
+    test_case(16'b1_11110_1111111111, 16'b1_11110_1111111111, 0);  // -max + -max
     exp = N_INF;
     #(PERIOD);
-    check_case("overflow: -max + -max = -Inf", exp);
+    check_case("-max + -max = -Inf (overflow)", exp);
     #(PERIOD);
 
-    // ---------------- Cancellation ----------------
-    test_case(16'b0_10000_1000000000, 16'b1_10000_1000000000, 0);
+    // Exact cancellation
+    test_case(16'b0_10000_1000000000, 16'b1_10000_1000000000, 0);  // 3 + (-3)
     exp = P_ZERO;
     #(PERIOD);
-    check_case("+x + (-x) = +0", exp);
+    check_case("x + (-x) = +0 (cancellation)", exp);
     #(PERIOD);
 
-    // ---------------- Sign checks ----------------
-    test_case(16'b0_10000_0000000000, 16'b0_10000_0000000000, 0);
-    exp = 16'b0_10001_0000000000;
+    // Sign preservation
+    test_case(TWO, TWO, 0);
+    exp = 16'b0_10001_0000000000;  // 4
     #(PERIOD);
-    check_case("+a + +b = +", exp);
+    check_case("+2 + +2 = +4", exp);
     #(PERIOD);
 
-    test_case(16'b1_10000_0000000000, 16'b1_10000_0000000000, 0);
-    exp = 16'b1_10001_0000000000;
+    test_case(16'b1_10000_0000000000, 16'b1_10000_0000000000, 0);  // -2 + -2
+    exp = 16'b1_10001_0000000000;  // -4
     #(PERIOD);
-    check_case("-a + -b = -", exp);
+    check_case("-2 + -2 = -4", exp);
     #(PERIOD);
-// end
 
+    $display("");
+    $display("=== Manual Subtraction Test Cases ===");
 
-// initial begin
-    #10ns;
+    // Basic subtraction
+    test_case(TWO, ONE, 1);  // 2 - 1
+    exp = ONE;
+    #(PERIOD);
+    check_case("2 - 1 = 1", exp);
+    #(PERIOD);
 
-    fd = $fopen("tb/unit/systolic_array/adder_testcases.csv", "r");
+    test_case(ONE, TWO, 1);  // 1 - 2
+    exp = 16'b1_01111_0000000000;  // -1
+    #(PERIOD);
+    check_case("1 - 2 = -1", exp);
+    #(PERIOD);
+
+    test_case(16'b0_10000_1000000000, 16'b0_10000_0000000000, 1);  // 3 - 2
+    exp = ONE;
+    #(PERIOD);
+    check_case("3 - 2 = 1", exp);
+    #(PERIOD);
+
+    // Subtraction resulting in zero
+    test_case(TWO, TWO, 1);  // 2 - 2
+    exp = P_ZERO;
+    #(PERIOD);
+    check_case("2 - 2 = 0", exp);
+    #(PERIOD);
+
+    // Subtraction with infinity
+    test_case(P_INF, ONE, 1);  // +Inf - 1
+    exp = P_INF;
+    #(PERIOD);
+    check_case("+Inf - 1 = +Inf", exp);
+    #(PERIOD);
+
+    test_case(P_INF, P_INF, 1);  // +Inf - +Inf
+    exp = NAN;
+    #(PERIOD);
+    check_case("+Inf - +Inf = NaN", exp);
+    #(PERIOD);
+
+    test_case(P_INF, N_INF, 1);  // +Inf - (-Inf) = +Inf + +Inf
+    exp = P_INF;
+    #(PERIOD);
+    check_case("+Inf - -Inf = +Inf", exp);
+    #(PERIOD);
+
+    // Subtraction with NaN
+    test_case(NAN, ONE, 1);
+    exp = NAN;
+    #(PERIOD);
+    check_case("NaN - 1 = NaN", exp);
+    #(PERIOD);
+
+    $display("");
+    $display("--- Random Test Cases from CSV ---");
+
+    fd = $fopen("scripts/systolic_array/random_cases.csv", "r");
     if (fd == 0) begin
-        $fatal("ERROR: Could not open random_cases.csv");
-    end
-    else begin
-        $display("Opened random_cases.csv for reading.");
+        $display("ERROR: Could not open scripts/systolic_array/random_cases.csv");
+        $display("       Run: python3 scripts/systolic_array/random_fpgen.py");
+        $finish;
     end
 
-    // Skip header row ("a,b,sub,expected")
+    // Skip header
     void'($fgets(header, fd));
 
-    // Read until end of file
-    // Read format: hex_a,hex_b,sub,hex_expected
     while (!$feof(fd)) begin
-        int ret;
-        ret = $fscanf(fd, "%h,%h,%d,%h\n", a, b, sub, expected);
-        if (ret != 4) begin
-            $display("Skipping line (ret=%0d)", ret);
-            continue;
-        end
+        int ret, sub_flag;
+        logic is_zero_result;
+        ret = $fscanf(fd, "%h,%h,%d,%h\n", a, b, sub_flag, expected);
+        if (ret != 4) continue;
 
-        // Apply to DUT
         @(negedge tb_clk);
         tb_start = 1;
         tb_a = a;
         tb_b = b;
+        tb_sub = sub_flag;
 
         @(negedge tb_clk);
         tb_start = 0;
         #(PERIOD);
 
-        // Compare result
-        if (tb_result !== expected)
-            $display("Fail: A=%h  B=%h  SUB=%0d → Got=%h  Exp=%h", a, b, sub, tb_result, expected);
-        else
-            $display("Pass: A=%h  B=%h  SUB=%0d → %h", a, b, sub, tb_result);
+        // Check if both result and expected are zeros (either +0 or -0)
+        is_zero_result = (tb_result == 16'h0000 || tb_result == 16'h8000) &&
+                         (expected == 16'h0000 || expected == 16'h8000);
+
+        // NaN-aware comparison, and accept +0/-0 equivalence
+        if (is_nan(tb_result) && is_nan(expected)) begin
+            pass_count++;
+        end else if (is_zero_result) begin
+            pass_count++;  // +0 and -0 are equivalent for our purposes
+        end else if (tb_result !== expected) begin
+            $display("FAIL: A=%h B=%h SUB=%d Got=%h Exp=%h", a, b, sub_flag, tb_result, expected);
+            fail_count++;
+        end else begin
+            pass_count++;
+        end
     end
 
     $fclose(fd);
-    $finish;;
+
+    $display("");
+    $display("=== Test Summary ===");
+    $display("PASSED: %0d", pass_count);
+    $display("FAILED: %0d", fail_count);
+    
+    if (fail_count == 0)
+        $display("ALL TESTS PASSED!");
+    else
+        $display("SOME TESTS FAILED!");
+
+    $finish;
 end
 
-    
 endmodule

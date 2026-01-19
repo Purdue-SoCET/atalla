@@ -1,172 +1,188 @@
-`timescale 1ns/1ps
+`timescale 1ps/1ps
 
-// This module probably CANNOT handle subtraction!
+// FP16 Adder with FTZ/DAZ mode
+// og by Vinay modified by Myles
 
-module add_fp16(input logic clk, nRST, start,
-                input logic [15:0] fp1_in, fp2_in,
-                output logic [15:0] fp_out );
-                // output logic ovf, unf, output_ready);
+module add_fp16 (
+    input logic clk,
+    input logic nRST,
+    input logic start,
+    input logic stall,
+    input logic [15:0] fp1_in,
+    input logic [15:0] fp2_in,
+    output logic [15:0] fp_out,
+    output logic done
+);
 
-
-// --- Special-case decode (IEEE 754 binary16) ---
-logic s1, s2;
-logic [4:0] e1, e2;
-logic [9:0] f1, f2;
-
-assign s1 = fp1_in[15];
-assign e1 = fp1_in[14:10];
-assign f1 = fp1_in[9:0];
-
-assign s2 = fp2_in[15];
-assign e2 = fp2_in[14:10];
-assign f2 = fp2_in[9:0];
-
-logic is_nan1, is_nan2, is_inf1, is_inf2, is_sub1, is_sub2, is_zero1, is_zero2;
-assign is_nan1  = (e1 == 5'h1F) && (f1 != 0);
-assign is_nan2  = (e2 == 5'h1F) && (f2 != 0);
-assign is_inf1  = (e1 == 5'h1F) && (f1 == 0);
-assign is_inf2  = (e2 == 5'h1F) && (f2 == 0);
-assign is_zero1 = (e1 == 5'h00) && (f1 == 0);
-assign is_zero2 = (e2 == 5'h00) && (f2 == 0);
-assign is_sub1  = (e1 == 5'h00) && (f1 != 0);
-assign is_sub2  = (e2 == 5'h00) && (f2 != 0);
-
-// NaN/Inf result selection (combinational "early-out")
-logic        use_special;
-logic [15:0] special_result;
-
-always_comb begin
-  use_special   = 1'b0;
-  special_result = 16'h7E00; // default quiet-NaN (qNaN)
-  
-  // NaN: if any NaN or (+Inf)+(-Inf) or (-Inf)+(+Inf)
-  if (is_nan1 || is_nan2) begin
-    use_special    = 1'b1;
-    special_result = 16'h7E00;               // qNaN
-  end else if (is_inf1 && is_inf2 && (s1 ^ s2)) begin
-    use_special    = 1'b1;
-    special_result = 16'h7E00;               // Inf - Inf => NaN
-  end else if (is_inf1 && !is_inf2) begin
-    use_special    = 1'b1;
-    special_result = {s1, 5'h1F, 10'b0};     // Inf +/- finite => Inf
-  end else if (!is_inf1 && is_inf2) begin
-    use_special    = 1'b1;
-    special_result = {s2, 5'h1F, 10'b0};     // finite +/- Inf => Inf
-  end
+// DAZ: Flush subnormal inputs to signed zero at the very front
+logic [15:0] a, b;
+always_comb begin : daz_flush
+    a = fp1_in;
+    b = fp2_in;
+    
+    // DAZ: exp==0 and mant!=0 -> ±0 (keep sign)
+    if ((a[14:10] == 5'd0) && (a[9:0] != 10'd0)) a[14:0] = 15'd0;
+    if ((b[14:10] == 5'd0) && (b[9:0] != 10'd0)) b[14:0] = 15'd0;
 end
 
+// Special case detection
+logic is_nan_a, is_nan_b, is_inf_a, is_inf_b;
+logic special_case;
+logic [15:0] special_result;
 
-// step 1: Compare EFFECTIVE exponents (subnormals use 1) for alignment.
-logic [4:0] e1_eff, e2_eff;
-assign e1_eff = (e1 == 5'b0) ? 5'd1 : e1;
-assign e2_eff = (e2 == 5'b0) ? 5'd1 : e2;
-
-logic [4:0] smaller_exponent;
-logic [4:0] larger_exponent;
-logic exp_select;
-
-always_comb begin
-    if (e1_eff < e2_eff) begin               // fp2 has bigger effective exponent
-        smaller_exponent = e1_eff;
-        larger_exponent  = e2_eff;
-        exp_select       = 1'b0;             // shift fp1
-    end else begin                            // fp1 has bigger or equal effective exponent
-        smaller_exponent = e2_eff;
-        larger_exponent  = e1_eff;
-        exp_select       = 1'b1;             // shift fp2
+always_comb begin : special_case_detect
+    special_case = 1'b0;
+    special_result = 16'h0000;
+    
+    // NaN: exponent = 0x1F, mantissa != 0
+    is_nan_a = (a[14:10] == 5'b11111) && (a[9:0] != 10'b0);
+    is_nan_b = (b[14:10] == 5'b11111) && (b[9:0] != 10'b0);
+    
+    // Infinity: exponent = 0x1F, mantissa = 0
+    is_inf_a = (a[14:10] == 5'b11111) && (a[9:0] == 10'b0);
+    is_inf_b = (b[14:10] == 5'b11111) && (b[9:0] == 10'b0);
+    
+    // Determine special cases
+    if (is_nan_a || is_nan_b) begin
+        // NaN propagation - preserve the NaN bit pattern but set quiet NaN bit
+        // IEEE 754: bit 9 of mantissa = 1 for quiet NaN, 0 for signaling NaN
+        // If both are NaN, propagate the first one
+        special_case = 1'b1;
+        if (is_nan_a) begin
+            special_result = {a[15:10], 1'b1, a[8:0]};  // Set bit 9 (quiet NaN)
+        end
+        else begin
+            special_result = {b[15:10], 1'b1, b[8:0]};  // Set bit 9 (quiet NaN)
+        end
+    end
+    else if (is_inf_a && is_inf_b) begin
+        if (a[15] == b[15]) begin
+            // Same sign: Inf + Inf = Inf (same sign)
+            special_case = 1'b1;
+            special_result = a;  // Both are same, return either
+        end
+        else begin
+            // Different signs: Inf - Inf = NaN
+            special_case = 1'b1;
+            special_result = 16'h7E00;  // Canonical NaN
+        end
+    end
+    else if (is_inf_a) begin
+        // a is Inf, b is finite: result is Inf with sign of a
+        special_case = 1'b1;
+        special_result = a;
+    end
+    else if (is_inf_b) begin
+        // b is Inf, a is finite: result is Inf with sign of b
+        special_case = 1'b1;
+        special_result = b;
     end
 end
 
-
-// step 2: Handle implicit mantissa bit (0 for subnormals, 1 for normals)
-logic frac_leading_bit_fp1;
-logic frac_leading_bit_fp2;
-always_comb begin
-    if(e1 == 5'b0)
-        frac_leading_bit_fp1 = 1'b0;
-    else
-        frac_leading_bit_fp1 = 1'b1;
-
-    if(e2 == 5'b0)
-        frac_leading_bit_fp2 = 1'b0;
-    else
-        frac_leading_bit_fp2 = 1'b1;
-end
-
-// step 3: Mantissa normalization. Shift the mantissa of the number with a smaller exponent to the right, by whatever the difference in exponents was.
-// aka, divide the mantissa so you can increase the exponent to match the larger one.
+// step 1-3: Combined exponent compare, implicit bit, and alignment (single path)
+logic op_swap;
+logic [15:0] high_op, low_op;
+logic [4:0] high_exp, low_exp;
+logic [12:0] mant_hi, mant_lo;
+logic [12:0] mant_lo_aligned;
+logic [12:0] mask_align;
+logic sticky_align_local;
+logic sticky_lost;  // True if sticky bits exist but weren't added (bit0 was already 1)
 logic [4:0] exp_diff, exp_max;
 logic [12:0] frac_shifted, frac_not_shifted;
 logic sign_shifted, sign_not_shifted;
 
-always_comb begin
-    exp_diff = larger_exponent - smaller_exponent;
-
-    if(exp_select == 0) begin                       // fp2 had a bigger exponent: shift fp1.
-
-        // Mantissa is only 13 bits (after appending two zeros and an implcit 1/0). If for normalization you have to shift by more than 13 bits, it's going to be zero.
-        // So, i think i can make a shifter that only shifts by the lower 4 bits of exp_diff, and if we had to shift by more than that, just hard code a zero as the output.
-        // QUESTION: does this mean i need to turn on an underflow flag?
-
-        if(exp_diff[4]) begin
-            frac_shifted = 13'b0;
-        end
-        else begin
-            frac_shifted = {frac_leading_bit_fp1, fp1_in[9:0], 2'b00} >> exp_diff[3:0];
-        end
-        // rounding_loss = |({frac_leading_bit_fp1, floating_point1_in[9:0], 2'b00} & ((1 << unsigned_exp_diff) - 1));    // chatgpt gave me this
-        sign_shifted = fp1_in[15];
-        frac_not_shifted = {frac_leading_bit_fp2, fp2_in[9:0], 2'b00};
-        sign_not_shifted = fp2_in[15];
-        exp_max = e2_eff;  // larger EFFECTIVE exponent
+always_comb begin : align_operands
+    // Pick operand with larger exponent as "high"
+    op_swap = (a[14:10] < b[14:10]);
+    high_op = op_swap ? b : a;
+    low_op  = op_swap ? a : b;
+    
+    high_exp = high_op[14:10];
+    low_exp  = low_op[14:10];
+    
+    exp_diff = high_exp - low_exp;
+    exp_max  = high_exp;
+    
+    // Build mantissas with implicit bit (DAZ already handled upstream)
+    mant_hi = {(|high_exp), high_op[9:0], 2'b00};
+    mant_lo = {(|low_exp), low_op[9:0], 2'b00};
+    
+    // Align low mantissa with sticky injected into bit0
+    mant_lo_aligned = 13'd0;
+    sticky_align_local = 1'b0;
+    sticky_lost = 1'b0;
+    mask_align = 13'd0;
+    
+    if (exp_diff >= 5'd13) begin
+        mant_lo_aligned = 13'd0;
+        mant_lo_aligned[0] = |mant_lo;
+        sticky_lost = 1'b0;  // All bits go to sticky, nothing lost
     end
-
-    else begin                                      // fp1 had a bigger exponent: shift fp2.
-        if(exp_diff[4]) begin
-            frac_shifted = 13'b0;
-        end
-        else begin
-            frac_shifted = {frac_leading_bit_fp2, fp2_in[9:0], 2'b00} >> exp_diff[3:0];
-        end
-        // rounding_loss = |({frac_leading_bit_fp2, floating_point2_in[9:0], 2'b00} & ((1 << unsigned_exp_diff) - 1));
-        sign_shifted = fp2_in[15];
-        frac_not_shifted = {frac_leading_bit_fp1, fp1_in[9:0], 2'b00};
-        sign_not_shifted = fp1_in[15];
-        exp_max = e1_eff;  // larger EFFECTIVE exponent
+    else if (exp_diff == 5'd0) begin
+        mant_lo_aligned = mant_lo;
+        sticky_lost = 1'b0;
     end
+    else begin
+        mant_lo_aligned = mant_lo >> exp_diff;
+        mask_align = (13'd1 << exp_diff) - 13'd1;
+        sticky_align_local = |(mant_lo & mask_align);
+        // Track if sticky bits exist but bit0 was already 1 (so OR doesn't add them)
+        // sticky_lost: bits shifted out, but bit0 was already 1 → we subtract less than true → result too large
+        // sticky_added: bits shifted out, bit0 was 0, we added 1 → we subtract more than true → result too small
+        sticky_lost = sticky_align_local & mant_lo_aligned[0];
+        mant_lo_aligned[0] = mant_lo_aligned[0] | sticky_align_local;
+    end
+    
+    // Map to existing signal names for downstream compatibility
+    frac_not_shifted = mant_hi;
+    frac_shifted = mant_lo_aligned;
+    sign_not_shifted = high_op[15];
+    sign_shifted = low_op[15];
 end
 
-// step 4: Add mantissae.
-
-// find which mantissa is bigger
+// step 4: Add mantissae
 logic [12:0] smaller_mantissa, larger_mantissa;
 logic [13:0] mantissa_sum;
 logic larger_mantissa_sign;
 logic result_sign, signs_differ, mantissa_overflow;
+logic sub_has_lost_sticky;  // True if subtrahend has lost sticky bits (result is too large)
+logic sub_has_added_sticky; // True if subtrahend has added sticky bit (result is too small)
 
-always_comb begin
-    if(frac_shifted > frac_not_shifted) begin       // if the mantissae are equal, it doesnt matter what gets selected
+always_comb begin : mantissa_compare
+    if (frac_shifted > frac_not_shifted) begin
         smaller_mantissa = frac_not_shifted;
         larger_mantissa = frac_shifted;
         larger_mantissa_sign = sign_shifted;
+        // In subtraction, smaller is subtrahend. Here smaller=frac_not_shifted (no sticky issues)
+        sub_has_lost_sticky = 1'b0;
+        sub_has_added_sticky = 1'b0;
     end
     else begin
         smaller_mantissa = frac_shifted;
         larger_mantissa = frac_not_shifted;
         larger_mantissa_sign = sign_not_shifted;
+        // In subtraction, smaller is subtrahend. Here smaller=frac_shifted
+        // sticky_lost: we subtracted less than true value, result is too large
+        // sticky_added: we subtracted more than true value, result is too small
+        sub_has_lost_sticky = sticky_lost;
+        sub_has_added_sticky = sticky_align_local & ~sticky_lost;  // sticky exists but wasn't lost
     end
 
     signs_differ = sign_shifted ^ sign_not_shifted;
 end
 
 // register values here, before addition
-logic[12:0] smaller_mantissa_l, larger_mantissa_l;
+logic [12:0] smaller_mantissa_l, larger_mantissa_l;
 logic larger_mantissa_sign_l, sign_shifted_l, sign_not_shifted_l, signs_differ_l;
-logic[4:0] exp_max_l;
+logic [4:0] exp_max_l;
+logic special_case_l;
+logic [15:0] special_result_l;
+logic sub_has_lost_sticky_l;  // Latched: subtrahend has lost sticky (result too large)
+logic sub_has_added_sticky_l; // Latched: subtrahend has added sticky (result too small)
 
-
-always_ff @(posedge clk, negedge nRST) begin
-    if(nRST == 1'b0) begin
+always_ff @(posedge clk, negedge nRST) begin : pipeline_reg
+    if (nRST == 1'b0) begin
         smaller_mantissa_l <= 0;
         larger_mantissa_l <= 0;
         exp_max_l <= 0;
@@ -174,24 +190,46 @@ always_ff @(posedge clk, negedge nRST) begin
         signs_differ_l <= 0;
         sign_shifted_l <= 0;
         sign_not_shifted_l <= 0;
+        special_case_l <= 0;
+        special_result_l <= 0;
+        sub_has_lost_sticky_l <= 0;
+        sub_has_added_sticky_l <= 0;
+        done <= 0;
     end
     else begin
-        smaller_mantissa_l <= smaller_mantissa;
-        larger_mantissa_l <= larger_mantissa;
-        exp_max_l <= exp_max;
-        larger_mantissa_sign_l <= larger_mantissa_sign;
-        signs_differ_l <= signs_differ;
-        sign_shifted_l <= sign_shifted;
-        sign_not_shifted_l <= sign_not_shifted;
+        if (stall) begin
+            smaller_mantissa_l <= smaller_mantissa_l;
+            larger_mantissa_l <= larger_mantissa_l;
+            exp_max_l <= exp_max_l;
+            larger_mantissa_sign_l <= larger_mantissa_sign_l;
+            signs_differ_l <= signs_differ_l;
+            sign_shifted_l <= sign_shifted_l;
+            sign_not_shifted_l <= sign_not_shifted_l;
+            special_case_l <= special_case_l;
+            special_result_l <= special_result_l;
+            sub_has_lost_sticky_l <= sub_has_lost_sticky_l;
+            sub_has_added_sticky_l <= sub_has_added_sticky_l;
+            done <= done;
+        end
+        else begin
+            smaller_mantissa_l <= smaller_mantissa;
+            larger_mantissa_l <= larger_mantissa;
+            exp_max_l <= exp_max;
+            larger_mantissa_sign_l <= larger_mantissa_sign;
+            signs_differ_l <= signs_differ;
+            sign_shifted_l <= sign_shifted;
+            sign_not_shifted_l <= sign_not_shifted;
+            special_case_l <= special_case;
+            special_result_l <= special_result;
+            sub_has_lost_sticky_l <= sub_has_lost_sticky;
+            sub_has_added_sticky_l <= sub_has_added_sticky;
+            done <= start;
+        end
     end
 end
 
-always_comb begin
-    // logic: If the signs of the input operands are the same, simply add the two together.
-    // The sign of the result will be the sign of both the inputs.
-    // If one is positive and the other is negative, the result is the larger value minus the smaller value (using absolute value)
-    // and the sign will be the sign of the larger operand.
-    if(!signs_differ_l) begin
+always_comb begin : mantissa_add
+    if (!signs_differ_l) begin
         mantissa_sum = smaller_mantissa_l + larger_mantissa_l;
         result_sign = sign_shifted_l & sign_not_shifted_l;
     end
@@ -203,116 +241,111 @@ always_comb begin
     mantissa_overflow = mantissa_sum[13];
 end
 
-// step 5: Re-normalization of mantissa sum.
-
-// screw all of this im gonna use the old inefficient module
-
-// // step 5.1: Calculate the number of leading zeros in the value.
-// // implementing leading-zero-detection (LZD) as a tree.
-// logic z1, z2, z3;   // Split input into 3 chunks of 4 bits (or 5 for the last one) each, and check each one individually for where the leading zero is.
-// assign z1 = |mantissa_sum[12:9];    // highest 1 is in upper 4 bits?
-// assign z2 = |mantissa_sum[8:5];     // highest 1 is in the next 4 below?
-// assign z3 = |mantissa_sum[4:0];     // or the lowest 4?
-
-// logic[3:0] l1_loc_1, l1_loc_2, l1_loc_3;
-// assign l1_loc_1 = (mantissa_sum[12] ? 0 : (mantissa_sum[11] ? 1 : (mantissa_sum[10] ? 2 : (mantissa_sum[9] ? 3 : 2))));
-// assign l1_loc_2 = (mantissa_sum[8] ? 0 : (mantissa_sum[7] ? 1 : (mantissa_sum[6] ? 2 : (mantissa_sum[5] ? 3 : 2))));
-
-// always_comb begin
-//     if(|mantissa_sum[12:])
-// end
+// step 5: Re-normalization of mantissa sum
 logic [12:0] normalized_mantissa_sum;
 logic [3:0] norm_shift;
-left_shift normalizer(.fraction(mantissa_sum[12:0]), .result(normalized_mantissa_sum), .shifted_amount(norm_shift));
+left_shift normalizer (
+    .fraction(mantissa_sum[12:0]),
+    .result(normalized_mantissa_sum),
+    .shifted_amount(norm_shift)
+);
 
 
 
-// step 6: Subtract exponents. I forgot why this exists. Transferred out of subtract.sv
-logic [5:0] u_exp1, u_exp2;
-logic [4:0] u_shifted_amount;
-logic [5:0] u_result;
-logic [4:0] exp_minus_shift_amount;
+// step 6: FTZ - Use signed exponent arithmetic to prevent wraparound
+logic signed [6:0] exp_norm_s;
 
-always_comb begin
-    u_exp1           = {1'b0, (normalized_mantissa_sum == 0 ? 5'b0 : exp_max_l)};
-    u_shifted_amount = {1'b0, norm_shift};
-    u_result         = u_exp1 - u_shifted_amount;
+always_comb begin : exp_adjust
+    if (normalized_mantissa_sum == 13'd0) 
+        exp_norm_s = 7'sd0;
+    else 
+        exp_norm_s = $signed({1'b0, exp_max_l}) - $signed({3'b0, norm_shift});
 end
-assign exp_minus_shift_amount = u_result[4:0];
-//------------------------------------------------------------------------------------
 
 
-// step 7: Rounding (+ handle underflow-to-subnormal)
-reg  [11:0] round_this;
-logic [5:0] exp_out;                  // 6th bit = overflow check
-logic       underflow_to_sub;
-logic [4:0] sub_shift_amt;            // up to 13 is enough; use 5 bits
-logic [12:0] subnormal_shifted;       // intermediate for subnormal shift
+// step 7: Rounding with FTZ underflow detection
+logic [11:0] round_this;
+logic [5:0] exp_base;
+logic ftz_under;
 
-always_comb begin
-    underflow_to_sub = (exp_max_l <= norm_shift);
-    sub_shift_amt    = 5'(1 + norm_shift) - exp_max_l; // valid only if underflow_to_sub
-    subnormal_shifted = normalized_mantissa_sum >> sub_shift_amt;
-    
-    if (mantissa_overflow) begin
-        // normal overflow path (same as before)
+always_comb begin : rounding_prep
+    if (mantissa_overflow == 1) begin
         round_this = mantissa_sum[12:1];
-        exp_out    = exp_max_l + 1;    // still effective-encoded
-    end else if (underflow_to_sub && (normalized_mantissa_sum != 13'b0)) begin
-
-        round_this = subnormal_shifted[11:0];
-        exp_out    = 6'd0;             // exponent field == 0 (subnormal)
+        round_this[0] = round_this[0] | mantissa_sum[0];
+        exp_base   = exp_max_l + 1;
+        ftz_under  = 1'b0;
     end else begin
-        // Normal path (no overflow, no subnormal underflow)
         round_this = normalized_mantissa_sum[11:0];
-        exp_out    = {1'b0, (exp_max_l - norm_shift)}; // encoded exponent field
+        if (exp_norm_s <= 7'sd0) begin
+            exp_base  = 6'd0;
+            ftz_under = 1'b1;
+        end else begin
+            exp_base  = exp_norm_s[5:0];
+            ftz_under = 1'b0;
+        end
     end
 end
 
-logic [15:0] round_out;
-logic round_flag;               // I added this. --Vinay 1/31/2025. Verilator wouldn't compile without it.
+// Rounding with sticky bits and carry handling
+// For subtraction with sticky handling:
+// - sub_has_lost_sticky: result is TOO LARGE, true is below computed → round DOWN
+// - sub_has_added_sticky: result is TOO SMALL, true is above computed → round UP
+logic round_inc;
+logic [10:0] frac_sum;
+logic frac_carry;
+logic [5:0] exp_out;
+logic [9:0] rounded_fraction;
 
-    // Rounding mode used: Round to Nearest, Tie to Even
-    logic G;
-    logic R;
-    assign G = round_this[1];
-    assign R = round_this[0];
-    logic [9:0] rounded_fraction;
-    always_comb begin
-        if(G & (R | round_this[2])) begin
-            rounded_fraction = round_this[11:2] + 1;
-            round_flag = 1;
-        end
-        else begin
-            rounded_fraction = round_this[11:2];
-            round_flag = 0;
-        end
+always_comb begin : rounding_logic
+    if (signs_differ_l && sub_has_lost_sticky_l && round_this[1] && !round_this[0]) begin
+        // Subtraction case: guard=1, sticky=0, but subtrahend had lost sticky
+        // True result is below computed (result is too large), so don't round up
+        round_inc = 1'b0;
     end
-
-    logic overflow, zero;
-    logic [4:0] exp_out_final;
-    logic [9:0] rounded_fraction_final;
-    always_comb begin
-        overflow = exp_out[5] | &exp_out[4:0];
-        // zero = ~(|normalized_mantissa_sum);
-
-        casez(overflow)
-            1'b0: begin
-                exp_out_final = exp_out[4:0];
-                rounded_fraction_final = rounded_fraction;
-            end
-            1'b1: begin
-                exp_out_final = 5'b11111;
-                rounded_fraction_final = 10'b0;
-            end
-        endcase
+    else if (signs_differ_l && sub_has_added_sticky_l && round_this[1] && !round_this[0]) begin
+        // Subtraction case: guard=1, sticky=0, but subtrahend had added sticky
+        // True result is above computed (result is too small), so force round up
+        round_inc = 1'b1;
     end
+    else begin
+        // Normal rounding: round to nearest even
+        round_inc = round_this[1] & (round_this[0] | round_this[2]);
+    end
+    
+    frac_sum = {1'b0, round_this[11:2]} + {10'd0, round_inc};
+    frac_carry = frac_sum[10];
+    exp_out = exp_base + {5'd0, frac_carry};
+    rounded_fraction = frac_carry ? 10'd0 : frac_sum[9:0];
+end
 
-    logic [15:0] fp_core_out;
-    assign fp_core_out = {result_sign, exp_out_final, rounded_fraction_final};
-    assign fp_out      = use_special ? special_result : fp_core_out;
-    // assign ovf = 0;
-    // assign unf = 0;
-    // assign output_ready = 1;
+// Final output with FTZ and overflow handling
+logic overflow;
+logic [4:0] exp_out_final;
+logic [9:0] rounded_fraction_final;
+
+always_comb begin : overflow_check
+    overflow = (exp_out > 6'd30);
+    
+    if (overflow) begin
+        exp_out_final = 5'b11111;
+        rounded_fraction_final = 10'b0;
+    end else begin
+        exp_out_final = exp_out[4:0];
+        rounded_fraction_final = rounded_fraction;
+    end
+end
+
+// Apply FTZ and handle exact cancellation
+always_comb begin : final_output
+    if (special_case_l) begin
+        fp_out = special_result_l;
+    end else if (mantissa_sum == 14'd0) begin
+        fp_out = {result_sign, 15'd0};
+    end else if (ftz_under) begin
+        fp_out = {result_sign, 15'd0};
+    end else begin
+        fp_out = {result_sign, exp_out_final, rounded_fraction_final};
+    end
+end
 
 endmodule
