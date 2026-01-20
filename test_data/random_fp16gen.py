@@ -1,7 +1,7 @@
 import numpy as np
 import csv
 
-N = 2000  # number of random cases
+N = 1000000  # number of random cases
 np.random.seed(67)
 
 # Random 16-bit value from 0x0000 → 0xFFFF
