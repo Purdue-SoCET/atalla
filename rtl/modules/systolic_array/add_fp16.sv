@@ -253,7 +253,6 @@ left_shift normalizer (
 );
 
 
-
 // step 6: FTZ - Use signed exponent arithmetic to prevent wraparound
 logic signed [6:0] exp_norm_s;
 
@@ -288,16 +287,17 @@ always_comb begin : rounding_prep
     end
 end
 
-// Rounding with sticky bits and carry handling
+// Rounding with sticky bits and carry handling (edge cases)
 // For subtraction with sticky handling:
-// - sub_has_lost_sticky: result is TOO LARGE, true is below computed → round DOWN
-// - sub_has_added_sticky: result is TOO SMALL, true is above computed → round UP
+// - sub_has_lost_sticky: result is TOO LARGE, true is below computed so round DOWN
+// - sub_has_added_sticky: result is TOO SMALL, true is above computed so round UP
 logic round_inc;
 logic [10:0] frac_sum;
 logic frac_carry;
 logic [5:0] exp_out;
 logic [9:0] rounded_fraction;
 
+// Logic needed to remove those nasty edge cases 
 always_comb begin : rounding_logic
     if (signs_differ_l && sub_has_lost_sticky_l && round_this[1] && !round_this[0]) begin
         // Subtraction case: guard=1, sticky=0, but subtrahend had lost sticky
