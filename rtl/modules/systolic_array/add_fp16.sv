@@ -182,6 +182,7 @@ logic special_case_l;
 logic [15:0] special_result_l;
 logic sub_has_lost_sticky_l;  // Latched: subtrahend has lost sticky (result too large)
 logic sub_has_added_sticky_l; // Latched: subtrahend has added sticky (result too small)
+logic start_l;  // Latched start for done pulse generation
 
 always_ff @(posedge clk, negedge nRST) begin : pipeline_reg
     if (nRST == 1'b0) begin
@@ -196,7 +197,7 @@ always_ff @(posedge clk, negedge nRST) begin : pipeline_reg
         special_result_l <= 0;
         sub_has_lost_sticky_l <= 0;
         sub_has_added_sticky_l <= 0;
-        done <= 0;
+        start_l <= 0;
     end
     else begin
         if (stall) begin
@@ -211,7 +212,7 @@ always_ff @(posedge clk, negedge nRST) begin : pipeline_reg
             special_result_l <= special_result_l;
             sub_has_lost_sticky_l <= sub_has_lost_sticky_l;
             sub_has_added_sticky_l <= sub_has_added_sticky_l;
-            done <= done;
+            start_l <= start_l;
         end
         else begin
             smaller_mantissa_l <= smaller_mantissa;
@@ -225,10 +226,13 @@ always_ff @(posedge clk, negedge nRST) begin : pipeline_reg
             special_result_l <= special_result;
             sub_has_lost_sticky_l <= sub_has_lost_sticky;
             sub_has_added_sticky_l <= sub_has_added_sticky;
-            done <= start;
+            start_l <= start;
         end
     end
 end
+
+// done is a 1-cycle pulse now
+assign done = start_l & ~stall;
 
 always_comb begin : mantissa_add
     if (!signs_differ_l) begin
