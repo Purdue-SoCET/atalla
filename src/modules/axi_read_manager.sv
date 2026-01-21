@@ -22,10 +22,10 @@ module axi_read_manager #(
     input  logic                pop, 
     // To Read Mux
     output logic                head_valid,
-    output logic [MID_ARID-1:0] head_id,
     output logic [ARADDR-1 :0]  head_addr,
-    output logic [ARLEN-1  :0]  head_len,
+    output logic [MID_ARID-1:0] head_id,
     output logic [ARSIZE-1 :0]  head_size,
+    output logic [ARLEN-1  :0]  head_len,
     output logic [ARBURST-1:0]  head_burst
 );
 
@@ -33,17 +33,17 @@ ar_payload_t fifo [0:AR_DEPTH-1];
 logic [ADDR_WIDTH-1:0] wr_ptr, rd_ptr;
 
 logic full, empty;
-assign full  = (wr_ptr + 1) == rd_ptr;
+assign full  = (wr_ptr + 1'b1 == rd_ptr);
 assign empty = (wr_ptr == rd_ptr);
 
 logic push;
-assign push = (arvalid && aready); 
+assign push = (arvalid & aready); 
 
 always_ff@(posedge CLK, negedge nRST) begin
     if(!nRST) begin 
         wr_ptr <= '0;
     end else begin
-        if(push) begin 
+        if(push && !full) begin 
             fifo[wr_ptr].valid  <= 1'b1;
             fifo[wr_ptr].addr   <= araddr;
             fifo[wr_ptr].mid_id <= {MASTER_ID, arid};
@@ -60,7 +60,7 @@ always_ff@(posedge CLK, negedge nRST) begin
         rd_ptr <= '0;
     end else begin
         if(!empty && pop) begin 
-                rd_ptr <= rd_ptr + 1;
+            rd_ptr <= rd_ptr + 1;
         end  
     end
 end 

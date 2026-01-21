@@ -43,6 +43,17 @@ arb.wav:
 	vlog -sv ./src/testbench/axi_read_arbiter_tb.sv ./src/modules/axi_read_arbiter.sv
 	vsim -coverage -voptargs="+acc" work.axi_read_arbiter_tb -do "do ./src/scripts/axi_read_arbiter.do; run $(SIMTIME);"
 
+ar_manager:
+	vlib work
+	vlog -sv +incdir+./src/include ./src/testbench/axi_read_manager_tb.sv ./src/modules/axi_read_manager.sv
+	vsim $(SIMTERM) -voptargs="+acc" work.axi_read_manager_tb -do $(SIMDO)
+
+ar_manager.wav:
+	vlib work
+	vlog -sv +incdir+./src/include ./src/testbench/axi_read_manager_tb.sv ./src/modules/axi_read_manager.sv
+	vsim -coverage -voptargs="+acc" work.axi_read_manager_tb -do ";do ./src/scripts/axi_read_manager.do run $(SIMTIME);"
+
+
 # %:
 # 	vlog -sv +incdir+./src/include ./src/testbench/$*_tb.sv  ./src/modules/$*.sv
 # 	vsim $(SIMTERM) -voptargs="+acc" work.$*_tb -do $(SIMDO)
