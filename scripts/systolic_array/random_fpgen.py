@@ -3,7 +3,7 @@ import csv
 import os
 from pathlib import Path
 
-N = 500000  # number of random cases for high confidence
+N = 1000000  # number of random cases for high confidence
 np.random.seed(67)
 
 # Get script directory and set output path relative to it

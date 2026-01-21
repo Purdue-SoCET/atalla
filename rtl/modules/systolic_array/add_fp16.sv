@@ -22,7 +22,7 @@ always_comb begin : daz_flush
     a = fp1_in;
     b = sub ? {~fp2_in[15], fp2_in[14:0]} : fp2_in;  // Flip sign for subtraction
     
-    // DAZ: exp==0 and mant!=0 -> ±0 (keep sign)
+    // DAZ: exp==0 and mant!=0 -> +-0 (keep sign)
     if ((a[14:10] == 5'd0) && (a[9:0] != 10'd0)) a[14:0] = 15'd0;
     if ((b[14:10] == 5'd0) && (b[9:0] != 10'd0)) b[14:0] = 15'd0;
 end
@@ -66,7 +66,7 @@ always_comb begin : special_case_detect
         else begin
             // Different signs: Inf - Inf = NaN
             special_case = 1'b1;
-            special_result = 16'h7E00;  // Canonical NaN
+            special_result = 16'h7E00;  // canonical NaN
         end
     end
     else if (is_inf_a) begin
@@ -130,8 +130,8 @@ always_comb begin : align_operands
         mask_align = (13'd1 << exp_diff) - 13'd1;
         sticky_align_local = |(mant_lo & mask_align);
         // Track if sticky bits exist but bit0 was already 1 (so OR doesn't add them)
-        // sticky_lost: bits shifted out, but bit0 was already 1 → we subtract less than true → result too large
-        // sticky_added: bits shifted out, bit0 was 0, we added 1 → we subtract more than true → result too small
+        // sticky_lost: bits shifted out, but bit0 was already 1 thus we subtract less than true thusresult too large
+        // sticky_added: bits shifted out, bit0 was 0, we added 1 thus we subtract more than true thus result too small
         sticky_lost = sticky_align_local & mant_lo_aligned[0];
         mant_lo_aligned[0] = mant_lo_aligned[0] | sticky_align_local;
     end

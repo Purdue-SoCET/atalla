@@ -1,7 +1,7 @@
 `timescale 1ns/1ps
 
 // FP16 Addition Testbench with DAZ/FTZ support
-// Prerequisites: Generate test cases first:
+// how to run: Generate test cases first:
 //   python3 scripts/systolic_array/random_fpgen.py
 // then u run verilator --binary -j 0 -Wall -Wno-fatal tb/unit/systolic_array/add_fp16_tb_full.sv rtl/modules/systolic_array/add_fp16.sv rtl/modules/systolic_array/left_shift.sv --trace
 // Then run: ./obj_dir/Vadd_fp16_tb_full
@@ -101,7 +101,7 @@ initial begin
     tb_nrst = 1;
     #(PERIOD);
 
-    $display("--- hardcoded addition cases ---");
+    $display("--- hardcoded addition cases ---"); // old test cases + some extra 
 
     // Basic arithmetic
     test_case(ONE, ONE, 0);
