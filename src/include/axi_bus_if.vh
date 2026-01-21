@@ -25,7 +25,7 @@ interface axi_bus_if;
     b_channel_t  b_o;
 
     // read arbiter signals 
-    logic sp0_req, sp1_req, d_req, i_req;
+    logic sp0_req, sp1_req, d_req, i_req, skid_ready;
     logic [2:0] ar_grant;
 
     // write arbiter signals
@@ -91,18 +91,13 @@ interface axi_bus_if;
         // From Manager
         input sp0_req, sp1_req, d_req, i_req,
 
-        // From Subordinate
-        input ar_o.ready,
+        // From Skid Buffer
+        input skid_ready,
 
-        // To Manager 
+        // To Read Mux/AR Manager 
         output ar_grant
     );
 
-    // AR QUEUE <=> AR ARBITER
-    // modport ar_arb (
-    //     input sp0_req, sp1_req, d_req, i_req, ar_o.ready,
-    //     output ar_grant
-    // );
 
     // MASTER (D$, SP) <=> AW QUEUE <=> SUBORDINATE (Controller)
     modport aw_queue (

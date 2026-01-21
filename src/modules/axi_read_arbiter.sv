@@ -1,3 +1,4 @@
+/*  Aryan Kadakia - kadakia0@purdue.edu */
 `timescale 1ps/1ps
 
 module axi_read_arbiter(
