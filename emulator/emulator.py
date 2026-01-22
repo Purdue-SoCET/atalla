@@ -51,8 +51,8 @@ def main():
     EU = ExecuteUnit()
 
     #Scratchpad object
-    SP0 = Scratchpad(slots_per_bank=8)
-    SP1 = Scratchpad(slots_per_bank=8)
+    SP0 = Scratchpad(slots_per_bank=16)
+    SP1 = Scratchpad(slots_per_bank=16)
     tile_id0 = 0
     tile_id1 = 0
     # Dic for storing tileID and addr
@@ -173,7 +173,7 @@ def main():
                         tile_id0 += 1
                         tileID0Dict[inst['rs1/rd1']] = tile_id0
                         localID = tileID0Dict[inst['rs1/rd1']]
-                    sdma_load(gmem=mem, scpad=SP0, gmem_base=inst['rs2'], scpad_base_row=sregs.read(inst['rs1/rd1']), tile_id=localID, NR=inst['num_rows'], NC=inst['num_cols'])
+                    sdma_load(gmem=mem, scpad=SP0, gmem_base=sregs.read(inst['rs2']), scpad_base_row=sregs.read(inst['rs1/rd1']), tile_id=localID, NR=inst['num_rows'], NC=inst['num_cols'])
                 elif inst['sid'] == 1:
                     if(inst['rs1/rd1'] in tileID1Dict.keys()):
                         localID = tileID1Dict[inst['rs1/rd1']]
@@ -181,7 +181,7 @@ def main():
                         tile_id1 += 1
                         tileID1Dict[inst['rs1/rd1']] = tile_id1
                         localID = tileID1Dict[inst['rs1/rd1']]
-                    sdma_load(gmem=mem, scpad=SP1, gmem_base=inst['rs2'], scpad_base_row=sregs.read(inst['rs1/rd1']), tile_id=localID, NR=inst['num_rows'], NC=inst['num_cols'])
+                    sdma_load(gmem=mem, scpad=SP1, gmem_base=sregs.read(inst['rs2']), scpad_base_row=sregs.read(inst['rs1/rd1']), tile_id=localID, NR=inst['num_rows'], NC=inst['num_cols'])
 
             elif(m == "scpad.st"):
                 if inst['sid'] == 0:
@@ -191,8 +191,7 @@ def main():
                         tile_id0 += 1
                         tileID0Dict[inst['rs1/rd1']] = tile_id0
                         localID = tileID0Dict[inst['rs1/rd1']]
-                    sdma_store(gmem=mem, scpad=SP0, scpad_base_row=inst['rs1/rd1'], gmem_base=inst['rs2'], tile_id=tile_id0, NR=inst['num_rows'], NC=inst['num_cols'])
-                    tile_id0 += 1
+                    sdma_store(gmem=mem, scpad=SP0, scpad_base_row=sregs.read(inst['rs1/rd1']), gmem_base=sregs.read(inst['rs2']), tile_id=tile_id0, NR=inst['num_rows'], NC=inst['num_cols'])
                 elif inst['sid'] == 1:
                     if(inst['rs1/rd1'] in tileID1Dict.keys()):
                         localID = tileID1Dict[inst['rs1/rd1']]
@@ -200,8 +199,7 @@ def main():
                         tile_id1 += 1
                         tileID1Dict[inst['rs1/rd1']] = tile_id1
                         localID = tileID1Dict[inst['rs1/rd1']]
-                    sdma_store(gmem=mem, scpad=SP1, scpad_base_row=inst['rs1/rd1'], gmem_base=inst['rs2'], tile_id=tile_id1, NR=inst['num_rows'], NC=inst['num_cols'])
-                    tile_id1 += 1
+                    sdma_store(gmem=mem, scpad=SP1, scpad_base_row=sregs.read(inst['rs1/rd1']), gmem_base=sregs.read(inst['rs2']), tile_id=tile_id1, NR=inst['num_rows'], NC=inst['num_cols'])
 
             #spad movement here
             elif(m == "lui.s"):
