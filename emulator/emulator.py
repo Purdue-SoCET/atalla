@@ -375,7 +375,7 @@ def main():
     dump_scpad_rc(scpad=SP0, title="SCPAD0 DUMP")
 
     #dump scpad1
-    dump_scpad_rc(scpad=SP0, title="SCPAD1 DUMP")
+    dump_scpad_rc(scpad=SP1, title="SCPAD1 DUMP")
 
 if __name__ == "__main__":
     main()

@@ -127,7 +127,7 @@ def sdma_load(
 
         # Read from GMEM
         for j in range(NC):
-            g_addr = swizzle(gmem_base + i * NC + j)
+            g_addr = (gmem_base + i * NC + j) * 4
             row_vals.append(gmem.read_data(g_addr))
 
         # Write into scratchpad banks
