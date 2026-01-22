@@ -2,7 +2,7 @@ from opcode_table import OPCODES
 
 def get_bits(value, high, low):
     """
-    Extract bits [high:low] from a value and reverse them.
+    Extract bits [high:low] from a value without reversing them.
 
     Parameters
     ----------
@@ -16,13 +16,12 @@ def get_bits(value, high, low):
     Returns
     -------
     int
-        The extracted and bit-reversed value.
+        The extracted value (not bit-reversed).
 
     """
     width = high - low + 1
     mask = (1 << width) - 1
-    return reverse_bits((value >> low) & mask, width)
-
+    return (value >> low) & mask  # Remove the reverse_bits call
 
 def reverse_bits(value, length):
     """
@@ -67,7 +66,7 @@ def decode_instruction(instr):
     """
     # All instructions: opcode = bits 0-6
     opcode = get_bits(instr, 6, 0)
-    opcode = reverse_bits(opcode, 7)
+    # opcode = reverse_bits(opcode, 7)
     # print("opcode: " + str(bin(opcode)))
     if opcode not in OPCODES:
         return {"opcode": opcode, "type": "UNKNOWN", "raw": instr}
