@@ -55,6 +55,9 @@ def main():
     SP1 = Scratchpad(slots_per_bank=8)
     tile_id0 = 0
     tile_id1 = 0
+    # Dic for storing tileID and addr
+    tileID0Dict = {}
+    tileID1Dict = {}
 
 
     halt = False
@@ -164,17 +167,39 @@ def main():
 
             elif(m == "scpad.ld"):
                 if inst['sid'] == 0:
-                    sdma_load(gmem=mem, scpad=SP0, gmem_base=inst['rs2'], scpad_base_row=inst['rs1/rd1'], tile_id=tile_id0, NR=inst['num_rows'], NC=inst['num_cols'])
-                    tile_id0 += 1
+                    if(inst['rs1/rd1'] in tileID0Dict.keys()):
+                        localID = tileID0Dict[inst['rs1/rd1']]
+                    else:
+                        tile_id0 += 1
+                        tileID0Dict[inst['rs1/rd1']] = tile_id0
+                        localID = tileID0Dict[inst['rs1/rd1']]
+                    sdma_load(gmem=mem, scpad=SP0, gmem_base=inst['rs2'], scpad_base_row=sregs.read(inst['rs1/rd1']), tile_id=localID, NR=inst['num_rows'], NC=inst['num_cols'])
                 elif inst['sid'] == 1:
-                    sdma_load(gmem=mem, scpad=SP0, gmem_base=inst['rs2'], scpad_base_row=inst['rs1/rd1'], tile_id=tile_id1, NR=inst['num_rows'], NC=inst['num_cols'])
-                    tile_id1 += 1
+                    if(inst['rs1/rd1'] in tileID1Dict.keys()):
+                        localID = tileID1Dict[inst['rs1/rd1']]
+                    else:
+                        tile_id1 += 1
+                        tileID1Dict[inst['rs1/rd1']] = tile_id1
+                        localID = tileID1Dict[inst['rs1/rd1']]
+                    sdma_load(gmem=mem, scpad=SP1, gmem_base=inst['rs2'], scpad_base_row=sregs.read(inst['rs1/rd1']), tile_id=localID, NR=inst['num_rows'], NC=inst['num_cols'])
 
             elif(m == "scpad.st"):
                 if inst['sid'] == 0:
+                    if(inst['rs1/rd1'] in tileID0Dict.keys()):
+                        localID = tileID0Dict[inst['rs1/rd1']]
+                    else:
+                        tile_id0 += 1
+                        tileID0Dict[inst['rs1/rd1']] = tile_id0
+                        localID = tileID0Dict[inst['rs1/rd1']]
                     sdma_store(gmem=mem, scpad=SP0, scpad_base_row=inst['rs1/rd1'], gmem_base=inst['rs2'], tile_id=tile_id0, NR=inst['num_rows'], NC=inst['num_cols'])
                     tile_id0 += 1
                 elif inst['sid'] == 1:
+                    if(inst['rs1/rd1'] in tileID1Dict.keys()):
+                        localID = tileID1Dict[inst['rs1/rd1']]
+                    else:
+                        tile_id1 += 1
+                        tileID1Dict[inst['rs1/rd1']] = tile_id1
+                        localID = tileID1Dict[inst['rs1/rd1']]
                     sdma_store(gmem=mem, scpad=SP1, scpad_base_row=inst['rs1/rd1'], gmem_base=inst['rs2'], tile_id=tile_id1, NR=inst['num_rows'], NC=inst['num_cols'])
                     tile_id1 += 1
 
@@ -346,6 +371,11 @@ def main():
     mem.dump_to_file(out_file)
     print(f"\n[INFO] Wrote updated memory to '{out_file}'.")
 
+    #dump scpad0
+    dump_scpad_rc(scpad=SP0, title="SCPAD0 DUMP")
+
+    #dump scpad1
+    dump_scpad_rc(scpad=SP0, title="SCPAD1 DUMP")
 
 if __name__ == "__main__":
     main()

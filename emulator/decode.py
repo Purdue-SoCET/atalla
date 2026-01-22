@@ -165,8 +165,8 @@ def decode_instruction(instr):
             # "rc_id": get_bits(instr, 39, 35)
             "vd": get_bits(instr, 14, 7),
             "rs1": get_bits(instr, 22, 15),
-            "num_rows": get_bits(instr, 27, 23),
-            "num_cols": get_bits(instr, 32, 28),
+            "num_cols": get_bits(instr, 27, 23),
+            "num_rows": get_bits(instr, 32, 28),
             "sid": get_bits(instr, 33, 33),
             "rc": get_bits(instr, 34, 34),
             "rc_id": get_bits(instr, 39, 35)
@@ -176,8 +176,8 @@ def decode_instruction(instr):
         decoded.update({
             "rs1/rd1": get_bits(instr, 14, 7),
             "rs2": get_bits(instr, 22, 15),
-            "num_rows": get_bits(instr, 27, 23),
-            "num_cols": get_bits(instr, 32, 28),
+            "num_cols": get_bits(instr, 27, 23),
+            "num_rows": get_bits(instr, 32, 28),
             "sid": get_bits(instr, 33, 33)
 
         })

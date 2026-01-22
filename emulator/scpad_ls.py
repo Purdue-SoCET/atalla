@@ -170,9 +170,23 @@ def sdma_store(
             g_addr = swizzle(gmem_base + i * NC + j)
             gmem.write_data(g_addr, val)
 
+
+def dump_scpad_rc(
+    scpad: Scratchpad,
+    title: str = None,
+) -> None:
+    if title is None:
+        title = f"Scratchpad Dump"
+
+    print(f"\n=== {title} ===")
+
+    for b in range(scpad.B):
+        print(f"Bank {b}: {scpad.banks[b]}")
+
+
 if __name__ == "__main__":
     gmem = Memory()
-    scpad = Scratchpad(slots_per_bank=8)
+    scpad = Scratchpad(slots_per_bank=16)
 
     # Initialize GMEM
     for i in range(64):
@@ -185,13 +199,11 @@ if __name__ == "__main__":
         gmem_base=0,
         scpad_base_row=0,
         tile_id="A",
-        NR=4,
+        NR=1,
         NC=4
     )
 
-    print("Scratchpad after LOAD:")
-    for b in range(scpad.B):
-        print(f"Bank {b}: {scpad.banks[b]}")
+    dump_scpad_rc(scpad=scpad, title="I hate this")
 
     # STORE tile back
     sdma_store(
