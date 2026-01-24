@@ -1,0 +1,5 @@
+[book]
+authors = ["Sooraj Chetput", "Fan Jing Hoon", "Akshath Raghav Ravikiran", "others to be added"]
+language = "en"
+src = "src"
+title = "Atalla AIHW Documentation"

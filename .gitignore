@@ -11,3 +11,9 @@ vsim.*
 !.gitmodules
 
 __pycache__
+
+modelsim.ini
+build/
+work/
+coverage/
+files.f

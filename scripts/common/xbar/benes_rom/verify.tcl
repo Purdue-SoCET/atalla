@@ -26,6 +26,5 @@ vmap work work
 
 vlog -sv -mfcu -lint {*}$INC_FLAGS {*}$SRC_FILES
 
-
 puts "Compilation/lint complete."
 quit -f
