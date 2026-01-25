@@ -133,7 +133,10 @@ def main():
             #vector load/store here
             elif m == "vreg.ld":
                 # 1. Select Scratchpad based on 'sp' field (0=SP0, 1=SP1)
-                target_sp = SP1 if inst.get('sp', 0) == 1 else SP0
+                if inst.get('sp', 0) == 1 
+                    target_sp = SP1 
+                else 
+                    target_sp = SP0
                 
                 # 2. Get address from Scalar Register (rs1)
                 addr = sregs.read(inst['rs1'])
