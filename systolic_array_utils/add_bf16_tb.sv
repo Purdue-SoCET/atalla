@@ -11,20 +11,20 @@ module add_bf16_tb;
     end
 
     logic [15:0] tb_a, tb_b;
-    logic        tb_sub;
+    logic tb_sub;
     logic [15:0] tb_result;
-    logic        tb_overflow, tb_underflow, tb_invalid;
+    logic tb_overflow, tb_underflow, tb_invalid;
 
     addsub_bf16 dut (
-        .clk       (tb_clk),
-        .nRST      (tb_nrst),
-        .sub       (tb_sub),
-        .bf1_in    (tb_a),
-        .bf2_in    (tb_b),
-        .bf_out    (tb_result),
-        .overflow  (tb_overflow),
+        .clk (tb_clk),
+        .nRST (tb_nrst),
+        .sub (tb_sub),
+        .bf1_in (tb_a),
+        .bf2_in (tb_b),
+        .bf_out (tb_result),
+        .overflow (tb_overflow),
         .underflow (tb_underflow),
-        .invalid   (tb_invalid)
+        .invalid (tb_invalid)
     );
 
     function automatic logic is_nan(input logic [15:0] v);
@@ -38,18 +38,18 @@ module add_bf16_tb;
 
     function automatic logic match(input logic [15:0] got, input logic [15:0] exp);
         if (is_nan(got) && is_nan(exp)) return 1'b1;
-        if (is_zero_equiv(got, exp))   return 1'b1;
+        if (is_zero_equiv(got, exp)) return 1'b1;
         return (got === exp);
     endfunction
 
     task automatic apply_and_wait(
         input logic [15:0] a,
         input logic [15:0] b,
-        input logic        sub
+        input logic sub
     );
         @(negedge tb_clk);
-        tb_a   = a;
-        tb_b   = b;
+        tb_a = a;
+        tb_b = b;
         tb_sub = sub;
         @(posedge tb_clk);
         #1ps;
@@ -62,13 +62,13 @@ module add_bf16_tb;
     integer idx, i;
 
     localparam logic [15:0]
-        QNAN     = 16'h7FC0,
-        POS_INF  = 16'h7F80,
-        NEG_INF  = 16'hFF80,
+        QNAN = 16'h7FC0,
+        POS_INF = 16'h7F80,
+        NEG_INF = 16'hFF80,
         POS_ZERO = 16'h0000,
         NEG_ZERO = 16'h8000,
-        MAX_POS  = 16'h7F7F,
-        MAX_NEG  = 16'hFF7F;
+        MAX_POS = 16'h7F7F,
+        MAX_NEG = 16'hFF7F;
 
     // CSV
     integer fd;
@@ -104,13 +104,13 @@ module add_bf16_tb;
         A[idx]=POS_ZERO; B[idx]=16'h4100; EXP[idx]=16'h4100; idx++;
 
         A[idx]=POS_INF; B[idx]=16'h4080; EXP[idx]=POS_INF; idx++;
-        A[idx]=POS_INF; B[idx]=NEG_INF;  EXP[idx]=QNAN; idx++;
+        A[idx]=POS_INF; B[idx]=NEG_INF; EXP[idx]=QNAN; idx++;
         A[idx]=NEG_INF; B[idx]=16'h4080; EXP[idx]=NEG_INF; idx++;
-        A[idx]=NEG_INF; B[idx]=NEG_INF;  EXP[idx]=NEG_INF; idx++;
-        A[idx]=POS_INF; B[idx]=POS_INF;  EXP[idx]=POS_INF; idx++;
+        A[idx]=NEG_INF; B[idx]=NEG_INF; EXP[idx]=NEG_INF; idx++;
+        A[idx]=POS_INF; B[idx]=POS_INF; EXP[idx]=POS_INF; idx++;
 
         A[idx]=QNAN; B[idx]=16'h3F80; EXP[idx]=QNAN; idx++;
-        A[idx]=QNAN; B[idx]=QNAN;     EXP[idx]=QNAN; idx++;
+        A[idx]=QNAN; B[idx]=QNAN; EXP[idx]=QNAN; idx++;
 
         A[idx]=MAX_POS; B[idx]=16'h7F00; EXP[idx]=POS_INF; idx++;
         A[idx]=MAX_NEG; B[idx]=MAX_NEG;  EXP[idx]=NEG_INF; idx++;
@@ -136,11 +136,12 @@ module add_bf16_tb;
             if (match(tb_result, EXP[i])) begin
                 pass_cnt++;
                 $display("PASS [%0d] A=%h B=%h OUT=%h",
-                         i, A[i], B[i], tb_result);
-            end else begin
+                        i, A[i], B[i], tb_result);
+            end
+            else begin
                 fail_cnt++;
                 $display("FAIL [%0d] A=%h B=%h GOT=%h EXP=%h",
-                         i, A[i], B[i], tb_result, EXP[i]);
+                        i, A[i], B[i], tb_result, EXP[i]);
             end
         end
 
@@ -150,12 +151,11 @@ module add_bf16_tb;
         void'($fgets(header,fd));
 
         while (!$feof(fd)) begin
-            if ($fscanf(fd,"%h,%h,%d,%h\n",
-                        csv_a,csv_b,csv_sub_i,csv_exp)==4) begin
+            if ($fscanf(fd,"%h,%h,%d,%h\n", csv_a,csv_b,csv_sub_i,csv_exp)==4) begin
                 csv_sub = csv_sub_i[0];
                 apply_and_wait(csv_a, csv_b, csv_sub);
                 if (match(tb_result, csv_exp)) pass_cnt++;
-                else                           fail_cnt++;
+                else fail_cnt++;
             end
         end
         $fclose(fd);
@@ -166,7 +166,7 @@ module add_bf16_tb;
         $display("PASSED : %0d", pass_cnt);
         $display("FAILED : %0d", fail_cnt);
         if (fail_cnt==0) $display("STATUS : PASS");
-        else             $display("STATUS : FAIL");
+        else $display("STATUS : FAIL");
 
         #CLK_PERIOD;
         $finish;
