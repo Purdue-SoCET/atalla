@@ -2,6 +2,8 @@ from typing import Callable
 from memory import Memory
 from scpad import Scratchpad
 from vector_register_file import VectorRegisterFile
+import numpy as np 
+import struct
 
 
 def identity_swizzle(addr: int) -> int:
@@ -76,7 +78,7 @@ def vreg_to_scpad(
     """
     # Read vector data
     vector_data = vregs.read(vs)
-
+    
     if rc == 0:
         # --- ROW MODE ---
         # Fixed Slot (scpad_addr), Iterate Banks
@@ -128,7 +130,13 @@ def sdma_load(
         # Read from GMEM
         for j in range(NC):
             g_addr = gmem_base + (i * NC + j) * 4
-            row_vals.append(gmem.read_data(g_addr))
+            raw_val = gmem.read_data(g_addr)
+
+            # 1. Pack the int into 4 bytes (little-endian 'I' for unsigned int)
+            # 2. Unpack those 4 bytes as a float ('f')
+            fp32_val = struct.unpack('<f', struct.pack('<I', raw_val & 0xFFFFFFFF))[0]
+
+            row_vals.append(fp32_val)
 
         # Write into scratchpad banks
         slot = (scpad_base_row + i) % scpad.S
