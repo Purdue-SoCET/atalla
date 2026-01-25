@@ -33,7 +33,7 @@ module add_bf16_tb;
     logic tb_done;
     logic tb_overflow, tb_underflow, tb_invalid;
 
-    add_bf16 bob (
+    add_bf16 DUT (
         .clk(tb_clk),
         .nRST(tb_nrst),
         .bf1_in(tb_a),
@@ -408,3 +408,4 @@ module add_bf16_tb;
     end
 
 endmodule
+// necessary blank last line for tb 
