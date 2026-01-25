@@ -94,7 +94,7 @@ def vreg_to_scpad(
         bank = scpad_addr % scpad.B
         for i, val in enumerate(vector_data):
             slot = i % scpad.S
-            scpad.banks[bank][slot] = val
+            scpad.banks[bank][slot] = val  
 
 
 # ============================================================
