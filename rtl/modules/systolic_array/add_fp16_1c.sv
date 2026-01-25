@@ -1,9 +1,8 @@
 `timescale 1ps/1ps
 
-// FP16 Combinational Adder with FTZ/DAZ mode
+// FP16 Combinational Adder with FTZ/DAZ mode FOR MAC 
 // og by Vinay modified by Myles
 // This is the core computation module - no input latching or stall logic.
-// For pipelined version with stall support, use add_fp16 which wraps this module.
 
 module add_fp16_nolatch (
     input logic sub,              // 1 for subtraction, 0 for addition
