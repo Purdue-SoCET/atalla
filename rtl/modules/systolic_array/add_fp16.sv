@@ -46,16 +46,9 @@ always_comb begin : special_case_detect
     
     // Determine special cases
     if (is_nan_a || is_nan_b) begin
-        // NaN propagation - preserve the NaN bit pattern but set quiet NaN bit
-        // IEEE 754: bit 9 of mantissa = 1 for quiet NaN, 0 for signaling NaN
-        // If both are NaN, propagate the first one
+        // NaN propagation - use canonical qNaN (same as adder now)
         special_case = 1'b1;
-        if (is_nan_a) begin
-            special_result = {a[15:10], 1'b1, a[8:0]};  // Set bit 9 (quiet NaN)
-        end
-        else begin
-            special_result = {b[15:10], 1'b1, b[8:0]};  // Set bit 9 (quiet NaN)
-        end
+        special_result = 16'h7E00;  // Canonical positive quiet NaN
     end
     else if (is_inf_a && is_inf_b) begin
         if (a[15] == b[15]) begin
