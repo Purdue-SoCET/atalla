@@ -2,6 +2,7 @@ from typing import Callable
 from memory import Memory
 from scpad import Scratchpad
 from vector_register_file import VectorRegisterFile
+import numpy as np 
 
 
 def identity_swizzle(addr: int) -> int:

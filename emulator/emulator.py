@@ -26,7 +26,8 @@ except ImportError:
 def main():
     mem_file = "mem.txt"
     out_file = "output_mem.txt"
-    out_reg_file = "output_regs.txt"
+    out_sreg_file = "output_sregs.txt"
+    out_vreg_file = "output_vregs.txt"
 
     # Load memory
     mem = Memory(mem_file)
@@ -132,10 +133,11 @@ def main():
                 mem.write_data(sregs.read(inst['rs1']) + inst['imm'], sregs.read(inst['rd']))
             #vector load/store here
             elif m == "vreg.ld":
-                # 1. Select Scratchpad based on 'sp' field (0=SP0, 1=SP1)
-                if inst.get('sp', 0) == 1 
+                # # 1. Select Scratchpad based on 'sp' field (0=SP0, 1=SP1)
+                # if inst.get('sp', 0) == 1 
+                if inst['sid'] == 1:
                     target_sp = SP1 
-                else 
+                else:
                     target_sp = SP0
                 
                 # 2. Get address from Scalar Register (rs1)
@@ -147,12 +149,17 @@ def main():
                     vregs=vregs,
                     scpad_addr=addr,
                     vd=inst['vd'],        # Destination Vector Reg
-                    rc=inst.get('rc', 0)  # 0=Row Mode, 1=Col Mode
+                    rc=inst['rc']
+                    # rc=inst.get('rc', 0)  # 0=Row Mode, 1=Col Mode
                 )
 
             elif m == "vreg.st":
                 # 1. Select Scratchpad
-                target_sp = SP1 if inst.get('sp', 0) == 1 else SP0
+                # target_sp = SP1 if inst.get('sp', 0) == 1 else SP0
+                if inst['sid'] == 1:
+                    target_sp = SP1 
+                else:
+                    target_sp = SP0
                 
                 # 2. Get address
                 addr = sregs.read(inst['rs1'])
@@ -163,7 +170,8 @@ def main():
                     vregs=vregs,
                     scpad_addr=addr,
                     vs=inst['vd'],        # VM-type uses 'vd' field as the register index
-                    rc=inst.get('rc', 0)
+                    rc=inst['rc']
+                    # rc=inst.get('rc', 0)
                 )
 
             #scpad load/store here
@@ -367,7 +375,8 @@ def main():
 
 
     # Dump memory to output file
-    sregs.dump_to_file(out_reg_file)
+    sregs.dump_to_file(out_sreg_file)
+    vregs.dump_to_file(out_vreg_file)
     # print(sregs)
     mem.dump_to_file(out_file)
     print(f"\n[INFO] Wrote updated memory to '{out_file}'.")
