@@ -7,7 +7,7 @@ import struct
 # Swapped to PyTorch for proper BF16 support
 # Raw bit manipulation is done via Python struct (NOT Torch) to avoid overflow issues
 
-N = 1_000_000
+N = 1000000
 SEED = 67
 
 random.seed(SEED)
