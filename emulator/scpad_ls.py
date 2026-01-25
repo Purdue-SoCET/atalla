@@ -78,7 +78,7 @@ def vreg_to_scpad(
     """
     # Read vector data
     vector_data = vregs.read(vs)
-
+    
     if rc == 0:
         # --- ROW MODE ---
         # Fixed Slot (scpad_addr), Iterate Banks
