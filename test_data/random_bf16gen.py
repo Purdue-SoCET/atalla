@@ -19,7 +19,7 @@ OUTPUT_FILE = SCRIPT_DIR / "random_bf16_cases.csv"
 
 # Random BF16 bit generator
 def random_bf16_bits():
-    return random.getrandbits(16)  # safest possible 16-bit RNG
+    return random.getrandbits(16)
 
 # BF16 bits -> torch.bfloat16
 def bf16_from_bits(bits):
