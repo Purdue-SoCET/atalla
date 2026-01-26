@@ -20,3 +20,9 @@ output/
 *.f
 *.mem
 *.do
+
+modelsim.ini
+build/
+work/
+coverage/
+files.f

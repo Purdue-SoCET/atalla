@@ -35,6 +35,7 @@ setup:
 
 ## Example: 
 ## 		make run FILE=./scripts/xbar/benes_rom/verify.tcl
+## 		make run FILE=./scripts/memory/scratchpad/swizzle/verify.tcl
 run:
 	vsim -c -do "source $(FILE)"
 
