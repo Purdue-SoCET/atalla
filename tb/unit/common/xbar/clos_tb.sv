@@ -21,10 +21,25 @@ module clos_tb;
     logic [15:0] val;
     logic [CLOS_DWIDTH-1:0] exp_out [CLOS_SIZE-1:0];
 
+    genvar gi;
+    generate
+    for (gi = 0; gi < CLOS_SIZE; gi++) begin
+        assign out[gi] = xif.out[gi];
+    end
+    endgenerate
+
+
     initial begin
         n_rst = 0;
         val = 16'd0;
-        perm = {5'd14, 5'd22, 5'd25, 5'd11, 5'd21, 5'd6, 5'd15, 5'd5, 5'd30, 5'd23, 5'd18, 5'd28, 5'd19, 5'd17, 5'd31, 5'd12, 5'd26, 5'd16, 5'd13, 5'd3, 5'd9, 5'd8, 5'd0, 5'd1, 5'd10, 5'd20, 5'd7, 5'd4, 5'd29, 5'd2, 5'd24, 5'd27};
+
+        perm = '{
+        5'd14, 5'd22, 5'd25, 5'd11, 5'd21, 5'd6, 5'd15, 5'd5,
+        5'd30, 5'd23, 5'd18, 5'd28, 5'd19, 5'd17, 5'd31, 5'd12,
+        5'd26, 5'd16, 5'd13, 5'd3,  5'd9,  5'd8,  5'd0,  5'd1,
+        5'd10, 5'd20, 5'd7,  5'd4,  5'd29, 5'd2,  5'd24, 5'd27
+        };
+
         xif.en = 1;
         
         for (i = 0; i < 32; i = i + 1) begin
@@ -38,21 +53,24 @@ module clos_tb;
             exp_out[perm[i]] = xif.in[i].din;
         end
 
-        #(PERIOD);
+        @(posedge clk); 
 
         n_rst = 1;
-        
-        
-        repeat (3) #(PERIOD);
+
+        @(posedge clk);         
+        @(posedge clk); 
+
         
         for (i = 0; i < 32; i = i + 1) begin
-            if(out[i] != exp_out[i]) begin
-                $display("!!! WRONG output for %d. expected : %d, output: %d !!!", i, exp_out[i], xif.out[i]);
-            end
-            else begin
-                $display("CORRECT output for %d. expected : %d, output: %d", i, exp_out[i], xif.out[i]);
-            end
+        if (out[i] !== exp_out[i]) begin
+            $display("!!! WRONG output for %0d. expected: %0d, got: %0d !!!",
+                    i, exp_out[i], out[i]);
+        end else begin
+            $display("CORRECT output for %0d. expected: %0d, got: %0d",
+                    i, exp_out[i], out[i]);
         end
+        end
+
         $finish;
     end
 

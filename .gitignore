@@ -11,3 +11,12 @@ vsim.*
 !.gitmodules
 
 __pycache__
+
+*.pyc
+*.ini
+*.log
+build/
+output/
+*.f
+*.mem
+*.do
