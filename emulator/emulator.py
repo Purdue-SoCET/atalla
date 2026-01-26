@@ -52,8 +52,8 @@ def main():
     EU = ExecuteUnit()
 
     #Scratchpad object
-    SP0 = Scratchpad(slots_per_bank=16)
-    SP1 = Scratchpad(slots_per_bank=16)
+    SP0 = Scratchpad(slots_per_bank=32)
+    SP1 = Scratchpad(slots_per_bank=32)
     tile_id0 = 0
     tile_id1 = 0
     # Dic for storing tileID and addr
@@ -361,7 +361,8 @@ def main():
                 src1 = vregs.read(inst['vs1'])
                 src2 = sregs.read(inst['rs1'])
                 WBdata = EU.execute(m, vA=src1, sA=src2)
-                vregs.write(inst['rd'], WBdata)
+                print(WBdata)
+                vregs.write(inst['vd'], WBdata)
 
             # ---------------- UNKNOWN ----------------
             else:
