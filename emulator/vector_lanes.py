@@ -250,6 +250,36 @@ class VectorLanes:
         b = self._ensure_vec(b)
         mask = (a != b).astype(np.float32)
         return self._q(mask)
+    
+
+    # --------------------------------------------------------
+    # Vector–Scalar comparison ops (VS)
+    # Output: BF16 1.0 (true) or 0.0 (false)
+    # --------------------------------------------------------
+    def cmp_gt_vs(self, a: np.ndarray, rs1) -> np.ndarray:
+        a = self._ensure_vec(a)
+        rs1 = np.float32(rs1)
+        mask = (a > rs1).astype(np.float32)
+        return self._q(mask)
+
+    def cmp_lt_vs(self, a: np.ndarray, rs1) -> np.ndarray:
+        a = self._ensure_vec(a)
+        rs1 = np.float32(rs1)
+        mask = (a < rs1).astype(np.float32)
+        return self._q(mask)
+
+    def cmp_eq_vs(self, a: np.ndarray, rs1) -> np.ndarray:
+        a = self._ensure_vec(a)
+        rs1 = np.float32(rs1)
+        mask = (a == rs1).astype(np.float32)
+        return self._q(mask)
+
+    def cmp_neq_vs(self, a: np.ndarray, rs1) -> np.ndarray:
+        a = self._ensure_vec(a)
+        rs1 = np.float32(rs1)
+        mask = (a != rs1).astype(np.float32)
+        return self._q(mask)
+
 
     # ---- reductions ----
     def reduce_sum(self, a: np.ndarray) -> np.ndarray:
@@ -346,39 +376,65 @@ class VectorLanes:
     # -------------------------
     # Unified dispatch interface
     # -------------------------
-    def execute(self, op: str, vA=None, vB=None, sA=None):
-        op = op.lower()
-        if op == "add":           return self.add(vA, vB)
-        if op == "sub":           return self.sub(vA, vB)
-        if op == "mul":           return self.mul(vA, vB)
-        if op == "div":           return self.div(vA, vB)
-
-        if op == "add_scalar":    return self.add_scalar(vA, sA)
-        if op == "sub_scalar":    return self.sub_scalar(vA, sA)
-        if op == "scalar_sub":    return self.scalar_sub(sA, vA)
-        if op == "mul_scalar":    return self.mul_scalar(vA, sA)
-        if op == "div_scalar":    return self.div_scalar(vA, sA)
-        if op == "scalar_div":    return self.scalar_div(sA, vA)
-
-        if op == "bw_and":        return self.bitwise_and(vA, vB)
-        if op == "bw_or":         return self.bitwise_or(vA, vB)
-        if op == "bw_xor":        return self.bitwise_xor(vA, vB)
-        if op == "bw_not":        return self.bitwise_not(vA)
-        if op == "shl_scalar":    return self.shl_scalar(vA, int(sA))
-        if op == "shr_scalar":    return self.shr_scalar(vA, int(sA))
-
-        if op == "cmp_gt":        return self.cmp_gt(vA, vB)
-        if op == "cmp_lt":        return self.cmp_lt(vA, vB)
-        if op == "cmp_eq":        return self.cmp_eq(vA, vB)
-        if op == "cmp_neq":       return self.cmp_neq(vA, vB)
-
-        if op == "reduce_sum":    return self.reduce_sum(vA)
-        if op == "reduce_min":    return self.reduce_max(vA)
-        if op == "reduce_max":    return self.reduce_min(vA)
-        if op == "exp":           return self.exp(vA)
-        if op == "sqrt":          return self.sqrt(vA)
+    def execute(self, op: str, vA=None, vB=None, sA=None, slr=None):
+        print(op)
+        new_op = op[:op.rfind(".")]
+        type = op[op.rfind("."):]
+        print(op)
+        print(type)
+        if(type == ".vv"):
+            if new_op == "add":           return self.add(vA, vB)
+            if new_op == "sub":           return self.sub(vA, vB)
+            if new_op == "mul":           return self.mul(vA, vB)
+            if new_op == "div":           return self.div(vA, vB)
+            if new_op == "and":        return self.bitwise_and(vA, vB)
+            if new_op == "or":         return self.bitwise_or(vA, vB)
+            if new_op == "xor":        return self.bitwise_xor(vA, vB)
+            if new_op == "not":        return self.bitwise_not(vA)
+            if new_op == "mgt":        return self.cmp_gt(vA, vB)
+            if new_op == "mlt":        return self.cmp_lt(vA, vB)
+            if new_op == "meq":        return self.cmp_eq(vA, vB)
+            if new_op == "mneq":       return self.cmp_neq(vA, vB)
+            else:
+                raise ValueError(f"Unknown vector op '{new_op}'")
+        elif(type == ".vi"):
+            if new_op == "addi":    return self.add_scalar(vA, sA)
+            if new_op == "subi":    return self.sub_scalar(vA, sA)
+            #if new_op == "scalar_sub":    return self.scalar_sub(sA, vA)
+            if new_op == "muli":    return self.mul_scalar(vA, sA)
+            if new_op == "divi":    return self.div_scalar(vA, sA)
+            #if new_op == "scalar_div":    return self.scalar_div(sA, vA)
+            if new_op == "expi":           return self.exp(vA)
+            if new_op == "sqrti":          return self.sqrt(vA)
+            if new_op == "not":        return self.bitwise_not(vA)
+            if new_op == "shift":    
+                if(slr):
+                    return self.shr_scalar(vA, int(sA))
+                else:
+                    return self.shl_scalar(vA, int(sA))
+            if new_op == "rsum":    return self.reduce_sum(vA)
+            if new_op == "rmin":    return self.reduce_max(vA)
+            if new_op == "rmax":    return self.reduce_min(vA)
+            else:
+                raise ValueError(f"Unknown vector op '{new_op}'")
+        elif(type == ".vs"):
+            if new_op == "shift":    
+                if(slr):
+                    return self.shr_scalar(vA, int(sA))
+                else:
+                    return self.shl_scalar(vA, int(sA))
+            if new_op == "add":    return self.add_scalar(vA, sA)
+            if new_op == "sub":    return self.sub_scalar(vA, sA)
+            if new_op == "mul":           return self.mul(vA, sA)
+            if new_op == "div":           return self.div(vA, sA)
+            if new_op == "mgt":        return self.cmp_gt_vs(vA, sA)
+            if new_op == "mlt":        return self.cmp_lt_vs(vA, sA)
+            if new_op == "meq":        return self.cmp_eq_vs(vA, sA)
+            if new_op == "mneq":       return self.cmp_neq_vs(vA, sA)
+            else:
+                raise ValueError(f"Unknown vector op '{new_op}'")
         else:
-            raise ValueError(f"Unknown vector op '{op}'")
+            raise ValueError(f"Unknown vector type '{type}'")
 
 # -------------------------
 # Convenience functional wrapper

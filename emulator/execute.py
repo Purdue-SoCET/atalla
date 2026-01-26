@@ -153,7 +153,7 @@ class ExecuteUnit:
                 instr: str,
                 A=None, B=None,
                 vA=None, vB=None, mask=None,
-                sA=None, sB=None,
+                sA=None, sB=None, slr=None,
                 index: int = None,
                 out_vl: int = None):
 
@@ -171,7 +171,7 @@ class ExecuteUnit:
         # =======================================================
         if instr in MNEMONIC_VECTOR:
             op = MNEMONIC_VECTOR[instr]
-            return self.vec.execute(op, vA, vB, sA)
+            return self.vec.execute(instr, vA, vB, sA, slr)
 
         # =======================================================
         # MATMUL

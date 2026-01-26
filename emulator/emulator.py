@@ -24,7 +24,7 @@ except ImportError:
     from scpad_ls import *
 
 def main():
-    mem_file = "TestFiles/mem.txt"
+    mem_file = "TestFiles/sdmavectorls.txt" # need to change this to target different mem test files
     out_file = "output_mem.txt"
     out_sreg_file = "output_sregs.txt"
     out_vreg_file = "output_vregs.txt"
@@ -44,7 +44,7 @@ def main():
 
     # Initialize Registers and Program Counter
     sregs = ScalarRegisterFile()
-    mregs = ScalarRegisterFile(num_regs=2)
+    mregs = ScalarRegisterFile(num_regs=16)
     vregs = VectorRegisterFile()
     pc = 0x00000000  # Program Counter, starts at address 0
 
@@ -348,20 +348,30 @@ def main():
             elif m.endswith(".vv"):
                 src1 = vregs.read(inst['vs1'])
                 src2 = vregs.read(inst['vs2'])
-                WBdata = EU.execute(m, vA=src1, vB=src2)
+                WBdata = EU.execute(m, vA=src1, vB=src2, slr=0)
                 vregs.write(inst['vd'], WBdata)
             # ---------------- VI (Vector-Immediate) ----------------
             elif m.endswith(".vi"):
                 src1 = sregs.read(inst['vs1'])
                 src2 = inst['imm']
-                WBdata = EU.execute(m, vA=src1, sA=src2)
+                if(m == 'shift.vs'):
+                    slr = (src2 >> 5) & 0b1
+                    imm = src2 & 0b1_1111
+                else:
+                    slr = 0
+                    imm = src2
+                WBdata = EU.execute(m, vA=src1, sA=imm, slr=slr)
                 vregs.write(inst['rd'], WBdata)
             # ---------------- VS (Vector-Scalar) ----------------
             elif m.endswith(".vs"):
                 src1 = vregs.read(inst['vs1'])
-                src2 = sregs.read(inst['rs1'])
-                WBdata = EU.execute(m, vA=src1, sA=src2)
-                print(WBdata)
+                if(m == 'shift.vs'):
+                    slr = (inst['rs1'] >> 5) & 0b1
+                    src2 = inst['rs1'] & 0b1_1111
+                else:
+                    slr = 0
+                    src2 = sregs.read(inst['rs1'])
+                WBdata = EU.execute(m, vA=src1, sA=src2, slr=slr)
                 vregs.write(inst['vd'], WBdata)
 
             # ---------------- UNKNOWN ----------------
