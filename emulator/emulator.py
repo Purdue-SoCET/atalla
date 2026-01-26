@@ -24,7 +24,7 @@ except ImportError:
     from scpad_ls import *
 
 def main():
-    mem_file = "TestFiles/mem.txt"
+    mem_file = "Testing/TestFiles/sdmavectorls.txt"
     out_file = "output_mem.txt"
     out_sreg_file = "output_sregs.txt"
     out_vreg_file = "output_vregs.txt"
