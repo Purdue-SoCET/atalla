@@ -1,0 +1,152 @@
+
+
+Path 1: VIOLATED (-702 ps) Setup Check with Pin mul_result_latched_reg[13]/clk->d
+           View: view_1p2_25
+          Group: clock1
+     Startpoint: (R) weight_reg[10]/clk
+          Clock: (R) clock1
+       Endpoint: (R) mul_result_latched_reg[13]/d
+          Clock: (R) clock1
+
+                     Capture       Launch     
+        Clock Edge:+    1667            0     
+       Src Latency:+       0            0     
+       Net Latency:+       0 (I)        0 (I) 
+           Arrival:=    1667            0     
+                                              
+             Setup:-     126                  
+       Uncertainty:-       0                  
+     Required Time:=    1541                  
+      Launch Clock:-       0                  
+         Data Path:-    2243                  
+             Slack:=    -702                  
+
+Launch clock path:
+#-------------------------------------------------------------------------------------------------
+#   Timing Point     Flags   Arc   Edge      Cell        Fanout Load Trans Delay Arrival Instance 
+#                                                               (fF)  (ps)  (ps)   (ps)  Location 
+#-------------------------------------------------------------------------------------------------
+  clk                (i,u)   -     R     (arrival)           66  0.0     6     0     136    (-,-) 
+  clk                -       -     -     (net)                -    -     -     -       -    (-,-) 
+  clk                -       -     -     (net)                -    -     -     -       -    (-,-) 
+  weight_reg[10]/clk <<<     -     R     unmapped_d_flop     66    -     1     0     136    (-,-) 
+#-------------------------------------------------------------------------------------------------
+
+#---------------------------------------------------------------------------------------------------------------------------
+#              Timing Point               Flags    Arc    Edge       Cell         Fanout  Load Trans Delay Arrival Instance 
+#                                                                                         (fF)  (ps)  (ps)   (ps)  Location 
+#---------------------------------------------------------------------------------------------------------------------------
+  weight_reg[10]/clk                      -       -       R     (arrival)             66     -     1     0       0    (-,-) 
+  weight_reg[10]/q                        (u)     clk->q  F     unmapped_d_flop        9  57.6     0   274     274    (-,-) 
+  weight[10]                              -       -       -     (net)                  -     -     -     -       -    (-,-) 
+  g4292/z                                 (u)     in_0->z F     unmapped_or2           1   6.4     0    31     305    (-,-) 
+  n_1810                                  -       -       -     (net)                  -     -     -     -       -    (-,-) 
+  g4245/z                                 (u)     in_1->z F     unmapped_or2           1   6.4     0    31     336    (-,-) 
+  n_1812                                  -       -       -     (net)                  -     -     -     -       -    (-,-) 
+  g4104/z                                 (u)     in_1->z F     unmapped_or2          13  83.2     0    93     429    (-,-) 
+  radish_frac_leading_bit_fp2             -       -       -     (net)                  -     -     -     -       -    (-,-) 
+  g4065/z                                 (u)     in_0->z R     unmapped_nand2         3  19.2     0    50     479    (-,-) 
+  radish_wallaca_n_35                     -       -       -     (net)                  -     -     -     -       -    (-,-) 
+  g4487/z                                 (u)     in_0->z R     unmapped_complex2      1   6.4     0    31     510    (-,-) 
+  n_2021                                  -       -       -     (net)                  -     -     -     -       -    (-,-) 
+  g3868/z                                 (u)     in_0->z F     unmapped_nand2         4  25.6     0    59     569    (-,-) 
+  radish_wallaca_stage1_carries[0][9]     -       -       -     (net)                  -     -     -     -       -    (-,-) 
+  g4511/z                                 (u)     in_0->z R     unmapped_complex2      1   6.4     0    31     600    (-,-) 
+  n_3074                                  -       -       -     (net)                  -     -     -     -       -    (-,-) 
+  g3810/z                                 (u)     in_1->z F     unmapped_nand2         2  12.8     0    41     640    (-,-) 
+  n_2097                                  -       -       -     (net)                  -     -     -     -       -    (-,-) 
+  g3784/z                                 (u)     in_0->z F     unmapped_complex2      1   6.4     0    31     671    (-,-) 
+  n_3062                                  -       -       -     (net)                  -     -     -     -       -    (-,-) 
+  g3785/z                                 (u)     in_1->z R     unmapped_nand2         3  19.2     0    50     721    (-,-) 
+  radish_wallaca_stage2_sums[0][11]       -       -       -     (net)                  -     -     -     -       -    (-,-) 
+  g3685/z                                 (u)     in_0->z R     unmapped_complex2      1   6.4     0    31     752    (-,-) 
+  n_3015                                  -       -       -     (net)                  -     -     -     -       -    (-,-) 
+  g3686/z                                 (u)     in_1->z F     unmapped_nand2         3  19.2     0    50     802    (-,-) 
+  radish_wallaca_genblk4[11].fa_s3_l1_n_3 -       -       -     (net)                  -     -     -     -       -    (-,-) 
+  g3620/z                                 (u)     in_1->z R     unmapped_nand2         1   6.4     0    31     833    (-,-) 
+  n_1309                                  -       -       -     (net)                  -     -     -     -       -    (-,-) 
+  g3543/z                                 (u)     in_1->z F     unmapped_nand2         3  19.2     0    50     883    (-,-) 
+  radish_wallaca_stage3_carries[0][8]     -       -       -     (net)                  -     -     -     -       -    (-,-) 
+  g4598/z                                 (u)     in_0->z R     unmapped_complex2      1   6.4     0    31     914    (-,-) 
+  n_2931                                  -       -       -     (net)                  -     -     -     -       -    (-,-) 
+  g3498/z                                 (u)     in_1->z F     unmapped_nand2         3  19.2     0    50     964    (-,-) 
+  radish_wallaca_genblk6[12].fa_s4_l1_n_3 -       -       -     (net)                  -     -     -     -       -    (-,-) 
+  g3466/z                                 (u)     in_0->z F     unmapped_complex2      1   6.4     0    31     995    (-,-) 
+  n_2918                                  -       -       -     (net)                  -     -     -     -       -    (-,-) 
+  g3467/z                                 (u)     in_1->z R     unmapped_nand2         3  19.2     0    50    1045    (-,-) 
+  radish_wallaca_stage4_level1_sums[12]   -       -       -     (net)                  -     -     -     -       -    (-,-) 
+  g3445/z                                 (u)     in_0->z R     unmapped_complex2      1   6.4     0    31    1076    (-,-) 
+  n_2907                                  -       -       -     (net)                  -     -     -     -       -    (-,-) 
+  g3446/z                                 (u)     in_1->z F     unmapped_nand2         3  19.2     0    50    1126    (-,-) 
+  radish_wallaca_genblk7[12].fa_s5_n_3    -       -       -     (net)                  -     -     -     -       -    (-,-) 
+  g3402/z                                 (u)     in_0->z R     unmapped_nand2         1   6.4     0    31    1157    (-,-) 
+  n_1339                                  -       -       -     (net)                  -     -     -     -       -    (-,-) 
+  g3378/z                                 (u)     in_1->z F     unmapped_nand2         2  12.8     0    41    1198    (-,-) 
+  radish_wallaca_stage5_carries[7]        -       -       -     (net)                  -     -     -     -       -    (-,-) 
+  radish_wallaca_add_180_39/g3391/z       (u)     in_1->z F     unmapped_or2           4  25.6     0    59    1257    (-,-) 
+  radish_wallaca_add_180_39/n_85          -       -       -     (net)                  -     -     -     -       -    (-,-) 
+  radish_wallaca_add_180_39/g3380/z       (u)     in_1->z R     unmapped_complex2      1   6.4     0    31    1288    (-,-) 
+  radish_wallaca_add_180_39/n_87          -       -       -     (net)                  -     -     -     -       -    (-,-) 
+  radish_wallaca_add_180_39/g3331/z       (u)     in_1->z F     unmapped_nand2         4  25.6     0    59    1347    (-,-) 
+  radish_wallaca_add_180_39/n_140         -       -       -     (net)                  -     -     -     -       -    (-,-) 
+  radish_wallaca_add_180_39/g3301/z       (u)     in_1->z R     unmapped_complex2      1   6.4     0    31    1378    (-,-) 
+  radish_wallaca_add_180_39/n_1863        -       -       -     (net)                  -     -     -     -       -    (-,-) 
+  radish_wallaca_add_180_39/g3273/z       (u)     in_1->z F     unmapped_nand2         1   6.4     0    31    1409    (-,-) 
+  radish_wallaca_add_180_39/n_1867        -       -       -     (net)                  -     -     -     -       -    (-,-) 
+  radish_wallaca_add_180_39/g3266/z       (u)     in_0->z F     unmapped_complex2      1   6.4     0    31    1440    (-,-) 
+  radish_wallaca_add_180_39/n_1869        -       -       -     (net)                  -     -     -     -       -    (-,-) 
+  radish_wallaca_add_180_39/g3251/z       (u)     in_1->z F     unmapped_or2           2  12.8     0    41    1480    (-,-) 
+  radish_wallaca_add_180_39/n_301         -       -       -     (net)                  -     -     -     -       -    (-,-) 
+  radish_wallaca_add_180_39/g3247/z       (u)     in_0->z F     unmapped_complex2      1   6.4     0    31    1511    (-,-) 
+  radish_wallaca_add_180_39/n_3212        -       -       -     (net)                  -     -     -     -       -    (-,-) 
+  radish_wallaca_add_180_39/g3248/z       (u)     in_1->z R     unmapped_nand2        30 192.0     0   121    1632    (-,-) 
+  n_409                                   -       -       -     (net)                  -     -     -     -       -    (-,-) 
+  g83/z                                   (u)     in_0->z R     unmapped_or2           1   6.4     0    31    1663    (-,-) 
+  n_3577                                  -       -       -     (net)                  -     -     -     -       -    (-,-) 
+  g4958/z                                 (u)     in_0->z F     unmapped_nand2         1   6.4     0    31    1694    (-,-) 
+  n_3578                                  -       -       -     (net)                  -     -     -     -       -    (-,-) 
+  g4872/z                                 (u)     in_0->z R     unmapped_nand2         5  32.0     0    65    1759    (-,-) 
+  n_3580                                  -       -       -     (net)                  -     -     -     -       -    (-,-) 
+  g4837/z                                 (u)     in_0->z F     unmapped_nand2         1   6.4     0    31    1790    (-,-) 
+  n_3585                                  -       -       -     (net)                  -     -     -     -       -    (-,-) 
+  g4807/z                                 (u)     in_0->z R     unmapped_nand2         2  12.8     0    41    1830    (-,-) 
+  n_3586                                  -       -       -     (net)                  -     -     -     -       -    (-,-) 
+  g4765/z                                 (u)     in_1->z R     unmapped_or2           1   6.4     0    31    1861    (-,-) 
+  n_4174                                  -       -       -     (net)                  -     -     -     -       -    (-,-) 
+  g4766/z                                 (u)     in_1->z F     unmapped_nand2         4  25.6     0    59    1920    (-,-) 
+  n_3587                                  -       -       -     (net)                  -     -     -     -       -    (-,-) 
+  g4742/z                                 (u)     in_1->z F     unmapped_or2           1   6.4     0    31    1952    (-,-) 
+  n_4166                                  -       -       -     (net)                  -     -     -     -       -    (-,-) 
+  g4743/z                                 (u)     in_1->z R     unmapped_nand2         5  32.0     0    65    2016    (-,-) 
+  n_3607                                  -       -       -     (net)                  -     -     -     -       -    (-,-) 
+  g4714/z                                 (u)     in_0->z F     unmapped_complex2      2  12.8     0    41    2057    (-,-) 
+  n_3680                                  -       -       -     (net)                  -     -     -     -       -    (-,-) 
+  g4697/z                                 (u)     in_0->z F     unmapped_or2           1   6.4     0    31    2088    (-,-) 
+  n_4152                                  -       -       -     (net)                  -     -     -     -       -    (-,-) 
+  g4698/z                                 (u)     in_1->z R     unmapped_nand2         1   6.4     0    31    2119    (-,-) 
+  n_3286                                  -       -       -     (net)                  -     -     -     -       -    (-,-) 
+  g4688/z                                 (u)     in_0->z F     unmapped_complex2      1   6.4     0    31    2150    (-,-) 
+  n_1621                                  -       -       -     (net)                  -     -     -     -       -    (-,-) 
+  g4667/z                                 (u)     in_0->z R     unmapped_nand2         1   6.4     0    31    2181    (-,-) 
+  n_3287                                  -       -       -     (net)                  -     -     -     -       -    (-,-) 
+  g5312/z                                 (u)     in_0->z F     unmapped_complex2      1   6.4     0    31    2212    (-,-) 
+  n_1453                                  -       -       -     (net)                  -     -     -     -       -    (-,-) 
+  g4643/z                                 (u)     in_1->z R     unmapped_complex2      1   6.4     0    31    2243    (-,-) 
+  next_mul_result_latched[13]             -       -       -     (net)                  -     -     -     -       -    (-,-) 
+  mul_result_latched_reg[13]/d            <<<     -       R     unmapped_d_flop        1     -     -     0    2243    (-,-) 
+#---------------------------------------------------------------------------------------------------------------------------
+
+(u) : Net has unmapped pin(s).
+
+Capture clock path:
+#-------------------------------------------------------------------------------------------------------------
+#         Timing Point           Flags   Arc   Edge      Cell        Fanout Load Trans Delay Arrival Instance 
+#                                                                           (fF)  (ps)  (ps)   (ps)  Location 
+#-------------------------------------------------------------------------------------------------------------
+  clk                            (i,u)   -     R     (arrival)           66  0.0     6     0    1803    (-,-) 
+  clk                            -       -     -     (net)                -    -     -     -       -    (-,-) 
+  clk                            -       -     -     (net)                -    -     -     -       -    (-,-) 
+  mul_result_latched_reg[13]/clk <<<     -     R     unmapped_d_flop     66    -     1     0    1803    (-,-) 
+#-------------------------------------------------------------------------------------------------------------
+
+
