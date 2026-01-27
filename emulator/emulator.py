@@ -23,11 +23,29 @@ except ImportError:
     from scpad import Scratchpad
     from scpad_ls import *
 
+def apply_mask(
+        v1: np.ndarray, #the old vector
+        v2: np.ndarray, #the new vector
+        mask: int) -> np.ndarray:
+    v1 = np.asarray(v1)
+    v2 = np.asarray(v2)
+
+    assert v1.shape == v2.shape, "Vectors must be same shape"
+
+    # Create boolean mask vector from scalar mask
+    # bit i of mask applies to lane i
+    mask_vec = ((mask >> np.arange(v1.size)) & 1).astype(bool)
+
+    # Select values
+    return np.where(mask_vec, v2, v1)
+
+
 def main():
-    mem_file = "TestFiles/sdmavectorls.txt" # need to change this to target different mem test files
+    mem_file = "Testing/TestFiles/sdmavectorls_mask.txt" # need to change this to target different mem test files
     out_file = "output_mem.txt"
     out_sreg_file = "output_sregs.txt"
     out_vreg_file = "output_vregs.txt"
+    out_mreg_file = "output_mregs.txt"
 
     # Load memory
     mem = Memory(mem_file)
@@ -149,7 +167,7 @@ def main():
                     vregs=vregs,
                     scpad_addr=addr,
                     vd=inst['vd'],        # Destination Vector Reg
-                    rc=inst['rc']
+                    rc=inst['rc'],
                     # rc=inst.get('rc', 0)  # 0=Row Mode, 1=Col Mode
                 )
 
@@ -211,8 +229,6 @@ def main():
                         tileID1Dict[inst['rs1/rd1']] = tile_id1
                         localID = tileID1Dict[inst['rs1/rd1']]
                     sdma_store(gmem=mem, scpad=SP1, scpad_base_row=sregs.read(inst['rs1/rd1']), gmem_base=sregs.read(inst['rs2']), tile_id=tile_id1, NR=inst['num_rows'], NC=inst['num_cols'])
-
-            #spad movement here
             elif(m == "lui.s"):
                 mem.write_data(inst['rd'], (inst['imm']<<7))
             elif(m == "mv.mts"):
@@ -349,19 +365,28 @@ def main():
                 src1 = vregs.read(inst['vs1'])
                 src2 = vregs.read(inst['vs2'])
                 WBdata = EU.execute(m, vA=src1, vB=src2, slr=0)
-                vregs.write(inst['vd'], WBdata)
+                mask = mregs.read(inst['mask'])
+                old_vec = vregs.read(inst['vd'])
+                new_vec = apply_mask(v1=old_vec, v2=WBdata, mask=mask)
+                vregs.write(inst['vd'], new_vec)
             # ---------------- VI (Vector-Immediate) ----------------
             elif m.endswith(".vi"):
                 src1 = sregs.read(inst['vs1'])
                 src2 = inst['imm']
-                if(m == 'shift.vs'):
+                if(m == 'shift.vi'):
                     slr = (src2 >> 5) & 0b1
                     imm = src2 & 0b1_1111
                 else:
                     slr = 0
                     imm = src2
                 WBdata = EU.execute(m, vA=src1, sA=imm, slr=slr)
-                vregs.write(inst['rd'], WBdata)
+                mask = mregs.read(inst['mask'])
+                old_vec = vregs.read(inst['vd'])
+                if(m != 'shift.vi'):
+                    new_vec = apply_mask(v1=old_vec, v2=WBdata, mask=mask)
+                else:
+                    new_vec = WBdata
+                vregs.write(inst['rd'], new_vec)
             # ---------------- VS (Vector-Scalar) ----------------
             elif m.endswith(".vs"):
                 src1 = vregs.read(inst['vs1'])
@@ -372,7 +397,13 @@ def main():
                     slr = 0
                     src2 = sregs.read(inst['rs1'])
                 WBdata = EU.execute(m, vA=src1, sA=src2, slr=slr)
-                vregs.write(inst['vd'], WBdata)
+                mask = mregs.read(inst['mask'])
+                old_vec = vregs.read(inst['vd'])
+                if(m != 'shift.vs'):
+                    new_vec = apply_mask(v1=old_vec, v2=WBdata, mask=mask)
+                else:
+                    new_vec = WBdata
+                vregs.write(inst['vd'], new_vec)
 
             # ---------------- UNKNOWN ----------------
             else:
@@ -388,6 +419,7 @@ def main():
     # Dump memory to output file
     sregs.dump_to_file(out_sreg_file)
     vregs.dump_to_file(out_vreg_file)
+    mregs.dump_to_file(out_mreg_file)
     # print(sregs)
     mem.dump_to_file(out_file)
     print(f"\n[INFO] Wrote updated memory to '{out_file}'.")

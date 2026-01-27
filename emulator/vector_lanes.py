@@ -377,11 +377,8 @@ class VectorLanes:
     # Unified dispatch interface
     # -------------------------
     def execute(self, op: str, vA=None, vB=None, sA=None, slr=None):
-        print(op)
         new_op = op[:op.rfind(".")]
         type = op[op.rfind("."):]
-        print(op)
-        print(type)
         if(type == ".vv"):
             if new_op == "add":           return self.add(vA, vB)
             if new_op == "sub":           return self.sub(vA, vB)
@@ -425,7 +422,7 @@ class VectorLanes:
                     return self.shl_scalar(vA, int(sA))
             if new_op == "add":    return self.add_scalar(vA, sA)
             if new_op == "sub":    return self.sub_scalar(vA, sA)
-            if new_op == "mul":           return self.mul(vA, sA)
+            if new_op == "mul":    return self.mul(vA, sA)
             if new_op == "div":           return self.div(vA, sA)
             if new_op == "mgt":        return self.cmp_gt_vs(vA, sA)
             if new_op == "mlt":        return self.cmp_lt_vs(vA, sA)

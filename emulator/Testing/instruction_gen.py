@@ -356,11 +356,12 @@ test1 = {'opcode': 0b0010110, 'rd': 8, 'rs1': 0, 'imm': 512} #0100000416
 test2 = {'opcode': 88, 'rs1/rd1': 0, 'rs2': 1, 'num_cols': 2, 'num_rows': 16, 'sid': 0} # 0101008058 
 test3 = {'opcode': 77, 'vd': 1, 'rs1': 0, 'num_cols': 1, 'num_rows': 0, 'sid': 0, 'rc': 1, 'rc_id': 0}
 test4 = {'opcode': 22, 'rd': 2, 'rs1': 0, 'imm': 10}
-test5 = {'opcode': 80, 'vd': 2, 'vs1': 1, 'rs1': 2, 'mask': 0}
+test5 = {'opcode': 80, 'vd': 2, 'vs1': 1, 'rs1': 2, 'mask': 1}
 test6 = {'opcode': 78, 'vd': 2, 'rs1': 0, 'num_cols': 1, 'num_rows': 0, 'sid': 1, 'rc': 1, 'rc_id': 0}
 test7 = {'opcode': 89, 'rs1/rd1': 0, 'rs2': 8, 'num_cols': 2, 'num_rows': 16, 'sid': 0}
 test8 = {'opcode': 48} #halt
 test9= {'opcode': 0b0010000, 'rd': 4, 'rs1': 6, 'rs2': 5} #mul.bf
+test10 = {'opcode': 0b1001100, 'rs1': 8, 'vmd': 1}
 
 print(f"Test 1 (expect 0100000416): {encode_instruction(test1)}") # 0100000416
 print(f"Test 2 (expect 0101008058): {encode_instruction(test2)}") # 0101008058 
@@ -370,4 +371,5 @@ print(f"Test 5 (expect 0001008150): {encode_instruction(test5)}")
 print(f"Test 6 (expect 060080014E): {encode_instruction(test6)}")  
 print(f"Test 7 (expect 0101040059): {encode_instruction(test7)}")  
 print(f"Test 8 (expect 0000000030): {encode_instruction(test8)}")  
-print(f"Test 9 {encode_instruction(test9)}")  
+print(f"Test 9 {encode_instruction(test9)}")
+print(f"Test 10 {encode_instruction(test10)}")  
