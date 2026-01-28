@@ -364,7 +364,7 @@ def main():
             # ---------------- VV (Vector-Vector) ----------------
             elif m.endswith(".vv"):
                 # ------------ GEMM ------------------------------
-                if (m = "gemm.vv"):
+                if (m == "gemm.vv"):
                     vregs.write(inst['vd'], vregs.read(inst['vs1']) @ weights + vregs.read(inst['vs2']))
                 else:
                     src1 = vregs.read(inst['vs1'])
