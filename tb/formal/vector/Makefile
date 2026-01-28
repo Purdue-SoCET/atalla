@@ -40,10 +40,11 @@ VERILATOR_FLAGS += -LDFLAGS "-lz"
 # RTL include directories
 VERILATOR_FLAGS += -I$(RTL_INCLUDE)common/arithmetic/sqrt
 VERILATOR_FLAGS += -I$(RTL_INCLUDE)common/arithmetic/divider
-VERILATOR_FLAGS += -I$(RTL_INCLUDE)common/arithmetic/exp
+VERILATOR_FLAGS += -I$(RTL_INCLUDE)common/arithmetic/multipliers
 VERILATOR_FLAGS += -I$(RTL_INCLUDE)common/xbar
 VERILATOR_FLAGS += -I$(RTL_INCLUDE)vector
-VERILATOR_FLAGS += -I$(RTL_INCLUDE)vector/reduction
+VERILATOR_FLAGS += -I$(RTL_INCLUDE)systolic_array
+
 
 
 
