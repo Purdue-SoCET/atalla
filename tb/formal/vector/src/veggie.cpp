@@ -36,113 +36,97 @@ void veggie::tick() {
     if (clk && !last_clk) {
         if (!rst_n)
         {
-            vrf_lane_vd.fill(0);
-            vrf_lane_vs.fill(0);
-            vrf_lane_ren.fill(0);
-            vrf_lane_wen.fill(0);
-            for (auto& arr : vrf_lane_vwdata) arr.fill(0);
-
-            vrf_sys_vd.fill(0);
-            vrf_sys_vs.fill(0);
-            vrf_sys_ren.fill(0);
-            vrf_sys_wen.fill(0);
-            for (auto& arr : vrf_sys_vwdata) arr.fill(0);
-
-            vrf_sp_vd.fill(0);
-            vrf_sp_vs.fill(0);
-            vrf_sp_ren.fill(0);
-            vrf_sp_wen.fill(0);
-            for (auto& arr : vrf_sp_vwdata) arr.fill(0);
-
-            for (auto& arr : vrf_lane_vrdata) arr.fill(0);
-            vfr_lane_dvalid.fill(0);
-
-            for (auto& arr : vrf_sys_vrdata) arr.fill(0);
-            vfr_sys_dvalid.fill(0);
-
-            for (auto& arr : vrf_sp_vrdata) arr.fill(0);
-            vfr_sp_dvalid.fill(0);
-
-            vmrf_vd.fill(0);
-            vmrf_vs.fill(0);
-            vmrf_mwen.fill(0);
-            vmrf_mren.fill(0);
-            vmrf_wdata.fill(0);
-            vmrf_rdata.fill(0);
-            vmrf_mvalid.fill(0);
+            lane_input_if = {};
+            sys_input_if = {};
+            sp_input_if = {};
+            mask_input_if = {};
+            reduction_input_if = {};
+            lane_output_if = {};
+            sys_output_if = {};
+            sp_output_if = {};
+            mask_output_if = {};
+            vrf_ready = 1;
         }
         else
         {
             // LANES
-            for (size_t i = 0; i < vrf_lane_wen.size(); i++) {
-                if (vrf_lane_wen[i]) {
-                    write_vector(vrf_lane_vwdata[i], vrf_lane_vd[i]);
+            //write
+            for (size_t i = 0; i < lane_input_if.wen.size(); i++) {
+                if (lane_input_if.wen[i]) {
+                    write_vector(lane_input_if.wdata[i], lane_input_if.vd[i]);
                 }
             }
-            for (size_t i = 0; i < vrf_lane_ren.size(); i++) {
-                if (vrf_lane_ren[i]) {
-                    vrf_lane_vrdata[i] = read_vector(vrf_lane_vs[i]);
-                    vfr_lane_dvalid[i] = 1;
+            //read
+            for (size_t i = 0; i < lane_input_if.ren.size(); i++) {
+                if (lane_input_if.ren[i]) {
+                    lane_output_if.rdata[i] = read_vector(lane_input_if.vs[i]);
+                    lane_output_if.valid[i] = 1;
                 } else {
-                    vfr_lane_dvalid[i] = 0;
+                    lane_output_if.valid[i] = 0;
                 }
             }
             
             // SYSARR
-            for (size_t i = 0; i < vrf_sys_wen.size(); i++) {
-                if (vrf_sys_wen[i]) {
-                    write_vector(vrf_sys_vwdata[i], vrf_sys_vd[i]);
+            //write
+            for (size_t i = 0; i < sys_input_if.wen.size(); i++) {
+                if (sys_input_if.wen[i]) {
+                    write_vector(sys_input_if.wdata[i], sys_input_if.vd[i]);
                 }
             }
-            for (size_t i = 0; i < vrf_sys_ren.size(); i++) {
-                if (vrf_sys_ren[i]) {
-                    vrf_sys_vrdata[i] = read_vector(vrf_sys_vs[i]);
-                    vfr_sys_dvalid[i] = 1;
+            //read
+            for (size_t i = 0; i < sys_input_if.ren.size(); i++) {
+                if (sys_input_if.ren[i]) {
+                    sys_output_if.rdata[i] = read_vector(sys_input_if.vs[i]);
+                    sys_output_if.valid[i] = 1;
                 } else {
-                    vfr_sys_dvalid[i] = 0;
+                    sys_output_if.valid[i] = 0;
                 }
             }
             
             // SCRATCHPAD
-            for (size_t i = 0; i < vrf_sp_wen.size(); i++) {
-                if (vrf_sp_wen[i]) {
-                    write_vector(vrf_sp_vwdata[i], vrf_sp_vd[i]);
+            //write
+            for (size_t i = 0; i < sp_input_if.wen.size(); i++) {
+                if (sp_input_if.wen[i]) {
+                    write_vector(sp_input_if.wdata[i], sp_input_if.vd[i]);
                 }
             }
-            for (size_t i = 0; i < vrf_sp_ren.size(); i++) {
-                if (vrf_sp_ren[i]) {
-                    vrf_sp_vrdata[i] = read_vector(vrf_sp_vs[i]);
-                    vfr_sp_dvalid[i] = 1;
+            //read
+            for (size_t i = 0; i < sp_input_if.ren.size(); i++) {
+                if (sp_input_if.ren[i]) {
+                    sp_output_if.rdata[i] = read_vector(sp_input_if.vs[i]);
+                    sp_output_if.valid[i] = 1;
                 } else {
-                    vfr_sp_dvalid[i] = 0;
+                    sp_output_if.valid[i] = 0;
                 }
             }
             
             // MASK
-            for (size_t i = 0; i < vmrf_mren.size(); i++)
+            //read
+            for (size_t i = 0; i < mask_input_if.ren.size(); i++)
             {
-                if (vmrf_mren[i])
+                if (mask_input_if.ren[i])
                 {
-                    vmrf_rdata[i] = read_mask(vmrf_vs[i]);
-                    vmrf_mvalid[i] = 1;
+                    mask_output_if.rdata[i] = read_mask(mask_input_if.vs[i]);
+                    mask_output_if.valid[i] = 1;
                 }
                 else
                 {
-                    vmrf_mvalid[i] = 0;
+                    mask_output_if.valid[i] = 0;
                 }
             }
-            for (size_t i = 0; i < vmrf_mwen.size(); i++)
+            //wrote
+            for (size_t i = 0; i < mask_input_if.wen.size(); i++)
             {
-                if (vmrf_mwen[i])
+                if (mask_input_if.wen[i])
                 {
-                    write_mask(vmrf_wdata[i], vmrf_vd[i]);
+                    write_mask(mask_input_if.wdata[i], mask_input_if.vd[i]);
                 }
             }
             
             // REDUCTION
-            if (reduction_valid)
+            if (reduction_input_if.valid)
             {
-                write_vector(reduction_wdata, reduction_vd);
+                write_vector(reduction_input_if.wdata, reduction_input_if.vd);
             }
         }
     }
