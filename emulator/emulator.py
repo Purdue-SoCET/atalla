@@ -64,6 +64,7 @@ def main():
     sregs = ScalarRegisterFile()
     mregs = ScalarRegisterFile(num_regs=16)
     vregs = VectorRegisterFile()
+    gemm_weights = np.zeros((32, 32))
     pc = 0x00000000  # Program Counter, starts at address 0
 
     #eecute object
@@ -376,6 +377,8 @@ def main():
                 if(m == 'shift.vi'):
                     slr = (src2 >> 5) & 0b1
                     imm = src2 & 0b1_1111
+                elif (m == "lw.vi"):
+                    weights[:, i] = src1
                 else:
                     slr = 0
                     imm = src2
