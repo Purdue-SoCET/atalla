@@ -15,28 +15,14 @@
 #include <stdexcept>
 #include <filesystem>
 
-//256 by 32 memory
-//16 by 32 masks
+/*
+Emulated VRF
 
-//4 write ports to the wb buffer
-//4 read ports, 0,1 and 2,3 for VV operations
-//valid signals
-//2 mask read and write ports
-//mvalid
+*/
 
-//vd
-//vector
-//wen
 
-//vs
-//ren
 
-//mvd
-//mask
-//mwen
 
-//mvs
-//mren
 
 class veggie
 {
@@ -44,9 +30,75 @@ private:
     std::array<std::array<uint16_t,32>,256> vrf;
     std::array<uint32_t,16> vrmf;
 public:
+    //structs
+    struct vrf_lane_in_t { //lanes WB to veggie
+        std::array<uint8_t,5> vd = {};
+        std::array<uint8_t,4> vs = {};
+        std::array<uint8_t,2> ren = {};
+        std::array<uint8_t,5> wen = {};
+        std::array<std::array<uint16_t,32>,1> wdata = {};
+    };
+
+    struct vrf_sys_in_t { //sys WB to veggie
+        std::array<uint8_t,1> vd = {};
+        std::array<uint8_t,2> vs = {};
+        std::array<uint8_t,2> ren = {};
+        std::array<uint8_t,1> wen = {};
+        std::array<std::array<uint16_t,32>,1> wdata = {};
+    };
+
+    struct vrf_sp_in_t { //sp WB to veggie
+        std::array<uint8_t,2> vd = {};
+        std::array<uint8_t,2> vs = {};
+        std::array<uint8_t,2> ren = {};
+        std::array<uint8_t,2> wen = {};
+        std::array<std::array<uint16_t,32>,2> wdata = {};
+    };
+
+    struct vrf_lane_out_t { //veggie data to lanes
+        std::array<std::array<uint16_t,32>,2> rdata = {};
+        std::array<uint8_t,2> valid = {};
+    };
+
+    struct vrf_sys_out_t { //veggie data to sys
+        std::array<std::array<uint16_t,32>,2> rdata = {};
+        std::array<uint8_t,2> valid = {};
+    };
+
+    struct vrf_sp_out_t { //veggie data to sp
+        std::array<std::array<uint16_t,32>,2> rdata = {};
+        std::array<uint8_t,2> valid = {};
+    };
+    
+    struct vmrf_in_t { //general inputs to vector mask
+        std::array<uint8_t, 3> vs = {};
+        std::array<uint8_t, 3> vd = {};
+        std::array<uint8_t, 3> wen = {};
+        std::array<uint8_t, 3> ren = {};
+        std::array<uint32_t, 3> wdata = {};
+    };
+
+    struct vmrf_out_t { //outputs from the mask unit
+        std::array<uint32_t, 3> rdata = {};
+        std::array<uint8_t, 3> valid = {};
+    };
+
+    struct reduction_in_t { //reduction WB to veggie
+        std::array<uint16_t,32> wdata = {};
+        uint8_t valid;
+        uint8_t vd;
+    };
+
     //inputs
     uint8_t clk;
     uint8_t rst_n;
+    vrf_lane_in_t lane_input_if;
+    vrf_sys_in_t sys_input_if;
+    vrf_sp_in_t sp_input_if;
+    vmrf_in_t mask_input_if;
+    reduction_in_t reduction_input_if;
+
+    /* depriciated, switched to structs
     std::array<uint8_t,5> vrf_lane_vd = {};
     std::array<uint8_t,4> vrf_lane_vs = {};
     std::array<uint8_t,2> vrf_lane_ren = {};
@@ -64,9 +116,15 @@ public:
     std::array<uint8_t,2> vrf_sp_ren = {};
     std::array<uint8_t,2> vrf_sp_wen = {};
     std::array<std::array<uint16_t,32>,2> vrf_sp_vwdata = {};
-
+    */
 
     //outputs
+    vrf_lane_out_t lane_output_if;
+    vrf_sys_out_t sys_output_if;
+    vrf_sp_out_t sp_output_if;
+    vmrf_out_t mask_output_if;
+    uint8_t vrf_ready = 1;
+    /* depriciated, switched to structs
     std::array<std::array<uint16_t,32>,2> vrf_lane_vrdata = {};
     std::array<uint8_t,2> vfr_lane_dvalid = {};
 
@@ -75,7 +133,6 @@ public:
     
     std::array<std::array<uint16_t,32>,2> vrf_sp_vrdata = {};
     std::array<uint8_t,2> vfr_sp_dvalid = {};
-
     
     std::array<uint8_t, 3> vmrf_vd = {};
     std::array<uint8_t, 3> vmrf_vs = {};
@@ -86,11 +143,11 @@ public:
     std::array<uint32_t, 3> vmrf_rdata = {};
     std::array<uint8_t, 3> vmrf_mvalid = {};
 
-    uint8_t vrf_ready = 1;
-
     std::array<uint16_t,32> reduction_wdata = {};
     uint8_t reduction_valid;
     uint8_t reduction_vd;
+
+    */
 
     std::array<uint8_t, 8> scalars  = {0, 1, 2, 3, 4, 5, 6, 7};
 
