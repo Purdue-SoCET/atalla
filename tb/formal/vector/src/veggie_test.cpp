@@ -57,11 +57,11 @@ void test_lane_write_read(veggie& vrf) {
     }
 
     // Initialize ALL signals
-    vrf.vrf_lane_vd.fill(0);
-    vrf.vrf_lane_vs.fill(0);
-    vrf.vrf_lane_wen.fill(0);
-    vrf.vrf_lane_ren.fill(0);
-    for (auto& arr : vrf.vrf_lane_vwdata) arr.fill(0);
+    vrf.lane_input_if.vd.fill(0);
+    vrf.lane_input_if.vs.fill(0);
+    vrf.lane_input_if.wen.fill(0);
+    vrf.lane_input_if.ren.fill(0);
+    for (auto& arr : vrf.lane_input_if.wdata) arr.fill(0);
 
     // Write to 5 different registers using the 5 write ports
     std::array<uint16_t, 32> test_vecs[5];
@@ -69,47 +69,47 @@ void test_lane_write_read(veggie& vrf) {
         test_vecs[i] = create_test_vector(i * 100);
     }
 
-    // Write each register
+    // Write each register sequentially
+    // Note: lane_input_if.wdata has only 1 element, so we can only write one register per cycle
     for (int i = 0; i < 5; i++) {
-        // IMPORTANT: Clear all write enables first
-        vrf.vrf_lane_wen.fill(0);
+        // Clear all write enables
+        vrf.lane_input_if.wen.fill(0);
         
-        // Setup THIS write
-        vrf.vrf_lane_vd[i] = i;
-        vrf.vrf_lane_wen[i] = 1;
-        vrf.vrf_lane_vwdata[i] = test_vecs[i];
+        // Setup write for register i using write port 0
+        vrf.lane_input_if.vd[0] = i;
+        vrf.lane_input_if.wen[0] = 1;
+        vrf.lane_input_if.wdata[0] = test_vecs[i];
         
         // Clock
-        vrf.tick();
-        vrf.clk = 1; 
-        vrf.tick();
-        vrf.clk = 0;
+        vrf.clk = 0; vrf.tick();
+        vrf.clk = 1; vrf.tick();
+        vrf.clk = 0; vrf.tick();
     }
 
     // Disable all writes
-    vrf.vrf_lane_wen.fill(0);
+    vrf.lane_input_if.wen.fill(0);
 
     // Read back using read port 0
     int pass_count = 0;
     for (int i = 0; i < 5; i++) {
-        vrf.vrf_lane_vs[0] = i;
-        vrf.vrf_lane_ren[0] = 1;
+        vrf.lane_input_if.vs[0] = i;
+        vrf.lane_input_if.ren[0] = 1;
         
         vrf.clk = 0; vrf.tick();
         vrf.clk = 1; vrf.tick();
         vrf.clk = 0; vrf.tick();
 
-        if (vrf.vfr_lane_dvalid[0]) {
-            bool match = vec_equal(vrf.vrf_lane_vrdata[0], test_vecs[i]);
+        if (vrf.lane_output_if.valid[0]) {
+            bool match = vec_equal(vrf.lane_output_if.rdata[0], test_vecs[i]);
             out << "Read VRF[" << i << "]: " << (match ? "PASS" : "FAIL") << "\n";
             if (match) pass_count++;
-            write_vector_line(out, vrf.vrf_lane_vrdata[0]);
+            write_vector_line(out, vrf.lane_output_if.rdata[0]);
         } else {
             out << "Read VRF[" << i << "]: FAIL (no valid)\n";
         }
     }
 
-    vrf.vrf_lane_ren[0] = 0;
+    vrf.lane_input_if.ren[0] = 0;
 
     std::cout << "Lane Write/Read: " << pass_count << "/5 tests passed\n";
     out.close();
@@ -134,35 +134,35 @@ void test_sysarr_write_read(veggie& vrf) {
         std::array<uint16_t, 32> test_vec = create_test_vector(1000 + i * 10);
         
         // Write
-        vrf.vrf_sys_vd[0] = 10 + i;  // Write to registers 10-19
-        vrf.vrf_sys_wen[0] = 1;
-        vrf.vrf_sys_vwdata[0] = test_vec;
+        vrf.sys_input_if.vd[0] = 10 + i;  // Write to registers 10-19
+        vrf.sys_input_if.wen[0] = 1;
+        vrf.sys_input_if.wdata[0] = test_vec;
 
         vrf.clk = 0; vrf.tick();
         vrf.clk = 1; vrf.tick();
         vrf.clk = 0; vrf.tick();
 
         // Disable write
-        vrf.vrf_sys_wen[0] = 0;
+        vrf.sys_input_if.wen[0] = 0;
 
         // Read back using read port 0
-        vrf.vrf_sys_vs[0] = 10 + i;
-        vrf.vrf_sys_ren[0] = 1;
+        vrf.sys_input_if.vs[0] = 10 + i;
+        vrf.sys_input_if.ren[0] = 1;
 
         vrf.clk = 0; vrf.tick();
         vrf.clk = 1; vrf.tick();
         vrf.clk = 0; vrf.tick();
 
-        if (vrf.vfr_sys_dvalid[0]) {
-            bool match = vec_equal(vrf.vrf_sys_vrdata[0], test_vec);
+        if (vrf.sys_output_if.valid[0]) {
+            bool match = vec_equal(vrf.sys_output_if.rdata[0], test_vec);
             out << "SysArr VRF[" << (10 + i) << "]: " << (match ? "PASS" : "FAIL") << "\n";
             if (match) pass_count++;
-            write_vector_line(out, vrf.vrf_sys_vrdata[0]);
+            write_vector_line(out, vrf.sys_output_if.rdata[0]);
         } else {
             out << "SysArr VRF[" << (10 + i) << "]: FAIL (no valid)\n";
         }
 
-        vrf.vrf_sys_ren[0] = 0;
+        vrf.sys_input_if.ren[0] = 0;
     }
 
     std::cout << "SysArr Write/Read: " << pass_count << "/10 tests passed\n";
@@ -186,26 +186,26 @@ void test_scratchpad_write_read(veggie& vrf) {
     std::array<uint16_t, 32> test_vec0 = create_test_vector(2000);
     std::array<uint16_t, 32> test_vec1 = create_test_vector(3000);
 
-    vrf.vrf_sp_vd[0] = 20;
-    vrf.vrf_sp_vd[1] = 21;
-    vrf.vrf_sp_wen[0] = 1;
-    vrf.vrf_sp_wen[1] = 1;
-    vrf.vrf_sp_vwdata[0] = test_vec0;
-    vrf.vrf_sp_vwdata[1] = test_vec1;
+    vrf.sp_input_if.vd[0] = 20;
+    vrf.sp_input_if.vd[1] = 21;
+    vrf.sp_input_if.wen[0] = 1;
+    vrf.sp_input_if.wen[1] = 1;
+    vrf.sp_input_if.wdata[0] = test_vec0;
+    vrf.sp_input_if.wdata[1] = test_vec1;
 
     vrf.clk = 0; vrf.tick();
     vrf.clk = 1; vrf.tick();
     vrf.clk = 0; vrf.tick();
 
     // Disable writes
-    vrf.vrf_sp_wen[0] = 0;
-    vrf.vrf_sp_wen[1] = 0;
+    vrf.sp_input_if.wen[0] = 0;
+    vrf.sp_input_if.wen[1] = 0;
 
     // Read back using both read ports simultaneously
-    vrf.vrf_sp_vs[0] = 20;
-    vrf.vrf_sp_vs[1] = 21;
-    vrf.vrf_sp_ren[0] = 1;
-    vrf.vrf_sp_ren[1] = 1;
+    vrf.sp_input_if.vs[0] = 20;
+    vrf.sp_input_if.vs[1] = 21;
+    vrf.sp_input_if.ren[0] = 1;
+    vrf.sp_input_if.ren[1] = 1;
 
     vrf.clk = 0; vrf.tick();
     vrf.clk = 1; vrf.tick();
@@ -213,22 +213,22 @@ void test_scratchpad_write_read(veggie& vrf) {
 
     int pass_count = 0;
 
-    if (vrf.vfr_sp_dvalid[0]) {
-        bool match = vec_equal(vrf.vrf_sp_vrdata[0], test_vec0);
+    if (vrf.sp_output_if.valid[0]) {
+        bool match = vec_equal(vrf.sp_output_if.rdata[0], test_vec0);
         out << "SP VRF[20] port 0: " << (match ? "PASS" : "FAIL") << "\n";
         if (match) pass_count++;
-        write_vector_line(out, vrf.vrf_sp_vrdata[0]);
+        write_vector_line(out, vrf.sp_output_if.rdata[0]);
     }
 
-    if (vrf.vfr_sp_dvalid[1]) {
-        bool match = vec_equal(vrf.vrf_sp_vrdata[1], test_vec1);
+    if (vrf.sp_output_if.valid[1]) {
+        bool match = vec_equal(vrf.sp_output_if.rdata[1], test_vec1);
         out << "SP VRF[21] port 1: " << (match ? "PASS" : "FAIL") << "\n";
         if (match) pass_count++;
-        write_vector_line(out, vrf.vrf_sp_vrdata[1]);
+        write_vector_line(out, vrf.sp_output_if.rdata[1]);
     }
 
-    vrf.vrf_sp_ren[0] = 0;
-    vrf.vrf_sp_ren[1] = 0;
+    vrf.sp_input_if.ren[0] = 0;
+    vrf.sp_input_if.ren[1] = 0;
 
     std::cout << "Scratchpad Write/Read: " << pass_count << "/2 tests passed\n";
     out.close();
@@ -251,9 +251,9 @@ void test_mask_write_read(veggie& vrf) {
     uint32_t test_masks[3] = {0xAAAAAAAA, 0x55555555, 0xF0F0F0F0};
     
     for (int i = 0; i < 3; i++) {
-        vrf.vmrf_vd[i] = i;
-        vrf.vmrf_mwen[i] = 1;
-        vrf.vmrf_wdata[i] = test_masks[i];
+        vrf.mask_input_if.vd[i] = i;
+        vrf.mask_input_if.wen[i] = 1;
+        vrf.mask_input_if.wdata[i] = test_masks[i];
     }
 
     vrf.clk = 0; vrf.tick();
@@ -262,13 +262,13 @@ void test_mask_write_read(veggie& vrf) {
 
     // Disable writes
     for (int i = 0; i < 3; i++) {
-        vrf.vmrf_mwen[i] = 0;
+        vrf.mask_input_if.wen[i] = 0;
     }
 
     // Read back using all 3 read ports
     for (int i = 0; i < 3; i++) {
-        vrf.vmrf_vs[i] = i;
-        vrf.vmrf_mren[i] = 1;
+        vrf.mask_input_if.vs[i] = i;
+        vrf.mask_input_if.ren[i] = 1;
     }
 
     vrf.clk = 0; vrf.tick();
@@ -277,11 +277,11 @@ void test_mask_write_read(veggie& vrf) {
 
     int pass_count = 0;
     for (int i = 0; i < 3; i++) {
-        if (vrf.vmrf_mvalid[i]) {
-            bool match = (vrf.vmrf_rdata[i] == test_masks[i]);
+        if (vrf.mask_output_if.valid[i]) {
+            bool match = (vrf.mask_output_if.rdata[i] == test_masks[i]);
             out << "Mask[" << i << "]: " << (match ? "PASS" : "FAIL");
             out << " (expected: 0x" << std::hex << test_masks[i];
-            out << ", got: 0x" << vrf.vmrf_rdata[i] << std::dec << ")\n";
+            out << ", got: 0x" << vrf.mask_output_if.rdata[i] << std::dec << ")\n";
             if (match) pass_count++;
         } else {
             out << "Mask[" << i << "]: FAIL (no valid)\n";
@@ -289,7 +289,7 @@ void test_mask_write_read(veggie& vrf) {
     }
 
     for (int i = 0; i < 3; i++) {
-        vrf.vmrf_mren[i] = 0;
+        vrf.mask_input_if.ren[i] = 0;
     }
 
     std::cout << "Mask Register File: " << pass_count << "/3 tests passed\n";
@@ -312,34 +312,34 @@ void test_reduction_write(veggie& vrf) {
     std::array<uint16_t, 32> reduction_vec = create_test_vector(5000);
     
     // Write via reduction path
-    vrf.reduction_vd = 30;
-    vrf.reduction_valid = 1;
-    vrf.reduction_wdata = reduction_vec;
+    vrf.reduction_input_if.vd = 30;
+    vrf.reduction_input_if.valid = 1;
+    vrf.reduction_input_if.wdata = reduction_vec;
 
     vrf.clk = 0; vrf.tick();
     vrf.clk = 1; vrf.tick();
     vrf.clk = 0; vrf.tick();
 
-    vrf.reduction_valid = 0;
+    vrf.reduction_input_if.valid = 0;
 
     // Read back using lane read port
-    vrf.vrf_lane_vs[0] = 30;
-    vrf.vrf_lane_ren[0] = 1;
+    vrf.lane_input_if.vs[0] = 30;
+    vrf.lane_input_if.ren[0] = 1;
 
     vrf.clk = 0; vrf.tick();
     vrf.clk = 1; vrf.tick();
     vrf.clk = 0; vrf.tick();
 
     bool pass = false;
-    if (vrf.vfr_lane_dvalid[0]) {
-        pass = vec_equal(vrf.vrf_lane_vrdata[0], reduction_vec);
+    if (vrf.lane_output_if.valid[0]) {
+        pass = vec_equal(vrf.lane_output_if.rdata[0], reduction_vec);
         out << "Reduction write to VRF[30]: " << (pass ? "PASS" : "FAIL") << "\n";
-        write_vector_line(out, vrf.vrf_lane_vrdata[0]);
+        write_vector_line(out, vrf.lane_output_if.rdata[0]);
     } else {
         out << "Reduction write to VRF[30]: FAIL (no valid)\n";
     }
 
-    vrf.vrf_lane_ren[0] = 0;
+    vrf.lane_input_if.ren[0] = 0;
 
     std::cout << "Reduction Write: " << (pass ? "PASS" : "FAIL") << "\n";
     out.close();
@@ -362,36 +362,36 @@ void test_concurrent_access(veggie& vrf) {
     std::array<uint16_t, 32> sys_vec = create_test_vector(200);
     std::array<uint16_t, 32> sp_vec = create_test_vector(300);
 
-    vrf.vrf_lane_vd[0] = 40;
-    vrf.vrf_lane_wen[0] = 1;
-    vrf.vrf_lane_vwdata[0] = lane_vec;
+    vrf.lane_input_if.vd[0] = 40;
+    vrf.lane_input_if.wen[0] = 1;
+    vrf.lane_input_if.wdata[0] = lane_vec;
 
-    vrf.vrf_sys_vd[0] = 41;
-    vrf.vrf_sys_wen[0] = 1;
-    vrf.vrf_sys_vwdata[0] = sys_vec;
+    vrf.sys_input_if.vd[0] = 41;
+    vrf.sys_input_if.wen[0] = 1;
+    vrf.sys_input_if.wdata[0] = sys_vec;
 
-    vrf.vrf_sp_vd[0] = 42;
-    vrf.vrf_sp_wen[0] = 1;
-    vrf.vrf_sp_vwdata[0] = sp_vec;
+    vrf.sp_input_if.vd[0] = 42;
+    vrf.sp_input_if.wen[0] = 1;
+    vrf.sp_input_if.wdata[0] = sp_vec;
 
     vrf.clk = 0; vrf.tick();
     vrf.clk = 1; vrf.tick();
     vrf.clk = 0; vrf.tick();
 
     // Disable all writes
-    vrf.vrf_lane_wen[0] = 0;
-    vrf.vrf_sys_wen[0] = 0;
-    vrf.vrf_sp_wen[0] = 0;
+    vrf.lane_input_if.wen[0] = 0;
+    vrf.sys_input_if.wen[0] = 0;
+    vrf.sp_input_if.wen[0] = 0;
 
     // Read back from all three simultaneously
-    vrf.vrf_lane_vs[0] = 40;
-    vrf.vrf_lane_ren[0] = 1;
+    vrf.lane_input_if.vs[0] = 40;
+    vrf.lane_input_if.ren[0] = 1;
 
-    vrf.vrf_sys_vs[0] = 41;
-    vrf.vrf_sys_ren[0] = 1;
+    vrf.sys_input_if.vs[0] = 41;
+    vrf.sys_input_if.ren[0] = 1;
 
-    vrf.vrf_sp_vs[0] = 42;
-    vrf.vrf_sp_ren[0] = 1;
+    vrf.sp_input_if.vs[0] = 42;
+    vrf.sp_input_if.ren[0] = 1;
 
     vrf.clk = 0; vrf.tick();
     vrf.clk = 1; vrf.tick();
@@ -399,30 +399,30 @@ void test_concurrent_access(veggie& vrf) {
 
     int pass_count = 0;
 
-    if (vrf.vfr_lane_dvalid[0] && vec_equal(vrf.vrf_lane_vrdata[0], lane_vec)) {
+    if (vrf.lane_output_if.valid[0] && vec_equal(vrf.lane_output_if.rdata[0], lane_vec)) {
         out << "Concurrent lane read: PASS\n";
         pass_count++;
     } else {
         out << "Concurrent lane read: FAIL\n";
     }
 
-    if (vrf.vfr_sys_dvalid[0] && vec_equal(vrf.vrf_sys_vrdata[0], sys_vec)) {
+    if (vrf.sys_output_if.valid[0] && vec_equal(vrf.sys_output_if.rdata[0], sys_vec)) {
         out << "Concurrent sys read: PASS\n";
         pass_count++;
     } else {
         out << "Concurrent sys read: FAIL\n";
     }
 
-    if (vrf.vfr_sp_dvalid[0] && vec_equal(vrf.vrf_sp_vrdata[0], sp_vec)) {
+    if (vrf.sp_output_if.valid[0] && vec_equal(vrf.sp_output_if.rdata[0], sp_vec)) {
         out << "Concurrent sp read: PASS\n";
         pass_count++;
     } else {
         out << "Concurrent sp read: FAIL\n";
     }
 
-    vrf.vrf_lane_ren[0] = 0;
-    vrf.vrf_sys_ren[0] = 0;
-    vrf.vrf_sp_ren[0] = 0;
+    vrf.lane_input_if.ren[0] = 0;
+    vrf.sys_input_if.ren[0] = 0;
+    vrf.sp_input_if.ren[0] = 0;
 
     std::cout << "Concurrent Access: " << pass_count << "/3 tests passed\n";
     out.close();
