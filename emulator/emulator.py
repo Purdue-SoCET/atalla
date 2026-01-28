@@ -361,15 +361,19 @@ def main():
                 src1 = sregs.read(inst['rs1'])
                 #WBdata = EU.execute(m, sA=src1, sB=src2)
                 #sregs.write(inst['rd'], WBdata)
-            # ---------------- Vv (Vector-Immediate) ----------------
+            # ---------------- VV (Vector-Vector) ----------------
             elif m.endswith(".vv"):
-                src1 = vregs.read(inst['vs1'])
-                src2 = vregs.read(inst['vs2'])
-                WBdata = EU.execute(m, vA=src1, vB=src2, slr=0)
-                mask = mregs.read(inst['mask'])
-                old_vec = vregs.read(inst['vd'])
-                new_vec = apply_mask(v1=old_vec, v2=WBdata, mask=mask)
-                vregs.write(inst['vd'], new_vec)
+                # ------------ GEMM ------------------------------
+                if (m = "gemm.vv"):
+                    vregs.write(inst['vd'], vregs.read(inst['vs1']) @ weights + vregs.read(inst['vs2']))
+                else:
+                    src1 = vregs.read(inst['vs1'])
+                    src2 = vregs.read(inst['vs2'])
+                    WBdata = EU.execute(m, vA=src1, vB=src2, slr=0)
+                    mask = mregs.read(inst['mask'])
+                    old_vec = vregs.read(inst['vd'])
+                    new_vec = apply_mask(v1=old_vec, v2=WBdata, mask=mask)
+                    vregs.write(inst['vd'], new_vec)
             # ---------------- VI (Vector-Immediate) ----------------
             elif m.endswith(".vi"):
                 src1 = sregs.read(inst['vs1'])
