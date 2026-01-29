@@ -363,7 +363,7 @@ test8 = {'opcode': 48} #halt
 test9= {'opcode': 0b0010000, 'rd': 4, 'rs1': 6, 'rs2': 5} #mul.bf
 test10 = {'opcode': 0b1001100, 'rs1': 8, 'vmd': 1}
 test11 = {'opcode': 0b1010110, 'mask':1, 'rs1': 2, 'vs1':1, 'vd':2}
-test12 = {'opcode': 0b1010111, 'mask':1, 'rs1': 2, 'vs1':1, 'vd':3}
+test12 = {'opcode': 0b1000111, 'imm5':7, 'mask': 0, 'imm8':1, 'vs1':1, 'vd':4}
 
 print(f"Test 1 (expect 0100000416): {encode_instruction(test1)}") # 0100000416
 print(f"Test 2 (expect 0101008058): {encode_instruction(test2)}") # 0101008058 

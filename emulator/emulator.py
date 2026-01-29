@@ -15,6 +15,7 @@ try:
     from .scpad import Scratchpad
     from .scpad_ls import *
     import struct
+    from typing import Sequence, List
 except ImportError:
     from memory import Memory
     from scalar_register_file import ScalarRegisterFile
@@ -24,6 +25,7 @@ except ImportError:
     from scpad import Scratchpad
     from scpad_ls import *
     import struct
+    from typing import Sequence, List
 
 def apply_mask(
         v1: np.ndarray, #the old vector
@@ -47,9 +49,38 @@ def fp32_to_hex(f):
 def hex_to_fp32(x):
     return struct.unpack('<f', struct.pack('<I', x & 0xFFFFFFFF))[0]
 
+def apply_imm_vector_op(
+    imm: int,
+    vs: Sequence[np.float32],
+    r_in: np.float32,
+) -> List[np.float32]:
+    # Immediate field extraction
+    imm6 = (imm >> 6) & 1
+    imm5 = (imm >> 5) & 1
+    idx  = imm & 0b1_1111  # imm[0:4]
+
+    print(imm6)
+    print(imm5)
+    print(idx)
+
+    vl = len(vs)
+    zero = np.float32(0.0)
+
+    vd: List[np.float32] = [zero] * vl
+
+    for i in range(vl):
+        if imm6:
+            vd[i] = r_in
+        elif imm5:
+            vd[i] = r_in if i == idx else zero
+        else:
+            vd[i] = r_in if i == idx else vs[i]
+
+    return vd
+
 
 def main():
-    mem_file = "Testing/TestFiles/sdmavectorls_meq.txt" # need to change this to target different mem test files
+    mem_file = "Testing/TestFiles/sdmavectorls_reduce_add.txt" # need to change this to target different mem test files
     out_file = "output_mem.txt"
     out_sreg_file = "output_sregs.txt"
     out_vreg_file = "output_vregs.txt"
@@ -432,12 +463,16 @@ def main():
                     slr = 0
                     imm = src2
                 WBdata = EU.execute(m, vA=src1, sA=imm, slr=slr)
+                print(WBdata)
                 mask = mregs.read(inst['mask'])
                 old_vec = vregs.read(inst['vd'])
-                if(m != 'shift.vi'):
+                if(m != 'shift.vi' and m != 'rsum.vi' and m != 'rmin.vi' and m != 'rmax.vi'):
                     new_vec = apply_mask(v1=old_vec, v2=WBdata, mask=mask)
+                elif(m == 'rsum.vi' or m == 'rmin.vi' or m == 'rmax.vi'):
+                    new_vec = apply_imm_vector_op(imm=imm, vs=src1, r_in=WBdata)
                 else:
                     new_vec = WBdata
+                print(new_vec)
                 vregs.write(inst['vd'], new_vec)
             # ---------------- VS (Vector-Scalar) ----------------
             elif m.endswith(".vs"):
