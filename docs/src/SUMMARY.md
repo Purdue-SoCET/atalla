@@ -1,6 +1,13 @@
 # Summary
 
 [Overview](./overview.md)
+- [Guidelines / How-To](./misc/overview.md)
+    - [Setup](./misc/setup.md)
+    - [Synthesis](./misc/synthesis.md)
+    - [Testing](./misc/testing.md)
+    - [Verification](./misc/verification.md)
+    - [Style-Guide](./misc/style_guide.md)
+    - [DPI-C Tutorial](./misc/dpi.md)
 - [HW Architecture](./architecture/overview.md)
     - [Caches](./architecture/caches.md)
     - [DRAM Controller](./architecture/dram_cntrl.md)
@@ -13,9 +20,3 @@
     - [Kernels](./sw-systems/kernels.md)
     - [Programming Model](./sw-systems/programming_model.md)
     - [PyTorch Infrastructure](./sw-systems/pytorch.md)
-- [Guidelines / How-To](./misc/overview.md)
-    - [Setup](./misc/setup.md)
-    - [Synthesis](./misc/synthesis.md)
-    - [Testing](./misc/testing.md)
-    - [Verification](./misc/verification.md)
-    - [Style-Guide](./misc/style_guide.md)
