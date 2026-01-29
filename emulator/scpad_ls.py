@@ -132,11 +132,22 @@ def sdma_load(
             g_addr = gmem_base + (i * NC + j) * 4
             raw_val = gmem.read_data(g_addr)
 
-            # 1. Pack the int into 4 bytes (little-endian 'I' for unsigned int)
-            # 2. Unpack those 4 bytes as a float ('f')
-            fp32_val = struct.unpack('<f', struct.pack('<I', raw_val & 0xFFFFFFFF))[0]
+            bf16_bits = raw_val & 0xFFFF
 
-            row_vals.append(fp32_val)
+            # 2. Pack as 2 bytes (unsigned short 'H')
+            bytes_val = struct.pack('<H', bf16_bits)
+
+            # 3. Use ml_dtypes to interpret these bytes as bfloat16
+            # frombuffer returns a numpy array, so we take the first element [0]
+            bf16_val = np.frombuffer(bytes_val, dtype=bfloat16)[0]
+
+            row_vals.append(bf16_val)
+
+            # # 1. Pack the int into 4 bytes (little-endian 'I' for unsigned int)
+            # # 2. Unpack those 4 bytes as a float ('f')
+            # fp32_val = struct.unpack('<f', struct.pack('<I', raw_val & 0xFFFFFFFF))[0]
+
+            # row_vals.append(fp32_val)
 
         # Write into scratchpad banks
         slot = (scpad_base_row + i) % scpad.S

@@ -14,6 +14,7 @@ try:
     from .execute import ExecuteUnit
     from .scpad import Scratchpad
     from .scpad_ls import *
+    from ml_dtypes import bfloat16
 except ImportError:
     from memory import Memory
     from scalar_register_file import ScalarRegisterFile
@@ -22,6 +23,7 @@ except ImportError:
     from execute import ExecuteUnit
     from scpad import Scratchpad
     from scpad_ls import *
+    from ml_dtypes import bfloat16
 
 def apply_mask(
         v1: np.ndarray, #the old vector
@@ -41,7 +43,7 @@ def apply_mask(
 
 
 def main():
-    mem_file = "Testing/TestFiles/sdmavectorls_mask.txt" # need to change this to target different mem test files
+    mem_file = "Testing/TestFiles/sdmavectorls.txt" # need to change this to target different mem test files
     out_file = "output_mem.txt"
     out_sreg_file = "output_sregs.txt"
     out_vreg_file = "output_vregs.txt"
