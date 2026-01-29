@@ -19,9 +19,9 @@ set INC_FLAGS [list \
 ]
 
 set DESIGN_SRCS [list \
+    ./rtl/include/common/xbar/xbar_pkg.sv \
     ./rtl/include/common/xbar/xbar_if.sv \
     ./rtl/include/common/xbar/xbar_params.svh \
-    ./rtl/include/common/xbar/xbar_pkg.sv \
     ./rtl/modules/common/xbar/param_switch.sv \
     ./rtl/modules/common/xbar/clos.sv \
 ]
