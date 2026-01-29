@@ -1,9 +1,6 @@
 `timescale 1ns/1ps
 // FP16 Pipelined Multiplier for Vector Core 
 // 3-cycle latency using wallacetree_11b_2c (pipeline split inside wallace tree)
-// Cycle 0: start=1, inputs sampled
-// Cycle 1: Input latch 
-// Cycle 2: WTM internal reg 
 // Author : Myles Querimit (Reference Vinay Pundith)
 // passes 999,997 out of 1 mil, the 3 wrong are boundry based on how hardware v numpy treats ftz 
 // output diff is smallest subnormal in to zero (in mac it gets ftz next stage anyways but keep in mind) 
