@@ -1,6 +1,6 @@
 `timescale 1ns/1ps
 // FP16 Pipelined Multiplier for Vector Core 
-// 2-cycle latency using wallacetree_11b_2c (pipeline split inside wallace tree)
+// 3-cycle latency using wallacetree_11b_2c (pipeline split inside wallace tree)
 // Cycle 0: start=1, inputs sampled
 // Cycle 1: Input latch 
 // Cycle 2: WTM internal reg 
