@@ -49,7 +49,7 @@ def hex_to_fp32(x):
 
 
 def main():
-    mem_file = "Testing/TestFiles/sdmavectorls_mask_slr.txt" # need to change this to target different mem test files
+    mem_file = "Testing/TestFiles/sdmavectorls_meq.txt" # need to change this to target different mem test files
     out_file = "output_mem.txt"
     out_sreg_file = "output_sregs.txt"
     out_vreg_file = "output_vregs.txt"
@@ -368,8 +368,6 @@ def main():
                     src1 = sregs.read(inst['rs1'])
                     src2 = inst['imm']
                 WBdata = EU.execute(m, sA=src1, sB=src2)
-                if(m == "slt.bf"):
-                    WBdata = fp32_to_hex(WBdata)
                 sregs.write(inst['rd'], WBdata)
             elif m in ("sltu.s", "sltui.s", "sltu.bf"):
                 if(m == "sltu.s" or m == "sltu.bf"):
@@ -382,8 +380,6 @@ def main():
                     src1 = sregs.read(inst['rs1'])
                     src2 = inst['imm']
                 WBdata = EU.execute(m, sA=src1, sB=src2)
-                if(m == "sltu.bf"):
-                    WBdata = fp32_to_hex(WBdata)
                 sregs.write(inst['rd'], WBdata)
             elif m == "stbf.s":
                 src1 = sregs.read(inst['rs1'])
@@ -407,7 +403,14 @@ def main():
                     mask = mregs.read(inst['mask'])
                     old_vec = vregs.read(inst['vd'])
                     new_vec = apply_mask(v1=old_vec, v2=WBdata, mask=mask)
-                    vregs.write(inst['vd'], new_vec)
+                    if(m != 'mgt.vv' and m != 'mlt.vv' and m != 'meq.vv' and m != 'mneq.vv'):
+                        vregs.write(inst['vd'], new_vec)
+                    else:
+                        new_vec = new_vec.astype(np.uint32)
+                        value = np.uint32(0)
+                        for i, bit in enumerate(new_vec):
+                            value |= bit << i
+                        mregs.write(inst['vd'], value)
             # ---------------- VI (WEIGHTS ONLY) ----------------
             elif (m == "lw.vi"):
                 src1 = vregs.read(inst['vs1'])
@@ -425,8 +428,6 @@ def main():
                 if(m == 'shift.vi'):
                     slr = (src2 >> 5) & 0b1
                     imm = src2 & 0b1_1111
-                    print(slr)
-                    print(imm)
                 else:
                     slr = 0
                     imm = src2
@@ -447,6 +448,7 @@ def main():
                 else:
                     slr = 0
                     src2 = sregs.read(inst['rs1'])
+                    src2 = hex_to_fp32(int(src2))
                 WBdata = EU.execute(m, vA=src1, sA=src2, slr=slr)
                 mask = mregs.read(inst['mask'])
                 old_vec = vregs.read(inst['vd'])
@@ -454,7 +456,14 @@ def main():
                     new_vec = apply_mask(v1=old_vec, v2=WBdata, mask=mask)
                 else:
                     new_vec = WBdata
-                vregs.write(inst['vd'], new_vec)
+                if(m != 'mgt.vs' and m != 'mlt.vs' and m != 'meq.vs' and m != 'mneq.vs'):
+                    vregs.write(inst['vd'], new_vec)
+                else:
+                    new_vec = new_vec.astype(np.uint32)
+                    value = np.uint32(0)
+                    for i, bit in enumerate(new_vec):
+                         value |= bit << i
+                    mregs.write(inst['vd'], value)
 
             # ---------------- UNKNOWN ----------------
             else:

@@ -101,10 +101,15 @@ MNEMONIC_VECTOR = {
     "div.vs": "div_scalar",
     "rdiv.vs": "scalar_div",
     
-    "gt.vv":  "cmp_gt",
-    "lt.vv":  "cmp_lt",
-    "eq.vv":  "cmp_eq",
-    "neq.vv": "cmp_neq"
+    "mgt.vv":  "cmp_gt",
+    "mlt.vv":  "cmp_lt",
+    "meq.vv":  "cmp_eq",
+    "mneq.vv": "cmp_neq",
+
+    "mgt.vs": "cmp_gt",
+    "mlt.vs": "cmp_lt",
+    "meq.vs": "cmp_eq",
+    "mneq.vs": "cmp_neq",
 }
 
 MNEMONIC_MATMUL = {
