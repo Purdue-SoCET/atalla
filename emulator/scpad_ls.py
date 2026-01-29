@@ -2,7 +2,8 @@ from typing import Callable
 from memory import Memory
 from scpad import Scratchpad
 from vector_register_file import VectorRegisterFile
-import numpy as np 
+import numpy as np
+from ml_dtypes import bfloat16
 import struct
 
 
@@ -160,6 +161,35 @@ def sdma_load(
 # ============================================================
 # DMA STORE: Scratchpad -> GMEM
 # ============================================================
+# def sdma_store(
+#     *,
+#     gmem: Memory,
+#     scpad: Scratchpad,
+#     scpad_base_row: int,
+#     gmem_base: int,
+#     tile_id: str,
+#     NR: int,
+#     NC: int,
+#     swizzle: Callable[[int], int] = identity_swizzle,
+# ):
+#     """
+#     for i in range(NR):
+#         for j in range(NC):
+#             GMEM[(gmem_ptr * i) + j] = SCPAD[ swizzle((scpad_ptr * i) + j) ]
+#     """
+
+#     for i in range(NR):
+#         slot = (scpad_base_row + i) % scpad.S
+
+#         for j in range(NC):
+#             bank = j
+#             if bank >= scpad.B:
+#                 break
+            
+#             val = scpad.banks[bank][slot]
+#             g_addr = gmem_base + (i * NC + j) * 4
+#             gmem.write_data(g_addr, val)
+
 def sdma_store(
     *,
     gmem: Memory,
@@ -178,16 +208,21 @@ def sdma_store(
     """
 
     for i in range(NR):
-        slot = (scpad_base_row + i) % scpad.S
+        slot = int((scpad_base_row + i) % scpad.S)  # Force to int
 
         for j in range(NC):
             bank = j
             if bank >= scpad.B:
                 break
-
-            val = scpad.banks[bank][slot]
+            
+            val = scpad.banks[bank][slot]  # This is a bfloat16
+            
+            # Convert bfloat16 to uint16 bits
+            bf16_bytes = np.array([val], dtype=bfloat16).tobytes()
+            bf16_bits = struct.unpack('<H', bf16_bytes)[0]
+            
             g_addr = gmem_base + (i * NC + j) * 4
-            gmem.write_data(g_addr, val)
+            gmem.write_data(g_addr, bf16_bits)
 
 
 def dump_scpad_rc(
