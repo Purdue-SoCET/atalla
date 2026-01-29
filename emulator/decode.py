@@ -149,7 +149,7 @@ def decode_instruction(instr):
             "vd": get_bits(instr, 14, 7),
             "vs1": get_bits(instr, 22, 15),
             "mask": get_bits(instr, 34, 31),
-            "imm": (imm8 < 5) | imm5
+            "imm": (imm8 << 5) | imm5
         })
 
     elif instr_type == "VM":

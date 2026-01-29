@@ -201,27 +201,47 @@ class VectorLanes:
     # --------------------------------------------------------
     def shl_scalar(self, a: np.ndarray, s: int) -> np.ndarray:
         a = self._ensure_vec(a)
-        out = np.empty_like(a, dtype=np.float32)
+        shift = int(s)
 
-        for start, end in iterate_chunks(a.size, self.adders):
-            a_chunk = self._q(a[start:end])
-            bits = bf16_to_uint16_bits(a_chunk)
-            shifted = (bits.astype(np.uint16) << np.uint16(s)).astype(np.uint16)
-            out[start:end] = uint16_bits_to_bf16(shifted)
+        if shift < 0:
+            return self.shr_scalar(a, -shift)
 
+        out = np.zeros_like(a)
+
+        lane_n = a.shape[-1]
+        if shift == 0:
+            out[...] = a
+            return out
+        if shift >= lane_n:
+            return out
+
+        # "left" = toward lower lane indices (index decreases)
+        out[..., :-shift] = a[..., shift:]
         return out
+
 
     def shr_scalar(self, a: np.ndarray, s: int) -> np.ndarray:
         a = self._ensure_vec(a)
-        out = np.empty_like(a, dtype=np.float32)
+        shift = int(s)
 
-        for start, end in iterate_chunks(a.size, self.adders):
-            a_chunk = self._q(a[start:end])
-            bits = bf16_to_uint16_bits(a_chunk)
-            shifted = (bits.astype(np.uint16) >> np.uint16(s)).astype(np.uint16)
-            out[start:end] = uint16_bits_to_bf16(shifted)
+        if shift < 0:
+            return self.shl_scalar(a, -shift)
 
+        out = np.zeros_like(a)
+
+        lane_n = a.shape[-1]
+        if shift == 0:
+            out[...] = a
+            return out
+        if shift >= lane_n:
+            return out
+
+        # "right" = toward higher lane indices (index increases)
+        out[..., shift:] = a[..., :-shift]
         return out
+
+
+
     
     # --------------------------------------------------------
     # Vector–Vector comparison ops

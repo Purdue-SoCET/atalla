@@ -14,6 +14,7 @@ try:
     from .execute import ExecuteUnit
     from .scpad import Scratchpad
     from .scpad_ls import *
+    import struct
 except ImportError:
     from memory import Memory
     from scalar_register_file import ScalarRegisterFile
@@ -22,6 +23,7 @@ except ImportError:
     from execute import ExecuteUnit
     from scpad import Scratchpad
     from scpad_ls import *
+    import struct
 
 def apply_mask(
         v1: np.ndarray, #the old vector
@@ -39,9 +41,15 @@ def apply_mask(
     # Select values
     return np.where(mask_vec, v2, v1)
 
+def fp32_to_hex(f):
+    return struct.unpack('<I', struct.pack('<f', f))[0]
+
+def hex_to_fp32(x):
+    return struct.unpack('<f', struct.pack('<I', x & 0xFFFFFFFF))[0]
+
 
 def main():
-    mem_file = "Testing/TestFiles/sdmavectorls_mask.txt" # need to change this to target different mem test files
+    mem_file = "Testing/TestFiles/sdmavectorls_mask_slr.txt" # need to change this to target different mem test files
     out_file = "output_mem.txt"
     out_sreg_file = "output_sregs.txt"
     out_vreg_file = "output_vregs.txt"
@@ -143,12 +151,6 @@ def main():
             elif(m == "lw.s"):
                 sregs.write(inst['rd'], mem.read_data(sregs.read(inst['rs1']) + inst['imm']))
             elif(m == "sw.s"):
-                # print("LOOK AT THIS")
-                # # print(sregs.read(inst['rs1']) + inst['imm'], inst['rd'])
-                # # print(sregs.read(inst['rd']), sregs.read(inst['rs1']) + inst['imm'])
-                # print(sregs.read(inst['rs1']) + inst['imm'])
-                # print(sregs.read(inst['rd']))
-
                 mem.write_data(sregs.read(inst['rs1']) + inst['imm'], sregs.read(inst['rd']))
             #vector load/store here
             elif m == "vreg.ld":
@@ -240,37 +242,57 @@ def main():
                 if(m == "add.s" or m == "add.bf"):
                     src1 = sregs.read(inst['rs1'])
                     src2 = sregs.read(inst['rs2'])
+                    if(m == "add.bf"):
+                        src1 = hex_to_fp32(src1)
+                        src2 = hex_to_fp32(src2)
                 else:
                     src1 = sregs.read(inst['rs1'])
                     src2 = inst['imm']
                 WBdata = EU.execute(m, sA=src1, sB=src2)
+                if(m == "add.bf"):
+                    WBdata = fp32_to_hex(WBdata)
                 sregs.write(inst['rd'], WBdata)
             elif m in ("sub.s", "subi.s", "sub.bf"):
                 if(m == "sub.s" or m == "sub.bf"):
                     src1 = sregs.read(inst['rs1'])
                     src2 = sregs.read(inst['rs2'])
+                    if(m == "sub.bf"):
+                        src1 = hex_to_fp32(src1)
+                        src2 = hex_to_fp32(src2)
                 else:
                     src1 = sregs.read(inst['rs1'])
                     src2 = inst['imm']
                 WBdata = EU.execute(m, sA=src1, sB=src2)
+                if(m == "sub.bf"):
+                    WBdata = fp32_to_hex(WBdata)
                 sregs.write(inst['rd'], WBdata)
             elif m in ("mul.s", "muli.s", "mul.bf"):
                 if(m == "mul.s" or m == "mul.bf"):
                     src1 = sregs.read(inst['rs1'])
                     src2 = sregs.read(inst['rs2'])
+                    if(m == "mul.bf"):
+                        src1 = hex_to_fp32(src1)
+                        src2 = hex_to_fp32(src2)
                 else:
                     src1 = sregs.read(inst['rs1'])
                     src2 = inst['imm']
                 WBdata = EU.execute(m, sA=src1, sB=src2)
+                if(m == "mul.bf"):
+                    WBdata = fp32_to_hex(WBdata)
                 sregs.write(inst['rd'], WBdata)
             elif m in ("div.s", "divi.s", "div.bf"):
                 if(m == "div.s" or m == "div.bf"):
                     src1 = sregs.read(inst['rs1'])
                     src2 = sregs.read(inst['rs2'])
+                    if(m == "div.bf"):
+                        src1 = hex_to_fp32(src1)
+                        src2 = hex_to_fp32(src2)
                 else:
                     src1 = sregs.read(inst['rs1'])
                     src2 = inst['imm']
                 WBdata = EU.execute(m, sA=src1, sB=src2)
+                if(m == "div.bf"):
+                    WBdata = fp32_to_hex(WBdata)
                 sregs.write(inst['rd'], WBdata)
             elif m in ("mod.s", "modi.s"):
                 if(m == "mod.s"):
@@ -339,33 +361,45 @@ def main():
                 if(m == "slt.s" or m == "slt.bf"):
                     src1 = sregs.read(inst['rs1'])
                     src2 = sregs.read(inst['rs2'])
+                    if(m == "slt.bf"):
+                        src1 = hex_to_fp32(src1)
+                        src2 = hex_to_fp32(src2)
                 else:
                     src1 = sregs.read(inst['rs1'])
                     src2 = inst['imm']
                 WBdata = EU.execute(m, sA=src1, sB=src2)
+                if(m == "slt.bf"):
+                    WBdata = fp32_to_hex(WBdata)
                 sregs.write(inst['rd'], WBdata)
             elif m in ("sltu.s", "sltui.s", "sltu.bf"):
                 if(m == "sltu.s" or m == "sltu.bf"):
                     src1 = sregs.read(inst['rs1'])
                     src2 = sregs.read(inst['rs2'])
+                    if(m == "sltu.bf"):
+                        src1 = hex_to_fp32(src1)
+                        src2 = hex_to_fp32(src2)
                 else:
                     src1 = sregs.read(inst['rs1'])
                     src2 = inst['imm']
                 WBdata = EU.execute(m, sA=src1, sB=src2)
+                if(m == "sltu.bf"):
+                    WBdata = fp32_to_hex(WBdata)
                 sregs.write(inst['rd'], WBdata)
             elif m == "stbf.s":
                 src1 = sregs.read(inst['rs1'])
-                #WBdata = EU.execute(m, sA=src1, sB=src2)
-                #sregs.write(inst['rd'], WBdata)
+                src1 = np.float32(src1)
+                temp = fp32_to_hex(src1)
+                sregs.write(inst['rd'], temp)
             elif m == "bfts.s":
                 src1 = sregs.read(inst['rs1'])
-                #WBdata = EU.execute(m, sA=src1, sB=src2)
-                #sregs.write(inst['rd'], WBdata)
+                src1 = hex_to_fp32(src1)
+                src1 = np.int32(src1)
+                sregs.write(inst['rd'], src1)
             # ---------------- VV (Vector-Vector) ----------------
             elif m.endswith(".vv"):
                 # ------------ GEMM ------------------------------
                 if (m == "gemm.vv"):
-                    vregs.write(inst['vd'], vregs.read(inst['vs1']) @ weights + vregs.read(inst['vs2']))
+                    vregs.write(inst['vd'], vregs.read(inst['vs1']) @ gemm_weights + vregs.read(inst['vs2']))
                 else:
                     src1 = vregs.read(inst['vs1'])
                     src2 = vregs.read(inst['vs2'])
@@ -374,15 +408,25 @@ def main():
                     old_vec = vregs.read(inst['vd'])
                     new_vec = apply_mask(v1=old_vec, v2=WBdata, mask=mask)
                     vregs.write(inst['vd'], new_vec)
+            # ---------------- VI (WEIGHTS ONLY) ----------------
+            elif (m == "lw.vi"):
+                src1 = vregs.read(inst['vs1'])
+                src2 = inst['imm']
+                gemm_weights[:, src2] = src1
+            elif (m == "vmov.vi"): #wrong no rd
+                src1 = vregs.read(inst['vs1'])
+                temp = fp32_to_hex(src1[inst['imm']])
+                #print(temp)
+                sregs.write(inst['vd'], temp)
             # ---------------- VI (Vector-Immediate) ----------------
-            elif m.endswith(".vi"):
-                src1 = sregs.read(inst['vs1'])
+            elif m.endswith(".vi") and (m != "lw.vi") and (m != "vmov.vi"):
+                src1 = vregs.read(inst['vs1'])
                 src2 = inst['imm']
                 if(m == 'shift.vi'):
                     slr = (src2 >> 5) & 0b1
                     imm = src2 & 0b1_1111
-                elif (m == "lw.vi"):
-                    weights[:, i] = src1
+                    print(slr)
+                    print(imm)
                 else:
                     slr = 0
                     imm = src2
@@ -393,7 +437,7 @@ def main():
                     new_vec = apply_mask(v1=old_vec, v2=WBdata, mask=mask)
                 else:
                     new_vec = WBdata
-                vregs.write(inst['rd'], new_vec)
+                vregs.write(inst['vd'], new_vec)
             # ---------------- VS (Vector-Scalar) ----------------
             elif m.endswith(".vs"):
                 src1 = vregs.read(inst['vs1'])

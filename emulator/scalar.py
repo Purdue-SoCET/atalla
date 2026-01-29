@@ -229,34 +229,18 @@ class ScalarALU:
     # BF16 arithmetic
     # ----------------------------------------------------
     def addbf(self, a, b):
-        A = self._broadcast_bf16(a)
-        B = self._broadcast_bf16(b)
-        fa = self._bf16_to_float32(A)
-        fb = self._bf16_to_float32(B)
-        return self._float32_to_bf16(fa + fb)
+        return (a + b)
 
     def subbf(self, a, b):
-        A = self._broadcast_bf16(a)
-        B = self._broadcast_bf16(b)
-        fa = self._bf16_to_float32(A)
-        fb = self._bf16_to_float32(B)
-        return self._float32_to_bf16(fa - fb)
+        return (a - b)
 
     def mulbf(self, a, b):
-        A = self._broadcast_bf16(a)
-        B = self._broadcast_bf16(b)
-        fa = self._bf16_to_float32(A)
-        fb = self._bf16_to_float32(B)
-        return self._float32_to_bf16(fa * fb)
+        return (a * b)
 
     def divbf(self, a, b):
-        A = self._broadcast_bf16(a)
-        B = self._broadcast_bf16(b)
-        fb = self._bf16_to_float32(B)
-        if np.any(fb == 0.0):
+        if np.any(b == 0.0):
             raise ZeroDivisionError("BF16 division by zero")
-        fa = self._bf16_to_float32(A)
-        return self._float32_to_bf16(fa / fb)
+        return a / b
 
     # -------------------------
     # BF16 comparisons
@@ -265,20 +249,14 @@ class ScalarALU:
         """
         Signed float comparison: (float32(A) < float32(B)) ? 1 : 0
         """
-        A = self._broadcast_bf16(a)
-        B = self._broadcast_bf16(b)
-        fa = self._bf16_to_float32(A)
-        fb = self._bf16_to_float32(B)
-        return (fa < fb).astype(np.int32)
+        return (a < b).astype(np.int32)
 
     def sltubf(self, a, b):
         """
         Unsigned comparison on raw BF16 bit-patterns.
         (treat BF16 as uint16 and compare)
         """
-        A = self._broadcast_bf16(a).astype(np.uint16)
-        B = self._broadcast_bf16(b).astype(np.uint16)
-        return (A < B).astype(np.int32)
+        return (a < b).astype(np.int32)
 
     # -------------------------
     # Unified dispatch interface
