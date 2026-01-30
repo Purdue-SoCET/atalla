@@ -105,3 +105,4 @@ compile_veggie: $(OBJ_DIR)/veggie_test.o  $(OBJ_DIR)/veggie.o | $(BIN_DIR)
 clean:
 	rm -rf $(OBJ_DIR) $(BIN_DIR) $(VERILATOR_OBJ_DIR) $(VERILATOR_LOG)
 	rm *.txt
+	rm *.vcd
