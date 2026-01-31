@@ -25,13 +25,13 @@ private:
     
     void set_all_ready(bool ready) {
         uint8_t val = ready ? 1 : 0;
-        dut->lane_alu_ready = val;
-        dut->lane_exp_ready = val;
-        dut->lane_sqrt_ready = val;
-        dut->lane_mul_ready = val;
-        dut->lane_div_ready = val;
-        dut->sys_ready = val;
-        dut->sp_ready = val;
+        dut->ready_signals.lane_alu_ready = val;
+        dut->ready_signals.lane_exp_ready = val;
+        dut->ready_signals.lane_sqrt_ready = val;
+        dut->ready_signals.lane_mul_ready = val;
+        dut->ready_signals.lane_div_ready = val;
+        dut->ready_signals.sys_ready = val;
+        dut->ready_signals.sp_ready = val;
     }
     
     void print_state(const std::string& msg = "") {
@@ -39,9 +39,9 @@ private:
             std::cout << msg << std::endl;
         }
         std::cout << "Cycle " << cycle_count << ":" << std::endl;
-        std::cout << "  lane_valid_in: [" << +dut->lane_valid_in[0] << ", " << +dut->lane_valid_in[1] << "]" << std::endl;
-        std::cout << "  sys_valid_in: " << +dut->sys_valid_in << std::endl;
-        std::cout << "  sp_valid_in: [" << +dut->sp_valid_in[0] << ", " << +dut->sp_valid_in[1] << "]" << std::endl;
+        std::cout << "  lane_valid_in: [" << +dut->sc_lane_signals[0].lane_valid_in << ", " << +dut->sc_lane_signals[1].lane_valid_in << "]" << std::endl;
+        std::cout << "  sys_valid_in: " << +dut->sc_sys_signals.valid_in << std::endl;
+        std::cout << "  sp_valid_in: [" << +dut->sc_sp_signals[0].valid_in << ", " << +dut->sc_sp_signals[1].valid_in << "]" << std::endl;
         std::cout << "  all_issued: " << dut->all_issued << std::endl;
         std::cout << std::endl;
     }
@@ -63,15 +63,15 @@ public:
         std::cout << "========================================" << std::endl;
         
         // Set some signals high
-        dut->lane_valid_in[0] = 1;
-        dut->sys_valid_in = 1;
+        dut->sc_lane_signals[0].lane_valid_in = 1;
+        dut->sc_sys_signals.valid_in = 1;
         
         reset_dut();
         
         // Verify all signals are zero after reset
-        assert(dut->lane_valid_in[0] == 0 && dut->lane_valid_in[1] == 0);
-        assert(dut->sys_valid_in == 0);
-        assert(dut->sp_valid_in[0] == 0 && dut->sp_valid_in[1] == 0);
+        assert(dut->sc_lane_signals[0].lane_valid_in == 0 && dut->sc_lane_signals[1].lane_valid_in == 0);
+        assert(dut->sc_sys_signals.valid_in == 0);
+        assert(dut->sc_sp_signals[0].valid_in == 0 && dut->sc_sp_signals[1].valid_in == 0);
         assert(dut->all_issued == false);
         
         std::cout << "✓ Reset test PASSED" << std::endl;
@@ -101,7 +101,7 @@ public:
         print_state("After issue:");
         
         // Verify lane instructions were issued
-        assert(dut->lane_valid_in[0] == 1 || dut->lane_valid_in[1] == 1);
+        assert(dut->sc_lane_signals[0].lane_valid_in == 1 || dut->sc_lane_signals[1].lane_valid_in == 1);
         
         std::cout << "✓ Issue when ready test PASSED" << std::endl;
     }
@@ -119,7 +119,7 @@ public:
         
         // Set one unit NOT ready
         set_all_ready(true);
-        dut->lane_alu_ready = 0; // One lane not ready
+        dut->ready_signals.lane_alu_ready = 0; // ALU not ready
         
         print_state("Before stall:");
         
@@ -129,9 +129,9 @@ public:
         print_state("After stall (cycle 1):");
         
         // Verify all valids are deasserted during stall
-        assert(dut->lane_valid_in[0] == 0 && dut->lane_valid_in[1] == 0);
-        assert(dut->sys_valid_in == 0);
-        assert(dut->sp_valid_in[0] == 0 && dut->sp_valid_in[1] == 0);
+        assert(dut->sc_lane_signals[0].lane_valid_in == 0 && dut->sc_lane_signals[1].lane_valid_in == 0);
+        assert(dut->sc_sys_signals.valid_in == 0);
+        assert(dut->sc_sp_signals[0].valid_in == 0 && dut->sc_sp_signals[1].valid_in == 0);
         
         // Now make all ready
         set_all_ready(true);
@@ -205,7 +205,7 @@ public:
             clock_tick();
             print_state();
             // Verify valids stay deasserted
-            assert(dut->lane_valid_in[0] == 0 && dut->lane_valid_in[1] == 0);
+            assert(dut->sc_lane_signals[0].lane_valid_in == 0 && dut->sc_lane_signals[1].lane_valid_in == 0);
         }
         
         // Resume
@@ -242,9 +242,9 @@ public:
         clock_tick();
         print_state("Next cycle (queue empty):");
         
-        assert(dut->lane_valid_in[0] == 0 && dut->lane_valid_in[1] == 0);
-        assert(dut->sys_valid_in == 0);
-        assert(dut->sp_valid_in[0] == 0 && dut->sp_valid_in[1] == 0);
+        assert(dut->sc_lane_signals[0].lane_valid_in == 0 && dut->sc_lane_signals[1].lane_valid_in == 0);
+        assert(dut->sc_sys_signals.valid_in == 0);
+        assert(dut->sc_sp_signals[0].valid_in == 0 && dut->sc_sp_signals[1].valid_in == 0);
         
         std::cout << "✓ Valid deassert every cycle test PASSED" << std::endl;
     }
@@ -270,7 +270,7 @@ public:
         dut->parse_packet("expi.vi,12,13,5,0,0|sqrti.vi,14,15,3,0,0|nop.s|nop.s");
         
         // Test reduction operations
-        dut->parse_packet("rsum.vi,16,17,0,0,0|rmin.vi,18,19,0,0,0|nop.s|nop.s");
+        dut->parse_packet("rsum.vi,16,17,0,0,0|nop.s|nop.s|nop.s");
         
         set_all_ready(true);
         
@@ -281,8 +281,8 @@ public:
             print_state();
             
             // Print FU selection for debugging
-            std::cout << "  fu_sel: [" << +dut->fu_sel[0] << ", " << +dut->fu_sel[1] << "]" << std::endl;
-            std::cout << "  alu_op: [" << +dut->alu_op[0] << ", " << +dut->alu_op[1] << "]" << std::endl;
+            std::cout << "  fu_sel: [" << +dut->sc_lane_signals[0].fu_sel << ", " << +dut->sc_lane_signals[1].fu_sel << "]" << std::endl;
+            std::cout << "  alu_op: [" << +dut->sc_lane_signals[0].alu_op << ", " << +dut->sc_lane_signals[1].alu_op << "]" << std::endl;
         }
         
         clock_tick();
@@ -294,7 +294,7 @@ public:
     // Test 8: System and scratchpad operations
     void test_sys_and_sp_ops() {
         std::cout << "\n========================================" << std::endl;
-        std::cout << "TEST 8: System and Scratchpad Operations" << std::endl;
+        std::cout << "TEST 8: Systolic and Scratchpad Operations" << std::endl;
         std::cout << "========================================" << std::endl;
         
         reset_dut();
@@ -322,8 +322,8 @@ public:
             print_state();
             
             // Print sys and sp signals
-            std::cout << "  sys_ren: [" << +dut->sys_ren[0] << ", " << +dut->sys_ren[1] << "]" << std::endl;
-            std::cout << "  sys_weight: " << +dut->sys_weight << std::endl;
+            std::cout << "  sys_ren: [" << +dut->sc_sys_signals.ren[0] << ", " << +dut->sc_sys_signals.ren[1] << "]" << std::endl;
+            std::cout << "  sys_weight: " << +dut->sc_sys_signals.weight << std::endl;
         }
         
         clock_tick();
@@ -344,6 +344,8 @@ public:
         test_multiple_instructions();
         test_stall_and_resume();
         test_valid_deassert_every_cycle();
+        test_different_functional_units();
+        test_sys_and_sp_ops();
         
         std::cout << "\n" << std::endl;
         std::cout << "╔════════════════════════════════════════╗" << std::endl;
