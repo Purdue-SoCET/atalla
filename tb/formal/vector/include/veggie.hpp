@@ -149,7 +149,7 @@ public:
 
     */
 
-    std::array<uint8_t, 8> scalars  = {0, 1, 2, 3, 4, 5, 6, 7};
+    std::array<uint8_t, 8> scalars  = {0, 1, 2, 3, 4, 5, 6, 7}; //fake scalars for broadcasting
 
     
     static inline const std::string default_folder = "./results/";
