@@ -80,6 +80,7 @@ logic [15:0] high_op, low_op;
 logic [4:0] high_exp, low_exp;
 logic [12:0] mant_hi, mant_lo;
 logic [12:0] mant_lo_aligned;
+logic [12:0] mask_align;
 logic sticky_align_local;
 logic sticky_lost;  // True if sticky bits exist but weren't added (bit0 was already 1)
 logic [4:0] exp_diff, exp_max;
@@ -106,24 +107,24 @@ always_comb begin : align_operands
     mant_lo_aligned = 13'd0;
     sticky_align_local = 1'b0;
     sticky_lost = 1'b0;
+    mask_align = 13'd0;
     
-    // Optimization C: Use shift-left-then-reduce for sticky (no subtract, no AND plane)
     if (exp_diff >= 5'd13) begin
         mant_lo_aligned = 13'd0;
         mant_lo_aligned[0] = |mant_lo;
-        sticky_align_local = |mant_lo;
         sticky_lost = 1'b0;  // All bits go to sticky, nothing lost
     end
     else if (exp_diff == 5'd0) begin
         mant_lo_aligned = mant_lo;
-        sticky_align_local = 1'b0;
         sticky_lost = 1'b0;
     end
     else begin
         mant_lo_aligned = mant_lo >> exp_diff;
-        // Fast sticky: shift left to isolate bits that will be lost, then reduce
-        sticky_align_local = |(mant_lo << (5'd13 - exp_diff));
+        mask_align = (13'd1 << exp_diff) - 13'd1;
+        sticky_align_local = |(mant_lo & mask_align);
         // Track if sticky bits exist but bit0 was already 1 (so OR doesn't add them)
+        // sticky_lost: bits shifted out, but bit0 was already 1 thus we subtract less than true thusresult too large
+        // sticky_added: bits shifted out, bit0 was 0, we added 1 thus we subtract more than true thus result too small
         sticky_lost = sticky_align_local & mant_lo_aligned[0];
         mant_lo_aligned[0] = mant_lo_aligned[0] | sticky_align_local;
     end
@@ -136,7 +137,6 @@ always_comb begin : align_operands
 end
 
 // step 4: Add mantissae
-// Optimization B: Skip magnitude compare when signs are the same
 logic [12:0] smaller_mantissa, larger_mantissa;
 logic [13:0] mantissa_sum;
 logic larger_mantissa_sign;
@@ -145,33 +145,26 @@ logic sub_has_lost_sticky;  // True if subtrahend has lost sticky bits (result i
 logic sub_has_added_sticky; // True if subtrahend has added sticky bit (result is too small)
 
 always_comb begin : mantissa_compare
-    signs_differ = sign_shifted ^ sign_not_shifted;
-    
-    if (!signs_differ) begin
-        // same sign: no magnitude compare needed, just add in aligned order
-        larger_mantissa = frac_not_shifted;   // mant_hi (higher exponent)
-        smaller_mantissa = frac_shifted;      // aligned low
-        larger_mantissa_sign = sign_not_shifted;
+    if (frac_shifted > frac_not_shifted) begin
+        smaller_mantissa = frac_not_shifted;
+        larger_mantissa = frac_shifted;
+        larger_mantissa_sign = sign_shifted;
+        // In subtraction, smaller is subtrahend. Here smaller=frac_not_shifted (no sticky issues)
         sub_has_lost_sticky = 1'b0;
         sub_has_added_sticky = 1'b0;
     end
     else begin
-        // diff signs: must compare magnitudes for subtraction
-        if (frac_shifted > frac_not_shifted) begin
-            smaller_mantissa = frac_not_shifted;
-            larger_mantissa = frac_shifted;
-            larger_mantissa_sign = sign_shifted;
-            sub_has_lost_sticky = 1'b0;
-            sub_has_added_sticky = 1'b0;
-        end
-        else begin
-            smaller_mantissa = frac_shifted;
-            larger_mantissa = frac_not_shifted;
-            larger_mantissa_sign = sign_not_shifted;
-            sub_has_lost_sticky = sticky_lost;
-            sub_has_added_sticky = sticky_align_local & ~sticky_lost;
-        end
+        smaller_mantissa = frac_shifted;
+        larger_mantissa = frac_not_shifted;
+        larger_mantissa_sign = sign_not_shifted;
+        // In subtraction, smaller is subtrahend. Here smaller=frac_shifted
+        // sticky_lost: we subtracted less than true value, result is too large
+        // sticky_added: we subtracted more than true value, result is too small
+        sub_has_lost_sticky = sticky_lost;
+        sub_has_added_sticky = sticky_align_local & ~sticky_lost;  // sticky exists but wasn't lost
     end
+
+    signs_differ = sign_shifted ^ sign_not_shifted;
 end
 
 // register values here, before addition
@@ -295,16 +288,13 @@ end
 // For subtraction with sticky handling:
 // - sub_has_lost_sticky: result is TOO LARGE, true is below computed so round DOWN
 // - sub_has_added_sticky: result is TOO SMALL, true is above computed so round UP
-
-// Optimization A: Fast carry detection using AND-tree instead of ripple carry
-// This removes the LSB->MSB carry dependency from the exponent path
 logic round_inc;
-logic [9:0] frac_pre;
-logic [9:0] frac_inc;
-logic frac_carry_fast;
+logic [10:0] frac_sum;
+logic frac_carry;
 logic [5:0] exp_out;
 logic [9:0] rounded_fraction;
 
+// Logic needed to remove those nasty edge cases 
 always_comb begin : rounding_logic
     if (signs_differ_l && sub_has_lost_sticky_l && round_this[1] && !round_this[0]) begin
         // Subtraction case: guard=1, sticky=0, but subtrahend had lost sticky
@@ -321,16 +311,10 @@ always_comb begin : rounding_logic
         round_inc = round_this[1] & (round_this[0] | round_this[2]);
     end
     
-    frac_pre = round_this[11:2];
-    
-    // Fast carry: carry out of +1 happens iff all bits are 1 and we increment
-    frac_carry_fast = round_inc & (&frac_pre);
-    
-    // Fraction still uses incrementer, but exponent no longer depends on carry chain
-    frac_inc = frac_pre + {9'b0, round_inc};
-    
-    exp_out = exp_base + {5'd0, frac_carry_fast};
-    rounded_fraction = frac_carry_fast ? 10'd0 : frac_inc;
+    frac_sum = {1'b0, round_this[11:2]} + {10'd0, round_inc};
+    frac_carry = frac_sum[10];
+    exp_out = exp_base + {5'd0, frac_carry};
+    rounded_fraction = frac_carry ? 10'd0 : frac_sum[9:0];
 end
 
 // Final output with FTZ and overflow handling
