@@ -1,0 +1,75 @@
+
+                                  Leakage    Internal                                  Library 
+   Gate    Instances    Area    Power (nW)  Power (nW)              Library             Domain 
+-----------------------------------------------------------------------------------------------
+addf_1x           50    892.160    427.555   327738.555    MITLL90_STDLIB_8T.tt1p2v25c       0 
+addh_1x           30    314.880    213.625   109265.718    MITLL90_STDLIB_8T.tt1p2v25c       0 
+and2_1x           61    256.102    213.416    93853.442    MITLL90_STDLIB_8T.tt1p2v25c       0 
+and2_2x            3     15.744     16.555     9296.478    MITLL90_STDLIB_8T.tt1p2v25c       0 
+and2_4x            1      7.347     10.126      334.104    MITLL90_STDLIB_8T.tt1p2v25c       0 
+and3_1x           17    107.059     51.529    20925.255    MITLL90_STDLIB_8T.tt1p2v25c       0 
+and3_2x            3     22.042     15.677     7373.239    MITLL90_STDLIB_8T.tt1p2v25c       0 
+ao21_1x           16     83.968     64.099    29014.136    MITLL90_STDLIB_8T.tt1p2v25c       0 
+ao21_2x            1      6.298      4.601     3539.591    MITLL90_STDLIB_8T.tt1p2v25c       0 
+ao22_1x           15    110.208     57.499    41771.721    MITLL90_STDLIB_8T.tt1p2v25c       0 
+ao22_2x            2     16.794     11.768     9316.194    MITLL90_STDLIB_8T.tt1p2v25c       0 
+aoi21_1x          56    235.110    113.739    72572.847    MITLL90_STDLIB_8T.tt1p2v25c       0 
+aoi21_2x          12     88.166     45.592    29188.075    MITLL90_STDLIB_8T.tt1p2v25c       0 
+aoi21_4x           5     68.224     40.442    21664.502    MITLL90_STDLIB_8T.tt1p2v25c       0 
+aoi22_1x          54    283.392     76.307    58221.309    MITLL90_STDLIB_8T.tt1p2v25c       0 
+aoi22_2x           5     52.480     22.317    15252.784    MITLL90_STDLIB_8T.tt1p2v25c       0 
+buf_1x            11     34.637     30.653    15210.457    MITLL90_STDLIB_8T.tt1p2v25c       0 
+buf_2x             6     25.190     32.099    16516.667    MITLL90_STDLIB_8T.tt1p2v25c       0 
+buf_4x             1      6.298      7.826     5142.471    MITLL90_STDLIB_8T.tt1p2v25c       0 
+buf_6x             1      9.446     14.044     8694.338    MITLL90_STDLIB_8T.tt1p2v25c       0 
+dffrq_1x         109   1830.502    754.737  1089626.624    MITLL90_STDLIB_8T.tt1p2v25c       0 
+inv_1x           304    638.157    529.172   144159.430    MITLL90_STDLIB_8T.tt1p2v25c       0 
+inv_2x            30     94.464    104.542    25743.749    MITLL90_STDLIB_8T.tt1p2v25c       0 
+inv_4x             6     31.488     42.627    12091.525    MITLL90_STDLIB_8T.tt1p2v25c       0 
+inv_6x             1      7.347     11.162     4052.506    MITLL90_STDLIB_8T.tt1p2v25c       0 
+inv_8x             1      9.446     13.333     5498.305    MITLL90_STDLIB_8T.tt1p2v25c       0 
+mux2_1x           59    433.485    226.834   144240.597    MITLL90_STDLIB_8T.tt1p2v25c       0 
+muxi2_1x          11     69.274     22.295    13252.397    MITLL90_STDLIB_8T.tt1p2v25c       0 
+nand2_1x         318   1001.318    452.006   156221.101    MITLL90_STDLIB_8T.tt1p2v25c       0 
+nand2_2x          62    325.376    191.067    70303.287    MITLL90_STDLIB_8T.tt1p2v25c       0 
+nand2_4x          22    207.821    122.639    49821.404    MITLL90_STDLIB_8T.tt1p2v25c       0 
+nand3_1x          47    197.325     66.318    28219.919    MITLL90_STDLIB_8T.tt1p2v25c       0 
+nand3_2x           6     50.381     23.090     7290.490    MITLL90_STDLIB_8T.tt1p2v25c       0 
+nand3_4x           5     73.472     43.917    14956.862    MITLL90_STDLIB_8T.tt1p2v25c       0 
+nor2_1x           91    286.541    125.703    58148.259    MITLL90_STDLIB_8T.tt1p2v25c       0 
+nor2_2x           16     83.968     38.252    17841.305    MITLL90_STDLIB_8T.tt1p2v25c       0 
+nor2_4x           15    141.696     78.064    28999.346    MITLL90_STDLIB_8T.tt1p2v25c       0 
+nor3_1x           35    146.944     34.956    25267.954    MITLL90_STDLIB_8T.tt1p2v25c       0 
+oa21_1x           17     89.216     72.865    43069.873    MITLL90_STDLIB_8T.tt1p2v25c       0 
+oa21_2x            7     44.083     42.359    29223.003    MITLL90_STDLIB_8T.tt1p2v25c       0 
+oa21_4x            1      8.397      9.180     6363.820    MITLL90_STDLIB_8T.tt1p2v25c       0 
+oa22_1x            5     36.736     17.356    16153.072    MITLL90_STDLIB_8T.tt1p2v25c       0 
+oa22_2x            1      8.397      4.384     4773.510    MITLL90_STDLIB_8T.tt1p2v25c       0 
+oai21_1x          84    352.666    223.669    94476.524    MITLL90_STDLIB_8T.tt1p2v25c       0 
+oai21_2x          13     95.514     44.509    20729.165    MITLL90_STDLIB_8T.tt1p2v25c       0 
+oai21_4x           5     68.224     48.340    26417.316    MITLL90_STDLIB_8T.tt1p2v25c       0 
+oai22_1x          62    325.376    133.224    66682.596    MITLL90_STDLIB_8T.tt1p2v25c       0 
+oai22_4x           1     18.893      7.238     7011.276    MITLL90_STDLIB_8T.tt1p2v25c       0 
+or2_1x            19     79.770     52.257    27018.903    MITLL90_STDLIB_8T.tt1p2v25c       0 
+or3_1x             7     44.083     16.181     4754.747    MITLL90_STDLIB_8T.tt1p2v25c       0 
+or3_2x             1      7.347      3.123      912.315    MITLL90_STDLIB_8T.tt1p2v25c       0 
+sdffrq_1x         60   1259.520    528.481   589131.996    MITLL90_STDLIB_8T.tt1p2v25c       0 
+xnor2_1x          73    536.346    283.620   130965.276    MITLL90_STDLIB_8T.tt1p2v25c       0 
+xnor2_4x           4     67.174     38.656    25891.166    MITLL90_STDLIB_8T.tt1p2v25c       0 
+xor2_1x           46    337.971    174.541    86577.516    MITLL90_STDLIB_8T.tt1p2v25c       0 
+xor2_2x            4     41.984     22.523    15690.504    MITLL90_STDLIB_8T.tt1p2v25c       0 
+-----------------------------------------------------------------------------------------------
+total           1898  11686.246   6072.691  3986469.521                                
+
+
+                                            Leakage  Leakage   Internal  Internal 
+     Type      Instances    Area   Area % Power (nW) Power %  Power (nW)  Power % 
+----------------------------------------------------------------------------------
+sequential           169  3090.022   26.4   1283.218    21.1 1678758.621     42.1 
+inverter             342   780.902    6.7    700.836    11.5  191545.515      4.8 
+buffer                19    75.571    0.6     84.623     1.4   45563.934      1.1 
+logic               1368  7739.750   66.2   4004.014    65.9 2070601.451     51.9 
+physical_cells         0     0.000    0.0      0.000     0.0       0.000      0.0 
+----------------------------------------------------------------------------------
+total               1898 11686.246  100.0   6072.691   100.0 3986469.521    100.0 
+

@@ -1,0 +1,13 @@
+
+#-------------------------------------------------------------------------
+#  ID Slack                Endpoint                  Group       View     
+#      (ps)                                                               
+#-------------------------------------------------------------------------
+    1     0   mul_result_latched_reg[8]/D            clock1   view_1p2_25 
+    2     0   mul_result_latched_reg[7]/D            clock1   view_1p2_25 
+    3     0   mul_result_latched_reg[6]/D            clock1   view_1p2_25 
+    4     0   add_core_smaller_mantissa_l_reg[3]/D   clock1   view_1p2_25 
+    5     0   mul_result_latched_reg[4]/D            clock1   view_1p2_25 
+#-------------------------------------------------------------------------
+
+
