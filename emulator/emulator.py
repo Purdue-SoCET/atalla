@@ -80,7 +80,7 @@ def apply_imm_vector_op(
 
 
 def main():
-    mem_file = "Testing/TestFiles/sdmavectorls_reduce_add.txt" # need to change this to target different mem test files
+    mem_file = "Testing/TestFiles/gemm.txt" # need to change this to target different mem test files
     out_file = "output_mem.txt"
     out_sreg_file = "output_sregs.txt"
     out_vreg_file = "output_vregs.txt"
@@ -104,6 +104,7 @@ def main():
     mregs = ScalarRegisterFile(num_regs=16)
     vregs = VectorRegisterFile()
     gemm_weights = np.zeros((32, 32))
+    num_weights = 0
     pc = 0x00000000  # Program Counter, starts at address 0
 
     #eecute object
@@ -445,8 +446,16 @@ def main():
             # ---------------- VI (WEIGHTS ONLY) ----------------
             elif (m == "lw.vi"):
                 src1 = vregs.read(inst['vs1'])
-                src2 = inst['imm']
-                gemm_weights[:, src2] = src1
+    
+                if num_weights < 32:
+                    # Initial fill: Place at the next available slot from left to right
+                    gemm_weights[:, num_weights] = src1
+                    num_weights += 1
+                else:
+                    # Matrix is full: Shift everything to the right and insert at the left (index 0)
+                    # gemm_weights[:, 1:] moves columns 0-30 to positions 1-31
+                    gemm_weights[:, 1:] = gemm_weights[:, :-1]
+                    gemm_weights[:, 0] = src1
             elif (m == "vmov.vi"): #wrong no rd
                 src1 = vregs.read(inst['vs1'])
                 temp = fp32_to_hex(src1[inst['imm']])
