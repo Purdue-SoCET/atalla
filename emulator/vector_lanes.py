@@ -302,44 +302,92 @@ class VectorLanes:
 
 
     # ---- reductions ----
-    def reduce_sum(self, a: np.ndarray) -> np.ndarray:
+    def _bit_is_set(self, mask: int, i: int) -> bool:
+        return ((int(mask) >> i) & 1) == 1
+
+
+    def reduce_sum(self, a: np.ndarray, mask: int) -> np.ndarray:
         a = self._ensure_vec(a)
         L = a.size
         q = self._q(a)
+
         partial = None
+        step = 0
         for s, e in iterate_chunks(L, self.reducers):
+            if not self._bit_is_set(mask, step):
+                step += 1
+                continue
+
             chunk_sum = np.sum(q[s:e].astype(np.float32), dtype=np.float32)
             chunk_sum_q = to_bf16(np.array([chunk_sum]), rounding=self.bf16_rounding)[0]
+
             if partial is None:
                 partial = chunk_sum_q
             else:
                 partial = to_bf16(np.array([partial + chunk_sum_q]), rounding=self.bf16_rounding)[0]
+
+            step += 1
+
+        if partial is None:
+            # no enabled steps
+            return np.array(0.0, dtype=np.float32)
+
         return np.array(partial, dtype=np.float32)
 
-    def reduce_max(self, a: np.ndarray) -> np.ndarray:
+
+    def reduce_max(self, a: np.ndarray, mask: int) -> np.ndarray:
         a = self._ensure_vec(a)
         q = self._q(a)
+
         cur = None
+        step = 0
         for s, e in iterate_chunks(q.size, self.reducers):
+            if not self._bit_is_set(mask, step):
+                step += 1
+                continue
+
             chunk_max = np.max(q[s:e].astype(np.float32))
             chunk_max_q = to_bf16(np.array([chunk_max]), rounding=self.bf16_rounding)[0]
+
             if cur is None:
                 cur = chunk_max_q
             else:
                 cur = to_bf16(np.array([max(cur, chunk_max_q)]), rounding=self.bf16_rounding)[0]
+
+            step += 1
+
+        if cur is None:
+            # no enabled steps
+            return np.array(-np.inf, dtype=np.float32)
+
         return np.array(cur, dtype=np.float32)
 
-    def reduce_min(self, a: np.ndarray) -> np.ndarray:
+
+    def reduce_min(self, a: np.ndarray, mask: int) -> np.ndarray:
         a = self._ensure_vec(a)
         q = self._q(a)
+
         cur = None
+        step = 0
         for s, e in iterate_chunks(q.size, self.reducers):
+            if not self._bit_is_set(mask, step):
+                step += 1
+                continue
+
             chunk_min = np.min(q[s:e].astype(np.float32))
             chunk_min_q = to_bf16(np.array([chunk_min]), rounding=self.bf16_rounding)[0]
+
             if cur is None:
                 cur = chunk_min_q
             else:
                 cur = to_bf16(np.array([min(cur, chunk_min_q)]), rounding=self.bf16_rounding)[0]
+
+            step += 1
+
+        if cur is None:
+            # no enabled steps
+            return np.array(np.inf, dtype=np.float32)
+
         return np.array(cur, dtype=np.float32)
 
     # ---- BF16 bitwise ops on underlying BF16 bit-patterns ----
@@ -396,7 +444,7 @@ class VectorLanes:
     # -------------------------
     # Unified dispatch interface
     # -------------------------
-    def execute(self, op: str, vA=None, vB=None, sA=None, slr=None):
+    def execute(self, op: str, vA=None, vB=None, sA=None, slr=None, mask=None):
         new_op = op[:op.rfind(".")]
         type = op[op.rfind("."):]
         if(type == ".vv"):
@@ -429,9 +477,9 @@ class VectorLanes:
                     return self.shr_scalar(vA, int(sA))
                 else:
                     return self.shl_scalar(vA, int(sA))
-            if new_op == "rsum":    return self.reduce_sum(vA)
-            if new_op == "rmin":    return self.reduce_max(vA)
-            if new_op == "rmax":    return self.reduce_min(vA)
+            if new_op == "rsum":    return self.reduce_sum(vA, mask=mask)
+            if new_op == "rmin":    return self.reduce_max(vA, mask=mask)
+            if new_op == "rmax":    return self.reduce_min(vA, mask=mask)
             else:
                 raise ValueError(f"Unknown vector op '{new_op}'")
         elif(type == ".vs"):

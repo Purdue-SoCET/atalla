@@ -129,8 +129,9 @@ def sdma_load(
 
         # Read from GMEM
         for j in range(NC):
-            g_addr = gmem_base + (i * NC + j) * 4
+            g_addr = gmem_base + (i * NC + j) * 2
             raw_val = gmem.read_data(g_addr)
+            raw_val = raw_val << 16
 
             # 1. Pack the int into 4 bytes (little-endian 'I' for unsigned int)
             # 2. Unpack those 4 bytes as a float ('f')
@@ -175,8 +176,11 @@ def sdma_store(
                 break
 
             val = scpad.banks[bank][slot]
-            g_addr = gmem_base + (i * NC + j) * 4
-            gmem.write_data(g_addr, val)
+            bits = struct.unpack('<I', struct.pack('<f', val))[0]
+            bits = bits >> 16
+            #x_shifted = struct.unpack('<f', struct.pack('<I', bits & 0xFFFFFFFF))[0]
+            g_addr = gmem_base + (i * NC + j) * 2
+            gmem.write_data(g_addr, bits)
 
 
 def dump_scpad_rc(

@@ -176,7 +176,7 @@ class ExecuteUnit:
         # =======================================================
         if instr in MNEMONIC_VECTOR:
             op = MNEMONIC_VECTOR[instr]
-            return self.vec.execute(instr, vA, vB, sA, slr)
+            return self.vec.execute(instr, vA, vB, sA, slr, mask)
 
         # =======================================================
         # MATMUL

@@ -80,7 +80,7 @@ def apply_imm_vector_op(
 
 
 def main():
-    mem_file = "Testing/TestFiles/gemm.txt" # need to change this to target different mem test files
+    mem_file = "Testing/TestFiles/sdmavectorls_mask_slr.txt" # need to change this to target different mem test files
     out_file = "output_mem.txt"
     out_sreg_file = "output_sregs.txt"
     out_vreg_file = "output_vregs.txt"
@@ -184,6 +184,16 @@ def main():
                 sregs.write(inst['rd'], mem.read_data(sregs.read(inst['rs1']) + inst['imm']))
             elif(m == "sw.s"):
                 mem.write_data(sregs.read(inst['rs1']) + inst['imm'], sregs.read(inst['rd']))
+            elif(m == "lhw.s"):
+                temp = mem.read_data(sregs.read(inst['rs1']) + inst['imm'])
+                temp = temp << 16
+                fp32_val = struct.unpack('<f', struct.pack('<I', temp & 0xFFFFFFFF))[0]
+                sregs.write(inst['rd'], fp32_val)
+            elif(m == "shw.s"):
+                temp = sregs.read(inst['rd'])
+                bits = struct.unpack('<I', struct.pack('<f', temp))[0]
+                bits = bits >> 16
+                mem.write_data(sregs.read(inst['rs1']) + inst['imm'], bits)
             #vector load/store here
             elif m == "vreg.ld":
                 # # 1. Select Scratchpad based on 'sp' field (0=SP0, 1=SP1)
@@ -465,15 +475,15 @@ def main():
             elif m.endswith(".vi") and (m != "lw.vi") and (m != "vmov.vi"):
                 src1 = vregs.read(inst['vs1'])
                 src2 = inst['imm']
+                nmask = mregs.read(inst['mask'])
+                print(nmask)
                 if(m == 'shift.vi'):
                     slr = (src2 >> 5) & 0b1
                     imm = src2 & 0b1_1111
                 else:
                     slr = 0
                     imm = src2
-                WBdata = EU.execute(m, vA=src1, sA=imm, slr=slr)
-                print(WBdata)
-                mask = mregs.read(inst['mask'])
+                WBdata = EU.execute(m, vA=src1, sA=imm, slr=slr, mask=nmask)
                 old_vec = vregs.read(inst['vd'])
                 if(m != 'shift.vi' and m != 'rsum.vi' and m != 'rmin.vi' and m != 'rmax.vi'):
                     new_vec = apply_mask(v1=old_vec, v2=WBdata, mask=mask)
@@ -481,7 +491,6 @@ def main():
                     new_vec = apply_imm_vector_op(imm=imm, vs=src1, r_in=WBdata)
                 else:
                     new_vec = WBdata
-                print(new_vec)
                 vregs.write(inst['vd'], new_vec)
             # ---------------- VS (Vector-Scalar) ----------------
             elif m.endswith(".vs"):
