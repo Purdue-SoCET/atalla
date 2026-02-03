@@ -116,7 +116,7 @@ def decode_instruction(instr):
         # MI-Type: rd 7-14, imm25 15-39
         decoded.update({
             "rd":  get_bits(instr, 14, 7),
-            "imm": sign_extend(get_bits(instr, 39, 15) << 2, 25) #shift left to word align
+            "imm": sign_extend(get_bits(instr, 39, 15), 25) #shift left to word align
         })
 
     elif instr_type == "S":

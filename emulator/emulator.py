@@ -80,7 +80,7 @@ def apply_imm_vector_op(
 
 
 def main():
-    mem_file = "Testing/unit_tests/br.txt" # need to change this to target different mem test files
+    mem_file = "Testing/unit_tests/mvv.txt" # need to change this to target different mem test files
     out_file = "output_mem.txt"
     out_sreg_file = "output_sregs.txt"
     out_vreg_file = "output_vregs.txt"
@@ -273,8 +273,9 @@ def main():
                         tileID1Dict[inst['rs1/rd1']] = tile_id1
                         localID = tileID1Dict[inst['rs1/rd1']]
                     sdma_store(gmem=mem, scpad=SP1, scpad_base_row=sregs.read(inst['rs1/rd1']), gmem_base=sregs.read(inst['rs2']), tile_id=tile_id1, NR=inst['num_rows'], NC=inst['num_cols'])
-            elif(m == "lui.s"):
-                mem.write_data(inst['rd'], (inst['imm']<<7))
+            elif(m == "lui.s"): 
+                print(inst['imm'])
+                sregs.write(inst['rd'], (inst['imm']) << 7)
             elif(m == "mv.mts"):
                 sregs.write(inst['rd'], mregs.read(inst['vms']))
             elif(m == "mv.stm"):
