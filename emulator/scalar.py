@@ -249,14 +249,14 @@ class ScalarALU:
         """
         Signed float comparison: (float32(A) < float32(B)) ? 1 : 0
         """
-        return (a < b).astype(np.int32)
+        return (a < b)
 
     def sltubf(self, a, b):
         """
         Unsigned comparison on raw BF16 bit-patterns.
         (treat BF16 as uint16 and compare)
         """
-        return (a < b).astype(np.int32)
+        return (a < b)
 
     # -------------------------
     # Unified dispatch interface

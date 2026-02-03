@@ -74,10 +74,6 @@ OPCODES = {
     0b0110111: ("or.vv",   "VV"),
     0b0111000: ("xor.vv",  "VV"),
     0b0111001: ("gemm.vv", "VV"),
-    0b0111010: ("mgt.vv",  "VV"),
-    0b0111011: ("mlt.vv",  "VV"),
-    0b0111100: ("meq.vv",  "VV"),
-    0b0111101: ("mneq.vv", "VV"),
 
     # ---------------- VI-Type ----------------
     0b0111110: ("addi.vi", "VI"),
@@ -92,7 +88,6 @@ OPCODES = {
     0b1000111: ("rsum.vi", "VI"),
     0b1001000: ("rmin.vi", "VI"),
     0b1001001: ("rmax.vi", "VI"),
-    0b1001111: ("vmov.vi", "VI"),
 
     # ---------------- VS-Type ----------------
     0b0111000: ("shift.vs","VS"),  # vector lane shift scalar reg
@@ -100,10 +95,6 @@ OPCODES = {
     0b1010001: ("sub.vs", "VS"),
     0b1010010: ("mul.vs", "VS"),
     0b1010011: ("div.vs", "VS"),
-    0b1010100: ("mgt.vs", "VS"),
-    0b1010101: ("mlt.vs", "VS"),
-    0b1010110: ("meq.vs", "VS"),
-    0b1010111: ("mneq.vs","VS"),
 
     # ---------------- Mask/Move ----------------
     0b1001011: ("mv.mts", "MTS"),
@@ -114,5 +105,17 @@ OPCODES = {
     0b1001110: ("vreg.st", "VM"),
     # ---------------- SCPD-Type ----------------
     0b1011000: ("scpad.ld", "SDMA"), # 0x58
-    0b1011001: ("scpad.st", "SDMA"), # 0x59 
+    0b1011001: ("scpad.st", "SDMA"), # 0x59
+    # ---------------- VTS-Type ----------------
+    0b1001111: ("vmov.vts", "VTS"),
+    # ---------------- MVV-Type ----------------
+    0b0111010: ("mgt.mvv",  "MVV"),
+    0b0111011: ("mlt.mvv",  "MVV"),
+    0b0111100: ("meq.mvv",  "MVV"),
+    0b0111101: ("mneq.mvv", "MVV"),
+    # ---------------- MVS-Type ----------------
+    0b1010100: ("mgt.mvs", "MVS"),
+    0b1010101: ("mlt.mvs", "MVS"),
+    0b1010110: ("meq.mvs", "MVS"),
+    0b1010111: ("mneq.mvs","MVS"),
 }

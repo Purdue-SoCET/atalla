@@ -289,15 +289,15 @@ def encode_instruction(instr_dict):
         # VI-Type: vd 7-14, vs1 15-22, imm8 23-30, mask 31-34, imm5 35-39
         vd = instr_dict.get('vd', 0)
         vs1 = instr_dict.get('vs1', 0)
-        imm8 = instr_dict.get('imm8', 0)
+        imm8_1 = instr_dict.get('imm8_1', 0)
         mask = instr_dict.get('mask', 0)
-        imm5 = instr_dict.get('imm5', 0)
+        imm8_2 = instr_dict.get('imm8_2', 0)
         
         instruction |= (vd & 0xFF) << 7
         instruction |= (vs1 & 0xFF) << 15
-        instruction |= (imm8 & 0xFF) << 23
+        instruction |= (imm8_1 & 0xFF) << 23
         instruction |= (mask & 0xF) << 31
-        instruction |= (imm5 & 0x1F) << 35
+        instruction |= (imm8_2 & 0xFF) << 35
         
     elif instr_type == "VM":
         # VM-Type: vd 7-14, rs1 15-22, num_cols 23-27, num_rows 28-32, sid 33, rc 34, rc_id 35-39
@@ -346,34 +346,44 @@ def encode_instruction(instr_dict):
         
         instruction |= (vmd & 0xFF) << 7
         instruction |= (rs1 & 0xFF) << 15
+
+    elif instr_type == "VTS":
+        imm8 = instr_dict.get('imm8', 0)
+        vs1 = instr_dict.get('vs1', 0)
+        rd = instr_dict.get('rd', 0)
+        
+        instruction |= (rd & 0xFF) << 7
+        instruction |= (vs1 & 0xFF) << 15
+        instruction |= (imm8 & 0xFF) << 23
+
+    elif instr_type == "MVV":
+        vmd = instr_dict.get('vmd', 0)
+        vs1 = instr_dict.get('vs1', 0)
+        vs2 = instr_dict.get('vs2', 0)
+        mask = instr_dict.get('mask', 0)
+        
+        instruction |= (vmd & 0xF) << 7
+        instruction |= (vs1 & 0xFF) << 11
+        instruction |= (vs2 & 0xFF) << 19
+        instruction |= (mask & 0xF) << 27
+
+    elif instr_type == "MVS":
+        vmd = instr_dict.get('vmd', 0)
+        vs1 = instr_dict.get('vs1', 0)
+        rs1 = instr_dict.get('rs1', 0)
+        mask = instr_dict.get('mask', 0)
+        
+        instruction |= (vmd & 0xF) << 7
+        instruction |= (vs1 & 0xFF) << 11
+        instruction |= (rs1 & 0xFF) << 19
+        instruction |= (mask & 0xF) << 27
     
-    # Convert to 40-bit hex (10 hex characters)
-    hex_str = format(instruction, '010x')
+    # Convert to 48-bit hex (12 hex characters)
+    hex_str = format(instruction, '012x')
     return hex_str
 
 # Test with your examples
-test1 = {'opcode': 0b0010110, 'rd': 8, 'rs1': 0, 'imm': 512} #0100000416
-test2 = {'opcode': 88, 'rs1/rd1': 0, 'rs2': 1, 'num_cols': 2, 'num_rows': 16, 'sid': 0} # 0101008058 
-test3 = {'opcode': 77, 'vd': 1, 'rs1': 0, 'num_cols': 1, 'num_rows': 0, 'sid': 0, 'rc': 1, 'rc_id': 0}
-test4 = {'opcode': 22, 'rd': 2, 'rs1': 0, 'imm': 10}
-test5 = {'opcode': 80, 'vd': 2, 'vs1': 1, 'rs1': 2, 'mask': 1}
-test6 = {'opcode': 78, 'vd': 2, 'rs1': 0, 'num_cols': 1, 'num_rows': 0, 'sid': 1, 'rc': 1, 'rc_id': 0}
-test7 = {'opcode': 89, 'rs1/rd1': 0, 'rs2': 8, 'num_cols': 2, 'num_rows': 16, 'sid': 0}
-test8 = {'opcode': 48} #halt
-test9= {'opcode': 0b0010000, 'rd': 4, 'rs1': 6, 'rs2': 5} #mul.bf
-test10 = {'opcode': 0b1001100, 'rs1': 8, 'vmd': 1}
-test11 = {'opcode': 0b1010110, 'mask':1, 'rs1': 2, 'vs1':1, 'vd':2}
-test12 = {'opcode': 0b1000111, 'imm5':7, 'mask': 0, 'imm8':1, 'vs1':1, 'vd':4}
+test1 = {'opcode': 0b1011011, 'imm12': 4, 'rs1': 0, 'rd': 3}
 
-print(f"Test 1 (expect 0100000416): {encode_instruction(test1)}") # 0100000416
-print(f"Test 2 (expect 0101008058): {encode_instruction(test2)}") # 0101008058 
-print(f"Test 3 (expect 04008000CD): {encode_instruction(test3)}")  
-print(f"Test 4 (expect 0005000116): {encode_instruction(test4)}")  
-print(f"Test 5 (expect 0001008150): {encode_instruction(test5)}")  
-print(f"Test 6 (expect 060080014E): {encode_instruction(test6)}")  
-print(f"Test 7 (expect 0101040059): {encode_instruction(test7)}")  
-print(f"Test 8 (expect 0000000030): {encode_instruction(test8)}")  
-print(f"Test 9 {encode_instruction(test9)}")
-print(f"Test 10 {encode_instruction(test10)}")
-print(f"Test 11 {encode_instruction(test11)}")
-print(f"Test 12 {encode_instruction(test12)}")  
+
+print(f"Instruction: {encode_instruction(test1)}")

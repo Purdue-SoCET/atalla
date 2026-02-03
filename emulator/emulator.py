@@ -80,7 +80,7 @@ def apply_imm_vector_op(
 
 
 def main():
-    mem_file = "Testing/TestFiles/sdmavectorls_mask_slr.txt" # need to change this to target different mem test files
+    mem_file = "Testing/unit_tests/bf_R.txt" # need to change this to target different mem test files
     out_file = "output_mem.txt"
     out_sreg_file = "output_sregs.txt"
     out_vreg_file = "output_vregs.txt"
@@ -140,46 +140,46 @@ def main():
                 br = True
                 if(m == "jal"):
                     brtarg = pc + (inst['imm'])
-                    sregs.write(inst['rd'], pc + 20)
+                    sregs.write(inst['rd'], pc + 24)
                 elif(m == "jalr"):
                     brtarg = sregs.read(inst['rs1']) + (inst['imm'])
-                    sregs.write(inst['rd'], pc + 20)
+                    sregs.write(inst['rd'], pc + 24)
                 elif(m == "beq.s"):
                     sregs.write(inst['rs1'], sregs.read(inst['rs1']) + inst['incr_imm'])
                     if(sregs.read(inst['rs1']) == sregs.read(inst['rs2'])):
                         brtarg = pc + (inst['imm'])
                     else:
-                        brtarg = pc + 20
+                        brtarg = pc + 24
                 elif(m == "bne.s"):
                     sregs.write(inst['rs1'], sregs.read(inst['rs1']) + inst['incr_imm'])
                     if(sregs.read(inst['rs1']) != sregs.read(inst['rs2'])):
                         brtarg = pc + (inst['imm'])
                     else:
-                        brtarg = pc + 20
+                        brtarg = pc + 24
                 elif(m == "blt.s"):
                     sregs.write(inst['rs1'], sregs.read(inst['rs1']) + inst['incr_imm'])
                     if(sregs.read(inst['rs1']) < sregs.read(inst['rs2'])):
                         brtarg = pc + (inst['imm'])
                     else:
-                        brtarg = pc + 20
+                        brtarg = pc + 24
                 elif(m == "bge.s"):
                     sregs.write(inst['rs1'], sregs.read(inst['rs1']) + inst['incr_imm'])
                     if(sregs.read(inst['rs1']) >= sregs.read(inst['rs2'])):
                         brtarg = pc + (inst['imm'])
                     else:
-                        brtarg = pc + 20
+                        brtarg = pc + 24
                 elif(m == "bgt.s"):
                     sregs.write(inst['rs1'], sregs.read(inst['rs1']) + inst['incr_imm'])
                     if(sregs.read(inst['rs1']) > sregs.read(inst['rs2'])):
                         brtarg = pc + (inst['imm'])
                     else:
-                        brtarg = pc + 20
+                        brtarg = pc + 24
                 elif(m == "ble.s"):
                     sregs.write(inst['rs1'], sregs.read(inst['rs1']) + inst['incr_imm'])
                     if(sregs.read(inst['rs1']) <= sregs.read(inst['rs2'])):
                         brtarg = pc + (inst['imm'])
                     else:
-                        brtarg = pc + 20
+                        brtarg = pc + 24
             elif(m == "lw.s"):
                 sregs.write(inst['rd'], mem.read_data(sregs.read(inst['rs1']) + inst['imm']))
             elif(m == "sw.s"):
@@ -187,13 +187,12 @@ def main():
             elif(m == "lhw.s"):
                 temp = mem.read_data(sregs.read(inst['rs1']) + inst['imm'])
                 temp = temp << 16
-                fp32_val = struct.unpack('<f', struct.pack('<I', temp & 0xFFFFFFFF))[0]
-                sregs.write(inst['rd'], fp32_val)
+                print(temp)
+                sregs.write(inst['rd'], temp)
             elif(m == "shw.s"):
                 temp = sregs.read(inst['rd'])
-                bits = struct.unpack('<I', struct.pack('<f', temp))[0]
-                bits = bits >> 16
-                mem.write_data(sregs.read(inst['rs1']) + inst['imm'], bits)
+                temp = temp >> 16
+                mem.write_data(sregs.read(inst['rs1']) + inst['imm'], temp)
             #vector load/store here
             elif m == "vreg.ld":
                 # # 1. Select Scratchpad based on 'sp' field (0=SP0, 1=SP1)
@@ -293,6 +292,7 @@ def main():
                 WBdata = EU.execute(m, sA=src1, sB=src2)
                 if(m == "add.bf"):
                     WBdata = fp32_to_hex(WBdata)
+                print(inst['rd'])
                 sregs.write(inst['rd'], WBdata)
             elif m in ("sub.s", "subi.s", "sub.bf"):
                 if(m == "sub.s" or m == "sub.bf"):
@@ -307,6 +307,7 @@ def main():
                 WBdata = EU.execute(m, sA=src1, sB=src2)
                 if(m == "sub.bf"):
                     WBdata = fp32_to_hex(WBdata)
+                print(WBdata)
                 sregs.write(inst['rd'], WBdata)
             elif m in ("mul.s", "muli.s", "mul.bf"):
                 if(m == "mul.s" or m == "mul.bf"):
@@ -445,14 +446,22 @@ def main():
                     mask = mregs.read(inst['mask'])
                     old_vec = vregs.read(inst['vd'])
                     new_vec = apply_mask(v1=old_vec, v2=WBdata, mask=mask)
-                    if(m != 'mgt.vv' and m != 'mlt.vv' and m != 'meq.vv' and m != 'mneq.vv'):
-                        vregs.write(inst['vd'], new_vec)
-                    else:
-                        new_vec = new_vec.astype(np.uint32)
-                        value = np.uint32(0)
-                        for i, bit in enumerate(new_vec):
-                            value |= bit << i
-                        mregs.write(inst['vd'], value)
+                    vregs.write(inst['vd'], new_vec)
+            # ---------------- MVV (Vector-Vector) ---------------
+            elif m.endswith(".mvv"):
+                src1 = vregs.read(inst['vs1'])
+                src2 = vregs.read(inst['vs2'])
+                WBdata = EU.execute(m, vA=src1, vB=src2, slr=0)
+                mask = mregs.read(inst['mask'])
+                old_vec = vregs.read(inst['vmd'])
+                bits = format(old_vec & 0xFFFFFFFF, '032b')
+                bit_vector = [int(b) for b in bits]
+                new_vec = apply_mask(v1=bit_vector, v2=WBdata, mask=mask)
+                new_vec = new_vec.astype(np.uint32)
+                value = np.uint32(0)
+                for i, bit in enumerate(new_vec):
+                    value |= bit << i
+                mregs.write(inst['vmd'], value)
             # ---------------- VI (WEIGHTS ONLY) ----------------
             elif (m == "lw.vi"):
                 src1 = vregs.read(inst['vs1'])
@@ -466,13 +475,12 @@ def main():
                     # gemm_weights[:, 1:] moves columns 0-30 to positions 1-31
                     gemm_weights[:, 1:] = gemm_weights[:, :-1]
                     gemm_weights[:, 0] = src1
-            elif (m == "vmov.vi"): #wrong no rd
+            elif (m == "vmov.vts"):
                 src1 = vregs.read(inst['vs1'])
-                temp = fp32_to_hex(src1[inst['imm']])
-                #print(temp)
-                sregs.write(inst['vd'], temp)
+                temp = fp32_to_hex(src1[inst['imm8']])
+                sregs.write(inst['rd'], temp)
             # ---------------- VI (Vector-Immediate) ----------------
-            elif m.endswith(".vi") and (m != "lw.vi") and (m != "vmov.vi"):
+            elif m.endswith(".vi") and (m != "lw.vi"):
                 src1 = vregs.read(inst['vs1'])
                 src2 = inst['imm']
                 nmask = mregs.read(inst['mask'])
@@ -482,7 +490,8 @@ def main():
                     imm = src2 & 0b1_1111
                 else:
                     slr = 0
-                    imm = src2
+                    imm = src2 << 16
+                    imm = struct.unpack('<f', struct.pack('<I', temp & 0xFFFFFFFF))[0]
                 WBdata = EU.execute(m, vA=src1, sA=imm, slr=slr, mask=nmask)
                 old_vec = vregs.read(inst['vd'])
                 if(m != 'shift.vi' and m != 'rsum.vi' and m != 'rmin.vi' and m != 'rmax.vi'):
@@ -509,15 +518,24 @@ def main():
                     new_vec = apply_mask(v1=old_vec, v2=WBdata, mask=mask)
                 else:
                     new_vec = WBdata
-                if(m != 'mgt.vs' and m != 'mlt.vs' and m != 'meq.vs' and m != 'mneq.vs'):
-                    vregs.write(inst['vd'], new_vec)
-                else:
-                    new_vec = new_vec.astype(np.uint32)
-                    value = np.uint32(0)
-                    for i, bit in enumerate(new_vec):
-                         value |= bit << i
-                    mregs.write(inst['vd'], value)
-
+                vregs.write(inst['vd'], new_vec)
+            # ---------------- MVS (Vector-Scalar) ---------------
+            elif m.endswith(".mvs"):
+                src1 = vregs.read(inst['vs1'])
+                slr = 0
+                src2 = sregs.read(inst['rs1'])
+                src2 = hex_to_fp32(int(src2))
+                WBdata = EU.execute(m, vA=src1, sA=src2, slr=slr)
+                mask = mregs.read(inst['mask'])
+                old_mask = mregs.read(inst['vmd'])
+                bits = format(old_mask & 0xFFFFFFFF, '032b')
+                bit_vector = [int(b) for b in bits]
+                new_vec = apply_mask(v1=bit_vector, v2=WBdata, mask=mask)
+                new_vec = new_vec.astype(np.uint32)
+                value = np.uint32(0)
+                for i, bit in enumerate(new_vec):
+                        value |= bit << i
+                mregs.write(inst['vmd'], value)
             # ---------------- UNKNOWN ----------------
             else:
                 raise ValueError(f"Unknown mnemonic: {m}")
@@ -526,7 +544,7 @@ def main():
         if(br):
             pc = brtarg
         else:
-            pc = pc + 20
+            pc = pc + 24
 
 
     # Dump memory to output file

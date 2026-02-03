@@ -143,13 +143,13 @@ def decode_instruction(instr):
 
     elif instr_type == "VI":
         # VI-Type: vd 7-14, vs1 15-22, imm8 23-30, mask 31-34, imm5 35-39
-        imm8 = get_bits(instr, 30, 23)
-        imm5 = get_bits(instr, 39, 35)
+        imm8_1 = get_bits(instr, 30, 23)
+        imm8_2 = get_bits(instr, 42, 35)
         decoded.update({
             "vd": get_bits(instr, 14, 7),
             "vs1": get_bits(instr, 22, 15),
             "mask": get_bits(instr, 34, 31),
-            "imm": (imm8 << 5) | imm5
+            "imm": (imm8_2 << 8) | imm8_1
         })
 
     elif instr_type == "VM":
@@ -193,6 +193,29 @@ def decode_instruction(instr):
             "rs1": get_bits(instr, 22, 15)
         })
 
+    elif instr_type == "VTS": 
+        decoded.update({
+            "rd": get_bits(instr, 14, 7),
+            "vs1": get_bits(instr, 22, 15),
+            "imm8": get_bits(instr, 30, 23)
+        })
+
+    elif instr_type == "MVV": 
+        decoded.update({
+            "vmd": get_bits(instr, 10, 7),
+            "vs1": get_bits(instr, 18, 11),
+            "vs2": get_bits(instr, 26, 19),
+            "mask": get_bits(instr, 30, 27)
+        })
+
+    elif instr_type == "MVS": 
+        decoded.update({
+            "vmd": get_bits(instr, 10, 7),
+            "vs1": get_bits(instr, 18, 11),
+            "rs1": get_bits(instr, 26, 19),
+            "mask": get_bits(instr, 30, 27)
+        })
+
     else:
         decoded.update({"raw": instr})
 
@@ -221,8 +244,8 @@ def decode_packet(packet, packet_length = 4):
     """
     instructions = []
     for i in range(packet_length):
-        shift = (3 - i) * 40  # Extract top instruction first
-        instr = (packet >> shift) & ((1 << 40) - 1)
+        shift = (3 - i) * 48  # Extract top instruction first
+        instr = (packet >> shift) & ((1 << 48) - 1)
         # print(instr)
         decoded = decode_instruction(instr)
         decoded["slot"] = i
