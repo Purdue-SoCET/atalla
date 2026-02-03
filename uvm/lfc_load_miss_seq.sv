@@ -20,7 +20,7 @@ class lfc_load_miss_seq extends uvm_sequence#(lfc_cpu_transaction);
 
     `uvm_info(get_type_name(), "Starting lfc_load_miss_seq...", UVM_MEDIUM)
 
-    req = lfc_cpu_transaction::type_id::create("req");
+    req = lfc_cpu_transaction #()::type_id::create("req");
 
     `uvm_info(get_type_name(), "Sending WRITE transaction...", UVM_MEDIUM)
 

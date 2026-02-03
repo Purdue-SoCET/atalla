@@ -40,7 +40,7 @@ class lfc_miss_coalesce_seq extends uvm_sequence#(lfc_cpu_transaction);
 
     `uvm_info(get_type_name(), "Starting basic lfc_miss_coalesce_seq...", UVM_MEDIUM)
 
-    req = lfc_cpu_transaction::type_id::create("req");
+    req = lfc_cpu_transaction #()::type_id::create("req");
 
     `uvm_info(get_type_name(), "Sending multiple read transaction...", UVM_MEDIUM)
 

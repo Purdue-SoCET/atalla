@@ -1,4 +1,6 @@
-`include "cache_types_pkg.svh";
+`include "../include/cache_types_pkg.svh";
+`include "cache_mshr_buffer.sv";
+`include "cache_bank.sv";
 
 module lockup_free_cache (
     input logic CLK, nRST,

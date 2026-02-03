@@ -1,4 +1,4 @@
-`include "cache_types_pkg.svh";
+`include "../include/cache_types_pkg.svh";
 
 module cache_bank (
     input logic CLK, nRST,

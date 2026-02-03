@@ -3,7 +3,7 @@
 
 import uvm_pkg::*;
 `include "uvm_macros.svh"
-//`include "lfc_cpu_passive_monitor.sv"
+`include "lfc_cpu_passive_monitor.sv"
 
 class lfc_cpu_passive_agent extends uvm_agent;
     `uvm_component_utils(lfc_cpu_passive_agent)

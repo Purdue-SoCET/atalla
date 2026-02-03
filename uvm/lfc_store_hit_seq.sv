@@ -64,7 +64,7 @@ class lfc_store_hit_seq extends uvm_sequence#(lfc_cpu_transaction);
 
   task read_req(input logic [31:0] addr);
     lfc_cpu_transaction req;
-    req = lfc_cpu_transaction::type_id::create("req");
+    req = lfc_cpu_transaction #()::type_id::create("req");
 
     start_item(req);
       req.n_rst              = 1'b1; 
@@ -82,7 +82,7 @@ class lfc_store_hit_seq extends uvm_sequence#(lfc_cpu_transaction);
 
   task write_req(input logic [31:0] addr, input logic [31:0] data);
     lfc_cpu_transaction req;
-    req = lfc_cpu_transaction::type_id::create("req");
+    req = lfc_cpu_transaction #()::type_id::create("req");
 
     start_item(req);
       req.n_rst              = 1'b1; 
@@ -109,7 +109,7 @@ class lfc_store_hit_seq extends uvm_sequence#(lfc_cpu_transaction);
 
     `uvm_info(get_type_name(), "Starting basic lfc_store_hit_seq...", UVM_MEDIUM)
 
-    req = lfc_cpu_transaction::type_id::create("req");
+    req = lfc_cpu_transaction #()::type_id::create("req");
 
     `uvm_info(get_type_name(), "Sending multiple read transaction...", UVM_MEDIUM)
 

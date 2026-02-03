@@ -1,4 +1,4 @@
-`include "cache_types_pkg.svh";
+`include "../include/cache_types_pkg.svh";
 
 module cache_mshr_buffer (
     input logic CLK, nRST,

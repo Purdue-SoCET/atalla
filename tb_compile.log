@@ -1,0 +1,35 @@
+QuestaSim-64 vlog 2021.4 Compiler 2021.10 Oct 13 2021
+Start time: 17:42:31 on Feb 03,2026
+vlog "+incdir+~/src+~/uvm" "+acc" "+cover" -L /package/eda/mg/questa2021.4/questasim/uvm-1.2 uvm/tb_top.sv -logfile tb_compile.log -printinfilenames=file_search.log 
+** Warning: ** while parsing file included at uvm/tb_top.sv(2)
+** while parsing file included at uvm/../src/modules/lockup_free_cache.sv(2)
+** at uvm/../src/modules/cache_mshr_buffer.sv(7): (vlog-13314) Defaulting port 'mem_instr' kind to 'var' rather than 'wire' due to default compile option setting of -svinputport=relaxed.
+** Warning: ** while parsing file included at uvm/tb_top.sv(2)
+** at uvm/../src/modules/lockup_free_cache.sv(2): (vlog-2283) Extra semicolon in $unit (global) scope.
+** Warning: ** while parsing file included at uvm/tb_top.sv(2)
+** while parsing file included at uvm/../src/modules/lockup_free_cache.sv(3)
+** at uvm/../src/modules/cache_bank.sv(8): (vlog-13314) Defaulting port 'mshr_entry' kind to 'var' rather than 'wire' due to default compile option setting of -svinputport=relaxed.
+** Warning: ** while parsing file included at uvm/tb_top.sv(2)
+** while parsing file included at uvm/../src/modules/lockup_free_cache.sv(3)
+** at uvm/../src/modules/cache_bank.sv(9): (vlog-13314) Defaulting port 'mem_instr_in' kind to 'var' rather than 'wire' due to default compile option setting of -svinputport=relaxed.
+** Warning: ** while parsing file included at uvm/tb_top.sv(2)
+** at uvm/../src/modules/lockup_free_cache.sv(3): (vlog-2283) Extra semicolon in $unit (global) scope.
+** Warning: ** while parsing file included at uvm/tb_top.sv(2)
+** at uvm/../src/modules/lockup_free_cache.sv(25): (vlog-13314) Defaulting port 'ram_mem_data' kind to 'var' rather than 'wire' due to default compile option setting of -svinputport=relaxed.
+** Note: (vlog-2286) uvm/test.sv(2): Using implicit +incdir+/package/eda/mg/questa2021.4/questasim/uvm-1.2/../verilog_src/uvm-1.2/src from import uvm_pkg
+-- Compiling package tb_top_sv_unit
+-- Importing package /package/eda/mg/questa2021.4/questasim/uvm-1.2.uvm_pkg (uvm-1.2 Built-in)
+-- Compiling module cache_mshr_buffer
+** Warning: uvm/../src/modules/cache_mshr_buffer.sv(7): (vlog-13314) Defaulting port 'mem_instr' kind to 'var' rather than 'wire' due to default compile option setting of -svinputport=relaxed.
+-- Compiling module cache_bank
+** Warning: uvm/../src/modules/cache_bank.sv(8): (vlog-13314) Defaulting port 'mshr_entry' kind to 'var' rather than 'wire' due to default compile option setting of -svinputport=relaxed.
+** Warning: uvm/../src/modules/cache_bank.sv(9): (vlog-13314) Defaulting port 'mem_instr_in' kind to 'var' rather than 'wire' due to default compile option setting of -svinputport=relaxed.
+-- Compiling module lockup_free_cache
+** Warning: uvm/../src/modules/lockup_free_cache.sv(25): (vlog-13314) Defaulting port 'ram_mem_data' kind to 'var' rather than 'wire' due to default compile option setting of -svinputport=relaxed.
+-- Compiling interface lfc_if
+-- Compiling module tb_top
+
+Top level modules:
+	tb_top
+End time: 17:42:32 on Feb 03,2026, Elapsed time: 0:00:01
+Errors: 0, Warnings: 10

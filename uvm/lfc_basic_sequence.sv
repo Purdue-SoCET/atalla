@@ -63,7 +63,7 @@ class lfc_basic_sequence extends uvm_sequence#(lfc_cpu_transaction);
 
     `uvm_info(get_type_name(), "Starting basic Read-After-Write sequence...", UVM_MEDIUM)
 
-    req = lfc_cpu_transaction::type_id::create("req");
+    req = lfc_cpu_transaction #()::type_id::create("req");
 
     `uvm_info(get_type_name(), "Sending WRITE transaction...", UVM_MEDIUM)
 

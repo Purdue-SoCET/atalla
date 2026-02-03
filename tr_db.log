@@ -1,0 +1,5 @@
+  CREATE_STREAM @0 {NAME:store_hit_seq T:Transactions SCOPE:uvm_test_top.env.cpu_active_agent.sqr STREAM:1160}
+  CREATE_STREAM @0 {NAME:basic_seq T:Transactions SCOPE:uvm_test_top.env.cpu_active_agent.sqr STREAM:1160}
+  CREATE_STREAM @0 {NAME:basic_seq T:Transactions SCOPE:uvm_test_top.env.cpu_active_agent.sqr STREAM:1160}
+  CREATE_STREAM @0 {NAME:basic_seq T:Transactions SCOPE:uvm_test_top.env.cpu_active_agent.sqr STREAM:1160}
+  CREATE_STREAM @0 {NAME:basic_seq T:Transactions SCOPE:uvm_test_top.env.cpu_active_agent.sqr STREAM:1160}
