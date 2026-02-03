@@ -41,7 +41,7 @@ class lfc_cpu_transaction #(parameter NUM_BANKS = 4, parameter UUID_SIZE = 4) ex
     `uvm_field_int(dp_out_flushed, UVM_DEFAULT)
   `uvm_object_utils_end
 
-  // add constraints for randomization
+  // TODO: add constraints for randomization
 
   function new(string name = "lfc_cpu_transaction");
     super.new(name);
