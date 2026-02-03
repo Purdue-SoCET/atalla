@@ -80,7 +80,7 @@ def apply_imm_vector_op(
 
 
 def main():
-    mem_file = "Testing/unit_tests/bf_R.txt" # need to change this to target different mem test files
+    mem_file = "Testing/unit_tests/br.txt" # need to change this to target different mem test files
     out_file = "output_mem.txt"
     out_sreg_file = "output_sregs.txt"
     out_vreg_file = "output_vregs.txt"
@@ -145,41 +145,41 @@ def main():
                     brtarg = sregs.read(inst['rs1']) + (inst['imm'])
                     sregs.write(inst['rd'], pc + 24)
                 elif(m == "beq.s"):
-                    sregs.write(inst['rs1'], sregs.read(inst['rs1']) + inst['incr_imm'])
                     if(sregs.read(inst['rs1']) == sregs.read(inst['rs2'])):
                         brtarg = pc + (inst['imm'])
                     else:
                         brtarg = pc + 24
-                elif(m == "bne.s"):
                     sregs.write(inst['rs1'], sregs.read(inst['rs1']) + inst['incr_imm'])
+                elif(m == "bne.s"):
                     if(sregs.read(inst['rs1']) != sregs.read(inst['rs2'])):
                         brtarg = pc + (inst['imm'])
                     else:
                         brtarg = pc + 24
-                elif(m == "blt.s"):
                     sregs.write(inst['rs1'], sregs.read(inst['rs1']) + inst['incr_imm'])
+                elif(m == "blt.s"):
                     if(sregs.read(inst['rs1']) < sregs.read(inst['rs2'])):
                         brtarg = pc + (inst['imm'])
                     else:
                         brtarg = pc + 24
-                elif(m == "bge.s"):
                     sregs.write(inst['rs1'], sregs.read(inst['rs1']) + inst['incr_imm'])
+                elif(m == "bge.s"):
                     if(sregs.read(inst['rs1']) >= sregs.read(inst['rs2'])):
                         brtarg = pc + (inst['imm'])
                     else:
                         brtarg = pc + 24
-                elif(m == "bgt.s"):
                     sregs.write(inst['rs1'], sregs.read(inst['rs1']) + inst['incr_imm'])
+                elif(m == "bgt.s"):
                     if(sregs.read(inst['rs1']) > sregs.read(inst['rs2'])):
                         brtarg = pc + (inst['imm'])
                     else:
                         brtarg = pc + 24
-                elif(m == "ble.s"):
                     sregs.write(inst['rs1'], sregs.read(inst['rs1']) + inst['incr_imm'])
+                elif(m == "ble.s"):
                     if(sregs.read(inst['rs1']) <= sregs.read(inst['rs2'])):
                         brtarg = pc + (inst['imm'])
                     else:
                         brtarg = pc + 24
+                    sregs.write(inst['rs1'], sregs.read(inst['rs1']) + inst['incr_imm'])
             elif(m == "lw.s"):
                 sregs.write(inst['rd'], mem.read_data(sregs.read(inst['rs1']) + inst['imm']))
             elif(m == "sw.s"):

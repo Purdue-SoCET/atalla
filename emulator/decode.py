@@ -96,11 +96,12 @@ def decode_instruction(instr):
         # BR-Type: incr-imm7 7-13, i1 14, rs1 15-22, rs2 23-30, imm9 31-39
         imm1 = get_bits(instr, 14, 14)
         imm9 = get_bits(instr, 39, 31)
+
         decoded.update({
             "incr_imm": get_bits(instr, 13, 7),
             "rs1": get_bits(instr, 22, 15),
             "rs2": get_bits(instr, 30, 23),
-            "imm": sign_extend((((imm1 << 9) | imm9) << 2), 10) #shift left to word align
+            "imm": sign_extend((((imm1 << 9) | imm9) << 2), 12) #shift left to word align
         })
 
     elif instr_type == "M":
@@ -273,7 +274,7 @@ def sign_extend(value, bits):
         Sign-extended integer.
     """
     sign_bit = 1 << (bits - 1)
-    return (value ^ sign_bit) - sign_bit
+    return (value & (sign_bit - 1)) - (value & sign_bit)
 
 
 # --------------------------------------------
