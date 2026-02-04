@@ -55,6 +55,7 @@ def apply_imm_vector_op(
     r_in: np.float32,
 ) -> List[np.float32]:
     # Immediate field extraction
+    imm = fp32_to_hex(imm)
     imm6 = (imm >> 6) & 1
     imm5 = (imm >> 5) & 1
     idx  = imm & 0b1_1111  # imm[0:4]
