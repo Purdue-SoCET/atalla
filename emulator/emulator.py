@@ -80,7 +80,7 @@ def apply_imm_vector_op(
 
 
 def main():
-    mem_file = "Testing/unit_tests/vectorvector.txt" # need to change this to target different mem test files
+    mem_file = "Testing/unit_tests/mvv.txt" # need to change this to target different mem test files
     out_file = "output_mem.txt"
     out_sreg_file = "output_sregs.txt"
     out_vreg_file = "output_vregs.txt"
@@ -212,6 +212,7 @@ def main():
                     scpad_addr=addr,
                     vd=inst['vd'],        # Destination Vector Reg
                     rc=inst['rc'],
+                    rc_id=inst['rc_id']
                     # rc=inst.get('rc', 0)  # 0=Row Mode, 1=Col Mode
                 )
 
@@ -232,7 +233,8 @@ def main():
                     vregs=vregs,
                     scpad_addr=addr,
                     vs=inst['vd'],        # VM-type uses 'vd' field as the register index
-                    rc=inst['rc']
+                    rc=inst['rc'],
+                    rc_id=inst['rc_id']
                     # rc=inst.get('rc', 0)
                 )
 
@@ -246,7 +248,7 @@ def main():
                         tile_id0 += 1
                         tileID0Dict[inst['rs1/rd1']] = tile_id0
                         localID = tileID0Dict[inst['rs1/rd1']]
-                    sdma_load(gmem=mem, scpad=SP0, gmem_base=sregs.read(inst['rs2']), scpad_base_row=sregs.read(inst['rs1/rd1']), tile_id=localID, NR=inst['num_rows'], NC=inst['num_cols'])
+                    sdma_load(gmem=mem, scpad=SP0, gmem_base=sregs.read(inst['rs2']), scpad_base_row=int(sregs.read(inst['rs1/rd1'])), tile_id=localID, NR=inst['num_rows'], NC=inst['num_cols'])
                 elif inst['sid'] == 1:
                     if(inst['rs1/rd1'] in tileID1Dict.keys()):
                         localID = tileID1Dict[inst['rs1/rd1']]
@@ -254,7 +256,7 @@ def main():
                         tile_id1 += 1
                         tileID1Dict[inst['rs1/rd1']] = tile_id1
                         localID = tileID1Dict[inst['rs1/rd1']]
-                    sdma_load(gmem=mem, scpad=SP1, gmem_base=sregs.read(inst['rs2']), scpad_base_row=sregs.read(inst['rs1/rd1']), tile_id=localID, NR=inst['num_rows'], NC=inst['num_cols'])
+                    sdma_load(gmem=mem, scpad=SP1, gmem_base=sregs.read(inst['rs2']), scpad_base_row=int(sregs.read(inst['rs1/rd1'])), tile_id=localID, NR=inst['num_rows'], NC=inst['num_cols'])
 
             elif(m == "scpad.st"):
                 if inst['sid'] == 0:
@@ -264,7 +266,7 @@ def main():
                         tile_id0 += 1
                         tileID0Dict[inst['rs1/rd1']] = tile_id0
                         localID = tileID0Dict[inst['rs1/rd1']]
-                    sdma_store(gmem=mem, scpad=SP0, scpad_base_row=sregs.read(inst['rs1/rd1']), gmem_base=sregs.read(inst['rs2']), tile_id=tile_id0, NR=inst['num_rows'], NC=inst['num_cols'])
+                    sdma_store(gmem=mem, scpad=SP0, scpad_base_row=int(sregs.read(inst['rs1/rd1'])), gmem_base=sregs.read(inst['rs2']), tile_id=tile_id0, NR=inst['num_rows'], NC=inst['num_cols'])
                 elif inst['sid'] == 1:
                     if(inst['rs1/rd1'] in tileID1Dict.keys()):
                         localID = tileID1Dict[inst['rs1/rd1']]
@@ -272,7 +274,7 @@ def main():
                         tile_id1 += 1
                         tileID1Dict[inst['rs1/rd1']] = tile_id1
                         localID = tileID1Dict[inst['rs1/rd1']]
-                    sdma_store(gmem=mem, scpad=SP1, scpad_base_row=sregs.read(inst['rs1/rd1']), gmem_base=sregs.read(inst['rs2']), tile_id=tile_id1, NR=inst['num_rows'], NC=inst['num_cols'])
+                    sdma_store(gmem=mem, scpad=SP1, scpad_base_row=int(sregs.read(inst['rs1/rd1'])), gmem_base=sregs.read(inst['rs2']), tile_id=tile_id1, NR=inst['num_rows'], NC=inst['num_cols'])
             elif(m == "lui.s"): 
                 print(inst['imm'])
                 sregs.write(inst['rd'], (inst['imm']) << 7)
@@ -491,7 +493,7 @@ def main():
                     imm = src2 & 0b1_1111
                 else:
                     slr = 0
-                    imm = src2 << 16
+                    temp = src2 << 16
                     imm = struct.unpack('<f', struct.pack('<I', temp & 0xFFFFFFFF))[0]
                 WBdata = EU.execute(m, vA=src1, sA=imm, slr=slr, mask=nmask)
                 old_vec = vregs.read(inst['vd'])
