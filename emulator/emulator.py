@@ -55,6 +55,7 @@ def apply_imm_vector_op(
     r_in: np.float32,
 ) -> List[np.float32]:
     # Immediate field extraction
+    imm = fp32_to_hex(imm)
     imm6 = (imm >> 6) & 1
     imm5 = (imm >> 5) & 1
     idx  = imm & 0b1_1111  # imm[0:4]
@@ -80,7 +81,7 @@ def apply_imm_vector_op(
 
 
 def main():
-    mem_file = "Testing/unit_tests/mvv.txt" # need to change this to target different mem test files
+    mem_file = "Testing/unit_tests/vectorimmediate.txt" # need to change this to target different mem test files
     out_file = "output_mem.txt"
     out_sreg_file = "output_sregs.txt"
     out_vreg_file = "output_vregs.txt"
@@ -498,7 +499,7 @@ def main():
                 WBdata = EU.execute(m, vA=src1, sA=imm, slr=slr, mask=nmask)
                 old_vec = vregs.read(inst['vd'])
                 if(m != 'shift.vi' and m != 'rsum.vi' and m != 'rmin.vi' and m != 'rmax.vi'):
-                    new_vec = apply_mask(v1=old_vec, v2=WBdata, mask=mask)
+                    new_vec = apply_mask(v1=old_vec, v2=WBdata, mask=inst['mask'])
                 elif(m == 'rsum.vi' or m == 'rmin.vi' or m == 'rmax.vi'):
                     new_vec = apply_imm_vector_op(imm=imm, vs=src1, r_in=WBdata)
                 else:

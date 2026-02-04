@@ -478,8 +478,8 @@ class VectorLanes:
                 else:
                     return self.shl_scalar(vA, int(sA))
             if new_op == "rsum":    return self.reduce_sum(vA, mask=mask)
-            if new_op == "rmin":    return self.reduce_max(vA, mask=mask)
-            if new_op == "rmax":    return self.reduce_min(vA, mask=mask)
+            if new_op == "rmin":    return self.reduce_min(vA, mask=mask)
+            if new_op == "rmax":    return self.reduce_max(vA, mask=mask)
             else:
                 raise ValueError(f"Unknown vector op '{new_op}'")
         elif(type == ".vs"):
