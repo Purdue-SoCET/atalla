@@ -491,12 +491,12 @@ def main():
                     imm = src2 & 0b1_1111
                 else:
                     slr = 0
-                    imm = src2 << 16
+                    temp = src2 << 16
                     imm = struct.unpack('<f', struct.pack('<I', temp & 0xFFFFFFFF))[0]
                 WBdata = EU.execute(m, vA=src1, sA=imm, slr=slr, mask=nmask)
                 old_vec = vregs.read(inst['vd'])
                 if(m != 'shift.vi' and m != 'rsum.vi' and m != 'rmin.vi' and m != 'rmax.vi'):
-                    new_vec = apply_mask(v1=old_vec, v2=WBdata, mask=mask)
+                    new_vec = apply_mask(v1=old_vec, v2=WBdata, mask=inst['mask'])
                 elif(m == 'rsum.vi' or m == 'rmin.vi' or m == 'rmax.vi'):
                     new_vec = apply_imm_vector_op(imm=imm, vs=src1, r_in=WBdata)
                 else:
