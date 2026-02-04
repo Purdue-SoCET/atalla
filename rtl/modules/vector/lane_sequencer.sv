@@ -146,4 +146,20 @@ module lane_sequencer (
         endcase
     end
 
+    // --------------------------------------------------------
+    // Performance counters
+    // --------------------------------------------------------
+
+    perf_handshake_if #(.SIG_WIDTH(1)) perf_seq_if();
+    assign perf_seq_if.valid = lane_out.valid;
+    assign perf_seq_if.ready = lane_in.ready;
+
+    perf_handshake #(
+        .SIG_WIDTH(1)
+    ) u_perf_seq (
+        .CLK(CLK),
+        .nRST(nRST),
+        .phif(perf_seq_if)
+    );
+
 endmodule

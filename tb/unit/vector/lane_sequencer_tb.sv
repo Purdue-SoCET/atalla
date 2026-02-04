@@ -476,6 +476,8 @@ module lane_sequencer_tb;
                 end
             end
 
+            $display("elems accept: %d", elems_accept);
+
             // Expect at least one bubble cycle between A and B
             if (bubble_cycles == 0) begin
                 $error("[%0t] D: Expected at least 1-cycle bubble between slices, saw 0", $time);
@@ -629,6 +631,8 @@ module lane_sequencer_tb;
         // VCD dump (optional)
         //$dumpfile("lane_sequencer_tb.vcd");
         //$dumpvars(0, lane_sequencer_tb);
+
+        $monitor("items processed: %d", dut.perf_seq_if.cnt_total_items);
 
         testname = "Scenario A: Happy Path";
         test_scenario_A(err);

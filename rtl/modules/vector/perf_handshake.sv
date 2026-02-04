@@ -6,9 +6,9 @@ module perf_handshake #(
 ) (
     input logic CLK,
     input logic nRST,
-    input logic enable,
-    input logic clear,
-    perf_handshake_if #(.SIG_WIDTH(SIG_WIDTH), .CNT_WIDTH(CNT_WIDTH)).phif phif
+    input logic enable = 1'b1,
+    input logic clear = 1'b0,
+    perf_handshake_if.phif phif
 );
 
   logic [SIG_WIDTH-1:0] trans_bits, stall_bits, starve_bits;
@@ -55,6 +55,7 @@ module perf_handshake #(
     for (int i = 0; i < SIG_WIDTH; i++) begin
       if (trans_bits[i]) begin
         item_count++;
+        $display("inc");
       end
     end
   end
