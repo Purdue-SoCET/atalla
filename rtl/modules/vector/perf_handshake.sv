@@ -8,7 +8,7 @@ module perf_handshake #(
     input logic nRST,
     input logic enable,
     input logic clear,
-    perf_handshake_if #(.SIG_WIDTH(SIG_WIDTH), .CNT_WIDTH(CNT_WIDTH)).phif phif
+    perf_handshake_if.phif phif
 );
 
   logic [SIG_WIDTH-1:0] trans_bits, stall_bits, starve_bits;
