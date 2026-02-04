@@ -80,7 +80,7 @@ def apply_imm_vector_op(
 
 
 def main():
-    mem_file = "Testing/unit_tests/mvv.txt" # need to change this to target different mem test files
+    mem_file = "Testing/unit_tests/vectorvector.txt" # need to change this to target different mem test files
     out_file = "output_mem.txt"
     out_sreg_file = "output_sregs.txt"
     out_vreg_file = "output_vregs.txt"
