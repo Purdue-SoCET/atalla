@@ -90,7 +90,7 @@ OPCODES = {
     0b1001001: ("rmax.vi", "VI"),
 
     # ---------------- VS-Type ----------------
-    0b0111000: ("shift.vs","VS"),  # vector lane shift scalar reg
+    # 0b0111000: ("shift.vs","VS"),  # vector lane shift scalar reg
     0b1010000: ("add.vs", "VS"),
     0b1010001: ("sub.vs", "VS"),
     0b1010010: ("mul.vs", "VS"),
