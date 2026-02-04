@@ -383,7 +383,7 @@ def encode_instruction(instr_dict):
     return hex_str
 
 # Test with your examples
-test1 = {'opcode': 0b0110010, 'vs1': 1, 'vs2': 1,  'vd': 2, 'mask': 1, 'sac': 0}
+test1 = {'opcode': 0b0111000, 'vs1': 1, 'vs2': 1,  'vd': 8, 'mask': 1, 'sac': 0}
 
 
 print(f"Instruction: {encode_instruction(test1)}")
