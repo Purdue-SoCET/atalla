@@ -20,7 +20,8 @@ def scpad_to_vreg(
     vd: int,           # Destination Vector Register Index
     rc: int = 0,       # 0 = Row Mode (across banks), 1 = Column Mode (down slots)
     rc_id: int = 0,
-    length: int = None # Optional override for vector length
+    num_rows: int = 31,
+    num_cols: int = 31
 ):
     """
     Loads a vector from Scratchpad into a Vector Register.
@@ -31,17 +32,16 @@ def scpad_to_vreg(
     vector_data = []
 
     # Default lengths if not provided
-    if length is None:
-        if rc == 0:
-            length = scpad.B  # Row mode -> width is number of banks
-        else:
-            length = scpad.S  # Col mode -> width is number of slots
+    if rc == 0:
+        length = num_rows  # Row mode -> width is number of banks
+    else:
+        length = num_cols  # Col mode -> width is number of slots
 
     if rc == 1:
         # --- COL MODE ---
         # Fixed Slot (scpad_addr), Iterate Banks
         slot = int(scpad_addr % scpad.S + rc_id)
-        for bank in range(length):
+        for bank in range(0, length+1):
             if bank >= scpad.B:
                 break
             val = scpad.banks[bank][slot]
@@ -51,7 +51,7 @@ def scpad_to_vreg(
         # --- ROW MODE ---
         # Fixed Bank (scpad_addr), Iterate Slots
         bank = scpad_addr % scpad.B + rc_id
-        for i in range(length):
+        for i in range(0,length+1):
             slot = i % scpad.S 
             val = scpad.banks[bank][slot]
             vector_data.append(val)
@@ -70,7 +70,9 @@ def vreg_to_scpad(
     scpad_addr: int,   # If rc=0: Slot Index. If rc=1: Bank Index.
     vs: int,           # Source Vector Register Index
     rc: int = 0,       # 0 = Row Mode, 1 = Column Mode
-    rc_id: int = 0
+    rc_id: int = 0,
+    num_rows: int = 31,
+    num_cols: int = 31
 ):
     """
     Stores a Vector Register into the Scratchpad.
@@ -86,7 +88,7 @@ def vreg_to_scpad(
         # Fixed Slot (scpad_addr), Iterate Banks
         slot = int (scpad_addr % scpad.S + rc_id)
         for bank, val in enumerate(vector_data):
-            if bank >= scpad.B:
+            if bank >= num_cols + 1:
                 break
             scpad.banks[bank][slot] = val
 
@@ -96,6 +98,8 @@ def vreg_to_scpad(
         bank = scpad_addr % scpad.B + rc_id
         for i, val in enumerate(vector_data):
             slot = i % scpad.S
+            if i >= num_rows + 1:
+                break
             scpad.banks[bank][slot] = val  
 
 
@@ -132,9 +136,12 @@ def sdma_load(
         # Read from GMEM
         for j in range(0, NC+1):
             print(j)
-            g_addr = gmem_base + (i * NC + j) * 2
+            g_addr = gmem_base + (i * (NC+1) + j) * 2
             raw_val = gmem.read_data(g_addr)
             raw_val = raw_val << 16
+
+            print(g_addr)
+            print(raw_val)
 
             # 1. Pack the int into 4 bytes (little-endian 'I' for unsigned int)
             # 2. Unpack those 4 bytes as a float ('f')
@@ -183,7 +190,7 @@ def sdma_store(
             bits = struct.unpack('<I', struct.pack('<f', val))[0]
             bits = bits >> 16
             #x_shifted = struct.unpack('<f', struct.pack('<I', bits & 0xFFFFFFFF))[0]
-            g_addr = gmem_base + (i * NR + j) * 2
+            g_addr = gmem_base + (i * (NC+1) + j) * 2
             gmem.write_data(g_addr, bits)
 
 

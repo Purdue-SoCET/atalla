@@ -303,92 +303,104 @@ class VectorLanes:
 
     # ---- reductions ----
     def _bit_is_set(self, mask: int, i: int) -> bool:
+        print(((int(mask) >> i) & 1) == 1)
         return ((int(mask) >> i) & 1) == 1
 
 
     def reduce_sum(self, a: np.ndarray, mask: int) -> np.ndarray:
         a = self._ensure_vec(a)
-        L = a.size
-        q = self._q(a)
+        q = self._q(a).astype(np.float32, copy=False)
+        L = q.size
+        R = int(self.reducers)
 
-        partial = None
-        step = 0
-        for s, e in iterate_chunks(L, self.reducers):
-            if not self._bit_is_set(mask, step):
-                step += 1
+        if R <= 0:
+            raise ValueError(f"reducers must be > 0, got {R}")
+
+        # treat mask as unsigned so negatives don't sign-extend
+        mask_u = int(mask) & ((1 << min(R, 32)) - 1) if R < 32 else (int(mask) & 0xFFFFFFFF)
+
+        partial = np.float32(0.0)
+        enabled_any = False
+
+        # Split [0, L) into R nearly-equal contiguous chunks
+        for step in range(R):
+            if ((mask_u >> step) & 1) == 0:
                 continue
 
-            chunk_sum = np.sum(q[s:e].astype(np.float32), dtype=np.float32)
-            chunk_sum_q = to_bf16(np.array([chunk_sum]), rounding=self.bf16_rounding)[0]
+            s = (step * L) // R
+            e = ((step + 1) * L) // R
+            if s >= e:  # happens if R > L
+                continue
 
-            if partial is None:
-                partial = chunk_sum_q
-            else:
-                partial = to_bf16(np.array([partial + chunk_sum_q]), rounding=self.bf16_rounding)[0]
+            partial += np.sum(q[s:e], dtype=np.float32)
+            enabled_any = True
 
-            step += 1
-
-        if partial is None:
-            # no enabled steps
-            return np.array(0.0, dtype=np.float32)
-
-        return np.array(partial, dtype=np.float32)
+        return np.array(partial if enabled_any else 0.0, dtype=np.float32)
 
 
     def reduce_max(self, a: np.ndarray, mask: int) -> np.ndarray:
         a = self._ensure_vec(a)
-        q = self._q(a)
+        q = self._q(a).astype(np.float32, copy=False)
+        L = q.size
+        R = int(self.reducers)
 
-        cur = None
-        step = 0
-        for s, e in iterate_chunks(q.size, self.reducers):
-            if not self._bit_is_set(mask, step):
-                step += 1
+        if R <= 0:
+            raise ValueError(f"reducers must be > 0, got {R}")
+
+        # treat mask as unsigned so negatives don't sign-extend
+        mask_u = int(mask) & ((1 << min(R, 32)) - 1) if R < 32 else (int(mask) & 0xFFFFFFFF)
+
+        cur = -np.inf
+        enabled_any = False
+
+        for step in range(R):
+            if ((mask_u >> step) & 1) == 0:
                 continue
 
-            chunk_max = np.max(q[s:e].astype(np.float32))
-            chunk_max_q = to_bf16(np.array([chunk_max]), rounding=self.bf16_rounding)[0]
+            s = (step * L) // R
+            e = ((step + 1) * L) // R
+            if s >= e:  # can happen if R > L
+                continue
 
-            if cur is None:
-                cur = chunk_max_q
-            else:
-                cur = to_bf16(np.array([max(cur, chunk_max_q)]), rounding=self.bf16_rounding)[0]
+            chunk_max = float(np.max(q[s:e]))
+            if chunk_max > cur:
+                cur = chunk_max
+            enabled_any = True
 
-            step += 1
-
-        if cur is None:
-            # no enabled steps
-            return np.array(-np.inf, dtype=np.float32)
-
-        return np.array(cur, dtype=np.float32)
+        return np.array(cur if enabled_any else -np.inf, dtype=np.float32)
 
 
     def reduce_min(self, a: np.ndarray, mask: int) -> np.ndarray:
         a = self._ensure_vec(a)
-        q = self._q(a)
+        q = self._q(a).astype(np.float32, copy=False)
+        L = q.size
+        R = int(self.reducers)
 
-        cur = None
-        step = 0
-        for s, e in iterate_chunks(q.size, self.reducers):
-            if not self._bit_is_set(mask, step):
-                step += 1
+        if R <= 0:
+            raise ValueError(f"reducers must be > 0, got {R}")
+
+        # treat mask as unsigned so negatives don't sign-extend
+        mask_u = int(mask) & ((1 << min(R, 32)) - 1) if R < 32 else (int(mask) & 0xFFFFFFFF)
+
+        cur = np.inf
+        enabled_any = False
+
+        for step in range(R):
+            if ((mask_u >> step) & 1) == 0:
                 continue
 
-            chunk_min = np.min(q[s:e].astype(np.float32))
-            chunk_min_q = to_bf16(np.array([chunk_min]), rounding=self.bf16_rounding)[0]
+            s = (step * L) // R
+            e = ((step + 1) * L) // R
+            if s >= e:  # can happen if R > L
+                continue
 
-            if cur is None:
-                cur = chunk_min_q
-            else:
-                cur = to_bf16(np.array([min(cur, chunk_min_q)]), rounding=self.bf16_rounding)[0]
+            chunk_min = float(np.min(q[s:e]))
+            if chunk_min < cur:
+                cur = chunk_min
+            enabled_any = True
 
-            step += 1
+        return np.array(cur if enabled_any else np.inf, dtype=np.float32)
 
-        if cur is None:
-            # no enabled steps
-            return np.array(np.inf, dtype=np.float32)
-
-        return np.array(cur, dtype=np.float32)
 
     # ---- BF16 bitwise ops on underlying BF16 bit-patterns ----
     def _bitwise_elementwise(self, a: np.ndarray, b: Optional[np.ndarray], op_bits: Callable[[np.ndarray, np.ndarray], np.ndarray], resources: int) -> np.ndarray:
@@ -447,7 +459,7 @@ class VectorLanes:
     def execute(self, op: str, vA=None, vB=None, sA=None, slr=None, mask=None):
         new_op = op[:op.rfind(".")]
         type = op[op.rfind("."):]
-        if(type == ".vv"):
+        if(type == ".vv" or type == ".mvv"):
             if new_op == "add":           return self.add(vA, vB)
             if new_op == "sub":           return self.sub(vA, vB)
             if new_op == "mul":           return self.mul(vA, vB)
@@ -482,7 +494,7 @@ class VectorLanes:
             if new_op == "rmax":    return self.reduce_max(vA, mask=mask)
             else:
                 raise ValueError(f"Unknown vector op '{new_op}'")
-        elif(type == ".vs"):
+        elif(type == ".vs" or type == ".mvs"):
             if new_op == "shift":    
                 if(slr):
                     return self.shr_scalar(vA, int(sA))

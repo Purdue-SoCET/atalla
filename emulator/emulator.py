@@ -55,14 +55,9 @@ def apply_imm_vector_op(
     r_in: np.float32,
 ) -> List[np.float32]:
     # Immediate field extraction
-    imm = fp32_to_hex(imm)
     imm6 = (imm >> 6) & 1
     imm5 = (imm >> 5) & 1
     idx  = imm & 0b1_1111  # imm[0:4]
-
-    print(imm6)
-    print(imm5)
-    print(idx)
 
     vl = len(vs)
     zero = np.float32(0.0)
@@ -81,7 +76,7 @@ def apply_imm_vector_op(
 
 
 def main():
-    mem_file = "Testing/unit_tests/vectorimmediate.txt" # need to change this to target different mem test files
+    mem_file = "Testing/unit_tests/vectorscalar.txt" # need to change this to target different mem test files
     out_file = "output_mem.txt"
     out_sreg_file = "output_sregs.txt"
     out_vreg_file = "output_vregs.txt"
@@ -213,8 +208,9 @@ def main():
                     scpad_addr=addr,
                     vd=inst['vd'],        # Destination Vector Reg
                     rc=inst['rc'],
-                    rc_id=inst['rc_id']
-                    # rc=inst.get('rc', 0)  # 0=Row Mode, 1=Col Mode
+                    rc_id=inst['rc_id'],
+                    num_rows=inst['num_rows'],
+                    num_cols=inst['num_cols']
                 )
 
             elif m == "vreg.st":
@@ -235,8 +231,9 @@ def main():
                     scpad_addr=addr,
                     vs=inst['vd'],        # VM-type uses 'vd' field as the register index
                     rc=inst['rc'],
-                    rc_id=inst['rc_id']
-                    # rc=inst.get('rc', 0)
+                    rc_id=inst['rc_id'],
+                    num_rows=inst['num_rows'],
+                    num_cols=inst['num_cols']
                 )
 
             #scpad load/store here
@@ -457,7 +454,7 @@ def main():
                 src2 = vregs.read(inst['vs2'])
                 WBdata = EU.execute(m, vA=src1, vB=src2, slr=0)
                 mask = mregs.read(inst['mask'])
-                old_vec = vregs.read(inst['vmd'])
+                old_vec = mregs.read(inst['vmd'])
                 bits = format(old_vec & 0xFFFFFFFF, '032b')
                 bit_vector = [int(b) for b in bits]
                 new_vec = apply_mask(v1=bit_vector, v2=WBdata, mask=mask)
@@ -488,7 +485,6 @@ def main():
                 src1 = vregs.read(inst['vs1'])
                 src2 = inst['imm']
                 nmask = mregs.read(inst['mask'])
-                print(nmask)
                 if(m == 'shift.vi'):
                     slr = (src2 >> 5) & 0b1
                     imm = src2 & 0b1_1111
@@ -496,12 +492,12 @@ def main():
                     slr = 0
                     temp = src2 << 16
                     imm = struct.unpack('<f', struct.pack('<I', temp & 0xFFFFFFFF))[0]
-                WBdata = EU.execute(m, vA=src1, sA=imm, slr=slr, mask=nmask)
+                WBdata = EU.execute(m, vA=src1, sA=imm, slr=slr, mask=int(nmask))
                 old_vec = vregs.read(inst['vd'])
                 if(m != 'shift.vi' and m != 'rsum.vi' and m != 'rmin.vi' and m != 'rmax.vi'):
-                    new_vec = apply_mask(v1=old_vec, v2=WBdata, mask=inst['mask'])
+                    new_vec = apply_mask(v1=old_vec, v2=WBdata, mask=mregs.read(inst['mask']))
                 elif(m == 'rsum.vi' or m == 'rmin.vi' or m == 'rmax.vi'):
-                    new_vec = apply_imm_vector_op(imm=imm, vs=src1, r_in=WBdata)
+                    new_vec = apply_imm_vector_op(imm=inst['imm'], vs=src1, r_in=WBdata)
                 else:
                     new_vec = WBdata
                 vregs.write(inst['vd'], new_vec)
