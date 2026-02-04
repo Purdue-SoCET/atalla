@@ -1,8 +1,8 @@
 /*  Akshath Raghav Ravikiran - araviki@purdue.edu */
 
-import scpad_pkg::*;
+module scratchpad (scpad_if sif); 
 
-module scratchpad (scpad_if.top sif); 
+    import scpad_pkg::*;
 
     generate
         if ((NUM_COLS & (NUM_COLS - 1)) != 0) initial $fatal(1, "NUM_COLS (%0d) must be a power of 2!", NUM_COLS);
@@ -13,8 +13,8 @@ module scratchpad (scpad_if.top sif);
     genvar ti;
     generate
         for (ti = 0; ti < NUM_SCPADS; ti++) begin : g_scpad
-            frontend #(.IDX(ti)) frontend (.fcif(sif));
-            backend #(.IDX(ti)) backend (.bif(sif));
+            frontend #(.IDX(ti)) frontend (.fvif(sif), .fsif(sif));
+            backend #(.IDX(ti)) backend (.bshif(sif), .bbif(sif), .bdrif(sif));
             body #(.IDX(ti)) body (.bif(sif));
         end
     endgenerate

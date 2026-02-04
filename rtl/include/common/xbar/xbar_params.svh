@@ -1,18 +1,37 @@
+/*  Akshath Raghav Ravikiran - araviki@purdue.edu */
+
 `ifndef XBAR_PARAMS_SVH
 `define XBAR_PARAMS_SVH
 
-    parameter int unsigned NAIVE_LATENCY = 1;
-    parameter int unsigned BENES_LATENCY = 3;
-    parameter int unsigned BATCHER_LATENCY = 4;
-    
-    `ifndef BATCHER_SIZE
-        `define BATCHER_SIZE 32
-    `endif
-    `ifndef BATCHER_DWIDTH
-        `define BATCHER_DWIDTH 16
-    `endif
-    `ifndef BATCHER_REGISTER_MASK
-        `define BATCHER_REGISTER_MASK 14'b11111111111111
-    `endif
-    
+parameter int unsigned NAIVE_LATENCY = 1;
+parameter int unsigned BENES_LATENCY = 9;
+parameter int unsigned BATCHER_LATENCY = 5;
+
+`ifndef BATCHER_SIZE
+    `define BATCHER_SIZE 32
 `endif
+`ifndef BATCHER_DWIDTH
+    `define BATCHER_DWIDTH 16
+`endif
+`ifndef BATCHER_REGISTER_MASK
+    `define BATCHER_REGISTER_MASK 14'b11111111111111
+`endif
+
+`ifndef BENES_SIZE
+    `define BENES_SIZE 32
+`endif
+`ifndef BENES_DWIDTH
+    `define BENES_DWIDTH 16
+`endif
+`ifndef BENES_REGISTER_MASK
+    `define BENES_REGISTER_MASK 8'b11111111
+`endif
+
+`ifndef CLOS_SIZE
+    `define CLOS_SIZE 32
+`endif
+`ifndef CLOS_DWIDTH
+    `define CLOS_DWIDTH 16
+`endif
+
+`endif // XBAR_PARAMS_SVH

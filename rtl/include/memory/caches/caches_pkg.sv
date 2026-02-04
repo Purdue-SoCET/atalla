@@ -4,7 +4,7 @@
 `ifndef CACHES_PKG_SV
 `define CACHES_PKG_SV
 
-package scpad_pkg;
+package caches_pkg;
     `include "caches_params.svh"
 
     localparam NUM_SETS = (CACHE_SIZE / 4) / (BLOCK_SIZE);
