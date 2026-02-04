@@ -6,8 +6,6 @@ vsim.*
 .deps/
 .mti_uselibs/
 .deps/
-*.log
-.editorconfig
 
 !.gitignore
 !.gitmodules
