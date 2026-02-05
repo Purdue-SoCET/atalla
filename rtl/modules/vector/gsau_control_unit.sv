@@ -79,4 +79,28 @@ module gsau_control_unit #(
 
   end
 
+    // WB performance of GSAU -> Vector
+    perf_handshake u_perf_handshake_wb (
+      .CLK(CLK),
+      .nRST(nRST),
+      .valid(gsau_port.wb_valid),
+      .ready(gsau_port.wb_output_ready)
+    );
+
+    // Filling GSAU FIFO
+    perf_counter u_perf_cnt_fill (
+        .CLK(CLK),
+        .nRST(nRST),
+        .enable(gsau_port.sa_input_en)
+    );
+
+    // Draining GSAU FIFO
+    perf_counter u_perf_cnt_drain (
+        .CLK(CLK),
+        .nRST(nRST),
+        .enable(gsau_port.sa_out_valid)
+    );
+
+
 endmodule
+

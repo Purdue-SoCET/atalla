@@ -3,8 +3,8 @@ module perf_counter #(
 ) (
   input logic CLK,
   input logic nRST,
-  input logic enable, // Enable counting
-  input logic clear, // Synchronous clear
+  input logic enable = 1'b1, // Enable counting
+  input logic clear = 1'b0, // Synchronous clear
   output logic [WIDTH-1:0] count // Current count value
 );
 
@@ -19,3 +19,4 @@ module perf_counter #(
   end
 
 endmodule
+

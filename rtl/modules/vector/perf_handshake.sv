@@ -1,23 +1,23 @@
-`include "perf_handshake_if.vh"
-
 module perf_handshake #(
     parameter int SIG_WIDTH = 1, // Width of the valid/ready signals
     parameter int CNT_WIDTH = 32 // Width of the cycle count
 ) (
     input logic CLK,
     input logic nRST,
+    input logic [SIG_WIDTH-1:0]     valid, ready,
+    output logic [CNT_WIDTH-1:0]    cnt_trans_cycles, cnt_stall_cycles,
+                                    cnt_starve_cycles, cnt_total_items,
     input logic enable = 1'b1,
-    input logic clear = 1'b0,
-    perf_handshake_if.phif phif
+    input logic clear = 1'b0
 );
 
   logic [SIG_WIDTH-1:0] trans_bits, stall_bits, starve_bits;
   logic [$clog2(SIG_WIDTH)+1:0] item_count;
 
   always_comb begin : handshake_bits_comb
-    trans_bits = phif.valid & phif.ready;
-    stall_bits = phif.valid & ~phif.ready;
-    starve_bits = ~phif.valid & phif.ready;
+    trans_bits = valid & ready;
+    stall_bits = valid & ~ready;
+    starve_bits = ~valid & ready;
   end
 
   perf_counter #(
@@ -27,7 +27,7 @@ module perf_handshake #(
     .nRST(nRST),
     .enable(enable && |trans_bits),
     .clear(clear),
-    .count(phif.cnt_trans_cycles)
+    .count(cnt_trans_cycles)
   );
 
   perf_counter #(
@@ -37,7 +37,7 @@ module perf_handshake #(
     .nRST(nRST),
     .enable(enable && |stall_bits),
     .clear(clear),
-    .count(phif.cnt_stall_cycles)
+    .count(cnt_stall_cycles)
   );
 
   perf_counter #(
@@ -47,7 +47,7 @@ module perf_handshake #(
     .nRST(nRST),
     .enable(enable && |starve_bits),
     .clear(clear),
-    .count(phif.cnt_starve_cycles)
+    .count(cnt_starve_cycles)
   );
 
   always_comb begin : total_items_comb
@@ -61,11 +61,11 @@ module perf_handshake #(
 
   always_ff @(posedge CLK, negedge nRST) begin : total_items_ff
     if (!nRST) begin
-      phif.cnt_total_items <= '0;
+      cnt_total_items <= '0;
     end else if (clear) begin
-      phif.cnt_total_items <= '0;
+      cnt_total_items <= '0;
     end else if (enable) begin
-      phif.cnt_total_items <= phif.cnt_total_items + item_count;
+      cnt_total_items <= cnt_total_items + item_count;
     end
   end
 

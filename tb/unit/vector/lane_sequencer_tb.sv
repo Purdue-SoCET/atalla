@@ -634,7 +634,7 @@ module lane_sequencer_tb;
         //$dumpfile("lane_sequencer_tb.vcd");
         //$dumpvars(0, lane_sequencer_tb);
 
-        // $monitor("items processed: %d", dut.perf_seq_if.cnt_total_items);
+        // $monitor("items processed: %d", dut.u_perf_handshake.cnt_total_items);
 
         testname = "Scenario A: Happy Path";
         test_scenario_A(err);
