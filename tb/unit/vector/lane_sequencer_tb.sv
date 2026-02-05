@@ -476,7 +476,7 @@ module lane_sequencer_tb;
                 end
             end
 
-            $display("elems accept: %d", elems_accept);
+            @(posedge CLK);
 
             // Expect at least one bubble cycle between A and B
             if (bubble_cycles == 0) begin
@@ -612,6 +612,8 @@ module lane_sequencer_tb;
                 end
             end
 
+            @(posedge CLK);
+
             if (err_cnt == 0)
                 $display(">>> %s PASSED", testname);
             else
@@ -632,7 +634,7 @@ module lane_sequencer_tb;
         //$dumpfile("lane_sequencer_tb.vcd");
         //$dumpvars(0, lane_sequencer_tb);
 
-        $monitor("items processed: %d", dut.perf_seq_if.cnt_total_items);
+        // $monitor("items processed: %d", dut.perf_seq_if.cnt_total_items);
 
         testname = "Scenario A: Happy Path";
         test_scenario_A(err);

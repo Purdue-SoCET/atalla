@@ -55,7 +55,6 @@ module perf_handshake #(
     for (int i = 0; i < SIG_WIDTH; i++) begin
       if (trans_bits[i]) begin
         item_count++;
-        $display("inc");
       end
     end
   end
