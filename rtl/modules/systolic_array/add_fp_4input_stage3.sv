@@ -14,12 +14,15 @@ module add_fp_4input_stage3 #(
     // N-bit left shifter and sticky bit reassign
     logic [MANTISSA_SIZE+PRECISION_BITS-1:0] shifted_sum; 
 
+    // Sets the sticky bit to zero if it is shifted into the mantissa
     always_comb begin : reset_sticky
         shifted_sum = sum << leading_zeros; 
         shifted_sum[0] = leading_zeros >= PRECISION_BITS ? 1'b0 : sum[0];
     end
 
-    // rounding
+    // rounding using FTZ
+
+    // internal mantissa has extra bit for overflow detection   
     logic overflow; 
     logic [MANTISSA_SIZE-1:0] unrounded_mantissa; 
     logic [MANTISSA_SIZE:0] rounded_mantissa_internal;
@@ -32,6 +35,9 @@ module add_fp_4input_stage3 #(
     assign sticky = shifted_sum[0];
 
     logic round_up;     
+
+    // If the guard bit is 1 and any of the round bit, sticky bit, or LSB of unrounded mantissa is 1, that means were are more than halfway 
+    // to the next value, so round up
     assign round_up = guard & (round | sticky | unrounded_mantissa[0]);
     assign rounded_mantissa_internal = unrounded_mantissa + round_up; 
     assign overflow = rounded_mantissa_internal[MANTISSA_SIZE];
@@ -48,12 +54,15 @@ module add_fp_4input_stage3 #(
         end
     end
 
-    // Exponent recalculation
+    // Exponent recalculation with extra 2 bits for overflow and underflow detection. Used signed numbers for easier calculations
     logic signed [EXPONENT_SIZE+1:0] new_exponent_internal; 
     logic [EXPONENT_SIZE-1:0] new_exponent;
     logic inf;
 
+    // new_exponent = exponent + overflow + right_shifts - leading_zeros
     assign new_exponent_internal = $signed({2'b0, exponent}) + $signed({{(EXPONENT_SIZE+1){1'b0}}, overflow}) + $signed({2'b0, right_shifts}) - $signed({2'b0, leading_zeros});
+    
+    // Handle special cases like overflow to infinity and underflow to zero
     always_comb begin
         inf = 0; 
         new_exponent = new_exponent_internal[EXPONENT_SIZE-1:0];
@@ -66,7 +75,7 @@ module add_fp_4input_stage3 #(
         end
     end
 
-    // Final sum assignment
+    // Final sum assignment. Depends on infinity, zero/subnormal, or normal number
     always_comb begin : final_mux
         if (inf) begin
             final_sum = {sign, new_exponent, {MANTISSA_SIZE{1'b0}}};
