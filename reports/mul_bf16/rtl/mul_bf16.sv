@@ -56,7 +56,7 @@ module mul_bf16(
                 is_nan = 1'b1; 
             end else begin 
                 // a is inf 
-                a_inf = 0; 
+                a_inf = 1'b1; 
             end
         end
 
@@ -67,7 +67,7 @@ module mul_bf16(
                 is_nan = 1'b1; 
             end else begin 
                 // b is inf 
-                b_inf = 0; 
+                b_inf = 1'b1; 
             end
         end
     end
@@ -148,7 +148,7 @@ module mul_bf16(
     logic [7:0] mul_final_exp;
     assign mul_final_exp = (mul_product == 0) ? 0 : mul_significand_rounded[7] ? exp_sum + 1 : exp_sum;
     assign mul_unf = unf | ~|mul_final_exp;
-    assign mul_ovf = ovf | &mul_final_exp; 
+    assign mul_ovf = ~mul_unf & (ovf | &mul_final_exp); 
     assign result =  nan ? QNAN :   
                      inf ? {mul_sign_result, POS_INF[14:0]} : 
                      ~|a_latched[14:7] || ~|b_latched[14:7] ? {mul_sign_result, 15'b0} :  // subnormal inputs or output 

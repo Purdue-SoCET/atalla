@@ -1,6 +1,7 @@
 // testbench for bf16 multiplier 
 // Made My Mixuan Pan 
 // Last Mdified: 2/3, 2026
+// gtkwave waves.vcd --save=mac_debug.gtkw
 // Command: verilator --binary -j 0 -Wall -Wno-fatal mul_bf16_tb.sv mul_bf16.sv -Imodules -Itestbench -Iinclude --hierarchical --trace; ./obj_dir/Vmul_bf16_tb; gtkwave ../waves/mul_bf16_waves.vcd --save=waves/mul_bf16_debug.gtkw 
 `timescale 1ns/1ps
 module mul_bf16_tb;
@@ -63,6 +64,10 @@ module mul_bf16_tb;
         errors_unf = 0;
         #20; 
         nRST = 1;
+
+        // create VCD for waveform viewing
+        $dumpfile("mul_bf16_waves.vcd");
+        $dumpvars(0, DUT);
 
         // open generated test file
         fd = $fopen("random_bf16_mul_cases.txt", "r");
