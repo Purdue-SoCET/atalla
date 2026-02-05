@@ -2,13 +2,18 @@ module perf_handshake #(
     parameter int SIG_WIDTH = 1, // Width of the valid/ready signals
     parameter int CNT_WIDTH = 32 // Width of the cycle count
 ) (
-    input logic CLK,
-    input logic nRST,
-    input logic [SIG_WIDTH-1:0]     valid, ready,
-    output logic [CNT_WIDTH-1:0]    cnt_trans_cycles, cnt_stall_cycles,
-                                    cnt_starve_cycles, cnt_total_items,
-    input logic enable = 1'b1,
-    input logic clear = 1'b0
+    input logic CLK, nRST,
+
+    input logic [SIG_WIDTH-1:0] valid, ready,
+
+    output logic [CNT_WIDTH-1:0]
+        cnt_trans_cycles,   // Cycles transaction occured (valid & ready)
+        cnt_stall_cycles,   // Cycles stall occured (valid & ~ready)
+        cnt_starve_cycles,  // Cycles starve occured (~valid & ready)
+        cnt_total_items,    // Total number of items processed
+
+    input logic enable  = 1'b1,
+                clear   = 1'b0
 );
 
   logic [SIG_WIDTH-1:0] trans_bits, stall_bits, starve_bits;

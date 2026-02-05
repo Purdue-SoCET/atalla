@@ -696,4 +696,77 @@ module lane #(
 
     end
 
+    // ============================================================
+    // Performance Counters
+    // ============================================================
+
+    perf_fu u_perf_fu_valu (
+        .CLK(CLK),
+        .nRST(nRST),
+        .seq_busy(!valu_seq_out.lane_ready),
+        .issue_valid(valu_seq_out.valid),
+        .fire_valid(valu_fire_valid),
+        .sync_ready(valu_sync_ready),
+        .hold_valid(valu_hold_valid),
+        .wb_ready(lif.lane_in.ready_in[VALU])
+    );
+
+    perf_fu u_perf_fu_exp (
+        .CLK(CLK),
+        .nRST(nRST),
+        .seq_busy(!exp_seq_out.lane_ready),
+        .issue_valid(exp_seq_out.valid),
+        .fire_valid(exp_fire_valid),
+        .sync_ready(exp_sync_ready),
+        .hold_valid(exp_hold_valid),
+        .wb_ready(lif.lane_in.ready_in[EXP])
+    );
+
+    perf_fu u_perf_fu_sqrt (
+        .CLK(CLK),
+        .nRST(nRST),
+        .seq_busy(!sqrt_seq_out.lane_ready),
+        .issue_valid(sqrt_seq_out.valid),
+        .fire_valid(sqrt_fire_valid),
+        .sync_ready(sqrt_sync_ready),
+        .hold_valid(sqrt_hold_valid),
+        .wb_ready(lif.lane_in.ready_in[SQRT])
+    );
+
+    perf_fu u_perf_fu_mul (
+        .CLK(CLK),
+        .nRST(nRST),
+        .seq_busy(!mul_seq_out.lane_ready),
+        .issue_valid(mul_seq_out.valid),
+        .fire_valid(mul_fire_valid),
+        .sync_ready(mul_sync_ready),
+        .hold_valid(mul_hold_valid),
+        .wb_ready(lif.lane_in.ready_in[MUL])
+    );
+
+    perf_fu u_perf_fu_div (
+        .CLK(CLK),
+        .nRST(nRST),
+        .seq_busy(!div_seq_out.lane_ready),
+        .issue_valid(div_seq_out.valid),
+        .fire_valid(div_fire_valid),
+        .sync_ready(div_sync_ready),
+        .hold_valid(div_hold_valid),
+        .wb_ready(lif.lane_in.ready_in[DIV])
+    );
+
+    logic is_mask_skip;
+    assign is_mask_skip =
+        (valu_seq_out.valid && !valu_seq_out.mask_bit)  ||
+        (exp_seq_out.valid  && !exp_seq_out.mask_bit)   ||
+        (sqrt_seq_out.valid && !sqrt_seq_out.mask_bit)  ||
+        (mul_seq_out.valid  && !mul_seq_out.mask_bit)   ||
+        (div_seq_out.valid  && !div_seq_out.mask_bit);
+
+    perf_counter u_perf_cnt_mask_skip (
+        .CLK(CLK),
+        .nRST(nRST),
+        .enable(is_mask_skip)
+    );
+
 endmodule

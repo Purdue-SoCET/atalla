@@ -146,15 +146,4 @@ module lane_sequencer (
         endcase
     end
 
-    // --------------------------------------------------------
-    // Performance counters
-    // --------------------------------------------------------
-
-    perf_handshake u_perf_handshake (
-        .CLK(CLK),
-        .nRST(nRST),
-        .valid(lane_out.valid),
-        .ready(lane_in.ready)
-    );
-
 endmodule
