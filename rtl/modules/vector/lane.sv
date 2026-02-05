@@ -711,6 +711,7 @@ module lane #(
         .wb_ready(lif.lane_in.ready_in[VALU])
     );
 
+    /* TODO: enable once exp is added
     perf_fu u_perf_fu_exp (
         .CLK(CLK),
         .nRST(nRST),
@@ -721,6 +722,7 @@ module lane #(
         .hold_valid(exp_hold_valid),
         .wb_ready(lif.lane_in.ready_in[EXP])
     );
+    */
 
     perf_fu u_perf_fu_sqrt (
         .CLK(CLK),
@@ -758,7 +760,7 @@ module lane #(
     logic is_mask_skip;
     assign is_mask_skip =
         (valu_seq_out.valid && !valu_seq_out.mask_bit)  ||
-        (exp_seq_out.valid  && !exp_seq_out.mask_bit)   ||
+        // (exp_seq_out.valid  && !exp_seq_out.mask_bit)   ||
         (sqrt_seq_out.valid && !sqrt_seq_out.mask_bit)  ||
         (mul_seq_out.valid  && !mul_seq_out.mask_bit)   ||
         (div_seq_out.valid  && !div_seq_out.mask_bit);

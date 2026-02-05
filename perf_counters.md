@@ -1,0 +1,16 @@
+- lanes fu (exp, sqrt, mul, div, valu)
+    - cycles fu is budy
+    - cycles pipeline accepted data
+    - cycles stall occured
+        - reason for stall
+    - number of elements skipped due to masking
+    - count bubbles
+- gsau
+    - valid ready for wb
+    - filling/draining fifo
+- vector datapath
+    - valid ready for instr issue
+    - count type of instrs (mem, reduction, arithmetic)
+    - average issue width per cycle
+    - average latency
+
