@@ -83,8 +83,8 @@ module gsau_control_unit #(
     perf_handshake u_perf_handshake_wb (
       .CLK(CLK),
       .nRST(nRST),
-      .valid(gsau_port.wb_valid),
-      .ready(gsau_port.wb_output_ready)
+      .valid(gsau_port.wb_valid_out),
+      .ready(gsau_port.wb_ready_in)
     );
 
     // Filling GSAU FIFO
@@ -98,9 +98,8 @@ module gsau_control_unit #(
     perf_counter u_perf_cnt_drain (
         .CLK(CLK),
         .nRST(nRST),
-        .enable(gsau_port.sa_out_valid)
+        .enable(gsau_port.sa_valid_in)
     );
-
 
 endmodule
 
