@@ -1,17 +1,17 @@
-[ ] lanes fu (exp, sqrt, mul, div, valu)
-    [X] cycles fu is busy
-    [X] cycles pipeline accepted data
-    [X] cycles stall occured
-        [X] reason for stall
-    [X] number of elements skipped due to masking
-    [ ] count bubbles
-[X] gsau
-    [X] valid ready for wb
-    [X] filling/draining fifo
-[ ] vector datapath
-    [X] valid ready for instr issue
-    [X] valid ready for gsau to veggie
-    [ ] count type of instrs (mem, reduction, arithmetic)
-    [ ] average issue width per cycle
-    [ ] average latency
+- [ ] lanes fu (exp, sqrt, mul, div, valu)
+    - [X] cycles fu is busy
+    - [X] cycles pipeline accepted data
+    - [X] cycles stall occured
+        - [X] reason for stall
+    - [X] number of elements skipped due to masking
+    - [ ] count bubbles
+- [X] gsau
+    - [X] valid ready for wb
+    - [X] filling/draining fifo
+- [ ] vector datapath
+    - [X] valid ready for instr issue
+    - [X] valid ready for gsau to veggie
+    - [ ] count type of instrs (mem, reduction, arithmetic)
+    - [ ] average issue width per cycle
+    - [ ] average latency
 
