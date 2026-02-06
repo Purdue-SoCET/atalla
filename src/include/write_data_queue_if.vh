@@ -5,6 +5,10 @@
 
 interface write_data_queue_if;
 
+logic wstrb, wvalid, wdata, wid, wlen;
+logic wready, bwvalid, bwresp, bwid;
+logic bwready;
+
 endinterface
 
 `endif // WRITE_DATA_QUEUE_IF
