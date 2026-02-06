@@ -375,4 +375,11 @@ module vector_datapath (
         .ready(vif.vector_out.ready_o)
     );
 
+    perf_handshake  u_perf_handshake_gsau_veggie (
+        .CLK(CLK),
+        .nRST(nRST),
+        .valid(vif.vector_in.gsau.veg_valid),
+        .ready(vif.vector_out.gsau.veg_ready)
+    );
+
 endmodule
