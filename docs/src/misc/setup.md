@@ -15,7 +15,34 @@ You will need to download [Cisco AnyConnect VPN](https://it.purdue.edu/newsroom/
 * Run `source /package/asicfab/AccountSetup/init.bash`
 * Add the following into `~/.bashrc`
 ```bash
-# needed
+[[ $- == *i* ]] || return
+HOSTNAME=$(hostname)
+
+if [ ${HOSTNAME} == "asicfab.ecn.purdue.edu" ]; then
+        source /package/asicfab/AccountSetup/init.bash
+
+        alias ls="ls --color"
+        alias ll="ls -la"
+
+
+        export COPYBUFFER=/package/asicfab/CopyBuffer
+        export MODULEPATH=/package/asicfab/AccountSetup/modulefiles:$MODULEPATH
+        export PATH=$HOME/.local/bin:$PATH # for python packages
+        unset PYTHONPATH
+        # For fusesoc + Questa usage
+        export MODEL_TECH="$(dirname $(which vsim))"
+
+        ###### CUSTOM CHANGES BELOW THIS LINE #######
+        module load gcc/11.2.0 python3/3.11
+        module load riscv-gcc verilator/5.036 gtkwave
+        module load cadence/xcelium/23.03 siemens/questa/2021.4 intel/quartus-std
+        module load lcov
+elif [ ${HOSTNAME} == "asicfabu.ecn.purdue.edu" ]; then
+        module load verilator gtkwave surfer lcov
+else
+        echo "Unknown host ${HOSTNAME}; not loading modules"
+fi
+
 module load cadence/genus       # used for synthesis
 module load cadence/innovus     # used for physical implementation 
 module load cadence/virtuoso    # used for manually inspecting and manipulating the design
@@ -29,8 +56,9 @@ export LD_PRELOAD=/lib64/libz.so.1
 
 Follow the steps in the [Github SSH-ing](https://docs.github.com/en/authentication/connecting-to-github-with-ssh) document. You should be able to clone the Atalla repository locally using `git clone git@github.com:Purdue-SoCET/atalla.git` now.
 
-#### Browse through the Makefile
 
-Run `make setup` after cloning into Atalla. It'll setup any additional packages required. The Makefile allows you to run make commands directly, but also allows you to define `.tcl` files under `/scripts` and run them.
-
-To test out a basic file, run `make run FILE=./scripts/common/xbar/clos/test.tcl`. You should see a passing testcase! 
+To test out a basic file, run 
+```
+git checkout scratchpad_main
+make run FILE=./scripts/common/xbar/clos/test.tcl
+```
