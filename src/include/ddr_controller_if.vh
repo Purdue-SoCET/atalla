@@ -1,9 +1,11 @@
-`ifndef WRITE_DATA_QUEUE_IF_VH
-`define WRITE_DATA_QUEUE_IF_VH
+`ifndef DDR_CONTROLLER_IF_VH
+`define DDR_CONTROLLER_IF_VH
 
 `include "dram_pkg.vh"
 
-interface write_data_queue_if;
+interface ddr_controller_if;
+
+// AXI 
 
 logic wstrb, wvalid, wdata, wid, wlen;
 logic wready, bwvalid, bwresp, bwid;
@@ -11,4 +13,4 @@ logic bwready;
 
 endinterface
 
-`endif // WRITE_DATA_QUEUE_IF
+`endif // DDR_CONTROLLER_IF_VH
