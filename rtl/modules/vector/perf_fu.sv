@@ -22,11 +22,8 @@ module perf_fu #(
 );
 
     logic is_stall_fifo, is_stall_wb;
-
-    always_comb begin : stall_type_comb
-        is_stall_fifo = issue_valid && !sync_ready;
-        is_stall_wb = hold_valid && !wb_ready;
-    end
+    assign is_stall_fifo = issue_valid && !sync_ready;
+    assign is_stall_wb = hold_valid && !wb_ready;
 
     perf_counter #(
         .WIDTH(CNT_WIDTH)

@@ -364,4 +364,15 @@ module vector_datapath (
     assign vif.vector_out.reduction_valid  = vruif.out.valid_out;
     assign vif.vector_out.reduction_vd     = reduction_vd;
 
+    // --------------------------------------------------------
+    // 6. Performance Counters
+    // --------------------------------------------------------
+
+    perf_handshake #(.SIG_WIDTH(LANE_ISSUE_W)) u_perf_handshake_vec (
+        .CLK(CLK),
+        .nRST(nRST),
+        .valid(vif.vector_in.valid_in),
+        .ready(vif.vector_out.ready_o)
+    );
+
 endmodule
