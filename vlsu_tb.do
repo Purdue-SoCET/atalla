@@ -1,77 +1,58 @@
 onerror {resume}
 quietly WaveActivateNextPane {} 0
-add wave -noupdate -divider {Clock & Reset}
-add wave -noupdate /vlsu_tb/clk
-add wave -noupdate /vlsu_tb/n_rst
-add wave -noupdate -divider {Scheduler Interface}
-add wave -noupdate /vlsu_tb/sched_valid_in
-add wave -noupdate /vlsu_tb/sched_ready_out
-add wave -noupdate /vlsu_tb/sched_write
-add wave -noupdate -radix hexadecimal /vlsu_tb/sched_addr
-add wave -noupdate -radix unsigned /vlsu_tb/sched_sp_sel
-add wave -noupdate -radix hexadecimal /vlsu_tb/sched_vdst
-add wave -noupdate -divider {VRF Store}
-add wave -noupdate /vlsu_tb/vrf_store_valid
-add wave -noupdate -radix hexadecimal /vlsu_tb/vrf_store_data
-add wave -noupdate -divider {SP0 Request}
-add wave -noupdate {/vlsu_tb/sp_req[0].valid}
-add wave -noupdate {/vlsu_tb/sp_req[0].write}
-add wave -noupdate -radix hexadecimal {/vlsu_tb/sp_req[0].spad_addr}
+add wave -noupdate -divider {Clock / Reset}
+add wave -noupdate /vlsu_tb/CLK
+add wave -noupdate /vlsu_tb/nRST
+add wave -noupdate -divider {Sched Ch0}
+add wave -noupdate {/vlsu_tb/sched_valid_in[0]}
+add wave -noupdate {/vlsu_tb/sched_ready_out[0]}
+add wave -noupdate {/vlsu_tb/sched_write[0]}
+add wave -noupdate -radix hexadecimal {/vlsu_tb/sched_addr[0]}
+add wave -noupdate -radix unsigned {/vlsu_tb/sched_vdst[0]}
+add wave -noupdate -divider {Sched Ch1}
+add wave -noupdate {/vlsu_tb/sched_valid_in[1]}
+add wave -noupdate {/vlsu_tb/sched_ready_out[1]}
+add wave -noupdate {/vlsu_tb/sched_write[1]}
+add wave -noupdate -radix hexadecimal {/vlsu_tb/sched_addr[1]}
+add wave -noupdate -radix unsigned {/vlsu_tb/sched_vdst[1]}
+add wave -noupdate -divider {SP Req/Res Ch0}
+add wave -noupdate {/vlsu_tb/sp_req[0]}
 add wave -noupdate {/vlsu_tb/sp_stall[0]}
-add wave -noupdate -divider {SP1 Request}
-add wave -noupdate {/vlsu_tb/sp_req[1].valid}
-add wave -noupdate {/vlsu_tb/sp_req[1].write}
-add wave -noupdate -radix hexadecimal {/vlsu_tb/sp_req[1].spad_addr}
+add wave -noupdate {/vlsu_tb/sp_res[0]}
+add wave -noupdate -divider {SP Req/Res Ch1}
+add wave -noupdate {/vlsu_tb/sp_req[1]}
 add wave -noupdate {/vlsu_tb/sp_stall[1]}
-add wave -noupdate -divider {SP0 Response}
-add wave -noupdate {/vlsu_tb/sp_res[0].valid}
-add wave -noupdate {/vlsu_tb/sp_res[0].write}
-add wave -noupdate -radix hexadecimal {/vlsu_tb/sp_res[0].rdata}
-add wave -noupdate -divider {SP1 Response}
-add wave -noupdate {/vlsu_tb/sp_res[1].valid}
-add wave -noupdate {/vlsu_tb/sp_res[1].write}
-add wave -noupdate -radix hexadecimal {/vlsu_tb/sp_res[1].rdata}
+add wave -noupdate {/vlsu_tb/sp_res[1]}
 add wave -noupdate -divider Writeback
 add wave -noupdate /vlsu_tb/wb_valid_out
 add wave -noupdate /vlsu_tb/wb_ready_in
-add wave -noupdate -radix hexadecimal /vlsu_tb/wb_vdst
-add wave -noupdate -radix hexadecimal /vlsu_tb/wb_load_data
-add wave -noupdate -divider {VLSU Internals}
-add wave -noupdate /vlsu_tb/DUT/is_load
-add wave -noupdate /vlsu_tb/DUT/is_store
-add wave -noupdate -radix unsigned /vlsu_tb/DUT/sp_select
-add wave -noupdate /vlsu_tb/DUT/can_accept_load
-add wave -noupdate /vlsu_tb/DUT/can_accept_store
-add wave -noupdate /vlsu_tb/DUT/can_accept_req
-add wave -noupdate -divider {FIFO Control}
+add wave -noupdate -radix unsigned /vlsu_tb/wb_vdst
+add wave -noupdate -divider Status
+add wave -noupdate /vlsu_tb/vlsu_busy
+add wave -noupdate /vlsu_tb/load_queue_full
+add wave -noupdate -divider {DUT Arbitration}
+add wave -noupdate -radix unsigned /vlsu_tb/DUT/rr_priority
+add wave -noupdate /vlsu_tb/DUT/found_pending
+add wave -noupdate -radix unsigned /vlsu_tb/DUT/winner_idx
+add wave -noupdate /vlsu_tb/DUT/resp_pending
+add wave -noupdate -divider {DUT Load Queue}
 add wave -noupdate /vlsu_tb/DUT/fifo_wr_en
 add wave -noupdate /vlsu_tb/DUT/fifo_shift
 add wave -noupdate /vlsu_tb/DUT/fifo_empty
 add wave -noupdate /vlsu_tb/DUT/fifo_full
-add wave -noupdate -radix hexadecimal /vlsu_tb/DUT/fifo_din
-add wave -noupdate -radix hexadecimal /vlsu_tb/DUT/fifo_dout
-add wave -noupdate -divider {Response Arb}
-add wave -noupdate /vlsu_tb/DUT/sp_res_pending
-add wave -noupdate /vlsu_tb/DUT/found_pending
-add wave -noupdate -radix unsigned /vlsu_tb/DUT/pending_sp_idx
-add wave -noupdate -divider Status
-add wave -noupdate /vlsu_tb/vlsu_busy
-add wave -noupdate {/vlsu_tb/load_queue_full[0]}
-add wave -noupdate {/vlsu_tb/load_queue_full[1]}
-add wave -noupdate -divider {SP Model Pipeline}
-add wave -noupdate -radix binary {/vlsu_tb/sp_delay_valid[0]}
-add wave -noupdate -radix binary {/vlsu_tb/sp_delay_valid[1]}
-add wave -noupdate -divider {Test Status}
-add wave -noupdate -radix ascii /vlsu_tb/current_test_type
-add wave -noupdate -radix unsigned /vlsu_tb/total_tests
-add wave -noupdate -radix unsigned /vlsu_tb/passed_tests
-add wave -noupdate -radix unsigned /vlsu_tb/failed_tests
-add wave -noupdate -expand {/vlsu_tb/DUT/gen_load_queues[0]/load_queue/fifo}
+add wave -noupdate -divider {DUT Resp Queue}
+add wave -noupdate /vlsu_tb/DUT/resp_wr_en
+add wave -noupdate /vlsu_tb/DUT/resp_shift
+add wave -noupdate /vlsu_tb/DUT/resp_empty
+add wave -noupdate /vlsu_tb/DUT/resp_full
+add wave -noupdate -divider Test
+add wave -noupdate -radix unsigned /vlsu_tb/test_num
+add wave -noupdate -radix unsigned /vlsu_tb/errors
 TreeUpdate [SetDefaultTree]
-WaveRestoreCursors {{Cursor 1} {695 ps} 0}
-quietly wave cursor active 1
-configure wave -namecolwidth 280
-configure wave -valuecolwidth 150
+WaveRestoreCursors {{Cursor 1} {0 ns} 0}
+quietly wave cursor active 0
+configure wave -namecolwidth 150
+configure wave -valuecolwidth 100
 configure wave -justifyvalue left
 configure wave -signalnamewidth 1
 configure wave -snapdistance 10
@@ -82,6 +63,6 @@ configure wave -gridoffset 0
 configure wave -gridperiod 1
 configure wave -griddelta 40
 configure wave -timeline 0
-configure wave -timelineunits ps
+configure wave -timelineunits ns
 update
-WaveRestoreZoom {647 ps} {755 ps}
+WaveRestoreZoom {0 ns} {1 us}

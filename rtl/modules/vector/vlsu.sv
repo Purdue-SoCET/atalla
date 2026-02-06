@@ -1,65 +1,81 @@
 `include "vector_pkg.vh"
-`include "scpad_params.svh"
 `include "scpad_pkg.sv"
 
 module vlsu #(
-    parameter int FIFO_DEPTH = 13,       // Matches scratchpad latency
-    parameter int NUM_VREGS  = 256       // Number of vector registers
+    parameter int FIFO_DEPTH = 13,
+    parameter int NUM_VREGS  = 256
 ) (
     input  logic        CLK,
     input  logic        nRST,
 
-    input  logic                                    sched_valid_in,
-    output logic                                    sched_ready_out,
-    input  logic                                    sched_write,     // 1=store, 0=load
-    input  logic [scpad_pkg::SCPAD_ADDR_WIDTH-1:0]  sched_addr,      // Scratchpad address
-    input  logic [scpad_pkg::SCPAD_ID_WIDTH-1:0]    sched_sp_sel,    // Scratchpad select
-    input  logic [vector_pkg::VIDX_W-1:0]           sched_vdst,      // Dest register (loads)
-    
-    // Swizzle parameters for scratchpad
-    input  logic [scpad_pkg::MAX_DIM_WIDTH-1:0]     sched_num_rows,
-    input  logic [scpad_pkg::MAX_DIM_WIDTH-1:0]     sched_num_cols,
-    input  logic [scpad_pkg::MAX_DIM_WIDTH-1:0]     sched_row_id,
-    input  logic [scpad_pkg::MAX_DIM_WIDTH-1:0]     sched_col_id,
-    input  logic                                    sched_row_or_col,
+    // Scheduler interface - one channel per scratchpad
+    input  logic                                        sched_valid_in  [scpad_pkg::NUM_SCPADS],
+    output logic                                        sched_ready_out [scpad_pkg::NUM_SCPADS],
+    input  logic                                        sched_write     [scpad_pkg::NUM_SCPADS],
+    input  logic [scpad_pkg::SCPAD_ADDR_WIDTH-1:0]      sched_addr      [scpad_pkg::NUM_SCPADS],
+    input  logic [vector_pkg::VIDX_W-1:0]               sched_vdst      [scpad_pkg::NUM_SCPADS],
 
-    input  vector_pkg::vreg_t                       vrf_store_data,
-    input  logic                                    vrf_store_valid,
+    // Swizzle parameters - per channel
+    input  logic [scpad_pkg::MAX_DIM_WIDTH-1:0]         sched_num_rows  [scpad_pkg::NUM_SCPADS],
+    input  logic [scpad_pkg::MAX_DIM_WIDTH-1:0]         sched_num_cols  [scpad_pkg::NUM_SCPADS],
+    input  logic [scpad_pkg::MAX_DIM_WIDTH-1:0]         sched_row_id    [scpad_pkg::NUM_SCPADS],
+    input  logic [scpad_pkg::MAX_DIM_WIDTH-1:0]         sched_col_id    [scpad_pkg::NUM_SCPADS],
+    input  logic                                        sched_row_or_col[scpad_pkg::NUM_SCPADS],
 
-    output scpad_pkg::req_t                         sp_req  [scpad_pkg::NUM_SCPADS],
-    input  logic                                    sp_stall [scpad_pkg::NUM_SCPADS],
-    input  scpad_pkg::res_t                         sp_res  [scpad_pkg::NUM_SCPADS],
+    // VRF store data - one per channel
+    input  vector_pkg::vreg_t                           vrf_store_data  [scpad_pkg::NUM_SCPADS],
+    input  logic                                        vrf_store_valid [scpad_pkg::NUM_SCPADS],
 
-    output vector_pkg::vreg_t                       wb_load_data,
-    output logic [vector_pkg::VIDX_W-1:0]           wb_vdst,
-    output logic                                    wb_valid_out,
-    input  logic                                    wb_ready_in,
+    // Scratchpad interface - per scratchpad
+    output scpad_pkg::req_t                             sp_req  [scpad_pkg::NUM_SCPADS],
+    input  logic                                        sp_stall [scpad_pkg::NUM_SCPADS],
+    input  scpad_pkg::res_t                             sp_res  [scpad_pkg::NUM_SCPADS],
 
-    output logic                                    vlsu_busy,
-    output logic                                    load_queue_full [scpad_pkg::NUM_SCPADS]
+    // Writeback - single port to writeback buffer
+    output vector_pkg::vreg_t                           wb_load_data,
+    output logic [vector_pkg::VIDX_W-1:0]               wb_vdst,
+    output logic                                        wb_valid_out,
+    input  logic                                        wb_ready_in,
+
+    output logic                                        vlsu_busy,
+    output logic                                        load_queue_full [scpad_pkg::NUM_SCPADS]
 );
 
     import vector_pkg::*;
     import scpad_pkg::*;
 
-    localparam int VDST_WIDTH = VIDX_W;
-    
+    localparam int VDST_WIDTH   = VIDX_W;
+    localparam int RDATA_WIDTH  = $bits(scpad_data_t);
+    localparam int SP_IDX_WIDTH = (NUM_SCPADS > 1) ? $clog2(NUM_SCPADS) : 1;
+
+    //----------------------------------------------------------------
+    // Per-channel load queue FIFOs (stores vdst, pushed on load issue)
+    //----------------------------------------------------------------
     logic [NUM_SCPADS-1:0]                   fifo_wr_en;
     logic [NUM_SCPADS-1:0]                   fifo_shift;
     logic [NUM_SCPADS-1:0][VDST_WIDTH-1:0]   fifo_din;
     logic [NUM_SCPADS-1:0][VDST_WIDTH-1:0]   fifo_dout;
     logic [NUM_SCPADS-1:0]                   fifo_empty;
     logic [NUM_SCPADS-1:0]                   fifo_full;
-    
+
+    //----------------------------------------------------------------
+    // Per-channel response FIFOs (stores rdata, pushed on sp_res valid)
+    //----------------------------------------------------------------
+    logic [NUM_SCPADS-1:0]                   resp_wr_en;
+    logic [NUM_SCPADS-1:0]                   resp_shift;
+    logic [NUM_SCPADS-1:0][RDATA_WIDTH-1:0]  resp_din;
+    logic [NUM_SCPADS-1:0][RDATA_WIDTH-1:0]  resp_dout;
+    logic [NUM_SCPADS-1:0]                   resp_empty;
+    logic [NUM_SCPADS-1:0]                   resp_full;
+
     genvar gi;
     generate
-        for (gi = 0; gi < NUM_SCPADS; gi++) begin : gen_load_queues
+        for (gi = 0; gi < NUM_SCPADS; gi++) begin : gen_queues
             sync_fifo #(
                 .FIFODEPTH(FIFO_DEPTH),
                 .DATAWIDTH(VDST_WIDTH)
             ) load_queue (
-                .nRST   (nRST),
-                .CLK    (CLK),
+                .nRST, .CLK,
                 .wr_en  (fifo_wr_en[gi]),
                 .shift  (fifo_shift[gi]),
                 .din    (fifo_din[gi]),
@@ -67,26 +83,54 @@ module vlsu #(
                 .empty  (fifo_empty[gi]),
                 .full   (fifo_full[gi])
             );
+
+            sync_fifo #(
+                .FIFODEPTH(FIFO_DEPTH),
+                .DATAWIDTH(RDATA_WIDTH)
+            ) resp_queue (
+                .nRST, .CLK,
+                .wr_en  (resp_wr_en[gi]),
+                .shift  (resp_shift[gi]),
+                .din    (resp_din[gi]),
+                .dout   (resp_dout[gi]),
+                .empty  (resp_empty[gi]),
+                .full   (resp_full[gi])
+            );
         end
     endgenerate
-    
-    logic is_load;
-    logic is_store;
-    logic [SCPAD_ID_WIDTH-1:0] sp_select;  // Which scratchpad (parameterized width)
-    logic can_accept_load;
-    logic can_accept_store;
-    logic can_accept_req;
-    logic [NUM_SCPADS-1:0] sp_res_pending;  // Response pending per scratchpad
-    
-    // For response arbitration - find first pending response
-    logic found_pending;
-    logic [SCPAD_ID_WIDTH-1:0] pending_sp_idx;
-    
+
+    // Round-robin priority for writeback arbitration
+    logic [SP_IDX_WIDTH-1:0] rr_priority;
+
+    always_ff @(posedge CLK or negedge nRST) begin
+        if (!nRST)
+            rr_priority <= '0;
+        else if (wb_valid_out && wb_ready_in) begin
+            if (rr_priority == SP_IDX_WIDTH'(NUM_SCPADS - 1))
+                rr_priority <= '0;
+            else
+                rr_priority <= rr_priority + 1'b1;
+        end
+    end
+
+    // Combinational signals
+    logic [NUM_SCPADS-1:0] is_load;
+    logic [NUM_SCPADS-1:0] is_store;
+    logic [NUM_SCPADS-1:0] can_accept;
+    logic [NUM_SCPADS-1:0] resp_pending;  // channel has both vdst and rdata ready
+
+    logic                    found_pending;
+    logic [SP_IDX_WIDTH-1:0] winner_idx;
+
     always_comb begin
+        // FIFO control defaults
         fifo_wr_en = '0;
         fifo_shift = '0;
         fifo_din   = '0;
-        
+        resp_wr_en = '0;
+        resp_shift = '0;
+        resp_din   = '0;
+
         // Scratchpad request defaults
         for (int i = 0; i < NUM_SCPADS; i++) begin
             sp_req[i].valid      = 1'b0;
@@ -100,87 +144,104 @@ module vlsu #(
             sp_req[i].xbar       = '0;
             sp_req[i].wdata      = '0;
         end
-        
+
         // Writeback defaults
-        wb_load_data  = '0;
-        wb_vdst       = '0;
-        wb_valid_out  = 1'b0;
-        
-        // Response pending defaults
-        sp_res_pending = '0;
-        found_pending  = 1'b0;
-        pending_sp_idx = '0;
-        
-        is_load   = sched_valid_in && !sched_write;
-        is_store  = sched_valid_in && sched_write;
-        sp_select = sched_sp_sel;  // Use full width for scratchpad selection
-        
-        
-        // For loads: target scratchpad's FIFO must not be full, and SP not stalled
-        can_accept_load = !fifo_full[sp_select] && !sp_stall[sp_select];
-        
-        // For stores: SP must not be stalled, and VRF must have valid data
-        can_accept_store = !sp_stall[sp_select] && vrf_store_valid;
-        
-        // Can accept when conditions met or no valid request
-        can_accept_req = is_load  ? can_accept_load  : 
-                         is_store ? can_accept_store : 1'b1;
-        
+        wb_load_data = '0;
+        wb_vdst      = '0;
+        wb_valid_out = 1'b0;
 
-        sched_ready_out = can_accept_req;
+        is_load      = '0;
+        is_store     = '0;
+        can_accept   = '0;
+        resp_pending = '0;
+        found_pending = 1'b0;
+        winner_idx    = '0;
 
-        if (is_load && can_accept_load) begin
-            // Push destination register to appropriate FIFO
-            fifo_wr_en[sp_select] = 1'b1;
-            fifo_din[sp_select]   = sched_vdst;
-            
-            // Send load request to scratchpad
-            sp_req[sp_select].valid      = 1'b1;
-            sp_req[sp_select].write      = 1'b0;  // Read
-            sp_req[sp_select].spad_addr  = sched_addr;
-            sp_req[sp_select].num_rows   = sched_num_rows;
-            sp_req[sp_select].num_cols   = sched_num_cols;
-            sp_req[sp_select].row_id     = sched_row_id;
-            sp_req[sp_select].col_id     = sched_col_id;
-            sp_req[sp_select].row_or_col = sched_row_or_col;
-        end
-
-        if (is_store && can_accept_store) begin
-            // Send store request with data from VRF
-            sp_req[sp_select].valid      = 1'b1;
-            sp_req[sp_select].write      = 1'b1;  // Write
-            sp_req[sp_select].spad_addr  = sched_addr;
-            sp_req[sp_select].num_rows   = sched_num_rows;
-            sp_req[sp_select].num_cols   = sched_num_cols;
-            sp_req[sp_select].row_id     = sched_row_id;
-            sp_req[sp_select].col_id     = sched_col_id;
-            sp_req[sp_select].row_or_col = sched_row_or_col;
-            sp_req[sp_select].wdata      = vrf_store_data;
-        end
-
+        //--------------------------------------------------------------
+        // Input: per-channel request handling
+        //--------------------------------------------------------------
         for (int i = 0; i < NUM_SCPADS; i++) begin
-            sp_res_pending[i] = sp_res[i].valid && !sp_res[i].write && !fifo_empty[i];
-        end
-        
- 
-        for (int i = 0; i < NUM_SCPADS; i++) begin
-            if (sp_res_pending[i] && !found_pending) begin
-                found_pending  = 1'b1;
-                pending_sp_idx = i[SCPAD_ID_WIDTH-1:0];
+            is_load[i]  = sched_valid_in[i] && !sched_write[i];
+            is_store[i] = sched_valid_in[i] &&  sched_write[i];
+
+            if (is_load[i])
+                can_accept[i] = !fifo_full[i] && !sp_stall[i];
+            else if (is_store[i])
+                can_accept[i] = !sp_stall[i] && vrf_store_valid[i];
+            else
+                can_accept[i] = 1'b1;
+
+            sched_ready_out[i] = can_accept[i];
+
+            // Load: push vdst to load queue, send read to scratchpad
+            if (is_load[i] && can_accept[i]) begin
+                fifo_wr_en[i] = 1'b1;
+                fifo_din[i]   = sched_vdst[i];
+
+                sp_req[i].valid      = 1'b1;
+                sp_req[i].write      = 1'b0;
+                sp_req[i].spad_addr  = sched_addr[i];
+                sp_req[i].num_rows   = sched_num_rows[i];
+                sp_req[i].num_cols   = sched_num_cols[i];
+                sp_req[i].row_id     = sched_row_id[i];
+                sp_req[i].col_id     = sched_col_id[i];
+                sp_req[i].row_or_col = sched_row_or_col[i];
+            end
+
+            // Store: send write with data to scratchpad
+            if (is_store[i] && can_accept[i]) begin
+                sp_req[i].valid      = 1'b1;
+                sp_req[i].write      = 1'b1;
+                sp_req[i].spad_addr  = sched_addr[i];
+                sp_req[i].num_rows   = sched_num_rows[i];
+                sp_req[i].num_cols   = sched_num_cols[i];
+                sp_req[i].row_id     = sched_row_id[i];
+                sp_req[i].col_id     = sched_col_id[i];
+                sp_req[i].row_or_col = sched_row_or_col[i];
+                sp_req[i].wdata      = vrf_store_data[i];
             end
         end
 
-        if (found_pending && wb_ready_in) begin
-            wb_load_data  = sp_res[pending_sp_idx].rdata;
-            wb_vdst       = fifo_dout[pending_sp_idx];
-            wb_valid_out  = 1'b1;
-            fifo_shift[pending_sp_idx] = 1'b1;  // Pop FIFO
+        //--------------------------------------------------------------
+        // Response capture: push rdata to response queue
+        //--------------------------------------------------------------
+        for (int i = 0; i < NUM_SCPADS; i++) begin
+            resp_wr_en[i] = sp_res[i].valid && !sp_res[i].write;
+            resp_din[i]   = sp_res[i].rdata;
         end
 
-        vlsu_busy = |(~fifo_empty);  // Busy if any FIFO is not empty
-        for (int i = 0; i < NUM_SCPADS; i++) begin
-            load_queue_full[i] = fifo_full[i];
+        //--------------------------------------------------------------
+        // Writeback arbitration: channel ready when both FIFOs non-empty
+        //--------------------------------------------------------------
+        for (int i = 0; i < NUM_SCPADS; i++)
+            resp_pending[i] = !resp_empty[i] && !fifo_empty[i];
+
+        // Round-robin starting from rr_priority
+        for (int offset = 0; offset < NUM_SCPADS; offset++) begin
+            int idx;
+            idx = (int'(rr_priority) + offset) % NUM_SCPADS;
+            if (resp_pending[idx] && !found_pending) begin
+                found_pending = 1'b1;
+                winner_idx    = SP_IDX_WIDTH'(idx);
+            end
         end
+
+        // Present writeback (valid independent of ready)
+        if (found_pending) begin
+            wb_load_data = resp_dout[winner_idx];
+            wb_vdst      = fifo_dout[winner_idx];
+            wb_valid_out = 1'b1;
+            // Pop both FIFOs only on completed handshake
+            if (wb_ready_in) begin
+                fifo_shift[winner_idx] = 1'b1;
+                resp_shift[winner_idx] = 1'b1;
+            end
+        end
+
+        // Status
+        vlsu_busy = |(~fifo_empty);
+        for (int i = 0; i < NUM_SCPADS; i++)
+            load_queue_full[i] = fifo_full[i];
     end
 
 endmodule
