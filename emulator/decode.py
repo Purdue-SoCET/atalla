@@ -245,7 +245,7 @@ def decode_packet(packet, packet_length = 4):
     """
     instructions = []
     for i in range(packet_length):
-        shift = (3 - i) * 48  # Extract top instruction first
+        shift = ((packet_length - 1) - i) * 48  # Extract top instruction first
         instr = (packet >> shift) & ((1 << 48) - 1)
         # print(instr)
         decoded = decode_instruction(instr)
