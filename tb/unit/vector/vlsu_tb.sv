@@ -1,158 +1,207 @@
-`include "vector_pkg.vh"
-`include "scpad_pkg.sv"
+/*  Julio Hernandez - herna628@purdue.edu */
 
-// VLSU Testbench - Multi-Channel
-// Verification plan items 1.1–1.7, plus additional stress/corner tests.
-// Scratchpad response latency is modeled with a configurable delay pipeline.
+// VLSU Testbench - Single Channel, Continuous Operation
+// Uses vlsu_if for scheduler/wb/status, scpad_if for scratchpad.
+// Single power-on reset, then tests run back-to-back without resets.
+//
+// NOTE: sync_fifo comes from ./rtl/modules/vector/sync_fifo.sv
+//       (compiled by Makefile via dut= flag).
 
 module vlsu_tb;
     import vector_pkg::*;
     import scpad_pkg::*;
 
-    localparam int CLK_PERIOD   = 10;
-    localparam int FIFO_DEPTH   = 13;
-    localparam int SP_LATENCY   = 5;
-    localparam int NUM_VREGS    = 256;
-    localparam int VDST_W       = VIDX_W;
-    localparam int NUM_SP       = NUM_SCPADS;
+    localparam int CLK_PERIOD = 10;
+    localparam int FIFO_DEPTH = 13;
+    localparam int SP_LATENCY = 5;
+    localparam int NUM_VREGS  = 256;
+    localparam logic [SCPAD_ID_WIDTH-1:0] TB_IDX = '0;
 
+    // ------------------------------------------------------------------
     // Clock / Reset
+    // ------------------------------------------------------------------
     logic CLK, nRST;
     always #(CLK_PERIOD/2) CLK = ~CLK;
 
-    // Scheduler channels
-    logic                           sched_valid_in  [NUM_SP];
-    logic                           sched_ready_out [NUM_SP];
-    logic                           sched_write     [NUM_SP];
-    logic [SCPAD_ADDR_WIDTH-1:0]    sched_addr      [NUM_SP];
-    logic [VIDX_W-1:0]              sched_vdst      [NUM_SP];
+    // ------------------------------------------------------------------
+    // Interfaces
+    // ------------------------------------------------------------------
+    vlsu_if  vif(.clk(CLK), .n_rst(nRST));
+    scpad_if sif(.clk(CLK), .n_rst(nRST));
 
-    logic [MAX_DIM_WIDTH-1:0]       sched_num_rows  [NUM_SP];
-    logic [MAX_DIM_WIDTH-1:0]       sched_num_cols  [NUM_SP];
-    logic [MAX_DIM_WIDTH-1:0]       sched_row_id    [NUM_SP];
-    logic [MAX_DIM_WIDTH-1:0]       sched_col_id    [NUM_SP];
-    logic                           sched_row_or_col[NUM_SP];
-
-    // VRF store data
-    vreg_t                          vrf_store_data  [NUM_SP];
-    logic                           vrf_store_valid [NUM_SP];
-
-    // Scratchpad interface
-    req_t                           sp_req  [NUM_SP];
-    logic                           sp_stall [NUM_SP];
-    res_t                           sp_res  [NUM_SP];
-
-    // Writeback
-    vreg_t                          wb_load_data;
-    logic [VIDX_W-1:0]             wb_vdst;
-    logic                           wb_valid_out;
-    logic                           wb_ready_in;
-
-    // Status
-    logic                           vlsu_busy;
-    logic                           load_queue_full [NUM_SP];
-
-    // DUT
+    // ------------------------------------------------------------------
+    // DUTs - one per scratchpad channel
+    // ------------------------------------------------------------------
     vlsu #(
         .FIFO_DEPTH(FIFO_DEPTH),
-        .NUM_VREGS(NUM_VREGS)
-    ) DUT (.*);
+        .NUM_VREGS(NUM_VREGS),
+        .IDX(0)
+    ) DUT0 (
+        .vif (vif),
+        .sif (sif)
+    );
 
+    vlsu #(
+        .FIFO_DEPTH(FIFO_DEPTH),
+        .NUM_VREGS(NUM_VREGS),
+        .IDX(1)
+    ) DUT1 (
+        .vif (vif),
+        .sif (sif)
+    );
+
+    // ------------------------------------------------------------------
     // Scratchpad response model - per-channel delay pipeline
+    // ------------------------------------------------------------------
     typedef struct packed {
         logic        valid;
         logic        write;
         scpad_data_t rdata;
     } sp_pipe_entry_t;
 
-    sp_pipe_entry_t sp_pipe [NUM_SP][SP_LATENCY];
+    logic sp_stall [NUM_SCPADS];
 
-    always_ff @(posedge CLK or negedge nRST) begin
-        if (!nRST) begin
-            for (int s = 0; s < NUM_SP; s++) begin
-                for (int d = 0; d < SP_LATENCY; d++)
-                    sp_pipe[s][d] <= '0;
-                sp_res[s].valid <= 1'b0;
-                sp_res[s].write <= 1'b0;
-                sp_res[s].rdata <= '0;
-            end
-        end else begin
-            for (int s = 0; s < NUM_SP; s++) begin
-                sp_pipe[s][0].valid <= sp_req[s].valid;
-                sp_pipe[s][0].write <= sp_req[s].write;
-                if (sp_req[s].valid && !sp_req[s].write) begin
-                    for (int e = 0; e < NUM_COLS; e++)
-                        sp_pipe[s][0].rdata[e] <= ELEM_BITS'({s[3:0], sp_req[s].spad_addr[ELEM_BITS-5:0]}) + ELEM_BITS'(e);
+    generate
+        for (genvar ch = 0; ch < NUM_SCPADS; ch++) begin : gen_sp_model
+            sp_pipe_entry_t sp_pipe [SP_LATENCY];
+
+            assign sif.fe_vec_stall[ch] = sp_stall[ch];
+
+            always_ff @(posedge CLK or negedge nRST) begin
+                if (!nRST) begin
+                    for (int d = 0; d < SP_LATENCY; d++)
+                        sp_pipe[d] <= '0;
+                    sif.vec_res[ch].valid <= 1'b0;
+                    sif.vec_res[ch].write <= 1'b0;
+                    sif.vec_res[ch].rdata <= '0;
                 end else begin
-                    sp_pipe[s][0].rdata <= '0;
+                    sp_pipe[0].valid <= sif.vec_req[ch].valid;
+                    sp_pipe[0].write <= sif.vec_req[ch].write;
+                    if (sif.vec_req[ch].valid && !sif.vec_req[ch].write) begin
+                        // Tag response data with channel + addr so we can distinguish
+                        for (int e = 0; e < NUM_COLS; e++)
+                            sp_pipe[0].rdata[e] <= ELEM_BITS'(sif.vec_req[ch].spad_addr[ELEM_BITS-1:0])
+                                                 + ELEM_BITS'(e)
+                                                 + ELEM_BITS'(ch << 8);
+                    end else begin
+                        sp_pipe[0].rdata <= '0;
+                    end
+                    for (int d = 1; d < SP_LATENCY; d++)
+                        sp_pipe[d] <= sp_pipe[d-1];
+                    sif.vec_res[ch].valid <= sp_pipe[SP_LATENCY-1].valid;
+                    sif.vec_res[ch].write <= sp_pipe[SP_LATENCY-1].write;
+                    sif.vec_res[ch].rdata <= sp_pipe[SP_LATENCY-1].rdata;
                 end
-                for (int d = 1; d < SP_LATENCY; d++)
-                    sp_pipe[s][d] <= sp_pipe[s][d-1];
-                sp_res[s].valid <= sp_pipe[s][SP_LATENCY-1].valid;
-                sp_res[s].write <= sp_pipe[s][SP_LATENCY-1].write;
-                sp_res[s].rdata <= sp_pipe[s][SP_LATENCY-1].rdata;
             end
         end
-    end
+    endgenerate
 
+    // ------------------------------------------------------------------
+    // Convenience aliases — channel 0 (single-channel tests)
+    // ------------------------------------------------------------------
+    `define SCHED_REQ  vif.sched_req[TB_IDX]
+    `define SCHED_RES  vif.sched_res[TB_IDX]
+    `define VRF_STORE  vif.vrf_store[TB_IDX]
+    `define WB_OUT     vif.wb_out[TB_IDX]
+    `define WB_READY   vif.wb_ready[TB_IDX]
+    `define STATUS     vif.status[TB_IDX]
+    `define SP_REQ     sif.vec_req[TB_IDX]
+
+    // ------------------------------------------------------------------
+    // Convenience aliases — channel 1 (parallel test)
+    // ------------------------------------------------------------------
+    `define SCHED_REQ1 vif.sched_req[1]
+    `define SCHED_RES1 vif.sched_res[1]
+    `define VRF_STORE1 vif.vrf_store[1]
+    `define WB_OUT1    vif.wb_out[1]
+    `define WB_READY1  vif.wb_ready[1]
+    `define STATUS1    vif.status[1]
+    `define SP_REQ1    sif.vec_req[1]
+
+    // ------------------------------------------------------------------
     // Test infrastructure
-    int test_num;
-    int errors;
-    int total_tests;
+    // ------------------------------------------------------------------
+    int test_num, errors, total_tests;
     string test_name;
 
-    task automatic reset();
-        nRST = 1'b0;
-        CLK  = 1'b0;
-        wb_ready_in = 1'b1;
-        for (int i = 0; i < NUM_SP; i++) begin
-            sched_valid_in[i]   = 1'b0;
-            sched_write[i]      = 1'b0;
-            sched_addr[i]       = '0;
-            sched_vdst[i]       = '0;
-            sched_num_rows[i]   = '0;
-            sched_num_cols[i]   = '0;
-            sched_row_id[i]     = '0;
-            sched_col_id[i]     = '0;
-            sched_row_or_col[i] = 1'b0;
-            vrf_store_data[i]   = '0;
-            vrf_store_valid[i]  = 1'b0;
-            sp_stall[i]         = 1'b0;
+    task automatic drain_and_idle(input int timeout_cycles = 200);
+        int waited;
+
+        `SCHED_REQ  = '0;
+        `VRF_STORE  = '0;
+        sp_stall[0] = 1'b0;
+        `WB_READY   = 1'b1;
+
+        waited = 0;
+        while ((`STATUS.busy || !DUT0.lq_empty || !DUT0.rq_empty) && waited < timeout_cycles) begin
+            @(posedge CLK);
+            waited++;
         end
-        repeat (3) @(posedge CLK);
-        nRST = 1'b1;
-        @(posedge CLK);
+
+        if (waited >= timeout_cycles) begin
+            $error("[%s] drain_and_idle TIMEOUT after %0d cycles (busy=%b, lq_empty=%b, rq_empty=%b)",
+                    test_name, timeout_cycles, `STATUS.busy, DUT0.lq_empty, DUT0.rq_empty);
+            errors++;
+        end
+
+        repeat (SP_LATENCY + 2) @(posedge CLK);
+    endtask
+
+    // Drain both channels
+    task automatic drain_both(input int timeout_cycles = 200);
+        int waited;
+
+        `SCHED_REQ  = '0;
+        `SCHED_REQ1 = '0;
+        `VRF_STORE  = '0;
+        `VRF_STORE1 = '0;
+        sp_stall[0] = 1'b0;
+        sp_stall[1] = 1'b0;
+        `WB_READY   = 1'b1;
+        `WB_READY1  = 1'b1;
+
+        waited = 0;
+        while ((`STATUS.busy  || !DUT0.lq_empty || !DUT0.rq_empty ||
+                `STATUS1.busy || !DUT1.lq_empty || !DUT1.rq_empty) && waited < timeout_cycles) begin
+            @(posedge CLK);
+            waited++;
+        end
+
+        if (waited >= timeout_cycles) begin
+            $error("[%s] drain_both TIMEOUT after %0d cycles", test_name, timeout_cycles);
+            errors++;
+        end
+
+        repeat (SP_LATENCY + 2) @(posedge CLK);
     endtask
 
     task automatic issue_load(
-        input int ch,
         input logic [SCPAD_ADDR_WIDTH-1:0] addr,
         input logic [VIDX_W-1:0] vd
     );
         @(posedge CLK);
-        sched_valid_in[ch] = 1'b1;
-        sched_write[ch]    = 1'b0;
-        sched_addr[ch]     = addr;
-        sched_vdst[ch]     = vd;
+        `SCHED_REQ.valid     = 1'b1;
+        `SCHED_REQ.write     = 1'b0;
+        `SCHED_REQ.spad_addr = addr;
+        `SCHED_REQ.vdst      = vd;
         @(posedge CLK);
-        sched_valid_in[ch] = 1'b0;
+        `SCHED_REQ.valid     = 1'b0;
     endtask
 
     task automatic issue_store(
-        input int ch,
         input logic [SCPAD_ADDR_WIDTH-1:0] addr,
         input vreg_t data
     );
         @(posedge CLK);
-        sched_valid_in[ch]  = 1'b1;
-        sched_write[ch]     = 1'b1;
-        sched_addr[ch]      = addr;
-        vrf_store_data[ch]  = data;
-        vrf_store_valid[ch] = 1'b1;
+        `SCHED_REQ.valid     = 1'b1;
+        `SCHED_REQ.write     = 1'b1;
+        `SCHED_REQ.spad_addr = addr;
+        `VRF_STORE.data      = data;
+        `VRF_STORE.valid     = 1'b1;
         @(posedge CLK);
-        sched_valid_in[ch]  = 1'b0;
-        sched_write[ch]     = 1'b0;
-        vrf_store_valid[ch] = 1'b0;
+        `SCHED_REQ.valid     = 1'b0;
+        `SCHED_REQ.write     = 1'b0;
+        `VRF_STORE.valid     = 1'b0;
     endtask
 
     task automatic wait_writeback(
@@ -161,17 +210,17 @@ module vlsu_tb;
     );
         int waited;
         waited = 0;
-        while (!wb_valid_out && waited < timeout_cycles) begin
+        while (!`WB_OUT.valid && waited < timeout_cycles) begin
             @(posedge CLK);
             waited++;
         end
-        if (!wb_valid_out) begin
+        if (!`WB_OUT.valid) begin
             $error("[%s] Timeout waiting for writeback of v%0d after %0d cycles",
                     test_name, expected_vd, timeout_cycles);
             errors++;
-        end else if (wb_vdst !== expected_vd) begin
+        end else if (`WB_OUT.vdst !== expected_vd) begin
             $error("[%s] Writeback vdst mismatch: expected v%0d, got v%0d",
-                    test_name, expected_vd, wb_vdst);
+                    test_name, expected_vd, `WB_OUT.vdst);
             errors++;
         end else begin
             $display("[%s] PASS - writeback v%0d received after %0d cycles",
@@ -186,88 +235,70 @@ module vlsu_tb;
     );
         int waited;
         waited = 0;
-        while (!wb_valid_out && waited < timeout_cycles) begin
+        while (!`WB_OUT.valid && waited < timeout_cycles) begin
             @(posedge CLK);
             waited++;
         end
-        if (!wb_valid_out) begin
+        if (!`WB_OUT.valid) begin
             $error("[%s] Timeout waiting for any writeback after %0d cycles",
                     test_name, timeout_cycles);
             errors++;
             got_vd = '0;
         end else begin
-            got_vd = wb_vdst;
+            got_vd = `WB_OUT.vdst;
         end
         @(posedge CLK);
     endtask
 
-    //=========================================================================
+    // ==================================================================
     // Test Cases
-    //=========================================================================
+    // ==================================================================
 
     initial begin
         $display("============================================================");
-        $display(" VLSU Multi-Channel Testbench - NUM_SCPADS = %0d", NUM_SP);
+        $display(" VLSU Single-Channel Testbench (Continuous Operation)");
         $display("============================================================");
         errors      = 0;
         total_tests = 0;
 
-        //=================================================================
-        // VP 1.1 - Power On Reset
-        // Reset all signals; verify all outputs are 0 upon reset.
-        //=================================================================
+        // ==============================================================
+        // VP 1.1 - Power On Reset (only reset in entire simulation)
+        // ==============================================================
         test_name = "VP1.1_power_on_reset";
         test_num  = 1;
         total_tests++;
         $display("\n--- Test %0d: %s ---", test_num, test_name);
 
-        nRST = 1'b0;
-        CLK  = 1'b0;
-        wb_ready_in = 1'b1;
-        for (int i = 0; i < NUM_SP; i++) begin
-            sched_valid_in[i]   = 1'b0;
-            sched_write[i]      = 1'b0;
-            sched_addr[i]       = '0;
-            sched_vdst[i]       = '0;
-            sched_num_rows[i]   = '0;
-            sched_num_cols[i]   = '0;
-            sched_row_id[i]     = '0;
-            sched_col_id[i]     = '0;
-            sched_row_or_col[i] = 1'b0;
-            vrf_store_data[i]   = '0;
-            vrf_store_valid[i]  = 1'b0;
-            sp_stall[i]         = 1'b0;
-        end
+        CLK        = 1'b0;
+        nRST       = 1'b0;
+        `SCHED_REQ = '0;
+        `VRF_STORE = '0;
+        `WB_READY  = 1'b1;
+        sp_stall[0] = 1'b0;
+        sp_stall[1] = 1'b0;
+        `SCHED_REQ1 = '0;
+        `VRF_STORE1 = '0;
+        `WB_READY1  = 1'b1;
         repeat (3) @(posedge CLK);
 
-        // Check all outputs are 0 while in reset
         begin
             int rst_err;
             rst_err = 0;
-
-            if (wb_valid_out !== 1'b0) begin
-                $error("[%s] wb_valid_out not 0 in reset", test_name);
-                rst_err++;
+            if (`WB_OUT.valid !== 1'b0) begin
+                $error("[%s] wb valid not 0 in reset", test_name); rst_err++;
             end
-            if (wb_vdst !== '0) begin
-                $error("[%s] wb_vdst not 0 in reset", test_name);
-                rst_err++;
+            if (`WB_OUT.vdst !== '0) begin
+                $error("[%s] wb vdst not 0 in reset", test_name); rst_err++;
             end
-            if (vlsu_busy !== 1'b0) begin
-                $error("[%s] vlsu_busy not 0 in reset", test_name);
-                rst_err++;
+            if (`STATUS.busy !== 1'b0) begin
+                $error("[%s] busy not 0 in reset", test_name); rst_err++;
             end
-            for (int ch = 0; ch < NUM_SP; ch++) begin
-                if (sp_req[ch].valid !== 1'b0) begin
-                    $error("[%s] sp_req[%0d].valid not 0 in reset", test_name, ch);
-                    rst_err++;
-                end
-                if (load_queue_full[ch] !== 1'b0) begin
-                    $error("[%s] load_queue_full[%0d] not 0 in reset", test_name, ch);
-                    rst_err++;
-                end
+            if (`SP_REQ.valid !== 1'b0) begin
+                $error("[%s] vec_req.valid not 0 in reset", test_name); rst_err++;
             end
-
+            if (`STATUS.load_queue_full !== 1'b0) begin
+                $error("[%s] load_queue_full not 0 in reset", test_name); rst_err++;
+            end
             if (rst_err == 0)
                 $display("[%s] PASS - all outputs 0 upon reset", test_name);
             else
@@ -276,273 +307,164 @@ module vlsu_tb;
         nRST = 1'b1;
         @(posedge CLK);
 
-        //=================================================================
+        // ==============================================================
         // VP 1.2 - Read/Valid Signals
-        // Verify valid/ready handshake fires correctly for loads and stores.
-        // (a) Load: sp_req.valid=1, sp_req.write=0, sched_ready_out=1
-        // (b) Store: sp_req.valid=1, sp_req.write=1, sched_ready_out=1
-        // (c) Stalled: sched_ready_out=0 when sp_stall asserted
-        //=================================================================
+        // ==============================================================
         test_name = "VP1.2_read_valid_signals";
         test_num  = 2;
         total_tests++;
-        reset();
         $display("\n--- Test %0d: %s ---", test_num, test_name);
 
         begin
             int vp12_err;
             vp12_err = 0;
 
-            // (a) Load on ch0
+            // (a) Load request
             @(posedge CLK);
-            sched_valid_in[0] = 1'b1;
-            sched_write[0]    = 1'b0;
-            sched_addr[0]     = 'hA0;
-            sched_vdst[0]     = 8'd20;
+            `SCHED_REQ.valid     = 1'b1;
+            `SCHED_REQ.write     = 1'b0;
+            `SCHED_REQ.spad_addr = 'hA0;
+            `SCHED_REQ.vdst      = 8'd20;
             #1;
-            if (sp_req[0].valid !== 1'b1) begin
-                $error("[%s] sp_req[0].valid not asserted on load", test_name);
-                vp12_err++;
+            if (`SP_REQ.valid !== 1'b1) begin
+                $error("[%s] vec_req.valid not asserted on load", test_name); vp12_err++;
             end
-            if (sp_req[0].write !== 1'b0) begin
-                $error("[%s] sp_req[0].write should be 0 for load", test_name);
-                vp12_err++;
+            if (`SP_REQ.write !== 1'b0) begin
+                $error("[%s] vec_req.write should be 0 for load", test_name); vp12_err++;
             end
-            if (sched_ready_out[0] !== 1'b1) begin
-                $error("[%s] sched_ready_out[0] should be 1 (accepting load)", test_name);
-                vp12_err++;
+            if (`SCHED_RES.ready !== 1'b1) begin
+                $error("[%s] sched_res.ready should be 1", test_name); vp12_err++;
             end
             @(posedge CLK);
-            sched_valid_in[0] = 1'b0;
+            `SCHED_REQ.valid = 1'b0;
 
-            // (b) Store on ch1
-            if (NUM_SP > 1) begin
-                @(posedge CLK);
-                sched_valid_in[1]  = 1'b1;
-                sched_write[1]     = 1'b1;
-                sched_addr[1]      = 'hB0;
-                vrf_store_data[1]  = '1;
-                vrf_store_valid[1] = 1'b1;
-                #1;
-                if (sp_req[1].valid !== 1'b1) begin
-                    $error("[%s] sp_req[1].valid not asserted on store", test_name);
-                    vp12_err++;
-                end
-                if (sp_req[1].write !== 1'b1) begin
-                    $error("[%s] sp_req[1].write should be 1 for store", test_name);
-                    vp12_err++;
-                end
-                @(posedge CLK);
-                sched_valid_in[1]  = 1'b0;
-                sched_write[1]     = 1'b0;
-                vrf_store_valid[1] = 1'b0;
+            // (b) Store request
+            @(posedge CLK);
+            `SCHED_REQ.valid     = 1'b1;
+            `SCHED_REQ.write     = 1'b1;
+            `SCHED_REQ.spad_addr = 'hB0;
+            `VRF_STORE.data      = '1;
+            `VRF_STORE.valid     = 1'b1;
+            #1;
+            if (`SP_REQ.valid !== 1'b1) begin
+                $error("[%s] vec_req.valid not asserted on store", test_name); vp12_err++;
             end
+            if (`SP_REQ.write !== 1'b1) begin
+                $error("[%s] vec_req.write should be 1 for store", test_name); vp12_err++;
+            end
+            @(posedge CLK);
+            `SCHED_REQ.valid = 1'b0;
+            `SCHED_REQ.write = 1'b0;
+            `VRF_STORE.valid = 1'b0;
 
-            // (c) Stall ch0
+            // (c) Stall - should reject
             sp_stall[0] = 1'b1;
             @(posedge CLK);
-            sched_valid_in[0] = 1'b1;
-            sched_write[0]    = 1'b0;
-            sched_addr[0]     = 'hCC;
-            sched_vdst[0]     = 8'd21;
+            `SCHED_REQ.valid     = 1'b1;
+            `SCHED_REQ.write     = 1'b0;
+            `SCHED_REQ.spad_addr = 'hCC;
+            `SCHED_REQ.vdst      = 8'd21;
             #1;
-            if (sched_ready_out[0] !== 1'b0) begin
-                $error("[%s] ready_out[0] should be 0 when stalled", test_name);
-                vp12_err++;
+            if (`SCHED_RES.ready !== 1'b0) begin
+                $error("[%s] ready should be 0 when stalled", test_name); vp12_err++;
             end
             @(posedge CLK);
-            sched_valid_in[0] = 1'b0;
-            sp_stall[0]       = 1'b0;
+            `SCHED_REQ.valid = 1'b0;
+            sp_stall[0]      = 1'b0;
 
             if (vp12_err == 0)
                 $display("[%s] PASS - valid/ready/write correct for load, store, stall", test_name);
             else
                 errors += vp12_err;
         end
-        repeat (SP_LATENCY + 5) @(posedge CLK);
+        drain_and_idle();
 
-        //=================================================================
+        // ==============================================================
         // VP 1.3 - Load Data From Scratchpad
-        // Issue loads on BOTH scratchpad channels simultaneously.
-        // Verify: two addresses sent, two vdst registers written back.
-        //=================================================================
-        test_name = "VP1.3_load_data_from_scratchpad";
+        // ==============================================================
+        test_name = "VP1.3_load_data";
         test_num  = 3;
         total_tests++;
-        reset();
         $display("\n--- Test %0d: %s ---", test_num, test_name);
 
         begin
-            logic [SCPAD_ADDR_WIDTH-1:0] addr0, addr1;
-            logic [VIDX_W-1:0] vd0, vd1;
-            addr0 = 'h100;
-            addr1 = 'h200;
-            vd0   = 8'd30;
-            vd1   = 8'd31;
-
             @(posedge CLK);
-            sched_valid_in[0] = 1'b1;
-            sched_write[0]    = 1'b0;
-            sched_addr[0]     = addr0;
-            sched_vdst[0]     = vd0;
-            if (NUM_SP > 1) begin
-                sched_valid_in[1] = 1'b1;
-                sched_write[1]    = 1'b0;
-                sched_addr[1]     = addr1;
-                sched_vdst[1]     = vd1;
-            end
-
-            // Verify sp_req carries correct addresses
+            `SCHED_REQ.valid     = 1'b1;
+            `SCHED_REQ.write     = 1'b0;
+            `SCHED_REQ.spad_addr = 'h100;
+            `SCHED_REQ.vdst      = 8'd30;
             #1;
-            if (sp_req[0].spad_addr !== addr0) begin
-                $error("[%s] sp_req[0].spad_addr mismatch: exp %h got %h",
-                        test_name, addr0, sp_req[0].spad_addr);
-                errors++;
+            if (`SP_REQ.spad_addr !== SCPAD_ADDR_WIDTH'('h100)) begin
+                $error("[%s] vec_req.spad_addr mismatch", test_name); errors++;
             end
-            if (NUM_SP > 1 && sp_req[1].spad_addr !== addr1) begin
-                $error("[%s] sp_req[1].spad_addr mismatch: exp %h got %h",
-                        test_name, addr1, sp_req[1].spad_addr);
-                errors++;
-            end
-
             @(posedge CLK);
-            for (int ch = 0; ch < NUM_SP; ch++)
-                sched_valid_in[ch] = 1'b0;
+            `SCHED_REQ.valid = 1'b0;
 
-            // Collect writebacks - both vd0 and vd1 must appear
-            begin
-                logic [VIDX_W-1:0] collected [NUM_SP];
-                logic seen0, seen1;
-                seen0 = 0;
-                seen1 = 0;
-                for (int w = 0; w < NUM_SP; w++)
-                    wait_any_writeback(collected[w], SP_LATENCY + 10);
-
-                for (int w = 0; w < NUM_SP; w++) begin
-                    if (collected[w] == vd0) seen0 = 1;
-                    if (collected[w] == vd1) seen1 = 1;
-                end
-
-                if (seen0)
-                    $display("[%s] PASS - v%0d writeback received (ch0 load)", test_name, vd0);
-                else begin
-                    $error("[%s] Missing writeback for v%0d (ch0 load)", test_name, vd0);
-                    errors++;
-                end
-                if (NUM_SP > 1) begin
-                    if (seen1)
-                        $display("[%s] PASS - v%0d writeback received (ch1 load)", test_name, vd1);
-                    else begin
-                        $error("[%s] Missing writeback for v%0d (ch1 load)", test_name, vd1);
-                        errors++;
-                    end
-                end
-            end
+            wait_writeback(8'd30, SP_LATENCY + 10);
         end
+        drain_and_idle();
 
-        //=================================================================
+        // ==============================================================
         // VP 1.4 - Store Data To Scratchpad
-        // Issue stores on BOTH channels simultaneously.
-        // Verify: sp_req carries correct addr + wdata, no spurious WB.
-        //=================================================================
-        test_name = "VP1.4_store_data_to_scratchpad";
+        // ==============================================================
+        test_name = "VP1.4_store_data";
         test_num  = 4;
         total_tests++;
-        reset();
         $display("\n--- Test %0d: %s ---", test_num, test_name);
 
         begin
-            logic [SCPAD_ADDR_WIDTH-1:0] s_addr0, s_addr1;
-            vreg_t s_data0, s_data1;
+            vreg_t s_data;
             int vp14_err;
             vp14_err = 0;
 
-            s_addr0 = 'h300;
-            s_addr1 = 'h400;
-            for (int e = 0; e < VLMAX; e++) begin
-                s_data0[e] = {1'b0, 5'd10, 10'(e)};
-                s_data1[e] = {1'b1, 5'd20, 10'(e + 100)};
-            end
+            for (int e = 0; e < VLMAX; e++)
+                s_data[e] = {1'b0, 5'd10, 10'(e)};
 
             @(posedge CLK);
-            sched_valid_in[0]  = 1'b1;
-            sched_write[0]     = 1'b1;
-            sched_addr[0]      = s_addr0;
-            vrf_store_data[0]  = s_data0;
-            vrf_store_valid[0] = 1'b1;
-            if (NUM_SP > 1) begin
-                sched_valid_in[1]  = 1'b1;
-                sched_write[1]     = 1'b1;
-                sched_addr[1]      = s_addr1;
-                vrf_store_data[1]  = s_data1;
-                vrf_store_valid[1] = 1'b1;
-            end
-
+            `SCHED_REQ.valid     = 1'b1;
+            `SCHED_REQ.write     = 1'b1;
+            `SCHED_REQ.spad_addr = 'h300;
+            `VRF_STORE.data      = s_data;
+            `VRF_STORE.valid     = 1'b1;
             #1;
-            // Ch0 checks
-            if (sp_req[0].spad_addr !== s_addr0) begin
-                $error("[%s] sp_req[0].spad_addr mismatch on store", test_name);
-                vp14_err++;
+            if (`SP_REQ.spad_addr !== SCPAD_ADDR_WIDTH'('h300)) begin
+                $error("[%s] vec_req.spad_addr mismatch on store", test_name); vp14_err++;
             end
-            if (sp_req[0].write !== 1'b1) begin
-                $error("[%s] sp_req[0].write should be 1", test_name);
-                vp14_err++;
+            if (`SP_REQ.write !== 1'b1) begin
+                $error("[%s] vec_req.write should be 1", test_name); vp14_err++;
             end
-            if (sp_req[0].wdata === '0 && s_data0 !== '0) begin
-                $error("[%s] sp_req[0].wdata appears all-zero, expected store data", test_name);
-                vp14_err++;
+            if (`SP_REQ.wdata === '0 && s_data !== '0) begin
+                $error("[%s] vec_req.wdata appears all-zero", test_name); vp14_err++;
             end
-            // Ch1 checks
-            if (NUM_SP > 1) begin
-                if (sp_req[1].spad_addr !== s_addr1) begin
-                    $error("[%s] sp_req[1].spad_addr mismatch on store", test_name);
-                    vp14_err++;
-                end
-                if (sp_req[1].write !== 1'b1) begin
-                    $error("[%s] sp_req[1].write should be 1", test_name);
-                    vp14_err++;
-                end
-                if (sp_req[1].wdata === '0 && s_data1 !== '0) begin
-                    $error("[%s] sp_req[1].wdata appears all-zero, expected store data", test_name);
-                    vp14_err++;
-                end
-            end
-
             @(posedge CLK);
-            for (int ch = 0; ch < NUM_SP; ch++) begin
-                sched_valid_in[ch]  = 1'b0;
-                sched_write[ch]     = 1'b0;
-                vrf_store_valid[ch] = 1'b0;
-            end
+            `SCHED_REQ.valid = 1'b0;
+            `SCHED_REQ.write = 1'b0;
+            `VRF_STORE.valid = 1'b0;
 
-            // No writeback from stores
             repeat (SP_LATENCY + 5) @(posedge CLK);
-            if (wb_valid_out) begin
-                $error("[%s] Unexpected writeback after store-only operations", test_name);
-                vp14_err++;
+            if (`WB_OUT.valid) begin
+                $error("[%s] Unexpected writeback after store", test_name); vp14_err++;
             end
 
             if (vp14_err == 0)
-                $display("[%s] PASS - both channels stored correct addr+data, no spurious WB", test_name);
+                $display("[%s] PASS - store addr+data correct, no spurious WB", test_name);
             else
                 errors += vp14_err;
         end
+        drain_and_idle();
 
-        //=================================================================
-        // VP 1.6 - Pop off a vector register from the FIFO queue
-        // When scratchpad returns valid data, FIFO pops vdst and sends
-        // it to writeback. Issue multiple loads, confirm FIFO-order pop.
-        //=================================================================
-        test_name = "VP1.6_fifo_pop_on_valid";
+        // ==============================================================
+        // VP 1.6 - FIFO Pop Order
+        // ==============================================================
+        test_name = "VP1.6_fifo_pop_order";
         test_num  = 5;
         total_tests++;
-        reset();
         $display("\n--- Test %0d: %s ---", test_num, test_name);
 
         begin
-            int vp16_err;
             logic [VIDX_W-1:0] expected_vds [3];
             logic [VIDX_W-1:0] got_vd;
+            int vp16_err;
             vp16_err = 0;
 
             expected_vds[0] = 8'd40;
@@ -551,279 +473,498 @@ module vlsu_tb;
 
             for (int i = 0; i < 3; i++) begin
                 @(posedge CLK);
-                sched_valid_in[0] = 1'b1;
-                sched_write[0]    = 1'b0;
-                sched_addr[0]     = SCPAD_ADDR_WIDTH'(i * 'h10);
-                sched_vdst[0]     = expected_vds[i];
+                `SCHED_REQ.valid     = 1'b1;
+                `SCHED_REQ.write     = 1'b0;
+                `SCHED_REQ.spad_addr = SCPAD_ADDR_WIDTH'(i * 'h10);
+                `SCHED_REQ.vdst      = expected_vds[i];
             end
             @(posedge CLK);
-            sched_valid_in[0] = 1'b0;
+            `SCHED_REQ.valid = 1'b0;
 
-            // Verify writebacks in FIFO order
             for (int i = 0; i < 3; i++) begin
                 wait_any_writeback(got_vd, SP_LATENCY + 10);
                 if (got_vd !== expected_vds[i]) begin
-                    $error("[%s] Writeback %0d: expected v%0d, got v%0d (FIFO order violated)",
+                    $error("[%s] WB %0d: expected v%0d, got v%0d (FIFO order violated)",
                             test_name, i, expected_vds[i], got_vd);
                     vp16_err++;
                 end else begin
-                    $display("[%s] PASS - writeback %0d popped v%0d in FIFO order",
+                    $display("[%s] PASS - WB %0d popped v%0d in order",
                              test_name, i, got_vd);
                 end
             end
-
-            if (vp16_err > 0)
-                errors += vp16_err;
+            if (vp16_err > 0) errors += vp16_err;
         end
+        drain_and_idle();
 
-        //=================================================================
+        // ==============================================================
         // VP 1.7 - Split Transaction
-        // Can finish a load and start a new one in the same cycle.
-        //=================================================================
+        // ==============================================================
         test_name = "VP1.7_split_transaction";
         test_num  = 6;
         total_tests++;
-        reset();
         $display("\n--- Test %0d: %s ---", test_num, test_name);
 
         begin
             int vp17_err;
-            logic [VIDX_W-1:0] got_vd;
             vp17_err = 0;
 
-            // Issue first load
-            issue_load(0, 'h500, 8'd50);
-
-            // Wait until response is about to arrive, then issue second load
+            issue_load('h500, 8'd50);
             repeat (SP_LATENCY - 1) @(posedge CLK);
 
             @(posedge CLK);
-            sched_valid_in[0] = 1'b1;
-            sched_write[0]    = 1'b0;
-            sched_addr[0]     = 'h600;
-            sched_vdst[0]     = 8'd51;
-
-            // Can we accept a new load during/near a writeback?
+            `SCHED_REQ.valid     = 1'b1;
+            `SCHED_REQ.write     = 1'b0;
+            `SCHED_REQ.spad_addr = 'h600;
+            `SCHED_REQ.vdst      = 8'd51;
             #1;
-            if (sched_ready_out[0] !== 1'b1) begin
-                $error("[%s] Cannot accept new load during writeback (split transaction failed)", test_name);
+            if (`SCHED_RES.ready !== 1'b1) begin
+                $error("[%s] Cannot accept new load during in-flight (split failed)", test_name);
                 vp17_err++;
             end else begin
-                $display("[%s] PASS - new load accepted while writeback pending", test_name);
+                $display("[%s] PASS - new load accepted while first in-flight", test_name);
             end
-
             @(posedge CLK);
-            sched_valid_in[0] = 1'b0;
+            `SCHED_REQ.valid = 1'b0;
 
-            // Collect both writebacks
-            wait_any_writeback(got_vd, SP_LATENCY + 10);
-            if (got_vd == 8'd50)
-                $display("[%s] PASS - first load (v50) completed", test_name);
-            else if (got_vd == 8'd51)
-                $display("[%s] INFO - second load (v51) came first", test_name);
-            else begin
-                $error("[%s] Unexpected writeback v%0d", test_name, got_vd);
-                vp17_err++;
-            end
+            wait_writeback(8'd50, SP_LATENCY + 10);
+            wait_writeback(8'd51, SP_LATENCY + 10);
 
-            wait_any_writeback(got_vd, SP_LATENCY + 10);
-            if (got_vd == 8'd51)
-                $display("[%s] PASS - second load (v51) completed", test_name);
-            else if (got_vd == 8'd50)
-                $display("[%s] PASS - first load (v50) completed second", test_name);
-            else begin
-                $error("[%s] Unexpected writeback v%0d", test_name, got_vd);
-                vp17_err++;
-            end
-
-            if (vp17_err > 0)
-                errors += vp17_err;
+            if (vp17_err > 0) errors += vp17_err;
         end
+        drain_and_idle();
 
-        //=================================================================
-        // Additional Tests (beyond verification plan)
-        //=================================================================
-
-        // Test 7: Round-robin fairness with concurrent loads
-        test_name = "T7_concurrent_loads_rr_fairness";
+        // ==============================================================
+        // T7 - Pipeline stress (6 back-to-back loads)
+        // ==============================================================
+        test_name = "T7_pipeline_stress";
         test_num  = 7;
         total_tests++;
-        reset();
         $display("\n--- Test %0d: %s ---", test_num, test_name);
 
-        for (int burst = 0; burst < 3; burst++) begin
-            @(posedge CLK);
-            for (int ch = 0; ch < NUM_SP; ch++) begin
-                sched_valid_in[ch] = 1'b1;
-                sched_write[ch]    = 1'b0;
-                sched_addr[ch]     = SCPAD_ADDR_WIDTH'(ch * 'h100 + burst * 'h10);
-                sched_vdst[ch]     = VIDX_W'(ch * 10 + burst);
-            end
-        end
-        @(posedge CLK);
-        for (int ch = 0; ch < NUM_SP; ch++)
-            sched_valid_in[ch] = 1'b0;
-
         begin
-            int wb_count;
-            logic [VIDX_W-1:0] wb_vd;
-            wb_count = 0;
-            for (int w = 0; w < 3 * NUM_SP; w++) begin
-                wait_any_writeback(wb_vd, SP_LATENCY + 20);
-                wb_count++;
-                $display("  Writeback #%0d: v%0d", wb_count, wb_vd);
+            int num_loads;
+            logic [VIDX_W-1:0] got_vd;
+            num_loads = 6;
+
+            for (int i = 0; i < num_loads; i++) begin
+                @(posedge CLK);
+                `SCHED_REQ.valid     = 1'b1;
+                `SCHED_REQ.write     = 1'b0;
+                `SCHED_REQ.spad_addr = SCPAD_ADDR_WIDTH'(i * 'h10);
+                `SCHED_REQ.vdst      = VIDX_W'(i);
             end
-            if (wb_count == 3 * NUM_SP)
-                $display("[%s] PASS - all %0d writebacks received", test_name, wb_count);
-            else begin
-                $error("[%s] Only got %0d / %0d writebacks", test_name, wb_count, 3*NUM_SP);
-                errors++;
+            @(posedge CLK);
+            `SCHED_REQ.valid = 1'b0;
+
+            for (int i = 0; i < num_loads; i++) begin
+                wait_any_writeback(got_vd, SP_LATENCY + 20);
+                if (got_vd !== VIDX_W'(i)) begin
+                    $error("[%s] WB %0d: expected v%0d, got v%0d", test_name, i, i, got_vd);
+                    errors++;
+                end else begin
+                    $display("[%s] PASS - WB %0d: v%0d", test_name, i, got_vd);
+                end
             end
         end
+        drain_and_idle();
 
-        // Test 8: FIFO full
-        // Block writeback during fill so responses don't drain the FIFO.
+        // ==============================================================
+        // T8 - FIFO full (backpressure blocks writeback, fills FIFO)
+        // ==============================================================
         test_name = "T8_fifo_full";
         test_num  = 8;
         total_tests++;
-        reset();
         $display("\n--- Test %0d: %s ---", test_num, test_name);
 
-        wb_ready_in = 1'b0;  // Prevent FIFO from draining during fill
+        `WB_READY = 1'b0;
         for (int i = 0; i < FIFO_DEPTH; i++) begin
             @(posedge CLK);
-            sched_valid_in[0] = 1'b1;
-            sched_write[0]    = 1'b0;
-            sched_addr[0]     = SCPAD_ADDR_WIDTH'(i * 4);
-            sched_vdst[0]     = VIDX_W'(i);
+            `SCHED_REQ.valid     = 1'b1;
+            `SCHED_REQ.write     = 1'b0;
+            `SCHED_REQ.spad_addr = SCPAD_ADDR_WIDTH'(i * 4);
+            `SCHED_REQ.vdst      = VIDX_W'(i + 100);
         end
         @(posedge CLK);
-        sched_valid_in[0] = 1'b0;
+        `SCHED_REQ.valid = 1'b0;
 
         @(posedge CLK);
-        if (load_queue_full[0] !== 1'b1) begin
-            $error("[%s] Expected load_queue_full[0] after %0d loads", test_name, FIFO_DEPTH);
+        if (`STATUS.load_queue_full !== 1'b1) begin
+            $error("[%s] Expected full after %0d loads", test_name, FIFO_DEPTH);
             errors++;
         end else
             $display("[%s] PASS - FIFO full asserted after %0d loads", test_name, FIFO_DEPTH);
 
-        sched_valid_in[0] = 1'b1;
-        sched_write[0]    = 1'b0;
-        sched_addr[0]     = 'hFFF;
-        sched_vdst[0]     = 8'hFF;
+        `SCHED_REQ.valid     = 1'b1;
+        `SCHED_REQ.write     = 1'b0;
+        `SCHED_REQ.spad_addr = 'hFFF;
+        `SCHED_REQ.vdst      = 8'hFF;
         @(posedge CLK);
-        if (sched_ready_out[0] !== 1'b0) begin
-            $error("[%s] Channel 0 should reject load when FIFO full", test_name);
+        if (`SCHED_RES.ready !== 1'b0) begin
+            $error("[%s] Should reject load when full", test_name);
             errors++;
         end else
-            $display("[%s] PASS - load rejected when FIFO full", test_name);
-        sched_valid_in[0] = 1'b0;
+            $display("[%s] PASS - load rejected when full", test_name);
+        `SCHED_REQ.valid = 1'b0;
 
-        wb_ready_in = 1'b1;  // Allow drain
-        repeat (FIFO_DEPTH + SP_LATENCY + 10) @(posedge CLK);
+        `WB_READY = 1'b1;
+        drain_and_idle();
 
-        // Test 9: Writeback backpressure
+        // ==============================================================
+        // T9 - Writeback backpressure (hold then release)
+        // ==============================================================
         test_name = "T9_wb_backpressure";
         test_num  = 9;
         total_tests++;
-        reset();
         $display("\n--- Test %0d: %s ---", test_num, test_name);
 
-        issue_load(0, 'h400, 8'd70);
-        wb_ready_in = 1'b0;
+        issue_load('h400, 8'd70);
+        `WB_READY = 1'b0;
         repeat (SP_LATENCY + 5) @(posedge CLK);
 
-        // With the response buffer, wb_valid_out asserts independently of wb_ready_in
-        if (wb_valid_out) begin
-            $display("  Writeback valid asserted while ready=0, checking hold...");
-            if (wb_vdst !== 8'd70) begin
-                $error("[%s] wb_vdst mismatch while held: expected v70, got v%0d", test_name, wb_vdst);
+        if (`WB_OUT.valid) begin
+            $display("  WB valid asserted while ready=0, checking hold...");
+            if (`WB_OUT.vdst !== 8'd70) begin
+                $error("[%s] wb vdst mismatch while held", test_name);
                 errors++;
             end
-            // Re-enable ready - handshake should complete
-            wb_ready_in = 1'b1;
+            repeat (3) @(posedge CLK);
+            if (!`WB_OUT.valid || `WB_OUT.vdst !== 8'd70) begin
+                $error("[%s] WB did not hold stable under backpressure", test_name);
+                errors++;
+            end else begin
+                $display("[%s] PASS - writeback held stable for 3 extra cycles", test_name);
+            end
+            `WB_READY = 1'b1;
             @(posedge CLK);
-            $display("[%s] PASS - writeback held until ready", test_name);
+            $display("[%s] PASS - writeback consumed after ready released", test_name);
         end else begin
-            $error("[%s] wb_valid_out not asserted despite pending response (backpressure broken)", test_name);
+            $error("[%s] wb_valid not asserted (backpressure broken)", test_name);
             errors++;
-            wb_ready_in = 1'b1;
-            repeat (10) @(posedge CLK);
+            `WB_READY = 1'b1;
         end
+        drain_and_idle();
 
-        // Test 10: vlsu_busy lifecycle
+        // ==============================================================
+        // T10 - Busy lifecycle (idle -> busy -> idle without reset)
+        // ==============================================================
         test_name = "T10_busy_lifecycle";
         test_num  = 10;
         total_tests++;
-        reset();
         $display("\n--- Test %0d: %s ---", test_num, test_name);
 
-        if (vlsu_busy) begin
-            $error("[%s] vlsu_busy should be 0 after reset", test_name);
+        if (`STATUS.busy) begin
+            $error("[%s] busy should be 0 before issuing (stale state!)", test_name);
             errors++;
+        end else begin
+            $display("[%s] PASS - idle before load", test_name);
         end
-        issue_load(0, 'hC00, 8'd90);
+
+        issue_load('hC00, 8'd90);
         @(posedge CLK);
-        if (!vlsu_busy) begin
-            $error("[%s] vlsu_busy should be 1 after load issued", test_name);
+        if (!`STATUS.busy) begin
+            $error("[%s] busy should be 1 after load issued", test_name);
             errors++;
+        end else begin
+            $display("[%s] PASS - busy asserted after load", test_name);
         end
+
         wait_writeback(8'd90, SP_LATENCY + 10);
         @(posedge CLK);
-        if (vlsu_busy) begin
-            $error("[%s] vlsu_busy should be 0 after queue drained", test_name);
+        if (`STATUS.busy) begin
+            $error("[%s] busy should be 0 after drain", test_name);
             errors++;
         end else
             $display("[%s] PASS - busy cleared after drain", test_name);
+        drain_and_idle();
 
-        // Test 11: All channels saturated stress
-        test_name = "T11_all_channels_saturated";
+        // ==============================================================
+        // T11 - Saturation stress (half-depth burst)
+        // ==============================================================
+        test_name = "T11_saturation_stress";
         test_num  = 11;
         total_tests++;
-        reset();
         $display("\n--- Test %0d: %s ---", test_num, test_name);
 
         begin
-            int loads_per_ch;
-            loads_per_ch = FIFO_DEPTH / 2;
-            for (int burst = 0; burst < loads_per_ch; burst++) begin
+            int num;
+            logic [VIDX_W-1:0] got_vd;
+            num = FIFO_DEPTH / 2;
+
+            for (int i = 0; i < num; i++) begin
                 @(posedge CLK);
-                for (int ch = 0; ch < NUM_SP; ch++) begin
-                    sched_valid_in[ch] = 1'b1;
-                    sched_write[ch]    = 1'b0;
-                    sched_addr[ch]     = SCPAD_ADDR_WIDTH'(ch * 'h1000 + burst * 'h10);
-                    sched_vdst[ch]     = VIDX_W'(ch * 32 + burst);
-                end
+                `SCHED_REQ.valid     = 1'b1;
+                `SCHED_REQ.write     = 1'b0;
+                `SCHED_REQ.spad_addr = SCPAD_ADDR_WIDTH'(i * 'h10);
+                `SCHED_REQ.vdst      = VIDX_W'(i + 200);
             end
             @(posedge CLK);
-            for (int ch = 0; ch < NUM_SP; ch++)
-                sched_valid_in[ch] = 1'b0;
+            `SCHED_REQ.valid = 1'b0;
 
-            begin
-                int total_expected, collected;
-                logic [VIDX_W-1:0] vd_tmp;
-                total_expected = loads_per_ch * NUM_SP;
-                collected = 0;
-                for (int w = 0; w < total_expected; w++) begin
-                    wait_any_writeback(vd_tmp, SP_LATENCY + loads_per_ch + 20);
-                    collected++;
-                end
-                if (collected == total_expected)
-                    $display("[%s] PASS - all %0d writebacks collected from %0d channels",
-                             test_name, collected, NUM_SP);
-                else begin
-                    $error("[%s] Only %0d / %0d writebacks", test_name, collected, total_expected);
+            for (int i = 0; i < num; i++) begin
+                wait_any_writeback(got_vd, SP_LATENCY + num + 20);
+                if (got_vd !== VIDX_W'(i + 200)) begin
+                    $error("[%s] WB %0d: expected v%0d, got v%0d", test_name, i, i + 200, got_vd);
                     errors++;
                 end
             end
+            $display("[%s] PASS - all %0d writebacks collected", test_name, num);
         end
+        drain_and_idle();
 
-        //---------------------------------------------------------------------
+        // ==============================================================
+        // T12 - Mixed load/store interleaving (continuous traffic)
+        // ==============================================================
+        test_name = "T12_mixed_load_store";
+        test_num  = 12;
+        total_tests++;
+        $display("\n--- Test %0d: %s ---", test_num, test_name);
+
+        begin
+            vreg_t st_data;
+            logic [VIDX_W-1:0] got_vd;
+            int t12_err;
+            t12_err = 0;
+
+            for (int e = 0; e < VLMAX; e++)
+                st_data[e] = {1'b1, 5'd5, 10'(e)};
+
+            issue_load('hD00, 8'd60);
+            issue_store('hD10, st_data);
+            issue_load('hD20, 8'd61);
+
+            wait_any_writeback(got_vd, SP_LATENCY + 15);
+            if (got_vd !== 8'd60) begin
+                $error("[%s] First WB expected v60, got v%0d", test_name, got_vd);
+                t12_err++;
+            end else
+                $display("[%s] PASS - v60 returned first", test_name);
+
+            wait_any_writeback(got_vd, SP_LATENCY + 15);
+            if (got_vd !== 8'd61) begin
+                $error("[%s] Second WB expected v61, got v%0d", test_name, got_vd);
+                t12_err++;
+            end else
+                $display("[%s] PASS - v61 returned second (store caused no issue)", test_name);
+
+            if (t12_err > 0) errors += t12_err;
+        end
+        drain_and_idle();
+
+        // ==============================================================
+        // T13 - Back-to-back bursts (no idle gap between batches)
+        // ==============================================================
+        test_name = "T13_back_to_back_bursts";
+        test_num  = 13;
+        total_tests++;
+        $display("\n--- Test %0d: %s ---", test_num, test_name);
+
+        begin
+            logic [VIDX_W-1:0] got_vd;
+            int total_loads;
+
+            for (int i = 0; i < 4; i++) begin
+                @(posedge CLK);
+                `SCHED_REQ.valid     = 1'b1;
+                `SCHED_REQ.write     = 1'b0;
+                `SCHED_REQ.spad_addr = SCPAD_ADDR_WIDTH'('hE00 + i * 'h10);
+                `SCHED_REQ.vdst      = VIDX_W'(150 + i);
+            end
+            for (int i = 0; i < 4; i++) begin
+                @(posedge CLK);
+                `SCHED_REQ.valid     = 1'b1;
+                `SCHED_REQ.write     = 1'b0;
+                `SCHED_REQ.spad_addr = SCPAD_ADDR_WIDTH'('hF00 + i * 'h10);
+                `SCHED_REQ.vdst      = VIDX_W'(154 + i);
+            end
+            @(posedge CLK);
+            `SCHED_REQ.valid = 1'b0;
+            total_loads = 8;
+
+            for (int i = 0; i < total_loads; i++) begin
+                wait_any_writeback(got_vd, SP_LATENCY + total_loads + 20);
+                if (got_vd !== VIDX_W'(150 + i)) begin
+                    $error("[%s] WB %0d: expected v%0d, got v%0d", test_name, i, 150 + i, got_vd);
+                    errors++;
+                end else begin
+                    $display("[%s] PASS - WB %0d: v%0d", test_name, i, got_vd);
+                end
+            end
+        end
+        drain_and_idle();
+
+        // ==============================================================
+        // T14 - Dual-channel parallel loads
+        //       Both scratchpads receive loads simultaneously.
+        //       Verify independent writeback on each channel.
+        // ==============================================================
+        test_name = "T14_dual_channel_parallel";
+        test_num  = 14;
+        total_tests++;
+        $display("\n--- Test %0d: %s ---", test_num, test_name);
+
+        begin
+            logic [VIDX_W-1:0] got_vd0, got_vd1;
+            int t14_err;
+            t14_err = 0;
+
+            // Issue loads to both channels on the same cycle
+            @(posedge CLK);
+            `SCHED_REQ.valid      = 1'b1;
+            `SCHED_REQ.write      = 1'b0;
+            `SCHED_REQ.spad_addr  = 'hA00;
+            `SCHED_REQ.vdst       = 8'd80;
+
+            `SCHED_REQ1.valid     = 1'b1;
+            `SCHED_REQ1.write     = 1'b0;
+            `SCHED_REQ1.spad_addr = 'hB00;
+            `SCHED_REQ1.vdst      = 8'd81;
+
+            #1;
+            // Both should be accepted
+            if (`SCHED_RES.ready !== 1'b1) begin
+                $error("[%s] CH0 ready should be 1", test_name); t14_err++;
+            end
+            if (`SCHED_RES1.ready !== 1'b1) begin
+                $error("[%s] CH1 ready should be 1", test_name); t14_err++;
+            end
+            // Both scratchpads should see a request
+            if (`SP_REQ.valid !== 1'b1) begin
+                $error("[%s] CH0 vec_req.valid should be 1", test_name); t14_err++;
+            end
+            if (`SP_REQ1.valid !== 1'b1) begin
+                $error("[%s] CH1 vec_req.valid should be 1", test_name); t14_err++;
+            end
+
+            @(posedge CLK);
+            `SCHED_REQ.valid  = 1'b0;
+            `SCHED_REQ1.valid = 1'b0;
+
+            // Wait for both writebacks in parallel
+            fork
+                // CH0
+                begin
+                    int w0;
+                    w0 = 0;
+                    while (!`WB_OUT.valid && w0 < SP_LATENCY + 10) begin
+                        @(posedge CLK); w0++;
+                    end
+                    if (!`WB_OUT.valid) begin
+                        $error("[%s] CH0 writeback timeout", test_name); t14_err++;
+                    end else if (`WB_OUT.vdst !== 8'd80) begin
+                        $error("[%s] CH0 WB vdst expected v80, got v%0d", test_name, `WB_OUT.vdst);
+                        t14_err++;
+                    end else begin
+                        $display("[%s] PASS - CH0 writeback v80 after %0d cycles", test_name, w0);
+                    end
+                end
+                // CH1
+                begin
+                    int w1;
+                    w1 = 0;
+                    while (!`WB_OUT1.valid && w1 < SP_LATENCY + 10) begin
+                        @(posedge CLK); w1++;
+                    end
+                    if (!`WB_OUT1.valid) begin
+                        $error("[%s] CH1 writeback timeout", test_name); t14_err++;
+                    end else if (`WB_OUT1.vdst !== 8'd81) begin
+                        $error("[%s] CH1 WB vdst expected v81, got v%0d", test_name, `WB_OUT1.vdst);
+                        t14_err++;
+                    end else begin
+                        $display("[%s] PASS - CH1 writeback v81 after %0d cycles", test_name, w1);
+                    end
+                end
+            join
+
+            // Verify both channels independent — issue second burst
+            @(posedge CLK);
+            // 3 loads on CH0, 2 loads on CH1, simultaneously
+            for (int i = 0; i < 3; i++) begin
+                @(posedge CLK);
+                `SCHED_REQ.valid      = 1'b1;
+                `SCHED_REQ.write      = 1'b0;
+                `SCHED_REQ.spad_addr  = SCPAD_ADDR_WIDTH'('hC00 + i * 'h10);
+                `SCHED_REQ.vdst       = VIDX_W'(170 + i);
+
+                if (i < 2) begin
+                    `SCHED_REQ1.valid     = 1'b1;
+                    `SCHED_REQ1.write     = 1'b0;
+                    `SCHED_REQ1.spad_addr = SCPAD_ADDR_WIDTH'('hD00 + i * 'h10);
+                    `SCHED_REQ1.vdst      = VIDX_W'(180 + i);
+                end else begin
+                    `SCHED_REQ1.valid     = 1'b0;
+                end
+            end
+            @(posedge CLK);
+            `SCHED_REQ.valid  = 1'b0;
+            `SCHED_REQ1.valid = 1'b0;
+
+            // Collect both channels in parallel (fork/join)
+            begin
+                int ch0_err, ch1_err;
+                ch0_err = 0;
+                ch1_err = 0;
+
+                fork
+                    // --- CH0: collect 3 writebacks ---
+                    begin
+                        for (int i = 0; i < 3; i++) begin
+                            begin
+                                int ww;
+                                ww = 0;
+                                while (!`WB_OUT.valid && ww < SP_LATENCY + 20) begin
+                                    @(posedge CLK); ww++;
+                                end
+                                if (!`WB_OUT.valid) begin
+                                    $error("[%s] CH0 burst WB %0d timeout", test_name, i); ch0_err++;
+                                end else if (`WB_OUT.vdst !== VIDX_W'(170 + i)) begin
+                                    $error("[%s] CH0 burst WB %0d: expected v%0d, got v%0d",
+                                            test_name, i, 170 + i, `WB_OUT.vdst); ch0_err++;
+                                end else begin
+                                    $display("[%s] PASS - CH0 burst WB %0d: v%0d", test_name, i, `WB_OUT.vdst);
+                                end
+                                @(posedge CLK);
+                            end
+                        end
+                    end
+
+                    // --- CH1: collect 2 writebacks ---
+                    begin
+                        for (int i = 0; i < 2; i++) begin
+                            begin
+                                int ww;
+                                ww = 0;
+                                while (!`WB_OUT1.valid && ww < SP_LATENCY + 20) begin
+                                    @(posedge CLK); ww++;
+                                end
+                                if (!`WB_OUT1.valid) begin
+                                    $error("[%s] CH1 burst WB %0d timeout", test_name, i); ch1_err++;
+                                end else if (`WB_OUT1.vdst !== VIDX_W'(180 + i)) begin
+                                    $error("[%s] CH1 burst WB %0d: expected v%0d, got v%0d",
+                                            test_name, i, 180 + i, `WB_OUT1.vdst); ch1_err++;
+                                end else begin
+                                    $display("[%s] PASS - CH1 burst WB %0d: v%0d", test_name, i, `WB_OUT1.vdst);
+                                end
+                                @(posedge CLK);
+                            end
+                        end
+                    end
+                join
+
+                t14_err += ch0_err + ch1_err;
+            end
+
+            if (t14_err == 0)
+                $display("[%s] PASS - all dual-channel operations verified", test_name);
+            else
+                errors += t14_err;
+        end
+        drain_both();
+
+        // ==============================================================
         // Summary
-        //---------------------------------------------------------------------
+        // ==============================================================
         $display("\n============================================================");
-        $display(" Results: %0d tests, %0d errors (NUM_SCPADS=%0d)",
-                 total_tests, errors, NUM_SP);
+        $display(" Results: %0d tests, %0d errors", total_tests, errors);
         if (errors == 0)
             $display(" ALL TESTS PASSED");
         else
@@ -843,55 +984,6 @@ module vlsu_tb;
     initial begin
         $dumpfile("vlsu_tb.vcd");
         $dumpvars(0, vlsu_tb);
-    end
-
-endmodule
-
-// Minimal sync_fifo behavioral model for simulation
-module sync_fifo #(
-    parameter int FIFODEPTH = 8,
-    parameter int DATAWIDTH = 8
-) (
-    input  logic                  nRST,
-    input  logic                  CLK,
-    input  logic                  wr_en,
-    input  logic                  shift,
-    input  logic [DATAWIDTH-1:0]  din,
-    output logic [DATAWIDTH-1:0]  dout,
-    output logic                  empty,
-    output logic                  full
-);
-
-    logic [DATAWIDTH-1:0] mem [FIFODEPTH];
-    int head, tail, count;
-
-    assign empty = (count == 0);
-    assign full  = (count >= FIFODEPTH);
-    assign dout  = mem[head];
-
-    always_ff @(posedge CLK or negedge nRST) begin
-        if (!nRST) begin
-            head  <= 0;
-            tail  <= 0;
-            count <= 0;
-            for (int i = 0; i < FIFODEPTH; i++)
-                mem[i] <= '0;
-        end else begin
-            if (wr_en && !full && shift && !empty) begin
-                mem[tail] <= din;
-                tail  <= (tail + 1) % FIFODEPTH;
-                head  <= (head + 1) % FIFODEPTH;
-            end
-            else if (wr_en && !full) begin
-                mem[tail] <= din;
-                tail  <= (tail + 1) % FIFODEPTH;
-                count <= count + 1;
-            end
-            else if (shift && !empty) begin
-                head  <= (head + 1) % FIFODEPTH;
-                count <= count - 1;
-            end
-        end
     end
 
 endmodule
