@@ -140,8 +140,6 @@ def sdma_load(
             raw_val = gmem.read_data(g_addr)
             raw_val = raw_val << 16
 
-            print(g_addr)
-            print(raw_val)
 
             # 1. Pack the int into 4 bytes (little-endian 'I' for unsigned int)
             # 2. Unpack those 4 bytes as a float ('f')
