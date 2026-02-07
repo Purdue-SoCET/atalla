@@ -7,7 +7,8 @@ module add_fp_4input_stage3 #(
     input logic [MANTISSA_SIZE+PRECISION_BITS-1:0] sum,
     input logic sign,
     input logic [EXPONENT_SIZE - 1:0] exponent,
-    input logic [$clog2(MANTISSA_SIZE)-1:0] right_shifts,
+    input logic special_case,
+    input logic [EXPONENT_SIZE+MANTISSA_SIZE:0] special_result,
     output logic [EXPONENT_SIZE+MANTISSA_SIZE:0] final_sum,
 );
 
@@ -59,25 +60,28 @@ module add_fp_4input_stage3 #(
     logic [EXPONENT_SIZE-1:0] new_exponent;
     logic inf;
 
-    // new_exponent = exponent + overflow + right_shifts - leading_zeros
-    assign new_exponent_internal = $signed({2'b0, exponent}) + $signed({{(EXPONENT_SIZE+1){1'b0}}, overflow}) + $signed({2'b0, right_shifts}) - $signed({2'b0, leading_zeros});
+    // new_exponent = exponent + overflow - leading_zeros
+    assign new_exponent_internal = $signed({2'b0, exponent}) + $signed({{(EXPONENT_SIZE+1){1'b0}}, overflow}) - $signed({2'b0, leading_zeros});
     
     // Handle special cases like overflow to infinity and underflow to zero
     always_comb begin
         inf = 0; 
         new_exponent = new_exponent_internal[EXPONENT_SIZE-1:0];
-        if (new_exponent == {EXPONENT_SIZE{1'b1}} | (|new_exponent_internal[EXPONENT_SIZE+1:EXPONENT_SIZE]) ) begin
-            inf = 1; 
+        if ($signed(new_exponent_internal) >= $signed({2'b0, {EXPONENT_SIZE{1'b1}}}) ) begin
+            inf = 1'b1; 
             new_exponent = {EXPONENT_SIZE{1'b1}};
         end
-        else if ($signed(new_exponent_internal) <= 0 | new_exponent_internal[EXPONENT_SIZE-1:0] == '0) begin
+        else if ($signed(new_exponent_internal) <= 0) begin
             new_exponent = {EXPONENT_SIZE{1'b0}}; 
         end
     end
 
     // Final sum assignment. Depends on infinity, zero/subnormal, or normal number
     always_comb begin : final_mux
-        if (inf) begin
+        if (special_case) begin
+            final_result = special_result; 
+        end
+        else if (inf) begin
             final_sum = {sign, new_exponent, {MANTISSA_SIZE{1'b0}}};
         end
         else if (new_exponent == {EXPONENT_SIZE{1'b0}}) begin
