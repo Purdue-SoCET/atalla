@@ -761,34 +761,46 @@ module vlsu_tb;
         begin
             logic [VIDX_W-1:0] got_vd;
             int total_loads;
-
-            for (int i = 0; i < 4; i++) begin
-                @(posedge CLK);
-                `SCHED_REQ.valid     = 1'b1;
-                `SCHED_REQ.write     = 1'b0;
-                `SCHED_REQ.spad_addr = SCPAD_ADDR_WIDTH'('hE00 + i * 'h10);
-                `SCHED_REQ.vdst      = VIDX_W'(150 + i);
-            end
-            for (int i = 0; i < 4; i++) begin
-                @(posedge CLK);
-                `SCHED_REQ.valid     = 1'b1;
-                `SCHED_REQ.write     = 1'b0;
-                `SCHED_REQ.spad_addr = SCPAD_ADDR_WIDTH'('hF00 + i * 'h10);
-                `SCHED_REQ.vdst      = VIDX_W'(154 + i);
-            end
-            @(posedge CLK);
-            `SCHED_REQ.valid = 1'b0;
+            int t13_err;
             total_loads = 8;
+            t13_err = 0;
 
-            for (int i = 0; i < total_loads; i++) begin
-                wait_any_writeback(got_vd, SP_LATENCY + total_loads + 20);
-                if (got_vd !== VIDX_W'(150 + i)) begin
-                    $error("[%s] WB %0d: expected v%0d, got v%0d", test_name, i, 150 + i, got_vd);
-                    errors++;
-                end else begin
-                    $display("[%s] PASS - WB %0d: v%0d", test_name, i, got_vd);
+            fork
+                // --- Issue thread: 2 bursts of 4 back-to-back ---
+                begin
+                    for (int i = 0; i < 4; i++) begin
+                        @(posedge CLK);
+                        `SCHED_REQ.valid     = 1'b1;
+                        `SCHED_REQ.write     = 1'b0;
+                        `SCHED_REQ.spad_addr = SCPAD_ADDR_WIDTH'('hE00 + i * 'h10);
+                        `SCHED_REQ.vdst      = VIDX_W'(150 + i);
+                    end
+                    for (int i = 0; i < 4; i++) begin
+                        @(posedge CLK);
+                        `SCHED_REQ.valid     = 1'b1;
+                        `SCHED_REQ.write     = 1'b0;
+                        `SCHED_REQ.spad_addr = SCPAD_ADDR_WIDTH'('hF00 + i * 'h10);
+                        `SCHED_REQ.vdst      = VIDX_W'(154 + i);
+                    end
+                    @(posedge CLK);
+                    `SCHED_REQ.valid = 1'b0;
                 end
-            end
+
+                // --- Collect thread: gather 8 writebacks in order ---
+                begin
+                    for (int i = 0; i < total_loads; i++) begin
+                        wait_any_writeback(got_vd, SP_LATENCY + total_loads + 20);
+                        if (got_vd !== VIDX_W'(150 + i)) begin
+                            $error("[%s] WB %0d: expected v%0d, got v%0d", test_name, i, 150 + i, got_vd);
+                            t13_err++;
+                        end else begin
+                            $display("[%s] PASS - WB %0d: v%0d", test_name, i, got_vd);
+                        end
+                    end
+                end
+            join
+
+            errors += t13_err;
         end
         drain_and_idle();
 

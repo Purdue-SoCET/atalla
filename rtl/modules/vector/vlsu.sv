@@ -121,20 +121,43 @@ module vlsu #(
             sif.vec_req[IDX].wdata      = vif.vrf_store[IDX].data;
         end
 
-        // Response capture
-        rq_wr_en = sif.vec_res[IDX].valid && !sif.vec_res[IDX].write;
-        rq_din   = sif.vec_res[IDX].rdata;
+        begin
+            logic resp_incoming;
+            logic bypass_eligible;
 
-        // Writeback
-        //  Fires when both FIFOs are non-empty.
-        //  valid asserted independently of ready (proper handshake).
-        if (!rq_empty && !lq_empty) begin
-            vif.wb_out[IDX].load_data = rq_dout;
-            vif.wb_out[IDX].vdst      = lq_dout;
-            vif.wb_out[IDX].valid     = 1'b1;
-            if (vif.wb_ready[IDX]) begin
-                lq_shift = 1'b1;
-                rq_shift = 1'b1;
+            resp_incoming    = sif.vec_res[IDX].valid && !sif.vec_res[IDX].write;
+            bypass_eligible  = resp_incoming && rq_empty && !lq_empty;
+
+            if (bypass_eligible) begin
+                // Drive writeback straight from scratchpad response
+                vif.wb_out[IDX].load_data = sif.vec_res[IDX].rdata;
+                vif.wb_out[IDX].vdst      = lq_dout;
+                vif.wb_out[IDX].valid     = 1'b1;
+                if (vif.wb_ready[IDX]) begin
+                    // Consumed — pop load queue, skip resp FIFO entirely
+                    lq_shift = 1'b1;
+                end else begin
+                    // Writeback stalled — buffer for later
+                    rq_wr_en = 1'b1;
+                    rq_din   = sif.vec_res[IDX].rdata;
+                end
+            end else begin
+                // Buffer any incoming response into FIFO
+                if (resp_incoming) begin
+                    rq_wr_en = 1'b1;
+                    rq_din   = sif.vec_res[IDX].rdata;
+                end
+
+                // Drain from FIFOs when both have data
+                if (!rq_empty && !lq_empty) begin
+                    vif.wb_out[IDX].load_data = rq_dout;
+                    vif.wb_out[IDX].vdst      = lq_dout;
+                    vif.wb_out[IDX].valid     = 1'b1;
+                    if (vif.wb_ready[IDX]) begin
+                        lq_shift = 1'b1;
+                        rq_shift = 1'b1;
+                    end
+                end
             end
         end
 
