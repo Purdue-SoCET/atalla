@@ -76,7 +76,12 @@ def apply_imm_vector_op(
 
 
 def main():
+<<<<<<< HEAD
     mem_file = "Testing/unit_tests/bf_R.txt" # need to change this to target different mem test files
+=======
+    mem_file = "Testing/unit_tests/three_instr.txt" # need to change this to target different mem test files
+    packet_length = 3  # Parameter: number of instructions in a packet
+>>>>>>> 25c526323a49d23f2a504ebd464478054c661d1f
     out_file = "output_mem.txt"
     out_sreg_file = "output_sregs.txt"
     out_vreg_file = "output_vregs.txt"
@@ -102,6 +107,7 @@ def main():
     gemm_weights = np.zeros((32, 32))
     num_weights = 0
     pc = 0x00000000  # Program Counter, starts at address 0
+    pc_increment = packet_length * 6 # each instruction is 6 bytes (48 bits)
 
     #eecute object
     EU = ExecuteUnit()
@@ -118,7 +124,7 @@ def main():
 
     halt = False
     while(not(halt)):
-        dec_packet = decode_packet(mem.read_instr(pc))
+        dec_packet = decode_packet(packet=mem.read_instr(pc), packet_length=packet_length)
         print(pc)
         # print(mem.read_instr(pc))
         for item in dec_packet:
@@ -136,45 +142,45 @@ def main():
                 br = True
                 if(m == "jal"):
                     brtarg = pc + (inst['imm'])
-                    sregs.write(inst['rd'], pc + 24)
+                    sregs.write(inst['rd'], pc + pc_increment)
                 elif(m == "jalr"):
                     brtarg = sregs.read(inst['rs1']) + (inst['imm'])
-                    sregs.write(inst['rd'], pc + 24)
+                    sregs.write(inst['rd'], pc + pc_increment)
                 elif(m == "beq.s"):
                     if(sregs.read(inst['rs1']) == sregs.read(inst['rs2'])):
                         brtarg = pc + (inst['imm'])
                     else:
-                        brtarg = pc + 24
+                        brtarg = pc + pc_increment
                     sregs.write(inst['rs1'], sregs.read(inst['rs1']) + inst['incr_imm'])
                 elif(m == "bne.s"):
                     if(sregs.read(inst['rs1']) != sregs.read(inst['rs2'])):
                         brtarg = pc + (inst['imm'])
                     else:
-                        brtarg = pc + 24
+                        brtarg = pc + pc_increment
                     sregs.write(inst['rs1'], sregs.read(inst['rs1']) + inst['incr_imm'])
                 elif(m == "blt.s"):
                     if(sregs.read(inst['rs1']) < sregs.read(inst['rs2'])):
                         brtarg = pc + (inst['imm'])
                     else:
-                        brtarg = pc + 24
+                        brtarg = pc + pc_increment
                     sregs.write(inst['rs1'], sregs.read(inst['rs1']) + inst['incr_imm'])
                 elif(m == "bge.s"):
                     if(sregs.read(inst['rs1']) >= sregs.read(inst['rs2'])):
                         brtarg = pc + (inst['imm'])
                     else:
-                        brtarg = pc + 24
+                        brtarg = pc + pc_increment
                     sregs.write(inst['rs1'], sregs.read(inst['rs1']) + inst['incr_imm'])
                 elif(m == "bgt.s"):
                     if(sregs.read(inst['rs1']) > sregs.read(inst['rs2'])):
                         brtarg = pc + (inst['imm'])
                     else:
-                        brtarg = pc + 24
+                        brtarg = pc + pc_increment
                     sregs.write(inst['rs1'], sregs.read(inst['rs1']) + inst['incr_imm'])
                 elif(m == "ble.s"):
                     if(sregs.read(inst['rs1']) <= sregs.read(inst['rs2'])):
                         brtarg = pc + (inst['imm'])
                     else:
-                        brtarg = pc + 24
+                        brtarg = pc + pc_increment
                     sregs.write(inst['rs1'], sregs.read(inst['rs1']) + inst['incr_imm'])
             elif(m == "lw.s"):
                 sregs.write(inst['rd'], mem.read_data(sregs.read(inst['rs1']) + inst['imm']))
@@ -542,7 +548,7 @@ def main():
         if(br):
             pc = brtarg
         else:
-            pc = pc + 24
+            pc = pc + pc_increment
 
 
     # Dump memory to output file
