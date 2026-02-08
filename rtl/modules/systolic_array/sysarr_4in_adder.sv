@@ -10,8 +10,8 @@ module 4in_adder_AIHW #(
     logic [15:0] x, y, m, n;
     logic [15:0] temp; //temp var for comparison of inputs
     logic [4:0] y_shift, m_shift, n_shift;
-    logic [15:0] y_shifted, m_shifted, n_shifted;
-    logic [15:0] x_f, y_shifted_f, m_shifted_f, n_shifted_f;
+    logic [MANTISSA-1:0] y_shifted, m_shifted, n_shifted;
+    logic [MANTISSA-1:0] x_f, y_shifted_f, m_shifted_f, n_shifted_f;
     logic y_op, m_op, n_op;
     logic y_op_f, m_op_f, n_op_f;
 
