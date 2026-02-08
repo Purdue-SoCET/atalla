@@ -34,7 +34,7 @@ module 4in_adder_AIHW #(
 
     always_ff @(posedge clk, negedge n_rst) begin
         if (!n_rst) begin
-	    x_e_f <= '0;
+	    	x_e_f <= '0;
             x_f <= '0;
             y_shifted_f <= '0;
             m_shifted_f <= '0;
@@ -42,10 +42,10 @@ module 4in_adder_AIHW #(
             y_op_f <= '0;
             m_op_f <= '0;
             n_op_f <= '0;
-	    special_case_f <= '0;
-	    special_result_f <= '0;
+	    	special_case_f <= '0;
+	    	special_result_f <= '0;
         end else begin
-	    x_e_f <= exp_x;
+	    	x_e_f <= exp_x;
             x_f <= x_mant;
             y_shifted_f <= y_shifted;
             m_shifted_f <= m_shifted;
@@ -53,14 +53,14 @@ module 4in_adder_AIHW #(
             y_op_f <= y_op;
             m_op_f <= m_op;
             n_op_f <= n_op;
-	    special_case_f <= special_case;
-	    special_result_f <= special_result;
+		    special_case_f <= special_case;
+		    special_result_f <= special_result;
         end
     end
 
     always_comb begin
-	//DAZ
-	a_daz = a;
+		//DAZ
+		a_daz = a;
         // DAZ: exp==0 and mant!=0 -> +-0 (keep sign)
         if ((a[14:10] == 5'd0) && (a[9:0] != 10'd0)) a_daz[14:0] = 15'd0;
         b_daz = b;
@@ -74,81 +74,81 @@ module 4in_adder_AIHW #(
 	
 	//SPECIAL CASE DETECTION
 	special_case = 1'b0;
-        special_result = 16'h0000;
+    special_result = 16'h0000;
 
 	is_nan_a = (a_daz[14:10] == 5'b11111) && (a_daz[9:0] != 10'b0);
-        is_nan_b = (b_daz[14:10] == 5'b11111) && (b_daz[9:0] != 10'b0);
-        is_nan_c = (c_daz[14:10] == 5'b11111) && (c_daz[9:0] != 10'b0);
-        is_nan_d = (d_daz[14:10] == 5'b11111) && (d_daz[9:0] != 10'b0);
+    is_nan_b = (b_daz[14:10] == 5'b11111) && (b_daz[9:0] != 10'b0);
+    is_nan_c = (c_daz[14:10] == 5'b11111) && (c_daz[9:0] != 10'b0);
+    is_nan_d = (d_daz[14:10] == 5'b11111) && (d_daz[9:0] != 10'b0);
 
 	is_inf_a = (a_daz[14:10] == 5'b11111) && (a_daz[9:0] == 10'b0);
-        is_inf_b = (b_daz[14:10] == 5'b11111) && (b_daz[9:0] == 10'b0);
-        is_inf_c = (c_daz[14:10] == 5'b11111) && (c_daz[9:0] == 10'b0);
-        is_inf_d = (d_daz[14:10] == 5'b11111) && (d_daz[9:0] == 10'b0);
+    is_inf_b = (b_daz[14:10] == 5'b11111) && (b_daz[9:0] == 10'b0);
+    is_inf_c = (c_daz[14:10] == 5'b11111) && (c_daz[9:0] == 10'b0);
+    is_inf_d = (d_daz[14:10] == 5'b11111) && (d_daz[9:0] == 10'b0);
         
 	//special cases
 	if (is_nan_a || is_nan_b || is_nan_c || is_nan_d) begin
             special_case = 1'b1;
             special_result = 16'h7E00;
-        end
-        else if ((is_inf_a && is_inf_b) || (is_inf_a && is_inf_c) || (is_inf_a && is_inf_d) ||
-                 (is_inf_b && is_inf_c) || (is_inf_b && is_inf_d) || (is_inf_c && is_inf_d)) 
+    end
+    else if ((is_inf_a && is_inf_b) || (is_inf_a && is_inf_c) || (is_inf_a && is_inf_d) ||
+            (is_inf_b && is_inf_c) || (is_inf_b && is_inf_d) || (is_inf_c && is_inf_d)) 
 	begin
-            logic has_pos_inf, has_neg_inf;
-            has_pos_inf = (is_inf_a && !a_daz[15]) || (is_inf_b && !b_daz[15]) || 
-                         (is_inf_c && !c_daz[15]) || (is_inf_d && !d_daz[15]);
-            has_neg_inf = (is_inf_a && a_daz[15]) || (is_inf_b && b_daz[15]) || 
-                         (is_inf_c && c_daz[15]) || (is_inf_d && d_daz[15]);
+        logic has_pos_inf, has_neg_inf;
+        has_pos_inf = (is_inf_a && !a_daz[15]) || (is_inf_b && !b_daz[15]) || 
+                      (is_inf_c && !c_daz[15]) || (is_inf_d && !d_daz[15]);
+        has_neg_inf = (is_inf_a && a_daz[15]) || (is_inf_b && b_daz[15]) || 
+                      (is_inf_c && c_daz[15]) || (is_inf_d && d_daz[15]);
             
-            if (has_pos_inf && has_neg_inf) begin
-                special_case = 1'b1;
-                special_result = 16'h7E00; 
-            end
-            else if (has_pos_inf) begin
-                special_case = 1'b1;
-                special_result = 16'h7C00;
-            end
-            else begin
-                special_case = 1'b1;
-                special_result = 16'hFC00; 
-            end
-        end
-        else if (is_inf_a) begin
+        if (has_pos_inf && has_neg_inf) begin
             special_case = 1'b1;
-	    special_result = a_daz;
+            special_result = 16'h7E00; 
         end
-        else if (is_inf_b) begin
+        else if (has_pos_inf) begin
             special_case = 1'b1;
-            special_result = b_daz;
+            special_result = 16'h7C00;
         end
-        else if (is_inf_c) begin
+        else begin
             special_case = 1'b1;
-            special_result = c_daz;
-        end
-        else if (is_inf_d) begin
-            special_case = 1'b1;
-	    special_result = d_daz;
-        end
+            special_result = 16'hFC00; 
+    	end
+    end
+    else if (is_inf_a) begin
+        special_case = 1'b1;
+		special_result = a_daz;
+    end
+	else if (is_inf_b) begin
+		special_case = 1'b1;
+		special_result = b_daz;
+	end
+	else if (is_inf_c) begin
+		special_case = 1'b1;
+		special_result = c_daz;
+	end
+	else if (is_inf_d) begin
+		special_case = 1'b1;
+	special_result = d_daz;
+	end
 
-        //STAGE 1
+    //STAGE 1
         
 	sign_a = a_daz[15];
-        exp_a = a_daz[14 -: EXP];
-        frac_a = a_daz[MANTISSA-1:0];
-        
-        sign_b = b_daz[15];
-        exp_b = b_daz[14 -: EXP];
-        frac_b = b_daz[MANTISSA-1:0];
-        
-        sign_c = c_daz[15];
-        exp_c = c_daz[14 -: EXP];
-        frac_c = c_daz[MANTISSA-1:0];
-        
-        sign_d = d_daz[15];
-        exp_d = d_daz[14 -: EXP];
-        frac_d = d_daz[MANTISSA-1:0];
+	exp_a = a_daz[14 -: EXP];
+	frac_a = a_daz[MANTISSA-1:0];
+	
+	sign_b = b_daz[15];
+	exp_b = b_daz[14 -: EXP];
+	frac_b = b_daz[MANTISSA-1:0];
+	
+	sign_c = c_daz[15];
+	exp_c = c_daz[14 -: EXP];
+	frac_c = c_daz[MANTISSA-1:0];
+	
+	sign_d = d_daz[15];
+	exp_d = d_daz[14 -: EXP];
+	frac_d = d_daz[MANTISSA-1:0];
 
-        //input comparison and assignment
+    //input comparison and assignment
 	if (exp_a >= exp_b) begin
             exp_p = exp_a; frac_p = frac_a; sign_p = sign_a;
             exp_m = exp_b; frac_m = frac_b; sign_m = sign_b;
@@ -168,32 +168,32 @@ module 4in_adder_AIHW #(
             exp_y = exp_r; frac_y = frac_r; sign_y = sign_r;
             exp_mx = exp_m; frac_mx = frac_m; sign_mx = sign_m;
             exp_nx = exp_n; frac_nx = frac_n; sign_nx = sign_n;
-        end else begin
-            exp_x = exp_r; frac_x = frac_r; sign_x = sign_r;
-            exp_y = exp_p; frac_y = frac_p; sign_y = sign_p;
-            exp_mx = exp_n; frac_mx = frac_n; sign_mx = sign_n;
-            exp_nx = exp_m; frac_nx = frac_m; sign_nx = sign_m;
-        end
-      
-        //shift var logic
-        y_shift = exp_x - exp_y;
-        m_shift = exp_x - exp_mx;
-        n_shift = exp_x - exp_nx;
-	
+	end else begin
+		exp_x = exp_r; frac_x = frac_r; sign_x = sign_r;
+		exp_y = exp_p; frac_y = frac_p; sign_y = sign_p;
+		exp_mx = exp_n; frac_mx = frac_n; sign_mx = sign_n;
+		exp_nx = exp_m; frac_nx = frac_m; sign_nx = sign_m;
+	end
+  
+	//shift var logic
+	y_shift = exp_x - exp_y;
+	m_shift = exp_x - exp_mx;
+	n_shift = exp_x - exp_nx;
+
 	//add hidden bit to mantissa
 	x_mant = {(|exp_x), frac_x, {PRECISION{1'b0}}, 1'b0};
 
-        //right shift
-        y_shifted = shift_right_sticky({(|exp_y), frac_y, {PRECISION{1'b0}}, 1'b0}, y_shift);
-        m_shifted = shift_right_sticky({(|exp_mx), frac_mx, {PRECISION{1'b0}}, 1'b0}, m_shift);
-        n_shifted = shift_right_sticky({(|exp_nx), frac_nx, {PRECISION{1'b0}}, 1'b0}, n_shift);
-        
+	//right shift
+	y_shifted = shift_right_sticky({(|exp_y), frac_y, {PRECISION{1'b0}}, 1'b0}, y_shift);
+	m_shifted = shift_right_sticky({(|exp_mx), frac_mx, {PRECISION{1'b0}}, 1'b0}, m_shift);
+	n_shifted = shift_right_sticky({(|exp_nx), frac_nx, {PRECISION{1'b0}}, 1'b0}, n_shift);
+	
 	//operation flags
 	y_op = sign_x ^ sign_y;
-        m_op = sign_x ^ sign_mx;
-        n_op = sign_x ^ sign_nx;
+	m_op = sign_x ^ sign_mx;
+	n_op = sign_x ^ sign_nx;
 
-    end
+	end
 
     function automatic logic [MANT_WIDTH-1:0] shift_right_sticky(
 	input logic [MANT_WIDTH-1:0] mant,
