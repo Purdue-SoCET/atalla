@@ -49,6 +49,7 @@ module lane_wrapper (
     
     // Flattened or struct ports connecting to vector_if
     input  vector_pkg::lane_in_t  lane_in,
+    input  logic                  valid_in_mask, // Controls valid_in bits
     output vector_pkg::lane_out_t lane_out,
     
     output lane_perf_t perf
@@ -59,8 +60,16 @@ module lane_wrapper (
     // Instantiate the interface
     vector_if vif();
 
-    // Drive interface from ports
-    assign vif.lane_in = lane_in;
+    // Mask the valid_in bits based on control signal
+    lane_in_t lane_in_masked;
+    always_comb begin
+        lane_in_masked = lane_in;
+        // Broadcast mask to all 5 FUs
+        lane_in_masked.valid_in = lane_in.valid_in & {5{valid_in_mask}};
+    end
+
+    // Drive interface from masked ports
+    assign vif.lane_in = lane_in_masked;
     assign lane_out = vif.lane_out;
 
     // Instantiate Lane
