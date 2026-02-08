@@ -14,6 +14,12 @@ struct FUCounters {
     uint64_t cycles_fire = 0;
     uint64_t stall_fifo = 0;
     uint64_t stall_wb = 0;
+
+    uint64_t bubbles = 0;       // !valid_raw
+    uint64_t skipped = 0;       // valid_raw && !mask_bit
+    uint64_t retired = 0;       // retire signal
+    uint64_t latency_acc = 0;   // accumulated in-flight count per cycle
+    uint64_t raw_valid_cycles = 0; // cycles where valid_raw was high
 };
 
 struct LaneCounters {
@@ -31,6 +37,13 @@ struct Testbench {
     std::unique_ptr<Vlane_wrapper> top;
     LaneCounters counters;
     
+    // Track in-flight instructions (simple counter: issue - retire)
+    // This is an approximation. Ideally we tag instructions.
+    int valu_inflight = 0;
+    int sqrt_inflight = 0;
+    int mul_inflight  = 0;
+    int div_inflight  = 0;
+
 #if VM_TRACE
     std::unique_ptr<VerilatedVcdC> tfp;
 #endif
@@ -80,18 +93,39 @@ struct Testbench {
 
         uint32_t p = top->perf;
 
-        auto update = [&](FUCounters& c, int offset) {
-            if ((p >> (offset + 4)) & 1) c.cycles_busy++;
-            if ((p >> (offset + 3)) & 1) c.cycles_issue++;
-            if ((p >> (offset + 2)) & 1) c.cycles_fire++;
-            if ((p >> (offset + 1)) & 1) c.stall_fifo++;
-            if ((p >> (offset + 0)) & 1) c.stall_wb++;
+        auto update = [&](FUCounters& c, int& inflight, int offset) {
+            bool busy       = (p >> (offset + 7)) & 1;
+            bool issue      = (p >> (offset + 6)) & 1;
+            bool fire       = (p >> (offset + 5)) & 1;
+            bool stall_fifo = (p >> (offset + 4)) & 1;
+            bool stall_wb   = (p >> (offset + 3)) & 1;
+            bool valid_raw  = (p >> (offset + 2)) & 1;
+            bool mask_bit   = (p >> (offset + 1)) & 1;
+            bool retire     = (p >> (offset + 0)) & 1;
+
+            if (busy) c.cycles_busy++;
+            if (issue) c.cycles_issue++;
+            if (fire) c.cycles_fire++;
+            if (stall_fifo) c.stall_fifo++;
+            if (stall_wb) c.stall_wb++;
+            
+            if (retire) c.retired++;
+            if (!valid_raw) c.bubbles++;
+            if (valid_raw) c.raw_valid_cycles++;
+            if (valid_raw && !mask_bit) c.skipped++;
+            
+            // Latency tracking
+            if (issue) inflight++;
+            if (retire) inflight--;
+            if (inflight < 0) inflight = 0;
+            
+            c.latency_acc += inflight;
         };
 
-        update(counters.div,  0);
-        update(counters.mul,  5);
-        update(counters.sqrt, 10);
-        update(counters.valu, 15);
+        update(counters.div,  div_inflight,  0);
+        update(counters.mul,  mul_inflight,  8);
+        update(counters.sqrt, sqrt_inflight, 16);
+        update(counters.valu, valu_inflight, 24);
     }
 
     void run(int cycles) {
@@ -101,11 +135,9 @@ struct Testbench {
 
         // Drive some traffic
         for (int i=0; i<cycles; ++i) {
-            // Randomly toggle bits in the wide input struct
             for (int k=0; k<14; ++k) {
                 top->lane_in[k] = rand();
             } 
-            
             step();
         }
         
@@ -117,11 +149,19 @@ struct Testbench {
     }
     
     void print_stats(const char* name, const FUCounters& c) {
-        std::cout << "[" << name << "] Busy: " << c.cycles_busy 
-                  << " Issue: " << c.cycles_issue
-                  << " Fire: " << c.cycles_fire
-                  << " Stall FIFO: " << c.stall_fifo
-                  << " Stall WB: " << c.stall_wb << std::endl;
+        double avg_lat = (c.retired > 0) ? (double)c.latency_acc / c.retired : 0.0;
+        
+        std::cout << "[" << name << "]" << std::endl;
+        std::cout << "  Busy:       " << c.cycles_busy << std::endl;
+        std::cout << "  Issue:      " << c.cycles_issue << std::endl;
+        std::cout << "  Fire:       " << c.cycles_fire << std::endl;
+        std::cout << "   retired:    " << c.retired << std::endl;
+        std::cout << "  Stall FIFO: " << c.stall_fifo << std::endl;
+        std::cout << "  Stall WB:   " << c.stall_wb << std::endl;
+        std::cout << "  Bubbles:    " << c.bubbles << std::endl;
+        std::cout << "  Skipped:    " << c.skipped << std::endl;
+        std::cout << "  Avg Latency:" << avg_lat << " cycles" << std::endl;
+        std::cout << "--------------------------------" << std::endl;
     }
 };
 
