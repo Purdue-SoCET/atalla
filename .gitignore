@@ -8,6 +8,8 @@ vsim.*
 .deps/
 *.log
 .editorconfig
+*.vcd
+**/obj_dir_verilator/
 
 !.gitignore
 !.gitmodules

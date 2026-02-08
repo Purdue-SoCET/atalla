@@ -368,6 +368,7 @@ module vector_datapath (
     // 6. Performance Counters
     // --------------------------------------------------------
 
+    /*
     perf_handshake #(.SIG_WIDTH(LANE_ISSUE_W)) u_perf_handshake_vec (
         .CLK(CLK),
         .nRST(nRST),
@@ -381,5 +382,6 @@ module vector_datapath (
         .valid(vif.vector_in.gsau.veg_valid),
         .ready(vif.vector_out.gsau.veg_ready)
     );
+    */
 
 endmodule

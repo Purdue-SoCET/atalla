@@ -5,6 +5,8 @@
 `include "vector_if.vh"
 //`include "vector_pkg.vh"
 `include "div_if.vh"
+`include "mul_if.vh"
+`include "sqrt_if.sv"
 
 module lane #(
     parameter int LANE_ID = 0   // unique per lane instance
@@ -21,7 +23,7 @@ module lane #(
     localparam int LAST_LANE     = NUM_LANES-1;
     localparam int LAST_ELEM     = ELEM_PER_LANE-1;
 
-        // ============================================================
+    // ============================================================
     // SQRT PIPELINE
     // ============================================================
 
@@ -700,6 +702,7 @@ module lane #(
     // Performance Counters
     // ============================================================
 
+    /*
     perf_fu u_perf_fu_valu (
         .CLK(CLK),
         .nRST(nRST),
@@ -724,6 +727,7 @@ module lane #(
     );
     */
 
+    /*
     perf_fu u_perf_fu_sqrt (
         .CLK(CLK),
         .nRST(nRST),
@@ -734,7 +738,9 @@ module lane #(
         .hold_valid(sqrt_hold_valid),
         .wb_ready(lif.lane_in.ready_in[SQRT])
     );
+    */
 
+    /*
     perf_fu u_perf_fu_mul (
         .CLK(CLK),
         .nRST(nRST),
@@ -745,7 +751,9 @@ module lane #(
         .hold_valid(mul_hold_valid),
         .wb_ready(lif.lane_in.ready_in[MUL])
     );
+    */
 
+    /*
     perf_fu u_perf_fu_div (
         .CLK(CLK),
         .nRST(nRST),
@@ -756,6 +764,8 @@ module lane #(
         .hold_valid(div_hold_valid),
         .wb_ready(lif.lane_in.ready_in[DIV])
     );
+    */
+
 
     logic is_mask_skip;
     assign is_mask_skip =
@@ -765,10 +775,12 @@ module lane #(
         (mul_seq_out.valid  && !mul_seq_out.mask_bit)   ||
         (div_seq_out.valid  && !div_seq_out.mask_bit);
 
-    perf_counter u_perf_cnt_mask_skip (
-        .CLK(CLK),
-        .nRST(nRST),
-        .enable(is_mask_skip)
-    );
+
+    // perf_counter u_perf_cnt_mask_skip (
+    //     .CLK(CLK),
+    //     .nRST(nRST),
+    //     .enable(is_mask_skip)
+    // );
+
 
 endmodule

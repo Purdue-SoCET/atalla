@@ -80,6 +80,8 @@ module gsau_control_unit #(
   end
 
     // WB performance of GSAU -> Vector
+    /*
+    // WB performance of GSAU -> Vector
     perf_handshake u_perf_handshake_wb (
       .CLK(CLK),
       .nRST(nRST),
@@ -100,6 +102,7 @@ module gsau_control_unit #(
         .nRST(nRST),
         .enable(gsau_port.sa_valid_in)
     );
+    */
 
 endmodule
 

@@ -45,23 +45,28 @@ end
 assign fast_path_delayed = fast_path_valid_shift[FAST_PATH_DELAY-1];
 
 // Handshake state machine
-always_ff @(posedge CLK, negedge nRST) begin
-    if (~nRST) begin
-        divif.out.valid_out <= 0;
-        divif.out.ready_in <= 0;
-        first_cycle <= 1;
-    end else begin
-        if (first_cycle) divif.out.ready_in <= 1;
-        first_cycle <= 0;
-        
-        // Assert valid_out after fixed latency for all operations
-        if (done || fast_path_delayed) divif.out.valid_out <= 1;
-        else if (divif.in.ready_out && divif.out.valid_out) divif.out.valid_out <= 0;
-        
-        if (divif.out.valid_out && divif.in.ready_out) divif.out.ready_in <= 1;
-        else if (divif.in.valid_in && divif.out.ready_in) divif.out.ready_in <= 0;
+    logic valid_out_reg, ready_in_reg;
+
+    always_ff @(posedge CLK, negedge nRST) begin
+        if (~nRST) begin
+            valid_out_reg <= 0;
+            ready_in_reg <= 0;
+            first_cycle <= 1;
+        end else begin
+            if (first_cycle) ready_in_reg <= 1;
+            first_cycle <= 0;
+            
+            // Assert valid_out after fixed latency for all operations
+            if (done || fast_path_delayed) valid_out_reg <= 1;
+            else if (divif.in.ready_out && valid_out_reg) valid_out_reg <= 0;
+            
+            if (valid_out_reg && divif.in.ready_out) ready_in_reg <= 1;
+            else if (divif.in.valid_in && ready_in_reg) ready_in_reg <= 0;
+        end
     end
-end
+
+    assign divif.out.valid_out = valid_out_reg;
+    assign divif.out.ready_in  = ready_in_reg;
 
 `ifdef DIV_FU_DEBUG
 // Internal FU debugging
@@ -199,16 +204,20 @@ assign is_ovf = ~skip_divider & exp_a[EXP_WIDTH-1] & ~exp_b[EXP_WIDTH-1] & (exp_
 assign is_sub = exp_norm[EXP_WIDTH] || exp_norm == 0;
 
 // Compute final result (accounting for edge cases)
-always_comb begin
-    if (is_nan)
-        divif.out.result = {final_sign, {EXP_WIDTH{1'b1}}, 1'b1, {(MANT_WIDTH-1){1'b0}}};
-    else if (is_inf || is_ovf && !skip_divider)
-        divif.out.result = {final_sign, {EXP_WIDTH{1'b1}}, {MANT_WIDTH{1'b0}}};
-    else if (is_zero || is_sub)
-        divif.out.result = {final_sign, {EXP_WIDTH{1'b0}}, {MANT_WIDTH{1'b0}}};
-    else
-        divif.out.result = {final_sign, final_exp, final_mant};
-end
+    logic [OPERAND_WIDTH-2:0] result_comb; // WIDTH-1 bits (EXP+MANT+1)
+    
+    always_comb begin
+        if (is_nan)
+            result_comb = {final_sign, {EXP_WIDTH{1'b1}}, 1'b1, {(MANT_WIDTH-1){1'b0}}};
+        else if (is_inf || is_ovf && !skip_divider)
+            result_comb = {final_sign, {EXP_WIDTH{1'b1}}, {MANT_WIDTH{1'b0}}};
+        else if (is_zero || is_sub)
+            result_comb = {final_sign, {EXP_WIDTH{1'b0}}, {MANT_WIDTH{1'b0}}};
+        else
+            result_comb = {final_sign, final_exp, final_mant};
+    end
+    
+    assign divif.out.result = result_comb;
 
 endmodule
 

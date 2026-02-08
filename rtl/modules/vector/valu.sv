@@ -147,25 +147,29 @@ module valu (
     // ----------------------------------------------------------------
     // Output register + valid_out
     // ----------------------------------------------------------------
+    logic valid_out_reg;
+
     always_ff @(posedge CLK or negedge nRST) begin
         if (!nRST) begin
-            result_reg        <= 16'h0000;
-            alu.out.valid_out <= 1'b0;
+            result_reg    <= 16'h0000;
+            valid_out_reg <= 1'b0;
         end else begin
             // Drop valid when WB consumes the result
-            if (alu.out.valid_out && alu.in.ready_out) begin
-                alu.out.valid_out <= 1'b0;
+            if (valid_out_reg && alu.in.ready_out) begin
+                valid_out_reg <= 1'b0;
             end
 
             // Latch a new result when stage-2 fires
             // (valid_s2 can only be 1 when valid_out is 0, because
             //  we don't accept a new op until the previous result retires.)
             if (valid_s2) begin
-                result_reg        <= result_next;
-                alu.out.valid_out <= 1'b1;
+                result_reg    <= result_next;
+                valid_out_reg <= 1'b1;
             end
         end
     end
+
+    assign alu.out.valid_out = valid_out_reg;
 
     // Drive result
     assign alu.out.result = result_reg;
