@@ -1,4 +1,3 @@
-`include "vaddsub_if.vh" //includes the vaddsub interface
 `include "vector_if.vh"
 `include "vector_types.vh"
 
