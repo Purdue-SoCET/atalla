@@ -17,4 +17,6 @@ interface mul_if;
 
     mul_in_t  in;
     mul_out_t out;
+
+    
 endinterface

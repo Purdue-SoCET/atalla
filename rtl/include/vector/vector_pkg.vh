@@ -6,44 +6,44 @@ package vector_pkg;
     // =========================================================================
     //  Vector ISA / Global Params
     // =========================================================================
-    // Top Level Parameters
-    parameter LANE_ISSUE_W = 2;
+    // Top Level localparams
+    localparam LANE_ISSUE_W = 2;
     
     // LANE VARIABLES
-    parameter NUM_LANES   = 16;
-    parameter LANE_ID_W   = $clog2(NUM_LANES);
-    parameter VLMAX       = 32;
+    localparam NUM_LANES   = 16;
+    localparam LANE_ID_W   = $clog2(NUM_LANES);
+    localparam VLMAX       = 32;
 
     // Elements per lane (total elems = NUM_LANES * SLICE_W = VLMAX)
-    parameter SLICE_W     = VLMAX / NUM_LANES;
-    parameter SLICE_ID_W  = $clog2(SLICE_W);
-    parameter VL_W        = $clog2(VLMAX);
+    localparam SLICE_W     = VLMAX / NUM_LANES;
+    localparam SLICE_ID_W  = $clog2(SLICE_W);
+    localparam VL_W        = $clog2(VLMAX);
 
     // FU layout per lane
-    parameter LANE_FU_COUNT  = 5;              // How many FUs per lane
-    parameter LANE_FU_ID_W   = $clog2(LANE_FU_COUNT);
+    localparam LANE_FU_COUNT  = 5;              // How many FUs per lane
+    localparam LANE_FU_ID_W   = $clog2(LANE_FU_COUNT);
 
-    // Other Parameters
-    parameter NUM_ELEMENTS = 32;
-    parameter ESZ          = 16;               // Element Size (bits)
-    parameter ESZ_W        = $clog2(ESZ);
+    // Other localparams
+    localparam NUM_ELEMENTS = 32;
+    localparam ESZ          = 16;               // Element Size (bits)
+    localparam ESZ_W        = $clog2(ESZ);
 
     // VEGGIE Params
-    parameter NUM_VREGS       = 256;
-    parameter READ_PORTS      = 4;
-    parameter WRITE_PORTS     = 4;
-    parameter MASK_PORTS      = 2;
-    parameter NUM_MASKS       = 16;           // Total masks
-    parameter MASK_BANK_COUNT = 2;
-    parameter MASK_IDX        = $clog2(NUM_MASKS);
+    localparam NUM_VREGS       = 256;
+    localparam READ_PORTS      = 4;
+    localparam WRITE_PORTS     = 4;
+    localparam MASK_PORTS      = 2;
+    localparam NUM_MASKS       = 16;           // Total masks
+    localparam MASK_BANK_COUNT = 2;
+    localparam MASK_IDX        = $clog2(NUM_MASKS);
 
     // Instruction Fields
-    parameter OPCODE_W = 7;
-    parameter VIDX_W   = 8;
-    parameter RIDX_W   = 8;
-    parameter IMM_W    = 8;
-    parameter DTYPE_W  = 2;
-    parameter INSTR_W  = 32;
+    localparam OPCODE_W = 7;
+    localparam VIDX_W   = 8;
+    localparam RIDX_W   = 8;
+    localparam IMM_W    = 8;
+    localparam DTYPE_W  = 2;
+    localparam INSTR_W  = 32;
 
     typedef logic [OPCODE_W-1:0] opcode_t;
     typedef logic [VIDX_W-1:0]   vsel_t;

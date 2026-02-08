@@ -35,32 +35,32 @@ module vector_datapath (
     // Veggie → GSAU
     assign gsau_if.veg_vdata1        = vif.vector_in.gsau.veg_vdata1;
     assign gsau_if.veg_vdata2        = vif.vector_in.gsau.veg_vdata2;
-    assign gsau_if.veg_valid         = vif.vector_in.gsau.veg_valid;
+    //assign gsau_if.veg_valid         = vif.vector_in.gsau.veg_valid;
 
     // Scoreboard → GSAU
     assign gsau_if.sb_vdst           = vif.vector_in.gsau.sb_vdst;
-    assign gsau_if.sb_valid          = vif.vector_in.gsau.sb_valid;
+    assign gsau_if.sb_valid_in          = vif.vector_in.gsau.sb_valid;
     assign gsau_if.sb_weight         = vif.vector_in.gsau.sb_weight;
 
     // WB buffer → GSAU
-    assign gsau_if.wb_output_ready   = vif.vector_in.gsau.wb_output_ready;
+    //assign gsau_if.wb_output_ready   = vif.vector_in.gsau.wb_output_ready;
 
     // Systolic array → GSAU
     assign gsau_if.sa_array_output   = vif.vector_in.gsau.sa_array_output;
-    assign gsau_if.sa_out_valid      = vif.vector_in.gsau.sa_out_valid;
-    assign gsau_if.sa_fifo_has_space = vif.vector_in.gsau.sa_fifo_has_space;
+    //assign gsau_if.sa_out_valid      = vif.vector_in.gsau.sa_out_valid;
+    //assign gsau_if.sa_fifo_has_space = vif.vector_in.gsau.sa_fifo_has_space;
 
     // ------------ GSAU outputs → vector_out.gsau -------------
     // GSAU → Veggie
-    assign vif.vector_out.gsau.veg_ready        = gsau_if.veg_ready;
+    //assign vif.vector_out.gsau.veg_ready        = gsau_if.veg_ready;
 
     // GSAU → Scoreboard
-    assign vif.vector_out.gsau.sb_ready         = gsau_if.sb_ready;
+    assign vif.vector_out.gsau.sb_ready         = gsau_if.sb_ready_out;
 
     // GSAU → WB buffer
     assign vif.vector_out.gsau.wb_psum          = gsau_if.wb_psum;
     assign vif.vector_out.gsau.wb_wbdst         = gsau_if.wb_wbdst;
-    assign vif.vector_out.gsau.wb_valid         = gsau_if.wb_valid;
+    assign vif.vector_out.gsau.wb_valid         = gsau_if.wb_valid_out;
 
     // GSAU → Systolic array
     assign vif.vector_out.gsau.sa_array_in          = gsau_if.sa_array_in;
@@ -68,7 +68,7 @@ module vector_datapath (
     assign vif.vector_out.gsau.sa_input_en          = gsau_if.sa_input_en;
     assign vif.vector_out.gsau.sa_weight_en         = gsau_if.sa_weight_en;
     assign vif.vector_out.gsau.sa_partial_en        = gsau_if.sa_partial_en;
-    assign vif.vector_out.gsau.sa_output_ready      = gsau_if.sa_output_ready;
+    //assign vif.vector_out.gsau.sa_output_ready      = gsau_if.sa_output_ready;
 
 
     // LANE DATAPATH ###########################################
@@ -105,12 +105,12 @@ module vector_datapath (
     // --------------------------------------------------------
     // Global "this op is a VALU reduction" + op + destination vd
     logic       reduction_mode;
-    logic [1:0] reduction_op;
+    logic [1:0] red_op;
     vsel_t      reduction_vd;
 
     always_comb begin
         reduction_mode = 1'b0;
-        reduction_op   = 2'b10; // default SUM
+        red_op   = 2'b10; // default SUM
         reduction_vd   = '0;
 
         for (int i = 0; i < LANE_ISSUE_W; i++) begin
@@ -118,7 +118,7 @@ module vector_datapath (
                 vif.vector_in.rm[i] &&
                 (vif.vector_in.fu_sel[i] == VALU)) begin
                 reduction_mode = 1'b1;
-                reduction_op   = vif.vector_in.vop[i][1:0];
+                red_op   = vif.vector_in.vop[i][1:0];
                 reduction_vd   = vif.vector_in.vd[i];
             end
         end
@@ -348,7 +348,7 @@ module vector_datapath (
         end
 
         vruif.in.valid_in       = reduction_mode & reduce_fire_any;
-        vruif.in.reduction_type = reduction_op;
+        vruif.in.reduction_type = red_op;
         // vector_input / broadcast / clear / imm left at '0 for now
     end
 
