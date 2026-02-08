@@ -2,7 +2,7 @@
 // by: Tarakanath Peddi, February 2026
 
 module sysarr_4inp_fp_adder_2nd_pipeline_state #(
-    parameter FRACTION_SIZE = 10,
+    parameter MANTISSA_SIZE = 10,
     parameter EXPONENT_SIZE = 5,
     parameter PRECISION_BITS = 3
 ) (

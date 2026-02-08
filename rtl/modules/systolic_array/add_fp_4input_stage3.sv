@@ -1,7 +1,7 @@
 module add_fp_4input_stage3 #(
     parameter EXPONENT_SIZE = 5,
     parameter MANTISSA_SIZE = 10,
-    parameter PRECISION_BITS = 3,
+    parameter PRECISION_BITS = 3
 ) (
     input logic [$clog2(MANTISSA_SIZE)-1:0] leading_zeros,
     input logic [MANTISSA_SIZE+PRECISION_BITS-1:0] sum,
