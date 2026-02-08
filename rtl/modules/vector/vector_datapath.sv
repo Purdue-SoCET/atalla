@@ -167,6 +167,14 @@ module vector_datapath (
     generate
         for (l_gen = 0; l_gen < NUM_LANES; l_gen++) begin : GEN_LANE_IN_MAP
 
+            // Internal registered as the old method had mixed blocking and non blocking assignments to the struct
+            logic [SLICE_W-1:0] v1_r       [LANE_FU_COUNT];
+            logic [SLICE_W-1:0] v2_r       [LANE_FU_COUNT];
+            logic               vmask_r    [LANE_FU_COUNT];
+            logic [4:0]         vd_r       [LANE_FU_COUNT];
+            opcode_t            vop_r      [LANE_FU_COUNT];
+            logic [2:0]         rm_r       [LANE_FU_COUNT];
+            logic               valid_in_r [LANE_FU_COUNT];
             // -----------------------------
             // 3a. READY path: pure combinational
             // -----------------------------
@@ -193,17 +201,17 @@ module vector_datapath (
                 int    base;
 
                 if (!nRST) begin
-                    lane_if[l_gen].lane_in.v1       <= '{default:'0};
-                    lane_if[l_gen].lane_in.v2       <= '{default:'0};
-                    lane_if[l_gen].lane_in.vmask    <= '{default:'0};
-                    lane_if[l_gen].lane_in.vd       <= '{default:'0};
-                    lane_if[l_gen].lane_in.vop      <= '{default:'0};
-                    lane_if[l_gen].lane_in.rm       <= '{default:'0};
-                    lane_if[l_gen].lane_in.valid_in <= '{default:1'b0};
+                    v1_r       <= '{default:'0};
+                    v2_r       <= '{default:'0};
+                    vmask_r    <= '{default:'0};
+                    vd_r       <= '{default:'0};
+                    vop_r      <= '{default:'0};
+                    rm_r       <= '{default:'0};
+                    valid_in_r <= '{default:1'b0};
                 end
                 else begin
                     // By default, no new slice issued this cycle
-                    lane_if[l_gen].lane_in.valid_in <= '{default:1'b0};
+                    valid_in_r <= '{default:1'b0};
 
                     // For each issue slot, if it's valid, update that FU's slice
                     for (i = 0; i < LANE_ISSUE_W; i++) begin
@@ -212,21 +220,28 @@ module vector_datapath (
                             base = l_gen * SLICE_W;
 
                             // Slice data for this lane/FU
-                            lane_if[l_gen].lane_in.v1[fu_i]    <=
-                                vif.vector_in.v1[i][base +: SLICE_W];
-                            lane_if[l_gen].lane_in.v2[fu_i]    <=
-                                vif.vector_in.v2[i][base +: SLICE_W];
-                            lane_if[l_gen].lane_in.vmask[fu_i] <=
-                                vif.masku_out.mask[l_gen];
+                            v1_r[fu_i]    <= vif.vector_in.v1[i][base +: SLICE_W];
+                            v2_r[fu_i]    <= vif.vector_in.v2[i][base +: SLICE_W];
+                            vmask_r[fu_i] <= vif.masku_out.mask[l_gen];
 
                             // Metadata
-                            lane_if[l_gen].lane_in.vd[fu_i]       <= vif.vector_in.vd[i];
-                            lane_if[l_gen].lane_in.vop[fu_i]      <= vif.vector_in.vop[i];
-                            lane_if[l_gen].lane_in.rm[fu_i]       <= vif.vector_in.rm[i];
-                            lane_if[l_gen].lane_in.valid_in[fu_i] <= 1'b1;
+                            vd_r[fu_i]       <= vif.vector_in.vd[i];
+                            vop_r[fu_i]      <= vif.vector_in.vop[i];
+                            rm_r[fu_i]       <= vif.vector_in.rm[i];
+                            valid_in_r[fu_i] <= 1'b1;
                         end
                     end
                 end
+            end
+
+            always_comb begin : LANE_IN_ASSIGN //combinational connections to the interface to avoid verilator
+                lane_if[l_gen].lane_in.v1       = v1_r;
+                lane_if[l_gen].lane_in.v2       = v2_r;
+                lane_if[l_gen].lane_in.vmask    = vmask_r;
+                lane_if[l_gen].lane_in.vd       = vd_r;
+                lane_if[l_gen].lane_in.vop      = vop_r;
+                lane_if[l_gen].lane_in.rm       = rm_r;
+                lane_if[l_gen].lane_in.valid_in = valid_in_r;
             end
         end
     endgenerate
