@@ -21,6 +21,12 @@ module sysarr_4_input_fp_adder #(
     logic [EXPONENT_SIZE - 1:0] a_e_out;
     logic [3:0] num_leading_zeros;
     logic sticky_bit;
+    logic [MANTISSA_SIZE + EXPONENT_SIZE :0] sum;
+
+    always_ff @( posedge clk, negedge nRST ) begin : output_registering
+        if(~nRST) a.out <= '0;
+        else a.out <= sum;
+    end
 
     sysarr_4in_adder #(
         .MANTISSA_SIZE(MANTISSA_SIZE), 
@@ -87,7 +93,7 @@ module sysarr_4_input_fp_adder #(
         .sticky_in(sticky_bit),
         .special_case(1'b0),
         .special_result('0),
-        .final_sum(add.out)
+        .final_sum(sum)
     );
 
 endmodule
