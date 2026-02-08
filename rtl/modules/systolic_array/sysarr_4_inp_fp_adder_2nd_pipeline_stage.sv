@@ -10,15 +10,15 @@ module sysarr_4inp_fp_adder_2nd_pipeline_state #(
     input logic a_s, b_op, c_op, d_op,
     input logic b_sb, c_sb, d_sb, 
     input logic [EXPONENT_SIZE - 1:0] a_e,
-    input logic [FRACTION_SIZE + PRECISION_BITS - 1:0] a_f, b_f, c_f, d_f, // these include the precision bits
-    output logic [FRACTION_SIZE + PRECISION_BITS - 1:0] sum_i,
+    input logic [MANTISSA_SIZE + PRECISION_BITS - 1:0] a_f, b_f, c_f, d_f, // these include the precision bits
+    output logic [MANTISSA_SIZE + PRECISION_BITS - 1:0] sum_i,
     output logic result_s, 
     output logic [EXPONENT_SIZE - 1:0] a_e_out,
     output logic [3:0] num_leading_zeros,
     output logic sticky_bit 
 );  
 
-    localparam WIDTH = FRACTION_SIZE + PRECISION_BITS;
+    localparam WIDTH = MANTISSA_SIZE + PRECISION_BITS;
 
     logic [WIDTH - 1:0] b_inv, c_inv, d_inv; 
     logic [WIDTH - 1:0] s1, c1; // adder immediate variables
