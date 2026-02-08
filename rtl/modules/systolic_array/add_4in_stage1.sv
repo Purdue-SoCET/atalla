@@ -29,8 +29,8 @@ module 4in_adder_AIHW #(
     logic [MANT_WIDTH-1:0] x_f, y_shifted_f, m_shifted_f, n_shifted_f;
     logic y_op_f, m_op_f, n_op_f;
 
-    logic special_case_f;
-    logic [15:0] special_result_f;
+    logic special_case, special_case_f;
+    logic [15:0] special_result, special_result_f;
 
     always_ff @(posedge clk, negedge n_rst) begin
         if (!n_rst) begin
@@ -42,6 +42,8 @@ module 4in_adder_AIHW #(
             y_op_f <= '0;
             m_op_f <= '0;
             n_op_f <= '0;
+	    special_case_f <= '0;
+	    special_result_f <= '0;
         end else begin
 	    x_e_f <= exp_x;
             x_f <= x_mant;
@@ -51,6 +53,8 @@ module 4in_adder_AIHW #(
             y_op_f <= y_op;
             m_op_f <= m_op;
             n_op_f <= n_op;
+	    special_case_f <= special_case;
+	    special_result_f <= special_result;
         end
     end
 
@@ -144,10 +148,6 @@ module 4in_adder_AIHW #(
         exp_d = d_daz[14 -: EXP];
         frac_d = d_daz[MANTISSA-1:0];
 
-        //inversion operation flag
-        y_op = y[15];
-        m_op = m[15];
-        n_op = n[15];
         //input comparison and assignment
 	if (exp_a >= exp_b) begin
             exp_p = exp_a; frac_p = frac_a; sign_p = sign_a;
