@@ -8,15 +8,15 @@ interface ddr_controller_if;
 // 2.5.2025 -> TASK - UPDATE WIDTHS
 
 // AXI -> WRITE_QUEUE
-logic wstrb, wvalid, wdata, wid, wlen;
-logic wready, bwvalid, bwresp, bwid;
-logic bwready;
+logic wstrb, wvalid, wdata, wid, wlen; // -> Write Queue
+logic wready, bwvalid, bwresp, bwid; // -> AXI
+logic bwready; // -> Write Queue
 
 // AXI -> LQ
-logic arvalid, araddr, arid, arsize, arlen, arburst;
-logic arready;
-logic rvalid, rdata, rid, rlast, rresp;
-logic rready; 
+logic arvalid, araddr, arid, arsize, arlen, arburst; // -> LQ
+logic arready; // -> AXI
+logic rvalid, rdata, rid, rlast, rresp; // -> AXI
+logic rready; // -> LQ
 
 // AXI -> STQ
 logic awvalid, awaddr, awid, awsize, awlen, awburst;
@@ -56,6 +56,58 @@ logic be_push_id, be_rid, be_rlen, be_rstrb;
 // AXI -> READ_ID_QUEUE
 logic rready;
 logic rq_rid, rq_rvalid, rq_rlen, rq_rstrb; 
+
+modport axi_sub ( // LQ -> AXI
+    input arready, rvalid, rdata, rid, rlast, rresp,
+    // Write Queue -> AXI
+    wready, bwvalid, bwresp, bwid, 
+    // STQ -> AXI
+    awready, 
+    // READ_ID -> AXI
+    rready,
+    // AXI -> LQ
+    output wstrb, wvalid, wdata, wid, wlen, bwready,
+    // AXI -> Write Queue
+    wstrb, wvalid, wdata, wid, wlen, bwready,
+    // AXI -> STQ
+    awvalid, awaddr, awid, awsize, awlen, awburst,
+    // AXI -> READ_ID
+    rq_rid, rq_rvalid, rq_rlen, rq_rstrb
+);
+
+modport stq ( // AXI -> STQ
+    input awvalid, awaddr, awid, awsize, awlen, awburst,
+    // ARB -> STQ
+    grant_s, 
+    // STQ -> AXI
+    output awready,
+    // STQ -> ARB
+    address_s, request_s  
+);
+
+modport lq (
+
+);
+
+modport arb (
+
+);
+
+modport bq (
+
+);
+
+modport read_id_queue (
+
+);
+
+modport write_id_queue (
+
+);
+
+modport command_fsm (
+
+);
 
 endinterface
 
