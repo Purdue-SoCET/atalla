@@ -5,6 +5,7 @@
 `include "vector_if.vh"
 //`include "vector_pkg.vh"
 `include "div_if.vh"
+`include "mul_if.vh"
 
 module lane #(
     parameter int LANE_ID = 0   // unique per lane instance
