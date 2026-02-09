@@ -1,0 +1,10 @@
+#LI example:
+#if you want to load the word 0x181C98 (too many bits to addi)
+#use LUI for the upper bits 0x3039 (this will be right shifted by 7 to get 181C80)
+#then use addi to add the lower bits 0x36 to that register to get the full binary of 0x181C98
+
+00000000: 0000181c80ae 00000000002F 00000000002F 00000000002F #lui {'opcode': 0b0101110, 'imm25': 12345, 'rd': 1}
+00000018: 00000c008096 00000000002F 00000000002F 00000000002F #addi {'opcode': 0b0010110, 'imm12': 24, 'rs1': 1, 'rd': 1}
+00000030: 000000000030 00000000002F 00000000002F 00000000002F #halt #confirmed working
+
+.data
