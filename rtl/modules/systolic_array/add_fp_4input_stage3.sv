@@ -8,7 +8,6 @@ module add_fp_4input_stage3 #(
     input logic [MANTISSA_SIZE+PRECISION_BITS:0] sum, 
     input logic sign,
     input logic [EXPONENT_SIZE - 1:0] exponent,
-    input logic sticky_in, 
     input logic special_case,
     input logic [EXPONENT_SIZE+MANTISSA_SIZE:0] special_result,
     output logic [EXPONENT_SIZE+MANTISSA_SIZE:0] final_sum

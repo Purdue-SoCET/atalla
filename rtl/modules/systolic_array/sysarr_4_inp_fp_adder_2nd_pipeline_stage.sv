@@ -15,7 +15,6 @@ module sysarr_4inp_fp_adder_2nd_pipeline_state #(
     output logic result_s, 
     output logic [EXPONENT_SIZE - 1:0] a_e_out,
     output logic [3:0] num_leading_zeros,
-    output logic sticky_bit 
 );  
 
     localparam WIDTH = MANTISSA_SIZE + PRECISION_BITS;
