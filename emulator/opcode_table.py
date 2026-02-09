@@ -1,3 +1,5 @@
+from functools import lru_cache
+
 # --------------------------------------------
 # Opcode Table
 # --------------------------------------------
@@ -119,3 +121,8 @@ OPCODES = {
     0b1010110: ("meq.mvs", "MVS"),
     0b1010111: ("mneq.mvs","MVS"),
 }
+
+@lru_cache
+def name_to_opcode():
+    return {name: (opcode, instr_type) for opcode, (name, instr_type) in OPCODES.items()}
+

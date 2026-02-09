@@ -243,6 +243,7 @@ def decode_packet(packet, packet_length = 4):
     list of dict
         List of decoded instruction dictionaries.
     """
+    print(packet)
     instructions = []
     for i in range(packet_length):
         shift = ((packet_length - 1) - i) * 48  # Extract top instruction first

@@ -8,3 +8,7 @@ vsim.*
 
 !.gitignore
 !.gitmodules
+
+reports/ 
+__pycache__/
+*.log

@@ -76,12 +76,8 @@ def apply_imm_vector_op(
 
 
 def main():
-<<<<<<< HEAD
-    mem_file = "Testing/unit_tests/bf_R.txt" # need to change this to target different mem test files
-=======
-    mem_file = "Testing/unit_tests/three_instr.txt" # need to change this to target different mem test files
-    packet_length = 3  # Parameter: number of instructions in a packet
->>>>>>> 25c526323a49d23f2a504ebd464478054c661d1f
+    mem_file = "Testing/TestFiles/edit_mem.txt" # need to change this to target different mem test files
+    packet_length = 4  # Parameter: number of instructions in a packet
     out_file = "output_mem.txt"
     out_sreg_file = "output_sregs.txt"
     out_vreg_file = "output_vregs.txt"
@@ -125,7 +121,7 @@ def main():
     halt = False
     while(not(halt)):
         dec_packet = decode_packet(packet=mem.read_instr(pc), packet_length=packet_length)
-        print(pc)
+        # print(pc)
         # print(mem.read_instr(pc))
         for item in dec_packet:
             print(item)
