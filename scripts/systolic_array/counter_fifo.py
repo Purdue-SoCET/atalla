@@ -40,14 +40,11 @@ class StaggerSim:
         out = [0]*self.N
 
         for r in range(self.N):
-            if not self.armed[r]: 
-                if self.delay[r] > 0:
-                    self.delay[r] -= 1
-                else:
-                    self.armed[r] = True
-            else: #counted down, can pop now
-                if self.fifos[r]:
-                    out[r] = self.fifos[r].popleft()
+            if self.delay[r] > 0:
+                self.delay[r] -= 1
+            elif self.fifos[r]:
+                out[r] = self.fifos[r].popleft()
+
 
         #tile finished?
         if (
@@ -60,9 +57,11 @@ class StaggerSim:
         return out
 
 def main():
-    N = 6
-    A = [[1,2,3,4,5,6], [7,8,9,1,2,3],[1,2,3,4,5,6],[7,8,9,1,2,3],[1,2,3,4,5,6],[7,8,9,1,2,3]]
-    B = [[1,2,3,4,5,6], [7,8,9,1,2,3],[1,2,3,4,5,6],[7,8,9,1,2,3],[1,2,3,4,5,6],[7,8,9,1,2,3]]
+    N = 4
+    A = [[1,2,3,4], [7,8,9,1],[1,2,3,4],[7,8,9,1]]
+    B = [[1,2,3,4], [7,8,9,1],[1,2,3,4],[7,8,9,1]]
+    # A = [[1,2,3,4,5,6], [7,8,9,1,2,3],[1,2,3,4,5,6],[7,8,9,1,2,3],[1,2,3,4,5,6],[7,8,9,1,2,3]]
+    # B = [[1,2,3,4,5,6], [7,8,9,1,2,3],[1,2,3,4,5,6],[7,8,9,1,2,3],[1,2,3,4,5,6],[7,8,9,1,2,3]]
     #A = [[r*10+c for c in range(1,N+1)] for r in range(1,N+1)]
     #B = [[100+r*10+c for c in range(1,N+1)] for r in range(1,N+1)]
 
@@ -70,12 +69,12 @@ def main():
 
     sim.start_tile(A)
 
-    for x in range(30):
+    for x in range(10):
         print(f"cycle {sim.cycle+1:02d}:", sim.step())
 
     sim.start_tile(B)
 
-    for x in range(30):
+    for x in range(10):
         print(f"cycle {sim.cycle+1:02d}:", sim.step())
 
 if __name__ == "__main__":
