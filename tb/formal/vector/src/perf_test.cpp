@@ -195,6 +195,8 @@ struct Testbench {
       }
     }
 
+    cycle();
+
     if (!drained) {
       std::cout << "WARNING: Pipeline drain timed out!" << std::endl;
       std::cout << "Remaining In-flight: VALU=" << valu_inflight
