@@ -6,25 +6,21 @@ typedef struct packed {
     logic valu_work;
     logic valu_stall;
     logic valu_starve;
-    logic valu_mask_bit;
 
     // SQRT
     logic sqrt_work;
     logic sqrt_stall;
     logic sqrt_starve;
-    logic sqrt_mask_bit;
 
     // MUL
     logic mul_work;
     logic mul_stall;
     logic mul_starve;
-    logic mul_mask_bit;
 
     // DIV
     logic div_work;
     logic div_stall;
     logic div_starve;
-    logic div_mask_bit;
 } lane_perf_t;
 
 module lane_wrapper (
@@ -74,27 +70,23 @@ module lane_wrapper (
     assign perf.valu_stall      = (u_lane.valu_issue_valid && !u_lane.valu_sync_ready) || 
                                   (u_lane.valu_hold_valid  && !lane_in.ready_in[3'b000]);
     assign perf.valu_starve     = !u_lane.valu_seq_out.valid;
-    assign perf.valu_mask_bit   = u_lane.valu_seq_out.mask_bit;
 
     // SQRT
     assign perf.sqrt_work       = u_lane.sqrt_fire_valid;
     assign perf.sqrt_stall      = (u_lane.sqrt_seq_out.valid && !u_lane.sqrt_sync_ready) || 
                                   (u_lane.sqrt_hold_valid  && !lane_in.ready_in[3'b010]);
     assign perf.sqrt_starve     = !u_lane.sqrt_seq_out.valid;
-    assign perf.sqrt_mask_bit   = u_lane.sqrt_seq_out.mask_bit;
 
     // MUL
     assign perf.mul_work        = u_lane.mul_fire_valid;
     assign perf.mul_stall       = (u_lane.mul_seq_out.valid && !u_lane.mul_sync_ready) || 
                                   (u_lane.mul_hold_valid   && !lane_in.ready_in[3'b011]);
     assign perf.mul_starve      = !u_lane.mul_seq_out.valid;
-    assign perf.mul_mask_bit    = u_lane.mul_seq_out.mask_bit;
 
     // DIV
     assign perf.div_work        = u_lane.div_fire_valid;
     assign perf.div_stall       = (u_lane.div_seq_out.valid && !u_lane.div_sync_ready) || 
                                   (u_lane.div_hold_valid   && !lane_in.ready_in[3'b100]);
     assign perf.div_starve      = !u_lane.div_seq_out.valid;
-    assign perf.div_mask_bit    = u_lane.div_seq_out.mask_bit;
 
 endmodule

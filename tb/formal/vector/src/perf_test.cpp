@@ -12,7 +12,6 @@ struct FUCounters {
   uint64_t work = 0;
   uint64_t stall = 0;
   uint64_t starve = 0;
-  uint64_t skipped = 0;
 };
 
 struct LaneCounters {
@@ -66,7 +65,6 @@ struct Testbench {
     cycle();
   }
 
-  // Full clock cycle simulation
   void cycle() {
     // Rising Edge
     top->CLK = 1;
@@ -76,7 +74,6 @@ struct Testbench {
     if (tfp)
       tfp->dump(main_time);
 #endif
-    // Sample just after rising edge eval
     sample_counters();
 
     // Falling Edge
@@ -95,27 +92,23 @@ struct Testbench {
 
     uint32_t p = top->perf;
 
-    // Struct is packed: VALU(15:12), SQRT(11:8), MUL(7:4), DIV(3:0)
-    // Each 4-bit group: [3:Work, 2:Stall, 1:Starve, 0:Mask]
+    // Struct is packed: VALU(11:9), SQRT(8:6), MUL(5:3), DIV(2:0)
+    // Each 3-bit group: [2:Work, 1:Stall, 0:Starve]
     
     auto update = [&](FUCounters &c, int offset) {
-      bool work   = (p >> (offset + 3)) & 1;
-      bool stall  = (p >> (offset + 2)) & 1;
-      bool starve = (p >> (offset + 1)) & 1;
-      bool mask   = (p >> (offset + 0)) & 1;
+      bool work   = (p >> (offset + 2)) & 1;
+      bool stall  = (p >> (offset + 1)) & 1;
+      bool starve = (p >> (offset + 0)) & 1;
 
       if (work)   c.work++;
       if (stall)  c.stall++;
       if (starve) c.starve++;
-      
-      // Skipped: Data valid (not starved) but masked out
-      if (!starve && !mask) c.skipped++;
     };
 
     update(counters.div, 0);
-    update(counters.mul, 4);
-    update(counters.sqrt, 8);
-    update(counters.valu, 12);
+    update(counters.mul, 3);
+    update(counters.sqrt, 6);
+    update(counters.valu, 9);
   }
 
   void run(int cycles, int injection_rate, int print_interval) {
@@ -156,7 +149,6 @@ struct Testbench {
     std::cout << "  Work:       " << c.work << std::endl;
     std::cout << "  Stall:      " << c.stall << std::endl;
     std::cout << "  Starve:     " << c.starve << std::endl;
-    std::cout << "  Skipped:    " << c.skipped << std::endl;
     std::cout << "--------------------------------" << std::endl;
   }
 };
