@@ -9,17 +9,10 @@
 
 // Counters
 struct FUCounters {
-  uint64_t cycles_busy = 0;
-  uint64_t cycles_issue = 0;
-  uint64_t cycles_fire = 0;
-  uint64_t stall_fifo = 0;
-  uint64_t stall_wb = 0;
-
-  uint64_t bubbles = 0;          // !valid_raw
-  uint64_t skipped = 0;          // valid_raw && !mask_bit
-  uint64_t retired = 0;          // retire signal
-  uint64_t latency_acc = 0;      // accumulated in-flight count per cycle
-  uint64_t raw_valid_cycles = 0; // cycles where valid_raw was high
+  uint64_t work = 0;
+  uint64_t stall = 0;
+  uint64_t starve = 0;
+  uint64_t skipped = 0;
 };
 
 struct LaneCounters {
@@ -35,13 +28,6 @@ double sc_time_stamp() { return main_time; }
 struct Testbench {
   std::unique_ptr<Vlane_wrapper> top;
   LaneCounters counters;
-
-  // Track in-flight instructions (simple counter: issue - retire)
-  // This is an approximation. Ideally we tag instructions.
-  int valu_inflight = 0;
-  int sqrt_inflight = 0;
-  int mul_inflight = 0;
-  int div_inflight = 0;
 
 #if VM_TRACE
   std::unique_ptr<VerilatedVcdC> tfp;
@@ -109,61 +95,36 @@ struct Testbench {
 
     uint32_t p = top->perf;
 
-    auto update = [&](FUCounters &c, int &inflight, int offset) {
-      bool busy = (p >> (offset + 7)) & 1;
-      bool issue = (p >> (offset + 6)) & 1;
-      bool fire = (p >> (offset + 5)) & 1;
-      bool stall_fifo = (p >> (offset + 4)) & 1;
-      bool stall_wb = (p >> (offset + 3)) & 1;
-      bool valid_raw = (p >> (offset + 2)) & 1;
-      bool mask_bit = (p >> (offset + 1)) & 1;
-      bool retire = (p >> (offset + 0)) & 1;
+    // Struct is packed: VALU(15:12), SQRT(11:8), MUL(7:4), DIV(3:0)
+    // Each 4-bit group: [3:Work, 2:Stall, 1:Starve, 0:Mask]
+    
+    auto update = [&](FUCounters &c, int offset) {
+      bool work   = (p >> (offset + 3)) & 1;
+      bool stall  = (p >> (offset + 2)) & 1;
+      bool starve = (p >> (offset + 1)) & 1;
+      bool mask   = (p >> (offset + 0)) & 1;
 
-      if (busy)
-        c.cycles_busy++;
-      if (issue)
-        c.cycles_issue++;
-      if (fire)
-        c.cycles_fire++;
-      if (stall_fifo)
-        c.stall_fifo++;
-      if (stall_wb)
-        c.stall_wb++;
-
-      if (retire)
-        c.retired++;
-      if (!valid_raw)
-        c.bubbles++;
-      if (valid_raw)
-        c.raw_valid_cycles++;
-      if (valid_raw && !mask_bit)
-        c.skipped++;
-
-      // Latency tracking
-      if (fire)
-        inflight++;
-      if (retire)
-        inflight--;
-      if (inflight < 0)
-        inflight = 0;
-
-      c.latency_acc += inflight;
+      if (work)   c.work++;
+      if (stall)  c.stall++;
+      if (starve) c.starve++;
+      
+      // Skipped: Data valid (not starved) but masked out
+      if (!starve && !mask) c.skipped++;
     };
 
-    update(counters.div, div_inflight, 0);
-    update(counters.mul, mul_inflight, 8);
-    update(counters.sqrt, sqrt_inflight, 16);
-    update(counters.valu, valu_inflight, 24);
+    update(counters.div, 0);
+    update(counters.mul, 4);
+    update(counters.sqrt, 8);
+    update(counters.valu, 12);
   }
 
-  void run(int cycles, int injection_rate) {
+  void run(int cycles, int injection_rate, int print_interval) {
     reset();
 
     std::cout << "Starting Simulation for " << cycles
               << " cycles with injection rate " << injection_rate << "%..."
               << std::endl;
 
-    // Drive some traffic
     for (int i = 0; i < cycles; ++i) {
       bool valid_cycle = (rand() % 100) < injection_rate;
       top->valid_in_mask = valid_cycle ? 1 : 0;
@@ -173,35 +134,14 @@ struct Testbench {
       }
 
       cycle();
-    }
-
-    // Drain functionality
-    std::cout << "Draining pipeline..." << std::endl;
-    top->valid_in_mask = 0;
-
-    // Force ready_in to 1
-    for (int k = 0; k < 14; ++k)
-      top->lane_in[k] = 0xFFFFFFFF;
-
-    bool drained = false;
-    for (int i = 0; i < 1000; ++i) {
-      cycle();
-
-      if (valu_inflight == 0 && sqrt_inflight == 0 && mul_inflight == 0 &&
-          div_inflight == 0) {
-        std::cout << "Pipeline drained in " << i << " cycles." << std::endl;
-        drained = true;
-        break;
+      
+      if (print_interval > 0 && (i + 1) % print_interval == 0) {
+          std::cout << "--- Cycle " << (i+1) << " ---" << std::endl;
+          print_stats("VALU", counters.valu);
+          print_stats("SQRT", counters.sqrt);
+          print_stats("MUL", counters.mul);
+          print_stats("DIV", counters.div);
       }
-    }
-
-    cycle();
-
-    if (!drained) {
-      std::cout << "WARNING: Pipeline drain timed out!" << std::endl;
-      std::cout << "Remaining In-flight: VALU=" << valu_inflight
-                << " SQRT=" << sqrt_inflight << " MUL=" << mul_inflight
-                << " DIV=" << div_inflight << std::endl;
     }
 
     std::cout << "Lane Simulation Complete." << std::endl;
@@ -212,18 +152,11 @@ struct Testbench {
   }
 
   void print_stats(std::string_view name, const FUCounters &c) {
-    double avg_lat = (c.retired > 0) ? (double)c.latency_acc / c.retired : 0.0;
-
     std::cout << "[" << name << "]" << std::endl;
-    std::cout << "  Busy:       " << c.cycles_busy << std::endl;
-    std::cout << "  Issue:      " << c.cycles_issue << std::endl;
-    std::cout << "  Fire:       " << c.cycles_fire << std::endl;
-    std::cout << "   retired:    " << c.retired << std::endl;
-    std::cout << "  Stall FIFO: " << c.stall_fifo << std::endl;
-    std::cout << "  Stall WB:   " << c.stall_wb << std::endl;
-    std::cout << "  Bubbles:    " << c.bubbles << std::endl;
+    std::cout << "  Work:       " << c.work << std::endl;
+    std::cout << "  Stall:      " << c.stall << std::endl;
+    std::cout << "  Starve:     " << c.starve << std::endl;
     std::cout << "  Skipped:    " << c.skipped << std::endl;
-    std::cout << "  Avg Latency:" << avg_lat << " cycles" << std::endl;
     std::cout << "--------------------------------" << std::endl;
   }
 };
@@ -231,12 +164,15 @@ struct Testbench {
 int main(int argc, char **argv) {
   Verilated::commandArgs(argc, argv);
 
+  int cycles = 10000;
   int rate = 100;
-  if (argc > 1) {
-    rate = atoi(argv[1]);
-  }
+  int interval = 1000;
+
+  if (argc > 1) cycles = atoi(argv[1]);
+  if (argc > 2) rate = atoi(argv[2]);
+  if (argc > 3) interval = atoi(argv[3]);
 
   Testbench tb;
-  tb.run(10000, rate);
+  tb.run(cycles, rate, interval);
   return 0;
 }

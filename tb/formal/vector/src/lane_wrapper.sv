@@ -3,44 +3,28 @@
 // Expose internal performance signals via struct port
 typedef struct packed {
     // VALU
-    logic valu_busy;
-    logic valu_issue;
-    logic valu_fire;
-    logic valu_stall_fifo;
-    logic valu_stall_wb;
-    logic valu_valid_raw; // valid from seq before mask
-    logic valu_mask_bit;  // mask bit value
-    logic valu_retire;    // wb complete
+    logic valu_work;
+    logic valu_stall;
+    logic valu_starve;
+    logic valu_mask_bit;
 
     // SQRT
-    logic sqrt_busy;
-    logic sqrt_issue;
-    logic sqrt_fire;
-    logic sqrt_stall_fifo;
-    logic sqrt_stall_wb;
-    logic sqrt_valid_raw;
+    logic sqrt_work;
+    logic sqrt_stall;
+    logic sqrt_starve;
     logic sqrt_mask_bit;
-    logic sqrt_retire;
 
     // MUL
-    logic mul_busy;
-    logic mul_issue;
-    logic mul_fire;
-    logic mul_stall_fifo;
-    logic mul_stall_wb;
-    logic mul_valid_raw;
+    logic mul_work;
+    logic mul_stall;
+    logic mul_starve;
     logic mul_mask_bit;
-    logic mul_retire;
 
     // DIV
-    logic div_busy;
-    logic div_issue;
-    logic div_fire;
-    logic div_stall_fifo;
-    logic div_stall_wb;
-    logic div_valid_raw;
+    logic div_work;
+    logic div_stall;
+    logic div_starve;
     logic div_mask_bit;
-    logic div_retire;
 } lane_perf_t;
 
 module lane_wrapper (
@@ -86,43 +70,31 @@ module lane_wrapper (
     // -------------------------------------------------------------------------
     
     // VALU
-    assign perf.valu_busy       = !u_lane.valu_seq_out.lane_ready;
-    assign perf.valu_issue      = u_lane.valu_seq_out.valid;
-    assign perf.valu_fire       = u_lane.valu_fire_valid;
-    assign perf.valu_stall_fifo = u_lane.valu_issue_valid && !u_lane.valu_sync_ready;
-    assign perf.valu_stall_wb   = u_lane.valu_hold_valid  && !lane_in.ready_in[3'b000]; // VALU=0
-    assign perf.valu_valid_raw  = u_lane.valu_seq_out.valid;
+    assign perf.valu_work       = u_lane.valu_fire_valid;
+    assign perf.valu_stall      = (u_lane.valu_issue_valid && !u_lane.valu_sync_ready) || 
+                                  (u_lane.valu_hold_valid  && !lane_in.ready_in[3'b000]);
+    assign perf.valu_starve     = !u_lane.valu_seq_out.valid;
     assign perf.valu_mask_bit   = u_lane.valu_seq_out.mask_bit;
-    assign perf.valu_retire     = u_lane.valu_retire;
 
     // SQRT
-    assign perf.sqrt_busy       = !u_lane.sqrt_seq_out.lane_ready;
-    assign perf.sqrt_issue      = u_lane.sqrt_seq_out.valid;
-    assign perf.sqrt_fire       = u_lane.sqrt_fire_valid;
-    assign perf.sqrt_stall_fifo = u_lane.sqrt_seq_out.valid && !u_lane.sqrt_sync_ready;
-    assign perf.sqrt_stall_wb   = u_lane.sqrt_hold_valid  && !lane_in.ready_in[3'b010]; // SQRT=2
-    assign perf.sqrt_valid_raw  = u_lane.sqrt_seq_out.valid;
+    assign perf.sqrt_work       = u_lane.sqrt_fire_valid;
+    assign perf.sqrt_stall      = (u_lane.sqrt_seq_out.valid && !u_lane.sqrt_sync_ready) || 
+                                  (u_lane.sqrt_hold_valid  && !lane_in.ready_in[3'b010]);
+    assign perf.sqrt_starve     = !u_lane.sqrt_seq_out.valid;
     assign perf.sqrt_mask_bit   = u_lane.sqrt_seq_out.mask_bit;
-    assign perf.sqrt_retire     = u_lane.sqrt_retire;
 
     // MUL
-    assign perf.mul_busy        = !u_lane.mul_seq_out.lane_ready;
-    assign perf.mul_issue       = u_lane.mul_seq_out.valid;
-    assign perf.mul_fire        = u_lane.mul_fire_valid;
-    assign perf.mul_stall_fifo  = u_lane.mul_seq_out.valid && !u_lane.mul_sync_ready;
-    assign perf.mul_stall_wb    = u_lane.mul_hold_valid   && !lane_in.ready_in[3'b011]; // MUL=3
-    assign perf.mul_valid_raw   = u_lane.mul_seq_out.valid;
+    assign perf.mul_work        = u_lane.mul_fire_valid;
+    assign perf.mul_stall       = (u_lane.mul_seq_out.valid && !u_lane.mul_sync_ready) || 
+                                  (u_lane.mul_hold_valid   && !lane_in.ready_in[3'b011]);
+    assign perf.mul_starve      = !u_lane.mul_seq_out.valid;
     assign perf.mul_mask_bit    = u_lane.mul_seq_out.mask_bit;
-    assign perf.mul_retire      = u_lane.mul_retire;
 
     // DIV
-    assign perf.div_busy        = !u_lane.div_seq_out.lane_ready;
-    assign perf.div_issue       = u_lane.div_seq_out.valid;
-    assign perf.div_fire        = u_lane.div_fire_valid;
-    assign perf.div_stall_fifo  = u_lane.div_seq_out.valid && !u_lane.div_sync_ready;
-    assign perf.div_stall_wb    = u_lane.div_hold_valid   && !lane_in.ready_in[3'b100]; // DIV=4
-    assign perf.div_valid_raw   = u_lane.div_seq_out.valid;
+    assign perf.div_work        = u_lane.div_fire_valid;
+    assign perf.div_stall       = (u_lane.div_seq_out.valid && !u_lane.div_sync_ready) || 
+                                  (u_lane.div_hold_valid   && !lane_in.ready_in[3'b100]);
+    assign perf.div_starve      = !u_lane.div_seq_out.valid;
     assign perf.div_mask_bit    = u_lane.div_seq_out.mask_bit;
-    assign perf.div_retire      = u_lane.div_retire;
 
 endmodule
