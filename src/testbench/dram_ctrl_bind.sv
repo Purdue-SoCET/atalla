@@ -16,7 +16,7 @@ module ddr_ctrl_confirm(
     endtask
 
     property one_hot;
-        @(posedge clk); disable iff (rst)
+        @(posedge CLK); disable iff (nRST)
         $onehot(); // Put one hot signal
     endproperty
 
