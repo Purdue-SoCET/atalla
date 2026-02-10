@@ -35,9 +35,11 @@ module adder_8b (
         r_sum  = r_exp1 + r_exp2;
     end
 
+    logic [8:0] full_sum; // an adidtional bit to handle the overflow situation when subtracting 127: a negative result automatically becomes all 1's (inf)
+    assign full_sum = {1'b0, exp1} + {1'b0, exp2} + {7'b0, carry} - 9'b01111111; 
     assign sum = (exp1 + exp2 + {7'b0, carry}) - 8'b01111111;  // Changed from 5'b10000. Also added carry, which wasn't used before. add with offset
     assign ovf = r_sum[7] && ~r_exp1[7] && ~r_exp2[7];
-    assign unf = ((carry != 1) || (sum != 8'b11111111)) && (~r_sum[7] && r_exp1[7] && r_exp2[7]);
+    assign unf = (&full_sum) | (((carry != 1) || (sum != 8'b11111111)) && (~r_sum[7] && r_exp1[7] && r_exp2[7]));
 
 endmodule
 
