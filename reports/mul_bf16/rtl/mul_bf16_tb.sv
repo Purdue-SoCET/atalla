@@ -23,6 +23,7 @@ module mul_bf16_tb;
     logic [15:0] b_in;
     logic [15:0] exp_result;
     int incorrect_unf, incorrect_ovf, incorrect_nan, expect_zero, expect_inf, expect_subnormal; 
+    int diff_1b; // the difference between expected and actual is 1 bit (actual should be round up to 1)
 
     // instantiate DUT
     mul_bf16 DUT(
@@ -53,6 +54,7 @@ module mul_bf16_tb;
         nRST = 1;
         incorrect_unf = 0;
         incorrect_ovf = 0;
+        diff_1b = 0;
 
         // create VCD for waveform viewing
         $dumpfile("mul_bf16_waves.vcd");
@@ -96,7 +98,7 @@ module mul_bf16_tb;
                     expect_zero += {31'b0, exp_result == 16'h0000 || exp_result == 16'h8000};
                     expect_inf += {31'b0, exp_result[14:0] == 15'h7f80};
                     expect_subnormal += {31'b0, exp_result[14:0] == 15'h0080}; // the expected result is subnormal, which is the case where we had some issues before
-
+                    diff_1b += {31'b0, (result == exp_result - 1)}; // the result is off by 1 bit, which means it's a rounding issue that we might want to investigate further
                     // Write failure to output file
                     $fwrite(fd_out, "%04h %04h %04h %04h FAIL\n", 
                             a, b, exp_result, result);
@@ -119,6 +121,7 @@ module mul_bf16_tb;
         $display("========== SUMMARY ==========");
         $display("Total tests: %0d", total);
         $display("Total errors: %0d", errors);
+        $display("Total 1-bit differences: %0d", diff_1b);
         $display("Pass rate: %0.2f%%", 100.0 * (total - errors) / total);
         
         $fclose(fd);

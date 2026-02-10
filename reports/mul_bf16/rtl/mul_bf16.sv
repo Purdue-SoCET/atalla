@@ -151,15 +151,17 @@ module mul_bf16(
     assign b_sub = ~|b_latched[14:7];
 
 
-    logic boundary_case; // roundup + subnormal = smallest value 0080 
-    assign boundary_case = unf & mul_significand_rounded[7]; 
+    logic boundary_case, boundary_push; // roundup + subnormal = smallest value 0080 
+    assign boundary_case = unf & mul_significand_rounded[7]; // the result is a small normal that becomes subnormal after rounding. This is the case where we had some issues before because we were treating it as a normal number instead of a subnormal number, which caused some of the results to be incorrect. The condition for this is that we have an underflow, and after rounding we have a carry out from the significand (which means we need to round up), but the rounded significand is all 1's (which means it becomes 0 after rounding up and causes the result to become subnormal). In this case, we can just set the exponent to 1 and the significand to 0 to get the correct result of 0.008.
+    assign boundary_push = unf & ~mul_significand_rounded[7] & &mul_significand_rounded[6:0]; // the result is a small normal that becomes subnormal without rounding. This is another case where we had some issues before because we were treating it as a normal number instead of a subnormal number, which caused some of the results to be incorrect. The condition for this is that we have an underflow, and after rounding we don't have a carry out from the significand (which means we don't need to round up), but the rounded significand is all 1's (which means it becomes 0 when we push the boundary), and the exponent sum is 0 (which means we can't just set the exponent to 1 to push the boundary because that would cause it to become a normal number instead of a subnormal number). In this case, we can just set the exponent to 0 and the significand to 1 to get the correct result of 0.008.
 
     logic [7:0] mul_final_exp;
     logic small_normal; // a small normal that is representatble but results in underflow 
     
     assign small_normal = unf & (mul_carryout & mul_final_exp[0] & ~|mul_final_exp[7:1]); 
 
-    assign mul_final_exp = boundary_case ? 8'h01 : mul_significand_rounded[7] ? exp_sum + 1 : exp_sum;
+    assign mul_final_exp = boundary_case | boundary_push ? 8'h01 : 
+                           mul_significand_rounded[7] ? exp_sum + 1 : exp_sum;
     assign mul_unf = ~ovf & ((unf & ~small_normal) | (~|mul_final_exp & ~(mul_significand_rounded[7] & &exp_sum)));
     assign mul_ovf = ~mul_unf & (ovf | &mul_final_exp | (mul_significand_rounded[7] & &exp_sum) | (~small_normal & mul_carryout & ~|exp_sum[7:1] & exp_sum[0])); // if the final exp is all 1's and we need to round up, that also causes overflow
 
