@@ -9,7 +9,7 @@ interface ddr_controller_if;
 // 2.8.2025 -> TASK - FINISH MODPORTS BY 2.12
 import dram_pkg::*;
 
-// AXI -> WRITE_QUEUE
+// AXI -> WDATA_QUEUE
 logic wstrb, wvalid, wdata, wid, wlen; // -> Write Queue
 logic wready, bwvalid, bwresp, bwid; // -> AXI
 logic bwready; // -> Write Queue
@@ -43,6 +43,7 @@ logic bq_bg, bq_b; // 2*16
 logic bq_r; // 15*16
 logic bq_c; // 10*16
 logic bq_id; // 4*16
+logic bq_ready;
 
 // COMMAND FSM -> BACKEND ARBITER
 logic be_arb;
@@ -51,6 +52,7 @@ logic be_bg, be_b; // 2*16
 logic be_r; // 15*16
 logic be_c; // 10*16
 logic be_id; // 4*16
+logic be_cmd; 
 
 // BACKEND ARBITER -> READ_ID_QUEUE
 logic be_push_id, be_rid, be_rlen, be_rstrb;
@@ -61,6 +63,13 @@ logic be_wid, be_write;
 // AXI -> READ_ID_QUEUE
 logic rready;
 logic rq_rid, rq_rvalid, rq_rlen, rq_rstrb; 
+
+// WDATA_QUEUE -> DRAM
+logic ddr_wdata_data;
+logic ddr_wdata_en;
+logic ddr_wdata_mask;
+logic ddr_we;
+
 
 modport axi_sub ( 
     // LQ -> AXI
@@ -117,21 +126,55 @@ modport arb (
 );
 
 modport bq (
-    
+    //ARB -> BQ
+    input fe_bg, fe_b, fe_c, fe_r, fe_write, fe_id, fe_write_bq,
+    //FSM -> BQ
+    bq_pop, 
+    //BQ -> ARB
+    output fe_full, 
+    //BQ -> FSM
+    bq_rw, bq_ready, bq_bg, bq_b, bq_r, bq_c, bq_id
 
 );
 
 modport read_id_queue (
+    //BQ -> FSM
+
 
 );
 
-modport write_id_queue (
-
+modport wdata_queue (
+    //AXI -> WDATA_QUEUE
+    input wstrb, wvalid, wdata, wid, wlen, bwready,
+    //BE -> WDATA_QUEUE
+    be_wid, be_write, 
+    //WDATA_QUEUE -> AXI
+    output wready, bwvalid, bwresp, bwid, 
+    //WDATA_QUEUE -> DRAM
+    ddr_wdata_data, ddr_wdata_en, ddr_wdata_mask, ddr_we
+    
 );
 
 modport command_fsm (
-
+    //BQ -> FSM
+    input     bq_rw, bq_ready, bq_bg, bq_b, bq_r, bq_c, bq_id,
+    //BE -> FSM
+    be_arb,
+    //FSM -> BE 
+    output be_r, be_c, be_b, be_bg, be_cmd, be_id, be_rlen, be_queue_ready
 );
+
+modport backend_arb (
+    //FSM -> BE
+    input be_r, be_c, be_b, be_bg, be_cmd, be_id, be_rlen, be_queue_ready,
+    //BE -> FSM
+    output be_arb, 
+    //BE -> WDATA_QUEUE
+    be_wid, be_write, 
+    //BE -> R_ID_QUEUE
+    be_rid, be_push_id, be_rlen
+);
+
 
 endinterface
 
