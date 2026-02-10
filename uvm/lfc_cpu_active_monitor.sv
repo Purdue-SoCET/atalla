@@ -31,23 +31,27 @@ class lfc_cpu_active_monitor extends uvm_monitor;
     //ap = new("ap", this);
     // optional: get VIF from config_db
     if(!uvm_config_db#(virtual lfc_if)::get(this, "", "lfc_vif", vif)) begin
-      `uvm_fatal("Monitor", "No virtual interface specified for this monitor instance")
+      `uvm_fatal("CPU_ACTIVE_MON", "No virtual interface specified for this monitor instance")
     end
   endfunction
 
   // minimal placeholder; add your sampling here
-  virtual task run_phase(uvm_phase phase);
+  virtual task run_phase(uvm_phase phase); // TODO: line this up with the driver better
     super.run_phase(phase);
     forever begin
       lfc_cpu_transaction tx;
-      @(posedge vif.clk); // 4 clock edges before input is sent from driver
-      tx = lfc_cpu_transaction #()::type_id::create("tx");
-      tx.mem_in = vif.mem_in;
-      tx.mem_in_addr = vif.mem_in_addr;
-      tx.mem_in_rw_mode = vif.mem_in_rw_mode;
-      tx.mem_in_store_value = vif.mem_in_store_value;
-      tx.dp_in_halt = vif.dp_in_halt;
-      lfc_ap.write(tx);
+      while(vif.mem_in !== 1'b1) @(negedge vif.clk); // new transaction when mem_in = 1
+      	//if(vif.mem_in) begin
+	      `uvm_info("CPU_ACTIVE_MON", "sending cpu active tx", UVM_LOW)
+	      tx = lfc_cpu_transaction #()::type_id::create("tx");
+	      tx.mem_in = 1;
+	      tx.mem_in_addr = vif.mem_in_addr;
+	      tx.mem_in_rw_mode = vif.mem_in_rw_mode;
+	      tx.mem_in_store_value = vif.mem_in_store_value;
+	      tx.dp_in_halt = vif.dp_in_halt;
+	      @(posedge vif.clk);
+	      lfc_ap.write(tx);
+      //end
     end
   endtask
 

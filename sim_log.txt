@@ -1,0 +1,238 @@
+Building testbench and DUT...
+vlog +incdir+~/src+~/uvm \
++acc \
++cover \
+-L /package/eda/mg/questa2021.4/questasim/uvm-1.2 \
+uvm/tb_top.sv \
+-logfile tb_compile.log \
+-printinfilenames=file_search.log
+QuestaSim-64 vlog 2021.4 Compiler 2021.10 Oct 13 2021
+Start time: 11:09:28 on Feb 07,2026
+vlog "+incdir+~/src+~/uvm" "+acc" "+cover" -L /package/eda/mg/questa2021.4/questasim/uvm-1.2 uvm/tb_top.sv -logfile tb_compile.log -printinfilenames=file_search.log 
+** Warning: ** while parsing file included at uvm/tb_top.sv(2)
+** while parsing file included at uvm/../src/modules/lockup_free_cache.sv(2)
+** at uvm/../src/modules/cache_mshr_buffer.sv(7): (vlog-13314) Defaulting port 'mem_instr' kind to 'var' rather than 'wire' due to default compile option setting of -svinputport=relaxed.
+** Warning: ** while parsing file included at uvm/tb_top.sv(2)
+** at uvm/../src/modules/lockup_free_cache.sv(2): (vlog-2283) Extra semicolon in $unit (global) scope.
+** Warning: ** while parsing file included at uvm/tb_top.sv(2)
+** while parsing file included at uvm/../src/modules/lockup_free_cache.sv(3)
+** at uvm/../src/modules/cache_bank.sv(8): (vlog-13314) Defaulting port 'mshr_entry' kind to 'var' rather than 'wire' due to default compile option setting of -svinputport=relaxed.
+** Warning: ** while parsing file included at uvm/tb_top.sv(2)
+** while parsing file included at uvm/../src/modules/lockup_free_cache.sv(3)
+** at uvm/../src/modules/cache_bank.sv(9): (vlog-13314) Defaulting port 'mem_instr_in' kind to 'var' rather than 'wire' due to default compile option setting of -svinputport=relaxed.
+** Warning: ** while parsing file included at uvm/tb_top.sv(2)
+** at uvm/../src/modules/lockup_free_cache.sv(3): (vlog-2283) Extra semicolon in $unit (global) scope.
+** Warning: ** while parsing file included at uvm/tb_top.sv(2)
+** at uvm/../src/modules/lockup_free_cache.sv(25): (vlog-13314) Defaulting port 'ram_mem_data' kind to 'var' rather than 'wire' due to default compile option setting of -svinputport=relaxed.
+** Note: (vlog-2286) uvm/test.sv(2): Using implicit +incdir+/package/eda/mg/questa2021.4/questasim/uvm-1.2/../verilog_src/uvm-1.2/src from import uvm_pkg
+-- Compiling package tb_top_sv_unit
+-- Importing package /package/eda/mg/questa2021.4/questasim/uvm-1.2.uvm_pkg (uvm-1.2 Built-in)
+-- Compiling module cache_mshr_buffer
+** Warning: uvm/../src/modules/cache_mshr_buffer.sv(7): (vlog-13314) Defaulting port 'mem_instr' kind to 'var' rather than 'wire' due to default compile option setting of -svinputport=relaxed.
+-- Compiling module cache_bank
+** Warning: uvm/../src/modules/cache_bank.sv(8): (vlog-13314) Defaulting port 'mshr_entry' kind to 'var' rather than 'wire' due to default compile option setting of -svinputport=relaxed.
+** Warning: uvm/../src/modules/cache_bank.sv(9): (vlog-13314) Defaulting port 'mem_instr_in' kind to 'var' rather than 'wire' due to default compile option setting of -svinputport=relaxed.
+-- Compiling module lockup_free_cache
+** Warning: uvm/../src/modules/lockup_free_cache.sv(25): (vlog-13314) Defaulting port 'ram_mem_data' kind to 'var' rather than 'wire' due to default compile option setting of -svinputport=relaxed.
+-- Compiling interface lfc_if
+-- Compiling module tb_top
+
+Top level modules:
+	tb_top
+End time: 11:09:29 on Feb 07,2026, Elapsed time: 0:00:01
+Errors: 0, Warnings: 10
+vsim -c tb_top -L \
+/package/eda/mg/questa2021.4/questasim/uvm-1.2 \
+-voptargs=+acc \
+-coverage \
++UVM_TESTNAME="test" \
++UVM_VERBOSITY=UVM_MEDIUM \
+-do "run -all" &
+Reading pref.tcl
+
+# 2021.4
+
+# vsim -c tb_top -L /package/eda/mg/questa2021.4/questasim/uvm-1.2 -voptargs="+acc" -coverage "+UVM_TESTNAME=test" "+UVM_VERBOSITY=UVM_MEDIUM" -do "run -all" 
+# Start time: 11:09:30 on Feb 07,2026
+# Loading /tmp/sowersj@asicfab.ecn.purdue.edu_dpi_261979/linux_x86_64_gcc-7.4.0/export_tramp.so
+# ** Note: (vsim-3813) Design is being optimized due to module recompilation...
+# ** Warning: (vopt-13408) Code coverage will be disabled for some DUs/packages/classes and source files.
+# ** Warning: uvm/../src/modules/cache_bank.sv(8): (vopt-13314) Defaulting port 'mshr_entry' kind to 'var' rather than 'wire' due to default compile option setting of -svinputport=relaxed.
+# ** Warning: uvm/../src/modules/cache_bank.sv(9): (vopt-13314) Defaulting port 'mem_instr_in' kind to 'var' rather than 'wire' due to default compile option setting of -svinputport=relaxed.
+# ** Note: (vopt-143) Recognized 1 FSM in module "cache_bank(fast)".
+# ** Warning: uvm/../src/modules/lockup_free_cache.sv(25): (vopt-13314) Defaulting port 'ram_mem_data' kind to 'var' rather than 'wire' due to default compile option setting of -svinputport=relaxed.
+# ** Warning: uvm/../src/modules/cache_mshr_buffer.sv(7): (vopt-13314) Defaulting port 'mem_instr' kind to 'var' rather than 'wire' due to default compile option setting of -svinputport=relaxed.
+# ** Note: (vsim-12126) Error and warning message counts have been restored: Errors=0, Warnings=5.
+# //  Questa Sim-64
+# //  Version 2021.4 linux_x86_64 Oct 13 2021
+# //
+# //  Copyright 1991-2021 Mentor Graphics Corporation
+# //  All Rights Reserved.
+# //
+# //  QuestaSim and its associated documentation contain trade
+# //  secrets and commercial or financial information that are the property of
+# //  Mentor Graphics Corporation and are privileged, confidential,
+# //  and exempt from disclosure under the Freedom of Information Act,
+# //  5 U.S.C. Section 552. Furthermore, this information
+# //  is prohibited from disclosure under the Trade Secrets Act,
+# //  18 U.S.C. Section 1905.
+# //
+# Loading sv_std.std
+# Loading /package/eda/mg/questa2021.4/questasim/uvm-1.2.uvm_pkg(fast)
+# Loading work.tb_top_sv_unit(fast)
+# Loading /package/eda/mg/questa2021.4/questasim/uvm-1.2.questa_uvm_pkg(fast)
+# Loading work.tb_top(fast)
+# Loading work.lfc_if(fast__2)
+# Loading work.lockup_free_cache(fast)
+# Loading work.cache_mshr_buffer(fast)
+# Loading work.cache_bank(fast)
+# Loading work.lfc_if(fast)
+# Compiling /tmp/sowersj@asicfab.ecn.purdue.edu_dpi_261979/linux_x86_64_gcc-7.4.0/exportwrapper.c
+# Loading /tmp/sowersj@asicfab.ecn.purdue.edu_dpi_261979/linux_x86_64_gcc-7.4.0/vsim_auto_compile.so
+# Loading /package/eda/mg/questa2021.4/questasim/uvm-1.2/linux_x86_64/uvm_dpi.so
+# run -all
+# UVM_INFO verilog_src/uvm-1.2/src/base/uvm_root.svh(392) @ 0: reporter [UVM/RELNOTES] 
+# ----------------------------------------------------------------
+# UVM-1.2
+# (C) 2007-2014 Mentor Graphics Corporation
+# (C) 2007-2014 Cadence Design Systems, Inc.
+# (C) 2006-2014 Synopsys, Inc.
+# (C) 2011-2013 Cypress Semiconductor Corp.
+# (C) 2013-2014 NVIDIA Corporation
+# ----------------------------------------------------------------
+# 
+#   ***********       IMPORTANT RELEASE NOTES         ************
+# 
+#   You are using a version of the UVM library that has been compiled
+#   with `UVM_NO_DEPRECATED undefined.
+#   See http://www.eda.org/svdb/view.php?id=3313 for more details.
+# 
+#   You are using a version of the UVM library that has been compiled
+#   with `UVM_OBJECT_DO_NOT_NEED_CONSTRUCTOR undefined.
+#   See http://www.eda.org/svdb/view.php?id=3770 for more details.
+# 
+#       (Specify +UVM_NO_RELNOTES to turn off this notice)
+# 
+# UVM_INFO verilog_src/questa_uvm_pkg-1.2/src/questa_uvm_pkg.sv(277) @ 0: reporter [Questa UVM] QUESTA_UVM-1.2.3
+# UVM_INFO verilog_src/questa_uvm_pkg-1.2/src/questa_uvm_pkg.sv(278) @ 0: reporter [Questa UVM]  questa_uvm::init(+struct)
+# UVM_INFO @ 0: reporter [RNTST] Running test test...
+# UVM_INFO uvm/test.sv(38) @ 0: uvm_test_top [Test] Build Phase
+#                    0 Starting sequence run_phase
+# UVM_INFO uvm/lfc_cpu_passive_monitor.sv(46) @ 0: uvm_test_top.env.cpu_passive_agent.mon [CPU_MON] Entered run_phase of CPU monitor
+# UVM_INFO uvm/lfc_cpu_active_monitor.sv(44) @ 0: uvm_test_top.env.cpu_active_agent.mon [Monitor] sending cpu active tx
+# UVM_INFO uvm/lfc_basic_sequence.sv(64) @ 0: uvm_test_top.env.cpu_active_agent.sqr@@basic_seq [lfc_basic_sequence] Starting basic Read-After-Write sequence...
+# UVM_INFO uvm/lfc_basic_sequence.sv(68) @ 0: uvm_test_top.env.cpu_active_agent.sqr@@basic_seq [lfc_basic_sequence] Sending WRITE transaction...
+# UVM_INFO uvm/lfc_cpu_active_monitor.sv(44) @ 10: uvm_test_top.env.cpu_active_agent.mon [Monitor] sending cpu active tx
+# UVM_INFO uvm/lfc_cpu_active_monitor.sv(44) @ 30: uvm_test_top.env.cpu_active_agent.mon [Monitor] sending cpu active tx
+# UVM_INFO uvm/lfc_cpu_active_monitor.sv(44) @ 50: uvm_test_top.env.cpu_active_agent.mon [Monitor] sending cpu active tx
+# UVM_INFO uvm/lfc_ram_active_monitor.sv(56) @ 50: uvm_test_top.env.ram_active_agent.mon [RAM_ACTIVE_MON] Sent tx: ram_mem_data:0 ram_mem_complete:0
+# UVM_INFO uvm/lfc_cpu_passive_monitor.sv(66) @ 70: uvm_test_top.env.cpu_passive_agent.mon [CPU_PASSIVE_MON] Sent write tx: uuid=1 stall=0 hit=0 flushed=0
+# UVM_WARNING uvm/lfc_scoreboard.sv(70) @ 70: uvm_test_top.env.lfc_scoreboard [SCOREBOARD] Skipping exp_tx with unknown UUID: x
+# UVM_INFO uvm/lfc_cpu_passive_monitor.sv(66) @ 90: uvm_test_top.env.cpu_passive_agent.mon [CPU_PASSIVE_MON] Sent write tx: uuid=1 stall=0 hit=0 flushed=0
+# UVM_WARNING uvm/lfc_scoreboard.sv(70) @ 90: uvm_test_top.env.lfc_scoreboard [SCOREBOARD] Skipping exp_tx with unknown UUID: x
+# UVM_INFO uvm/lfc_cpu_passive_monitor.sv(66) @ 110: uvm_test_top.env.cpu_passive_agent.mon [CPU_PASSIVE_MON] Sent write tx: uuid=1 stall=0 hit=0 flushed=0
+# UVM_WARNING uvm/lfc_scoreboard.sv(70) @ 110: uvm_test_top.env.lfc_scoreboard [SCOREBOARD] Skipping exp_tx with unknown UUID: x
+# UVM_INFO uvm/lfc_cpu_passive_monitor.sv(66) @ 130: uvm_test_top.env.cpu_passive_agent.mon [CPU_PASSIVE_MON] Sent write tx: uuid=1 stall=0 hit=0 flushed=0
+# UVM_WARNING uvm/lfc_scoreboard.sv(70) @ 130: uvm_test_top.env.lfc_scoreboard [SCOREBOARD] Skipping exp_tx with unknown UUID: x
+# UVM_INFO uvm/lfc_cpu_passive_monitor.sv(66) @ 150: uvm_test_top.env.cpu_passive_agent.mon [CPU_PASSIVE_MON] Sent write tx: uuid=1 stall=0 hit=0 flushed=0
+# UVM_INFO uvm/lfc_cpu_passive_monitor.sv(66) @ 170: uvm_test_top.env.cpu_passive_agent.mon [CPU_PASSIVE_MON] Sent write tx: uuid=1 stall=0 hit=0 flushed=0
+# UVM_INFO uvm/lfc_cpu_passive_monitor.sv(66) @ 190: uvm_test_top.env.cpu_passive_agent.mon [CPU_PASSIVE_MON] Sent write tx: uuid=1 stall=0 hit=0 flushed=0
+# UVM_INFO uvm/lfc_cpu_passive_monitor.sv(66) @ 210: uvm_test_top.env.cpu_passive_agent.mon [CPU_PASSIVE_MON] Sent write tx: uuid=1 stall=0 hit=0 flushed=0
+# UVM_INFO uvm/lfc_cpu_passive_monitor.sv(66) @ 230: uvm_test_top.env.cpu_passive_agent.mon [CPU_PASSIVE_MON] Sent write tx: uuid=1 stall=0 hit=0 flushed=0
+# UVM_INFO uvm/lfc_cpu_passive_monitor.sv(66) @ 250: uvm_test_top.env.cpu_passive_agent.mon [CPU_PASSIVE_MON] Sent write tx: uuid=1 stall=0 hit=0 flushed=0
+# UVM_INFO uvm/lfc_ram_passive_monitor.sv(62) @ 270: uvm_test_top.env.ram_passive_agent.mon [RAM_MON] Captured bank=0 REN=1 WEN=0 addr=0x00001004 store=0x00000000 data=0x00000000 complete=0
+# UVM_INFO uvm/lfc_cpu_passive_monitor.sv(66) @ 270: uvm_test_top.env.cpu_passive_agent.mon [CPU_PASSIVE_MON] Sent write tx: uuid=1 stall=0 hit=0 flushed=0
+# UVM_INFO uvm/lfc_cpu_passive_monitor.sv(66) @ 290: uvm_test_top.env.cpu_passive_agent.mon [CPU_PASSIVE_MON] Sent write tx: uuid=1 stall=0 hit=0 flushed=0
+# UVM_INFO uvm/lfc_ram_passive_monitor.sv(62) @ 290: uvm_test_top.env.ram_passive_agent.mon [RAM_MON] Captured bank=0 REN=1 WEN=0 addr=0x00001004 store=0x00000000 data=0x00000000 complete=0
+# UVM_INFO uvm/lfc_ram_passive_monitor.sv(62) @ 310: uvm_test_top.env.ram_passive_agent.mon [RAM_MON] Captured bank=0 REN=1 WEN=0 addr=0x00001004 store=0x00000000 data=0x00000000 complete=0
+# UVM_INFO uvm/lfc_cpu_passive_monitor.sv(66) @ 310: uvm_test_top.env.cpu_passive_agent.mon [CPU_PASSIVE_MON] Sent write tx: uuid=1 stall=0 hit=0 flushed=0
+# UVM_INFO uvm/lfc_cpu_passive_monitor.sv(66) @ 330: uvm_test_top.env.cpu_passive_agent.mon [CPU_PASSIVE_MON] Sent write tx: uuid=1 stall=0 hit=0 flushed=0
+# UVM_INFO uvm/lfc_ram_passive_monitor.sv(62) @ 330: uvm_test_top.env.ram_passive_agent.mon [RAM_MON] Captured bank=0 REN=1 WEN=0 addr=0x00001004 store=0x00000000 data=0x00000000 complete=0
+# UVM_INFO uvm/lfc_ram_passive_monitor.sv(62) @ 350: uvm_test_top.env.ram_passive_agent.mon [RAM_MON] Captured bank=0 REN=1 WEN=0 addr=0x00001004 store=0x00000000 data=0x00000000 complete=0
+# UVM_INFO uvm/lfc_cpu_passive_monitor.sv(66) @ 350: uvm_test_top.env.cpu_passive_agent.mon [CPU_PASSIVE_MON] Sent write tx: uuid=1 stall=0 hit=0 flushed=0
+# UVM_INFO uvm/lfc_cpu_passive_monitor.sv(66) @ 370: uvm_test_top.env.cpu_passive_agent.mon [CPU_PASSIVE_MON] Sent write tx: uuid=1 stall=0 hit=0 flushed=0
+# UVM_INFO uvm/lfc_ram_active_monitor.sv(56) @ 370: uvm_test_top.env.ram_active_agent.mon [RAM_ACTIVE_MON] Sent tx: ram_mem_data:0 ram_mem_complete:1
+# UVM_INFO uvm/lfc_ram_passive_monitor.sv(62) @ 370: uvm_test_top.env.ram_passive_agent.mon [RAM_MON] Captured bank=0 REN=1 WEN=0 addr=0x00001004 store=0x00000000 data=0x00000000 complete=1
+# UVM_INFO uvm/lfc_ram_passive_monitor.sv(62) @ 390: uvm_test_top.env.ram_passive_agent.mon [RAM_MON] Captured bank=0 REN=1 WEN=0 addr=0x00001004 store=0x00000000 data=0x00000000 complete=1
+# UVM_INFO uvm/lfc_cpu_passive_monitor.sv(66) @ 390: uvm_test_top.env.cpu_passive_agent.mon [CPU_PASSIVE_MON] Sent write tx: uuid=1 stall=0 hit=0 flushed=0
+# UVM_INFO uvm/lfc_ram_active_driver.sv(86) @ 390: uvm_test_top.env.ram_active_agent.drv [RAM_DRV] READ bank=0 addr=0x00001004 data=0x00000000
+# UVM_INFO uvm/lfc_cpu_passive_monitor.sv(66) @ 410: uvm_test_top.env.cpu_passive_agent.mon [CPU_PASSIVE_MON] Sent write tx: uuid=1 stall=0 hit=0 flushed=0
+# UVM_INFO uvm/lfc_ram_active_monitor.sv(56) @ 410: uvm_test_top.env.ram_active_agent.mon [RAM_ACTIVE_MON] Sent tx: ram_mem_data:0 ram_mem_complete:0
+# UVM_INFO uvm/lfc_ram_passive_monitor.sv(62) @ 410: uvm_test_top.env.ram_passive_agent.mon [RAM_MON] Captured bank=0 REN=1 WEN=0 addr=0x00001008 store=0x00000000 data=0x00000000 complete=0
+# UVM_INFO uvm/lfc_ram_passive_monitor.sv(62) @ 430: uvm_test_top.env.ram_passive_agent.mon [RAM_MON] Captured bank=0 REN=1 WEN=0 addr=0x00001008 store=0x00000000 data=0x00000000 complete=0
+# UVM_INFO uvm/lfc_cpu_passive_monitor.sv(66) @ 430: uvm_test_top.env.cpu_passive_agent.mon [CPU_PASSIVE_MON] Sent write tx: uuid=1 stall=0 hit=0 flushed=0
+# UVM_INFO uvm/lfc_cpu_passive_monitor.sv(66) @ 450: uvm_test_top.env.cpu_passive_agent.mon [CPU_PASSIVE_MON] Sent write tx: uuid=1 stall=0 hit=0 flushed=0
+# UVM_INFO uvm/lfc_ram_passive_monitor.sv(62) @ 450: uvm_test_top.env.ram_passive_agent.mon [RAM_MON] Captured bank=0 REN=1 WEN=0 addr=0x00001008 store=0x00000000 data=0x00000000 complete=0
+# UVM_INFO uvm/lfc_ram_passive_monitor.sv(62) @ 470: uvm_test_top.env.ram_passive_agent.mon [RAM_MON] Captured bank=0 REN=1 WEN=0 addr=0x00001008 store=0x00000000 data=0x00000000 complete=0
+# UVM_INFO uvm/lfc_cpu_passive_monitor.sv(66) @ 470: uvm_test_top.env.cpu_passive_agent.mon [CPU_PASSIVE_MON] Sent write tx: uuid=1 stall=0 hit=0 flushed=0
+# UVM_INFO uvm/lfc_cpu_passive_monitor.sv(66) @ 490: uvm_test_top.env.cpu_passive_agent.mon [CPU_PASSIVE_MON] Sent write tx: uuid=1 stall=0 hit=0 flushed=0
+# UVM_INFO uvm/lfc_ram_passive_monitor.sv(62) @ 490: uvm_test_top.env.ram_passive_agent.mon [RAM_MON] Captured bank=0 REN=1 WEN=0 addr=0x00001008 store=0x00000000 data=0x00000000 complete=0
+# UVM_INFO uvm/lfc_ram_passive_monitor.sv(62) @ 510: uvm_test_top.env.ram_passive_agent.mon [RAM_MON] Captured bank=0 REN=1 WEN=0 addr=0x00001008 store=0x00000000 data=0x00000000 complete=0
+# UVM_INFO uvm/lfc_cpu_passive_monitor.sv(66) @ 510: uvm_test_top.env.cpu_passive_agent.mon [CPU_PASSIVE_MON] Sent write tx: uuid=1 stall=0 hit=0 flushed=0
+# UVM_INFO uvm/lfc_ram_active_driver.sv(86) @ 530: uvm_test_top.env.ram_active_agent.drv [RAM_DRV] READ bank=0 addr=0x00001008 data=0x00000000
+# UVM_INFO uvm/lfc_cpu_passive_monitor.sv(66) @ 530: uvm_test_top.env.cpu_passive_agent.mon [CPU_PASSIVE_MON] Sent write tx: uuid=1 stall=0 hit=0 flushed=0
+# UVM_INFO uvm/lfc_ram_passive_monitor.sv(62) @ 530: uvm_test_top.env.ram_passive_agent.mon [RAM_MON] Captured bank=0 REN=1 WEN=0 addr=0x00001008 store=0x00000000 data=0x00000000 complete=0
+# UVM_INFO uvm/lfc_ram_passive_monitor.sv(62) @ 550: uvm_test_top.env.ram_passive_agent.mon [RAM_MON] Captured bank=0 REN=1 WEN=0 addr=0x0000100c store=0x00000000 data=0x00000000 complete=0
+# UVM_INFO uvm/lfc_cpu_passive_monitor.sv(66) @ 550: uvm_test_top.env.cpu_passive_agent.mon [CPU_PASSIVE_MON] Sent write tx: uuid=1 stall=0 hit=0 flushed=0
+# UVM_INFO uvm/lfc_cpu_passive_monitor.sv(66) @ 570: uvm_test_top.env.cpu_passive_agent.mon [CPU_PASSIVE_MON] Sent write tx: uuid=1 stall=0 hit=0 flushed=0
+# UVM_INFO uvm/lfc_ram_passive_monitor.sv(62) @ 570: uvm_test_top.env.ram_passive_agent.mon [RAM_MON] Captured bank=0 REN=1 WEN=0 addr=0x0000100c store=0x00000000 data=0x00000000 complete=0
+# UVM_INFO uvm/lfc_ram_passive_monitor.sv(62) @ 590: uvm_test_top.env.ram_passive_agent.mon [RAM_MON] Captured bank=0 REN=1 WEN=0 addr=0x0000100c store=0x00000000 data=0x00000000 complete=0
+# UVM_INFO uvm/lfc_cpu_passive_monitor.sv(66) @ 590: uvm_test_top.env.cpu_passive_agent.mon [CPU_PASSIVE_MON] Sent write tx: uuid=1 stall=0 hit=0 flushed=0
+# UVM_INFO uvm/lfc_cpu_passive_monitor.sv(66) @ 610: uvm_test_top.env.cpu_passive_agent.mon [CPU_PASSIVE_MON] Sent write tx: uuid=1 stall=0 hit=0 flushed=0
+# UVM_INFO uvm/lfc_ram_passive_monitor.sv(62) @ 610: uvm_test_top.env.ram_passive_agent.mon [RAM_MON] Captured bank=0 REN=1 WEN=0 addr=0x0000100c store=0x00000000 data=0x00000000 complete=0
+# UVM_INFO uvm/lfc_ram_passive_monitor.sv(62) @ 630: uvm_test_top.env.ram_passive_agent.mon [RAM_MON] Captured bank=0 REN=1 WEN=0 addr=0x0000100c store=0x00000000 data=0x00000000 complete=0
+# UVM_INFO uvm/lfc_cpu_passive_monitor.sv(66) @ 630: uvm_test_top.env.cpu_passive_agent.mon [CPU_PASSIVE_MON] Sent write tx: uuid=1 stall=0 hit=0 flushed=0
+# UVM_INFO uvm/lfc_cpu_passive_monitor.sv(66) @ 650: uvm_test_top.env.cpu_passive_agent.mon [CPU_PASSIVE_MON] Sent write tx: uuid=1 stall=0 hit=0 flushed=0
+# UVM_INFO uvm/lfc_ram_active_monitor.sv(56) @ 650: uvm_test_top.env.ram_active_agent.mon [RAM_ACTIVE_MON] Sent tx: ram_mem_data:0 ram_mem_complete:1
+# UVM_INFO uvm/lfc_ram_passive_monitor.sv(62) @ 650: uvm_test_top.env.ram_passive_agent.mon [RAM_MON] Captured bank=0 REN=1 WEN=0 addr=0x0000100c store=0x00000000 data=0x00000000 complete=1
+# UVM_INFO uvm/lfc_ram_passive_monitor.sv(62) @ 670: uvm_test_top.env.ram_passive_agent.mon [RAM_MON] Captured bank=0 REN=1 WEN=0 addr=0x0000100c store=0x00000000 data=0x00000000 complete=1
+# UVM_INFO uvm/lfc_cpu_passive_monitor.sv(66) @ 670: uvm_test_top.env.cpu_passive_agent.mon [CPU_PASSIVE_MON] Sent write tx: uuid=1 stall=0 hit=0 flushed=0
+# UVM_INFO uvm/lfc_ram_active_driver.sv(86) @ 670: uvm_test_top.env.ram_active_agent.drv [RAM_DRV] READ bank=0 addr=0x0000100c data=0x00000000
+# UVM_INFO uvm/lfc_cpu_passive_monitor.sv(66) @ 690: uvm_test_top.env.cpu_passive_agent.mon [CPU_PASSIVE_MON] Sent write tx: uuid=1 stall=0 hit=0 flushed=0
+# UVM_INFO uvm/lfc_ram_active_monitor.sv(56) @ 690: uvm_test_top.env.ram_active_agent.mon [RAM_ACTIVE_MON] Sent tx: ram_mem_data:0 ram_mem_complete:0
+# UVM_INFO uvm/lfc_cpu_passive_monitor.sv(66) @ 710: uvm_test_top.env.cpu_passive_agent.mon [CPU_PASSIVE_MON] Sent write tx: uuid=1 stall=0 hit=0 flushed=0
+# UVM_INFO uvm/lfc_cpu_passive_monitor.sv(66) @ 730: uvm_test_top.env.cpu_passive_agent.mon [CPU_PASSIVE_MON] Sent write tx: uuid=1 stall=0 hit=0 flushed=0
+# UVM_INFO uvm/lfc_cpu_passive_monitor.sv(66) @ 750: uvm_test_top.env.cpu_passive_agent.mon [CPU_PASSIVE_MON] Sent write tx: uuid=1 stall=0 hit=0 flushed=0
+# UVM_INFO uvm/lfc_cpu_passive_monitor.sv(66) @ 770: uvm_test_top.env.cpu_passive_agent.mon [CPU_PASSIVE_MON] Sent write tx: uuid=1 stall=0 hit=0 flushed=0
+# UVM_INFO uvm/lfc_cpu_passive_monitor.sv(66) @ 790: uvm_test_top.env.cpu_passive_agent.mon [CPU_PASSIVE_MON] Sent write tx: uuid=1 stall=0 hit=0 flushed=0
+# UVM_INFO uvm/lfc_cpu_passive_monitor.sv(66) @ 810: uvm_test_top.env.cpu_passive_agent.mon [CPU_PASSIVE_MON] Sent write tx: uuid=1 stall=0 hit=0 flushed=0
+# UVM_INFO uvm/lfc_cpu_passive_monitor.sv(66) @ 830: uvm_test_top.env.cpu_passive_agent.mon [CPU_PASSIVE_MON] Sent write tx: uuid=1 stall=0 hit=0 flushed=0
+# UVM_INFO uvm/lfc_cpu_passive_monitor.sv(66) @ 850: uvm_test_top.env.cpu_passive_agent.mon [CPU_PASSIVE_MON] Sent write tx: uuid=1 stall=0 hit=0 flushed=0
+# UVM_INFO uvm/lfc_cpu_passive_monitor.sv(66) @ 870: uvm_test_top.env.cpu_passive_agent.mon [CPU_PASSIVE_MON] Sent write tx: uuid=1 stall=0 hit=0 flushed=0
+# UVM_INFO uvm/lfc_cpu_passive_monitor.sv(66) @ 890: uvm_test_top.env.cpu_passive_agent.mon [CPU_PASSIVE_MON] Sent write tx: uuid=1 stall=0 hit=0 flushed=0
+# UVM_INFO uvm/lfc_basic_sequence.sv(82) @ 890: uvm_test_top.env.cpu_active_agent.sqr@@basic_seq [lfc_basic_sequence] WRITE complete: addr=0x1000 data=0xdeadbeef
+# UVM_INFO uvm/lfc_basic_sequence.sv(86) @ 890: uvm_test_top.env.cpu_active_agent.sqr@@basic_seq [lfc_basic_sequence] Sending READ transaction...
+# UVM_INFO uvm/lfc_cpu_passive_monitor.sv(71) @ 910: uvm_test_top.env.cpu_passive_agent.mon [CPU_PASSIVE_MON] Hit recorded
+# UVM_INFO uvm/lfc_cpu_passive_monitor.sv(72) @ 910: uvm_test_top.env.cpu_passive_agent.mon [CPU_PASSIVE_MON] Sent read tx: uuid=1 stall=0 hit=1 flushed=0
+# UVM_INFO uvm/lfc_basic_sequence.sv(98) @ 1730: uvm_test_top.env.cpu_active_agent.sqr@@basic_seq [lfc_basic_sequence] READ request sent: addr=0x1000
+# UVM_INFO verilog_src/uvm-1.2/src/base/uvm_objection.svh(1270) @ 2730: reporter [TEST_DONE] 'run' phase is ready to proceed to the 'extract' phase
+# UVM_INFO @ 2730: uvm_test_top.env.lfc_scoreboard [Scoreboard] Matches:    0
+# UVM_INFO @ 2730: uvm_test_top.env.lfc_scoreboard [Scoreboard] Mismatches: 0
+# UVM_INFO verilog_src/uvm-1.2/src/base/uvm_report_server.svh(847) @ 2730: reporter [UVM/REPORT/SERVER] 
+# --- UVM Report Summary ---
+# 
+# ** Report counts by severity
+# UVM_INFO :   91
+# UVM_WARNING :    4
+# UVM_ERROR :    0
+# UVM_FATAL :    0
+# ** Report counts by id
+# [CPU_MON]     1
+# [CPU_PASSIVE_MON]    44
+# [Monitor]     4
+# [Questa UVM]     2
+# [RAM_ACTIVE_MON]     5
+# [RAM_DRV]     3
+# [RAM_MON]    21
+# [RNTST]     1
+# [SCOREBOARD]     4
+# [Scoreboard]     2
+# [TEST_DONE]     1
+# [Test]     1
+# [UVM/RELNOTES]     1
+# [lfc_basic_sequence]     5
+# 
+# ** Note: $finish    : /package/eda/mg/questa2021.4/questasim/linux_x86_64/../verilog_src/uvm-1.2/src/base/uvm_root.svh(517)
+#    Time: 2730 ns  Iteration: 68  Instance: /tb_top
+# End time: 11:09:33 on Feb 07,2026, Elapsed time: 0:00:03
+# Errors: 0, Warnings: 5

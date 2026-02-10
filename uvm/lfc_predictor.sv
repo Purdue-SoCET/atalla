@@ -83,6 +83,7 @@ class lfc_predictor extends uvm_component /*#(lfc_cpu_transaction, lfc_ram_trans
         out_cpu.hit = data_is_in_cache[cpu_t.mem_in_addr];
 
         if (out_cpu.hit) begin // cache data only changes on hits, misses are sent to MSHR instead
+	    `uvm_info("PRED", "hit recorded", UVM_MEDIUM)
             if (cpu_t.mem_in_rw_mode) begin // write mode
                 data_model[cpu_t.mem_in_addr] = cpu_t.mem_in_store_value;
             end else begin // read mode
@@ -98,11 +99,14 @@ class lfc_predictor extends uvm_component /*#(lfc_cpu_transaction, lfc_ram_trans
             uuid_addr_map[out_cpu.mem_out_uuid] = cpu_t.mem_in_addr; // track the address that corresponds to the UUID
 
             // UUID counter increment with wraparound
-            if (next_uuid[bank_id] == 15)
-                next_uuid[bank_id] = 4'b0;
-            else
-                next_uuid[bank_id] = next_uuid[bank_id] + 1;
-        end
+	    //if(out_cpu.mem_in) begin
+		assert(out_cpu.mem_in) else `uvm_error("Pred", "mem_in=0")
+            	if (next_uuid[bank_id] == 15)
+                	next_uuid[bank_id] = 4'b0;
+            	else
+                	next_uuid[bank_id] = next_uuid[bank_id] + 1;
+	    //end
+        end 
 
         out_cpu.stall = (MSHR_occupancy > 8);
 

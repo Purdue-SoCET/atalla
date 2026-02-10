@@ -34,7 +34,7 @@ class lfc_cpu_active_driver extends uvm_driver#(lfc_cpu_transaction);
         lfc_cpu_transaction req_item;
 
         DUT_reset(); // 3 clock cycles
-        forever begin
+        forever begin // TODO: transaction "overlap" should be variable
             seq_item_port.get_next_item(req_item);
 
             
