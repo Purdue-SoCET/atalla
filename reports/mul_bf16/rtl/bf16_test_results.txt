@@ -1,12 +1,8 @@
 # BF16 Multiplier Test Results
 # Format: a b expected actual status
 
-8419 3bd5 8000 8080 FAIL
-95cd aa1f 0000 0080 FAIL
-b0fd 8f01 0000 0080 FAIL
-9995 a65b 0000 0080 FAIL
 
 # ========== SUMMARY ==========
 # Total tests: 1000000
-# Total errors: 4
+# Total errors: 0
 # Pass rate: 100.00%
