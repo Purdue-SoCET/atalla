@@ -1,16 +1,16 @@
-`ifndef DDR_CONTROL_PROP
-`define DDR_CONTROL_PROP
-
 `include "dram_pkg.vh"
 `include "cpu_types_pkg.vh"
 
-module ddr_control_prop;
+module ddr_ctrl_confirm(
+    input logic CLK,
+    input logic nRST
+);
     import dram_pkg::*;
     import cpu_types_pkg::*;
-    // Stores properties to be used 
 
+    // PROPERTIES
     task check_one_hot(
-        input logic smth;
+        input logic smth
     );
         assert one_hot();
     endtask
@@ -30,6 +30,9 @@ module ddr_control_prop;
     property write_response;
     endproperty
 
+    // ASSERTIONS
+    assert property (one_hot)
+        else $error("I guess bro");
+        
 endmodule 
-`endif // DDR_CONTROL_PROP
 
