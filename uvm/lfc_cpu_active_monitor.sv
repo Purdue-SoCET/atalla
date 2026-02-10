@@ -36,7 +36,7 @@ class lfc_cpu_active_monitor extends uvm_monitor;
   endfunction
 
   // minimal placeholder; add your sampling here
-  virtual task run_phase(uvm_phase phase); // TODO: line this up with the driver better
+  virtual task run_phase(uvm_phase phase);
     super.run_phase(phase);
     forever begin
       lfc_cpu_transaction tx;
@@ -49,7 +49,7 @@ class lfc_cpu_active_monitor extends uvm_monitor;
 	      tx.mem_in_rw_mode = vif.mem_in_rw_mode;
 	      tx.mem_in_store_value = vif.mem_in_store_value;
 	      tx.dp_in_halt = vif.dp_in_halt;
-	      @(posedge vif.clk);
+	      @(negedge vif.clk);
 	      lfc_ap.write(tx);
       //end
     end

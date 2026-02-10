@@ -83,6 +83,7 @@ class lfc_predictor extends uvm_component /*#(lfc_cpu_transaction, lfc_ram_trans
         out_cpu.hit = data_is_in_cache[cpu_t.mem_in_addr];
 
         if (out_cpu.hit) begin // cache data only changes on hits, misses are sent to MSHR instead
+	    MSHR_occupancy--;
 	    `uvm_info("PRED", "hit recorded", UVM_MEDIUM)
             if (cpu_t.mem_in_rw_mode) begin // write mode
                 data_model[cpu_t.mem_in_addr] = cpu_t.mem_in_store_value;
@@ -91,9 +92,11 @@ class lfc_predictor extends uvm_component /*#(lfc_cpu_transaction, lfc_ram_trans
             end
             out_cpu.mem_out_uuid = 4'b0; // we don't care what uuid is for hits
         end else begin
+	    //out_cpu.mem_out_uuid = MSHR_occupancy;
             MSHR_occupancy++;
+	    out_cpu.mem_out_uuid = MSHR_occupancy;
 
-            out_cpu.mem_out_uuid = next_uuid[bank_id]; // prediction of the UUID that will be assigned
+            //out_cpu.mem_out_uuid = next_uuid[bank_id]; // prediction of the UUID that will be assigned
 
             uuid_in_flight[out_cpu.mem_out_uuid] = 1'b1; // mark UUID as in flight
             uuid_addr_map[out_cpu.mem_out_uuid] = cpu_t.mem_in_addr; // track the address that corresponds to the UUID
@@ -101,10 +104,8 @@ class lfc_predictor extends uvm_component /*#(lfc_cpu_transaction, lfc_ram_trans
             // UUID counter increment with wraparound
 	    //if(out_cpu.mem_in) begin
 		assert(out_cpu.mem_in) else `uvm_error("Pred", "mem_in=0")
-            	if (next_uuid[bank_id] == 15)
-                	next_uuid[bank_id] = 4'b0;
-            	else
-                	next_uuid[bank_id] = next_uuid[bank_id] + 1;
+            	if (next_uuid[bank_id] == 15) next_uuid[bank_id] = 4'b0;
+            	else next_uuid[bank_id] = next_uuid[bank_id] + 1;
 	    //end
         end 
 
