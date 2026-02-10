@@ -155,9 +155,13 @@ module mul_bf16(
     assign boundary_case = unf & mul_significand_rounded[7]; 
 
     logic [7:0] mul_final_exp;
+    logic small_normal; // a small normal that is representatble but results in underflow 
+    
+    assign small_normal = unf & (mul_carryout & mul_final_exp[0] & ~|mul_final_exp[7:1]); 
+
     assign mul_final_exp = boundary_case ? 8'h01 : (mul_product == 0) ? 0 : mul_significand_rounded[7] ? exp_sum + 1 : exp_sum;
-    assign mul_unf = ~ovf & ((unf) | (~|mul_final_exp & ~(mul_significand_rounded[7] & &exp_sum)));
-    assign mul_ovf = ~mul_unf & (ovf | &mul_final_exp | (mul_significand_rounded[7] & &exp_sum) | (mul_carryout & ~|exp_sum[7:1] & exp_sum[0])); // if the final exp is all 1's and we need to round up, that also causes overflow
+    assign mul_unf = ~ovf & ((unf & ~small_normal) | (~|mul_final_exp & ~(mul_significand_rounded[7] & &exp_sum)));
+    assign mul_ovf = ~mul_unf & (ovf | &mul_final_exp | (mul_significand_rounded[7] & &exp_sum) | (~small_normal & mul_carryout & ~|exp_sum[7:1] & exp_sum[0])); // if the final exp is all 1's and we need to round up, that also causes overflow
 
     assign result =  nan ? QNAN :   
                      inf ? {mul_sign_result, POS_INF[14:0]} : 

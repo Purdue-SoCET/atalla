@@ -1,6 +1,6 @@
 //By            : Joe Nasti
 //Last Updated  : 10/27/2025 by Vinay Pundith - Converted to 8 bit adder for TPU Systolic Array BF16 MAC Unit
-//                02/04/2006 by Mixuan Pan - removed ovf and unf because not using in mul_bf16 
+//                02/10/2006 by Mixuan Pan - extra bit for sum to handle negative value for 127 subtration that should go to underflow instead of all 1's in the exponent bit for a bf16 multiplier 
 //
 //Module summary:
 //    Adds two unsigned 8 bit integers with ofset of 16 and signals if there is an over/underflow
@@ -41,5 +41,6 @@ module adder_8b (
     assign ovf = (full_sum[8] & ~|full_sum[7:0]) | (r_sum[7] && ~r_exp1[7] && ~r_exp2[7]);
     assign unf = (&full_sum) | (((carry != 1) || (sum != 8'b11111111)) && (~r_sum[7] && r_exp1[7] && r_exp2[7]));
 
+    
 endmodule
 
