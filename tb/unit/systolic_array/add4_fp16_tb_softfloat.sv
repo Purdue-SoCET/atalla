@@ -108,12 +108,6 @@ module add4_fp16_tb_softfloat;
     logic [15:0] a, b, c, d, expected;
 
 initial begin
-    $dumpfile("fp4adder.vcd");       // name of the waveform file
-    $dumpvars(0, add4_fp16_tb_softfloat); // dump entire hierarchy under the testbench top
-end
-
-
-initial begin
     pass_count = 0;
     fail_count = 0;
     tb_nrst = 1'b0;

@@ -10,26 +10,25 @@ module sysarr_4inp_fp_adder_2nd_pipeline_state #(
     input logic a_s, b_op, c_op, d_op,
     input logic b_sb, c_sb, d_sb, 
     input logic [EXPONENT_SIZE - 1:0] a_e,
-    input logic [MANTISSA_SIZE + PRECISION_BITS + 1:0] a_f, b_f, c_f, d_f, // these include the precision bits
-    output logic [MANTISSA_SIZE + PRECISION_BITS + 2:0] sum_i,
+    input logic [MANTISSA_SIZE + PRECISION_BITS - 1:0] a_f, b_f, c_f, d_f, // these include the precision bits
+    output logic [MANTISSA_SIZE + PRECISION_BITS - 1:0] sum_i,
     output logic result_s, 
     output logic [EXPONENT_SIZE - 1:0] a_e_out,
     output logic [3:0] num_leading_zeros,
-    output logic [1:0] right_shifts
 );  
 
-    localparam WIDTH = MANTISSA_SIZE + PRECISION_BITS + 2;
+    localparam WIDTH = MANTISSA_SIZE + PRECISION_BITS;
 
-    logic [WIDTH+1:0] b_inv, c_inv, d_inv; 
-    logic [WIDTH+1:0] s1, c1; // adder immediate variables
-    logic [WIDTH+1:0] s2, c2;
+    logic [WIDTH - 1:0] b_inv, c_inv, d_inv; 
+    logic [WIDTH - 1:0] s1, c1; // adder immediate variables
+    logic [WIDTH - 1:0] s2, c2;
 
     logic signed [2:0] signed_sb_sum;
 
     logic next_result_s;
     logic [3:0] next_num_leading_zeros;
 
-    logic signed [WIDTH+1:0] magnitude_sum;
+    logic [WIDTH:0] magnitude_sum;
     logic [WIDTH:0] corrected_sum;
 
     always_ff @( posedge clk, negedge nRST ) begin 
@@ -42,16 +41,16 @@ module sysarr_4inp_fp_adder_2nd_pipeline_state #(
         end else begin
             a_e_out <= a_e;
             result_s <= next_result_s;
-            sum_i <= corrected_sum[WIDTH:0];
+            sum_i <= corrected_sum[WIDTH-1:0];
             num_leading_zeros <= next_num_leading_zeros;
             // sticky_bit <= (signed_sb_sum != 0);
         end
     end
 
     // 2's complement inversion if *_op == 1
-    assign b_inv = (b_op) ? ~b_f  + 1: b_f;
-    assign c_inv = (c_op) ? ~c_f  + 1: c_f;
-    assign d_inv = (d_op) ? ~d_f + 1: d_f;
+    assign b_inv = (b_op) ? ~b_f : b_f;
+    assign c_inv = (c_op) ? ~c_f : c_f;
+    assign d_inv = (d_op) ? ~d_f : d_f;
 
     // overall sticky bit calculator
     always_comb begin
@@ -67,7 +66,7 @@ module sysarr_4inp_fp_adder_2nd_pipeline_state #(
 
     // stage 1: compress a, b, c
     generate
-        for (i = 0; i < WIDTH+1; i++) begin : loop_s1
+        for (i = 0; i < WIDTH; i++) begin : loop_s1
             full_adder fa_1 (
                 .a   (a_f[i]),
                 .b   (b_inv[i]),
@@ -80,7 +79,7 @@ module sysarr_4inp_fp_adder_2nd_pipeline_state #(
 
     // stage 2: compress s1, d, and shifted c1
     generate
-        for (i = 0; i < WIDTH+1; i++) begin : loop_s2
+        for (i = 0; i < WIDTH; i++) begin : loop_s2
             full_adder fa_2 (
                 .a   (s1[i]),
                 .b   (d_inv[i]),
@@ -94,31 +93,24 @@ module sysarr_4inp_fp_adder_2nd_pipeline_state #(
     // stage 3: final addition
     // s2 + (c2 << 1) + (c1[msb] << width)
     assign magnitude_sum =
-          $signed({1'b0, s2})
-        + $signed({c2, 1'b0})
-        + $signed({14'b0, (b_op + c_op + d_op)});
+          {1'b0, s2}
+        + {c2, 1'b0}
+        + {c1[WIDTH-1], {WIDTH{1'b0}}}
+        + (b_op + c_op + d_op);
 
     // 2's complement inversion of sum if sign is negative:
-    assign next_result_s = a_s ^ magnitude_sum[WIDTH+1];
-    assign corrected_sum = next_result_s ? -magnitude_sum : magnitude_sum; 
-
-    always_comb begin : right_shift_logic
-        right_shifts = 2'b00;
-        if (corrected_sum[WIDTH]) begin
-            right_shifts = 2'b10;
-        end else if (corrected_sum[WIDTH-1]) begin
-            right_shifts = 2'b01;
-        end
-    end
+    assign next_result_s = a_s ^ magnitude_sum[WIDTH];
+    assign corrected_sum = next_result_s ? (~magnitude_sum + 1'b1)
+                                         : magnitude_sum;
 
     // leading zero detector
     always_comb begin
         next_num_leading_zeros = 4'hF;
 
-        for (int k = WIDTH; k >= 0; k--) begin
+        for (int k = WIDTH - 1; k >= 0; k--) begin
             if (corrected_sum[k]) begin
                 next_num_leading_zeros =
-                    ((WIDTH - k) > 15) ? 4'hF : (WIDTH - k);
+                    ((WIDTH - 1 - k) > 15) ? 4'hF : (WIDTH - 1 - k);
                 break;
             end
         end

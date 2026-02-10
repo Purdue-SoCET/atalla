@@ -63,14 +63,6 @@ void Vadd4_fp16_tb_softfloat::eval_step() {
     Verilated::endOfEval(vlSymsp->__Vm_evalMsgQp);
 }
 
-void Vadd4_fp16_tb_softfloat::eval_end_step() {
-    VL_DEBUG_IF(VL_DBG_MSGF("+eval_end_step Vadd4_fp16_tb_softfloat::eval_end_step\n"); );
-#ifdef VM_TRACE
-    // Tracing
-    if (VL_UNLIKELY(vlSymsp->__Vm_dumping)) vlSymsp->_traceDump();
-#endif  // VM_TRACE
-}
-
 //============================================================
 // Events and timing
 bool Vadd4_fp16_tb_softfloat::eventsPending() { return !vlSymsp->TOP.__VdlySched.empty(); }

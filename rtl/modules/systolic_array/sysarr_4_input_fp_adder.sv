@@ -23,9 +23,7 @@ module sysarr_4_input_fp_adder #(
     logic st2_special_case;
     logic [15:0] st2_special_result;
 
-    logic [1:0] right_shifts;
-
-    logic [MANTISSA_SIZE + PRECISION_BITS + 2 : 0] sum_i;
+    logic [MANTISSA_SIZE + PRECISION_BITS : 0] sum_i;
     logic result_s;
     logic [EXPONENT_SIZE - 1:0] a_e_out;
     logic [3:0] num_leading_zeros;
@@ -86,15 +84,14 @@ module sysarr_4_input_fp_adder #(
         .c_sb(st1_m_f[0]), 
         .d_sb(st1_n_f[0]),
         .a_e(st1_a_e),
-        .a_f(st1_x_f[NEW_MANT_WIDTH-1:0]), 
-        .b_f(st1_y_f[NEW_MANT_WIDTH-1:0]), 
-        .c_f(st1_m_f[NEW_MANT_WIDTH-1:0]), 
-        .d_f(st1_n_f[NEW_MANT_WIDTH-1:0]),
+        .a_f(st1_x_f[NEW_MANT_WIDTH-1:1]), 
+        .b_f(st1_y_f[NEW_MANT_WIDTH-1:1]), 
+        .c_f(st1_m_f[NEW_MANT_WIDTH-1:1]), 
+        .d_f(st1_n_f[NEW_MANT_WIDTH-1:1]),
         .sum_i(sum_i),
         .result_s(result_s),
         .a_e_out(a_e_out),
-        .num_leading_zeros(num_leading_zeros),
-        .right_shifts(right_shifts)
+        .num_leading_zeros(num_leading_zeros)
     );
 
     add_fp_4input_stage3 #(
@@ -110,8 +107,7 @@ module sysarr_4_input_fp_adder #(
         .exponent(a_e_out),
         .special_case(st2_special_case),
         .special_result(st2_special_result),
-        .final_sum(sum),
-        .right_shifts(right_shifts)
+        .final_sum(sum)
     );
 
 endmodule
