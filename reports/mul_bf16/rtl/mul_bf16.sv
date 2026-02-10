@@ -145,13 +145,23 @@ module mul_bf16(
     end
 
     // Concatenation to produce final result.
+    
+    logic a_sub, b_sub; // subnormal inputs 
+    assign a_sub = ~|a_latched[14:7];
+    assign b_sub = ~|b_latched[14:7];
+
+
+    logic boundary_case; // roundup + subnormal = smallest value 0080 
+    assign boundary_case = unf & mul_significand_rounded[7]; 
+
     logic [7:0] mul_final_exp;
-    assign mul_final_exp = (mul_product == 0) ? 0 : mul_significand_rounded[7] ? exp_sum + 1 : exp_sum;
-    assign mul_unf = unf | ~|mul_final_exp;
-    assign mul_ovf = ~mul_unf & (ovf | &mul_final_exp); 
+    assign mul_final_exp = boundary_case ? 8'h01 : (mul_product == 0) ? 0 : mul_significand_rounded[7] ? exp_sum + 1 : exp_sum;
+    assign mul_unf = (unf) | ~|mul_final_exp;
+    assign mul_ovf = ~mul_unf & (ovf | &mul_final_exp | (mul_carryout & ~|exp_sum[7:1] & exp_sum[0])); // if the final exp is all 1's and we need to round up, that also causes overflow
+
     assign result =  nan ? QNAN :   
                      inf ? {mul_sign_result, POS_INF[14:0]} : 
-                     ~|a_latched[14:7] || ~|b_latched[14:7] ? {mul_sign_result, 15'b0} :  // subnormal inputs or output 
+                     a_sub || b_sub ? {mul_sign_result, 15'b0} :  // subnormal inputs or output 
                      mul_ovf ? {mul_sign_result, POS_INF[14:0]} :
                      mul_unf ? {mul_sign_result, 15'b0} :
                      {mul_sign_result, mul_final_exp, mul_significand_rounded[6:0]};
