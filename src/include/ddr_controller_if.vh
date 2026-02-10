@@ -52,29 +52,31 @@ logic be_r; // 15*16
 logic be_c; // 10*16
 logic be_id; // 4*16
 
-// BACKEND -> READ_ID_QUEUE
+// BACKEND ARBITER -> READ_ID_QUEUE
 logic be_push_id, be_rid, be_rlen, be_rstrb;
+
+// BACKEND ARBITER -> WDATA_QUEUE
+logic be_wid, be_write; 
 
 // AXI -> READ_ID_QUEUE
 logic rready;
 logic rq_rid, rq_rvalid, rq_rlen, rq_rstrb; 
 
-modport axi_sub ( // LQ -> AXI
-    input arready, rvalid, rdata, rid, rlast, rresp,
+modport axi_sub ( 
+    // LQ -> AXI
+    input arready, 
     // Write Queue -> AXI
-    wready, bwvalid, bwresp, bwid, 
+    wready, 
     // STQ -> AXI
     awready, 
-    // READ_ID -> AXI
-    rready,
-    // AXI -> LQ
+    // WDATA_QUEUE -> AXI
+    wready, bwvalid, bwresp, bwid,
+    // AXI -> WDATA_QUEUE
     output wstrb, wvalid, wdata, wid, wlen, bwready,
-    // AXI -> Write Queue
-    wstrb, wvalid, wdata, wid, wlen, bwready,
+    // AXI -> LQ
+    arvalid, araddr, arid, arsize, arlen, arburst, 
     // AXI -> STQ
     awvalid, awaddr, awid, awsize, awlen, awburst,
-    // AXI -> READ_ID
-    rq_rid, rq_rvalid, rq_rlen, rq_rstrb
 );
 
 modport stq ( // AXI -> STQ
@@ -88,14 +90,34 @@ modport stq ( // AXI -> STQ
 );
 
 modport lq (
+    //AXI -> LQ
+    input arvalid, araddr, arid, arsize, arlen, arburst, 
+    //ARB -> LQ
+    grant_l, 
+    //LQ -> AXI
+    output arready, 
+    //STQ -> ARB
+    address_l, request_l
 
 );
 
 modport arb (
-
+    //STQ -> ARB
+    input request_s, address_s,
+    //LQ -> ARB
+    request_l, address_l,
+    //BQ -> ARB
+    fe_full, 
+    //ARB -> LQ
+    output grant_l,
+    //ARB -> STQ
+    grant_s, 
+    //ARB -> BQ
+    fe_bg, fe_b, fe_r, fe_c, fe_write, fe_id, fe_write_bq
 );
 
 modport bq (
+    
 
 );
 
