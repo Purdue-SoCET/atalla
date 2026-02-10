@@ -7,6 +7,7 @@ interface ddr_controller_if;
 
 // 2.5.2025 -> TASK - ADD MODPORTS
 // 2.8.2025 -> TASK - FINISH MODPORTS BY 2.12
+import dram_pkg::*;
 
 // AXI -> WRITE_QUEUE
 logic wstrb, wvalid, wdata, wid, wlen; // -> Write Queue
