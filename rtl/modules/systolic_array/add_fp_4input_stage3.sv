@@ -5,6 +5,7 @@ module add_fp_4input_stage3 #(
 ) (
     input logic clk, nRST,
     input logic [$clog2(MANTISSA_SIZE)-1:0] leading_zeros,
+    input logic [1:0] right_shifts,
     input logic [MANTISSA_SIZE+PRECISION_BITS:0] sum, 
     input logic sign,
     input logic [EXPONENT_SIZE - 1:0] exponent,
@@ -18,7 +19,7 @@ module add_fp_4input_stage3 #(
     logic [$clog2(MANTISSA_SIZE)-1:0] leading_zeros_reg;
     logic sign_reg;
     logic [EXPONENT_SIZE - 1:0] exponent_reg;
-    logic sticky_in_reg;
+    // logic sticky_in_reg;
     logic special_case_reg;
     logic [EXPONENT_SIZE+MANTISSA_SIZE:0] special_result_reg;
     logic [EXPONENT_SIZE+MANTISSA_SIZE:0] final_sum_next;
@@ -29,7 +30,7 @@ module add_fp_4input_stage3 #(
             leading_zeros_reg <= '0;
             sign_reg <= '0;
             exponent_reg <= '0;
-            sticky_in_reg <= '0;
+            // sticky_in_reg <= '0;
             special_case_reg <= '0;
             special_result_reg <= '0;
             final_sum <= '0;
@@ -38,7 +39,7 @@ module add_fp_4input_stage3 #(
             leading_zeros_reg <= leading_zeros;
             sign_reg <= sign;
             exponent_reg <= exponent;
-            sticky_in_reg <= sticky_in;
+            // sticky_in_reg <= sticky_in;
             special_case_reg <= special_case;
             special_result_reg <= special_result;
             final_sum <= final_sum_next;
@@ -47,7 +48,7 @@ module add_fp_4input_stage3 #(
 
     always_comb begin : reset_sticky
         shifted_sum = sum_reg << leading_zeros_reg; 
-        shifted_sum[0] = (leading_zeros_reg >= PRECISION_BITS ? 1'b0 : sum_reg[0]) | sticky_in_reg;
+        shifted_sum[0] = (leading_zeros_reg >= PRECISION_BITS ? 1'b0 : sum_reg[0]);
     end
  
     logic overflow; 
@@ -80,7 +81,7 @@ module add_fp_4input_stage3 #(
     logic [EXPONENT_SIZE-1:0] new_exponent;
     logic inf;
 
-    assign new_exponent_internal = $signed({2'b0, exponent_reg}) + $signed({{(EXPONENT_SIZE+1){1'b0}}, overflow}) - $signed({2'b0, leading_zeros_reg});
+    assign new_exponent_internal = $signed({2'b0, exponent_reg}) + $signed({{(EXPONENT_SIZE+1){1'b0}}, overflow}) - $signed({2'b0, leading_zeros_reg})+ $signed({2'b0, right_shifts});
     
     always_comb begin
         inf = 0; 

@@ -30,8 +30,8 @@ module sysarr_4_input_fp_adder #(
     logic [MANTISSA_SIZE + EXPONENT_SIZE :0] sum;
 
     always_ff @( posedge clk, negedge nRST ) begin : output_registering
-        if(~nRST) a.out <= '0;
-        else a.out <= sum;
+        if(~nRST) add.out <= '0;
+        else add.out <= sum;
     end
 
     // Pipeline register to align special case signals with Stage 2 latency
@@ -91,7 +91,7 @@ module sysarr_4_input_fp_adder #(
         .sum_i(sum_i),
         .result_s(result_s),
         .a_e_out(a_e_out),
-        .num_leading_zeros(num_leading_zeros),
+        .num_leading_zeros(num_leading_zeros)
     );
 
     add_fp_4input_stage3 #(
