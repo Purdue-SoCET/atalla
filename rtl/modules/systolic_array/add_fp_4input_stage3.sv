@@ -6,7 +6,7 @@ module add_fp_4input_stage3 #(
     input logic clk, nRST,
     input logic [$clog2(MANTISSA_SIZE)-1:0] leading_zeros,
     input logic [1:0] right_shifts,
-    input logic [MANTISSA_SIZE+PRECISION_BITS:0] sum, 
+    input logic [MANTISSA_SIZE+PRECISION_BITS+2:0] sum, 
     input logic sign,
     input logic [EXPONENT_SIZE - 1:0] exponent,
     input logic special_case,
@@ -14,8 +14,8 @@ module add_fp_4input_stage3 #(
     output logic [EXPONENT_SIZE+MANTISSA_SIZE:0] final_sum
 );
 
-    logic [MANTISSA_SIZE+PRECISION_BITS:0] shifted_sum; 
-    logic [MANTISSA_SIZE+PRECISION_BITS:0] sum_reg;
+    logic [MANTISSA_SIZE+PRECISION_BITS:0] shifted_sum;
+    logic [MANTISSA_SIZE+PRECISION_BITS+2:0] sum_reg;
     logic [$clog2(MANTISSA_SIZE)-1:0] leading_zeros_reg;
     logic sign_reg;
     logic [EXPONENT_SIZE - 1:0] exponent_reg;
@@ -23,6 +23,7 @@ module add_fp_4input_stage3 #(
     logic special_case_reg;
     logic [EXPONENT_SIZE+MANTISSA_SIZE:0] special_result_reg;
     logic [EXPONENT_SIZE+MANTISSA_SIZE:0] final_sum_next;
+    logic [1:0] right_shift_reg;
 
     always_ff @(posedge clk, negedge nRST) begin
         if (!nRST) begin
@@ -34,6 +35,7 @@ module add_fp_4input_stage3 #(
             special_case_reg <= '0;
             special_result_reg <= '0;
             final_sum <= '0;
+            right_shift_reg <= '0;
         end else begin
             sum_reg <= sum;
             leading_zeros_reg <= leading_zeros;
@@ -43,20 +45,28 @@ module add_fp_4input_stage3 #(
             special_case_reg <= special_case;
             special_result_reg <= special_result;
             final_sum <= final_sum_next;
+            right_shift_reg <= right_shifts; 
         end
     end
 
     always_comb begin : reset_sticky
-        shifted_sum = sum_reg << leading_zeros_reg; 
-        shifted_sum[0] = (leading_zeros_reg >= PRECISION_BITS ? 1'b0 : sum_reg[0]);
+        shifted_sum = sum_reg;
+        if (right_shift_reg == 2'b10) begin
+            shifted_sum = sum_reg >> 2;
+        end else if (right_shift_reg == 2'b01) begin
+            shifted_sum = sum_reg >> 1;
+        end else begin
+            shifted_sum = sum_reg << leading_zeros_reg; 
+            shifted_sum[0] = (leading_zeros_reg >= PRECISION_BITS ? 1'b0 : sum_reg[0]);
+        end
     end
  
     logic overflow; 
-    logic [MANTISSA_SIZE-1:0] unrounded_mantissa; 
-    logic [MANTISSA_SIZE:0] rounded_mantissa_internal;
+    logic [MANTISSA_SIZE+PRECISION_BITS:0] unrounded_mantissa; 
+    logic [MANTISSA_SIZE+PRECISION_BITS:0] rounded_mantissa_internal;
     logic guard, round, sticky; 
 
-    assign unrounded_mantissa = shifted_sum[MANTISSA_SIZE+PRECISION_BITS:PRECISION_BITS+1];
+    assign unrounded_mantissa = shifted_sum[MANTISSA_SIZE+PRECISION_BITS-1:PRECISION_BITS+1];
     assign guard = shifted_sum[PRECISION_BITS]; 
     assign round = shifted_sum[PRECISION_BITS-1];
     assign sticky = |shifted_sum[PRECISION_BITS-2:0]; 
@@ -65,7 +75,7 @@ module add_fp_4input_stage3 #(
 
     assign round_up = guard & (round | sticky | unrounded_mantissa[0]);
     assign rounded_mantissa_internal = unrounded_mantissa + round_up; 
-    assign overflow = rounded_mantissa_internal[MANTISSA_SIZE];
+    assign overflow = rounded_mantissa_internal[MANTISSA_SIZE+PRECISION_BITS];
 
     logic [MANTISSA_SIZE-1:0] final_mantissa;
     always_comb begin
@@ -81,7 +91,7 @@ module add_fp_4input_stage3 #(
     logic [EXPONENT_SIZE-1:0] new_exponent;
     logic inf;
 
-    assign new_exponent_internal = $signed({2'b0, exponent_reg}) + $signed({{(EXPONENT_SIZE+1){1'b0}}, overflow}) - $signed({2'b0, leading_zeros_reg})+ $signed({2'b0, right_shifts});
+    assign new_exponent_internal = $signed({2'b0, exponent_reg}) + $signed({{(EXPONENT_SIZE+1){1'b0}}, overflow}) - $signed({2'b0, leading_zeros_reg}) + $signed({{(EXPONENT_SIZE+1){1'b0}}, right_shift_reg});
     
     always_comb begin
         inf = 0; 

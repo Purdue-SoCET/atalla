@@ -284,12 +284,12 @@ VL_INLINE_OPT VlCoroutine Vadd4_fp16_tb_softfloat___024root___eval_initial__TOP_
     vlSelfRef.add4_fp16_tb_softfloat__DOT__tb_d = 0U;
     co_await vlSelfRef.__VdlySched.delay(0x7d0ULL, 
                                          nullptr, "tb/unit/systolic_array/add4_fp16_tb_softfloat.sv", 
-                                         119);
+                                         125);
     vlSelfRef.__Vm_traceActivity[2U] = 1U;
     vlSelfRef.add4_fp16_tb_softfloat__DOT__tb_nrst = 1U;
     co_await vlSelfRef.__VdlySched.delay(0x7d0ULL, 
                                          nullptr, "tb/unit/systolic_array/add4_fp16_tb_softfloat.sv", 
-                                         121);
+                                         127);
     vlSelfRef.__Vm_traceActivity[2U] = 1U;
     VL_WRITEF_NX("--- Hardcoded 4-input Addition Cases ---\n",0);
     __Vtask_add4_fp16_tb_softfloat__DOT__test_case__0__d = 0x3c00U;
@@ -309,7 +309,7 @@ VL_INLINE_OPT VlCoroutine Vadd4_fp16_tb_softfloat___024root___eval_initial__TOP_
     vlSelfRef.add4_fp16_tb_softfloat__DOT__exp = 0x4400U;
     co_await vlSelfRef.__VdlySched.delay(0x2710ULL, 
                                          nullptr, "tb/unit/systolic_array/add4_fp16_tb_softfloat.sv", 
-                                         128);
+                                         134);
     vlSelfRef.__Vm_traceActivity[2U] = 1U;
     __Vtask_add4_fp16_tb_softfloat__DOT__check_case__1__expected 
         = vlSelfRef.add4_fp16_tb_softfloat__DOT__exp;
@@ -361,7 +361,7 @@ VL_INLINE_OPT VlCoroutine Vadd4_fp16_tb_softfloat___024root___eval_initial__TOP_
     }
     co_await vlSelfRef.__VdlySched.delay(0x7d0ULL, 
                                          nullptr, "tb/unit/systolic_array/add4_fp16_tb_softfloat.sv", 
-                                         130);
+                                         136);
     vlSelfRef.__Vm_traceActivity[2U] = 1U;
     __Vtask_add4_fp16_tb_softfloat__DOT__test_case__4__d = 0x4000U;
     __Vtask_add4_fp16_tb_softfloat__DOT__test_case__4__c = 0x4000U;
@@ -380,7 +380,7 @@ VL_INLINE_OPT VlCoroutine Vadd4_fp16_tb_softfloat___024root___eval_initial__TOP_
     vlSelfRef.add4_fp16_tb_softfloat__DOT__exp = 0x4800U;
     co_await vlSelfRef.__VdlySched.delay(0x2710ULL, 
                                          nullptr, "tb/unit/systolic_array/add4_fp16_tb_softfloat.sv", 
-                                         135);
+                                         141);
     vlSelfRef.__Vm_traceActivity[2U] = 1U;
     __Vtask_add4_fp16_tb_softfloat__DOT__check_case__5__expected 
         = vlSelfRef.add4_fp16_tb_softfloat__DOT__exp;
@@ -432,7 +432,7 @@ VL_INLINE_OPT VlCoroutine Vadd4_fp16_tb_softfloat___024root___eval_initial__TOP_
     }
     co_await vlSelfRef.__VdlySched.delay(0x7d0ULL, 
                                          nullptr, "tb/unit/systolic_array/add4_fp16_tb_softfloat.sv", 
-                                         137);
+                                         143);
     vlSelfRef.__Vm_traceActivity[2U] = 1U;
     __Vtask_add4_fp16_tb_softfloat__DOT__test_case__8__d = 0U;
     __Vtask_add4_fp16_tb_softfloat__DOT__test_case__8__c = 0U;
@@ -451,7 +451,7 @@ VL_INLINE_OPT VlCoroutine Vadd4_fp16_tb_softfloat___024root___eval_initial__TOP_
     vlSelfRef.add4_fp16_tb_softfloat__DOT__exp = 0U;
     co_await vlSelfRef.__VdlySched.delay(0x2710ULL, 
                                          nullptr, "tb/unit/systolic_array/add4_fp16_tb_softfloat.sv", 
-                                         142);
+                                         148);
     vlSelfRef.__Vm_traceActivity[2U] = 1U;
     __Vtask_add4_fp16_tb_softfloat__DOT__check_case__9__expected 
         = vlSelfRef.add4_fp16_tb_softfloat__DOT__exp;
@@ -503,7 +503,7 @@ VL_INLINE_OPT VlCoroutine Vadd4_fp16_tb_softfloat___024root___eval_initial__TOP_
     }
     co_await vlSelfRef.__VdlySched.delay(0x7d0ULL, 
                                          nullptr, "tb/unit/systolic_array/add4_fp16_tb_softfloat.sv", 
-                                         144);
+                                         150);
     vlSelfRef.__Vm_traceActivity[2U] = 1U;
     __Vtask_add4_fp16_tb_softfloat__DOT__test_case__12__d = 0U;
     __Vtask_add4_fp16_tb_softfloat__DOT__test_case__12__c = 0U;
@@ -522,7 +522,7 @@ VL_INLINE_OPT VlCoroutine Vadd4_fp16_tb_softfloat___024root___eval_initial__TOP_
     vlSelfRef.add4_fp16_tb_softfloat__DOT__exp = 0x3c00U;
     co_await vlSelfRef.__VdlySched.delay(0x2710ULL, 
                                          nullptr, "tb/unit/systolic_array/add4_fp16_tb_softfloat.sv", 
-                                         149);
+                                         155);
     vlSelfRef.__Vm_traceActivity[2U] = 1U;
     __Vtask_add4_fp16_tb_softfloat__DOT__check_case__13__expected 
         = vlSelfRef.add4_fp16_tb_softfloat__DOT__exp;
@@ -574,7 +574,7 @@ VL_INLINE_OPT VlCoroutine Vadd4_fp16_tb_softfloat___024root___eval_initial__TOP_
     }
     co_await vlSelfRef.__VdlySched.delay(0x7d0ULL, 
                                          nullptr, "tb/unit/systolic_array/add4_fp16_tb_softfloat.sv", 
-                                         151);
+                                         157);
     vlSelfRef.__Vm_traceActivity[2U] = 1U;
     __Vtask_add4_fp16_tb_softfloat__DOT__test_case__16__d = 0x3c00U;
     __Vtask_add4_fp16_tb_softfloat__DOT__test_case__16__c = 0x3c00U;
@@ -593,7 +593,7 @@ VL_INLINE_OPT VlCoroutine Vadd4_fp16_tb_softfloat___024root___eval_initial__TOP_
     vlSelfRef.add4_fp16_tb_softfloat__DOT__exp = 0x7c00U;
     co_await vlSelfRef.__VdlySched.delay(0x2710ULL, 
                                          nullptr, "tb/unit/systolic_array/add4_fp16_tb_softfloat.sv", 
-                                         156);
+                                         162);
     vlSelfRef.__Vm_traceActivity[2U] = 1U;
     __Vtask_add4_fp16_tb_softfloat__DOT__check_case__17__expected 
         = vlSelfRef.add4_fp16_tb_softfloat__DOT__exp;
@@ -645,7 +645,7 @@ VL_INLINE_OPT VlCoroutine Vadd4_fp16_tb_softfloat___024root___eval_initial__TOP_
     }
     co_await vlSelfRef.__VdlySched.delay(0x7d0ULL, 
                                          nullptr, "tb/unit/systolic_array/add4_fp16_tb_softfloat.sv", 
-                                         158);
+                                         164);
     vlSelfRef.__Vm_traceActivity[2U] = 1U;
     __Vtask_add4_fp16_tb_softfloat__DOT__test_case__20__d = 0x3c00U;
     __Vtask_add4_fp16_tb_softfloat__DOT__test_case__20__c = 0x3c00U;
@@ -664,7 +664,7 @@ VL_INLINE_OPT VlCoroutine Vadd4_fp16_tb_softfloat___024root___eval_initial__TOP_
     vlSelfRef.add4_fp16_tb_softfloat__DOT__exp = 0x7c00U;
     co_await vlSelfRef.__VdlySched.delay(0x2710ULL, 
                                          nullptr, "tb/unit/systolic_array/add4_fp16_tb_softfloat.sv", 
-                                         163);
+                                         169);
     vlSelfRef.__Vm_traceActivity[2U] = 1U;
     __Vtask_add4_fp16_tb_softfloat__DOT__check_case__21__expected 
         = vlSelfRef.add4_fp16_tb_softfloat__DOT__exp;
@@ -716,7 +716,7 @@ VL_INLINE_OPT VlCoroutine Vadd4_fp16_tb_softfloat___024root___eval_initial__TOP_
     }
     co_await vlSelfRef.__VdlySched.delay(0x7d0ULL, 
                                          nullptr, "tb/unit/systolic_array/add4_fp16_tb_softfloat.sv", 
-                                         165);
+                                         171);
     vlSelfRef.__Vm_traceActivity[2U] = 1U;
     __Vtask_add4_fp16_tb_softfloat__DOT__test_case__24__d = 0x3c00U;
     __Vtask_add4_fp16_tb_softfloat__DOT__test_case__24__c = 0x3c00U;
@@ -735,7 +735,7 @@ VL_INLINE_OPT VlCoroutine Vadd4_fp16_tb_softfloat___024root___eval_initial__TOP_
     vlSelfRef.add4_fp16_tb_softfloat__DOT__exp = 0x7d00U;
     co_await vlSelfRef.__VdlySched.delay(0x2710ULL, 
                                          nullptr, "tb/unit/systolic_array/add4_fp16_tb_softfloat.sv", 
-                                         170);
+                                         176);
     vlSelfRef.__Vm_traceActivity[2U] = 1U;
     __Vtask_add4_fp16_tb_softfloat__DOT__check_case__25__expected 
         = vlSelfRef.add4_fp16_tb_softfloat__DOT__exp;
@@ -787,7 +787,7 @@ VL_INLINE_OPT VlCoroutine Vadd4_fp16_tb_softfloat___024root___eval_initial__TOP_
     }
     co_await vlSelfRef.__VdlySched.delay(0x7d0ULL, 
                                          nullptr, "tb/unit/systolic_array/add4_fp16_tb_softfloat.sv", 
-                                         172);
+                                         178);
     vlSelfRef.__Vm_traceActivity[2U] = 1U;
     __Vtask_add4_fp16_tb_softfloat__DOT__test_case__28__d = 0x3c00U;
     __Vtask_add4_fp16_tb_softfloat__DOT__test_case__28__c = 0x3c00U;
@@ -806,7 +806,7 @@ VL_INLINE_OPT VlCoroutine Vadd4_fp16_tb_softfloat___024root___eval_initial__TOP_
     vlSelfRef.add4_fp16_tb_softfloat__DOT__exp = 0x7d00U;
     co_await vlSelfRef.__VdlySched.delay(0x2710ULL, 
                                          nullptr, "tb/unit/systolic_array/add4_fp16_tb_softfloat.sv", 
-                                         177);
+                                         183);
     vlSelfRef.__Vm_traceActivity[2U] = 1U;
     __Vtask_add4_fp16_tb_softfloat__DOT__check_case__29__expected 
         = vlSelfRef.add4_fp16_tb_softfloat__DOT__exp;
@@ -858,7 +858,7 @@ VL_INLINE_OPT VlCoroutine Vadd4_fp16_tb_softfloat___024root___eval_initial__TOP_
     }
     co_await vlSelfRef.__VdlySched.delay(0x7d0ULL, 
                                          nullptr, "tb/unit/systolic_array/add4_fp16_tb_softfloat.sv", 
-                                         179);
+                                         185);
     vlSelfRef.__Vm_traceActivity[2U] = 1U;
     __Vtask_add4_fp16_tb_softfloat__DOT__test_case__32__d = 0x3c00U;
     __Vtask_add4_fp16_tb_softfloat__DOT__test_case__32__c = 0x3c00U;
@@ -877,7 +877,7 @@ VL_INLINE_OPT VlCoroutine Vadd4_fp16_tb_softfloat___024root___eval_initial__TOP_
     vlSelfRef.add4_fp16_tb_softfloat__DOT__exp = 0x4000U;
     co_await vlSelfRef.__VdlySched.delay(0x2710ULL, 
                                          nullptr, "tb/unit/systolic_array/add4_fp16_tb_softfloat.sv", 
-                                         184);
+                                         190);
     vlSelfRef.__Vm_traceActivity[2U] = 1U;
     __Vtask_add4_fp16_tb_softfloat__DOT__check_case__33__expected 
         = vlSelfRef.add4_fp16_tb_softfloat__DOT__exp;
@@ -929,7 +929,7 @@ VL_INLINE_OPT VlCoroutine Vadd4_fp16_tb_softfloat___024root___eval_initial__TOP_
     }
     co_await vlSelfRef.__VdlySched.delay(0x7d0ULL, 
                                          nullptr, "tb/unit/systolic_array/add4_fp16_tb_softfloat.sv", 
-                                         186);
+                                         192);
     vlSelfRef.__Vm_traceActivity[2U] = 1U;
     __Vtask_add4_fp16_tb_softfloat__DOT__test_case__36__d = 0x7bffU;
     __Vtask_add4_fp16_tb_softfloat__DOT__test_case__36__c = 0x7bffU;
@@ -948,7 +948,7 @@ VL_INLINE_OPT VlCoroutine Vadd4_fp16_tb_softfloat___024root___eval_initial__TOP_
     vlSelfRef.add4_fp16_tb_softfloat__DOT__exp = 0x7c00U;
     co_await vlSelfRef.__VdlySched.delay(0x2710ULL, 
                                          nullptr, "tb/unit/systolic_array/add4_fp16_tb_softfloat.sv", 
-                                         191);
+                                         197);
     vlSelfRef.__Vm_traceActivity[2U] = 1U;
     __Vtask_add4_fp16_tb_softfloat__DOT__check_case__37__expected 
         = vlSelfRef.add4_fp16_tb_softfloat__DOT__exp;
@@ -1000,7 +1000,7 @@ VL_INLINE_OPT VlCoroutine Vadd4_fp16_tb_softfloat___024root___eval_initial__TOP_
     }
     co_await vlSelfRef.__VdlySched.delay(0x7d0ULL, 
                                          nullptr, "tb/unit/systolic_array/add4_fp16_tb_softfloat.sv", 
-                                         193);
+                                         199);
     vlSelfRef.__Vm_traceActivity[2U] = 1U;
     __Vtask_add4_fp16_tb_softfloat__DOT__test_case__40__d = 0xbc00U;
     __Vtask_add4_fp16_tb_softfloat__DOT__test_case__40__c = 0x3c00U;
@@ -1019,7 +1019,7 @@ VL_INLINE_OPT VlCoroutine Vadd4_fp16_tb_softfloat___024root___eval_initial__TOP_
     vlSelfRef.add4_fp16_tb_softfloat__DOT__exp = 0U;
     co_await vlSelfRef.__VdlySched.delay(0x2710ULL, 
                                          nullptr, "tb/unit/systolic_array/add4_fp16_tb_softfloat.sv", 
-                                         198);
+                                         204);
     vlSelfRef.__Vm_traceActivity[2U] = 1U;
     __Vtask_add4_fp16_tb_softfloat__DOT__check_case__41__expected 
         = vlSelfRef.add4_fp16_tb_softfloat__DOT__exp;
@@ -1071,7 +1071,7 @@ VL_INLINE_OPT VlCoroutine Vadd4_fp16_tb_softfloat___024root___eval_initial__TOP_
     }
     co_await vlSelfRef.__VdlySched.delay(0x7d0ULL, 
                                          nullptr, "tb/unit/systolic_array/add4_fp16_tb_softfloat.sv", 
-                                         200);
+                                         206);
     vlSelfRef.__Vm_traceActivity[2U] = 1U;
     __Vtask_add4_fp16_tb_softfloat__DOT__test_case__44__d = 0xc000U;
     __Vtask_add4_fp16_tb_softfloat__DOT__test_case__44__c = 0xc000U;
@@ -1090,7 +1090,7 @@ VL_INLINE_OPT VlCoroutine Vadd4_fp16_tb_softfloat___024root___eval_initial__TOP_
     vlSelfRef.add4_fp16_tb_softfloat__DOT__exp = 0xc800U;
     co_await vlSelfRef.__VdlySched.delay(0x2710ULL, 
                                          nullptr, "tb/unit/systolic_array/add4_fp16_tb_softfloat.sv", 
-                                         206);
+                                         212);
     vlSelfRef.__Vm_traceActivity[2U] = 1U;
     __Vtask_add4_fp16_tb_softfloat__DOT__check_case__45__expected 
         = vlSelfRef.add4_fp16_tb_softfloat__DOT__exp;
@@ -1142,7 +1142,7 @@ VL_INLINE_OPT VlCoroutine Vadd4_fp16_tb_softfloat___024root___eval_initial__TOP_
     }
     co_await vlSelfRef.__VdlySched.delay(0x7d0ULL, 
                                          nullptr, "tb/unit/systolic_array/add4_fp16_tb_softfloat.sv", 
-                                         208);
+                                         214);
     vlSelfRef.__Vm_traceActivity[2U] = 1U;
     VL_WRITEF_NX("\n--- Berkeley SoftFloat Random Test Cases ---\n",0);
     vlSelfRef.add4_fp16_tb_softfloat__DOT__fd = VL_FOPEN_NN(
@@ -1152,7 +1152,7 @@ VL_INLINE_OPT VlCoroutine Vadd4_fp16_tb_softfloat___024root___eval_initial__TOP_
     ;
     if (VL_UNLIKELY(((0U == vlSelfRef.add4_fp16_tb_softfloat__DOT__fd)))) {
         VL_WRITEF_NX("error: could not open testfloat_cases_4.csv\nmake sure it is in the right directory! check tb for pathing\n",0);
-        VL_FINISH_MT("tb/unit/systolic_array/add4_fp16_tb_softfloat.sv", 217, "");
+        VL_FINISH_MT("tb/unit/systolic_array/add4_fp16_tb_softfloat.sv", 223, "");
     }
     (void)VL_FGETS_NI(add4_fp16_tb_softfloat__DOT__header, vlSelfRef.add4_fp16_tb_softfloat__DOT__fd);
     while ((! (vlSelfRef.add4_fp16_tb_softfloat__DOT__fd ? feof(VL_CVT_I_FP(vlSelfRef.add4_fp16_tb_softfloat__DOT__fd)) : true))) {
@@ -1173,7 +1173,7 @@ VL_INLINE_OPT VlCoroutine Vadd4_fp16_tb_softfloat___024root___eval_initial__TOP_
                                                                  nullptr, 
                                                                  "@(negedge add4_fp16_tb_softfloat.tb_clk)", 
                                                                  "tb/unit/systolic_array/add4_fp16_tb_softfloat.sv", 
-                                                                 232);
+                                                                 238);
             vlSelfRef.__Vm_traceActivity[2U] = 1U;
             vlSelfRef.add4_fp16_tb_softfloat__DOT__tb_a 
                 = vlSelfRef.add4_fp16_tb_softfloat__DOT__a;
@@ -1186,7 +1186,7 @@ VL_INLINE_OPT VlCoroutine Vadd4_fp16_tb_softfloat___024root___eval_initial__TOP_
             co_await vlSelfRef.__VdlySched.delay(0x1f40ULL, 
                                                  nullptr, 
                                                  "tb/unit/systolic_array/add4_fp16_tb_softfloat.sv", 
-                                                 238);
+                                                 244);
             vlSelfRef.__Vm_traceActivity[2U] = 1U;
             vlSelfRef.add4_fp16_tb_softfloat__DOT__unnamedblk1__DOT__is_zero_result 
                 = (((0U == (IData)(vlSymsp->TOP__add4_fp16_tb_softfloat__DOT__add_if.out)) 
@@ -1247,7 +1247,7 @@ VL_INLINE_OPT VlCoroutine Vadd4_fp16_tb_softfloat___024root___eval_initial__TOP_
     } else {
         VL_WRITEF_NX("SOME TESTS FAILED!\n",0);
     }
-    VL_FINISH_MT("tb/unit/systolic_array/add4_fp16_tb_softfloat.sv", 271, "");
+    VL_FINISH_MT("tb/unit/systolic_array/add4_fp16_tb_softfloat.sv", 277, "");
     vlSelfRef.__Vm_traceActivity[2U] = 1U;
 }
 
@@ -1304,7 +1304,7 @@ VL_INLINE_OPT void Vadd4_fp16_tb_softfloat___024root___nba_sequent__TOP__1(Vadd4
                                                    << 0xfU) 
                                                   | (((IData)(vlSelfRef.add4_fp16_tb_softfloat__DOT__etchedfp4adder__DOT__third_stage__DOT__new_exponent) 
                                                       << 0xaU) 
-                                                     | ((0x400U 
+                                                     | ((0x2000U 
                                                          & (IData)(vlSelfRef.add4_fp16_tb_softfloat__DOT__etchedfp4adder__DOT__third_stage__DOT__rounded_mantissa_internal))
                                                          ? 0U
                                                          : 
@@ -1324,18 +1324,22 @@ VL_INLINE_OPT void Vadd4_fp16_tb_softfloat___024root___nba_sequent__TOP__1(Vadd4
         vlSelfRef.add4_fp16_tb_softfloat__DOT__etchedfp4adder__DOT__st1_special_result = 0U;
     }
     vlSelfRef.add4_fp16_tb_softfloat__DOT__etchedfp4adder__DOT__third_stage__DOT__rounded_mantissa_internal 
-        = (0x7ffU & ((0x3ffU & ((IData)(vlSelfRef.add4_fp16_tb_softfloat__DOT__etchedfp4adder__DOT__third_stage__DOT__shifted_sum) 
-                                >> 4U)) + (1U & (((IData)(vlSelfRef.add4_fp16_tb_softfloat__DOT__etchedfp4adder__DOT__third_stage__DOT__shifted_sum) 
-                                                  >> 3U) 
-                                                 & (IData)(
-                                                           (0U 
-                                                            != 
-                                                            (0x17U 
-                                                             & (IData)(vlSelfRef.add4_fp16_tb_softfloat__DOT__etchedfp4adder__DOT__third_stage__DOT__shifted_sum))))))));
+        = (0x3fffU & ((0x1ffU & ((IData)(vlSelfRef.add4_fp16_tb_softfloat__DOT__etchedfp4adder__DOT__third_stage__DOT__shifted_sum) 
+                                 >> 4U)) + (1U & (((IData)(vlSelfRef.add4_fp16_tb_softfloat__DOT__etchedfp4adder__DOT__third_stage__DOT__shifted_sum) 
+                                                   >> 3U) 
+                                                  & (IData)(
+                                                            (0U 
+                                                             != 
+                                                             (0x17U 
+                                                              & (IData)(vlSelfRef.add4_fp16_tb_softfloat__DOT__etchedfp4adder__DOT__third_stage__DOT__shifted_sum))))))));
     vlSelfRef.add4_fp16_tb_softfloat__DOT__etchedfp4adder__DOT__third_stage__DOT__new_exponent_internal 
-        = (0x7fU & (((IData)(vlSelfRef.add4_fp16_tb_softfloat__DOT__etchedfp4adder__DOT__third_stage__DOT__exponent_reg) 
-                     + (1U & ((IData)(vlSelfRef.add4_fp16_tb_softfloat__DOT__etchedfp4adder__DOT__third_stage__DOT__rounded_mantissa_internal) 
-                              >> 0xaU))) - VL_EXTENDS_II(7,6, (IData)(vlSelfRef.add4_fp16_tb_softfloat__DOT__etchedfp4adder__DOT__third_stage__DOT__leading_zeros_reg))));
+        = (0x7fU & ((((0xffU & VL_EXTENDS_II(8,7, (IData)(vlSelfRef.add4_fp16_tb_softfloat__DOT__etchedfp4adder__DOT__third_stage__DOT__exponent_reg))) 
+                      + (0xffU & VL_EXTENDS_II(8,7, 
+                                               (1U 
+                                                & ((IData)(vlSelfRef.add4_fp16_tb_softfloat__DOT__etchedfp4adder__DOT__third_stage__DOT__rounded_mantissa_internal) 
+                                                   >> 0xdU))))) 
+                     - (0xffU & VL_EXTENDS_II(8,6, (IData)(vlSelfRef.add4_fp16_tb_softfloat__DOT__etchedfp4adder__DOT__third_stage__DOT__leading_zeros_reg)))) 
+                    + (IData)(vlSelfRef.add4_fp16_tb_softfloat__DOT__etchedfp4adder__DOT__third_stage__DOT__right_shift_reg)));
     vlSelfRef.add4_fp16_tb_softfloat__DOT__etchedfp4adder__DOT__third_stage__DOT__sign_reg 
         = ((IData)(vlSelfRef.add4_fp16_tb_softfloat__DOT__tb_nrst) 
            && (IData)(vlSelfRef.add4_fp16_tb_softfloat__DOT__etchedfp4adder__DOT__result_s));
@@ -1359,26 +1363,31 @@ VL_INLINE_OPT void Vadd4_fp16_tb_softfloat___024root___nba_sequent__TOP__1(Vadd4
            && (IData)(vlSelfRef.add4_fp16_tb_softfloat__DOT__etchedfp4adder__DOT__st1_special_case));
     vlSelfRef.add4_fp16_tb_softfloat__DOT__etchedfp4adder__DOT__second_stage__DOT__next_result_s 
         = (1U & ((IData)(vlSelfRef.add4_fp16_tb_softfloat__DOT__etchedfp4adder__DOT__st1_a_s) 
-                 ^ ((IData)(vlSelfRef.add4_fp16_tb_softfloat__DOT__etchedfp4adder__DOT__second_stage__DOT__magnitude_sum) 
-                    >> 0xdU)));
-    vlSelfRef.add4_fp16_tb_softfloat__DOT__etchedfp4adder__DOT__second_stage__DOT__corrected_sum 
-        = (0x7fffU & ((IData)(vlSelfRef.add4_fp16_tb_softfloat__DOT__etchedfp4adder__DOT__second_stage__DOT__next_result_s)
-                       ? ((IData)(1U) + (~ (IData)(vlSelfRef.add4_fp16_tb_softfloat__DOT__etchedfp4adder__DOT__second_stage__DOT__magnitude_sum)))
-                       : (IData)(vlSelfRef.add4_fp16_tb_softfloat__DOT__etchedfp4adder__DOT__second_stage__DOT__magnitude_sum)));
+                 ^ (vlSelfRef.add4_fp16_tb_softfloat__DOT__etchedfp4adder__DOT__second_stage__DOT__magnitude_sum 
+                    >> 0x10U)));
+    vlSelfRef.add4_fp16_tb_softfloat__DOT__etchedfp4adder__DOT__second_stage__DOT____VdfgRegularize_hc819fdcb_0_3 
+        = (0x1ffffU & ((IData)(vlSelfRef.add4_fp16_tb_softfloat__DOT__etchedfp4adder__DOT__second_stage__DOT__next_result_s)
+                        ? (- vlSelfRef.add4_fp16_tb_softfloat__DOT__etchedfp4adder__DOT__second_stage__DOT__magnitude_sum)
+                        : vlSelfRef.add4_fp16_tb_softfloat__DOT__etchedfp4adder__DOT__second_stage__DOT__magnitude_sum));
     vlSelfRef.add4_fp16_tb_softfloat__DOT__etchedfp4adder__DOT__st1_special_case 
         = ((IData)(vlSelfRef.add4_fp16_tb_softfloat__DOT__tb_nrst) 
            && (IData)(vlSelfRef.add4_fp16_tb_softfloat__DOT__etchedfp4adder__DOT__first_stage__DOT__special_case));
+    vlSelfRef.add4_fp16_tb_softfloat__DOT__etchedfp4adder__DOT__right_shifts = 0U;
+    if ((0x8000U & vlSelfRef.add4_fp16_tb_softfloat__DOT__etchedfp4adder__DOT__second_stage__DOT____VdfgRegularize_hc819fdcb_0_3)) {
+        vlSelfRef.add4_fp16_tb_softfloat__DOT__etchedfp4adder__DOT__right_shifts = 2U;
+    } else if ((0x4000U & vlSelfRef.add4_fp16_tb_softfloat__DOT__etchedfp4adder__DOT__second_stage__DOT____VdfgRegularize_hc819fdcb_0_3)) {
+        vlSelfRef.add4_fp16_tb_softfloat__DOT__etchedfp4adder__DOT__right_shifts = 1U;
+    }
     vlSelfRef.add4_fp16_tb_softfloat__DOT__etchedfp4adder__DOT__second_stage__DOT__next_num_leading_zeros = 0xfU;
-    vlSelfRef.add4_fp16_tb_softfloat__DOT__etchedfp4adder__DOT__second_stage__DOT__unnamedblk1__DOT__k = 0xcU;
+    vlSelfRef.add4_fp16_tb_softfloat__DOT__etchedfp4adder__DOT__second_stage__DOT__unnamedblk1__DOT__k = 0xfU;
     {
         while (VL_LTES_III(32, 0U, vlSelfRef.add4_fp16_tb_softfloat__DOT__etchedfp4adder__DOT__second_stage__DOT__unnamedblk1__DOT__k)) {
-            if (((0xeU >= (0xfU & vlSelfRef.add4_fp16_tb_softfloat__DOT__etchedfp4adder__DOT__second_stage__DOT__unnamedblk1__DOT__k)) 
-                 && (1U & ((IData)(vlSelfRef.add4_fp16_tb_softfloat__DOT__etchedfp4adder__DOT__second_stage__DOT__corrected_sum) 
-                           >> (0xfU & vlSelfRef.add4_fp16_tb_softfloat__DOT__etchedfp4adder__DOT__second_stage__DOT__unnamedblk1__DOT__k))))) {
+            if ((1U & (vlSelfRef.add4_fp16_tb_softfloat__DOT__etchedfp4adder__DOT__second_stage__DOT____VdfgRegularize_hc819fdcb_0_3 
+                       >> (0xfU & vlSelfRef.add4_fp16_tb_softfloat__DOT__etchedfp4adder__DOT__second_stage__DOT__unnamedblk1__DOT__k)))) {
                 vlSelfRef.add4_fp16_tb_softfloat__DOT__etchedfp4adder__DOT__second_stage__DOT__next_num_leading_zeros 
-                    = (VL_LTS_III(32, 0xfU, ((IData)(0xcU) 
+                    = (VL_LTS_III(32, 0xfU, ((IData)(0xfU) 
                                              - vlSelfRef.add4_fp16_tb_softfloat__DOT__etchedfp4adder__DOT__second_stage__DOT__unnamedblk1__DOT__k))
-                        ? 0xfU : (0xfU & ((IData)(0xcU) 
+                        ? 0xfU : (0xfU & ((IData)(0xfU) 
                                           - vlSelfRef.add4_fp16_tb_softfloat__DOT__etchedfp4adder__DOT__second_stage__DOT__unnamedblk1__DOT__k)));
                 goto __Vlabel2;
             }
