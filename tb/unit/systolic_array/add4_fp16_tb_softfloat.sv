@@ -3,6 +3,8 @@
 // 4-input FP16 Adder Testbench using Berkeley SoftFloat test vectors
 // Tests sysarr_4_input_fp_adder (3-stage pipelined CSA-based adder)
 //
+// updated w new cases !!
+//
 // how to gen test cases (or just dm Myles):
 //   ./gen_testfloat4 -n 1000000 > testfloat_cases_4.csv    (ftz and daz)
 //   ./gen_testfloat4 --no-daz > testfloat_cases_4.csv      (disable daz)
@@ -117,7 +119,7 @@ initial begin
     $dumpvars(0, add4_fp16_tb_softfloat);
 
     // failure file
-    fail_fd = $fopen("test_failures.csv", "w");
+    fail_fd = $fopen("test_failures_pure.csv", "w");
     $fwrite(fail_fd, "a,b,c,d,expected,got\n");
 
     pass_count = 0;
@@ -222,9 +224,9 @@ initial begin
     $display("");
     $display("--- Berkeley SoftFloat Random Test Cases ---");
 
-    fd = $fopen("scripts/systolic_array/testfloat_cases_4.csv", "r");
+    fd = $fopen("scripts/systolic_array/testfloat_cases_4_pure.csv", "r");
     if (fd == 0) begin
-        $display("error: could not open testfloat_cases_4.csv");
+        $display("error: could not open testfloat_cases_4_pure.csv");
         $display("make sure it is in the right directory! check tb for pathing"); 
         $finish;
     end
@@ -284,7 +286,7 @@ initial begin
     $display("=== test summary ===");
     $display("PASSED: %0d", pass_count);
     $display("FAILED: %0d", fail_count);
-    $display("failure cases logged to: test_failures.csv");
+    $display("failure cases logged to: test_failures_pure.csv");
 
     if (fail_count == 0)
         $display("ALL TESTS PASSED!");
