@@ -9,9 +9,8 @@ module sysarr_4_input_fp_adder #(
     input logic nRST,
     systolic_array_4_input_adder_if.add add
 );
-    localparam NEW_MANT_WIDTH = 1 + MANTISSA_SIZE + PRECISION_BITS + 1; // e.g. 15 bits
-    localparam WIDTH = MANTISSA_SIZE + PRECISION_BITS + 2;              // e.g. 15 bits
-    // We need extra bits for sign extension and overflow protection in Stage 2
+    localparam NEW_MANT_WIDTH = 1 + MANTISSA_SIZE + PRECISION_BITS + 1; 
+    localparam WIDTH = MANTISSA_SIZE + PRECISION_BITS + 2;             
     localparam EXT_WIDTH = WIDTH + 3; 
 
     // =================================================================================
@@ -36,7 +35,6 @@ module sysarr_4_input_fp_adder #(
     logic special_case;
     logic [15:0] special_result;
 
-    // --- Pipeline Register 1 ---
     logic st1_a_s;
     logic st1_b_op, st1_c_op, st1_d_op;
     logic [EXPONENT_SIZE - 1:0] st1_a_e;
@@ -110,7 +108,7 @@ module sysarr_4_input_fp_adder #(
             exp_mx = exp_n; frac_mx = frac_n; sign_mx = sign_n; exp_nx = exp_m; frac_nx = frac_m; sign_nx = sign_m; 
         end
 
-        // 5. Calculate Shifts (Denormal aware)
+        // 5. Calculate Shifts
         exp_x_eff  = (exp_x == 0)  ? {{EXPONENT_SIZE-1{1'b0}}, 1'b1} : exp_x;
         exp_y_eff  = (exp_y == 0)  ? {{EXPONENT_SIZE-1{1'b0}}, 1'b1} : exp_y;
         exp_mx_eff = (exp_mx == 0) ? {{EXPONENT_SIZE-1{1'b0}}, 1'b1} : exp_mx;
@@ -150,10 +148,9 @@ module sysarr_4_input_fp_adder #(
     // STAGE 2: Carry Save Adder Tree & Summation
     // =================================================================================
     
-    // Extended signals for sign extension
     logic [EXT_WIDTH-1:0] a_ext, b_ext, c_ext, d_ext;
     logic [EXT_WIDTH-1:0] s1, c1, s2, c2;
-    logic signed [EXT_WIDTH-1:0] magnitude_sum; // Signed to capture negative results
+    logic signed [EXT_WIDTH-1:0] magnitude_sum; 
     logic [WIDTH:0] corrected_sum;
     logic next_result_s;
     logic [3:0] next_num_leading_zeros;
@@ -172,15 +169,7 @@ module sysarr_4_input_fp_adder #(
     logic [WIDTH-1:0] d_raw;
 
     always_comb begin : stage2_combinational
-        // 1. Sign Extend Inputs to EXT_WIDTH
-        // A is always positive (relative to itself). 
-        // We prepend 3'b000.
         a_ext = {3'b000, st1_x_f[NEW_MANT_WIDTH-1:1]};
-
-        // B, C, D are conditionally inverted.
-        // If Op=1 (Negative), we use 2's Complement: ~val + 1.
-        // Sign extension: If negative, prepend 111. If positive, prepend 000.
-        
         b_raw = st1_y_f[NEW_MANT_WIDTH-1:1];
         c_raw = st1_m_f[NEW_MANT_WIDTH-1:1];
         d_raw = st1_n_f[NEW_MANT_WIDTH-1:1];
@@ -195,41 +184,35 @@ module sysarr_4_input_fp_adder #(
         if (st1_d_op) d_ext = {3'b111, ~d_raw} + 1'b1;
         else          d_ext = {3'b000, d_raw};
 
-        // 2. Carry Save Adder Tree (Using Extended Width)
-        // Layer 1
+        // CSA Tree
         for (int i=0; i<EXT_WIDTH; i++) begin
             s1[i] = a_ext[i] ^ b_ext[i] ^ c_ext[i];
             c1[i] = (a_ext[i] & b_ext[i]) | (b_ext[i] & c_ext[i]) | (a_ext[i] & c_ext[i]);
         end
-        // Layer 2
         for (int i=0; i<EXT_WIDTH; i++) begin
             logic c_val = (i == 0) ? 1'b0 : c1[i-1];
             s2[i] = s1[i] ^ d_ext[i] ^ c_val;
             c2[i] = (s1[i] & d_ext[i]) | (d_ext[i] & c_val) | (s1[i] & c_val);
         end
 
-        // 3. Final Signed Addition
-        // s2 + (c2 << 1). 
+        // Final Signed Addition
         magnitude_sum = $signed(s2) + $signed({c2[EXT_WIDTH-2:0], 1'b0});
 
-        // 4. Sign/Magnitude Correction
-        // MSB of EXT_WIDTH result determines if the sum is negative (relative to A's sign)
+        // Sign Correction
         if (magnitude_sum[EXT_WIDTH-1]) begin
-            next_result_s = ~st1_a_s; // Sign Flipped
-            // Take absolute value for mantissa
-            // Note: We only need the lower bits for the mantissa logic
+            next_result_s = ~st1_a_s; 
             corrected_sum = (~magnitude_sum[WIDTH:0]) + 1'b1;
         end else begin
-            next_result_s = st1_a_s; // Sign Matched A
+            next_result_s = st1_a_s;
             corrected_sum = magnitude_sum[WIDTH:0];
         end
 
-        // 5. Right Shift Logic
+        // Right Shift Logic
         if (corrected_sum[WIDTH]) next_right_shift_radix = 2'd2; 
         else if (corrected_sum[WIDTH-1]) next_right_shift_radix = 2'd1; 
         else next_right_shift_radix = 2'd0;
 
-        // 6. Leading Zero Detection
+        // LZD
         next_num_leading_zeros = 4'hF;
         for (int k = MANTISSA_SIZE + PRECISION_BITS; k >= 0; k--) begin
             if (corrected_sum[k]) begin
@@ -245,7 +228,6 @@ module sysarr_4_input_fp_adder #(
             st2_num_leading_zeros <= '0; st2_right_shift_radix <= '0;
             st2_special_case <= '0; st2_special_result <= '0;
         end else begin
-            // Inject Sticky: LSB OR'd with Stage 1 sticky bits
             st2_sum_i <= {corrected_sum[WIDTH:1], corrected_sum[0] | st1_y_f[0] | st1_m_f[0] | st1_n_f[0]};
             st2_result_s <= next_result_s;
             st2_a_e_out <= st1_a_e;
@@ -264,7 +246,7 @@ module sysarr_4_input_fp_adder #(
     logic [MANTISSA_SIZE+PRECISION_BITS:0] shifted_sum; 
     logic [MANTISSA_SIZE-1:0] unrounded_mantissa; 
     logic [MANTISSA_SIZE:0] rounded_mantissa_internal;
-    logic guard, round, sticky; 
+    logic guard, round, sticky, sticky_shifted_out; 
     logic round_up;
     logic overflow; 
     logic [MANTISSA_SIZE-1:0] final_mantissa;
@@ -276,13 +258,24 @@ module sysarr_4_input_fp_adder #(
     always_comb begin : stage3_combinational
         sum_reg_st3 = st2_sum_i[MANTISSA_SIZE+PRECISION_BITS:0];
 
-        if (st2_right_shift_radix != 0) shifted_sum = sum_reg_st3 >> st2_right_shift_radix; 
-        else shifted_sum = sum_reg_st3 << st2_num_leading_zeros; 
+        // 1. Shift & Sticky Accumulation
+        if (st2_right_shift_radix != 0) begin
+            shifted_sum = sum_reg_st3 >> st2_right_shift_radix; 
+            // FIX 1: Capture bits falling off the right side
+            sticky_shifted_out = |(sum_reg_st3 & ((1 << st2_right_shift_radix) - 1));
+        end else begin
+            shifted_sum = sum_reg_st3 << st2_num_leading_zeros; 
+            sticky_shifted_out = 0;
+        end
 
+        // 2. Rounding
         unrounded_mantissa = shifted_sum[MANTISSA_SIZE+PRECISION_BITS-1:PRECISION_BITS];
-        guard = shifted_sum[PRECISION_BITS]; 
-        round = shifted_sum[PRECISION_BITS-1];
-        sticky = |shifted_sum[PRECISION_BITS-2:0]; 
+        
+        // FIX 2: Correct Indices (Guard=2, Round=1, Sticky=0)
+        // Previous Code used [3] for Guard which is the LSB of Mantissa!
+        guard = shifted_sum[PRECISION_BITS - 1]; 
+        round = shifted_sum[PRECISION_BITS - 2]; 
+        sticky = |shifted_sum[PRECISION_BITS - 3 : 0] | sticky_shifted_out; 
         
         round_up = guard & (round | sticky | unrounded_mantissa[0]);
         rounded_mantissa_internal = unrounded_mantissa + round_up; 

@@ -83,9 +83,10 @@ class alignas(VL_CACHE_LINE_BYTES) Vadd4_fp16_tb_softfloat___024root final : pub
         CData/*0:0*/ add4_fp16_tb_softfloat__DOT__etchedfp4adder__DOT__guard;
         CData/*0:0*/ add4_fp16_tb_softfloat__DOT__etchedfp4adder__DOT__round;
         CData/*0:0*/ add4_fp16_tb_softfloat__DOT__etchedfp4adder__DOT__sticky;
-        CData/*0:0*/ add4_fp16_tb_softfloat__DOT__etchedfp4adder__DOT__round_up;
+        CData/*0:0*/ add4_fp16_tb_softfloat__DOT__etchedfp4adder__DOT__sticky_shifted_out;
     };
     struct {
+        CData/*0:0*/ add4_fp16_tb_softfloat__DOT__etchedfp4adder__DOT__round_up;
         CData/*0:0*/ add4_fp16_tb_softfloat__DOT__etchedfp4adder__DOT__overflow;
         CData/*6:0*/ add4_fp16_tb_softfloat__DOT__etchedfp4adder__DOT__new_exponent_internal;
         CData/*4:0*/ add4_fp16_tb_softfloat__DOT__etchedfp4adder__DOT__new_exponent;
@@ -149,9 +150,9 @@ class alignas(VL_CACHE_LINE_BYTES) Vadd4_fp16_tb_softfloat___024root final : pub
         SData/*9:0*/ add4_fp16_tb_softfloat__DOT__etchedfp4adder__DOT__final_mantissa;
         SData/*15:0*/ add4_fp16_tb_softfloat__DOT__etchedfp4adder__DOT__final_sum_next;
         SData/*14:0*/ __Vfunc_add4_fp16_tb_softfloat__DOT__etchedfp4adder__DOT__shift_right_sticky__50__result;
-        SData/*14:0*/ __Vfunc_add4_fp16_tb_softfloat__DOT__etchedfp4adder__DOT__shift_right_sticky__51__result;
     };
     struct {
+        SData/*14:0*/ __Vfunc_add4_fp16_tb_softfloat__DOT__etchedfp4adder__DOT__shift_right_sticky__51__result;
         SData/*14:0*/ __Vfunc_add4_fp16_tb_softfloat__DOT__etchedfp4adder__DOT__shift_right_sticky__52__result;
         IData/*31:0*/ add4_fp16_tb_softfloat__DOT__pass_count;
         IData/*31:0*/ add4_fp16_tb_softfloat__DOT__fail_count;

@@ -117,23 +117,32 @@ VL_ATTR_COLD void Vadd4_fp16_tb_softfloat___024root___stl_sequent__TOP__0(Vadd4_
     // Body
     vlSelfRef.add4_fp16_tb_softfloat__DOT__etchedfp4adder__DOT__sum_reg_st3 
         = (0x3fffU & (IData)(vlSelfRef.add4_fp16_tb_softfloat__DOT__etchedfp4adder__DOT__st2_sum_i));
-    vlSelfRef.add4_fp16_tb_softfloat__DOT__etchedfp4adder__DOT__shifted_sum 
-        = (0x3fffU & ((0U != (IData)(vlSelfRef.add4_fp16_tb_softfloat__DOT__etchedfp4adder__DOT__st2_right_shift_radix))
-                       ? ((IData)(vlSelfRef.add4_fp16_tb_softfloat__DOT__etchedfp4adder__DOT__sum_reg_st3) 
-                          >> (IData)(vlSelfRef.add4_fp16_tb_softfloat__DOT__etchedfp4adder__DOT__st2_right_shift_radix))
-                       : ((IData)(vlSelfRef.add4_fp16_tb_softfloat__DOT__etchedfp4adder__DOT__sum_reg_st3) 
-                          << (IData)(vlSelfRef.add4_fp16_tb_softfloat__DOT__etchedfp4adder__DOT__st2_num_leading_zeros))));
+    if ((0U != (IData)(vlSelfRef.add4_fp16_tb_softfloat__DOT__etchedfp4adder__DOT__st2_right_shift_radix))) {
+        vlSelfRef.add4_fp16_tb_softfloat__DOT__etchedfp4adder__DOT__shifted_sum 
+            = (0x3fffU & ((IData)(vlSelfRef.add4_fp16_tb_softfloat__DOT__etchedfp4adder__DOT__sum_reg_st3) 
+                          >> (IData)(vlSelfRef.add4_fp16_tb_softfloat__DOT__etchedfp4adder__DOT__st2_right_shift_radix)));
+        vlSelfRef.add4_fp16_tb_softfloat__DOT__etchedfp4adder__DOT__sticky_shifted_out 
+            = (0U != ((IData)(vlSelfRef.add4_fp16_tb_softfloat__DOT__etchedfp4adder__DOT__sum_reg_st3) 
+                      & (((IData)(1U) << (IData)(vlSelfRef.add4_fp16_tb_softfloat__DOT__etchedfp4adder__DOT__st2_right_shift_radix)) 
+                         - (IData)(1U))));
+    } else {
+        vlSelfRef.add4_fp16_tb_softfloat__DOT__etchedfp4adder__DOT__shifted_sum 
+            = (0x3fffU & ((IData)(vlSelfRef.add4_fp16_tb_softfloat__DOT__etchedfp4adder__DOT__sum_reg_st3) 
+                          << (IData)(vlSelfRef.add4_fp16_tb_softfloat__DOT__etchedfp4adder__DOT__st2_num_leading_zeros)));
+        vlSelfRef.add4_fp16_tb_softfloat__DOT__etchedfp4adder__DOT__sticky_shifted_out = 0U;
+    }
     vlSelfRef.add4_fp16_tb_softfloat__DOT__etchedfp4adder__DOT__unrounded_mantissa 
         = (0x3ffU & ((IData)(vlSelfRef.add4_fp16_tb_softfloat__DOT__etchedfp4adder__DOT__shifted_sum) 
                      >> 3U));
     vlSelfRef.add4_fp16_tb_softfloat__DOT__etchedfp4adder__DOT__guard 
         = (1U & ((IData)(vlSelfRef.add4_fp16_tb_softfloat__DOT__etchedfp4adder__DOT__shifted_sum) 
-                 >> 3U));
+                 >> 2U));
     vlSelfRef.add4_fp16_tb_softfloat__DOT__etchedfp4adder__DOT__round 
         = (1U & ((IData)(vlSelfRef.add4_fp16_tb_softfloat__DOT__etchedfp4adder__DOT__shifted_sum) 
-                 >> 2U));
+                 >> 1U));
     vlSelfRef.add4_fp16_tb_softfloat__DOT__etchedfp4adder__DOT__sticky 
-        = (0U != (3U & (IData)(vlSelfRef.add4_fp16_tb_softfloat__DOT__etchedfp4adder__DOT__shifted_sum)));
+        = (1U & ((IData)(vlSelfRef.add4_fp16_tb_softfloat__DOT__etchedfp4adder__DOT__shifted_sum) 
+                 | (IData)(vlSelfRef.add4_fp16_tb_softfloat__DOT__etchedfp4adder__DOT__sticky_shifted_out)));
     vlSelfRef.add4_fp16_tb_softfloat__DOT__etchedfp4adder__DOT__round_up 
         = ((IData)(vlSelfRef.add4_fp16_tb_softfloat__DOT__etchedfp4adder__DOT__guard) 
            & (((IData)(vlSelfRef.add4_fp16_tb_softfloat__DOT__etchedfp4adder__DOT__round) 
@@ -1582,6 +1591,7 @@ VL_ATTR_COLD void Vadd4_fp16_tb_softfloat___024root___ctor_var_reset(Vadd4_fp16_
     vlSelf->add4_fp16_tb_softfloat__DOT__etchedfp4adder__DOT__guard = VL_RAND_RESET_I(1);
     vlSelf->add4_fp16_tb_softfloat__DOT__etchedfp4adder__DOT__round = VL_RAND_RESET_I(1);
     vlSelf->add4_fp16_tb_softfloat__DOT__etchedfp4adder__DOT__sticky = VL_RAND_RESET_I(1);
+    vlSelf->add4_fp16_tb_softfloat__DOT__etchedfp4adder__DOT__sticky_shifted_out = VL_RAND_RESET_I(1);
     vlSelf->add4_fp16_tb_softfloat__DOT__etchedfp4adder__DOT__round_up = VL_RAND_RESET_I(1);
     vlSelf->add4_fp16_tb_softfloat__DOT__etchedfp4adder__DOT__overflow = VL_RAND_RESET_I(1);
     vlSelf->add4_fp16_tb_softfloat__DOT__etchedfp4adder__DOT__final_mantissa = VL_RAND_RESET_I(10);
