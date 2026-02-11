@@ -6,7 +6,7 @@ package dram_pkg;
     //Hoho
 
     parameter ID_NUM = 8; 
-    parameter BANK_NUM = 8;
+    parameter BANK_NUM = 16;
     parameter STQ_DEPTH = 8;
     parameter LQ_DEPTH = 8;
     
