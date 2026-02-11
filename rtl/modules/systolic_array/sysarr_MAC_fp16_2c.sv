@@ -105,7 +105,7 @@ assign start_delayed = mac_if.start;
     end
 
 // Combinational adder (cycle 2)
-    add_fp16_1c turnip (.fp1_in(mul_result_latched), .fp2_in(mac_if.in_accumulate), .fp_out(mac_if.out_accumulate));
+    add_fp16_nolatch turnip (.sub(1'b0), .fp1_in(mul_result_latched), .fp2_in(mac_if.in_accumulate), .fp_out(mac_if.out_accumulate));
     
     // value_ready indicates result is valid
     assign mac_if.value_ready = mul_ready;
