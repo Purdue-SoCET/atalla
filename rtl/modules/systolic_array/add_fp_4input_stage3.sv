@@ -6,7 +6,7 @@ module add_fp_4input_stage3 #(
     input logic clk, nRST,
     input logic [$clog2(MANTISSA_SIZE)-1:0] leading_zeros,
     input logic [1:0] right_shifts,
-    input logic [MANTISSA_SIZE+PRECISION_BITS:0] sum, 
+    input logic [MANTISSA_SIZE+PRECISION_BITS+2:0] sum, 
     input logic sign,
     input logic [EXPONENT_SIZE - 1:0] exponent,
     input logic special_case,
@@ -23,6 +23,7 @@ module add_fp_4input_stage3 #(
     logic special_case_reg;
     logic [EXPONENT_SIZE+MANTISSA_SIZE:0] special_result_reg;
     logic [EXPONENT_SIZE+MANTISSA_SIZE:0] final_sum_next;
+    logic [1:0] right_shift_reg;
 
     always_ff @(posedge clk, negedge nRST) begin
         if (!nRST) begin
@@ -34,6 +35,7 @@ module add_fp_4input_stage3 #(
             special_case_reg <= '0;
             special_result_reg <= '0;
             final_sum <= '0;
+            right_shift_reg <= '0;
         end else begin
             sum_reg <= sum;
             leading_zeros_reg <= leading_zeros;
@@ -43,12 +45,18 @@ module add_fp_4input_stage3 #(
             special_case_reg <= special_case;
             special_result_reg <= special_result;
             final_sum <= final_sum_next;
+            right_shift_reg <= right_shifts;
         end
     end
 
     always_comb begin : reset_sticky
-        shifted_sum = sum_reg << leading_zeros_reg; 
-        shifted_sum[0] = (leading_zeros_reg >= PRECISION_BITS ? 1'b0 : sum_reg[0]);
+        if (right_shift_reg != 0) begin
+            shifted_sum = sum_reg >> right_shift_reg; 
+        end
+        else begin
+            shifted_sum = sum_reg << leading_zeros_reg; 
+            shifted_sum[0] = (leading_zeros_reg >= PRECISION_BITS ? 1'b0 : sum_reg[0]);
+        end
     end
  
     logic overflow; 
@@ -56,7 +64,7 @@ module add_fp_4input_stage3 #(
     logic [MANTISSA_SIZE:0] rounded_mantissa_internal;
     logic guard, round, sticky; 
 
-    assign unrounded_mantissa = shifted_sum[MANTISSA_SIZE+PRECISION_BITS:PRECISION_BITS+1];
+    assign unrounded_mantissa = shifted_sum[MANTISSA_SIZE+PRECISION_BITS-1:PRECISION_BITS];
     assign guard = shifted_sum[PRECISION_BITS]; 
     assign round = shifted_sum[PRECISION_BITS-1];
     assign sticky = |shifted_sum[PRECISION_BITS-2:0]; 
@@ -81,7 +89,15 @@ module add_fp_4input_stage3 #(
     logic [EXPONENT_SIZE-1:0] new_exponent;
     logic inf;
 
-    assign new_exponent_internal = $signed({2'b0, exponent_reg}) + $signed({{(EXPONENT_SIZE+1){1'b0}}, overflow}) - $signed({2'b0, leading_zeros_reg})+ $signed({2'b0, right_shifts});
+    assign new_exponent_internal = $signed({2'b0, exponent_reg}) + $signed({{(EXPONENT_SIZE+1){1'b0}}, overflow}) + $signed({2'b0, right_shifts});
+
+    always_comb begin
+        new_exponent_internal = $signed({2'b0, exponent_reg}) + $signed({{(EXPONENT_SIZE+1){1'b0}}, overflow}) + $signed({2'b0, right_shifts});
+        if (right_shift_reg == 0) begin
+            new_exponent_internal -= $signed({2'b0, leading_zeros_reg});
+            
+        end
+    end
     
     always_comb begin
         inf = 0; 

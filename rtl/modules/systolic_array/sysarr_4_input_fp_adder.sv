@@ -23,11 +23,12 @@ module sysarr_4_input_fp_adder #(
     logic st2_special_case;
     logic [15:0] st2_special_result;
 
-    logic [MANTISSA_SIZE + PRECISION_BITS : 0] sum_i;
+    logic [MANTISSA_SIZE + PRECISION_BITS + 2: 0] sum_i;
     logic result_s;
     logic [EXPONENT_SIZE - 1:0] a_e_out;
     logic [3:0] num_leading_zeros;
     logic [MANTISSA_SIZE + EXPONENT_SIZE :0] sum;
+    logic [1:0] right_shift_radix;
 
     always_ff @( posedge clk, negedge nRST ) begin : output_registering
         if(~nRST) add.out <= '0;
@@ -91,7 +92,8 @@ module sysarr_4_input_fp_adder #(
         .sum_i(sum_i),
         .result_s(result_s),
         .a_e_out(a_e_out),
-        .num_leading_zeros(num_leading_zeros)
+        .num_leading_zeros(num_leading_zeros),
+        .right_shift_radix(right_shift_radix) 
     );
 
     add_fp_4input_stage3 #(
@@ -107,7 +109,8 @@ module sysarr_4_input_fp_adder #(
         .exponent(a_e_out),
         .special_case(st2_special_case),
         .special_result(st2_special_result),
-        .final_sum(sum)
+        .final_sum(sum),
+        .right_shifts(right_shift_radix) 
     );
 
 endmodule
