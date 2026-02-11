@@ -136,22 +136,12 @@ class alignas(VL_CACHE_LINE_BYTES) Vadd4_fp16_tb_softfloat___024root final : pub
         SData/*14:0*/ add4_fp16_tb_softfloat__DOT__etchedfp4adder__DOT__st1_m_f;
         SData/*14:0*/ add4_fp16_tb_softfloat__DOT__etchedfp4adder__DOT__st1_n_f;
         SData/*15:0*/ add4_fp16_tb_softfloat__DOT__etchedfp4adder__DOT__st1_special_result;
-        SData/*14:0*/ add4_fp16_tb_softfloat__DOT__etchedfp4adder__DOT__a_f_st2;
-        SData/*14:0*/ add4_fp16_tb_softfloat__DOT__etchedfp4adder__DOT__b_f_st2;
-        SData/*14:0*/ add4_fp16_tb_softfloat__DOT__etchedfp4adder__DOT__c_f_st2;
-        SData/*14:0*/ add4_fp16_tb_softfloat__DOT__etchedfp4adder__DOT__d_f_st2;
-        SData/*14:0*/ add4_fp16_tb_softfloat__DOT__etchedfp4adder__DOT__b_inv;
-        SData/*14:0*/ add4_fp16_tb_softfloat__DOT__etchedfp4adder__DOT__c_inv;
-        SData/*14:0*/ add4_fp16_tb_softfloat__DOT__etchedfp4adder__DOT__d_inv;
-        SData/*14:0*/ add4_fp16_tb_softfloat__DOT__etchedfp4adder__DOT__s1;
-        SData/*14:0*/ add4_fp16_tb_softfloat__DOT__etchedfp4adder__DOT__c1;
-        SData/*14:0*/ add4_fp16_tb_softfloat__DOT__etchedfp4adder__DOT__s2;
-        SData/*14:0*/ add4_fp16_tb_softfloat__DOT__etchedfp4adder__DOT__c2;
         SData/*15:0*/ add4_fp16_tb_softfloat__DOT__etchedfp4adder__DOT__corrected_sum;
         SData/*15:0*/ add4_fp16_tb_softfloat__DOT__etchedfp4adder__DOT__st2_sum_i;
         SData/*15:0*/ add4_fp16_tb_softfloat__DOT__etchedfp4adder__DOT__st2_special_result;
-    };
-    struct {
+        SData/*14:0*/ add4_fp16_tb_softfloat__DOT__etchedfp4adder__DOT__b_raw;
+        SData/*14:0*/ add4_fp16_tb_softfloat__DOT__etchedfp4adder__DOT__c_raw;
+        SData/*14:0*/ add4_fp16_tb_softfloat__DOT__etchedfp4adder__DOT__d_raw;
         SData/*13:0*/ add4_fp16_tb_softfloat__DOT__etchedfp4adder__DOT__sum_reg_st3;
         SData/*13:0*/ add4_fp16_tb_softfloat__DOT__etchedfp4adder__DOT__shifted_sum;
         SData/*9:0*/ add4_fp16_tb_softfloat__DOT__etchedfp4adder__DOT__unrounded_mantissa;
@@ -160,6 +150,8 @@ class alignas(VL_CACHE_LINE_BYTES) Vadd4_fp16_tb_softfloat___024root final : pub
         SData/*15:0*/ add4_fp16_tb_softfloat__DOT__etchedfp4adder__DOT__final_sum_next;
         SData/*14:0*/ __Vfunc_add4_fp16_tb_softfloat__DOT__etchedfp4adder__DOT__shift_right_sticky__50__result;
         SData/*14:0*/ __Vfunc_add4_fp16_tb_softfloat__DOT__etchedfp4adder__DOT__shift_right_sticky__51__result;
+    };
+    struct {
         SData/*14:0*/ __Vfunc_add4_fp16_tb_softfloat__DOT__etchedfp4adder__DOT__shift_right_sticky__52__result;
         IData/*31:0*/ add4_fp16_tb_softfloat__DOT__pass_count;
         IData/*31:0*/ add4_fp16_tb_softfloat__DOT__fail_count;
@@ -167,7 +159,15 @@ class alignas(VL_CACHE_LINE_BYTES) Vadd4_fp16_tb_softfloat___024root final : pub
         IData/*31:0*/ add4_fp16_tb_softfloat__DOT__fail_fd;
         IData/*31:0*/ add4_fp16_tb_softfloat__DOT__unnamedblk1__DOT__ret;
         IData/*31:0*/ add4_fp16_tb_softfloat__DOT__unnamedblk1__DOT__total_count;
-        IData/*16:0*/ add4_fp16_tb_softfloat__DOT__etchedfp4adder__DOT__magnitude_sum;
+        IData/*17:0*/ add4_fp16_tb_softfloat__DOT__etchedfp4adder__DOT__a_ext;
+        IData/*17:0*/ add4_fp16_tb_softfloat__DOT__etchedfp4adder__DOT__b_ext;
+        IData/*17:0*/ add4_fp16_tb_softfloat__DOT__etchedfp4adder__DOT__c_ext;
+        IData/*17:0*/ add4_fp16_tb_softfloat__DOT__etchedfp4adder__DOT__d_ext;
+        IData/*17:0*/ add4_fp16_tb_softfloat__DOT__etchedfp4adder__DOT__s1;
+        IData/*17:0*/ add4_fp16_tb_softfloat__DOT__etchedfp4adder__DOT__c1;
+        IData/*17:0*/ add4_fp16_tb_softfloat__DOT__etchedfp4adder__DOT__s2;
+        IData/*17:0*/ add4_fp16_tb_softfloat__DOT__etchedfp4adder__DOT__c2;
+        IData/*17:0*/ add4_fp16_tb_softfloat__DOT__etchedfp4adder__DOT__magnitude_sum;
         IData/*31:0*/ add4_fp16_tb_softfloat__DOT__etchedfp4adder__DOT__stage2_combinational__DOT__unnamedblk2__DOT__i;
         IData/*31:0*/ add4_fp16_tb_softfloat__DOT__etchedfp4adder__DOT__stage2_combinational__DOT__unnamedblk3__DOT__i;
         IData/*31:0*/ add4_fp16_tb_softfloat__DOT__etchedfp4adder__DOT__stage2_combinational__DOT__unnamedblk5__DOT__k;

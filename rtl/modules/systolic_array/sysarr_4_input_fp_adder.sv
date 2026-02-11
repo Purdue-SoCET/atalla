@@ -9,8 +9,10 @@ module sysarr_4_input_fp_adder #(
     input logic nRST,
     systolic_array_4_input_adder_if.add add
 );
-    localparam NEW_MANT_WIDTH = 1 + MANTISSA_SIZE + PRECISION_BITS + 1;
-    localparam WIDTH = MANTISSA_SIZE + PRECISION_BITS + 2;
+    localparam NEW_MANT_WIDTH = 1 + MANTISSA_SIZE + PRECISION_BITS + 1; // e.g. 15 bits
+    localparam WIDTH = MANTISSA_SIZE + PRECISION_BITS + 2;              // e.g. 15 bits
+    // We need extra bits for sign extension and overflow protection in Stage 2
+    localparam EXT_WIDTH = WIDTH + 3; 
 
     // =================================================================================
     // STAGE 1: Sorting, Alignment, and Special Case Detection
@@ -148,10 +150,10 @@ module sysarr_4_input_fp_adder #(
     // STAGE 2: Carry Save Adder Tree & Summation
     // =================================================================================
     
-    logic [WIDTH-1:0] a_f_st2, b_f_st2, c_f_st2, d_f_st2;
-    logic [WIDTH-1:0] b_inv, c_inv, d_inv;
-    logic [WIDTH-1:0] s1, c1, s2, c2;
-    logic signed [WIDTH+1:0] magnitude_sum;
+    // Extended signals for sign extension
+    logic [EXT_WIDTH-1:0] a_ext, b_ext, c_ext, d_ext;
+    logic [EXT_WIDTH-1:0] s1, c1, s2, c2;
+    logic signed [EXT_WIDTH-1:0] magnitude_sum; // Signed to capture negative results
     logic [WIDTH:0] corrected_sum;
     logic next_result_s;
     logic [3:0] next_num_leading_zeros;
@@ -165,44 +167,69 @@ module sysarr_4_input_fp_adder #(
     logic st2_special_case;
     logic [15:0] st2_special_result;
 
+    logic [WIDTH-1:0] b_raw;
+    logic [WIDTH-1:0] c_raw;
+    logic [WIDTH-1:0] d_raw;
+
     always_comb begin : stage2_combinational
-        a_f_st2 = st1_x_f[NEW_MANT_WIDTH-1:1];
-        b_f_st2 = st1_y_f[NEW_MANT_WIDTH-1:1];
-        c_f_st2 = st1_m_f[NEW_MANT_WIDTH-1:1];
-        d_f_st2 = st1_n_f[NEW_MANT_WIDTH-1:1];
+        // 1. Sign Extend Inputs to EXT_WIDTH
+        // A is always positive (relative to itself). 
+        // We prepend 3'b000.
+        a_ext = {3'b000, st1_x_f[NEW_MANT_WIDTH-1:1]};
 
-        // 2's Complement Inversion
-        b_inv = st1_b_op ? (~b_f_st2 + 1) : b_f_st2;
-        c_inv = st1_c_op ? (~c_f_st2 + 1) : c_f_st2;
-        d_inv = st1_d_op ? (~d_f_st2 + 1) : d_f_st2; 
+        // B, C, D are conditionally inverted.
+        // If Op=1 (Negative), we use 2's Complement: ~val + 1.
+        // Sign extension: If negative, prepend 111. If positive, prepend 000.
+        
+        b_raw = st1_y_f[NEW_MANT_WIDTH-1:1];
+        c_raw = st1_m_f[NEW_MANT_WIDTH-1:1];
+        d_raw = st1_n_f[NEW_MANT_WIDTH-1:1];
+        
+        // 2's Complement Logic with Sign Extension
+        if (st1_b_op) b_ext = {3'b111, ~b_raw} + 1'b1;
+        else          b_ext = {3'b000, b_raw};
 
-        // Carry Save Adder Tree
+        if (st1_c_op) c_ext = {3'b111, ~c_raw} + 1'b1;
+        else          c_ext = {3'b000, c_raw};
+
+        if (st1_d_op) d_ext = {3'b111, ~d_raw} + 1'b1;
+        else          d_ext = {3'b000, d_raw};
+
+        // 2. Carry Save Adder Tree (Using Extended Width)
         // Layer 1
-        for (int i=0; i<WIDTH; i++) begin
-            s1[i] = a_f_st2[i] ^ b_inv[i] ^ c_inv[i];
-            c1[i] = (a_f_st2[i] & b_inv[i]) | (b_inv[i] & c_inv[i]) | (a_f_st2[i] & c_inv[i]);
+        for (int i=0; i<EXT_WIDTH; i++) begin
+            s1[i] = a_ext[i] ^ b_ext[i] ^ c_ext[i];
+            c1[i] = (a_ext[i] & b_ext[i]) | (b_ext[i] & c_ext[i]) | (a_ext[i] & c_ext[i]);
         end
         // Layer 2
-        for (int i=0; i<WIDTH; i++) begin
+        for (int i=0; i<EXT_WIDTH; i++) begin
             logic c_val = (i == 0) ? 1'b0 : c1[i-1];
-            // FIX: Uses d_inv correctly
-            s2[i] = s1[i] ^ d_inv[i] ^ c_val;
-            c2[i] = (s1[i] & d_inv[i]) | (d_inv[i] & c_val) | (s1[i] & c_val);
+            s2[i] = s1[i] ^ d_ext[i] ^ c_val;
+            c2[i] = (s1[i] & d_ext[i]) | (d_ext[i] & c_val) | (s1[i] & c_val);
         end
 
-        // Final Addition
-        magnitude_sum = $signed({1'b0, s2}) + $signed({c2, 1'b0});
+        // 3. Final Signed Addition
+        // s2 + (c2 << 1). 
+        magnitude_sum = $signed(s2) + $signed({c2[EXT_WIDTH-2:0], 1'b0});
 
-        // Sign Correction
-        next_result_s = st1_a_s ^ magnitude_sum[WIDTH+1];
-        corrected_sum = next_result_s ? (~magnitude_sum + 1'b1) : magnitude_sum;
+        // 4. Sign/Magnitude Correction
+        // MSB of EXT_WIDTH result determines if the sum is negative (relative to A's sign)
+        if (magnitude_sum[EXT_WIDTH-1]) begin
+            next_result_s = ~st1_a_s; // Sign Flipped
+            // Take absolute value for mantissa
+            // Note: We only need the lower bits for the mantissa logic
+            corrected_sum = (~magnitude_sum[WIDTH:0]) + 1'b1;
+        end else begin
+            next_result_s = st1_a_s; // Sign Matched A
+            corrected_sum = magnitude_sum[WIDTH:0];
+        end
 
-        // Right Shift Logic
+        // 5. Right Shift Logic
         if (corrected_sum[WIDTH]) next_right_shift_radix = 2'd2; 
         else if (corrected_sum[WIDTH-1]) next_right_shift_radix = 2'd1; 
         else next_right_shift_radix = 2'd0;
 
-        // Leading Zero Detection
+        // 6. Leading Zero Detection
         next_num_leading_zeros = 4'hF;
         for (int k = MANTISSA_SIZE + PRECISION_BITS; k >= 0; k--) begin
             if (corrected_sum[k]) begin
@@ -218,6 +245,7 @@ module sysarr_4_input_fp_adder #(
             st2_num_leading_zeros <= '0; st2_right_shift_radix <= '0;
             st2_special_case <= '0; st2_special_result <= '0;
         end else begin
+            // Inject Sticky: LSB OR'd with Stage 1 sticky bits
             st2_sum_i <= {corrected_sum[WIDTH:1], corrected_sum[0] | st1_y_f[0] | st1_m_f[0] | st1_n_f[0]};
             st2_result_s <= next_result_s;
             st2_a_e_out <= st1_a_e;
