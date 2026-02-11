@@ -9,6 +9,8 @@
 //   ./gen_testfloat4 --no-ftz > testfloat_cases_4.csv      (disable ftz)
 // u can only use those commands if u clone soft float (shoot myles a dm if u want to compile new) 
 // to run -> verilator --binary -j 0 -Wall -Wno-fatal --timing --top-module add4_fp16_tb_softfloat add4_fp16_tb_softfloat.sv sysarr_4_input_fp_adder.sv sysarr_4in_adder.sv sysarr_4_inp_fp_adder_2nd_pipeline_stage.sv add_fp_4input_stage3.sv --trace; ./obj_dir/Vadd4_fp16_tb_softfloat
+// to view waves -> gtkwave waves/add4_fp16_waves.vcd --save=waves/add4_fp16_debug.gtkw
+// also creates file called test_failures.csv w all failed cases (input, exp, got)
 
 
 `include "systolic_array_4_input_adder_if.vh"
@@ -83,6 +85,7 @@ module add4_fp16_tb_softfloat;
         if (!match) begin
             $display("failed test for %s: A=%h B=%h C=%h D=%h Got=%h Exp=%h",
                      casename, tb_a, tb_b, tb_c, tb_d, tb_result, expected);
+            $fwrite(fail_fd, "%h,%h,%h,%h,%h,%h\n", tb_a, tb_b, tb_c, tb_d, expected, tb_result);
             fail_count++;
         end else begin
             $display("passed %s | A=%h B=%h C=%h D=%h -> %h",
@@ -104,10 +107,19 @@ module add4_fp16_tb_softfloat;
     localparam logic [15:0] MAX_FINITE = 16'b0_11110_1111111111;
 
     integer fd;
+    integer fail_fd;
     string header;
     logic [15:0] a, b, c, d, expected;
 
 initial begin
+    // waveform stuff
+    $dumpfile("waves/add4_fp16_waves.vcd");
+    $dumpvars(0, add4_fp16_tb_softfloat);
+
+    // failure file
+    fail_fd = $fopen("test_failures.csv", "w");
+    $fwrite(fail_fd, "a,b,c,d,expected,got\n");
+
     pass_count = 0;
     fail_count = 0;
     tb_nrst = 1'b0;
@@ -246,7 +258,16 @@ initial begin
         end else if (is_zero_result) begin
             pass_count++;
         end else if (tb_result !== expected) begin
+            // log to fail file
+            $fwrite(fail_fd, "%h,%h,%h,%h,%h,%h\n", a, b, c, d, expected, tb_result);
             fail_count++;
+            // only print first 10 failures to terminal u can change if u want
+            if (fail_count <= 10) begin
+                $display("FAIL: A=%h B=%h C=%h D=%h | Got=%h Exp=%h", 
+                         a, b, c, d, tb_result, expected);
+            end else if (fail_count == 11) begin
+                $display("... (suppressing further terminal output, all failures logged to test_failures.csv) ...");
+            end
         end else begin
             pass_count++;
         end
@@ -257,11 +278,13 @@ initial begin
     end
 
     $fclose(fd);
+    $fclose(fail_fd);
 
     $display("");
-    $display("=== test Summary ===");
+    $display("=== test summary ===");
     $display("PASSED: %0d", pass_count);
     $display("FAILED: %0d", fail_count);
+    $display("failure cases logged to: test_failures.csv");
 
     if (fail_count == 0)
         $display("ALL TESTS PASSED!");
