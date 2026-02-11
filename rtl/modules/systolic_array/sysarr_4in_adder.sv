@@ -86,6 +86,9 @@ module 4in_adder_AIHW #(
 	if (is_nan_a || is_nan_b || is_nan_c || is_nan_d) begin
             special_case = 1'b1;
             special_result = 16'h7E00;
+            // NaN propagation - use canonical qNaN
+            special_case = 1'b1;
+            special_result = 16'h7E00;  // Canonical positive quiet NaN
         end
         else if ((is_inf_a && is_inf_b) || (is_inf_a && is_inf_c) || (is_inf_a && is_inf_d) ||
                  (is_inf_b && is_inf_c) || (is_inf_b && is_inf_d) || (is_inf_c && is_inf_d)) 
@@ -107,6 +110,20 @@ module 4in_adder_AIHW #(
             else begin
                 special_case = 1'b1;
                 special_result = 16'hFC00; 
+            end
+        end
+        else if (is_inf_a) begin
+                special_result = 16'h7E00;  // canonical NaN
+            end
+            else if (has_pos_inf) begin
+                // Same sign (positive): result is +Inf
+                special_case = 1'b1;
+                special_result = 16'h7C00;  // +Inf
+            end
+            else begin
+                // Same sign (negative): result is -Inf
+                special_case = 1'b1;
+                special_result = 16'hFC00;  // -Inf
             end
         end
         else if (is_inf_a) begin
@@ -201,6 +218,20 @@ module 4in_adder_AIHW #(
     );
     	logic [MANT_WIDTH-1:0] result;
 	logic sticky;
+
+	if (shift_amt == 0) begin
+            result = mant;
+        end else if (shift_amt >= MANT_WIDTH) begin
+            result = '0;
+            result[0] = |mant; // sticky = OR of all bits
+        end else begin
+            result = mant >> shift_amt;
+            sticky = |(mant & ((1 << shift_amt) - 1));
+            if (sticky || result[0]) result[0] = 1'b1;
+        end
+        
+        return result;
+    endfunction
 
 	if (shift_amt == 0) begin
             result = mant;
