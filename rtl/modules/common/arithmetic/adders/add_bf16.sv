@@ -1,7 +1,5 @@
 `timescale 1ns/1ps
 
-// This module probably CANNOT handle subtraction!
-
 module add_bf16(input logic clk, nRST, 
                 input logic [15:0] bf1_in, bf2_in,
                 output logic [15:0] bf_out,
@@ -68,12 +66,9 @@ always_comb begin
     exp_diff = larger_exponent - smaller_exponent;
 
     if(exp_select == 0) begin                       // bf2 had a bigger exponent: shift bf1.
-
-        // Mantissa is only 10 bits (after appending two zeros and an implcit 1/0). If for normalization you have to shift by more than 13 bits, it's going to be zero.
-        // So, i think i can make a shifter that only shifts by the lower 4 bits of exp_diff, and if we had to shift by more than that, just hard code a zero as the output.
-        // QUESTION: does this mean i need to turn on an underflow flag?
-
-        if(exp_diff[7]) begin
+        
+        // ~|bf1_in[14:7] handles FTZ subnormals 
+        if(exp_diff[7] | ~|bf1_in[14:7]) begin
             frac_shifted = 10'b0;
         end
         else begin
@@ -81,13 +76,13 @@ always_comb begin
         end
         // rounding_loss = |({frac_leading_bit_bf1, floating_point1_in[9:0], 2'b00} & ((1 << unsigned_exp_diff) - 1));    // chatgpt gave me this - sticky 
         sign_shifted = bf1_in[15];
-        frac_not_shifted = {frac_leading_bit_bf2, bf2_in[6:0], 2'b00};
+        frac_not_shifted = ~|bf2_in[14:7] ? 10'b0 : {frac_leading_bit_bf2, bf2_in[6:0], 2'b00};
         sign_not_shifted = bf2_in[15];
         exp_max = bf2_in[14:7];
     end
 
     else begin                                      // bf1 had a bigger exponent: shift bf2.
-        if(exp_diff[7]) begin
+        if(exp_diff[7] | ~|bf1_in[14:7]) begin
             frac_shifted = 10'b0;
         end
         else begin
@@ -95,7 +90,7 @@ always_comb begin
         end
         // rounding_loss = |({frac_leading_bit_bf2, floating_point2_in[9:0], 2'b00} & ((1 << unsigned_exp_diff) - 1));
         sign_shifted = bf2_in[15];
-        frac_not_shifted = {frac_leading_bit_bf1, bf1_in[6:0], 2'b00};
+        frac_not_shifted = ~|bf1_in[14:7] ? 10'b0 : {frac_leading_bit_bf1, bf1_in[6:0], 2'b00};
         sign_not_shifted = bf1_in[15];
         exp_max = bf1_in[14:7];
     end
@@ -156,6 +151,7 @@ always_comb begin
     // The sign of the result will be the sign of both the inputs.
     // If one is positive and the other is negative, the result is the larger value minus the smaller value (using absolute value)
     // and the sign will be the sign of the larger operand.
+    
     if(!signs_differ_l) begin
         mantissa_sum = smaller_mantissa_l + larger_mantissa_l;
         result_sign = sign_shifted_l & sign_not_shifted_l;
@@ -165,6 +161,9 @@ always_comb begin
         result_sign = larger_mantissa_sign_l;
     end
 
+    if (~|bf1_in[14:0] & ~|bf2_in[1:0]) begin 
+        result_sign = bf1_in[15] & bf2_in[15];
+    end
     mantissa_overflow = mantissa_sum[10];  // Correct bit for overflow detection
 end
 
@@ -191,37 +190,20 @@ always_comb begin
 end
 
 // step 5: Re-normalization of mantissa sum.
-
-// screw all of this im gonna use the old inefficient module
-
-// // step 5.1: Calculate the number of leading zeros in the value.
-// // implementing leading-zero-detection (LZD) as a tree.
-// logic z1, z2, z3;   // Split input into 3 chunks of 4 bits (or 5 for the last one) each, and check each one individually for where the leading zero is.
-// assign z1 = |mantissa_sum[12:9];    // highest 1 is in upper 4 bits?
-// assign z2 = |mantissa_sum[8:5];     // highest 1 is in the next 4 below?
-// assign z3 = |mantissa_sum[4:0];     // or the lowest 4?
-
-// logic[3:0] l1_loc_1, l1_loc_2, l1_loc_3;
-// assign l1_loc_1 = (mantissa_sum[12] ? 0 : (mantissa_sum[11] ? 1 : (mantissa_sum[10] ? 2 : (mantissa_sum[9] ? 3 : 2))));
-// assign l1_loc_2 = (mantissa_sum[8] ? 0 : (mantissa_sum[7] ? 1 : (mantissa_sum[6] ? 2 : (mantissa_sum[5] ? 3 : 2))));
-
-// always_comb begin
-//     if(|mantissa_sum[12:])
-// end
-logic [9:0] normalized_mantissa_sum;
+logic [8:0] normalized_mantissa_sum;
 logic [3:0] norm_shift;
-left_shift normalizer(.fraction(mantissa_sum[9:0]), .result(normalized_mantissa_sum), .shifted_amount(norm_shift));
+left_shift_add_bf16 normalizer(.fraction(mantissa_sum[9:0]), .result(normalized_mantissa_sum), .shifted_amount(norm_shift));
 
 
 
 // step 6: Subtract exponents. I forgot why this exists. Transferred out of subtract.sv
-logic [8:0] u_exp1, u_exp2;
+logic [7:0] u_exp1;
 logic [7:0] u_shifted_amount;
-logic [8:0] u_result;
+logic [7:0] u_result;
 
 
 always_comb begin
-    u_exp1           = {1'b0, exp_max_l};
+    u_exp1           = exp_max_l;
     u_shifted_amount = {1'b0, {3'b0, norm_shift}};
     u_result         = u_exp1 - u_shifted_amount;
 end
@@ -247,8 +229,6 @@ always_comb begin
     end
 end
 
-logic [15:0] round_out;
-logic round_flag;               // retained: indicates rounding increment occurred
 // Adjusted rounding result width to 7 bits (BF16 fraction) and compute
 // an exponent adjustment if rounding carries into the exponent.
 logic [6:0] rounded_fraction;
@@ -267,14 +247,13 @@ logic [7:0] exp_out_adj;
     logic [7:0] round_sum;
     always_comb begin
         // Default
-        round_flag = 0;
+        
         round_sum = {1'b0, round_this[8:2]}; // 8-bit with zero MSB
 
         // if (G & (R | round_this[2])) begin
         if (G & (R | sticky_bit)) begin
             // increment candidate fraction (round up)
             round_sum = round_sum + 8'd1;
-            round_flag = 1;
         end
 
         // rounded_fraction is the lower 7 bits; if MSB of round_sum is set,
@@ -283,7 +262,28 @@ logic [7:0] exp_out_adj;
         exp_out_adj = exp_out + {7'b0, round_sum[7]};
     end
 
+    logic [15:7] xor_out; 
+    assign xor_out = bf1_in[15:7] ^ bf2_in[15:7]; 
     // Final output packing: sign(1) + exponent(8) + fraction(7) = 16 bits
-    assign bf_out = {result_sign, exp_out_adj, rounded_fraction};
-
+    always_comb begin 
+        // +inf & -inf 
+        if (is_inf1 & is_inf2 & (bf1_in[15] ^ bf2_in[15])) begin 
+            bf_out = 16'h7fc0; 
+        // overflow and underflow 
+        end else if ((&bf1_in[14:8] & ~bf1_in[7] & &bf1_in[6:0] & |bf2_in[14:0]) | (&bf2_in[14:8] & ~bf2_in[7] & &bf2_in[6:0] & |bf1_in[14:0]) & ~(bf1_in[15] ^ bf2_in[15])) begin 
+            bf_out = bf1_in[15] ? 16'hff80 : 16'h7F80; 
+        // one of the inputs is inf or NaN 
+        end else if (is_inf1 | is_nan1) begin 
+            bf_out = bf1_in; 
+        end else if (is_inf2 | is_nan2) begin 
+            bf_out = bf2_in; 
+                    // opposite with subnormal result 
+        end else if (xor_out[15] & ~|xor_out[14:7]) begin 
+            bf_out = 16'h0; 
+        // result after rounding 
+        end else begin 
+            bf_out = {result_sign, exp_out_adj, rounded_fraction};
+        end
+    end
 endmodule
+// necessary for a blank last line 
