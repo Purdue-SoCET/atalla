@@ -42,7 +42,7 @@ module sysarr_4inp_fp_adder_2nd_pipeline_state #(
         end else begin
             a_e_out <= a_e;
             result_s <= next_result_s;
-            sum_i <= corrected_sum[WIDTH:0];
+            sum_i <= {corrected_sum[WIDTH:1], corrected_sum[0] | b_sb | c_sb | d_sb};
             num_leading_zeros <= next_num_leading_zeros;
             // sticky_bit <= (signed_sb_sum != 0);
         end

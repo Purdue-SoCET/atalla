@@ -23,6 +23,9 @@ module add_4in_stage1 #(
     
     //denormals are zero
     logic [15:0] a_daz, b_daz, c_daz, d_daz;
+
+    logic [EXP-1:0] exp_x_eff, exp_y_eff, exp_mx_eff, exp_nx_eff;
+
     
     logic [EXP-1:0] exp_a, exp_b, exp_c, exp_d;
     logic [MANTISSA-1:0] frac_a, frac_b, frac_c, frac_d;
@@ -168,11 +171,16 @@ module add_4in_stage1 #(
             exp_mx = exp_n; frac_mx = frac_n; sign_mx = sign_n;
             exp_nx = exp_m; frac_nx = frac_m; sign_nx = sign_m;
         end
+
+        exp_x_eff  = (exp_x == 0)  ? 1'b1 : exp_x;
+        exp_y_eff  = (exp_y == 0)  ? 1'b1 : exp_y;
+        exp_mx_eff = (exp_mx == 0) ? 1'b1 : exp_mx;
+        exp_nx_eff = (exp_nx == 0) ? 1'b1 : exp_nx;
     
         //shift var logic
-        y_shift = exp_x - exp_y;
-        m_shift = exp_x - exp_mx;
-        n_shift = exp_x - exp_nx;
+        y_shift = exp_x_eff - exp_y_eff;
+        m_shift = exp_x_eff - exp_mx_eff;
+        n_shift = exp_x_eff - exp_nx_eff;
 
         //add hidden bit to mantissa
         x_mant = {(|exp_x), frac_x, {PRECISION{1'b0}}, 1'b0};

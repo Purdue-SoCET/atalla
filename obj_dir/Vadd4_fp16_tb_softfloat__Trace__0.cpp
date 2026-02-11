@@ -48,500 +48,129 @@ void Vadd4_fp16_tb_softfloat___024root__trace_chg_0_sub_0(Vadd4_fp16_tb_softfloa
     if (VL_UNLIKELY(((vlSelfRef.__Vm_traceActivity[3U] 
                       | vlSelfRef.__Vm_traceActivity
                       [5U])))) {
-        bufp->chgSData(oldp+18,(vlSelfRef.add4_fp16_tb_softfloat__DOT__etchedfp4adder__DOT__first_stage__DOT__a_daz),16);
-        bufp->chgSData(oldp+19,(vlSelfRef.add4_fp16_tb_softfloat__DOT__etchedfp4adder__DOT__first_stage__DOT__b_daz),16);
-        bufp->chgSData(oldp+20,(vlSelfRef.add4_fp16_tb_softfloat__DOT__etchedfp4adder__DOT__first_stage__DOT__c_daz),16);
-        bufp->chgSData(oldp+21,(vlSelfRef.add4_fp16_tb_softfloat__DOT__etchedfp4adder__DOT__first_stage__DOT__d_daz),16);
-        bufp->chgCData(oldp+22,(vlSelfRef.add4_fp16_tb_softfloat__DOT__etchedfp4adder__DOT__first_stage__DOT__exp_a),5);
-        bufp->chgCData(oldp+23,(vlSelfRef.add4_fp16_tb_softfloat__DOT__etchedfp4adder__DOT__first_stage__DOT__exp_b),5);
-        bufp->chgCData(oldp+24,(vlSelfRef.add4_fp16_tb_softfloat__DOT__etchedfp4adder__DOT__first_stage__DOT__exp_c),5);
-        bufp->chgCData(oldp+25,(vlSelfRef.add4_fp16_tb_softfloat__DOT__etchedfp4adder__DOT__first_stage__DOT__exp_d),5);
-        bufp->chgSData(oldp+26,(vlSelfRef.add4_fp16_tb_softfloat__DOT__etchedfp4adder__DOT__first_stage__DOT__frac_a),10);
-        bufp->chgSData(oldp+27,(vlSelfRef.add4_fp16_tb_softfloat__DOT__etchedfp4adder__DOT__first_stage__DOT__frac_b),10);
-        bufp->chgSData(oldp+28,(vlSelfRef.add4_fp16_tb_softfloat__DOT__etchedfp4adder__DOT__first_stage__DOT__frac_c),10);
-        bufp->chgSData(oldp+29,(vlSelfRef.add4_fp16_tb_softfloat__DOT__etchedfp4adder__DOT__first_stage__DOT__frac_d),10);
-        bufp->chgBit(oldp+30,(vlSelfRef.add4_fp16_tb_softfloat__DOT__etchedfp4adder__DOT__first_stage__DOT__sign_a));
-        bufp->chgBit(oldp+31,(vlSelfRef.add4_fp16_tb_softfloat__DOT__etchedfp4adder__DOT__first_stage__DOT__sign_b));
-        bufp->chgBit(oldp+32,(vlSelfRef.add4_fp16_tb_softfloat__DOT__etchedfp4adder__DOT__first_stage__DOT__sign_c));
-        bufp->chgBit(oldp+33,(vlSelfRef.add4_fp16_tb_softfloat__DOT__etchedfp4adder__DOT__first_stage__DOT__sign_d));
-        bufp->chgCData(oldp+34,(vlSelfRef.add4_fp16_tb_softfloat__DOT__etchedfp4adder__DOT__first_stage__DOT__exp_p),5);
-        bufp->chgCData(oldp+35,(vlSelfRef.add4_fp16_tb_softfloat__DOT__etchedfp4adder__DOT__first_stage__DOT__exp_m),5);
-        bufp->chgCData(oldp+36,(vlSelfRef.add4_fp16_tb_softfloat__DOT__etchedfp4adder__DOT__first_stage__DOT__exp_r),5);
-        bufp->chgCData(oldp+37,(vlSelfRef.add4_fp16_tb_softfloat__DOT__etchedfp4adder__DOT__first_stage__DOT__exp_n),5);
-        bufp->chgCData(oldp+38,(vlSelfRef.add4_fp16_tb_softfloat__DOT__etchedfp4adder__DOT__first_stage__DOT__exp_x),5);
-        bufp->chgCData(oldp+39,(vlSelfRef.add4_fp16_tb_softfloat__DOT__etchedfp4adder__DOT__first_stage__DOT__exp_y),5);
-        bufp->chgCData(oldp+40,(vlSelfRef.add4_fp16_tb_softfloat__DOT__etchedfp4adder__DOT__first_stage__DOT__exp_mx),5);
-        bufp->chgCData(oldp+41,(vlSelfRef.add4_fp16_tb_softfloat__DOT__etchedfp4adder__DOT__first_stage__DOT__exp_nx),5);
-        bufp->chgSData(oldp+42,(vlSelfRef.add4_fp16_tb_softfloat__DOT__etchedfp4adder__DOT__first_stage__DOT__frac_p),10);
-        bufp->chgSData(oldp+43,(vlSelfRef.add4_fp16_tb_softfloat__DOT__etchedfp4adder__DOT__first_stage__DOT__frac_m),10);
-        bufp->chgSData(oldp+44,(vlSelfRef.add4_fp16_tb_softfloat__DOT__etchedfp4adder__DOT__first_stage__DOT__frac_r),10);
-        bufp->chgSData(oldp+45,(vlSelfRef.add4_fp16_tb_softfloat__DOT__etchedfp4adder__DOT__first_stage__DOT__frac_n),10);
-        bufp->chgSData(oldp+46,(vlSelfRef.add4_fp16_tb_softfloat__DOT__etchedfp4adder__DOT__first_stage__DOT__frac_x),10);
-        bufp->chgSData(oldp+47,(vlSelfRef.add4_fp16_tb_softfloat__DOT__etchedfp4adder__DOT__first_stage__DOT__frac_y),10);
-        bufp->chgSData(oldp+48,(vlSelfRef.add4_fp16_tb_softfloat__DOT__etchedfp4adder__DOT__first_stage__DOT__frac_mx),10);
-        bufp->chgSData(oldp+49,(vlSelfRef.add4_fp16_tb_softfloat__DOT__etchedfp4adder__DOT__first_stage__DOT__frac_nx),10);
-        bufp->chgBit(oldp+50,(vlSelfRef.add4_fp16_tb_softfloat__DOT__etchedfp4adder__DOT__first_stage__DOT__sign_p));
-        bufp->chgBit(oldp+51,(vlSelfRef.add4_fp16_tb_softfloat__DOT__etchedfp4adder__DOT__first_stage__DOT__sign_m));
-        bufp->chgBit(oldp+52,(vlSelfRef.add4_fp16_tb_softfloat__DOT__etchedfp4adder__DOT__first_stage__DOT__sign_r));
-        bufp->chgBit(oldp+53,(vlSelfRef.add4_fp16_tb_softfloat__DOT__etchedfp4adder__DOT__first_stage__DOT__sign_n));
-        bufp->chgBit(oldp+54,(vlSelfRef.add4_fp16_tb_softfloat__DOT__etchedfp4adder__DOT__first_stage__DOT__sign_x));
-        bufp->chgBit(oldp+55,(vlSelfRef.add4_fp16_tb_softfloat__DOT__etchedfp4adder__DOT__first_stage__DOT__sign_y));
-        bufp->chgBit(oldp+56,(vlSelfRef.add4_fp16_tb_softfloat__DOT__etchedfp4adder__DOT__first_stage__DOT__sign_mx));
-        bufp->chgBit(oldp+57,(vlSelfRef.add4_fp16_tb_softfloat__DOT__etchedfp4adder__DOT__first_stage__DOT__sign_nx));
-        bufp->chgCData(oldp+58,(vlSelfRef.add4_fp16_tb_softfloat__DOT__etchedfp4adder__DOT__first_stage__DOT__y_shift),5);
-        bufp->chgCData(oldp+59,(vlSelfRef.add4_fp16_tb_softfloat__DOT__etchedfp4adder__DOT__first_stage__DOT__m_shift),5);
-        bufp->chgCData(oldp+60,(vlSelfRef.add4_fp16_tb_softfloat__DOT__etchedfp4adder__DOT__first_stage__DOT__n_shift),5);
-        bufp->chgSData(oldp+61,(vlSelfRef.add4_fp16_tb_softfloat__DOT__etchedfp4adder__DOT__first_stage__DOT__x_mant),15);
-        bufp->chgSData(oldp+62,(vlSelfRef.add4_fp16_tb_softfloat__DOT__etchedfp4adder__DOT__first_stage__DOT__y_shifted),15);
-        bufp->chgSData(oldp+63,(vlSelfRef.add4_fp16_tb_softfloat__DOT__etchedfp4adder__DOT__first_stage__DOT__m_shifted),15);
-        bufp->chgSData(oldp+64,(vlSelfRef.add4_fp16_tb_softfloat__DOT__etchedfp4adder__DOT__first_stage__DOT__n_shifted),15);
-        bufp->chgBit(oldp+65,(vlSelfRef.add4_fp16_tb_softfloat__DOT__etchedfp4adder__DOT__first_stage__DOT__y_op));
-        bufp->chgBit(oldp+66,(vlSelfRef.add4_fp16_tb_softfloat__DOT__etchedfp4adder__DOT__first_stage__DOT__m_op));
-        bufp->chgBit(oldp+67,(vlSelfRef.add4_fp16_tb_softfloat__DOT__etchedfp4adder__DOT__first_stage__DOT__n_op));
-        bufp->chgBit(oldp+68,(vlSelfRef.add4_fp16_tb_softfloat__DOT__etchedfp4adder__DOT__first_stage__DOT__is_nan_a));
-        bufp->chgBit(oldp+69,(vlSelfRef.add4_fp16_tb_softfloat__DOT__etchedfp4adder__DOT__first_stage__DOT__is_nan_b));
-        bufp->chgBit(oldp+70,(vlSelfRef.add4_fp16_tb_softfloat__DOT__etchedfp4adder__DOT__first_stage__DOT__is_nan_c));
-        bufp->chgBit(oldp+71,(vlSelfRef.add4_fp16_tb_softfloat__DOT__etchedfp4adder__DOT__first_stage__DOT__is_nan_d));
-        bufp->chgBit(oldp+72,(vlSelfRef.add4_fp16_tb_softfloat__DOT__etchedfp4adder__DOT__first_stage__DOT__is_inf_a));
-        bufp->chgBit(oldp+73,(vlSelfRef.add4_fp16_tb_softfloat__DOT__etchedfp4adder__DOT__first_stage__DOT__is_inf_b));
-        bufp->chgBit(oldp+74,(vlSelfRef.add4_fp16_tb_softfloat__DOT__etchedfp4adder__DOT__first_stage__DOT__is_inf_c));
-        bufp->chgBit(oldp+75,(vlSelfRef.add4_fp16_tb_softfloat__DOT__etchedfp4adder__DOT__first_stage__DOT__is_inf_d));
-        bufp->chgBit(oldp+76,(vlSelfRef.add4_fp16_tb_softfloat__DOT__etchedfp4adder__DOT__first_stage__DOT__special_case));
-        bufp->chgSData(oldp+77,(vlSelfRef.add4_fp16_tb_softfloat__DOT__etchedfp4adder__DOT__first_stage__DOT__special_result),16);
-        bufp->chgBit(oldp+78,(vlSelfRef.add4_fp16_tb_softfloat__DOT__etchedfp4adder__DOT__first_stage__DOT__unnamedblk1__DOT__has_pos_inf));
-        bufp->chgBit(oldp+79,(vlSelfRef.add4_fp16_tb_softfloat__DOT__etchedfp4adder__DOT__first_stage__DOT__unnamedblk1__DOT__has_neg_inf));
+        bufp->chgSData(oldp+18,(vlSelfRef.add4_fp16_tb_softfloat__DOT__etchedfp4adder__DOT__a_daz),16);
+        bufp->chgSData(oldp+19,(vlSelfRef.add4_fp16_tb_softfloat__DOT__etchedfp4adder__DOT__b_daz),16);
+        bufp->chgSData(oldp+20,(vlSelfRef.add4_fp16_tb_softfloat__DOT__etchedfp4adder__DOT__c_daz),16);
+        bufp->chgSData(oldp+21,(vlSelfRef.add4_fp16_tb_softfloat__DOT__etchedfp4adder__DOT__d_daz),16);
+        bufp->chgCData(oldp+22,(vlSelfRef.add4_fp16_tb_softfloat__DOT__etchedfp4adder__DOT__exp_a),5);
+        bufp->chgCData(oldp+23,(vlSelfRef.add4_fp16_tb_softfloat__DOT__etchedfp4adder__DOT__exp_b),5);
+        bufp->chgCData(oldp+24,(vlSelfRef.add4_fp16_tb_softfloat__DOT__etchedfp4adder__DOT__exp_c),5);
+        bufp->chgCData(oldp+25,(vlSelfRef.add4_fp16_tb_softfloat__DOT__etchedfp4adder__DOT__exp_d),5);
+        bufp->chgSData(oldp+26,(vlSelfRef.add4_fp16_tb_softfloat__DOT__etchedfp4adder__DOT__frac_a),10);
+        bufp->chgSData(oldp+27,(vlSelfRef.add4_fp16_tb_softfloat__DOT__etchedfp4adder__DOT__frac_b),10);
+        bufp->chgSData(oldp+28,(vlSelfRef.add4_fp16_tb_softfloat__DOT__etchedfp4adder__DOT__frac_c),10);
+        bufp->chgSData(oldp+29,(vlSelfRef.add4_fp16_tb_softfloat__DOT__etchedfp4adder__DOT__frac_d),10);
+        bufp->chgBit(oldp+30,(vlSelfRef.add4_fp16_tb_softfloat__DOT__etchedfp4adder__DOT__sign_a));
+        bufp->chgBit(oldp+31,(vlSelfRef.add4_fp16_tb_softfloat__DOT__etchedfp4adder__DOT__sign_b));
+        bufp->chgBit(oldp+32,(vlSelfRef.add4_fp16_tb_softfloat__DOT__etchedfp4adder__DOT__sign_c));
+        bufp->chgBit(oldp+33,(vlSelfRef.add4_fp16_tb_softfloat__DOT__etchedfp4adder__DOT__sign_d));
+        bufp->chgCData(oldp+34,(vlSelfRef.add4_fp16_tb_softfloat__DOT__etchedfp4adder__DOT__exp_p),5);
+        bufp->chgCData(oldp+35,(vlSelfRef.add4_fp16_tb_softfloat__DOT__etchedfp4adder__DOT__exp_m),5);
+        bufp->chgCData(oldp+36,(vlSelfRef.add4_fp16_tb_softfloat__DOT__etchedfp4adder__DOT__exp_r),5);
+        bufp->chgCData(oldp+37,(vlSelfRef.add4_fp16_tb_softfloat__DOT__etchedfp4adder__DOT__exp_n),5);
+        bufp->chgCData(oldp+38,(vlSelfRef.add4_fp16_tb_softfloat__DOT__etchedfp4adder__DOT__exp_x),5);
+        bufp->chgCData(oldp+39,(vlSelfRef.add4_fp16_tb_softfloat__DOT__etchedfp4adder__DOT__exp_y),5);
+        bufp->chgCData(oldp+40,(vlSelfRef.add4_fp16_tb_softfloat__DOT__etchedfp4adder__DOT__exp_mx),5);
+        bufp->chgCData(oldp+41,(vlSelfRef.add4_fp16_tb_softfloat__DOT__etchedfp4adder__DOT__exp_nx),5);
+        bufp->chgSData(oldp+42,(vlSelfRef.add4_fp16_tb_softfloat__DOT__etchedfp4adder__DOT__frac_p),10);
+        bufp->chgSData(oldp+43,(vlSelfRef.add4_fp16_tb_softfloat__DOT__etchedfp4adder__DOT__frac_m),10);
+        bufp->chgSData(oldp+44,(vlSelfRef.add4_fp16_tb_softfloat__DOT__etchedfp4adder__DOT__frac_r),10);
+        bufp->chgSData(oldp+45,(vlSelfRef.add4_fp16_tb_softfloat__DOT__etchedfp4adder__DOT__frac_n),10);
+        bufp->chgSData(oldp+46,(vlSelfRef.add4_fp16_tb_softfloat__DOT__etchedfp4adder__DOT__frac_x),10);
+        bufp->chgSData(oldp+47,(vlSelfRef.add4_fp16_tb_softfloat__DOT__etchedfp4adder__DOT__frac_y),10);
+        bufp->chgSData(oldp+48,(vlSelfRef.add4_fp16_tb_softfloat__DOT__etchedfp4adder__DOT__frac_mx),10);
+        bufp->chgSData(oldp+49,(vlSelfRef.add4_fp16_tb_softfloat__DOT__etchedfp4adder__DOT__frac_nx),10);
+        bufp->chgBit(oldp+50,(vlSelfRef.add4_fp16_tb_softfloat__DOT__etchedfp4adder__DOT__sign_p));
+        bufp->chgBit(oldp+51,(vlSelfRef.add4_fp16_tb_softfloat__DOT__etchedfp4adder__DOT__sign_m));
+        bufp->chgBit(oldp+52,(vlSelfRef.add4_fp16_tb_softfloat__DOT__etchedfp4adder__DOT__sign_r));
+        bufp->chgBit(oldp+53,(vlSelfRef.add4_fp16_tb_softfloat__DOT__etchedfp4adder__DOT__sign_n));
+        bufp->chgBit(oldp+54,(vlSelfRef.add4_fp16_tb_softfloat__DOT__etchedfp4adder__DOT__sign_x));
+        bufp->chgBit(oldp+55,(vlSelfRef.add4_fp16_tb_softfloat__DOT__etchedfp4adder__DOT__sign_y));
+        bufp->chgBit(oldp+56,(vlSelfRef.add4_fp16_tb_softfloat__DOT__etchedfp4adder__DOT__sign_mx));
+        bufp->chgBit(oldp+57,(vlSelfRef.add4_fp16_tb_softfloat__DOT__etchedfp4adder__DOT__sign_nx));
+        bufp->chgCData(oldp+58,(vlSelfRef.add4_fp16_tb_softfloat__DOT__etchedfp4adder__DOT__exp_x_eff),5);
+        bufp->chgCData(oldp+59,(vlSelfRef.add4_fp16_tb_softfloat__DOT__etchedfp4adder__DOT__exp_y_eff),5);
+        bufp->chgCData(oldp+60,(vlSelfRef.add4_fp16_tb_softfloat__DOT__etchedfp4adder__DOT__exp_mx_eff),5);
+        bufp->chgCData(oldp+61,(vlSelfRef.add4_fp16_tb_softfloat__DOT__etchedfp4adder__DOT__exp_nx_eff),5);
+        bufp->chgCData(oldp+62,(vlSelfRef.add4_fp16_tb_softfloat__DOT__etchedfp4adder__DOT__y_shift),5);
+        bufp->chgCData(oldp+63,(vlSelfRef.add4_fp16_tb_softfloat__DOT__etchedfp4adder__DOT__m_shift),5);
+        bufp->chgCData(oldp+64,(vlSelfRef.add4_fp16_tb_softfloat__DOT__etchedfp4adder__DOT__n_shift),5);
+        bufp->chgSData(oldp+65,(vlSelfRef.add4_fp16_tb_softfloat__DOT__etchedfp4adder__DOT__x_mant),15);
+        bufp->chgSData(oldp+66,(vlSelfRef.add4_fp16_tb_softfloat__DOT__etchedfp4adder__DOT__y_shifted),15);
+        bufp->chgSData(oldp+67,(vlSelfRef.add4_fp16_tb_softfloat__DOT__etchedfp4adder__DOT__m_shifted),15);
+        bufp->chgSData(oldp+68,(vlSelfRef.add4_fp16_tb_softfloat__DOT__etchedfp4adder__DOT__n_shifted),15);
+        bufp->chgBit(oldp+69,(vlSelfRef.add4_fp16_tb_softfloat__DOT__etchedfp4adder__DOT__y_op));
+        bufp->chgBit(oldp+70,(vlSelfRef.add4_fp16_tb_softfloat__DOT__etchedfp4adder__DOT__m_op));
+        bufp->chgBit(oldp+71,(vlSelfRef.add4_fp16_tb_softfloat__DOT__etchedfp4adder__DOT__n_op));
+        bufp->chgBit(oldp+72,(vlSelfRef.add4_fp16_tb_softfloat__DOT__etchedfp4adder__DOT__is_nan_a));
+        bufp->chgBit(oldp+73,(vlSelfRef.add4_fp16_tb_softfloat__DOT__etchedfp4adder__DOT__is_nan_b));
+        bufp->chgBit(oldp+74,(vlSelfRef.add4_fp16_tb_softfloat__DOT__etchedfp4adder__DOT__is_nan_c));
+        bufp->chgBit(oldp+75,(vlSelfRef.add4_fp16_tb_softfloat__DOT__etchedfp4adder__DOT__is_nan_d));
+        bufp->chgBit(oldp+76,(vlSelfRef.add4_fp16_tb_softfloat__DOT__etchedfp4adder__DOT__is_inf_a));
+        bufp->chgBit(oldp+77,(vlSelfRef.add4_fp16_tb_softfloat__DOT__etchedfp4adder__DOT__is_inf_b));
+        bufp->chgBit(oldp+78,(vlSelfRef.add4_fp16_tb_softfloat__DOT__etchedfp4adder__DOT__is_inf_c));
+        bufp->chgBit(oldp+79,(vlSelfRef.add4_fp16_tb_softfloat__DOT__etchedfp4adder__DOT__is_inf_d));
+        bufp->chgBit(oldp+80,(vlSelfRef.add4_fp16_tb_softfloat__DOT__etchedfp4adder__DOT__special_case));
+        bufp->chgSData(oldp+81,(vlSelfRef.add4_fp16_tb_softfloat__DOT__etchedfp4adder__DOT__special_result),16);
+        bufp->chgBit(oldp+82,(vlSelfRef.add4_fp16_tb_softfloat__DOT__etchedfp4adder__DOT__stage1_combinational__DOT__unnamedblk1__DOT__has_pos_inf));
+        bufp->chgBit(oldp+83,(vlSelfRef.add4_fp16_tb_softfloat__DOT__etchedfp4adder__DOT__stage1_combinational__DOT__unnamedblk1__DOT__has_neg_inf));
     }
     if (VL_UNLIKELY((vlSelfRef.__Vm_traceActivity[4U]))) {
-        bufp->chgSData(oldp+80,(vlSymsp->TOP__add4_fp16_tb_softfloat__DOT__add_if.out),16);
-        bufp->chgBit(oldp+81,(vlSelfRef.add4_fp16_tb_softfloat__DOT__etchedfp4adder__DOT__st1_a_s));
-        bufp->chgBit(oldp+82,(vlSelfRef.add4_fp16_tb_softfloat__DOT__etchedfp4adder__DOT__st1_b_op));
-        bufp->chgBit(oldp+83,(vlSelfRef.add4_fp16_tb_softfloat__DOT__etchedfp4adder__DOT__st1_c_op));
-        bufp->chgBit(oldp+84,(vlSelfRef.add4_fp16_tb_softfloat__DOT__etchedfp4adder__DOT__st1_d_op));
-        bufp->chgCData(oldp+85,(vlSelfRef.add4_fp16_tb_softfloat__DOT__etchedfp4adder__DOT__st1_a_e),5);
-        bufp->chgSData(oldp+86,(vlSelfRef.add4_fp16_tb_softfloat__DOT__etchedfp4adder__DOT__st1_x_f),15);
-        bufp->chgSData(oldp+87,(vlSelfRef.add4_fp16_tb_softfloat__DOT__etchedfp4adder__DOT__st1_y_f),15);
-        bufp->chgSData(oldp+88,(vlSelfRef.add4_fp16_tb_softfloat__DOT__etchedfp4adder__DOT__st1_m_f),15);
-        bufp->chgSData(oldp+89,(vlSelfRef.add4_fp16_tb_softfloat__DOT__etchedfp4adder__DOT__st1_n_f),15);
-        bufp->chgBit(oldp+90,(vlSelfRef.add4_fp16_tb_softfloat__DOT__etchedfp4adder__DOT__st1_special_case));
-        bufp->chgSData(oldp+91,(vlSelfRef.add4_fp16_tb_softfloat__DOT__etchedfp4adder__DOT__st1_special_result),16);
-        bufp->chgBit(oldp+92,(vlSelfRef.add4_fp16_tb_softfloat__DOT__etchedfp4adder__DOT__st2_special_case));
-        bufp->chgSData(oldp+93,(vlSelfRef.add4_fp16_tb_softfloat__DOT__etchedfp4adder__DOT__st2_special_result),16);
-        bufp->chgSData(oldp+94,(vlSelfRef.add4_fp16_tb_softfloat__DOT__etchedfp4adder__DOT__sum_i),16);
-        bufp->chgBit(oldp+95,(vlSelfRef.add4_fp16_tb_softfloat__DOT__etchedfp4adder__DOT__result_s));
-        bufp->chgCData(oldp+96,(vlSelfRef.add4_fp16_tb_softfloat__DOT__etchedfp4adder__DOT__a_e_out),5);
-        bufp->chgCData(oldp+97,(vlSelfRef.add4_fp16_tb_softfloat__DOT__etchedfp4adder__DOT__num_leading_zeros),4);
-        bufp->chgSData(oldp+98,(vlSelfRef.add4_fp16_tb_softfloat__DOT__etchedfp4adder__DOT__sum),16);
-        bufp->chgCData(oldp+99,(vlSelfRef.add4_fp16_tb_softfloat__DOT__etchedfp4adder__DOT__right_shift_radix),2);
-        bufp->chgBit(oldp+100,((1U & (IData)(vlSelfRef.add4_fp16_tb_softfloat__DOT__etchedfp4adder__DOT__st1_y_f))));
-        bufp->chgBit(oldp+101,((1U & (IData)(vlSelfRef.add4_fp16_tb_softfloat__DOT__etchedfp4adder__DOT__st1_m_f))));
-        bufp->chgBit(oldp+102,((1U & (IData)(vlSelfRef.add4_fp16_tb_softfloat__DOT__etchedfp4adder__DOT__st1_n_f))));
-        bufp->chgSData(oldp+103,((0x3fffU & ((IData)(vlSelfRef.add4_fp16_tb_softfloat__DOT__etchedfp4adder__DOT__st1_x_f) 
-                                             >> 1U))),14);
-        bufp->chgSData(oldp+104,((0x3fffU & ((IData)(vlSelfRef.add4_fp16_tb_softfloat__DOT__etchedfp4adder__DOT__st1_y_f) 
-                                             >> 1U))),14);
-        bufp->chgSData(oldp+105,((0x3fffU & ((IData)(vlSelfRef.add4_fp16_tb_softfloat__DOT__etchedfp4adder__DOT__st1_m_f) 
-                                             >> 1U))),14);
-        bufp->chgSData(oldp+106,((0x3fffU & ((IData)(vlSelfRef.add4_fp16_tb_softfloat__DOT__etchedfp4adder__DOT__st1_n_f) 
-                                             >> 1U))),14);
-        bufp->chgSData(oldp+107,((0x7fffU & vlSelfRef.add4_fp16_tb_softfloat__DOT__etchedfp4adder__DOT__second_stage__DOT____VdfgRegularize_hc819fdcb_1_0)),15);
-        bufp->chgSData(oldp+108,((0x7fffU & vlSelfRef.add4_fp16_tb_softfloat__DOT__etchedfp4adder__DOT__second_stage__DOT____VdfgRegularize_hc819fdcb_2_0)),15);
-        bufp->chgSData(oldp+109,((0x7fffU & vlSelfRef.add4_fp16_tb_softfloat__DOT__etchedfp4adder__DOT__second_stage__DOT____VdfgRegularize_hc819fdcb_3_0)),15);
-        bufp->chgSData(oldp+110,(((((((IData)(vlSelfRef.add4_fp16_tb_softfloat__DOT__etchedfp4adder__DOT__second_stage__DOT____Vcellout__loop_s1__BRA__14__KET____DOT__fa_1__sum) 
-                                      << 0xeU) | ((IData)(vlSelfRef.add4_fp16_tb_softfloat__DOT__etchedfp4adder__DOT__second_stage__DOT____Vcellout__loop_s1__BRA__13__KET____DOT__fa_1__sum) 
-                                                  << 0xdU)) 
-                                    | (((IData)(vlSelfRef.add4_fp16_tb_softfloat__DOT__etchedfp4adder__DOT__second_stage__DOT____Vcellout__loop_s1__BRA__12__KET____DOT__fa_1__sum) 
-                                        << 0xcU) | 
-                                       ((IData)(vlSelfRef.add4_fp16_tb_softfloat__DOT__etchedfp4adder__DOT__second_stage__DOT____Vcellout__loop_s1__BRA__11__KET____DOT__fa_1__sum) 
-                                        << 0xbU))) 
-                                   | ((((IData)(vlSelfRef.add4_fp16_tb_softfloat__DOT__etchedfp4adder__DOT__second_stage__DOT____Vcellout__loop_s1__BRA__10__KET____DOT__fa_1__sum) 
-                                        << 0xaU) | 
-                                       ((IData)(vlSelfRef.add4_fp16_tb_softfloat__DOT__etchedfp4adder__DOT__second_stage__DOT____Vcellout__loop_s1__BRA__9__KET____DOT__fa_1__sum) 
-                                        << 9U)) | (
-                                                   ((IData)(vlSelfRef.add4_fp16_tb_softfloat__DOT__etchedfp4adder__DOT__second_stage__DOT____Vcellout__loop_s1__BRA__8__KET____DOT__fa_1__sum) 
-                                                    << 8U) 
-                                                   | ((IData)(vlSelfRef.add4_fp16_tb_softfloat__DOT__etchedfp4adder__DOT__second_stage__DOT____Vcellout__loop_s1__BRA__7__KET____DOT__fa_1__sum) 
-                                                      << 7U)))) 
-                                  | (((((IData)(vlSelfRef.add4_fp16_tb_softfloat__DOT__etchedfp4adder__DOT__second_stage__DOT____Vcellout__loop_s1__BRA__6__KET____DOT__fa_1__sum) 
-                                        << 6U) | ((IData)(vlSelfRef.add4_fp16_tb_softfloat__DOT__etchedfp4adder__DOT__second_stage__DOT____Vcellout__loop_s1__BRA__5__KET____DOT__fa_1__sum) 
-                                                  << 5U)) 
-                                      | (((IData)(vlSelfRef.add4_fp16_tb_softfloat__DOT__etchedfp4adder__DOT__second_stage__DOT____Vcellout__loop_s1__BRA__4__KET____DOT__fa_1__sum) 
-                                          << 4U) | 
-                                         ((IData)(vlSelfRef.add4_fp16_tb_softfloat__DOT__etchedfp4adder__DOT__second_stage__DOT____Vcellout__loop_s1__BRA__3__KET____DOT__fa_1__sum) 
-                                          << 3U))) 
-                                     | (((IData)(vlSelfRef.add4_fp16_tb_softfloat__DOT__etchedfp4adder__DOT__second_stage__DOT____Vcellout__loop_s1__BRA__2__KET____DOT__fa_1__sum) 
-                                         << 2U) | (
-                                                   ((IData)(vlSelfRef.add4_fp16_tb_softfloat__DOT__etchedfp4adder__DOT__second_stage__DOT____Vcellout__loop_s1__BRA__1__KET____DOT__fa_1__sum) 
-                                                    << 1U) 
-                                                   | (IData)(vlSelfRef.add4_fp16_tb_softfloat__DOT__etchedfp4adder__DOT__second_stage__DOT__s1__BRA__0__KET__)))))),15);
-        bufp->chgSData(oldp+111,((((((0x4000U & (vlSelfRef.add4_fp16_tb_softfloat__DOT__etchedfp4adder__DOT__second_stage__DOT____VdfgRegularize_hc819fdcb_1_0 
-                                                 & vlSelfRef.add4_fp16_tb_softfloat__DOT__etchedfp4adder__DOT__second_stage__DOT____VdfgRegularize_hc819fdcb_2_0)) 
-                                     | ((IData)(vlSelfRef.add4_fp16_tb_softfloat__DOT__etchedfp4adder__DOT__second_stage__DOT____Vcellout__loop_s1__BRA__13__KET____DOT__fa_1__co) 
-                                        << 0xdU)) | 
-                                    (((IData)(vlSelfRef.add4_fp16_tb_softfloat__DOT__etchedfp4adder__DOT__second_stage__DOT____Vcellout__loop_s1__BRA__12__KET____DOT__fa_1__co) 
-                                      << 0xcU) | ((IData)(vlSelfRef.add4_fp16_tb_softfloat__DOT__etchedfp4adder__DOT__second_stage__DOT____Vcellout__loop_s1__BRA__11__KET____DOT__fa_1__co) 
-                                                  << 0xbU))) 
-                                   | ((((IData)(vlSelfRef.add4_fp16_tb_softfloat__DOT__etchedfp4adder__DOT__second_stage__DOT____Vcellout__loop_s1__BRA__10__KET____DOT__fa_1__co) 
-                                        << 0xaU) | 
-                                       ((IData)(vlSelfRef.add4_fp16_tb_softfloat__DOT__etchedfp4adder__DOT__second_stage__DOT____Vcellout__loop_s1__BRA__9__KET____DOT__fa_1__co) 
-                                        << 9U)) | (
-                                                   ((IData)(vlSelfRef.add4_fp16_tb_softfloat__DOT__etchedfp4adder__DOT__second_stage__DOT____Vcellout__loop_s1__BRA__8__KET____DOT__fa_1__co) 
-                                                    << 8U) 
-                                                   | ((IData)(vlSelfRef.add4_fp16_tb_softfloat__DOT__etchedfp4adder__DOT__second_stage__DOT____Vcellout__loop_s1__BRA__7__KET____DOT__fa_1__co) 
-                                                      << 7U)))) 
-                                  | (((((IData)(vlSelfRef.add4_fp16_tb_softfloat__DOT__etchedfp4adder__DOT__second_stage__DOT____Vcellout__loop_s1__BRA__6__KET____DOT__fa_1__co) 
-                                        << 6U) | ((IData)(vlSelfRef.add4_fp16_tb_softfloat__DOT__etchedfp4adder__DOT__second_stage__DOT____Vcellout__loop_s1__BRA__5__KET____DOT__fa_1__co) 
-                                                  << 5U)) 
-                                      | (((IData)(vlSelfRef.add4_fp16_tb_softfloat__DOT__etchedfp4adder__DOT__second_stage__DOT____Vcellout__loop_s1__BRA__4__KET____DOT__fa_1__co) 
-                                          << 4U) | 
-                                         ((IData)(vlSelfRef.add4_fp16_tb_softfloat__DOT__etchedfp4adder__DOT__second_stage__DOT____Vcellout__loop_s1__BRA__3__KET____DOT__fa_1__co) 
-                                          << 3U))) 
-                                     | (((IData)(vlSelfRef.add4_fp16_tb_softfloat__DOT__etchedfp4adder__DOT__second_stage__DOT____Vcellout__loop_s1__BRA__2__KET____DOT__fa_1__co) 
-                                         << 2U) | (
-                                                   ((IData)(vlSelfRef.add4_fp16_tb_softfloat__DOT__etchedfp4adder__DOT__second_stage__DOT____Vcellout__loop_s1__BRA__1__KET____DOT__fa_1__co) 
-                                                    << 1U) 
-                                                   | (IData)(vlSelfRef.add4_fp16_tb_softfloat__DOT__etchedfp4adder__DOT__second_stage__DOT__c1__BRA__0__KET__)))))),15);
-        bufp->chgSData(oldp+112,(vlSelfRef.add4_fp16_tb_softfloat__DOT__etchedfp4adder__DOT__second_stage__DOT__s2),15);
-        bufp->chgSData(oldp+113,(vlSelfRef.add4_fp16_tb_softfloat__DOT__etchedfp4adder__DOT__second_stage__DOT__c2),15);
-        bufp->chgCData(oldp+114,(vlSelfRef.add4_fp16_tb_softfloat__DOT__etchedfp4adder__DOT__second_stage__DOT__signed_sb_sum),3);
-        bufp->chgBit(oldp+115,(vlSelfRef.add4_fp16_tb_softfloat__DOT__etchedfp4adder__DOT__second_stage__DOT__next_result_s));
-        bufp->chgCData(oldp+116,(vlSelfRef.add4_fp16_tb_softfloat__DOT__etchedfp4adder__DOT__second_stage__DOT__next_num_leading_zeros),4);
-        bufp->chgIData(oldp+117,(vlSelfRef.add4_fp16_tb_softfloat__DOT__etchedfp4adder__DOT__second_stage__DOT__magnitude_sum),17);
-        bufp->chgSData(oldp+118,((0xffffU & vlSelfRef.add4_fp16_tb_softfloat__DOT__etchedfp4adder__DOT__second_stage__DOT____VdfgRegularize_hc819fdcb_0_0)),16);
-        bufp->chgBit(oldp+119,((1U & ((IData)(vlSelfRef.add4_fp16_tb_softfloat__DOT__etchedfp4adder__DOT__st1_x_f) 
-                                      >> 1U))));
-        bufp->chgBit(oldp+120,((1U & vlSelfRef.add4_fp16_tb_softfloat__DOT__etchedfp4adder__DOT__second_stage__DOT____VdfgRegularize_hc819fdcb_1_0)));
-        bufp->chgBit(oldp+121,((1U & vlSelfRef.add4_fp16_tb_softfloat__DOT__etchedfp4adder__DOT__second_stage__DOT____VdfgRegularize_hc819fdcb_2_0)));
-        bufp->chgBit(oldp+122,(vlSelfRef.add4_fp16_tb_softfloat__DOT__etchedfp4adder__DOT__second_stage__DOT__s1__BRA__0__KET__));
-        bufp->chgBit(oldp+123,(vlSelfRef.add4_fp16_tb_softfloat__DOT__etchedfp4adder__DOT__second_stage__DOT__c1__BRA__0__KET__));
-        bufp->chgBit(oldp+124,((1U & ((IData)(vlSelfRef.add4_fp16_tb_softfloat__DOT__etchedfp4adder__DOT__st1_x_f) 
-                                      >> 0xbU))));
-        bufp->chgBit(oldp+125,((1U & (vlSelfRef.add4_fp16_tb_softfloat__DOT__etchedfp4adder__DOT__second_stage__DOT____VdfgRegularize_hc819fdcb_1_0 
-                                      >> 0xaU))));
-        bufp->chgBit(oldp+126,((1U & (vlSelfRef.add4_fp16_tb_softfloat__DOT__etchedfp4adder__DOT__second_stage__DOT____VdfgRegularize_hc819fdcb_2_0 
-                                      >> 0xaU))));
-        bufp->chgBit(oldp+127,(vlSelfRef.add4_fp16_tb_softfloat__DOT__etchedfp4adder__DOT__second_stage__DOT____Vcellout__loop_s1__BRA__10__KET____DOT__fa_1__sum));
-        bufp->chgBit(oldp+128,(vlSelfRef.add4_fp16_tb_softfloat__DOT__etchedfp4adder__DOT__second_stage__DOT____Vcellout__loop_s1__BRA__10__KET____DOT__fa_1__co));
-        bufp->chgBit(oldp+129,((1U & ((IData)(vlSelfRef.add4_fp16_tb_softfloat__DOT__etchedfp4adder__DOT__st1_x_f) 
-                                      >> 0xcU))));
-        bufp->chgBit(oldp+130,((1U & (vlSelfRef.add4_fp16_tb_softfloat__DOT__etchedfp4adder__DOT__second_stage__DOT____VdfgRegularize_hc819fdcb_1_0 
-                                      >> 0xbU))));
-        bufp->chgBit(oldp+131,((1U & (vlSelfRef.add4_fp16_tb_softfloat__DOT__etchedfp4adder__DOT__second_stage__DOT____VdfgRegularize_hc819fdcb_2_0 
-                                      >> 0xbU))));
-        bufp->chgBit(oldp+132,(vlSelfRef.add4_fp16_tb_softfloat__DOT__etchedfp4adder__DOT__second_stage__DOT____Vcellout__loop_s1__BRA__11__KET____DOT__fa_1__sum));
-        bufp->chgBit(oldp+133,(vlSelfRef.add4_fp16_tb_softfloat__DOT__etchedfp4adder__DOT__second_stage__DOT____Vcellout__loop_s1__BRA__11__KET____DOT__fa_1__co));
-        bufp->chgBit(oldp+134,((1U & ((IData)(vlSelfRef.add4_fp16_tb_softfloat__DOT__etchedfp4adder__DOT__st1_x_f) 
-                                      >> 0xdU))));
-        bufp->chgBit(oldp+135,((1U & (vlSelfRef.add4_fp16_tb_softfloat__DOT__etchedfp4adder__DOT__second_stage__DOT____VdfgRegularize_hc819fdcb_1_0 
-                                      >> 0xcU))));
-        bufp->chgBit(oldp+136,((1U & (vlSelfRef.add4_fp16_tb_softfloat__DOT__etchedfp4adder__DOT__second_stage__DOT____VdfgRegularize_hc819fdcb_2_0 
-                                      >> 0xcU))));
-        bufp->chgBit(oldp+137,(vlSelfRef.add4_fp16_tb_softfloat__DOT__etchedfp4adder__DOT__second_stage__DOT____Vcellout__loop_s1__BRA__12__KET____DOT__fa_1__sum));
-        bufp->chgBit(oldp+138,(vlSelfRef.add4_fp16_tb_softfloat__DOT__etchedfp4adder__DOT__second_stage__DOT____Vcellout__loop_s1__BRA__12__KET____DOT__fa_1__co));
-        bufp->chgBit(oldp+139,((1U & ((IData)(vlSelfRef.add4_fp16_tb_softfloat__DOT__etchedfp4adder__DOT__st1_x_f) 
-                                      >> 0xeU))));
-        bufp->chgBit(oldp+140,((1U & (vlSelfRef.add4_fp16_tb_softfloat__DOT__etchedfp4adder__DOT__second_stage__DOT____VdfgRegularize_hc819fdcb_1_0 
-                                      >> 0xdU))));
-        bufp->chgBit(oldp+141,((1U & (vlSelfRef.add4_fp16_tb_softfloat__DOT__etchedfp4adder__DOT__second_stage__DOT____VdfgRegularize_hc819fdcb_2_0 
-                                      >> 0xdU))));
-        bufp->chgBit(oldp+142,(vlSelfRef.add4_fp16_tb_softfloat__DOT__etchedfp4adder__DOT__second_stage__DOT____Vcellout__loop_s1__BRA__13__KET____DOT__fa_1__sum));
-        bufp->chgBit(oldp+143,(vlSelfRef.add4_fp16_tb_softfloat__DOT__etchedfp4adder__DOT__second_stage__DOT____Vcellout__loop_s1__BRA__13__KET____DOT__fa_1__co));
-        bufp->chgBit(oldp+144,((1U & (vlSelfRef.add4_fp16_tb_softfloat__DOT__etchedfp4adder__DOT__second_stage__DOT____VdfgRegularize_hc819fdcb_1_0 
-                                      >> 0xeU))));
-        bufp->chgBit(oldp+145,((1U & (vlSelfRef.add4_fp16_tb_softfloat__DOT__etchedfp4adder__DOT__second_stage__DOT____VdfgRegularize_hc819fdcb_2_0 
-                                      >> 0xeU))));
-        bufp->chgBit(oldp+146,(vlSelfRef.add4_fp16_tb_softfloat__DOT__etchedfp4adder__DOT__second_stage__DOT____Vcellout__loop_s1__BRA__14__KET____DOT__fa_1__sum));
-        bufp->chgBit(oldp+147,((1U & ((vlSelfRef.add4_fp16_tb_softfloat__DOT__etchedfp4adder__DOT__second_stage__DOT____VdfgRegularize_hc819fdcb_1_0 
-                                       & vlSelfRef.add4_fp16_tb_softfloat__DOT__etchedfp4adder__DOT__second_stage__DOT____VdfgRegularize_hc819fdcb_2_0) 
-                                      >> 0xeU))));
-        bufp->chgBit(oldp+148,((1U & ((IData)(vlSelfRef.add4_fp16_tb_softfloat__DOT__etchedfp4adder__DOT__st1_x_f) 
-                                      >> 2U))));
-        bufp->chgBit(oldp+149,((1U & (vlSelfRef.add4_fp16_tb_softfloat__DOT__etchedfp4adder__DOT__second_stage__DOT____VdfgRegularize_hc819fdcb_1_0 
-                                      >> 1U))));
-        bufp->chgBit(oldp+150,((1U & (vlSelfRef.add4_fp16_tb_softfloat__DOT__etchedfp4adder__DOT__second_stage__DOT____VdfgRegularize_hc819fdcb_2_0 
-                                      >> 1U))));
-        bufp->chgBit(oldp+151,(vlSelfRef.add4_fp16_tb_softfloat__DOT__etchedfp4adder__DOT__second_stage__DOT____Vcellout__loop_s1__BRA__1__KET____DOT__fa_1__sum));
-        bufp->chgBit(oldp+152,(vlSelfRef.add4_fp16_tb_softfloat__DOT__etchedfp4adder__DOT__second_stage__DOT____Vcellout__loop_s1__BRA__1__KET____DOT__fa_1__co));
-        bufp->chgBit(oldp+153,((1U & ((IData)(vlSelfRef.add4_fp16_tb_softfloat__DOT__etchedfp4adder__DOT__st1_x_f) 
-                                      >> 3U))));
-        bufp->chgBit(oldp+154,((1U & (vlSelfRef.add4_fp16_tb_softfloat__DOT__etchedfp4adder__DOT__second_stage__DOT____VdfgRegularize_hc819fdcb_1_0 
-                                      >> 2U))));
-        bufp->chgBit(oldp+155,((1U & (vlSelfRef.add4_fp16_tb_softfloat__DOT__etchedfp4adder__DOT__second_stage__DOT____VdfgRegularize_hc819fdcb_2_0 
-                                      >> 2U))));
-        bufp->chgBit(oldp+156,(vlSelfRef.add4_fp16_tb_softfloat__DOT__etchedfp4adder__DOT__second_stage__DOT____Vcellout__loop_s1__BRA__2__KET____DOT__fa_1__sum));
-        bufp->chgBit(oldp+157,(vlSelfRef.add4_fp16_tb_softfloat__DOT__etchedfp4adder__DOT__second_stage__DOT____Vcellout__loop_s1__BRA__2__KET____DOT__fa_1__co));
-        bufp->chgBit(oldp+158,((1U & ((IData)(vlSelfRef.add4_fp16_tb_softfloat__DOT__etchedfp4adder__DOT__st1_x_f) 
-                                      >> 4U))));
-        bufp->chgBit(oldp+159,((1U & (vlSelfRef.add4_fp16_tb_softfloat__DOT__etchedfp4adder__DOT__second_stage__DOT____VdfgRegularize_hc819fdcb_1_0 
-                                      >> 3U))));
-        bufp->chgBit(oldp+160,((1U & (vlSelfRef.add4_fp16_tb_softfloat__DOT__etchedfp4adder__DOT__second_stage__DOT____VdfgRegularize_hc819fdcb_2_0 
-                                      >> 3U))));
-        bufp->chgBit(oldp+161,(vlSelfRef.add4_fp16_tb_softfloat__DOT__etchedfp4adder__DOT__second_stage__DOT____Vcellout__loop_s1__BRA__3__KET____DOT__fa_1__sum));
-        bufp->chgBit(oldp+162,(vlSelfRef.add4_fp16_tb_softfloat__DOT__etchedfp4adder__DOT__second_stage__DOT____Vcellout__loop_s1__BRA__3__KET____DOT__fa_1__co));
-        bufp->chgBit(oldp+163,((1U & ((IData)(vlSelfRef.add4_fp16_tb_softfloat__DOT__etchedfp4adder__DOT__st1_x_f) 
-                                      >> 5U))));
-        bufp->chgBit(oldp+164,((1U & (vlSelfRef.add4_fp16_tb_softfloat__DOT__etchedfp4adder__DOT__second_stage__DOT____VdfgRegularize_hc819fdcb_1_0 
-                                      >> 4U))));
-        bufp->chgBit(oldp+165,((1U & (vlSelfRef.add4_fp16_tb_softfloat__DOT__etchedfp4adder__DOT__second_stage__DOT____VdfgRegularize_hc819fdcb_2_0 
-                                      >> 4U))));
-        bufp->chgBit(oldp+166,(vlSelfRef.add4_fp16_tb_softfloat__DOT__etchedfp4adder__DOT__second_stage__DOT____Vcellout__loop_s1__BRA__4__KET____DOT__fa_1__sum));
-        bufp->chgBit(oldp+167,(vlSelfRef.add4_fp16_tb_softfloat__DOT__etchedfp4adder__DOT__second_stage__DOT____Vcellout__loop_s1__BRA__4__KET____DOT__fa_1__co));
-        bufp->chgBit(oldp+168,((1U & ((IData)(vlSelfRef.add4_fp16_tb_softfloat__DOT__etchedfp4adder__DOT__st1_x_f) 
-                                      >> 6U))));
-        bufp->chgBit(oldp+169,((1U & (vlSelfRef.add4_fp16_tb_softfloat__DOT__etchedfp4adder__DOT__second_stage__DOT____VdfgRegularize_hc819fdcb_1_0 
-                                      >> 5U))));
-        bufp->chgBit(oldp+170,((1U & (vlSelfRef.add4_fp16_tb_softfloat__DOT__etchedfp4adder__DOT__second_stage__DOT____VdfgRegularize_hc819fdcb_2_0 
-                                      >> 5U))));
-        bufp->chgBit(oldp+171,(vlSelfRef.add4_fp16_tb_softfloat__DOT__etchedfp4adder__DOT__second_stage__DOT____Vcellout__loop_s1__BRA__5__KET____DOT__fa_1__sum));
-        bufp->chgBit(oldp+172,(vlSelfRef.add4_fp16_tb_softfloat__DOT__etchedfp4adder__DOT__second_stage__DOT____Vcellout__loop_s1__BRA__5__KET____DOT__fa_1__co));
-        bufp->chgBit(oldp+173,((1U & ((IData)(vlSelfRef.add4_fp16_tb_softfloat__DOT__etchedfp4adder__DOT__st1_x_f) 
-                                      >> 7U))));
-        bufp->chgBit(oldp+174,((1U & (vlSelfRef.add4_fp16_tb_softfloat__DOT__etchedfp4adder__DOT__second_stage__DOT____VdfgRegularize_hc819fdcb_1_0 
-                                      >> 6U))));
-        bufp->chgBit(oldp+175,((1U & (vlSelfRef.add4_fp16_tb_softfloat__DOT__etchedfp4adder__DOT__second_stage__DOT____VdfgRegularize_hc819fdcb_2_0 
-                                      >> 6U))));
-        bufp->chgBit(oldp+176,(vlSelfRef.add4_fp16_tb_softfloat__DOT__etchedfp4adder__DOT__second_stage__DOT____Vcellout__loop_s1__BRA__6__KET____DOT__fa_1__sum));
-        bufp->chgBit(oldp+177,(vlSelfRef.add4_fp16_tb_softfloat__DOT__etchedfp4adder__DOT__second_stage__DOT____Vcellout__loop_s1__BRA__6__KET____DOT__fa_1__co));
-        bufp->chgBit(oldp+178,((1U & ((IData)(vlSelfRef.add4_fp16_tb_softfloat__DOT__etchedfp4adder__DOT__st1_x_f) 
-                                      >> 8U))));
-        bufp->chgBit(oldp+179,((1U & (vlSelfRef.add4_fp16_tb_softfloat__DOT__etchedfp4adder__DOT__second_stage__DOT____VdfgRegularize_hc819fdcb_1_0 
-                                      >> 7U))));
-        bufp->chgBit(oldp+180,((1U & (vlSelfRef.add4_fp16_tb_softfloat__DOT__etchedfp4adder__DOT__second_stage__DOT____VdfgRegularize_hc819fdcb_2_0 
-                                      >> 7U))));
-        bufp->chgBit(oldp+181,(vlSelfRef.add4_fp16_tb_softfloat__DOT__etchedfp4adder__DOT__second_stage__DOT____Vcellout__loop_s1__BRA__7__KET____DOT__fa_1__sum));
-        bufp->chgBit(oldp+182,(vlSelfRef.add4_fp16_tb_softfloat__DOT__etchedfp4adder__DOT__second_stage__DOT____Vcellout__loop_s1__BRA__7__KET____DOT__fa_1__co));
-        bufp->chgBit(oldp+183,((1U & ((IData)(vlSelfRef.add4_fp16_tb_softfloat__DOT__etchedfp4adder__DOT__st1_x_f) 
-                                      >> 9U))));
-        bufp->chgBit(oldp+184,((1U & (vlSelfRef.add4_fp16_tb_softfloat__DOT__etchedfp4adder__DOT__second_stage__DOT____VdfgRegularize_hc819fdcb_1_0 
-                                      >> 8U))));
-        bufp->chgBit(oldp+185,((1U & (vlSelfRef.add4_fp16_tb_softfloat__DOT__etchedfp4adder__DOT__second_stage__DOT____VdfgRegularize_hc819fdcb_2_0 
-                                      >> 8U))));
-        bufp->chgBit(oldp+186,(vlSelfRef.add4_fp16_tb_softfloat__DOT__etchedfp4adder__DOT__second_stage__DOT____Vcellout__loop_s1__BRA__8__KET____DOT__fa_1__sum));
-        bufp->chgBit(oldp+187,(vlSelfRef.add4_fp16_tb_softfloat__DOT__etchedfp4adder__DOT__second_stage__DOT____Vcellout__loop_s1__BRA__8__KET____DOT__fa_1__co));
-        bufp->chgBit(oldp+188,((1U & ((IData)(vlSelfRef.add4_fp16_tb_softfloat__DOT__etchedfp4adder__DOT__st1_x_f) 
-                                      >> 0xaU))));
-        bufp->chgBit(oldp+189,((1U & (vlSelfRef.add4_fp16_tb_softfloat__DOT__etchedfp4adder__DOT__second_stage__DOT____VdfgRegularize_hc819fdcb_1_0 
-                                      >> 9U))));
-        bufp->chgBit(oldp+190,((1U & (vlSelfRef.add4_fp16_tb_softfloat__DOT__etchedfp4adder__DOT__second_stage__DOT____VdfgRegularize_hc819fdcb_2_0 
-                                      >> 9U))));
-        bufp->chgBit(oldp+191,(vlSelfRef.add4_fp16_tb_softfloat__DOT__etchedfp4adder__DOT__second_stage__DOT____Vcellout__loop_s1__BRA__9__KET____DOT__fa_1__sum));
-        bufp->chgBit(oldp+192,(vlSelfRef.add4_fp16_tb_softfloat__DOT__etchedfp4adder__DOT__second_stage__DOT____Vcellout__loop_s1__BRA__9__KET____DOT__fa_1__co));
-        bufp->chgBit(oldp+193,((1U & vlSelfRef.add4_fp16_tb_softfloat__DOT__etchedfp4adder__DOT__second_stage__DOT____VdfgRegularize_hc819fdcb_3_0)));
-        bufp->chgBit(oldp+194,((1U & ((IData)(vlSelfRef.add4_fp16_tb_softfloat__DOT__etchedfp4adder__DOT__second_stage__DOT__s1__BRA__0__KET__) 
-                                      ^ vlSelfRef.add4_fp16_tb_softfloat__DOT__etchedfp4adder__DOT__second_stage__DOT____VdfgRegularize_hc819fdcb_3_0))));
-        bufp->chgBit(oldp+195,(((IData)(vlSelfRef.add4_fp16_tb_softfloat__DOT__etchedfp4adder__DOT__second_stage__DOT__s1__BRA__0__KET__) 
-                                & vlSelfRef.add4_fp16_tb_softfloat__DOT__etchedfp4adder__DOT__second_stage__DOT____VdfgRegularize_hc819fdcb_3_0)));
-        bufp->chgBit(oldp+196,((1U & (vlSelfRef.add4_fp16_tb_softfloat__DOT__etchedfp4adder__DOT__second_stage__DOT____VdfgRegularize_hc819fdcb_3_0 
-                                      >> 0xaU))));
-        bufp->chgBit(oldp+197,((1U & ((IData)(vlSelfRef.add4_fp16_tb_softfloat__DOT__etchedfp4adder__DOT__second_stage__DOT____Vcellout__loop_s1__BRA__10__KET____DOT__fa_1__sum) 
-                                      ^ ((vlSelfRef.add4_fp16_tb_softfloat__DOT__etchedfp4adder__DOT__second_stage__DOT____VdfgRegularize_hc819fdcb_3_0 
-                                          >> 0xaU) 
-                                         ^ (IData)(vlSelfRef.add4_fp16_tb_softfloat__DOT__etchedfp4adder__DOT__second_stage__DOT____Vcellout__loop_s1__BRA__9__KET____DOT__fa_1__co))))));
-        bufp->chgBit(oldp+198,((((IData)(vlSelfRef.add4_fp16_tb_softfloat__DOT__etchedfp4adder__DOT__second_stage__DOT____Vcellout__loop_s1__BRA__10__KET____DOT__fa_1__sum) 
-                                 & (vlSelfRef.add4_fp16_tb_softfloat__DOT__etchedfp4adder__DOT__second_stage__DOT____VdfgRegularize_hc819fdcb_3_0 
-                                    >> 0xaU)) | (((vlSelfRef.add4_fp16_tb_softfloat__DOT__etchedfp4adder__DOT__second_stage__DOT____VdfgRegularize_hc819fdcb_3_0 
-                                                   >> 0xaU) 
-                                                  | (IData)(vlSelfRef.add4_fp16_tb_softfloat__DOT__etchedfp4adder__DOT__second_stage__DOT____Vcellout__loop_s1__BRA__10__KET____DOT__fa_1__sum)) 
-                                                 & (IData)(vlSelfRef.add4_fp16_tb_softfloat__DOT__etchedfp4adder__DOT__second_stage__DOT____Vcellout__loop_s1__BRA__9__KET____DOT__fa_1__co)))));
-        bufp->chgBit(oldp+199,((1U & (vlSelfRef.add4_fp16_tb_softfloat__DOT__etchedfp4adder__DOT__second_stage__DOT____VdfgRegularize_hc819fdcb_3_0 
-                                      >> 0xbU))));
-        bufp->chgBit(oldp+200,((1U & ((IData)(vlSelfRef.add4_fp16_tb_softfloat__DOT__etchedfp4adder__DOT__second_stage__DOT____Vcellout__loop_s1__BRA__11__KET____DOT__fa_1__sum) 
-                                      ^ ((vlSelfRef.add4_fp16_tb_softfloat__DOT__etchedfp4adder__DOT__second_stage__DOT____VdfgRegularize_hc819fdcb_3_0 
-                                          >> 0xbU) 
-                                         ^ (IData)(vlSelfRef.add4_fp16_tb_softfloat__DOT__etchedfp4adder__DOT__second_stage__DOT____Vcellout__loop_s1__BRA__10__KET____DOT__fa_1__co))))));
-        bufp->chgBit(oldp+201,((((IData)(vlSelfRef.add4_fp16_tb_softfloat__DOT__etchedfp4adder__DOT__second_stage__DOT____Vcellout__loop_s1__BRA__11__KET____DOT__fa_1__sum) 
-                                 & (vlSelfRef.add4_fp16_tb_softfloat__DOT__etchedfp4adder__DOT__second_stage__DOT____VdfgRegularize_hc819fdcb_3_0 
-                                    >> 0xbU)) | (((vlSelfRef.add4_fp16_tb_softfloat__DOT__etchedfp4adder__DOT__second_stage__DOT____VdfgRegularize_hc819fdcb_3_0 
-                                                   >> 0xbU) 
-                                                  | (IData)(vlSelfRef.add4_fp16_tb_softfloat__DOT__etchedfp4adder__DOT__second_stage__DOT____Vcellout__loop_s1__BRA__11__KET____DOT__fa_1__sum)) 
-                                                 & (IData)(vlSelfRef.add4_fp16_tb_softfloat__DOT__etchedfp4adder__DOT__second_stage__DOT____Vcellout__loop_s1__BRA__10__KET____DOT__fa_1__co)))));
-        bufp->chgBit(oldp+202,((1U & (vlSelfRef.add4_fp16_tb_softfloat__DOT__etchedfp4adder__DOT__second_stage__DOT____VdfgRegularize_hc819fdcb_3_0 
-                                      >> 0xcU))));
-        bufp->chgBit(oldp+203,((1U & ((IData)(vlSelfRef.add4_fp16_tb_softfloat__DOT__etchedfp4adder__DOT__second_stage__DOT____Vcellout__loop_s1__BRA__12__KET____DOT__fa_1__sum) 
-                                      ^ ((vlSelfRef.add4_fp16_tb_softfloat__DOT__etchedfp4adder__DOT__second_stage__DOT____VdfgRegularize_hc819fdcb_3_0 
-                                          >> 0xcU) 
-                                         ^ (IData)(vlSelfRef.add4_fp16_tb_softfloat__DOT__etchedfp4adder__DOT__second_stage__DOT____Vcellout__loop_s1__BRA__11__KET____DOT__fa_1__co))))));
-        bufp->chgBit(oldp+204,((((IData)(vlSelfRef.add4_fp16_tb_softfloat__DOT__etchedfp4adder__DOT__second_stage__DOT____Vcellout__loop_s1__BRA__12__KET____DOT__fa_1__sum) 
-                                 & (vlSelfRef.add4_fp16_tb_softfloat__DOT__etchedfp4adder__DOT__second_stage__DOT____VdfgRegularize_hc819fdcb_3_0 
-                                    >> 0xcU)) | (((vlSelfRef.add4_fp16_tb_softfloat__DOT__etchedfp4adder__DOT__second_stage__DOT____VdfgRegularize_hc819fdcb_3_0 
-                                                   >> 0xcU) 
-                                                  | (IData)(vlSelfRef.add4_fp16_tb_softfloat__DOT__etchedfp4adder__DOT__second_stage__DOT____Vcellout__loop_s1__BRA__12__KET____DOT__fa_1__sum)) 
-                                                 & (IData)(vlSelfRef.add4_fp16_tb_softfloat__DOT__etchedfp4adder__DOT__second_stage__DOT____Vcellout__loop_s1__BRA__11__KET____DOT__fa_1__co)))));
-        bufp->chgBit(oldp+205,((1U & (vlSelfRef.add4_fp16_tb_softfloat__DOT__etchedfp4adder__DOT__second_stage__DOT____VdfgRegularize_hc819fdcb_3_0 
-                                      >> 0xdU))));
-        bufp->chgBit(oldp+206,((1U & ((IData)(vlSelfRef.add4_fp16_tb_softfloat__DOT__etchedfp4adder__DOT__second_stage__DOT____Vcellout__loop_s1__BRA__13__KET____DOT__fa_1__sum) 
-                                      ^ ((vlSelfRef.add4_fp16_tb_softfloat__DOT__etchedfp4adder__DOT__second_stage__DOT____VdfgRegularize_hc819fdcb_3_0 
-                                          >> 0xdU) 
-                                         ^ (IData)(vlSelfRef.add4_fp16_tb_softfloat__DOT__etchedfp4adder__DOT__second_stage__DOT____Vcellout__loop_s1__BRA__12__KET____DOT__fa_1__co))))));
-        bufp->chgBit(oldp+207,((((IData)(vlSelfRef.add4_fp16_tb_softfloat__DOT__etchedfp4adder__DOT__second_stage__DOT____Vcellout__loop_s1__BRA__13__KET____DOT__fa_1__sum) 
-                                 & (vlSelfRef.add4_fp16_tb_softfloat__DOT__etchedfp4adder__DOT__second_stage__DOT____VdfgRegularize_hc819fdcb_3_0 
-                                    >> 0xdU)) | (((vlSelfRef.add4_fp16_tb_softfloat__DOT__etchedfp4adder__DOT__second_stage__DOT____VdfgRegularize_hc819fdcb_3_0 
-                                                   >> 0xdU) 
-                                                  | (IData)(vlSelfRef.add4_fp16_tb_softfloat__DOT__etchedfp4adder__DOT__second_stage__DOT____Vcellout__loop_s1__BRA__13__KET____DOT__fa_1__sum)) 
-                                                 & (IData)(vlSelfRef.add4_fp16_tb_softfloat__DOT__etchedfp4adder__DOT__second_stage__DOT____Vcellout__loop_s1__BRA__12__KET____DOT__fa_1__co)))));
-        bufp->chgBit(oldp+208,((1U & (vlSelfRef.add4_fp16_tb_softfloat__DOT__etchedfp4adder__DOT__second_stage__DOT____VdfgRegularize_hc819fdcb_3_0 
-                                      >> 0xeU))));
-        bufp->chgBit(oldp+209,((1U & ((IData)(vlSelfRef.add4_fp16_tb_softfloat__DOT__etchedfp4adder__DOT__second_stage__DOT____Vcellout__loop_s1__BRA__14__KET____DOT__fa_1__sum) 
-                                      ^ ((vlSelfRef.add4_fp16_tb_softfloat__DOT__etchedfp4adder__DOT__second_stage__DOT____VdfgRegularize_hc819fdcb_3_0 
-                                          >> 0xeU) 
-                                         ^ (IData)(vlSelfRef.add4_fp16_tb_softfloat__DOT__etchedfp4adder__DOT__second_stage__DOT____Vcellout__loop_s1__BRA__13__KET____DOT__fa_1__co))))));
-        bufp->chgBit(oldp+210,((((IData)(vlSelfRef.add4_fp16_tb_softfloat__DOT__etchedfp4adder__DOT__second_stage__DOT____Vcellout__loop_s1__BRA__14__KET____DOT__fa_1__sum) 
-                                 & (vlSelfRef.add4_fp16_tb_softfloat__DOT__etchedfp4adder__DOT__second_stage__DOT____VdfgRegularize_hc819fdcb_3_0 
-                                    >> 0xeU)) | (((vlSelfRef.add4_fp16_tb_softfloat__DOT__etchedfp4adder__DOT__second_stage__DOT____VdfgRegularize_hc819fdcb_3_0 
-                                                   >> 0xeU) 
-                                                  | (IData)(vlSelfRef.add4_fp16_tb_softfloat__DOT__etchedfp4adder__DOT__second_stage__DOT____Vcellout__loop_s1__BRA__14__KET____DOT__fa_1__sum)) 
-                                                 & (IData)(vlSelfRef.add4_fp16_tb_softfloat__DOT__etchedfp4adder__DOT__second_stage__DOT____Vcellout__loop_s1__BRA__13__KET____DOT__fa_1__co)))));
-        bufp->chgBit(oldp+211,((1U & (vlSelfRef.add4_fp16_tb_softfloat__DOT__etchedfp4adder__DOT__second_stage__DOT____VdfgRegularize_hc819fdcb_3_0 
-                                      >> 1U))));
-        bufp->chgBit(oldp+212,((1U & ((IData)(vlSelfRef.add4_fp16_tb_softfloat__DOT__etchedfp4adder__DOT__second_stage__DOT____Vcellout__loop_s1__BRA__1__KET____DOT__fa_1__sum) 
-                                      ^ ((vlSelfRef.add4_fp16_tb_softfloat__DOT__etchedfp4adder__DOT__second_stage__DOT____VdfgRegularize_hc819fdcb_3_0 
-                                          >> 1U) ^ (IData)(vlSelfRef.add4_fp16_tb_softfloat__DOT__etchedfp4adder__DOT__second_stage__DOT__c1__BRA__0__KET__))))));
-        bufp->chgBit(oldp+213,((((IData)(vlSelfRef.add4_fp16_tb_softfloat__DOT__etchedfp4adder__DOT__second_stage__DOT____Vcellout__loop_s1__BRA__1__KET____DOT__fa_1__sum) 
-                                 & (vlSelfRef.add4_fp16_tb_softfloat__DOT__etchedfp4adder__DOT__second_stage__DOT____VdfgRegularize_hc819fdcb_3_0 
-                                    >> 1U)) | (((vlSelfRef.add4_fp16_tb_softfloat__DOT__etchedfp4adder__DOT__second_stage__DOT____VdfgRegularize_hc819fdcb_3_0 
-                                                 >> 1U) 
-                                                | (IData)(vlSelfRef.add4_fp16_tb_softfloat__DOT__etchedfp4adder__DOT__second_stage__DOT____Vcellout__loop_s1__BRA__1__KET____DOT__fa_1__sum)) 
-                                               & (IData)(vlSelfRef.add4_fp16_tb_softfloat__DOT__etchedfp4adder__DOT__second_stage__DOT__c1__BRA__0__KET__)))));
-        bufp->chgBit(oldp+214,((1U & (vlSelfRef.add4_fp16_tb_softfloat__DOT__etchedfp4adder__DOT__second_stage__DOT____VdfgRegularize_hc819fdcb_3_0 
-                                      >> 2U))));
-        bufp->chgBit(oldp+215,((1U & ((IData)(vlSelfRef.add4_fp16_tb_softfloat__DOT__etchedfp4adder__DOT__second_stage__DOT____Vcellout__loop_s1__BRA__2__KET____DOT__fa_1__sum) 
-                                      ^ ((vlSelfRef.add4_fp16_tb_softfloat__DOT__etchedfp4adder__DOT__second_stage__DOT____VdfgRegularize_hc819fdcb_3_0 
-                                          >> 2U) ^ (IData)(vlSelfRef.add4_fp16_tb_softfloat__DOT__etchedfp4adder__DOT__second_stage__DOT____Vcellout__loop_s1__BRA__1__KET____DOT__fa_1__co))))));
-        bufp->chgBit(oldp+216,((((IData)(vlSelfRef.add4_fp16_tb_softfloat__DOT__etchedfp4adder__DOT__second_stage__DOT____Vcellout__loop_s1__BRA__2__KET____DOT__fa_1__sum) 
-                                 & (vlSelfRef.add4_fp16_tb_softfloat__DOT__etchedfp4adder__DOT__second_stage__DOT____VdfgRegularize_hc819fdcb_3_0 
-                                    >> 2U)) | (((vlSelfRef.add4_fp16_tb_softfloat__DOT__etchedfp4adder__DOT__second_stage__DOT____VdfgRegularize_hc819fdcb_3_0 
-                                                 >> 2U) 
-                                                | (IData)(vlSelfRef.add4_fp16_tb_softfloat__DOT__etchedfp4adder__DOT__second_stage__DOT____Vcellout__loop_s1__BRA__2__KET____DOT__fa_1__sum)) 
-                                               & (IData)(vlSelfRef.add4_fp16_tb_softfloat__DOT__etchedfp4adder__DOT__second_stage__DOT____Vcellout__loop_s1__BRA__1__KET____DOT__fa_1__co)))));
-        bufp->chgBit(oldp+217,((1U & (vlSelfRef.add4_fp16_tb_softfloat__DOT__etchedfp4adder__DOT__second_stage__DOT____VdfgRegularize_hc819fdcb_3_0 
-                                      >> 3U))));
-        bufp->chgBit(oldp+218,((1U & ((IData)(vlSelfRef.add4_fp16_tb_softfloat__DOT__etchedfp4adder__DOT__second_stage__DOT____Vcellout__loop_s1__BRA__3__KET____DOT__fa_1__sum) 
-                                      ^ ((vlSelfRef.add4_fp16_tb_softfloat__DOT__etchedfp4adder__DOT__second_stage__DOT____VdfgRegularize_hc819fdcb_3_0 
-                                          >> 3U) ^ (IData)(vlSelfRef.add4_fp16_tb_softfloat__DOT__etchedfp4adder__DOT__second_stage__DOT____Vcellout__loop_s1__BRA__2__KET____DOT__fa_1__co))))));
-        bufp->chgBit(oldp+219,((((IData)(vlSelfRef.add4_fp16_tb_softfloat__DOT__etchedfp4adder__DOT__second_stage__DOT____Vcellout__loop_s1__BRA__3__KET____DOT__fa_1__sum) 
-                                 & (vlSelfRef.add4_fp16_tb_softfloat__DOT__etchedfp4adder__DOT__second_stage__DOT____VdfgRegularize_hc819fdcb_3_0 
-                                    >> 3U)) | (((vlSelfRef.add4_fp16_tb_softfloat__DOT__etchedfp4adder__DOT__second_stage__DOT____VdfgRegularize_hc819fdcb_3_0 
-                                                 >> 3U) 
-                                                | (IData)(vlSelfRef.add4_fp16_tb_softfloat__DOT__etchedfp4adder__DOT__second_stage__DOT____Vcellout__loop_s1__BRA__3__KET____DOT__fa_1__sum)) 
-                                               & (IData)(vlSelfRef.add4_fp16_tb_softfloat__DOT__etchedfp4adder__DOT__second_stage__DOT____Vcellout__loop_s1__BRA__2__KET____DOT__fa_1__co)))));
-        bufp->chgBit(oldp+220,((1U & (vlSelfRef.add4_fp16_tb_softfloat__DOT__etchedfp4adder__DOT__second_stage__DOT____VdfgRegularize_hc819fdcb_3_0 
-                                      >> 4U))));
-        bufp->chgBit(oldp+221,((1U & ((IData)(vlSelfRef.add4_fp16_tb_softfloat__DOT__etchedfp4adder__DOT__second_stage__DOT____Vcellout__loop_s1__BRA__4__KET____DOT__fa_1__sum) 
-                                      ^ ((vlSelfRef.add4_fp16_tb_softfloat__DOT__etchedfp4adder__DOT__second_stage__DOT____VdfgRegularize_hc819fdcb_3_0 
-                                          >> 4U) ^ (IData)(vlSelfRef.add4_fp16_tb_softfloat__DOT__etchedfp4adder__DOT__second_stage__DOT____Vcellout__loop_s1__BRA__3__KET____DOT__fa_1__co))))));
-        bufp->chgBit(oldp+222,((((IData)(vlSelfRef.add4_fp16_tb_softfloat__DOT__etchedfp4adder__DOT__second_stage__DOT____Vcellout__loop_s1__BRA__4__KET____DOT__fa_1__sum) 
-                                 & (vlSelfRef.add4_fp16_tb_softfloat__DOT__etchedfp4adder__DOT__second_stage__DOT____VdfgRegularize_hc819fdcb_3_0 
-                                    >> 4U)) | (((vlSelfRef.add4_fp16_tb_softfloat__DOT__etchedfp4adder__DOT__second_stage__DOT____VdfgRegularize_hc819fdcb_3_0 
-                                                 >> 4U) 
-                                                | (IData)(vlSelfRef.add4_fp16_tb_softfloat__DOT__etchedfp4adder__DOT__second_stage__DOT____Vcellout__loop_s1__BRA__4__KET____DOT__fa_1__sum)) 
-                                               & (IData)(vlSelfRef.add4_fp16_tb_softfloat__DOT__etchedfp4adder__DOT__second_stage__DOT____Vcellout__loop_s1__BRA__3__KET____DOT__fa_1__co)))));
-        bufp->chgBit(oldp+223,((1U & (vlSelfRef.add4_fp16_tb_softfloat__DOT__etchedfp4adder__DOT__second_stage__DOT____VdfgRegularize_hc819fdcb_3_0 
-                                      >> 5U))));
-        bufp->chgBit(oldp+224,((1U & ((IData)(vlSelfRef.add4_fp16_tb_softfloat__DOT__etchedfp4adder__DOT__second_stage__DOT____Vcellout__loop_s1__BRA__5__KET____DOT__fa_1__sum) 
-                                      ^ ((vlSelfRef.add4_fp16_tb_softfloat__DOT__etchedfp4adder__DOT__second_stage__DOT____VdfgRegularize_hc819fdcb_3_0 
-                                          >> 5U) ^ (IData)(vlSelfRef.add4_fp16_tb_softfloat__DOT__etchedfp4adder__DOT__second_stage__DOT____Vcellout__loop_s1__BRA__4__KET____DOT__fa_1__co))))));
-        bufp->chgBit(oldp+225,((((IData)(vlSelfRef.add4_fp16_tb_softfloat__DOT__etchedfp4adder__DOT__second_stage__DOT____Vcellout__loop_s1__BRA__5__KET____DOT__fa_1__sum) 
-                                 & (vlSelfRef.add4_fp16_tb_softfloat__DOT__etchedfp4adder__DOT__second_stage__DOT____VdfgRegularize_hc819fdcb_3_0 
-                                    >> 5U)) | (((vlSelfRef.add4_fp16_tb_softfloat__DOT__etchedfp4adder__DOT__second_stage__DOT____VdfgRegularize_hc819fdcb_3_0 
-                                                 >> 5U) 
-                                                | (IData)(vlSelfRef.add4_fp16_tb_softfloat__DOT__etchedfp4adder__DOT__second_stage__DOT____Vcellout__loop_s1__BRA__5__KET____DOT__fa_1__sum)) 
-                                               & (IData)(vlSelfRef.add4_fp16_tb_softfloat__DOT__etchedfp4adder__DOT__second_stage__DOT____Vcellout__loop_s1__BRA__4__KET____DOT__fa_1__co)))));
-        bufp->chgBit(oldp+226,((1U & (vlSelfRef.add4_fp16_tb_softfloat__DOT__etchedfp4adder__DOT__second_stage__DOT____VdfgRegularize_hc819fdcb_3_0 
-                                      >> 6U))));
-        bufp->chgBit(oldp+227,((1U & ((IData)(vlSelfRef.add4_fp16_tb_softfloat__DOT__etchedfp4adder__DOT__second_stage__DOT____Vcellout__loop_s1__BRA__6__KET____DOT__fa_1__sum) 
-                                      ^ ((vlSelfRef.add4_fp16_tb_softfloat__DOT__etchedfp4adder__DOT__second_stage__DOT____VdfgRegularize_hc819fdcb_3_0 
-                                          >> 6U) ^ (IData)(vlSelfRef.add4_fp16_tb_softfloat__DOT__etchedfp4adder__DOT__second_stage__DOT____Vcellout__loop_s1__BRA__5__KET____DOT__fa_1__co))))));
-        bufp->chgBit(oldp+228,((((IData)(vlSelfRef.add4_fp16_tb_softfloat__DOT__etchedfp4adder__DOT__second_stage__DOT____Vcellout__loop_s1__BRA__6__KET____DOT__fa_1__sum) 
-                                 & (vlSelfRef.add4_fp16_tb_softfloat__DOT__etchedfp4adder__DOT__second_stage__DOT____VdfgRegularize_hc819fdcb_3_0 
-                                    >> 6U)) | (((vlSelfRef.add4_fp16_tb_softfloat__DOT__etchedfp4adder__DOT__second_stage__DOT____VdfgRegularize_hc819fdcb_3_0 
-                                                 >> 6U) 
-                                                | (IData)(vlSelfRef.add4_fp16_tb_softfloat__DOT__etchedfp4adder__DOT__second_stage__DOT____Vcellout__loop_s1__BRA__6__KET____DOT__fa_1__sum)) 
-                                               & (IData)(vlSelfRef.add4_fp16_tb_softfloat__DOT__etchedfp4adder__DOT__second_stage__DOT____Vcellout__loop_s1__BRA__5__KET____DOT__fa_1__co)))));
-        bufp->chgBit(oldp+229,((1U & (vlSelfRef.add4_fp16_tb_softfloat__DOT__etchedfp4adder__DOT__second_stage__DOT____VdfgRegularize_hc819fdcb_3_0 
-                                      >> 7U))));
-        bufp->chgBit(oldp+230,((1U & ((IData)(vlSelfRef.add4_fp16_tb_softfloat__DOT__etchedfp4adder__DOT__second_stage__DOT____Vcellout__loop_s1__BRA__7__KET____DOT__fa_1__sum) 
-                                      ^ ((vlSelfRef.add4_fp16_tb_softfloat__DOT__etchedfp4adder__DOT__second_stage__DOT____VdfgRegularize_hc819fdcb_3_0 
-                                          >> 7U) ^ (IData)(vlSelfRef.add4_fp16_tb_softfloat__DOT__etchedfp4adder__DOT__second_stage__DOT____Vcellout__loop_s1__BRA__6__KET____DOT__fa_1__co))))));
-        bufp->chgBit(oldp+231,((((IData)(vlSelfRef.add4_fp16_tb_softfloat__DOT__etchedfp4adder__DOT__second_stage__DOT____Vcellout__loop_s1__BRA__7__KET____DOT__fa_1__sum) 
-                                 & (vlSelfRef.add4_fp16_tb_softfloat__DOT__etchedfp4adder__DOT__second_stage__DOT____VdfgRegularize_hc819fdcb_3_0 
-                                    >> 7U)) | (((vlSelfRef.add4_fp16_tb_softfloat__DOT__etchedfp4adder__DOT__second_stage__DOT____VdfgRegularize_hc819fdcb_3_0 
-                                                 >> 7U) 
-                                                | (IData)(vlSelfRef.add4_fp16_tb_softfloat__DOT__etchedfp4adder__DOT__second_stage__DOT____Vcellout__loop_s1__BRA__7__KET____DOT__fa_1__sum)) 
-                                               & (IData)(vlSelfRef.add4_fp16_tb_softfloat__DOT__etchedfp4adder__DOT__second_stage__DOT____Vcellout__loop_s1__BRA__6__KET____DOT__fa_1__co)))));
-        bufp->chgBit(oldp+232,((1U & (vlSelfRef.add4_fp16_tb_softfloat__DOT__etchedfp4adder__DOT__second_stage__DOT____VdfgRegularize_hc819fdcb_3_0 
-                                      >> 8U))));
-        bufp->chgBit(oldp+233,((1U & ((IData)(vlSelfRef.add4_fp16_tb_softfloat__DOT__etchedfp4adder__DOT__second_stage__DOT____Vcellout__loop_s1__BRA__8__KET____DOT__fa_1__sum) 
-                                      ^ ((vlSelfRef.add4_fp16_tb_softfloat__DOT__etchedfp4adder__DOT__second_stage__DOT____VdfgRegularize_hc819fdcb_3_0 
-                                          >> 8U) ^ (IData)(vlSelfRef.add4_fp16_tb_softfloat__DOT__etchedfp4adder__DOT__second_stage__DOT____Vcellout__loop_s1__BRA__7__KET____DOT__fa_1__co))))));
-        bufp->chgBit(oldp+234,((((IData)(vlSelfRef.add4_fp16_tb_softfloat__DOT__etchedfp4adder__DOT__second_stage__DOT____Vcellout__loop_s1__BRA__8__KET____DOT__fa_1__sum) 
-                                 & (vlSelfRef.add4_fp16_tb_softfloat__DOT__etchedfp4adder__DOT__second_stage__DOT____VdfgRegularize_hc819fdcb_3_0 
-                                    >> 8U)) | (((vlSelfRef.add4_fp16_tb_softfloat__DOT__etchedfp4adder__DOT__second_stage__DOT____VdfgRegularize_hc819fdcb_3_0 
-                                                 >> 8U) 
-                                                | (IData)(vlSelfRef.add4_fp16_tb_softfloat__DOT__etchedfp4adder__DOT__second_stage__DOT____Vcellout__loop_s1__BRA__8__KET____DOT__fa_1__sum)) 
-                                               & (IData)(vlSelfRef.add4_fp16_tb_softfloat__DOT__etchedfp4adder__DOT__second_stage__DOT____Vcellout__loop_s1__BRA__7__KET____DOT__fa_1__co)))));
-        bufp->chgBit(oldp+235,((1U & (vlSelfRef.add4_fp16_tb_softfloat__DOT__etchedfp4adder__DOT__second_stage__DOT____VdfgRegularize_hc819fdcb_3_0 
-                                      >> 9U))));
-        bufp->chgBit(oldp+236,((1U & ((IData)(vlSelfRef.add4_fp16_tb_softfloat__DOT__etchedfp4adder__DOT__second_stage__DOT____Vcellout__loop_s1__BRA__9__KET____DOT__fa_1__sum) 
-                                      ^ ((vlSelfRef.add4_fp16_tb_softfloat__DOT__etchedfp4adder__DOT__second_stage__DOT____VdfgRegularize_hc819fdcb_3_0 
-                                          >> 9U) ^ (IData)(vlSelfRef.add4_fp16_tb_softfloat__DOT__etchedfp4adder__DOT__second_stage__DOT____Vcellout__loop_s1__BRA__8__KET____DOT__fa_1__co))))));
-        bufp->chgBit(oldp+237,((((IData)(vlSelfRef.add4_fp16_tb_softfloat__DOT__etchedfp4adder__DOT__second_stage__DOT____Vcellout__loop_s1__BRA__9__KET____DOT__fa_1__sum) 
-                                 & (vlSelfRef.add4_fp16_tb_softfloat__DOT__etchedfp4adder__DOT__second_stage__DOT____VdfgRegularize_hc819fdcb_3_0 
-                                    >> 9U)) | (((vlSelfRef.add4_fp16_tb_softfloat__DOT__etchedfp4adder__DOT__second_stage__DOT____VdfgRegularize_hc819fdcb_3_0 
-                                                 >> 9U) 
-                                                | (IData)(vlSelfRef.add4_fp16_tb_softfloat__DOT__etchedfp4adder__DOT__second_stage__DOT____Vcellout__loop_s1__BRA__9__KET____DOT__fa_1__sum)) 
-                                               & (IData)(vlSelfRef.add4_fp16_tb_softfloat__DOT__etchedfp4adder__DOT__second_stage__DOT____Vcellout__loop_s1__BRA__8__KET____DOT__fa_1__co)))));
-        bufp->chgIData(oldp+238,(vlSelfRef.add4_fp16_tb_softfloat__DOT__etchedfp4adder__DOT__second_stage__DOT__unnamedblk1__DOT__k),32);
-        bufp->chgSData(oldp+239,(vlSelfRef.add4_fp16_tb_softfloat__DOT__etchedfp4adder__DOT__third_stage__DOT__shifted_sum),14);
-        bufp->chgSData(oldp+240,(vlSelfRef.add4_fp16_tb_softfloat__DOT__etchedfp4adder__DOT__third_stage__DOT__sum_reg),14);
-        bufp->chgCData(oldp+241,(vlSelfRef.add4_fp16_tb_softfloat__DOT__etchedfp4adder__DOT__third_stage__DOT__leading_zeros_reg),4);
-        bufp->chgBit(oldp+242,(vlSelfRef.add4_fp16_tb_softfloat__DOT__etchedfp4adder__DOT__third_stage__DOT__sign_reg));
-        bufp->chgCData(oldp+243,(vlSelfRef.add4_fp16_tb_softfloat__DOT__etchedfp4adder__DOT__third_stage__DOT__exponent_reg),5);
-        bufp->chgBit(oldp+244,(vlSelfRef.add4_fp16_tb_softfloat__DOT__etchedfp4adder__DOT__third_stage__DOT__special_case_reg));
-        bufp->chgSData(oldp+245,(vlSelfRef.add4_fp16_tb_softfloat__DOT__etchedfp4adder__DOT__third_stage__DOT__special_result_reg),16);
-        bufp->chgSData(oldp+246,(((IData)(vlSelfRef.add4_fp16_tb_softfloat__DOT__etchedfp4adder__DOT__third_stage__DOT__special_case_reg)
-                                   ? (IData)(vlSelfRef.add4_fp16_tb_softfloat__DOT__etchedfp4adder__DOT__third_stage__DOT__special_result_reg)
-                                   : ((IData)(vlSelfRef.add4_fp16_tb_softfloat__DOT__etchedfp4adder__DOT__third_stage__DOT__inf)
-                                       ? (((IData)(vlSelfRef.add4_fp16_tb_softfloat__DOT__etchedfp4adder__DOT__third_stage__DOT__sign_reg) 
-                                           << 0xfU) 
-                                          | ((IData)(vlSelfRef.add4_fp16_tb_softfloat__DOT__etchedfp4adder__DOT__third_stage__DOT__new_exponent) 
-                                             << 0xaU))
-                                       : ((0U == (IData)(vlSelfRef.add4_fp16_tb_softfloat__DOT__etchedfp4adder__DOT__third_stage__DOT__new_exponent))
-                                           ? (((IData)(vlSelfRef.add4_fp16_tb_softfloat__DOT__etchedfp4adder__DOT__third_stage__DOT__sign_reg) 
-                                               << 0xfU) 
-                                              | ((IData)(vlSelfRef.add4_fp16_tb_softfloat__DOT__etchedfp4adder__DOT__third_stage__DOT__new_exponent) 
-                                                 << 0xaU))
-                                           : (((IData)(vlSelfRef.add4_fp16_tb_softfloat__DOT__etchedfp4adder__DOT__third_stage__DOT__sign_reg) 
-                                               << 0xfU) 
-                                              | (((IData)(vlSelfRef.add4_fp16_tb_softfloat__DOT__etchedfp4adder__DOT__third_stage__DOT__new_exponent) 
-                                                  << 0xaU) 
-                                                 | ((0x400U 
-                                                     & (IData)(vlSelfRef.add4_fp16_tb_softfloat__DOT__etchedfp4adder__DOT__third_stage__DOT__rounded_mantissa_internal))
-                                                     ? 0U
-                                                     : 
-                                                    (0x3ffU 
-                                                     & (IData)(vlSelfRef.add4_fp16_tb_softfloat__DOT__etchedfp4adder__DOT__third_stage__DOT__rounded_mantissa_internal))))))))),16);
-        bufp->chgCData(oldp+247,(vlSelfRef.add4_fp16_tb_softfloat__DOT__etchedfp4adder__DOT__third_stage__DOT__right_shift_reg),2);
-        bufp->chgBit(oldp+248,((1U & ((IData)(vlSelfRef.add4_fp16_tb_softfloat__DOT__etchedfp4adder__DOT__third_stage__DOT__rounded_mantissa_internal) 
-                                      >> 0xaU))));
-        bufp->chgSData(oldp+249,((0x3ffU & ((IData)(vlSelfRef.add4_fp16_tb_softfloat__DOT__etchedfp4adder__DOT__third_stage__DOT__shifted_sum) 
-                                            >> 3U))),10);
-        bufp->chgSData(oldp+250,(vlSelfRef.add4_fp16_tb_softfloat__DOT__etchedfp4adder__DOT__third_stage__DOT__rounded_mantissa_internal),11);
-        bufp->chgBit(oldp+251,((1U & ((IData)(vlSelfRef.add4_fp16_tb_softfloat__DOT__etchedfp4adder__DOT__third_stage__DOT__shifted_sum) 
-                                      >> 3U))));
-        bufp->chgBit(oldp+252,((1U & ((IData)(vlSelfRef.add4_fp16_tb_softfloat__DOT__etchedfp4adder__DOT__third_stage__DOT__shifted_sum) 
-                                      >> 2U))));
-        bufp->chgBit(oldp+253,((0U != (3U & (IData)(vlSelfRef.add4_fp16_tb_softfloat__DOT__etchedfp4adder__DOT__third_stage__DOT__shifted_sum)))));
-        bufp->chgBit(oldp+254,((IData)((((IData)(vlSelfRef.add4_fp16_tb_softfloat__DOT__etchedfp4adder__DOT__third_stage__DOT__shifted_sum) 
-                                         >> 3U) & (0U 
-                                                   != 
-                                                   (0xfU 
-                                                    & (IData)(vlSelfRef.add4_fp16_tb_softfloat__DOT__etchedfp4adder__DOT__third_stage__DOT__shifted_sum)))))));
-        bufp->chgSData(oldp+255,(((0x400U & (IData)(vlSelfRef.add4_fp16_tb_softfloat__DOT__etchedfp4adder__DOT__third_stage__DOT__rounded_mantissa_internal))
-                                   ? 0U : (0x3ffU & (IData)(vlSelfRef.add4_fp16_tb_softfloat__DOT__etchedfp4adder__DOT__third_stage__DOT__rounded_mantissa_internal)))),10);
-        bufp->chgCData(oldp+256,(vlSelfRef.add4_fp16_tb_softfloat__DOT__etchedfp4adder__DOT__third_stage__DOT__new_exponent_internal),7);
-        bufp->chgCData(oldp+257,(vlSelfRef.add4_fp16_tb_softfloat__DOT__etchedfp4adder__DOT__third_stage__DOT__new_exponent),5);
-        bufp->chgBit(oldp+258,(vlSelfRef.add4_fp16_tb_softfloat__DOT__etchedfp4adder__DOT__third_stage__DOT__inf));
+        bufp->chgSData(oldp+84,(vlSymsp->TOP__add4_fp16_tb_softfloat__DOT__add_if.out),16);
+        bufp->chgBit(oldp+85,(vlSelfRef.add4_fp16_tb_softfloat__DOT__etchedfp4adder__DOT__st1_a_s));
+        bufp->chgBit(oldp+86,(vlSelfRef.add4_fp16_tb_softfloat__DOT__etchedfp4adder__DOT__st1_b_op));
+        bufp->chgBit(oldp+87,(vlSelfRef.add4_fp16_tb_softfloat__DOT__etchedfp4adder__DOT__st1_c_op));
+        bufp->chgBit(oldp+88,(vlSelfRef.add4_fp16_tb_softfloat__DOT__etchedfp4adder__DOT__st1_d_op));
+        bufp->chgCData(oldp+89,(vlSelfRef.add4_fp16_tb_softfloat__DOT__etchedfp4adder__DOT__st1_a_e),5);
+        bufp->chgSData(oldp+90,(vlSelfRef.add4_fp16_tb_softfloat__DOT__etchedfp4adder__DOT__st1_x_f),15);
+        bufp->chgSData(oldp+91,(vlSelfRef.add4_fp16_tb_softfloat__DOT__etchedfp4adder__DOT__st1_y_f),15);
+        bufp->chgSData(oldp+92,(vlSelfRef.add4_fp16_tb_softfloat__DOT__etchedfp4adder__DOT__st1_m_f),15);
+        bufp->chgSData(oldp+93,(vlSelfRef.add4_fp16_tb_softfloat__DOT__etchedfp4adder__DOT__st1_n_f),15);
+        bufp->chgBit(oldp+94,(vlSelfRef.add4_fp16_tb_softfloat__DOT__etchedfp4adder__DOT__st1_special_case));
+        bufp->chgSData(oldp+95,(vlSelfRef.add4_fp16_tb_softfloat__DOT__etchedfp4adder__DOT__st1_special_result),16);
+        bufp->chgSData(oldp+96,(vlSelfRef.add4_fp16_tb_softfloat__DOT__etchedfp4adder__DOT__a_f_st2),15);
+        bufp->chgSData(oldp+97,(vlSelfRef.add4_fp16_tb_softfloat__DOT__etchedfp4adder__DOT__b_f_st2),15);
+        bufp->chgSData(oldp+98,(vlSelfRef.add4_fp16_tb_softfloat__DOT__etchedfp4adder__DOT__c_f_st2),15);
+        bufp->chgSData(oldp+99,(vlSelfRef.add4_fp16_tb_softfloat__DOT__etchedfp4adder__DOT__d_f_st2),15);
+        bufp->chgSData(oldp+100,(vlSelfRef.add4_fp16_tb_softfloat__DOT__etchedfp4adder__DOT__b_inv),15);
+        bufp->chgSData(oldp+101,(vlSelfRef.add4_fp16_tb_softfloat__DOT__etchedfp4adder__DOT__c_inv),15);
+        bufp->chgSData(oldp+102,(vlSelfRef.add4_fp16_tb_softfloat__DOT__etchedfp4adder__DOT__d_inv),15);
+        bufp->chgSData(oldp+103,(vlSelfRef.add4_fp16_tb_softfloat__DOT__etchedfp4adder__DOT__s1),15);
+        bufp->chgSData(oldp+104,(vlSelfRef.add4_fp16_tb_softfloat__DOT__etchedfp4adder__DOT__c1),15);
+        bufp->chgSData(oldp+105,(vlSelfRef.add4_fp16_tb_softfloat__DOT__etchedfp4adder__DOT__s2),15);
+        bufp->chgSData(oldp+106,(vlSelfRef.add4_fp16_tb_softfloat__DOT__etchedfp4adder__DOT__c2),15);
+        bufp->chgIData(oldp+107,(vlSelfRef.add4_fp16_tb_softfloat__DOT__etchedfp4adder__DOT__magnitude_sum),17);
+        bufp->chgSData(oldp+108,(vlSelfRef.add4_fp16_tb_softfloat__DOT__etchedfp4adder__DOT__corrected_sum),16);
+        bufp->chgBit(oldp+109,(vlSelfRef.add4_fp16_tb_softfloat__DOT__etchedfp4adder__DOT__next_result_s));
+        bufp->chgCData(oldp+110,(vlSelfRef.add4_fp16_tb_softfloat__DOT__etchedfp4adder__DOT__next_num_leading_zeros),4);
+        bufp->chgCData(oldp+111,(vlSelfRef.add4_fp16_tb_softfloat__DOT__etchedfp4adder__DOT__next_right_shift_radix),2);
+        bufp->chgSData(oldp+112,(vlSelfRef.add4_fp16_tb_softfloat__DOT__etchedfp4adder__DOT__st2_sum_i),16);
+        bufp->chgBit(oldp+113,(vlSelfRef.add4_fp16_tb_softfloat__DOT__etchedfp4adder__DOT__st2_result_s));
+        bufp->chgCData(oldp+114,(vlSelfRef.add4_fp16_tb_softfloat__DOT__etchedfp4adder__DOT__st2_a_e_out),5);
+        bufp->chgCData(oldp+115,(vlSelfRef.add4_fp16_tb_softfloat__DOT__etchedfp4adder__DOT__st2_num_leading_zeros),4);
+        bufp->chgCData(oldp+116,(vlSelfRef.add4_fp16_tb_softfloat__DOT__etchedfp4adder__DOT__st2_right_shift_radix),2);
+        bufp->chgBit(oldp+117,(vlSelfRef.add4_fp16_tb_softfloat__DOT__etchedfp4adder__DOT__st2_special_case));
+        bufp->chgSData(oldp+118,(vlSelfRef.add4_fp16_tb_softfloat__DOT__etchedfp4adder__DOT__st2_special_result),16);
+        bufp->chgSData(oldp+119,(vlSelfRef.add4_fp16_tb_softfloat__DOT__etchedfp4adder__DOT__sum_reg_st3),14);
+        bufp->chgSData(oldp+120,(vlSelfRef.add4_fp16_tb_softfloat__DOT__etchedfp4adder__DOT__shifted_sum),14);
+        bufp->chgSData(oldp+121,(vlSelfRef.add4_fp16_tb_softfloat__DOT__etchedfp4adder__DOT__unrounded_mantissa),10);
+        bufp->chgSData(oldp+122,(vlSelfRef.add4_fp16_tb_softfloat__DOT__etchedfp4adder__DOT__rounded_mantissa_internal),11);
+        bufp->chgBit(oldp+123,(vlSelfRef.add4_fp16_tb_softfloat__DOT__etchedfp4adder__DOT__guard));
+        bufp->chgBit(oldp+124,(vlSelfRef.add4_fp16_tb_softfloat__DOT__etchedfp4adder__DOT__round));
+        bufp->chgBit(oldp+125,(vlSelfRef.add4_fp16_tb_softfloat__DOT__etchedfp4adder__DOT__sticky));
+        bufp->chgBit(oldp+126,(vlSelfRef.add4_fp16_tb_softfloat__DOT__etchedfp4adder__DOT__round_up));
+        bufp->chgBit(oldp+127,(vlSelfRef.add4_fp16_tb_softfloat__DOT__etchedfp4adder__DOT__overflow));
+        bufp->chgSData(oldp+128,(vlSelfRef.add4_fp16_tb_softfloat__DOT__etchedfp4adder__DOT__final_mantissa),10);
+        bufp->chgCData(oldp+129,(vlSelfRef.add4_fp16_tb_softfloat__DOT__etchedfp4adder__DOT__new_exponent_internal),7);
+        bufp->chgCData(oldp+130,(vlSelfRef.add4_fp16_tb_softfloat__DOT__etchedfp4adder__DOT__new_exponent),5);
+        bufp->chgBit(oldp+131,(vlSelfRef.add4_fp16_tb_softfloat__DOT__etchedfp4adder__DOT__inf));
+        bufp->chgSData(oldp+132,(vlSelfRef.add4_fp16_tb_softfloat__DOT__etchedfp4adder__DOT__final_sum_next),16);
+        bufp->chgIData(oldp+133,(vlSelfRef.add4_fp16_tb_softfloat__DOT__etchedfp4adder__DOT__stage2_combinational__DOT__unnamedblk2__DOT__i),32);
+        bufp->chgIData(oldp+134,(vlSelfRef.add4_fp16_tb_softfloat__DOT__etchedfp4adder__DOT__stage2_combinational__DOT__unnamedblk3__DOT__i),32);
+        bufp->chgBit(oldp+135,(vlSelfRef.add4_fp16_tb_softfloat__DOT__etchedfp4adder__DOT__stage2_combinational__DOT__unnamedblk3__DOT__unnamedblk4__DOT__c_val));
+        bufp->chgIData(oldp+136,(vlSelfRef.add4_fp16_tb_softfloat__DOT__etchedfp4adder__DOT__stage2_combinational__DOT__unnamedblk5__DOT__k),32);
     }
-    bufp->chgBit(oldp+259,(vlSelfRef.add4_fp16_tb_softfloat__DOT__tb_clk));
+    bufp->chgBit(oldp+137,(vlSelfRef.add4_fp16_tb_softfloat__DOT__tb_clk));
 }
 
 void Vadd4_fp16_tb_softfloat___024root__trace_cleanup(void* voidSelf, VerilatedVcd* /*unused*/) {
