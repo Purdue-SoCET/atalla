@@ -29,8 +29,8 @@ module 4in_adder_AIHW #(
     logic [MANT_WIDTH-1:0] x_f, y_shifted_f, m_shifted_f, n_shifted_f;
     logic y_op_f, m_op_f, n_op_f;
 
-    logic special_case_f;
-    logic [15:0] special_result_f;
+    logic special_case, special_case_f;
+    logic [15:0] special_result, special_result_f;
 
     always_ff @(posedge clk, negedge n_rst) begin
         if (!n_rst) begin
@@ -42,6 +42,8 @@ module 4in_adder_AIHW #(
             y_op_f <= '0;
             m_op_f <= '0;
             n_op_f <= '0;
+	    special_case_f <= '0;
+	    special_result_f <= '0;
         end else begin
 	    x_e_f <= exp_x;
             x_f <= x_mant;
@@ -51,6 +53,8 @@ module 4in_adder_AIHW #(
             y_op_f <= y_op;
             m_op_f <= m_op;
             n_op_f <= n_op;
+	    special_case_f <= special_case;
+	    special_result_f <= special_result;
         end
     end
 
@@ -86,9 +90,6 @@ module 4in_adder_AIHW #(
 	if (is_nan_a || is_nan_b || is_nan_c || is_nan_d) begin
             special_case = 1'b1;
             special_result = 16'h7E00;
-            // NaN propagation - use canonical qNaN
-            special_case = 1'b1;
-            special_result = 16'h7E00;  // Canonical positive quiet NaN
         end
         else if ((is_inf_a && is_inf_b) || (is_inf_a && is_inf_c) || (is_inf_a && is_inf_d) ||
                  (is_inf_b && is_inf_c) || (is_inf_b && is_inf_d) || (is_inf_c && is_inf_d)) 
@@ -116,14 +117,12 @@ module 4in_adder_AIHW #(
                 special_result = 16'h7E00;  // canonical NaN
             end
             else if (has_pos_inf) begin
-                // Same sign (positive): result is +Inf
                 special_case = 1'b1;
-                special_result = 16'h7C00;  // +Inf
+                special_result = 16'h7C00;
             end
             else begin
-                // Same sign (negative): result is -Inf
                 special_case = 1'b1;
-                special_result = 16'hFC00;  // -Inf
+                special_result = 16'hFC00; 
             end
         end
         else if (is_inf_a) begin
@@ -161,10 +160,6 @@ module 4in_adder_AIHW #(
         exp_d = d_daz[14 -: EXP];
         frac_d = d_daz[MANTISSA-1:0];
 
-        //inversion operation flag
-        y_op = y[15];
-        m_op = m[15];
-        n_op = n[15];
         //input comparison and assignment
 	if (exp_a >= exp_b) begin
             exp_p = exp_a; frac_p = frac_a; sign_p = sign_a;
@@ -223,7 +218,7 @@ module 4in_adder_AIHW #(
             result = mant;
         end else if (shift_amt >= MANT_WIDTH) begin
             result = '0;
-            result[0] = |mant; // sticky = OR of all bits
+            result[0] = |mant;
         end else begin
             result = mant >> shift_amt;
             sticky = |(mant & ((1 << shift_amt) - 1));
