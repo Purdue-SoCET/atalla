@@ -1,9 +1,9 @@
 `include "systolic_array_4_input_adder_if.vh"
 
 module sysarr_4_input_fp_adder #(
-    parameter MANTISSA_SIZE  = 10,
-    parameter EXPONENT_SIZE  = 5,
-    parameter PRECISION_BITS = 22 
+    parameter MANTISSA_SIZE  = 7,
+    parameter EXPONENT_SIZE  = 8,
+    parameter PRECISION_BITS = 13 
 ) (
     input logic clk, 
     input logic nRST,
