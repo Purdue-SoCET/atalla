@@ -17,28 +17,16 @@ module pipelined_adder_tree #(
     output logic [DATA_WIDTH-1:0]   sum_out          // Final result = sum(terms_in) + psum_in
 );
 
-    // -----------------------------------------------------------------------
-    // Tree geometry  (N must be a power of 2)
-    // -----------------------------------------------------------------------
-    // initial assert (N > 0 && (N & (N-1)) == 0) else $fatal("N must be a power of 2");
-
     localparam int TREE_DEPTH = $clog2(N); // number of tree levels
     localparam int PSUM_DELAY = TREE_DEPTH * ADD_LATENCY;  // cycles psum_in must be held before final add
 
-    // -----------------------------------------------------------------------
     // Inter-stage wires
     //   stage_data[l][k]  – data at tree level l, element k
-    //   Level 0 : N elements (inputs)
-    //   Level l : N >> l elements
-    //   Level TREE_DEPTH : 1 element (tree result)
-    // -----------------------------------------------------------------------
     logic [DATA_WIDTH-1:0] stage_data [0:TREE_DEPTH][0:N-1];
 
     assign stage_data[0] = terms_in;
 
-    // -----------------------------------------------------------------------
     // Binary reduction tree  (TREE_DEPTH levels of add_fp16)
-    // -----------------------------------------------------------------------
     generate
         for (genvar l = 0; l < TREE_DEPTH; l++) begin : tree_level
             localparam int PAIRS = N >> (l + 1);
@@ -59,10 +47,9 @@ module pipelined_adder_tree #(
         end
     endgenerate
 
-    // -----------------------------------------------------------------------
     // psum_in delay line  –  holds psum_in for PSUM_DELAY cycles so it
     // arrives at the final adder aligned with the tree result
-    // -----------------------------------------------------------------------
+    // current implemented with FFs
     logic [DATA_WIDTH-1:0] psum_delayed;
 
     generate
@@ -88,9 +75,7 @@ module pipelined_adder_tree #(
         end
     endgenerate
 
-    // -----------------------------------------------------------------------
     // Final addition :  sum_out = tree_result + psum_delayed
-    // -----------------------------------------------------------------------
     add_fp16 u_psum_add (
         .clk    (clk),
         .nRST   (nRST),
@@ -104,47 +89,3 @@ module pipelined_adder_tree #(
     );
 
 endmodule
-
-
-/*
-module pipelined_adder_tree #(
-    parameter int NUM_INPUTS  = 32,   // Number of inputs to sum
-    parameter int DATA_WIDTH  = 16,   // Element width (FP16)
-    parameter int ADD_LATENCY = 2     // Pipeline depth of the add_fp16 module
-)(
-    input  logic                    clk,
-    input  logic                    nRST,
-    input  logic                    start,     // Asserted when terms_in & psum_in are valid
-    input  logic                    stall,
-    input  logic [DATA_WIDTH-1:0]   terms_in [NUM_INPUTS],   // Products from one column
-    input  logic [DATA_WIDTH-1:0]   psum_in,         // Partial sum (aligned with terms_in)
-    output logic [DATA_WIDTH-1:0]   sum_out,         // Final result = sum(terms_in) + psum_in
-    output logic                    done             // Asserted when sum_out is valid
-);
-
-    localparam int TREE_DEPTH = $clog2(NUM_INPUTS); // num_inputs rounded up to next power of 2 with psums included
-
-    logic [DATA_WIDTH-1:0] stage_data [0:TREE_DEPTH][0:N_PADDED-1];
-
-    generate 
-        for (genvar i = 0; i < TREE_DEPTH; i++) begin : tree_rows
-            localparam int PAIRS = N_PADDED >> (i + 1); // tree has 1/2 the adders of previous level
-            
-            for (genvar j = 0; j < PAIRS; j++) begin : adders_per_row
-                add_fp16 u_add (
-                    .clk    (clk),
-                    .nRST   (nRST),
-                    .start  (1'b1),
-                    .stall  (stall),
-                    .sub    (1'b0),
-                    .fp1_in (stage_data[i][2*j]),
-                    .fp2_in (stage_data[i][2*j+1]),
-                    .fp_out (stage_data[i+1][j]),
-                    .done   ()                       // timing from valid_sr
-                );
-            end
-        end
-    endgenerate
-
-endmodule
-*/
