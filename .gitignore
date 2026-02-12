@@ -9,7 +9,7 @@ vsim.*
 *.log
 .editorconfig
 *.vcd
-**/obj_dir_verilator/
+**/obj_dir_verilator*/
 
 !.gitignore
 !.gitmodules
