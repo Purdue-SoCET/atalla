@@ -22,6 +22,7 @@ module add4_fp16_tb_softfloat;
 
     localparam PERIOD = 2;
     localparam LATENCY = 4;  // 3 pipeline stages + 1 output register
+    localparam PRECISION_BITS = 16;
 
     logic tb_clk;
     logic tb_nrst;
@@ -37,14 +38,14 @@ module add4_fp16_tb_softfloat;
     systolic_array_4_input_adder_if #(
         .EXPONENT_SIZE(5),
         .MANTISSA_SIZE(10),
-        .PRECISION_BITS(22)
+        .PRECISION_BITS(PRECISION_BITS)
     ) add_if();
 
     logic [15:0] tb_a, tb_b, tb_c, tb_d;
     logic [15:0] tb_result;
     logic [15:0] exp;
 
-    int pass_count, fail_count;
+    int pass_count, fail_count, off_by_one, off_by_two, off_by_five_plus, diff; 
 
     // con testbench signals to interface
     assign add_if.a = tb_a;
@@ -57,7 +58,7 @@ module add4_fp16_tb_softfloat;
     sysarr_4_input_fp_adder #(
         .MANTISSA_SIZE(10),
         .EXPONENT_SIZE(5),
-        .PRECISION_BITS(22)
+        .PRECISION_BITS(PRECISION_BITS)
     ) etchedfp4adder (
         .clk(tb_clk),
         .nRST(tb_nrst),
@@ -124,6 +125,8 @@ initial begin
 
     pass_count = 0;
     fail_count = 0;
+    off_by_one = 0; 
+    off_by_two = 0; 
     tb_nrst = 1'b0;
     tb_a = 16'h0;
     tb_b = 16'h0;
@@ -270,6 +273,21 @@ initial begin
             end else if (fail_count == 11) begin
                 $display("... (suppressing further terminal output, all failures logged to test_failures.csv) ...");
             end
+
+            diff = int'(tb_result) - int'(expected);
+            // Check for off-by-one (either +1 or -1)
+            if ((diff == 1 || diff == -1)) begin
+                // $display("NOTE: off-by-one detected...");
+                off_by_one++;
+            end else if ((diff == 2 || diff == -2)) begin
+                // $display("NOTE: off-by-two detected...");
+                off_by_two++;
+            end
+            else if (diff >= 2 || diff <= -2) begin
+                $display("NOTE: off-by-two-plus detected in test case A=%h B=%h C=%h D=%h | Got=%h Exp=%h (diff=%0d)", 
+                         a, b, c, d, tb_result, expected, diff);
+                off_by_five_plus++;
+            end
         end else begin
             pass_count++;
         end
@@ -284,8 +302,12 @@ initial begin
 
     $display("");
     $display("=== test summary ===");
+    $display("PRECISION BITS: %0d", 16);
     $display("PASSED: %0d", pass_count);
     $display("FAILED: %0d", fail_count);
+    $display("OFF-BY-ONE: %0d", off_by_one);
+    $display("OFF-BY-TWO: %0d", off_by_two);
+    $display("OFF-BY-TWO-PLUS: %0d", off_by_five_plus);
     $display("failure cases logged to: test_failures_pure.csv");
 
     if (fail_count == 0)
