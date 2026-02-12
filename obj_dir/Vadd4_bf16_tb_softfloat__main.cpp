@@ -2,7 +2,7 @@
 // DESCRIPTION: main() calling loop, created with Verilator --main
 
 #include "verilated.h"
-#include "Vadd4_fp16_tb_softfloat.h"
+#include "Vadd4_bf16_tb_softfloat.h"
 
 //======================
 
@@ -14,7 +14,7 @@ int main(int argc, char** argv, char**) {
     contextp->commandArgs(argc, argv);
 
     // Construct the Verilated model, from Vtop.h generated from Verilating
-    const std::unique_ptr<Vadd4_fp16_tb_softfloat> topp{new Vadd4_fp16_tb_softfloat{contextp.get(), ""}};
+    const std::unique_ptr<Vadd4_bf16_tb_softfloat> topp{new Vadd4_bf16_tb_softfloat{contextp.get(), ""}};
 
     // Simulate until $finish
     while (!contextp->gotFinish()) {

@@ -5,6 +5,7 @@
 #include "Vadd4_fp16_tb_softfloat___024root__DepSet_h715d43e7__0.cpp"
 #include "Vadd4_fp16_tb_softfloat_systolic_array_4_input_adder_if__DepSet_hcfee7b34__0.cpp"
 #include "Vadd4_fp16_tb_softfloat__main.cpp"
+#include "Vadd4_fp16_tb_softfloat__Trace__0.cpp"
 #include "Vadd4_fp16_tb_softfloat__ConstPool_0.cpp"
 #include "Vadd4_fp16_tb_softfloat___024root__Slow.cpp"
 #include "Vadd4_fp16_tb_softfloat___024root__DepSet_hb360f58f__0__Slow.cpp"
@@ -12,3 +13,5 @@
 #include "Vadd4_fp16_tb_softfloat_systolic_array_4_input_adder_if__Slow.cpp"
 #include "Vadd4_fp16_tb_softfloat_systolic_array_4_input_adder_if__DepSet_hcfee7b34__0__Slow.cpp"
 #include "Vadd4_fp16_tb_softfloat__Syms.cpp"
+#include "Vadd4_fp16_tb_softfloat__Trace__0__Slow.cpp"
+#include "Vadd4_fp16_tb_softfloat__TraceDecls__0__Slow.cpp"

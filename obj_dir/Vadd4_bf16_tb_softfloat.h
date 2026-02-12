@@ -5,22 +5,22 @@
 // The class here is then constructed to instantiate the design.
 // See the Verilator manual for examples.
 
-#ifndef VERILATED_VADD4_FP16_TB_SOFTFLOAT_H_
-#define VERILATED_VADD4_FP16_TB_SOFTFLOAT_H_  // guard
+#ifndef VERILATED_VADD4_BF16_TB_SOFTFLOAT_H_
+#define VERILATED_VADD4_BF16_TB_SOFTFLOAT_H_  // guard
 
 #include "verilated.h"
 
-class Vadd4_fp16_tb_softfloat__Syms;
-class Vadd4_fp16_tb_softfloat___024root;
+class Vadd4_bf16_tb_softfloat__Syms;
+class Vadd4_bf16_tb_softfloat___024root;
 class VerilatedVcdC;
-class Vadd4_fp16_tb_softfloat_systolic_array_4_input_adder_if;
+class Vadd4_bf16_tb_softfloat_systolic_array_4_input_adder_if__pi1;
 
 
 // This class is the main interface to the Verilated model
-class alignas(VL_CACHE_LINE_BYTES) Vadd4_fp16_tb_softfloat VL_NOT_FINAL : public VerilatedModel {
+class alignas(VL_CACHE_LINE_BYTES) Vadd4_bf16_tb_softfloat VL_NOT_FINAL : public VerilatedModel {
   private:
     // Symbol table holding complete model state (owned by this class)
-    Vadd4_fp16_tb_softfloat__Syms* const vlSymsp;
+    Vadd4_bf16_tb_softfloat__Syms* const vlSymsp;
 
   public:
 
@@ -35,23 +35,23 @@ class alignas(VL_CACHE_LINE_BYTES) Vadd4_fp16_tb_softfloat VL_NOT_FINAL : public
     // CELLS
     // Public to allow access to /* verilator public */ items.
     // Otherwise the application code can consider these internals.
-    Vadd4_fp16_tb_softfloat_systolic_array_4_input_adder_if* const __PVT__add4_fp16_tb_softfloat__DOT__add_if;
+    Vadd4_bf16_tb_softfloat_systolic_array_4_input_adder_if__pi1* const __PVT__add4_bf16_tb_softfloat__DOT__add_if;
 
     // Root instance pointer to allow access to model internals,
     // including inlined /* verilator public_flat_* */ items.
-    Vadd4_fp16_tb_softfloat___024root* const rootp;
+    Vadd4_bf16_tb_softfloat___024root* const rootp;
 
     // CONSTRUCTORS
     /// Construct the model; called by application code
     /// If contextp is null, then the model will use the default global context
     /// If name is "", then makes a wrapper with a
     /// single model invisible with respect to DPI scope names.
-    explicit Vadd4_fp16_tb_softfloat(VerilatedContext* contextp, const char* name = "TOP");
-    explicit Vadd4_fp16_tb_softfloat(const char* name = "TOP");
+    explicit Vadd4_bf16_tb_softfloat(VerilatedContext* contextp, const char* name = "TOP");
+    explicit Vadd4_bf16_tb_softfloat(const char* name = "TOP");
     /// Destroy the model; called (often implicitly) by application code
-    virtual ~Vadd4_fp16_tb_softfloat();
+    virtual ~Vadd4_bf16_tb_softfloat();
   private:
-    VL_UNCOPYABLE(Vadd4_fp16_tb_softfloat);  ///< Copying not allowed
+    VL_UNCOPYABLE(Vadd4_bf16_tb_softfloat);  ///< Copying not allowed
 
   public:
     // API METHODS

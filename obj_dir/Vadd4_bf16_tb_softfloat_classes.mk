@@ -2,7 +2,7 @@
 # DESCRIPTION: Verilator output: Make include file with class lists
 #
 # This file lists generated Verilated files, for including in higher level makefiles.
-# See Vadd4_fp16_tb_softfloat.mk for the caller.
+# See Vadd4_bf16_tb_softfloat.mk for the caller.
 
 ### Switches...
 # C11 constructs required?  0/1 (always on now)
@@ -25,30 +25,30 @@ VM_TRACE_VCD = 1
 ### Object file lists...
 # Generated module classes, fast-path, compile with highest optimization
 VM_CLASSES_FAST += \
-	Vadd4_fp16_tb_softfloat \
-	Vadd4_fp16_tb_softfloat___024root__DepSet_hb360f58f__0 \
-	Vadd4_fp16_tb_softfloat___024root__DepSet_h715d43e7__0 \
-	Vadd4_fp16_tb_softfloat_systolic_array_4_input_adder_if__DepSet_hcfee7b34__0 \
-	Vadd4_fp16_tb_softfloat__main \
+	Vadd4_bf16_tb_softfloat \
+	Vadd4_bf16_tb_softfloat___024root__DepSet_h3bc6827f__0 \
+	Vadd4_bf16_tb_softfloat___024root__DepSet_hf239cbf9__0 \
+	Vadd4_bf16_tb_softfloat_systolic_array_4_input_adder_if__pi1__DepSet_hff38efa3__0 \
+	Vadd4_bf16_tb_softfloat__main \
 
 # Generated module classes, non-fast-path, compile with low/medium optimization
 VM_CLASSES_SLOW += \
-	Vadd4_fp16_tb_softfloat__ConstPool_0 \
-	Vadd4_fp16_tb_softfloat___024root__Slow \
-	Vadd4_fp16_tb_softfloat___024root__DepSet_hb360f58f__0__Slow \
-	Vadd4_fp16_tb_softfloat___024root__DepSet_h715d43e7__0__Slow \
-	Vadd4_fp16_tb_softfloat_systolic_array_4_input_adder_if__Slow \
-	Vadd4_fp16_tb_softfloat_systolic_array_4_input_adder_if__DepSet_hcfee7b34__0__Slow \
+	Vadd4_bf16_tb_softfloat__ConstPool_0 \
+	Vadd4_bf16_tb_softfloat___024root__Slow \
+	Vadd4_bf16_tb_softfloat___024root__DepSet_h3bc6827f__0__Slow \
+	Vadd4_bf16_tb_softfloat___024root__DepSet_hf239cbf9__0__Slow \
+	Vadd4_bf16_tb_softfloat_systolic_array_4_input_adder_if__pi1__Slow \
+	Vadd4_bf16_tb_softfloat_systolic_array_4_input_adder_if__pi1__DepSet_hff38efa3__0__Slow \
 
 # Generated support classes, fast-path, compile with highest optimization
 VM_SUPPORT_FAST += \
-	Vadd4_fp16_tb_softfloat__Trace__0 \
+	Vadd4_bf16_tb_softfloat__Trace__0 \
 
 # Generated support classes, non-fast-path, compile with low/medium optimization
 VM_SUPPORT_SLOW += \
-	Vadd4_fp16_tb_softfloat__Syms \
-	Vadd4_fp16_tb_softfloat__Trace__0__Slow \
-	Vadd4_fp16_tb_softfloat__TraceDecls__0__Slow \
+	Vadd4_bf16_tb_softfloat__Syms \
+	Vadd4_bf16_tb_softfloat__Trace__0__Slow \
+	Vadd4_bf16_tb_softfloat__TraceDecls__0__Slow \
 
 # Global classes, need linked once per executable, fast-path, compile with highest optimization
 VM_GLOBAL_FAST += \
