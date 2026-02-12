@@ -1,0 +1,1920 @@
+Cadence Genus(TM) Synthesis Solution.
+Copyright 2023 Cadence Design Systems, Inc. All rights reserved worldwide.
+Cadence and the Cadence logo are registered trademarks and Genus is a trademark
+of Cadence Design Systems, Inc. in the United States and other countries.
+
+[01:34:36.018825] Configured Lic search path (21.01-s002): 1720@marina.ecn.purdue.edu
+
+Version: 21.17-s066_1, built Wed Mar 15 06:43:30 PDT 2023
+Options: -batch -log /home/asicfab/a/mquerimi/SoCET/Flowkit/logs/syn_generic -disable_user_startup -execute {if {[catch {init_flow  {flow_script {} yaml_script /home/asicfab/a/mquerimi/SoCET/Flowkit/scripts/flow.yaml flow_no_check 0 parent_uuid {} previous_uuid {} top_dir /home/asicfab/a/mquerimi/SoCET/Flowkit flow_dir . status_file /home/asicfab/a/mquerimi/SoCET/Flowkit/flow.status.d/syn_generic metrics_file /home/asicfab/a/mquerimi/SoCET/Flowkit/flow.metrics.d/syn_generic run_tag {} db {{} {} {} {}} db_is_ref_run 0 branch {} caller_data {group 0 process_branch 0 trunk_process 1} flow {flow flow:flow_current tool genus tool_options {} dir . db {{} {} {} {}} start_step {tool genus flow flow:flow_current canonical_path {.steps flow:synthesis .steps flow:syn_generic .steps flow_step:block_start} step flow_step:block_start features {} str synthesis.syn_generic.block_start} branch {} caller_data {group 0 process_branch 0} uuid {} parent_uuid {} case_sensitive_match 0 child_of {} process_branch_trunk 1} flow_name flow:flow_current first_step {tool genus flow flow:flow_current canonical_path {.steps flow:synthesis .steps flow:syn_generic .steps flow_step:block_start} step flow_step:block_start features {} str synthesis.syn_generic.block_start} interactive 0 interactive_run 0 enabled_features {} inject_tcl {} trunk_process 1 aum_upload false tool_options {} last_step {tool genus flow flow:flow_current canonical_path {.steps flow:synthesis .steps flow:syn_generic .steps flow_step:schedule_syn_generic_report_synth} step flow_step:schedule_syn_generic_report_synth features {} str synthesis.syn_generic.schedule_syn_generic_report_synth} log_prefix /home/asicfab/a/mquerimi/SoCET/Flowkit/logs/syn_generic}; run_flow -from {tool genus flow flow:flow_current canonical_path {.steps flow:synthesis .steps flow:syn_generic .steps flow_step:block_start} step flow_step:block_start features {} str synthesis.syn_generic.block_start} -to {tool genus flow flow:flow_current canonical_path {.steps flow:synthesis .steps flow:syn_generic .steps flow_step:schedule_syn_generic_report_synth} step flow_step:schedule_syn_generic_report_synth features {} str synthesis.syn_generic.schedule_syn_generic_report_synth}} msg]} { puts [concat {Tcl error:} $errorInfo]; set fp [open {/home/asicfab/a/mquerimi/SoCET/Flowkit/flow.status.d/syn_generic} a]; puts $fp {}; puts $fp [list [list script run_tcl status error flow {flow:flow_current} branch {} flow_working_directory {.} flow_starting_db {{} {} {} {}} tool_options {} steps_run [get_db flow_step_canonical_current] msg $msg]]; close $fp; exit 1 }; exit 0} 
+Date:    Thu Jan 29 01:34:36 2026
+Host:    asicfab.ecn.purdue.edu (x86_64 w/Linux 4.18.0-553.92.1.el8_10.x86_64) (24cores*96cpus*2physical cpus*AMD EPYC 7352 24-Core Processor 512KB) (263166400KB)
+PID:     2363334
+OS:      Red Hat Enterprise Linux release 8.10 (Ootpa)
+
+
+[01:34:36.453747] Periodic Lic check successful
+[01:34:36.453760] Feature usage summary:
+[01:34:36.453761] Genus_Synthesis
+Checking out license: Genus_Synthesis
+
+
+***********************************************************************************************************
+***********************************************************************************************************
+
+
+
+Loading tool scripts...
+Finished loading tool scripts (9 seconds elapsed).
+
+#@ Processing -execute option
+@genus 1> if {[catch {init_flow  {flow_script {} yaml_script /home/asicfab/a/mquerimi/SoCET/Flowkit/scripts/flow.yaml flow_no_check 0 parent_uuid {} previous_uuid {} top_dir /home/asicfab/a/mquerimi/SoCET/Flowkit flow_dir . status_file /home/asicfab/a/mquerimi/SoCET/Flowkit/flow.status.d/syn_generic metrics_file /home/asicfab/a/mquerimi/SoCET/Flowkit/flow.metrics.d/syn_generic run_tag {} db {{} {} {} {}} db_is_ref_run 0 branch {} caller_data {group 0 process_branch 0 trunk_process 1} flow {flow flow:flow_current tool genus tool_options {} dir . db {{} {} {} {}} start_step {tool genus flow flow:flow_current canonical_path {.steps flow:synthesis .steps flow:syn_generic .steps flow_step:block_start} step flow_step:block_start features {} str synthesis.syn_generic.block_start} branch {} caller_data {group 0 process_branch 0} uuid {} parent_uuid {} case_sensitive_match 0 child_of {} process_branch_trunk 1} flow_name flow:flow_current first_step {tool genus flow flow:flow_current canonical_path {.steps flow:synthesis .steps flow:syn_generic .steps flow_step:block_start} step flow_step:block_start features {} str synthesis.syn_generic.block_start} interactive 0 interactive_run 0 enabled_features {} inject_tcl {} trunk_process 1 aum_upload false tool_options {} last_step {tool genus flow flow:flow_current canonical_path {.steps flow:synthesis .steps flow:syn_generic .steps flow_step:schedule_syn_generic_report_synth} step flow_step:schedule_syn_generic_report_synth features {} str synthesis.syn_generic.schedule_syn_generic_report_synth} log_prefix /home/asicfab/a/mquerimi/SoCET/Flowkit/logs/syn_generic}; run_flow -from {tool genus flow flow:flow_current canonical_path {.steps flow:synthesis .steps flow:syn_generic .steps flow_step:block_start} step flow_step:block_start features {} str synthesis.syn_generic.block_start} -to {tool genus flow flow:flow_current canonical_path {.steps flow:synthesis .steps flow:syn_generic .steps flow_step:schedule_syn_generic_report_synth} step flow_step:schedule_syn_generic_report_synth features {} str synthesis.syn_generic.schedule_syn_generic_report_synth}} msg]} { puts [concat {Tcl error:} $errorInfo]; set fp [open {/home/asicfab/a/mquerimi/SoCET/Flowkit/flow.status.d/syn_generic} a]; puts $fp {}; puts $fp [list [list script run_tcl status error flow {flow:flow_current} branch {} flow_working_directory {.} flow_starting_db {{} {} {} {}} tool_options {} steps_run [get_db flow_step_canonical_current] msg $msg]]; close $fp; exit 1 }; exit 0
+init_flow summary:
+  Flow script        : 
+  YAML script        : /home/asicfab/a/mquerimi/SoCET/Flowkit/scripts/flow.yaml
+  Flow               : flow:flow_current
+  From               : synthesis.syn_generic.block_start
+  To                 : synthesis.syn_generic.schedule_syn_generic_report_synth
+  Top directory      : /home/asicfab/a/mquerimi/SoCET/Flowkit
+  Working directory  : .
+  Starting database  : 
+  Run tag            : 
+  Branch name        : 
+  Metrics file       : /home/asicfab/a/mquerimi/SoCET/Flowkit/flow.metrics.d/syn_generic
+  Status file        : /home/asicfab/a/mquerimi/SoCET/Flowkit/flow.status.d/syn_generic
+reading previous metrics...
+Sourcing flow scripts...
+  Setting attribute of root '/': 'flow_template_type' = stylus
+  Setting attribute of root '/': 'flow_template_version' = 1
+  Setting attribute of root '/': 'flow_template_tools' = genus innovus tempus
+  Setting attribute of root '/': 'flow_template_feature_definition' = flow_express 0 report_inline 0 report_defer 0 report_none {} report_clp 0 report_lec 1 use_common_db 0 report_pba 0 dft_simple 0 dft_compressor 0 synth_hybrid 0 synth_ispatial {} synth_placev2 0 opt_early_cts 0 clock_design 0 clock_flexible_htree 0 opt_clock 0 opt_postcts_hold_disable 0 opt_postcts_split 0 route_filler_disable 0 route_track_opt 0 route_secondary_nets 0 opt_postroute_split 0 opt_route 0 opt_signoff 0 opt_em 0 opt_eco 0 sta_use_setup_yaml 0 sta_dmmmc 0 sta_glitch 0 sta_eco 0 ff_setup 0
+  Setting attribute of root '/': 'flowtool_metrics_qor_vivid' = reports/qor.html
+  Setting attribute of root '/': 'flow_header_tcl' = 
+  #- extend flow report name based on context
+  if {[is_flow -quiet -inside flow:sta] || [is_flow -quiet -inside flow:sta_dmmmc] || [is_flow -quiet -inside flow:sta_eco]} {
+    if {![regexp {sta$} [get_db flow_report_name]]} {
+      set_db flow_report_name [expr {[string is space [get_db flow_report_name]] ? "sta" : "[get_db flow_report_name].sta"}]
+    }
+  } elseif {[is_flow -quiet -inside flow:ir_early_static] || [is_flow -quiet -inside flow:ir_early_dynamic]} {
+    if {![regexp {era$} [get_db flow_report_name]]} {
+      set_db flow_report_name [expr {[string is space [get_db flow_report_name]] ? "era" : "[get_db flow_report_name].era"}]
+    }
+  } elseif {[is_flow -quiet -inside flow:ir_grid] || [is_flow -quiet -inside flow:ir_static] || [is_flow -quiet -inside flow:ir_dynamic] || [is_flow -quiet -inside flow:ir_rampup]} {
+    if {![regexp {ir$} [get_db flow_report_name]]} {
+      set_db flow_report_name [expr {[string is space [get_db flow_report_name]] ? "ir" : "[get_db flow_report_name].ir"}]
+    }
+  } elseif {[is_flow -quiet -inside flow:sta_subflows] && [get_db flow_branch] ne {}} {
+    set_db flow_report_name [get_db flow_branch]
+  } elseif {[regexp {block_start|hier_start|eco_start} [get_db flow_step_current]]} {
+    set_db flow_report_name [get_db [lindex [get_db flow_hier_path] end] .name]
+  } else {
+  }
+
+  #- Create report dir (if necessary)
+  file mkdir [file normalize [file join [get_db flow_report_directory] [get_db flow_report_name]]]
+
+  Setting attribute of root '/': 'flow_top' = flow:block
+  Setting attribute of root '/': 'flow_top' = flow_current
+Sourcing flow scripts done.
+Begin steps for plugin point Cadence.plugin.flowkit.read_db.pre
+#@ Begin verbose flow_step activate_views
+@flow_step(activate_views)  2:   apply {{} {
+                                   set db [get_db flow_starting_db]
+                                   set flow [lindex [get_db flow_hier_path] end]
+                                   set setup_views [get_feature -obj $flow setup_views]
+                                   set hold_views [get_feature -obj $flow hold_views]
+                                   set leakage_view [get_feature -obj $flow leakage_view]
+                                   set dynamic_view [get_feature -obj $flow dynamic_view]
+                                 
+                                   if {($setup_views ne "") || ($hold_views ne "") || ($leakage_view ne "") || ($dynamic_view ne "")} {
+                                     #- use read_db args for DB types and set_analysis_views for TCL
+                                     if {([llength [get_db analysis_views]]) > 0 &&  ([lindex $db 0] eq {tcl} || [lindex $db 0] in {enc cdb} && [file isfile [lindex $db 1]])} {
+                                       set cmd "set_analysis_view"
+                                       if {$setup_views ne ""} {
+                                         append cmd " -setup [list $setup_views]"
+                                       } else {
+                                         append cmd " -setup [list [get_db [get_db analysis_views -if .is_setup] .name]]"
+                                       }
+                                       if {$hold_views ne ""} {
+                                         append cmd " -hold [list $hold_views]"
+                                       } else {
+                                         append cmd " -hold [list [get_db [get_db analysis_views -if .is_hold] .name]]"
+                                       }
+                                       if {$leakage_view ne ""} {
+                                         append cmd " -leakage [list $leakage_view]"
+                                       } else {
+                                         if {[llength [get_db analysis_views -if .is_leakage]] > 0} {
+                                           append cmd " -leakage [list [get_db [get_db analysis_views -if .is_leakage] .name]]"
+                                         }
+                                       }
+                                       if {$dynamic_view ne ""} {
+                                         append cmd " -dynamic [list $dynamic_view]"
+                                       } else {
+                                         if {[llength [get_db analysis_views -if .is_dynamic]] > 0} {
+                                           append cmd " -dynamic [list [get_db [get_db analysis_views -if .is_dynamic] .name]]"
+                                         }
+                                       }
+                                       eval $cmd
+                                     } elseif {[llength [get_db analysis_views]] == 0} {
+                                       set cmd "set_flowkit_read_db_args"
+                                       if {$setup_views ne ""} {
+                                         append cmd " -setup_views [list $setup_views]"
+                                       }
+                                       if {$hold_views ne ""} {
+                                         append cmd " -hold_views [list $hold_views]"
+                                       }
+                                       if {$leakage_view ne ""} {
+                                         append cmd " -leakage_view [list $leakage_view]"
+                                       }
+                                       if {$dynamic_view ne ""} {
+                                         append cmd " -dynamic_view [list $dynamic_view]"
+                                       }
+                                       eval $cmd
+                                     } else {
+                                     }
+                                   }
+                                 }}
+#@ End verbose flow_step activate_views
+#@ Begin verbose flow_step init_mcpu
+@flow_step(init_mcpu)  2:   apply {{} {
+                              # Multi host/cpu attributes
+                              #-----------------------------------------------------------------------------
+                              # The FLOWTOOL_NUM_CPUS is an environment variable which should be exported by
+                              # the specified dist script.  This connects the number of CPUs being reserved
+                              # for batch jobs with the current flow scripts.  The LSB_MAX_NUM_PROCESSORS is
+                              # a typical environment variable exported by distribution platforms and is
+                              # useful for ensuring all interactive jobs are using the reserved amount of CPUs.
+                              if {[info exists ::env(FLOWTOOL_NUM_CPUS)]} {
+                                set max_cpus $::env(FLOWTOOL_NUM_CPUS)
+                              } elseif {[info exists ::env(LSB_MAX_NUM_PROCESSORS)]} {
+                                set max_cpus $::env(LSB_MAX_NUM_PROCESSORS)
+                              } else {
+                                set max_cpus 8
+                              }
+                              switch -glob [get_db program_short_name] {
+                                default       { set_multi_cpu_usage -verbose -local_cpu $max_cpus }
+                                joules*       { set_multi_cpu_usage -verbose -local_cpu $max_cpus }
+                                genus*        { set_multi_cpu_usage -verbose -local_cpu $max_cpus }
+                                innovus*      { set_multi_cpu_usage -verbose -local_cpu $max_cpus }
+                                tempus*       { set_multi_cpu_usage -verbose -local_cpu $max_cpus }
+                                voltus*       { set_multi_cpu_usage -verbose -local_cpu $max_cpus }
+                              }
+                            }}
+set_multi_cpu_usage -local_cpu 8
+#@ End verbose flow_step init_mcpu
+End steps for plugin point Cadence.plugin.flowkit.read_db.pre
+Sourcing flow scripts...
+  Setting attribute of root '/': 'flow_template_type' = stylus
+  Setting attribute of root '/': 'flow_template_version' = 1
+  Setting attribute of root '/': 'flow_template_tools' = genus innovus tempus
+  Setting attribute of root '/': 'flow_template_feature_definition' = flow_express 0 report_inline 0 report_defer 0 report_none {} report_clp 0 report_lec 1 use_common_db 0 report_pba 0 dft_simple 0 dft_compressor 0 synth_hybrid 0 synth_ispatial {} synth_placev2 0 opt_early_cts 0 clock_design 0 clock_flexible_htree 0 opt_clock 0 opt_postcts_hold_disable 0 opt_postcts_split 0 route_filler_disable 0 route_track_opt 0 route_secondary_nets 0 opt_postroute_split 0 opt_route 0 opt_signoff 0 opt_em 0 opt_eco 0 sta_use_setup_yaml 0 sta_dmmmc 0 sta_glitch 0 sta_eco 0 ff_setup 0
+  Setting attribute of root '/': 'flowtool_metrics_qor_vivid' = reports/qor.html
+  Setting attribute of root '/': 'flow_header_tcl' = 
+  #- extend flow report name based on context
+  if {[is_flow -quiet -inside flow:sta] || [is_flow -quiet -inside flow:sta_dmmmc] || [is_flow -quiet -inside flow:sta_eco]} {
+    if {![regexp {sta$} [get_db flow_report_name]]} {
+      set_db flow_report_name [expr {[string is space [get_db flow_report_name]] ? "sta" : "[get_db flow_report_name].sta"}]
+    }
+  } elseif {[is_flow -quiet -inside flow:ir_early_static] || [is_flow -quiet -inside flow:ir_early_dynamic]} {
+    if {![regexp {era$} [get_db flow_report_name]]} {
+      set_db flow_report_name [expr {[string is space [get_db flow_report_name]] ? "era" : "[get_db flow_report_name].era"}]
+    }
+  } elseif {[is_flow -quiet -inside flow:ir_grid] || [is_flow -quiet -inside flow:ir_static] || [is_flow -quiet -inside flow:ir_dynamic] || [is_flow -quiet -inside flow:ir_rampup]} {
+    if {![regexp {ir$} [get_db flow_report_name]]} {
+      set_db flow_report_name [expr {[string is space [get_db flow_report_name]] ? "ir" : "[get_db flow_report_name].ir"}]
+    }
+  } elseif {[is_flow -quiet -inside flow:sta_subflows] && [get_db flow_branch] ne {}} {
+    set_db flow_report_name [get_db flow_branch]
+  } elseif {[regexp {block_start|hier_start|eco_start} [get_db flow_step_current]]} {
+    set_db flow_report_name [get_db [lindex [get_db flow_hier_path] end] .name]
+  } else {
+  }
+
+  #- Create report dir (if necessary)
+  file mkdir [file normalize [file join [get_db flow_report_directory] [get_db flow_report_name]]]
+
+  Setting attribute of root '/': 'flow_top' = flow:block
+  Setting attribute of root '/': 'flow_top' = flow_current
+Sourcing flow scripts done.
+reading previous metrics...
+Begin steps for plugin point Cadence.plugin.flowkit.read_db.post
+#@ Begin verbose flow_step activate_views
+@flow_step(activate_views)  2:   apply {{} {
+                                   set db [get_db flow_starting_db]
+                                   set flow [lindex [get_db flow_hier_path] end]
+                                   set setup_views [get_feature -obj $flow setup_views]
+                                   set hold_views [get_feature -obj $flow hold_views]
+                                   set leakage_view [get_feature -obj $flow leakage_view]
+                                   set dynamic_view [get_feature -obj $flow dynamic_view]
+                                 
+                                   if {($setup_views ne "") || ($hold_views ne "") || ($leakage_view ne "") || ($dynamic_view ne "")} {
+                                     #- use read_db args for DB types and set_analysis_views for TCL
+                                     if {([llength [get_db analysis_views]]) > 0 &&  ([lindex $db 0] eq {tcl} || [lindex $db 0] in {enc cdb} && [file isfile [lindex $db 1]])} {
+                                       set cmd "set_analysis_view"
+                                       if {$setup_views ne ""} {
+                                         append cmd " -setup [list $setup_views]"
+                                       } else {
+                                         append cmd " -setup [list [get_db [get_db analysis_views -if .is_setup] .name]]"
+                                       }
+                                       if {$hold_views ne ""} {
+                                         append cmd " -hold [list $hold_views]"
+                                       } else {
+                                         append cmd " -hold [list [get_db [get_db analysis_views -if .is_hold] .name]]"
+                                       }
+                                       if {$leakage_view ne ""} {
+                                         append cmd " -leakage [list $leakage_view]"
+                                       } else {
+                                         if {[llength [get_db analysis_views -if .is_leakage]] > 0} {
+                                           append cmd " -leakage [list [get_db [get_db analysis_views -if .is_leakage] .name]]"
+                                         }
+                                       }
+                                       if {$dynamic_view ne ""} {
+                                         append cmd " -dynamic [list $dynamic_view]"
+                                       } else {
+                                         if {[llength [get_db analysis_views -if .is_dynamic]] > 0} {
+                                           append cmd " -dynamic [list [get_db [get_db analysis_views -if .is_dynamic] .name]]"
+                                         }
+                                       }
+                                       eval $cmd
+                                     } elseif {[llength [get_db analysis_views]] == 0} {
+                                       set cmd "set_flowkit_read_db_args"
+                                       if {$setup_views ne ""} {
+                                         append cmd " -setup_views [list $setup_views]"
+                                       }
+                                       if {$hold_views ne ""} {
+                                         append cmd " -hold_views [list $hold_views]"
+                                       }
+                                       if {$leakage_view ne ""} {
+                                         append cmd " -leakage_view [list $leakage_view]"
+                                       }
+                                       if {$dynamic_view ne ""} {
+                                         append cmd " -dynamic_view [list $dynamic_view]"
+                                       }
+                                       eval $cmd
+                                     } else {
+                                     }
+                                   }
+                                 }}
+#@ End verbose flow_step activate_views
+#@ Begin verbose flow_step init_mcpu
+@flow_step(init_mcpu)  2:   apply {{} {
+                              # Multi host/cpu attributes
+                              #-----------------------------------------------------------------------------
+                              # The FLOWTOOL_NUM_CPUS is an environment variable which should be exported by
+                              # the specified dist script.  This connects the number of CPUs being reserved
+                              # for batch jobs with the current flow scripts.  The LSB_MAX_NUM_PROCESSORS is
+                              # a typical environment variable exported by distribution platforms and is
+                              # useful for ensuring all interactive jobs are using the reserved amount of CPUs.
+                              if {[info exists ::env(FLOWTOOL_NUM_CPUS)]} {
+                                set max_cpus $::env(FLOWTOOL_NUM_CPUS)
+                              } elseif {[info exists ::env(LSB_MAX_NUM_PROCESSORS)]} {
+                                set max_cpus $::env(LSB_MAX_NUM_PROCESSORS)
+                              } else {
+                                set max_cpus 8
+                              }
+                              switch -glob [get_db program_short_name] {
+                                default       { set_multi_cpu_usage -verbose -local_cpu $max_cpus }
+                                joules*       { set_multi_cpu_usage -verbose -local_cpu $max_cpus }
+                                genus*        { set_multi_cpu_usage -verbose -local_cpu $max_cpus }
+                                innovus*      { set_multi_cpu_usage -verbose -local_cpu $max_cpus }
+                                tempus*       { set_multi_cpu_usage -verbose -local_cpu $max_cpus }
+                                voltus*       { set_multi_cpu_usage -verbose -local_cpu $max_cpus }
+                              }
+                            }}
+set_multi_cpu_usage -local_cpu 8
+#@ End verbose flow_step init_mcpu
+End steps for plugin point Cadence.plugin.flowkit.read_db.post
+UM:   flow.cputime  flow.realtime  timing.setup.tns  timing.setup.wns  snapshot
+UM:*                                                                   init_flow
+      flow.cputime  flow.realtime  timing.setup.tns  timing.setup.wns  snapshot
+UM:*                                                                   syn_generic
+  Setting attribute of root '/': 'flow_report_name' = syn_generic
+#@ Begin verbose flow_step synthesis.syn_generic.block_start
+@flow_step(block_start) 2:     set_db flow_write_db_common false
+  Setting attribute of root '/': 'flow_write_db_common' = false
+#@ End verbose flow_step synthesis.syn_generic.block_start
+      flow.cputime  flow.realtime  timing.setup.tns  timing.setup.wns  snapshot
+UM:             10             14                                      block_start
+#@ Begin verbose flow_step synthesis.syn_generic.init_design.read_mmmc
+@flow_step(read_mmmc)   2:   apply {{} {
+                               set FH [open [file join [get_db flow_db_directory] [get_db flow_report_name].mmmc_config.tcl] w]
+                             
+                               puts $FH "##############################################################################"
+                               puts $FH "## LIBRARY SETS"
+                               puts $FH "##############################################################################"
+                               foreach name [dict keys [get_flow_config library_sets]] {
+                             
+                                 set library_files [get_flow_config -quiet library_sets $name library_files]
+                                 set link_files    [get_flow_config -quiet library_sets $name link_library_files]
+                                 set target_files  [get_flow_config -quiet library_sets $name target_library_files]
+                                 set aocv_files    [get_flow_config -quiet library_sets $name aocv_files]
+                                 set lvf_files     [get_flow_config -quiet library_sets $name lvf_files]
+                                 set si_files      [get_flow_config -quiet library_sets $name si_files]
+                                 set socv_files    [get_flow_config -quiet library_sets $name socv_files]
+                             
+                                 puts $FH "create_library_set \\"
+                                 puts $FH "  -name $name \\"
+                                 #- define timing_files (.ldb/.lib)
+                                 if {[llength $library_files] > 0} {
+                                   puts $FH "  -timing \\"
+                                   puts $FH "    \[list \\"
+                                   if {[llength $library_files] != [llength [join $library_files]]} {
+                                     foreach inner_list $library_files {
+                                       puts $FH "      \[list \\"
+                                       foreach file $inner_list {
+                                         puts $FH "        [file normalize $file] \\"
+                                       }
+                                       puts $FH "      \] \\"
+                                     }
+                                   } else {
+                                     foreach file $library_files {
+                                       puts $FH "      [file normalize $file] \\"
+                                     }
+                                   }
+                                   if {[llength [concat $aocv_files $lvf_files $si_files $socv_files]] > 0 } {
+                                     puts $FH "    \] \\"
+                                   } else {
+                                     puts $FH "    \]"
+                                   }
+                                 }
+                                 #- define link/target timing_files (.ldb/.lib)
+                                 if {[llength $link_files] > 0 && [llength $target_files] > 0} {
+                                   puts $FH "  -link_timing \\"
+                                   puts $FH "    \[list \\"
+                                   foreach file $link_files {
+                                     puts $FH "      [file normalize $file] \\"
+                                   }
+                                   puts $FH "    \] \\"
+                                   puts $FH "  -target_timing \\"
+                                   puts $FH "    \[list \\"
+                                   foreach file $target_files {
+                                     puts $FH "      [file normalize $file] \\"
+                                   }
+                                   if {[llength [concat $aocv_files $lvf_files $si_files $socv_files]] > 0 } {
+                                     puts $FH "    \] \\"
+                                   } else {
+                                     puts $FH "    \]"
+                                   }
+                                 }
+                                 #- define aocv files
+                                 if {[llength $aocv_files] > 0 } {
+                                   puts $FH "  -aocv \\"
+                                   puts $FH "    \[list \\"
+                                   foreach file $aocv_files {
+                                     puts $FH "      [file normalize $file] \\"
+                                   }
+                                   if {[llength [concat $lvf_files $si_files $socv_files]] > 0 } {
+                                     puts $FH "    \] \\"
+                                   } else {
+                                     puts $FH "    \]"
+                                   }
+                                 }
+                                 #- define lvf files
+                                 if {[llength $lvf_files] > 0 } {
+                                   puts $FH "  -lvf \\"
+                                   puts $FH "    \[list \\"
+                                   foreach file $lvf_files {
+                                     puts $FH "      [file normalize $file] \\"
+                                   }
+                                   if {[llength [concat $si_files $socv_files]] > 0 } {
+                                     puts $FH "    \] \\"
+                                   } else {
+                                     puts $FH "    \]"
+                                   }
+                                 }
+                                 #- define si files (.cdb)
+                                 if {[llength $si_files] > 0 } {
+                                   puts $FH "  -si     \\"
+                                   puts $FH "    \[list \\"
+                                   foreach file $si_files {
+                                     puts $FH "      [file normalize $file] \\"
+                                   }
+                                   if {[llength [concat $socv_files]] > 0 } {
+                                     puts $FH "    \] \\"
+                                   } else {
+                                     puts $FH "    \]"
+                                   }
+                                 }
+                                 #- define socv files
+                                 if {[llength $socv_files] > 0 } {
+                                   puts $FH "  -socv   \\"
+                                   puts $FH "    \[list \\"
+                                   foreach file $socv_files {
+                                     puts $FH "      [file normalize $file] \\"
+                                   }
+                                   puts $FH "    \]"
+                                 }
+                                 puts $FH ""
+                               }
+                               puts $FH ""
+                               puts $FH "##############################################################################"
+                               puts $FH "## OPERATING CONDITIONS"
+                               puts $FH "##############################################################################"
+                               foreach name [dict keys [get_flow_config -quiet opconds]] {
+                                 set op_cond_process      [get_flow_config -quiet opconds $name process]
+                                 set op_cond_voltage      [get_flow_config -quiet opconds $name voltage]
+                                 set op_cond_temperature  [get_flow_config -quiet opconds $name temperature]
+                             
+                                 puts $FH "create_opcond \\"
+                                 puts $FH "  -name $name \\"
+                                 if ![string is space $op_cond_process] {
+                                   puts $FH "  -process $op_cond_process \\"
+                                 }
+                                 if ![string is space $op_cond_voltage] {
+                                   puts $FH "  -voltage $op_cond_voltage \\"
+                                 }
+                                 if ![string is space $op_cond_temperature] {
+                                   puts $FH "  -temperature $op_cond_temperature \\"
+                                 }
+                                 puts $FH ""
+                               }
+                               puts $FH ""
+                               puts $FH "###############################################################################"
+                               puts $FH "### RC CORNERS"
+                               puts $FH "###############################################################################"
+                               foreach name [dict keys [get_flow_config rc_corners]] {
+                                 set rc_corner_qrc_tech    [get_flow_config -quiet rc_corners $name qrc_tech_file]
+                                 set rc_corner_temperature [get_flow_config -quiet rc_corners $name temperature]
+                             
+                                 puts $FH "create_rc_corner \\"
+                                 puts $FH "  -name $name \\"
+                                 if ![string is space $rc_corner_temperature] {
+                                   puts $FH "  -temperature $rc_corner_temperature \\"
+                                 }
+                                 if ![string is space $rc_corner_qrc_tech] {
+                                   puts $FH "  -qrc_tech $rc_corner_qrc_tech"
+                                 }
+                                 puts $FH ""
+                               }
+                               puts $FH ""
+                               puts $FH "##############################################################################"
+                               puts $FH "## TIMING CONDITIONS"
+                               puts $FH "##############################################################################"
+                               foreach name [dict keys [get_flow_config timing_conditions]] {
+                                 set timing_condition_lib_set [get_flow_config -quiet timing_conditions $name library_sets]
+                                 set timing_condition_opcond  [get_flow_config -quiet timing_conditions $name opcond]
+                                 set timing_condition_opcond_lib  [get_flow_config -quiet timing_conditions $name opcond_library]
+                             
+                                 puts $FH "create_timing_condition \\"
+                                 puts $FH "  -name $name \\"
+                             
+                                 #- Timing Condition library sets validation
+                                 puts $FH "  -library_sets \\"
+                                 puts $FH "    \[list \\"
+                                 foreach tc_lib_set $timing_condition_lib_set {
+                                   puts $FH "        $tc_lib_set \\"
+                                 }
+                                 if {[llength [concat $timing_condition_opcond $timing_condition_opcond_lib]] > 0 } {
+                                   puts $FH "    \] \\"
+                                 } else {
+                                   puts $FH "    \]"
+                                 }
+                                 if {![string is space $timing_condition_opcond]} {
+                                   if {![string is space $timing_condition_opcond_lib]} {
+                                     puts $FH "  -opcond $timing_condition_opcond \\"
+                                     puts $FH "  -opcond_library $timing_condition_opcond_lib"
+                                   } else {
+                                    puts $FH "  -opcond $timing_condition_opcond"
+                                  }
+                                 }
+                                 puts $FH ""
+                               }
+                               puts $FH ""
+                               puts $FH "###############################################################################"
+                               puts $FH "### DELAY CORNERS"
+                               puts $FH "###############################################################################"
+                               foreach name [dict keys [get_flow_config delay_corners]] {
+                                 set delay_corner_early_rc_corner  [get_flow_config -quiet delay_corners $name rc_corner early]
+                                 set delay_corner_late_rc_corner   [get_flow_config -quiet delay_corners $name rc_corner late]
+                                 set delay_corner_early_timing_condition [get_flow_config -quiet delay_corners $name timing_condition early]
+                                 set delay_corner_late_timing_condition  [get_flow_config -quiet delay_corners $name timing_condition late]
+                             
+                                 puts $FH "create_delay_corner \\"
+                                 puts $FH "  -name $name \\"
+                             
+                                 #- define delay_corner -rc_corner
+                                 if {![string is space $delay_corner_early_rc_corner] && ![string is space $delay_corner_late_rc_corner]} {
+                                   if {$delay_corner_early_rc_corner eq $delay_corner_late_rc_corner} {
+                                     puts $FH "  -rc_corner $delay_corner_early_rc_corner \\"
+                                   } else {
+                                     puts $FH "  -early_rc_corner $delay_corner_early_rc_corner \\"
+                                     puts $FH "  -late_rc_corner $delay_corner_late_rc_corner \\"
+                                   }
+                                 }
+                                 #- define delay_corner -timing_condition
+                                 if {![string is space $delay_corner_early_timing_condition] && ![string is space $delay_corner_late_timing_condition]} {
+                                   if {$delay_corner_early_timing_condition eq $delay_corner_late_timing_condition} {
+                                     puts $FH "  -timing_condition [list $delay_corner_early_timing_condition]"
+                                   } else {
+                                     puts $FH "  -early_timing_condition [list $delay_corner_early_timing_condition] \\"
+                                     puts $FH "  -late_timing_condition [list $delay_corner_late_timing_condition]"
+                                   }
+                                 }
+                                 puts $FH ""
+                               }
+                               puts $FH ""
+                               puts $FH "###############################################################################"
+                               puts $FH "### CONSTRAINT MODES"
+                               puts $FH "###############################################################################"
+                               foreach name [dict keys [get_flow_config constraint_modes]] {
+                                 set constraint_mode_sdc       [get_flow_config -quiet constraint_modes $name sdc_files]
+                                 set constraint_mode_tcl_vars  [get_flow_config -quiet constraint_modes $name tcl_variables]
+                             
+                                 puts $FH "create_constraint_mode \\"
+                                 puts $FH "  -name $name \\"
+                                 #- Constraint_mode -sdc_files
+                                 puts $FH "  -sdc_files \\"
+                                 puts $FH "    \[list \\"
+                                 foreach file $constraint_mode_sdc {
+                                   puts $FH "      [file normalize $file] \\"
+                                 }
+                                 #- Constraint_mode -tcl_vars
+                                 if ![string is space $constraint_mode_tcl_vars] {
+                                   puts $FH "    \] \\"
+                                   puts $FH "  -tcl_variables \{$constraint_mode_tcl_vars\}"
+                                 } else {
+                                   puts $FH "    \]"
+                                 }
+                                 puts $FH ""
+                               }
+                               puts $FH ""
+                               puts $FH "###############################################################################"
+                               puts $FH "### ANALYSIS VIEWS"
+                               puts $FH "###############################################################################"
+                               set analysis_view_is_setup_list   ""
+                               set analysis_view_is_hold_list    ""
+                               set analysis_view_is_dynamic_list ""
+                               set analysis_view_is_leakage_list ""
+                               foreach name [dict keys [get_flow_config analysis_views]] {
+                                 puts $FH "create_analysis_view \\"
+                                 puts $FH "  -name $name \\"
+                                 puts $FH "  -constraint_mode [get_flow_config -quiet analysis_views $name constraint_mode] \\"
+                                 if {![string is space [get_flow_config -quiet analysis_views $name power_modes]]} {
+                                   puts $FH "  -power_modes [get_flow_config -quiet analysis_views $name power_modes] \\"
+                                 }
+                                 puts $FH "  -delay_corner [get_flow_config -quiet analysis_views $name delay_corner]"
+                                 #- Sort views by purpose
+                                 if {[string is true -strict [get_flow_config -quiet analysis_views $name is_setup]]} {
+                                   lappend analysis_view_is_setup_list $name
+                                 }
+                                 if {[string is true -strict [get_flow_config -quiet analysis_views $name is_hold]]} {
+                                   lappend analysis_view_is_hold_list $name
+                                 }
+                                 if {[string is true -strict [get_flow_config -quiet analysis_views $name is_leakage]]} {
+                                   lappend analysis_view_is_leakage_list $name
+                                 }
+                                 if {[string is true -strict [get_flow_config -quiet analysis_views $name is_dynamic]]} {
+                                   lappend analysis_view_is_dynamic_list $name
+                                 }
+                                 puts $FH ""
+                               }
+                             
+                               #- Override view list with feature values when available
+                               if {[get_feature setup_views] ne ""} {
+                                 set analysis_view_is_setup_list [get_feature setup_views]
+                               }
+                               if {[get_feature hold_views] ne ""} {
+                                 set analysis_view_is_hold_list [get_feature hold_views]
+                               }
+                               if {[get_feature leakage_view] ne ""} {
+                                 set analysis_view_is_leakage_list [get_feature leakage_view]
+                               }
+                               if {[get_feature dynamic_view] ne ""} {
+                                 set analysis_view_is_dynamic_list [get_feature dynamic_view]
+                               }
+                             
+                               #- Configure the Analysis View
+                               puts $FH "set_analysis_view \\"
+                               puts $FH "  -setup   \[list $analysis_view_is_setup_list\] \\"
+                               if {[llength $analysis_view_is_leakage_list] > 0 && [llength $analysis_view_is_dynamic_list] > 0} {
+                                 puts $FH "  -hold    \[list $analysis_view_is_hold_list\] \\"
+                                 puts $FH "  -leakage \[list $analysis_view_is_leakage_list\] \\"
+                                 puts $FH "  -dynamic \[list $analysis_view_is_dynamic_list\]"
+                               } elseif {[llength $analysis_view_is_leakage_list] > 0 && [llength $analysis_view_is_dynamic_list] == 0} {
+                                 puts $FH "  -hold    \[list $analysis_view_is_hold_list\] \\"
+                                 puts $FH "  -leakage \[list $analysis_view_is_leakage_list\]"
+                               } elseif {[llength $analysis_view_is_leakage_list] == 0 && [llength $analysis_view_is_dynamic_list] > 0} {
+                                 puts $FH "  -hold    \[list $analysis_view_is_hold_list\] \\"
+                                 puts $FH "  -dynamic \[list $analysis_view_is_dynamic_list\]"
+                               } else {
+                                 puts $FH "  -hold    \[list $analysis_view_is_hold_list\]"
+                               }
+                               puts $FH ""
+                               close $FH
+                             
+                               #- Read MMMC file
+                               if {[is_flow -inside flow:init_design]} {
+                                 read_mmmc [file join [get_db flow_db_directory] [get_db flow_report_name].mmmc_config.tcl]
+                               }
+                             }}
+  Setting attribute of root '/': 'is_read_mmmc_flow' = true
+Sourcing './dbs/syn_generic.mmmc_config.tcl' (Thu Jan 29 01:34:48 EST 2026)...
+#@ Begin verbose source ./dbs/syn_generic.mmmc_config.tcl
+@file(syn_generic.mmmc_config.tcl) 4: create_library_set \
+  -name libset_tt_1p2v_25c \
+  -timing \
+    [list \
+      /package/asicfab/pdk/MIT/MITLL_90_2025/MITLL90_STDLIB_8T/MITLL90_STDLIB_8T/2020.07.01.UNI/MITLL90_STDLIB_8T.tt1p2v25c.lib \
+      /package/asicfab/pdk/MIT/MITLL_90_2025/MITLL90_IOPads_5_1_1/2020.01.27/MITLL90_IOPads_5_1_1.tt1p2v25c.lib \
+    ]
+@file(syn_generic.mmmc_config.tcl) 20: create_rc_corner \
+  -name rc_best_25 \
+  -temperature 25 \
+
+create_rc_corner \
+  -name rc_typ_25 \
+  -temperature 25 \
+
+create_rc_corner \
+  -name rc_worst_25 \
+  -temperature 25 \
+
+
+@file(syn_generic.mmmc_config.tcl) 36: create_timing_condition \
+  -name timing_condition_tt_1p2v_25c \
+  -library_sets \
+    [list \
+        libset_tt_1p2v_25c \
+    ]
+@file(syn_generic.mmmc_config.tcl) 47: create_delay_corner \
+  -name delay_1p2v_25 \
+  -early_rc_corner rc_best_25 \
+  -late_rc_corner rc_worst_25 \
+  -timing_condition timing_condition_tt_1p2v_25c
+@file(syn_generic.mmmc_config.tcl) 57: create_constraint_mode \
+  -name func \
+  -sdc_files \
+    [list \
+      /home/asicfab/a/mquerimi/SoCET/Flowkit/scripts/constraints/mul_fp16_VC.sdc \
+    ]
+@file(syn_generic.mmmc_config.tcl) 68: create_analysis_view \
+  -name view_1p2_25 \
+  -constraint_mode func \
+  -delay_corner delay_1p2v_25
+@file(syn_generic.mmmc_config.tcl) 73: set_analysis_view \
+  -setup   [list view_1p2_25] \
+  -hold    [list view_1p2_25] \
+  -leakage [list view_1p2_25] \
+  -dynamic [list view_1p2_25]
+
+Threads Configured:6
+Warning : Invalid expression specified for the attribute. [LBR-715]
+        : The expression '(!vdd!) + (vss!)' specified for attribute power_down_function for pin 'X' of cell 'xor2_4x' is invalid. The expression has invalid syntax. The attribute will be ignored. (File /package/asicfab/pdk/MIT/MITLL_90_2025/MITLL90_STDLIB_8T/MITLL90_STDLIB_8T/2020.07.01.UNI/MITLL90_STDLIB_8T.tt1p2v25c.lib)
+        : Check and update the library to have correct expression value for the attribute, otherwise the attribute will be ignored for the pin.
+Warning : Invalid expression specified for the attribute. [LBR-715]
+        : The expression '(!vdd!) + (vss!)' specified for attribute power_down_function for pin 'X' of cell 'xor2_2x' is invalid. The expression has invalid syntax. The attribute will be ignored. (File /package/asicfab/pdk/MIT/MITLL_90_2025/MITLL90_STDLIB_8T/MITLL90_STDLIB_8T/2020.07.01.UNI/MITLL90_STDLIB_8T.tt1p2v25c.lib)
+Warning : Invalid expression specified for the attribute. [LBR-715]
+        : The expression '(!vdd!) + (vss!)' specified for attribute power_down_function for pin 'X' of cell 'xor2_1x' is invalid. The expression has invalid syntax. The attribute will be ignored. (File /package/asicfab/pdk/MIT/MITLL_90_2025/MITLL90_STDLIB_8T/MITLL90_STDLIB_8T/2020.07.01.UNI/MITLL90_STDLIB_8T.tt1p2v25c.lib)
+Warning : Invalid expression specified for the attribute. [LBR-715]
+        : The expression '(!vdd!) + (vss!)' specified for attribute power_down_function for pin 'X' of cell 'xnor2_4x' is invalid. The expression has invalid syntax. The attribute will be ignored. (File /package/asicfab/pdk/MIT/MITLL_90_2025/MITLL90_STDLIB_8T/MITLL90_STDLIB_8T/2020.07.01.UNI/MITLL90_STDLIB_8T.tt1p2v25c.lib)
+Warning : Invalid expression specified for the attribute. [LBR-715]
+        : The expression '(!vdd!) + (vss!)' specified for attribute power_down_function for pin 'X' of cell 'xnor2_2x' is invalid. The expression has invalid syntax. The attribute will be ignored. (File /package/asicfab/pdk/MIT/MITLL_90_2025/MITLL90_STDLIB_8T/MITLL90_STDLIB_8T/2020.07.01.UNI/MITLL90_STDLIB_8T.tt1p2v25c.lib)
+Warning : Invalid expression specified for the attribute. [LBR-715]
+        : The expression '(!vdd!) + (vss!)' specified for attribute power_down_function for pin 'X' of cell 'xnor2_1x' is invalid. The expression has invalid syntax. The attribute will be ignored. (File /package/asicfab/pdk/MIT/MITLL_90_2025/MITLL90_STDLIB_8T/MITLL90_STDLIB_8T/2020.07.01.UNI/MITLL90_STDLIB_8T.tt1p2v25c.lib)
+Warning : Invalid expression specified for the attribute. [LBR-715]
+        : The expression '(!vdd!) + (vss!)' specified for attribute power_down_function for pin 'X' of cell 'tinv_2x' is invalid. The expression has invalid syntax. The attribute will be ignored. (File /package/asicfab/pdk/MIT/MITLL_90_2025/MITLL90_STDLIB_8T/MITLL90_STDLIB_8T/2020.07.01.UNI/MITLL90_STDLIB_8T.tt1p2v25c.lib)
+Warning : Invalid expression specified for the attribute. [LBR-715]
+        : The expression '(!vdd!) + (vss!)' specified for attribute power_down_function for pin 'X' of cell 'tinv_1x' is invalid. The expression has invalid syntax. The attribute will be ignored. (File /package/asicfab/pdk/MIT/MITLL_90_2025/MITLL90_STDLIB_8T/MITLL90_STDLIB_8T/2020.07.01.UNI/MITLL90_STDLIB_8T.tt1p2v25c.lib)
+Warning : Invalid expression specified for the attribute. [LBR-715]
+        : The expression '(!vdd!) + (vss!)' specified for attribute power_down_function for pin 'Q' of cell 'sdffsq_1x' is invalid. The expression has invalid syntax. The attribute will be ignored. (File /package/asicfab/pdk/MIT/MITLL_90_2025/MITLL90_STDLIB_8T/MITLL90_STDLIB_8T/2020.07.01.UNI/MITLL90_STDLIB_8T.tt1p2v25c.lib)
+Warning : Invalid expression specified for the attribute. [LBR-715]
+        : The expression '(!vdd!) + (vss!)' specified for attribute power_down_function for pin 'Q' of cell 'sdffrq_1x' is invalid. The expression has invalid syntax. The attribute will be ignored. (File /package/asicfab/pdk/MIT/MITLL_90_2025/MITLL90_STDLIB_8T/MITLL90_STDLIB_8T/2020.07.01.UNI/MITLL90_STDLIB_8T.tt1p2v25c.lib)
+Warning : Inval
+  Message Summary for Library both libraries:
+  *******************************************
+id expression specified for the attribute. [LBR-715]
+        : The expression '(!vdd!) + (vss!)' specified for attribute power_down_function for pin 'QN' of cell 'sdffqn_1x' is invalid. The expression has invalid syntax. The attribute will be ignored. (File /package/asicfab/pdk/MIT/MITLL_90_2025/MITLL90_STDLIB_8T/MITLL90_STDLIB_8T/2020.07.01.UNI/MITLL90_STDLIB_8T.tt1p2v25c.lib)
+Warning : Invalid expression specified for the attribute. [LBR-715]
+        : The expression '(!vdd!) + (vss!)' specified for attribute power_down_function for pin 'Q' of cell 'sdffq_1x' is invalid. The expression has invalid syntax. The attribute will be ignored. (File /package/asicfab/pdk/MIT/MITLL_90_2025/MITLL90_STDLIB_8T/MITLL90_STDLIB_8T/2020.07.01.UNI/MITLL90_STDLIB_8T.tt1p2v25c.lib)
+Warning : Invalid expression specified for the attribute. [LBR-715]
+        : The expression '(!vdd!) + (vss!)' specified for attribute power_down_function for pin 'Q' of cell 'sdffnq_1x' is invalid. The expression has invalid syntax. The attribute will be ignored. (File /package/asicfab/pdk/MIT/MITLL_90_2025/MITLL90_STDLIB_8T/MITLL90_STDLIB_8T/2020.07.01.UNI/MITLL90_STDLIB_8T.tt1p2v25c.lib)
+Warning : Invalid expression specified for the attribute. [LBR-715]
+        : The expression '(!vdd!) + (vss!)' specified for attribute power_down_function for pin 'X' of cell 'or3_4x' is invalid. The expression has invalid syntax. The attribute will be ignored. (File /package/asicfab/pdk/MIT/MITLL_90_2025/MITLL90_STDLIB_8T/MITLL90_STDLIB_8T/2020.07.01.UNI/MITLL90_STDLIB_8T.tt1p2v25c.lib)
+Warning : Invalid expression specified for the attribute. [LBR-715]
+        : The expression '(!vdd!) + (vss!)' specified for attribute power_down_function for pin 'X' of cell 'or3_2x' is invalid. The expression has invalid syntax. The attribute will be ignored. (File /package/asicfab/pdk/MIT/MITLL_90_2025/MITLL90_STDLIB_8T/MITLL90_STDLIB_8T/2020.07.01.UNI/MITLL90_STDLIB_8T.tt1p2v25c.lib)
+Warning : Invalid expression specified for the attribute. [LBR-715]
+        : The expression '(!vdd!) + (vss!)' specified for attribute power_down_function for pin 'X' of cell 'or3_1x' is invalid. The expression has invalid syntax. The attribute will be ignored. (File /package/asicfab/pdk/MIT/MITLL_90_2025/MITLL90_STDLIB_8T/MITLL90_STDLIB_8T/2020.07.01.UNI/MITLL90_STDLIB_8T.tt1p2v25c.lib)
+Warning : Invalid expression specified for the attribute. [LBR-715]
+        : The expression '(!vdd!) + (vss!)' specified for attribute power_down_function for pin 'X' of cell 'or2_4x' is invalid. The expression has invalid syntax. The attribute will be ignored. (File /package/asicfab/pdk/MIT/MITLL_90_2025/MITLL90_STDLIB_8T/MITLL90_STDLIB_8T/2020.07.01.UNI/MITLL90_STDLIB_8T.tt1p2v25c.lib)
+Warning : Invalid expression specified for the attribute. [LBR-715]
+        : The expression '(!vdd!) + (vss!)' specified for attribute power_down_function for pin 'X' of cell 'or2_2x' is invalid. The expression has invalid syntax. The attribute will be ignored. (File /package/asicfab/pdk/MIT/MITLL_90_2025/MITLL90_STDLIB_8T/MITLL90_STDLIB_8T/2020.07.01.UNI/MITLL90_STDLIB_8T.tt1p2v25c.lib)
+Warning : Invalid expression specified for the attribute. [LBR-715]
+        : The expression '(!vdd!) + (vss!)' specified for attribute power_down_function for pin 'X' of cell 'or2_1x' is invalid. The expression has invalid syntax. The attribute will be ignored. (File /package/asicfab/pdk/MIT/MITLL_90_2025/MITLL90_STDLIB_8T/MITLL90_STDLIB_8T/2020.07.01.UNI/MITLL90_STDLIB_8T.tt1p2v25c.lib)
+Warning : Invalid expression specified for the attribute. [LBR-715]
+        : The expression '(!vdd!) + (vss!)' specified for attribute power_down_function for pin 'X' of cell 'oai22_4x' is invalid. The expression has invalid syntax. The attribute will be ignored. (File /package/asicfab/pdk/MIT/MITLL_90_2025/MITLL90_STDLIB_8T/MITLL90_STDLIB_8T/2020.07.01.UNI/MITLL90_STDLIB_8T.tt1p2v25c.lib)
+Warning : Maximum message print count reached. [MESG-11]
+        : Maximum print count of '20' reached for message 'LBR-715'.
+  Invalid expression specified for the attribute. [LBR-715]: 94
+  *******************************************
+ 
+Info    : Created nominal operating condition. [LBR-412]
+        : Operating condition '_nominal_' was created for the PVT values (1.000000, 1.200000, 25.000000) in library 'MITLL90_STDLIB_8T.tt1p2v25c.lib'.
+        : The nominal operating condition is represented, either by the nominal PVT values specified in the library source (via nom_process,nom_voltage and nom_temperature respectively), or by the default PVT values (1.0,1.0,1.0).
+Info    : Created nominal operating condition. [LBR-412]
+        : Operating condition '_nominal_' was created for the PVT values (1.000000, 1.200000, 25.000000) in library 'MITLL90_IOPads_5_1_1.tt1p2v25c.lib'.
+Warning : Library cell has no output pins defined. [LBR-9]
+        : Library cell 'decap_2x' must have an output pin.
+        : Add the missing output pin(s), then reload the library. Else the library cell will be marked as timing model i.e. unusable. Timing_model means that the cell does not have any defined function. If there is no output pin, Genus will mark library cell as unusable i.e. the attribute 'usable' will be marked to 'false' on the libcell. Therefore, the cell is not used for mapping and it will not be picked up from the library for synthesis. If you query the attribute 'unusable_reason' on the libcell; result will be: 'Library cell has no output pins.'Note: The message LBR-9 is only for the logical pins and not for the power_ground pins. Genus will depend upon the output function defined in the pin group (output pin) of the cell, to use it for mapping. The pg_pin will not have any function defined.
+Warning : Library cell has no output pins defined. [LBR-9]
+        : Library cell 'decap_2x' must have an output pin.
+Warning : Library cell has no output pins defined. [LBR-9]
+        : Library cell 'decap_3x' must have an output pin.
+Warning : Library cell has no output pins defined. [LBR-9]
+        : Library cell 'decap_3x' must have an output pin.
+Warning : Library cell has no output pins defined. [LBR-9]
+        : Library cell 'decap_4x' must have an output pin.
+Warning : Library cell has no output pins defined. [LBR-9]
+        : Library cell 'decap_4x' must have an output pin.
+Warning : Library cell has no output pins defined. [LBR-9]
+        : Library cell 'decap_8x' must have an output pin.
+Warning : Library cell has no output pins defined. [LBR-9]
+        : Library cell 'decap_8x' must have an output pin.
+Info    : Set default library domain. [LBR-109]
+        : The default library domain is 'library_domain:timing_condition_tt_1p2v_25c'.
+#@ End verbose source ./dbs/syn_generic.mmmc_config.tcl
+#@ End verbose flow_step synthesis.syn_generic.init_design.read_mmmc
+      flow.cputime  flow.realtime  timing.setup.tns  timing.setup.wns  snapshot
+UM:              1              1                                      read_mmmc
+      flow.cputime  flow.realtime  timing.setup.tns  timing.setup.wns  snapshot
+UM:*                                                                   init_design
+#@ Begin verbose flow_step synthesis.syn_generic.init_design.read_physical
+@flow_step(read_physical)  2:   apply {{} {
+                                  if {![string is space [get_flow_config -quiet init_physical_files lef_files]]} {
+                                    read_physical -lef [get_flow_config init_physical_files lef_files]
+                                  }
+                                  if {![string is space [get_flow_config -quiet init_physical_files oa_ref_libs]]} {
+                                    set flow_startup_directory [get_db flow_startup_directory]
+                                    set flow_top_directory [file normalize [get_db flow_working_directory]]
+                                    if {![string is space [get_flow_config -quiet init_physical_files oa_search_libs]]} {
+                                      set cmd "[list read_physical -oa_ref_libs [get_flow_config init_physical_files oa_ref_libs] -oa_search_libs [get_flow_config init_physical_files oa_search_libs]]"
+                                    } else {
+                                      set cmd "[list read_physical -oa_ref_libs [get_flow_config init_physical_files oa_ref_libs]]"
+                                    }
+                                
+                                    if {$flow_startup_directory ne $flow_top_directory} {
+                                      cd $flow_startup_directory
+                                      eval $cmd
+                                      cd $flow_top_directory
+                                    } else {
+                                      eval $cmd
+                                    }
+                                  }
+                                }}
+
+  According to lef_library, there are total 7 routing layers [ V(4) / H(3) ]
+
+Warning : Missing wire parameter. [PHYS-15]
+        : 'EDGECAPACITANCE' parameter is missing for layer 'MTK1' [line 185 in file /package/asicfab/pdk/MIT/MITLL_90_2025/MITLL_PDK/lef/soi90nm_5_1_1.lef]
+        : Check the wire parameter in LEF technology files.
+Warning : Missing wire parameter. [PHYS-15]
+        : 'EDGECAPACITANCE' parameter is missing for layer 'MRF1' [line 201 in file /package/asicfab/pdk/MIT/MITLL_90_2025/MITLL_PDK/lef/soi90nm_5_1_1.lef]
+Warning : Missing wire parameter. [PHYS-15]
+        : 'CPERSQDIST' parameter is missing for layer 'MTK1' [line 185 in file /package/asicfab/pdk/MIT/MITLL_90_2025/MITLL_PDK/lef/soi90nm_5_1_1.lef]
+Warning : Missing wire parameter. [PHYS-15]
+        : 'CPERSQDIST' parameter is missing for layer 'MRF1' [line 201 in file /package/asicfab/pdk/MIT/MITLL_90_2025/MITLL_PDK/lef/soi90nm_5_1_1.lef]
+Warning : The variant range of wire parameters is too large. An example of wire parameters are, a WIDTH for layer, PITCH for layer, MINSPACING for layers, etc. [PHYS-12]
+        : The variant range (0.14, 5) of 'WIDTH' for layers 'M1' and 'MRF1' is too large.
+        : Check the consistency of the parameters, and see if you can ignore this message or you're using different LEF file with wrong parameters.
+Warning : The variant range of wire parameters is too large. An example of wire parameters are, a WIDTH for layer, PITCH for layer, MINSPACING for layers, etc. [PHYS-12]
+        : The variant range (0.32, 10) of 'PITCH' for layers 'M3' and 'MRF1' is too large.
+Warning : The variant range of wire parameters is too large. An example of wire parameters are, a WIDTH for layer, PITCH for layer, MINSPACING for layers, etc. [PHYS-12]
+        : The variant range (0.16, 5) of 'OFFSET' for layers 'M3' and 'MRF1' is too large.
+Warning : The variant range of wire parameters is too large. An example of wire parameters are, a WIDTH for layer, PITCH for layer, MINSPACING for layers, etc. [PHYS-12]
+        : The variant range (0.16, 5) of 'MINSPACING' for layers 'M3' and 'MRF1' is too large.
+Warning : Automatically disabling an arc which forms loop at output. [LBR-73]
+        : The arc is named 'CORE_PAD_n91' between pins 'CORE' and 'PAD' in libcell 'pad80_inDig_buf_out_cdm'.
+        : Check to see whether the timing arc in question is crucial for synthesis.  If it is, disable a proper arc in the loop.
+Warning : Automatically disabling an arc which forms loop at output. [LBR-73]
+        : The arc is named 'CORE_PAD_n60' between pins 'CORE' and 'PAD' in libcell 'pad80_inDig_buf_out_cdm'.
+Warning : Automatically disabling an arc which forms loop at output. [LBR-73]
+        : The arc is named 'CORE_PAD_n91' between pins 'CORE' and 'PAD' in libcell 'pad80_inDig_buf_out_hbm'.
+Warning : Automatically disabling an arc which forms loop at output. [LBR-73]
+        : The arc is named 'CORE_PAD_n60' between pins 'CORE' and 'PAD' in libcell 'pad80_inDig_buf_out_hbm'.
+  Libraries have 78 usable logic and 13 usable sequential lib-cells.
+Warning : Physical cell not defined in library. [PHYS-279]
+        : The physical (LEF) cell fill_16x cannot be found in library.
+        : Ensure that the proper library files are available and have been imported.
+Warning : Physical cell not defined in library. [PHYS-279]
+        : The physical (LEF) cell fill_1x cannot be found in library.
+Warning : Physical cell not defined in library. [PHYS-279]
+        : The physical (LEF) cell fill_2x cannot be found in library.
+Warning : Physical cell not defined in library. [PHYS-279]
+        : The physical (LEF) cell fill_4x cannot be found in library.
+Warning : Physical cell not defined in library. [PHYS-279]
+        : The physical (LEF) cell fill_8x cannot be found in library.
+Warning : Physical cell not defined in library. [PHYS-279]
+        : The physical (LEF) cell corner_1p1mm cannot be found in library.
+Warning : Physical cell not defined in library. [PHYS-279]
+        : The physical (LEF) cell corner cannot be found in library.
+Warning : Physical cell not defined in library. [PHYS-279]
+        : The physical (LEF) cell pad80_analog_hbm cannot be found in library.
+Warning : Physical cell not defined in library. [PHYS-279]
+        : The physical (LEF) cell pad80_analog_no_hbm cannot be found in library.
+Warning : Pin names are not consistent in lib and LEF files. [PHYS-113]
+        : Pin 'wafer!' of library cell 'pad80_inDig' is in logical library but not in physical library.
+Warning : Pin names are not consistent in lib and LEF files. [PHYS-113]
+        : Pin 'wafer!' of library cell 'pad80_inDig' is in logical library but not in physical library.
+Warning : Pin names are not consistent in lib and LEF files. [PHYS-113]
+        : Pin 'wafer!' of library cell 'pad80_inDig_no_ls' is in logical library but not in physical library.
+Warning : Pin names are not consistent in lib and LEF files. [PHYS-113]
+        : Pin 'wafer!' of library cell 'pad80_inDig_no_ls' is in logical library but not in physical library.
+Warning : Pin names are not consistent in lib and LEF files. [PHYS-113]
+        : Pin 'wafer!' of library cell 'pad80_inDig_no_ls_PD' is in logical library but not in physical library.
+Warning : Pin names are not consistent in lib and LEF files. [PHYS-113]
+        : Pin 'wafer!' of library cell 'pad80_inDig_no_ls_PD' is in logical library but not in physical library.
+Warning : Pin names are not consistent in lib and LEF files. [PHYS-113]
+        : Pin 'wafer!' of library cell 'pad80_inDig_no_ls_PU' is in logical library but not in physical library.
+Warning : Pin names are not consistent in lib and LEF files. [PHYS-113]
+        : Pin 'wafer!' of library cell 'pad80_inDig_no_ls_PU' is in logical library but not in physical library.
+Warning : Pin names are not consistent in lib and LEF files. [PHYS-113]
+        : Pin 'wafer!' of library cell 'pad80_inDig_PD' is in logical library but not in physical library.
+Warning : Pin names are not consistent in lib and LEF files. [PHYS-113]
+        : Pin 'wafer!' of library cell 'pad80_inDig_PD' is in logical library but not in physical library.
+Warning : Pin names are not consistent in lib and LEF files. [PHYS-113]
+        : Pin 'wafer!' of library cell 'pad80_inDig_PU' is in logical library but not in physical library.
+Warning : Pin names are not consistent in lib and LEF files. [PHYS-113]
+        : Pin 'wafer!' of library cell 'pad80_inDig_PU' is in logical library but not in physical library.
+Warning : Pin names are not consistent in lib and LEF files. [PHYS-113]
+        : Pin 'wafer!' of library cell 'pad80_ls_buf_out' is in logical library but not in physical library.
+Warning : Pin names are not consistent in lib and LEF files. [PHYS-113]
+        : Pin 'wafer!' of library cell 'pad80_ls_buf_out' is in logical library but not in physical library.
+Warning : Pin names are not consistent in lib and LEF files. [PHYS-113]
+        : Pin 'VDD1' of library cell 'pad80_ls_vdd1_buf_out' is in logical library but not in physical library.
+Warning : Pin names are not consistent in lib and LEF files. [PHYS-113]
+        : Pin 'VSS1' of library cell 'pad80_ls_vdd1_buf_out' is in logical library but not in physical library.
+Warning : Pin names are not consistent in lib and LEF files. [PHYS-113]
+        : Pin 'wafer!' of library cell 'pad80_ls_vdd1_buf_out' is in logical library but not in physical library.
+Warning : Pin names are not consistent in lib and LEF files. [PHYS-113]
+        : Pin 'VDD1' of library cell 'pad80_ls_vdd1_buf_out' is in logical library but not in physical library.
+Warning : Pin names are not consistent in lib and LEF files. [PHYS-113]
+        : Pin 'VSS1' of library cell 'pad80_ls_vdd1_buf_out' is in logical library but not in physical library.
+Warning : Pin names are not consistent in lib and LEF files. [PHYS-113]
+        : Pin 'wafer!' of library cell 'pad80_ls_vdd1_buf_out' is in logical library but not in physical library.
+Warning : Maximum message print count reached. [MESG-11]
+        : Maximum print count of '20' reached for message 'PHYS-113'.
+Warning : Physical cell not defined in library. [PHYS-279]
+        : The physical (LEF) cell pad80_vddio cannot be found in library.
+Warning : Physical cell not defined in library. [PHYS-279]
+        : The physical (LEF) cell pad80_vdd cannot be found in library.
+Warning : Physical cell not defined in library. [PHYS-279]
+        : The physical (LEF) cell pad80_vssio cannot be found in library.
+Warning : Physical cell not defined in library. [PHYS-279]
+        : The physical (LEF) cell pad80_vss cannot be found in library.
+Warning : Physical cell not defined in library. [PHYS-279]
+        : The physical (LEF) cell power_shunt cannot be found in library.
+Warning : Physical cell not defined in library. [PHYS-279]
+        : The physical (LEF) cell spacer_10 cannot be found in library.
+Warning : Physical cell not defined in library. [PHYS-279]
+        : The physical (LEF) cell spacer_1 cannot be found in library.
+Warning : Physical cell not defined in library. [PHYS-279]
+        : The physical (LEF) cell spacer_30 cannot be found in library.
+Warning : Physical cell not defined in library. [PHYS-279]
+        : The physical (LEF) cell spacer_5 cannot be found in library.
+Warning : Physical cell not defined in library. [PHYS-279]
+        : The physical (LEF) cell spacer_60 cannot be found in library.
+#@ End verbose flow_step synthesis.syn_generic.init_design.read_physical
+      flow.cputime  flow.realtime  timing.setup.tns  timing.setup.wns  snapshot
+UM:              3              3                                      read_physical
+#@ Begin verbose flow_step synthesis.syn_generic.init_design.read_mul_fp16_hdl
+@flow_step(read_mul_fp16_hdl) 2:   source ./designs/mul_fp16/filelist.tcl
+Sourcing './designs/mul_fp16/filelist.tcl' (Thu Jan 29 01:34:52 EST 2026)...
+#@ Begin verbose source ./designs/mul_fp16/filelist.tcl
+@file(filelist.tcl) 4: set atalla_root [file normalize [file join [pwd] .. atalla]]
+@file(filelist.tcl) 7: set listofdirs {}
+@file(filelist.tcl) 8: lappend listofdirs "$atalla_root/rtl/modules/common/general"
+@file(filelist.tcl) 9: set_db init_hdl_search_path $listofdirs
+  Setting attribute of root '/': 'init_hdl_search_path' = /home/asicfab/a/mquerimi/SoCET/atalla/rtl/modules/common/general
+@file(filelist.tcl) 12: read_hdl -sv -define {NOIP SYNTHESIS} "$atalla_root/rtl/modules/common/general/fa.sv"
+  input logic a, b, cin,
+               |
+Warning : Implicit net declaration not allowed with `default_nettype none. [VLOGPT-43]
+        : Assuming a wire net type for declaration 'a' in file '/home/asicfab/a/mquerimi/SoCET/atalla/rtl/modules/common/general/fa.sv' on line 9, column 16.
+        : When `default_nettype is none, each input and inout port declaration requires a corresponding net type.
+  input logic a, b, cin,
+                  |
+Warning : Implicit net declaration not allowed with `default_nettype none. [VLOGPT-43]
+        : Assuming a wire net type for declaration 'b' in file '/home/asicfab/a/mquerimi/SoCET/atalla/rtl/modules/common/general/fa.sv' on line 9, column 19.
+  input logic a, b, cin,
+                       |
+Warning : Implicit net declaration not allowed with `default_nettype none. [VLOGPT-43]
+        : Assuming a wire net type for declaration 'cin' in file '/home/asicfab/a/mquerimi/SoCET/atalla/rtl/modules/common/general/fa.sv' on line 9, column 24.
+@file(filelist.tcl) 13: read_hdl -sv -define {NOIP SYNTHESIS} "$atalla_root/rtl/modules/common/general/ha.sv"
+    input logic a, b, 
+                 |
+Warning : Implicit net declaration not allowed with `default_nettype none. [VLOGPT-43]
+        : Assuming a wire net type for declaration 'a' in file '/home/asicfab/a/mquerimi/SoCET/atalla/rtl/modules/common/general/ha.sv' on line 9, column 18.
+    input logic a, b, 
+                    |
+Warning : Implicit net declaration not allowed with `default_nettype none. [VLOGPT-43]
+        : Assuming a wire net type for declaration 'b' in file '/home/asicfab/a/mquerimi/SoCET/atalla/rtl/modules/common/general/ha.sv' on line 9, column 21.
+@file(filelist.tcl) 14: read_hdl -sv -define {NOIP SYNTHESIS} "$atalla_root/rtl/modules/common/general/wallacetree_11b_2c.sv"
+@file(filelist.tcl) 15: read_hdl -sv -define {NOIP SYNTHESIS} "$atalla_root/rtl/modules/common/general/adder_5b.sv"
+@file(filelist.tcl) 16: read_hdl -sv -define {NOIP SYNTHESIS} "$atalla_root/rtl/modules/common/general/mul_fp16_VC.sv"
+#@ End verbose source ./designs/mul_fp16/filelist.tcl
+#@ End verbose flow_step synthesis.syn_generic.init_design.read_mul_fp16_hdl
+      flow.cputime  flow.realtime  timing.setup.tns  timing.setup.wns  snapshot
+UM:              0              0                                      read_mul_fp16_hdl
+#@ Begin verbose flow_step synthesis.syn_generic.init_design.elaborate_mul_fp16
+@flow_step(elaborate_mul_fp16) 2:   elaborate mul_fp16_VC
+Warning : Automatically disabling an arc which forms loop at output. [LBR-73]
+        : The arc is named 'CORE_PAD_n91' between pins 'CORE' and 'PAD' in libcell 'pad80_inDig_buf_out_cdm'.
+Warning : Automatically disabling an arc which forms loop at output. [LBR-73]
+        : The arc is named 'CORE_PAD_n60' between pins 'CORE' and 'PAD' in libcell 'pad80_inDig_buf_out_cdm'.
+Warning : Automatically disabling an arc which forms loop at output. [LBR-73]
+        : The arc is named 'CORE_PAD_n91' between pins 'CORE' and 'PAD' in libcell 'pad80_inDig_buf_out_hbm'.
+Warning : Automatically disabling an arc which forms loop at output. [LBR-73]
+        : The arc is named 'CORE_PAD_n60' between pins 'CORE' and 'PAD' in libcell 'pad80_inDig_buf_out_hbm'.
+Info    : Elaborating Design. [ELAB-1]
+        : Elaborating top-level block 'mul_fp16_VC' from file '/home/asicfab/a/mquerimi/SoCET/atalla/rtl/modules/common/general/mul_fp16_VC.sv'.
+Warning : Undriven signal detected. [ELABUTL-125]
+        : Undriven bits of signal 'stage3_carries[1]' in module 'wallacetree_11b_2c'.
+        : The undriven signal handling can be controlled by setting the attribute 'hdl_unconnected_value' before syn_generic command.
+Info    : Done Elaborating Design. [ELAB-3]
+        : Done elaborating 'mul_fp16_VC'.
+Checking for analog nets...
+Check completed for analog nets.
+Checking for source RTL...
+Check completed for source RTL.
+Running Unified Mux Engine Tricks...
+Completed Unified Mux Engine Tricks
+
+Stage: post_elab
+--------------------------------------------------------
+| Trick             | Accepts | Rejects | Runtime (ms) | 
+--------------------------------------------------------
+| ume_constant_bmux |       0 |       0 |         0.00 | 
+--------------------------------------------------------
+Starting clip mux common data inputs [v1.0] (stage: post_elab, startdef: mul_fp16_VC, recur: true)
+Completed clip mux common data inputs (accepts: 0, rejects: 0, runtime: 0.000s)
+Starting clip the non-user hierarchies [v2.0] (stage: post_elab, startdef: mul_fp16_VC, recur: true)
+Completed clip the non-user hierarchies (accepts: 0, rejects: 0, runtime: 0.000s)
+
+Stage: post_elab
+---------------------------------------------------------
+| Transform          | Accepts | Rejects | Runtime (ms) | 
+---------------------------------------------------------
+| hlo_clip_mux_input |       0 |       0 |         0.00 | 
+| hlo_clip           |       0 |       0 |         0.00 | 
+---------------------------------------------------------
+      flow.cputime  flow.realtime  timing.setup.tns  timing.setup.wns  snapshot
+UM:*                                                                   elaborate
+#@ End verbose flow_step synthesis.syn_generic.init_design.elaborate_mul_fp16
+      flow.cputime  flow.realtime  timing.setup.tns  timing.setup.wns  snapshot
+UM:              1              1                                      elaborate_mul_fp16
+#@ Begin verbose flow_step synthesis.syn_generic.init_design.read_power_intent
+@flow_step(read_power_intent) 2:   if {![string is space [get_flow_config -quiet init_power_intent_files 1801]]} {
+                                     read_power_intent -1801 [get_flow_config init_power_intent_files 1801]
+                                   }
+@flow_step(read_power_intent) 5:   if {![string is space [get_flow_config -quiet init_power_intent_files cpf]]} {
+                                     read_power_intent -cpf [get_flow_config init_power_intent_files cpf]
+                                   }
+#@ End verbose flow_step synthesis.syn_generic.init_design.read_power_intent
+      flow.cputime  flow.realtime  timing.setup.tns  timing.setup.wns  snapshot
+UM:              0              0                                      read_power_intent
+#@ Begin verbose flow_step synthesis.syn_generic.init_design.run_init_design
+@flow_step(run_init_design) 2:   set_db init_ground_nets vss!
+This attribute has no effect on the tool operation.
+  Setting attribute of root '/': 'init_ground_nets' = vss!
+@flow_step(run_init_design) 3:   set_db init_power_nets vdd!
+This attribute has no effect on the tool operation.
+  Setting attribute of root '/': 'init_power_nets' = vdd!
+@flow_step(run_init_design) 5:   init_design
+Started checking and loading power intent for design mul_fp16_VC...
+===================================================================
+No power intent for design 'mul_fp16_VC'.
+Completed checking and loading power intent for design mul_fp16_VC (runtime:0.00s memory_usage:0.00M peak_memory:0.00M).
+========================================================================================================================
+#
+# Reading SDC /home/asicfab/a/mquerimi/SoCET/Flowkit/scripts/constraints/mul_fp16_VC.sdc for view:view_1p2_25 (constraint_mode:func)
+#
+Statistics for commands executed by read_sdc:
+ "all_inputs"               - successful      2 , failed      0 (runtime  0.00)
+ "all_outputs"              - successful      1 , failed      0 (runtime  0.00)
+ "create_clock"             - successful      1 , failed      0 (runtime  0.01)
+ "current_design"           - successful      1 , failed      0 (runtime  0.01)
+ "get_clocks"               - successful      5 , failed      0 (runtime  0.00)
+ "get_ports"                - successful      2 , failed      0 (runtime  0.01)
+ "set_clock_transition"     - successful      2 , failed      0 (runtime  0.00)
+ "set_clock_uncertainty"    - successful      1 , failed      0 (runtime  0.01)
+ "set_driving_cell"         - successful      1 , failed      0 (runtime  0.01)
+ "set_false_path"           - successful      1 , failed      0 (runtime  0.00)
+ "set_input_delay"          - successful      1 , failed      0 (runtime  0.01)
+ "set_output_delay"         - successful      1 , failed      0 (runtime  0.00)
+ "set_units"                - successful      2 , failed      0 (runtime  0.00)
+read_sdc completed in 00:00:00 (hh:mm:ss)
+  Setting attribute of root '/': 'read_qrc_tech_file_rc_corner' = true
+#@ End verbose flow_step synthesis.syn_generic.init_design.run_init_design
+      flow.cputime  flow.realtime  timing.setup.tns  timing.setup.wns  snapshot
+UM:              1              1                                      run_init_design
+Finished exporting design database to file '/home/asicfab/a/mquerimi/SoCET/Flowkit/dbs/syn_generic.init_design.run_init_design.db' for 'mul_fp16_VC' (command execution time mm:ss cpu = 00:00, real = 00:00).
+#@ Begin verbose flow_step synthesis.syn_generic.init_elaborate
+@flow_step(init_elaborate) 2:   # HDL attributes [get_db -category hdl]
+@flow_step(init_elaborate) 3:   #-----------------------------------------------------------------------------
+@flow_step(init_elaborate) 5:   # Low Power attributes [get_db -category lp_cg]
+@flow_step(init_elaborate) 6:   #-----------------------------------------------------------------------------
+@flow_step(init_elaborate) 7:   set_db lp_insert_clock_gating 0
+  Setting attribute of root '/': 'lp_insert_clock_gating' = false
+#@ End verbose flow_step synthesis.syn_generic.init_elaborate
+      flow.cputime  flow.realtime  timing.setup.tns  timing.setup.wns  snapshot
+UM:              0              1                                      init_elaborate
+#@ Begin verbose flow_step synthesis.syn_generic.init_genus.init_genus_yaml
+@flow_step(init_genus_yaml)  2:   # Timing attributes  [get_db -category tim]
+@flow_step(init_genus_yaml)  3:   #-------------------------------------------------------------------------------
+@flow_step(init_genus_yaml)  4:   set_db ocv_mode                         true
+  Setting attribute of root '/': 'ocv_mode' = true
+@flow_step(init_genus_yaml)  6:   # Routing attributes  [get_db -category route]
+@flow_step(init_genus_yaml)  7:   #-------------------------------------------------------------------------------
+@flow_step(init_genus_yaml)  8:   set_db design_top_routing_layer M5
+no gcells found!
+  Setting attribute of root '/': 'design_top_routing_layer' = M5
+@flow_step(init_genus_yaml)  9:   set_db design_bottom_routing_layer M1
+  Setting attribute of root '/': 'design_bottom_routing_layer' = M2
+@flow_step(init_genus_yaml) 11:   # Optimization attributes  [get_db -category netlist]
+@flow_step(init_genus_yaml) 12:   #-------------------------------------------------------------------------------
+@flow_step(init_genus_yaml) 13:   set_db design_flow_effort standard
+  Setting attribute of root '/': 'design_flow_effort' = standard
+@flow_step(init_genus_yaml) 14:   set_db design_power_effort low
+  Setting attribute of root '/': 'design_power_effort' = low
+@flow_step(init_genus_yaml) 15:   set_db opt_leakage_to_dynamic_ratio 0.8
+  Setting attribute of root '/': 'opt_leakage_to_dynamic_ratio' = 0.8
+@flow_step(init_genus_yaml) 16:   if {[get_feature synth_ispatial]} {
+                                    set_db opt_spatial_common_db            [file normalize [file join [get_db flow_db_directory] [get_db flow_report_name].cdb]]
+                                  }
+@flow_step(init_genus_yaml) 19:   set_db cts_buffer_cells {buf_1x buf_2x buf_4x buf_6x buf_8x buf_16x buf_32x}
+  Setting attribute of root '/': 'cts_buffer_cells' = base_cell:buf_1x base_cell:buf_2x base_cell:buf_4x base_cell:buf_6x base_cell:buf_8x base_cell:buf_16x base_cell:buf_32x
+@flow_step(init_genus_yaml) 20:   set_db cts_inverter_cells {inv_1x inv_2x inv_4x inv_6x inv_8x inv_12x inv_16x inv_32x}
+  Setting attribute of root '/': 'cts_inverter_cells' = base_cell:inv_1x base_cell:inv_2x base_cell:inv_4x base_cell:inv_6x base_cell:inv_8x base_cell:inv_12x base_cell:inv_16x base_cell:inv_32x
+@flow_step(init_genus_yaml) 21:   set_db {} .lp_clock_gating_auto_path_adjust variable
+@flow_step(init_genus_yaml) 23:   # Physical attributes  [get_db -category phys]
+@flow_step(init_genus_yaml) 24:   #-------------------------------------------------------------------------------
+@flow_step(init_genus_yaml) 25:   set_db design_process_node 90
+  Setting attribute of root '/': 'design_process_node' = 90
+#@ End verbose flow_step synthesis.syn_generic.init_genus.init_genus_yaml
+      flow.cputime  flow.realtime  timing.setup.tns  timing.setup.wns  snapshot
+UM:              1              0                                      init_genus_yaml
+      flow.cputime  flow.realtime  timing.setup.tns  timing.setup.wns  snapshot
+UM:*                                                                   init_genus
+#@ Begin verbose flow_step synthesis.syn_generic.init_genus.init_genus_user
+@flow_step(init_genus_user)  2:   # Timing attributes  [get_db -category tim]
+@flow_step(init_genus_user)  3:   #-----------------------------------------------------------------------------
+@flow_step(init_genus_user)  4:   set_db timing_apply_default_primary_input_assertion true
+  Setting attribute of root '/': 'timing_apply_default_primary_input_assertion' = true
+@flow_step(init_genus_user)  5:   set_db timing_analysis_async_checks     async
+  Setting attribute of root '/': 'timing_analysis_async_checks' = async
+@flow_step(init_genus_user)  7: # Optimization attributes  [get_db -category netlist]
+@flow_step(init_genus_user)  8: #-----------------------------------------------------------------------------
+@flow_step(init_genus_user) 10: # Datapath attributes  [get_db -category dp]
+@flow_step(init_genus_user) 11: #-----------------------------------------------------------------------------
+@flow_step(init_genus_user) 13: # Leakage Power attributes  [get_db -category lp_opt lib_ui]
+@flow_step(init_genus_user) 14: #-----------------------------------------------------------------------------
+@flow_step(init_genus_user) 16: if {[get_feature synth_ispatial]} {
+                                  # Physical Synthesis attributes  [get_db -category phys]
+                                  #-----------------------------------------------------------------------------
+                                }
+#@ End verbose flow_step synthesis.syn_generic.init_genus.init_genus_user
+      flow.cputime  flow.realtime  timing.setup.tns  timing.setup.wns  snapshot
+UM:              0              1                                      init_genus_user
+#@ Begin verbose flow_step synthesis.syn_generic.commit_power_intent
+@flow_step(commit_power_intent)  2:   if {[join [dict values [get_db init_power_intent_files]]] ne {}} {
+                                        #- apply power intent rules
+                                        if {[is_flow -quiet -inside synthesis]} {
+                                          apply_power_intent -summary
+                                        }
+                                      
+                                        #- commit power intent rules
+                                        commit_power_intent
+                                      }
+#@ End verbose flow_step synthesis.syn_generic.commit_power_intent
+      flow.cputime  flow.realtime  timing.setup.tns  timing.setup.wns  snapshot
+UM:              0              0                                      commit_power_intent
+#@ Begin verbose flow_step synthesis.syn_generic.run_syn_generic
+@flow_step(run_syn_generic) 2:   #- Synthesize to generic gates
+@flow_step(run_syn_generic) 3:   if {[get_feature synth_ispatial]} {
+                                   syn_generic -physical
+                                 } else {
+                                   syn_generic
+                                 }
+Info    : Undriven signal detected. [ELABUTL-130]
+        : Assuming a logic '0' value for undriven bits of signal 'stage3_carries[1]' in module 'wallacetree_11b_2c'.
+        : The 'hdl_unconnected_value' attribute controls treatment of undriven signal.
+
+Stage: pre_early_cg
+------------------------------------------------
+| Transform | Accepts | Rejects | Runtime (ms) | 
+------------------------------------------------
+------------------------------------------------
+Warning : Automatically disabling an arc which forms loop at output. [LBR-73]
+        : The arc is named 'CORE_PAD_n91' between pins 'CORE' and 'PAD' in libcell 'pad80_inDig_buf_out_cdm'.
+Warning : Automatically disabling an arc which forms loop at output. [LBR-73]
+        : The arc is named 'CORE_PAD_n60' between pins 'CORE' and 'PAD' in libcell 'pad80_inDig_buf_out_cdm'.
+Warning : Automatically disabling an arc which forms loop at output. [LBR-73]
+        : The arc is named 'CORE_PAD_n91' between pins 'CORE' and 'PAD' in libcell 'pad80_inDig_buf_out_hbm'.
+Warning : Automatically disabling an arc which forms loop at output. [LBR-73]
+        : The arc is named 'CORE_PAD_n60' between pins 'CORE' and 'PAD' in libcell 'pad80_inDig_buf_out_hbm'.
+##Generic Timing Info for library domain: timing_condition_tt_1p2v_25c typical gate delay: 59.2 ps std_slew: 10.5 ps std_load: 6.4 fF
+Starting mux data reorder optimization [v1.0] (stage: pre_to_gen_setup, startdef: mul_fp16_VC, recur: true)
+Completed mux data reorder optimization (accepts: 0, rejects: 0, runtime: 0.000s)
+
+Stage: pre_to_gen_setup
+------------------------------------------------------
+| Transform       | Accepts | Rejects | Runtime (ms) | 
+------------------------------------------------------
+| hlo_mux_reorder |       0 |       0 |         0.00 | 
+------------------------------------------------------
+Current PLE settings:
+
+Aspect ratio        : 1.000
+Shrink factor       : 1.000
+Scale of res/length : 1.000
+Scale of cap/length : 1.000
+Net derating factor : 1.000
+Thermal factor      : 1.000
+Via Resistance      : 0.000 ohm (from default)
+Site size           : 2.880 um (from lef [tech+cell])
+
+                                   Capacitance  
+  Layer                             / Length         Data source:
+Name        Direction Utilization  (pF/micron)       lef_library
+------------------------------------------------
+M1              V         0.00        0.000062  
+M2              H         1.00        0.000067  
+M3              V         1.00        0.000067  
+M4              H         1.00        0.000067  
+M5              V         1.00        0.000067  
+
+                                    Resistance   
+  Layer                              / Length         Data source:
+Name        Direction Utilization  (ohm/micron)       lef_library
+-------------------------------------------------
+M1              V         0.00         2.000000  
+M2              H         1.00         2.000000  
+M3              V         1.00         2.000000  
+M4              H         1.00         2.000000  
+M5              V         1.00         2.000000  
+
+                                        Area     
+  Layer                               / Length        Data source:
+Name        Direction Utilization     (micron)        lef_library
+-------------------------------------------------
+M1              V         0.00         0.140000  
+M2              H         1.00         0.140000  
+M3              V         1.00         0.140000  
+M4              H         1.00         0.140000  
+M5              V         1.00         0.140000  
+
+Info    : Synthesizing. [SYNTH-1]
+        : Synthesizing 'mul_fp16_VC' to generic gates using 'medium' effort.
+PBS_Generic-Start - Elapsed_Time 0, CPU_Time 0.0
+stamp 'PBS_Generic-Start' being created for table 'pbs_debug'
+
+  Total Time (Wall) |  Stage Time (Wall)  |   % (Wall)   |    Date - Time     |  Memory   | Stage
+--------------------+---------------------+--------------+--------------------+-----------+----------------------
+ 00:00:18(00:00:14) |  00:00:00(00:00:00) |   0.0(  0.0) |    1:34:57 (Jan29) |  517.4 MB | PBS_Generic-Start
+--------------------+---------------------+--------------+--------------------+-----------+----------------------
+Number of threads: 8 * 1   (id: pbs_debug, time_info v1.57)
+Info: (*N*) indicates data that was populated from previously saved time_info database
+Info: CPU time includes time of parent + longest thread
+TNS Restructuring config: no_value at stage: generic applied.
+Info    : Partition Based Synthesis execution skipped. [PHYS-752]
+        : Design size is less than the partition size '100000' for distributed generic optimization to kick in.
+Starting mux data reorder optimization [v1.0] (stage: pre_to_gen_setup, startdef: mul_fp16_VC, recur: true)
+Completed mux data reorder optimization (accepts: 0, rejects: 0, runtime: 0.002s)
+
+Stage: pre_to_gen_setup
+------------------------------------------------------
+| Transform       | Accepts | Rejects | Runtime (ms) | 
+------------------------------------------------------
+| hlo_mux_reorder |       0 |       0 |         2.00 | 
+------------------------------------------------------
+Starting mux data reorder optimization [v1.0] (stage: post_to_gen_setup, startdef: mul_fp16_VC, recur: true)
+Completed mux data reorder optimization (accepts: 0, rejects: 0, runtime: 0.000s)
+
+Stage: post_to_gen_setup
+------------------------------------------------------
+| Transform       | Accepts | Rejects | Runtime (ms) | 
+------------------------------------------------------
+| hlo_mux_reorder |       0 |       0 |         0.00 | 
+------------------------------------------------------
+Current PLE settings:
+
+Aspect ratio        : 1.000
+Shrink factor       : 1.000
+Scale of res/length : 1.000
+Scale of cap/length : 1.000
+Net derating factor : 1.000
+Thermal factor      : 1.000
+Via Resistance      : 0.000 ohm (from default)
+Site size           : 2.880 um (from lef [tech+cell])
+
+                                   Capacitance  
+  Layer                             / Length         Data source:
+Name        Direction Utilization  (pF/micron)       lef_library
+------------------------------------------------
+M1              V         0.00        0.000062  
+M2              H         1.00        0.000067  
+M3              V         1.00        0.000067  
+M4              H         1.00        0.000067  
+M5              V         1.00        0.000067  
+
+                                    Resistance   
+  Layer                              / Length         Data source:
+Name        Direction Utilization  (ohm/micron)       lef_library
+-------------------------------------------------
+M1              V         0.00         2.000000  
+M2              H         1.00         2.000000  
+M3              V         1.00         2.000000  
+M4              H         1.00         2.000000  
+M5              V         1.00         2.000000  
+
+                                        Area     
+  Layer                               / Length        Data source:
+Name        Direction Utilization     (micron)        lef_library
+-------------------------------------------------
+M1              V         0.00         0.140000  
+M2              H         1.00         0.140000  
+M3              V         1.00         0.140000  
+M4              H         1.00         0.140000  
+M5              V         1.00         0.140000  
+
+Running Unified Mux Engine Tricks...
+Completed Unified Mux Engine Tricks
+
+Stage: pre_hlo_rtlopt
+--------------------------------------------
+| Trick | Accepts | Rejects | Runtime (ms) | 
+--------------------------------------------
+--------------------------------------------
+Starting infer macro optimization [v1.0] (stage: pre_rtlopt, startdef: mul_fp16_VC, recur: true)
+Completed infer macro optimization (accepts: 0, rejects: 2, runtime: 0.002s)
+Starting decode mux sandwich optimization [v2.0] (stage: pre_rtlopt, startdef: mul_fp16_VC, recur: true)
+Completed decode mux sandwich optimization (accepts: 0, rejects: 0, runtime: 0.000s)
+Starting decode mux optimization [v1.0] (stage: pre_rtlopt, startdef: mul_fp16_VC, recur: true)
+Completed decode mux optimization (accepts: 0, rejects: 0, runtime: 0.000s)
+Starting chop wide muxes [v1.0] (stage: pre_rtlopt, startdef: mul_fp16_VC, recur: true)
+Completed chop wide muxes (accepts: 0, rejects: 0, runtime: 0.000s)
+Starting common data mux cascade opt [v1.0] (stage: pre_rtlopt, startdef: mul_fp16_VC, recur: true)
+Completed common data mux cascade opt (accepts: 0, rejects: 0, runtime: 0.000s)
+Starting mux input consolidation [v1.0] (stage: pre_rtlopt, startdef: mul_fp16_VC, recur: true)
+Completed mux input consolidation (accepts: 0, rejects: 0, runtime: 0.000s)
+Starting constant-data mux optimization [v1.0] (stage: pre_rtlopt, startdef: mul_fp16_VC, recur: true)
+Completed constant-data mux optimization (accepts: 0, rejects: 0, runtime: 0.000s)
+Starting chain-to-tree inequality transform [v2.0] (stage: pre_rtlopt, startdef: mul_fp16_VC, recur: true)
+Completed chain-to-tree inequality transform (accepts: 0, rejects: 0, runtime: 0.003s)
+Starting reconvergence optimization [v1.0] (stage: pre_rtlopt, startdef: mul_fp16_VC, recur: true)
+Completed reconvergence optimization (accepts: 0, rejects: 0, runtime: 0.000s)
+Starting logic restructure optimization [v1.0] (stage: pre_rtlopt, startdef: mul_fp16_VC, recur: true)
+Completed logic restructure optimization (accepts: 0, rejects: 0, runtime: 0.001s)
+Starting common select mux optimization [v1.0] (stage: pre_rtlopt, startdef: mul_fp16_VC, recur: true)
+Completed common select mux optimization (accepts: 0, rejects: 0, runtime: 0.000s)
+Starting identity transform [v3.0] (stage: pre_rtlopt, startdef: mul_fp16_VC, recur: true)
+Completed identity transform (accepts: 0, rejects: 2, runtime: 0.001s)
+Starting reduce operator chain [v1.0] (stage: pre_rtlopt, startdef: mul_fp16_VC, recur: true)
+Completed reduce operator chain (accepts: 0, rejects: 0, runtime: 0.000s)
+Starting common data mux cascade opt [v1.0] (stage: pre_rtlopt, startdef: mul_fp16_VC, recur: true)
+Completed common data mux cascade opt (accepts: 0, rejects: 0, runtime: 0.000s)
+Starting mux input consolidation [v1.0] (stage: pre_rtlopt, startdef: mul_fp16_VC, recur: true)
+Completed mux input consolidation (accepts: 0, rejects: 0, runtime: 0.000s)
+Starting optimize datapath elements [v1.0] (stage: pre_rtlopt, startdef: mul_fp16_VC, recur: true)
+Completed optimize datapath elements (accepts: 3, rejects: 0, runtime: 0.000s)
+Starting datapath recasting [v1.0] (stage: pre_rtlopt, startdef: mul_fp16_VC, recur: true)
+Completed datapath recasting (accepts: 0, rejects: 0, runtime: 0.000s)
+Starting clip mux common data inputs [v1.0] (stage: pre_rtlopt, startdef: mul_fp16_VC, recur: true)
+Completed clip mux common data inputs (accepts: 0, rejects: 0, runtime: 0.000s)
+Starting clip the non-user hierarchies [v2.0] (stage: pre_rtlopt, startdef: mul_fp16_VC, recur: true)
+Completed clip the non-user hierarchies (accepts: 0, rejects: 0, runtime: 0.000s)
+
+Stage: pre_rtlopt
+----------------------------------------------------------------
+| Transform                 | Accepts | Rejects | Runtime (ms) | 
+----------------------------------------------------------------
+| hlo_infer_macro           |       0 |       2 |         2.00 | 
+| hlo_decode_mux_sandwich   |       0 |       0 |         0.00 | 
+| hlo_mux_decode            |       0 |       0 |         0.00 | 
+| hlo_chop_mux              |       0 |       0 |         0.00 | 
+| hlo_mux_cascade_opt       |       0 |       0 |         0.00 | 
+| hlo_mux_consolidation     |       0 |       0 |         0.00 | 
+| hlo_constant_mux_opt      |       0 |       0 |         0.00 | 
+| hlo_inequality_transform  |       0 |       0 |         3.00 | 
+| hlo_reconv_opt            |       0 |       0 |         0.00 | 
+| hlo_restructure           |       0 |       0 |         1.00 | 
+| hlo_common_select_muxopto |       0 |       0 |         0.00 | 
+| hlo_identity_transform    |       0 |       2 |         1.00 | 
+| hlo_reduce_operator_chain |       0 |       0 |         0.00 | 
+| hlo_mux_cascade_opt       |       0 |       0 |         0.00 | 
+| hlo_mux_consolidation     |       0 |       0 |         0.00 | 
+| hlo_optimize_datapath     |       3 |       0 |         0.00 | 
+| hlo_datapath_recast       |       0 |       0 |         0.00 | 
+| hlo_clip_mux_input        |       0 |       0 |         0.00 | 
+| hlo_clip                  |       0 |       0 |         0.00 | 
+----------------------------------------------------------------
+Running Unified Mux Engine Tricks...
+Completed Unified Mux Engine Tricks
+
+Stage: post_hlo_rtlopt
+--------------------------------------------------
+| Trick       | Accepts | Rejects | Runtime (ms) | 
+--------------------------------------------------
+| ume_runtime |       0 |       0 |         0.00 | 
+--------------------------------------------------
+Number of big hc bmuxes before = 0
+Info    : Pre-processed datapath logic. [DPOPT-6]
+        : Pre-processing optimizations applied to datapath logic in 'mul_fp16_VC':
+          live_trim(1) 
+Info    : Optimizing datapath logic. [DPOPT-1]
+        : Optimizing datapath logic in 'mul_fp16_VC'.
+Info    : Implementing datapath configurations. [DPOPT-3]
+        : Implementing datapath configurations for 'CDN_DP_region_2_0'
+CSAGen Prep Share:0 Re-Write:3 Speculation: 0
+Warning: (CSAGEN-QOR) CSA is rejected due to upper bit truncation.
+:		wallaca_add_212_39 -> add_EXPs_add_28_50.B
+MaxCSA: Successfully built Maximal CSA Expression Expr0
+MaxCSA: Successfully built Maximal CSA Expression Expr1
+CDN_DP_region_2_0 level = 0 loads = 0 drivers = 0
+CDN_DP_region_2_0_c0 in mul_fp16_VC: area: 4203320004 ,dp = 10 mux = 15 sg = slow         worst_clk_period: -1.0000 
+    wns: 2222  norm_wns:  -1.0000 
+    fail_endp: -1 
+    tns:  96394  tns_per_endp:  -1.0000   norm_tns_per_endp:  -1.0000 
+    tns_sense_max:  -1.0000  tns_sense_avg:  -1.0000   tns_sense_num: -1
+    power:  -9223372036854775808  
+ skipped
+CDN_DP_region_2_0_c1 in mul_fp16_VC: area: 4902620112 ,dp = 10 mux = 13 sg = fast         worst_clk_period: -1.0000 
+    wns: 3651  norm_wns:  -1.0000 
+    fail_endp: -1 
+    tns:  119292  tns_per_endp:  -1.0000   norm_tns_per_endp:  -1.0000 
+    tns_sense_max:  -1.0000  tns_sense_avg:  -1.0000   tns_sense_num: -1
+    power:  -9223372036854775808  
+ is current best
+CDN_DP_region_2_0_c2 in mul_fp16_VC: area: 3891266730 ,dp = 9 mux = 13 sg = very_slow    worst_clk_period: -1.0000 
+    wns: 2222  norm_wns:  -1.0000 
+    fail_endp: -1 
+    tns:  92234  tns_per_endp:  -1.0000   norm_tns_per_endp:  -1.0000 
+    tns_sense_max:  -1.0000  tns_sense_avg:  -1.0000   tns_sense_num: -1
+    power:  -9223372036854775808  
+ is current best
+CDN_DP_region_2_0_c3 in mul_fp16_VC: area: 4902620112 ,dp = 10 mux = 13 sg = very_fast    worst_clk_period: -1.0000 
+    wns: 3651  norm_wns:  -1.0000 
+    fail_endp: -1 
+    tns:  119292  tns_per_endp:  -1.0000   norm_tns_per_endp:  -1.0000 
+    tns_sense_max:  -1.0000  tns_sense_avg:  -1.0000   tns_sense_num: -1
+    power:  -9223372036854775808  
+
+CDN_DP_region_2_0_c4 in mul_fp16_VC: area: 3891266730 ,dp = 9 mux = 13 sg = very_fast    worst_clk_period: -1.0000 
+    wns: 2222  norm_wns:  -1.0000 
+    fail_endp: -1 
+    tns:  92234  tns_per_endp:  -1.0000   norm_tns_per_endp:  -1.0000 
+    tns_sense_max:  -1.0000  tns_sense_avg:  -1.0000   tns_sense_num: -1
+    power:  -9223372036854775808  
+ is current best
+CDN_DP_region_2_0_c5 in mul_fp16_VC: area: 3891266730 ,dp = 9 mux = 13 sg = very_fast    worst_clk_period: -1.0000 
+    wns: 2222  norm_wns:  -1.0000 
+    fail_endp: -1 
+    tns:  92234  tns_per_endp:  -1.0000   norm_tns_per_endp:  -1.0000 
+    tns_sense_max:  -1.0000  tns_sense_avg:  -1.0000   tns_sense_num: -1
+    power:  -9223372036854775808  
+ is current best
+CDN_DP_region_2_0_c6 in mul_fp16_VC: area: 4925178180 ,dp = 10 mux = 14 sg = very_fast    worst_clk_period: -1.0000 
+    wns: 4060  norm_wns:  -1.0000 
+    fail_endp: -1 
+    tns:  125836  tns_per_endp:  -1.0000   norm_tns_per_endp:  -1.0000 
+    tns_sense_max:  -1.0000  tns_sense_avg:  -1.0000   tns_sense_num: -1
+    power:  -9223372036854775808  
+
+CDN_DP_region_2_0_c7 in mul_fp16_VC: area: 5635757322 ,dp = 9 mux = 16 sg = very_fast    worst_clk_period: -1.0000 
+    wns: 2411  norm_wns:  -1.0000 
+    fail_endp: -1 
+    tns:  99834  tns_per_endp:  -1.0000   norm_tns_per_endp:  -1.0000 
+    tns_sense_max:  -1.0000  tns_sense_avg:  -1.0000   tns_sense_num: -1
+    power:  -9223372036854775808  
+
+Best config: CDN_DP_region_2_0_c5 in mul_fp16_VC: area: 3891266730 ,dp = 9 mux = 13 sg = very_fast    worst_clk_period: -1.0000 
+    wns: 2222  norm_wns:  -1.0000 
+    fail_endp: -1 
+    tns:  92234  tns_per_endp:  -1.0000   norm_tns_per_endp:  -1.0000 
+    tns_sense_max:  -1.0000  tns_sense_avg:  -1.0000   tns_sense_num: -1
+    power:  -9223372036854775808  
+  Smallest config area : 3891266730.  Fastest config wns;  2222
+##>+----------------------------------------------------------------------------------------------------------------------------------------------------------------+
+##>Summary table of configs (Best config is CDN_DP_region_2_0_c5)
+##>+----------------------------------------------------------------------------------------------------------------------------------------------------------------+
+##>                     0                  1                  2                  3                  4                  5                  6                  7            
+##>+----------------------------------------------------------------------------------------------------------------------------------------------------------------+
+##>           Area       4203320004         4902620112         3891266730         4902620112         3891266730         3891266730         4925178180         5635757322  
+##>            WNS          -222.20            -365.10            -222.20            -365.10            -222.20            -222.20            -406.00            -241.10  
+##>            TNS            96394             119292              92234             119292              92234              92234             125836              99834  
+##>    Num Rewrite                0                  1                  1                  1                  1                  1                  1                  3  
+##>     Num Factor                0                  0                  0                  0                  0                  0                  0                  0  
+##>      Num Share                0                  0                  0                  0                  0                  0                  0                  0  
+##>   Num CmultCse                0                  0                  0                  0                  0                  0                  0                  0  
+##>   Num Downsize                0                  0                  0                  0                  0                  0                  0                  0  
+##>  Num Speculate                0                  0                  0                  0                  0                  0                  0                  2  
+##>     Runtime(s)                0                  0                  0                  0                  0                  0                  0                  2  
++----------------------------------------------------------------------------------------------------------------------------------------------------------------+
+##>
+##>
+##>+-----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------+
+##>Optimization Step DEBUG Table for config CDN_DP_region_2_0_c5
+##>
+##>                          Step                        Area   (  % Chg)         WNS (Change)          TNS (Change)                Power   (  % Chg)        Runtime (s)        Comment                   
+##>+-----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------+
+##>createMaxCarrySave              START             4203320004 (       )     -222.20 (        )      96394 (        )                    0 (       )              
+##> datapath_rewrite_one_def       START             4203320004 (  +0.00)     -222.20 (   +0.00)      96394 (       0)                    0 (  +0.00)              
+##>  fast_cse_elim                 START             4203320004 (  +0.00)     -222.20 (   +0.00)      96394 (       0)                    0 (  +0.00)              
+##>                                  END             4203320004 (  +0.00)     -222.20 (   +0.00)      96394 (       0)                    0 (  +0.00)           0  
+##>  fast_cse_elim                 START             4203320004 (  +0.00)     -222.20 (   +0.00)      96394 (       0)                    0 (  +0.00)              
+##>                                  END             4203320004 (  +0.00)     -222.20 (   +0.00)      96394 (       0)                    0 (  +0.00)           0  
+##>  rewrite                       START             4203320004 (  +0.00)     -222.20 (   +0.00)      96394 (       0)                    0 (  +0.00)              (na,csaa) inc_with_select --> inc_ci
+##>                                  END             4139405478 (  -1.52)     -352.50 ( -130.30)     117242 (   20848)                    0 (  +0.00)           0  
+##>  rewrite                       START             4203320004 (  +1.54)     -222.20 ( +130.30)      96394 (  -20848)                    0 (  +0.00)              (na,csaa) inc_ci_with_select_version1 --> inc_ci_with_select_version2
+##>                                  END             4139405478 (  -1.52)     -352.50 ( -130.30)     117242 (   20848)                    0 (  +0.00)           0  
+##>  rewrite                       START             4203320004 (  +1.54)     -222.20 ( +130.30)      96394 (  -20848)                    0 (  +0.00)              (a,ar) add_c_ohmux_version1 --> add_c_ohmux_version2
+##>                                  END             4139405478 (  -1.52)     -352.50 ( -130.30)     117242 (   20848)                    0 (  +0.00)           0  
+##>  fast_cse_elim                 START             4139405478 (  +0.00)     -352.50 (   +0.00)     117242 (       0)                    0 (  +0.00)              
+##>                                  END             4139405478 (  +0.00)     -352.50 (   +0.00)     117242 (       0)                    0 (  +0.00)           0  
+##>  fast_cse_elim                 START             4139405478 (  +0.00)     -352.50 (   +0.00)     117242 (       0)                    0 (  +0.00)              
+##>                                  END             4139405478 (  +0.00)     -352.50 (   +0.00)     117242 (       0)                    0 (  +0.00)           0  
+##>                                  END             4139405478 (  -1.52)     -352.50 ( -130.30)     117242 (   20848)                    0 (  +0.00)           0  
+##> speculate_in_gdef              START             4139405478 (  +0.00)     -352.50 (   +0.00)     117242 (       0)                    0 (  +0.00)              
+##>  pre_speculate_mux_merge       START             4139405478 (  +0.00)     -352.50 (   +0.00)     117242 (       0)                    0 (  +0.00)              
+##>                                  END             4139405478 (  +0.00)     -352.50 (   +0.00)     117242 (       0)                    0 (  +0.00)           0  
+##>                                  END             4139405478 (  +0.00)     -352.50 (   +0.00)     117242 (       0)                    0 (  +0.00)           0  
+##> csa_opto                       START             4139405478 (  +0.00)     -352.50 (   +0.00)     117242 (       0)                    0 (  +0.00)              
+##>                                  END             3996537714 (  -3.45)     -235.50 ( +117.00)      98522 (  -18720)                    0 (  +0.00)           0  
+##>                                  END             3996537714 (  -4.92)     -235.50 (  -13.30)      98522 (    2128)                    0 (  +0.00)           0  
+##>canonicalize_by_names           START             3996537714 (  +0.00)     -235.50 (   +0.00)      98522 (       0)                    0 (  +0.00)              
+##>                                  END             3996537714 (  +0.00)     -235.50 (   +0.00)      98522 (       0)                    0 (  +0.00)           0  
+##>datapath_rewrite_post_csa_one_  START             3996537714 (  +0.00)     -235.50 (   +0.00)      98522 (       0)                    0 (  +0.00)              
+##> rewrite                        START             3996537714 (  +0.00)     -235.50 (   +0.00)      98522 (       0)                    0 (  +0.00)              (na,csaa) base_comb_unsigned_add_ci_hdp_sub_from --> comb_unsigned_add_ci_hdp_sub_to
+##>                                  END             4496574888 ( +12.51)     -235.50 (   +0.00)      98622 (     100)                    0 (  +0.00)           0  
+##>                                  END             3996537714 (  +0.00)     -235.50 (   +0.00)      98522 (       0)                    0 (  +0.00)           0  
+##>datapath_csa_factoring_one_gde  START             3996537714 (  +0.00)     -235.50 (   +0.00)      98522 (       0)                    0 (  +0.00)              
+##>                                  END             3996537714 (  +0.00)     -235.50 (   +0.00)      98522 (       0)                    0 (  +0.00)           0  
+##>dpopt_share_one_def             START             3996537714 (  +0.00)     -235.50 (   +0.00)      98522 (       0)                    0 (  +0.00)              
+##>                                  END             3996537714 (  +0.00)     -235.50 (   +0.00)      98522 (       0)                    0 (  +0.00)           0  
+##>datapath_rewrite_post_share     START             3996537714 (  +0.00)     -235.50 (   +0.00)      98522 (       0)                    0 (  +0.00)              
+##>                                  END             3996537714 (  +0.00)     -235.50 (   +0.00)      98522 (       0)                    0 (  +0.00)           0  
+##>dp_combine_const_mult_with_com  START             3996537714 (  +0.00)     -235.50 (   +0.00)      98522 (       0)                    0 (  +0.00)              
+##>                                  END             3996537714 (  +0.00)     -235.50 (   +0.00)      98522 (       0)                    0 (  +0.00)           0  
+##>speculate_in_gdef               START             3996537714 (  +0.00)     -235.50 (   +0.00)      98522 (       0)                    0 (  +0.00)              
+##> pre_speculate_mux_merge        START             3996537714 (  +0.00)     -235.50 (   +0.00)      98522 (       0)                    0 (  +0.00)              
+##>                                  END             3996537714 (  +0.00)     -235.50 (   +0.00)      98522 (       0)                    0 (  +0.00)           0  
+##>                                  END             3996537714 (  +0.00)     -235.50 (   +0.00)      98522 (       0)                    0 (  +0.00)           0  
+##>dp_operator_level_decompositio  START             3996537714 (  +0.00)     -235.50 (   +0.00)      98522 (       0)                    0 (  +0.00)              
+##>                                  END             3996537714 (  +0.00)     -235.50 (   +0.00)      98522 (       0)                    0 (  +0.00)           0  
+##>selective_flatten_dp_config     START             3996537714 (  +0.00)     -235.50 (   +0.00)      98522 (       0)                    0 (  +0.00)              
+##>                                  END             3996537714 (  +0.00)     -235.50 (   +0.00)      98522 (       0)                    0 (  +0.00)           0  
+##>createMaxCarrySave              START             3996537714 (  +0.00)     -235.50 (   +0.00)      98522 (       0)                    0 (  +0.00)              
+##> datapath_rewrite_one_def       START             3996537714 (  +0.00)     -235.50 (   +0.00)      98522 (       0)                    0 (  +0.00)              
+##>  fast_cse_elim                 START             3996537714 (  +0.00)     -235.50 (   +0.00)      98522 (       0)                    0 (  +0.00)              
+##>                                  END             3996537714 (  +0.00)     -235.50 (   +0.00)      98522 (       0)                    0 (  +0.00)           0  
+##>  fast_cse_elim                 START             3996537714 (  +0.00)     -235.50 (   +0.00)      98522 (       0)                    0 (  +0.00)              
+##>                                  END             3996537714 (  +0.00)     -235.50 (   +0.00)      98522 (       0)                    0 (  +0.00)           0  
+##>                                  END             3996537714 (  +0.00)     -235.50 (   +0.00)      98522 (       0)                    0 (  +0.00)           0  
+##> speculate_in_gdef              START             3996537714 (  +0.00)     -235.50 (   +0.00)      98522 (       0)                    0 (  +0.00)              
+##>  pre_speculate_mux_merge       START             3996537714 (  +0.00)     -235.50 (   +0.00)      98522 (       0)                    0 (  +0.00)              
+##>                                  END             3996537714 (  +0.00)     -235.50 (   +0.00)      98522 (       0)                    0 (  +0.00)           0  
+##>                                  END             3996537714 (  +0.00)     -235.50 (   +0.00)      98522 (       0)                    0 (  +0.00)           0  
+##> csa_opto                       START             3996537714 (  +0.00)     -235.50 (   +0.00)      98522 (       0)                    0 (  +0.00)              
+##>                                  END             3996537714 (  +0.00)     -235.50 (   +0.00)      98522 (       0)                    0 (  +0.00)           0  
+##>                                  END             3996537714 (  +0.00)     -235.50 (   +0.00)      98522 (       0)                    0 (  +0.00)           0  
+##>context_based_simplify          START             3996537714 (  +0.00)     -235.50 (   +0.00)      98522 (       0)                    0 (  +0.00)              
+##>                                  END             3913824798 (  -2.07)     -222.20 (  +13.30)      95402 (   -3120)                    0 (  +0.00)           0  
+##>group_csa_final_adder_dp        START             3913824798 (  +0.00)     -222.20 (   +0.00)      95402 (       0)                    0 (  +0.00)              
+##>                                  END             3913824798 (  +0.00)     -222.20 (   +0.00)      95402 (       0)                    0 (  +0.00)           0  
+##>dpopt_flatten_critical_muxes_i  START             3913824798 (  +0.00)     -222.20 (   +0.00)      95402 (       0)                    0 (  +0.00)              
+##>                                  END             3891266730 (  -0.58)     -222.20 (   +0.00)      92234 (   -3168)                    0 (  +0.00)           0  
+##>speculate_in_gdef               START             3891266730 (  +0.00)     -222.20 (   +0.00)      92234 (       0)                    0 (  +0.00)              
+##> pre_speculate_mux_merge        START             3891266730 (  +0.00)     -222.20 (   +0.00)      92234 (       0)                    0 (  +0.00)              
+##>                                  END             3891266730 (  +0.00)     -222.20 (   +0.00)      92234 (       0)                    0 (  +0.00)           0  
+##>                                  END             3891266730 (  +0.00)     -222.20 (   +0.00)      92234 (       0)                    0 (  +0.00)           0  
+##>create_score                    START             3891266730 (  +0.00)     -222.20 (   +0.00)      92234 (       0)                    0 (  +0.00)              
+##>                                  END             3891266730 (  +0.00)     -222.20 (   +0.00)      92234 (       0)                    0 (  +0.00)           0  
+##>+-----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------+
+Committed config: CDN_DP_region_2_0_c5
+Info    : Done implementing datapath configurations. [DPOPT-4]
+        : Selected 'very_fast' configuration 5 for module 'CDN_DP_region_2_0_c5'.
+          Optimizations applied to 'very_fast' configuration:
+            rewriting(1), factoring(0), sharing(0), cmultcse(0), downsizing(0), speculation(0)
+Info:  Ungrouped 0 dp-cluster instances.  0 cluster instances were left intact, to aid verification.
+Info    : Done optimizing datapath logic. [DPOPT-2]
+        : Done optimizing datapath logic in 'mul_fp16_VC'.
+Number of big hc bmuxes after = 0
+Starting logic reduction [v1.0] (stage: post_rtlopt, startdef: mul_fp16_VC, recur: true)
+Completed logic reduction (accepts: 0, rejects: 0, runtime: 0.001s)
+Starting mux data reorder optimization [v1.0] (stage: post_rtlopt, startdef: mul_fp16_VC, recur: true)
+Completed mux data reorder optimization (accepts: 0, rejects: 0, runtime: 0.000s)
+
+Stage: post_rtlopt
+----------------------------------------------------------
+| Transform           | Accepts | Rejects | Runtime (ms) | 
+----------------------------------------------------------
+| hlo_logic_reduction |       0 |       0 |         1.00 | 
+| hlo_mux_reorder     |       0 |       0 |         0.00 | 
+----------------------------------------------------------
+Info    : Deleting instances not driving any primary outputs. [GLO-34]
+        : Deleting 2 sequential instances.
+        : Optimizations such as constant propagation or redundancy removal could change the connections so a hierarchical instance does not drive any primary outputs anymore. To see the list of deleted hierarchical instances, set the 'information_level' attribute to 2 or above. If the message is truncated set the message attribute 'truncate' to false to see the complete list. To prevent this optimization, set the 'delete_unloaded_insts' root/subdesign attribute to 'false' or 'preserve' instance attribute to 'true'.
+Starting mux speculation [v1.0] (stage: post_muxopt, startdef: mul_fp16_VC, recur: true)
+Starting speculation optimization
+Completed speculation optimization (accepts:0)
+Completed mux speculation (accepts: 0, rejects: 0, runtime: 0.036s)
+
+Stage: post_muxopt
+------------------------------------------------------
+| Transform       | Accepts | Rejects | Runtime (ms) | 
+------------------------------------------------------
+| hlo_speculation |       0 |       0 |        36.00 | 
+------------------------------------------------------
+==================================
+Stage : to_generic 
+==================================
+  =================
+   Message Summary
+  =================
+--------------------------------------------------------------------------------
+|     Id      |  Sev   |Count |                 Message Text                   |
+--------------------------------------------------------------------------------
+| CDFG-250    |Info    |    5 |Processing multi-dimensional arrays.            |
+| CDFG-372    |Info    |    5 |Bitwidth mismatch in assignment.                |
+|             |        |      |Review and make sure the mismatch is            |
+|             |        |      | unintentional. Genus can possibly issue        |
+|             |        |      | bitwidth mismatch warning for explicit         |
+|             |        |      | assignments present in RTL as-well-as for      |
+|             |        |      | implicit assignments inferred by the tool. For |
+|             |        |      | example, in case of enum declaration without   |
+|             |        |      | value, the tool will implicitly assign value   |
+|             |        |      | to the enum variables. It also issues the      |
+|             |        |      | warning for any bitwidth mismatch that appears |
+|             |        |      | in this implicit assignment.                   |
+| CDFG-738    |Info    |    2 |Common subexpression eliminated.                |
+| CDFG-739    |Info    |    2 |Common subexpression kept.                      |
+| CWD-19      |Info    |   99 |An implementation was inferred.                 |
+| DPOPT-1     |Info    |    1 |Optimizing datapath logic.                      |
+| DPOPT-2     |Info    |    1 |Done optimizing datapath logic.                 |
+| DPOPT-3     |Info    |    1 |Implementing datapath configurations.           |
+| DPOPT-4     |Info    |    1 |Done implementing datapath configurations.      |
+| DPOPT-6     |Info    |    1 |Pre-processed datapath logic.                   |
+| DPOPT-10    |Info    |    5 |Optimized a mux chain.                          |
+| ELAB-1      |Info    |    1 |Elaborating Design.                             |
+| ELAB-2      |Info    |    4 |Elaborating Subdesign.                          |
+| ELAB-3      |Info    |    1 |Done Elaborating Design.                        |
+| ELABUTL-125 |Warning |    1 |Undriven signal detected.                       |
+|             |        |      |The undriven signal handling can be controlled  |
+|             |        |      | by setting the attribute                       |
+|             |        |      | 'hdl_unconnected_value' before syn_generic     |
+|             |        |      | command.                                       |
+| ELABUTL-130 |Info    |    1 |Undriven signal detected.                       |
+|             |        |      |The 'hdl_unconnected_value' attribute controls  |
+|             |        |      | treatment of undriven signal.                  |
+| GB-6        |Info    |    4 |A datapath component has been ungrouped.        |
+| GLO-34      |Info    |    1 |Deleting instances not driving any primary      |
+|             |        |      | outputs.                                       |
+|             |        |      |Optimizations such as constant propagation or   |
+|             |        |      | redundancy removal could change the            |
+|             |        |      | connections so a hierarchical instance does    |
+|             |        |      | not drive any primary outputs anymore. To see  |
+|             |        |      | the list of deleted hierarchical instances,    |
+|             |        |      | set the 'information_level' attribute to 2 or  |
+|             |        |      | above. If the message is truncated set the     |
+|             |        |      | message attribute 'truncate' to false to see   |
+|             |        |      | the complete list. To prevent this             |
+|             |        |      | optimization, set the 'delete_unloaded_insts'  |
+|             |        |      | root/subdesign attribute to 'false' or         |
+|             |        |      | 'preserve' instance attribute to 'true'.       |
+| GLO-51      |Info    |    2 |Hierarchical instance automatically ungrouped.  |
+|             |        |      |Hierarchical instances can be automatically     |
+|             |        |      | ungrouped to allow for better area or timing   |
+|             |        |      | optimization. To prevent this ungroup, set the |
+|             |        |      | root-level attribute 'auto_ungroup' to 'none'. |
+|             |        |      | You can also prevent individual ungroup with   |
+|             |        |      | setting the attribute 'ungroup_ok' of          |
+|             |        |      | instances or modules to 'false'.               |
+| LBR-9       |Warning |    8 |Library cell has no output pins defined.        |
+|             |        |      |Add the missing output pin(s)                   |
+|             |        |      | , then reload the library. Else the library    |
+|             |        |      | cell will be marked as timing model i.e.       |
+|             |        |      | unusable. Timing_model means that the cell     |
+|             |        |      | does not have any defined function. If there   |
+|             |        |      | is no output pin, Genus will mark library cell |
+|             |        |      | as unusable i.e. the attribute 'usable' will   |
+|             |        |      | be marked to 'false' on the libcell.           |
+|             |        |      | Therefore, the cell is not used for mapping    |
+|             |        |      | and it will not be picked up from the library  |
+|             |        |      | for synthesis. If you query the attribute      |
+|             |        |      | 'unusable_reason' on the libcell; result will  |
+|             |        |      | be: 'Library cell has no output pins.'Note:    |
+|             |        |      | The message LBR-9 is only for the logical pins |
+|             |        |      | and not for the power_ground pins. Genus will  |
+|             |        |      | depend upon the output function defined in the |
+|             |        |      | pin group (output pin)                         |
+|             |        |      | of the cell, to use it for mapping. The pg_pin |
+|             |        |      | will not have any function defined.            |
+| LBR-73      |Warning |   12 |Automatically disabling an arc which forms loop |
+|             |        |      | at output.                                     |
+|             |        |      |Check to see whether the timing arc in question |
+|             |        |      | is crucial for synthesis.  If it is, disable a |
+|             |        |      | proper arc in the loop.                        |
+| LBR-109     |Info    |    1 |Set default library domain.                     |
+| LBR-162     |Info    |   25 |Both 'pos_unate' and 'neg_unate' timing_sense   |
+|             |        |      | arcs have been processed.                      |
+|             |        |      |Setting the 'timing_sense' to non_unate.        |
+| LBR-412     |Info    |    2 |Created nominal operating condition.            |
+|             |        |      |The nominal operating condition is represented, |
+|             |        |      | either by the nominal PVT values specified in  |
+|             |        |      | the library source                             |
+|             |        |      | (via nom_process,nom_voltage and nom_temperatu |
+|             |        |      | re respectively)                               |
+|             |        |      | , or by the default PVT values (1.0,1.0,1.0).  |
+| LBR-715     |Warning |   94 |Invalid expression specified for the attribute. |
+|             |        |      |Check and update the library to have correct    |
+|             |        |      | expression value for the attribute, otherwise  |
+|             |        |      | the attribute will be ignored for the pin.     |
+| PHYS-12     |Warning |    4 |The variant range of wire parameters is too     |
+|             |        |      | large. An example of wire parameters are, a    |
+|             |        |      | WIDTH for layer, PITCH for layer, MINSPACING   |
+|             |        |      | for layers, etc.                               |
+|             |        |      |Check the consistency of the parameters, and    |
+|             |        |      | see if you can ignore this message or you're   |
+|             |        |      | using different LEF file with wrong            |
+|             |        |      | parameters.                                    |
+| PHYS-15     |Warning |    4 |Missing wire parameter.                         |
+|             |        |      |Check the wire parameter in LEF technology      |
+|             |        |      | files.                                         |
+| PHYS-113    |Warning |   26 |Pin names are not consistent in lib and LEF     |
+|             |        |      | files.                                         |
+| PHYS-127    |Info    |    1 |Macro with non-zero origin.                     |
+| PHYS-145    |Info    |   15 |Inconsistent pin direction prevents conversion  |
+|             |        |      | to pgpin.                                      |
+|             |        |      |Although the pin is considered a power or       |
+|             |        |      | ground pin in LEF, to be converted to pgpin,   |
+|             |        |      | the direction of the pin must be consistent in |
+|             |        |      | both lib and LEF libraries.                    |
+| PHYS-279    |Warning |   19 |Physical cell not defined in library.           |
+|             |        |      |Ensure that the proper library files are        |
+|             |        |      | available and have been imported.              |
+| PHYS-752    |Info    |    1 |Partition Based Synthesis execution skipped.    |
+| RTLOPT-40   |Info    |    6 |Transformed datapath macro.                     |
+| SYNTH-1     |Info    |    1 |Synthesizing.                                   |
+| TIM-1000    |Info    |    1 |Multimode clock gating check is disabled.       |
+| TUI-58      |Info    |  149 |Removed object.                                 |
+| VLOGPT-43   |Warning |    5 |Implicit net declaration not allowed with       |
+|             |        |      | `default_nettype none.                         |
+|             |        |      |When `default_nettype is none, each input and   |
+|             |        |      | inout port declaration requires a              |
+|             |        |      | corresponding net type.                        |
+--------------------------------------------------------------------------------
+no gcells found!
+Current PLE settings:
+
+Aspect ratio        : 1.000
+Shrink factor       : 1.000
+Scale of res/length : 1.000
+Scale of cap/length : 1.000
+Net derating factor : 1.000
+Thermal factor      : 1.000
+Via Resistance      : 0.000 ohm (from default)
+Site size           : 2.880 um (from lef [tech+cell])
+
+                                   Capacitance  
+  Layer                             / Length         Data source:
+Name        Direction Utilization  (pF/micron)       lef_library
+------------------------------------------------
+M1              V         0.00        0.000062  
+M2              H         1.00        0.000067  
+M3              V         1.00        0.000067  
+M4              H         1.00        0.000067  
+M5              V         1.00        0.000067  
+
+                                    Resistance   
+  Layer                              / Length         Data source:
+Name        Direction Utilization  (ohm/micron)       lef_library
+-------------------------------------------------
+M1              V         0.00         2.000000  
+M2              H         1.00         2.000000  
+M3              V         1.00         2.000000  
+M4              H         1.00         2.000000  
+M5              V         1.00         2.000000  
+
+                                        Area     
+  Layer                               / Length        Data source:
+Name        Direction Utilization     (micron)        lef_library
+-------------------------------------------------
+M1              V         0.00         0.140000  
+M2              H         1.00         0.140000  
+M3              V         1.00         0.140000  
+M4              H         1.00         0.140000  
+M5              V         1.00         0.140000  
+
+Warning : Total power has skewed contributions from leakage and dynamic power. [POPT-502]
+        : With 'opt_leakage_to_dynamic_ratio' set to 0.8, the total power of 'nand2_1x' is being computed as:
+	  Total Power = (Leakage Power * 0.8) + (Dynamic Power * (1 - 0.8))
+	  Leakage Power:     1.2904880000 nW
+	  Dynamic Power:  1649.9229580000 nW
+	  Total Power:     331.0169820000 nW
+	  Leakage Power is contributing 0.312% to the Total Power.
+        : Dynamic power is typically calculated/specified for some 'active period'. For combination of leakage and dynamic power opt_leakage_to_dynamic_ratio must specify the percentage of overall time for which the design is not in the 'active period' but in 'idle mode', i.e. no dynamic power but only leakage power is consumed. For a reasonable optimization across dynamic and leakage power, leakage contribution is expected to be above 5% and below 95%. A contribution of less than 5% will result in limited leakage optimization and contribution of more than 95% will result in limited dynamic optimization. Adjust 'opt_leakage_to_dynamic_ratio' so that leakage contribution comes to an intermediate value if you intend both optimizations to occur.
+Mapper: Libraries have:
+	domain timing_condition_tt_1p2v_25c: 78 combo usable cells and 13 sequential usable cells
+Multi-threaded constant propagation [1|0] ...
+Multi-threaded Virtual Mapping    (8 threads per ST process, 8 of 96 CPUs usable)
+==================================
+Stage : first_condense 
+==================================
+  =================
+   Message Summary
+  =================
+--------------------------------------------------------------------------------
+|    Id    |  Sev   |Count |                   Message Text                    |
+--------------------------------------------------------------------------------
+| GB-6     |Info    |    6 |A datapath component has been ungrouped.           |
+| GLO-51   |Info    |  112 |Hierarchical instance automatically ungrouped.     |
+|          |        |      |Hierarchical instances can be automatically        |
+|          |        |      | ungrouped to allow for better area or timing      |
+|          |        |      | optimization. To prevent this ungroup, set the    |
+|          |        |      | root-level attribute 'auto_ungroup' to 'none'.    |
+|          |        |      | You can also prevent individual ungroup with      |
+|          |        |      | setting the attribute 'ungroup_ok' of instances   |
+|          |        |      | or modules to 'false'.                            |
+| POPT-502 |Warning |    1 |Total power has skewed contributions from leakage  |
+|          |        |      | and dynamic power.                                |
+|          |        |      |Dynamic power is typically calculated/specified    |
+|          |        |      | for some 'active period'. For combination of      |
+|          |        |      | leakage and dynamic power                         |
+|          |        |      | opt_leakage_to_dynamic_ratio must specify the     |
+|          |        |      | percentage of overall time for which the design   |
+|          |        |      | is not in the 'active period' but in 'idle mode', |
+|          |        |      | i.e. no dynamic power but only leakage power is   |
+|          |        |      | consumed. For a reasonable optimization across    |
+|          |        |      | dynamic and leakage power, leakage contribution   |
+|          |        |      | is expected to be above 5% and below 95%. A       |
+|          |        |      | contribution of less than 5% will result in       |
+|          |        |      | limited leakage optimization and contribution of  |
+|          |        |      | more than 95% will result in limited dynamic      |
+|          |        |      | optimization. Adjust                              |
+|          |        |      | 'opt_leakage_to_dynamic_ratio' so that leakage    |
+|          |        |      | contribution comes to an intermediate value if    |
+|          |        |      | you intend both optimizations to occur.           |
+--------------------------------------------------------------------------------
+ 
+Global mapping target info
+==========================
+Cost Group 'clock1' target slack:    50 ps
+Target path end-point (Port: mul_fp16_VC/result[14])
+
+
+State Retention Synthesis Status
+================================
+
+Category                        Flops   Percentage
+--------------------------------------------------
+Total instances                    96        100.0
+Excluded from State Retention      96        100.0
+    - Will not convert             96        100.0
+      - Preserved                   0          0.0
+      - Power intent excluded      96        100.0
+    - Could not convert             0          0.0
+      - Scan type                   0          0.0
+      - No suitable cell            0          0.0
+State Retention instances           0          0.0
+--------------------------------------------------
+
+no gcells found!
+PBS_Generic_Opt-Post - Elapsed_Time 8, CPU_Time 8.420622999999999
+stamp 'PBS_Generic_Opt-Post' being created for table 'pbs_debug'
+
+  Total Time (Wall) |  Stage Time (Wall)  |   % (Wall)   |    Date - Time     |  Memory   | Stage
+--------------------+---------------------+--------------+--------------------+-----------+----------------------
+ 00:00:18(00:00:14) |  00:00:00(00:00:00) |   0.0(  0.0) |    1:34:57 (Jan29) |  517.4 MB | PBS_Generic-Start
+--------------------+---------------------+--------------+--------------------+-----------+----------------------
+ 00:00:26(00:00:23) |  00:00:08(00:00:09) | 100.0(100.0) |    1:35:05 (Jan29) |  859.6 MB | PBS_Generic_Opt-Post
+--------------------+---------------------+--------------+--------------------+-----------+----------------------
+Number of threads: 8 * 1   (id: pbs_debug, time_info v1.57)
+Info: (*N*) indicates data that was populated from previously saved time_info database
+Info: CPU time includes time of parent + longest thread
+PBS_Generic-Postgen HBO Optimizations - Elapsed_Time 0, CPU_Time 0.0
+stamp 'PBS_Generic-Postgen HBO Optimizations' being created for table 'pbs_debug'
+
+  Total Time (Wall) |  Stage Time (Wall)  |   % (Wall)   |    Date - Time     |  Memory   | Stage
+--------------------+---------------------+--------------+--------------------+-----------+----------------------
+ 00:00:18(00:00:14) |  00:00:00(00:00:00) |   0.0(  0.0) |    1:34:57 (Jan29) |  517.4 MB | PBS_Generic-Start
+--------------------+---------------------+--------------+--------------------+-----------+----------------------
+ 00:00:26(00:00:23) |  00:00:08(00:00:09) | 100.0(100.0) |    1:35:05 (Jan29) |  859.6 MB | PBS_Generic_Opt-Post
+--------------------+---------------------+--------------+--------------------+-----------+----------------------
+ 00:00:26(00:00:23) |  00:00:00(00:00:00) |   0.0(  0.0) |    1:35:05 (Jan29) |  859.6 MB | PBS_Generic-Postgen HBO Optimizations
+--------------------+---------------------+--------------+--------------------+-----------+----------------------
+Number of threads: 8 * 1   (id: pbs_debug, time_info v1.57)
+Info: (*N*) indicates data that was populated from previously saved time_info database
+Info: CPU time includes time of parent + longest thread
+##>=================== Cadence Confidential (Generic-Logical) ===================
+##>=================== Cadence Confidential (Generic-Logical) ===================
+##>Main Thread Summary:
+##>----------------------------------------------------------------------------------------
+##>STEP                           Elapsed       WNS       TNS     Insts      Area    Memory
+##>----------------------------------------------------------------------------------------
+##>G:Initial                            1         -         -      1357     12538       517
+##>G:Setup                              0         -         -         -         -         -
+##>G:Launch ST                          0         -         -         -         -         -
+##>G:Design Partition                   0         -         -         -         -         -
+##>G:Create Partition Netlists          0         -         -         -         -         -
+##>G:Init Power                         0         -         -         -         -         -
+##>G:Budgeting                          0         -         -         -         -         -
+##>G:Derenv-DB                          0         -         -         -         -         -
+##>G:Debug Outputs                      0         -         -         -         -         -
+##>G:ST loading                         0         -         -         -         -         -
+##>G:Distributed                        0         -         -         -         -         -
+##>G:Timer                              0         -         -         -         -         -
+##>G:Assembly                           0         -         -         -         -         -
+##>G:DFT                                0         -         -         -         -         -
+##>G:Const Prop                         0         -         -      1652     14222       859
+##>G:Misc                               8
+##>----------------------------------------------------------------------------------------
+##>Total Elapsed                        9
+##>========================================================================================
+Info    : Done synthesizing. [SYNTH-2]
+        : Done synthesizing 'mul_fp16_VC' to generic gates.
+      flow.cputime  flow.realtime  timing.setup.tns  timing.setup.wns  snapshot
+UM:*                                                                   syn_gen
+#@ End verbose flow_step synthesis.syn_generic.run_syn_generic
+      flow.cputime  flow.realtime  timing.setup.tns  timing.setup.wns  snapshot
+UM:             10             10                                      run_syn_generic
+#@ Begin verbose flow_step synthesis.syn_generic.write_generic_netlist
+@flow_step(write_generic_netlist) 1: write_netlist -generic > ./syn_generic.v
+#@ End verbose flow_step synthesis.syn_generic.write_generic_netlist
+      flow.cputime  flow.realtime  timing.setup.tns  timing.setup.wns  snapshot
+UM:              0              0                                      write_generic_netlist
+#@ Begin verbose flow_step synthesis.syn_generic.block_finish
+@flow_step(block_finish)  2:   apply {{} {
+                                 #- Make sure flow_report_name is reset from any reports executed during the flow
+                                 set_db flow_report_name [get_db [lindex [get_db flow_hier_path] end] .name]
+                                 #- Set DB for handoff to Innovus
+                                 if {[is_flow -inside flow:syn_opt]} {
+                               if {[get_feature synth_ispatial]} {
+                                     set_db flow_post_db_overwrite [list cdb [get_db opt_spatial_common_db]]
+                                     set_db flow_step:block_finish .skip_db true
+                               } else {
+                                     set_db flow_write_db_common true
+                               }
+                                 }
+                               
+                                 #- Store non-default root attributes to metrics
+                                 catch {report_obj -tcl} flow_root_config
+                                 if {[dict exists $flow_root_config root:/]} {
+                                   set flow_root_config [dict get $flow_root_config root:/]
+                                 } elseif {[dict exists $flow_root_config root:]} {
+                                   set flow_root_config [dict get $flow_root_config root:]
+                                 } else {
+                                 }
+                                 foreach key [dict keys $flow_root_config] {
+                                   if {[string length [dict get $flow_root_config $key]] > 200} {
+                                     dict set flow_root_config $key "\[long value truncated\]"
+                                   }
+                                 }
+                                 set_metric -name flow.root_config -value $flow_root_config
+                               }}
+  Setting attribute of root '/': 'flow_report_name' = syn_generic
+#@ End verbose flow_step synthesis.syn_generic.block_finish
+      flow.cputime  flow.realtime  timing.setup.tns  timing.setup.wns  snapshot
+UM:              1              0                                      block_finish
+Finished exporting design database to file '/home/asicfab/a/mquerimi/SoCET/Flowkit/dbs/syn_generic.db' for 'mul_fp16_VC' (command execution time mm:ss cpu = 00:00, real = 00:01).
+#@ Begin verbose flow_step synthesis.syn_generic.schedule_syn_generic_report_synth
+@flow_step(schedule_syn_generic_report_synth) 2:     schedule_flow -flow report_synth -include_in_metrics
+#@ End verbose flow_step synthesis.syn_generic.schedule_syn_generic_report_synth
+
+Program version = 21.17-s066_1
+Working directory = /home/asicfab/a/mquerimi/SoCET/Flowkit
+Databases directory = /home/asicfab/a/mquerimi/SoCET/Flowkit/dbs
+Starting time = Jan 29, 2026 01:34:47
+Ending time = Jan 29, 2026 01:35:09
+
+Run Flow Summary
+---------------------
+
+Steps run:  synthesis.syn_generic.block_start synthesis.syn_generic.init_design.read_mmmc synthesis.syn_generic.init_design.read_physical synthesis.syn_generic.init_design.read_mul_fp16_hdl synthesis.syn_generic.init_design.elaborate_mul_fp16 synthesis.syn_generic.init_design.read_power_intent synthesis.syn_generic.init_design.run_init_design synthesis.syn_generic.init_elaborate synthesis.syn_generic.init_genus.init_genus_yaml synthesis.syn_generic.init_genus.init_genus_user synthesis.syn_generic.commit_power_intent synthesis.syn_generic.run_syn_generic synthesis.syn_generic.write_generic_netlist synthesis.syn_generic.block_finish synthesis.syn_generic.schedule_syn_generic_report_synth
+
+Step status:
+     synthesis.syn_generic.block_start                               success
+     synthesis.syn_generic.init_design.read_mmmc                     success
+     synthesis.syn_generic.init_design.read_physical                 success
+     synthesis.syn_generic.init_design.read_mul_fp16_hdl             success
+     synthesis.syn_generic.init_design.elaborate_mul_fp16            success
+     synthesis.syn_generic.init_design.read_power_intent             success
+     synthesis.syn_generic.init_design.run_init_design               success
+     synthesis.syn_generic.init_elaborate                            success
+     synthesis.syn_generic.init_genus.init_genus_yaml                success
+     synthesis.syn_generic.init_genus.init_genus_user                success
+     synthesis.syn_generic.commit_power_intent                       success
+     synthesis.syn_generic.run_syn_generic                           success
+     synthesis.syn_generic.write_generic_netlist                     success
+     synthesis.syn_generic.block_finish                              success
+     synthesis.syn_generic.schedule_syn_generic_report_synth         success
+
+ ---------------------------------------------------------------------------------------------------- 
+| Snapshot    | flow.cputime (s) | flow.realtime (s) | timing.setup.tns (ns) | timing.setup.wns (ns) |
+|-------------+------------------+-------------------+-----------------------+-----------------------|
+| syn_generic | 0:00:28          | 0:00:32           |                       |                       |
+ ---------------------------------------------------------------------------------------------------- 
+
+Lic Summary:
+[01:35:09.132512] Cdslmd servers: marina
+[01:35:09.132523] Feature usage summary:
+[01:35:09.132523] Genus_Synthesis
+

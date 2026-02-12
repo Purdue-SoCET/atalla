@@ -1,0 +1,895 @@
+Cadence Genus(TM) Synthesis Solution.
+Copyright 2025 Cadence Design Systems, Inc. All rights reserved worldwide.
+Cadence and the Cadence logo are registered trademarks and Genus is a trademark
+of Cadence Design Systems, Inc. in the United States and other countries.
+
+[11:12:40.002889] Configured Lic search path (25.01-s002): 1720@marina.ecn.purdue.edu
+
+Version: 25.11-s095_1, built Tue Aug 12 07:59:05 PDT 2025
+Options: -batch -log /home/asicfab/a/mquerimi/SoCET/Flowkit/logs/syn_generic -disable_user_startup -execute {if {[catch {init_flow  {flow_script {} yaml_script /home/asicfab/a/mquerimi/SoCET/Flowkit/scripts/flow.yaml flow_no_check 0 parent_uuid {} previous_uuid de80dc2c-b96d-453a-b1e0-70d1b4244f32 top_dir /home/asicfab/a/mquerimi/SoCET/Flowkit flow_dir . status_file /home/asicfab/a/mquerimi/SoCET/Flowkit/flow.status.d/syn_generic_9 metrics_file /home/asicfab/a/mquerimi/SoCET/Flowkit/flow.metrics.d/syn_generic_9 run_tag {} db {{} {} {} {}} db_is_ref_run 0 branch {} caller_data {group 0 process_branch 0 trunk_process 1 flowtool_hostname asicfab.ecn.purdue.edu flowtool_pid 2171678} flow {flow flow:flow_current dir . db {{} {} {} {}} branch {} tool genus caller_data {group 0 process_branch 0} uuid de80dc2c-b96d-453a-b1e0-70d1b4244f32 tool_options {} start_step {tool genus flow flow:flow_current canonical_path {.steps flow:synthesis .steps flow:syn_generic .steps flow_step:block_start} step flow_step:block_start str synthesis.syn_generic.block_start} process_branch_trunk 1} flow_name flow:flow_current first_step {tool genus flow flow:flow_current canonical_path {.steps flow:synthesis .steps flow:syn_generic .steps flow_step:block_start} step flow_step:block_start features {} str synthesis.syn_generic.block_start} interactive 0 interactive_run 0 enabled_features {} inject_tcl {} trunk_process 1 aum_upload false tool_options {} overwrite 0 last_step {tool genus flow flow:flow_current canonical_path {.steps flow:synthesis .steps flow:syn_generic .steps flow_step:schedule_syn_generic_report_synth} step flow_step:schedule_syn_generic_report_synth features {} str synthesis.syn_generic.schedule_syn_generic_report_synth} log_prefix /home/asicfab/a/mquerimi/SoCET/Flowkit/logs/syn_generic}; run_flow -from {tool genus flow flow:flow_current canonical_path {.steps flow:synthesis .steps flow:syn_generic .steps flow_step:block_start} step flow_step:block_start features {} str synthesis.syn_generic.block_start} -to {tool genus flow flow:flow_current canonical_path {.steps flow:synthesis .steps flow:syn_generic .steps flow_step:schedule_syn_generic_report_synth} step flow_step:schedule_syn_generic_report_synth features {} str synthesis.syn_generic.schedule_syn_generic_report_synth}} msg]} { puts [concat {Tcl error:} $errorInfo]; set fp [open {/home/asicfab/a/mquerimi/SoCET/Flowkit/flow.status.d/syn_generic_9} a]; puts $fp {}; puts $fp [list [list script run_tcl status error flow {flow:flow_current} branch {} flow_working_directory {.} flow_starting_db {{} {} {} {}} {tool_options} {} steps_run [get_db flow_step_canonical_current] msg $msg]]; close $fp; exit 1 }; exit 0} 
+Date:    Thu Feb 12 11:12:40 2026
+Host:    asicfab.ecn.purdue.edu (x86_64 w/Linux 4.18.0-553.92.1.el8_10.x86_64) (24cores*96cpus*2physical cpus*AMD EPYC 7352 24-Core Processor 512KB) (263166400KB)
+PID:     2179145
+OS:      Red Hat Enterprise Linux 8.10 (Ootpa)
+
+Checking out license: Genus_Synthesis
+[11:12:40.383114] Periodic Lic check successful
+[11:12:40.907688] Feature usage summary:
+[11:12:40.907688] Genus_Synthesis  
+License checkout complete (0 seconds elapsed).
+
+
+***********************************************************************************************************
+***********************************************************************************************************
+
+
+
+Finished executable startup (7 seconds elapsed).
+
+Loading tool scripts...
+Finished loading tool scripts (21 seconds elapsed).
+
+#@ Processing -execute option
+@genus:root: 1> if {[catch {init_flow  {flow_script {} yaml_script /home/asicfab/a/mquerimi/SoCET/Flowkit/scripts/flow.yaml flow_no_check 0 parent_uuid {} previous_uuid de80dc2c-b96d-453a-b1e0-70d1b4244f32 top_dir /home/asicfab/a/mquerimi/SoCET/Flowkit flow_dir . status_file /home/asicfab/a/mquerimi/SoCET/Flowkit/flow.status.d/syn_generic_9 metrics_file /home/asicfab/a/mquerimi/SoCET/Flowkit/flow.metrics.d/syn_generic_9 run_tag {} db {{} {} {} {}} db_is_ref_run 0 branch {} caller_data {group 0 process_branch 0 trunk_process 1 flowtool_hostname asicfab.ecn.purdue.edu flowtool_pid 2171678} flow {flow flow:flow_current dir . db {{} {} {} {}} branch {} tool genus caller_data {group 0 process_branch 0} uuid de80dc2c-b96d-453a-b1e0-70d1b4244f32 tool_options {} start_step {tool genus flow flow:flow_current canonical_path {.steps flow:synthesis .steps flow:syn_generic .steps flow_step:block_start} step flow_step:block_start str synthesis.syn_generic.block_start} process_branch_trunk 1} flow_name flow:flow_current first_step {tool genus flow flow:flow_current canonical_path {.steps flow:synthesis .steps flow:syn_generic .steps flow_step:block_start} step flow_step:block_start features {} str synthesis.syn_generic.block_start} interactive 0 interactive_run 0 enabled_features {} inject_tcl {} trunk_process 1 aum_upload false tool_options {} overwrite 0 last_step {tool genus flow flow:flow_current canonical_path {.steps flow:synthesis .steps flow:syn_generic .steps flow_step:schedule_syn_generic_report_synth} step flow_step:schedule_syn_generic_report_synth features {} str synthesis.syn_generic.schedule_syn_generic_report_synth} log_prefix /home/asicfab/a/mquerimi/SoCET/Flowkit/logs/syn_generic}; run_flow -from {tool genus flow flow:flow_current canonical_path {.steps flow:synthesis .steps flow:syn_generic .steps flow_step:block_start} step flow_step:block_start features {} str synthesis.syn_generic.block_start} -to {tool genus flow flow:flow_current canonical_path {.steps flow:synthesis .steps flow:syn_generic .steps flow_step:schedule_syn_generic_report_synth} step flow_step:schedule_syn_generic_report_synth features {} str synthesis.syn_generic.schedule_syn_generic_report_synth}} msg]} { puts [concat {Tcl error:} $errorInfo]; set fp [open {/home/asicfab/a/mquerimi/SoCET/Flowkit/flow.status.d/syn_generic_9} a]; puts $fp {}; puts $fp [list [list script run_tcl status error flow {flow:flow_current} branch {} flow_working_directory {.} flow_starting_db {{} {} {} {}} {tool_options} {} steps_run [get_db flow_step_canonical_current] msg $msg]]; close $fp; exit 1 }; exit 0
+init_flow summary:
+  Flow script        : 
+  YAML script        : /home/asicfab/a/mquerimi/SoCET/Flowkit/scripts/flow.yaml
+  Flow               : flow:flow_current
+  From               : synthesis.syn_generic.block_start
+  To                 : synthesis.syn_generic.schedule_syn_generic_report_synth
+  Top directory      : /home/asicfab/a/mquerimi/SoCET/Flowkit
+  Working directory  : .
+  Starting database  : 
+  Run tag            : 
+  Branch name        : 
+  Metrics file       : /home/asicfab/a/mquerimi/SoCET/Flowkit/flow.metrics.d/syn_generic_9
+  Status file        : /home/asicfab/a/mquerimi/SoCET/Flowkit/flow.status.d/syn_generic_9
+reading previous metrics...
+Sourcing flow scripts...
+  Setting attribute of root '/': 'flow_template_type' = stylus
+  Setting attribute of root '/': 'flow_template_version' = 1
+  Setting attribute of root '/': 'flow_template_tools' = genus innovus tempus
+  Setting attribute of root '/': 'flow_template_feature_definition' = flow_express 0 report_inline 0 report_defer 0 report_none {} report_clp 0 report_lec 1 use_common_db 0 report_pba 0 dft_simple 0 dft_compressor 0 synth_hybrid 0 synth_ispatial {} synth_placev2 0 opt_early_cts 0 clock_design 0 clock_flexible_htree 0 opt_clock 0 opt_postcts_hold_disable 0 opt_postcts_split 0 route_filler_disable 0 route_track_opt 0 route_secondary_nets 0 opt_postroute_split 0 opt_route 0 opt_signoff 0 opt_em 0 opt_eco 0 sta_use_setup_yaml 0 sta_dmmmc 0 sta_glitch 0 sta_eco 0 ff_setup 0
+  Setting attribute of root '/': 'flowtool_metrics_qor_vivid' = reports/qor.html
+  Setting attribute of root '/': 'flow_header_tcl' = 
+  #- extend flow report name based on context
+  if {[is_flow -quiet -inside flow:sta] || [is_flow -quiet -inside flow:sta_dmmmc] || [is_flow -quiet -inside flow:sta_eco]} {
+    if {![regexp {sta$} [get_db flow_report_name]]} {
+      set_db flow_report_name [expr {[string is space [get_db flow_report_name]] ? "sta" : "[get_db flow_report_name].sta"}]
+    }
+  } elseif {[is_flow -quiet -inside flow:ir_early_static] || [is_flow -quiet -inside flow:ir_early_dynamic]} {
+    if {![regexp {era$} [get_db flow_report_name]]} {
+      set_db flow_report_name [expr {[string is space [get_db flow_report_name]] ? "era" : "[get_db flow_report_name].era"}]
+    }
+  } elseif {[is_flow -quiet -inside flow:ir_grid] || [is_flow -quiet -inside flow:ir_static] || [is_flow -quiet -inside flow:ir_dynamic] || [is_flow -quiet -inside flow:ir_rampup]} {
+    if {![regexp {ir$} [get_db flow_report_name]]} {
+      set_db flow_report_name [expr {[string is space [get_db flow_report_name]] ? "ir" : "[get_db flow_report_name].ir"}]
+    }
+  } elseif {[is_flow -quiet -inside flow:sta_subflows] && [get_db flow_branch] ne {}} {
+    set_db flow_report_name [get_db flow_branch]
+  } elseif {[regexp {block_start|hier_start|eco_start} [get_db flow_step_current]]} {
+    set_db flow_report_name [get_db [lindex [get_db flow_hier_path] end] .name]
+  } else {
+  }
+
+  #- Create report dir (if necessary)
+  file mkdir [file normalize [file join [get_db flow_report_directory] [get_db flow_report_name]]]
+
+  Setting attribute of root '/': 'flow_top' = flow:block
+  Setting attribute of root '/': 'flow_top' = flow_current
+Sourcing flow scripts done.
+Begin steps for plugin point Cadence.plugin.flowkit.read_db.pre
+#@ Begin verbose flow_step activate_views
+@flow_step(activate_views)  2:   apply {{} {
+                                   set db [get_db flow_starting_db]
+                                   set flow [lindex [get_db flow_hier_path] end]
+                                   set setup_views [get_feature -obj $flow setup_views]
+                                   set hold_views [get_feature -obj $flow hold_views]
+                                   set leakage_view [get_feature -obj $flow leakage_view]
+                                   set dynamic_view [get_feature -obj $flow dynamic_view]
+                                 
+                                   if {($setup_views ne "") || ($hold_views ne "") || ($leakage_view ne "") || ($dynamic_view ne "")} {
+                                     #- use read_db args for DB types and set_analysis_views for TCL
+                                     if {([llength [get_db analysis_views]]) > 0 &&  ([lindex $db 0] eq {tcl} || [lindex $db 0] in {enc cdb} && [file isfile [lindex $db 1]])} {
+                                       set cmd "set_analysis_view"
+                                       if {$setup_views ne ""} {
+                                         append cmd " -setup [list $setup_views]"
+                                       } else {
+                                         append cmd " -setup [list [get_db [get_db analysis_views -if .is_setup] .name]]"
+                                       }
+                                       if {$hold_views ne ""} {
+                                         append cmd " -hold [list $hold_views]"
+                                       } else {
+                                         append cmd " -hold [list [get_db [get_db analysis_views -if .is_hold] .name]]"
+                                       }
+                                       if {$leakage_view ne ""} {
+                                         append cmd " -leakage [list $leakage_view]"
+                                       } else {
+                                         if {[llength [get_db analysis_views -if .is_leakage]] > 0} {
+                                           append cmd " -leakage [list [get_db [get_db analysis_views -if .is_leakage] .name]]"
+                                         }
+                                       }
+                                       if {$dynamic_view ne ""} {
+                                         append cmd " -dynamic [list $dynamic_view]"
+                                       } else {
+                                         if {[llength [get_db analysis_views -if .is_dynamic]] > 0} {
+                                           append cmd " -dynamic [list [get_db [get_db analysis_views -if .is_dynamic] .name]]"
+                                         }
+                                       }
+                                       eval $cmd
+                                     } elseif {[llength [get_db analysis_views]] == 0} {
+                                       set cmd "set_flowkit_read_db_args"
+                                       if {$setup_views ne ""} {
+                                         append cmd " -setup_views [list $setup_views]"
+                                       }
+                                       if {$hold_views ne ""} {
+                                         append cmd " -hold_views [list $hold_views]"
+                                       }
+                                       if {$leakage_view ne ""} {
+                                         append cmd " -leakage_view [list $leakage_view]"
+                                       }
+                                       if {$dynamic_view ne ""} {
+                                         append cmd " -dynamic_view [list $dynamic_view]"
+                                       }
+                                       eval $cmd
+                                     } else {
+                                     }
+                                   }
+                                 }}
+#@ End verbose flow_step activate_views
+#@ Begin verbose flow_step init_mcpu
+@flow_step(init_mcpu)  2:   apply {{} {
+                              # Multi host/cpu attributes
+                              #-----------------------------------------------------------------------------
+                              # The FLOWTOOL_NUM_CPUS is an environment variable which should be exported by
+                              # the specified dist script.  This connects the number of CPUs being reserved
+                              # for batch jobs with the current flow scripts.  The LSB_MAX_NUM_PROCESSORS is
+                              # a typical environment variable exported by distribution platforms and is
+                              # useful for ensuring all interactive jobs are using the reserved amount of CPUs.
+                              if {[info exists ::env(FLOWTOOL_NUM_CPUS)]} {
+                                set max_cpus $::env(FLOWTOOL_NUM_CPUS)
+                              } elseif {[info exists ::env(LSB_MAX_NUM_PROCESSORS)]} {
+                                set max_cpus $::env(LSB_MAX_NUM_PROCESSORS)
+                              } else {
+                                set max_cpus 8
+                              }
+                              switch -glob [get_db program_short_name] {
+                                default       { set_multi_cpu_usage -verbose -local_cpu $max_cpus }
+                                joules*       { set_multi_cpu_usage -verbose -local_cpu $max_cpus }
+                                genus*        { set_multi_cpu_usage -verbose -local_cpu $max_cpus }
+                                innovus*      { set_multi_cpu_usage -verbose -local_cpu $max_cpus }
+                                tempus*       { set_multi_cpu_usage -verbose -local_cpu $max_cpus }
+                                voltus*       { set_multi_cpu_usage -verbose -local_cpu $max_cpus }
+                              }
+                            }}
+set_multi_cpu_usage -local_cpu 8
+#@ End verbose flow_step init_mcpu
+End steps for plugin point Cadence.plugin.flowkit.read_db.pre
+Sourcing flow scripts...
+  Setting attribute of root '/': 'flow_template_type' = stylus
+  Setting attribute of root '/': 'flow_template_version' = 1
+  Setting attribute of root '/': 'flow_template_tools' = genus innovus tempus
+  Setting attribute of root '/': 'flow_template_feature_definition' = flow_express 0 report_inline 0 report_defer 0 report_none {} report_clp 0 report_lec 1 use_common_db 0 report_pba 0 dft_simple 0 dft_compressor 0 synth_hybrid 0 synth_ispatial {} synth_placev2 0 opt_early_cts 0 clock_design 0 clock_flexible_htree 0 opt_clock 0 opt_postcts_hold_disable 0 opt_postcts_split 0 route_filler_disable 0 route_track_opt 0 route_secondary_nets 0 opt_postroute_split 0 opt_route 0 opt_signoff 0 opt_em 0 opt_eco 0 sta_use_setup_yaml 0 sta_dmmmc 0 sta_glitch 0 sta_eco 0 ff_setup 0
+  Setting attribute of root '/': 'flowtool_metrics_qor_vivid' = reports/qor.html
+  Setting attribute of root '/': 'flow_header_tcl' = 
+  #- extend flow report name based on context
+  if {[is_flow -quiet -inside flow:sta] || [is_flow -quiet -inside flow:sta_dmmmc] || [is_flow -quiet -inside flow:sta_eco]} {
+    if {![regexp {sta$} [get_db flow_report_name]]} {
+      set_db flow_report_name [expr {[string is space [get_db flow_report_name]] ? "sta" : "[get_db flow_report_name].sta"}]
+    }
+  } elseif {[is_flow -quiet -inside flow:ir_early_static] || [is_flow -quiet -inside flow:ir_early_dynamic]} {
+    if {![regexp {era$} [get_db flow_report_name]]} {
+      set_db flow_report_name [expr {[string is space [get_db flow_report_name]] ? "era" : "[get_db flow_report_name].era"}]
+    }
+  } elseif {[is_flow -quiet -inside flow:ir_grid] || [is_flow -quiet -inside flow:ir_static] || [is_flow -quiet -inside flow:ir_dynamic] || [is_flow -quiet -inside flow:ir_rampup]} {
+    if {![regexp {ir$} [get_db flow_report_name]]} {
+      set_db flow_report_name [expr {[string is space [get_db flow_report_name]] ? "ir" : "[get_db flow_report_name].ir"}]
+    }
+  } elseif {[is_flow -quiet -inside flow:sta_subflows] && [get_db flow_branch] ne {}} {
+    set_db flow_report_name [get_db flow_branch]
+  } elseif {[regexp {block_start|hier_start|eco_start} [get_db flow_step_current]]} {
+    set_db flow_report_name [get_db [lindex [get_db flow_hier_path] end] .name]
+  } else {
+  }
+
+  #- Create report dir (if necessary)
+  file mkdir [file normalize [file join [get_db flow_report_directory] [get_db flow_report_name]]]
+
+  Setting attribute of root '/': 'flow_top' = flow:block
+  Setting attribute of root '/': 'flow_top' = flow_current
+Sourcing flow scripts done.
+reading previous metrics...
+Begin steps for plugin point Cadence.plugin.flowkit.read_db.post
+#@ Begin verbose flow_step activate_views
+@flow_step(activate_views)  2:   apply {{} {
+                                   set db [get_db flow_starting_db]
+                                   set flow [lindex [get_db flow_hier_path] end]
+                                   set setup_views [get_feature -obj $flow setup_views]
+                                   set hold_views [get_feature -obj $flow hold_views]
+                                   set leakage_view [get_feature -obj $flow leakage_view]
+                                   set dynamic_view [get_feature -obj $flow dynamic_view]
+                                 
+                                   if {($setup_views ne "") || ($hold_views ne "") || ($leakage_view ne "") || ($dynamic_view ne "")} {
+                                     #- use read_db args for DB types and set_analysis_views for TCL
+                                     if {([llength [get_db analysis_views]]) > 0 &&  ([lindex $db 0] eq {tcl} || [lindex $db 0] in {enc cdb} && [file isfile [lindex $db 1]])} {
+                                       set cmd "set_analysis_view"
+                                       if {$setup_views ne ""} {
+                                         append cmd " -setup [list $setup_views]"
+                                       } else {
+                                         append cmd " -setup [list [get_db [get_db analysis_views -if .is_setup] .name]]"
+                                       }
+                                       if {$hold_views ne ""} {
+                                         append cmd " -hold [list $hold_views]"
+                                       } else {
+                                         append cmd " -hold [list [get_db [get_db analysis_views -if .is_hold] .name]]"
+                                       }
+                                       if {$leakage_view ne ""} {
+                                         append cmd " -leakage [list $leakage_view]"
+                                       } else {
+                                         if {[llength [get_db analysis_views -if .is_leakage]] > 0} {
+                                           append cmd " -leakage [list [get_db [get_db analysis_views -if .is_leakage] .name]]"
+                                         }
+                                       }
+                                       if {$dynamic_view ne ""} {
+                                         append cmd " -dynamic [list $dynamic_view]"
+                                       } else {
+                                         if {[llength [get_db analysis_views -if .is_dynamic]] > 0} {
+                                           append cmd " -dynamic [list [get_db [get_db analysis_views -if .is_dynamic] .name]]"
+                                         }
+                                       }
+                                       eval $cmd
+                                     } elseif {[llength [get_db analysis_views]] == 0} {
+                                       set cmd "set_flowkit_read_db_args"
+                                       if {$setup_views ne ""} {
+                                         append cmd " -setup_views [list $setup_views]"
+                                       }
+                                       if {$hold_views ne ""} {
+                                         append cmd " -hold_views [list $hold_views]"
+                                       }
+                                       if {$leakage_view ne ""} {
+                                         append cmd " -leakage_view [list $leakage_view]"
+                                       }
+                                       if {$dynamic_view ne ""} {
+                                         append cmd " -dynamic_view [list $dynamic_view]"
+                                       }
+                                       eval $cmd
+                                     } else {
+                                     }
+                                   }
+                                 }}
+#@ End verbose flow_step activate_views
+#@ Begin verbose flow_step init_mcpu
+@flow_step(init_mcpu)  2:   apply {{} {
+                              # Multi host/cpu attributes
+                              #-----------------------------------------------------------------------------
+                              # The FLOWTOOL_NUM_CPUS is an environment variable which should be exported by
+                              # the specified dist script.  This connects the number of CPUs being reserved
+                              # for batch jobs with the current flow scripts.  The LSB_MAX_NUM_PROCESSORS is
+                              # a typical environment variable exported by distribution platforms and is
+                              # useful for ensuring all interactive jobs are using the reserved amount of CPUs.
+                              if {[info exists ::env(FLOWTOOL_NUM_CPUS)]} {
+                                set max_cpus $::env(FLOWTOOL_NUM_CPUS)
+                              } elseif {[info exists ::env(LSB_MAX_NUM_PROCESSORS)]} {
+                                set max_cpus $::env(LSB_MAX_NUM_PROCESSORS)
+                              } else {
+                                set max_cpus 8
+                              }
+                              switch -glob [get_db program_short_name] {
+                                default       { set_multi_cpu_usage -verbose -local_cpu $max_cpus }
+                                joules*       { set_multi_cpu_usage -verbose -local_cpu $max_cpus }
+                                genus*        { set_multi_cpu_usage -verbose -local_cpu $max_cpus }
+                                innovus*      { set_multi_cpu_usage -verbose -local_cpu $max_cpus }
+                                tempus*       { set_multi_cpu_usage -verbose -local_cpu $max_cpus }
+                                voltus*       { set_multi_cpu_usage -verbose -local_cpu $max_cpus }
+                              }
+                            }}
+set_multi_cpu_usage -local_cpu 8
+#@ End verbose flow_step init_mcpu
+End steps for plugin point Cadence.plugin.flowkit.read_db.post
+UM:   flow.cputime  flow.realtime  timing.setup.tns  timing.setup.wns  snapshot
+UM:*                                                                   init_flow
+      flow.cputime  flow.realtime  timing.setup.tns  timing.setup.wns  snapshot
+UM:*                                                                   syn_generic
+  Setting attribute of root '/': 'flow_report_name' = syn_generic
+#@ Begin verbose flow_step synthesis.syn_generic.block_start
+@flow_step(block_start) 2:     set_db flow_write_db_common false
+  Setting attribute of root '/': 'flow_write_db_common' = false
+#@ End verbose flow_step synthesis.syn_generic.block_start
+      flow.cputime  flow.realtime  timing.setup.tns  timing.setup.wns  snapshot
+UM:             32             38                                      block_start
+#@ Begin verbose flow_step synthesis.syn_generic.init_design.read_mmmc
+@flow_step(read_mmmc)   2:   apply {{} {
+                               set FH [open [file join [get_db flow_db_directory] [get_db flow_report_name].mmmc_config.tcl] w]
+                             
+                               puts $FH "##############################################################################"
+                               puts $FH "## LIBRARY SETS"
+                               puts $FH "##############################################################################"
+                               foreach name [dict keys [get_flow_config library_sets]] {
+                             
+                                 set library_files [get_flow_config -quiet library_sets $name library_files]
+                                 set link_files    [get_flow_config -quiet library_sets $name link_library_files]
+                                 set target_files  [get_flow_config -quiet library_sets $name target_library_files]
+                                 set aocv_files    [get_flow_config -quiet library_sets $name aocv_files]
+                                 set lvf_files     [get_flow_config -quiet library_sets $name lvf_files]
+                                 set si_files      [get_flow_config -quiet library_sets $name si_files]
+                                 set socv_files    [get_flow_config -quiet library_sets $name socv_files]
+                             
+                                 puts $FH "create_library_set \\"
+                                 puts $FH "  -name $name \\"
+                                 #- define timing_files (.ldb/.lib)
+                                 if {[llength $library_files] > 0} {
+                                   puts $FH "  -timing \\"
+                                   puts $FH "    \[list \\"
+                                   if {[llength $library_files] != [llength [join $library_files]]} {
+                                     foreach inner_list $library_files {
+                                       puts $FH "      \[list \\"
+                                       foreach file $inner_list {
+                                         puts $FH "        [file normalize $file] \\"
+                                       }
+                                       puts $FH "      \] \\"
+                                     }
+                                   } else {
+                                     foreach file $library_files {
+                                       puts $FH "      [file normalize $file] \\"
+                                     }
+                                   }
+                                   if {[llength [concat $aocv_files $lvf_files $si_files $socv_files]] > 0 } {
+                                     puts $FH "    \] \\"
+                                   } else {
+                                     puts $FH "    \]"
+                                   }
+                                 }
+                                 #- define link/target timing_files (.ldb/.lib)
+                                 if {[llength $link_files] > 0 && [llength $target_files] > 0} {
+                                   puts $FH "  -link_timing \\"
+                                   puts $FH "    \[list \\"
+                                   foreach file $link_files {
+                                     puts $FH "      [file normalize $file] \\"
+                                   }
+                                   puts $FH "    \] \\"
+                                   puts $FH "  -target_timing \\"
+                                   puts $FH "    \[list \\"
+                                   foreach file $target_files {
+                                     puts $FH "      [file normalize $file] \\"
+                                   }
+                                   if {[llength [concat $aocv_files $lvf_files $si_files $socv_files]] > 0 } {
+                                     puts $FH "    \] \\"
+                                   } else {
+                                     puts $FH "    \]"
+                                   }
+                                 }
+                                 #- define aocv files
+                                 if {[llength $aocv_files] > 0 } {
+                                   puts $FH "  -aocv \\"
+                                   puts $FH "    \[list \\"
+                                   foreach file $aocv_files {
+                                     puts $FH "      [file normalize $file] \\"
+                                   }
+                                   if {[llength [concat $lvf_files $si_files $socv_files]] > 0 } {
+                                     puts $FH "    \] \\"
+                                   } else {
+                                     puts $FH "    \]"
+                                   }
+                                 }
+                                 #- define lvf files
+                                 if {[llength $lvf_files] > 0 } {
+                                   puts $FH "  -lvf \\"
+                                   puts $FH "    \[list \\"
+                                   foreach file $lvf_files {
+                                     puts $FH "      [file normalize $file] \\"
+                                   }
+                                   if {[llength [concat $si_files $socv_files]] > 0 } {
+                                     puts $FH "    \] \\"
+                                   } else {
+                                     puts $FH "    \]"
+                                   }
+                                 }
+                                 #- define si files (.cdb)
+                                 if {[llength $si_files] > 0 } {
+                                   puts $FH "  -si     \\"
+                                   puts $FH "    \[list \\"
+                                   foreach file $si_files {
+                                     puts $FH "      [file normalize $file] \\"
+                                   }
+                                   if {[llength [concat $socv_files]] > 0 } {
+                                     puts $FH "    \] \\"
+                                   } else {
+                                     puts $FH "    \]"
+                                   }
+                                 }
+                                 #- define socv files
+                                 if {[llength $socv_files] > 0 } {
+                                   puts $FH "  -socv   \\"
+                                   puts $FH "    \[list \\"
+                                   foreach file $socv_files {
+                                     puts $FH "      [file normalize $file] \\"
+                                   }
+                                   puts $FH "    \]"
+                                 }
+                                 puts $FH ""
+                               }
+                               puts $FH ""
+                               puts $FH "##############################################################################"
+                               puts $FH "## OPERATING CONDITIONS"
+                               puts $FH "##############################################################################"
+                               foreach name [dict keys [get_flow_config -quiet opconds]] {
+                                 set op_cond_process      [get_flow_config -quiet opconds $name process]
+                                 set op_cond_voltage      [get_flow_config -quiet opconds $name voltage]
+                                 set op_cond_temperature  [get_flow_config -quiet opconds $name temperature]
+                             
+                                 puts $FH "create_opcond \\"
+                                 puts $FH "  -name $name \\"
+                                 if ![string is space $op_cond_process] {
+                                   puts $FH "  -process $op_cond_process \\"
+                                 }
+                                 if ![string is space $op_cond_voltage] {
+                                   puts $FH "  -voltage $op_cond_voltage \\"
+                                 }
+                                 if ![string is space $op_cond_temperature] {
+                                   puts $FH "  -temperature $op_cond_temperature \\"
+                                 }
+                                 puts $FH ""
+                               }
+                               puts $FH ""
+                               puts $FH "###############################################################################"
+                               puts $FH "### RC CORNERS"
+                               puts $FH "###############################################################################"
+                               foreach name [dict keys [get_flow_config rc_corners]] {
+                                 set rc_corner_qrc_tech    [get_flow_config -quiet rc_corners $name qrc_tech_file]
+                                 set rc_corner_temperature [get_flow_config -quiet rc_corners $name temperature]
+                             
+                                 puts $FH "create_rc_corner \\"
+                                 puts $FH "  -name $name \\"
+                                 if ![string is space $rc_corner_temperature] {
+                                   puts $FH "  -temperature $rc_corner_temperature \\"
+                                 }
+                                 if ![string is space $rc_corner_qrc_tech] {
+                                   puts $FH "  -qrc_tech $rc_corner_qrc_tech"
+                                 }
+                                 puts $FH ""
+                               }
+                               puts $FH ""
+                               puts $FH "##############################################################################"
+                               puts $FH "## TIMING CONDITIONS"
+                               puts $FH "##############################################################################"
+                               foreach name [dict keys [get_flow_config timing_conditions]] {
+                                 set timing_condition_lib_set [get_flow_config -quiet timing_conditions $name library_sets]
+                                 set timing_condition_opcond  [get_flow_config -quiet timing_conditions $name opcond]
+                                 set timing_condition_opcond_lib  [get_flow_config -quiet timing_conditions $name opcond_library]
+                             
+                                 puts $FH "create_timing_condition \\"
+                                 puts $FH "  -name $name \\"
+                             
+                                 #- Timing Condition library sets validation
+                                 puts $FH "  -library_sets \\"
+                                 puts $FH "    \[list \\"
+                                 foreach tc_lib_set $timing_condition_lib_set {
+                                   puts $FH "        $tc_lib_set \\"
+                                 }
+                                 if {[llength [concat $timing_condition_opcond $timing_condition_opcond_lib]] > 0 } {
+                                   puts $FH "    \] \\"
+                                 } else {
+                                   puts $FH "    \]"
+                                 }
+                                 if {![string is space $timing_condition_opcond]} {
+                                   if {![string is space $timing_condition_opcond_lib]} {
+                                     puts $FH "  -opcond $timing_condition_opcond \\"
+                                     puts $FH "  -opcond_library $timing_condition_opcond_lib"
+                                   } else {
+                                    puts $FH "  -opcond $timing_condition_opcond"
+                                  }
+                                 }
+                                 puts $FH ""
+                               }
+                               puts $FH ""
+                               puts $FH "###############################################################################"
+                               puts $FH "### DELAY CORNERS"
+                               puts $FH "###############################################################################"
+                               foreach name [dict keys [get_flow_config delay_corners]] {
+                                 set delay_corner_early_rc_corner  [get_flow_config -quiet delay_corners $name rc_corner early]
+                                 set delay_corner_late_rc_corner   [get_flow_config -quiet delay_corners $name rc_corner late]
+                                 set delay_corner_early_timing_condition [get_flow_config -quiet delay_corners $name timing_condition early]
+                                 set delay_corner_late_timing_condition  [get_flow_config -quiet delay_corners $name timing_condition late]
+                             
+                                 puts $FH "create_delay_corner \\"
+                                 puts $FH "  -name $name \\"
+                             
+                                 #- define delay_corner -rc_corner
+                                 if {![string is space $delay_corner_early_rc_corner] && ![string is space $delay_corner_late_rc_corner]} {
+                                   if {$delay_corner_early_rc_corner eq $delay_corner_late_rc_corner} {
+                                     puts $FH "  -rc_corner $delay_corner_early_rc_corner \\"
+                                   } else {
+                                     puts $FH "  -early_rc_corner $delay_corner_early_rc_corner \\"
+                                     puts $FH "  -late_rc_corner $delay_corner_late_rc_corner \\"
+                                   }
+                                 }
+                                 #- define delay_corner -timing_condition
+                                 if {![string is space $delay_corner_early_timing_condition] && ![string is space $delay_corner_late_timing_condition]} {
+                                   if {$delay_corner_early_timing_condition eq $delay_corner_late_timing_condition} {
+                                     puts $FH "  -timing_condition [list $delay_corner_early_timing_condition]"
+                                   } else {
+                                     puts $FH "  -early_timing_condition [list $delay_corner_early_timing_condition] \\"
+                                     puts $FH "  -late_timing_condition [list $delay_corner_late_timing_condition]"
+                                   }
+                                 }
+                                 puts $FH ""
+                               }
+                               puts $FH ""
+                               puts $FH "###############################################################################"
+                               puts $FH "### CONSTRAINT MODES"
+                               puts $FH "###############################################################################"
+                               foreach name [dict keys [get_flow_config constraint_modes]] {
+                                 set constraint_mode_sdc       [get_flow_config -quiet constraint_modes $name sdc_files]
+                                 set constraint_mode_tcl_vars  [get_flow_config -quiet constraint_modes $name tcl_variables]
+                             
+                                 puts $FH "create_constraint_mode \\"
+                                 puts $FH "  -name $name \\"
+                                 #- Constraint_mode -sdc_files
+                                 puts $FH "  -sdc_files \\"
+                                 puts $FH "    \[list \\"
+                                 foreach file $constraint_mode_sdc {
+                                   puts $FH "      [file normalize $file] \\"
+                                 }
+                                 #- Constraint_mode -tcl_vars
+                                 if ![string is space $constraint_mode_tcl_vars] {
+                                   puts $FH "    \] \\"
+                                   puts $FH "  -tcl_variables \{$constraint_mode_tcl_vars\}"
+                                 } else {
+                                   puts $FH "    \]"
+                                 }
+                                 puts $FH ""
+                               }
+                               puts $FH ""
+                               puts $FH "###############################################################################"
+                               puts $FH "### ANALYSIS VIEWS"
+                               puts $FH "###############################################################################"
+                               set analysis_view_is_setup_list   ""
+                               set analysis_view_is_hold_list    ""
+                               set analysis_view_is_dynamic_list ""
+                               set analysis_view_is_leakage_list ""
+                               foreach name [dict keys [get_flow_config analysis_views]] {
+                                 puts $FH "create_analysis_view \\"
+                                 puts $FH "  -name $name \\"
+                                 puts $FH "  -constraint_mode [get_flow_config -quiet analysis_views $name constraint_mode] \\"
+                                 if {![string is space [get_flow_config -quiet analysis_views $name power_modes]]} {
+                                   puts $FH "  -power_modes [get_flow_config -quiet analysis_views $name power_modes] \\"
+                                 }
+                                 puts $FH "  -delay_corner [get_flow_config -quiet analysis_views $name delay_corner]"
+                                 #- Sort views by purpose
+                                 if {[string is true -strict [get_flow_config -quiet analysis_views $name is_setup]]} {
+                                   lappend analysis_view_is_setup_list $name
+                                 }
+                                 if {[string is true -strict [get_flow_config -quiet analysis_views $name is_hold]]} {
+                                   lappend analysis_view_is_hold_list $name
+                                 }
+                                 if {[string is true -strict [get_flow_config -quiet analysis_views $name is_leakage]]} {
+                                   lappend analysis_view_is_leakage_list $name
+                                 }
+                                 if {[string is true -strict [get_flow_config -quiet analysis_views $name is_dynamic]]} {
+                                   lappend analysis_view_is_dynamic_list $name
+                                 }
+                                 puts $FH ""
+                               }
+                             
+                               #- Override view list with feature values when available
+                               if {[get_feature setup_views] ne ""} {
+                                 set analysis_view_is_setup_list [get_feature setup_views]
+                               }
+                               if {[get_feature hold_views] ne ""} {
+                                 set analysis_view_is_hold_list [get_feature hold_views]
+                               }
+                               if {[get_feature leakage_view] ne ""} {
+                                 set analysis_view_is_leakage_list [get_feature leakage_view]
+                               }
+                               if {[get_feature dynamic_view] ne ""} {
+                                 set analysis_view_is_dynamic_list [get_feature dynamic_view]
+                               }
+                             
+                               #- Configure the Analysis View
+                               puts $FH "set_analysis_view \\"
+                               puts $FH "  -setup   \[list $analysis_view_is_setup_list\] \\"
+                               if {[llength $analysis_view_is_leakage_list] > 0 && [llength $analysis_view_is_dynamic_list] > 0} {
+                                 puts $FH "  -hold    \[list $analysis_view_is_hold_list\] \\"
+                                 puts $FH "  -leakage \[list $analysis_view_is_leakage_list\] \\"
+                                 puts $FH "  -dynamic \[list $analysis_view_is_dynamic_list\]"
+                               } elseif {[llength $analysis_view_is_leakage_list] > 0 && [llength $analysis_view_is_dynamic_list] == 0} {
+                                 puts $FH "  -hold    \[list $analysis_view_is_hold_list\] \\"
+                                 puts $FH "  -leakage \[list $analysis_view_is_leakage_list\]"
+                               } elseif {[llength $analysis_view_is_leakage_list] == 0 && [llength $analysis_view_is_dynamic_list] > 0} {
+                                 puts $FH "  -hold    \[list $analysis_view_is_hold_list\] \\"
+                                 puts $FH "  -dynamic \[list $analysis_view_is_dynamic_list\]"
+                               } else {
+                                 puts $FH "  -hold    \[list $analysis_view_is_hold_list\]"
+                               }
+                               puts $FH ""
+                               close $FH
+                             
+                               #- Read MMMC file
+                               if {[is_flow -inside flow:init_design]} {
+                                 read_mmmc [file join [get_db flow_db_directory] [get_db flow_report_name].mmmc_config.tcl]
+                               }
+                             }}
+  Setting attribute of root '/': 'is_read_mmmc_flow' = true
+Sourcing './dbs/syn_generic.mmmc_config.tcl' (Thu Feb 12 11:13:15 EST 2026)...
+#@ Begin verbose source ./dbs/syn_generic.mmmc_config.tcl
+@file(syn_generic.mmmc_config.tcl) 4: create_library_set \
+  -name libset_tt_1p2v_25c \
+  -timing \
+    [list \
+      /package/asicfab/pdk/MIT/MITLL_90_2025/MITLL90_STDLIB_8T/MITLL90_STDLIB_8T/2020.07.01.UNI/MITLL90_STDLIB_8T.tt1p2v25c.lib \
+      /package/asicfab/pdk/MIT/MITLL_90_2025/MITLL90_IOPads_5_1_1/2020.01.27/MITLL90_IOPads_5_1_1.tt1p2v25c.lib \
+    ]
+@file(syn_generic.mmmc_config.tcl) 20: create_rc_corner \
+  -name rc_best_25 \
+  -temperature 25 \
+
+create_rc_corner \
+  -name rc_typ_25 \
+  -temperature 25 \
+
+create_rc_corner \
+  -name rc_worst_25 \
+  -temperature 25 \
+
+
+@file(syn_generic.mmmc_config.tcl) 36: create_timing_condition \
+  -name timing_condition_tt_1p2v_25c \
+  -library_sets \
+    [list \
+        libset_tt_1p2v_25c \
+    ]
+@file(syn_generic.mmmc_config.tcl) 47: create_delay_corner \
+  -name delay_1p2v_25 \
+  -early_rc_corner rc_best_25 \
+  -late_rc_corner rc_worst_25 \
+  -timing_condition timing_condition_tt_1p2v_25c
+@file(syn_generic.mmmc_config.tcl) 57: create_constraint_mode \
+  -name func \
+  -sdc_files \
+    [list \
+      /home/asicfab/a/mquerimi/SoCET/Flowkit/scripts/constraints/sysarr_4_input_fp_adder.sdc \
+    ]
+@file(syn_generic.mmmc_config.tcl) 68: create_analysis_view \
+  -name view_1p2_25 \
+  -constraint_mode func \
+  -delay_corner delay_1p2v_25
+@file(syn_generic.mmmc_config.tcl) 73: set_analysis_view \
+  -setup   [list view_1p2_25] \
+  -hold    [list view_1p2_25] \
+  -leakage [list view_1p2_25] \
+  -dynamic [list view_1p2_25]
+Warning : Invalid expression specified for the attribute. [LBR-715]
+        : The expression '(!vdd!) + (vss!)' specified for attribute power_down_function for pin 'X' of cell 'xor2_4x' is invalid. The expression has invalid syntax. The attribute will be ignored. (File /package/asicfab/pdk/MIT/MITLL_90_2025/MITLL90_STDLIB_8T/MITLL90_STDLIB_8T/2020.07.01.UNI/MITLL90_STDLIB_8T.tt1p2v25c.lib, Line 91371)
+        : Check and update the library to have correct expression value for the attribute, otherwise the attribute will be ignored for the pin.
+Warning : Invalid expression specified for the attribute. [LBR-715]
+        : The expression '(!vdd!) + (vss!)' specified for attribute power_down_function for pin 'X' of cell 'xor2_2x' is invalid. The expression has invalid syntax. The attribute will be ignored. (File /package/asicfab/pdk/MIT/MITLL_90_2025/MITLL90_STDLIB_8T/MITLL90_STDLIB_8T/2020.07.01.UNI/MITLL90_STDLIB_8T.tt1p2v25c.lib, Line 90817)
+Warning : Invalid expression specified for the attribute. [LBR-715]
+        : The expression '(!vdd!) + (vss!)' specified for attribute power_down_function for pin 'X' of cell 'xor2_1x' is invalid. The expression has invalid syntax. The attribute will be ignored. (File /package/asicfab/pdk/MIT/MITLL_90_2025/MITLL90_STDLIB_8T/MITLL90_STDLIB_8T/2020.07.01.UNI/MITLL90_STDLIB_8T.tt1p2v25c.lib, Line 90263)
+Warning : Invalid expression specified for the attribute. [LBR-715]
+        : The expression '(!vdd!) + (vss!)' specified for attribute power_down_function for pin 'X' of cell 'xnor2_4x' is invalid. The expression has invalid syntax. The attribute will be ignored. (File /package/asicfab/pdk/MIT/MITLL_90_2025/MITLL90_STDLIB_8T/MITLL90_STDLIB_8T/2020.07.01.UNI/MITLL90_STDLIB_8T.tt1p2v25c.lib, Line 89709)
+Warning : Invalid expression specified for the attribute. [LBR-715]
+        : The expression '(!vdd!) + (vss!)' specified for attribute power_down_function for pin 'X' of cell 'xnor2_2x' is invalid. The expression has invalid syntax. The attribute will be ignored. (File /package/asicfab/pdk/MIT/MITLL_90_2025/MITLL90_STDLIB_8T/MITLL90_STDLIB_8T/2020.07.01.UNI/MITLL90_STDLIB_8T.tt1p2v25c.lib, Line 89155)
+Warning : Invalid expression specified for the attribute. [LBR-715]
+        : The expression '(!vdd!) + (vss!)' specified for attribute power_down_function for pin 'X' of cell 'xnor2_1x' is invalid. The expression has invalid syntax. The attribute will be ignored. (File /package/asicfab/pdk/MIT/MITLL_90_2025/MITLL90_STDLIB_8T/MITLL90_STDLIB_8T/2020.07.01.UNI/MITLL90_STDLIB_8T.tt1p2v25c.lib, Line 88601)
+Warning : Invalid expression specified for the attribute. [LBR-715]
+        : The expression '(!vdd!) + (vss!)' specified for attribute power_down_function for pin 'X' of cell 'tinv_2x' is invalid. The expression has invalid syntax. The attribute will be ignored. (File /package/asicfab/pdk/MIT/MITLL_90_2025/MITLL90_STDLIB_8T/MITLL90_STDLIB_8T/2020.07.01.UNI/MITLL90_STDLIB_8T.tt1p2v25c.lib, Line 88138)
+Warning : Invalid expression specified for the attribute. [LBR-715]
+        : The expression '(!vdd!) + (vss!)' specified for attribute power_down_function for pin 'X' of cell 'tinv_1x' is invalid. The expression has invalid syntax. The attribute will be ignored. (File /package/asicfab/pdk/MIT/MITLL_90_2025/MITLL90_STDLIB_8T/MITLL90_STDLIB_8T/2020.07.01.UNI/MITLL90_STDLIB_8T.tt1p2v25c.lib, Line 87665)
+Warning : Invalid expression specified for the attribute. [LBR-715]
+        : The expression '(!vdd!) + (vss!)' specified for attribute power_down_function for pin 'Q' of cell 'sdffsq_1x' is invalid. The expression has invalid syntax. The attribute will be ignored. (File /package/asicfab/pdk/MIT/MITLL_90_2025/MITLL90_STDLIB_8T/MITLL90_STDLIB_8T/2020.07.01.UNI/MITLL90_STDLIB_8T.tt1p2v25c.lib, Line 84656)
+Warning : Invalid expression specified for the attribute. [LBR-715]
+        : The expression '(!vdd!) + (vss!)' specified for attribute power_down_function for pin 'Q' of cell 'sdffrq_1x' is invalid. The expression has invalid syntax. The attribute will be ignored. (File /package/asicfab/pdk/MIT/MITLL_90_2025/MITLL90_STDLIB_8T/MITLL90_STDLIB_8T/2020.07.01.UNI/MITLL90_STDLIB_8T.tt1p2v25c.lib, Line 81789)
+Warning : Invalid expression specified for the attribute. [LBR-715]
+        : The expression '(!vdd!) + (vss!)' specified for attribute power_down_function for pin 'QN' of cell 'sdffqn_1x' is invalid. The expression has invalid syntax. The attribute will be ignored. (File /package/asicfab/pdk/MIT/MITLL_90_2025/MITLL90_STDLIB_8T/MITLL90_STDLIB_8T/2020.07.01.UNI/MITLL90_STDLIB_8T.tt1p2v25c.lib, Line 79614)
+Warning : Invalid expression specified for the attribute. [LBR-715]
+        : The expression '(!vdd!) + (vss!)' specified for attribute power_down_function for pin 'Q' of cell 'sdffq_1x' is invalid. The expression has invalid syntax. The attribute will be ignored. (File /package/asicfab/pdk/MIT/MITLL_90_2025/MITLL90_STDLIB_8T/MITLL90_STDLIB_8T/2020.07.01.UNI/MITLL90_STDLIB_8T.tt1p2v25c.lib, Line 77519)
+Warning : Invalid expression specified for the attribute. [LBR-715]
+        : The expression '(!vdd!) + (vss!)' specified for attribute power_down_function for pin 'Q' of cell 'sdffnq_1x' is invalid. The expression has invalid syntax. The attribute will be ignored. (File /package/asicfab/pdk/MIT/MITLL_90_2025/MITLL90_STDLIB_8T/MITLL90_STDLIB_8T/2020.07.01.UNI/MITLL90_STDLIB_8T.tt1p2v25c.lib, Line 75424)
+Warning : Invalid expression specified for the attribute. [LBR-715]
+        : The expression '(!vdd!) + (vss!)' specified for attribute power_down_function for pin 'X' of cell 'or3_4x' is invalid. The expression has invalid syntax. The attribute will be ignored. (File /package/asicfab/pdk/MIT/MITLL_90_2025/MITLL90_STDLIB_8T/MITLL90_STDLIB_8T/2020.07.01.UNI/MITLL90_STDLIB_8T.tt1p2v25c.lib, Line 74596)
+Warning : Invalid expression specified for the attribute. [LBR-715]
+        : The expression '(!vdd!) + (vss!)' specified for attribute power_down_function for pin 'X' of cell 'or3_2x' is invalid. The expression has invalid syntax. The attribute will be ignored. (File /package/asicfab/pdk/MIT/MITLL_90_2025/MITLL90_STDLIB_8T/MITLL90_STDLIB_8T/2020.07.01.UNI/MITLL90_STDLIB_8T.tt1p2v25c.lib, Line 73888)
+Warning : Invalid expression specified for the attribute. [LBR-715]
+        : The expression '(!vdd!) + (vss!)' specified for attribute power_down_function for pin 'X' of cell 'or3_1x' is invalid. The expression has invalid syntax. The attribute will be ignored. (File /package/asicfab/pdk/MIT/MITLL_90_2025/MITLL90_STDLIB_8T/MITLL90_STDLIB_8T/2020.07.01.UNI/MITLL90_STDLIB_8T.tt1p2v25c.lib, Line 73180)
+Warning : Invalid expression specified for the attribute. [LBR-715]
+        : The expression '(!vdd!) + (vss!)' specified for attribute power_down_function for pin 'X' of cell 'or2_4x' is invalid. The expression has invalid syntax. The attribute will be ignored. (File /package/asicfab/pdk/MIT/MITLL_90_2025/MITLL90_STDLIB_8T/MITLL90_STDLIB_8T/2020.07.01.UNI/MITLL90_STDLIB_8T.tt1p2v25c.lib, Line 72792)
+Warning : Invalid expression specified for the attribute. [LBR-715]
+        : The expression '(!vdd!) + (vss!)' specified for attribute power_down_function for pin 'X' of cell 'or2_2x' is invalid. The expression has invalid syntax. The attribute will be ignored. (File /package/asicfab/pdk/MIT/MITLL_90_2025/MITLL90_STDLIB_8T/MITLL90_STDLIB_8T/2020.07.01.UNI/MITLL90_STDLIB_8T.tt1p2v25c.lib, Line 72424)
+Warning : Invalid expression specified for the attribute. [LBR-715]
+        : The expression '(!vdd!) + (vss!)' specified for attribute power_down_function for pin 'X' of cell 'or2_1x' is invalid. The expression has invalid syntax. The attribute will be ignored. (File /package/asicfab/pdk/MIT/MITLL_90_2025/MITLL90_STDLIB_8T/MITLL90_STDLIB_8T/2020.07.01.UNI/MITLL90_STDLIB_8T.tt1p2v25c.lib, Line 72056)
+Warning : Invalid expression specified for the attribute. [LBR-715]
+        : The expression '(!vdd!) + (vss!)' specified for attribute power_down_function for pin 'X' of cell 'oai22_4x' is invalid. The expression has invalid syntax. The attribute will be ignored. (File /package/asicfab/pdk/MIT/MITLL_90_2025/MITLL90_STDLIB_8T/MITLL90_STDLIB_8T/
+  Message Summary for Library both libraries:
+  *******************************************
+2020.07.01.UNI/MITLL90_STDLIB_8T.tt1p2v25c.lib, Line 69532)
+Warning : Maximum message print count reached. [MESG-11]
+        : Maximum print count of '20' reached for message 'LBR-715'.
+  Invalid expression specified for the attribute. [LBR-715]: 94
+  *******************************************
+ 
+Info    : Created nominal operating condition. [LBR-412]
+        : Operating condition '_nominal_' was created for the PVT values (1.000000, 1.200000, 25.000000) in library 'MITLL90_STDLIB_8T.tt1p2v25c.lib'.
+        : The nominal operating condition is represented, either by the nominal PVT values specified in the library source (via nom_process,nom_voltage and nom_temperature respectively), or by the default PVT values (1.0,1.0,1.0).
+Info    : Created nominal operating condition. [LBR-412]
+        : Operating condition '_nominal_' was created for the PVT values (1.000000, 1.200000, 25.000000) in library 'MITLL90_IOPads_5_1_1.tt1p2v25c.lib'.
+Warning : Library cell has no output pins defined. [LBR-9]
+        : Library cell 'decap_2x' must have an output pin.
+        : Add the missing output pin(s), then reload the library. Else the library cell will be marked as timing model i.e. unusable. Timing_model means that the cell does not have any defined function. If there is no output pin, Genus will mark library cell as unusable i.e. the attribute 'usable' will be marked to 'false' on the libcell. Therefore, the cell is not used for mapping and it will not be picked up from the library for synthesis. If you query the attribute 'unusable_reason' on the libcell; result will be: 'Library cell has no output pins.'Note: The message LBR-9 is only for the logical pins and not for the power_ground pins. Genus will depend upon the output function defined in the pin group (output pin) of the cell, to use it for mapping. The pg_pin will not have any function defined.
+Warning : Library cell has no output pins defined. [LBR-9]
+        : Library cell 'decap_2x' must have an output pin.
+Warning : Library cell has no output pins defined. [LBR-9]
+        : Library cell 'decap_3x' must have an output pin.
+Warning : Library cell has no output pins defined. [LBR-9]
+        : Library cell 'decap_3x' must have an output pin.
+Warning : Library cell has no output pins defined. [LBR-9]
+        : Library cell 'decap_4x' must have an output pin.
+Warning : Library cell has no output pins defined. [LBR-9]
+        : Library cell 'decap_4x' must have an output pin.
+Warning : Library cell has no output pins defined. [LBR-9]
+        : Library cell 'decap_8x' must have an output pin.
+Warning : Library cell has no output pins defined. [LBR-9]
+        : Library cell 'decap_8x' must have an output pin.
+Info    : Set default library domain. [LBR-109]
+        : The default library domain is 'library_domain:timing_condition_tt_1p2v_25c'.
+#@ End verbose source ./dbs/syn_generic.mmmc_config.tcl
+#@ End verbose flow_step synthesis.syn_generic.init_design.read_mmmc
+      flow.cputime  flow.realtime  timing.setup.tns  timing.setup.wns  snapshot
+UM:              4              5                                      read_mmmc
+      flow.cputime  flow.realtime  timing.setup.tns  timing.setup.wns  snapshot
+UM:*                                                                   init_design
+#@ Begin verbose flow_step synthesis.syn_generic.init_design.read_physical
+@flow_step(read_physical)  2:   apply {{} {
+                                  if {![string is space [get_flow_config -quiet init_physical_files lef_files]]} {
+                                    read_physical -lef [get_flow_config init_physical_files lef_files]
+                                  }
+                                  if {![string is space [get_flow_config -quiet init_physical_files oa_ref_libs]]} {
+                                    set flow_startup_directory [get_db flow_startup_directory]
+                                    set flow_top_directory [file normalize [get_db flow_working_directory]]
+                                    if {![string is space [get_flow_config -quiet init_physical_files oa_search_libs]]} {
+                                      set cmd "[list read_physical -oa_ref_libs [get_flow_config init_physical_files oa_ref_libs] -oa_search_libs [get_flow_config init_physical_files oa_search_libs]]"
+                                    } else {
+                                      set cmd "[list read_physical -oa_ref_libs [get_flow_config init_physical_files oa_ref_libs]]"
+                                    }
+                                
+                                    if {$flow_startup_directory ne $flow_top_directory} {
+                                      cd $flow_startup_directory
+                                      eval $cmd
+                                      cd $flow_top_directory
+                                    } else {
+                                      eval $cmd
+                                    }
+                                  }
+                                }}
+
+  According to lef_library, there are total 7 routing layers [ V(4) / H(3) ]
+
+Warning : Missing wire parameter. [PHYS-15]
+        : 'EDGECAPACITANCE' parameter is missing for layer 'MTK1' [line 185 in file /package/asicfab/pdk/MIT/MITLL_90_2025/MITLL_PDK/lef/soi90nm_5_1_1.lef]
+        : Check the wire parameter in LEF technology files.
+Warning : Missing wire parameter. [PHYS-15]
+        : 'EDGECAPACITANCE' parameter is missing for layer 'MRF1' [line 201 in file /package/asicfab/pdk/MIT/MITLL_90_2025/MITLL_PDK/lef/soi90nm_5_1_1.lef]
+Warning : Missing wire parameter. [PHYS-15]
+        : 'CPERSQDIST' parameter is missing for layer 'MTK1' [line 185 in file /package/asicfab/pdk/MIT/MITLL_90_2025/MITLL_PDK/lef/soi90nm_5_1_1.lef]
+Warning : Missing wire parameter. [PHYS-15]
+        : 'CPERSQDIST' parameter is missing for layer 'MRF1' [line 201 in file /package/asicfab/pdk/MIT/MITLL_90_2025/MITLL_PDK/lef/soi90nm_5_1_1.lef]
+Warning : The variant range of wire parameters is too large. An example of wire parameters are, a WIDTH for layer, PITCH for layer, MINSPACING for layers, etc. [PHYS-12]
+        : The variant range (0.14, 5) of 'WIDTH' for layers 'M1' and 'MRF1' is too large.
+        : Check the consistency of the parameters, and see if you can ignore this message or you're using different LEF file with wrong parameters.
+Warning : The variant range of wire parameters is too large. An example of wire parameters are, a WIDTH for layer, PITCH for layer, MINSPACING for layers, etc. [PHYS-12]
+        : The variant range (0.32, 10) of 'PITCH' for layers 'M3' and 'MRF1' is too large.
+Warning : The variant range of wire parameters is too large. An example of wire parameters are, a WIDTH for layer, PITCH for layer, MINSPACING for layers, etc. [PHYS-12]
+        : The variant range (0.16, 5) of 'OFFSET' for layers 'M3' and 'MRF1' is too large.
+Warning : The variant range of wire parameters is too large. An example of wire parameters are, a WIDTH for layer, PITCH for layer, MINSPACING for layers, etc. [PHYS-12]
+        : The variant range (0.16, 5) of 'MINSPACING' for layers 'M3' and 'MRF1' is too large.
+Warning : Physical cell not defined in library. [PHYS-279]
+        : The physical (LEF) cell fill_16x cannot be found in library.
+        : Ensure that the proper library files are available and have been imported.
+Warning : Physical cell not defined in library. [PHYS-279]
+        : The physical (LEF) cell fill_1x cannot be found in library.
+Warning : Physical cell not defined in library. [PHYS-279]
+        : The physical (LEF) cell fill_2x cannot be found in library.
+Warning : Physical cell not defined in library. [PHYS-279]
+        : The physical (LEF) cell fill_4x cannot be found in library.
+Warning : Physical cell not defined in library. [PHYS-279]
+        : The physical (LEF) cell fill_8x cannot be found in library.
+Warning : Physical cell not defined in library. [PHYS-279]
+        : The physical (LEF) cell corner_1p1mm cannot be found in library.
+Warning : Physical cell not defined in library. [PHYS-279]
+        : The physical (LEF) cell corner cannot be found in library.
+Warning : Physical cell not defined in library. [PHYS-279]
+        : The physical (LEF) cell pad80_analog_hbm cannot be found in library.
+Warning : Physical cell not defined in library. [PHYS-279]
+        : The physical (LEF) cell pad80_analog_no_hbm cannot be found in library.
+Warning : Pin names are not consistent in lib and LEF files. [PHYS-113]
+        : Pin 'wafer!' of library cell 'pad80_inDig' is in logical library but not in physical library.
+Warning : Pin names are not consistent in lib and LEF files. [PHYS-113]
+        : Pin 'wafer!' of library cell 'pad80_inDig' is in logical library but not in physical library.
+Warning : Pin names are not consistent in lib and LEF files. [PHYS-113]
+        : Pin 'wafer!' of library cell 'pad80_inDig_no_ls' is in logical library but not in physical library.
+Warning : Pin names are not consistent in lib and LEF files. [PHYS-113]
+        : Pin 'wafer!' of library cell 'pad80_inDig_no_ls' is in logical library but not in physical library.
+Warning : Pin names are not consistent in lib and LEF files. [PHYS-113]
+        : Pin 'wafer!' of library cell 'pad80_inDig_no_ls_PD' is in logical library but not in physical library.
+Warning : Pin names are not consistent in lib and LEF files. [PHYS-113]
+        : Pin 'wafer!' of library cell 'pad80_inDig_no_ls_PD' is in logical library but not in physical library.
+Warning : Pin names are not consistent in lib and LEF files. [PHYS-113]
+        : Pin 'wafer!' of library cell 'pad80_inDig_no_ls_PU' is in logical library but not in physical library.
+Warning : Pin names are not consistent in lib and LEF files. [PHYS-113]
+        : Pin 'wafer!' of library cell 'pad80_inDig_no_ls_PU' is in logical library but not in physical library.
+Warning : Pin names are not consistent in lib and LEF files. [PHYS-113]
+        : Pin 'wafer!' of library cell 'pad80_inDig_PD' is in logical library but not in physical library.
+Warning : Pin names are not consistent in lib and LEF files. [PHYS-113]
+        : Pin 'wafer!' of library cell 'pad80_inDig_PD' is in logical library but not in physical library.
+Warning : Pin names are not consistent in lib and LEF files. [PHYS-113]
+        : Pin 'wafer!' of library cell 'pad80_inDig_PU' is in logical library but not in physical library.
+Warning : Pin names are not consistent in lib and LEF files. [PHYS-113]
+        : Pin 'wafer!' of library cell 'pad80_inDig_PU' is in logical library but not in physical library.
+Warning : Pin names are not consistent in lib and LEF files. [PHYS-113]
+        : Pin 'wafer!' of library cell 'pad80_ls_buf_out' is in logical library but not in physical library.
+Warning : Pin names are not consistent in lib and LEF files. [PHYS-113]
+        : Pin 'wafer!' of library cell 'pad80_ls_buf_out' is in logical library but not in physical library.
+Warning : Pin names are not consistent in lib and LEF files. [PHYS-113]
+        : Pin 'VDD1' of library cell 'pad80_ls_vdd1_buf_out' is in logical library but not in physical library.
+Warning : Pin names are not consistent in lib and LEF files. [PHYS-113]
+        : Pin 'VSS1' of library cell 'pad80_ls_vdd1_buf_out' is in logical library but not in physical library.
+Warning : Pin names are not consistent in lib and LEF files. [PHYS-113]
+        : Pin 'wafer!' of library cell 'pad80_ls_vdd1_buf_out' is in logical library but not in physical library.
+Warning : Pin names are not consistent in lib and LEF files. [PHYS-113]
+        : Pin 'VDD1' of library cell 'pad80_ls_vdd1_buf_out' is in logical library but not in physical library.
+Warning : Pin names are not consistent in lib and LEF files. [PHYS-113]
+        : Pin 'VSS1' of library cell 'pad80_ls_vdd1_buf_out' is in logical library but not in physical library.
+Warning : Pin names are not consistent in lib and LEF files. [PHYS-113]
+        : Pin 'wafer!' of library cell 'pad80_ls_vdd1_buf_out' is in logical library but not in physical library.
+Warning : Maximum message print count reached. [MESG-11]
+        : Maximum print count of '20' reached for message 'PHYS-113'.
+Warning : Physical cell not defined in library. [PHYS-279]
+        : The physical (LEF) cell pad80_vddio cannot be found in library.
+Warning : Physical cell not defined in library. [PHYS-279]
+        : The physical (LEF) cell pad80_vdd cannot be found in library.
+Warning : Physical cell not defined in library. [PHYS-279]
+        : The physical (LEF) cell pad80_vssio cannot be found in library.
+Warning : Physical cell not defined in library. [PHYS-279]
+        : The physical (LEF) cell pad80_vss cannot be found in library.
+Warning : Physical cell not defined in library. [PHYS-279]
+        : The physical (LEF) cell power_shunt cannot be found in library.
+Warning : Physical cell not defined in library. [PHYS-279]
+        : The physical (LEF) cell spacer_10 cannot be found in library.
+Warning : Physical cell not defined in library. [PHYS-279]
+        : The physical (LEF) cell spacer_1 cannot be found in library.
+Warning : Physical cell not defined in library. [PHYS-279]
+        : The physical (LEF) cell spacer_30 cannot be found in library.
+Warning : Physical cell not defined in library. [PHYS-279]
+        : The physical (LEF) cell spacer_5 cannot be found in library.
+Warning : Physical cell not defined in library. [PHYS-279]
+        : The physical (LEF) cell spacer_60 cannot be found in library.
+#@ End verbose flow_step synthesis.syn_generic.init_design.read_physical
+      flow.cputime  flow.realtime  timing.setup.tns  timing.setup.wns  snapshot
+UM:              7              7                                      read_physical
+#@ Begin verbose flow_step synthesis.syn_generic.init_design.read_sysarr_4_input_fp_adder_hdl
+@flow_step(read_sysarr_4_input_fp_adder_hdl) 2:   source ./designs/sysarr_4_input_fp_adder/filelist.tcl
+FLOWKIT: Encountered error during previous command and saving error database: dbs/syn_generic.init_design.read_sysarr_4_input_fp_adder_hdl.ERROR.db.
+         To disable saving a database on error condition, set the attribute 'flow_error_write_db' to false.
+Warning : Automatically disabling an arc which forms loop at output. [LBR-73]
+        : The arc is named 'CORE_PAD_n91' between pins 'CORE' and 'PAD' in libcell 'pad80_inDig_buf_out_cdm'.
+        : Check to see whether the timing arc in question is crucial for synthesis.  If it is, disable a proper arc in the loop.
+Warning : Automatically disabling an arc which forms loop at output. [LBR-73]
+        : The arc is named 'CORE_PAD_n60' between pins 'CORE' and 'PAD' in libcell 'pad80_inDig_buf_out_cdm'.
+Warning : Automatically disabling an arc which forms loop at output. [LBR-73]
+        : The arc is named 'CORE_PAD_n91' between pins 'CORE' and 'PAD' in libcell 'pad80_inDig_buf_out_hbm'.
+Warning : Automatically disabling an arc which forms loop at output. [LBR-73]
+        : The arc is named 'CORE_PAD_n60' between pins 'CORE' and 'PAD' in libcell 'pad80_inDig_buf_out_hbm'.
+  Libraries have 78 usable logic and 13 usable sequential lib-cells.
+Finished exporting design database to file '/home/asicfab/a/mquerimi/SoCET/Flowkit/dbs/syn_generic.init_design.read_sysarr_4_input_fp_adder_hdl.ERROR.db' for '__default_mmmc_spec' (command execution time mm:ss cpu = 00:00, real = 00:01).
+#@ End verbose flow_step synthesis.syn_generic.init_design.read_sysarr_4_input_fp_adder_hdl
+Tcl error: File './designs/sysarr_4_input_fp_adder/filelist.tcl' does not exist.
+    while executing
+"source ./designs/sysarr_4_input_fp_adder/filelist.tcl"
+    (flow_step:read_sysarr_4_input_fp_adder_hdl .body_tcl line 2)
+    invoked from within
+"run_flow -from {tool genus flow flow:flow_current canonical_path {.steps flow:synthesis .steps flow:syn_generic .steps flow_step:block_start} step flo..."
+
+Lic Summary:
+[11:13:27.290819] Cdslmd servers: marina
+[11:13:27.290832] Feature usage summary:
+[11:13:27.290832] Genus_Synthesis  
+Abnormal exit.
