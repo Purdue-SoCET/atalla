@@ -201,7 +201,7 @@ VL_INLINE_OPT void Vadd4_fp16_tb_softfloat___024root___act_comb__TOP__0(Vadd4_fp
          | ((IData)(add4_fp16_tb_softfloat__DOT__etchedfp4adder__DOT__any_pos_inf) 
             & (IData)(add4_fp16_tb_softfloat__DOT__etchedfp4adder__DOT__any_neg_inf)))) {
         vlSelfRef.add4_fp16_tb_softfloat__DOT__etchedfp4adder__DOT__special_case = 1U;
-        vlSelfRef.add4_fp16_tb_softfloat__DOT__etchedfp4adder__DOT__special_result = 0x7e00U;
+        vlSelfRef.add4_fp16_tb_softfloat__DOT__etchedfp4adder__DOT__special_result = 0xfe00U;
     } else if (add4_fp16_tb_softfloat__DOT__etchedfp4adder__DOT__any_pos_inf) {
         vlSelfRef.add4_fp16_tb_softfloat__DOT__etchedfp4adder__DOT__special_case = 1U;
         vlSelfRef.add4_fp16_tb_softfloat__DOT__etchedfp4adder__DOT__special_result = 0x7c00U;

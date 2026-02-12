@@ -13,6 +13,7 @@ module sysarr_4_input_fp_adder #(
     localparam NEW_MANT_WIDTH = 1 + MANTISSA_SIZE + PRECISION_BITS + 1; 
     localparam SUM_WIDTH      = NEW_MANT_WIDTH + 2; 
     localparam LZD_WIDTH      = $clog2(SUM_WIDTH + 1);
+    localparam MAX_EXP         = (1 << EXPONENT_SIZE) - 1;
 
     // --- Internal Signal Declarations ---
     logic [15:0] a_daz, b_daz, c_daz, d_daz;
@@ -44,7 +45,7 @@ module sysarr_4_input_fp_adder #(
     logic st1_a_s, st1_b_op, st1_c_op, st1_d_op, st1_align_sticky, st1_special_case;
 
     // --- Stage 2 Summation Signals ---
-    logic signed [SUM_WIDTH:0] sum_a, neg_b, neg_c, neg_d;
+    logic signed [SUM_WIDTH+1:0] sum_a, neg_b, neg_c, neg_d;
     logic [SUM_WIDTH-1:0] mag_sum;
     logic signed [SUM_WIDTH:0] raw_sum;
     logic [LZD_WIDTH-1:0] lead_zeros;
@@ -95,15 +96,15 @@ module sysarr_4_input_fp_adder #(
         if (is_nan_any || (any_pos_inf && any_neg_inf)) begin
             // Any NaN, or +Inf + -Inf -> result is NaN
             special_case = 1;
-            special_result = 16'h7E00; // NaN
+            special_result = {1'b1, {EXPONENT_SIZE{1'b1}}, 1'b1, {(MANTISSA_SIZE-1){1'b0}}}; // NaN
         end else if (any_pos_inf) begin
             // At least one +Inf, no conflicting -Inf -> result is +Inf
             special_case = 1;
-            special_result = 16'h7C00; // +Inf
+            special_result = {1'b0, {EXPONENT_SIZE{1'b1}}, {MANTISSA_SIZE{1'b0}}}; // +Inf
         end else if (any_neg_inf) begin
             // At least one -Inf, no conflicting +Inf -> result is -Inf
             special_case = 1;
-            special_result = 16'hFC00; // -Inf
+            special_result = {1'b1, {EXPONENT_SIZE{1'b1}}, {MANTISSA_SIZE{1'b0}}}; // -Inf
         end
 
         // Sorting network to find the absolute largest operand (anchor for sign and exponent)
@@ -251,9 +252,9 @@ module sysarr_4_input_fp_adder #(
 
         // Assemble final output while checking for 0, Overflow (Inf), and Underflow
         if (st2_sum_mag == 0) result_out = {st2_res_sign, 15'd0};
-        else if (final_exp_calc >= 31) result_out = {st2_res_sign, 5'b11111, 10'd0};
+        else if (final_exp_calc >= MAX_EXP) result_out = {st2_res_sign, {EXPONENT_SIZE{1'b1}}, {MANTISSA_SIZE{1'b0}}}; // Inf
         else if (final_exp_calc <= 0)  result_out = {st2_res_sign, 15'd0};
-        else result_out = {st2_res_sign, final_exp_calc[4:0], final_mant};
+        else result_out = {st2_res_sign, final_exp_calc[EXPONENT_SIZE-1:0], final_mant};
 
         // Override with exception result if necessary
         if (st2_special) result_out = st2_spec_res;
