@@ -1,0 +1,22 @@
+Flowtool
+Copyright 2016 Cadence Design Systems Inc.  All rights reserved worldwide
+
+Command:   -reset -to synthesis
+Directory: /home/asicfab/a/kwon196/atalla
+Script:    run_flow.tcl
+Version:   v23.10-d040_1, built 07/14/2023 03:19 PDT
+Date:      Tue Feb 10 15:40:18 2026
+
+ERROR: ERROR: read_flow filename not found: /home/asicfab/a/kwon196/atalla/run_flow.tcl
+    while executing
+"error "ERROR: read_flow filename not found: $file""
+    (procedure "::flowkit::generic.read_flow" line 13)
+    invoked from within
+"::flowkit::generic.read_flow $debug $no_check $script_files"
+    (procedure "parse_argv" line 496)
+    invoked from within
+"parse_argv $argv"
+    (procedure "main" line 28)
+    invoked from within
+"main {*}$args"
+Flow failed

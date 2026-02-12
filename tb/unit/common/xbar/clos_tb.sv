@@ -15,6 +15,8 @@ module clos_tb;
     always  #5 clk = ~clk;
 
     xbar_if #(.SIZE(CLOS_SIZE), .DWIDTH(CLOS_DWIDTH)) xif (.clk(clk), .n_rst(n_rst));
+    // clos_singlecycle #(.CLOS_SIZE(CLOS_SIZE), .CLOS_DWIDTH(CLOS_DWIDTH), .IM_OM_NUM(8), .CM_NUM(4)) DUT (xif);
+    // clos_2cycle #(.CLOS_SIZE(CLOS_SIZE), .CLOS_DWIDTH(CLOS_DWIDTH), .IM_OM_NUM(8), .CM_NUM(4)) DUT (xif);
     clos #(.CLOS_SIZE(CLOS_SIZE), .CLOS_DWIDTH(CLOS_DWIDTH), .IM_OM_NUM(8), .CM_NUM(4)) DUT (xif);
 
     integer i;
@@ -53,22 +55,22 @@ module clos_tb;
             exp_out[perm[i]] = xif.in[i].din;
         end
 
-        @(posedge clk); 
+        @(negedge clk);
 
         n_rst = 1;
 
-        @(posedge clk);         
-        @(posedge clk); 
-
+        @(posedge clk);
+        @(posedge clk);
+        @(negedge clk);
         
         for (i = 0; i < 32; i = i + 1) begin
-        if (out[i] !== exp_out[i]) begin
-            $display("!!! WRONG output for %0d. expected: %0d, got: %0d !!!",
-                    i, exp_out[i], out[i]);
-        end else begin
-            $display("CORRECT output for %0d. expected: %0d, got: %0d",
-                    i, exp_out[i], out[i]);
-        end
+            if (out[i] !== exp_out[i]) begin
+                $display("!!! WRONG output for %0d. expected: %0d, got: %0d !!!",
+                        i, exp_out[i], out[i]);
+            end else begin
+                $display("CORRECT output for %0d. expected: %0d, got: %0d",
+                        i, exp_out[i], out[i]);
+            end
         end
 
         $finish;

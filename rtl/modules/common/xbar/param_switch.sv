@@ -9,6 +9,9 @@ module param_switch #(
 
   always_comb begin
     for (int o = 0; o < N; o++) begin 
+      out_data[o] = 0;
+    end
+    for (int o = 0; o < N; o++) begin 
       out_data[sel_in[o]] = in_data[o];
     end
   end

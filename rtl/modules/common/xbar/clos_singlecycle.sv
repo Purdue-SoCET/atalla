@@ -5,7 +5,7 @@
 
 import xbar_pkg::*;
 
-module clos #(
+module clos_singlecycle #(
     parameter int CLOS_SIZE = 32,
     parameter int CLOS_DWIDTH = 16,
     parameter int IM_OM_NUM = 8,
@@ -37,38 +37,23 @@ module clos #(
 
     logic [IM_OM_SIZE_TAG-1:0] lsb [IM_OM_NUM-1:0] [IM_OM_SIZE-1:0];
 
-    always_ff @( posedge xif.clk, negedge xif.n_rst ) begin : blockName
-        if(!xif.n_rst) begin
-            for (int i = 0; i < CM_NUM; i++) begin
-                for (int j = 0; j < CM_SIZE; j++) begin
-                    center_module[i][j] <= '0;
-                    center_perm[i][j]   <= '0;
-                end
-            end
-            for (int i = 0; i < IM_OM_NUM; i++) begin
-                for (int j = 0; j < IM_OM_SIZE; j++) begin
-                    output_module[i][j] <= '0;
-                    output_perm[i][j]   <= '0;
-                end
+    always_comb begin
+        for (int i = 0; i < CM_NUM; i++) begin
+            for (int j = 0; j < CM_SIZE; j++) begin
+                center_module[i][j] = n_center_module[i][j];
+                center_perm[i][j]   = n_center_perm[i][j];
             end
         end
-        else if (xif.en) begin
-            for (int i = 0; i < CM_NUM; i++) begin
-                for (int j = 0; j < CM_SIZE; j++) begin
-                    center_module[i][j] <= n_center_module[i][j];
-                    center_perm[i][j]   <= n_center_perm[i][j];
-                end
-            end
-            for (int i = 0; i < CM_NUM; i++) begin
-                for (int j = 0; j < CM_SIZE; j++) begin
-                    output_module[j][i] <= center_module[i][j];
-                    output_perm[j][i]   <= center_perm[i][j];
-                end
+        for (int i = 0; i < CM_NUM; i++) begin
+            for (j = 0; j < CM_SIZE; j++) begin
+                output_module[j][i] = center_module[i][j];
+                output_perm[j][i]   = center_perm[i][j];
             end
         end
     end
     
     genvar i, j;
+
     generate
         for (i = 0; i < IM_OM_NUM; i++) begin
             for (j = 0; j < IM_OM_SIZE; j++) begin
@@ -83,14 +68,13 @@ module clos #(
             for (j = 0; j < IM_OM_SIZE; j++) begin
                 assign lsb[i][j] = output_perm[i][j][1:0];
             end
-
+            
             param_switch #(.N(IM_OM_SIZE), .DATA_W(CLOS_DWIDTH)
             ) out_switch (
                 .in_data(output_module[i]),
                 .sel_in(lsb[i]),
                 .out_data(xif.out[(i + 1) * IM_OM_SIZE - 1: i * IM_OM_SIZE])
             );
-
             param_switch #(.N(IM_OM_SIZE), .DATA_W(TAGWIDTH)
             ) out_perm_switch (
                 .in_data(output_perm[i]),
@@ -98,6 +82,13 @@ module clos #(
                 .out_data(out_perm[(i + 1) * IM_OM_SIZE - 1: i * IM_OM_SIZE])
             );
         end
+
+        // for (i = 0; i < CM_NUM; i++) begin
+        //     for (j = 0; j < CM_SIZE; j++) begin
+        //         assign n_output_module[j][i] = center_module[i][j];
+        //         assign n_output_perm[j][i]   = center_perm[i][j];
+        //     end
+        // end
     endgenerate
 
     logic [CLOS_SIZE-1:0] num_counter [IM_OM_NUM-1:0];
@@ -117,4 +108,5 @@ module clos #(
             end
         end
     end
+
 endmodule
