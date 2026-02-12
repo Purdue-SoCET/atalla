@@ -7,7 +7,7 @@
 
 #include "verilated.h"
 #include "verilated_timing.h"
-class Vadd4_fp16_tb_softfloat_systolic_array_4_input_adder_if;
+class Vadd4_fp16_tb_softfloat_systolic_array_4_input_adder_if__pi1;
 
 
 class Vadd4_fp16_tb_softfloat__Syms;
@@ -15,7 +15,7 @@ class Vadd4_fp16_tb_softfloat__Syms;
 class alignas(VL_CACHE_LINE_BYTES) Vadd4_fp16_tb_softfloat___024root final : public VerilatedModule {
   public:
     // CELLS
-    Vadd4_fp16_tb_softfloat_systolic_array_4_input_adder_if* __PVT__add4_fp16_tb_softfloat__DOT__add_if;
+    Vadd4_fp16_tb_softfloat_systolic_array_4_input_adder_if__pi1* __PVT__add4_fp16_tb_softfloat__DOT__add_if;
 
     // DESIGN SPECIFIC STATE
     // Anonymous structures to workaround compiler member-count bugs
@@ -115,18 +115,7 @@ class alignas(VL_CACHE_LINE_BYTES) Vadd4_fp16_tb_softfloat___024root final : pub
         SData/*9:0*/ add4_fp16_tb_softfloat__DOT__etchedfp4adder__DOT__frac_y;
         SData/*9:0*/ add4_fp16_tb_softfloat__DOT__etchedfp4adder__DOT__frac_mx;
         SData/*9:0*/ add4_fp16_tb_softfloat__DOT__etchedfp4adder__DOT__frac_nx;
-        SData/*14:0*/ add4_fp16_tb_softfloat__DOT__etchedfp4adder__DOT__x_mant;
-        SData/*14:0*/ add4_fp16_tb_softfloat__DOT__etchedfp4adder__DOT__y_shifted;
-        SData/*14:0*/ add4_fp16_tb_softfloat__DOT__etchedfp4adder__DOT__m_shifted;
-        SData/*14:0*/ add4_fp16_tb_softfloat__DOT__etchedfp4adder__DOT__n_shifted;
-        SData/*14:0*/ add4_fp16_tb_softfloat__DOT__etchedfp4adder__DOT__y_mant_base;
-        SData/*14:0*/ add4_fp16_tb_softfloat__DOT__etchedfp4adder__DOT__m_mant_base;
-        SData/*14:0*/ add4_fp16_tb_softfloat__DOT__etchedfp4adder__DOT__n_mant_base;
         SData/*15:0*/ add4_fp16_tb_softfloat__DOT__etchedfp4adder__DOT__special_result;
-        SData/*14:0*/ add4_fp16_tb_softfloat__DOT__etchedfp4adder__DOT__st1_x_f;
-        SData/*14:0*/ add4_fp16_tb_softfloat__DOT__etchedfp4adder__DOT__st1_y_f;
-        SData/*14:0*/ add4_fp16_tb_softfloat__DOT__etchedfp4adder__DOT__st1_m_f;
-        SData/*14:0*/ add4_fp16_tb_softfloat__DOT__etchedfp4adder__DOT__st1_n_f;
         SData/*15:0*/ add4_fp16_tb_softfloat__DOT__etchedfp4adder__DOT__st1_special_result;
         SData/*15:0*/ add4_fp16_tb_softfloat__DOT__etchedfp4adder__DOT__st2_spec_res;
         SData/*9:0*/ add4_fp16_tb_softfloat__DOT__etchedfp4adder__DOT__raw_mant;
@@ -139,17 +128,28 @@ class alignas(VL_CACHE_LINE_BYTES) Vadd4_fp16_tb_softfloat___024root final : pub
         IData/*31:0*/ add4_fp16_tb_softfloat__DOT__fail_fd;
         IData/*31:0*/ add4_fp16_tb_softfloat__DOT__unnamedblk1__DOT__ret;
         IData/*31:0*/ add4_fp16_tb_softfloat__DOT__unnamedblk1__DOT__total_count;
-        IData/*16:0*/ add4_fp16_tb_softfloat__DOT__etchedfp4adder__DOT__sum_a;
-        IData/*16:0*/ add4_fp16_tb_softfloat__DOT__etchedfp4adder__DOT__sum_b;
-        IData/*16:0*/ add4_fp16_tb_softfloat__DOT__etchedfp4adder__DOT__sum_c;
-        IData/*16:0*/ add4_fp16_tb_softfloat__DOT__etchedfp4adder__DOT__sum_d;
-        IData/*16:0*/ add4_fp16_tb_softfloat__DOT__etchedfp4adder__DOT__neg_b;
-        IData/*16:0*/ add4_fp16_tb_softfloat__DOT__etchedfp4adder__DOT__neg_c;
-        IData/*16:0*/ add4_fp16_tb_softfloat__DOT__etchedfp4adder__DOT__neg_d;
-        IData/*16:0*/ add4_fp16_tb_softfloat__DOT__etchedfp4adder__DOT__raw_sum;
-        IData/*16:0*/ add4_fp16_tb_softfloat__DOT__etchedfp4adder__DOT__mag_sum;
-        IData/*16:0*/ add4_fp16_tb_softfloat__DOT__etchedfp4adder__DOT__st2_sum_mag;
-        IData/*16:0*/ add4_fp16_tb_softfloat__DOT__etchedfp4adder__DOT__norm_val;
+        IData/*26:0*/ add4_fp16_tb_softfloat__DOT__etchedfp4adder__DOT__x_mant;
+        IData/*26:0*/ add4_fp16_tb_softfloat__DOT__etchedfp4adder__DOT__y_shifted;
+        IData/*26:0*/ add4_fp16_tb_softfloat__DOT__etchedfp4adder__DOT__m_shifted;
+        IData/*26:0*/ add4_fp16_tb_softfloat__DOT__etchedfp4adder__DOT__n_shifted;
+        IData/*26:0*/ add4_fp16_tb_softfloat__DOT__etchedfp4adder__DOT__y_mant_base;
+        IData/*26:0*/ add4_fp16_tb_softfloat__DOT__etchedfp4adder__DOT__m_mant_base;
+        IData/*26:0*/ add4_fp16_tb_softfloat__DOT__etchedfp4adder__DOT__n_mant_base;
+        IData/*26:0*/ add4_fp16_tb_softfloat__DOT__etchedfp4adder__DOT__st1_x_f;
+        IData/*26:0*/ add4_fp16_tb_softfloat__DOT__etchedfp4adder__DOT__st1_y_f;
+        IData/*26:0*/ add4_fp16_tb_softfloat__DOT__etchedfp4adder__DOT__st1_m_f;
+        IData/*26:0*/ add4_fp16_tb_softfloat__DOT__etchedfp4adder__DOT__st1_n_f;
+        IData/*28:0*/ add4_fp16_tb_softfloat__DOT__etchedfp4adder__DOT__sum_a;
+        IData/*28:0*/ add4_fp16_tb_softfloat__DOT__etchedfp4adder__DOT__sum_b;
+        IData/*28:0*/ add4_fp16_tb_softfloat__DOT__etchedfp4adder__DOT__sum_c;
+        IData/*28:0*/ add4_fp16_tb_softfloat__DOT__etchedfp4adder__DOT__sum_d;
+        IData/*28:0*/ add4_fp16_tb_softfloat__DOT__etchedfp4adder__DOT__neg_b;
+        IData/*28:0*/ add4_fp16_tb_softfloat__DOT__etchedfp4adder__DOT__neg_c;
+        IData/*28:0*/ add4_fp16_tb_softfloat__DOT__etchedfp4adder__DOT__neg_d;
+        IData/*28:0*/ add4_fp16_tb_softfloat__DOT__etchedfp4adder__DOT__raw_sum;
+        IData/*28:0*/ add4_fp16_tb_softfloat__DOT__etchedfp4adder__DOT__mag_sum;
+        IData/*28:0*/ add4_fp16_tb_softfloat__DOT__etchedfp4adder__DOT__st2_sum_mag;
+        IData/*28:0*/ add4_fp16_tb_softfloat__DOT__etchedfp4adder__DOT__norm_val;
     };
     struct {
         IData/*31:0*/ add4_fp16_tb_softfloat__DOT__etchedfp4adder__DOT__stage2_logic__DOT__unnamedblk1__DOT__i;

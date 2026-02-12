@@ -37,7 +37,7 @@ module add4_fp16_tb_softfloat;
     systolic_array_4_input_adder_if #(
         .EXPONENT_SIZE(5),
         .MANTISSA_SIZE(10),
-        .PRECISION_BITS(3)
+        .PRECISION_BITS(15)
     ) add_if();
 
     logic [15:0] tb_a, tb_b, tb_c, tb_d;
@@ -57,7 +57,7 @@ module add4_fp16_tb_softfloat;
     sysarr_4_input_fp_adder #(
         .MANTISSA_SIZE(10),
         .EXPONENT_SIZE(5),
-        .PRECISION_BITS(3)
+        .PRECISION_BITS(15)
     ) etchedfp4adder (
         .clk(tb_clk),
         .nRST(tb_nrst),

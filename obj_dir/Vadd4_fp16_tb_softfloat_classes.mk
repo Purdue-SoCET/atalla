@@ -28,7 +28,7 @@ VM_CLASSES_FAST += \
 	Vadd4_fp16_tb_softfloat \
 	Vadd4_fp16_tb_softfloat___024root__DepSet_hb360f58f__0 \
 	Vadd4_fp16_tb_softfloat___024root__DepSet_h715d43e7__0 \
-	Vadd4_fp16_tb_softfloat_systolic_array_4_input_adder_if__DepSet_hcfee7b34__0 \
+	Vadd4_fp16_tb_softfloat_systolic_array_4_input_adder_if__pi1__DepSet_hc464d570__0 \
 	Vadd4_fp16_tb_softfloat__main \
 
 # Generated module classes, non-fast-path, compile with low/medium optimization
@@ -37,8 +37,8 @@ VM_CLASSES_SLOW += \
 	Vadd4_fp16_tb_softfloat___024root__Slow \
 	Vadd4_fp16_tb_softfloat___024root__DepSet_hb360f58f__0__Slow \
 	Vadd4_fp16_tb_softfloat___024root__DepSet_h715d43e7__0__Slow \
-	Vadd4_fp16_tb_softfloat_systolic_array_4_input_adder_if__Slow \
-	Vadd4_fp16_tb_softfloat_systolic_array_4_input_adder_if__DepSet_hcfee7b34__0__Slow \
+	Vadd4_fp16_tb_softfloat_systolic_array_4_input_adder_if__pi1__Slow \
+	Vadd4_fp16_tb_softfloat_systolic_array_4_input_adder_if__pi1__DepSet_hc464d570__0__Slow \
 
 # Generated support classes, fast-path, compile with highest optimization
 VM_SUPPORT_FAST += \

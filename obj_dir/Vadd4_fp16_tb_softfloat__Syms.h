@@ -16,7 +16,7 @@
 
 // INCLUDE MODULE CLASSES
 #include "Vadd4_fp16_tb_softfloat___024root.h"
-#include "Vadd4_fp16_tb_softfloat_systolic_array_4_input_adder_if.h"
+#include "Vadd4_fp16_tb_softfloat_systolic_array_4_input_adder_if__pi1.h"
 
 // SYMS CLASS (contains all model state)
 class alignas(VL_CACHE_LINE_BYTES)Vadd4_fp16_tb_softfloat__Syms final : public VerilatedSyms {
@@ -33,7 +33,7 @@ class alignas(VL_CACHE_LINE_BYTES)Vadd4_fp16_tb_softfloat__Syms final : public V
 
     // MODULE INSTANCE STATE
     Vadd4_fp16_tb_softfloat___024root TOP;
-    Vadd4_fp16_tb_softfloat_systolic_array_4_input_adder_if TOP__add4_fp16_tb_softfloat__DOT__add_if;
+    Vadd4_fp16_tb_softfloat_systolic_array_4_input_adder_if__pi1 TOP__add4_fp16_tb_softfloat__DOT__add_if;
 
     // CONSTRUCTORS
     Vadd4_fp16_tb_softfloat__Syms(VerilatedContext* contextp, const char* namep, Vadd4_fp16_tb_softfloat* modelp);
