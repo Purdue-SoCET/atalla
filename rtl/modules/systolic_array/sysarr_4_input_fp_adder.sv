@@ -3,7 +3,7 @@
 module sysarr_4_input_fp_adder #(
     parameter MANTISSA_SIZE  = 10,
     parameter EXPONENT_SIZE  = 5,
-    parameter PRECISION_BITS = 3 
+    parameter PRECISION_BITS = 22 
 ) (
     input logic clk, 
     input logic nRST,
