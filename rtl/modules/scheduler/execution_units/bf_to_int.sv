@@ -2,7 +2,7 @@
 
 module bf_to_int #()
 (
-    input logic CLK, nRST,
+    input logic CLK,
     bf_to_int_if.bf_int bf_intif
 );
 
@@ -21,11 +21,10 @@ module bf_to_int #()
     assign bf_intif.ready_in = bf_intif.ready_out;
     assign bf_intif.rdOut = bf_intif.rdIn;
 
-    logic [8:0] mant8;
+    logic [7:0] mant8, mag;
     int E;
     int shift_amt;
 
-    logic [63:0] mag;
     logic [63:0] mag_shifted;
     logic [31:0] mag32;
     logic roundBit;
@@ -58,7 +57,7 @@ module bf_to_int #()
             end
 
             if (!sign) begin
-                if ((mag_shifted > 64'd2147483647) || (roundBit && (mag_shifted > 64'd2147483646))) begin
+                if (mag_shifted > 32'd2147483647) begin
                     //overflow = 1'b1;
                     bf_intif.outputInt = I32_MAX;
                 end else begin
@@ -70,7 +69,7 @@ module bf_to_int #()
                     end
                 end
             end else begin
-                if (mag_shifted >= 64'd2147483648 || (roundBit && (mag_shifted >= 64'd2147483647))) begin
+                if (mag_shifted >= 32'd2147483648) begin
                     //overflow = 1'b1;
                     bf_intif.outputInt = I32_MIN;
                 end else begin
