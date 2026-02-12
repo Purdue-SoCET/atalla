@@ -68,37 +68,37 @@ RTL_SOURCES += $(RTL_MODULES)/vector/rc_fu.sv
 RTL_SOURCES += $(SRC_DIR)/lane_wrapper.sv
 
 
-# PERF TEST SOURCES
-PERF_TB_SOURCES = $(SRC_DIR)/perf_test.cpp
-PERF_EXE = $(BIN_DIR)/perf_test
+# LANE PERF TEST SOURCES
+LANE_PERF_TB_SOURCES = $(SRC_DIR)/lane_perf_test.cpp
+LANE_PERF_EXE = $(BIN_DIR)/lane_perf_test
 
 # GSAU TEST SOURCES
 GSAU_TB_SOURCES = $(SRC_DIR)/gsau_perf_test.cpp
 GSAU_TOP = gsau_wrapper
 
-# Verilate for perf test
-perf_verilate:
+# Verilate for lane perf test
+lane_perf_verilate:
 	$(VERILATOR) $(VERILATOR_FLAGS) \
 		--top-module $(TOP_MODULE) \
 		--Mdir $(VERILATOR_OBJ_DIR) \
 		$(RTL_SOURCES) \
-		$(PERF_TB_SOURCES) 2>&1 | tee $(VERILATOR_LOG)
+		$(LANE_PERF_TB_SOURCES) 2>&1 | tee $(VERILATOR_LOG)
 
-# Run perf test
-run_perf: perf_verilate
+# Run lane perf test
+run_lane_perf: lane_perf_verilate
 	$(MAKE) -j -C $(VERILATOR_OBJ_DIR) -f V$(TOP_MODULE).mk V$(TOP_MODULE)
 	./$(VERILATOR_OBJ_DIR)/V$(TOP_MODULE)
 
-# Verilate for GSAU test
-gsau_verilate:
+# Verilate for GSAU perf test
+gsau_perf_verilate:
 	$(VERILATOR) $(VERILATOR_FLAGS) \
 		--top-module $(GSAU_TOP) \
 		--Mdir $(VERILATOR_OBJ_DIR)_gsau \
 		$(RTL_SOURCES) $(SRC_DIR)/gsau_wrapper.sv \
 		$(GSAU_TB_SOURCES) 2>&1 | tee gsau_build.log
 
-# Run GSAU test
-run_gsau: gsau_verilate
+# Run GSAU perf test
+run_gsau_perf: gsau_perf_verilate
 	$(MAKE) -j -C $(VERILATOR_OBJ_DIR)_gsau -f V$(GSAU_TOP).mk V$(GSAU_TOP)
 	./$(VERILATOR_OBJ_DIR)_gsau/V$(GSAU_TOP)
 

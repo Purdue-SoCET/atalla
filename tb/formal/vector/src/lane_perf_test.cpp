@@ -1,11 +1,6 @@
+#include "perf_testbench_base.h"
 #include "Vlane_wrapper.h"
 #include <iostream>
-#include <memory>
-#include <verilated.h>
-
-#if VM_TRACE
-#include <verilated_vcd_c.h>
-#endif
 
 // Counters
 struct FUCounters {
@@ -21,37 +16,12 @@ struct LaneCounters {
   FUCounters div;
 };
 
-vluint64_t main_time = 0;
-double sc_time_stamp() { return main_time; }
-
-struct Testbench {
-  std::unique_ptr<Vlane_wrapper> top;
+struct Testbench : public PerfTestbenchBase<Testbench, Vlane_wrapper> {
   LaneCounters counters;
 
-#if VM_TRACE
-  std::unique_ptr<VerilatedVcdC> tfp;
-#endif
+  Testbench() : PerfTestbenchBase("lane_perf.vcd") {}
 
-  Testbench() {
-    top = std::make_unique<Vlane_wrapper>();
-
-#if VM_TRACE
-    Verilated::traceEverOn(true);
-    tfp = std::make_unique<VerilatedVcdC>();
-    top->trace(tfp.get(), 99);
-    tfp->open("lane_perf.vcd");
-#endif
-  }
-
-  ~Testbench() {
-#if VM_TRACE
-    if (tfp)
-      tfp->close();
-#endif
-    top->final();
-  }
-
-  void reset() {
+  void reset() override {
     top->nRST = 0;
     top->CLK = 0;
     // Initialize inputs
@@ -65,28 +35,7 @@ struct Testbench {
     cycle();
   }
 
-  void cycle() {
-    // Rising Edge
-    top->CLK = 1;
-    top->eval();
-    main_time++;
-#if VM_TRACE
-    if (tfp)
-      tfp->dump(main_time);
-#endif
-    sample_counters();
-
-    // Falling Edge
-    top->CLK = 0;
-    top->eval();
-    main_time++;
-#if VM_TRACE
-    if (tfp)
-      tfp->dump(main_time);
-#endif
-  }
-
-  void sample_counters() {
+  void sample_counters() override {
     if (!top->nRST)
       return;
 
