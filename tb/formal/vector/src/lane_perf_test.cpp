@@ -19,7 +19,7 @@ struct LaneCounters {
 struct Testbench : public PerfTestbenchBase<Testbench, Vlane_wrapper> {
   LaneCounters counters;
 
-  Testbench() : PerfTestbenchBase("lane_perf.vcd") {}
+  Testbench() : PerfTestbenchBase{} {}
 
   void reset() override {
     top->nRST = 0;
@@ -87,10 +87,6 @@ struct Testbench : public PerfTestbenchBase<Testbench, Vlane_wrapper> {
     }
 
     std::cout << "Lane Simulation Complete." << std::endl;
-    print_stats("VALU", counters.valu);
-    print_stats("SQRT", counters.sqrt);
-    print_stats("MUL", counters.mul);
-    print_stats("DIV", counters.div);
   }
 
   void print_stats(std::string_view name, const FUCounters &c) {

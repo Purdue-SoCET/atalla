@@ -15,7 +15,7 @@ struct GSAUCounters {
 struct Testbench : public PerfTestbenchBase<Testbench, Vgsau_wrapper> {
     GSAUCounters counters;
 
-    Testbench() : PerfTestbenchBase("gsau_perf.vcd") {}
+    Testbench() : PerfTestbenchBase{} {}
 
     void reset() override {
         top->nRST = 0;
@@ -80,7 +80,6 @@ struct Testbench : public PerfTestbenchBase<Testbench, Vgsau_wrapper> {
             }
         }
         std::cout << "GSAU Simulation Complete." << std::endl;
-        print_stats();
     }
 
     void print_stats() {
