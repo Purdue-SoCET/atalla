@@ -1,5 +1,5 @@
 `timescale 1ps/1ps
-`include "axi_bus_pkg.vh"
+`include "axi_bus_pkg.sv"
 
 import axi_bus_pkg::*;
 

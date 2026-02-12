@@ -8,29 +8,31 @@ interface axi_bus_if(input logic clk, input logic nRST);
 
     import axi_bus_pkg::*;
 
-    // channel structs 
-    ar_channel_t ar_sp0_i; // Scratchpad0 AR channel
-    ar_channel_t ar_sp1_i; // Scratchpad1 AR channel
-    ar_channel_t ar_d_i;   // D$ AR channel
-    ar_channel_t ar_i_i;   // I$ AR channel
-    ar_channel_t ar_o;     // Controller AR channel
-    r_channel_t  r_i;      // Controller R channel
-    r_channel_t  r_sp0_o;  // Scratchpad0 R channel
-    r_channel_t  r_sp1_o;  // Scratchpad1 R channel
-    r_channel_t  r_d_o;    // D$ R channel
-    r_channel_t  r_i_o;    // I$ R channel
-    aw_channel_t aw_sp0_i; // Scratchpad0 AW channel
-    aw_channel_t aw_sp1_i; // Scratchpad1 AW channel
-    aw_channel_t aw_d_i;   // D$ AW channel
-    aw_channel_t aw_o;     // Controller AW channel
-    w_channel_t  w_sp0_i;  // Scratchpad0 W channel
-    w_channel_t  w_sp1_i;  // Scratchpad1 W channel
-    w_channel_t  w_d_i;    // D$ W channel
-    w_channel_t  w_o;      // Controller W channel
-    b_channel_t  b_i;      // Controller B channel
-    b_channel_t  b_sp0_o;  // Scratchpad0 B channel
-    b_channel_t  b_sp1_o;  // Scratchpad1 B channel
-    b_channel_t  b_d_o;    // D$ B channel
+    // master side channel structs 
+    master_ar_channel_t ar_sp0_i; // Scratchpad0 AR channel
+    master_ar_channel_t ar_sp1_i; // Scratchpad1 AR channel
+    master_ar_channel_t ar_d_i;   // D$ AR channel
+    master_ar_channel_t ar_i_i;   // I$ AR channel
+    master_r_channel_t  r_sp0_o;  // Scratchpad0 R channel
+    master_r_channel_t  r_sp1_o;  // Scratchpad1 R channel
+    master_r_channel_t  r_d_o;    // D$ R channel
+    master_r_channel_t  r_i_o;    // I$ R channel
+    master_aw_channel_t aw_sp0_i; // Scratchpad0 AW channel
+    master_aw_channel_t aw_sp1_i; // Scratchpad1 AW channel
+    master_aw_channel_t aw_d_i;   // D$ AW channel
+    master_w_channel_t  w_sp0_i;  // Scratchpad0 W channel
+    master_w_channel_t  w_sp1_i;  // Scratchpad1 W channel
+    master_w_channel_t  w_d_i;    // D$ W channel
+    master_b_channel_t  b_sp0_o;  // Scratchpad0 B channel
+    master_b_channel_t  b_sp1_o;  // Scratchpad1 B channel
+    master_b_channel_t  b_d_o;    // D$ B channel
+
+    // subordinate side channel structs
+    sub_ar_channel_t ar_o;     // Controller AR channel
+    sub_r_channel_t  r_i;      // Controller R channel
+    sub_aw_channel_t aw_o;     // Controller AW channel
+    sub_w_channel_t  w_o;      // Controller W channel
+    sub_b_channel_t  b_i;      // Controller B channel
 
     // read arbiter signals 
     logic sp0_req_r, sp1_req_r, d_req_r, i_req_r, skid_ready_r;

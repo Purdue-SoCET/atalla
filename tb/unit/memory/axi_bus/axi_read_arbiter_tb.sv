@@ -1,12 +1,14 @@
 `timescale 1ps/1ps
+`include "axi_bus_pkg.sv"
 
+import axi_bus_pkg::*;
 module axi_read_arbiter_tb ();
 
     localparam CLK_PERIOD = 10ns;
 
     logic clk, nrst;
     logic ready, sp0_req, sp1_req, d_req, i_req;
-    logic [2:0] grant_sel;
+    logic [ARGRANT-1:0] grant_sel;
 
     string test_case = "";
 

@@ -92,62 +92,98 @@ package axi_bus_pkg;
         B_DECERR         = 2'b11
     } bresp_t;
 
-    // AR Channel 
+    // AR Channel From Master 
     typedef struct packed {
         logic [ARADDR-1:0]   addr;
         logic [ARID-1:0]     id;     // Local (2-bit) ID: index within master
         logic [ARSIZE-1:0]   size;
         logic [ARLEN-1:0]    len;
         logic [ARBURST-1:0]  burst;
-        logic [MID_ARID-1:0] mid_id; // Global (4-bit) ID: {MASTER_ID, id}
-    } ar_channel_t;
+    } master_ar_channel_t;
 
-    // R Channel 
+    // R Channel To Master 
     typedef struct packed {
         logic [RDATA-1:0]   data;
         logic [RID-1:0]     id;
         logic               last;
         rresp_t             resp;
-        logic [MID_RID-1:0] mid_id;
-    } r_channel_t;
+    } master_r_channel_t;
 
-    // AW Channel 
+    // AW Channel From Master 
     typedef struct packed {
         logic [AWADDR-1:0]   addr;
         logic [AWID-1:0]     id;
         logic [AWSIZE-1:0]   size;
         logic [AWLEN-1:0]    len;
         logic [AWBURST-1:0]  burst;
-        logic [MID_AWID-1:0] mid_id;
-    } aw_channel_t;
+    } master_aw_channel_t;
 
-    // W Channel 
+    // W Channel From Master 
     typedef struct packed {
         logic [WDATA-1:0]   data;
         logic [WID-1:0]     id;
         logic               last;
         logic [WSTRB-1:0]   strb;
-        logic [MID_WID-1:0] mid_id;
-    } w_channel_t;
+    } master_w_channel_t;
 
     // B Channel
     typedef struct packed {
         logic [BID-1:0]     id;
         bresp_t             resp;
-        logic [MID_BID-1:0] mid_id;
-    } b_channel_t;
+    } master_b_channel_t;
 
-    // AR Payload
+    // AR Channel To Subordiante
     typedef struct packed {
+        logic [ARADDR-1:0]   addr;
+        logic [MID_ARID-1:0] mid_id; // Global (4-bit) ID: {MASTER_ID, id}
+        logic [ARSIZE-1:0]   size;
+        logic [ARLEN-1:0]    len;
+        logic [ARBURST-1:0]  burst;
+    } sub_ar_channel_t;
+
+    // R Channel From Subordinate
+    typedef struct packed {
+        logic [RDATA-1:0]   data;
+        logic [RID-1:0]     id;
+        logic               last;
+        rresp_t             resp;
+    } sub_r_channel_t;
+
+    // AW Channel To Subordinate
+    typedef struct packed {
+        logic [AWADDR-1:0]   addr;
+        logic [MID_AWID-1:0] mid_id; // Global (4-bit) ID: {MASTER_ID, id}
+        logic [AWSIZE-1:0]   size;
+        logic [AWLEN-1:0]    len;
+        logic [AWBURST-1:0]  burst;
+    } sub_aw_channel_t;
+
+    // W Channel To Subordiante
+    typedef struct packed {
+        logic [MID_ARID-1:0] mid_id; // Global (4-bit) ID: {MASTER_ID, id}
+        logic [WDATA-1:0]    data;
+        logic                last;
+        logic [WSTRB-1:0]    strb;
+    } sub_w_channel_t;
+
+    // B Channel From Subordinate
+    typedef struct packed {
+        logic [BID-1:0]     id;
+        bresp_t             resp;
+    } sub_b_channel_t;
+
+    // Created structs for all FIFOs/buffer used in the design. Could have reused the channel structs but wanted to seperate the two for better readibility. 
+    // AR MANAGER FIFO payload
+     typedef struct packed {
         logic                valid;
         logic [ARADDR-1:0]   addr;
         logic [MID_ARID-1:0] mid_id; // Global (4-bit) ID: {MASTER_ID, id}
         logic [ARSIZE-1:0]   size;
         logic [ARLEN-1:0]    len;
         logic [ARBURST-1:0]  burst;
-    } ar_payload_t;
+     } ar_payload_t;
 
-    // R Payload
+     // READ RESPONSE SKID BUFFER payload 
     typedef struct packed {
         logic               valid;
         logic [RDATA-1:0]   data;
@@ -156,7 +192,7 @@ package axi_bus_pkg;
         rresp_t             resp;
     } r_payload_t;
 
-    // AW Payload
+    // AW_W MANAGER AW FIFO payload
     typedef struct packed {
         logic                valid;
         logic [AWADDR-1:0]   addr;
@@ -166,7 +202,7 @@ package axi_bus_pkg;
         logic [AWBURST-1:0]  burst;
     } aw_payload_t;
 
-    // W Payload
+    // AW_W MANAGER W FIFO payload
     typedef struct packed {
         logic                valid;
         logic [MID_ARID-1:0] mid_id; // Global (4-bit) ID: {MASTER_ID, id}
@@ -175,12 +211,13 @@ package axi_bus_pkg;
         logic [WSTRB-1:0]    strb;
     } w_payload_t;
 
-    // B Payload
+    // WRITE RESPONSE SKID BUFFER payload
     typedef struct packed {
         logic               valid;
         logic [BID-1:0]     id;
         bresp_t             resp;
     } b_payload_t;
+
 
 endpackage
 `endif // AXI_BUS_PKG_SV
