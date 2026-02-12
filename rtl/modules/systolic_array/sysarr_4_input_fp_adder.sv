@@ -11,7 +11,7 @@ module sysarr_4_input_fp_adder #(
 );
     localparam NEW_MANT_WIDTH = 1 + MANTISSA_SIZE + PRECISION_BITS + 1; 
     localparam WIDTH = MANTISSA_SIZE + PRECISION_BITS + 2;             
-    localparam EXT_WIDTH = WIDTH + 3; 
+    localparam EXT_WIDTH = WIDTH + 3; // 18 bits for Sign Extension
 
     // =================================================================================
     // STAGE 1: Sorting, Alignment, and Special Case Detection
@@ -21,11 +21,9 @@ module sysarr_4_input_fp_adder #(
     logic [EXPONENT_SIZE-1:0] exp_a, exp_b, exp_c, exp_d;
     logic [MANTISSA_SIZE-1:0] frac_a, frac_b, frac_c, frac_d;
     logic sign_a, sign_b, sign_c, sign_d;
-
     logic [EXPONENT_SIZE-1:0] exp_p, exp_m, exp_r, exp_n, exp_x, exp_y, exp_mx, exp_nx;
     logic [MANTISSA_SIZE-1:0] frac_p, frac_m, frac_r, frac_n, frac_x, frac_y, frac_mx, frac_nx;
     logic sign_p, sign_m, sign_r, sign_n, sign_x, sign_y, sign_mx, sign_nx;
-
     logic [EXPONENT_SIZE-1:0] exp_x_eff, exp_y_eff, exp_mx_eff, exp_nx_eff;
     logic [EXPONENT_SIZE-1:0] y_shift, m_shift, n_shift;
     logic [NEW_MANT_WIDTH-1:0] x_mant, y_shifted, m_shifted, n_shifted;
@@ -164,9 +162,7 @@ module sysarr_4_input_fp_adder #(
     logic st2_special_case;
     logic [15:0] st2_special_result;
 
-    logic [WIDTH-1:0] b_raw;
-    logic [WIDTH-1:0] c_raw;
-    logic [WIDTH-1:0] d_raw;
+    logic [WIDTH-1:0] b_raw, c_raw, d_raw;
 
     always_comb begin : stage2_combinational
         a_ext = {3'b000, st1_x_f[NEW_MANT_WIDTH-1:1]};
@@ -229,6 +225,7 @@ module sysarr_4_input_fp_adder #(
             st2_special_case <= '0; st2_special_result <= '0;
         end else begin
             st2_sum_i <= {corrected_sum[WIDTH:1], corrected_sum[0] | st1_y_f[0] | st1_m_f[0] | st1_n_f[0]};
+            
             st2_result_s <= next_result_s;
             st2_a_e_out <= st1_a_e;
             st2_num_leading_zeros <= next_num_leading_zeros;
@@ -261,7 +258,7 @@ module sysarr_4_input_fp_adder #(
         // 1. Shift & Sticky Accumulation
         if (st2_right_shift_radix != 0) begin
             shifted_sum = sum_reg_st3 >> st2_right_shift_radix; 
-            // FIX 1: Capture bits falling off the right side
+            // FIX: Capture bits falling off the right side (Sticky from Overflow)
             sticky_shifted_out = |(sum_reg_st3 & ((1 << st2_right_shift_radix) - 1));
         end else begin
             shifted_sum = sum_reg_st3 << st2_num_leading_zeros; 
@@ -269,10 +266,8 @@ module sysarr_4_input_fp_adder #(
         end
 
         // 2. Rounding
+        // FIX: Correct Indices (Guard=2, Round=1, Sticky=0)
         unrounded_mantissa = shifted_sum[MANTISSA_SIZE+PRECISION_BITS-1:PRECISION_BITS];
-        
-        // FIX 2: Correct Indices (Guard=2, Round=1, Sticky=0)
-        // Previous Code used [3] for Guard which is the LSB of Mantissa!
         guard = shifted_sum[PRECISION_BITS - 1]; 
         round = shifted_sum[PRECISION_BITS - 2]; 
         sticky = |shifted_sum[PRECISION_BITS - 3 : 0] | sticky_shifted_out; 
@@ -284,9 +279,16 @@ module sysarr_4_input_fp_adder #(
         if (overflow) final_mantissa = {MANTISSA_SIZE{1'b0}};
         else final_mantissa = rounded_mantissa_internal[MANTISSA_SIZE-1:0];
 
-        new_exponent_internal = $signed({2'b0, st2_a_e_out}) + $signed({{(EXPONENT_SIZE+1){1'b0}}, overflow}) + $signed({2'b0, st2_right_shift_radix});
-        if (st2_right_shift_radix == 0) new_exponent_internal = new_exponent_internal - $signed({2'b0, st2_num_leading_zeros});
+        // 3. Exponent Update
+        new_exponent_internal = $signed({2'b0, st2_a_e_out}) + 
+                                $signed({{(EXPONENT_SIZE+1){1'b0}}, overflow}) + 
+                                $signed({2'b0, st2_right_shift_radix});
+        
+        if (st2_right_shift_radix == 0) begin
+            new_exponent_internal = new_exponent_internal - $signed({2'b0, st2_num_leading_zeros});
+        end
 
+        // 4. Check Infinity / Underflow
         inf = 0; 
         if ($signed(new_exponent_internal) >= $signed({2'b0, {EXPONENT_SIZE{1'b1}}}) ) begin
             inf = 1'b1; new_exponent = {EXPONENT_SIZE{1'b1}};

@@ -43,7 +43,7 @@ VL_ATTR_COLD void Vadd4_fp16_tb_softfloat___024root___eval_settle(Vadd4_fp16_tb_
 #ifdef VL_DEBUG
             Vadd4_fp16_tb_softfloat___024root___dump_triggers__stl(vlSelf);
 #endif
-            VL_FATAL_MT("tb/unit/systolic_array/add4_fp16_tb_softfloat.sv", 19, "", "Settle region did not converge.");
+            VL_FATAL_MT("tb/unit/systolic_array/add4_fp16_tb_softfloat.sv", 21, "", "Settle region did not converge.");
         }
         __VstlIterCount = ((IData)(1U) + __VstlIterCount);
         __VstlContinue = 0U;

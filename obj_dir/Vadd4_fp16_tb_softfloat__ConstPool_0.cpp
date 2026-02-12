@@ -4,8 +4,9 @@
 
 #include "verilated.h"
 
-extern const VlWide<11>/*351:0*/ Vadd4_fp16_tb_softfloat__ConstPool__CONST_h0d604a67_0 = {{
-    0x2e637376, 0x65735f34, 0x5f636173, 0x6c6f6174,
-    0x65737466, 0x61792f74, 0x5f617272, 0x6f6c6963,
-    0x73797374, 0x7074732f, 0x73637269
+extern const VlWide<13>/*415:0*/ Vadd4_fp16_tb_softfloat__ConstPool__CONST_h07642e36_0 = {{
+    0x2e637376, 0x70757265, 0x735f345f, 0x63617365,
+    0x6f61745f, 0x7374666c, 0x792f7465, 0x61727261,
+    0x6c69635f, 0x7973746f, 0x74732f73, 0x63726970,
+    0x00000073
 }};

@@ -45,7 +45,7 @@ Vadd4_fp16_tb_softfloat__Syms::Vadd4_fp16_tb_softfloat__Syms(VerilatedContext* c
     , TOP__add4_fp16_tb_softfloat__DOT__add_if{this, Verilated::catName(namep, "add4_fp16_tb_softfloat.add_if")}
 {
         // Check resources
-        Verilated::stackCheck(486);
+        Verilated::stackCheck(490);
     // Configure time unit / time precision
     _vm_contextp__->timeunit(-9);
     _vm_contextp__->timeprecision(-12);

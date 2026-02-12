@@ -28,12 +28,12 @@ VL_INLINE_OPT VlCoroutine Vadd4_fp16_tb_softfloat___024root___eval_initial__TOP_
         co_await vlSelfRef.__VdlySched.delay(0x3e8ULL, 
                                              nullptr, 
                                              "tb/unit/systolic_array/add4_fp16_tb_softfloat.sv", 
-                                             29);
+                                             31);
         vlSelfRef.add4_fp16_tb_softfloat__DOT__tb_clk = 1U;
         co_await vlSelfRef.__VdlySched.delay(0x3e8ULL, 
                                              nullptr, 
                                              "tb/unit/systolic_array/add4_fp16_tb_softfloat.sv", 
-                                             31);
+                                             33);
     }
 }
 
@@ -547,7 +547,7 @@ void Vadd4_fp16_tb_softfloat___024root___eval(Vadd4_fp16_tb_softfloat___024root*
 #ifdef VL_DEBUG
             Vadd4_fp16_tb_softfloat___024root___dump_triggers__nba(vlSelf);
 #endif
-            VL_FATAL_MT("tb/unit/systolic_array/add4_fp16_tb_softfloat.sv", 19, "", "NBA region did not converge.");
+            VL_FATAL_MT("tb/unit/systolic_array/add4_fp16_tb_softfloat.sv", 21, "", "NBA region did not converge.");
         }
         __VnbaIterCount = ((IData)(1U) + __VnbaIterCount);
         __VnbaContinue = 0U;
@@ -558,7 +558,7 @@ void Vadd4_fp16_tb_softfloat___024root___eval(Vadd4_fp16_tb_softfloat___024root*
 #ifdef VL_DEBUG
                 Vadd4_fp16_tb_softfloat___024root___dump_triggers__act(vlSelf);
 #endif
-                VL_FATAL_MT("tb/unit/systolic_array/add4_fp16_tb_softfloat.sv", 19, "", "Active region did not converge.");
+                VL_FATAL_MT("tb/unit/systolic_array/add4_fp16_tb_softfloat.sv", 21, "", "Active region did not converge.");
             }
             vlSelfRef.__VactIterCount = ((IData)(1U) 
                                          + vlSelfRef.__VactIterCount);
