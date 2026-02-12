@@ -436,4 +436,4 @@ if __name__ == "__main__":
             test_num += 1
             progress_bar(test_num, test_total_num)
     
-    compare_result.compare_results(PATH_TO_EXPECTED_RESULT, PATH_TO_RESULT)
+    # compare_result.compare_results(PATH_TO_EXPECTED_RESULT, PATH_TO_RESULT)

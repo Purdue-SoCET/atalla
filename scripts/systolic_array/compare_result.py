@@ -96,8 +96,8 @@ def get_matrix(mats: List[Matrix], test_num: int, matrix_idx: int) -> Matrix | N
 # ---------------- Compare Matrices ----------------
 
 def compare_matrices(expected_results, results):
-    a_map = {(m.test_num, m.matrix_idx): m for m in expected_result}
-    b_map = {(m.test_num, m.matrix_idx): m for m in result}
+    a_map = {(m.test_num, m.matrix_idx): m for m in expected_results}
+    b_map = {(m.test_num, m.matrix_idx): m for m in results}
 
     keys = set(a_map) | set(b_map)
 
