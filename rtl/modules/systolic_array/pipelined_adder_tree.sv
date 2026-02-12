@@ -1,12 +1,10 @@
-// ============================================================================
 // pipelined_adder_tree.sv
 // Parameterized binary adder tree for MEISSA systolic array column reduction.
 // Sums N FP16 products and injects an external partial sum (psum_in).
-// ============================================================================
 
 module pipelined_adder_tree #(
-    parameter int N           = 4,    // Number of inputs to sum (MUST be a power of 2)
-    parameter int DATA_WIDTH  = 16,   // Element width; must match add_fp16 (FP16 = 16)
+    parameter int N           = 4,    // Number of inputs to sum (MUST be a power of 2), does not include psum
+    parameter int DATA_WIDTH  = 16,   // Element width; must match adder module (FP16 = 16)
     parameter int ADD_LATENCY = 2     // Pipeline depth of the adder (0 = combinational)
 )(
     input  logic                    clk,
@@ -21,7 +19,7 @@ module pipelined_adder_tree #(
     localparam int PSUM_DELAY = TREE_DEPTH * ADD_LATENCY;  // cycles psum_in must be held before final add
 
     // Inter-stage wires
-    //   stage_data[l][k]  – data at tree level l, element k
+    // stage_data[l][k]  – data at tree level l, element k
     logic [DATA_WIDTH-1:0] stage_data [0:TREE_DEPTH][0:N-1];
 
     assign stage_data[0] = terms_in;
