@@ -3,7 +3,7 @@
 module sysarr_4_input_fp_adder #(
     parameter MANTISSA_SIZE  = 10,
     parameter EXPONENT_SIZE  = 5,
-    parameter PRECISION_BITS = 25 
+    parameter PRECISION_BITS = 3 
 ) (
     input logic clk, 
     input logic nRST,
@@ -34,7 +34,7 @@ module sysarr_4_input_fp_adder #(
     logic y_op, m_op, n_op;
     
     // Exception signals
-    logic is_nan_any, is_inf_any, special_case;
+    logic is_nan_any, special_case;
     logic [15:0] special_result;
 
     // --- Pipeline Stage 1 Registers ---
@@ -44,10 +44,9 @@ module sysarr_4_input_fp_adder #(
     logic st1_a_s, st1_b_op, st1_c_op, st1_d_op, st1_align_sticky, st1_special_case;
 
     // --- Stage 2 Summation Signals ---
-    logic [SUM_WIDTH-1:0] sum_a, sum_b, sum_c, sum_d, neg_b, neg_c, neg_d;
+    logic signed [SUM_WIDTH:0] sum_a, neg_b, neg_c, neg_d;
     logic [SUM_WIDTH-1:0] mag_sum;
-    logic [1:0]           neg_count;
-    logic signed [SUM_WIDTH-1:0] raw_sum;
+    logic signed [SUM_WIDTH:0] raw_sum;
     logic [LZD_WIDTH-1:0] lead_zeros;
     logic res_sign;
 
@@ -65,6 +64,7 @@ module sysarr_4_input_fp_adder #(
     logic signed [EXPONENT_SIZE+2:0] final_exp_calc;
     logic guard_bit, round_bit, sticky_bit, round_up;
     logic [15:0] result_out;
+    logic any_pos_inf, any_neg_inf;
 
     // =================================================================================
     // STAGE 1: Sorting, Exception Handling, and Alignment
@@ -84,16 +84,26 @@ module sysarr_4_input_fp_adder #(
 
         // Detect non-finite numbers (NaN and Infinity)
         is_nan_any = (&exp_a & |frac_a) | (&exp_b & |frac_b) | (&exp_c & |frac_c) | (&exp_d & |frac_d);
-        is_inf_any = (&exp_a & ~|frac_a) | (&exp_b & ~|frac_b) | (&exp_c & ~|frac_c) | (&exp_d & ~|frac_d);
         special_case = 0; special_result = 0;
+
+        any_pos_inf = (&exp_a & ~sign_a & ~|frac_a) | (&exp_b & ~sign_b & ~|frac_b) | (&exp_c & ~sign_c & ~|frac_c) | (&exp_d & ~sign_d & ~|frac_d);
+        any_neg_inf = (&exp_a &  sign_a & ~|frac_a) | (&exp_b &  sign_b & ~|frac_b) | (&exp_c &  sign_c & ~|frac_c) | (&exp_d &  sign_d & ~|frac_d);
         
+        special_case = 0; 
+        special_result = 16'h0000; 
         // Handle special case results (IEEE-754 rules)
-        if (is_nan_any) begin special_case = 1; special_result = 16'h7E00; end
-        else if (is_inf_any) begin
+        if (is_nan_any || (any_pos_inf && any_neg_inf)) begin
+            // Any NaN, or +Inf + -Inf -> result is NaN
             special_case = 1;
-            if (((&exp_a && !sign_a) || (&exp_b && !sign_b)) && ((&exp_a && sign_a) || (&exp_b && sign_b))) special_result = 16'h7E00;
-            else if (sign_a | sign_b | sign_c | sign_d) special_result = 16'hFC00;
-            else special_result = 16'h7C00;
+            special_result = 16'h7E00; // NaN
+        end else if (any_pos_inf) begin
+            // At least one +Inf, no conflicting -Inf -> result is +Inf
+            special_case = 1;
+            special_result = 16'h7C00; // +Inf
+        end else if (any_neg_inf) begin
+            // At least one -Inf, no conflicting +Inf -> result is -Inf
+            special_case = 1;
+            special_result = 16'hFC00; // -Inf
         end
 
         // Sorting network to find the absolute largest operand (anchor for sign and exponent)
@@ -156,53 +166,35 @@ module sysarr_4_input_fp_adder #(
     // =================================================================================
     // STAGE 2: 2's Complement Summation and LZD
     // =================================================================================
-    // Intermediate CSA signals
-
-    logic [SUM_WIDTH-1:0] c1_s, c1_c; // Level 1
-    logic [SUM_WIDTH-1:0] c2_s, c2_c; // Level 2
-
-    logic [SUM_WIDTH-1:0] c2_c_shifted;
-    logic [SUM_WIDTH-1:0] c1_c_shifted;
     
-    logic [SUM_WIDTH-1:0] csa_sum_lvl1, csa_carry_lvl1;
-    logic [SUM_WIDTH-1:0] csa_sum_lvl2, csa_carry_lvl2;
+    logic signed [SUM_WIDTH+1:0] sum1, carry1;
+    logic signed [SUM_WIDTH+1:0] carry1_shifted; 
 
-    logic [SUM_WIDTH-1:0] carry_l2_shifted;
-    logic [SUM_WIDTH-1:0] carry_l1_shifted;
-    
     always_comb begin : stage2_logic
         // 1. Prepare Operands with 1's complement
         sum_a = {2'b00, st1_x_f}; 
-        neg_b = st1_b_op ? ~{2'b00, st1_y_f} : {2'b00, st1_y_f};
-        neg_c = st1_c_op ? ~{2'b00, st1_m_f} : {2'b00, st1_m_f};
-        neg_d = st1_d_op ? ~{2'b00, st1_n_f} : {2'b00, st1_n_f};
+        neg_b = st1_b_op ? -{2'b00, st1_y_f} : {2'b00, st1_y_f};
+        neg_c = st1_c_op ? -{2'b00, st1_m_f} : {2'b00, st1_m_f};
+        neg_d = st1_d_op ? -{2'b00, st1_n_f} : {2'b00, st1_n_f};
 
-        // 2. First Level: Compress A, B, and C
-        for (int i = 0; i < SUM_WIDTH; i++) begin
-            csa_sum_lvl1[i]   = sum_a[i] ^ neg_b[i] ^ neg_c[i];
-            csa_carry_lvl1[i] = (sum_a[i] & neg_b[i]) | (neg_b[i] & neg_c[i]) | (neg_c[i] & sum_a[i]);
+        // 2. Sum all operands together
+        // Stage 2 logic (fast CSA)
+
+        // First level CSA: sum_a + neg_b + neg_c
+        for (int i = 0; i <= SUM_WIDTH+1; i++) begin
+            sum1[i]   = sum_a[i] ^ neg_b[i] ^ neg_c[i];
+            carry1[i] = (sum_a[i] & neg_b[i]) | (neg_b[i] & neg_c[i]) | (neg_c[i] & sum_a[i]);
         end
 
-        // 3. Second Level: Compress (Sum_L1), (Carry_L1 << 1), and D
-        // Note: We shift the carry from L1 and use the LSB to inject the 'plus-one' for B
-        carry_l1_shifted = {csa_carry_lvl1[SUM_WIDTH-2:0], st1_b_op}; 
+        carry1_shifted = carry1 << 1;
 
-        for (int i = 0; i < SUM_WIDTH; i++) begin
-            csa_sum_lvl2[i]   = csa_sum_lvl1[i] ^ carry_l1_shifted[i] ^ neg_d[i];
-            csa_carry_lvl2[i] = (csa_sum_lvl1[i] & carry_l1_shifted[i]) | (carry_l1_shifted[i] & neg_d[i]) | (neg_d[i] & csa_sum_lvl1[i]);
-        end
+        // Final CPA with D
+        raw_sum = sum1 + carry1_shifted + neg_d;
 
-        // 4. Final Vector Addition (CPA)
-        // We still have the 'plus-ones' for C and D to account for.
-        // We shift the L2 carry and inject the 'plus-one' for C into the LSB.
-        carry_l2_shifted = {csa_carry_lvl2[SUM_WIDTH-2:0], st1_c_op};
-
-        // The very last 'plus-one' for D is added via the final Carry-Propagate Adder
-        raw_sum = $signed(csa_sum_lvl2) + $signed(carry_l2_shifted) + $signed({{(SUM_WIDTH-1){1'b0}}, st1_d_op});
 
         // --- Magnitude and LZD ---
         // If the MSB is 1, the result is negative in 2's complement
-        if (raw_sum[SUM_WIDTH-1]) begin
+        if (raw_sum[SUM_WIDTH]) begin
             mag_sum = ~raw_sum + 1'b1;
             res_sign = ~st1_a_s; // Invert the anchor sign
         end else begin

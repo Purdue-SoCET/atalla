@@ -10,7 +10,6 @@ int main(int argc, char** argv, char**) {
     // Setup context, defaults, and parse command line
     Verilated::debug(0);
     const std::unique_ptr<VerilatedContext> contextp{new VerilatedContext};
-    contextp->traceEverOn(true);
     contextp->commandArgs(argc, argv);
 
     // Construct the Verilated model, from Vtop.h generated from Verilating

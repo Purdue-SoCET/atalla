@@ -12,8 +12,7 @@
 
 class Vadd4_fp16_tb_softfloat__Syms;
 class Vadd4_fp16_tb_softfloat___024root;
-class VerilatedVcdC;
-class Vadd4_fp16_tb_softfloat_systolic_array_4_input_adder_if__pi1;
+class Vadd4_fp16_tb_softfloat_systolic_array_4_input_adder_if;
 
 
 // This class is the main interface to the Verilated model
@@ -26,7 +25,7 @@ class alignas(VL_CACHE_LINE_BYTES) Vadd4_fp16_tb_softfloat VL_NOT_FINAL : public
 
     // CONSTEXPR CAPABILITIES
     // Verilated with --trace?
-    static constexpr bool traceCapable = true;
+    static constexpr bool traceCapable = false;
 
     // PORTS
     // The application code writes and reads these signals to
@@ -35,7 +34,7 @@ class alignas(VL_CACHE_LINE_BYTES) Vadd4_fp16_tb_softfloat VL_NOT_FINAL : public
     // CELLS
     // Public to allow access to /* verilator public */ items.
     // Otherwise the application code can consider these internals.
-    Vadd4_fp16_tb_softfloat_systolic_array_4_input_adder_if__pi1* const __PVT__add4_fp16_tb_softfloat__DOT__add_if;
+    Vadd4_fp16_tb_softfloat_systolic_array_4_input_adder_if* const __PVT__add4_fp16_tb_softfloat__DOT__add_if;
 
     // Root instance pointer to allow access to model internals,
     // including inlined /* verilator public_flat_* */ items.
@@ -56,12 +55,12 @@ class alignas(VL_CACHE_LINE_BYTES) Vadd4_fp16_tb_softfloat VL_NOT_FINAL : public
   public:
     // API METHODS
     /// Evaluate the model.  Application must call when inputs change.
-    void eval() { eval_step(); eval_end_step(); }
+    void eval() { eval_step(); }
     /// Evaluate when calling multiple units/models per time step.
     void eval_step();
     /// Evaluate at end of a timestep for tracing, when using eval_step().
     /// Application must call after all eval() and before time changes.
-    void eval_end_step();
+    void eval_end_step() {}
     /// Simulation complete, run final blocks.  Application must call on completion.
     void final();
     /// Are there scheduled events to handle?
@@ -83,7 +82,6 @@ class alignas(VL_CACHE_LINE_BYTES) Vadd4_fp16_tb_softfloat VL_NOT_FINAL : public
     /// Re-init after cloning the model at the process level (e.g. fork in Linux)
     /// Re-allocate necessary resources. Called after cloning.
     void atClone() const;
-    std::unique_ptr<VerilatedTraceConfig> traceConfig() const override final;
   private:
     // Internal functions - trace registration
     void traceBaseModel(VerilatedTraceBaseC* tfp, int levels, int options);

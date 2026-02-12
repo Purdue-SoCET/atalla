@@ -37,7 +37,7 @@ module add4_fp16_tb_softfloat;
     systolic_array_4_input_adder_if #(
         .EXPONENT_SIZE(5),
         .MANTISSA_SIZE(10),
-        .PRECISION_BITS(25)
+        .PRECISION_BITS(3)
     ) add_if();
 
     logic [15:0] tb_a, tb_b, tb_c, tb_d;

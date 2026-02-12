@@ -14,13 +14,13 @@ VM_COVERAGE = 0
 # Parallel builds?  0/1 (from --output-split)
 VM_PARALLEL_BUILDS = 0
 # Tracing output mode?  0/1 (from --trace-fst/--trace-saif/--trace-vcd)
-VM_TRACE = 1
+VM_TRACE = 0
 # Tracing output mode in FST format?  0/1 (from --trace-fst)
 VM_TRACE_FST = 0
 # Tracing output mode in SAIF format?  0/1 (from --trace-saif)
 VM_TRACE_SAIF = 0
 # Tracing output mode in VCD format?  0/1 (from --trace-vcd)
-VM_TRACE_VCD = 1
+VM_TRACE_VCD = 0
 
 ### Object file lists...
 # Generated module classes, fast-path, compile with highest optimization
@@ -28,7 +28,7 @@ VM_CLASSES_FAST += \
 	Vadd4_fp16_tb_softfloat \
 	Vadd4_fp16_tb_softfloat___024root__DepSet_hb360f58f__0 \
 	Vadd4_fp16_tb_softfloat___024root__DepSet_h715d43e7__0 \
-	Vadd4_fp16_tb_softfloat_systolic_array_4_input_adder_if__pi1__DepSet_hc464d570__0 \
+	Vadd4_fp16_tb_softfloat_systolic_array_4_input_adder_if__DepSet_hcfee7b34__0 \
 	Vadd4_fp16_tb_softfloat__main \
 
 # Generated module classes, non-fast-path, compile with low/medium optimization
@@ -37,23 +37,19 @@ VM_CLASSES_SLOW += \
 	Vadd4_fp16_tb_softfloat___024root__Slow \
 	Vadd4_fp16_tb_softfloat___024root__DepSet_hb360f58f__0__Slow \
 	Vadd4_fp16_tb_softfloat___024root__DepSet_h715d43e7__0__Slow \
-	Vadd4_fp16_tb_softfloat_systolic_array_4_input_adder_if__pi1__Slow \
-	Vadd4_fp16_tb_softfloat_systolic_array_4_input_adder_if__pi1__DepSet_hc464d570__0__Slow \
+	Vadd4_fp16_tb_softfloat_systolic_array_4_input_adder_if__Slow \
+	Vadd4_fp16_tb_softfloat_systolic_array_4_input_adder_if__DepSet_hcfee7b34__0__Slow \
 
 # Generated support classes, fast-path, compile with highest optimization
 VM_SUPPORT_FAST += \
-	Vadd4_fp16_tb_softfloat__Trace__0 \
 
 # Generated support classes, non-fast-path, compile with low/medium optimization
 VM_SUPPORT_SLOW += \
 	Vadd4_fp16_tb_softfloat__Syms \
-	Vadd4_fp16_tb_softfloat__Trace__0__Slow \
-	Vadd4_fp16_tb_softfloat__TraceDecls__0__Slow \
 
 # Global classes, need linked once per executable, fast-path, compile with highest optimization
 VM_GLOBAL_FAST += \
 	verilated \
-	verilated_vcd_c \
 	verilated_timing \
 	verilated_threads \
 
