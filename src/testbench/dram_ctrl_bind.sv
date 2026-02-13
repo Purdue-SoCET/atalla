@@ -3,17 +3,15 @@
 
 module ddr_ctrl_confirm(
     input logic CLK,
-    input logic nRST
+    input logic nRST,
+    // 2/13 - TODO: ADD SIGNALS
+    ddr_controller_if.wdata_queue wdq
 );
     import dram_pkg::*;
     import cpu_types_pkg::*;
 
-    // PROPERTIES
-    task check_one_hot(
-        input logic smth
-    );
-        assert one_hot();
-    endtask
+    // // PROPERTIES
+    // 2/13 - TODO: Figure out proper syntax
 
     property one_hot;
         @(posedge CLK); disable iff (nRST)
@@ -30,9 +28,9 @@ module ddr_ctrl_confirm(
     property write_response;
     endproperty
 
-    // ASSERTIONS
-    assert property (one_hot)
-        else $error("I guess bro");
+    sequence 
+
+    endsequence
         
 endmodule 
 
