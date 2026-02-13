@@ -3,9 +3,13 @@
 
 module nb_wdata_queue_fifo_tb;
     // parameters
-
-
     logic CLK;
+
+
+    // interfaces/modports
+
+
+    // instantiations
 
 
 
