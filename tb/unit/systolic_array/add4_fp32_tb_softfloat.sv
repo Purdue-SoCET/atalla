@@ -1,6 +1,6 @@
 `timescale 1ns/1ps
 
-// 4-input FP16 Adder Testbench using Berkeley SoftFloat test vectors
+// 4-input FP32 Adder Testbench using Berkeley SoftFloat test vectors
 // Tests sysarr_4_input_fp_adder (3-stage pipelined CSA-based adder)
 //
 // updated w new cases !!
@@ -10,21 +10,21 @@
 //   ./gen_testfloat4 --no-daz > testfloat_cases_4.csv      (disable daz)
 //   ./gen_testfloat4 --no-ftz > testfloat_cases_4.csv      (disable ftz)
 // u can only use those commands if u clone soft float (shoot myles a dm if u want to compile new) 
-// to run -> verilator --binary -j 0 -Wall -Wno-fatal --timing --top-module add4_fp16_tb_softfloat add4_fp16_tb_softfloat.sv sysarr_4_input_fp_adder.sv sysarr_4in_adder.sv sysarr_4_inp_fp_adder_2nd_pipeline_stage.sv add_fp_4input_stage3.sv --trace; ./obj_dir/Vadd4_fp16_tb_softfloat
-// to view waves -> gtkwave waves/add4_fp16_waves.vcd --save=waves/add4_fp16_debug.gtkw
+// to run -> verilator --binary -j 0 -Wall -Wno-fatal --timing --top-module add4_fp32_tb_softfloat add4_fp32_tb_softfloat.sv sysarr_4_input_fp_adder.sv sysarr_4in_adder.sv sysarr_4_inp_fp_adder_2nd_pipeline_stage.sv add_fp_4input_stage3.sv --trace; ./obj_dir/Vadd4_fp32_tb_softfloat
+// to view waves -> gtkwave waves/add4_fp32_waves.vcd --save=waves/add4_fp32_debug.gtkw
 // also creates file called test_failures.csv w all failed cases (input, exp, got)
 
 
 `include "systolic_array_4_input_adder_if.vh"
 
 /* verilator lint_off UNUSEDSIGNAL */
-module add4_fp16_tb_softfloat;
+module add4_fp32_tb_softfloat;
 
     localparam PERIOD = 2;
     localparam LATENCY = 4;  // 3 pipeline stages + 1 output register
     localparam PRECISION_BITS = 22;
-    localparam EXPONENT_SIZE = 5; 
-    localparam MANTISSA_SIZE = 10; 
+    localparam EXPONENT_SIZE = 8;
+    localparam MANTISSA_SIZE = 23; 
 
     logic tb_clk;
     logic tb_nrst;
@@ -43,9 +43,9 @@ module add4_fp16_tb_softfloat;
         .PRECISION_BITS(PRECISION_BITS)
     ) add_if();
 
-    logic [15:0] tb_a, tb_b, tb_c, tb_d;
-    logic [15:0] tb_result;
-    logic [15:0] exp;
+    logic [31:0] tb_a, tb_b, tb_c, tb_d;
+    logic [31:0] tb_result;
+    logic [31:0] exp;
 
     int pass_count, fail_count, off_by_one, off_by_two, off_by_five_plus, diff; 
 
@@ -67,7 +67,7 @@ module add4_fp16_tb_softfloat;
         .add(add_if)
     );
 
-    task automatic test_case(input logic [15:0] a, input logic [15:0] b, input logic [15:0] c, input logic [15:0] d);
+    task automatic test_case(input logic [31:0] a, input logic [31:0] b, input logic [31:0] c, input logic [31:0] d);
         @(negedge tb_clk);
         tb_a = a;
         tb_b = b;
@@ -75,11 +75,11 @@ module add4_fp16_tb_softfloat;
         tb_d = d;
     endtask
 
-    function automatic logic is_nan(input logic [15:0] val);
-        return (val[14:10] == 5'b11111) && (val[9:0] != 10'b0);
+    function automatic logic is_nan(input logic [31:0] val);
+        return (val[30:23] == 8'b11111111) && (val[22:0] != 23'b0);
     endfunction
 
-    task automatic check_case(input string casename, input logic [15:0] expected);
+    task automatic check_case(input string casename, input logic [31:0] expected);
         logic match;
         if (is_nan(tb_result) && is_nan(expected)) begin
             match = 1'b1;
@@ -99,22 +99,22 @@ module add4_fp16_tb_softfloat;
         end
     endtask
 
-    localparam logic [15:0] P_INF      = 16'b0_11111_0000000000;
-    localparam logic [15:0] N_INF      = 16'b1_11111_0000000000;
-    localparam logic [15:0] NAN        = 16'b0_11111_0100000000;
-    localparam logic [15:0] P_ZERO     = 16'b0_00000_0000000000;
-    localparam logic [15:0] N_ZERO     = 16'b1_00000_0000000000;
-    localparam logic [15:0] ONE        = 16'b0_01111_0000000000;
-    localparam logic [15:0] TWO        = 16'b0_10000_0000000000;
-    localparam logic [15:0] THREE      = 16'b0_10000_1000000000;
-    localparam logic [15:0] FOUR       = 16'b0_10001_0000000000;
-    localparam logic [15:0] MIN_SUB    = 16'b0_00000_0000000001;
-    localparam logic [15:0] MAX_FINITE = 16'b0_11110_1111111111;
+    localparam logic [31:0] P_INF      = 32'b0_11111111_0000000000000000;
+    localparam logic [31:0] N_INF      = 32'b1_11111111_0000000000000000;
+    localparam logic [31:0] NAN        = 32'b0_11111111_010000000000000;
+    localparam logic [31:0] P_ZERO     = 32'b0_00000_...;
+    localparam logic [31:0] N_ZERO     = 32'b1_...;
+    localparam logic [31:0] ONE        = 32'b...;
+    localparam logic [31:0] TWO        = 32'b...;
+    localparam logic [31:0] THREE      = 32'b...;
+    localparam logic [31:0] FOUR       = 32'b0_10001_0000000000;
+    localparam logic [31:0] MIN_SUB    = 32'b0_00000_0000000001;
+    localparam logic [31:0] MAX_FINITE = 32'b1_11111111_1111111111;
 
     integer fd;
     integer fail_fd;
     string header;
-    logic [15:0] a, b, c, d, expected;
+    logic [31:0] a, b, c, d, expected;
 
 initial begin
     // waveform stuff
