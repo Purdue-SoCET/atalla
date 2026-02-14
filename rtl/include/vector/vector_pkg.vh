@@ -286,21 +286,20 @@ package vector_pkg;
     // Result Collector structs
     // =========================================================================
     typedef struct packed {
-        bf16_t     [NUM_LANES-1:0][LANE_FU_COUNT-1:0] result;
-        logic      [NUM_LANES-1:0][LANE_FU_COUNT-1:0] ready_in;  // from WB buffer
-        logic      [NUM_LANES-1:0][LANE_FU_COUNT-1:0] valid_in;  // from Lanes
-        vsel_t     [NUM_LANES-1:0][LANE_FU_COUNT-1:0] vd;
-        slice_idx_t[NUM_LANES-1:0][LANE_FU_COUNT-1:0] elem_idx; 
-        logic      [NUM_LANES-1:0][LANE_FU_COUNT-1:0] last;      // meta.last
+        logic input_valid;
+        logic wb_ready;
+
+        logic [NUM_LANES-1:0][15:0] lane_input;
+        logic [7:0]     vd_input;
     } result_collector_in_t;
 
     typedef struct packed {
-        vreg_t [LANE_FU_COUNT-1:0] result;
-        logic  [LANE_FU_COUNT-1:0] ready_in;  // to Lanes (broadcast per FU)
-        logic  [LANE_FU_COUNT-1:0] valid_o;   // to WB Buffer
-        vsel_t [LANE_FU_COUNT-1:0] vd;
-    } result_collector_out_t;
+        logic input_ready;
+        logic wb_valid;
 
+        vreg_t          vector_output;
+        logic [7:0]     vd_output;
+    } result_collector_out_t;
     // =========================================================================
     // Top-level GSAU + vector_datapath structs
     // =========================================================================
