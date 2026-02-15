@@ -237,50 +237,40 @@ package vector_pkg;
 
     // Per-lane, per-FU input bundle
     typedef struct packed {
-        logic     [LANE_FU_COUNT-1:0] rm;
-        logic     [LANE_FU_COUNT-1:0] valid_in; // From SB there's valid data
-        logic     [LANE_FU_COUNT-1:0] ready_in; // From WB
-        slice_vt  [LANE_FU_COUNT-1:0] v1;
-        slice_vt  [LANE_FU_COUNT-1:0] v2;       // VS and VI typed come broadcasted
-        vsel_t    [LANE_FU_COUNT-1:0] vd;       // Pass through
-        slice_mt  [LANE_FU_COUNT-1:0] vmask; 
-        opcode_t  [LANE_FU_COUNT-1:0] vop;      // full ISA opcode into FU
+        logic [LANE_ISSUE_W-1:0] input_valid;
+        logic [LANE_ISSUE_W-1:0][SLICE_W - 1:0][ESZ - 1:0] v1;
+        logic [LANE_ISSUE_W-1:0][SLICE_W - 1:0][ESZ - 1:0] v2;
+        fu_t  [LANE_ISSUE_W-1:0] usel;
+        logic [LANE_ISSUE_W-1:0][7:0] vd;
+        logic [LANE_ISSUE_W-1:0] rm;
+        logic [LANE_ISSUE_W-1:0][SLICE_W - 1:0] mask;
+        valu_op_t [LANE_ISSUE_W-1:0] aluop;
+        logic [4out:0] rc_ready;
     } lane_in_t;
 
     // Per-lane, per-FU output bundle
     typedef struct packed {
-        bf16_t     [LANE_FU_COUNT-1:0] result;
-        logic      [LANE_FU_COUNT-1:0] ready_o; // to SB
-        logic      [LANE_FU_COUNT-1:0] valid_o; // to WB buffer
-        bf16_t     [LANE_FU_COUNT-1:0] rval;    // to reduction tree for rm mode
-        vsel_t     [LANE_FU_COUNT-1:0] vd;
-        slice_idx_t[LANE_FU_COUNT-1:0] elem_idx; 
-        logic      [LANE_FU_COUNT-1:0] last;
+        functional_unit_out_t [LANE_FU_COUNT-1:0] units;
     } lane_out_t;
 
     // Lane sequencer in/out (per lane, per issue slot)
     typedef struct packed {
-        slice_vt   v1;
-        slice_vt   v2;
-        slice_mt   vmask;
-        vsel_t     vd;
-        opcode_t   vop;
-        logic      rm;
-        logic      valid;
-        logic      ready;
-    } lane_seq_in_t;
+        logic [SLICE_W - 1:0][ESZ - 1:0] v1,
+        logic [SLICE_W - 1:0][ESZ - 1:0] v2,
+        logic [SLICE_W - 1:0] mask,
+        logic valid_in,
+        logic ready_out,
 
+    } lane_sequencer_if_in_t;
+
+    
     typedef struct packed {
-        bf16_t      v1_elem;
-        bf16_t      v2_elem;
-        logic       mask_bit;
-        vsel_t      vd;
-        opcode_t    vop;
-        logic       rm;
-        slice_idx_t elem_idx;
-        logic       valid;
-        logic       lane_ready;
-    } lane_seq_out_t;
+        logic [ESZ - 1:0] v1,
+        logic [ESZ - 1:0] v2,
+        logic mask,
+        logic valid_out,
+        logic ready_in,
+    } lane_sequencer_if_out_t;
 
     // =========================================================================
     // Result Collector structs
@@ -300,6 +290,33 @@ package vector_pkg;
         vreg_t          vector_output;
         logic [7:0]     vd_output;
     } result_collector_out_t;
+
+    // =========================================================================
+    // Unified Functional Unit Interface structs
+    // =========================================================================
+    typedef struct packed {
+        logic input_valid;
+        logic [SLICE_W-1:0][15:0] v1, v2;
+        fu_t usel;
+        logic [7:0] vd;
+        logic rm;
+        logic [SLICE_W-1:0] mask;
+        valu_op_t alu_op;
+    } functional_unit_issue_port_t;
+    
+    typedef struct packed {
+        functional_unit_issue_port_t ports [LANE_ISSUE_W-1:0];
+        logic wb_ready;
+    } functional_unit_in_t;
+
+    typedef struct packed {
+        logic [16:0] result;
+        logic wb_valid;
+        logic rm;
+        logic [7:0] vd;
+        logic input_ready;
+    } functional_unit_out_t;
+
     // =========================================================================
     // Top-level GSAU + vector_datapath structs
     // =========================================================================
