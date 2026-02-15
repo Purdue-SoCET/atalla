@@ -1,0 +1,207 @@
+/*
+general_Lane_tb.sv
+This is a general testbench to test any lane FU for timing
+This does NOT validate arithmetic as each unit should have that already
+This will not have toggle or branch coverage cause i dont have time
+Owner: Jacob Walter
+
+Make command:
+
+
+Test Cases:
+1. Power on reset
+2. Issue from port 1
+3. Issue from port 2
+4. Mask Test 1
+5. Mask Test 2
+5. Output Backpressure test
+
+*/
+
+`timescale 1ns/1ps
+
+`include "functional_unit_if.vh"
+`include "vector_pkg.vh"
+
+module general_lane_tb (
+);
+    
+
+    import vector_pkg::*;
+
+    //Clock setup
+    logic CLK;
+    logic nRST;
+
+    initial CLK = 1'b0;
+    always #5 CLK = ~CLK;   // 100 MHz
+
+    //DUT instanciation
+    functional_unit_if fuif();
+    sqrt_FU DUT (
+        .CLK(CLK),
+        .nRST(nRST),
+        .fuif(fuif)
+    );
+
+    //Test Data
+
+    //this only sets signals, clocking is the responsibility of the caller
+        task automatic issue_from_port(
+            input int i,
+            input logic [SLICE_W-1:0][15:0] v1, v2,
+            input fu_t usel,
+            input logic [7:0] vd,
+            input logic rm,
+            input logic [SLICE_W-1:0] mask,
+            input valu_op_t alu_op
+        );
+            fuif.in.ports[i].input_valid = 'b1;
+            fuif.in.ports[i].v1 = v1;
+            fuif.in.ports[i].v2 = v2;
+            fuif.in.ports[i].usel = usel;
+            fuif.in.ports[i].vd = vd;
+            fuif.in.ports[i].rm = rm;
+            fuif.in.ports[i].mask = mask;
+            fuif.in.ports[i].alu_op = alu_op;
+        endtask //automatic
+
+
+    task automatic sqrt_test_issue_port_0();
+        logic [SLICE_W-1:0][15:0] v1;
+        logic [SLICE_W-1:0][15:0] v2;
+        int wb_count = 0;
+        int timeout = 0;
+        v1 = '{16'h4110,16'h4080}; //9,4
+        v2 = 'b0;
+        
+        fuif.in.wb_ready = 'b1;
+        issue_from_port(0, v1, v2, SQRT, 1, 0, 2'b11, VR_SUM);
+        @(posedge CLK);
+        fuif.in.ports[0].input_valid = 'b0;
+
+        while (wb_count < SLICE_W) begin
+            @(posedge CLK);
+            if (fuif.out.wb_valid) begin
+                wb_count++;
+            end
+            timeout++;
+            assert (timeout < 1000) else $fatal("Timeout waiting for writeback");
+        end
+    endtask
+
+    task automatic sqrt_test_issue_port_1();
+        logic [SLICE_W-1:0][15:0] v1;
+        logic [SLICE_W-1:0][15:0] v2;
+        int wb_count = 0;
+        int timeout = 0;
+        v1 = '{16'h4110,16'h4080}; //9,4
+        v2 = 'b0;
+        
+        fuif.in.wb_ready = 'b1;
+        issue_from_port(1, v1, v2, SQRT, 1, 0, 2'b11, VR_SUM);
+        @(posedge CLK);
+        fuif.in.ports[1].input_valid = 'b0;
+
+        while (wb_count < SLICE_W) begin
+            @(posedge CLK);
+            if (fuif.out.wb_valid) begin
+                wb_count++;
+            end
+            timeout++;
+            assert (timeout < 1000) else $fatal("Timeout waiting for writeback");
+        end
+    endtask
+
+    task automatic sqrt_test_masking_1();
+        logic [SLICE_W-1:0][15:0] v1;
+        logic [SLICE_W-1:0][15:0] v2;
+        int wb_count = 0;
+        int timeout = 0;
+        v1 = '{16'h4110,16'h4080}; //9,4
+        v2 = 'b0;
+        
+        fuif.in.wb_ready = 'b1;
+        issue_from_port(0, v1, v2, SQRT, 1, 0, 2'b01, VR_SUM); // Only element 0 active
+        @(posedge CLK);
+        fuif.in.ports[0].input_valid = 'b0;
+
+        while (wb_count < SLICE_W) begin
+            @(posedge CLK);
+            if (fuif.out.wb_valid) begin
+                // Verify masked element outputs zero
+                if (wb_count == 1) begin
+                    assert(fuif.out.result == 16'h0000) else $error("Element 1 should be masked (zero)");
+                end
+                wb_count++;
+            end
+            timeout++;
+            assert (timeout < 1000) else $fatal("Timeout waiting for writeback");
+        end
+    endtask
+
+    task automatic sqrt_test_masking_2();
+        logic [SLICE_W-1:0][15:0] v1;
+        logic [SLICE_W-1:0][15:0] v2;
+        int wb_count = 0;
+        int timeout = 0;
+        v1 = '{16'h4110,16'h4080}; //9,4
+        v2 = 'b0;
+        
+        fuif.in.wb_ready = 'b1;
+        issue_from_port(0, v1, v2, SQRT, 1, 0, 2'b10, VR_SUM); // Only element 1 active
+        @(posedge CLK);
+        fuif.in.ports[0].input_valid = 'b0;
+
+        while (wb_count < SLICE_W) begin
+            @(posedge CLK);
+            if (fuif.out.wb_valid) begin
+                // Verify masked element outputs zero
+                if (wb_count == 0) begin
+                    assert(fuif.out.result == 16'h0000) else $error("Element 0 should be masked (zero)");
+                end
+                wb_count++;
+            end
+            timeout++;
+            assert (timeout < 1000) else $fatal("Timeout waiting for writeback");
+        end
+    endtask
+
+    task automatic sqrt_backpressure();
+        logic [SLICE_W-1:0][15:0] v1;
+        logic [SLICE_W-1:0][15:0] v2;
+        int wb_count = 0;
+        int timeout = 0;
+        v1 = '{16'h4110,16'h4080}; //9,4
+        v2 = 'b0;
+
+        fuif.in.wb_ready = 'b0;
+        issue_from_port(0, v1, v2, SQRT, 1, 0, 2'b11, VR_SUM);
+        @(posedge CLK);
+        fuif.in.ports[0].input_valid = 'b0;
+
+        //waiting for the first element of the slice to write back
+        while (wb_count < 1) begin
+            @(posedge CLK);
+            if (fuif.out.wb_valid) begin
+                wb_count++;
+            end
+            timeout++;
+            assert (timeout < 1000) else $fatal("Timeout waiting for writeback");
+        end
+        @(posedge CLK); //5 clocks to simulate backpressure to make sure the whole unit keeps running until it backs up completly
+        @(posedge CLK);
+        @(posedge CLK);
+        @(posedge CLK);
+        @(posedge CLK);
+        fuif.in.wb_ready = 'b1;
+        while (wb_count < SLICE_W) begin //begin waiting for the second element to writeback
+            @(posedge CLK);
+            if (fuif.out.wb_valid) begin
+                wb_count++;
+            end
+            timeout++;
+            assert (timeout < 1000) else $fatal("Timeout waiting for writeback");
+        end
+    endtask //automatic
+endmodule
