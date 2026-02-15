@@ -9,7 +9,7 @@
 
 
 module lane #(
-    parameter int LANE_ID = 0   // unique per lane instance
+
 ) (
     input  logic        CLK,
     input  logic        nRST,
