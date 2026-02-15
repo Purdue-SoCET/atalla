@@ -52,7 +52,7 @@ module pipelined_adder_tree #(
 
     generate
         if (PSUM_DELAY == 0) begin : no_psum_delay
-            psum_delayed = psum_in;
+            assign psum_delayed = psum_in;
         end else begin : psum_delay_sr
             logic [DATA_WIDTH-1:0] psum_sr [0:PSUM_DELAY-1];
 
@@ -69,7 +69,7 @@ module pipelined_adder_tree #(
                 end
             end
 
-            psum_delayed = psum_sr[PSUM_DELAY - 1];
+            assign psum_delayed = psum_sr[PSUM_DELAY - 1];
         end
     endgenerate
 
