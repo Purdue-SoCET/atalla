@@ -14,6 +14,8 @@ from src.misc.opcode_table import OPCODES, name_to_opcode
 INVERT_OPCODES = name_to_opcode()
 VIRTUAL_PACKET_SIZE = 1 
 REAL_PACKET_SIZE = 4
+INSTR_BYTE_WIDTH = 6
+INSTR_ADDR_STRIDE = REAL_PACKET_SIZE * INSTR_BYTE_WIDTH
 
 IntLike = int
 BytesLike = Union[bytes, bytearray, memoryview]
@@ -230,6 +232,7 @@ IMM_RE = re.compile(r"^[+-]?(?:0x[0-9a-fA-F]+|0b[01]+|\d+)$")
 MEM_RE = re.compile(r"^([+-]?(?:0x[0-9a-fA-F]+|0b[01]+|\d+))\(\s*\$(?:x)?(\d+)\s*\)$", re.IGNORECASE)
 LABEL_RE = re.compile(r"^[A-Za-z_]\w*:$")
 
+# ---- Label Branch Support Start ----
 def parse_int(s: str) -> int:
     s = s.strip()
     if not IMM_RE.match(s):
@@ -263,6 +266,41 @@ def split_br_imm(off: int) -> tuple[int, int, int]:
 def split_imm16(off: int) -> tuple[int, int]:
     imm16 = to_twos_complement(off, 16)
     return imm16 & 0xFF, (imm16 >> 8) & 0xFF
+
+def split_br_target_imm(delta_bytes: int) -> tuple[int, int]:
+    if delta_bytes % 4 != 0:
+        raise ValueError(f"Branch target offset must be 4-byte aligned, got {delta_bytes}")
+
+    word_off = delta_bytes // 4
+    if word_off < -512 or word_off > 511:
+        raise ValueError(
+            f"Branch target offset {delta_bytes} out of range; "
+            f"must fit signed 10-bit words ([-2048, 2044] bytes)"
+        )
+
+    imm10 = word_off & 0x3FF
+    imm1 = (imm10 >> 9) & 0x1
+    imm9 = imm10 & 0x1FF
+    return imm1, imm9
+
+def parse_leading_labels(code: str) -> tuple[list[str], str]:
+    labels: list[str] = []
+    s = code.strip()
+
+    while s:
+        m = re.match(r"^([A-Za-z_]\w*):", s)
+        if not m:
+            break
+        labels.append(m.group(1))
+        s = s[m.end():].lstrip()
+
+    return labels, s
+
+def parse_incr_imm7(s: str) -> int:
+    v = parse_int(s)
+    if not (0 <= v <= 0x7F):
+        raise ValueError(f"incr_imm out of range (0..127): {v}")
+    return v
 
 
 def strip_comment(line: str) -> tuple[str, str]:
@@ -304,7 +342,13 @@ def split_mnemonic_operands(code: str) -> tuple[str, list[str]]:
     ops = [o.strip() for o in ops_str.split(",") if o.strip()]
     return mnemonic, ops
 
-def asm_to_instr_dict(mnemonic: str, ops: list[str]) -> dict:
+def asm_to_instr_dict(
+    mnemonic: str,
+    ops: list[str],
+    *,
+    labels: dict[str, int] | None = None,
+    pc: int | None = None,
+) -> dict:
     if mnemonic not in INVERT_OPCODES:
         raise ValueError(f"Unknown mnemonic: {mnemonic}")
 
@@ -347,11 +391,35 @@ def asm_to_instr_dict(mnemonic: str, ops: list[str]) -> dict:
         return d
 
     if instr_type == "BR":
-        # beq.s rs1, rs2, off
+        # Legacy:
+        #   beq.s rs1, rs2, packed_off
+        # Label-aware:
+        #   beq.s rs1, rs2, target_label[, incr_imm]
+        #   beq.s rs1, rs2, target_offset_bytes[, incr_imm]
+        if len(ops) not in (3, 4):
+            raise ValueError(f"{mnemonic} expects 3 or 4 operands")
+
         d["rs1"] = parse_reg(ops[0])
         d["rs2"] = parse_reg(ops[1])
-        off = parse_int(ops[2])
-        incr_imm, imm1, imm9 = split_br_imm(off)
+        target = ops[2].strip()
+
+        if len(ops) == 3 and IMM_RE.match(target):
+            # Keep old packed-immediate behavior for compatibility.
+            packed_off = parse_int(target)
+            incr_imm, imm1, imm9 = split_br_imm(packed_off)
+        else:
+            if labels is not None and target in labels:
+                if pc is None:
+                    raise ValueError("Internal error: missing PC for label-based branch")
+                delta_bytes = labels[target] - pc
+            elif IMM_RE.match(target):
+                delta_bytes = parse_int(target)
+            else:
+                raise ValueError(f"Unknown branch label: {target!r}")
+
+            imm1, imm9 = split_br_target_imm(delta_bytes)
+            incr_imm = parse_incr_imm7(ops[3]) if len(ops) == 4 else 0
+
         d["incr_imm"] = incr_imm
         d["imm1"] = imm1
         d["imm9"] = imm9
@@ -397,33 +465,50 @@ def asm_to_instr_dict(mnemonic: str, ops: list[str]) -> dict:
 def assemble_file(in_data: str) -> list[tuple[str, str]]:
     out = []
     stop_markers = {"data mem", ".data"}
+    labels: dict[str, int] = {}
+    parsed_lines: list[tuple[int, str, str]] = []
+    pc = 0
 
     for raw in in_data.splitlines():
         code, cmt = strip_comment(raw)
-        code = strip_label(code)
+        code = code.strip()
 
-        if not code.strip():
+        if not code:
             continue
 
-        if code.strip().lower() in stop_markers:
+        line_labels, code = parse_leading_labels(code)
+        for label in line_labels:
+            if label in labels:
+                raise ValueError(f"Duplicate label: {label}")
+            labels[label] = pc
+
+        if not code:
+            continue
+
+        lowered = code.lower()
+        if lowered in stop_markers:
             break
 
         # ignore typical directives
-        if code.strip().startswith("."):
+        if code.startswith("."):
             continue
 
+        parsed_lines.append((pc, code, cmt))
+        pc += INSTR_ADDR_STRIDE
+
+    for pc, code, cmt in parsed_lines:
         mnemonic, ops = split_mnemonic_operands(code)
         if not mnemonic:
             continue
 
-        # print(f"Parsing line: {raw!r} -> mnemonic={mnemonic!r}, ops={ops!r}, comment={cmt!r}")
-        instr_dict = asm_to_instr_dict(mnemonic, ops)
+        instr_dict = asm_to_instr_dict(mnemonic, ops, labels=labels, pc=pc)
         hex48 = encode_instruction(instr_dict).upper()
         if len(hex48) != 12:
             raise ValueError(f"encode_instruction returned {hex48!r} (expected 12 hex chars)")
         out.append((hex48, cmt))
 
     return out
+# ---- Label Branch Support End ----
 
 def emit_test_format(instrs: list[tuple[str, str]]) -> str:
     nop_hex = encode_instruction({"opcode": INVERT_OPCODES["nop.s"][0]}).upper()
@@ -445,7 +530,7 @@ def emit_test_format(instrs: list[tuple[str, str]]) -> str:
 
         lines.append(f"{addr:08X}: " + " ".join(hex_words) + cmt_str)
 
-        addr += 0x18  
+        addr += INSTR_ADDR_STRIDE
         i += VIRTUAL_PACKET_SIZE
 
     return "\n".join(lines)
