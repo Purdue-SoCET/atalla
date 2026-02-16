@@ -1,114 +1,96 @@
 // Vector Writeback Arbiter Module ============================================
-// Author: Michael Lee
-// Email: lee4279@purdue.edu
-// Arbitrates vector core vector writeback to remove bank conflicts and 
-// prioritize GSAU->Reduction->Lanes 
+// Author: Jaideep Dadi
+// Email: djaideep@purdue.edu
 // TODO 
-// insert VLSU?? (as lanes) 
-// fix handshake timing
-// check priority
+// Check vector core stall-related inputs & modify code accordingly. Banks can be associative, no?
 // ============================================================================
 `include "v_wb_arbiter_if.vh"
 `include "vector_pkg.vh"
 
-module v_wb_arbiter (
+module v_wb_arbiter #(
+    parameter INPUTS      = vector_pkg::LANE_FU_COUNT //the number of input sources (FU lanes (5) + reduction + GSAU). Is it 9?
+)(
     input logic CLK, nRST,
-    v_wb_arbiter_if.v_wb_arbiter vif
+    v_wb_arbiter_if.v_wb_arbiter_if vif,
+    output logic [INPUTS-1:0] stallSignal // Indicate which input is causing the stall
 ); 
     import vector_pkg::*;
-    logic [6:0] req; 
-    vsel_t [6:0] vds;
-    vreg_t [6:0] datas;
 
-    logic [3:0][6:0] g;
-    logic [1:0][1:0] banksused
+    logic [INPUTS-1:0] vectorOut_valid;
+    vsel_t [INPUTS-1:0] vectorOut_destReg;
+    vreg_t [INPUTS-1:0] vectorOut_result;
 
-    // priority is encoded here lsb is high msb is low lanes are same but cannot be prioed here easily
-    assign req = {vif.vector_out.valid_o, vif.vector_out.reduction_valid, vif.vector_out.gsau.wb_valid};
-    assign vds = {vif.vector_out.vd, vif.vector_out.reduction_vd, vif.vector_out.gsau.wb_wbdst};
-    assign datas = {vif.vector_out.result, vif.vector_out.reduction_result, vif.vector_out.gsau.wb_psum};
+    assign vectorOut_valid = {vif.vector_out.valid_o}; //, vif.vector_out.reduction_valid, vif.vector_out.gsau.wb_valid};
+    assign vectorOut_destReg = {vif.vector_out.vd}; //, vif.vector_out.reduction_vd, vif.vector_out.gsau.wb_wbdst};
+    assign vectorOut_result = {vif.vector_out.result}; //, vif.vector_out.reduction_result, vif.vector_out.gsau.wb_psum};
 
-    // Extract bank ID for each request (Need to split like this?)
-    assign banks[0] = vds[0][7:6]; 
-    assign banks[1] = vds[1][7:6];
-    assign banks[2] = vds[2][7:6]; 
-    assign banks[3] = vds[3][7:6];
-    assign banks[4] = vds[4][7:6]; 
-    assign banks[5] = vds[5][7:6];
-    assign banks[6] = vds[6][7:6];
+    logic [2:0] banks [0:3]; // {valid, index[1:0]} for each port
+    logic [$clog2(INPUTS)-1:0] inputIndex; // For the for loop
 
-    // Grant ports to a request g[port][source req]
-    // A source is granted a port if it is requesting AND not taken by a higher port
-    // AND has no bank conflict with registers chosen by higher-priority ports.
-    
-    // TODO update bank logic after every grant check its port then set mask? NEED TO CHANGE MASK STRUCTURE
+    //assign vif.veggie_in.WEN[0]   = |g[0];
+    //assign vif.veggie_in.vd[0]    = g[0][0] ? vds[0] : g[0][1] ? vds[1] : g[0][2] ? vds[2] : g[0][3] ? vds[3] : g[0][4] ? vds[4] : g[0][5] ? vds[5] : vds[6];
+    //assign vif.veggie_in.vdata[0] = g[0][0] ? datas[0] : g[0][1] ? datas[1] : g[0][2] ? datas[2] : g[0][3] ? datas[3] : g[0][4] ? datas[4] : g[0][5] ? datas[5] : datas[6];
+
     always_comb begin
-        // Port 0 Priority encoder (no conflicts possible)
-        g[0][0] = req[0];
-        g[0][1] = req[1] && !g[0][0];
-        g[0][2] = req[2] && !(|g[0][1:0]);
-        g[0][3] = req[3] && !(|g[0][2:0]);
-        g[0][4] = req[4] && !(|g[0][3:0]);
-        g[0][5] = req[5] && !(|g[0][4:0]);
-        g[0][6] = req[6] && !(|g[0][5:0]);
+        stallSignal = '0;
+        vif.veggie_in.WEN   = '0;
+        vif.veggie_in.vd    = '0;
+        vif.veggie_in.vdata = '0;
 
-        
-        // Port 1 Check bank conflict with port 0
-        banksused[0] = banks[g[0]]
+        if (!vif.veggie_out.ready) begin
+            stallSignal = '1; // If Veggie is not ready, stall the entire pipeline?
+        end else begin
+            stallSignal = '0;
+            //clear bank when veggie ready to accept new data
+            banks[0] = 3'b0;
+            banks[1] = 3'b0;
+            banks[2] = 3'b0;
+            banks[3] = 3'b0;
 
-        g[1][0] = req[0] && (banks[req[0]] != banksused [0x]);
-        g[1][1] = req[1] && !m1[1] && !g[1][0];
-        g[1][2] = req[2] && !m1[2] && !(|g[1][1:0]);
-        g[1][3] = req[3] && !m1[3] && !(|g[1][2:0]);
-        g[1][4] = req[4] && !m1[4] && !(|g[1][3:0]);
-        g[1][5] = req[5] && !m1[5] && !(|g[1][4:0]);
-        g[1][6] = req[6] && !m1[6] && !(|g[1][5:0]);
-
-        // Port 2 Check bank conflict with port 0 1
-        
-        g[2][0] = req[0] && !m2[0];
-        g[2][1] = req[1] && !m2[1] && !g[2][0];
-        g[2][2] = req[2] && !m2[2] && !(|g[2][1:0]);
-        g[2][3] = req[3] && !m2[3] && !(|g[2][2:0]);
-        g[2][4] = req[4] && !m2[4] && !(|g[2][3:0]);
-        g[2][5] = req[5] && !m2[5] && !(|g[2][4:0]);
-        g[2][6] = req[6] && !m2[6] && !(|g[2][5:0]);
-
-        // Port 2 Check bank conflict with port 0 1 2
-        
-        g[3][0] = req[0] && !m3[0];
-        g[3][1] = req[1] && !m3[1] && !g[3][0];
-        g[3][2] = req[2] && !m3[2] && !(|g[3][1:0]);
-        g[3][3] = req[3] && !m3[3] && !(|g[3][2:0]);
-        g[3][4] = req[4] && !m3[4] && !(|g[3][3:0]);
-        g[3][5] = req[5] && !m3[5] && !(|g[3][4:0]);
-        g[3][6] = req[6] && !m3[6] && !(|g[3][5:0]);
+            //This is synthesizable, right? Coz we can unroll it to 8 inputs. Also, how many inputs again?
+            for (inputIndex = 0; inputIndex < INPUTS; inputIndex++) begin
+                if (vectorOut_valid[inputIndex]) begin
+                    case (vectorOut_destReg[inputIndex][7:6]) // Bank ID
+                    2'b00: 
+                        if (!banks[0][2]) begin // Bank is not used by a higher-priority port
+                            banks[0] = {1'b1, vectorOut_destReg[inputIndex][7:6]}; // Mark bank as used and store index
+                            //The above line can be used later. Currently, banks are address exclusive. In future, I want to make this associative.
+                            vif.veggie_in.vd[0]   = vectorOut_destReg[inputIndex];
+                            vif.veggie_in.vdata[0] = vectorOut_result[inputIndex];
+                            vif.veggie_in.WEN[0] = 1;
+                        end else begin
+                            stallSignal[inputIndex] = 1; // Bank conflict with higher-priority port, stall this request. Indicate which input is causing the stall
+                        end
+                    2'b01: 
+                        if (!banks[1][2]) begin // Bank is not used by a higher-priority port
+                            banks[1] = {1'b1, vectorOut_destReg[inputIndex][7:6]}; // Mark bank as used and store index
+                            vif.veggie_in.vd[1]   = vectorOut_destReg[inputIndex];
+                            vif.veggie_in.vdata[1] = vectorOut_result[inputIndex];
+                            vif.veggie_in.WEN[1] = 1;
+                        end else begin
+                            stallSignal[inputIndex] = 1; // Bank conflict with higher-priority port, stall this request. Indicate which input is causing the stall
+                        end
+                    2'b10:
+                        if (!banks[2][2]) begin // Bank is not used by a higher-priority port
+                            banks[2] = {1'b1, vectorOut_destReg[inputIndex][7:6]}; // Mark bank as used and store index
+                            vif.veggie_in.vd[2]   = vectorOut_destReg[inputIndex];
+                            vif.veggie_in.vdata[2] = vectorOut_result[inputIndex];
+                            vif.veggie_in.WEN[2] = 1;
+                        end else begin
+                            stallSignal[inputIndex] = 1; // Bank conflict with higher-priority port, stall this request. Indicate which input is causing the stall
+                        end
+                    2'b11:
+                        if (!banks[3][2]) begin // Bank is not used by a higher-priority port
+                            banks[3] = {1'b1, vectorOut_destReg[inputIndex][7:6]}; // Mark bank as used and store index
+                            vif.veggie_in.vd[3]   = vectorOut_destReg[inputIndex];
+                            vif.veggie_in.vdata[3] = vectorOut_result[inputIndex];
+                            vif.veggie_in.WEN[3] = 1;
+                        end else begin
+                            stallSignal[inputIndex] = 1; // Bank conflict with higher-priority port, stall this request. Indicate which input is causing the stall
+                        end
+                    endcase
+                end
+            end
+        end
     end
-
-    // Output Mapping
-    // Port 0 Assignments
-    assign vif.veggie_in.WEN[0]   = |g[0];
-    assign vif.veggie_in.vd[0]    = g[0][0] ? vds[0] : g[0][1] ? vds[1] : g[0][2] ? vds[2] : g[0][3] ? vds[3] : g[0][4] ? vds[4] : g[0][5] ? vds[5] : vds[6];
-    assign vif.veggie_in.vdata[0] = g[0][0] ? datas[0] : g[0][1] ? datas[1] : g[0][2] ? datas[2] : g[0][3] ? datas[3] : g[0][4] ? datas[4] : g[0][5] ? datas[5] : datas[6];
-
-    // Port 1 Assignments
-    assign vif.veggie_in.WEN[1]   = |g[1];
-    assign vif.veggie_in.vd[1]    = g[1][0] ? vds[0] : g[1][1] ? vds[1] : g[1][2] ? vds[2] : g[1][3] ? vds[3] : g[1][4] ? vds[4] : g[1][5] ? vds[5] : vds[6];
-    assign vif.veggie_in.vdata[1] = g[1][0] ? datas[0] : g[1][1] ? datas[1] : g[1][2] ? datas[2] : g[1][3] ? datas[3] : g[1][4] ? datas[4] : g[1][5] ? datas[5] : datas[6];
-
-    // Port 2 Assignments
-    assign vif.veggie_in.WEN[2]   = |g[2];
-    assign vif.veggie_in.vd[2]    = g[2][0] ? vds[0] : g[2][1] ? vds[1] : g[2][2] ? vds[2] : g[2][3] ? vds[3] : g[2][4] ? vds[4] : g[2][5] ? vds[5] : vds[6];
-    assign vif.veggie_in.vdata[2] = g[2][0] ? datas[0] : g[2][1] ? datas[1] : g[2][2] ? datas[2] : g[2][3] ? datas[3] : g[2][4] ? datas[4] : g[2][5] ? datas[5] : datas[6];
-
-    // Port 3 Assignments
-    assign vif.veggie_in.WEN[3]   = |g[3];
-    assign vif.veggie_in.vd[3]    = g[3][0] ? vds[0] : g[3][1] ? vds[1] : g[3][2] ? vds[2] : g[3][3] ? vds[3] : g[3][4] ? vds[4] : g[3][5] ? vds[5] : vds[6];
-    assign vif.veggie_in.vdata[3] = g[3][0] ? datas[0] : g[3][1] ? datas[1] : g[3][2] ? datas[2] : g[3][3] ? datas[3] : g[3][4] ? datas[4] : g[3][5] ? datas[5] : datas[6];
-
-    // TODO Ready feedback FIX FIX FIX
-    assign vif.vector_out.gsau.veg_ready = g[0][0] | g[1][0] | g[2][0] | g[3][0];
-    assign vif.vector_out.ready_o        = g[0][6:2] | g[1][6:2] | g[2][6:2] | g[3][6:2];
-
 endmodule
-    
