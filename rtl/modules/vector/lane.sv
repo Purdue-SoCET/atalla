@@ -4,7 +4,7 @@
 // Owner: Jacob Walter
 // ------------------------------------------------------------
 `include "lane_in.vh"
-`include "functional_unit_if"
+`include "functional_unit_if.vh"
 `include "vector_pkg.vh"
 
 
