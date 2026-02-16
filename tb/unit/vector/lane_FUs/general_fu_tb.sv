@@ -211,26 +211,27 @@ module general_fu_tb (
         fuif.in.wb_ready = 'b0;
         issue_from_port(0, v1, v2, SQRT, 10, 0, 2'b11, VR_SUM);
         @(posedge CLK);
-        fuif.in.ports[0].input_valid = 'b0;
+        clear_port(0);
 
-        //waiting for the first element of the slice to write back
-        while (wb_count < 1) begin
+        // Wait for the first element to assert valid (NOT handshake yet)
+        timeout = 0;
+        while (!fuif.out.wb_valid) begin
             @(posedge CLK);
-            if (fuif.out.wb_valid) begin
-                wb_count++;
-            end
             timeout++;
-            assert (timeout < 1000) else $fatal("Timeout waiting for writeback");
+            assert (timeout < 1000) else $fatal("Timeout waiting for first valid");
         end
-        @(posedge CLK); //5 clocks to simulate backpressure to make sure the whole unit keeps running until it backs up completly
-        @(posedge CLK);
-        @(posedge CLK);
-        @(posedge CLK);
-        @(posedge CLK);
+        
+        // Hold backpressure for 5 clocks
+        repeat(5) @(posedge CLK);
+        
+        // Release backpressure
         fuif.in.wb_ready = 'b1;
-        while (wb_count < SLICE_W) begin //begin waiting for the second element to writeback
+        
+        // Now count actual handshakes
+        timeout = 0;
+        while (wb_count < SLICE_W) begin
             @(posedge CLK);
-            if (fuif.out.wb_valid) begin
+            if (fuif.out.wb_valid && fuif.in.wb_ready) begin  // Check HANDSHAKE
                 wb_count++;
             end
             timeout++;
