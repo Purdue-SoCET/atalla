@@ -5,7 +5,9 @@ This does NOT validate arithmetic as each unit should have that already
 This will not have toggle or branch coverage cause i dont have time
 Owner: Jacob Walter
 
-Make command:
+Make commands:
+Sqrt:
+make test tb_file=general_fu_tb.sv modules=/vector/lane_FUs/sqrt_FU.sv,/vector/lane_sequencer.sv,/vector/lane_FUs/lane_unit_fifo.sv,/common/arithmetic/sqrt/sqrt_bf16.sv,/common/arithmetic/adders/add_bf16.sv,/common/arithmetic/adders/left_shift_add_bf16.sv,/common/arithmetic/multipliers/ packages=/vector/vector_pkg.vh GUI=ON
 
 
 Test Cases:
@@ -44,7 +46,33 @@ module general_fu_tb (
         .fuif(fuif)
     );
 
-    //Test Data
+    task automatic reset_dut();
+        // Assert reset
+        nRST = 1'b0;
+
+        // Initialize all FU interface inputs
+        fuif.in.wb_ready = 1'b0;
+
+        for (int i = 0; i < LANE_ISSUE_W; i++) begin
+            fuif.in.ports[i].input_valid = 1'b0;
+            fuif.in.ports[i].v1         = '0;
+            fuif.in.ports[i].v2         = '0;
+            fuif.in.ports[i].usel       = fu_t'(0);
+            fuif.in.ports[i].vd         = '0;
+            fuif.in.ports[i].rm         = '0;
+            fuif.in.ports[i].mask       = '0;
+            fuif.in.ports[i].alu_op     = valu_op_t'(0);
+        end
+
+        // Hold reset for a few clocks
+        repeat (5) @(posedge CLK);
+
+        // Deassert reset synchronously
+        nRST = 1'b1;
+
+        // Wait for DUT to stabilize
+        repeat (5) @(posedge CLK);
+    endtask
 
     //this only sets signals, clocking is the responsibility of the caller
         task automatic issue_from_port(
@@ -66,6 +94,19 @@ module general_fu_tb (
             fuif.in.ports[i].alu_op = alu_op;
         endtask //automatic
 
+        task automatic clear_port(
+            input int i
+        );
+            fuif.in.ports[i].input_valid = 1'b0;
+            fuif.in.ports[i].v1         = '0;
+            fuif.in.ports[i].v2         = '0;
+            fuif.in.ports[i].usel       = fu_t'(0);
+            fuif.in.ports[i].vd         = '0;
+            fuif.in.ports[i].rm         = '0;
+            fuif.in.ports[i].mask       = '0;
+            fuif.in.ports[i].alu_op     = valu_op_t'(0);
+        endtask
+
 
     task automatic sqrt_test_issue_port_0();
         logic [SLICE_W-1:0][15:0] v1;
@@ -78,7 +119,7 @@ module general_fu_tb (
         fuif.in.wb_ready = 'b1;
         issue_from_port(0, v1, v2, SQRT, 1, 0, 2'b11, VR_SUM);
         @(posedge CLK);
-        fuif.in.ports[0].input_valid = 'b0;
+        clear_port(0);
 
         while (wb_count < SLICE_W) begin
             @(posedge CLK);
@@ -101,7 +142,7 @@ module general_fu_tb (
         fuif.in.wb_ready = 'b1;
         issue_from_port(1, v1, v2, SQRT, 2, 0, 2'b11, VR_SUM);
         @(posedge CLK);
-        fuif.in.ports[1].input_valid = 'b0;
+        clear_port(1);
 
         while (wb_count < SLICE_W) begin
             @(posedge CLK);
@@ -196,4 +237,46 @@ module general_fu_tb (
             assert (timeout < 1000) else $fatal("Timeout waiting for writeback");
         end
     endtask //automatic
+
+    task automatic sqrt_max_issue();
+        logic [SLICE_W-1:0][15:0] v1;
+        logic [SLICE_W-1:0][15:0] v2;
+        int num_issues = 10;
+        int issued_count = 0;
+        
+        v2 = 'b0;
+        fuif.in.wb_ready = 'b1;
+        
+        while (issued_count < num_issues) begin
+            // Wait for unit to be ready
+            wait (fuif.out.input_ready == 1);
+            
+            // Generate unique data for each issue
+            v1[0] = 16'h4000 + (issued_count * 16);
+            v1[1] = 16'h4080 + (issued_count * 16);
+            
+            issue_from_port(0, v1, v2, SQRT, issued_count[7:0], 0, 2'b11, VR_SUM);
+            issued_count++;
+            $display("Issued SQRT operation %0d", issued_count);
+            
+            @(posedge CLK);
+            clear_port(0);
+        end
+        
+        $display("Max issue test complete: issued %0d operations", issued_count);
+    endtask //automatic
+
+
+    initial begin
+        reset_dut();
+        //sqrt_test_issue_port_0();
+        //sqrt_test_issue_port_1();
+        //sqrt_max_issue();
+        //sqrt_test_masking_1();
+        //sqrt_test_masking_2();
+        sqrt_backpressure();
+
+        repeat(3) @(posedge CLK);
+        $stop;
+    end
 endmodule

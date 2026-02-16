@@ -298,7 +298,7 @@ package vector_pkg;
         logic rm;
         logic [7:0] vd;
         logic input_ready;
-        logic mask
+        logic mask;
     } functional_unit_out_t;
 
     //lane structs

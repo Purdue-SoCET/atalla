@@ -8,34 +8,40 @@ module lane_unit_fifo #(
     input  logic wr_en,
     input  logic rd_en,
     input  logic [DWIDTH-1:0] din,
-    output logic [DWIDTH-1:0] dout,
+    output logic [DWIDTH-1:0] dout
 );
 
     localparam PWIDTH = $clog2(DEPTH);
     
     logic [DWIDTH-1:0] mem [DEPTH-1:0];
-    logic [PWIDTH:0] count;  // Extra bit to count up to DEPTH
+    logic [PWIDTH:0] count;
     logic [PWIDTH-1:0] wptr, rptr;
     logic full;
     logic empty;
 
-    // Counter tracks number of elements
+    // Counter
     always_ff @(posedge clk, negedge nRST) begin
         if (!nRST) begin
             count <= '0;
         end else begin
             case ({wr_en & !full, rd_en & !empty})
-                2'b10: count <= count + 1;  // Write only
-                2'b01: count <= count - 1;  // Read only
-                default: count <= count;     // Both or neither
+                2'b10: count <= count + 1;
+                2'b01: count <= count - 1;
+                default: count <= count;
             endcase
         end
     end
 
-    // Write pointer
+    // Write pointer and memory reset
     always_ff @(posedge clk, negedge nRST) begin
         if (!nRST) begin
             wptr <= '0;
+
+            // Initialize memory to zero
+            for (int i = 0; i < DEPTH; i++) begin
+                mem[i] <= '0;
+            end
+
         end else if (wr_en & !full) begin
             mem[wptr] <= din;
             wptr <= (wptr + 1) % DEPTH;
