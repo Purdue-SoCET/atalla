@@ -70,8 +70,8 @@ module skew_buffer #(
                 waddr = wr_ptr + (DELAY_SLOPE * i);
             end
 
-            if (waddr >= SRAM_DEPTH) begin
-                waddr = waddr - SRAM_DEPTH;
+            if (waddr >= SRAM_DEPTH - 1) begin
+                waddr = waddr - SRAM_DEPTH - 1;
             end
 
             sram_bank #(

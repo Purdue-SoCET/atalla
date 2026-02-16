@@ -36,15 +36,16 @@ module pipelined_adder_tree #(
                     .start  (1'b1),
                     .stall  (stall),
                     .sub    (1'b0),
-                    .fp1_in (stage_data[l][2*k]),
-                    .fp2_in (stage_data[l][2*k+1]),
-                    .fp_out (stage_data[l+1][k]),
+                    .fp1_in (stage_data[l][2 * k]),
+                    .fp2_in (stage_data[l][2 * k + 1]),
+                    .fp_out (stage_data[l + 1][k]),
                     .done   ()
                 );
             end
         end
     endgenerate
 
+    /*
     // psum_in delay line  –  holds psum_in for PSUM_DELAY cycles so it
     // arrives at the final adder aligned with the tree result
     // current implemented with FFs
@@ -72,6 +73,7 @@ module pipelined_adder_tree #(
             assign psum_delayed = psum_sr[PSUM_DELAY - 1];
         end
     endgenerate
+    */
 
     // Final addition :  sum_out = tree_result + psum_delayed
     add_fp16 u_psum_add (
@@ -81,7 +83,7 @@ module pipelined_adder_tree #(
         .stall  (stall),
         .sub    (1'b0),
         .fp1_in (stage_data[TREE_DEPTH][0]),
-        .fp2_in (psum_delayed),
+        .fp2_in (psum_in),
         .fp_out (sum_out),
         .done   ()
     );
