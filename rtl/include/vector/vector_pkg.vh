@@ -235,56 +235,39 @@ package vector_pkg;
         logic       rm;        // reduction mode flag
     } meta_t;
 
-    // Per-lane, per-FU input bundle
-    typedef struct packed {
-        logic [LANE_ISSUE_W-1:0] input_valid;
-        logic [LANE_ISSUE_W-1:0][SLICE_W - 1:0][ESZ - 1:0] v1;
-        logic [LANE_ISSUE_W-1:0][SLICE_W - 1:0][ESZ - 1:0] v2;
-        fu_t  [LANE_ISSUE_W-1:0] usel;
-        logic [LANE_ISSUE_W-1:0][7:0] vd;
-        logic [LANE_ISSUE_W-1:0] rm;
-        logic [LANE_ISSUE_W-1:0][SLICE_W - 1:0] mask;
-        valu_op_t [LANE_ISSUE_W-1:0] aluop;
-        logic [4out:0] rc_ready;
-    } lane_in_t;
-
-    // Per-lane, per-FU output bundle
-    typedef struct packed {
-        functional_unit_out_t [LANE_FU_COUNT-1:0] units;
-    } lane_out_t;
-
+    
     // Lane sequencer in/out (per lane, per issue slot)
     typedef struct packed {
-        logic [SLICE_W - 1:0][ESZ - 1:0] v1,
-        logic [SLICE_W - 1:0][ESZ - 1:0] v2,
-        logic [SLICE_W - 1:0] mask,
-        logic valid_in,
-        logic ready_out,
+        logic [SLICE_W - 1:0][ESZ - 1:0] v1;
+        logic [SLICE_W - 1:0][ESZ - 1:0] v2;
+        logic [SLICE_W - 1:0] mask;
+        logic valid_in;
+        logic ready_out;
 
     } lane_sequencer_if_in_t;
 
     
     typedef struct packed {
-        logic [ESZ - 1:0] v1,
-        logic [ESZ - 1:0] v2,
-        logic mask,
-        logic valid_out,
-        logic ready_in,
+        logic [ESZ - 1:0] v1;
+        logic [ESZ - 1:0] v2;
+        logic mask;
+        logic valid_out;
+        logic ready_in;
     } lane_sequencer_if_out_t;
 
     // =========================================================================
     // Result Collector structs
     // =========================================================================
     typedef struct packed {
-        logic input_valid;
+        logic [NUM_LANES-1:0] input_valid;
+        logic [NUM_LANES-1:0] mask;
         logic wb_ready;
-
-        logic [NUM_LANES-1:0][15:0] lane_input;
+        logic [NUM_LANES-1:0][ESZ-1:0] lane_input;
         logic [7:0]     vd_input;
     } result_collector_in_t;
 
     typedef struct packed {
-        logic input_ready;
+        logic [NUM_LANES-1:0] input_ready;
         logic wb_valid;
 
         vreg_t          vector_output;
@@ -305,17 +288,35 @@ package vector_pkg;
     } functional_unit_issue_port_t;
     
     typedef struct packed {
-        functional_unit_issue_port_t ports [LANE_ISSUE_W-1:0];
+        functional_unit_issue_port_t [LANE_ISSUE_W-1:0] ports;
         logic wb_ready;
     } functional_unit_in_t;
 
     typedef struct packed {
-        logic [16:0] result;
+        logic [ESZ-1:0] result;
         logic wb_valid;
         logic rm;
         logic [7:0] vd;
         logic input_ready;
     } functional_unit_out_t;
+
+    //lane structs
+    typedef struct packed {
+        logic [LANE_ISSUE_W-1:0] input_valid;
+        logic [LANE_ISSUE_W-1:0][SLICE_W - 1:0][ESZ - 1:0] v1;
+        logic [LANE_ISSUE_W-1:0][SLICE_W - 1:0][ESZ - 1:0] v2;
+        fu_t  [LANE_ISSUE_W-1:0] usel;
+        logic [LANE_ISSUE_W-1:0][7:0] vd;
+        logic [LANE_ISSUE_W-1:0] rm;
+        logic [LANE_ISSUE_W-1:0][SLICE_W - 1:0] mask;
+        valu_op_t [LANE_ISSUE_W-1:0] aluop;
+        logic [LANE_FU_COUNT-1:0] rc_ready;
+    } lane_in_t;
+
+    typedef struct packed {
+        functional_unit_out_t [LANE_FU_COUNT-1:0] units;
+    } lane_out_t;
+
 
     // =========================================================================
     // Top-level GSAU + vector_datapath structs
