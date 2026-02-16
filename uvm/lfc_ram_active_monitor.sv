@@ -52,13 +52,15 @@ class lfc_ram_active_monitor extends uvm_monitor;
       tx.ram_mem_complete = vif.ram_mem_complete;
 
       if(has_run_once > 0) begin // avoids an uninstantiated comparison
-        if(!tx.input_equal(prev_tx)) begin
+        if(!tx.input_equal(prev_tx) && tx.ram_mem_complete) begin
           `uvm_info("RAM_ACTIVE_MON", $sformatf("Sent tx: ram_mem_data:%0h ram_mem_complete:%0h", tx.ram_mem_data, tx.ram_mem_complete), UVM_LOW)
+	  prev_tx.copy(tx);
           lfc_ap.write(tx);
-        end
+        end else begin
+	  prev_tx.copy(tx);
+	end
       end
 
-      prev_tx.copy(tx);
       if (has_run_once == 0) has_run_once++;
     end
   endtask

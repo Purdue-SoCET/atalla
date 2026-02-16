@@ -44,15 +44,9 @@ module tb_top();
     lfc_if lfc_interface(clk);
 
     // Reset input for both CPU and RAM
-    //assign lfc_interface.n_rst = n_rst;
     assign n_rst = lfc_interface.n_rst;
 
     // CPU Inputs
-    /*assign lfc_interface.mem_in = mem_in;
-    assign lfc_interface.mem_in_addr = mem_in_addr;
-    assign lfc_interface.mem_in_rw_mode = mem_in_rw_mode;
-    assign lfc_interface.mem_in_store_value = mem_in_store_value;
-    assign lfc_interface.dp_in_halt = dp_in_halt;*/
     assign mem_in = lfc_interface.mem_in;
     assign mem_in_addr = lfc_interface.mem_in_addr;
     assign mem_in_rw_mode = lfc_interface.mem_in_rw_mode;
@@ -69,8 +63,6 @@ module tb_top();
     assign lfc_interface.dp_out_flushed = dp_out_flushed;
 
     // RAM Inputs
-    //assign lfc_interface.ram_mem_data = ram_mem_data;
-    //assign lfc_interface.ram_mem_complete = ram_mem_complete;
     assign ram_mem_data = lfc_interface.ram_mem_data;
     assign ram_mem_complete = lfc_interface.ram_mem_complete;
 

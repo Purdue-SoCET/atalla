@@ -13,7 +13,7 @@ import uvm_pkg::*;
 `include "lfc_cpu_transaction.sv"
 `include "lfc_ram_transaction.sv"
 
-class lfc_environment extends uvm_env;
+class lfc_environment #(parameter NUM_BANKS = 4) extends uvm_env;
   `uvm_component_utils(lfc_environment)
 
   /*// Agents
@@ -52,7 +52,7 @@ class lfc_environment extends uvm_env;
     cpu_active_agent = lfc_cpu_active_agent::type_id::create("cpu_active_agent", this);
     cpu_passive_agent = lfc_cpu_passive_agent::type_id::create("cpu_passive_agent", this);
     ram_active_agent = lfc_ram_active_agent::type_id::create("ram_active_agent", this);
-    ram_passive_agent = lfc_ram_passive_agent::type_id::create("ram_passive_agent", this);
+    ram_passive_agent = lfc_ram_passive_agent#(NUM_BANKS)::type_id::create("ram_passive_agent", this);
     
     pred = lfc_predictor::type_id::create("lfc_predictor", this);
     sb = lfc_scoreboard::type_id::create("lfc_scoreboard", this);

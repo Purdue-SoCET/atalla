@@ -16,6 +16,8 @@ import uvm_pkg::*;
 class test extends uvm_test;
     `uvm_component_utils(test)
 
+    localparam NUM_BANKS = 4;
+
     lfc_environment env;
     virtual lfc_if vif;
     lfc_basic_sequence basic_seq;
@@ -37,7 +39,7 @@ class test extends uvm_test;
         super.build_phase(phase);
         `uvm_info("Test", "Build Phase", UVM_LOW)
 
-        env = lfc_environment::type_id::create("env", this);
+        env = lfc_environment#(.NUM_BANKS(NUM_BANKS))::type_id::create("env", this);
         basic_seq = lfc_basic_sequence::type_id::create("basic_seq", this);
         wr_seq = lfc_wr_sequence::type_id::create("wr_seq", this);
 
@@ -61,10 +63,10 @@ class test extends uvm_test;
         $display("%t Starting sequence run_phase", $time);
         basic_seq.start(env.cpu_active_agent.sqr);
         #1000ns;
-        //load_hit.start(env.cpu_active_agent.sqr);
-        //#1000ns;
-        // load_miss.start(env.cpu_active_agent.sqr);
+        // load_hit.start(env.cpu_active_agent.sqr);
         // #1000ns;
+        //load_miss.start(env.cpu_active_agent.sqr);
+        //#1000ns;
         // miss_coal.start(env.cpu_active_agent.sqr);
         // #1000ns;
         // mshr_overflow_seq.start(env.cpu_active_agent.sqr);
