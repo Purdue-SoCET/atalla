@@ -36,7 +36,7 @@ module skew_buffer #(
 
     always_ff @(posedge clk, negedge n_rst) begin : pointer_regs
         if (~n_rst) begin
-            wr_ptr <= RECT_DELAY - READ; // initialize the skew in write pointer
+            wr_ptr <= RECT_DELAY - READ_LATENCY; // initialize the skew in write pointer
             rd_ptr = '0;
             ptr_counter <= '0;
         end else begin
