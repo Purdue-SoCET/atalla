@@ -53,60 +53,63 @@ module sqrt_FU.sv (
         end
     end
 
-    //connections to the arithmetic unit
+    //connections to the arithmetic unit. always goes through the unit
     assign srif.in.valid_in = lsif.out.valid_out; //only start the unit when there is data we want to operate on
     assign srif.in.operand = lsif.out.v1;
     assign srif.in.ready_out = fuif.in.wb_ready;
     assign lsif.in.ready_out = srif.out.ready_in;
-    //bad solution but the other solution is not the same across each unit, so for the sake of time i am just tracking the mask bit and zeroing out the result when the FU is done
-    logic mask_pipe [UNIT_LATENCY-1:0];
-    logic valid_pipe [UNIT_LATENCY-1:0];
-    logic [7:0] vd_pipe [UNIT_LATENCY-1:0];
+    
+    //idea for tracking masking: when seq streams out valid data, push the mask bit, when there is a valid output handshake, pop it
+    lane_unit_fifo #(
+        .DEPTH(4),   // Twice as big as i think i need
+        .DWIDTH(1)    // Single mask bit
+    ) mask_fifo (
+        .clk(CLK),
+        .nRST(nRST),
+        .wr_en(lsif.out.valid_out),
+        .rd_en(srif.out.valid_out & fuif.in.wb_ready),
+        .din(lsif.out.mask),
+        .dout(fuif.out.mask)
+    );
+
+    // VD metadata
+    logic [$clog2(SLICE_W)-1:0] output_count_r, output_count_n;
+    //this is the best idea i could come up with. Its probably bad. The idea is when the lane is issued a valid input that we can accept we push the VD into a fifo
+    //we track what element of the slice is being sent, and only pop the fifo once the last element has been sent through
 
     always_ff @(posedge CLK, negedge nRST) begin
         if (!nRST) begin
-            for (int i = 0; i < UNIT_LATENCY; i++) begin
-                mask_pipe[i] <= 1'b0;
-                valid_pipe[i] <= 1'b0;
-                 vd_pipe[i] <= 8'b0;
-            end
-        end 
-        else if (fuif.in.wb_ready || !valid_pipe[UNIT_LATENCY-1]) begin
-            mask_pipe[0] <= lsif.out.mask;
-            valid_pipe[0] <= lsif.out.valid_out;
-            vd_pipe[0] <= vd_n;
-            
-            for (int i = 1; i < UNIT_LATENCY; i++) begin
-                mask_pipe[i] <= mask_pipe[i-1];
-                valid_pipe[i] <= valid_pipe[i-1];
-                vd_pipe[i] <= vd_pipe[i-1];
+            output_count_r <= '0;
+        end else begin
+            output_count_r <= output_count_n;
+        end
+    end
+
+    always_comb begin
+        output_count_n = output_count_r;
+        if (srif.out.valid_out & fuif.in.wb_ready) begin
+            if (output_count_r == SLICE_W - 1) begin
+                output_count_n = '0;  // Wrap back to 0
+            end else begin
+                output_count_n = output_count_r + 1;
             end
         end
     end
 
+    logic is_last_element;
+    assign is_last_element = (output_count_r == (SLICE_W - 1));
 
-
-    //metadata
-    
-    always_ff @(posedge CLK, negedge nRST) begin : metadata_reg
-        if (!nRST) begin
-            vd_r <= 'b0;
-        end
-        else begin
-            vd_r <= vd_n;
-        end
-    end
-
-    always_comb begin : metadata_comb
-    vd_n = vd_r;
-        //we want to register the metadata only upon accepting an input
-        for (int i = 0; i < LANE_ISSUE_W; i++) begin
-            if (fuif.in.ports[i].input_valid & (fuif.in.ports[i].usel == SQRT) & fuif.in.input_ready) begin
-                vd_n = fuif.in.ports[i].vd;
-            end
-        end
-    end
-    assign fuif.out.vd = vd_pipe[UNIT_LATENCY-1];
+    lane_unit_fifo #(
+        .DEPTH(4),
+        .DWIDTH(8)
+    ) vd_fifo (
+        .clk(CLK),
+        .nRST(nRST),
+        .wr_en(lsif.out.valid_out),
+        .rd_en(srif.out.valid_out & fuif.in.wb_ready & is_last_element),  // Pop on last element only
+        .din(vd_r),
+        .dout(fuif.out.vd),
+    );
 
 
     //output
