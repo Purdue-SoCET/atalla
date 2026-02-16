@@ -21,9 +21,9 @@ module sysarr_MEISSA_top #(
     logic [DW-1:0] adder_sum [N-1:0];
 
     // only stall when gsau indicates stall (consumer module wb buffer needs to stall)
-    assign sysarr_stall = gsau_if.sa_ready_out;
+    assign sysarr_stall = ~gsau_if.sa_ready_out;
 
-    assign gsau_if.sa_ready_in = sysarr_stall;
+    assign gsau_if.sa_ready_in = ~sysarr_stall;
 
     //mul grid: input and output is latched
 
