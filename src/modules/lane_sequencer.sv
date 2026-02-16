@@ -17,6 +17,7 @@ module lane_sequencer(
     import vector_pkg::*;
 
     // make sure slice_w is pow^2
+    // ty my goat Jacob for this 
     initial begin
         assert (2**$clog2(SLICE_W) == SLICE_W) else $fatal("SLICE_W must be a power of 2");
     end
@@ -24,18 +25,18 @@ module lane_sequencer(
     // bit width for the counter, need it to index 
     localparam IDX_WIDTH = (SLICE_W == 1) ? 1 : $clog2(SLICE_W);
 
-    logic [IDX_WIDTH-1:0] elem_idx, elem_idx_n; // This is to count n track element output
+    logic [IDX_WIDTH-1:0] elem_idx, elem_idx_n; // count n track element output
 
-    logic [SLICE_W-1:0][ESZ-1:0] v1_reg, v2_reg, v1_reg_n, v2_reg_n; // Registers for v1 and v2, based of number of elements in a slice, via # of lanes
-    logic [SLICE_W-1:0] mask_reg, mask_reg_n; // Registers for the mask bits for the elements
+    logic [SLICE_W-1:0][ESZ-1:0] v1_reg, v2_reg, v1_reg_n, v2_reg_n; // Registers v1 v2
+    logic [SLICE_W-1:0] mask_reg, mask_reg_n; // Registers for mask bits of elements
 
     logic valid_reg, valid_reg_n; // register for valid signal
     logic ready_reg, ready_reg_n; // register for thr ready signal
 
-    logic last_elem; // tracking last element to know counter reset and valid/readys
+    logic last_elem; // to know counter reset and valid/readys
     assign last_elem = (elem_idx == IDX_WIDTH'(SLICE_W - 1));
 
-    // This is the counter to track which element sequencer is on in the slice, it resets when completed a full slice or when theres new input
+    // counter to track which element sequencer is on in the slice, resets when completed slice or when new input
     always_ff @(posedge CLK or negedge nRST) begin: elem_idx_ff
         if (!nRST) begin
             elem_idx <= '0;
@@ -45,10 +46,10 @@ module lane_sequencer(
         end
     end
 
-    always_comb begin : elem_idx_comb
+    always_comb begin: elem_idx_comb
         elem_idx_n = elem_idx;
 
-        // Advance when FU is ready for output
+        // cont when FU is ready for output
         if (valid_reg & seq_if.in.ready_out) begin
             if (last_elem) begin
                 elem_idx_n = '0;
@@ -73,12 +74,12 @@ module lane_sequencer(
         end
     end
 
-    always_comb begin: registered_shtu_ff_next
+    always_comb begin: shtu_ff_next
         v1_reg_n = v1_reg;
         v2_reg_n = v2_reg;
         mask_reg_n = mask_reg;
 
-        // Capture new slice when ready and valid
+        // new slice when ready and valid
         if (seq_if.in.valid_in & ready_reg) begin
             v1_reg_n = seq_if.in.v1;
             v2_reg_n = seq_if.in.v2;
@@ -100,14 +101,14 @@ module lane_sequencer(
         end
     end
 
+    // Assert valid when accept a new slice
+    // Deassert valid when last element completes
     always_comb begin: valid_comb
         valid_reg_n = valid_reg;
 
-        // Assert valid when accept a new slice
         if (seq_if.in.valid_in & ready_reg) begin
             valid_reg_n = 1'b1;
         end
-        // Deassert valid when last element completes
         else if (valid_reg & seq_if.in.ready_out & last_elem) begin
             valid_reg_n = 1'b0;
         end
@@ -115,7 +116,7 @@ module lane_sequencer(
 
     assign seq_if.out.valid_out = valid_reg;
 
-    always_ff @(posedge CLK, negedge nRST) begin : ready_ff
+    always_ff @(posedge CLK or negedge nRST) begin : ready_ff
         if (!nRST) begin
             ready_reg <= 1'b1;
         end
@@ -124,14 +125,14 @@ module lane_sequencer(
         end
     end
 
-    always_comb begin : ready_comb
+    // Not ready when accept a new slice
+    // Ready again when last element completes
+    always_comb begin: ready_comb
         ready_reg_n = ready_reg;
 
-        // Not ready when accept a new slice
         if (seq_if.in.valid_in & ready_reg) begin
             ready_reg_n = 1'b0;
         end
-        // Ready again when last element completes
         else if (valid_reg & seq_if.in.ready_out & last_elem) begin
             ready_reg_n = 1'b1;
         end
