@@ -263,21 +263,21 @@ package vector_pkg;
     //localparam NUM_SLICE = NUM_ELEMENTS / NUM_LANES;
 
     typedef struct packed {
-        logic [SLICE_W - 1:0][ESZ - 1:0] v1,
-        logic [SLICE_W - 1:0][ESZ - 1:0] v2,
-        logic [SLICE_W - 1:0] mask,
-        logic valid_in,
-        logic ready_out,
+        logic [SLICE_W - 1:0][ESZ - 1:0] v1;
+        logic [SLICE_W - 1:0][ESZ - 1:0] v2;
+        logic [SLICE_W - 1:0] mask;
+        logic valid_in;
+        logic ready_out;
 
     } lane_sequencer_if_in_t;
 
     
     typedef struct packed {
-        logic [ESZ - 1:0] v1,
-        logic [ESZ - 1:0] v2,
-        logic mask,
-        logic valid_out,
-        logic ready_in,
+        logic [ESZ - 1:0] v1;
+        logic [ESZ - 1:0] v2;
+        logic mask;
+        logic valid_out;
+        logic ready_in;
     } lane_sequencer_if_out_t;
 
     // =========================================================================
