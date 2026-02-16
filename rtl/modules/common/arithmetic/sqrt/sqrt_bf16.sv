@@ -1,5 +1,5 @@
 `include "sqrt_types.vh"
-`include "sqrt_if.sv"
+`include "sqrt_if.vh"
 
 /* 
 BF16 sqaure root module.
