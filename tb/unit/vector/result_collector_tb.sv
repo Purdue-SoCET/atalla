@@ -366,12 +366,12 @@ module result_collector_tb;
         power_on_reset();
         @(posedge CLK);
         
-        //vector_collection_multi_cycle();
-        //vector_collection_staggered();
+        vector_collection_multi_cycle();
+        vector_collection_staggered();
        
-        //backpressure_test();
-        //mask_test();
-        //back_to_back_vectors();
+        backpressure_test();
+        mask_test();
+        back_to_back_vectors();
         
         vector_collection_one_slow_lane();
 

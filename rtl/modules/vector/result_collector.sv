@@ -71,23 +71,40 @@ module result_collector (
     assign rcif.out.vector_output = collection_arrays; //theoretically this works cause they are both packed and the same bit width
 
     //vd latching
+    logic vd_locked, vd_locked_n;
     always_ff @(posedge CLK, negedge nRST) begin : vd_ff
         if (!nRST) begin
             vd <= 'b0;
+            vd_locked <= 1'b0;
         end
         else begin
             vd <= vd_n;
+            vd_locked = vd_locked_n;
+        end
+    end
+
+
+
+    always_comb begin
+        vd_locked_n = vd_locked;
+        // Lock VD when first valid data arrives
+        if ((|rcif.in.input_valid) & (|rcif.out.input_ready) & !vd_locked) begin
+            vd_locked_n = 1'b1;
+        end
+        
+        // Unlock when handshake completes (vector written back)
+        if (rcif.out.wb_valid & rcif.in.wb_ready) begin
+            vd_locked_n = 1'b0;
         end
     end
 
     always_comb begin : vd_comb
-    vd_n = vd;
-    // Capture vd right after reset (beginning of new vector)
-    // This might not work as we are only looking to see if the first lane is on count 0
-    if ((lane_counters[0].count == 0) & (|rcif.in.input_valid) & rcif.out.input_ready[0]) begin
-        vd_n = rcif.in.vd_input;
+        vd_n = vd;
+        // Capture vd on first valid input, only when unlocked
+        if ((|rcif.in.input_valid) & (|rcif.out.input_ready) & !vd_locked) begin
+            vd_n = rcif.in.vd_input;
+        end
     end
-end
     assign rcif.out.vd_output = vd;
 
     //valid ready determination
