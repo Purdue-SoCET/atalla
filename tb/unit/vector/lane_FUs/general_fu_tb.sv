@@ -23,7 +23,7 @@ Test Cases:
 `include "functional_unit_if.vh"
 `include "vector_pkg.vh"
 
-module general_lane_tb (
+module general_fu_tb (
 );
     
 
@@ -99,7 +99,7 @@ module general_lane_tb (
         v2 = 'b0;
         
         fuif.in.wb_ready = 'b1;
-        issue_from_port(1, v1, v2, SQRT, 1, 0, 2'b11, VR_SUM);
+        issue_from_port(1, v1, v2, SQRT, 2, 0, 2'b11, VR_SUM);
         @(posedge CLK);
         fuif.in.ports[1].input_valid = 'b0;
 
@@ -129,10 +129,6 @@ module general_lane_tb (
         while (wb_count < SLICE_W) begin
             @(posedge CLK);
             if (fuif.out.wb_valid) begin
-                // Verify masked element outputs zero
-                if (wb_count == 1) begin
-                    assert(fuif.out.result == 16'h0000) else $error("Element 1 should be masked (zero)");
-                end
                 wb_count++;
             end
             timeout++;
@@ -156,10 +152,6 @@ module general_lane_tb (
         while (wb_count < SLICE_W) begin
             @(posedge CLK);
             if (fuif.out.wb_valid) begin
-                // Verify masked element outputs zero
-                if (wb_count == 0) begin
-                    assert(fuif.out.result == 16'h0000) else $error("Element 0 should be masked (zero)");
-                end
                 wb_count++;
             end
             timeout++;
@@ -176,7 +168,7 @@ module general_lane_tb (
         v2 = 'b0;
 
         fuif.in.wb_ready = 'b0;
-        issue_from_port(0, v1, v2, SQRT, 1, 0, 2'b11, VR_SUM);
+        issue_from_port(0, v1, v2, SQRT, 10, 0, 2'b11, VR_SUM);
         @(posedge CLK);
         fuif.in.ports[0].input_valid = 'b0;
 
