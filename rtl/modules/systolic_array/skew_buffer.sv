@@ -13,7 +13,7 @@ module skew_buffer #(
     localparam int READ_LATENCY      = 1,    // sram read latency
     localparam int WRITE_LATENCY     = 1,    // sram write latency (MUST be equal to read latency)
     // since first column gets 0 delay, last column can get NUM_COLS - 1 delay coefficient
-    localparam int SRAM_DEPTH = RECT_DELAY + (DELAY_SLOPE * (NUM_COLS - 1)),
+    localparam int SRAM_DEPTH = RECT_DELAY + (DELAY_SLOPE * (NUM_COLS)),
     localparam int PTR_WIDTH = $clog2(SRAM_DEPTH)
 ) (
     input  logic clk, n_rst,
@@ -59,7 +59,7 @@ module skew_buffer #(
         end
     end
 
-    logic [$clog2(SRAM_DEPTH):0] waddr;
+    logic [$clog2(SRAM_DEPTH) + 1:0] waddr;
 
     generate;
         for (genvar i; i < NUM_COLS, i++) begin
@@ -70,8 +70,8 @@ module skew_buffer #(
                 waddr = wr_ptr + (DELAY_SLOPE * i);
             end
 
-            if (waddr >= SRAM_DEPTH - 1) begin
-                waddr = waddr - SRAM_DEPTH - 1;
+            if (waddr >= SRAM_DEPTH) begin
+                waddr = waddr - SRAM_DEPTH;
             end
 
             sram_bank #(
