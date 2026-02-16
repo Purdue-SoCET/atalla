@@ -3,7 +3,7 @@
 `ifndef AXI_BUS_IF_SV
 `define AXI_BUS_IF_SV
 
-interface axi_bus_if(input logic clk, input logic nRST);
+interface axi_bus_if(input logic CLK, input logic nRST);
     `include "axi_bus_params.svh"
 
     import axi_bus_pkg::*;
@@ -40,6 +40,7 @@ interface axi_bus_if(input logic clk, input logic nRST);
 
     // write arbiter signals
     logic sp0_req_w, sp1_req_w, d_req_w, skid_ready_w;
+    logic [AWLEN-1:0] sp0_len_w, sp1_len_w, d_len_w;
     logic [AWGRANT-1:0] aw_grant;
 
     // SP0 & AR MANAGER READY/VALID
@@ -285,10 +286,11 @@ interface axi_bus_if(input logic clk, input logic nRST);
         input b_d_o_ready
     );
 
-    // AW MANAGERS <=> WRITE ARBITER
+    // WRITE ARBITER
     modport write_arbiter (
         // From Manager
         input sp0_req_w, sp1_req_w, d_req_w,
+        input sp0_len_w, sp1_len_w, d_len_w,
 
         // From Skid Buffer
         input skid_ready_w,
@@ -297,5 +299,23 @@ interface axi_bus_if(input logic clk, input logic nRST);
         output aw_grant
     );
 
+    // ----------------------------------------------------------------------
+    // WRITE PATH TB Definitions
+    // ----------------------------------------------------------------------
+    // WRITE ARBITER TB
+    modport write_arbiter_tb (
+        // From Manager
+        output sp0_req_w, sp1_req_w, d_req_w,
+        output sp0_len_w, sp1_len_w, d_len_w,
+
+        // From Skid Buffer
+        output skid_ready_w,
+
+        // To Read Mux/AR Manager 
+        input aw_grant
+    );
+
+
+
 endinterface
-`endif // AXI_BUS_IF_VH
+`endif // AXI_BUS_IF_SV
