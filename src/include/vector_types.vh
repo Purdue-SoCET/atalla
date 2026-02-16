@@ -11,6 +11,31 @@ package vector_pkg;
     parameter DTYPE_W = 2;
     parameter INSTR_W = 32;
     parameter NUM_SP = 2;
+    // =========================================================================
+    //  Vector ISA / Global Params
+    // =========================================================================
+    // Top Level localparams
+    localparam LANE_ISSUE_W = 2;
+    
+    // LANE VARIABLES
+    localparam NUM_LANES   = 16;
+    localparam LANE_ID_W   = $clog2(NUM_LANES);
+    localparam VLMAX       = 32;
+
+    // Elements per lane (total elems = NUM_LANES * SLICE_W = VLMAX)
+    localparam SLICE_W     = VLMAX / NUM_LANES;
+    localparam SLICE_ID_W  = $clog2(SLICE_W);
+    localparam VL_W        = $clog2(VLMAX);
+
+    // FU layout per lane
+    localparam LANE_FU_COUNT  = 5;              // How many FUs per lane
+    localparam LANE_FU_ID_W   = $clog2(LANE_FU_COUNT);
+
+    // Other localparams
+    localparam NUM_ELEMENTS = 32;
+    localparam ESZ          = 16;               // Element Size (bits)
+    localparam ESZ_W        = $clog2(ESZ);
+
 
     typedef logic [OPCODE_W-1:0] opcode_t;
     typedef logic [VIDX_W-1:0] vsel_t;
@@ -77,6 +102,28 @@ package vector_pkg;
         logic spwrite;
         logic spread;
     } control_t;
+
+    // Lane sequencer in/out (per lane, per functional unit)
+        
+    //localparam NUM_SLICE = NUM_ELEMENTS / NUM_LANES;
+
+    typedef struct packed {
+        logic [SLICE_W - 1:0][ESZ - 1:0] v1;
+        logic [SLICE_W - 1:0][ESZ - 1:0] v2;
+        logic [SLICE_W - 1:0] mask;
+        logic valid_in;
+        logic ready_out;
+
+    } lane_sequencer_if_in_t;
+
+    
+    typedef struct packed {
+        logic [ESZ - 1:0] v1;
+        logic [ESZ - 1:0] v2;
+        logic mask;
+        logic valid_out;
+        logic ready_in;
+    } lane_sequencer_if_out_t;
 
 endpackage
 `endif
