@@ -379,6 +379,71 @@ def asm_to_instr_dict(mnemonic: str, ops: list[str]) -> dict:
             d["mask"] = parse_int(ops[3])
         return d
 
+    if instr_type == "VV":
+        # add.vv vd, vs1, vs2, mask, sac
+        d["vd"] = parse_reg(ops[0])
+        d["vs1"] = parse_reg(ops[1])
+        d["vs2"] = parse_reg(ops[2])
+        d["mask"] = parse_int(ops[3])
+        d["sac"] = parse_int(ops[4])
+        return d
+
+    if instr_type == "VS":
+        # add.vs vd, vs1, rs1, mask
+        d["vd"] = parse_reg(ops[0])
+        d["vs1"] = parse_reg(ops[1])
+        d["rs1"] = parse_reg(ops[2])
+        d["mask"] = parse_int(ops[3])
+        return d
+
+    if instr_type == "VM":
+        # vreg.ld vd, rs1, num_cols, num_rows, sid, rc, rc_id
+        d["vd"] = parse_reg(ops[0])
+        d["rs1"] = parse_reg(ops[1])
+        d["num_cols"] = parse_int(ops[2])
+        d["num_rows"] = parse_int(ops[3])
+        d["sid"] = parse_int(ops[4])
+        d["rc"] = parse_int(ops[5])
+        d["rc_id"] = parse_int(ops[6])
+        return d
+
+    if instr_type == "SDMA":
+        # scpad.ld rs1, rs2, num_cols, num_rows, sid
+        d["rs1"] = parse_reg(ops[0])
+        d["rs2"] = parse_reg(ops[1])
+        d["num_cols"] = parse_int(ops[2])
+        d["num_rows"] = parse_int(ops[3])
+        d["sid"] = parse_int(ops[4])
+        return d
+
+    if instr_type == "MTS":
+        # mv.mts rd, vms
+        d["rd"] = parse_reg(ops[0])
+        d["vms"] = parse_int(ops[1])
+        return d
+
+    if instr_type == "STM":
+        # mv.stm vmd, rs1
+        d["vmd"] = parse_int(ops[0])
+        d["rs1"] = parse_reg(ops[1])
+        return d
+
+    if instr_type == "MVV":
+        # mgt.mvv vmd, vs1, vs2, mask
+        d["vmd"] = parse_int(ops[0])
+        d["vs1"] = parse_reg(ops[1])
+        d["vs2"] = parse_reg(ops[2])
+        d["mask"] = parse_int(ops[3])
+        return d
+
+    if instr_type == "MVS":
+        # mgt.mvs vmd, vs1, rs1, mask
+        d["vmd"] = parse_int(ops[0])
+        d["vs1"] = parse_reg(ops[1])
+        d["rs1"] = parse_reg(ops[2])
+        d["mask"] = parse_int(ops[3])
+        return d
+
     if instr_type == "VTS":
         # vmov.vts rd, vs1, imm8
         d["rd"]  = parse_reg(ops[0])
