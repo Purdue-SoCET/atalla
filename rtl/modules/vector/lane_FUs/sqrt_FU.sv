@@ -18,7 +18,7 @@ module sqrt_FU (
     import vector_pkg::*;
     localparam int UNIT_LATENCY = 8; //latency of the arithmetic unit
 
-    logic [7:0] vd_r, vd_n;
+    logic [7:0] vd;
 
     //Module and interface instanciation
     lane_sequencer_if lsif();
@@ -44,13 +44,13 @@ module sqrt_FU (
         lsif.in.valid_in = 'b0;
         lsif.in.v1 = 'b0;
         lsif.in.mask = 'b0;
-        vd_n = vd_r;
+        vd = 'b0;
         for (int i = 0; i < LANE_ISSUE_W; i++) begin
             if (fuif.in.ports[i].input_valid & (fuif.in.ports[i].usel == SQRT) & fuif.out.input_ready) begin //are any of the input ports issuing to this FU? and we are ready
                 lsif.in.valid_in = 'b1;
                 lsif.in.v1 = fuif.in.ports[i].v1;
                 lsif.in.mask = fuif.in.ports[i].mask;
-                vd_n = fuif.in.ports[i].vd;
+                vd = fuif.in.ports[i].vd;
             end
         end
     end
@@ -100,14 +100,7 @@ module sqrt_FU (
 
     logic is_last_element;
     assign is_last_element = (output_count_r == (SLICE_W - 1));
-
-    always_ff @(posedge CLK, negedge nRST) begin
-        if (!nRST)
-            vd_r <= '0;
-        else
-            vd_r <= vd_n;
-    end
-
+    
     lane_unit_fifo #(
         .DEPTH(4),
         .DWIDTH(8)
@@ -116,7 +109,7 @@ module sqrt_FU (
         .nRST(nRST),
         .wr_en(lsif.in.valid_in & lsif.out.ready_in),
         .rd_en(srif.out.valid_out & fuif.in.wb_ready & is_last_element),  // Pop on last element only
-        .din(vd_n),
+        .din(vd),
         .dout(fuif.out.vd)
     );
 
