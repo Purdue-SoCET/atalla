@@ -368,7 +368,7 @@ package vector_pkg;
     typedef struct packed {
         vreg_t veg_vdata1;
         vreg_t veg_vdata2;
-        logic [7:0] vd,
+        logic [7:0] vd;
         logic valid_in;
         logic weight;
         logic wb_ready;
