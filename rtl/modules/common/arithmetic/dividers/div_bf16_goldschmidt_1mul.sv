@@ -40,11 +40,11 @@ module div_bf16_goldschmidt_1mul (
     logic mul_start, mul_done;
 
     logic a_nan, a_inf, a_zero, b_nan, b_inf, b_zero;
-    assign a_nan  = (divif.in.operand1[14:7] == EXP_INF) && (divif.in.operand1[6:0] != 0);
-    assign a_inf  = (divif.in.operand1[14:7] == EXP_INF) && (divif.in.operand1[6:0] == 0);
+    assign a_nan = (divif.in.operand1[14:7] == EXP_INF) && (divif.in.operand1[6:0] != 0);
+    assign a_inf = (divif.in.operand1[14:7] == EXP_INF) && (divif.in.operand1[6:0] == 0);
     assign a_zero = (divif.in.operand1[14:7] == 0);
-    assign b_nan  = (divif.in.operand2[14:7] == EXP_INF) && (divif.in.operand2[6:0] != 0);
-    assign b_inf  = (divif.in.operand2[14:7] == EXP_INF) && (divif.in.operand2[6:0] == 0);
+    assign b_nan = (divif.in.operand2[14:7] == EXP_INF) && (divif.in.operand2[6:0] != 0);
+    assign b_inf = (divif.in.operand2[14:7] == EXP_INF) && (divif.in.operand2[6:0] == 0);
     assign b_zero = (divif.in.operand2[14:7] == 0);
 
     always_ff @(posedge CLK or negedge nRST) begin
@@ -93,8 +93,8 @@ module div_bf16_goldschmidt_1mul (
                     next_n = {1'b0, BIAS, divif.in.operand1[6:0]};
                     next_d = {1'b0, BIAS, divif.in.operand2[6:0]};
 
-                    // Initial Seed F0 (Linear bit-flip approximation)
-                    next_f = {1'b0, BIAS, ~divif.in.operand2[6:0]}; 
+                    // Initial Seed F0 (Magic Number)
+                    next_f = 16'h7EF3 - {1'b0, BIAS, divif.in.operand2[6:0]};
 
                     if (a_nan || b_nan || (a_inf && b_inf) || (a_zero && b_zero) || a_inf || b_zero || a_zero || b_inf)
                         next_state = SPECIAL;
@@ -136,8 +136,8 @@ module div_bf16_goldschmidt_1mul (
             end
 
             REFINE_F: begin
-                // F = 2 - D. Approximate to flipping the mantissa
-                next_f = {1'b0, BIAS, ~reg_d[6:0]}; 
+                // F = 2 - D.
+                next_f = 16'h4000 - reg_d;
                 next_state = FINAL_NF;
             end
 
