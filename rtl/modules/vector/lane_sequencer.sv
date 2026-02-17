@@ -1,149 +1,144 @@
-//`include "vector_pkg.vh"
-import vector_pkg::*;
+// ------------------------------------------------------------
+// lane_sequencer.sv
+// Sequences the slice of vector into the functional unit of a lane
+// Owner: Vedant Sharma
+// Paramater control for this file is in vector_pkg.vh
+// ------------------------------------------------------------
 
-// ----------------------------------------
-// Lane sequencer
-// ----------------------------------------
-module lane_sequencer (
-    input  logic           CLK,
-    input  logic           nRST,
-    input  lane_seq_in_t   lane_in,
-    output lane_seq_out_t  lane_out
+`include "lane_sequencer_if.vh"
+
+module lane_sequencer(
+    input logic CLK, 
+    input logic nRST,
+
+    lane_sequencer_if.lane_sequencer seq_if
 );
-    // FSM states
-    typedef enum logic { IDLE, BUSY } state_t;
-    state_t     state, next_state;
 
-    // Latched copy of input slice
-    lane_seq_in_t  reg_slice;
+    import vector_pkg::*;
 
-    // Element index
-    slice_idx_t    elem_idx_q, elem_idx_next;
-
-    // Handshake
-    logic          elem_accepted;
-    logic          lane_ready;
-
-    // Element is accepted when we are asserting valid and consumer is ready
-    //assign elem_accepted = lane_out.valid && lane_in.ready;
-    //assign elem_accepted = lane_out.valid && lane_in.ready && lane_out.mask_bit;
-    assign elem_accepted = (state == BUSY) && lane_out.valid && lane_in.ready;
-
-
-    // -----------------------------
-    // Datapath: build lane_out
-    // -----------------------------
-    always_comb begin
-        // Default all fields to 0
-        lane_out = '0;
-
-        lane_out.elem_idx = elem_idx_q;
-        
-        // Metadata passthrough
-        lane_out.vd  = reg_slice.vd;
-        lane_out.vop = reg_slice.vop;
-        lane_out.rm  = reg_slice.rm;
-
-        // Current element data
-        lane_out.v1_elem  = reg_slice.v1[elem_idx_q];
-        lane_out.v2_elem  = reg_slice.v2[elem_idx_q];
-        lane_out.mask_bit = reg_slice.vmask[elem_idx_q];
-
-        // Valid while we're busy on this slice
-        // If you want to skip masked-off elements entirely, you can change this to:
-        // lane_out.valid = (state == BUSY) && reg_slice.valid && lane_out.mask_bit;
-        lane_out.valid = (state == BUSY) && reg_slice.valid;
-
-        // lane_ready is computed by the FSM block below
-        lane_out.lane_ready = lane_ready;
+    // make sure slice_w is pow^2
+    // ty my goat Jacob for this 
+    initial begin
+        assert (2**$clog2(SLICE_W) == SLICE_W) else $fatal("SLICE_W must be a power of 2");
     end
 
-    // -----------------------------
-    // Sequential: state + index + slice latch
-    // -----------------------------
-    always_ff @(posedge CLK or negedge nRST) begin
+    // bit width for the counter, need it to index 
+    localparam IDX_WIDTH = (SLICE_W == 1) ? 1 : $clog2(SLICE_W);
+
+    logic [IDX_WIDTH-1:0] elem_idx, elem_idx_n; // count n track element output
+
+    logic [SLICE_W-1:0][ESZ-1:0] v1_reg, v2_reg, v1_reg_n, v2_reg_n; // Registers v1 v2
+    logic [SLICE_W-1:0] mask_reg, mask_reg_n; // Registers for mask bits of elements
+
+    logic valid_reg, valid_reg_n; // register for valid signal
+    logic ready_reg, ready_reg_n; // register for thr ready signal
+
+    logic last_elem; // to know counter reset and valid/readys
+    assign last_elem = (elem_idx == IDX_WIDTH'(SLICE_W - 1));
+
+    // counter to track which element sequencer is on in the slice, resets when completed slice or when new input
+    always_ff @(posedge CLK or negedge nRST) begin: elem_idx_ff
         if (!nRST) begin
-            state      <= IDLE;
-            elem_idx_q <= '0;
-            reg_slice  <= '0;
-        end else begin
-            state <= next_state;
+            elem_idx <= '0;
+        end
+        else begin
+            elem_idx <= elem_idx_n;
+        end
+    end
 
-            if (state == IDLE) begin
-                // Always park at element 0 when idle
-                elem_idx_q <= '0;
+    always_comb begin: elem_idx_comb
+        elem_idx_n = elem_idx;
 
-                // Only (re)latch slice when we actually start BUSY
-                if (next_state == BUSY) begin
-                    reg_slice <= lane_in;
-                end
+        // cont when FU is ready for output
+        if (valid_reg & seq_if.in.ready_out) begin
+            if (last_elem) begin
+                elem_idx_n = '0;
             end
-            else if (state == BUSY && elem_accepted) begin
-                elem_idx_q <= elem_idx_next;
+            else begin
+                elem_idx_n = elem_idx + 1;
             end
         end
     end
 
-    // -----------------------------
-    // Sequential: state + index + slice latch
-    // -----------------------------
-    // vd must stay constant for the whole BUSY window of a slice
-    logic [7:0] vd_snapshot;
-
-    always_ff @(posedge CLK or negedge nRST) begin
+    // Register the input slice, and mask, and output valid/ready handshakes
+    always_ff @(posedge CLK or negedge nRST) begin: registered_shtu_ff
         if (!nRST) begin
-            vd_snapshot <= '0;
-        end else begin
-            if (state == IDLE && next_state == BUSY) begin
-                vd_snapshot <= lane_in.vd;
-            end
+            v1_reg <= '0;
+            v2_reg <= '0;
+            mask_reg <= '0;
+        end
+        else begin
+            v1_reg <= v1_reg_n;
+            v2_reg <= v2_reg_n;
+            mask_reg <= mask_reg_n;
         end
     end
 
-    always_ff @(posedge CLK) begin
-        if (state == BUSY && lane_out.valid) begin
-            assert (lane_out.vd == vd_snapshot)
-                else $error("[SEQ] vd changed inside slice: snapshot=%0d, now=%0d",
-                            vd_snapshot, lane_out.vd);
+    always_comb begin: shtu_ff_next
+        v1_reg_n = v1_reg;
+        v2_reg_n = v2_reg;
+        mask_reg_n = mask_reg;
+
+        // new slice when ready and valid
+        if (seq_if.in.valid_in & ready_reg) begin
+            v1_reg_n = seq_if.in.v1;
+            v2_reg_n = seq_if.in.v2;
+            mask_reg_n = seq_if.in.mask;
         end
     end
 
+    // Ideally I'd do this in a comb, but im lowkey too lazy
+    assign seq_if.out.v1 = v1_reg[elem_idx];
+    assign seq_if.out.v2 = v2_reg[elem_idx];
+    assign seq_if.out.mask = mask_reg[elem_idx];
 
-
-    // -----------------------------
-    // Combinational: FSM + lane_ready
-    // -----------------------------
-    always_comb begin
-        next_state    = state;
-        elem_idx_next = elem_idx_q;
-        lane_ready    = 1'b0;
-
-        unique case (state)
-            IDLE: begin
-                // Ready to accept a new slice
-                lane_ready = 1'b1;
-
-                // Latch when producer asserts valid
-                if (lane_in.valid) begin
-                    next_state = BUSY;
-                end
-            end
-
-            BUSY: begin
-                // Not ready for a new slice while serializing current one
-                lane_ready = 1'b0;
-
-                if (elem_accepted) begin
-                    if (elem_idx_q == SLICE_W - 1) begin
-                        // Last element consumed, go idle
-                        next_state = IDLE;
-                    end else begin
-                        // Move to next element
-                        elem_idx_next = elem_idx_q + 1'b1;
-                    end
-                end
-            end
-        endcase
+    always_ff @(posedge CLK or negedge nRST) begin: valid_ff
+        if (!nRST) begin
+            valid_reg <= 1'b0;
+        end
+        else begin
+            valid_reg <= valid_reg_n;
+        end
     end
+
+    // Assert valid when accept a new slice
+    // Deassert valid when last element completes
+    always_comb begin: valid_comb
+        valid_reg_n = valid_reg;
+
+        if (seq_if.in.valid_in & ready_reg) begin
+            valid_reg_n = 1'b1;
+        end
+        else if (valid_reg & seq_if.in.ready_out & last_elem) begin
+            valid_reg_n = 1'b0;
+        end
+    end
+
+    assign seq_if.out.valid_out = valid_reg;
+
+    always_ff @(posedge CLK or negedge nRST) begin : ready_ff
+        if (!nRST) begin
+            ready_reg <= 1'b1;
+        end
+        else begin
+            ready_reg <= ready_reg_n;
+        end
+    end
+
+    // Not ready when accept a new slice
+    // Ready again when last element completes
+    always_comb begin: ready_comb
+        ready_reg_n = ready_reg;
+
+        if (seq_if.in.valid_in & ready_reg) begin
+            ready_reg_n = 1'b0;
+        end
+        else if (valid_reg & seq_if.in.ready_out & last_elem) begin
+            ready_reg_n = 1'b1;
+        end
+    end
+
+    assign seq_if.out.ready_in = ready_reg;
+
 
 endmodule

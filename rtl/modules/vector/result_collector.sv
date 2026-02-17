@@ -79,7 +79,7 @@ module result_collector (
         end
         else begin
             vd <= vd_n;
-            vd_locked = vd_locked_n;
+            vd_locked <= vd_locked_n;
         end
     end
 
