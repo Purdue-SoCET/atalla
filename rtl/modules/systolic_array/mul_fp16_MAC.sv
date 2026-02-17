@@ -1,7 +1,13 @@
+`timescale 1ps/1ps
+// FP16 mult w DAZ/FTZ and special case handling
+// 1 cut w stall
+// Original - Vinay | Modified - Myles 
+
 module mul_fp16_MAC(
     input logic clk,
     input logic nRST,
     input logic start,
+    input logic stall,
     input logic [15:0] a, b,
     output logic [15:0] result,
     output logic done
@@ -61,6 +67,7 @@ module mul_fp16_MAC(
         .a({frac_leading_bit_fp1, a[9:0]}),
         .b({frac_leading_bit_fp2, b[9:0]}),
         .active(start),
+        .stall(stall),
         .result(mul_product),
         .overflow(mul_carryout),
         .round_loss(mul_round_loss),
@@ -81,6 +88,15 @@ module mul_fp16_MAC(
             inf_times_zero_r1 <= '0;
             exp_a_r1 <= '0;
             exp_b_r1 <= '0;
+        end
+        else if (stall) begin
+            mul_sign_r1 <= mul_sign_r1;
+            any_nan_r1 <= any_nan_r1;
+            any_inf_r1 <= any_inf_r1;
+            any_zero_r1 <= any_zero_r1;
+            inf_times_zero_r1 <= inf_times_zero_r1;
+            exp_a_r1 <= exp_a_r1;
+            exp_b_r1 <= exp_b_r1;
         end
         else begin
             mul_sign_r1 <= mul_sign;
@@ -184,9 +200,11 @@ module mul_fp16_MAC(
     always_ff @(posedge clk, negedge nRST) begin
         if (!nRST)
             done_r <= 1'b0;
+        else if (stall)
+            done_r <= done_r;
         else
             done_r <= wtm_ready;
     end
-    assign done = done_r;
+    assign done = done_r & ~stall;
 
 endmodule

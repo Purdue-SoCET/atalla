@@ -68,6 +68,7 @@ module sysarr_MAC_fp16_4c(input logic clk, input logic nRST, systolic_array_MAC_
         .clk(clk),
         .nRST(nRST),
         .start(mac_if.start),
+        .stall(mac_if.stall_sa),
         .a(input_x),
         .b(weight),
         .result(mul_result),

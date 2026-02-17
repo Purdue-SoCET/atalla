@@ -2,13 +2,13 @@
 // tell me to parameterize this, and i will throw a snowball at you.
 // use for FP16 multiplication.
 // by: Mixuan Pan and Vinay Pundith, September 2025
-// fixed bug - Myles Querimit Jan 2026
+// added stall - Myles Querimit feb 2026
 
 `timescale 1ns/1ps
 
 /* verilator lint_off UNUSEDSIGNAL */
 
-module wallacetree_11b_2c (input logic clk, nRST, [10:0] a, b, input logic active, output logic [12:0] result, output logic overflow, round_loss, value_ready);
+module wallacetree_11b_2c (input logic clk, nRST, [10:0] a, b, input logic active, stall, output logic [12:0] result, output logic overflow, round_loss, value_ready);
 logic [2:0][12:0] stage1_sums;
 logic [2:0][10:0] stage1_carries;
 
@@ -164,6 +164,12 @@ begin
         stage4_level1_carries_lat <= 0;
         stage3_level2_carries_lat <= 0;
         value_ready <= 0;
+    end
+    else if (stall) begin
+        stage4_level1_sums_lat <= stage4_level1_sums_lat;
+        stage4_level1_carries_lat <= stage4_level1_carries_lat;
+        stage3_level2_carries_lat <= stage3_level2_carries_lat;
+        value_ready <= value_ready;
     end
     else begin
         value_ready <= active;

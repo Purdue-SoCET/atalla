@@ -1,5 +1,5 @@
 `timescale 1ns/1ps
-// FP16 2 Multiplier with input and output latching
+// FP16 2 Multiplier with input and output latching NO STALL 
 // Wraps mul_fp16_nolatch with registered inputs for use in vector core.
 // For systolic array MAC use mul_fp16_nolatch directly.
 

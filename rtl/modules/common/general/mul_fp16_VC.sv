@@ -1,14 +1,15 @@
 `timescale 1ns/1ps
 // FP16 Pipelined Multiplier for Vector Core 
-// 2-cycle latency using wallacetree_11b_2c (pipeline split inside wallace tree)
+// 2-cycle latency using wallacetree_11b_2c (pipeline split inside wallace tree) w stall
 // Author : Myles Querimit (Reference Vinay Pundith)
 // passes 999,997 out of 1 mil, the 3 wrong are boundry based on how hardware v numpy treats ftz 
-// output diff is smallest subnormal in to zero (in mac it gets ftz next stage anyways but keep in mind) 
+// output diff is smallest subnormal in to zero 
 
 module mul_fp16_VC(
     input logic clk,
     input logic nRST,
     input logic start,
+    input logic stall,
     input logic [15:0] a, b,
     output logic [15:0] result,
     output logic done
@@ -24,6 +25,11 @@ module mul_fp16_VC(
             a_lat <= '0;
             b_lat <= '0;
             stage0_valid <= '0;
+        end
+        else if (stall) begin
+            a_lat <= a_lat;
+            b_lat <= b_lat;
+            stage0_valid <= stage0_valid;
         end
         else begin
             a_lat <= a;
@@ -88,6 +94,7 @@ module mul_fp16_VC(
         .a({frac_leading_bit_fp1, a_lat[9:0]}),
         .b({frac_leading_bit_fp2, b_lat[9:0]}),
         .active(stage0_valid),
+        .stall(stall),
         .result(mul_product),
         .overflow(mul_carryout),
         .round_loss(mul_round_loss),
@@ -108,6 +115,15 @@ module mul_fp16_VC(
             inf_times_zero_r1 <= '0;
             exp_a_r1 <= '0;
             exp_b_r1 <= '0;
+        end
+        else if (stall) begin
+            mul_sign_r1 <= mul_sign_r1;
+            any_nan_r1 <= any_nan_r1;
+            any_inf_r1 <= any_inf_r1;
+            any_zero_r1 <= any_zero_r1;
+            inf_times_zero_r1 <= inf_times_zero_r1;
+            exp_a_r1 <= exp_a_r1;
+            exp_b_r1 <= exp_b_r1;
         end
         else begin
             mul_sign_r1 <= mul_sign;
