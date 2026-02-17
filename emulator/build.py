@@ -628,18 +628,22 @@ class DRAMWriter:
         self.write_bytes(addr, b)
 
 
-    def _word_addrs(self) -> List[int]:
+    def _word_addrs(self, *, stride: int = 2) -> List[int]:
         if not self._bytes:
             return []
+        if stride <= 0:
+            raise ValueError("stride must be positive")
         mn = min(self._bytes.keys())
         mx = max(self._bytes.keys())
-        start = mn & ~0x3
-        end = (mx & ~0x3)
-        return list(range(start, end + 4, 4))
+        # Emit overlapping 32-bit words at even-byte boundaries by default.
+        # This preserves bf16 placement in output (e.g., words starting at 0x2, 0x4, ...).
+        start = mn - (mn % stride)
+        end = mx - (mx % stride)
+        return list(range(start, end + stride, stride))
 
-    def to_u32_words(self, *, include_zeros: bool = False) -> Dict[int, int]:
+    def to_u32_words(self, *, include_zeros: bool = False, stride: int = 2) -> Dict[int, int]:
         out: Dict[int, int] = {}
-        for wa in self._word_addrs():
+        for wa in self._word_addrs(stride=stride):
             bs = [self._bytes.get(wa + i, 0) for i in range(4)]
             if self.endian == "little":
                 w = bs[0] | (bs[1] << 8) | (bs[2] << 16) | (bs[3] << 24)
@@ -650,8 +654,8 @@ class DRAMWriter:
                 out[wa] = w & 0xFFFFFFFF
         return out
 
-    def render_data_mem(self, *, include_zeros: bool = False) -> str:
-        words = self.to_u32_words(include_zeros=include_zeros)
+    def render_data_mem(self, *, include_zeros: bool = False, stride: int = 2) -> str:
+        words = self.to_u32_words(include_zeros=include_zeros, stride=stride)
         lines = [f"{addr:08X}: {val:08X}" for addr, val in sorted(words.items())]
         return "\n".join(lines)
 
