@@ -364,37 +364,53 @@ package vector_pkg;
     // =========================================================================
     // Top-level GSAU + vector_datapath structs
     // =========================================================================
+    
     typedef struct packed {
-
+        vreg_t veg_vdata1;
+        vreg_t veg_vdata2;
+        logic [7:0] vd,
+        logic valid_in;
+        logic weight;
+        logic wb_ready;
     } vector_if_gsau_in_t;
 
     typedef struct packed {
-
+        logic ready_out;
+        vreg_t psum;
+        logic [7:0] vd;
+        logic wb_valid;
     } vector_if_gsau_out_t;
 
     typedef struct packed {
-
+        logic [511:0] sa_array_in;
+        logic [511:0] sa_array_in_partials;
+        logic         sa_input_en;
+        logic         sa_weight_en;
+        logic         sa_partial_en;
+        logic         sa_ready_out;
     } gsau_sys_in_t;
 
     typedef struct packed {
-
+        logic [511:0] sa_array_output;
+        logic         sa_valid_in;
+        logic         sa_ready_in;
     } gsau_sys_out_t;
-
+    
     typedef struct packed {
-        vlsu_sched_req_t [NUM_SCPDS-1:0] sched_req;
-        vlsu_vrf_store_t [NUM_SCPDS-1:0] vrf_data;
+        vlsu_sched_req_t [NUM_SCPADS-1:0] sched_req;
+        vlsu_vrf_store_t [NUM_SCPADS-1:0] vrf_data;
     } vector_if_vlsu_in_t;
 
     typedef struct packed {
-        vlsu_wb_t [NUM_SCPDS-1:0] wb;
-        vlsu_status_t [NUM_SCPDS-1:0] status;
+        vlsu_wb_t [NUM_SCPADS-1:0] wb;
+        vlsu_status_t [NUM_SCPADS-1:0] status;
     } vector_if_vlsu_out_t;
 
-    typdef struct packed {
+    typedef struct packed {
         req_t [NUM_SCPADS-1:0] vec_req;
     } vlsu_sp_in_t;
 
-    typdef struct packed {
+    typedef struct packed {
         res_t [NUM_SCPADS-1:0] vec_res;
         logic [NUM_SCPADS-1:0] fe_vec_stall;
     } vlsu_sp_out_t;
@@ -408,13 +424,13 @@ package vector_pkg;
         logic rm;
         vmask_t mask;
         valu_op_t alu_op;
-    } lanes_issue_port_t
+    } lanes_issue_port_t;
 
     typedef struct packed {
         logic wb_valid;
         vreg_t vector_output;
         logic [7:0]     vd_output;
-    } vector_if_reduction_out_t
+    } vector_if_reduction_out_t;
 
     typedef struct packed {
         lanes_issue_port_t [LANE_ISSUE_W-1:0] lane_issue_ports;
