@@ -14,6 +14,15 @@ button, input, select, textarea {
   font-family: var(--atalla-font) !important;
 }
 
+html, body,
+#page-wrapper,
+.content,
+.sidebar,
+nav, header, footer,
+button, input, select, textarea {
+  font-weight: 450 !important; /* try 450 or 500 */
+}
+
 code, pre, kbd, samp, .hljs, .language-text {
   font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas,
                "Liberation Mono", "Courier New", monospace !important;
