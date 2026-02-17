@@ -18,7 +18,7 @@ Modern deep-learning workloads demand high TOPS/W and predictable dataflow. Atal
 
 This project aims to be an open, reproducible infrastructure that ties together the whole toolchain -- from workloads to silicon-quality analysis: model-level experiments → architectural simulation → RTL design & verification → ASIC PPA flows → FPGA/emulation when available.
 
-> [!INFO]
+> [!NOTE]
 > Keywords: Computer Architecture · HW/SW Co-Design · Digital Verification · ASIC Synthesis · RTL Emulation
 
 
