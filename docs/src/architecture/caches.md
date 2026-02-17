@@ -1,4 +1,4 @@
-## Overview 
+### Lockup-Free D/I Cache  
 
 ![TopLevel](../img/dcache_top.png)
 
@@ -7,12 +7,7 @@ This project implements a lockup-free, multi-banked cache intended for integrati
 The cache is fully parameterized (capacity, associativity, block size, banks, MSHR depth) and written in synthesizable SystemVerilog. The implementation targets realistic OoO scheduling behavior rather than simplified blocking semantics.
 
 Code [here](https://github.com/Purdue-SoCET/atalla/tree/main/rtl/modules/memory/caches).
-
-<iframe
-  src="pdfs/lockupfreecache.pdf"
-  style="width: 100%; height: 900px; border: 0;"
-  loading="lazy"
-></iframe>
+Report [here](https://github.com/Purdue-SoCET/atalla/blob/documentation_update_branch/docs/src/pdfs/lockupfreecache.pdf).
 
 
 ### Architectural Overview
