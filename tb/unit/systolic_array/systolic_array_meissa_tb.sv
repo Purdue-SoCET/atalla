@@ -4,6 +4,7 @@
 `include "systolic_array_add_if.vh"
 `include "systolic_array_FIFO_if.vh"
 `include "systolic_array_tb_pkg.sv"
+`include "gsau_control_interface.vh"
 
 `timescale 1 ns / 1 ns
 
@@ -15,130 +16,102 @@ module systolic_array_tb();
     // parameter WIDTH = 16;
 
     // clk/reset
-    logic tb_nRST;
+    logic nRST;
 
-    // Memory interface instance
-    systolic_array_if #(.array_dim(ARRAY_DIM), .data_w(DATA_WIDTH)) memory_if();
+    // Systolic Array Interface
+    gsau_control_unit_if gsau_if();
 
     // Clock gen
     parameter PERIOD = 10;
-    logic tb_clk = 0;
-    always #(PERIOD/2) tb_clk++;
+    logic CLK = 0;
+    always #(PERIOD/2) CLK++;
     // FILE I/O
-    int out_file, file;
+    int out_file, file, actual_output_file;
     /* verilator lint_off UNUSEDSIGNAL */
     string line;
     /* verilator lint_off UNUSEDSIGNAL */
     logic [DATA_WIDTH-1:0] temp_weights[ARRAY_DIM][ARRAY_DIM];
     logic [DATA_WIDTH-1:0] temp_inputs[ARRAY_DIM][ARRAY_DIM];
     logic [DATA_WIDTH-1:0] temp_partials[ARRAY_DIM][ARRAY_DIM];
-    logic [DATA_WIDTH-1:0] temp_outputs[ARRAY_DIM][ARRAY_DIM];
+    logic [DATA_WIDTH-1:0] temp_exp_outputs[ARRAY_DIM][ARRAY_DIM];
+    logic [DATA_WIDTH-1:0] temp_act_outputs[ARRAY_DIM][ARRAY_DIM];
 
     logic [(ARRAY_DIM*DATA_WIDTH)-1:0] m_weights[ARRAY_DIM];
     logic [(ARRAY_DIM*DATA_WIDTH)-1:0] m_inputs[ARRAY_DIM];
     logic [(ARRAY_DIM*DATA_WIDTH)-1:0] m_partials[ARRAY_DIM];
-    logic [(ARRAY_DIM*DATA_WIDTH)-1:0] m_outputs[ARRAY_DIM];
+    logic [(ARRAY_DIM*DATA_WIDTH)-1:0] m_exp_outputs[ARRAY_DIM];
+    logic [(ARRAY_DIM*DATA_WIDTH)-1:0] m_act_outputs[ARRAY_DIM];
     int loaded_weights;
-    // Reset task
-    task reset;
+
+    task reset();
         begin
-        tb_nRST = 1'b0;
-        @(posedge tb_clk);
-        @(posedge tb_clk);
-        @(negedge tb_clk);
-        tb_nRST = 1'b1;
-        @(posedge tb_clk);
-        @(posedge tb_clk);
+        nRST = 1'b0;
+        @(posedge CLK);
+        @(posedge CLK);
+        @(negedge CLK);
+        nRST = 1'b1;
+        @(posedge CLK);
+        @(posedge CLK);
         end
     endtask
 
-  // 
-  task row_load(
-    input logic [1:0] rtype,
-    input logic [$clog2(ARRAY_DIM)-1:0] rinnum,
-    input logic [$clog2(ARRAY_DIM)-1:0] rpsnum,
-    input logic [(ARRAY_DIM*DATA_WIDTH)-1:0] rinput,
-    input logic [(ARRAY_DIM*DATA_WIDTH)-1:0] rpartial
-  );
-    begin
-      if (rtype == 2'b00) begin
-        memory_if.weight_en = 1'b1;
-      end else if (|rtype) begin
-        memory_if.input_en = rtype[0];
-        memory_if.partial_en = rtype[1];
-      end
-      memory_if.row_in_en = rinnum;
-      memory_if.row_ps_en = rpsnum;
-      memory_if.array_in = rinput;
-      memory_if.array_in_partials = rpartial;
-      @(posedge tb_clk);
-      memory_if.array_in = '0;
-      memory_if.array_in_partials = '0;
-      memory_if.weight_en = 1'b0;
-      memory_if.partial_en = 1'b0;
-      memory_if.input_en = 1'b0;
-      memory_if.row_in_en = '0;
-      memory_if.row_ps_en = '0;
-    end
-  endtask
+    task get_matrices(output int weights);
+        string token;
+        string section;
+        weights = 0;
 
-task get_matrices(output int weights);
-    string token;
-    string section;
-    weights = 0;
+        // Read section header: Weight
+        void'($fgets(line, file));
+        section = line.toupper();
 
-    // Read section header: Weight
-    void'($fgets(line, file));
-    section = line.toupper();
+        if (section.len() >= 5 && section.substr(0,4) == "WEIGHT") begin
+            weights = 1;
+            // Read Weights
+            for (int i = 0; i < ARRAY_DIM; i++) begin
+                void'($fgets(line, file));
+                for (int j = 0; j < ARRAY_DIM; j++) begin
+                    token = line.substr(j*7, 6); // "0xXXXX"
+                    $sscanf(token, "%h", temp_weights[i][j]);
+                end
+            end
+            // Skip blank line
+            void'($fgets(line, file));
 
-    if (section.find("WEIGHT") != -1) begin
-        weights = 1;
-        // Read Weights
+            // Read Input header
+            void'($fgets(line, file));
+        end
+        
+        // Reads Inputs
         for (int i = 0; i < ARRAY_DIM; i++) begin
             void'($fgets(line, file));
             for (int j = 0; j < ARRAY_DIM; j++) begin
-                token = line.substr(j*7, 6); // "0xXXXX"
-                $sscanf(token, "%h", temp_weights[i][j]);
+                token = line.substr(j*7, 6);
+                $sscanf(token, "%h", temp_inputs[i][j]);
             end
         end
+
         // Skip blank line
         void'($fgets(line, file));
 
-        // Read Input header
+        // Read Psum header
         void'($fgets(line, file));
-    end
-    
-    // Reads Inputs
-    for (int i = 0; i < ARRAY_DIM; i++) begin
-        void'($fgets(line, file));
-        for (int j = 0; j < ARRAY_DIM; j++) begin
-            token = line.substr(j*7, 6);
-            $sscanf(token, "%h", temp_inputs[i][j]);
+
+        // Read Psums
+        for (int i = 0; i < ARRAY_DIM; i++) begin
+            void'($fgets(line, file));
+            for (int j = 0; j < ARRAY_DIM; j++) begin
+                token = line.substr(j*7, 6);
+                $sscanf(token, "%h", temp_partials[i][j]);
+            end
         end
-    end
 
-    // Skip blank line
-    void'($fgets(line, file));
-
-    // Read Psum header
-    void'($fgets(line, file));
-
-    // Read Psums
-    for (int i = 0; i < ARRAY_DIM; i++) begin
-        void'($fgets(line, file));
-        for (int j = 0; j < ARRAY_DIM; j++) begin
-            token = line.substr(j*7, 6);
-            $sscanf(token, "%h", temp_partials[i][j]);
+        // Pack rows into wide buses
+        for (int i = 0; i < ARRAY_DIM; i++) begin
+            m_weights[i]  = {>>{temp_weights[i]}};
+            m_inputs[i]   = {>>{temp_inputs[i]}};
+            m_partials[i] = {>>{temp_partials[i]}};
         end
-    end
-
-    // Pack rows into wide buses
-    for (int i = 0; i < ARRAY_DIM; i++) begin
-        m_weights[i]  = {>>{temp_weights[i]}};
-        m_inputs[i]   = {>>{temp_inputs[i]}};
-        m_partials[i] = {>>{temp_partials[i]}};
-    end
-endtask
+    endtask
 
     task get_m_output();
         string token;
@@ -146,103 +119,176 @@ endtask
             void'($fgets(line, out_file));
             for (int j = 0; j < ARRAY_DIM; j++) begin
                 token = line.substr(j * 7, 6);
-                $sscanf(token, "%h", temp_outputs[i][j]);
+                $sscanf(token, "%h", temp_exp_outputs[i][j]);
             end
-            m_outputs[i] = {>>{temp_outputs[i]}};
+            m_exp_outputs[i] = {>>{temp_exp_outputs[i]}};
         end
     endtask
 
-  task load_weights();
-    for (int r = 0; r < ARRAY_DIM; r++)begin
-      /* verilator lint_off WIDTHTRUNC */
-      row_load(.rtype(2'b00), .rinnum(r), .rpsnum('0), .rinput(m_weights[r]), .rpartial('0));
-      /* verilator lint_off WIDTHTRUNC */
-    end
-  endtask
+    task load_weights();
+        gsau_if.sa_input_en   = 1'b0;
+        gsau_if.sa_partial_en = 1'b0;
+        gsau_if.sa_weight_en  = 1'b0;
+        gsau_if.sa_array_in   = '0;
 
-  task load_in_ps(input int delay);
-    for (int in = 0; in < ARRAY_DIM; in++)begin
-      /* verilator lint_off WIDTHTRUNC */
-      row_load(.rtype(2'b11), .rinnum(in), .rpsnum(in), .rinput(m_inputs[in]), .rpartial(m_partials[in]));
-      /* verilator lint_off WIDTHTRUNC */
-      repeat(delay) @(posedge tb_clk); // everyone else iteration delay
-    end
-  endtask
+        for (int column = 0; column < ARRAY_DIM; column++) begin
+            while (!gsau_if.sa_ready_in) @(posedge CLK);
 
-  // Instantiate the DUT
-  systolic_array #(
-    .N(ARRAY_DIM),
-    .WIDTH(DATA_WIDTH)
-  ) DUT (
-    .clk    (tb_clk),
-    .nRST   (tb_nRST),
-    .memory (memory_if.memory_array)
-  );
-  always @(posedge tb_clk) begin
-    if (memory_if.out_en == 1'b1)begin
-      $display("output row is %d", memory_if.row_out);
-      if (m_outputs[memory_if.row_out] != memory_if.array_output)begin
-        $display("Output incorrect\n");
-        $display("Our Output is");
-        for (int y = 0; y < ARRAY_DIM; y++)begin
-          $write("%d, ", memory_if.array_output[(y+1)*DATA_WIDTH-1-:DATA_WIDTH]);
+            // Pack column k of W into the bus
+            gsau_if.sa_array_in = '0;
+            for (int row = 0; row < ARRAY_DIM; row++) begin
+                gsau_if.sa_array_in[DATA_WIDTH*row +: DATA_WIDTH] = temp_weights[row][column];
+            end
+
+            gsau_if.sa_weight_en = 1'b1;
+            @(posedge CLK);
         end
-        $display("");
-      end
-      $display("Correct Output is");
-      for (int z = 0; z < ARRAY_DIM; z++)begin
-          $write("%d, ", m_outputs[memory_if.row_out][(z+1)*DATA_WIDTH-1-:DATA_WIDTH]);
-      end
-      $display("");
-      /* verilator lint_off WIDTHEXPAND */
-      if (memory_if.row_out == ARRAY_DIM-1)begin
-      /* verilator lint_off WIDTHEXPAND */
-        get_m_output();
-      end
-    end
-  end
+
+        gsau_if.sa_weight_en = 1'b0;
+        gsau_if.sa_array_in  = '0;
+    endtask
+
+    task load_inputs();
+        gsau_if.sa_weight_en = 1'b0;
+        gsau_if.sa_partial_en = 1'b0;
+        gsau_if.sa_input_en = 1'b0;
+        gsau_if.sa_array_in = '0;
+
+        for (int column = 0; column < ARRAY_DIM; column++) begin
+            while (!gsau_if.sa_ready_in) @(posedge CLK);
+
+            gsau_if.sa_array_in = '0;
+            for (int row = 0; row < ARRAY_DIM; row++) begin
+                gsau_if.sa_array_in[DATA_WIDTH * row +: DATA_WIDTH] = temp_inputs[row][column];
+            end
+            gsau_if.sa_input_en = 1'b1;
+            @(posedge CLK);
+        end
+
+        gsau_if.sa_input_en = 1'b0;
+        gsau_if.sa_array_in = '0;
+    endtask
+
+    task load_psums();
+        gsau_if.sa_weight_en = 1'b0;
+        gsau_if.sa_input_en = 1'b0;
+        gsau_if.sa_partial_en = 1'b0;
+        gsau_if.sa_array_in_partial = '0;
+
+        for (int column = 0; column < ARRAY_DIM; column++) begin
+            while (!gsau_if.sa_ready_in) begin
+                @(posedge CLK);
+            end
+
+            gsau_if.sa_array_in_partials = '0;
+            for (int row = 0; row < ARRAY_DIM; row++) begin
+                gsau_if.sa_array_in_partials[DATA_WIDTH * row +: DATA_WIDTH] = temp_partials[row][column];
+            end
+
+            gsau_if.sa_partial_en = 1'b1;
+            @(posedge CLK);
+        end
+
+        gsau_if.sa_partials_en = 1'b0;
+        gsau_if.sa_array_in_partials = '0;
+    endtask
+
+    task write_matrix(input string test_name);
+        $fwrite(actual_output_file, "%s\n", test_name);
+
+        for (int row = 0; row < ARRAY_DIM; row++) begin
+            for (int column = 0; column < ARRAY_DIM; column++) begin
+                $fwrite(actual_output_file, "0x%04h", temp_act_outputs[row][column]);
+                
+                if (column != ARRAY_DIM - 1) begin
+                    $fwrite(actual_output_file, ",");
+                end
+            end
+            $fwrite(actual_output_file, "\n");
+        end
+    endtask
+
+    sysarr_MEISSA_top DUT (
+        .clk(CLK),
+        .nRST(nRST),
+        .gsau_if(gsau_if.systolic_array)
+    );
 
   // Test Stimulus
   initial begin
     $dumpfile("dump.vcd");  // For VCD format
     $dumpvars(0, systolic_array_tb);
-    memory_if.weight_en = '0;
-    memory_if.input_en = '0;
-    memory_if.partial_en = '0;
-    memory_if.row_in_en = '0;
-    memory_if.row_ps_en = '0;
-    memory_if.array_in = '0;
-    memory_if.array_in_partials = '0;
+
+    gsau_if.sa_array_in = '0;
+    gsau_if.sa_array_in_partials = '0;
+    gsau_if.sa_input_en = 1'b0;
+    gsau_if.sa_weight_en = 1'b0;
+    gsau_if.sa_partial_en = 1'b0;
+    gsau_if.sa_ready_out = 1'b1;
     
     // any file
     file = $fopen(PATH_TO_INPUT, "r");
     out_file = $fopen(PATH_TO_EXPECTED_RESULT, "r");
+    actual_output_file = $fopen(PATH_TO_RESULT, "w");
     reset();
 
-    while (!$feof(file)) begin
-        // Go through All test cases in File
-        do begin
-            $fgets(line, file);
-        end while ((line.substr(0, 3) != "Test") || (line.substr(0, 3) != "Input") && !$feof(file));
-        if (!$feof(file)) begin
-            loaded_weights = 0;
-            get_matrices(.weights(loaded_weights));
-            get_m_output();
-            if (loaded_weights == 1)begin
-            // LOAD WEIGHTS
-            load_weights();
+    forever begin
+        string test_name;
+        bit found_test;
+        found_test = 0;
+        
+        while (!found_test) begin
+            if ($fgets(line, file) == 0) begin
+               break;
             end
-            load_in_ps(.delay(1));
 
-            wait(memory_if.drained == 1'b1);
+            if (line.len() >= 4 && line.substr(0,3) == "Test") begin
+                test_name = line;
+                found_test = 1;
+            end
         end
-    end
 
-    $display("array should be drained %d", memory_if.drained);
-    $display("fifos should have space  %d", memory_if.fifo_has_space);
+        if (!found_test) begin
+            break;
+        end
+
+        loaded_weights = 0;
+        get_matrices(.weights(loaded_weights));
+        // get_m_output();
+
+        if (loaded_weights) begin
+            load_weights();
+        end
+
+        load_psums();
+
+        load_inputs();
+
+        for (int i = 0; i < ARRAY_DIM; i++) begin
+            m_act_outputs[i] = '0;
+            for (int j = 0; j < ARRAY_DIM; j++) begin
+                temp_act_outputs[i][j] = '0;
+            end
+        end
+
+        int row;
+        row = 0;
+        while (row < ARRAY_DIM) begin
+            @(posedge CLK);
+            if (gsau_if.sa_valid_in) begin
+                m_act_outputs[row] = gsau_if.sa_array_output;
+                for (int i = 0; i < ARRAY_DIM; i++) begin
+                    temp_act_outputs[row][i] = gsau_if.sa_array_output[DATA_WIDTH*i +: DATA_WIDTH];
+                end
+                row++;
+            end
+        end
+        write_matrix(test_name);
+    end
 
     $fclose(file);
     $fclose(out_file);
+    $fclose(actual_output_file);
     #50;
     $stop;
   end
