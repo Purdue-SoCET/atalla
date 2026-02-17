@@ -8,9 +8,9 @@
 `include "functional_unit_if.vh"
 `include "lane_sequencer_if.vh"
 
-`include "mul_if.vh"
+`include "div_if.vh"
 
-module mul_fu (
+module div_FU (
     input logic                     CLK,
     input logic                     nRST,
     functional_unit_if.fuif        fuif

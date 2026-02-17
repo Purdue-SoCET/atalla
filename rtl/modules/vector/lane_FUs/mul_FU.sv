@@ -10,7 +10,7 @@
 
 `include "mul_if.vh"
 
-module mul_fu (
+module mul_FU (
     input logic                     CLK,
     input logic                     nRST,
     functional_unit_if.fuif        fuif

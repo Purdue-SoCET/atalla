@@ -10,7 +10,7 @@
 
 `include "exp_if.vh"
 
-module sqrt_FU (
+module exp_FU (
     input logic                     CLK,
     input logic                     nRST,
     functional_unit_if.fuif         fuif
