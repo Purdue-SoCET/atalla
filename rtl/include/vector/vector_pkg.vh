@@ -2,7 +2,8 @@
 `define VECTOR_PKG_VH
 
 package vector_pkg;
-
+    `include "scpad_params.svh"
+    import scpad_pkg::*;
     // =========================================================================
     //  Vector ISA / Global Params
     // =========================================================================
@@ -220,10 +221,10 @@ package vector_pkg;
     // FU selector encoded as 3 bits (0..4) matching LANE_FU_COUNT = 5
     typedef enum logic [2:0] {
         VALU = 3'b000,
-        EXP  = 3'b001,
-        SQRT = 3'b010,
-        MUL  = 3'b011,
-        DIV  = 3'b100
+        MUL  = 3'b001,
+        DIV  = 3'b010,
+        EXP  = 3'b011,
+        SQRT = 3'b100
     } fu_t;
 
     // Metadata carried alongside each element through the lane
@@ -318,82 +319,114 @@ package vector_pkg;
         functional_unit_out_t [LANE_FU_COUNT-1:0] units;
     } lane_out_t;
 
+    //vlsu
+    // Scheduler => VLSU (one per scratchpad channel)
+    typedef struct packed {
+        logic                        valid;
+        logic                        write;
+        logic [SCPAD_ADDR_WIDTH-1:0] spad_addr;
+        logic [VIDX_W-1:0]          vdst;
+        logic [MAX_DIM_WIDTH-1:0]   num_rows;
+        logic [MAX_DIM_WIDTH-1:0]   num_cols;
+        logic [MAX_DIM_WIDTH-1:0]   row_id;
+        logic [MAX_DIM_WIDTH-1:0]   col_id;
+        logic                        row_or_col;
+    } vlsu_sched_req_t;
+
+    // VLSU => Scheduler
+    typedef struct packed {
+        logic ready;
+    } vlsu_sched_res_t;
+
+    // VRF => VLSU (store data)
+    typedef struct packed {
+        vreg_t data;
+        logic  valid;
+    } vlsu_vrf_store_t;
+
+    // VLSU => Writeback Buffer (load data)
+    typedef struct packed {
+        vreg_t             load_data;
+        logic [VIDX_W-1:0] vdst;
+        logic              valid;
+    } vlsu_wb_t;
+
+    // VLSU status
+    typedef struct packed {
+        logic busy;
+        logic load_queue_full;
+    } vlsu_status_t;
+
+    //vlsu sp interface
+
+
 
     // =========================================================================
     // Top-level GSAU + vector_datapath structs
     // =========================================================================
     typedef struct packed {
-        // From Veggie File to GSAU
-        vreg_t    veg_vdata1;         // vs1
-        vreg_t    veg_vdata2;         // vs2
-        logic     veg_valid;
 
-        // From Scoreboard to GSAU
-        vsel_t    sb_vdst;
-        logic     sb_valid;
-        logic     sb_weight;
-
-        // From WB buffer to GSAU
-        logic     wb_output_ready;
-
-        // From Systolic Array to GSAU
-        vreg_t    sa_array_output;
-        logic     sa_out_valid;
-        logic     sa_fifo_has_space;
-    } gsau_in_t;
+    } vector_if_gsau_in_t;
 
     typedef struct packed {
-        // From GSAU to Veggie File
-        logic     veg_ready;
 
-        // From GSAU to Scoreboard
-        logic     sb_ready;
-
-        // From GSAU to WB buffer
-        vreg_t    wb_psum;
-        vsel_t    wb_wbdst;
-        logic     wb_valid;
-
-        // From GSAU to Systolic Array
-        vreg_t    sa_array_in;
-        vreg_t    sa_array_in_partials;
-        logic     sa_input_en;
-        logic     sa_weight_en;
-        logic     sa_partial_en;
-        logic     sa_output_ready;
-    } gsau_out_t;
-
-    // Per-issue-slot vector input (before MaskU / lanes)
-    typedef struct packed {
-        logic   [LANE_ISSUE_W-1:0]    rm;
-        logic   [LANE_ISSUE_W-1:0]    valid_in; // From SB there's valid data
-        logic   [LANE_ISSUE_W-1:0]    ready_in; // From WB
-        vreg_t  [LANE_ISSUE_W-1:0]    v1;
-        vreg_t  [LANE_ISSUE_W-1:0]    v2;       // VS and VI typed come broadcasted
-        vsel_t  [LANE_ISSUE_W-1:0]    vd;       // Pass through
-        vmask_t [LANE_ISSUE_W-1:0]    vmask; 
-        opcode_t[LANE_ISSUE_W-1:0]    vop;      // full ISA opcode, matches lane_in.vop
-        fu_t    [LANE_ISSUE_W-1:0]    fu_sel;
-
-        gsau_in_t                     gsau;
-    } vector_in_t;
+    } vector_if_gsau_out_t;
 
     typedef struct packed {
-        // Lane Outputs (post Result Collector)
-        vreg_t [LANE_FU_COUNT-1:0] result;
-        logic  [LANE_FU_COUNT-1:0] valid_o;   // to WB Buffer
-        logic  [LANE_FU_COUNT-1:0] ready_o;   // to SB
-        vsel_t [LANE_FU_COUNT-1:0] vd;
 
-        // Reduction Outputs
-        vreg_t                     reduction_result;
-        logic                      reduction_valid;
-        vsel_t                     reduction_vd;
+    } gsau_sys_in_t;
 
-        // GSAU
-        gsau_out_t                 gsau;
-    } vector_out_t;
+    typedef struct packed {
 
+    } gsau_sys_out_t;
+
+    typedef struct packed {
+        vlsu_sched_req_t [NUM_SCPDS-1:0] sched_req;
+        vlsu_vrf_store_t [NUM_SCPDS-1:0] vrf_data;
+    } vector_if_vlsu_in_t;
+
+    typedef struct packed {
+        vlsu_wb_t [NUM_SCPDS-1:0] wb;
+        vlsu_status_t [NUM_SCPDS-1:0] status;
+    } vector_if_vlsu_out_t;
+
+    typdef struct packed {
+        req_t [NUM_SCPADS-1:0] vec_req;
+    } vlsu_sp_in_t;
+
+    typdef struct packed {
+        res_t [NUM_SCPADS-1:0] vec_res;
+        logic [NUM_SCPADS-1:0] fe_vec_stall;
+    } vlsu_sp_out_t;
+
+    typedef struct packed {
+        logic input_valid;
+        vreg_t v1;
+        vreg_t v2;
+        fu_t usel;
+        logic [7:0] vd;
+        logic rm;
+        vmask_t mask;
+        valu_op_t alu_op;
+    } lanes_issue_port_t
+
+    typedef struct packed {
+        logic wb_valid;
+        vreg_t vector_output;
+        logic [7:0]     vd_output;
+    } vector_if_reduction_out_t
+
+    typedef struct packed {
+        lanes_issue_port_t [LANE_ISSUE_W-1:0] lane_issue_ports;
+        logic [LANE_FU_COUNT-1:0] wb_ready;
+        logic reduction_wb_ready;
+    } vector_if_lanes_in_t;
+
+    typedef struct packed {
+        result_collector_out_t [LANE_FU_COUNT-1:0] result_collectors;
+        logic [LANE_FU_COUNT-1:0] fu_global_status; //can be indexed by fu_t
+        vector_if_reduction_out_t reduction;
+    } vector_if_lanes_out_t;
 endpackage
 
 `endif
