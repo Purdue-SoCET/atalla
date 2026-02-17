@@ -7,7 +7,7 @@ text-direction = "ltr"
 
 [output.html]
 theme = "theme"
-default-theme = "rust"
+default-theme = "light"
 additional-css = ["custom.css"]
 
 [output.html.search]

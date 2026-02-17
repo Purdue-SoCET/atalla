@@ -1,3 +1,5 @@
+## Overview 
+
 ![TopLevel](../img/dcache_top.png)
 
 This project implements a lockup-free, multi-banked cache intended for integration with the SoCET AIHW and GPU cores. The design allows cache hits to complete independently of outstanding misses, while supporting multiple in-flight memory requests via per-bank MSHR queues.
@@ -6,9 +8,14 @@ The cache is fully parameterized (capacity, associativity, block size, banks, MS
 
 Code [here](https://github.com/Purdue-SoCET/atalla/tree/main/rtl/modules/memory/caches).
 
-<embed src="pdfs/lockupfreecache.pdf" type="application/pdf" width="100%" height="900px" />
+<iframe
+  src="pdfs/lockupfreecache.pdf"
+  style="width: 100%; height: 900px; border: 0;"
+  loading="lazy"
+></iframe>
 
-## Architectural Overview
+
+### Architectural Overview
 
 At the top level, the cache is organized as N independent banks, each containing:
 
@@ -31,7 +38,7 @@ Miss completion is decoupled from request issue via UUID tagging, allowing the p
 
 ---
 
-## Banking and Set Interleaving
+### Banking and Set Interleaving
 
 Banks partition the total set space rather than duplicating full cache structures. Set indices are interleaved across banks to maximize spatial parallelism:
 
@@ -41,14 +48,9 @@ Banks partition the total set space rather than duplicating full cache structure
 This mapping allows sequential memory accesses (e.g., streaming through arrays) to naturally distribute across banks, enabling parallel block fills and reducing structural hazards. Banking also shortens tag-compare critical paths and aligns with multi-bank DRAM interfaces where available.
 
 ![Addressing Logic](../img/addressing.drawio.png)
-<div class="caption">
-    Addressing scheme inside each Bank 
-</div>
 
 
----
-
-## Miss Status Holding Registers (MSHRs)
+### Miss Status Holding Registers (MSHRs)
 
 Each bank contains a FIFO-style MSHR buffer that tracks outstanding misses. An MSHR entry represents one cache block, not individual words.
 
@@ -61,11 +63,6 @@ Each MSHR stores:
 * UUID associated with the originating instruction
 
 ![Buffer Logic](../img/buffer.drawio.png)
-<div class="caption">
-    Inside view of the MSHR Buffer
-</div>
-
-
 
 ### Secondary Miss Coalescing
 
@@ -84,9 +81,7 @@ The buffer is implemented as a shift-based pipeline rather than pointer-indexed 
 
 Latency added by shifting is negligible relative to DRAM service time.
 
----
-
-## Bank Operation and Hit-Under-Miss
+### Bank Operation and Hit-Under-Miss
 
 Each bank exposes two independent access paths:
 
@@ -117,9 +112,8 @@ A key corner case arises when a secondary miss reaches the bank after the primar
 
 This preserves correctness without forcing full reserialization of misses.
 
----
 
-## Replacement Policy
+### Replacement Policy
 
 Replacement uses an age-based LRU implementation:
 
@@ -132,9 +126,8 @@ This approach generalizes cleanly to arbitrary associativity but introduces a lo
 
 Currently, tree-based (pseudo-LRU) is being added to reduce comparator depth and critical path length.
 
----
 
-## Verification and Results
+### Verification and Results
 
 The design was fully unit-tested and system-tested. Verified behaviors include:
 
