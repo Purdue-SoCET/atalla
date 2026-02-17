@@ -6,6 +6,7 @@
 // ------------------------------------------------------------
 `include "vector_pkg.vh"
 `include "functional_unit_if.vh"
+`include "lane_sequencer_if.vh"
 
 `include "sqrt_if.vh"
 
