@@ -690,10 +690,11 @@ def render_testfile(instr_lines: str, dram_render: str) -> str:
 if __name__ == "__main__":
     
     ap = argparse.ArgumentParser()
+    ap.add_argument("-i", "--input", type=Path, default=None, help="Input assembly file")
     ap.add_argument("-o", "--output", type=Path, default=None, help="Output test file")
     args = ap.parse_args()
 
-    asm = """
+    demo_asm = """
         lw.s    $1, 0($0)        # $1 = *(0x0) = 0x100
         lw.s    $2, 0($1)        # $2 = *(0x100)
         addi.s  $2, $2, 1        # $2++
@@ -702,18 +703,19 @@ if __name__ == "__main__":
         halt.s
     """
 
+    asm = args.input.read_text() if args.input is not None else demo_asm
     instrs = assemble_file(asm)       
     instr_text = emit_test_format(instrs)
 
-    img = DRAMWriter() 
-
-    #  mem[0x0] -> 0x100
-    img.u32(0x0000_0000, 0x0000_0100)
-
-    #  mem[0x100] -> 5 (expect becomes 6)
-    img.u32(0x0000_0100, 0x0000_0005)
-
-    data_text = img.render_data_mem(include_zeros=False)
+    if args.input is None:
+        img = DRAMWriter() 
+        #  mem[0x0] -> 0x100
+        img.u32(0x0000_0000, 0x0000_0100)
+        #  mem[0x100] -> 5 (expect becomes 6)
+        img.u32(0x0000_0100, 0x0000_0005)
+        data_text = img.render_data_mem(include_zeros=False)
+    else:
+        data_text = ""
 
     final = render_testfile(instr_text, data_text)
 

@@ -168,7 +168,10 @@ class ExecuteUnit:
         # =======================================================
         if instr in MNEMONIC_SCALAR:
             op = MNEMONIC_SCALAR[instr]
-            return self.scalar.execute(op, sA, sB)
+            result = self.scalar.execute(op, sA, sB)
+            if isinstance(result, np.ndarray) and result.size == 1:
+                return result.item()
+            return result
 
         # =======================================================
         # VECTOR
