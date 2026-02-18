@@ -4,7 +4,13 @@
 `define AXI_BUS_PKG_SV
 
 package axi_bus_pkg;
-    `include "axi_bus_params.svh"
+    // `include "axi_bus_params.svh"
+
+    parameter int unsigned NUM_MASTERS     = 4;
+    parameter int unsigned NUM_U_READS     = 4;      // Number of outstanding reads for one UNITS (I$, D$, SP0, SP1)
+    parameter int unsigned NUM_U_WRITES    = 4;      // Number of outstanding writes for one UNITS (D$, SP0, SP1)
+    parameter int unsigned ADDR_WIDTH      = 32;
+    parameter int unsigned DATA_BEAT_WIDTH = 64;     // Size of 1 beat in transaction
 
     //////////////////////////////////////////////////////////////////////
     ///////////////////////// Derived Parameters /////////////////////////
@@ -143,6 +149,7 @@ package axi_bus_pkg;
 
     // R Channel From Subordinate
     typedef struct packed {
+        logic [MID-1:0]     mid;
         logic [RDATA-1:0]   data;
         logic [RID-1:0]     id;
         logic               last;

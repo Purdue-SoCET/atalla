@@ -58,7 +58,7 @@ interface axi_bus_if(input logic clk, input logic nRST);
     logic ar_o_valid, ar_o_ready;
 
     // DRAM CONTROLLER & READ RESPONSE ROUTER READY/VALID
-    logic r_i_valid, r_i_ready;
+    logic r_valid, r_sp0_ready, r_sp1_ready, r_i_ready, r_d_ready; // indicate overall status of ready and valid
 
     // SP0 R Skid Buffer && SP0 READY/VALID
     logic r_sp0_o_valid, r_sp0_o_ready;
@@ -144,13 +144,29 @@ interface axi_bus_if(input logic clk, input logic nRST);
         input ar_o_ready
     );
 
-    // DRAM CONTROLLER <=> READ RESPONSE ROUTER
-    modport subordinate_to_r (
-        // To Subordinate
-        output r_i_ready, 
+    // // DRAM CONTROLLER <=> READ RESPONSE ROUTER
+    // modport subordinate_to_r (
+    //     // To Subordinate
+    //     output r_i_ready, 
 
-        // From Subordinate
-        input r_i_valid, r_i
+    //     // From Subordinate
+    //     input r_i_valid, r_i
+    // );
+
+    // READ RESPONSE ROUTER
+    modport router (
+        // From Master
+        input r_sp0_o_ready, r_sp1_o_ready, r_i_o_ready, r_d_o_ready,
+
+        // From Controller
+        r_valid, r_i, // sub_r_channel_t
+        
+        // To Master
+        output r_sp0_o, r_sp1_o, r_i_o, r_d_o, // master_r_channel_t
+            r_sp0_o_valid, r_sp1_o_valid, r_i_o_valid, r_d_o_valid,
+
+        // To Controller
+        r_sp0_ready, r_sp1_ready, r_i_ready, r_d_ready //TODO do we need saperate ready signals? If we have meta data telling which one receiving, we only need single ready signal.
     );
 
     // SP0 R Skid Buffer <=> SP0
