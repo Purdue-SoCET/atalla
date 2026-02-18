@@ -13,12 +13,12 @@
 `timescale 1ns/1ps
 
 module adder_5b (
-    input        carry,
-    input  [4:0] exp1,
-    input  [4:0] exp2,
-    output [4:0] sum,
-    output       ovf,
-    output       unf
+    input  logic      carry,
+    input  logic [4:0] exp1,
+    input  logic [4:0] exp2,
+    output logic [4:0] sum,
+    output logic       ovf,
+    output logic       unf
 );
 
     // Use 6-bit arithmetic to avoid wraparound issues

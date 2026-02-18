@@ -14,6 +14,8 @@ module mul_grid (
     output logic [DW-1:0] prod_r [N-1:0][N-1:0]
 );
 
+    import sys_arr_pkg::*;
+
     //DW = 16
     //N = 4
 
