@@ -71,21 +71,35 @@ module sysarr_MEISSA_top #(
     */
     localparam TOTAL_DELAY = N + MUL_LATENCY + $clog2(N) * ADD_LATENCY + ADD_LATENCY;
     logic [TOTAL_DELAY - 1:0] valid_bits;
-    generate;
-        for (genvar i = 0; i < (TOTAL_DELAY); i++) begin
-            always_ff @(posedge clk, negedge nRST) begin
-                if (~nRST) begin
-                    valid_bits <= '0;
-                end else begin
-                    if (!sysarr_stall) begin
-                        valid_bits[i] <= (i == 0) ? gsau_if.sa_input_en : valid_bits[i - 1];
-                    end
-                end
+    // generate;
+    //     for (genvar i = 0; i < (TOTAL_DELAY); i++) begin
+    //         always_ff @(posedge clk, negedge nRST) begin
+    //             if (~nRST) begin
+    //                 valid_bits <= '0;
+    //             end else begin
+    //                 if (!sysarr_stall) begin
+    //                     valid_bits[i] <= (i == 0) ? gsau_if.sa_input_en : valid_bits[i - 1];
+    //                 end
+    //             end
+    //         end
+    //     end
+
+    //     gsau_if.sa_valid_in = valid_bits[TOTAL_DELAY - 1];
+    // endgenerate
+
+    // shift register for result valid signal to GSAU
+
+    always_ff @(posedge clk or negedge nRST) begin
+        if (!nRST) begin
+            valid_bits <= '0;
+        end else begin
+            if (!sysarr_stall) begin
+                valid_bits <= {valid_bits[TOTAL_DELAY - 2 : 0], gsau_if.sa_input_in};
             end
         end
+    end
 
-        gsau_if.sa_valid_in = valid_bits[TOTAL_DELAY - 1];
-    endgenerate
+    assign gsau_if.sa_valid_in = valid_bits[TOTAL_DELAY - 1];
 
     skew_buffer #(
         // see parameter details in skew_buffer module
