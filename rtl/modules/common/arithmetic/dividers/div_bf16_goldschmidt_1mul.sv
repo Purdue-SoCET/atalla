@@ -42,7 +42,7 @@ module div_bf16_goldschmidt_1mul (
     logic signed [9:0] res_exp, next_exp;
     logic res_sign, next_sign;
     logic [15:0] res_out, next_res_out;
-    logic [9:0] true_exp_calc;
+    logic signed [9:0] true_exp_calc;
 
     logic a_nan, a_inf, a_zero, b_nan, b_inf, b_zero;
     logic is_same_mag;
