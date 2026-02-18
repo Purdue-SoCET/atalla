@@ -28,7 +28,7 @@ module div_FU (
         .seq_if(lsif)
     );
 
-    dib_if dvif();
+    div_if dvif();
     div div(
         .CLK(CLK),
         .nRST(nRST),
