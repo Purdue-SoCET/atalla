@@ -1,7 +1,7 @@
 from __future__ import annotations
 
 from dataclasses import dataclass, field
-from typing import Dict, List, Optional, Union
+from typing import Dict, List, Union
 import struct
 import os
 import sys, re 
@@ -12,14 +12,8 @@ import numpy as np
 from src.misc.opcode_table import OPCODES, name_to_opcode
 
 INVERT_OPCODES = name_to_opcode()
-VIRTUAL_PACKET_SIZE = 1
+VIRTUAL_PACKET_SIZE = 1 
 REAL_PACKET_SIZE = 4
-
-# Default latency (cycles) for VLIW scheduling; load/stores often have higher latency.
-DEFAULT_LATENCY_MAP = {
-    "lw.s": 2, "sw.s": 2, "lhw.s": 2, "shw.s": 2,
-    "jal": 1, "jalr": 1,
-}
 
 IntLike = int
 BytesLike = Union[bytes, bytearray, memoryview]
@@ -310,8 +304,6 @@ def split_mnemonic_operands(code: str) -> tuple[str, list[str]]:
     ops = [o.strip() for o in ops_str.split(",") if o.strip()]
     return mnemonic, ops
 
-
-
 def asm_to_instr_dict(mnemonic: str, ops: list[str]) -> dict:
     if mnemonic not in INVERT_OPCODES:
         raise ValueError(f"Unknown mnemonic: {mnemonic}")
@@ -402,329 +394,60 @@ def asm_to_instr_dict(mnemonic: str, ops: list[str]) -> dict:
     raise NotImplementedError(f"Type {instr_type} not implemented yet for {mnemonic}")
 
 
-def get_deps_from_instr_dict(mnemonic: str, d: dict) -> tuple[str, List[int], List[int], Union[tuple, None]]:
-    """
-    Derive (op, dsts, srcs, mem_key) from mnemonic and the dict produced by asm_to_instr_dict.
-    dsts/srcs are integer register numbers for hazard analysis; mem_key is (rs1, imm12) or None.
-    """
-    op = mnemonic
-    dsts: List[int] = []
-    srcs: List[int] = []
-    mem_key = None
-    instr_type = d.get("type", "S")
-
-    if instr_type == "R":
-        dsts = [d["rd"]]
-        srcs = [d["rs1"], d["rs2"]]
-    elif instr_type in ("I",):
-        dsts = [d["rd"]]
-        srcs = [d["rs1"]]
-    elif instr_type == "M":
-        dsts = [d["rd"]] if mnemonic.startswith("lw") or mnemonic.startswith("lhw") else []
-        srcs = [d["rs1"]]
-        mem_key = (d["rs1"], d["imm12"])
-    elif instr_type == "BR":
-        srcs = [d["rs1"], d["rs2"]]
-    elif instr_type == "MI":
-        if d.get("rd", 0) != 0:
-            dsts = [d["rd"]]
-    elif instr_type == "S":
-        pass
-    elif instr_type == "VTS":
-        dsts = [d["rd"]]
-        srcs = [d["vs1"]]
-    elif instr_type in ("VV", "VS", "VI", "VM", "MVV", "MVS"):
-        vd = d.get("vd") if "vd" in d else d.get("vmd")
-        if vd is not None:
-            dsts.append(vd)
-        for k in ("vs1", "vs2", "rs1"):
-            if k in d and d[k] is not None:
-                srcs.append(d[k])
-    elif instr_type == "SDMA":
-        srcs = [d.get("rs1", d.get("rd1", 0)), d["rs2"]]
-    elif instr_type in ("MTS", "STM"):
-        if "rd" in d:
-            dsts = [d["rd"]]
-        if "vms" in d:
-            srcs = [d["vms"]]
-        elif "vmd" in d:
-            dsts = [d["vmd"]]
-        if "rs1" in d:
-            srcs.append(d["rs1"])
-    else:
-        for k in ("rd", "vd", "vmd"):
-            if k in d:
-                dsts.append(d[k])
-        for k in ("rs1", "rs2", "vs1", "vs2"):
-            if k in d:
-                srcs.append(d[k])
-
-    return op, dsts, srcs, mem_key
-
-def vliw_packetizer(asm_str, latency_map):
-    
-def _is_control_op(mnemonic: str) -> bool:
-    if mnemonic in ("jal", "jalr"):
-        return True
-    if mnemonic.startswith("b") and mnemonic.endswith(".s"):
-        return True
-    return False
-
-
-def _is_mem_op(mnemonic: str) -> bool:
-    return mnemonic.startswith("lw") or mnemonic.startswith("sw") or mnemonic.startswith("sd") or mnemonic.startswith("lh") or mnemonic.startswith("sh")
-
-
-def greedy_pack(
-    instructions: List[tuple],
-    ready_time: List[int],
-    max_width: int = 4,
-    latency_map: Optional[Dict[str, int]] = None,
-) -> List[List[int]]:
-    """
-    Pack instructions into VLIW packets. Each instruction is (op, dsts, srcs, mem_key)
-    with dsts/srcs as list of int (reg numbers). Returns list of packets (each packet
-    is a list of instruction indices into instructions).
-    """
-    if not instructions:
-        return []
-    latency_map = latency_map or {}
-    scheduled = [False] * len(instructions)
-    current_cycle = 0
-    packets: List[List[int]] = []
-
-    while not all(scheduled):
-        packet: List[int] = []
-        packet_reads: set = set()
-        packet_writes: set = set()
-        mem_in_packet = False
-
-        for i in range(len(instructions)):
-            if scheduled[i] or ready_time[i] > current_cycle:
-                continue
-            op, dsts, srcs, mem_key = instructions[i]
-
-            if _is_control_op(op):
-                if len(packet) == 0:
-                    packet.append(i)
-                    scheduled[i] = True
-                break
-
-            if _is_mem_op(op) and mem_in_packet:
-                continue
-
-            hazard = False
-            for s in srcs:
-                if s in packet_writes:
-                    hazard = True
-                    break
-            for d in dsts:
-                if d in packet_writes or d in packet_reads:
-                    hazard = True
-                    break
-            if hazard:
-                continue
-
-            packet.append(i)
-            packet_reads.update(srcs)
-            packet_writes.update(dsts)
-            if _is_mem_op(op):
-                mem_in_packet = True
-            scheduled[i] = True
-            if len(packet) >= max_width:
-                break
-
-        packets.append(packet if packet else [])
-        current_cycle += 1
-
-    return packets
-
-
-def build_vliw_packets(
-    instructions: List[tuple],
-    encoded: List[tuple],
-    max_width: int = 4,
-    latency_map: Optional[Dict[str, int]] = None,
-) -> List[List[tuple]]:
-    """
-    Split instructions into basic blocks (using block_start flags), run dependency
-    analysis and greedy packing per block, and return list of packets. Each packet
-    is a list of (hex48, cmt) of length max_width (nop-padded).
-    Entry format: (mnemonic, ops, instr_dict, cmt, block_start).
-    """
-    if not instructions or not encoded:
-        return []
-    latency_map = latency_map or DEFAULT_LATENCY_MAP
-    nop_hex = encode_instruction({"opcode": INVERT_OPCODES["nop.s"][0]}).upper()
-
-    # Build blocks: each entry is (mnemonic, ops, instr_dict, cmt, block_start)
-    blocks: List[List[tuple]] = []
-    current: List[tuple] = []
-    for i, entry in enumerate(instructions):
-        if len(entry) >= 5 and entry[4]:  # block_start
-            if current:
-                blocks.append(current)
-            current = []
-        current.append((i, entry))
-
-    if current:
-        blocks.append(current)
-
-    all_packets: List[List[tuple]] = []
-    for block in blocks:
-        block_indices = [idx for idx, _ in block]
-        block_entries = [e for _, e in block]
-        deps = [
-            get_deps_from_instr_dict(entry[0], entry[2])
-            for entry in block_entries
-        ]
-        ready_time = build_dependency_graph(deps, latency_map, single_lsu=True)
-        packet_indices = greedy_pack(deps, ready_time, max_width, latency_map)
-
-        for pkt in packet_indices:
-            hex_cmt = [encoded[block_indices[j]] for j in pkt]
-            while len(hex_cmt) < max_width:
-                hex_cmt.append((nop_hex, ""))
-            all_packets.append(hex_cmt)
-
-    return all_packets
-
-def build_dependency_graph(instructions, latency_map, single_lsu=True):    
-    last_write = {}
-    last_mem_cycle = -1
-    last_store_at = {}
-    ready_time = [0 for _ in range(len(instructions))] 
-
-    for i in range(len(instructions)):
-        op, dsts, srcs, mem_key = instructions[i] 
-        start = 0
-        for s in srcs:
-            if s in last_write:
-                if last_write[s] > start:
-                    start = last_write[s]
-
-        is_load = op.startswith("lw") or op.startswith("lh") #added lh and sh since they are defined as memory operations in line 474
-        is_store = op.startswith("sw") or op.startswith("sd") or op.startswith("sh")
-        is_mem = is_load or is_store
-
-        if single_lsu and is_mem:
-            if last_mem_cycle + 1 > start:
-                start = last_mem_cycle + 1
-
-        if is_mem and mem_key is not None:
-            if is_load:
-                if mem_key in last_store_at and last_store_at[mem_key] > start:
-                    start = last_store_at[mem_key]
-            else:
-                if mem_key in last_store_at and last_store_at[mem_key] > start:
-                    start = last_store_at[mem_key]
-
-        ready_time[i] = start
-
-        latency = latency_map.get(op, 1)
-        for d in dsts:
-            last_write[d] = start + latency
-
-        if is_mem:
-            last_mem_cycle = start
-            if is_store and mem_key is not None:
-                last_store_at[mem_key] = start + latency
-
-    return ready_time
-
-
-def assemble_file(
-    in_data: str, enable_vliw: bool = False
-) -> Union[List[tuple], List[List[tuple]]]:
-    """
-    Assemble instructions from assembly text.
-    If enable_vliw=False, returns flat list of (hex48, cmt).
-    If enable_vliw=True, returns list of packets (each packet is list of (hex48, cmt), nop-padded to REAL_PACKET_SIZE).
-    """
-    instructions: List[tuple] = []  # (mnemonic, ops, instr_dict, cmt, block_start)
+def assemble_file(in_data: str) -> list[tuple[str, str]]:
+    out = []
     stop_markers = {"data mem", ".data"}
-    next_block_start = True
 
     for raw in in_data.splitlines():
         code, cmt = strip_comment(raw)
-        code_stripped = strip_label(code)
+        code = strip_label(code)
 
-        if not code_stripped.strip():
-            # Blank or label-only line (e.g. "L_end:")
-            if raw.strip().endswith(":") or (":" in raw and re.match(r"^[A-Za-z_]\w*:\s*$", raw.strip().split("#")[0].strip())):
-                next_block_start = True
+        if not code.strip():
             continue
 
-        if code_stripped.strip().lower() in stop_markers:
+        if code.strip().lower() in stop_markers:
             break
 
-        if code_stripped.strip().startswith("."):
+        # ignore typical directives
+        if code.strip().startswith("."):
             continue
 
-        mnemonic, ops = split_mnemonic_operands(code_stripped)
+        mnemonic, ops = split_mnemonic_operands(code)
         if not mnemonic:
             continue
 
-        block_start = next_block_start
-        next_block_start = _is_control_op(mnemonic)
-
+        # print(f"Parsing line: {raw!r} -> mnemonic={mnemonic!r}, ops={ops!r}, comment={cmt!r}")
         instr_dict = asm_to_instr_dict(mnemonic, ops)
-        instructions.append((mnemonic, ops, instr_dict, cmt, block_start))
-
-    if not instructions:
-        return []
-
-    encoded = []
-    for entry in instructions:
-        mnemonic, ops, instr_dict, cmt = entry[0], entry[1], entry[2], entry[3]
         hex48 = encode_instruction(instr_dict).upper()
         if len(hex48) != 12:
             raise ValueError(f"encode_instruction returned {hex48!r} (expected 12 hex chars)")
-        encoded.append((hex48, cmt))
+        out.append((hex48, cmt))
 
-    if not enable_vliw:
-        return encoded
+    return out
 
-    packets = build_vliw_packets(instructions, encoded, max_width=REAL_PACKET_SIZE, latency_map=DEFAULT_LATENCY_MAP)
-    return packets
-
-def emit_test_format(instrs: List[tuple]) -> str:
-    """Emit one line per VIRTUAL_PACKET_SIZE instructions (sequential packing, no VLIW)."""
+def emit_test_format(instrs: list[tuple[str, str]]) -> str:
     nop_hex = encode_instruction({"opcode": INVERT_OPCODES["nop.s"][0]}).upper()
 
     lines = []
     addr = 0
     i = 0
     while i < len(instrs):
-        chunk = instrs[i : i + VIRTUAL_PACKET_SIZE]
+        chunk = instrs[i:i+VIRTUAL_PACKET_SIZE]
         hex_words = [h for (h, _) in chunk]
         comments = [c for (_, c) in chunk if c]
 
         while len(hex_words) < REAL_PACKET_SIZE:
             hex_words.append(nop_hex)
 
+        # Prefer comment from first real instruction, or join if you want
         comment = comments[0] if comments else ""
         cmt_str = f" # {comment}" if comment else ""
 
         lines.append(f"{addr:08X}: " + " ".join(hex_words) + cmt_str)
 
-        addr += 0x18
+        addr += 0x18  
         i += VIRTUAL_PACKET_SIZE
 
-    return "\n".join(lines)
-
-
-def emit_test_format_from_packets(packets: List[List[tuple]]) -> str:
-    """Emit one line per VLIW packet (each packet is already list of (hex48, cmt) padded to REAL_PACKET_SIZE)."""
-    lines = []
-    addr = 0
-    for pkt in packets:
-        hex_words = [h for (h, _) in pkt]
-        comments = [c for (_, c) in pkt if c]
-        comment = comments[0] if comments else ""
-        cmt_str = f" # {comment}" if comment else ""
-        lines.append(f"{addr:08X}: " + " ".join(hex_words) + cmt_str)
-        addr += 0x18
     return "\n".join(lines)
 
 def _check_endian(endian: str) -> str:
@@ -879,11 +602,125 @@ def render_testfile(instr_lines: str, dram_render: str) -> str:
 
     return "\n".join([p for p in parts if p is not None]).rstrip() + "\n"
 
+def build_dependency_graph(instructions, latency_map, single_lsu=True):
+    last_write = {}
+    last_mem_cycle = -1
+    last_store_at = {}
+    ready_time = [0 for _ in range(len(instructions))]
+
+    for i in range(len(instructions)):
+        op, dsts, srcs, mem_key = instructions[i] 
+        start = 0
+        for s in srcs:
+            if s in last_write:
+                if last_write[s] > start:
+                    start = last_write[s]
+
+        is_load = op.startswith("lw")
+        is_store = op.startswith("sw") or op.startswith("sd")
+        is_mem = is_load or is_store
+
+        if single_lsu and is_mem:
+            if last_mem_cycle + 1 > start:
+                start = last_mem_cycle + 1
+
+        if is_mem and mem_key is not None:
+            if is_load:
+                if mem_key in last_store_at and last_store_at[mem_key] > start:
+                    start = last_store_at[mem_key]
+            else:
+                if mem_key in last_store_at and last_store_at[mem_key] > start:
+                    start = last_store_at[mem_key]
+
+        ready_time[i] = start
+
+        latency = latency_map.get(op, 1)
+        for d in dsts:
+            last_write[d] = start + latency
+
+        if is_mem:
+            last_mem_cycle = start
+            if is_store and mem_key is not None:
+                last_store_at[mem_key] = start + latency
+
+    return ready_time
+
+
+def greedy_pack(instructions, ready_time, max_width=4):
+    packets = []
+    scheduled = [False for _ in range(len(instructions))]
+    current_cycle = 0
+    
+
+    def is_control(op):
+        if op in {"j", "jal", "jalr"}:
+            return True
+        if op.startswith("b"):
+            return True
+        return False
+
+    while not all(scheduled):
+        packet = []
+        packet_reads = set()
+        packet_writes = set()
+        mem_in_packet = False
+        count = 0
+
+        for i in range(len(instructions)):
+            op, dsts, srcs, mem_key = instructions[i]
+            if scheduled[i]:
+                continue
+            if ready_time[i] > current_cycle:
+                continue
+
+            if is_control(op):
+                if count == 0:
+                    packet.append(i)
+                    scheduled[i] = True
+                break
+
+            is_mem = op.startswith("lw") or op.startswith("sw") or op.startswith("sd")
+            if mem_in_packet and is_mem:
+                continue
+
+            hazard = False
+            for s in srcs:
+                if s in packet_writes:
+                    hazard = True
+                    break
+            for d in dsts:
+                if d in packet_writes or d in packet_reads:
+                    hazard = True
+                    break
+            if hazard:
+                continue
+
+            packet.append(i)
+            for s in srcs:
+                packet_reads.add(s)
+            for d in dsts:
+                packet_writes.add(d)
+            if is_mem:
+                mem_in_packet = True
+            scheduled[i] = True
+            count += 1
+            if count == max_width:
+                break
+
+        if len(packet) == 0:
+            packets.append([])
+            current_cycle += 1
+            continue
+
+        packets.append(packet)
+        current_cycle += 1
+
+    return packets
+
 if __name__ == "__main__":
     
     ap = argparse.ArgumentParser()
     ap.add_argument("-o", "--output", type=Path, default=None, help="Output test file")
-    ap.add_argument("--vliw", action="store_true", help="Enable VLIW packing with dependency analysis")
     args = ap.parse_args()
 
     asm = """
@@ -895,11 +732,8 @@ if __name__ == "__main__":
         halt.s
     """
 
-    instrs = assemble_file(asm, enable_vliw=args.vliw)
-    if instrs and isinstance(instrs[0], list):
-        instr_text = emit_test_format_from_packets(instrs)
-    else:
-        instr_text = emit_test_format(instrs)
+    instrs = assemble_file(asm)       
+    instr_text = emit_test_format(instrs)
 
     img = DRAMWriter() 
 
