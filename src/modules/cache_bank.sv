@@ -38,7 +38,7 @@ module cache_bank (
 
     // LRU 
     psuedo_lru_frame [NUM_SETS_PER_BANK-1:0] tree_lru, next_tree_lru;  
-    logic [TREE_BITS-1:0] _node, __node;
+    logic [TREE_BITS-1:0] _hit_node, _miss_node, __node;
 
     assign set_index = mem_instr_in.addr.index >> BANKS_LEN;   
     assign cache_bank_free = !latched_cache_bank_busy;  
@@ -92,21 +92,31 @@ module cache_bank (
 
     always_comb begin : tree_based_lru_update
         next_tree_lru = tree_lru;
-        _node = 0; 
+        _hit_node = '0;
+        _miss_node = '0;
 
-        for (int level = 0; level < WAYS_LEN; level++) begin
-            if (scheduler_hit) begin
-                next_tree_lru[set_index].tree[_node] = ~hit_way_index[(WAYS_LEN-1) - level];
+        if (curr_state == FINISH) begin
+          for (int level = 0; level < WAYS_LEN; level++) begin
+            next_tree_lru[latched_victim_set_index].tree[_miss_node] = ~latched_victim_way_index[WAYS_LEN - 1 - level];
 
-                if (!hit_way_index[(WAYS_LEN-1) - level]) _node = (2 * _node) + 1;
-                else _node = (2 * _node) + 2;
+            if (!latched_victim_way_index[WAYS_LEN - 1 - level]) begin
+              _miss_node = (2 * _miss_node) + 1;
+            end else begin
+              _miss_node = (2 * _miss_node) + 2;
             end
-            else if (curr_state == FINISH) begin
-                next_tree_lru[latched_victim_set_index].tree[_node] = ~latched_victim_way_index[WAYS_LEN-1 - level];
+          end
+        end
 
-                if (!latched_victim_way_index[WAYS_LEN-1 - level]) _node = (2 * _node) + 1;
-                else _node = (2 * _node) + 2;
+        if (scheduler_hit) begin
+          for (int level = 0; level < WAYS_LEN; level++) begin
+            next_tree_lru[set_index].tree[_hit_node] = ~hit_way_index[WAYS_LEN - 1 - level];
+
+            if (!hit_way_index[WAYS_LEN - 1 - level]) begin
+              _hit_node = (2 * _hit_node) + 1;
+            end else begin
+              _hit_node = (2 * _hit_node) + 2;
             end
+          end
         end
     end 
 

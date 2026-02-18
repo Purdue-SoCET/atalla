@@ -388,10 +388,66 @@ program test (
         wait(tb_scheduler_uuid_ready == 1); 
     endtask
 
+    task automatic inject_directed_miss(
+        logic [UUID_SIZE-1:0] uuid,
+        addr_t addr
+    );
+        tb_mshr_entry = {1'b1, uuid, addr, BLOCK_SIZE'('0), cache_block'('0)};
+
+        wait(tb_cache_bank_free == 0);
+        @(posedge tb_clk);
+
+        tb_mshr_entry.valid = 0;
+
+        stall_for_ram();
+        @(posedge tb_clk);
+    endtask
+
+    task automatic test_lru_collision_bug();
+        set_test_id("-------> Hit & Miss Finish Same Cycle");
+
+        inject_directed_miss(4'd1, addr_t'{24'd1, 4'd0, 2'd0, 2'd0});
+
+        inject_directed_miss(4'd10, addr_t'{24'd10, 4'd4, 2'd0, 2'd0}); // W0
+        inject_directed_miss(4'd12, addr_t'{24'd12, 4'd4, 2'd0, 2'd0}); // W2
+        inject_directed_miss(4'd11, addr_t'{24'd11, 4'd4, 2'd0, 2'd0}); // W1
+        inject_directed_miss(4'd13, addr_t'{24'd13, 4'd4, 2'd0, 2'd0}); // W3
+
+        fork
+            begin : miss_thread
+                // Tag 14 replaces Tag 10 in Set 1, Way 0
+                inject_directed_miss(4'd14, addr_t'{24'd14, 4'd4, 2'd0, 2'd0});
+            end
+            begin : hit_thread
+                wait(dut.curr_state == FINISH);
+ 
+                // Simulate a Hit on Set 0, Tag 1
+                tb_instr_valid = 1;
+                address = addr_t'{24'd1, 4'd0, 2'd0, 2'd0};
+                tb_mem_instr  = in_mem_instr'{ address, 1'b0, 32'd0 };
+
+                @(posedge tb_clk);
+                tb_instr_valid = 0;
+            end
+        join
+
+        inject_directed_miss(4'd15, addr_t'{24'd15, 4'd4, 2'd0, 2'd0});
+
+        if (dut.bank[1][0].tag === 24'd15) begin
+            $error("BUG DETECTED: Tag 15 overwrote Way 0. The concurrent Hit masked the Miss's LRU update.");
+        end else if (dut.bank[1][2].tag === 24'd15 && dut.bank[1][0].tag === 24'd14) begin
+            $display("SUCCESS: Tag 15 correctly went to Way 2.");
+        end else begin
+            $error("UNKNOWN STATE: Way 0: %0d, Way 2: %0d", dut.bank[1][0].tag, dut.bank[1][2].tag);
+        end
+    endtask
+
     initial begin
 
         set_test_id("-------> RESET");
         reset();
+
+        test_lru_collision_bug();
 
         // Starting with empty bank!
         set_test_id("-------> Trying a WRITE - MISS");
