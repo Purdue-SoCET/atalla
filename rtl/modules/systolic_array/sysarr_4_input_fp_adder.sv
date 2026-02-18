@@ -47,6 +47,7 @@ module sysarr_4_input_fp_adder #(
     // --- Stage 2 Summation Signals ---
     logic signed [SUM_WIDTH+1:0] sum_a, neg_b, neg_c, neg_d;
     logic [SUM_WIDTH-1:0] mag_sum;
+    logic [SUM_WIDTH-1:0] lzd_scan;
     logic signed [SUM_WIDTH:0] raw_sum;
     logic [LZD_WIDTH-1:0] lead_zeros;
     logic res_sign;
@@ -55,7 +56,7 @@ module sysarr_4_input_fp_adder #(
     logic [EXPONENT_SIZE-1:0] st2_exp_base;
     logic [SUM_WIDTH-1:0]      st2_sum_mag;
     logic [LZD_WIDTH-1:0]      st2_lzd;
-    logic [15:0]              st2_spec_res;
+    logic [15:0]               st2_spec_res;
     logic st2_res_sign, st2_sticky, st2_special;
 
     // --- Stage 3 Post-Processing Signals ---
@@ -204,14 +205,17 @@ module sysarr_4_input_fp_adder #(
         end
         
         // Ensure mag_sum isn't zero before LZD
-        lead_zeros = SUM_WIDTH - 1;
         if (mag_sum == 0) begin
+            lzd_scan = 0; // Prevent latched logic inference
             lead_zeros = SUM_WIDTH - 1;
         end else begin
-            for (int i = SUM_WIDTH-1; i >= 0; i--) begin
-                if (mag_sum[i]) begin
-                    lead_zeros = (SUM_WIDTH - 1) - i;
-                    break;
+            lzd_scan = mag_sum;
+            lead_zeros = 0;
+            // Tree-based Binary Search LZD
+            for (int i = $clog2(SUM_WIDTH)-1; i >= 0; i--) begin
+                if ((lzd_scan >> (SUM_WIDTH - (1 << i))) == 0) begin
+                    lead_zeros = lead_zeros + (1 << i);
+                    lzd_scan = lzd_scan << (1 << i);
                 end
             end
         end

@@ -22,7 +22,7 @@ module add4_fp16_tb_softfloat;
 
     localparam PERIOD = 2;
     localparam LATENCY = 4;  // 3 pipeline stages + 1 output register
-    localparam PRECISION_BITS = 16;
+    localparam PRECISION_BITS = 22;
 
     logic tb_clk;
     logic tb_nrst;
@@ -302,7 +302,7 @@ initial begin
 
     $display("");
     $display("=== test summary ===");
-    $display("PRECISION BITS: %0d", 16);
+    $display("PRECISION BITS: %0d", PRECISION_BITS);
     $display("PASSED: %0d", pass_count);
     $display("FAILED: %0d", fail_count);
     $display("OFF-BY-ONE: %0d", off_by_one);
