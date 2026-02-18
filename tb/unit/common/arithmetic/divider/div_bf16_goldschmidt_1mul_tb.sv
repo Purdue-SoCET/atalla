@@ -110,7 +110,7 @@ module div_bf16_goldschmidt_1mul_tb;
       // Both NaN — pass
     end else if (divif.out.result !== expected_in) begin
       if ((divif.out.result[15] == expected_in[15]) && (abs_diff <= 2)) begin
-        $display("INFO: Result off by ~2 ULP - Acceptable for Goldschmidt.");
+        $display("INFO: Result off by %d ULP - Acceptable for Goldschmidt.", abs_diff);
       end else begin
          $display("ERROR @%0t [%s]: %h / %h = %h (expected %h)", 
                   $time, tb_test_case, divif.in.operand1, divif.in.operand2, divif.out.result, expected_in);
@@ -326,13 +326,13 @@ module div_bf16_goldschmidt_1mul_tb;
       subnormal_output_tests = errors - normal_tests - subnormal_input_tests;
     end else if (EXP_WIDTH == 8 && MANT_WIDTH == 7) begin
       // BF16 test files (if available)
-      run_file_tests("tb/unit/vector/test_cases/div_bf16_normal_tests_10K.csv", "BF16_NORMAL_TESTS");
+      run_file_tests("tb/unit/vector/test_cases/vdiv_bf16_normal_tests_10K.csv", "BF16_NORMAL_TESTS");
       normal_tests = errors;
 
-      run_file_tests("tb/unit/vector/test_cases/div_bf16_subnormal_input_tests_10K.csv", "BF16_SUBNORMAL_INPUT_TESTS");
+      run_file_tests("tb/unit/vector/test_cases/vdiv_bf16_subnormal_input_tests_10K.csv", "BF16_SUBNORMAL_INPUT_TESTS");
       subnormal_input_tests = errors - normal_tests;
 
-      run_file_tests("tb/unit/vector/test_cases/div_bf16_subnormal_output_tests_10K.csv", "BF16_SUBNORMAL_OUTPUT_TESTS");
+      run_file_tests("tb/unit/vector/test_cases/vdiv_bf16_subnormal_output_tests_10K.csv", "BF16_SUBNORMAL_OUTPUT_TESTS");
       subnormal_output_tests = errors - normal_tests - subnormal_input_tests;
     end else begin
       $display("INFO: No file-based tests available for this custom format");
