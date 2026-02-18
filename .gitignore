@@ -17,9 +17,6 @@ systolic_array_tb_pkg.sv
 *ini
 *.deps/
 build/
-waves/
 *.log
 *.jou
-*waves*/
 out/
-waves/
