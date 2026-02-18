@@ -2,8 +2,8 @@
 
 module bf_to_int #()
 (
-    input logic CLK,
-    bf_to_int_if.bf_int bf_intif
+    input logic [15:0] inputBF,
+    output logic [31:0] outputInt
 );
 
     localparam int signed I32_MAX = 32'sh7FFF_FFFF;
@@ -13,13 +13,9 @@ module bf_to_int #()
     logic [7:0] exp;
     logic [6:0] frac;
 
-    assign sign = bf_intif.inputBF[15];
-    assign exp = bf_intif.inputBF[14:7];
-    assign frac = bf_intif.inputBF[6:0];
-
-    assign bf_intif.valid_out = bf_intif.valid_in;
-    assign bf_intif.ready_in = bf_intif.ready_out;
-    assign bf_intif.rdOut = bf_intif.rdIn;
+    assign sign = inputBF[15];
+    assign exp = inputBF[14:7];
+    assign frac = inputBF[6:0];
 
     logic [7:0] mant8, mag;
     int E;
@@ -35,13 +31,13 @@ module bf_to_int #()
 
         if (exp == 8'hFF) begin
             if(sign == 1'b0) begin
-                bf_intif.outputInt = I32_MAX;
+                outputInt = I32_MAX;
             end else begin
-                bf_intif.outputInt = I32_MIN;
+                outputInt = I32_MIN;
             end
         end
         else if (exp == 8'h00 && frac == 7'h00) begin
-            bf_intif.outputInt = 32'd0;
+            outputInt = 32'd0;
         end
         else begin
 
@@ -59,25 +55,25 @@ module bf_to_int #()
             if (!sign) begin
                 if (mag_shifted > 32'd2147483647) begin
                     //overflow = 1'b1;
-                    bf_intif.outputInt = I32_MAX;
+                    outputInt = I32_MAX;
                 end else begin
                     mag32 = mag_shifted[31:0];
                     if(roundBit) begin
-                        bf_intif.outputInt = $signed(mag32) + 1;
+                        outputInt = $signed(mag32) + 1;
                     end else begin
-                        bf_intif.outputInt = $signed(mag32);
+                        outputInt = $signed(mag32);
                     end
                 end
             end else begin
                 if (mag_shifted >= 32'd2147483648) begin
                     //overflow = 1'b1;
-                    bf_intif.outputInt = I32_MIN;
+                    outputInt = I32_MIN;
                 end else begin
                     mag32 = mag_shifted[31:0];
                     if(roundBit) begin
-                        bf_intif.outputInt = -$signed(mag32) - 1;
+                        outputInt = -$signed(mag32) - 1;
                     end else begin
-                        bf_intif.outputInt = -$signed(mag32);
+                        outputInt = -$signed(mag32);
                     end
                 end
             end

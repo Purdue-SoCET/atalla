@@ -2,8 +2,8 @@
 
 module int_to_bf #()
 (
-    input logic CLK,
-    int_to_bf_if.int_bf int_bfif
+    input logic [31:0] inputInt,
+    output logic [15:0] outputBF
 );
 
     localparam int signed I32_MAX = 32'sh7FFF_FFFF;
@@ -21,22 +21,19 @@ module int_to_bf #()
     logic [4:0] i;
     logic [5:0] k;
 
-    assign sign = int_bfif.inputInt[31];
-    assign int_bfif.valid_out = int_bfif.valid_in;
-    assign int_bfif.ready_in = int_bfif.ready_out;
-    assign int_bfif.rdOut = int_bfif.rdIn;
+    assign sign = inputInt[31];
 
     always_comb begin : conversion
 
-        if (int_bfif.inputInt == I32_MIN) begin
+        if (inputInt == I32_MIN) begin
             abs_u = I32_MIN;
         end
         else begin
-            abs_u = sign ? (~int_bfif.inputInt + 1) : int_bfif.inputInt; 
+            abs_u = sign ? (~inputInt + 1) : inputInt; 
         end
 
         if(abs_u == 0) begin
-            int_bfif.outputBF = 16'b0;
+            outputBF = 16'b0;
         end else begin
             for (k = 0; k < 32; k++) begin
                 if (abs_u[k]) begin
@@ -68,7 +65,7 @@ module int_to_bf #()
                     frac_field = frac_plus[6:0];
                 end
             end
-            int_bfif.outputBF = {sign, exp_field, frac_field};
+            outputBF = {sign, exp_field, frac_field};
         end
         
     end
