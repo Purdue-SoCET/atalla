@@ -8,6 +8,7 @@ module div_bf16_goldschmidt_1mul (
     localparam [7:0] BIAS = 8'h7F;
     localparam [7:0] EXP_INF = 8'hFF;
 
+    // Multiplier signals
     logic [15:0] mul_a, mul_b, mul_out;
     logic mul_start, mul_done;
 
@@ -36,19 +37,81 @@ module div_bf16_goldschmidt_1mul (
     logic [15:0] reg_n, next_n;
     logic [15:0] reg_d, next_d;
     logic [15:0] reg_f, next_f;
-    logic [7:0] res_exp, next_exp;
+
+    // Signed tracking fixes the 1.0 / Max edge cases
+    logic signed [9:0] res_exp, next_exp;
     logic res_sign, next_sign;
     logic [15:0] res_out, next_res_out;
-    logic [8:0] true_exp_calc;
+    logic signed [9:0] true_exp_calc;
 
     logic a_nan, a_inf, a_zero, b_nan, b_inf, b_zero;
+    logic is_same_mag;
+    logic is_div_by_one;
+    
 
+    // Flush to zero
+    logic [15:0] op1_ftz, op2_ftz;
+
+    assign op1_ftz = (divif.in.operand1[14:7] == 8'h00) ? {divif.in.operand1[15], 15'h0000} : divif.in.operand1;
+    assign op2_ftz = (divif.in.operand2[14:7] == 8'h00) ? {divif.in.operand2[15], 15'h0000} : divif.in.operand2;
+
+    // Special Number checking
     assign a_nan = (divif.in.operand1[14:7] == EXP_INF) && (divif.in.operand1[6:0] != 0);
     assign a_inf = (divif.in.operand1[14:7] == EXP_INF) && (divif.in.operand1[6:0] == 0);
     assign a_zero = (divif.in.operand1[14:7] == 0);
     assign b_nan = (divif.in.operand2[14:7] == EXP_INF) && (divif.in.operand2[6:0] != 0);
     assign b_inf = (divif.in.operand2[14:7] == EXP_INF) && (divif.in.operand2[6:0] == 0);
     assign b_zero = (divif.in.operand2[14:7] == 0);
+    assign is_same_mag = (op1_ftz[14:0] == op2_ftz[14:0]);
+    assign is_div_by_one = (op2_ftz[14:0] == 15'h3F80);
+
+    logic [15:0] fast_f_out;
+    logic [7:0]  d_exp;
+    logic [6:0]  d_mant;
+    logic [12:0] fixed_d, fixed_f;
+    logic [7:0]  f_exp;
+    logic [6:0]  f_mant;
+
+    always_comb begin
+        d_exp  = reg_d[14:7];
+        d_mant = reg_d[6:0];
+
+        // 1. Convert BF16 D to 3.10 fixed-point format (Value = [12:10].[9:0])
+        if (d_exp == 8'h00) begin
+            fixed_d = 13'h000;
+        end else if (d_exp <= 8'd127) begin
+            // Shift down based on how much smaller exponent is than 127
+            fixed_d = {2'b00, 1'b1, d_mant, 3'b000} >> (8'd127 - d_exp);
+        end else begin
+            // Hard clip at 2.0 to prevent underflow wrap
+            fixed_d = 13'h0800; 
+        end
+
+        // 2. Fixed-point subtraction: 2.0 - D
+        // 2.0 represented in 3.10 fixed-point is 13'b010_0000000000 = 13'h0800
+        fixed_f = 13'h0800 - fixed_d;
+
+        // 3. Normalize back to BF16 (Priority Encoder)
+        if (fixed_f == 13'h0000) begin
+            f_exp = 8'h00; f_mant = 7'h00;
+        end else if (fixed_f[11]) begin f_exp = 8'd128; f_mant = 7'h00; // 2.0
+        end else if (fixed_f[10]) begin f_exp = 8'd127; f_mant = fixed_f[9:3]; // 1.xxx
+        end else if (fixed_f[9])  begin f_exp = 8'd126; f_mant = fixed_f[8:2]; // 0.1xxx
+        end else if (fixed_f[8])  begin f_exp = 8'd125; f_mant = fixed_f[7:1];
+        end else if (fixed_f[7])  begin f_exp = 8'd124; f_mant = fixed_f[6:0];
+        end else if (fixed_f[6])  begin f_exp = 8'd123; f_mant = {fixed_f[5:0], 1'b0};
+        end else if (fixed_f[5])  begin f_exp = 8'd122; f_mant = {fixed_f[4:0], 2'b00};
+        end else if (fixed_f[4])  begin f_exp = 8'd121; f_mant = {fixed_f[3:0], 3'b000};
+        end else if (fixed_f[3])  begin f_exp = 8'd120; f_mant = {fixed_f[2:0], 4'h0};
+        end else if (fixed_f[2])  begin f_exp = 8'd119; f_mant = {fixed_f[1:0], 5'h0};
+        end else if (fixed_f[1])  begin f_exp = 8'd118; f_mant = {fixed_f[0],   6'h0};
+        end else if (fixed_f[0])  begin f_exp = 8'd117; f_mant = 7'h00;
+        end else begin                  f_exp = 8'h00;  f_mant = 7'h00;
+        end
+
+        // F is always positive in Goldschmidt
+        fast_f_out = {1'b0, f_exp, f_mant};
+    end
 
     always_ff @(posedge CLK or negedge nRST) begin
         if (~nRST) begin
@@ -89,19 +152,22 @@ module div_bf16_goldschmidt_1mul (
             IDLE: begin
                 if (nRST) divif.out.ready_in = 1;
                 if (divif.in.valid_in) begin
-                    next_sign = divif.in.operand1[15] ^ divif.in.operand2[15];
-                    next_exp = divif.in.operand1[14:7] - divif.in.operand2[14:7] + BIAS;
+                    next_sign = op1_ftz[15] ^ op2_ftz[15];
+
+                    next_exp = $signed({2'b0, op1_ftz[14:7]}) - $signed({2'b0, op2_ftz[14:7]}) + 10'sd127;
                     
                     // Force exponents to 1.0 (0x7F) to normalize mantissas for Goldschmidt
-                    next_n = {1'b0, BIAS, divif.in.operand1[6:0]};
-                    next_d = {1'b0, BIAS, divif.in.operand2[6:0]};
+                    next_n = {1'b0, BIAS, op1_ftz[6:0]};
+                    next_d = {1'b0, BIAS, op2_ftz[6:0]};
 
                     // Initial Seed F0 (Magic Number)
-                    next_f = 16'h7EF3 - {1'b0, BIAS, divif.in.operand2[6:0]};
+                    next_f = 16'h7EF3 - {1'b0, BIAS, op2_ftz[6:0]};
 
-                    if (a_nan || b_nan || (a_inf && b_inf) || (a_zero && b_zero) || a_inf || b_zero || a_zero || b_inf)
+                    if (a_nan || b_nan || (a_inf && b_inf) || (a_zero && b_zero) || a_inf || b_zero || a_zero || b_inf) begin
                         next_state = SPECIAL;
-                    else
+                    end else if (is_same_mag || is_div_by_one) begin
+                        next_state = SPECIAL;
+                    end else
                         next_state = INIT_NF;
                 end
             end
@@ -112,6 +178,10 @@ module div_bf16_goldschmidt_1mul (
                     next_res_out = {1'b0, EXP_INF, 7'h40}; // NaN
                 else if (a_inf || b_zero)
                     next_res_out = {next_sign, EXP_INF, 7'h00}; // Infinity
+                else if (is_same_mag)
+                    next_res_out = {next_sign, 8'h7F, 7'h00};
+                else if (is_div_by_one)
+                    next_res_out = {next_sign, op1_ftz[14:7], op1_ftz[6:0]};
                 else
                     next_res_out = {next_sign, 8'h00, 7'h00};
                 
@@ -140,7 +210,7 @@ module div_bf16_goldschmidt_1mul (
 
             REFINE_F: begin
                 // F = 2 - D.
-                next_f = 16'h4000 - reg_d;
+                next_f = fast_f_out;
                 next_state = FINAL_NF;
             end
 
@@ -158,12 +228,12 @@ module div_bf16_goldschmidt_1mul (
                 if (!(a_nan || b_nan || (a_inf && b_inf) || (a_zero && b_zero) || a_inf || b_zero || a_zero || b_inf)) begin
                     // Reconstruct the true exponent by combining the input difference
                     // with the normalized exponent generated by the final mul_bf16 result
-                    true_exp_calc = {1'b0, res_exp} + {1'b0, reg_n[14:7]} - 9'h07F;
+                    true_exp_calc = $signed(res_exp) + $signed({2'b0, reg_n[14:7]}) - 10'sd127;
                     
-                    if (true_exp_calc > 9'h0FE) begin
+                    if (true_exp_calc >= 10'sd255) begin
                         // Overflow to Infinity
                         next_res_out = {res_sign, EXP_INF, 7'h00};
-                    end else if (true_exp_calc[8] || true_exp_calc == 0) begin
+                    end else if (true_exp_calc <= 10'sd0) begin
                         // Underflow to Zero
                         next_res_out = {res_sign, 8'h00, 7'h00};
                     end else begin
