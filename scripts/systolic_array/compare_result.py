@@ -134,16 +134,8 @@ def compare_results(expected_result_path, result_path):
 if __name__ == "__main__":
     import sys
 
-    if len(sys.argv) != 2:
-        print("Usage: python compare_result.py <file.txt>")
+    if len(sys.argv) != 3:
+        print("Usage: python compare_result.py <file1.txt> <file2.txt>")
         raise SystemExit(2)
-
-    mats = parse_matrices(sys.argv[1])
-
-    # Print summary
-    for m in mats:
-        rows = len(m.data)
-        cols = len(m.data[0]) if rows else 0
-        print(f"Test {m.test_num} Matrix {m.matrix_idx} shape=({rows},{cols})")
-        for row in m.data:
-            print(",".join(f"0x{v:04X}" for v in row))
+    
+    compare_results(sys.argv[1], sys.argv[2])
