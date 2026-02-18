@@ -601,8 +601,19 @@ def render_testfile(instr_lines: str, dram_render: str) -> str:
     parts.append(dram_render)
 
     return "\n".join([p for p in parts if p is not None]).rstrip() + "\n"
+def convert_instructions(instructions_old):
+    #input = hex, comment output = op, dsts, srcs, mem_key
+    instructions = []
+    for instr, comment in instructions_old:
+        if(comment):
+            operation = comment.split()[0]
+        else:
+            operation = "nop.s"
+        instructions.append((operation, [], [], None))
+    return instructions
 
-def build_dependency_graph(instructions, latency_map, single_lsu=True):
+def build_dependency_graph(instructions_bad, latency_map, single_lsu=True):
+    instructions = convert_instructions(instructions_bad)  # op, dsts, srcs, mem_key 
     last_write = {}
     last_mem_cycle = -1
     last_store_at = {}
@@ -734,6 +745,15 @@ if __name__ == "__main__":
 
     instrs = assemble_file(asm)       
     instr_text = emit_test_format(instrs)
+    instrs = assemble_file(asm)  # returns list[(hex, comment)]
+
+    # Convert to the format dependency graph expects
+    sched_instrs = instr_to_sched_format(instrs)
+
+    latency_map = {"lw.s": 2, "sw.s": 2, "addi.s": 1, "halt.s": 1}  # example
+    ready = build_dependency_graph(convert_instructions(instrs), latency_map)
+
+    packets = greedy_pack(sched_instrs, ready)
 
     img = DRAMWriter() 
 
