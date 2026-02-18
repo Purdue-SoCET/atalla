@@ -14,6 +14,7 @@ from src.misc.opcode_table import OPCODES, name_to_opcode
 INVERT_OPCODES = name_to_opcode()
 VIRTUAL_PACKET_SIZE = 1 
 REAL_PACKET_SIZE = 4
+RAW_VI_IMM_MNEMONICS = {"shift.vi", "rsum.vi", "rmin.vi", "rmax.vi"}
 
 IntLike = int
 BytesLike = Union[bytes, bytearray, memoryview]
@@ -377,11 +378,15 @@ def asm_to_instr_dict(mnemonic: str, ops: list[str]) -> dict:
         return d
 
     if instr_type == "VI":
-        # addi.vi vd, vs1, imm16 [, mask]
-        # Numeric immediate is encoded as BF16 raw bits.
+        # VI format supports two immediate encodings:
+        # 1) arithmetic/scalar-style .vi ops use BF16-encoded immediate payload
+        # 2) control-style .vi ops (shift/rsum/rmin/rmax) use raw immediate bits
         d["vd"]  = parse_reg(ops[0])
         d["vs1"] = parse_reg(ops[1])
-        imm16 = _bf16_bits(parse_number(ops[2]))
+        if mnemonic in RAW_VI_IMM_MNEMONICS:
+            imm16 = parse_int(ops[2]) & 0xFFFF
+        else:
+            imm16 = _bf16_bits(parse_number(ops[2]))
         lo, hi = split_imm16(imm16)
         d["imm8_1"] = lo
         d["imm8_2"] = hi
