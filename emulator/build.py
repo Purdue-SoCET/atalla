@@ -227,6 +227,7 @@ def encode_instruction(instr_dict):
 
 REG_RE = re.compile(r"^\$(?:x)?(\d+)$", re.IGNORECASE)
 IMM_RE = re.compile(r"^[+-]?(?:0x[0-9a-fA-F]+|0b[01]+|\d+)$")
+FLOAT_RE = re.compile(r"^[+-]?(?:\d+\.\d*|\.\d+|\d+)(?:[eE][+-]?\d+)?$")
 MEM_RE = re.compile(r"^([+-]?(?:0x[0-9a-fA-F]+|0b[01]+|\d+))\(\s*\$(?:x)?(\d+)\s*\)$", re.IGNORECASE)
 LABEL_RE = re.compile(r"^[A-Za-z_]\w*:$")
 
@@ -235,6 +236,14 @@ def parse_int(s: str) -> int:
     if not IMM_RE.match(s):
         raise ValueError(f"Bad immediate: {s!r}")
     return int(s, 0)  # supports 123, 0x10, 0b1010, -4
+
+def parse_number(s: str) -> float:
+    s = s.strip()
+    if IMM_RE.match(s):
+        return float(int(s, 0))
+    if FLOAT_RE.match(s):
+        return float(s)
+    raise ValueError(f"Bad numeric immediate: {s!r}")
 
 def parse_reg(s: str) -> int:
     s = s.strip()
@@ -369,9 +378,10 @@ def asm_to_instr_dict(mnemonic: str, ops: list[str]) -> dict:
 
     if instr_type == "VI":
         # addi.vi vd, vs1, imm16 [, mask]
+        # Numeric immediate is encoded as BF16 raw bits.
         d["vd"]  = parse_reg(ops[0])
         d["vs1"] = parse_reg(ops[1])
-        imm16 = parse_int(ops[2])
+        imm16 = _bf16_bits(parse_number(ops[2]))
         lo, hi = split_imm16(imm16)
         d["imm8_1"] = lo
         d["imm8_2"] = hi
