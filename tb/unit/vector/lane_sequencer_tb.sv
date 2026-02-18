@@ -1,0 +1,656 @@
+`timescale 1ns/1ps
+
+//`include "vector_pkg.vh"
+//`include "sqrt_types.vh"
+
+module lane_sequencer_tb;
+    import vector_pkg::*;
+
+    // Clock & reset
+    logic CLK;
+    logic nRST;
+
+    // DUT interface
+    lane_seq_in_t  lane_in;
+    lane_seq_out_t lane_out;
+
+    // Parameterized slice width (comes from your package / defines)
+    localparam int SLICE_W_TB = SLICE_W;
+
+    // Global error counter
+    int total_errors = 0;
+
+    // ----------------------------------------
+    // DUT instance
+    // ----------------------------------------
+    lane_sequencer dut (
+        .CLK     (CLK),
+        .nRST    (nRST),
+        .lane_in (lane_in),
+        .lane_out(lane_out)
+    );
+
+    // ----------------------------------------
+    // Clock generation: 10 ns period
+    // ----------------------------------------
+    initial CLK = 0;
+    always #5 CLK = ~CLK;
+
+    // ----------------------------------------
+    // Common helper: reset & init
+    // ----------------------------------------
+    task automatic init_signals();
+        begin
+            lane_in = '{default:'0};
+            lane_in.ready = 1'b1;  // downstream ready by default
+            lane_in.valid = 1'b0;
+        end
+    endtask
+
+    task automatic apply_reset();
+        begin
+            nRST = 1'b0;
+            init_signals();
+            repeat (3) @(posedge CLK);
+            nRST = 1'b1;
+            @(posedge CLK);  // allow 1 cycle to settle
+        end
+    endtask
+
+    // ----------------------------------------
+    // Simple check helpers
+    // ----------------------------------------
+    task automatic check_bit(
+        input string what,
+        input logic  got,
+        input logic  exp,
+        inout int    err_cnt
+    );
+        begin
+            if (got !== exp) begin
+                $error("[%0t] CHECK FAILED: %s got=%0b exp=%0b",
+                       $time, what, got, exp);
+                err_cnt++;
+            end
+        end
+    endtask
+
+    task automatic check_int(
+        input string what,
+        input int    got,
+        input int    exp,
+        inout int    err_cnt
+    );
+        begin
+            if (got !== exp) begin
+                $error("[%0t] CHECK FAILED: %s got=%0d exp=%0d",
+                       $time, what, got, exp);
+                err_cnt++;
+            end
+        end
+    endtask
+
+    task automatic check_word(
+        input string       what,
+        input logic [15:0] got,
+        input logic [15:0] exp,
+        inout int          err_cnt
+    );
+        begin
+            if (got !== exp) begin
+                $error("[%0t] CHECK FAILED: %s got=0x%h exp=0x%h",
+                       $time, what, got, exp);
+                err_cnt++;
+            end
+        end
+    endtask
+
+    // ----------------------------------------
+    // Helper: drive a full slice into lane_in
+    // ----------------------------------------
+    task automatic drive_slice(
+        input fp16_t   base_v1,
+        input fp16_t   base_v2,
+        input logic    all_masks_one,
+        input vsel_t   vd,
+        input opcode_t vop,
+        input logic    rm
+    );
+        int i;
+        begin
+            // Build slice
+            for (i = 0; i < SLICE_W_TB; i++) begin
+                lane_in.v1[i]    = fp16_t'(base_v1 + i);
+                lane_in.v2[i]    = fp16_t'(base_v2 + i);
+                lane_in.vmask[i] = (all_masks_one) ? 1'b1 : 1'b0;
+            end
+
+            lane_in.vd  = vd;
+            lane_in.vop = vop;
+            lane_in.rm  = rm;
+
+            // Default downstream ready
+            lane_in.ready = 1'b1;
+
+            // Wait until DUT is ready for new slice
+            wait (lane_out.lane_ready == 1'b1);
+            @(posedge CLK);
+
+            // Pulse valid for one cycle to latch slice at IDLE->BUSY transition
+            lane_in.valid = 1'b1;
+            @(posedge CLK);
+            lane_in.valid = 1'b0;
+        end
+    endtask
+
+    // ----------------------------------------
+    // Scenario A: Happy Path (Basic Serialization)
+    // ----------------------------------------
+    task automatic test_scenario_A(output int err_cnt);
+        string   testname;
+        fp16_t   base_v1, base_v2;
+        vsel_t   vd;
+        opcode_t vop;
+        logic    rm;
+        int      elems_seen;
+        int      idx;
+        begin
+            testname = "Scenario A: Happy Path";
+            err_cnt  = 0;
+            $display("\n========== %s ==========", testname);
+
+            // Reset DUT
+            apply_reset();
+
+            // Drive a slice
+            base_v1 = fp16_t'(16'h0010);
+            base_v2 = fp16_t'(16'h0100);
+            vd      = 'h3;
+            vop     = 'h5;
+            rm      = 1'b1;
+
+            drive_slice(base_v1, base_v2, /*all_masks_one=*/1'b1, vd, vop, rm);
+
+            // Now monitor serialized outputs
+            elems_seen = 0;
+
+            // Wait until first valid
+            wait (lane_out.valid == 1'b1);
+            //@(posedge CLK);
+
+            while (elems_seen < SLICE_W_TB) begin
+                @(posedge CLK);
+
+                if (lane_out.valid && lane_in.ready) begin
+                    idx = lane_out.elem_idx;
+
+                    check_int($sformatf("A.elem_idx (elem %0d)", elems_seen),
+                              idx, elems_seen, err_cnt);
+
+                    // Expect v1_elem = base_v1 + idx
+                    check_word($sformatf("A.v1_elem (idx %0d)", idx),
+                               lane_out.v1_elem, fp16_t'(base_v1 + idx), err_cnt);
+
+                    // Expect v2_elem = base_v2 + idx
+                    check_word($sformatf("A.v2_elem (idx %0d)", idx),
+                               lane_out.v2_elem, fp16_t'(base_v2 + idx), err_cnt);
+
+                    // Mask = 1
+                    check_bit($sformatf("A.mask_bit (idx %0d)", idx),
+                              lane_out.mask_bit, 1'b1, err_cnt);
+
+                    // Metadata stable
+                    if (lane_out.vop !== vop) begin
+                        $error("[%0t] A: vop changed mid-slice (got=%0h exp=%0h)",
+                               $time, lane_out.vop, vop);
+                        err_cnt++;
+                    end
+                    if (lane_out.rm !== rm) begin
+                        $error("[%0t] A: rm changed mid-slice (got=%0b exp=%0b)",
+                               $time, lane_out.rm, rm);
+                        err_cnt++;
+                    end
+
+                    elems_seen++;
+                end
+            end
+
+            // After complete slice, lane_ready should eventually reassert
+            repeat (3) @(posedge CLK);
+            check_bit("A.lane_ready after slice", lane_out.lane_ready, 1'b1, err_cnt);
+
+            if (err_cnt == 0)
+                $display(">>> %s PASSED", testname);
+            else
+                $display(">>> %s FAILED with %0d errors", testname, err_cnt);
+
+            total_errors += err_cnt;
+        end
+    endtask
+
+        // ----------------------------------------
+    // Scenario B: Downstream Backpressure (Stalling)
+    // ----------------------------------------
+    task automatic test_scenario_B(output int err_cnt);
+        string   testname;
+        fp16_t   base_v1, base_v2;
+        vsel_t   vd;
+        opcode_t vop;
+        logic    rm;
+        int      idx_before_stall;
+        int      stall_cycles;
+        int      elems_seen;
+        int      idx;
+        int      remaining;
+        begin
+            testname = "Scenario B: Downstream Backpressure";
+            err_cnt  = 0;
+            $display("\n========== %s ==========", testname);
+
+            apply_reset();
+
+            // Drive a slice with all masks=1
+            base_v1 = fp16_t'(16'h0100);
+            base_v2 = fp16_t'(16'h0200);
+            vd      = 'h1;
+            vop     = 'h2;
+            rm      = 1'b0;
+
+            drive_slice(base_v1, base_v2, 1'b1, vd, vop, rm);
+
+            // Wait until BUSY and first valid element appears while downstream is ready
+            wait (lane_out.valid == 1'b1 && lane_in.ready == 1'b1);
+
+            // Capture the index of the element we're going to stall on
+            idx_before_stall = lane_out.elem_idx;
+
+            // Start stall on downstream BEFORE the next clock edge
+            lane_in.ready = 1'b0;
+            stall_cycles  = 3;
+
+            // During stall, valid must stay high and elem_idx must not advance
+            repeat (stall_cycles) begin
+                @(posedge CLK);
+                check_bit("B.valid during backpressure", lane_out.valid, 1'b1, err_cnt);
+                check_int("B.elem_idx during stall",
+                          lane_out.elem_idx, idx_before_stall, err_cnt);
+            end
+
+            // Release backpressure
+            lane_in.ready = 1'b1;
+
+            // Number of elements remaining from idx_before_stall .. SLICE_W_TB-1
+            remaining = SLICE_W_TB - idx_before_stall;
+
+            // Continue to accept remaining elements and check correctness
+            elems_seen = 0;
+            while (elems_seen < remaining) begin
+                @(posedge CLK);
+                if (lane_out.valid && lane_in.ready) begin
+                    idx = lane_out.elem_idx;
+
+                    // First element after stall must resume at idx_before_stall
+                    if (elems_seen == 0) begin
+                        check_int("B.first idx after stall", idx, idx_before_stall, err_cnt);
+                    end
+
+                    // Data correctness
+                    check_word($sformatf("B.v1_elem (idx %0d)", idx),
+                               lane_out.v1_elem, fp16_t'(base_v1 + idx), err_cnt);
+                    check_word($sformatf("B.v2_elem (idx %0d)", idx),
+                               lane_out.v2_elem, fp16_t'(base_v2 + idx), err_cnt);
+
+                    elems_seen++;
+                end
+            end
+
+            // End state: lane_ready high again
+            repeat (3) @(posedge CLK);
+            check_bit("B.lane_ready after slice", lane_out.lane_ready, 1'b1, err_cnt);
+
+            if (err_cnt == 0)
+                $display(">>> %s PASSED", testname);
+            else
+                $display(">>> %s FAILED with %0d errors", testname, err_cnt);
+
+            total_errors += err_cnt;
+        end
+    endtask
+
+    // ----------------------------------------
+    // Scenario C: Upstream Starvation
+    // ----------------------------------------
+    task automatic test_scenario_C(output int err_cnt);
+        string   testname;
+        fp16_t   base_v1, base_v2;
+        vsel_t   vd;
+        opcode_t vop;
+        logic    rm;
+        int      elems_seen;
+        begin
+            testname = "Scenario C: Upstream Starvation";
+            err_cnt  = 0;
+            $display("\n========== %s ==========", testname);
+
+            apply_reset();
+
+            // Drive one slice
+            base_v1 = fp16_t'(16'h0200);
+            base_v2 = fp16_t'(16'h0300);
+            vd      = 'h2;
+            vop     = 'h3;
+            rm      = 1'b0;
+
+            drive_slice(base_v1, base_v2, 1'b1, vd, vop, rm);
+
+            // Drain all elements
+            elems_seen = 0;
+            while (elems_seen < SLICE_W_TB) begin
+                @(posedge CLK);
+                if (lane_out.valid && lane_in.ready) begin
+                    elems_seen++;
+                end
+            end
+
+            // Now we're idle. Keep valid low and wait a few cycles.
+            lane_in.valid = 1'b0;
+            lane_in.ready = 1'b1;
+
+            repeat (5) begin
+                @(posedge CLK);
+                check_bit("C.valid in starvation", lane_out.valid, 1'b0, err_cnt);
+                check_bit("C.lane_ready in starvation", lane_out.lane_ready, 1'b1, err_cnt);
+            end
+
+            if (err_cnt == 0)
+                $display(">>> %s PASSED", testname);
+            else
+                $display(">>> %s FAILED with %0d errors", testname, err_cnt);
+
+            total_errors += err_cnt;
+        end
+    endtask
+
+    // ----------------------------------------
+    // Scenario D: Back-to-Back Throughput
+    // ----------------------------------------
+    task automatic test_scenario_D(output int err_cnt);
+        string   testname;
+        fp16_t   baseA_v1, baseA_v2;
+        fp16_t   baseB_v1, baseB_v2;
+        vsel_t   vdA, vdB;
+        opcode_t vopA, vopB;
+        logic    rmA, rmB;
+        int      elems_accept;
+        int      bubble_cycles;
+        bit      in_between_slices;
+        bit      first_B_seen;
+        logic    accepted;
+        int      idx;
+        begin
+            testname = "Scenario D: Back-to-Back Throughput";
+            err_cnt  = 0;
+            $display("\n========== %s ==========", testname);
+
+            apply_reset();
+
+            // Slice A characteristics
+            baseA_v1 = fp16_t'(16'h0100);
+            baseA_v2 = fp16_t'(16'h0200);
+
+            // Slice B characteristics
+            baseB_v1 = fp16_t'(16'h0300);
+            baseB_v2 = fp16_t'(16'h0400);
+
+            vdA  = 'h1;
+            vopA = 'h4;
+            rmA  = 1'b1;
+
+            vdB  = 'h2;
+            vopB = 'h6;
+            rmB  = 1'b0;
+
+            // Drive Slice A
+            drive_slice(baseA_v1, baseA_v2, 1'b1, vdA, vopA, rmA);
+
+            // Fork off thread that will drive Slice B immediately once lane_ready is seen again
+            fork
+                begin : drive_B_thread
+                    wait (lane_out.lane_ready == 1'b1);
+                    @(posedge CLK);
+                    drive_slice(baseB_v1, baseB_v2, 1'b1, vdB, vopB, rmB);
+                end
+            join_none
+
+            // Scoreboard: watch all accepted elements from both slices
+            elems_accept      = 0;
+            bubble_cycles     = 0;
+            in_between_slices = 0;
+            first_B_seen      = 0;
+
+            // We expect 2 * SLICE_W_TB total accepted elements
+            while (elems_accept < 2*SLICE_W_TB) begin
+                @(posedge CLK);
+
+                accepted = lane_out.valid && lane_in.ready;
+
+                // Track bubble cycles between last A and first B
+                if (!in_between_slices && accepted &&
+                    (lane_out.elem_idx == SLICE_W_TB-1) &&
+                    (elems_accept < SLICE_W_TB)) begin
+                    in_between_slices = 1'b1;
+                end else if (in_between_slices && !first_B_seen) begin
+                    if (!accepted) begin
+                        bubble_cycles++;
+                    end else begin
+                        first_B_seen = 1'b1;
+                    end
+                end
+
+                if (accepted) begin
+                    idx = lane_out.elem_idx;
+
+                    if (elems_accept < SLICE_W_TB) begin
+                        // Slice A
+                        check_word($sformatf("D.A.v1_elem (idx %0d)", idx),
+                                   lane_out.v1_elem, fp16_t'(baseA_v1 + idx), err_cnt);
+                        check_word($sformatf("D.A.v2_elem (idx %0d)", idx),
+                                   lane_out.v2_elem, fp16_t'(baseA_v2 + idx), err_cnt);
+                        if (lane_out.vop !== vopA || lane_out.rm !== rmA) begin
+                            $error("[%0t] D: metadata mismatch in Slice A", $time);
+                            err_cnt++;
+                        end
+                    end else begin
+                        // Slice B
+                        check_word($sformatf("D.B.v1_elem (idx %0d)", idx),
+                                   lane_out.v1_elem, fp16_t'(baseB_v1 + idx), err_cnt);
+                        check_word($sformatf("D.B.v2_elem (idx %0d)", idx),
+                                   lane_out.v2_elem, fp16_t'(baseB_v2 + idx), err_cnt);
+                        if (lane_out.vop !== vopB || lane_out.rm !== rmB) begin
+                            $error("[%0t] D: metadata mismatch in Slice B", $time);
+                            err_cnt++;
+                        end
+                    end
+
+                    elems_accept++;
+                end
+            end
+
+            // Expect at least one bubble cycle between A and B
+            if (bubble_cycles == 0) begin
+                $error("[%0t] D: Expected at least 1-cycle bubble between slices, saw 0", $time);
+                err_cnt++;
+            end else begin
+                $display("D: Observed %0d bubble cycles between Slice A and B (1-cycle bubble is expected)",
+                         bubble_cycles);
+            end
+
+            if (err_cnt == 0)
+                $display(">>> %s PASSED", testname);
+            else
+                $display(">>> %s FAILED with %0d errors", testname, err_cnt);
+
+            total_errors += err_cnt;
+        end
+    endtask
+
+    // ----------------------------------------
+    // Scenario E: Asynchronous Reset
+    // ----------------------------------------
+    task automatic test_scenario_E(output int err_cnt);
+        string   testname;
+        fp16_t   base_v1, base_v2;
+        vsel_t   vd;
+        opcode_t vop;
+        logic    rm;
+        begin
+            testname = "Scenario E: Asynchronous Reset";
+            err_cnt  = 0;
+            $display("\n========== %s ==========", testname);
+
+            apply_reset();
+
+            // Start a slice
+            base_v1 = fp16_t'(16'h0123);
+            base_v2 = fp16_t'(16'h0456);
+            vd      = 'h0;
+            vop     = 'h1;
+            rm      = 1'b0;
+
+            drive_slice(base_v1, base_v2, 1'b1, vd, vop, rm);
+
+            // Wait until we are clearly in BUSY and have seen at least 1 valid cycle
+            wait (lane_out.valid == 1'b1);
+            @(posedge CLK);
+
+            // Assert asynchronous reset in the middle of BUSY
+            #2;
+            nRST = 1'b0;
+            #1;
+
+            check_bit("E.valid right after async reset", lane_out.valid, 1'b0, err_cnt);
+            check_int("E.elem_idx right after async reset", lane_out.elem_idx, 0, err_cnt);
+            check_bit("E.lane_ready right after async reset", lane_out.lane_ready, 1'b1, err_cnt);
+
+            // Deassert reset and make sure we remain in IDLE
+            nRST = 1'b1;
+            @(posedge CLK);
+
+            check_bit("E.valid after releasing reset", lane_out.valid, 1'b0, err_cnt);
+            check_bit("E.lane_ready after releasing reset", lane_out.lane_ready, 1'b1, err_cnt);
+            check_int("E.elem_idx after releasing reset", lane_out.elem_idx, 0, err_cnt);
+
+            if (err_cnt == 0)
+                $display(">>> %s PASSED", testname);
+            else
+                $display(">>> %s FAILED with %0d errors", testname, err_cnt);
+
+            total_errors += err_cnt;
+        end
+    endtask
+
+    // ----------------------------------------
+    // Scenario F: Mask Bit Toggling
+    // ----------------------------------------
+    task automatic test_scenario_F(output int err_cnt);
+        string   testname;
+        int      i;
+        fp16_t   base_v1, base_v2;
+        vsel_t   vd;
+        opcode_t vop;
+        logic    rm;
+        int      elems_seen;
+        int      idx;
+        logic    exp_mask;
+        begin
+            testname = "Scenario F: Mask Bit Toggling";
+            err_cnt  = 0;
+            $display("\n========== %s ==========", testname);
+
+            apply_reset();
+
+            // Build custom mask pattern; for SLICE_W>=4 this will include 1,0,0,1
+            base_v1 = fp16_t'(16'h1000);
+            base_v2 = fp16_t'(16'h2000);
+            vd      = 'h7;
+            vop     = 'hA;
+            rm      = 1'b1;
+
+            // Wait for lane_ready
+            wait (lane_out.lane_ready == 1'b1);
+            @(posedge CLK);
+
+            for (i = 0; i < SLICE_W_TB; i++) begin
+                lane_in.v1[i]    = fp16_t'(base_v1 + i);
+                lane_in.v2[i]    = fp16_t'(base_v2 + i);
+                lane_in.vmask[i] = ((i % 3) == 0) ? 1'b1 : 1'b0;
+            end
+
+            lane_in.vd    = vd;
+            lane_in.vop   = vop;
+            lane_in.rm    = rm;
+            lane_in.ready = 1'b1;
+
+            // Pulse valid to latch slice
+            lane_in.valid = 1'b1;
+            @(posedge CLK);
+            lane_in.valid = 1'b0;
+
+            // Drain elements and check mask_bit == vmask[elem_idx]
+            elems_seen = 0;
+            while (elems_seen < SLICE_W_TB) begin
+                @(posedge CLK);
+                if (lane_out.valid && lane_in.ready) begin
+                    idx      = lane_out.elem_idx;
+                    exp_mask = ((idx % 3) == 0) ? 1'b1 : 1'b0;
+
+                    check_bit($sformatf("F.mask_bit (idx %0d)", idx),
+                              lane_out.mask_bit, exp_mask, err_cnt);
+                    elems_seen++;
+                end
+            end
+
+            if (err_cnt == 0)
+                $display(">>> %s PASSED", testname);
+            else
+                $display(">>> %s FAILED with %0d errors", testname, err_cnt);
+
+            total_errors += err_cnt;
+        end
+    endtask
+
+    // ----------------------------------------
+    // Top-level initial: run all scenarios sequentially
+    // ----------------------------------------
+    initial begin
+        int    err;
+        string testname;
+
+        // VCD dump (optional)
+        //$dumpfile("lane_sequencer_tb.vcd");
+        //$dumpvars(0, lane_sequencer_tb);
+
+        testname = "Scenario A: Happy Path";
+        test_scenario_A(err);
+        testname = "Scenario B: Backpressure";
+        test_scenario_B(err);
+        testname = "Scenario C: Upstream Starvation";
+        test_scenario_C(err);
+        testname = "Scenario D: Back-to-Back Throughput";
+        test_scenario_D(err);
+        testname = "Scenario E: Asynchronous Reset";
+        test_scenario_E(err);
+        testname = "Scenario F: Mask Bit Toggling";
+        test_scenario_F(err);
+
+        $display("\n========================================");
+        if (total_errors == 0)
+            $display("ALL TESTS PASSED");
+        else
+            $display("TOTAL ERRORS ACROSS ALL TESTS: %0d", total_errors);
+        $display("========================================\n");
+
+        $finish;
+    end
+
+endmodule
