@@ -63,7 +63,6 @@ module sysarr_MEISSA_top_tb();
         // Read section header: Weight
         void'($fgets(line, file));
         section = line.toupper();
-        $display(section);
 
         if (section.len() >= 5 && section.substr(0,5) == "WEIGHT") begin
             weights = 1;
@@ -246,7 +245,6 @@ module sysarr_MEISSA_top_tb();
             if (line.len() >= 4 && line.substr(0,3) == "Test") begin
                 test_name = line;
                 found_test = 1;
-                $display("%s", test_name);
             end
         end
 
@@ -291,7 +289,6 @@ module sysarr_MEISSA_top_tb();
     $fclose(out_file);
     $fclose(actual_output_file);
     #50;
-    $display("End of Tests");
     $stop;
   end
 
