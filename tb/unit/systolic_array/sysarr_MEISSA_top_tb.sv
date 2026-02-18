@@ -28,7 +28,7 @@ module sysarr_MEISSA_top_tb();
     // FILE I/O
     int out_file, file, actual_output_file;
     /* verilator lint_off UNUSEDSIGNAL */
-    string line;
+    string line, test_name;
     /* verilator lint_off UNUSEDSIGNAL */
     logic [DATA_WIDTH-1:0] temp_weights[ARRAY_DIM][ARRAY_DIM];
     logic [DATA_WIDTH-1:0] temp_inputs[ARRAY_DIM][ARRAY_DIM];
@@ -63,14 +63,15 @@ module sysarr_MEISSA_top_tb();
         // Read section header: Weight
         void'($fgets(line, file));
         section = line.toupper();
+        $display(section);
 
-        if (section.len() >= 5 && section.substr(0,4) == "WEIGHT") begin
+        if (section.len() >= 5 && section.substr(0,5) == "WEIGHT") begin
             weights = 1;
             // Read Weights
             for (int i = 0; i < ARRAY_DIM; i++) begin
                 void'($fgets(line, file));
                 for (int j = 0; j < ARRAY_DIM; j++) begin
-                    token = line.substr(j*7, 6); // "0xXXXX"
+                    token = line.substr(j*7, (j*7)+6); // "0xXXXX"
                     $sscanf(token, "%h", temp_weights[i][j]);
                 end
             end
@@ -85,7 +86,7 @@ module sysarr_MEISSA_top_tb();
         for (int i = 0; i < ARRAY_DIM; i++) begin
             void'($fgets(line, file));
             for (int j = 0; j < ARRAY_DIM; j++) begin
-                token = line.substr(j*7, 6);
+                token = line.substr(j*7, (j*7)+6);
                 $sscanf(token, "%h", temp_inputs[i][j]);
             end
         end
@@ -100,7 +101,7 @@ module sysarr_MEISSA_top_tb();
         for (int i = 0; i < ARRAY_DIM; i++) begin
             void'($fgets(line, file));
             for (int j = 0; j < ARRAY_DIM; j++) begin
-                token = line.substr(j*7, 6);
+                token = line.substr(j*7, (j*7)+6);
                 $sscanf(token, "%h", temp_partials[i][j]);
             end
         end
@@ -169,6 +170,8 @@ module sysarr_MEISSA_top_tb();
 
         gsau_if.sa_input_en = 1'b0;
         gsau_if.sa_array_in = '0;
+        gsau_if.sa_partial_en = 1'b0;
+        gsau_if.sa_array_in_partials = '0;
     endtask
 
     task load_psums();
@@ -196,7 +199,7 @@ module sysarr_MEISSA_top_tb();
     endtask
 
     task write_matrix(input string test_name);
-        $fwrite(actual_output_file, "%s\n", test_name);
+        $fwrite(actual_output_file, "%s", test_name);
 
         for (int row = 0; row < ARRAY_DIM; row++) begin
             for (int column = 0; column < ARRAY_DIM; column++) begin
@@ -208,6 +211,7 @@ module sysarr_MEISSA_top_tb();
             end
             $fwrite(actual_output_file, "\n");
         end
+        $fwrite(actual_output_file, "\n");
     endtask
 
     sysarr_MEISSA_top DUT (CLK, nRST, gsau_if);
@@ -231,7 +235,6 @@ module sysarr_MEISSA_top_tb();
     reset();
 
     forever begin
-        string test_name;
         bit found_test;
         int row;
         found_test = 0;
@@ -240,10 +243,10 @@ module sysarr_MEISSA_top_tb();
             if ($fgets(line, file) == 0) begin
                break;
             end
-
             if (line.len() >= 4 && line.substr(0,3) == "Test") begin
                 test_name = line;
                 found_test = 1;
+                $display("%s", test_name);
             end
         end
 
@@ -253,13 +256,11 @@ module sysarr_MEISSA_top_tb();
 
         loaded_weights = 0;
         get_matrices(.weights(loaded_weights));
-        // get_m_output();
 
         if (loaded_weights) begin
             load_weights();
         end
 
-        //load_psums();
 
         load_inputs();
 
@@ -284,10 +285,13 @@ module sysarr_MEISSA_top_tb();
         write_matrix(test_name);
     end
 
+    test_name = "End of Tests";
+
     $fclose(file);
     $fclose(out_file);
     $fclose(actual_output_file);
     #50;
+    $display("End of Tests");
     $stop;
   end
 
