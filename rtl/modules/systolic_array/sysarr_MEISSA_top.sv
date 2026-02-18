@@ -16,9 +16,9 @@ module sysarr_MEISSA_top #(
     gsau_control_unit_if.systolic_array gsau_if
 );
     logic sysarr_stall;
-    logic [DW-1:0] mul_prod [N-1:0][N-1:0];
-    logic [DW-1:0] col_prod [N-1:0][N-1:0];
-    logic [DW-1:0] adder_sum [N-1:0];
+    logic [N - 1:0][N - 1:0][DW - 1:0] mul_prod;
+    logic [N - 1:0][N - 1:0][DW - 1:0] col_prod;
+    logic [N - 1:0][DW - 1:0] adder_sum;
 
     // only stall when gsau indicates stall (consumer module wb buffer needs to stall)
     assign sysarr_stall = ~gsau_if.sa_ready_out;
@@ -94,7 +94,7 @@ module sysarr_MEISSA_top #(
             valid_bits <= '0;
         end else begin
             if (!sysarr_stall) begin
-                valid_bits <= {valid_bits[TOTAL_DELAY - 2 : 0], gsau_if.sa_input_in};
+                valid_bits <= {valid_bits[TOTAL_DELAY - 2 : 0], gsau_if.sa_input_en};
             end
         end
     end

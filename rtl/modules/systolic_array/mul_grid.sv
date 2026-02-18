@@ -11,7 +11,7 @@ module mul_grid (
     input logic [511:0] sa_inputs,
     input logic act_en, weight_en,
     input logic mul_stall,
-    output logic [DW-1:0] prod_r [N-1:0][N-1:0]
+    output logic [N-1:0][N-1:0][DW-1:0] prod_r
 );
 
     import sys_arr_pkg::*;
@@ -21,9 +21,9 @@ module mul_grid (
 
     systolic_array_MAC_if mac_ifs[N-1:0][N-1:0] (); 
 
-    logic [DW-1:0] a_pipe [N-1:0][N-1:0];
-    logic [DW-1:0] b_pipe [N-1:0][N-1:0]; 
-    logic [DW-1:0] prod [N-1:0][N-1:0];
+    logic [N-1:0][N-1:0][DW-1:0] a_pipe;
+    logic [N-1:0][N-1:0][DW-1:0] b_pipe;
+    logic [N-1:0][N-1:0][DW-1:0] prod;
     // logic [DW-1:0] prod_r [N-1:0][N-1:0];
 
     logic [N-1:0] col_starts; // start bit mask for mul PEs per column
@@ -82,7 +82,7 @@ module mul_grid (
                     .a(a_pipe[i][j]),
                     .b(b_pipe[i][j]),
                     .result(prod[i][j]),
-                    .done(mac_ifs.value_ready[i][j])
+                    .done(mac_ifs[i][j].value_ready)
                 );
 
                 //register prod for adder tree
@@ -90,7 +90,7 @@ module mul_grid (
                     if (!nRST) begin
                         prod_r[i][j] <= '0;
                     end else if (!mul_stall) begin
-                        if (mac_ifs.value_ready[i][j]) begin
+                        if (mac_ifs[i][j].value_ready) begin
                             prod_r[i][j] <= prod[i][j];
                         end
                     end

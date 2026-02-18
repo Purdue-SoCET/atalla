@@ -10,7 +10,7 @@ module pipelined_adder_tree #(
     input  logic                    clk,
     input  logic                    nRST,
     input  logic                    stall,
-    input  logic [DATA_WIDTH-1:0]   terms_in [N],   // Products from one column
+    input  logic [N - 1:0] [DATA_WIDTH-1:0] terms_in,   // Products from one column
     input  logic [DATA_WIDTH-1:0]   psum_in,         // Partial sum; must be valid alongside terms_in
     output logic [DATA_WIDTH-1:0]   sum_out          // Final result = sum(terms_in) + psum_in
 );
@@ -20,7 +20,7 @@ module pipelined_adder_tree #(
 
     // Inter-stage wires
     // stage_data[l][k]  – data at tree level l, element k
-    logic [DATA_WIDTH-1:0] stage_data [0:TREE_DEPTH][0:N-1];
+    logic [TREE_DEPTH - 1:0][N - 1:0][DATA_WIDTH-1:0] stage_data;
 
     assign stage_data[0] = terms_in;
 

@@ -27,3 +27,4 @@
 
 // Top
 ./rtl/modules/systolic_array/sysarr_MEISSA_top.sv
+./tb/unit/systolic_array/systolic_array_tb_pkg.sv
