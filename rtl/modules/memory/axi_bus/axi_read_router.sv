@@ -17,7 +17,7 @@ module axi_read_router # (
         .ready(rif.r_sp0_o_ready),
         .selected(sp0_sel),
         .in_val(r_valid),
-        .out_val(rif.r_sp1_o_valid),
+        .out_val(rif.r_sp0_o_valid),
         .r_out(rif.r_sp0_o)
     );
 
@@ -32,10 +32,10 @@ module axi_read_router # (
 
     axi_skid_buffer SKID_I (
         .r_in(i_o),
-        .ready(rif.i_o_ready),
+        .ready(rif.r_i_o_ready),
         .selected(i_sel),
         .in_val(r_valid),
-        .out_val(rif.r_sp1_o_valid),
+        .out_val(rif.r_i_o_valid),
         .r_out(rif.r_i_o)
     );
 
@@ -44,14 +44,9 @@ module axi_read_router # (
         .ready(rif.r_d_o_ready),
         .selected(d_sel),
         .in_val(r_valid),
-        .out_val(rif.r_sp1_o_valid),
+        .out_val(rif.r_d_o_valid),
         .r_out(rif.r_d_o)
     );
-
-    assign rif.r_sp0_ready = rif.r_sp0_o_ready;
-    assign rif.r_sp1_ready = rif.r_sp1_o_ready;
-    assign rif.r_i_ready = rif.r_i_o_ready;
-    assign rif.r_d_ready = rif.r_d_o_ready;
 
     always_comb begin //TODO: how do I know which one I am receiving?
         sp0_sel = 0;
@@ -64,9 +59,12 @@ module axi_read_router # (
         i_o = '0;
         d_o = '0;
 
-        casez (r_i.mid) //TODO: master ID to identify which buffer
+        rif.r_ready = 0;
+
+        casez (rif.r_i.mid)
 
             MID_SP0: begin
+                rif.r_ready = rif.r_sp0_o_ready;
                 sp0_sel = rif.r_valid;
 
                 sp0_o.data = rif.r_i.data;
@@ -77,6 +75,7 @@ module axi_read_router # (
             end
 
             MID_SP1: begin
+                rif.r_ready = rif.r_sp1_o_ready;
                 sp1_sel = rif.r_valid;
 
                 sp1_o.data = rif.r_i.data;
@@ -87,6 +86,7 @@ module axi_read_router # (
             end
 
             MID_I: begin
+                rif.r_ready = rif.r_i_o_ready;
                 i_sel = rif.r_valid;
 
                 i_o.data = rif.r_i.data;
@@ -97,6 +97,7 @@ module axi_read_router # (
             end
 
             MID_D: begin
+                rif.r_ready = rif.r_d_o_ready;
                 d_sel = rif.r_valid;
 
                 d_o.data = rif.r_i.data;

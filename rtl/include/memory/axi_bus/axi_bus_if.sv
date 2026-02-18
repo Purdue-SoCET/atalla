@@ -58,7 +58,8 @@ interface axi_bus_if(input logic clk, input logic nRST);
     logic ar_o_valid, ar_o_ready;
 
     // DRAM CONTROLLER & READ RESPONSE ROUTER READY/VALID
-    logic r_valid, r_sp0_ready, r_sp1_ready, r_i_ready, r_d_ready; // indicate overall status of ready and valid
+    logic r_valid, r_ready;
+    // r_sp0_ready, r_sp1_ready, r_i_ready, r_d_ready;
 
     // SP0 R Skid Buffer && SP0 READY/VALID
     logic r_sp0_o_valid, r_sp0_o_ready;
@@ -166,7 +167,8 @@ interface axi_bus_if(input logic clk, input logic nRST);
             r_sp0_o_valid, r_sp1_o_valid, r_i_o_valid, r_d_o_valid,
 
         // To Controller
-        r_sp0_ready, r_sp1_ready, r_i_ready, r_d_ready //TODO do we need saperate ready signals? If we have meta data telling which one receiving, we only need single ready signal.
+        // r_sp0_ready, r_sp1_ready, r_i_ready, r_d_ready //TODO do we need saperate ready signals? If we have meta data telling which one receiving, we only need single ready signal.
+        r_ready
     );
 
     // SP0 R Skid Buffer <=> SP0

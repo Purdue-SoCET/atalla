@@ -8,7 +8,7 @@ INCLUDE = ./rtl/include/memory/axi_bus/
 TB = ./tb/unit/memory/axi_bus/
 MODULE = ./rtl/modules/memory/axi_bus/
 SCRIPT = ./scripts/memory/axi_bus/
-
+SCRATCH := work
 
 %.wav:
 	vlog -sv +incdir+$(INCLUDE) $(TB)$*_tb.sv $(MODULE)$*.sv $(EXTRA_dram_top)
