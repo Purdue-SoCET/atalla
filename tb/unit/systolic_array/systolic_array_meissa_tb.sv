@@ -160,8 +160,10 @@ module systolic_array_tb();
             gsau_if.sa_array_in = '0;
             for (int row = 0; row < ARRAY_DIM; row++) begin
                 gsau_if.sa_array_in[DATA_WIDTH * row +: DATA_WIDTH] = temp_inputs[row][column];
+                gsau_if.sa_array_in_partials[DATA_WIDTH * row +: DATA_WIDTH] = temp_partials[row][column];
             end
             gsau_if.sa_input_en = 1'b1;
+            gsau_if.sa_partial_en = 1'b1;
             @(posedge CLK);
         end
 
@@ -260,7 +262,7 @@ module systolic_array_tb();
             load_weights();
         end
 
-        load_psums();
+        // load_psums();
 
         load_inputs();
 
