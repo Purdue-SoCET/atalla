@@ -184,7 +184,6 @@ def sdma_store(
                 break
 
             val = scpad.banks[bank][slot]
-            print(val)
             bits = struct.unpack('<I', struct.pack('<f', val))[0]
             bits = bits >> 16
             #x_shifted = struct.unpack('<f', struct.pack('<I', bits & 0xFFFFFFFF))[0]
