@@ -6,6 +6,10 @@ vsim.*
 .deps/
 .mti_uselibs/
 .deps/
+*.vcd
+__pycache__/
+*.csv
+systolic_array_tb_pkg.sv
 
 !.gitignore
 !.gitmodules
