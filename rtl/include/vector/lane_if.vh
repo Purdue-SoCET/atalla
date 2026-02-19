@@ -14,6 +14,14 @@ interface lane_if #(
         input in,
         output out
     );
+
+    modport lane_in (
+        input in
+    );
+
+    modport lane_out (
+        output out
+    );
 endinterface
 
 `endif

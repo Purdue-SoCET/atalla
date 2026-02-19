@@ -6,7 +6,7 @@ Owner: Jacob Walter
 LLM was used for testscases as the old testcases did not work with the updated design. The LLM was used to create a few more cases that i have reviewed
 
 Make command for my testbench:
-make test tb_file=result_collector_tb.sv packages=/vector/vector_pkg.vh modules=/vector/result_collector.sv,/vector/result_collector_counter.sv GUI=ON
+make test tb_file=result_collector_tb.sv packages=/vector/vector_pkg.vh,/memory/scratchpad/scpad_pkg.sv modules=/vector/result_collector.sv,/vector/result_collector_counter.sv GUI=ON
 
 Test Cases:
 1. Power on reset

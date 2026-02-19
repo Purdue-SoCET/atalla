@@ -23,7 +23,7 @@ interface vector_if;
 
   //scpad connection
   vlsu_sp_in_t sp_in;
-  vlsu_sp_out_t sp_out
+  vlsu_sp_out_t sp_out;
 
   //schedular to lanes
   vector_if_lanes_in_t lanes_in;
@@ -53,7 +53,7 @@ interface vector_if;
   modport lanes (
     input lanes_in,
     output lanes_out
-  )
+  );
 
   modport vif (
     input gsau_in,
