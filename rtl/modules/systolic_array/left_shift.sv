@@ -17,7 +17,7 @@
 module left_shift (
     input      [12:0] fraction,
     output reg [12:0] result,
-    output reg [ 4:0] shifted_amount
+    output reg [ 3:0] shifted_amount
 );
 
     always_comb begin
