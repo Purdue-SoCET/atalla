@@ -2,8 +2,8 @@
 `include "sMult_if.sv"
 
 module mult_wrapper (
-    input  logic        clk,
-    input  logic        nRST,
+    input logic clk,
+    input logic nRST,
 
     sMult_if.mainport portmap
 );

@@ -34,7 +34,6 @@ always_comb begin
     updated_bf_2_in = cur_bf_2;
     latency = 1;
     portmap.bf_out = 16'b0;
-    portmap.less_than = 0;
     if(cur_add == 1) begin
         updated_bf_2_in = cur_bf_2;
         latency = 1;
@@ -50,7 +49,7 @@ always_comb begin
     end else if(cur_slt == 1) begin
         updated_bf_2_in[15] = ~cur_bf_2[15];
         if(add_sub_slt_output[15] == 1) begin
-            portmap.less_than = 1;
+            portmap.bf_out = 16'b1;
         end
         latency = 1;
     end
