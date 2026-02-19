@@ -377,40 +377,18 @@ package vector_pkg;
         logic [7:0] vd;
         logic wb_valid;
     } vector_if_gsau_out_t;
-
-    typedef struct packed {
-        logic [511:0] sa_array_in;
-        logic [511:0] sa_array_in_partials;
-        logic         sa_input_en;
-        logic         sa_weight_en;
-        logic         sa_partial_en;
-        logic         sa_ready_out;
-    } gsau_sys_in_t;
-
-    typedef struct packed {
-        logic [511:0] sa_array_output;
-        logic         sa_valid_in;
-        logic         sa_ready_in;
-    } gsau_sys_out_t;
     
     typedef struct packed {
         vlsu_sched_req_t [NUM_SCPADS-1:0] sched_req;
         vlsu_vrf_store_t [NUM_SCPADS-1:0] vrf_data;
+        logic [NUM_SCPADS-1:0] wb_ready;
     } vector_if_vlsu_in_t;
 
     typedef struct packed {
         vlsu_wb_t [NUM_SCPADS-1:0] wb;
         vlsu_status_t [NUM_SCPADS-1:0] status;
+        vlsu_sched_res_t [NUM_SCPADS-1:0] sched_res;
     } vector_if_vlsu_out_t;
-
-    typedef struct packed {
-        req_t [NUM_SCPADS-1:0] vec_req;
-    } vlsu_sp_in_t;
-
-    typedef struct packed {
-        res_t [NUM_SCPADS-1:0] vec_res;
-        logic [NUM_SCPADS-1:0] fe_vec_stall;
-    } vlsu_sp_out_t;
 
     typedef struct packed {
         logic input_valid;
