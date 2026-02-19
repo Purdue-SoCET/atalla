@@ -7,9 +7,9 @@ Owner: Jacob Walter
 
 Make commands:
 Sqrt:
-make test tb_file=general_fu_tb.sv modules=/vector/lane_FUs/sqrt_FU.sv,/vector/lane_sequencer.sv,/vector/lane_FUs/lane_unit_fifo.sv,/common/arithmetic/sqrt/sqrt_bf16.sv,/common/arithmetic/adders/add_bf16.sv,/common/arithmetic/adders/left_shift_add_bf16.sv,/common/arithmetic/multipliers/mul_bf16.sv,/common/arithmetic/multipliers/wallacetree_8b.sv,/common/arithmetic/adders/adder_8b.sv,/common/arithmetic/multipliers/fa.sv,/common/arithmetic/multipliers/ha.sv packages=/vector/vector_pkg.vh GUI=ON
+make test tb_file=general_fu_tb.sv modules=/vector/lane_FUs/sqrt_FU.sv,/vector/lane_sequencer.sv,/vector/lane_FUs/lane_unit_fifo.sv,/common/arithmetic/sqrt/sqrt_bf16.sv,/common/arithmetic/adders/add_bf16.sv,/common/arithmetic/adders/left_shift_add_bf16.sv,/common/arithmetic/multipliers/mul_bf16.sv,/common/arithmetic/multipliers/wallacetree_8b.sv,/common/arithmetic/adders/adder_8b.sv,/common/arithmetic/multipliers/fa.sv,/common/arithmetic/multipliers/ha.sv packages=/vector/vector_pkg.vh,/memory/scratchpad/scpad_pkg.sv GUI=ON
 Multiplier:
-make test tb_file=general_fu_tb.sv modules=/vector/lane_FUs/mul_FU.sv,/vector/lane_sequencer.sv,/vector/lane_FUs/lane_unit_fifo.sv,/common/arithmetic/multipliers/mul_bf16_fu.sv,/common/arithmetic/multipliers/mul_bf16.sv,/common/arithmetic/multipliers/wallacetree_8b.sv,/common/arithmetic/multipliers/fa.sv,/common/arithmetic/multipliers/ha.sv,/common/arithmetic/adders/adder_8b.sv packages=/vector/vector_pkg.vh GUI=ON
+make test tb_file=general_fu_tb.sv modules=/vector/lane_FUs/mul_FU.sv,/vector/lane_sequencer.sv,/vector/lane_FUs/lane_unit_fifo.sv,/common/arithmetic/multipliers/mul_bf16_fu.sv,/common/arithmetic/multipliers/mul_bf16.sv,/common/arithmetic/multipliers/wallacetree_8b.sv,/common/arithmetic/multipliers/fa.sv,/common/arithmetic/multipliers/ha.sv,/common/arithmetic/adders/adder_8b.sv packages=/vector/vector_pkg.vh,/memory/scratchpad/scpad_pkg.sv GUI=ON
 
 Test Cases:
 1. Power on reset
@@ -41,19 +41,19 @@ module general_fu_tb (
 
     functional_unit_if fuif();
     //DUT instanciation
-    /*
     
     sqrt_FU DUT (
         .CLK(CLK),
         .nRST(nRST),
         .fuif(fuif)
     );
-    */
-    mul_fu DUT (
+    /*
+    mul_FU DUT (
         .CLK(CLK),
         .nRST(nRST),
         .fuif(fuif)
     );
+    */
 
 
     task automatic reset_dut();
@@ -256,6 +256,8 @@ module general_fu_tb (
         int wb_count = 0;
         int timeout = 0;
         
+        
+        
         fuif.in.wb_ready = 1'b1;
         issue_from_port(port_num, v1, v2, usel, vd, rm, mask, alu_op);
         @(posedge CLK);
@@ -314,10 +316,10 @@ module general_fu_tb (
     task automatic test_all_sqrt();
         sqrt_test_issue_port_0();
         sqrt_test_issue_port_1();
-        sqrt_max_issue();
         sqrt_test_masking_1();
         sqrt_test_masking_2();
         sqrt_backpressure();
+        sqrt_max_issue();
     endtask
 
     task automatic mul_test_issue_port_0();
@@ -362,17 +364,15 @@ module general_fu_tb (
     task automatic test_all_mul();
         mul_test_issue_port_0();
         mul_test_issue_port_1();
-        mul_max_issue();
         mul_test_masking_1();
         mul_test_masking_2();
         mul_backpressure();
+        mul_max_issue();
     endtask
 
     initial begin
         reset_dut();
-        //test_all_sqrt();
-        //test_all_mul();
-        mul_max_issue();
+        test_all_sqrt();
         repeat(3) @(posedge CLK);
         $stop;
     end

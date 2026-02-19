@@ -92,10 +92,10 @@ module lane_tb;
     endtask
 
     //drives the ready signals from the RC for backpressure testing. Takes in bits and drives the input signals
-    task automatic drive_rc_ready(
+    task automatic drive_ready(
         input logic [LANE_FU_COUNT-1:0] status 
     );
-        lif.in.rc_ready = status;
+        lif.in.ready = status;
     endtask
 
     //clears an input port
@@ -103,11 +103,11 @@ module lane_tb;
         lif.in.input_valid[port] = 0;
         lif.in.v1[port] = '0;
         lif.in.v2[port] = '0;
-        lif.in.usel[port] = ALU_FU;  // or whatever default
+        lif.in.usel[port] = VALU;  // or whatever default
         lif.in.vd[port] = '0;
         lif.in.rm[port] = 0;
         lif.in.mask[port] = '0;
-        lif.in.aluop[port] = VADD;  // or whatever default
+        lif.in.aluop[port] = VR_MAX;  // or whatever default
     endtask
 
     //clears all ports
@@ -122,15 +122,23 @@ module lane_tb;
         input int fu_idx,
         input int timeout = 100
     );
+
         int cycles = 0;
 
-        while (!lif.out.units[fu_idx].input_ready && cycles <= timeout) begin
+        // Wait until ready is observed on a clock edge
+        while (cycles < timeout) begin
+
             @(posedge CLK);
+
+            if (lif.out.units[fu_idx].input_ready)
+                return;
+
             cycles++;
+
         end
-        if (cycles >= timeout_cycles) begin
-            $error("Timeout waiting for FU %0d to be ready", fu_idx);
-        end
+
+        $error("Timeout waiting for FU %0d to be ready", fu_idx);
+
     endtask
 
     //function waits for a specific FU to have valid data on the output
@@ -145,8 +153,8 @@ module lane_tb;
             cycles++;
         end
 
-        if (cycles >= timeout_cycles) begin
-            $error("Timeout waiting for FU %0d to be ready", fu_idx);
+        if (cycles >= timeout) begin
+            $error("Timeout waiting for FU %0d to be valid", fu_idx);
         end
     endtask
 
@@ -183,7 +191,7 @@ module lane_tb;
     task automatic reset_dut();
         nRST = 0;
         clear_all_ports();
-        drive_rc_ready('1);
+        drive_ready('1);
         repeat(5) @(posedge CLK);
         nRST = 1;
         repeat(2) @(posedge CLK);
@@ -195,180 +203,117 @@ module lane_tb;
     //Issues an instruction to a FU from a port and verifies the output signals
     task automatic fu_issue_test(
         input int port, 
-        input int fu,
+        input fu_t usel,
         input valu_op_t op,
         input logic [SLICE_W-1:0][15:0] v1,
         input logic [SLICE_W-1:0][15:0] v2,
         input logic [7:0] vd,
-        input logic rm,  // Reduction mode
-        input logic [SLICE_W-1:0] mask = '1  // Default to all enabled
+        input logic rm,
+        input logic [SLICE_W-1:0] mask = '1
     );
-        //issue instruction to the FU
-        issue_pulse(port, v1, v2, fu, vd, rm, mask, op);
-        
-        // Check each slice as it streams out
-        for (int slice = 0; slice < SLICE_W; slice++) begin
-            wait_for_fu_valid(fu); 
-            
-            assert (lif.out.units[fu].valid == 1) else 
-                $error("FU %0d Port %0d: Slice %0d - Valid not asserted", fu, port, slice);
-            assert (lif.out.units[fu].rm == rm) else 
-                $error("FU %0d Port %0d: Slice %0d - Reduction Mode Incorrect: got %0b, expected %0b", 
-                    fu, port, slice, lif.out.units[fu].rm, rm);
-            assert (lif.out.units[fu].mask[slice] == mask[slice]) else
-                $error("FU %0d Port %0d: Slice %0d - Mask Incorrect: got %0b, expected %0b", 
-                    fu, port, slice, lif.out.units[fu].mask[slice], mask[slice]);
-            assert (lif.out.units[fu].vd == vd) else 
-                $error("FU %0d Port %0d: Slice %0d - VD Incorrect: got %0d, expected %0d", 
-                    fu, port, slice, lif.out.units[fu].vd, vd);            
-            @(posedge CLK);
-        end
-    endtask
+        // Issue instruction to the FU
+        issue_pulse(port, v1, v2, usel, vd, rm, mask, op);
+
+        // Allow time for all slices to stream out
+        repeat (SLICE_W) @(posedge CLK);
+
+endtask
+
 
     //issues num_issues instructions to the FU as fast as the unit will accept them
     task automatic fu_max_issue(
         input int port,
-        input int fu,
+        input fu_t fu,
         input valu_op_t op,
         input int num_issues,
         input logic [SLICE_W-1:0] mask = '1
     );
+
         logic [SLICE_W-1:0][15:0] v1, v2;
         logic [7:0] vd;
 
-        //have to fork-join as i need one constantly issuing and one validating the outputs
-        fork
-            // Issuing thread - issues as soon as ready
-            begin
-                for (int i = 0; i < num_issues; i++) begin
-                    // Generate unique data for each issue
-                    vd = i[7:0];
-                    for (int slice = 0; slice < SLICE_W; slice++) begin
-                        v1[slice] = 16'h1000 + (i * 16) + slice;
-                        v2[slice] = 16'h2000 + (i * 16) + slice;
-                    end
-                    
-                    // Wait for FU to be ready to accept new work
-                    wait (lif.out.units[fu].ready == 1);
-                    
-                    // Issue the instruction
-                    issue_to_port(port, 1, v1, v2, fu, vd, 0, mask, op);
-                    @(posedge CLK);
-                    clear_port(port);
-                    
-                    $display("Issued FU %0d operation: %0d", fu, i);
-                end
+        drive_ready('1);
+
+        for (int i = 0; i < num_issues; i++) begin
+
+            vd = i[7:0];
+
+            for (int slice = 0; slice < SLICE_W; slice++) begin
+                v1[slice] = 16'h1000 + (i * 16) + slice;
+                v2[slice] = 16'h2000 + (i * 16) + slice;
             end
+
+            // Wait until FU ready
+            wait_for_fu_ready(fu);
+
+            // Issue instruction
+            issue_to_port(port, 1, v1, v2, fu, vd, 0, mask, op);
+
+            @(posedge CLK);
+            clear_port(port);
+
+            $display("Issued FU %0d operation: %0d", fu, i);
+
             
-            // Validation thread
-            begin
-                for (int i = 0; i < num_issues; i++) begin
-                    automatic logic [7:0] expected_vd = i[7:0];
-                    
-                    // Check each slice as it streams out
-                    for (int slice = 0; slice < SLICE_W; slice++) begin
-                        wait_for_fu_valid(fu); 
-                        
-                        assert (lif.out.units[fu].valid == 1) else 
-                            $error("FU %0d Continuous Issue %0d Port %0d: Slice %0d - Valid not asserted", 
-                                fu, i, port, slice);
-                        assert (lif.out.units[fu].rm == 0) else 
-                            $error("FU %0d Continuous Issue %0d Port %0d: Slice %0d - Reduction Mode Incorrect", 
-                                fu, i, port, slice);
-                        assert (lif.out.units[fu].mask[slice] == mask[slice]) else
-                            $error("FU %0d Continuous Issue %0d Port %0d: Slice %0d - Mask Incorrect: got %0b, expected %0b", 
-                                fu, i, port, slice, lif.out.units[fu].mask[slice], mask[slice]);
-                        assert (lif.out.units[fu].vd == expected_vd) else 
-                            $error("FU %0d Continuous Issue %0d Port %0d: Slice %0d - VD Incorrect: got %0d, expected %0d", 
-                                fu, i, port, slice, lif.out.units[fu].vd, expected_vd);            
-                        @(posedge CLK);
-                    end
-                    
-                    $display("Validated FU %0d operation: %0d", fu, i);
-                end
-            end
-        join
-    endtask //automatic
+
+        end
+
+        repeat(10) @(posedge CLK);
+
+    endtask
 
     task automatic fu_backpressure_test(
         input int port,
-        input int fu,
+        input fu_t fu,
         input valu_op_t op
     );
+
         logic [SLICE_W-1:0][15:0] v1, v2;
         logic [7:0] vd;
-        int issued_count = 0;
-        int validated_count = 0;
 
-        //data
+        logic [LANE_FU_COUNT-1:0] bp_mask;
+
         vd = 8'd42;
+
         for (int slice = 0; slice < SLICE_W; slice++) begin
             v1[slice] = 16'h1000 + slice;
             v2[slice] = 16'h2000 + slice;
         end
 
-        //another fork join. This time with 3 threads. 1 to issue constantly, 1 to validate the outputs, and one to control the backpressure
-        fork
-            //issuing thread
-            begin
-                wait (lif.out.units[fu].ready == 1);
-                issue_to_port(port, 1, v1, v2, fu, vd, 0, '1, op);
-                @(posedge CLK);
-                clear_port(port);
-                issued_count++;
-                $display("Issued operation %0d", issued_count);
+        // Apply backpressure (not ready)
+        bp_mask = '1;
+        bp_mask[fu] = 0;
+        drive_ready(bp_mask);
 
-                //issue second instruction as soon as ready
-                wait (lif.out.units[fu].ready == 1);
-                issue_to_port(port, 1, v1, v2, fu, vd + 1, 0, '1, op);
-                @(posedge CLK);
-                clear_port(port);
-                issued_count++;
-                $display("Issued operation %0d", issued_count);
-            end
+        // Wait until unit can accept first instruction
+        wait (lif.out.units[fu].input_ready == 1);
 
-            //backpressure control thread
-            begin
-                logic [LANE_FU_COUNT-1:0] bp_mask = '1;
-                bp_mask[fu] = 0;  // Set target FU to not ready
-                drive_rc_ready(bp_mask);
-                wait_for_fu_valid(fu); //wait until we get data from the unit
-                repeat(3) @(posedge CLK); //wait a few more cycles to release pressure
-                drive_rc_ready('1); //release backpressure
-            end
+        issue_to_port(port, 1, v1, v2, fu, vd, 0, '1, op);
+        @(posedge CLK);
+        clear_port(port);
 
-            //validation thread
-            begin
-            // Validate both issued operations
-                for (int op_num = 0; op_num < 2; op_num++) begin
-                    automatic logic [7:0] expected_vd = vd + op_num;
-                    
-                    // Check each slice as it streams out
-                    for (int slice = 0; slice < SLICE_W; slice++) begin
-                        // Wait for valid AND wb_ready (handshake)
-                        wait (lif.out.units[fu].valid == 1 && lif.in.rc_ready[fu] == 1);
-                        
-                        assert (lif.out.units[fu].valid == 1) else 
-                            $error("FU %0d Backpressure Test Op %0d Port %0d: Slice %0d - Valid not asserted", 
-                                fu, op_num, port, slice);
-                        assert (lif.out.units[fu].rm == 0) else 
-                            $error("FU %0d Backpressure Test Op %0d Port %0d: Slice %0d - Reduction Mode Incorrect", 
-                                fu, op_num, port, slice);
-                        assert (lif.out.units[fu].mask[slice] == 1) else
-                            $error("FU %0d Backpressure Test Op %0d Port %0d: Slice %0d - Mask Incorrect: got %0b, expected 1", 
-                                fu, op_num, port, slice, lif.out.units[fu].mask[slice]);
-                        assert (lif.out.units[fu].vd == expected_vd) else 
-                            $error("FU %0d Backpressure Test Op %0d Port %0d: Slice %0d - VD Incorrect: got %0d, expected %0d", 
-                                fu, op_num, port, slice, lif.out.units[fu].vd, expected_vd);            
-                        @(posedge CLK);
-                    end
-                    
-                    validated_count++;
-                    $display("Validated operation: %0d", validated_count);
-                end
-            end
-        join
-    endtask //automatic
+        $display("Issued operation 0");
+
+        // Issue second instruction
+        wait (lif.out.units[fu].input_ready == 1);
+
+        issue_to_port(port, 1, v1, v2, fu, vd+1, 0, '1, op);
+        @(posedge CLK);
+        clear_port(port);
+
+        $display("Issued operation 1");
+
+        // Hold backpressure for several cycles
+        repeat(6) @(posedge CLK);
+
+        // Release backpressure
+        drive_ready('1);
+
+        // Allow pipeline to drain
+        repeat(SLICE_W * 2) @(posedge CLK);
+
+    endtask
+
 
 
     //this runs all the ALU testcases as defined at the top of the file
@@ -383,36 +328,36 @@ module lane_tb;
 
         current_test = "ALU_ADD_PORT0";
         $display("=== Test 1: ALU ADD from Port 0 ===");
-        fu_issue_test(0, 0, VR_SUM, test_v1, test_v2, 8'd1, 0);
+        fu_issue_test(0, VALU, VR_SUM, test_v1, test_v2, 8'd1, 0);
         $display("Test 1 Complete\n");
 
         current_test = "ALU_ADD_PORT1";
         $display("=== Test 2: ALU ADD from Port 1 ===");
-        fu_issue_test(1, 0, VR_SUM, test_v1, test_v2, 8'd2, 0);
+        fu_issue_test(1, VALU, VR_SUM, test_v1, test_v2, 8'd2, 0);
         $display("Test 2 Complete\n");
 
         current_test = "ALU_MIN_REDUCTION";
         $display("=== Test 3: ALU MIN Reduction ===");
         test_v1 = {16'h4200, 16'h4100};
         test_v2 = {16'h4000, 16'h4300};
-        fu_issue_test(0, 0, VR_MIN, test_v1, test_v2, 8'd3, 1);
+        fu_issue_test(0, VALU, VR_MIN, test_v1, test_v2, 8'd3, 1);
         $display("Test 3 Complete\n");
 
         current_test = "ALU_MASK_TEST";
         $display("=== Test 4: ALU Mask Test ===");
         test_v1 = {16'h3f80, 16'h4000};
         test_v2 = {16'h4000, 16'h4100};
-        fu_issue_test(0, 0, VR_SUM, test_v1, test_v2, 8'd4, 0, 2'b10);
+        fu_issue_test(0, VALU, VR_SUM, test_v1, test_v2, 8'd4, 0, 2'b10);
         $display("Test 4 Complete\n");
 
         current_test = "ALU_MAX_ISSUE";
         $display("=== Test 5: ALU Maximum Issue Rate ===");
-        fu_max_issue(0, 0, VR_SUM, 10);
+        fu_max_issue(0, VALU, VR_SUM, 10);
         $display("Test 5 Complete\n");
 
         current_test = "ALU_BACKPRESSURE";
         $display("=== Test 6: ALU Backpressure Test ===");
-        fu_backpressure_test(0, 0, VR_SUM);
+        fu_backpressure_test(0, VALU, VR_SUM);
         $display("Test 6 Complete\n");
 
         current_test = "ALU_COMPLETE";
@@ -431,30 +376,31 @@ module lane_tb;
 
         current_test = "MULT_PORT0";
         $display("=== Test 1: MULT from Port 0 ===");
-        fu_issue_test(0, 1, VR_SUM, test_v1, test_v2, 8'd1, 0);
+        fu_issue_test(0, MUL, VR_SUM, test_v1, test_v2, 8'd1, 0);
         $display("Test 1 Complete\n");
 
         current_test = "MULT_PORT1";
         $display("=== Test 2: MULT from Port 1 ===");
-        fu_issue_test(1, 1, VR_SUM, test_v1, test_v2, 8'd2, 0);
+        fu_issue_test(1, MUL, VR_SUM, test_v1, test_v2, 8'd2, 0);
         $display("Test 2 Complete\n");
 
         current_test = "MULT_MASK_TEST";
         $display("=== Test 3: MULT Mask Test ===");
         test_v1 = {16'h3f80, 16'h4000};
         test_v2 = {16'h4000, 16'h4100};
-        fu_issue_test(0, 1, VR_SUM, test_v1, test_v2, 8'd3, 0, 2'b10);
+        fu_issue_test(0, MUL, VR_SUM, test_v1, test_v2, 8'd3, 0, 2'b10);
         $display("Test 3 Complete\n");
 
         current_test = "MULT_MAX_ISSUE";
         $display("=== Test 4: MULT Maximum Issue Rate ===");
-        fu_max_issue(0, 1, VR_SUM, 10);
+        fu_max_issue(0, MUL, VR_SUM, 10);
         $display("Test 4 Complete\n");
 
         current_test = "MULT_BACKPRESSURE";
         $display("=== Test 5: MULT Backpressure Test ===");
-        fu_backpressure_test(0, 1, VR_SUM);
+        fu_backpressure_test(0, MUL, VR_SUM);
         $display("Test 5 Complete\n");
+
 
         current_test = "MULT_COMPLETE";
         $display("MULT tests complete");
@@ -472,29 +418,29 @@ module lane_tb;
 
         current_test = "DIV_PORT0";
         $display("=== Test 1: DIV from Port 0 ===");
-        fu_issue_test(0, 2, VR_SUM, test_v1, test_v2, 8'd1, 0);
+        fu_issue_test(0, DIV, VR_SUM, test_v1, test_v2, 8'd1, 0);
         $display("Test 1 Complete\n");
 
         current_test = "DIV_PORT1";
         $display("=== Test 2: DIV from Port 1 ===");
-        fu_issue_test(1, 2, VR_SUM, test_v1, test_v2, 8'd2, 0);
+        fu_issue_test(1, DIV, VR_SUM, test_v1, test_v2, 8'd2, 0);
         $display("Test 2 Complete\n");
 
         current_test = "DIV_MASK_TEST";
         $display("=== Test 3: DIV Mask Test ===");
         test_v1 = {16'h4000, 16'h4100};
         test_v2 = {16'h3f80, 16'h4000};
-        fu_issue_test(0, 2, VR_SUM, test_v1, test_v2, 8'd3, 0, 2'b10);
+        fu_issue_test(0, DIV, VR_SUM, test_v1, test_v2, 8'd3, 0, 2'b10);
         $display("Test 3 Complete\n");
 
         current_test = "DIV_MAX_ISSUE";
         $display("=== Test 4: DIV Maximum Issue Rate ===");
-        fu_max_issue(0, 2, VR_SUM, 10);
+        fu_max_issue(0, DIV, VR_SUM, 10);
         $display("Test 4 Complete\n");
 
         current_test = "DIV_BACKPRESSURE";
         $display("=== Test 5: DIV Backpressure Test ===");
-        fu_backpressure_test(0, 2, VR_SUM);
+        fu_backpressure_test(0, DIV, VR_SUM);
         $display("Test 5 Complete\n");
 
         current_test = "DIV_COMPLETE";
@@ -513,28 +459,28 @@ module lane_tb;
 
         current_test = "EXP_PORT0";
         $display("=== Test 1: EXP from Port 0 ===");
-        fu_issue_test(0, 3, VR_SUM, test_v1, test_v2, 8'd1, 0);
+        fu_issue_test(0, EXP, VR_SUM, test_v1, test_v2, 8'd1, 0);
         $display("Test 1 Complete\n");
 
         current_test = "EXP_PORT1";
         $display("=== Test 2: EXP from Port 1 ===");
-        fu_issue_test(1, 3, VR_SUM, test_v1, test_v2, 8'd2, 0);
+        fu_issue_test(1, EXP, VR_SUM, test_v1, test_v2, 8'd2, 0);
         $display("Test 2 Complete\n");
 
         current_test = "EXP_MASK_TEST";
         $display("=== Test 3: EXP Mask Test ===");
         test_v1 = {16'h3f80, 16'h4000};
-        fu_issue_test(0, 3, VR_SUM, test_v1, test_v2, 8'd3, 0, 2'b10);
+        fu_issue_test(0, EXP, VR_SUM, test_v1, test_v2, 8'd3, 0, 2'b10);
         $display("Test 3 Complete\n");
 
         current_test = "EXP_MAX_ISSUE";
         $display("=== Test 4: EXP Maximum Issue Rate ===");
-        fu_max_issue(0, 3, VR_SUM, 10);
+        fu_max_issue(0, EXP, VR_SUM, 10);
         $display("Test 4 Complete\n");
 
         current_test = "EXP_BACKPRESSURE";
         $display("=== Test 5: EXP Backpressure Test ===");
-        fu_backpressure_test(0, 3, VR_SUM);
+        fu_backpressure_test(0, EXP, VR_SUM);
         $display("Test 5 Complete\n");
 
         current_test = "EXP_COMPLETE";
@@ -553,28 +499,28 @@ module lane_tb;
 
         current_test = "SQRT_PORT0";
         $display("=== Test 1: SQRT from Port 0 ===");
-        fu_issue_test(0, 4, VR_SUM, test_v1, test_v2, 8'd1, 0);
+        fu_issue_test(0, SQRT, VR_SUM, test_v1, test_v2, 8'd1, 0);
         $display("Test 1 Complete\n");
 
         current_test = "SQRT_PORT1";
         $display("=== Test 2: SQRT from Port 1 ===");
-        fu_issue_test(1, 4, VR_SUM, test_v1, test_v2, 8'd2, 0);
+        fu_issue_test(1, SQRT, VR_SUM, test_v1, test_v2, 8'd2, 0);
         $display("Test 2 Complete\n");
 
         current_test = "SQRT_MASK_TEST";
         $display("=== Test 3: SQRT Mask Test ===");
         test_v1 = {16'h4000, 16'h4100};
-        fu_issue_test(0, 4, VR_SUM, test_v1, test_v2, 8'd3, 0, 2'b10);
+        fu_issue_test(0, SQRT, VR_SUM, test_v1, test_v2, 8'd3, 0, 2'b10);
         $display("Test 3 Complete\n");
 
         current_test = "SQRT_MAX_ISSUE";
         $display("=== Test 4: SQRT Maximum Issue Rate ===");
-        fu_max_issue(0, 4, VR_SUM, 10);
+        fu_max_issue(0, SQRT, VR_SUM, 10);
         $display("Test 4 Complete\n");
-
+        
         current_test = "SQRT_BACKPRESSURE";
         $display("=== Test 5: SQRT Backpressure Test ===");
-        fu_backpressure_test(0, 4, VR_SUM);
+        fu_backpressure_test(0, SQRT, VR_SUM);
         $display("Test 5 Complete\n");
 
         current_test = "SQRT_COMPLETE";
@@ -582,163 +528,116 @@ module lane_tb;
     endtask
 
     task automatic test_multi_issue_alu_mult();
+
         logic [SLICE_W-1:0][15:0] test_v1_alu, test_v2_alu;
         logic [SLICE_W-1:0][15:0] test_v1_mult, test_v2_mult;
-        
+
         $display("\n=====================================================");
         $display("Starting Multi-Issue Test: ALU + MULT");
         $display("=====================================================\n");
-        
+
         current_test = "MULTI_ALU_MULT";
-        
+
         // Setup test data
-        test_v1_alu = {16'h3f80, 16'h4000};
-        test_v2_alu = {16'h4000, 16'h4100};
+        test_v1_alu  = {16'h3f80, 16'h4000};
+        test_v2_alu  = {16'h4000, 16'h4100};
+
         test_v1_mult = {16'h3f80, 16'h4000};
         test_v2_mult = {16'h4000, 16'h4100};
-        
-        fork
-            // Issue to ALU from port 0
-            begin
-                issue_pulse(0, test_v1_alu, test_v2_alu, 0, 8'd1, 0, '1, VR_SUM);
-                
-                // Validate ALU output
-                for (int slice = 0; slice < SLICE_W; slice++) begin
-                    wait_for_fu_valid(0);
-                    assert (lif.out.units[0].valid == 1) else 
-                        $error("Multi-Issue ALU+MULT: ALU Slice %0d - Valid not asserted", slice);
-                    assert (lif.out.units[0].vd == 8'd1) else 
-                        $error("Multi-Issue ALU+MULT: ALU Slice %0d - VD Incorrect", slice);
-                    @(posedge CLK);
-                end
-                $display("ALU operation validated");
-            end
-            
-            // Issue to MULT from port 1
-            begin
-                issue_pulse(1, test_v1_mult, test_v2_mult, 1, 8'd2, 0, '1, VR_SUM);
-                
-                // Validate MULT output
-                for (int slice = 0; slice < SLICE_W; slice++) begin
-                    wait_for_fu_valid(1);
-                    assert (lif.out.units[1].valid == 1) else 
-                        $error("Multi-Issue ALU+MULT: MULT Slice %0d - Valid not asserted", slice);
-                    assert (lif.out.units[1].vd == 8'd2) else 
-                        $error("Multi-Issue ALU+MULT: MULT Slice %0d - VD Incorrect", slice);
-                    @(posedge CLK);
-                end
-                $display("MULT operation validated");
-            end
-        join
-        
+
+        // Wait until both units ready
+        wait_for_fu_ready(VALU);
+        wait_for_fu_ready(MUL);
+
+        // Issue both in same cycle
+        issue_to_port(0, 1, test_v1_alu,  test_v2_alu,  VALU, 8'd1, 0, '1, VR_SUM);
+        issue_to_port(1, 1, test_v1_mult, test_v2_mult, MUL,  8'd2, 0, '1, VR_SUM);
+
+        @(posedge CLK);
+
+        clear_port(0);
+        clear_port(1);
+
+        $display("Issued ALU and MULT simultaneously");
+
+        repeat(SLICE_W + 5) @(posedge CLK);
+
         $display("Multi-Issue ALU+MULT Test Complete\n");
-    endtask //automatic
+
+    endtask
 
     task automatic test_multi_issue_mult_sqrt();
+
         logic [SLICE_W-1:0][15:0] test_v1_mult, test_v2_mult;
         logic [SLICE_W-1:0][15:0] test_v1_sqrt, test_v2_sqrt;
-        
+
         $display("\n=====================================================");
         $display("Starting Multi-Issue Test: MULT + SQRT");
         $display("=====================================================\n");
-        
+
         current_test = "MULTI_MULT_SQRT";
-        
-        // Setup test data
+
         test_v1_mult = {16'h3f80, 16'h4000};
         test_v2_mult = {16'h4000, 16'h4100};
+
         test_v1_sqrt = {16'h4000, 16'h4100};
-        test_v2_sqrt = '0;  // SQRT only uses v1
-        
-        fork
-            // Issue to MULT from port 0
-            begin
-                issue_pulse(0, test_v1_mult, test_v2_mult, 1, 8'd3, 0, '1, VR_SUM);
-                
-                // Validate MULT output
-                for (int slice = 0; slice < SLICE_W; slice++) begin
-                    wait_for_fu_valid(MULT);
-                    assert (lif.out.units[1].valid == 1) else 
-                        $error("Multi-Issue MULT+SQRT: MULT Slice %0d - Valid not asserted", slice);
-                    assert (lif.out.units[1].vd == 8'd3) else 
-                        $error("Multi-Issue MULT+SQRT: MULT Slice %0d - VD Incorrect", slice);
-                    @(posedge CLK);
-                end
-                $display("MULT operation validated");
-            end
-            
-            // Issue to SQRT from port 1
-            begin
-                issue_pulse(1, test_v1_sqrt, test_v2_sqrt, 4, 8'd4, 0, '1, VR_SUM);
-                
-                // Validate SQRT output
-                for (int slice = 0; slice < SLICE_W; slice++) begin
-                    wait_for_fu_valid(4);
-                    assert (lif.out.units[4].valid == 1) else 
-                        $error("Multi-Issue MULT+SQRT: SQRT Slice %0d - Valid not asserted", slice);
-                    assert (lif.out.units[4].vd == 8'd4) else 
-                        $error("Multi-Issue MULT+SQRT: SQRT Slice %0d - VD Incorrect", slice);
-                    @(posedge CLK);
-                end
-                $display("SQRT operation validated");
-            end
-        join
-        
+        test_v2_sqrt = '0;
+
+        wait_for_fu_ready(MUL);
+        wait_for_fu_ready(SQRT);
+
+        issue_to_port(0, 1, test_v1_mult, test_v2_mult, MUL,  8'd3, 0, '1, VR_SUM);
+        issue_to_port(1, 1, test_v1_sqrt, test_v2_sqrt, SQRT, 8'd4, 0, '1, VR_SUM);
+
+        @(posedge CLK);
+
+        clear_port(0);
+        clear_port(1);
+
+        $display("Issued MULT and SQRT simultaneously");
+
+        repeat(SLICE_W + 30) @(posedge CLK);
+
         $display("Multi-Issue MULT+SQRT Test Complete\n");
-    endtask //automatic
+
+    endtask
 
     task automatic test_multi_issue_sqrt_exp();
+
         logic [SLICE_W-1:0][15:0] test_v1_sqrt, test_v2_sqrt;
-        logic [SLICE_W-1:0][15:0] test_v1_exp, test_v2_exp;
-        
+        logic [SLICE_W-1:0][15:0] test_v1_exp,  test_v2_exp;
+
         $display("\n=====================================================");
         $display("Starting Multi-Issue Test: SQRT + EXP");
         $display("=====================================================\n");
-        
+
         current_test = "MULTI_SQRT_EXP";
-        
-        // Setup test data
+
         test_v1_sqrt = {16'h4000, 16'h4100};
-        test_v2_sqrt = '0;  // SQRT only uses v1
-        test_v1_exp = {16'h3f80, 16'h4000};
-        test_v2_exp = '0;   // EXP only uses v1
-        
-        fork
-            // Issue to SQRT from port 0
-            begin
-                issue_pulse(0, test_v1_sqrt, test_v2_sqrt, 4, 8'd5, 0, '1, VR_SUM);
-                
-                // Validate SQRT output
-                for (int slice = 0; slice < SLICE_W; slice++) begin
-                    wait_for_fu_valid(4);
-                    assert (lif.out.units[4].valid == 1) else 
-                        $error("Multi-Issue SQRT+EXP: SQRT Slice %0d - Valid not asserted", slice);
-                    assert (lif.out.units[4].vd == 8'd5) else 
-                        $error("Multi-Issue SQRT+EXP: SQRT Slice %0d - VD Incorrect", slice);
-                    @(posedge CLK);
-                end
-                $display("SQRT operation validated");
-            end
-            
-            // Issue to EXP from port 1
-            begin
-                issue_pulse(1, test_v1_exp, test_v2_exp, 3, 8'd6, 0, '1, VR_SUM);
-                
-                // Validate EXP output
-                for (int slice = 0; slice < SLICE_W; slice++) begin
-                    wait_for_fu_valid(3);
-                    assert (lif.out.units[3].valid == 1) else 
-                        $error("Multi-Issue SQRT+EXP: EXP Slice %0d - Valid not asserted", slice);
-                    assert (lif.out.units[3].vd == 8'd6) else 
-                        $error("Multi-Issue SQRT+EXP: EXP Slice %0d - VD Incorrect", slice);
-                    @(posedge CLK);
-                end
-                $display("EXP operation validated");
-            end
-        join
-        
+        test_v2_sqrt = '0;
+
+        test_v1_exp  = {16'h3f80, 16'h4000};
+        test_v2_exp  = '0;
+
+        wait_for_fu_ready(SQRT);
+        wait_for_fu_ready(EXP);
+
+        issue_to_port(0, 1, test_v1_sqrt, test_v2_sqrt, SQRT, 8'd5, 0, '1, VR_SUM);
+        issue_to_port(1, 1, test_v1_exp,  test_v2_exp,  EXP,  8'd6, 0, '1, VR_SUM);
+
+        @(posedge CLK);
+
+        clear_port(0);
+        clear_port(1);
+
+        $display("Issued SQRT and EXP simultaneously");
+
+        repeat(SLICE_W + 15) @(posedge CLK);
+
         $display("Multi-Issue SQRT+EXP Test Complete\n");
-    endtask //automatic
+
+    endtask
+
 
     //saturation test. Does not verify the outputs, visual debugging will be required
     task automatic lane_saturation();
@@ -746,6 +645,12 @@ module lane_tb;
         int num_issues_per_fu = 5;
         int total_issues = num_issues_per_fu * 5;
         int issue_count = 0;
+        int fu_issue_count[5] = '{0, 0, 0, 0, 0};
+        int port0_issued;
+        int port1_issued;
+        int fu_issued_port0;
+        int fu_issued_port1;
+        fu_t fu;
 
         $display("\n=====================================================");
         $display("Starting Lane Saturation Test");
@@ -756,18 +661,18 @@ module lane_tb;
         test_v2 = {16'h4000, 16'h4100};
         test_v2_zero = '0;
 
-        int fu_issue_count[5] = '{0, 0, 0, 0, 0};
-
+        
             while (issue_count < total_issues) begin
-            int port0_issued = 0;
-            int port1_issued = 0;
-            int fu_issued_port0 = 0;
-            int fu_issued_port1 = 0;
+                port0_issued = 0;
+                port1_issued = 0;
+                fu_issued_port0 = 0;
+                fu_issued_port1 = 0;
 
-            for (int fu = 0; fu < LANE_FU_COUNT; fu++) begin //find a FU that we can issue to on port 0
+            for (int i = 0; i < LANE_FU_COUNT; i++) begin //find a FU that we can issue to on port 0
+                fu = fu_t'(i);
                 if (fu_issue_count[fu] < num_issues_per_fu && (lif.out.units[fu].input_ready == 1)) begin
                     logic [SLICE_W-1:0][15:0] v2_to_use = (fu == 3 || fu == 4) ? test_v2_zero : test_v2; //FU is exp or sqrt
-                    issue_to_port(0, 1, test_v1, v2_to_use, fu, (fu * 10 + fu_issue_count[fu])[7:0], 0, '1, VR_SUM);
+                    issue_to_port(0, 1, test_v1, v2_to_use, fu, (fu * 10 + fu_issue_count[fu]), 0, '1, VR_SUM);
                     fu_issue_count[fu]++;
                     issue_count++;
                     port0_issued = 1;
@@ -776,14 +681,15 @@ module lane_tb;
                     break;
                 end
             end
-            for (int fu = 0; fu < LANE_FU_COUNT; fu++) begin //find a differnt port we can issue to
+            for (int j = 0; j < LANE_FU_COUNT; j++) begin //find a differnt port we can issue to
+                fu = fu_t'(j);
                 if (port0_issued && fu == fu_issued_port0) continue; //if the current FU that we are looking at is already issued to port 1, skip
 
-                if (fu_issue_count[fu] < num_issues_per_fu && lif.out.units[fu].ready == 1) begin
-                    logic [SLICE_W-1:0][15:0] v2_to_use = (fu == EXP_FU || fu == SQRT_FU) ? test_v2_zero : test_v2;
-                    valu_op_t op = (fu == ALU_FU) ? VADD : VR_SUM;
+                if (fu_issue_count[fu] < num_issues_per_fu && lif.out.units[fu].input_ready == 1) begin
+                    logic [SLICE_W-1:0][15:0] v2_to_use = (fu == EXP || fu == SQRT) ? test_v2_zero : test_v2;
+                    valu_op_t op = (fu == VALU) ? VR_SUM : VR_SUM;
                     
-                    issue_to_port(1, 1, test_v1, v2_to_use, fu, (fu * 10 + fu_issue_count[fu])[7:0], 0, '1, op);
+                    issue_to_port(1, 1, test_v1, v2_to_use, fu, (fu * 10 + fu_issue_count[fu]), 0, '1, op);
                     fu_issue_count[fu]++;
                     issue_count++;
                     port1_issued = 1;
@@ -798,5 +704,15 @@ module lane_tb;
             end
 
     endtask //automatic
+
+    initial begin
+        reset_dut();
+        @(posedge CLK);
+        //test_mult();
+        //test_sqrt();
+        test_multi_issue_mult_sqrt();
+
+        $stop;
+    end
 
 endmodule

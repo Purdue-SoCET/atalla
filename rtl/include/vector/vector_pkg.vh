@@ -312,16 +312,14 @@ package vector_pkg;
         logic [LANE_ISSUE_W-1:0] rm;
         logic [LANE_ISSUE_W-1:0][SLICE_W - 1:0] mask;
         valu_op_t [LANE_ISSUE_W-1:0] aluop;
-        logic [LANE_FU_COUNT-1:0] rc_ready;
+        logic [LANE_FU_COUNT-1:0] ready;
     } lane_in_t;
 
     typedef struct packed {
         functional_unit_out_t [LANE_FU_COUNT-1:0] units;
     } lane_out_t;
 
-    //vlsu
-    // Scheduler => VLSU (one per scratchpad channel)
-    typedef struct packed {
+        typedef struct packed {
         logic                        valid;
         logic                        write;
         logic [SCPAD_ADDR_WIDTH-1:0] spad_addr;
@@ -356,8 +354,7 @@ package vector_pkg;
         logic busy;
         logic load_queue_full;
     } vlsu_status_t;
-
-    //vlsu sp interface
+    
 
 
 
@@ -443,6 +440,7 @@ package vector_pkg;
         logic [LANE_FU_COUNT-1:0] fu_global_status; //can be indexed by fu_t
         vector_if_reduction_out_t reduction;
     } vector_if_lanes_out_t;
+
 endpackage
 
 `endif
