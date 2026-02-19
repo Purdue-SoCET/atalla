@@ -19,12 +19,12 @@ module nb_wdata_queue_prop(
         (wdq.bwvalid && wdq.bwready) |=> !wdq.bwvalid;
     endproperty
 
-    property 
+    property AXI_wdata_wait;
         @(posedge CLK) disable iff (!nRST)
         (wdq.bwvalid && !wdq.bwready) |=>  $stable(wdq.bwvalid); 
     endproperty
 
-    property 
+    property AXI_wdata_handshake_cycle;
         @(posedge CLK) disable iff (!nRST)
         (wdq.bwvalid && wdq.bwready) |-> wdq.bwvalid; 
     endproperty
