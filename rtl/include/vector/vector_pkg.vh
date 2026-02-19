@@ -110,6 +110,38 @@ package vector_pkg;
         VR_SUB = 2'b11
     } valu_op_t;
 
+    // ***New ALU stuff***
+    // Basically added the vector reduction ops into the rest of the ALU ops since they all need add/sub
+
+    typedef enum logic [3:0] {
+        ALU_ADD = 4'b0000, // BF16 addition
+        ALU_SUB = 4'b0001, // BF16 subtraction
+        ALU_AND = 4'b0010, // Bitwise AND
+        ALU_OR = 4'b0011, // Bitwise OR
+        ALU_XOR = 4'b0100, // Bitwise XOR
+        ALU_NOT = 4'b0101, // Bitwise NOT (v1 only)
+        ALU_MGT = 4'b0110, // Mask greater than (v1 > v2)
+        ALU_MLT = 4'b0111, // Mask less than (v1 < v2)
+        ALU_MEQ = 4'b1000, // Mask equal (v1 == v2)
+        ALU_MNEQ = 4'b1001 // Mask not equal (v1 != v2)
+    } alu_op_t;
+
+    typedef struct packed {
+        logic [ESZ-1:0] v1;
+        logic [ESZ-1:0] v2;
+        alu_op_t aluop;
+        logic rm; // Reduction mode
+        logic mask; // Element mask bit
+        logic valid_in;
+        logic ready_out;
+    } valu_if_in_t;
+
+    typedef struct packed {
+        logic [ESZ-1:0] result;
+        logic valid_out;
+        logic ready_in;
+    } valu_if_out_t;
+
     // =========================================================================
     // Top-Level Control
     // =========================================================================

@@ -1,175 +1,271 @@
-`include "vector_pkg.vh"
+// ------------------------------------------------------------
+// valu.sv
+// Vector Lane ALU with BF16 add/sub, logical ops, and comparisons
+// 2-cycle pipeline to match addsub_bf16 latency, subject to change based off adder changes for bf16
+// Owner: Vedant Sharma
+// ------------------------------------------------------------
+
 `include "vector_pkg.vh"
 `include "valu_if.vh"
 
 module valu (
-    input  logic       CLK,
-    input  logic       nRST,
-    valu_if.valu_if    alu
+    input logic CLK,
+    input logic nRST,
+    valu_if.valu alu_if
 );
+
+    // This alu is kinda fucked rn, I went under the assumption that there's no mid-flight backpressure from the collector.
+    // ik ik, probably going to have that kind of thing, so I have a feeling I may have to add a stall signal into the adder itself which is kinda scary and I don't want to mess with it rn
+    // buttttt it is needed for the L1 testing so guess I'll have to do it.
 
     import vector_pkg::*;
 
-    // ----------------------------------------------------------------
-    // Internal wires / regs
-    // ----------------------------------------------------------------
-    logic [15:0] bf1_in, bf2_in, bf_out;
-    logic        op;
-    logic        overflow, underflow, invalid;
+    /*
+        Please note:
+         this implementation of the ALU is going to be based off cycle/step based formatting
+        mainly for me to easily actually understnad what I'm doing
+        plus it's easier to debug and test in the long run. Not to mention very easy to read as well.
+        Thank you @mixuan for the idea from add_bf16.
+    */
 
-    // Simple BF16 add/sub block (already existing IP)
-    addsub_bf16 adder (
-        .clk      (CLK),
-        .nRST     (nRST),
-        .bf1_in   (bf1_in),
-        .bf2_in   (bf2_in),
-        .op       (op),
-        .bf_out   (bf_out),
-        .overflow (overflow),
-        .underflow(underflow),
-        .invalid  (invalid)
+    // Cycle 0:
+    // Skip computation if mask is 0 and rm is 0 (i.e., no operation)
+    logic skip_compute;
+    assign skip_compute = !alu_if.in.mask && !alu_if.in.rm;
+
+
+    // Cycle 0:
+    // operation handling and set up adder config
+    logic is_logical;
+    logic is_mgt, is_mlt, is_meq, is_mneq;
+    logic addsub_op;
+
+    always_comb begin
+        is_mgt = (alu_if.in.aluop == ALU_MGT);
+        is_mlt = (alu_if.in.aluop == ALU_MLT);
+        is_meq = (alu_if.in.aluop == ALU_MEQ);
+        is_mneq = (alu_if.in.aluop == ALU_MNEQ);
+        
+        is_logical = (alu_if.in.aluop == ALU_AND) || (alu_if.in.aluop == ALU_OR) || (alu_if.in.aluop == ALU_XOR) || (alu_if.in.aluop == ALU_NOT);
+        
+        // Subtract for SUB and all compare operations (compare uses subtraction to check sign)
+        addsub_op = (alu_if.in.aluop == ALU_SUB) || is_mgt || is_mlt || is_meq || is_mneq;
+    end
+
+
+    // The prior implementation from chase or whoever made ALU used nan detection, but I'm pretty sure the adder already handles that.
+    // My only question is whether its required for the logical ops, bc those completely bypass adder.
+    // My thinking is if your feeding a random ahh NaN value into the ALU you're expecting a bitwise op on the actual thing itself so it should be fine.
+
+    // BF add/sub setup, has 2 cycle latency inside
+    // feed 0's into adder if skip_compute, wish we could completely invalidate the adder and just not even have to run 0's but idk if thats possible.
+    // Inputs go directly into adder, meaning no extra delays for this
+    logic [15:0] addsub_in1, addsub_in2;
+    logic [15:0] addsub_out;
+    logic addsub_overflow, addsub_underflow, addsub_invalid;
+
+    assign addsub_in1 = skip_compute ? '0 : alu_if.in.v1;
+    assign addsub_in2 = skip_compute ? '0 : alu_if.in.v2;
+
+    // Instantiate BF16 add/sub module
+    addsub_bf16 u_addsub (
+        .clk(CLK),
+        .nRST(nRST),
+        .bf1_in(addsub_in1),
+        .bf2_in(addsub_in2),
+        .op(addsub_op),
+        .bf_out(addsub_out),
+        .overflow(addsub_overflow),
+        .underflow(addsub_underflow),
+        .invalid(addsub_invalid)
     );
 
-    // Pipeline staging
-    logic [15:0] value_a_s1, value_b_s1;
-    logic [15:0] value_a_s2, value_b_s2;
-    logic [1:0]  alu_op_s1,  alu_op_s2;
-    logic        any_nan_s1, any_nan_s2;
-    logic        valid_s1,   valid_s2;
+    // Still Cycle 0 for this:
 
-    // Input handshake
-    logic        ready_in_reg;   // FU input ready (to lane)
-    logic        accept_in;      // actual accept pulse
+    // Logical stuff!
+    // I'm going to attempt to write this as a completely seperate thing from the rest which is why its all seperated btw
+    // I'm pretty sure I need to add logical support into the ALU as that was needed anyway
 
-    // Output stage
-    logic [15:0] result_reg;
-    logic [15:0] result_next;
-
-    // ----------------------------------------------------------------
-    // Handshake: one in-flight op at a time
-    // ----------------------------------------------------------------
-
-    // We are ready to accept a new op when ready_in_reg is 1.
-    assign accept_in = alu.in.valid_in & ready_in_reg;
-
-    // Advertise input readiness to lane
-    assign alu.out.ready_in = ready_in_reg;
-
-    // ready_in_reg: 1 after reset, drops when we accept an op,
-    // goes back to 1 once the result has been consumed.
-    always_ff @(posedge CLK or negedge nRST) begin
-        if (!nRST) begin
-            ready_in_reg <= 1'b1;
-        end else begin
-            if (accept_in) begin
-                // Took a new operation – block new ones until retire
-                ready_in_reg <= 1'b0;
-            end else if (alu.out.valid_out && alu.in.ready_out) begin
-                // Result has been consumed by WB – we can take another
-                ready_in_reg <= 1'b1;
-            end
-        end
-    end
-
-    // ----------------------------------------------------------------
-    // NaN detection / stage-1 register
-    // ----------------------------------------------------------------
-    logic a_is_nan_raw, b_is_nan_raw, any_nan_raw;
+    // technically can literally make this a purely comb thing and make this one cycle, need to check with Jing if thats actually a good thing or not
+    // For now I'm going to make it go thru the pipeline stage to be safe. Making it match up with adder latency
+    logic [ESZ-1:0] logical_result;
 
     always_comb begin
-        a_is_nan_raw = (&alu.in.operand1[14:7]) && (|alu.in.operand1[6:0]);
-        b_is_nan_raw = (&alu.in.operand2[14:7]) && (|alu.in.operand2[6:0]);
-        any_nan_raw  = a_is_nan_raw | b_is_nan_raw;
-
-        // adder inputs driven from stage-1 registers
-        bf1_in = value_a_s1;
-        bf2_in = value_b_s1;
-
-        // use stage-1 opcode for add/sub path
-        op = (alu_op_s1 == VR_SUB ||
-              alu_op_s1 == VR_MIN ||
-              alu_op_s1 == VR_MAX);
-    end
-
-    // Stage 1: capture operands/op when we truly accept an input
-    always_ff @(posedge CLK or negedge nRST) begin
-        if (!nRST) begin
-            value_a_s1 <= '0;
-            value_b_s1 <= '0;
-            alu_op_s1  <= 2'b00;
-            any_nan_s1 <= 1'b0;
-            valid_s1   <= 1'b0;
-        end else begin
-            if (accept_in) begin
-                value_a_s1 <= alu.in.operand1;
-                value_b_s1 <= alu.in.operand2;
-                alu_op_s1  <= alu.in.alu_op;
-                any_nan_s1 <= any_nan_raw;
-            end
-            // valid_s1 is a 1-cycle pulse when we accept an input
-            valid_s1 <= accept_in;
+        if (skip_compute) begin
+            logical_result = '0;
         end
-    end
-
-    // Stage 2: align control / NaN flag with adder output
-    always_ff @(posedge CLK or negedge nRST) begin
-        if (!nRST) begin
-            value_a_s2 <= '0;
-            value_b_s2 <= '0;
-            alu_op_s2  <= 2'b00;
-            any_nan_s2 <= 1'b0;
-            valid_s2   <= 1'b0;
-        end else begin
-            value_a_s2 <= value_a_s1;
-            value_b_s2 <= value_b_s1;
-            alu_op_s2  <= alu_op_s1;
-            any_nan_s2 <= any_nan_s1;
-            valid_s2   <= valid_s1;
-        end
-    end
-
-    // ----------------------------------------------------------------
-    // Result select (NaN / MIN / MAX / ADD / SUB)
-    // ----------------------------------------------------------------
-    always_comb begin
-        if (any_nan_s2) begin
-            result_next = 16'h7FC0; // canonical bf16 qNaN
-        end else begin
-            unique case (alu_op_s2)
-                VR_SUM, VR_SUB: result_next = bf_out;
-                VR_MIN:         result_next = (bf_out[15] ? value_a_s2 : value_b_s2);
-                VR_MAX:         result_next = (bf_out[15] ? value_b_s2 : value_a_s2);
-                default:        result_next = 16'h0000;
+        else begin
+            case (alu_if.in.aluop)
+                ALU_AND: logical_result = alu_if.in.v1 & alu_if.in.v2;
+                ALU_OR: logical_result = alu_if.in.v1 | alu_if.in.v2;
+                ALU_XOR: logical_result = alu_if.in.v1 ^ alu_if.in.v2;
+                ALU_NOT: logical_result = ~alu_if.in.v1;
+                default: logical_result = '0;
             endcase
         end
     end
 
-    // ----------------------------------------------------------------
-    // Output register + valid_out
-    // ----------------------------------------------------------------
-    logic valid_out_r;
-    always_ff @(posedge CLK or negedge nRST) begin
-        if (!nRST) begin
-            result_reg        <= 16'h0000;
-            valid_out_r <= 1'b0;
-        end else begin
-            // Drop valid when WB consumes the result
-            if (alu.out.valid_out && alu.in.ready_out) begin
-                valid_out_r <= 1'b0;
-            end
 
-            // Latch a new result when stage-2 fires
-            // (valid_s2 can only be 1 when valid_out is 0, because
-            //  we don't accept a new op until the previous result retires.)
-            if (valid_s2) begin
-                result_reg        <= result_next;
-                valid_out_r <= 1'b1;
+
+    // Cycle 1:
+    // Finally adding the pipeline stage stuff now.
+    // Need this to delay metadata for some ops to align with add/sub output, also needed to delay the lgocial ops
+
+    logic [ESZ-1:0] v1_s1, v2_s1;
+    logic [ESZ-1:0] logical_s1;
+    logic is_logical_s1;
+    logic is_mgt_s1, is_mlt_s1, is_meq_s1, is_mneq_s1;
+    logic rm_s1;
+    logic skip_s1;
+    logic valid_s1;
+
+    always_ff @(posedge CLK, negedge nRST) begin
+        if (!nRST) begin
+            v1_s1 <= '0;
+            v2_s1 <= '0;
+            logical_s1 <= '0;
+            is_logical_s1 <= 1'b0;
+            is_mgt_s1 <= 1'b0;
+            is_mlt_s1 <= 1'b0;
+            is_meq_s1 <= 1'b0;
+            is_mneq_s1 <= 1'b0;
+            rm_s1 <= 1'b0;
+            skip_s1 <= 1'b0;
+            valid_s1 <= 1'b0;
+        end
+        else begin
+            v1_s1 <= alu_if.in.v1;
+            v2_s1 <= alu_if.in.v2;
+            logical_s1 <= logical_result;
+            is_logical_s1 <= is_logical;
+            is_mgt_s1 <= is_mgt;
+            is_mlt_s1 <= is_mlt;
+            is_meq_s1 <= is_meq;
+            is_mneq_s1 <= is_mneq;
+            rm_s1 <= alu_if.in.rm;
+            skip_s1 <= skip_compute;
+            valid_s1 <= alu_if.in.valid_in;
+        end
+    end
+
+    // Cycle 2:
+    // Pipeline stage 2, output generation, everything should be aligned w adder, but will have test quite a bit to make sure.
+    // bummy ahh pipeline suffered from the cntrl c cntr v method HAAHHAHAHA, swear if i had to do that again i would cry
+    logic [ESZ-1:0] v1_s2, v2_s2;
+    logic [ESZ-1:0] logical_s2;
+    logic is_logical_s2;
+    logic is_mgt_s2, is_mlt_s2, is_meq_s2, is_mneq_s2;
+    logic rm_s2;
+    logic skip_s2;
+    logic valid_s2;
+
+    always_ff @(posedge CLK, negedge nRST) begin
+        if (!nRST) begin
+            v1_s2 <= '0;
+            v2_s2 <= '0;
+            logical_s2 <= '0;
+            is_logical_s2 <= 1'b0;
+            is_mgt_s2 <= 1'b0;
+            is_mlt_s2 <= 1'b0;
+            is_meq_s2 <= 1'b0;
+            is_mneq_s2 <= 1'b0;
+            rm_s2 <= 1'b0;
+            skip_s2 <= 1'b0;
+            valid_s2 <= 1'b0;
+        end
+        else begin
+            v1_s2 <= v1_s1;
+            v2_s2 <= v2_s1;
+            logical_s2 <= logical_s1;
+            is_logical_s2 <= is_logical_s1;
+            is_mgt_s2 <= is_mgt_s1;
+            is_mlt_s2 <= is_mlt_s1;
+            is_meq_s2 <= is_meq_s1;
+            is_mneq_s2 <= is_mneq_s1;
+            rm_s2 <= rm_s1;
+            skip_s2 <= skip_s1;
+            valid_s2 <= valid_s1;
+        end
+    end
+
+    // Alright still on cycle 2:
+    // this is for the compare logic stuff, plus handling the output mux
+
+    logic v1_lt_v2;
+    logic v1_eq_v2;
+
+    assign v1_lt_v2 = addsub_out[15];
+    assign v1_eq_v2 = (addsub_out == 16'h0000) || (addsub_out == 16'h8000); // negative 0 i genuinely hate you with a burning passion...
+
+    
+    
+    // Output muxing logic:
+    logic [ESZ-1:0] result_out;
+
+    always_comb begin
+        if (skip_s2) begin
+            // Masked off and not reduction: output 0
+            result_out = '0;
+        end
+        else if (is_logical_s2) begin
+            // Logical ops: use delayed combinational result
+            result_out = logical_s2;
+        end
+        else if (is_mgt_s2) begin
+            if (rm_s2) begin
+                // Reduction mode MGT: output max(v1, v2)
+                result_out = v1_lt_v2 ? v2_s2 : v1_s2;
+            end
+            else begin
+                // Normal mode MGT: output 1 if v1 > v2, else 0
+                result_out = {15'b0, ~v1_lt_v2 && ~v1_eq_v2};
+            end
+        end
+        else if (is_mlt_s2) begin
+            if (rm_s2) begin
+                // Reduction mode MLT: output min(v1, v2)
+                result_out = v1_lt_v2 ? v1_s2 : v2_s2;
+            end
+            else begin
+                // Normal mode MLT: output 1 if v1 < v2, else 0
+                result_out = {15'b0, v1_lt_v2};
+            end
+        end
+        else if (is_meq_s2) begin
+            // MEQ: output 1 if v1 == v2, else 0
+            result_out = {15'b0, v1_eq_v2};
+        end
+        else if (is_mneq_s2) begin
+            // MNEQ: output 1 if v1 != v2, else 0
+            result_out = {15'b0, ~v1_eq_v2};
+        end
+        else begin
+            // Default: ADD or SUB, use adder output directly
+            result_out = addsub_out;
+        end
+    end
+
+    
+    // regular handshake stuff
+    logic ready_reg;
+
+    always_ff @(posedge CLK, negedge nRST) begin
+        if (!nRST) begin
+            ready_reg <= 1'b1;
+        end
+        else begin
+            if (valid_s2 && !alu_if.in.ready_out) begin
+                ready_reg <= 1'b0;
+            end
+            else begin
+                ready_reg <= 1'b1;
             end
         end
     end
 
-    // Drive result
-    assign alu.out.result = result_reg;
-    assign alu.out.valid_out = valid_out_r;
+    // Outputs
+    assign alu_if.out.result = result_out;
+    assign alu_if.out.valid_out = valid_s2;
+    assign alu_if.out.ready_in = ready_reg;
 
 endmodule
