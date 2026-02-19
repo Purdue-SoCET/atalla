@@ -46,14 +46,7 @@ class lfc_cpu_active_driver extends uvm_driver#(lfc_cpu_transaction);
             #(0.2ns);
             @(posedge vif.clk);
             vif.mem_in = 1'b0;
-            #(700ns);
-            @(posedge vif.clk);
-            @(posedge vif.clk);
-            @(posedge vif.clk);
-            @(posedge vif.clk);
-            @(posedge vif.clk);
-            @(posedge vif.clk);
-            @(posedge vif.clk);
+	    @(posedge vif.clk);
             seq_item_port.item_done();
         end
     endtask

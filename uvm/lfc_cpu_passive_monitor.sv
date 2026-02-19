@@ -7,17 +7,9 @@ import uvm_pkg::*;
 `include "lfc_if.sv"
 `include "lfc_cpu_transaction.sv"
 
-// --- Replace these with your real types if needed ---
-//typedef virtual lfc_if lfc_cpu_vif_t; 
-//typedef lfc_cpu_item       cpu_txn_t;     
-
 class lfc_cpu_passive_monitor extends uvm_monitor;
   `uvm_component_utils(lfc_cpu_passive_monitor)
 
-  // analysis port to scoreboard/subscribers
-  //uvm_analysis_port #(cpu_txn_t) ap;
-
-  // optional: virtual interface handle
   virtual lfc_if vif;
   lfc_cpu_transaction prev_tx;
 
@@ -30,8 +22,6 @@ class lfc_cpu_passive_monitor extends uvm_monitor;
 
   virtual function void build_phase(uvm_phase phase);
     super.build_phase(phase);
-    //ap = new("ap", this);
-    // optional: get VIF from config_db
     if(!uvm_config_db#(virtual lfc_if)::get(this, "", "lfc_vif", vif)) begin
       `uvm_fatal("Monitor", "No virtual interface specified for this monitor instance")
     end
@@ -58,15 +48,7 @@ class lfc_cpu_passive_monitor extends uvm_monitor;
     tx.uuid_block       = vif.uuid_block;
     tx.dp_out_flushed   = vif.dp_out_flushed;
     
-    /*`uvm_info("CPU_PASSIVE_MON", $sformatf("Sampled: uuid=%0d stall=%0b hit=%0b flushed=%0b",
-                  tx.mem_out_uuid, tx.stall, tx.hit, tx.dp_out_flushed), UVM_LOW)*/
-
     if (has_run_once > 0 && vif.n_rst) begin
-      /*if(vif.mem_in_rw_mode == 1) begin // write
-        `uvm_info("CPU_PASSIVE_MON", $sformatf("Sent write tx: uuid=%0h stall=%0b hit=%0b flushed=%0b",
-                      tx.mem_out_uuid, tx.stall, tx.hit, tx.dp_out_flushed), UVM_LOW)
-        result_ap.write(tx);
-      end else begin*/
         if(tx.hit == 1 && prev_tx.hit == 0) begin // if new hit, send to scoreboad
               `uvm_info("CPU_PASSIVE_MON", "Hit recorded", UVM_MEDIUM)
               `uvm_info("CPU_PASSIVE_MON", $sformatf("Sent read tx: uuid=%0h stall=%0b hit=%0b flushed=%0b",
@@ -83,12 +65,6 @@ class lfc_cpu_passive_monitor extends uvm_monitor;
 	      end
     	end
     end
-
-      /*if (!$isunknown(tx.stall) && !$isunknown(tx.hit)) begin
-        result_ap.write(tx);
-        `uvm_info("CPU_PASSIVE_MON", $sformatf("Sent tx: uuid=%0h stall=%0b hit=%0b flushed=%0b",
-                    tx.mem_out_uuid, tx.stall, tx.hit, tx.dp_out_flushed), UVM_LOW)
-      end*/
 
     prev_tx.copy(tx);
     if (has_run_once == 0) has_run_once++;

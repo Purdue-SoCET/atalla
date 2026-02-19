@@ -7,17 +7,11 @@ import uvm_pkg::*;
 `include "lfc_if.sv"
 `include "lfc_ram_transaction.sv"
 
-// --- Replace these with your real types if needed ---
 typedef virtual lfc_if lfc_ram_vif_t;
-//typedef lfc_cpu_item       cpu_txn_t;
 
 class lfc_ram_active_monitor extends uvm_monitor;
   `uvm_component_utils(lfc_ram_active_monitor)
 
-  // analysis port to scoreboard/subscribers
-  //uvm_analysis_port #(cpu_txn_t) ap;
-
-  // optional: virtual interface handle
   lfc_cpu_vif_t vif;
   lfc_ram_transaction prev_tx;
 
@@ -30,8 +24,6 @@ class lfc_ram_active_monitor extends uvm_monitor;
 
   virtual function void build_phase(uvm_phase phase);
     super.build_phase(phase);
-    //ap = new("ap", this);
-    // optional: get VIF from config_db
     if(!uvm_config_db#(virtual lfc_if)::get(this, "", "lfc_vif", vif)) begin
       `uvm_fatal("Monitor", "No virtual interface specified for this monitor instance")
     end
@@ -46,13 +38,14 @@ class lfc_ram_active_monitor extends uvm_monitor;
     forever begin
       lfc_ram_transaction tx;
       @(posedge vif.clk);
+      #(1ps); // allows monitor to catch the signal high
       tx = lfc_ram_transaction #()::type_id::create("tx");
 
       tx.ram_mem_data = vif.ram_mem_data;
       tx.ram_mem_complete = vif.ram_mem_complete;
 
       if(has_run_once > 0) begin // avoids an uninstantiated comparison
-        if(!tx.input_equal(prev_tx) && tx.ram_mem_complete) begin
+        if(tx.ram_mem_complete & ~prev_tx.ram_mem_complete) begin
           `uvm_info("RAM_ACTIVE_MON", $sformatf("Sent tx: ram_mem_data:%0h ram_mem_complete:%0h", tx.ram_mem_data, tx.ram_mem_complete), UVM_LOW)
 	  prev_tx.copy(tx);
           lfc_ap.write(tx);
