@@ -11,27 +11,28 @@ module alu_control #()
     typedef enum {start, latch} state;
     state n_state, cur_state;
 
-    logic [31:0] cur_rs1_value, cur_rs2_value, rs1_value_latch, rs2_value_latch. rs1_value_nlatch, rs2_value_nlatch;
+    logic [31:0] cur_rs1_value, cur_rs2_value, rs1_value_latch, rs2_value_latch, rs1_value_nlatch, rs2_value_nlatch;
     logic [31:0] cur_imm, imm_latch, imm_nlatch;
     logic [31:0] cur_incr7, incr7_latch, incr7_nlatch;
     logic [31:0] cur_pc, pc_latch, pc_nlatch;
     logic [7:0] cur_rdIn, rdIn_latch, rdIn_nlatch;
     logic [7:0] cur_rs1_idx, rs1_idx_latch, rs1_idx_nlatch;
-    logic [6:0] cur_salu_op, salu_op_latch, salu_op_nlatch;
-    logic [6:0] cur_ctrl_opcode, ctrl_opcode_latch, ctrl_opcode_nlatch;
+    logic [6:0] cur_op, op_latch, op_nlatch;
+    logic cur_alu_valid, alu_valid_latch, alu_valid_nlatch;
+    logic cur_control_valid, control_valid_latch, control_valid_nlatch;
 
 
     scalar_alu_if alu_if ();
     control_if cont_if ();
 
-    control CONT (.CLK(clk), .nRST(nRST), .ctrl_if(cont_if));
-    scalar_alu ALU (.CLK(clk), .nRST(nRST), .salu_if(alu_if));
+    control CONT (.CLK(CLK), .nRST(nRST), .ctrl_if(cont_if));
+    scalar_alu ALU (.CLK(CLK), .nRST(nRST), .salu_if(alu_if));
 
     assign alu_if.srcA = cur_rs1_value;
     assign alu_if.srcB = cur_rs2_value;
     assign alu_if.imm = cur_imm;
     assign alu_if.rdIn = cur_rdIn;
-    assign alu_if.salu_op = cur_salu_op;
+    assign alu_if.salu_op = cur_op;
 
     assign cont_if.rs1_value = cur_rs1_value;
     assign cont_if.rs2_value = cur_rs2_value;
@@ -40,7 +41,7 @@ module alu_control #()
     assign cont_if.imm = cur_imm;
     assign cont_if.incr7 = cur_incr7;
     assign cont_if.pc = cur_pc;
-    assign cont_if.ctrl_opcode = cur_ctrl_opcode;
+    assign cont_if.ctrl_opcode = cur_op;
 
 
     always_comb begin
@@ -48,13 +49,13 @@ module alu_control #()
         portmap.rdOut = 8'b0;
         portmap.redirect_valid = 1'b0;
         portmap.redirect_target = 32'b0;
-        if(cur_salu_op != 7'b0) begin
+        if(cur_alu_valid == 1) begin
             portmap.rd_value = alu_if.rdResult;
             portmap.rdOut = alu_if.rdOut;
-        end else if(cur_ctrl_opcode != 7'b0) begin
+        end else if(cur_control_valid == 1) begin
             portmap.rd_value = cont_if.rd_value;
             portmap.rdOut = cont_if.rd_idx_out;
-            portmap.redirect_valid = cont_if.redirect_valid;
+            portmap.redirect_valid = cont_if.redirect_valid && portmap.ready_out;
             portmap.redirect_target = cont_if.redirect_target;
         end
     end
@@ -79,10 +80,12 @@ module alu_control #()
         cur_rdIn = portmap.rdIn;
         rs1_idx_nlatch = rs1_idx_latch;
         cur_rs1_idx = portmap.rs1_idx;
-        salu_op_nlatch = salu_op_latch;
-        cur_salu_op = portmap.salu_op;
-        ctrl_opcode_nlatch = ctrl_opcode_latch;
-        cur_ctrl_opcode = portmap.ctrl_opcode;
+        op_nlatch = op_latch;
+        cur_op = portmap.op;
+        alu_valid_nlatch = alu_valid_latch;
+        cur_alu_valid = portmap.alu_valid;
+        control_valid_nlatch = control_valid_latch;
+        cur_control_valid = portmap.control_valid;
 
 
         case (cur_state)
@@ -100,8 +103,9 @@ module alu_control #()
                 pc_nlatch = portmap.pc;
                 rdIn_nlatch = portmap.rdIn;
                 rs1_idx_nlatch = portmap.rs1_idx;
-                salu_op_nlatch = portmap.salu_op;
-                ctrl_opcode_nlatch = portmap.ctrl_opcode;
+                op_nlatch = portmap.op;
+                alu_valid_nlatch = portmap.alu_valid;
+                control_valid_nlatch = portmap.control_valid;
 
             end
             latch: begin
@@ -118,8 +122,9 @@ module alu_control #()
                 cur_pc = pc_latch;
                 cur_rdIn = rdIn_latch;
                 cur_rs1_idx = rs1_idx_latch;
-                cur_salu_op = salu_op_latch;
-                cur_ctrl_opcode = ctrl_opcode_latch;
+                cur_op = op_latch;
+                cur_alu_valid = alu_valid_latch;
+                cur_control_valid = control_valid_latch;
 
             end
         endcase
@@ -135,8 +140,9 @@ module alu_control #()
             pc_latch <= 32'b0;
             rdIn_latch <= 8'b0;
             rs1_idx_latch <= 8'b0;
-            salu_op_latch <= 7'b0;
-            ctrl_opcode_latch <= 7'b0;
+            op_latch <= 7'b0;
+            alu_valid_latch <= 1'b0;
+            control_valid_latch <= 1'b0;
         end
         else begin
             cur_state <= n_state;
@@ -147,8 +153,9 @@ module alu_control #()
             pc_latch <= pc_nlatch;
             rdIn_latch <= rdIn_nlatch;
             rs1_idx_latch <= rs1_idx_nlatch;
-            salu_op_latch <= salu_op_nlatch;
-            ctrl_opcode_latch <= ctrl_opcode_nlatch;
+            op_latch <= op_nlatch;
+            alu_valid_latch <= alu_valid_nlatch;
+            control_valid_latch <= control_valid_nlatch;
         end
     end
 
