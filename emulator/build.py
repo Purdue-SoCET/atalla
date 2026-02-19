@@ -13,7 +13,7 @@ from instruction_latency import latency
 from src.misc.opcode_table import OPCODES, name_to_opcode
 
 INVERT_OPCODES = name_to_opcode()
-VIRTUAL_PACKET_SIZE = 1 
+VIRTUAL_PACKET_SIZE = 4 
 REAL_PACKET_SIZE = 4
 
 IntLike = int
@@ -613,8 +613,7 @@ def convert_instructions(instructions_old):
         instructions.append((operation, [], [], None))
     return instructions
 
-def build_dependency_graph(instructions_bad, latency_map, single_lsu=True):
-    instructions = convert_instructions(instructions_bad)  # op, dsts, srcs, mem_key 
+def build_dependency_graph(instructions, latency_map, single_lsu=True):
     last_write = {}
     last_mem_cycle = -1
     last_store_at = {}
@@ -745,12 +744,21 @@ if __name__ == "__main__":
     """
 
     instrs = assemble_file(asm)       
-    instr_text = emit_test_format(instrs)
 
-
+    instructions = convert_instructions(instrs)
     ready = build_dependency_graph(convert_instructions(instrs), latency)
 
-    packets = greedy_pack(instrs, ready)
+    packets = greedy_pack(instructions, ready)
+
+    print("ready:", ready)
+    print("packets:", packets)
+
+    scheduled = []
+    for packet in packets:
+        for i in packet:
+            scheduled.append(instrs[i])
+
+    instr_text = emit_test_format(scheduled)
 
     img = DRAMWriter() 
 
