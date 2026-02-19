@@ -105,7 +105,7 @@ module sysarr_MEISSA_top #(
         // see parameter details in skew_buffer module
         .NUM_COLS       (N),
         .COL_WIDTH      (DW),
-        .RECT_DELAY     (MUL_LATENCY),
+        .RECT_DELAY     (MUL_LATENCY + (ADD_LATENCY * $clog2(N))), // latency for first columns add tree to have valid result
         .DELAY_SLOPE    (1),
         .REVERSE_TRIANGLE(0)
     ) psum_buffer (

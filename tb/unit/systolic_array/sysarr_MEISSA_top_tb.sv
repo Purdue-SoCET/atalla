@@ -215,6 +215,13 @@ module sysarr_MEISSA_top_tb();
 
     sysarr_MEISSA_top DUT (CLK, nRST, gsau_if);
 
+  // Simulation timeout
+  initial begin
+    #50000;
+    $display("TIMEOUT: Simulation exceeded 50000 ns");
+    $finish;
+  end
+
   // Test Stimulus
   initial begin
     $dumpfile("dump.vcd");  // For VCD format
@@ -289,7 +296,7 @@ module sysarr_MEISSA_top_tb();
     $fclose(out_file);
     $fclose(actual_output_file);
     #50;
-    $stop;
+    $finish;
   end
 
 endmodule
