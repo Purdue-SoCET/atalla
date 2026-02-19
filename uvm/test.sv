@@ -63,7 +63,7 @@ class test extends uvm_test;
         $display("%t Starting sequence run_phase", $time);
         basic_seq.start(env.cpu_active_agent.sqr);
         #1000ns;
-        // load_hit.start(env.cpu_active_agent.sqr);
+        load_hit.start(env.cpu_active_agent.sqr);
         // #1000ns;
         //load_miss.start(env.cpu_active_agent.sqr);
         //#1000ns;

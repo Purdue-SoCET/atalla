@@ -29,7 +29,7 @@ class lfc_predictor extends uvm_component /*#(lfc_cpu_transaction, lfc_ram_trans
     // lfc_ram_transaction output_ram_tx;
 
     // uvm_tlm_analysis_fifo#(lfc_cpu_transaction) expected_MSHR;
-    int MSHR_occupancy = 0;
+    int MSHR_occupancy [3:0] = '{default: 0};
     logic [31:0] data_model [0:31];
     logic [31:0] data_is_in_cache = 32'b0;
 
@@ -83,7 +83,7 @@ class lfc_predictor extends uvm_component /*#(lfc_cpu_transaction, lfc_ram_trans
         out_cpu.hit = data_is_in_cache[cpu_t.mem_in_addr];
 
         if (out_cpu.hit) begin // cache data only changes on hits, misses are sent to MSHR instead
-	    MSHR_occupancy--;
+	    MSHR_occupancy[bank_id]--;
 	    `uvm_info("PRED", "hit recorded", UVM_MEDIUM)
             if (cpu_t.mem_in_rw_mode) begin // write mode
                 data_model[cpu_t.mem_in_addr] = cpu_t.mem_in_store_value;
@@ -93,8 +93,8 @@ class lfc_predictor extends uvm_component /*#(lfc_cpu_transaction, lfc_ram_trans
             out_cpu.mem_out_uuid = 4'b0; // we don't care what uuid is for hits
         end else begin
 	    //out_cpu.mem_out_uuid = MSHR_occupancy;
-            MSHR_occupancy++;
-	    out_cpu.mem_out_uuid = MSHR_occupancy;
+            MSHR_occupancy[bank_id]++;
+	    out_cpu.mem_out_uuid = MSHR_occupancy[bank_id];
 
             //out_cpu.mem_out_uuid = next_uuid[bank_id]; // prediction of the UUID that will be assigned
 
@@ -109,7 +109,14 @@ class lfc_predictor extends uvm_component /*#(lfc_cpu_transaction, lfc_ram_trans
 	    //end
         end 
 
-        out_cpu.stall = (MSHR_occupancy > 8);
+	out_cpu.stall = 1'b0;
+	for(int i = 0; i < 16; i++) begin
+		if (MSHR_occupancy[i] > 8) begin
+			out_cpu.stall = 1'b1;
+		end
+	end
+	
+	// out_cpu.stall = (MSHR_occupancy > 8);
 
         pred_cpu_ap.write(out_cpu);
     endfunction
@@ -122,9 +129,14 @@ class lfc_predictor extends uvm_component /*#(lfc_cpu_transaction, lfc_ram_trans
         out_ram = lfc_ram_transaction#(NUM_BANKS)::type_id::create("out_ram");
         out_ram.copy(ram_t);
 
-        if (ram_t.ram_mem_complete && MSHR_occupancy > 0) begin
-            MSHR_occupancy--;
-        end
+        //if (|ram_t.ram_mem_complete && MSHR_occupancy > 0) begin
+        //    MSHR_occupancy--;
+        //end
+
+	if (|ram_t.ram_mem_complete) begin
+            data_model[ram_t.ram_mem_addr[ram_t.ram_mem_complete]] = ram_t.ram_mem_data;
+            data_is_in_cache[ram_t.ram_mem_addr[ram_t.ram_mem_complete]] = 1'b1;
+	end
 
         pred_ram_ap.write(out_ram);
     endfunction
