@@ -4,7 +4,7 @@
 interface systolic_array_4_input_adder_if #(
     parameter EXPONENT_SIZE = 5, //5 for FP16, 8 for BF16
     parameter MANTISSA_SIZE = 10, //10 for FP16, 7 for BF16
-    parameter PRECISION_BITS = 3 
+    parameter PRECISION_BITS = 22 
 );
     localparam WIDTH = MANTISSA_SIZE + EXPONENT_SIZE + 1;
 

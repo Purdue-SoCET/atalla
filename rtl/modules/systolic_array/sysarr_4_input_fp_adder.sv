@@ -1,18 +1,22 @@
 `include "systolic_array_4_input_adder_if.vh"
 
 module sysarr_4_input_fp_adder #(
-    parameter MANTISSA_SIZE  = 10,
-    parameter EXPONENT_SIZE  = 5,
-    parameter PRECISION_BITS = 22 
+    parameter MANTISSA_SIZE     = 10, // Input Mantissa Width
+    parameter EXPONENT_SIZE     = 5,
+    parameter OUT_MANTISSA_SIZE = 10, // Output Mantissa Width (New Parameter)
+    parameter PRECISION_BITS    = 22 
 ) (
     input logic clk, 
     input logic nRST,
     systolic_array_4_input_adder_if.add add
 );
     // --- Local Parameters ---
-    localparam NEW_MANT_WIDTH = 1 + MANTISSA_SIZE + PRECISION_BITS + 1; 
+    // Ensure internal width covers the larger of input or output mantissa to prevent precision loss before rounding
+    localparam MAX_MANT_SIZE = (MANTISSA_SIZE > OUT_MANTISSA_SIZE) ? MANTISSA_SIZE : OUT_MANTISSA_SIZE;
+    localparam NEW_MANT_WIDTH = 1 + MAX_MANT_SIZE + PRECISION_BITS + 1; 
     localparam SUM_WIDTH      = NEW_MANT_WIDTH + 2; 
     localparam MAX_EXP        = (1 << EXPONENT_SIZE) - 1;
+    localparam RES_WIDTH      = 1 + EXPONENT_SIZE + OUT_MANTISSA_SIZE; // Total width of result
 
     // --- Internal Signal Declarations ---
     logic [15:0] a_daz, b_daz, c_daz, d_daz;
@@ -35,12 +39,12 @@ module sysarr_4_input_fp_adder #(
     
     // Exception signals
     logic is_nan_any, special_case, any_pos_inf, any_neg_inf;
-    logic [15:0] special_result;
+    logic [RES_WIDTH-1:0] special_result; // Scaled to output width
 
     // --- Pipeline Stage 1 Registers (Compressed Vectors) ---
     logic [EXPONENT_SIZE-1:0]  st1_a_e;
     logic st1_a_s, st1_align_sticky, st1_special_case;
-    logic [15:0] st1_special_result;
+    logic [RES_WIDTH-1:0] st1_special_result;
     logic [SUM_WIDTH:0] st1_sum_vec;
     logic [SUM_WIDTH:0] st1_carry_vec;
     logic [1:0]         st1_hot_ones; 
@@ -50,21 +54,23 @@ module sysarr_4_input_fp_adder #(
     logic [SUM_WIDTH-1:0] mag_sum;
     logic res_sign;
 
-    // --- Pipeline Stage 2 Registers (Result Magnitude ONLY - LZD removed) ---
+    // --- Pipeline Stage 2 Registers (Result Magnitude ONLY) ---
     logic [EXPONENT_SIZE-1:0] st2_exp_base;
     logic [SUM_WIDTH-1:0]      st2_sum_mag;
-    logic [15:0]               st2_spec_res;
+    logic [RES_WIDTH-1:0]      st2_spec_res;
     logic st2_res_sign, st2_sticky, st2_special;
 
     // --- Stage 3 Signals ---
     logic [SUM_WIDTH-1:0]      lzd_scan;
-    logic [$clog2(SUM_WIDTH):0] lead_zeros; // LZD Calculated here now
+    logic [$clog2(SUM_WIDTH):0] lead_zeros; 
     logic [SUM_WIDTH-1:0]      norm_val;
-    logic [MANTISSA_SIZE-1:0] raw_mant, final_mant;
-    logic [MANTISSA_SIZE:0]   rounded_mant_int;
+    
+    // Output specific signals
+    logic [OUT_MANTISSA_SIZE-1:0] raw_mant, final_mant;
+    logic [OUT_MANTISSA_SIZE:0]   rounded_mant_int;
     logic signed [EXPONENT_SIZE+2:0] final_exp_calc;
     logic guard_bit, round_bit, sticky_bit, round_up;
-    logic [15:0] result_out;
+    logic [RES_WIDTH-1:0] result_out;
 
     // =================================================================================
     // STAGE 1: Sort, Align, and COMPRESS
@@ -85,13 +91,19 @@ module sysarr_4_input_fp_adder #(
         any_pos_inf = (&exp_a & ~sign_a & ~|frac_a) | (&exp_b & ~sign_b & ~|frac_b) | (&exp_c & ~sign_c & ~|frac_c) | (&exp_d & ~sign_d & ~|frac_d);
         any_neg_inf = (&exp_a &  sign_a & ~|frac_a) | (&exp_b &  sign_b & ~|frac_b) | (&exp_c &  sign_c & ~|frac_c) | (&exp_d &  sign_d & ~|frac_d);
         
-        special_case = 0; special_result = 16'h0000; 
+        special_case = 0; special_result = 0; 
         if (is_nan_any || (any_pos_inf && any_neg_inf)) begin
-            special_case = 1; special_result = {1'b1, {EXPONENT_SIZE{1'b1}}, 1'b1, {(MANTISSA_SIZE-1){1'b0}}};
+            special_case = 1; 
+            // NaN: Sign=1, Exp=All 1s, Mant=100...0
+            special_result = {1'b1, {EXPONENT_SIZE{1'b1}}, 1'b1, {(OUT_MANTISSA_SIZE-1){1'b0}}};
         end else if (any_pos_inf) begin
-            special_case = 1; special_result = {1'b0, {EXPONENT_SIZE{1'b1}}, {MANTISSA_SIZE{1'b0}}};
+            special_case = 1; 
+            // +Inf
+            special_result = {1'b0, {EXPONENT_SIZE{1'b1}}, {OUT_MANTISSA_SIZE{1'b0}}};
         end else if (any_neg_inf) begin
-            special_case = 1; special_result = {1'b1, {EXPONENT_SIZE{1'b1}}, {MANTISSA_SIZE{1'b0}}};
+            special_case = 1; 
+            // -Inf
+            special_result = {1'b1, {EXPONENT_SIZE{1'b1}}, {OUT_MANTISSA_SIZE{1'b0}}};
         end
 
         // Sort
@@ -113,6 +125,7 @@ module sysarr_4_input_fp_adder #(
         exp_mx_eff = (exp_mx == 0) ? 1 : exp_mx; exp_nx_eff = (exp_nx == 0) ? 1 : exp_nx;
         y_shift = exp_x_eff - exp_y_eff; m_shift = exp_x_eff - exp_mx_eff; n_shift = exp_x_eff - exp_nx_eff;
 
+        // Note: Inputs still use MANTISSA_SIZE, internal math uses NEW_MANT_WIDTH
         x_mant      = { (|exp_x),  frac_x,  {PRECISION_BITS{1'b0}}, 1'b0 };
         y_mant_base = { (|exp_y),  frac_y,  {PRECISION_BITS{1'b0}}, 1'b0 };
         m_mant_base = { (|exp_mx), frac_mx, {PRECISION_BITS{1'b0}}, 1'b0 };
@@ -159,7 +172,6 @@ module sysarr_4_input_fp_adder #(
     // STAGE 2: Final Add (Critical Path Isolation)
     // =================================================================================
     always_comb begin : stage2_logic
-        // This addition is the slowest single operation. We give it the whole stage.
         raw_sum = $signed(st1_sum_vec) + $signed(st1_carry_vec << 1) + $signed({{(SUM_WIDTH){1'b0}}, st1_hot_ones});
 
         if (raw_sum[SUM_WIDTH]) begin
@@ -169,10 +181,9 @@ module sysarr_4_input_fp_adder #(
             mag_sum = raw_sum;
             res_sign = st1_a_s;
         end
-        // LZD REMOVED FROM HERE TO IMPROVE CRITICAL PATH
     end
 
-    // Pipeline Stage 2 Flip-Flops (LZD result removed -> Area Saving)
+    // Pipeline Stage 2 Flip-Flops
     always_ff @(posedge clk or negedge nRST) begin
         if (!nRST) begin
             st2_sum_mag <= 0; st2_res_sign <= 0; st2_exp_base <= 0;
@@ -188,8 +199,7 @@ module sysarr_4_input_fp_adder #(
     // STAGE 3: LZD, Normalization and Rounding
     // =================================================================================
     always_comb begin : stage3_logic
-        // 1. Tree-based LZD (Moved to Stage 3)
-        // Since we are latching the sum, this logic now runs in parallel with the next stage's fetch
+        // 1. Tree-based LZD
         if (st2_sum_mag == 0) begin
             lzd_scan = 0;
             lead_zeros = SUM_WIDTH - 1;
@@ -204,25 +214,33 @@ module sysarr_4_input_fp_adder #(
             end
         end
 
-        // 2. Normalization Shift
+        // 2. Normalization
         norm_val = st2_sum_mag << lead_zeros;
         
-        // 3. Rounding
-        raw_mant   = norm_val[SUM_WIDTH-2 -: MANTISSA_SIZE];
-        guard_bit  = norm_val[SUM_WIDTH-2 - MANTISSA_SIZE];
-        round_bit  = norm_val[SUM_WIDTH-3 - MANTISSA_SIZE];
-        sticky_bit = (|norm_val[SUM_WIDTH-4-MANTISSA_SIZE : 0]) | st2_sticky;
+        // 3. Rounding (Updated for OUT_MANTISSA_SIZE)
+        // norm_val[SUM_WIDTH-1] is the Hidden Bit (1).
+        // The mantissa bits start at [SUM_WIDTH-2].
+        
+        // Extract raw mantissa based on the configured Output size
+        raw_mant   = norm_val[SUM_WIDTH-2 -: OUT_MANTISSA_SIZE];
+        guard_bit  = norm_val[SUM_WIDTH-2 - OUT_MANTISSA_SIZE];
+        round_bit  = norm_val[SUM_WIDTH-3 - OUT_MANTISSA_SIZE];
+        // Sticky bit is everything remaining below the round bit
+        sticky_bit = (|norm_val[SUM_WIDTH-4-OUT_MANTISSA_SIZE : 0]) | st2_sticky;
 
         round_up = guard_bit & (round_bit | sticky_bit | raw_mant[0]);
         rounded_mant_int = raw_mant + round_up;
         
-        final_mant = rounded_mant_int[MANTISSA_SIZE] ? 0 : rounded_mant_int[MANTISSA_SIZE-1:0];
-        final_exp_calc = $signed({2'b00, st2_exp_base}) + 2 - $signed({2'b00, lead_zeros}) + $signed({10'd0, rounded_mant_int[MANTISSA_SIZE]});
+        // Handle overflow (e.g., 1.111 -> 10.000)
+        final_mant = rounded_mant_int[OUT_MANTISSA_SIZE] ? 0 : rounded_mant_int[OUT_MANTISSA_SIZE-1:0];
+        
+        // Exponent Adjustment
+        final_exp_calc = $signed({2'b00, st2_exp_base}) + 2 - $signed({2'b00, lead_zeros}) + $signed({10'd0, rounded_mant_int[OUT_MANTISSA_SIZE]});
 
         // 4. Output Packing
-        if (st2_sum_mag == 0) result_out = {st2_res_sign, 15'd0};
-        else if (final_exp_calc >= MAX_EXP) result_out = {st2_res_sign, {EXPONENT_SIZE{1'b1}}, {MANTISSA_SIZE{1'b0}}}; 
-        else if (final_exp_calc <= 0)  result_out = {st2_res_sign, 15'd0};
+        if (st2_sum_mag == 0) result_out = {st2_res_sign, {RES_WIDTH-1{1'b0}}};
+        else if (final_exp_calc >= MAX_EXP) result_out = {st2_res_sign, {EXPONENT_SIZE{1'b1}}, {OUT_MANTISSA_SIZE{1'b0}}}; 
+        else if (final_exp_calc <= 0)  result_out = {st2_res_sign, {RES_WIDTH-1{1'b0}}};
         else result_out = {st2_res_sign, final_exp_calc[EXPONENT_SIZE-1:0], final_mant};
 
         if (st2_special) result_out = st2_spec_res;
