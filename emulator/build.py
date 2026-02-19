@@ -8,6 +8,7 @@ import sys, re
 from pathlib import Path
 import argparse
 import numpy as np
+from instruction_latency import latency
 
 from src.misc.opcode_table import OPCODES, name_to_opcode
 
@@ -745,15 +746,11 @@ if __name__ == "__main__":
 
     instrs = assemble_file(asm)       
     instr_text = emit_test_format(instrs)
-    instrs = assemble_file(asm)  # returns list[(hex, comment)]
 
-    # Convert to the format dependency graph expects
-    sched_instrs = instr_to_sched_format(instrs)
 
-    latency_map = {"lw.s": 2, "sw.s": 2, "addi.s": 1, "halt.s": 1}  # example
-    ready = build_dependency_graph(convert_instructions(instrs), latency_map)
+    ready = build_dependency_graph(convert_instructions(instrs), latency)
 
-    packets = greedy_pack(sched_instrs, ready)
+    packets = greedy_pack(instrs, ready)
 
     img = DRAMWriter() 
 
