@@ -71,7 +71,7 @@ module sysarr_MEISSA_top_tb();
                 void'($fgets(line, file));
                 for (int j = 0; j < ARRAY_DIM; j++) begin
                     token = line.substr(j*7, (j*7)+6); // "0xXXXX"
-                    $sscanf(token, "%h", temp_weights[i][j]);
+                    void'($sscanf(token, "%h", temp_weights[i][j]));
                 end
             end
             // Skip blank line
@@ -86,7 +86,7 @@ module sysarr_MEISSA_top_tb();
             void'($fgets(line, file));
             for (int j = 0; j < ARRAY_DIM; j++) begin
                 token = line.substr(j*7, (j*7)+6);
-                $sscanf(token, "%h", temp_inputs[i][j]);
+                void'($sscanf(token, "%h", temp_inputs[i][j]));
             end
         end
 
@@ -101,7 +101,7 @@ module sysarr_MEISSA_top_tb();
             void'($fgets(line, file));
             for (int j = 0; j < ARRAY_DIM; j++) begin
                 token = line.substr(j*7, (j*7)+6);
-                $sscanf(token, "%h", temp_partials[i][j]);
+                void'($sscanf(token, "%h", temp_partials[i][j]));
             end
         end
 
@@ -119,7 +119,7 @@ module sysarr_MEISSA_top_tb();
             void'($fgets(line, out_file));
             for (int j = 0; j < ARRAY_DIM; j++) begin
                 token = line.substr(j * 7, 6);
-                $sscanf(token, "%h", temp_exp_outputs[i][j]);
+                void'($sscanf(token, "%h", temp_exp_outputs[i][j]));
             end
             m_exp_outputs[i] = {>>{temp_exp_outputs[i]}};
         end
