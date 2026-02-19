@@ -107,7 +107,7 @@ lint:
 
 test:
 	@if [ -z "$(tb_file)" ]; then \
-	  echo "Usage: make $@ tb_file=tb_top.sv [folder=/sub/dir] [dut=file1.sv,file2.sv] [GUI=ON/OFF]"; exit 1; \
+	  echo "Usage: make $@ tb_file=tb_top.sv [folder=/sub/dir] [dut=file1.sv,file2.sv] [modules=/path/to/dir,/path/to/file.sv] [packages=/path/to/pkg.sv,/path/to/dir] [GUI=ON/OFF]"; exit 1; \
 	fi; \
 	\
 	# 1. Locate Testbench File \
@@ -126,30 +126,75 @@ test:
 	TB_RELPATH=$$(echo "$$TB_DIR" | sed "s|$(UNITTESTROOT)||"); \
 	\
 	# 2. Identify Include Sources and PACKAGES \
-	INCSRCS=""; \
-	if [ -n "$$TB_RELPATH" ] && [ "$$TB_RELPATH" != "/" ]; then \
-	  INCSRCS=$$(find "$(INCDIRROOT)/common" "$(INCDIRROOT)$$TB_RELPATH" -type f \( -name '*.sv' -o -name '*_pkg.sv' -o -name '*_pkg.vh' \) -print 2>/dev/null | sort); \
+	PKGS=""; \
+	INC_OTHERS=""; \
+	\
+	if [ -n "$(packages)" ]; then \
+	  echo "[$@] compiling specified packages: $(packages)"; \
+	  for p in $$(echo "$(packages)" | tr ',' ' '); do \
+	    if [[ "$$p" = /* ]]; then \
+	      FULL_PATH="$(INCDIRROOT)$$p"; \
+	    else \
+	      FULL_PATH="$$p"; \
+	    fi; \
+	    if [ -f "$$FULL_PATH" ]; then \
+	      echo "  Adding package file: $$FULL_PATH"; \
+	      PKGS="$$PKGS $$FULL_PATH"; \
+	    elif [ -d "$$FULL_PATH" ]; then \
+	      echo "  Searching for packages in directory: $$FULL_PATH"; \
+	      PKG_FILES=$$(find "$$FULL_PATH" -type f \( -name '*_pkg.sv' -o -name '*_pkg.vh' -o -name '*.sv' ! -name '*_pkg.sv' \) -print 2>/dev/null); \
+	      PKGS="$$PKGS $$PKG_FILES"; \
+	    else \
+	      echo "Error: Package path $$FULL_PATH not found (neither file nor directory)"; exit 1; \
+	    fi; \
+	  done; \
+	  PKGS=$$(printf '%s\n' $$PKGS | sed '/^$$/d' | sort -u); \
 	else \
-	  INCSRCS=$$(find "$(INCDIRROOT)" -type f \( -name '*.sv' -o -name '*_pkg.sv' -o -name '*_pkg.vh' \) -print 2>/dev/null | sort); \
+	  echo "[$@] auto-discovering packages from include directories"; \
+	  INCSRCS=""; \
+	  if [ -n "$$TB_RELPATH" ] && [ "$$TB_RELPATH" != "/" ]; then \
+	    INCSRCS=$$(find "$(INCDIRROOT)/common" "$(INCDIRROOT)$$TB_RELPATH" -type f \( -name '*.sv' -o -name '*_pkg.sv' -o -name '*_pkg.vh' \) -print 2>/dev/null | sort); \
+	  else \
+	    INCSRCS=$$(find "$(INCDIRROOT)" -type f \( -name '*.sv' -o -name '*_pkg.sv' -o -name '*_pkg.vh' \) -print 2>/dev/null | sort); \
+	  fi; \
+	  PKGS=$$(printf '%s\n' $$INCSRCS | grep -E '_pkg\.(sv|vh)$$' || true); \
+	  INC_OTHERS=$$(printf '%s\n' $$INCSRCS | grep -Ev '_pkg\.(sv|vh)$$' || true); \
 	fi; \
-	PKGS=$$(printf '%s\n' $$INCSRCS | grep -E '_pkg\.(sv|vh)$$' || true); \
-	INC_OTHERS=$$(printf '%s\n' $$INCSRCS | grep -Ev '_pkg\.(sv|vh)$$' || true); \
 	\
 	# 3. Identify Module Sources \
 	MODSRCS=""; \
 	MOD_SEARCH_PATH="$(MODROOT)$$TB_RELPATH"; \
 	\
-	# For vector unit tests (tb/unit/vector/*), compile the whole vector + sqrt + adders + multipliers + dividers + general subsystem \
-	if [ "$$TB_RELPATH" = "/vector" ]; then \
-	  echo "[$@] vector TB detected -> compiling all vector + sqrt + adders + multipliers + dividers + general modules"; \
-	  MOD_SEARCH_PATH="$(MODROOT)/vector \
-	                    $(MODROOT)/common/arithmetic/sqrt \
-	                    $(MODROOT)/common/arithmetic/adders \
-	                    $(MODROOT)/common/arithmetic/mutlipliers \
-	                    $(MODROOT)/common/arithmetic/dividers \
-	                    $(MODROOT)/common/general"; \
-	  MODSRCS=$$(find $$MOD_SEARCH_PATH -type f -name '*.sv' ! -name '*_pkg.sv' -print 2>/dev/null | sort); \
+	if [ -n "$(modules)" ]; then \
+	  echo "[$@] compiling modules from specified paths: $(modules)"; \
+	  for p in $$(echo "$(modules)" | tr ',' ' '); do \
+	    if [[ "$$p" = /* ]] && [[ ! "$$p" = $(MODROOT)* ]]; then \
+	      FULL_PATH="$(MODROOT)$$p"; \
+	    else \
+	      FULL_PATH="$$p"; \
+	    fi; \
+	    if [ -f "$$FULL_PATH" ]; then \
+	      echo "  Adding file: $$FULL_PATH"; \
+	      MODSRCS="$$MODSRCS $$FULL_PATH"; \
+	    elif [ -d "$$FULL_PATH" ]; then \
+	      echo "  Searching directory: $$FULL_PATH"; \
+	      DIR_FILES=$$(find "$$FULL_PATH" -type f -name '*.sv' ! -name '*_pkg.sv' -print 2>/dev/null); \
+	      MODSRCS="$$MODSRCS $$DIR_FILES"; \
+	    else \
+	      echo "Error: Path $$FULL_PATH not found (neither file nor directory)"; exit 1; \
+	    fi; \
+	  done; \
+	  MODSRCS=$$(printf '%s\n' $$MODSRCS | sed '/^$$/d' | sort -u); \
+	elif [ -n "$(dut)" ]; then \
+	  echo "[$@] compiling specific DUT files: $(dut)"; \
+	  for f in $$(echo "$(dut)" | tr ',' ' '); do \
+	    FOUND=$$(find $$MOD_SEARCH_PATH -name "$$f" -print); \
+	    [ -n "$$FOUND" ] || { echo "Error: DUT file $$f not found in $$MOD_SEARCH_PATH"; exit 1; }; \
+	    MODSRCS="$$MODSRCS $$FOUND"; \
+	  done; \
+	  MODSRCS=$$(printf '%s\n' $$MODSRCS | sed '/^$$/d' | sort -u); \
 	else \
+<<<<<<< HEAD
 		if [ -n "$(dut)" ]; then \
 	    echo "[$@] compiling specific DUT files: $(dut)"; \
 	    for f in $$(echo "$(dut)" | tr ',' ' '); do \
@@ -163,6 +208,10 @@ test:
 	    echo "[$@] compiling all modules in: $$MOD_SEARCH_PATH"; \
 	    MODSRCS=$$(find $$MOD_SEARCH_PATH -type f -name '*.sv' ! -name '*_pkg.sv' -print 2>/dev/null | sort); \
 	  fi; \
+=======
+	  echo "[$@] compiling all modules in: $$MOD_SEARCH_PATH"; \
+	  MODSRCS=$$(find $$MOD_SEARCH_PATH -type f -name '*.sv' ! -name '*_pkg.sv' -print 2>/dev/null | sort); \
+>>>>>>> ea449e0ce91c4e5b990c87c315ffa94240dec135
 	fi; \
 	\
 	# 4. Testbench Sources \
@@ -176,9 +225,11 @@ test:
 	INCDIRS_ALL=$$(find "$(INCDIRROOT)" "$(MODROOT)" "$(UNITTESTROOT)" -type d -print 2>/dev/null | sed 's/^/+incdir+/'); \
 	ALL_INCS="$$BASE_INCS $$INCDIRS_ALL"; \
 	\
+	echo "[$@] Ensuring work library exists..."; \
+	$(VLIB) work 2>/dev/null || true; \
 	echo "[$@] Running generic simulation script..."; \
 	if [ "$(GUI)" = "ON" ]; then \
-		$(VSIM) -do "set batch_mode 0; \
+		$(VSIM) -voptargs="+acc" -do "set batch_mode 0; \
 		             set WAVE_ROOT $(WAVEROOT); \
 		             set TB_NAME $$TB_TOP; \
 		             set SRCS {$$ORDERED_SRCS}; \
@@ -186,7 +237,7 @@ test:
 		             set VLOG_FLAGS {$(VLOG_FLAGS)}; \
 		             do $(SCRIPTROOT)/run_sim.tcl"; \
 	else \
-		$(VSIM) -c -do "set batch_mode 1; \
+		$(VSIM) -voptargs="+acc" -c -do "set batch_mode 1; \
 		                set WAVE_ROOT $(WAVEROOT); \
 		                set TB_NAME $$TB_TOP; \
 		                set SRCS {$$ORDERED_SRCS}; \

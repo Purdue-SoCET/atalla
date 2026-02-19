@@ -44,9 +44,7 @@ module sync_fifo #(parameter FIFODEPTH=8, DATAWIDTH=16) // DATAWIDTH = word size
   always_ff @(posedge CLK or negedge nRST) begin
     if (!nRST) begin
       rptr <= '0;
-      dout  <= '0;
     end else begin
-      dout <= fifo[rptr]; // do not block data based on shifting (rd_en)
       if (shift & !empty) begin
         // Rollover pointer when it reaches FIFODEPTH
         if (rptr == FIFODEPTH - 1)
@@ -72,4 +70,5 @@ module sync_fifo #(parameter FIFODEPTH=8, DATAWIDTH=16) // DATAWIDTH = word size
 
   assign full  = (count == FIFODEPTH);
   assign empty = (count == 0);
+  assign dout = fifo[rptr];
 endmodule

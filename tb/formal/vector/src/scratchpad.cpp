@@ -2,35 +2,7 @@
 
 scratchpad::scratchpad()
 {
-    sp1.setZero();
-    sp2.setZero();
 
-    clk = 0;
-    rst_n = 1;
-    cycle_count = 0;
-    valid_in_sp1 = 0;
-    valid_in_sp2 = 0;
-    write_sp1 = 0;
-    write_sp2 = 0;
-    sp_addr_sp1 = 0;
-    sp_addr_sp2 = 0;
-    num_rows_sp1 = 0;
-    num_rows_sp2 = 0;
-    num_cols_sp1 = 0;
-    num_cols_sp2 = 0;
-    col_id_sp1 = 0;
-    col_id_sp2 = 0;
-    row_id_sp1 = 0;
-    row_id_sp2 = 0;
-    row_or_col_sp1 = 0;
-    row_or_col_sp2 = 0;
-    std::fill(std::begin(wdata_sp1),std::end(wdata_sp1), 0);
-    std::fill(std::begin(wdata_sp2),std::end(wdata_sp2), 0);
-
-    valid_out_sp1 = 0;
-    valid_out_sp2 = 0;
-    std::fill(std::begin(rdata_sp1),std::end(rdata_sp1), 0);
-    std::fill(std::begin(rdata_sp2),std::end(rdata_sp2), 0);
 }
 
 void scratchpad::tick()
@@ -40,43 +12,43 @@ void scratchpad::tick()
     if (clk && !last_clk) {
          if (!rst_n)
          {
-            sp1.setZero();
-            sp2.setZero();
+            sp[0].setZero();
+            sp[1].setZero();
 
             clk = 0;
             rst_n = 1;
             last_clk = 0;
             cycle_count = 0;
-            valid_in_sp1 = 0;
-            valid_in_sp2 = 0;
-            write_sp1 = 0;
-            write_sp2 = 0;
-            sp_addr_sp1 = 0;
-            sp_addr_sp2 = 0;
-            num_rows_sp1 = 0;
-            num_rows_sp2 = 0;
-            num_cols_sp1 = 0;
-            num_cols_sp2 = 0;
-            col_id_sp1 = 0;
-            col_id_sp2 = 0;
-            row_id_sp1 = 0;
-            row_id_sp2 = 0;
-            row_or_col_sp1 = 0;
-            row_or_col_sp2 = 0;
-            std::fill(std::begin(wdata_sp1),std::end(wdata_sp1), 0);
-            std::fill(std::begin(wdata_sp2),std::end(wdata_sp2), 0);
-            valid_out_sp1 = 0;
-            valid_out_sp2 = 0;
-            std::fill(std::begin(rdata_sp1),std::end(rdata_sp1), 0);
-            std::fill(std::begin(rdata_sp2),std::end(rdata_sp2), 0);
+
+            for (size_t i = 0; i < sp_input_if.size(); i++)
+            {
+                sp_input_if[i].valid_in = 0;
+                sp_input_if[i].wen = 0;
+                sp_input_if[i].addr = 0;
+                sp_input_if[i].num_rows = 0;
+                sp_input_if[i].num_cols = 0;
+                sp_input_if[i].row_id = 0;
+                sp_input_if[i].col_id = 0;
+                sp_input_if[i].row_or_col = 0;
+                std::fill(sp_input_if[i].wdata.begin(), sp_input_if[i].wdata.end(), 0);
+
+                sp_output_if[i].valid = 0;
+                std::fill(sp_output_if[i].rdata.begin(), sp_output_if[i].rdata.end(), 0);
+
+                wb_queue[i] = std::queue<std::array<uint16_t, 32>>();
+                completion_cycles[i] = std::queue<int>();
+            }
+
          }
          else 
          {
-            valid_out_sp1 = 0;
-            valid_out_sp2 = 0;
-            std::fill(std::begin(rdata_sp1),std::end(rdata_sp1), 0);
-            std::fill(std::begin(rdata_sp2),std::end(rdata_sp2), 0);
+            for (size_t i = 0; i < sp_output_if.size(); i++) {
+                sp_output_if[i].valid = 0;
+                std::fill(sp_output_if[i].rdata.begin(), sp_output_if[i].rdata.end(), 0);
+            }
+            
 
+            /* Depriciated Block, keeping for now
             if (valid_in_sp1)
             {
                if (write_sp1)
@@ -145,8 +117,59 @@ void scratchpad::tick()
                    }
                }
             }
+            */
 
-            //latency handling
+            //iterative scratchpad reading and writing
+            for (size_t i = 0; i < sp_input_if.size(); i++)
+            {
+                sp_input_if_t curr_sp = sp_input_if[i];
+                if (curr_sp.valid_in)
+                {
+                    if (curr_sp.wen)
+                    {
+                        if (curr_sp.row_or_col)
+                        {
+                            load_col(i, curr_sp.addr, curr_sp.col_id, curr_sp.num_rows, curr_sp.wdata);
+                        }
+                        else
+                        {
+                            load_row(i, curr_sp.addr, curr_sp.row_id, curr_sp.num_cols, curr_sp.wdata);
+                        }
+                    }
+                    else
+                    {
+                        std::array<uint16_t, 32> read_data;
+                        if (curr_sp.row_or_col)
+                        {
+                            read_data = read_col(i, curr_sp.addr, curr_sp.col_id, curr_sp.num_rows);
+                            wb_queue[i].push(read_data);
+                            completion_cycles[i].push(cycle_count + 13);
+                        }
+                        else
+                        {
+                            read_data = read_row(i, curr_sp.addr, curr_sp.row_id, curr_sp.num_cols);
+                            wb_queue[i].push(read_data);
+                            completion_cycles[i].push(cycle_count + 13);
+                        }
+                    }
+                }
+            }
+            //iterative latency handling
+            for (size_t i = 0; i < sp_input_if.size(); i++)
+            {
+                std::queue<std::array<uint16_t, 32>>& curr_queue = wb_queue[i];
+                std::queue<int>& curr_cycle = completion_cycles[i];
+
+                if (!curr_cycle.empty() && curr_cycle.front() == cycle_count)
+                {
+                    sp_output_if[i].rdata = curr_queue.front();
+                    sp_output_if[i].valid = 1;
+                    curr_queue.pop();
+                    curr_cycle.pop();
+                }
+            }
+
+            /* depriciated block keeping for now
             if (!read_completion_cycles_sp1.empty() && read_completion_cycles_sp1.front() == cycle_count)
             {
                 for (int i = 0; i < rdata_sp1.size(); i++)
@@ -167,6 +190,7 @@ void scratchpad::tick()
                 wb_queue_sp2.pop();
                 read_completion_cycles_sp2.pop();
             }
+            */
          }
 
         cycle_count++;
@@ -175,46 +199,37 @@ void scratchpad::tick()
 }
 
 
-void scratchpad::load_row(uint8_t sp_id, uint8_t addr, uint8_t row_id, uint8_t num_cols, Eigen::Matrix<Eigen::bfloat16, 32, 1> wdata)
+void scratchpad::load_row(uint8_t sp_id, uint8_t addr, uint8_t row_id, uint8_t num_cols, std::array<uint16_t, 32> wdata)
 {
-    Eigen::Matrix<Eigen::bfloat16, 32, 1> wdata_copy = wdata;
-    if (sp_id == 1)
-        sp1.row(addr + row_id).head(num_cols) = wdata_copy.head(num_cols).transpose();
-    else if (sp_id == 2)
-        sp2.row(addr + row_id).head(num_cols) = wdata_copy.head(num_cols).transpose();
+    uint16_t col_offset = addr * 32;
+    sp[sp_id].row(row_id).segment(col_offset, num_cols) = Eigen::Map<Eigen::Matrix<uint16_t, 32, 1>>(wdata.data()).head(num_cols).transpose();
 }
 
-void scratchpad::load_col(uint8_t sp_id, uint8_t addr, uint8_t col_id, uint8_t num_rows, Eigen::Matrix<Eigen::bfloat16, 32, 1> wdata)
+void scratchpad::load_col(uint8_t sp_id, uint8_t addr, uint8_t col_id, uint8_t num_rows, std::array<uint16_t, 32> wdata)
 {   
-    Eigen::Matrix<Eigen::bfloat16, 32, 1> wdata_copy = wdata;
-    if (sp_id == 1)
-        sp1.col(col_id).segment(addr, num_rows) = wdata_copy.head(num_rows);
-    else if (sp_id == 2)
-        sp2.col(col_id).segment(addr, num_rows) = wdata_copy.head(num_rows);
+    uint16_t col_offset = addr * 32 + col_id;
+    sp[sp_id].col(col_offset).head(num_rows) = Eigen::Map<Eigen::Matrix<uint16_t, 32, 1>>(wdata.data()).head(num_rows);
 }
 
-Eigen::Matrix<Eigen::bfloat16, 32, 1> scratchpad::read_row(uint8_t sp_id, uint8_t addr, uint8_t row_id, uint8_t num_cols)
+std::array<uint16_t, 32> scratchpad::read_row(uint8_t sp_id, uint8_t addr, uint8_t row_id, uint8_t num_cols)
 {
-    Eigen::Matrix<Eigen::bfloat16, 32, 1> result;
-    result.setZero();
+    std::array<uint16_t, 32> result = {0};
     
-    if (sp_id == 1)
-        result.head(num_cols) = sp1.row(addr + row_id).head(num_cols).transpose();
-    else if (sp_id == 2)
-        result.head(num_cols) = sp2.row(addr + row_id).head(num_cols).transpose();
-    
+    uint16_t col_offset = addr * 32;
+    Eigen::Matrix<uint16_t, 32, 1> temp;
+    temp.head(num_cols) = sp[sp_id].row(row_id).segment(col_offset, num_cols).transpose();
+
+    std::copy(temp.data(), temp.data() + num_cols, result.data());    
     return result;
 }
 
-Eigen::Matrix<Eigen::bfloat16, 32, 1> scratchpad::read_col(uint8_t sp_id, uint8_t addr, uint8_t col_id, uint8_t num_rows)
+std::array<uint16_t, 32> scratchpad::read_col(uint8_t sp_id, uint8_t addr, uint8_t col_id, uint8_t num_rows)
 {
-    Eigen::Matrix<Eigen::bfloat16, 32, 1> result;
-    result.setZero();
-    
-    if (sp_id == 1)
-        result.head(num_rows) = sp1.col(col_id).segment(addr, num_rows);
-    else if (sp_id == 2)
-        result.head(num_rows) = sp2.col(col_id).segment(addr, num_rows);
+    std::array<uint16_t, 32> result = {0};
+
+    uint16_t col_offset = addr * 32 + col_id;
+    Eigen::Matrix<uint16_t, 32, 1> temp = sp[sp_id].col(col_offset).head(num_rows);
+    std::copy(temp.data(), temp.data() + num_rows, result.data());
     
     return result;
 }

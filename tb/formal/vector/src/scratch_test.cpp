@@ -47,20 +47,20 @@ void test_write_read_rows(scratchpad& sp) {
     // WRITE ALL 32 ROWS (atomic per-row)
     // --------------------------
     for (int row = 0; row < 32; row++) {
-        sp.valid_in_sp1 = 1;
-        sp.write_sp1 = 1;
-        sp.sp_addr_sp1 = 0;
-        sp.row_id_sp1 = row;
-        sp.num_cols_sp1 = 32;
-        sp.row_or_col_sp1 = 0; // row mode
-        sp.wdata_sp1 = test[row];
+        sp.sp_input_if[0].valid_in = 1;
+        sp.sp_input_if[0].wen = 1;
+        sp.sp_input_if[0].addr = 0;
+        sp.sp_input_if[0].row_id = row;
+        sp.sp_input_if[0].num_cols = 32;
+        sp.sp_input_if[0].row_or_col = 0; // row mode
+        sp.sp_input_if[0].wdata = test[row];
 
         sp.clk = 1; sp.tick();
         sp.clk = 0; sp.tick();
     }
     // De-assert write signals
-    sp.valid_in_sp1 = 0;
-    sp.write_sp1 = 0;
+    sp.sp_input_if[0].valid_in = 0;
+    sp.sp_input_if[0].wen = 0;
 
     // --------------------------
     // ISSUE READS WHILE CAPTURING COMPLETIONS
@@ -74,22 +74,22 @@ void test_write_read_rows(scratchpad& sp) {
     while ((issued < expected || received < expected) && safety-- > 0) {
         // Issue a read if still need to
         if (issued < expected) {
-            sp.valid_in_sp1 = 1;
-            sp.write_sp1 = 0;
-            sp.sp_addr_sp1 = 0;
-            sp.row_id_sp1 = issued;
-            sp.num_cols_sp1 = 32;
-            sp.row_or_col_sp1 = 0;
+            sp.sp_input_if[0].valid_in = 1;
+            sp.sp_input_if[0].wen = 0;
+            sp.sp_input_if[0].addr = 0;
+            sp.sp_input_if[0].row_id = issued;
+            sp.sp_input_if[0].num_cols = 32;
+            sp.sp_input_if[0].row_or_col = 0;
             issued++;
         } else {
-            sp.valid_in_sp1 = 0;
+            sp.sp_input_if[0].valid_in = 0;
         }
 
         // Rising edge: let module process; capture output if available
         sp.clk = 1; sp.tick();
 
-        if (sp.valid_out_sp1) {
-            write_vector_line(out, sp.rdata_sp1);
+        if (sp.sp_output_if[0].valid) {
+            write_vector_line(out, sp.sp_output_if[0].rdata);
             received++;
         }
 
@@ -131,24 +131,24 @@ void test_write_read_cols(scratchpad& sp) {
     // WRITE ALL 32 COLUMNS (atomic per-column)
     // --------------------------
     for (int col = 0; col < 32; col++) {
-        sp.valid_in_sp2 = 1;
-        sp.write_sp2 = 1;
-        sp.sp_addr_sp2 = 0;
-        sp.col_id_sp2 = col;
-        sp.num_rows_sp2 = 32;
-        sp.row_or_col_sp2 = 1; // column mode
+        sp.sp_input_if[1].valid_in = 1;
+        sp.sp_input_if[1].wen = 1;
+        sp.sp_input_if[1].addr = 0;
+        sp.sp_input_if[1].col_id = col;
+        sp.sp_input_if[1].num_rows = 32;
+        sp.sp_input_if[1].row_or_col = 1; // column mode
         
-        // Extract column col into wdata_sp2
+        // Extract column col into wdata
         for (int r = 0; r < 32; r++) {
-            sp.wdata_sp2[r] = test[r][col];
+            sp.sp_input_if[1].wdata[r] = test[r][col];
         }
 
         sp.clk = 1; sp.tick();
         sp.clk = 0; sp.tick();
     }
     // De-assert write signals
-    sp.valid_in_sp2 = 0;
-    sp.write_sp2 = 0;
+    sp.sp_input_if[1].valid_in = 0;
+    sp.sp_input_if[1].wen = 0;
 
     // --------------------------
     // ISSUE READS WHILE CAPTURING COMPLETIONS
@@ -164,29 +164,29 @@ void test_write_read_cols(scratchpad& sp) {
     while ((issued < expected || received < expected) && safety-- > 0) {
         // Issue read if needed
         if (issued < expected) {
-            sp.valid_in_sp2 = 1;
-            sp.write_sp2 = 0;
-            sp.sp_addr_sp2 = 0;
-            sp.col_id_sp2 = issued;
-            sp.num_rows_sp2 = 32;
-            sp.row_or_col_sp2 = 1;
+            sp.sp_input_if[1].valid_in = 1;
+            sp.sp_input_if[1].wen = 0;
+            sp.sp_input_if[1].addr = 0;
+            sp.sp_input_if[1].col_id = issued;
+            sp.sp_input_if[1].num_rows = 32;
+            sp.sp_input_if[1].row_or_col = 1;
             issued++;
         } else {
-            sp.valid_in_sp2 = 0;
+            sp.sp_input_if[1].valid_in = 0;
         }
 
         // Rising edge: capture if valid_out
         sp.clk = 1; sp.tick();
 
-        if (sp.valid_out_sp2) {
+        if (sp.sp_output_if[1].valid) {
             // Duplicate detection (helpful for debugging)
-            if (have_prev && vec_equal(prev_vec, sp.rdata_sp2)) {
+            if (have_prev && vec_equal(prev_vec, sp.sp_output_if[1].rdata)) {
                 std::cerr << "WARNING: duplicate vector received for column read #" << received << "\n";
             }
-            prev_vec = sp.rdata_sp2;
+            prev_vec = sp.sp_output_if[1].rdata;
             have_prev = true;
 
-            write_vector_line(out, sp.rdata_sp2);
+            write_vector_line(out, sp.sp_output_if[1].rdata);
             received++;
         }
 
@@ -215,36 +215,36 @@ void test_latency_timing(scratchpad& sp) {
         return;
     }
 
-    // Write a row (address 10, row 5)
-    sp.valid_in_sp1 = 1;
-    sp.write_sp1 = 1;
-    sp.sp_addr_sp1 = 10;
-    sp.row_id_sp1 = 5;
-    sp.num_cols_sp1 = 32;
-    sp.row_or_col_sp1 = 0;
+    // Write a row (address 4, row 5)
+    sp.sp_input_if[0].valid_in = 1;
+    sp.sp_input_if[0].wen = 1;
+    sp.sp_input_if[0].addr = 4;
+    sp.sp_input_if[0].row_id = 5;
+    sp.sp_input_if[0].num_cols = 32;
+    sp.sp_input_if[0].row_or_col = 0;
 
     for (int i = 0; i < 32; i++)
-        sp.wdata_sp1[i] = 42;
+        sp.sp_input_if[0].wdata[i] = 42;
 
     sp.clk = 1; sp.tick();
     sp.clk = 0; sp.tick();
 
-    sp.valid_in_sp1 = 0;
-    sp.write_sp1 = 0;
+    sp.sp_input_if[0].valid_in = 0;
+    sp.sp_input_if[0].wen = 0;
 
     // Issue read
-    sp.valid_in_sp1 = 1;
-    sp.write_sp1 = 0;
-    sp.sp_addr_sp1 = 10;
-    sp.row_id_sp1 = 5;
-    sp.num_cols_sp1 = 32;
+    sp.sp_input_if[0].valid_in = 1;
+    sp.sp_input_if[0].wen = 0;
+    sp.sp_input_if[0].addr = 4;
+    sp.sp_input_if[0].row_id = 5;
+    sp.sp_input_if[0].num_cols = 32;
 
     int read_cycle = sp.cycle_count;
     log << "Read issued at cycle: " << read_cycle << "\n";
 
     sp.clk = 1; sp.tick();
     sp.clk = 0; sp.tick();
-    sp.valid_in_sp1 = 0;
+    sp.sp_input_if[0].valid_in = 0;
 
     bool data_received = false;
     int cycles_until_data = 0;
@@ -252,16 +252,16 @@ void test_latency_timing(scratchpad& sp) {
     for (int i = 0; i < 40; i++) {
         sp.clk = 1; sp.tick();
 
-        log << "Cycle " << sp.cycle_count << ": valid_out_sp1=" << (int)sp.valid_out_sp1 << "\n";
-        if (sp.valid_out_sp1 && !data_received) {
+        log << "Cycle " << sp.cycle_count << ": valid=" << (int)sp.sp_output_if[0].valid << "\n";
+        if (sp.sp_output_if[0].valid && !data_received) {
             cycles_until_data = sp.cycle_count - read_cycle - 1;
             data_received = true;
-            log << "valid_out_sp1 went high at cycle: " << sp.cycle_count << "\n";
-            log << "Cycles from read to valid_out: " << cycles_until_data << "\n";
+            log << "valid went high at cycle: " << sp.cycle_count << "\n";
+            log << "Cycles from read to valid: " << cycles_until_data << "\n";
 
             bool correct = true;
             for (int j = 0; j < 32; j++) {
-                uint16_t val = sp.rdata_sp1[j];
+                uint16_t val = sp.sp_output_if[0].rdata[j];
                 if (val != 42) {
                     correct = false;
                     log << "Data mismatch at index " << j << ": expected 42, got " << val << "\n";
@@ -278,8 +278,8 @@ void test_latency_timing(scratchpad& sp) {
     }
 
     if (!data_received) {
-        log << "FAIL: valid_out_sp1 never went high within 40 cycles\n";
-        std::cerr << "FAIL: valid_out_sp1 never went high within 40 cycles\n";
+        log << "FAIL: valid never went high within 40 cycles\n";
+        std::cerr << "FAIL: valid never went high within 40 cycles\n";
     }
 
     log.close();

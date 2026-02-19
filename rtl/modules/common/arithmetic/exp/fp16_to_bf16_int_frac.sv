@@ -97,7 +97,7 @@ module fp16_to_bf16_int_frac (
               mant_rounded = mant_b + 7'd1;
 
               // handle mantissa overflow (e.g., 1.1111111 -> 10.000000)
-              if (mant_rounded == 7'b10000000) begin
+              if (mant_rounded == 7'b1000000) begin
                 mant_rounded = 7'd0;         // drop back to 0.xxx
                 exp_rounded  = exp_b + 8'd1; // bump exponent
               end

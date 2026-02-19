@@ -27,8 +27,9 @@ TB_DIR = .
 VERILATOR = verilator
 VERILATOR_FLAGS = --cc --exe --build -Wall
 VERILATOR_FLAGS += --trace
-VERILATOR_FLAGS += -Wno-DECLFILENAME -Wno-TIMESCALEMOD -Wno-UNUSEDSIGNAL
+VERILATOR_FLAGS += -Wno-DECLFILENAME -Wno-TIMESCALEMOD -Wno-UNUSEDSIGNAL 
 VERILATOR_FLAGS += -Wno-UNUSEDPARAM -Wno-PINMISSING -Wno-UNDRIVEN -Wno-WIDTHEXPAND
+VERILATOR_FLAGS += -Wno-EOFNEWLINE
 
 # Pass C++ compiler flags to Verilator (for testbench compilation)
 # Use $(CURDIR) to get absolute path to current directory
@@ -37,28 +38,34 @@ VERILATOR_FLAGS += -CFLAGS "-I$(CURDIR)/$(INCLUDE_DIR) -std=c++17 -g -Wall -Wext
 # Link VCD tracing library
 VERILATOR_FLAGS += -LDFLAGS "-lz"
 
+
 # RTL include directories
-VERILATOR_FLAGS += -I$(RTL_INCLUDE)common/arithmetic/sqrt
-VERILATOR_FLAGS += -I$(RTL_INCLUDE)common/arithmetic/divider
-VERILATOR_FLAGS += -I$(RTL_INCLUDE)common/arithmetic/exp
-VERILATOR_FLAGS += -I$(RTL_INCLUDE)common/xbar
-VERILATOR_FLAGS += -I$(RTL_INCLUDE)vector
-VERILATOR_FLAGS += -I$(RTL_INCLUDE)vector/reduction
+VERILATOR_FLAGS += -I$(RTL_INCLUDE)
+VERILATOR_FLAGS += -I$(RTL_MODULES)/vector
+VERILATOR_FLAGS += -I$(RTL_INCLUDE)/common/arithmetic/sqrt
+VERILATOR_FLAGS += -I$(RTL_INCLUDE)/common/arithmetic/divider
+VERILATOR_FLAGS += -I$(RTL_INCLUDE)/common/arithmetic/multipliers
+VERILATOR_FLAGS += -I$(RTL_INCLUDE)/vector
+VERILATOR_FLAGS += -I$(RTL_INCLUDE)/systolic_array
 
 
 
-TOP_MODULE = vector_core_wrapper
+
+TOP_MODULE = vector_datapath_wrapper
 VERILATOR_OBJ_DIR = obj_dir_verilator
 VERILATOR_LOG = verilator_build.log
 
+# packages
+RTL_SOURCES = $(RTL_INCLUDE)/vector/vector_pkg.vh
 # RTL sources
-RTL_SOURCES = $(wildcard $(RTL_MODULES)/common/arithmetic/adders/*.sv)
-RTL_SOURCES = $(wildcard $(RTL_MODULES)/common/arithmetic/dividers/*.sv)
-RTL_SOURCES = $(wildcard $(RTL_MODULES)/common/arithmetic/multipliers/*.sv)
-RTL_SOURCES = $(wildcard $(RTL_MODULES)/common/arithmetic/sqrt/*.sv)
-RTL_SOURCES = $(wildcard $(RTL_MODULES)/common/arithmetic/exp/*.sv)
+RTL_SOURCES += $(wildcard $(RTL_MODULES)/common/arithmetic/adders/*.sv)
+RTL_SOURCES += $(wildcard $(RTL_MODULES)/common/arithmetic/mutlipliers/*.sv)
+RTL_SOURCES += $(wildcard $(RTL_MODULES)/common/arithmetic/dividers/*.sv)	
+RTL_SOURCES += $(wildcard $(RTL_MODULES)/common/arithmetic/sqrt/*.sv)
+RTL_SOURCES += $(wildcard $(RTL_MODULES)/common/arithmetic/exp/*.sv)
+RTL_SOURCES += $(wildcard $(RTL_MODULES)/common/general/*.sv)
 RTL_SOURCES += $(wildcard $(RTL_MODULES)/vector/*.sv)
-RTL_SOURCES += $(wildcard $(RTL_MODULES)/vector/reduction/*.sv)
+#RTL_SOURCES += $(wildcard $(RTL_MODULES)/vector/reduction/*.sv)
 
 # VERILATOR TESTBENCH SOURCES - ONLY these files, NOT the _test.cpp files
 TB_SOURCES = $(SRC_DIR)/testbench.cpp
@@ -66,7 +73,6 @@ TB_SOURCES += $(SRC_DIR)/scratchpad.cpp
 TB_SOURCES += $(SRC_DIR)/sysarr.cpp
 TB_SOURCES += $(SRC_DIR)/schedular.cpp
 TB_SOURCES += $(SRC_DIR)/veggie.cpp
-# DO NOT include sysarr_test.cpp or scratch_test.cpp here!
 
 # Verilate the design
 verilate:
@@ -104,3 +110,4 @@ compile_veggie: $(OBJ_DIR)/veggie_test.o  $(OBJ_DIR)/veggie.o | $(BIN_DIR)
 clean:
 	rm -rf $(OBJ_DIR) $(BIN_DIR) $(VERILATOR_OBJ_DIR) $(VERILATOR_LOG)
 	rm *.txt
+	rm *.vcd

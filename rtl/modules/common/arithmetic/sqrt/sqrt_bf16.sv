@@ -1,5 +1,5 @@
 `include "sqrt_types.vh"
-`include "sqrt_if.sv"
+`include "sqrt_if.vh"
 
 /* 
 BF16 sqaure root module.
@@ -118,7 +118,7 @@ module sqrt_bf16 (
             ready_input_reg <= 1'b1;
         else if (srif.in.valid_in & ready_input_reg)
             ready_input_reg <= 1'b0;
-        else if (valid_data_out_internal & srif.in.ready_out)
+        else if (srif.out.valid_out & srif.in.ready_out)  // Changed this line
             ready_input_reg <= 1'b1;
     end
 
