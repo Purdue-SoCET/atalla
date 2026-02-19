@@ -38,8 +38,32 @@ add wave -noupdate /sysarr_MEISSA_top_tb/DUT/output_buffer/next_wr_ptr
 add wave -noupdate /sysarr_MEISSA_top_tb/DUT/output_buffer/next_rd_ptr
 add wave -noupdate /sysarr_MEISSA_top_tb/DUT/output_buffer/waddr
 add wave -noupdate /sysarr_MEISSA_top_tb/DUT/output_buffer/waddr_wrapped
+add wave -noupdate /sysarr_MEISSA_top_tb/DUT/u_mul_grid/clk
+add wave -noupdate /sysarr_MEISSA_top_tb/DUT/u_mul_grid/nRST
+add wave -noupdate /sysarr_MEISSA_top_tb/DUT/u_mul_grid/sa_inputs
+add wave -noupdate /sysarr_MEISSA_top_tb/DUT/u_mul_grid/act_en
+add wave -noupdate /sysarr_MEISSA_top_tb/DUT/u_mul_grid/weight_en
+add wave -noupdate /sysarr_MEISSA_top_tb/DUT/u_mul_grid/mul_stall
+add wave -noupdate /sysarr_MEISSA_top_tb/DUT/u_mul_grid/prod_r
+add wave -noupdate /sysarr_MEISSA_top_tb/DUT/u_mul_grid/a_pipe
+add wave -noupdate /sysarr_MEISSA_top_tb/DUT/u_mul_grid/b_pipe
+add wave -noupdate /sysarr_MEISSA_top_tb/DUT/u_mul_grid/prod
+add wave -noupdate /sysarr_MEISSA_top_tb/DUT/u_mul_grid/load_w
+add wave -noupdate /sysarr_MEISSA_top_tb/DUT/u_mul_grid/load_a
+add wave -noupdate -subitemconfig {{/sysarr_MEISSA_top_tb/DUT/col[31]/u_piped_addr_tree/stage_data[0]} -expand} {/sysarr_MEISSA_top_tb/DUT/col[31]/u_piped_addr_tree/stage_data}
+add wave -noupdate {/sysarr_MEISSA_top_tb/DUT/u_mul_grid/row[31]/column[0]/u_mul/clk}
+add wave -noupdate {/sysarr_MEISSA_top_tb/DUT/u_mul_grid/row[31]/column[0]/u_mul/nRST}
+add wave -noupdate {/sysarr_MEISSA_top_tb/DUT/u_mul_grid/row[31]/column[0]/u_mul/start}
+add wave -noupdate {/sysarr_MEISSA_top_tb/DUT/u_mul_grid/row[31]/column[0]/u_mul/a}
+add wave -noupdate {/sysarr_MEISSA_top_tb/DUT/u_mul_grid/row[31]/column[0]/u_mul/b}
+add wave -noupdate {/sysarr_MEISSA_top_tb/DUT/u_mul_grid/row[31]/column[0]/u_mul/result}
+add wave -noupdate {/sysarr_MEISSA_top_tb/DUT/u_mul_grid/row[31]/column[0]/u_mul/done}
+add wave -noupdate {/sysarr_MEISSA_top_tb/DUT/u_mul_grid/row[31]/column[1]/u_mul/a}
+add wave -noupdate {/sysarr_MEISSA_top_tb/DUT/u_mul_grid/row[31]/column[1]/u_mul/b}
+add wave -noupdate {/sysarr_MEISSA_top_tb/DUT/u_mul_grid/row[31]/column[1]/u_mul/result}
+add wave -noupdate {/sysarr_MEISSA_top_tb/DUT/u_mul_grid/row[31]/column[1]/u_mul/done}
 TreeUpdate [SetDefaultTree]
-WaveRestoreCursors {{Cursor 1} {40919 ps} 0}
+WaveRestoreCursors {{Cursor 1} {1490193 ps} 0}
 quietly wave cursor active 1
 configure wave -namecolwidth 150
 configure wave -valuecolwidth 100
@@ -55,4 +79,4 @@ configure wave -griddelta 40
 configure wave -timeline 0
 configure wave -timelineunits ns
 update
-WaveRestoreZoom {0 ps} {599814 ps}
+WaveRestoreZoom {1220090 ps} {1819904 ps}

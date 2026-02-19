@@ -43,9 +43,9 @@ module sysarr_MEISSA_top #(
     genvar j,k;
     generate
         for (j = 0; j < N; j++) begin: col
-            for (k = 0; k < N; k++) begin: col_pack
+            /*for (k = 0; k < N; k++) begin: col_pack
                 assign col_prod[j][k] = mul_prod[k][j]; //pack mul_prod into 1D arr
-            end
+            end */
 
             pipelined_adder_tree #(
                 .N(N),
@@ -55,7 +55,7 @@ module sysarr_MEISSA_top #(
                 .clk(clk),
                 .nRST(nRST),
                 .stall(sysarr_stall),
-                .terms_in(col_prod[j]),
+                .terms_in(mul_prod[j]),
                 .psum_in(adder_tree_psum[j]),
                 .sum_out(adder_sum[j])
             );
