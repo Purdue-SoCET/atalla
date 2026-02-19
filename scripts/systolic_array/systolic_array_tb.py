@@ -26,13 +26,13 @@ PATH_TO_RESULT = ATALLA_ROOT / "scripts/systolic_array/systolic_array_tb_result.
 # Systolic array params
 # ---------------------------------------------------------------------
 latency = 40
-array_dim = 4
+array_dim = 32
 data_width = 16
 dtype = "fp16"
 seed = 777
 
 gen_test_vectors = True
-gen_pkg_file = False
+gen_pkg_file = True
 
 # ---------------------------------------------------------------------
 # Create tb package file

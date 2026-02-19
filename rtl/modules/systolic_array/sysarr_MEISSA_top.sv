@@ -134,5 +134,5 @@ module sysarr_MEISSA_top #(
 
     // Drive GSAU output interface
     // Pack N columns of DW bits into sa_array_output (full vector width)
-    assign gsau_if.sa_array_output[N - 2:0] = {adder_sum[N - 1], output_data[N - 2:0]};
+    assign gsau_if.sa_array_output = {adder_sum[N - 1], output_data[N - 2:0]};
 endmodule

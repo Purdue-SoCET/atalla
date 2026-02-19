@@ -224,8 +224,8 @@ module sysarr_MEISSA_top_tb();
 
   // Test Stimulus
   initial begin
-    $dumpfile("dump.vcd");  // For VCD format
-    $dumpvars(0, sysarr_MEISSA_top_tb);
+    //$dumpfile("dump.vcd");  // For VCD format
+    //$dumpvars(0, sysarr_MEISSA_top_tb);
 
     gsau_if.sa_array_in = '0;
     gsau_if.sa_array_in_partials = '0;

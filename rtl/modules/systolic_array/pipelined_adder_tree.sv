@@ -20,7 +20,7 @@ module pipelined_adder_tree #(
 
     // Inter-stage wires
     // stage_data[l][k]  – data at tree level l, element k
-    logic [TREE_DEPTH - 1:0][N - 1:0][DATA_WIDTH-1:0] stage_data;
+    logic [TREE_DEPTH:0][N - 1:0][DATA_WIDTH-1:0] stage_data;
 
     assign stage_data[0] = terms_in;
 
