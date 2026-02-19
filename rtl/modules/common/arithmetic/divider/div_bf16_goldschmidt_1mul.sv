@@ -70,8 +70,8 @@ module div_bf16_goldschmidt_1mul (
     // Initial Inputs/Outputs
     logic [15:0] mulm_1, muld_1, f_1;
 
-    assign muln_1 = (divif.in.operand1[14:7] == 8'h00) ? 16'h0000:{8'h00, (divif.in.operadn1[6:0] << 1), 1'b0};
-    assign muld_1 = (divif.in.operand1[14:7] == 8'h00) ? 16'h0000:{8'h00, (divif.in.operadn2[6:0] << 1), 1'b0};
+    assign muln_1 = (divif.in.operand1[14:7] == 8'h00) ? 16'h0000:{1'b1, divif.in.operadn1[14:0]};
+    assign muld_1 = (divif.in.operand1[14:7] == 8'h00) ? 16'h0000:{1'b1, divif.in.operadn2[14:0]};
     assign f_1 = (16'h7EF3 - divif.in.operand2 & 16'h7FFF) & 16'h7FFF;
 
     // Second Iteration Inputs/Outputs
@@ -82,11 +82,9 @@ module div_bf16_goldschmidt_1mul (
 
     // Final Output
     logic sign;
-    logic [7:0] exp;
     logic [15:0] n_fin, fin;
     assign sign = divif.in.operand1[15] ^ divif.in.operand2[15];
-    assign exp = outn[14:7] + divif.in.operand1[14:7] - divif.in.operand2[14:7];
-    assign n_fin = {sign, exp, outn[6:0]};
+    assign n_fin = {sign, outn[14:0]};
     assign divif.out.result = fin;
 
     // ----------------------------------------------------------------

@@ -35,9 +35,8 @@ endif
 lane_sequencer.sim lane_sequencer.wav: dut := lane_sequencer.sv,lane.sv
 veggie.sim veggie.wav: dut := veggie.sv
 
-div_bf16_goldschmidt_1mul.sim div_bf16_goldschmidt_1mul.wav: dut := div_bf16_goldschmidt_1mul.sv,mul_bf16.sv
-
-div_bf16pipeline_1mul.sim div_bf16pipeline_1mul.wav: dut := div_bf16pipeline_1mul.sv,mul_bf16.sv
+# Use the full relative path for the sub-module
+div_bf16_goldschmidt_1mul.sim: dut := div_bf16_goldschmidt_1mul.sv mul_bf16.sv addsub_bf16.sv
 
 # For lane, only list "roots"; siblings will be auto-included
 lane.sim lane.wav: dut := lane.sv,lane_fu_pt.sv,sqrt_bf16.sv,mul_bf16.sv,add_bf16.sv
@@ -194,24 +193,8 @@ test:
 	  done; \
 	  MODSRCS=$$(printf '%s\n' $$MODSRCS | sed '/^$$/d' | sort -u); \
 	else \
-<<<<<<< HEAD
-		if [ -n "$(dut)" ]; then \
-	    echo "[$@] compiling specific DUT files: $(dut)"; \
-	    for f in $$(echo "$(dut)" | tr ',' ' '); do \
-	      FOUND=$$(find $(MODROOT) -name "$$f" -print | head -1); \
-	      [ -n "$$FOUND" ] || { echo "Error: DUT file $$f not found in $(MODROOT)"; exit 1; }; \
-	      MODSRCS="$$MODSRCS $$FOUND"; \
-	    done; \
-
-	    MODSRCS=$$(printf '%s\n' $$MODSRCS | sed '/^$$/d' | sort -u); \
-	  else \
-	    echo "[$@] compiling all modules in: $$MOD_SEARCH_PATH"; \
-	    MODSRCS=$$(find $$MOD_SEARCH_PATH -type f -name '*.sv' ! -name '*_pkg.sv' -print 2>/dev/null | sort); \
-	  fi; \
-=======
 	  echo "[$@] compiling all modules in: $$MOD_SEARCH_PATH"; \
 	  MODSRCS=$$(find $$MOD_SEARCH_PATH -type f -name '*.sv' ! -name '*_pkg.sv' -print 2>/dev/null | sort); \
->>>>>>> ea449e0ce91c4e5b990c87c315ffa94240dec135
 	fi; \
 	\
 	# 4. Testbench Sources \

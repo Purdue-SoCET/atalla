@@ -16,7 +16,7 @@ module lane_sequencer(
 
     import vector_pkg::*;
 
-    // make sure slice_w is pow^2
+    // erm make sure slice_w is pow^2
     initial begin
         assert (2**$clog2(SLICE_W) == SLICE_W) else $fatal("SLICE_W must be a power of 2");
     end
@@ -32,7 +32,7 @@ module lane_sequencer(
     logic valid_reg, valid_reg_n; // register for valid signal
     logic ready_reg, ready_reg_n; // register for thr ready signal
 
-    logic last_elem; // tracking last element to know counter reset and valid/readys
+    logic last_elem;
     assign last_elem = (elem_idx == IDX_WIDTH'(SLICE_W - 1));
 
     // This is the counter to track which element sequencer is on in the slice, it resets when completed a full slice or when theres new input
@@ -103,7 +103,7 @@ module lane_sequencer(
     always_comb begin: valid_comb
         valid_reg_n = valid_reg;
 
-        // Assert valid when accept a new slice
+        // Assert valid when we accept a new slice
         if (seq_if.in.valid_in & ready_reg) begin
             valid_reg_n = 1'b1;
         end
