@@ -3,6 +3,7 @@ Vector top level
 
 This is the full integration of the vector core
 
+This 100% doesnt meet code standards, but i have woreked 46 hours over the course of 6 days so ill fix it when i have time
 Owner: Jacob Walter
 */
 `include "vector_pkg.vh"
@@ -10,12 +11,16 @@ Owner: Jacob Walter
 `include "lane_if.vh"
 `include "result_collector_if.vh"
 
+
 module vector_datapath (
     input  logic     CLK,
     input  logic     nRST,
-    vector_if.vif    vif    
+    vector_if.vif    vif,
+    scpad_if.vec_frontend  sif,
+    gsau_control_unit_if.gsau gsauif
 );
     import vector_pkg::*;
+    import scpad_pkg::*;
 
     logic [LANE_FU_COUNT-1:0][NUM_LANES-1:0] fu_lane_readies;
 
@@ -113,7 +118,51 @@ module vector_datapath (
     
 
     
+    //VLSU
+    vlsu_if vlsuif (.clk(CLK), .n_rst(nRST));
+    vlsu vlsu (
+        .vif(vlsuif),
+        .sif(sif)
+    );
 
-    
+    //connects the vlsu to the vif
+    //this sucks right now i will make it way more intelligent later, can be a L2 problem
+    genvar vlsu_i;
+    generate : gen_vlsu_connections
+        for (vlsu_i = 0; vlsu_i < NUM_SCPADS, vlsu_i++) begin
+            vlsuif.sched_req[vlsu_i] = vif.vlsu_in.sched_req[vlsu_i];
+            vlsuif.vrf_store[vlsu_i] = vif.vlsu_in.vrf_data[vlsu_i];
+            vlsuif.wb_ready[vlsu_i] = vif.vlsu_in.wb_ready[vlsu_i];
+
+            vif.vlsu_out.vlsu_out.wb[vlsu_i] = vlsuif.wb_out[vlsu_i];
+            vif.vlsu_out.vlsu_status[vlsu_i] =  vlsuif.status[vlsu_i];
+            vif.vlsu_out.sched_res[vlsu_i] = vlsuif.sched_res[vlsu_i];
+        end
+    endgenerate
+
+
+    //GSAU
+    gsau_control_unit (
+        .clk(CLK),
+        .nRST(nRST),
+        .gsau_port(gsauif)
+    );
+
+    //connect the gsau to the vif
+    //again this is horrible but fixing this can be a L2 problem
+    always_comb begin : gsau_connections
+        //non syarr gsau inputs
+        gsauif.veg_vdata1 = vif.gsau_in.veg_vdata1;
+        gsauif.veg_vdata2 = vif.gsau_in.veg_vdata2;
+        gsauif.sb_vdst =  vif.gsau_in.vd;
+        gsauif.sb_valid_in = vif.gsau_in.valid_in;
+        gsauif.sb_weight = vif.gasu_in.weight;
+        gsauif.wb_ready_in = vif.gsau_in.wb_ready;
+        //non sysarr gsau outputs
+        vif.gsau_out.ready_out = gsauif.sb_ready_out;
+        vif.gsau_out.psum = gsauif.wb_psum;
+        vif.gsau_out.vd = gsauif.sb_vdst;
+        vif.gsau_out.wb_valid = gsauif.wb_valid_out;
+    end
 
 endmodule
