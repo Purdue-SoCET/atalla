@@ -1,18 +1,19 @@
 `timescale 1ns/1ps
 `include "execution_unit_if.sv"
+import execution_unit_types_pkg::*;
 
 module xbar_4x5_exec_comb
 (
-  input  execution_unit_if.in_DEC_t slot_1,
-  input  execution_unit_if.in_DEC_t slot_2,
-  input  execution_unit_if.in_DEC_t slot_3,
-  input  execution_unit_if.in_DEC_t slot_4,
+  input  execution_unit_types_pkg::in_DEC_t slot_1,
+  input  execution_unit_types_pkg::in_DEC_t slot_2,
+  input  execution_unit_types_pkg::in_DEC_t slot_3,
+  input  execution_unit_types_pkg::in_DEC_t slot_4,
 
-  output execution_unit_if.in_DEC_t ex1_in,
-  output execution_unit_if.in_DEC_t ex2_in,
-  output execution_unit_if.in_DEC_t ex3_in,
-  output execution_unit_if.in_DEC_t ex4_in,
-  output execution_unit_if.in_DEC_t ex5_in,
+  output execution_unit_types_pkg::in_DEC_t ex1_in,
+  output execution_unit_types_pkg::in_DEC_t ex2_in,
+  output execution_unit_types_pkg::in_DEC_t ex3_in,
+  output execution_unit_types_pkg::in_DEC_t ex4_in,
+  output execution_unit_types_pkg::in_DEC_t ex5_in,
 
   output logic ex1_valid,
   output logic ex2_valid,
@@ -30,7 +31,7 @@ module xbar_4x5_exec_comb
     DEST_EX5  = 3'd5
   } dest_e;
 
-  function automatic dest_e decode_dest(input execution_unit_if.in_DEC_t s);
+  function automatic dest_e decode_dest(input execution_unit_types_pkg::in_DEC_t s);
     // If multiple valids are high in one slot, this imposes priority.
     if (s.alu_valid || s.control_valid) begin
       return DEST_EX1;
