@@ -37,6 +37,8 @@ veggie.sim veggie.wav: dut := veggie.sv
 
 div_bf16_goldschmidt_1mul.sim div_bf16_goldschmidt_1mul.wav: dut := div_bf16_goldschmidt_1mul.sv,mul_bf16.sv
 
+div_bf16pipeline_1mul.sim div_bf16pipeline_1mul.wav: dut := div_bf16pipeline_1mul.sv,mul_bf16.sv
+
 # For lane, only list "roots"; siblings will be auto-included
 lane.sim lane.wav: dut := lane.sv,lane_fu_pt.sv,sqrt_bf16.sv,mul_bf16.sv,add_bf16.sv
 

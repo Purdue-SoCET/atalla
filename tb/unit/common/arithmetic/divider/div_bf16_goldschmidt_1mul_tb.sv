@@ -109,7 +109,7 @@ module div_bf16_goldschmidt_1mul_tb;
     if (is_nan(divif.out.result) && is_nan(expected_in)) begin
       // Both NaN — pass
     end else if (divif.out.result !== expected_in) begin
-      if ((divif.out.result[15] == expected_in[15]) && (abs_diff <= 2)) begin
+      if ((divif.out.result[15] == expected_in[15]) && (abs_diff <= 2)) begin // ABS_DIFF IS ULP RANGE!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
         $display("INFO: Result: %h (expected %h). Result off by %.2d ULP - Acceptable for Goldschmidt.", divif.out.result, expected_in, abs_diff);
       end else begin
          $display("ERROR @%0t [%s]: %h / %h = %h (expected %h)", 
@@ -325,14 +325,14 @@ module div_bf16_goldschmidt_1mul_tb;
       run_file_tests("tb/unit/vector/test_cases/div_fp16_subnormal_output_tests_10K.csv", "SUBNORMAL_OUTPUT_TESTS");
       subnormal_output_tests = errors - normal_tests - subnormal_input_tests;
     end else if (EXP_WIDTH == 8 && MANT_WIDTH == 7) begin
-      // BF16 test files (if available)
-      run_file_tests("tb/unit/vector/test_cases/vdiv_bf16_normal_tests_10K.csv", "BF16_NORMAL_TESTS");
+      // BF16 test files (if available) --------------------------------------------------------------------------------------------------------------------------
+      run_file_tests("tb/unit/common/arithmetic/divider/test_cases/div_bf16_normal_tests_10K.csv", "BF16_NORMAL_TESTS");
       normal_tests = errors;
 
-      run_file_tests("tb/unit/vector/test_cases/vdiv_bf16_subnormal_input_tests_10K.csv", "BF16_SUBNORMAL_INPUT_TESTS");
+      run_file_tests("tb/unit/common/arithmetic/divider/test_cases/div_bf16_subnormal_input_tests_10K.csv", "BF16_SUBNORMAL_INPUT_TESTS");
       subnormal_input_tests = errors - normal_tests;
 
-      run_file_tests("tb/unit/vector/test_cases/vdiv_bf16_subnormal_output_tests_10K.csv", "BF16_SUBNORMAL_OUTPUT_TESTS");
+      run_file_tests("tb/unit/common/arithmetic/divider/test_cases/div_bf16_subnormal_output_tests_10K.csv", "BF16_SUBNORMAL_OUTPUT_TESTS");
       subnormal_output_tests = errors - normal_tests - subnormal_input_tests;
     end else begin
       $display("INFO: No file-based tests available for this custom format");

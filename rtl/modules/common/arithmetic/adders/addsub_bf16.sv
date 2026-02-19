@@ -221,7 +221,7 @@ module addsub_bf16 (
     logic [9:0] normalized_mantissa_sum;
     logic [3:0] norm_shift;
 
-    left_shift_bf16 normalizer (
+    left_shift_add_bf16 normalizer (
         .fraction      (mantissa_sum[9:0]),
         .result        (normalized_mantissa_sum),
         .shifted_amount(norm_shift)
