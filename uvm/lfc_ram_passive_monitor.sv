@@ -46,7 +46,8 @@ class lfc_ram_passive_monitor #(parameter NUM_BANKS = 4) extends uvm_monitor;
 
       for (int b = 0; b < vif.NUM_BANKS; b++) begin
         // sample read or write
-        if ((vif.ram_mem_REN[b] && ~old_ram_mem_REN[b]) || (vif.ram_mem_WEN[b] && ~old_ram_mem_WEN[b])) begin
+        if ((vif.ram_mem_REN[b] && ~old_ram_mem_REN[b]) || (vif.ram_mem_WEN[b] && ~old_ram_mem_WEN[b]) || 
+	    ($isunknown(vif.ram_mem_REN[b]) && $isunknown(vif.ram_mem_WEN[b]))) begin
           lfc_ram_transaction tr;
           tr = lfc_ram_transaction #()::type_id::create($sformatf("ram_tr_bank%0d", b));
 
