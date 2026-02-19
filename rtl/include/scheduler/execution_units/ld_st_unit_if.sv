@@ -5,7 +5,7 @@ interface ld_st_unit_if;
 
 
     //to dcache
-    logic WEN, REN, halfWord_dcache;
+    logic WEN, REN;
     logic [31:0] data_store, data_addr;
 
     //from dcache
@@ -30,11 +30,11 @@ interface ld_st_unit_if;
 
     modport ld_st (
         input rdIn, halfWord, valid_in, ld, st, data_load, hit, ready_out, addr, data_in,
-        output WEN, REN, data_store, data_addr, ready_in, data_out, rdOut, valid_out, halfWord_dcache
+        output WEN, REN, data_store, data_addr, ready_in, data_out, rdOut, valid_out
     );
 
     modport tb (
-        input WEN, REN, data_store, data_addr, ready_in, data_out, rdOut, valid_out, halfWord_dcache,
+        input WEN, REN, data_store, data_addr, ready_in, data_out, rdOut, valid_out,
         output rdIn, halfWord, valid_in, ld, st, data_load, hit, ready_out, addr, data_in
     );
 
