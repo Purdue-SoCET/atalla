@@ -39,7 +39,7 @@ module mul_grid (
         if (!nRST) begin
             col_starts <= '0;
         end else if (!mul_stall) begin
-            col_starts <= {col_starts[N-1:1], act_en};
+            col_starts <= {col_starts[N-2:0], act_en};
         end
     end
 
