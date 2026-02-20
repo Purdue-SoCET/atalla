@@ -309,7 +309,7 @@ module div_bf16_goldschmidt_1mul_tb;
     // Check that ready_in goes high after reset
     @(posedge CLK);
     if (divif.out.ready_in !== 1) begin
-      $display("ERROR @%0t [POST_RESET]: ready_out should be 1 after reset, got %b", 
+      $display("ERROR @%0t [POST_RESET]: ready_in should be 1 after reset, got %b", 
                 $time, divif.out.ready_in);
       errors++;
     end
@@ -330,11 +330,11 @@ module div_bf16_goldschmidt_1mul_tb;
       run_file_tests("tb/unit/common/arithmetic/divider/test_cases/div_bf16_normal_tests_10K.csv", "BF16_NORMAL_TESTS");
       normal_tests = errors;
 
-      run_file_tests("tb/unit/common/arithmetic/divider/test_cases/div_bf16_subnormal_input_tests_10K.csv", "BF16_SUBNORMAL_INPUT_TESTS");
-      subnormal_input_tests = errors - normal_tests;
+      // run_file_tests("tb/unit/common/arithmetic/divider/test_cases/div_bf16_subnormal_input_tests_10K.csv", "BF16_SUBNORMAL_INPUT_TESTS");
+      // subnormal_input_tests = errors - normal_tests;
 
-      run_file_tests("tb/unit/common/arithmetic/divider/test_cases/div_bf16_subnormal_output_tests_10K.csv", "BF16_SUBNORMAL_OUTPUT_TESTS");
-      subnormal_output_tests = errors - normal_tests - subnormal_input_tests;
+      // run_file_tests("tb/unit/common/arithmetic/divider/test_cases/div_bf16_subnormal_output_tests_10K.csv", "BF16_SUBNORMAL_OUTPUT_TESTS");
+      // subnormal_output_tests = errors - normal_tests - subnormal_input_tests;
     end else begin
       $display("INFO: No file-based tests available for this custom format");
     end

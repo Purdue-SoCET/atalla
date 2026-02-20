@@ -50,7 +50,7 @@ module div_bf16_goldschmidt_1mul (
         .invalid()    // Figure out what the parameters of "invalid" are
     );
 
-    typedef enum logic [3:0] {
+    typedef enum logic [4:0] {
         INITIAL, // Initial guess, clock multiplier
         MULT1,   // Multiplication Process
         SUB1,    // Subtract for next F
@@ -100,14 +100,8 @@ module div_bf16_goldschmidt_1mul (
     // assign is_div_by_one = (op2_ftz[14:0] == 15'h3F80);
     // assign special_case = a_nan || a_inf || a_zero || b_nan || b_inf || b_zero || is_same_mag || is_div_by_one || special_case; 
 
-    logic [15:0] fast_f_out;
-    logic [7:0]  d_exp;
-    logic [6:0]  d_mant;
-    logic [12:0] fixed_d, fixed_f;
-    logic [7:0]  f_exp;
-    logic [6:0]  f_mant;
-
     always_comb begin : next_state
+        n_state = state;
         case(state)
             INITIAL:  n_state = MULT1;
             MULT1:    if(donen && doned) n_state = SUB1;
@@ -131,7 +125,7 @@ module div_bf16_goldschmidt_1mul (
         divif.out.valid_out = 0;
         case(state)
             INITIAL: begin
-                divif.out.ready_in = 1;
+                if(nRST) divif.out.ready_in = 1;
                 n_startn = 1;
                 n_startd = 1;
                 muln = muln_1;
@@ -161,18 +155,18 @@ module div_bf16_goldschmidt_1mul (
             S_DONE: begin
                 divif.out.valid_out = 1;
             end
-            default: begin
-                divif.out.valid_out = 1;
-            end
+            default: begin end
         endcase
     end
 
     always_ff @(posedge CLK, negedge nRST) begin
         if(~nRST) begin
+            state <= INITIAL;
             startn <= '0;
             startd <= '0;
             fin <= '0;
         end else begin
+            state <= n_state;
             startn <= n_startn;
             startd <= n_startd;
             fin <= n_fin;
