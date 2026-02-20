@@ -131,7 +131,7 @@ module sysarr_MEISSA_top_tb();
         gsau_if.sa_weight_en  = 1'b0;
         gsau_if.sa_array_in   = '0;
 
-        for (int column = 0; column < ARRAY_DIM; column++) begin
+        for (int column = ARRAY_DIM - 1; column >= 0; column--) begin
             while (!gsau_if.sa_ready_in) @(posedge CLK);
 
             // Pack column k of W into the bus
@@ -154,18 +154,31 @@ module sysarr_MEISSA_top_tb();
         gsau_if.sa_input_en = 1'b0;
         gsau_if.sa_array_in = '0;
 
-        for (int column = 0; column < ARRAY_DIM; column++) begin
+        for (int row = 0; row < ARRAY_DIM; row++) begin
             while (!gsau_if.sa_ready_in) @(posedge CLK);
 
             gsau_if.sa_array_in = '0;
-            for (int row = 0; row < ARRAY_DIM; row++) begin
-                gsau_if.sa_array_in[DATA_WIDTH * row +: DATA_WIDTH] = temp_inputs[row][column];
-                gsau_if.sa_array_in_partials[DATA_WIDTH * row +: DATA_WIDTH] = temp_partials[row][column];
+            for (int column = 0; column < ARRAY_DIM; column++) begin
+                gsau_if.sa_array_in[DATA_WIDTH * column +: DATA_WIDTH] = temp_inputs[row][column];
+                gsau_if.sa_array_in_partials[DATA_WIDTH * column +: DATA_WIDTH] = temp_partials[row][column];
             end
             gsau_if.sa_partial_en = 1;
             gsau_if.sa_input_en = 1'b1;
             @(posedge CLK);
         end
+
+        // for (int column = 0; column < ARRAY_DIM; column++) begin
+        //     while (!gsau_if.sa_ready_in) @(posedge CLK);
+
+        //     gsau_if.sa_array_in = '0;
+        //     for (int row = 0; row < ARRAY_DIM; row++) begin
+        //         gsau_if.sa_array_in[DATA_WIDTH * row +: DATA_WIDTH] = temp_inputs[row][column];
+        //         gsau_if.sa_array_in_partials[DATA_WIDTH * row +: DATA_WIDTH] = temp_partials[row][column];
+        //     end
+        //     gsau_if.sa_partial_en = 1;
+        //     gsau_if.sa_input_en = 1'b1;
+        //     @(posedge CLK);
+        // end
 
         gsau_if.sa_input_en = 1'b0;
         gsau_if.sa_array_in = '0;
