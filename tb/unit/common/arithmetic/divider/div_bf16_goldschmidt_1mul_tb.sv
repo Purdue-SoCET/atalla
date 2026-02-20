@@ -309,7 +309,7 @@ module div_bf16_goldschmidt_1mul_tb;
     // Check that ready_in goes high after reset
     @(posedge CLK);
     if (divif.out.ready_in !== 1) begin
-      $display("ERROR @%0t [POST_RESET]: ready_out should be 1 after reset, got %b", 
+      $display("ERROR @%0t [POST_RESET]: ready_in should be 1 after reset, got %b", 
                 $time, divif.out.ready_in);
       errors++;
     end

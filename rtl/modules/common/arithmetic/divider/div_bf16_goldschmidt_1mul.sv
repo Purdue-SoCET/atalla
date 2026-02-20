@@ -109,7 +109,7 @@ module div_bf16_goldschmidt_1mul (
 
     always_comb begin : next_state
         case(state)
-            INITIAL:  n_state = MULT1;
+            INITIAL:  if (divif.in.valid_in) n_state = MULT1;
             MULT1:    if(donen && doned) n_state = SUB1;
             SUB1:     n_state = SUB2;
             SUB2:     n_state = INITIAL2;
@@ -131,7 +131,7 @@ module div_bf16_goldschmidt_1mul (
         divif.out.valid_out = 0;
         case(state)
             INITIAL: begin
-                divif.out.ready_in = 1;
+                if (nRST) divif.out.ready_in = 1;
                 n_startn = 1;
                 n_startd = 1;
                 muln = muln_1;
@@ -162,17 +162,20 @@ module div_bf16_goldschmidt_1mul (
                 divif.out.valid_out = 1;
             end
             default: begin
-                divif.out.valid_out = 1;
+                divif.out.valid_out = 0;
+                divif.out.ready_in = 0;
             end
         endcase
     end
 
     always_ff @(posedge CLK, negedge nRST) begin
         if(~nRST) begin
+            state <= INITIAL;
             startn <= '0;
             startd <= '0;
             fin <= '0;
         end else begin
+            state <= n_state;
             startn <= n_startn;
             startd <= n_startd;
             fin <= n_fin;
