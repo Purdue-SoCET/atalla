@@ -11,7 +11,7 @@ module div_bf16_goldschmidt_1mul (
     localparam [15:0] TWO = 16'h4000;
     logic [15:0] qNaN = 16'h7FC0; // NaN
 
-    typedef enum logic [3:0] {
+    typedef enum logic [2:0] {
         INITIAL, // Initial guess, clock multiplier
         MULT1,   // Multiplication Process
         SUB1,    // Subtract for next F
@@ -19,8 +19,7 @@ module div_bf16_goldschmidt_1mul (
         INITIAL2,// Let SUB values sit in the register inputs of multiplication    
         MULT2,   // Multiplication Process
         EXP,     // Exponent and Sign Calculations
-        DONE,    // Self Explanatory
-        S_DONE   // Subnormal Output
+        DONE    // Self Explanatory
     } state_t;
 
 // SIGNAL DECLARATIONS
@@ -164,7 +163,6 @@ module div_bf16_goldschmidt_1mul (
             MULT2:    if(donen && doned) n_state = EXP;
             EXP:      n_state = DONE;
             DONE:     if(divif.in.ready_out) n_state = INITIAL;
-            S_DONE:   if(divif.in.ready_out) n_state = INITIAL;
             default:  n_state = INITIAL;
         endcase
     end
@@ -230,9 +228,6 @@ module div_bf16_goldschmidt_1mul (
                 f = iter1_f;
             end
             DONE: begin
-                divif.out.valid_out = 1;
-            end
-            S_DONE: begin
                 divif.out.valid_out = 1;
             end
             default: begin
