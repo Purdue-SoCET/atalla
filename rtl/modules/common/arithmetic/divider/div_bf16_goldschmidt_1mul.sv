@@ -36,7 +36,9 @@ module div_bf16_goldschmidt_1mul (
 
     // Pipeline Registers
     logic [15:0] iter1_outn, iter1_outd, iter1_f;
+    logic [15:0] n_iter1_outn, n_iter1_outd, n_iter1_f;
     logic [15:0] fin;
+    logic [15:0] next_fin;
 
     // Datapath and Math Signals
     logic [15:0] muln_1, muld_1, f_1;
@@ -193,6 +195,26 @@ module div_bf16_goldschmidt_1mul (
         divif.out.ready_in = 0;
         divif.out.valid_out = 0;
 
+        n_iter1_outn = iter1_outn;
+        n_iter1_outd = iter1_outd;
+        n_iter1_f = iter1_f;
+
+        next_fin = fin;
+
+        if (state == INITIAL && divif.in.valid_in && is_special) begin
+            next_fin = special_result;
+        end
+        if (state == MULT1 && donen && doned) begin
+            n_iter1_outn = outn;
+            n_iter1_outd = outd;
+        end
+        if (state == SUB2) begin
+            n_iter1_f = subout;
+        end
+        if (state == MULT2 && donen && doned) begin
+            next_fin = n_fin;
+        end
+
         case(state)
             INITIAL: begin
                 if (nRST) divif.out.ready_in = 1;
@@ -252,19 +274,10 @@ module div_bf16_goldschmidt_1mul (
             state <= n_state;
             startn <= n_startn;
             startd <= n_startd;
-            if (state == MULT1 && donen && doned) begin
-                iter1_outn <= outn;
-                iter1_outd <= outd;
-            end
-            if (state == SUB2) begin
-                iter1_f <= subout;
-            end
-            if (state == INITIAL && divif.in.valid_in && is_special) begin
-                fin <= special_result;
-            end 
-            else if (state == MULT2 && donen && doned) begin
-                fin <= n_fin;
-            end
+            iter1_outn <= n_iter1_outn;
+            iter1_outd <= n_iter1_outd;
+            iter1_f <= n_iter1_f;
+            fin <= next_fin;
         end
     end
 
