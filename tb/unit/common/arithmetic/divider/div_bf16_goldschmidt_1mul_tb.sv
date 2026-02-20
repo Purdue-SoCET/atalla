@@ -329,6 +329,8 @@ module div_bf16_goldschmidt_1mul_tb;
       // BF16 test files (if available) --------------------------------------------------------------------------------------------------------------------------
       run_file_tests("tb/unit/common/arithmetic/divider/test_cases/div_bf16_normal_tests_10K.csv", "BF16_NORMAL_TESTS");
       normal_tests = errors;
+//      run_file_tests("tb/unit/common/arithmetic/divider/test_cases/div_bf16_normal_test.csv", "BF16_NORMAL_TEST");
+//      normal_tests = errors;
 
       run_file_tests("tb/unit/common/arithmetic/divider/test_cases/div_bf16_subnormal_input_tests_10K.csv", "BF16_SUBNORMAL_INPUT_TESTS");
       subnormal_input_tests = errors - normal_tests;
