@@ -59,49 +59,10 @@ package vector_pkg;
     typedef logic [$clog2(NUM_MASKS)-1:0] mask_sel_t;
     typedef logic [VLMAX-1:0]             vmask_t;
 
-    // -------------------------------------------------------------------------
-    // RISC-V encodings
-    // -------------------------------------------------------------------------
-    typedef struct packed {
-        logic   swizzle;
-        logic   transpose; // 0 = row, 1 = column
-        dtype_t datatype;
-        vsel_t  vd; 
-        logic   mask;
-        reg_t   rs1;       // base address
-        logic   sp;        // scratchpad0, scratchpad1
-        opcode_t opcode;
-        logic [INSTR_W-DTYPE_W-VIDX_W-RIDX_W-OPCODE_W-5:0] reserve;  
-    } rv_mtype_t;
-
-    typedef struct packed {
-        logic   mask;
-        vsel_t  vd;
-        vsel_t  vs1;
-        vsel_t  vs2;
-        opcode_t opcode;
-    } rv_rtype_t;
-
-    typedef struct packed {
-        logic   mask;
-        vsel_t  vd;
-        vsel_t  vs1;
-        imm_t   imm; 
-        opcode_t opcode;
-    } rv_itype_t;
-
     // =========================================================================
     // Data Structures
     // =========================================================================
-    typedef struct packed {
-        logic        sign;
-        logic [14:7] exp;
-        logic [6:0]  frac;
-    } bf16_t; 
-
-    typedef bf16_t [SLICE_W-1:0] slice_vt;   // per-lane slice
-    typedef logic  [SLICE_W-1:0] slice_mt;   // per-lane mask bits
-    typedef bf16_t [VLMAX-1:0]   vreg_t;     // full vector
+    typedef [ESZ-1:0][VLMAX-1:0]   vreg_t;     // full vector
 
     // Reduction op (used by VALU for VRMAX/VRMIN/VRSUM/VRSUB)
     typedef enum logic [1:0] {
@@ -110,26 +71,6 @@ package vector_pkg;
         VR_SUM = 2'b10,
         VR_SUB = 2'b11
     } valu_op_t;
-
-    // =========================================================================
-    // Top-Level Control
-    // =========================================================================
-    typedef struct packed {
-        logic    wen;          // write enable
-        vsel_t   vwsel;        // vector write select 
-        logic [2:0] valid;     // valid FU bits
-        logic [4:0] vop;       // Vector op for ALU (legacy)
-        dtype_t  datatype;     // FP16, INT32, etc.
-        logic    vm; 
-        logic    rm;
-        logic [1:0] sp;
-        logic    swizzle;
-        logic    memtovreg;
-        logic    sp_write;
-        logic    sp_read;
-        vl_t     vl;
-        logic [4:0] shift;     // TBD
-    } control_t;
 
     // =========================================================================
     // Veggie interface structs
@@ -226,16 +167,6 @@ package vector_pkg;
         EXP  = 3'b011,
         SQRT = 3'b100
     } fu_t;
-
-    // Metadata carried alongside each element through the lane
-    typedef struct packed {
-        vsel_t      vd;
-        slice_idx_t elem_idx;
-        logic       last;      // marks last element of the vector
-        logic [7:0] dbg_seq;   // debug sequence number for tracing
-        logic       rm;        // reduction mode flag
-    } meta_t;
-
     
     // Lane sequencer in/out (per lane, per issue slot)
     typedef struct packed {
@@ -264,7 +195,7 @@ package vector_pkg;
         logic [NUM_LANES-1:0] mask;
         logic wb_ready;
         logic [NUM_LANES-1:0][ESZ-1:0] lane_input;
-        logic [7:0]     vd_input;
+        logic [VIDX_W-1:0]     vd_input;
     } result_collector_in_t;
 
     typedef struct packed {
@@ -272,7 +203,7 @@ package vector_pkg;
         logic wb_valid;
 
         vreg_t          vector_output;
-        logic [7:0]     vd_output;
+        logic [VIDX_W-1:0]     vd_output;
     } result_collector_out_t;
 
     // =========================================================================
@@ -280,9 +211,9 @@ package vector_pkg;
     // =========================================================================
     typedef struct packed {
         logic input_valid;
-        logic [SLICE_W-1:0][15:0] v1, v2;
+        logic [SLICE_W-1:0][ESZ-1:0] v1, v2;
         fu_t usel;
-        logic [7:0] vd;
+        logic [VIDX_W-1:0] vd;
         logic rm;
         logic [SLICE_W-1:0] mask;
         valu_op_t alu_op;
@@ -297,7 +228,7 @@ package vector_pkg;
         logic [ESZ-1:0] result;
         logic wb_valid;
         logic rm;
-        logic [7:0] vd;
+        logic [VIDX_W-1:0] vd;
         logic input_ready;
         logic mask;
     } functional_unit_out_t;
@@ -308,7 +239,7 @@ package vector_pkg;
         logic [LANE_ISSUE_W-1:0][SLICE_W - 1:0][ESZ - 1:0] v1;
         logic [LANE_ISSUE_W-1:0][SLICE_W - 1:0][ESZ - 1:0] v2;
         fu_t  [LANE_ISSUE_W-1:0] usel;
-        logic [LANE_ISSUE_W-1:0][7:0] vd;
+        logic [LANE_ISSUE_W-1:0][VIDX_W-1:0] vd;
         logic [LANE_ISSUE_W-1:0] rm;
         logic [LANE_ISSUE_W-1:0][SLICE_W - 1:0] mask;
         valu_op_t [LANE_ISSUE_W-1:0] aluop;
