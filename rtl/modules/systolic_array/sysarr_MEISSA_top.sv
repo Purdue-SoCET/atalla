@@ -56,7 +56,7 @@ module sysarr_MEISSA_top #(
                 .nRST(nRST),
                 .stall(sysarr_stall),
                 .terms_in(mul_prod[j]),
-                .psum_in(adder_tree_psum[j]),
+                .psum_in(512'b0),
                 .sum_out(adder_sum[j])
             );
         end
@@ -69,7 +69,7 @@ module sysarr_MEISSA_top #(
      * $clog2(N) * ADD_LATENCY - Adder Tree latency (num stages * delay per stage)
      * ADD_LATENCY - last adder for psums
     */
-    localparam TOTAL_DELAY = N + MUL_LATENCY + $clog2(N) * ADD_LATENCY + ADD_LATENCY;
+    localparam TOTAL_DELAY = N + MUL_LATENCY + $clog2(N) * ADD_LATENCY + ADD_LATENCY + 2;
     logic [TOTAL_DELAY - 1:0] valid_bits;
     // generate;
     //     for (genvar i = 0; i < (TOTAL_DELAY); i++) begin
@@ -94,7 +94,7 @@ module sysarr_MEISSA_top #(
             valid_bits <= '0;
         end else begin
             if (!sysarr_stall) begin
-                valid_bits <= {valid_bits[TOTAL_DELAY - 2 : 0], gsau_if.sa_input_en};
+                valid_bits <= {valid_bits[TOTAL_DELAY - 1 : 0], gsau_if.sa_input_en};
             end
         end
     end
@@ -134,5 +134,6 @@ module sysarr_MEISSA_top #(
 
     // Drive GSAU output interface
     // Pack N columns of DW bits into sa_array_output (full vector width)
-    assign gsau_if.sa_array_output = {adder_sum[N - 1], output_data[N - 2:0]};
+    // assign gsau_if.sa_array_output = {adder_sum[N - 1], output_data[N - 2:0]};
+    assign gsau_if.sa_array_output = output_data;
 endmodule

@@ -13,7 +13,7 @@ module skew_buffer #(
     localparam int READ_LATENCY      = 1,    // sram read latency
     localparam int WRITE_LATENCY     = 1,    // sram write latency (MUST be equal to read latency)
     // since first column gets 0 delay, last column can get NUM_COLS - 1 delay coefficient
-    localparam int SRAM_DEPTH = RECT_DELAY + (DELAY_SLOPE * (NUM_COLS - 1)) + 1,
+    localparam int SRAM_DEPTH = RECT_DELAY + (DELAY_SLOPE * (NUM_COLS - 1)) + 2,
     localparam int PTR_WIDTH = $clog2(SRAM_DEPTH)
 ) (
     input  logic clk, n_rst,
@@ -31,7 +31,7 @@ module skew_buffer #(
 
     always_ff @(posedge clk, negedge n_rst) begin : pointer_regs
         if (~n_rst) begin
-            wr_ptr <= RECT_DELAY; // initialize the skew in write pointer
+            wr_ptr <= RECT_DELAY + 1; // initialize the skew in write pointer
             rd_ptr <= '0;
         end else begin
             wr_ptr <= next_wr_ptr;
@@ -46,13 +46,13 @@ module skew_buffer #(
         // we're ALWAYS incrementing read & write pointers (when latency allows us to) UNLESS stall is high
         if (!stall) begin
             if (wr_ptr >= SRAM_DEPTH - 1) begin
-                next_wr_ptr = '0;
+                next_wr_ptr = 0;
             end else begin
                 next_wr_ptr = wr_ptr + 1;
             end
 
             if (rd_ptr >= SRAM_DEPTH - 1) begin
-                next_rd_ptr = '0;
+                next_rd_ptr = 0;
             end else begin
                 next_rd_ptr = rd_ptr + 1;
             end
@@ -66,13 +66,13 @@ module skew_buffer #(
     generate
         for (i = 0; i < NUM_COLS; i++) begin
             // Reverse Triangle logic, flip the direction of the slope
-                if (REVERSE_TRIANGLE) begin
+                if (!REVERSE_TRIANGLE) begin
                     assign waddr[i] = wr_ptr + (DELAY_SLOPE * (NUM_COLS - i - 1));
                 end else begin
                     assign waddr[i] = wr_ptr + (DELAY_SLOPE * i);
                 end
 
-                assign waddr_wrapped[i] = (waddr >= SRAM_DEPTH) ? waddr - SRAM_DEPTH : waddr; 
+                assign waddr_wrapped[i] = (waddr[i] >= SRAM_DEPTH) ? waddr[i] - SRAM_DEPTH : waddr[i]; 
 
             sram_bank #(
                 .READ_LATENCY  (READ_LATENCY),
@@ -92,7 +92,7 @@ module skew_buffer #(
 
                 .wen   (!stall),
                 .waddr (waddr_wrapped[i]),
-                .wdata (wr_data[NUM_COLS - i - 1]),
+                .wdata (wr_data[i]),
                 .wdone ()
             );
         end
