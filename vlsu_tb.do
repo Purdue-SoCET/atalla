@@ -12,6 +12,7 @@ add wave -noupdate {/vlsu_tb/vif/vrf_store[0]}
 add wave -noupdate -divider {CH0 Scratchpad}
 add wave -noupdate {/vlsu_tb/sif/vec_req[0]}
 add wave -noupdate {/vlsu_tb/sif/fe_vec_stall[0]}
+add wave -noupdate {/vlsu_tb/sif/fe_vec_res_stall[0]}
 add wave -noupdate {/vlsu_tb/sif/vec_res[0]}
 add wave -noupdate -divider {CH0 Writeback}
 add wave -noupdate {/vlsu_tb/vif/wb_out[0]}
@@ -23,10 +24,13 @@ add wave -noupdate /vlsu_tb/DUT0/lq_wr_en
 add wave -noupdate /vlsu_tb/DUT0/lq_shift
 add wave -noupdate /vlsu_tb/DUT0/lq_empty
 add wave -noupdate /vlsu_tb/DUT0/lq_full
-add wave -noupdate /vlsu_tb/DUT0/rq_wr_en
-add wave -noupdate /vlsu_tb/DUT0/rq_shift
-add wave -noupdate /vlsu_tb/DUT0/rq_empty
-add wave -noupdate /vlsu_tb/DUT0/rq_full
+add wave -noupdate /vlsu_tb/DUT0/skid_valid_r
+add wave -noupdate /vlsu_tb/DUT0/skid_valid_next
+add wave -noupdate /vlsu_tb/DUT0/skid_data_r
+add wave -noupdate /vlsu_tb/DUT0/resp_incoming
+add wave -noupdate /vlsu_tb/DUT0/is_load
+add wave -noupdate /vlsu_tb/DUT0/is_store
+add wave -noupdate /vlsu_tb/DUT0/can_accept
 add wave -noupdate -divider {===== Channel 1 =====}
 add wave -noupdate -divider {CH1 Scheduler}
 add wave -noupdate {/vlsu_tb/vif/sched_req[1]}
@@ -36,6 +40,7 @@ add wave -noupdate {/vlsu_tb/vif/vrf_store[1]}
 add wave -noupdate -divider {CH1 Scratchpad}
 add wave -noupdate {/vlsu_tb/sif/vec_req[1]}
 add wave -noupdate {/vlsu_tb/sif/fe_vec_stall[1]}
+add wave -noupdate {/vlsu_tb/sif/fe_vec_res_stall[1]}
 add wave -noupdate {/vlsu_tb/sif/vec_res[1]}
 add wave -noupdate -divider {CH1 Writeback}
 add wave -noupdate {/vlsu_tb/vif/wb_out[1]}
@@ -47,16 +52,15 @@ add wave -noupdate /vlsu_tb/DUT1/lq_wr_en
 add wave -noupdate /vlsu_tb/DUT1/lq_shift
 add wave -noupdate /vlsu_tb/DUT1/lq_empty
 add wave -noupdate /vlsu_tb/DUT1/lq_full
-add wave -noupdate /vlsu_tb/DUT1/rq_wr_en
-add wave -noupdate /vlsu_tb/DUT1/rq_shift
-add wave -noupdate /vlsu_tb/DUT1/rq_empty
-add wave -noupdate /vlsu_tb/DUT1/rq_full
+add wave -noupdate /vlsu_tb/DUT1/skid_valid_r
+add wave -noupdate /vlsu_tb/DUT1/skid_valid_next
+add wave -noupdate /vlsu_tb/DUT1/skid_data_r
 add wave -noupdate -divider Test
 add wave -noupdate -radix unsigned /vlsu_tb/test_num
 add wave -noupdate -radix unsigned /vlsu_tb/errors
 TreeUpdate [SetDefaultTree]
-WaveRestoreCursors {{Cursor 1} {2841 ns} 0}
-quietly wave cursor active 1
+WaveRestoreCursors {{Cursor 1} {0 ns} 0}
+quietly wave cursor active 0
 configure wave -namecolwidth 150
 configure wave -valuecolwidth 100
 configure wave -justifyvalue left
@@ -71,4 +75,4 @@ configure wave -griddelta 40
 configure wave -timeline 0
 configure wave -timelineunits ns
 update
-WaveRestoreZoom {2005 ns} {3005 ns}
+WaveRestoreZoom {2845 ns} {3845 ns}

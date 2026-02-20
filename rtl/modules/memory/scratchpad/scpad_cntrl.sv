@@ -11,7 +11,7 @@ module scpad_cntrl #(parameter logic [scpad_pkg::SCPAD_ID_WIDTH-1:0] IDX = '0) (
     logic rd_valid;  // Delayed rd_en - indicates dout is valid
     sel_req_t fifo_out;
 
-    // FIFO depth based on MAX_SRAM_DELAY, minimum 4 for proper sync_fifo operation
+    // FIFO depth based on MAX_SRAM_DELAY, minimum 4 for proper fifo operation
     // Add extra depth for burst handling
     localparam FIFO_DEPTH = (MAX_SRAM_DELAY < 4) ? 8 : (MAX_SRAM_DELAY + 8);
     
@@ -45,7 +45,7 @@ module scpad_cntrl #(parameter logic [scpad_pkg::SCPAD_ID_WIDTH-1:0] IDX = '0) (
     // Input comes from xbar_cntrl_req (after wxbar processing)
     // Output goes to SRAM banks via cntrl_spad_req
     // NOTE: wr_en gated by !full to prevent silent drops (though backpressure should prevent this)
-    sync_fifo #(.DEPTH(FIFO_DEPTH), .DWIDTH($bits(sel_req_t))) req_fifo (
+    fifo #(.DEPTH(FIFO_DEPTH), .DWIDTH($bits(sel_req_t))) req_fifo (
         .clk(srif.clk),
         .rstn(srif.n_rst),
         .wr_en(srif.xbar_cntrl_req[IDX].valid && !req_fifo_full),

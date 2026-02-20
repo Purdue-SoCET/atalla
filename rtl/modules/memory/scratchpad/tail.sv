@@ -9,13 +9,15 @@ module tail #(parameter logic [scpad_pkg::SCPAD_ID_WIDTH-1:0] IDX = '0) (scpad_i
     import scpad_pkg::*;
 
     // Combinational routing - no latch needed
-    // Route response to FE or BE based on src field
+    // Route read response to FE or BE based on src field
+    // Note: write completions never reach rxbar/tail — body only asserts
+    // spad_xbar_req.valid on reads (|bank_rdone). Write completions go
+    // through spad_cntrl_res directly to head, bypassing this path.
     always_comb begin
         tif.fe_res[IDX] = '0;
         tif.be_res[IDX] = '0;
 
-        if (tif.stomach_tail_res[IDX].valid && !tif.stomach_tail_res[IDX].write) begin
-            // Read response - route to correct destination with data
+        if (tif.stomach_tail_res[IDX].valid) begin
             case (tif.stomach_tail_res[IDX].src)
                 SRC_FE: begin
                     tif.fe_res[IDX].valid = 1'b1;
@@ -25,13 +27,6 @@ module tail #(parameter logic [scpad_pkg::SCPAD_ID_WIDTH-1:0] IDX = '0) (scpad_i
                     tif.be_res[IDX].valid = 1'b1;
                     tif.be_res[IDX].rdata = tif.stomach_tail_res[IDX].rdata;
                 end
-            endcase
-        end
-        else if (tif.stomach_tail_res[IDX].valid && tif.stomach_tail_res[IDX].write) begin
-            // Write response - just signal completion
-            case (tif.stomach_tail_res[IDX].src)
-                SRC_FE: tif.fe_res[IDX].valid = 1'b1;
-                SRC_BE: tif.be_res[IDX].valid = 1'b1;
             endcase
         end
     end

@@ -6,6 +6,9 @@
 //
 // NOTE: sync_fifo comes from ./rtl/modules/vector/sync_fifo.sv
 //       (compiled by Makefile via dut= flag).
+//
+// Scratchpad model honors fe_vec_res_stall: when asserted, responses
+// queue internally (mimicking rxbar FIFO) and vec_res is held stable.
 
 module vlsu_tb;
     import vector_pkg::*;
@@ -52,6 +55,12 @@ module vlsu_tb;
 
     // ------------------------------------------------------------------
     // Scratchpad response model - per-channel delay pipeline
+    //
+    // Models the scratchpad's SP_LATENCY-cycle read pipeline plus
+    // an internal output buffer (mimicking rxbar FIFO). When
+    // fe_vec_res_stall is asserted by the VLSU, responses queue
+    // in the output buffer and vec_res is held stable. When stall
+    // clears, the buffer drains one entry per cycle.
     // ------------------------------------------------------------------
     typedef struct packed {
         logic        valid;
@@ -59,11 +68,14 @@ module vlsu_tb;
         scpad_data_t rdata;
     } sp_pipe_entry_t;
 
-    logic sp_stall [NUM_SCPADS];
+    logic sp_stall [NUM_SCPADS]; // FE request stall (driven by test)
 
     generate
         for (genvar ch = 0; ch < NUM_SCPADS; ch++) begin : gen_sp_model
             sp_pipe_entry_t sp_pipe [SP_LATENCY];
+
+            // Output buffer (mimics rxbar FIFO)
+            sp_pipe_entry_t out_buf [$];
 
             assign sif.fe_vec_stall[ch] = sp_stall[ch];
 
@@ -74,11 +86,12 @@ module vlsu_tb;
                     sif.vec_res[ch].valid <= 1'b0;
                     sif.vec_res[ch].write <= 1'b0;
                     sif.vec_res[ch].rdata <= '0;
+                    out_buf.delete();
                 end else begin
+                    // ── Pipeline advance ──────────────────────
                     sp_pipe[0].valid <= sif.vec_req[ch].valid;
                     sp_pipe[0].write <= sif.vec_req[ch].write;
                     if (sif.vec_req[ch].valid && !sif.vec_req[ch].write) begin
-                        // Tag response data with channel + addr so we can distinguish
                         for (int e = 0; e < NUM_COLS; e++)
                             sp_pipe[0].rdata[e] <= ELEM_BITS'(sif.vec_req[ch].spad_addr[ELEM_BITS-1:0])
                                                  + ELEM_BITS'(e)
@@ -88,9 +101,26 @@ module vlsu_tb;
                     end
                     for (int d = 1; d < SP_LATENCY; d++)
                         sp_pipe[d] <= sp_pipe[d-1];
-                    sif.vec_res[ch].valid <= sp_pipe[SP_LATENCY-1].valid;
-                    sif.vec_res[ch].write <= sp_pipe[SP_LATENCY-1].write;
-                    sif.vec_res[ch].rdata <= sp_pipe[SP_LATENCY-1].rdata;
+
+                    // ── Pipeline end → output buffer ─────────
+                    if (sp_pipe[SP_LATENCY-1].valid)
+                        out_buf.push_back(sp_pipe[SP_LATENCY-1]);
+
+                    // ── Output buffer → vec_res ──────────────
+                    // Honor fe_vec_res_stall: hold vec_res when stalled
+                    if (!sif.fe_vec_res_stall[ch]) begin
+                        if (out_buf.size() > 0) begin
+                            automatic sp_pipe_entry_t head = out_buf.pop_front();
+                            sif.vec_res[ch].valid <= head.valid;
+                            sif.vec_res[ch].write <= head.write;
+                            sif.vec_res[ch].rdata <= head.rdata;
+                        end else begin
+                            sif.vec_res[ch].valid <= 1'b0;
+                            sif.vec_res[ch].write <= 1'b0;
+                            sif.vec_res[ch].rdata <= '0;
+                        end
+                    end
+                    // else: hold vec_res stable (stalled)
                 end
             end
         end
@@ -133,14 +163,14 @@ module vlsu_tb;
         `WB_READY   = 1'b1;
 
         waited = 0;
-        while ((`STATUS.busy || !DUT0.lq_empty || !DUT0.rq_empty) && waited < timeout_cycles) begin
+        while ((`STATUS.busy || !DUT0.lq_empty || DUT0.skid_valid_r) && waited < timeout_cycles) begin
             @(posedge CLK);
             waited++;
         end
 
         if (waited >= timeout_cycles) begin
-            $error("[%s] drain_and_idle TIMEOUT after %0d cycles (busy=%b, lq_empty=%b, rq_empty=%b)",
-                    test_name, timeout_cycles, `STATUS.busy, DUT0.lq_empty, DUT0.rq_empty);
+            $error("[%s] drain_and_idle TIMEOUT after %0d cycles (busy=%b, lq_empty=%b, skid=%b)",
+                    test_name, timeout_cycles, `STATUS.busy, DUT0.lq_empty, DUT0.skid_valid_r);
             errors++;
         end
 
@@ -161,8 +191,8 @@ module vlsu_tb;
         `WB_READY1  = 1'b1;
 
         waited = 0;
-        while ((`STATUS.busy  || !DUT0.lq_empty || !DUT0.rq_empty ||
-                `STATUS1.busy || !DUT1.lq_empty || !DUT1.rq_empty) && waited < timeout_cycles) begin
+        while ((`STATUS.busy  || !DUT0.lq_empty || DUT0.skid_valid_r ||
+                `STATUS1.busy || !DUT1.lq_empty || DUT1.skid_valid_r) && waited < timeout_cycles) begin
             @(posedge CLK);
             waited++;
         end
@@ -256,7 +286,7 @@ module vlsu_tb;
 
     initial begin
         $display("============================================================");
-        $display(" VLSU Single-Channel Testbench (Continuous Operation)");
+        $display(" VLSU Testbench (Skid Buffer, Dual-Channel)");
         $display("============================================================");
         errors      = 0;
         total_tests = 0;
@@ -299,8 +329,11 @@ module vlsu_tb;
             if (`STATUS.load_queue_full !== 1'b0) begin
                 $error("[%s] load_queue_full not 0 in reset", test_name); rst_err++;
             end
+            if (sif.fe_vec_res_stall[0] !== 1'b0) begin
+                $error("[%s] fe_vec_res_stall not 0 in reset", test_name); rst_err++;
+            end
             if (rst_err == 0)
-                $display("[%s] PASS - all outputs 0 upon reset", test_name);
+                $display("[%s] PASS - all outputs 0 upon reset (incl. fe_vec_res_stall)", test_name);
             else
                 errors += rst_err;
         end
@@ -569,9 +602,9 @@ module vlsu_tb;
         drain_and_idle();
 
         // ==============================================================
-        // T8 - FIFO full (backpressure blocks writeback, fills FIFO)
+        // T8 - Load queue full (backpressure blocks new issues)
         // ==============================================================
-        test_name = "T8_fifo_full";
+        test_name = "T8_load_queue_full";
         test_num  = 8;
         total_tests++;
         $display("\n--- Test %0d: %s ---", test_num, test_name);
@@ -832,14 +865,12 @@ module vlsu_tb;
             `SCHED_REQ1.vdst      = 8'd81;
 
             #1;
-            // Both should be accepted
             if (`SCHED_RES.ready !== 1'b1) begin
                 $error("[%s] CH0 ready should be 1", test_name); t14_err++;
             end
             if (`SCHED_RES1.ready !== 1'b1) begin
                 $error("[%s] CH1 ready should be 1", test_name); t14_err++;
             end
-            // Both scratchpads should see a request
             if (`SP_REQ.valid !== 1'b1) begin
                 $error("[%s] CH0 vec_req.valid should be 1", test_name); t14_err++;
             end
@@ -853,7 +884,6 @@ module vlsu_tb;
 
             // Wait for both writebacks in parallel
             fork
-                // CH0
                 begin
                     int w0;
                     w0 = 0;
@@ -869,7 +899,6 @@ module vlsu_tb;
                         $display("[%s] PASS - CH0 writeback v80 after %0d cycles", test_name, w0);
                     end
                 end
-                // CH1
                 begin
                     int w1;
                     w1 = 0;
@@ -889,7 +918,6 @@ module vlsu_tb;
 
             // Verify both channels independent — issue second burst
             @(posedge CLK);
-            // 3 loads on CH0, 2 loads on CH1, simultaneously
             for (int i = 0; i < 3; i++) begin
                 @(posedge CLK);
                 `SCHED_REQ.valid      = 1'b1;
@@ -910,14 +938,12 @@ module vlsu_tb;
             `SCHED_REQ.valid  = 1'b0;
             `SCHED_REQ1.valid = 1'b0;
 
-            // Collect both channels in parallel (fork/join)
             begin
                 int ch0_err, ch1_err;
                 ch0_err = 0;
                 ch1_err = 0;
 
                 fork
-                    // --- CH0: collect 3 writebacks ---
                     begin
                         for (int i = 0; i < 3; i++) begin
                             begin
@@ -938,8 +964,6 @@ module vlsu_tb;
                             end
                         end
                     end
-
-                    // --- CH1: collect 2 writebacks ---
                     begin
                         for (int i = 0; i < 2; i++) begin
                             begin
@@ -971,6 +995,300 @@ module vlsu_tb;
                 errors += t14_err;
         end
         drain_both();
+
+        // ==============================================================
+        // T15 - Skid buffer: capture on wb stall, drain on release
+        //
+        //       Issue a load, block writeback. Response arrives → must
+        //       bypass to wb_out (valid=1, ready=0) and capture into
+        //       skid. Verify fe_vec_res_stall asserts. Then release
+        //       wb_ready, verify drain and stall clears.
+        // ==============================================================
+        test_name = "T15_skid_capture_drain";
+        test_num  = 15;
+        total_tests++;
+        $display("\n--- Test %0d: %s ---", test_num, test_name);
+
+        begin
+            int t15_err;
+            t15_err = 0;
+
+            // Ensure stall is clear before test
+            if (sif.fe_vec_res_stall[0] !== 1'b0) begin
+                $error("[%s] fe_vec_res_stall not 0 at test start", test_name); t15_err++;
+            end
+
+            issue_load('h700, 8'd75);
+            `WB_READY = 1'b0;
+
+            // Wait for response to arrive + capture into skid
+            repeat (SP_LATENCY + 4) @(posedge CLK);
+
+            // wb_out should be presenting data (from skid or bypass)
+            if (!`WB_OUT.valid) begin
+                $error("[%s] WB valid should be 1 (response arrived, wb stalled)", test_name);
+                t15_err++;
+            end
+            if (`WB_OUT.vdst !== 8'd75) begin
+                $error("[%s] WB vdst expected v75, got v%0d", test_name, `WB_OUT.vdst);
+                t15_err++;
+            end
+
+            // Skid should be occupied → fe_vec_res_stall asserted
+            if (DUT0.skid_valid_r !== 1'b1) begin
+                $error("[%s] skid_valid_r should be 1 after wb stall", test_name); t15_err++;
+            end
+            if (sif.fe_vec_res_stall[0] !== 1'b1) begin
+                $error("[%s] fe_vec_res_stall should be 1 (skid occupied)", test_name); t15_err++;
+            end else begin
+                $display("[%s] PASS - skid captured, fe_vec_res_stall asserted", test_name);
+            end
+
+            // Hold for extra cycles - wb_out must remain stable
+            repeat (3) @(posedge CLK);
+            if (!`WB_OUT.valid || `WB_OUT.vdst !== 8'd75) begin
+                $error("[%s] WB not stable during continued stall", test_name); t15_err++;
+            end
+
+            // Release writeback
+            `WB_READY = 1'b1;
+            @(posedge CLK); // consumed this cycle
+            @(posedge CLK); // skid clears next cycle
+
+            if (DUT0.skid_valid_r !== 1'b0) begin
+                $error("[%s] skid_valid_r should be 0 after drain", test_name); t15_err++;
+            end
+            if (sif.fe_vec_res_stall[0] !== 1'b0) begin
+                $error("[%s] fe_vec_res_stall should be 0 after drain", test_name); t15_err++;
+            end else begin
+                $display("[%s] PASS - skid drained, fe_vec_res_stall cleared", test_name);
+            end
+
+            if (t15_err == 0)
+                $display("[%s] PASS - full skid capture/drain cycle verified", test_name);
+            else
+                errors += t15_err;
+        end
+        drain_and_idle();
+
+        // ==============================================================
+        // T16 - Skid buffer: multiple responses queued during wb stall
+        //
+        //       Issue 3 loads, block writeback. All 3 responses arrive
+        //       while stalled. First goes to skid, remaining 2 are
+        //       held by the SP model (rxbar FIFO). Release wb_ready
+        //       and verify all 3 drain in order.
+        // ==============================================================
+        test_name = "T16_skid_multi_response_stall";
+        test_num  = 16;
+        total_tests++;
+        $display("\n--- Test %0d: %s ---", test_num, test_name);
+
+        begin
+            int t16_err;
+            logic [VIDX_W-1:0] got_vd;
+            t16_err = 0;
+
+            `WB_READY = 1'b0;
+
+            // Issue 3 back-to-back loads
+            for (int i = 0; i < 3; i++) begin
+                @(posedge CLK);
+                `SCHED_REQ.valid     = 1'b1;
+                `SCHED_REQ.write     = 1'b0;
+                `SCHED_REQ.spad_addr = SCPAD_ADDR_WIDTH'('h800 + i * 'h10);
+                `SCHED_REQ.vdst      = VIDX_W'(230 + i);
+            end
+            @(posedge CLK);
+            `SCHED_REQ.valid = 1'b0;
+
+            // Wait for all responses to be produced by the pipeline
+            repeat (SP_LATENCY + 6) @(posedge CLK);
+
+            // Skid should be occupied
+            if (DUT0.skid_valid_r !== 1'b1) begin
+                $error("[%s] skid should be occupied", test_name); t16_err++;
+            end
+            if (sif.fe_vec_res_stall[0] !== 1'b1) begin
+                $error("[%s] fe_vec_res_stall should be 1", test_name); t16_err++;
+            end else begin
+                $display("[%s] PASS - stall asserted with queued responses", test_name);
+            end
+
+            // Release and collect all 3 in order.
+            //
+            // Timing note: sample vdst at @(posedge CLK) (pre-NBA) to
+            // capture the transfer data before the skid/FIFO advances.
+            // Then #1 after sampling lets NBA settle so the next
+            // iteration's @(posedge CLK) doesn't see stale valid.
+            `WB_READY = 1'b1;
+
+            for (int i = 0; i < 3; i++) begin
+                begin
+                    int cyc;
+                    cyc = 0;
+                    forever begin
+                        @(posedge CLK);
+                        if (`WB_OUT.valid || cyc >= SP_LATENCY + 15) break;
+                        cyc++;
+                    end
+                    if (!`WB_OUT.valid) begin
+                        $error("[%s] Timeout waiting for WB %0d", test_name, i);
+                        t16_err++;
+                    end
+                end
+                got_vd = `WB_OUT.vdst;   // sample pre-NBA
+                if (`WB_OUT.valid && got_vd !== VIDX_W'(230 + i)) begin
+                    $error("[%s] WB %0d: expected v%0d, got v%0d", test_name, i, 230 + i, got_vd);
+                    t16_err++;
+                end else if (`WB_OUT.valid) begin
+                    $display("[%s] PASS - WB %0d: v%0d (correct order)", test_name, i, got_vd);
+                end
+                #1;  // let NBA settle before next iteration
+            end
+
+            if (t16_err == 0)
+                $display("[%s] PASS - all 3 responses drained in order after stall", test_name);
+            else
+                errors += t16_err;
+        end
+        drain_and_idle();
+
+        // ==============================================================
+        // T17 - Skid bypass: zero-latency path when wb is ready
+        //
+        //       Issue a load with wb_ready=1. Response should bypass
+        //       the skid entirely - skid never gets occupied,
+        //       fe_vec_res_stall never asserts.
+        // ==============================================================
+        test_name = "T17_skid_bypass";
+        test_num  = 17;
+        total_tests++;
+        $display("\n--- Test %0d: %s ---", test_num, test_name);
+
+        begin
+            int t17_err;
+            logic skid_ever_set;
+            t17_err = 0;
+            skid_ever_set = 1'b0;
+
+            `WB_READY = 1'b1;
+            issue_load('h900, 8'd85);
+
+            // Monitor skid during the entire response window
+            fork
+                begin
+                    // Monitor thread
+                    repeat (SP_LATENCY + 5) begin
+                        @(posedge CLK);
+                        if (DUT0.skid_valid_r)
+                            skid_ever_set = 1'b1;
+                    end
+                end
+                begin
+                    // Collect writeback
+                    wait_writeback(8'd85, SP_LATENCY + 10);
+                end
+            join
+
+            if (skid_ever_set) begin
+                $error("[%s] skid was occupied during bypass path (should never set)", test_name);
+                t17_err++;
+            end else begin
+                $display("[%s] PASS - skid never occupied, bypass worked", test_name);
+            end
+            if (sif.fe_vec_res_stall[0] !== 1'b0) begin
+                $error("[%s] fe_vec_res_stall should be 0 after bypass", test_name); t17_err++;
+            end
+
+            if (t17_err > 0) errors += t17_err;
+        end
+        drain_and_idle();
+
+        // ==============================================================
+        // T18 - Skid + continued issuing: verify new loads accepted
+        //       while skid is occupied (load queue not full)
+        // ==============================================================
+        test_name = "T18_skid_occupied_new_loads";
+        test_num  = 18;
+        total_tests++;
+        $display("\n--- Test %0d: %s ---", test_num, test_name);
+
+        begin
+            int t18_err;
+            logic [VIDX_W-1:0] got_vd;
+            t18_err = 0;
+
+            // Issue first load, block writeback
+            issue_load('hA00, 8'd91);
+            `WB_READY = 1'b0;
+
+            // Wait for skid to fill
+            repeat (SP_LATENCY + 4) @(posedge CLK);
+
+            if (DUT0.skid_valid_r !== 1'b1) begin
+                $error("[%s] skid should be occupied", test_name); t18_err++;
+            end
+
+            // Issue second load while skid is occupied
+            // Should still be accepted (load queue has space, fe_vec_stall is separate)
+            @(posedge CLK);
+            `SCHED_REQ.valid     = 1'b1;
+            `SCHED_REQ.write     = 1'b0;
+            `SCHED_REQ.spad_addr = 'hA10;
+            `SCHED_REQ.vdst      = 8'd92;
+            #1;
+            if (`SCHED_RES.ready !== 1'b1) begin
+                $error("[%s] Should accept load even with skid occupied (lq not full)", test_name);
+                t18_err++;
+            end else begin
+                $display("[%s] PASS - new load accepted while skid occupied", test_name);
+            end
+            @(posedge CLK);
+            `SCHED_REQ.valid = 1'b0;
+
+            // Release and drain both.
+            // Same timing strategy as T16: sample at posedge (pre-NBA),
+            // then #1 to let NBA settle before next collection.
+            `WB_READY = 1'b1;
+
+            begin
+                int cyc;
+                cyc = 0;
+                forever begin
+                    @(posedge CLK);
+                    if (`WB_OUT.valid || cyc >= SP_LATENCY + 15) break;
+                    cyc++;
+                end
+            end
+            got_vd = `WB_OUT.vdst;  // sample pre-NBA
+            if (got_vd !== 8'd91) begin
+                $error("[%s] First WB expected v91, got v%0d", test_name, got_vd); t18_err++;
+            end else
+                $display("[%s] PASS - v91 drained first from skid", test_name);
+            #1;  // let NBA settle
+
+            begin
+                int cyc;
+                cyc = 0;
+                forever begin
+                    @(posedge CLK);
+                    if (`WB_OUT.valid || cyc >= SP_LATENCY + 15) break;
+                    cyc++;
+                end
+            end
+            got_vd = `WB_OUT.vdst;  // sample pre-NBA
+            if (got_vd !== 8'd92) begin
+                $error("[%s] Second WB expected v92, got v%0d", test_name, got_vd); t18_err++;
+            end else
+                $display("[%s] PASS - v92 drained second", test_name);
+
+            if (t18_err == 0)
+                $display("[%s] PASS - new loads work while skid occupied", test_name);
+            else
+                errors += t18_err;
+        end
+        drain_and_idle();
 
         // ==============================================================
         // Summary

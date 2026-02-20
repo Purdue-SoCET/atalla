@@ -16,8 +16,6 @@ interface vlsu_if (input logic clk, input logic n_rst);
         logic [MAX_DIM_WIDTH-1:0]   num_rows;
         logic [MAX_DIM_WIDTH-1:0]   num_cols;
         logic [MAX_DIM_WIDTH-1:0]   row_id;
-        logic [MAX_DIM_WIDTH-1:0]   col_id;
-        logic                        row_or_col;
     } vlsu_sched_req_t;
 
     // VLSU => Scheduler

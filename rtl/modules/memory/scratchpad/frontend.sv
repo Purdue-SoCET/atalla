@@ -15,9 +15,6 @@ module frontend #(parameter logic [scpad_pkg::SCPAD_ID_WIDTH-1:0] IDX = '0) (
     // Internal request signal to hold vec_req (latched or direct)
     req_t internal_req;
 
-    // Internal interface for swizzle (same pattern as backend)
-    scpad_if fe_internal(fvif.clk, fvif.n_rst);
-
     // Propagate downstream stalls    
     assign fvif.fe_vec_stall[IDX] = fsif.fe_stall[IDX];
 
@@ -43,21 +40,12 @@ module frontend #(parameter logic [scpad_pkg::SCPAD_ID_WIDTH-1:0] IDX = '0) (
         end 
     endgenerate
 
-    // Swizzle - instantiated with internal interface (same pattern as backend)
-    swizzle u_swizzle (.swizz(fe_internal));
-    
-    // Drive swizzle request signals
-    assign fe_internal.swizz_req.row_or_col = internal_req.row_or_col;
-    assign fe_internal.swizz_req.spad_addr  = internal_req.spad_addr;
-    assign fe_internal.swizz_req.num_rows   = internal_req.num_rows;
-    assign fe_internal.swizz_req.num_cols   = internal_req.num_cols;
-    assign fe_internal.swizz_req.row_id     = internal_req.row_id;
-    assign fe_internal.swizz_req.col_id     = internal_req.col_id;
-
-    // Combine internal_req with swizzle outputs to form fe_req
     always_comb begin
         fsif.fe_req[IDX] = internal_req;
-        fsif.fe_req[IDX].xbar = fe_internal.swizz_res.xbar_desc;
+        fsif.fe_req[IDX].xbar.slot = internal_req.spad_addr + internal_req.row_id;
+        for (int i = 0; i < NUM_COLS; i++) begin
+            fsif.fe_req[IDX].xbar.valid_mask[i] = (i <= internal_req.num_cols);
+        end
     end
 
 endmodule

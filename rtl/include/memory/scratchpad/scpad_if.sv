@@ -35,12 +35,9 @@ interface scpad_if (input logic clk, input logic n_rst);
     req_t  be_req  [NUM_SCPADS];
     res_t  be_res  [NUM_SCPADS];
 
-    // Swizzle
-    swizz_req_t swizz_req;
-    swizz_res_t swizz_res;
-
     // Vector <=> Frontend 
     logic fe_vec_stall [NUM_SCPADS];
+    logic fe_vec_res_stall [NUM_SCPADS]; // VLSU backpressure on rxbar drain
     req_t  vec_req  [NUM_SCPADS];
     res_t vec_res  [NUM_SCPADS];
 
@@ -58,7 +55,6 @@ interface scpad_if (input logic clk, input logic n_rst);
     sel_req_t xbar_cntrl_req [NUM_SCPADS]; // into body fifo 
     sel_req_t cntrl_spad_req [NUM_SCPADS]; // into spad 
     sel_res_t spad_xbar_req [NUM_SCPADS]; // into rd xbar
-    xbar_desc_t spad_xbar_desc [NUM_SCPADS]; // tracked xbar descriptor for un-swizzle (from body.sv)
     sel_res_t stomach_tail_res [NUM_SCPADS]; // into tail 
 
     // Spad Done.
@@ -76,7 +72,7 @@ interface scpad_if (input logic clk, input logic n_rst);
 
     modport vec_frontend (
         input  fe_vec_stall, vec_res, 
-        output vec_req
+        output vec_req, fe_vec_res_stall
     );
 
     modport sched_backend (
@@ -122,12 +118,6 @@ interface scpad_if (input logic clk, input logic n_rst);
         output sr_wr_l_out
     );
 
-    // Swizzle
-    modport swizzle (
-        input  swizz_req,
-        output swizz_res
-    );
-
     // Vec. Core <=> Frontend 
     modport frontend_vec (
         input clk, n_rst, 
@@ -155,7 +145,6 @@ interface scpad_if (input logic clk, input logic n_rst);
         input clk, n_rst, 
         input r_stall,
         input spad_xbar_req,
-        input spad_xbar_desc,  // tracked xbar descriptor for un-swizzle
         output stomach_tail_res
     );
 
@@ -310,7 +299,7 @@ interface scpad_if (input logic clk, input logic n_rst);
     modport scratchpad_tb (
         input clk, n_rst,
         // Vector Core interface
-        output vec_req,
+        output vec_req, fe_vec_res_stall,
         input fe_vec_stall, vec_res,
         // Scheduler interface  
         output sched_req,

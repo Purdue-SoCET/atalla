@@ -1,5 +1,5 @@
 module latch #(
-    parameter type T = logic[31:0],  
+    parameter type T = logic[31:0]  
 )(
     input logic clk, n_rst,   
     input logic en,      

@@ -39,13 +39,12 @@ module backend #(parameter logic [scpad_pkg::SCPAD_ID_WIDTH-1:0] IDX = '0) (
 
     scpad_if be_internal(bbif.clk, bbif.n_rst);
 
-    swizzle swizzle_metadata(.swizz(be_internal));
-    assign be_internal.swizz_req.row_or_col = 1'b1; 
-    assign be_internal.swizz_req.spad_addr = bshif.sched_req[IDX].spad_addr; 
-    assign be_internal.swizz_req.num_rows = bshif.sched_req[IDX].num_rows;
-    assign be_internal.swizz_req.num_cols = bshif.sched_req[IDX].num_cols;
-    assign be_internal.swizz_req.row_id = be_id;  
-    assign be_internal.swizz_req.col_id = be_id;  
+    xbar_desc_t be_identity_xbar;
+    always_comb begin
+        be_identity_xbar.slot = bshif.sched_req[IDX].spad_addr + be_id;
+        for (int i = 0; i < NUM_COLS; i++)
+            be_identity_xbar.valid_mask[i] = (i <= bshif.sched_req[IDX].num_cols);
+    end
 
     dram_request_queue dr_rd_req_q(.be_dr_req_q(be_internal));
     assign be_internal.be_dr_req_q_in.sched_write = bshif.sched_req[IDX].write;
@@ -59,7 +58,7 @@ module backend #(parameter logic [scpad_pkg::SCPAD_ID_WIDTH-1:0] IDX = '0) (
     assign be_internal.sr_wr_l_in.dram_id = bdrif.dram_be_res[IDX].id;
     assign be_internal.sr_wr_l_in.dram_res_valid = bdrif.dram_be_res[IDX].valid;
     assign be_internal.sr_wr_l_in.spad_addr = bshif.sched_req[IDX].spad_addr + {be_id, 5'b00000};
-    assign be_internal.sr_wr_l_in.xbar = be_internal.swizz_res.xbar_desc;
+    assign be_internal.sr_wr_l_in.xbar = be_identity_xbar;
     assign be_internal.sr_wr_l_in.dram_rddata = bdrif.dram_be_res[IDX].rdata;
     assign be_internal.sr_wr_l_in.num_request = num_request;
     assign be_internal.sr_wr_l_in.be_stall = bbif.be_stall[IDX];
@@ -153,9 +152,7 @@ module backend #(parameter logic [scpad_pkg::SCPAD_ID_WIDTH-1:0] IDX = '0) (
                     bbif.be_req[IDX].num_rows = bshif.sched_req[IDX].num_rows;
                     bbif.be_req[IDX].num_cols = bshif.sched_req[IDX].num_cols;
                     bbif.be_req[IDX].row_id = uuid;
-                    bbif.be_req[IDX].col_id = uuid;
-                    bbif.be_req[IDX].row_or_col = 1'b1;
-                    bbif.be_req[IDX].xbar = be_internal.swizz_res.xbar_desc;
+                    bbif.be_req[IDX].xbar = be_identity_xbar;
                     bbif.be_req[IDX].wdata = 0;
                     nxt_uuid = initial_request_done ? uuid : uuid + 1;
                     

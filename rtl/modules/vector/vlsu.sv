@@ -31,28 +31,26 @@ module vlsu #(
         .full  (lq_full)
     );
 
-    logic                    rq_wr_en, rq_shift;
-    logic [RDATA_WIDTH-1:0]  rq_din, rq_dout;
-    logic                    rq_empty, rq_full;
+    logic                   skid_valid_r, skid_valid_next;
+    logic [RDATA_WIDTH-1:0] skid_data_r,  skid_data_next;
 
-    sync_fifo #(
-        .FIFODEPTH(FIFO_DEPTH),
-        .DATAWIDTH(RDATA_WIDTH)
-    ) resp_queue (
-        .nRST  (vif.n_rst),
-        .CLK   (vif.clk),
-        .wr_en (rq_wr_en),
-        .shift (rq_shift),
-        .din   (rq_din),
-        .dout  (rq_dout),
-        .empty (rq_empty),
-        .full  (rq_full)
-    );
+    always_ff @(posedge vif.clk or negedge vif.n_rst) begin
+        if (!vif.n_rst) begin
+            skid_valid_r     <= 1'b0;
+            skid_data_r      <= '0;
+        end else begin
+            skid_valid_r     <= skid_valid_next;
+            skid_data_r      <= skid_data_next;
+        end
+    end
+
+    assign sif.fe_vec_res_stall[IDX] = skid_valid_r || skid_valid_next;
 
     logic is_load, is_store, can_accept;
+    logic resp_incoming;
 
     always_comb begin
-        // Defaults — vlsu_if outputs
+        // ── Defaults — vlsu_if outputs ───────────────────
         vif.sched_res[IDX].ready  = 1'b0;
         vif.wb_out[IDX].load_data = '0;
         vif.wb_out[IDX].vdst      = '0;
@@ -60,40 +58,41 @@ module vlsu #(
         vif.status[IDX].busy            = 1'b0;
         vif.status[IDX].load_queue_full = 1'b0;
 
-        // Defaults — scpad_if outputs
+        // ── Defaults — scpad_if outputs ──────────────────
         sif.vec_req[IDX].valid      = 1'b0;
         sif.vec_req[IDX].write      = 1'b0;
         sif.vec_req[IDX].spad_addr  = '0;
         sif.vec_req[IDX].num_rows   = '0;
         sif.vec_req[IDX].num_cols   = '0;
         sif.vec_req[IDX].row_id     = '0;
-        sif.vec_req[IDX].col_id     = '0;
-        sif.vec_req[IDX].row_or_col = 1'b0;
         sif.vec_req[IDX].xbar       = '0;
         sif.vec_req[IDX].wdata      = '0;
 
-        // Defaults — FIFO controls
+        // ── Defaults — FIFO + skid controls ──────────────
         lq_wr_en = 1'b0;
         lq_shift = 1'b0;
         lq_din   = '0;
-        rq_wr_en = 1'b0;
-        rq_shift = 1'b0;
-        rq_din   = '0;
 
-        // Input classification
+        skid_valid_next = skid_valid_r;
+        skid_data_next  = skid_data_r;
+
+        // ── Input classification ─────────────────────────
         is_load  = vif.sched_req[IDX].valid && !vif.sched_req[IDX].write;
         is_store = vif.sched_req[IDX].valid &&  vif.sched_req[IDX].write;
 
+        resp_incoming = sif.vec_res[IDX].valid && !sif.vec_res[IDX].write;
+
+        // ── Accept logic ─────────────────────────────────
         if (is_load)
             can_accept = !lq_full && !sif.fe_vec_stall[IDX];
         else if (is_store)
             can_accept = !sif.fe_vec_stall[IDX] && vif.vrf_store[IDX].valid;
         else
-            can_accept = 1'b1;
+            can_accept = !lq_full && !sif.fe_vec_stall[IDX];
 
         vif.sched_res[IDX].ready = can_accept;
 
-        // Load path
+        // ── Load path ────────────────────────────────────
         if (is_load && can_accept) begin
             lq_wr_en = 1'b1;
             lq_din   = vif.sched_req[IDX].vdst;
@@ -104,11 +103,9 @@ module vlsu #(
             sif.vec_req[IDX].num_rows   = vif.sched_req[IDX].num_rows;
             sif.vec_req[IDX].num_cols   = vif.sched_req[IDX].num_cols;
             sif.vec_req[IDX].row_id     = vif.sched_req[IDX].row_id;
-            sif.vec_req[IDX].col_id     = vif.sched_req[IDX].col_id;
-            sif.vec_req[IDX].row_or_col = vif.sched_req[IDX].row_or_col;
         end
 
-        // Store path
+        // ── Store path ───────────────────────────────────
         if (is_store && can_accept) begin
             sif.vec_req[IDX].valid      = 1'b1;
             sif.vec_req[IDX].write      = 1'b1;
@@ -116,53 +113,35 @@ module vlsu #(
             sif.vec_req[IDX].num_rows   = vif.sched_req[IDX].num_rows;
             sif.vec_req[IDX].num_cols   = vif.sched_req[IDX].num_cols;
             sif.vec_req[IDX].row_id     = vif.sched_req[IDX].row_id;
-            sif.vec_req[IDX].col_id     = vif.sched_req[IDX].col_id;
-            sif.vec_req[IDX].row_or_col = vif.sched_req[IDX].row_or_col;
             sif.vec_req[IDX].wdata      = vif.vrf_store[IDX].data;
         end
 
-        begin
-            logic resp_incoming;
-            logic bypass_eligible;
-
-            resp_incoming    = sif.vec_res[IDX].valid && !sif.vec_res[IDX].write;
-            bypass_eligible  = resp_incoming && rq_empty && !lq_empty;
-
-            if (bypass_eligible) begin
-                // Drive writeback straight from scratchpad response
-                vif.wb_out[IDX].load_data = sif.vec_res[IDX].rdata;
-                vif.wb_out[IDX].vdst      = lq_dout;
-                vif.wb_out[IDX].valid     = 1'b1;
-                if (vif.wb_ready[IDX]) begin
-                    // Consumed — pop load queue, skip resp FIFO entirely
-                    lq_shift = 1'b1;
-                end else begin
-                    // Writeback stalled — buffer for later
-                    rq_wr_en = 1'b1;
-                    rq_din   = sif.vec_res[IDX].rdata;
-                end
+        // ── Response + Writeback ─────────────────────────
+        if (skid_valid_r && !lq_empty) begin
+            // ── Drain skid ───────────────────────────────
+            vif.wb_out[IDX].load_data = skid_data_r;
+            vif.wb_out[IDX].vdst      = lq_dout;
+            vif.wb_out[IDX].valid     = 1'b1;
+            if (vif.wb_ready[IDX]) begin
+                lq_shift        = 1'b1;
+                skid_valid_next = 1'b0;
+            end
+        end else if (!skid_valid_r && resp_incoming && !lq_empty) begin
+            // ── Bypass ───────────────────────────────────
+            vif.wb_out[IDX].load_data = sif.vec_res[IDX].rdata;
+            vif.wb_out[IDX].vdst      = lq_dout;
+            vif.wb_out[IDX].valid     = 1'b1;
+            if (vif.wb_ready[IDX]) begin
+                lq_shift = 1'b1;
             end else begin
-                // Buffer any incoming response into FIFO
-                if (resp_incoming) begin
-                    rq_wr_en = 1'b1;
-                    rq_din   = sif.vec_res[IDX].rdata;
-                end
-
-                // Drain from FIFOs when both have data
-                if (!rq_empty && !lq_empty) begin
-                    vif.wb_out[IDX].load_data = rq_dout;
-                    vif.wb_out[IDX].vdst      = lq_dout;
-                    vif.wb_out[IDX].valid     = 1'b1;
-                    if (vif.wb_ready[IDX]) begin
-                        lq_shift = 1'b1;
-                        rq_shift = 1'b1;
-                    end
-                end
+                // Writeback stalled — capture for later
+                skid_valid_next = 1'b1;
+                skid_data_next  = sif.vec_res[IDX].rdata;
             end
         end
 
-        // Status 
-        vif.status[IDX].busy            = !lq_empty;
+        // ── Status ───────────────────────────────────────
+        vif.status[IDX].busy            = !lq_empty || skid_valid_r;
         vif.status[IDX].load_queue_full = lq_full;
     end
 

@@ -24,29 +24,23 @@ module body #(parameter logic [scpad_pkg::SCPAD_ID_WIDTH-1:0] IDX = '0) (scpad_i
     logic [SRAM_READ_LATENCY:0] meta_write_pipe;
     src_t meta_src_pipe [SRAM_READ_LATENCY+1];
     
-    // Pipeline for xbar_desc_t through SRAM latency (for rxbar un-swizzling)
-    xbar_desc_t xbar_desc_pipe [SRAM_READ_LATENCY+1];
-    
     always_ff @(posedge bif.clk or negedge bif.n_rst) begin
         if (!bif.n_rst) begin
             meta_valid_pipe <= '0;
             meta_write_pipe <= '0;
             for (int i = 0; i <= SRAM_READ_LATENCY; i++) begin
                 meta_src_pipe[i] <= SRC_FE;
-                xbar_desc_pipe[i] <= '0;
             end
         end else begin
             // Shift pipeline - only for reads
             meta_valid_pipe[0] <= bif.cntrl_spad_req[IDX].valid && !bif.cntrl_spad_req[IDX].write;
             meta_write_pipe[0] <= bif.cntrl_spad_req[IDX].write;
             meta_src_pipe[0]   <= bif.cntrl_spad_req[IDX].src;
-            xbar_desc_pipe[0]  <= bif.cntrl_spad_req[IDX].xbar;  // Track xbar descriptor
             
             for (int i = 1; i <= SRAM_READ_LATENCY; i++) begin
                 meta_valid_pipe[i] <= meta_valid_pipe[i-1];
                 meta_write_pipe[i] <= meta_write_pipe[i-1];
                 meta_src_pipe[i]   <= meta_src_pipe[i-1];
-                xbar_desc_pipe[i]  <= xbar_desc_pipe[i-1];
             end
         end
     end
@@ -68,13 +62,13 @@ module body #(parameter logic [scpad_pkg::SCPAD_ID_WIDTH-1:0] IDX = '0) (scpad_i
             
             for (ti = 0; ti < SRAM_VERT_FOLD_FACTOR; ti++) begin : g_subarray
                 // Determine which subarray this access targets based on address bits
-                // Uses lower SRAM_SUBARRAY_WIDTH_BITS of slot_mask to select subarray
+                // Uses lower SRAM_SUBARRAY_WIDTH_BITS of slot to select subarray
                 logic is_selected;
                 if (SRAM_VERT_FOLD_FACTOR == 1) begin
                     // Only one subarray, always selected
                     assign is_selected = 1'b1;
                 end else begin
-                    assign is_selected = (bif.cntrl_spad_req[IDX].xbar.slot_mask[gi][SRAM_SUBARRAY_WIDTH_BITS-1:0] == ti);
+                    assign is_selected = (bif.cntrl_spad_req[IDX].xbar.slot[SRAM_SUBARRAY_WIDTH_BITS-1:0] == ti);
                 end
 
                 sram_bank #(
@@ -88,12 +82,12 @@ module body #(parameter logic [scpad_pkg::SCPAD_ID_WIDTH-1:0] IDX = '0) (scpad_i
                     .busy(subarray_busy[ti]), 
 
                     // Read when valid, mask set, NOT a write, AND this subarray is selected
-                    // Address is lower SRAM_SUBARRAY_HEIGHT_BITS of slot_mask
+                    // Address is lower SRAM_SUBARRAY_HEIGHT_BITS of slot
                     .ren(bif.cntrl_spad_req[IDX].xbar.valid_mask[gi] && 
                          bif.cntrl_spad_req[IDX].valid && 
                          !bif.cntrl_spad_req[IDX].write && 
                          is_selected),
-                    .raddr(bif.cntrl_spad_req[IDX].xbar.slot_mask[gi][SRAM_SUBARRAY_HEIGHT_BITS-1:0]),
+                    .raddr(bif.cntrl_spad_req[IDX].xbar.slot[SRAM_SUBARRAY_HEIGHT_BITS-1:0]),
                     .rdone(subarray_rdone[ti]),
                     .rdata(subarray_rdata[ti]),
 
@@ -102,7 +96,7 @@ module body #(parameter logic [scpad_pkg::SCPAD_ID_WIDTH-1:0] IDX = '0) (scpad_i
                          bif.cntrl_spad_req[IDX].valid && 
                          bif.cntrl_spad_req[IDX].write && 
                          is_selected),
-                    .waddr(bif.cntrl_spad_req[IDX].xbar.slot_mask[gi][SRAM_SUBARRAY_HEIGHT_BITS-1:0]),
+                    .waddr(bif.cntrl_spad_req[IDX].xbar.slot[SRAM_SUBARRAY_HEIGHT_BITS-1:0]),
                     .wdone(subarray_wdone[ti]),
                     .wdata(bif.cntrl_spad_req[IDX].wdata[gi])
                 );
@@ -140,9 +134,6 @@ module body #(parameter logic [scpad_pkg::SCPAD_ID_WIDTH-1:0] IDX = '0) (scpad_i
     assign bif.spad_xbar_req[IDX].valid = |bank_rdone;  // Valid when any bank has read data
     assign bif.spad_xbar_req[IDX].write = meta_write_pipe[SRAM_READ_LATENCY];  // Delayed metadata
     assign bif.spad_xbar_req[IDX].src   = meta_src_pipe[SRAM_READ_LATENCY];    // Delayed metadata
-
-    // Drive tracked xbar descriptor for rxbar un-swizzling
-    assign bif.spad_xbar_desc[IDX] = xbar_desc_pipe[SRAM_READ_LATENCY];
 
     tail #(.IDX(IDX)) tail (.tif(bif));
 

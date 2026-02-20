@@ -1,7 +1,5 @@
 /*  Akshath Raghav Ravikiran - araviki@purdue.edu */
 
-`include "xbar_if.sv"
-
 module rxbar #(parameter logic [scpad_pkg::SCPAD_ID_WIDTH-1:0] IDX = '0) (scpad_if rif); 
 
     import scpad_pkg::*;
@@ -28,11 +26,11 @@ module rxbar #(parameter logic [scpad_pkg::SCPAD_ID_WIDTH-1:0] IDX = '0) (scpad_
     assign fifo_in.write = rif.spad_xbar_req[IDX].write;
     assign fifo_in.src   = rif.spad_xbar_req[IDX].src;
     
-    assign rd_en = !fifo_empty;
+    assign rd_en = !fifo_empty && !rif.fe_vec_res_stall[IDX];
     assign rif.r_stall[IDX] = fifo_full;
     
     // Metadata FIFO
-    sync_fifo #(.DEPTH(FIFO_DEPTH), .DWIDTH($bits(pass_t))) meta_fifo (
+    fifo #(.DEPTH(FIFO_DEPTH), .DWIDTH($bits(pass_t))) meta_fifo (
         .clk(rif.clk), .rstn(rif.n_rst),
         .wr_en(rif.spad_xbar_req[IDX].valid),
         .din(fifo_in),
@@ -43,7 +41,7 @@ module rxbar #(parameter logic [scpad_pkg::SCPAD_ID_WIDTH-1:0] IDX = '0) (scpad_
     );
     
     // Rdata FIFO - direct pass-through (identity permutation for all types)
-    sync_fifo #(.DEPTH(FIFO_DEPTH), .DWIDTH($bits(scpad_data_t))) rdata_fifo (
+    fifo #(.DEPTH(FIFO_DEPTH), .DWIDTH($bits(scpad_data_t))) rdata_fifo (
         .clk(rif.clk), .rstn(rif.n_rst),
         .wr_en(rif.spad_xbar_req[IDX].valid),
         .din(rif.spad_xbar_req[IDX].rdata),

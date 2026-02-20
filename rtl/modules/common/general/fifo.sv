@@ -1,7 +1,7 @@
 // Credit: https://www.chipverify.com/verilog/synchronous-fifo
 // https://www.chipverify.com/images/verilog/sync_fifo.svg
 
-module sync_fifo #(
+module fifo #(
     parameter DEPTH = 8, 
     parameter DWIDTH = 16
 ) (

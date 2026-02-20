@@ -9,7 +9,8 @@ module naive_xbar #(
     genvar i;
     generate
       for (i = 0; i < SIZE; i++) begin : gen_route
-        assign xif.out[i] = xif.en ? xif.in.din[xif.in.shift[i]] : '0;
+        // Route: output[i] gets data from input[shift[i]]
+        assign xif.out[i] = xif.en ? xif.in[xif.in[i].shift].din : '0;
       end
     endgenerate
 
