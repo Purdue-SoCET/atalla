@@ -297,12 +297,14 @@ package vector_pkg;
         logic [LANE_FU_COUNT-1:0] fu_global_status;
         logic gsau_status;
         vlsu_sched_res_t [NUM_SCPADS-1:0] vlsu_status;
+        logic reduction_status;
     } vector_if_unit_ready_t;
 
     typedef struct packed {
         logic [LANE_FU_COUNT-1:0] lanes_wb_ready;
         logic gsau_wb_ready;
         logic [NUM_SCPADS-1:0] vlsu_wb_ready;
+        logic reduction_wb_ready;
     } vector_if_wb_ready_t;
 
     typedef struct packed {
@@ -350,8 +352,6 @@ package vector_pkg;
 
     typedef struct packed {
         lanes_issue_port_t [LANE_ISSUE_W-1:0] lane_issue_ports;
-        
-        logic reduction_wb_ready;
     } vector_if_lanes_in_t;
 
     typedef struct packed {
