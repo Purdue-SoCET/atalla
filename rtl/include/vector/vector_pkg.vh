@@ -268,29 +268,6 @@ package vector_pkg;
         logic       rm;        // reduction mode flag
     } meta_t;
 
-    // Per-lane, per-FU input bundle
-    typedef struct packed {
-        logic     [LANE_FU_COUNT-1:0] rm;
-        logic     [LANE_FU_COUNT-1:0] valid_in; // From SB there's valid data
-        logic     [LANE_FU_COUNT-1:0] ready_in; // From WB
-        slice_vt  [LANE_FU_COUNT-1:0] v1;
-        slice_vt  [LANE_FU_COUNT-1:0] v2;       // VS and VI typed come broadcasted
-        vsel_t    [LANE_FU_COUNT-1:0] vd;       // Pass through
-        slice_mt  [LANE_FU_COUNT-1:0] vmask; 
-        opcode_t  [LANE_FU_COUNT-1:0] vop;      // full ISA opcode into FU
-    } lane_in_t;
-
-    // Per-lane, per-FU output bundle
-    typedef struct packed {
-        bf16_t     [LANE_FU_COUNT-1:0] result;
-        logic      [LANE_FU_COUNT-1:0] ready_o; // to SB
-        logic      [LANE_FU_COUNT-1:0] valid_o; // to WB buffer
-        bf16_t     [LANE_FU_COUNT-1:0] rval;    // to reduction tree for rm mode
-        vsel_t     [LANE_FU_COUNT-1:0] vd;
-        slice_idx_t[LANE_FU_COUNT-1:0] elem_idx; 
-        logic      [LANE_FU_COUNT-1:0] last;
-    } lane_out_t;
-
     // Lane sequencer in/out (per lane, per functional unit)
         
     //localparam NUM_SLICE = NUM_ELEMENTS / NUM_LANES;

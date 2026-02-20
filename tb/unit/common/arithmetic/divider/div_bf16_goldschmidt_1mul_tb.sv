@@ -1,3 +1,4 @@
+// make test tb_file=div_bf16_goldschmidt_1mul_tb.sv modules=/common/arithmetic/adders,/common/arithmetic/multipliers,/common/arithmetic/divider packages=/vector/vector_pkg.vh,/memory/scratchpad/scpad_pkg.sv,/common/xbar/xbar_pkg.sv GUI=ON
 `include "div_if.vh"
 `timescale 1 ns / 1 ns
 
@@ -110,7 +111,7 @@ module div_bf16_goldschmidt_1mul_tb;
       // Both NaN — pass
     end else if (divif.out.result !== expected_in) begin
       if ((divif.out.result[15] == expected_in[15]) && (abs_diff <= 2)) begin // ABS_DIFF IS ULP RANGE!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
-        $display("INFO: Result: %h (expected %h). Result off by %.2d ULP - Acceptable for Goldschmidt.", divif.out.result, expected_in, abs_diff);
+        $display("INFO: Result: %h (expected %h). Result off by %d ULP - Acceptable for Goldschmidt.", divif.out.result, expected_in, abs_diff);
       end else begin
          $display("ERROR @%0t [%s]: %h / %h = %h (expected %h)", 
                   $time, tb_test_case, divif.in.operand1, divif.in.operand2, divif.out.result, expected_in);

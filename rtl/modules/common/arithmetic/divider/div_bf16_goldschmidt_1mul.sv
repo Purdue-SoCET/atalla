@@ -2,12 +2,12 @@
 
 module div_bf16_goldschmidt_1mul (
     input logic CLK, nRST,
-    div_if.div divif
+    div_if.dvif divif
 );
 
     localparam [7:0] BIAS = 8'h7F;
     localparam [7:0] EXP_INF = 8'hFF;
-    localparam [15:0] TWO = 16'h0100;
+    localparam [15:0] TWO = 16'h4000;
 
     // Mult Signals
     logic [15:0] muln, muld, f;
@@ -70,8 +70,8 @@ module div_bf16_goldschmidt_1mul (
     // Initial Inputs/Outputs
     logic [15:0] mulm_1, muld_1, f_1;
 
-    assign muln_1 = (divif.in.operand1[14:7] == 8'h00) ? 16'h0000:{1'b1, divif.in.operadn1[14:0]};
-    assign muld_1 = (divif.in.operand1[14:7] == 8'h00) ? 16'h0000:{1'b1, divif.in.operadn2[14:0]};
+    assign muln_1 = (divif.in.operand1[14:7] == 8'h00) ? 16'h0000:{1'b1, divif.in.operand1[14:0]};
+    assign muld_1 = (divif.in.operand1[14:7] == 8'h00) ? 16'h0000:{1'b1, divif.in.operand2[14:0]};
     assign f_1 = (16'h7EF3 - divif.in.operand2 & 16'h7FFF) & 16'h7FFF;
 
     // Second Iteration Inputs/Outputs
