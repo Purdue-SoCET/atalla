@@ -127,41 +127,24 @@ module div_bf16_goldschmidt_1mul (
     always_comb begin
         is_special = 1'b1;
         special_result = {sign, 15'h0000};
-
         // NaN Propagation
-        if (op1_is_nan || op2_is_nan) begin
-            special_result = qNaN;
-        end
+        if (op1_is_nan || op2_is_nan) special_result = qNaN;
         // 0 / 0 or Inf / Inf -> NaN
-        else if ((op1_is_zero && op2_is_zero) || (op1_is_inf && op2_is_inf)) begin
-            special_result = qNaN;
-        end
+        else if ((op1_is_zero && op2_is_zero) || (op1_is_inf && op2_is_inf)) special_result = qNaN;
         // N / 0 -> Infinity
-        else if (op2_is_zero) begin
-            special_result = {sign, 8'hFF, 7'h00};
-        end
+        else if (op2_is_zero) special_result = {sign, 8'hFF, 7'h00};
         // N / Inf -> Zero
-        else if (op2_is_inf) begin
-            special_result = {sign, 15'h0000};
-        end
+        else if (op2_is_inf) special_result = {sign, 15'h0000};
         // 0 / N -> Zero
-        else if (op1_is_zero) begin
-            special_result = {sign, 15'h0000};
-        end
+        else if (op1_is_zero) special_result = {sign, 15'h0000};
         // Inf / N -> Infinity
-        else if (op1_is_inf) begin
-            special_result = {sign, 8'hFF, 7'h00};
-        end
-        else if (op1_op2_same & !op2_is_zero) begin
-            special_result = {sign, 15'h3F80};
-        end
-        else if (op2_is_one) begin
-            special_result = {sign, divif.in.operand1[14:0]};
-        end
+        else if (op1_is_inf) special_result = {sign, 8'hFF, 7'h00};
+        // N / N -> 1
+        else if (op1_op2_same & !op2_is_zero) special_result = {sign, 15'h3F80};
+        // N / 1 -> N
+        else if (op2_is_one) special_result = {sign, divif.in.operand1[14:0]};
         // Not a special case, proceed with Goldschmidt
-        else begin
-            is_special = 1'b0;
-        end
+        else is_special = 1'b0;
     end
 
 // FSM NEXT STATE AND OUTPUTS
@@ -258,7 +241,6 @@ module div_bf16_goldschmidt_1mul (
             end
         endcase
     end
-
 
 // SEQUENTIAL LOGIC
     always_ff @(posedge CLK, negedge nRST) begin
