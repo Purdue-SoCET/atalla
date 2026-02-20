@@ -69,7 +69,7 @@ module div_bf16_goldschmidt_1mul (
     // logic is_div_by_one;
 
     // Initial Inputs/Outputs
-    logic [15:0] mulm_1, muld_1, f_1;
+    logic [15:0] muln_1, muld_1, f_1;
 
     assign muln_1 = (divif.in.operand1[14:7] == 8'h00) ? 16'h0000:{1'b1, divif.in.operand1[14:0]};
     assign muld_1 = (divif.in.operand1[14:7] == 8'h00) ? 16'h0000:{1'b1, divif.in.operand2[14:0]};
@@ -83,8 +83,10 @@ module div_bf16_goldschmidt_1mul (
 
     // Final Output
     logic sign;
+    logic [9:0] exp;
     logic [15:0] n_fin, fin;
     assign sign = divif.in.operand1[15] ^ divif.in.operand2[15];
+    assign exp = $signed({2'h0, muln_1[14:7]}) - $signed({2'h0, muld_1[14:7]}) + 10'sd127 + $signed({2'h0, outn[14:7]}) - 10'sd127;
     assign n_fin = {sign, outn[14:0]};
     assign divif.out.result = fin;
 
