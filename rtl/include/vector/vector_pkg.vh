@@ -319,7 +319,7 @@ package vector_pkg;
         functional_unit_out_t [LANE_FU_COUNT-1:0] units;
     } lane_out_t;
 
-        typedef struct packed {
+    typedef struct packed {
         logic                        valid;
         logic                        write;
         logic [SCPAD_ADDR_WIDTH-1:0] spad_addr;
@@ -359,16 +359,28 @@ package vector_pkg;
 
 
     // =========================================================================
-    // Top-level GSAU + vector_datapath structs
+    // Top-level vector if structs
     // =========================================================================
     
+    typdef struct packed {
+        logic [LANE_FU_COUNT-1:0] fu_global_status;
+        logic gsau_status;
+        vlsu_sched_res_t [NUM_SCPADS-1:0] vlsu_status;
+    } vector_if_unit_ready_t;
+
+    typedef struct packed {
+        logic [LANE_FU_COUNT-1:0] lanes_wb_ready;
+        logic gsau_wb_ready;
+        logic [NUM_SCPADS-1:0] vlsu_wb_ready;
+    } vector_if_wb_ready_t;
+
     typedef struct packed {
         vreg_t veg_vdata1;
         vreg_t veg_vdata2;
         logic [7:0] vd;
         logic valid_in;
         logic weight;
-        logic wb_ready;
+        
     } vector_if_gsau_in_t;
 
     typedef struct packed {
@@ -381,13 +393,11 @@ package vector_pkg;
     typedef struct packed {
         vlsu_sched_req_t [NUM_SCPADS-1:0] sched_req;
         vlsu_vrf_store_t [NUM_SCPADS-1:0] vrf_data;
-        logic [NUM_SCPADS-1:0] wb_ready;
     } vector_if_vlsu_in_t;
 
     typedef struct packed {
         vlsu_wb_t [NUM_SCPADS-1:0] wb;
         vlsu_status_t [NUM_SCPADS-1:0] status;
-        vlsu_sched_res_t [NUM_SCPADS-1:0] sched_res;
     } vector_if_vlsu_out_t;
 
     typedef struct packed {
@@ -409,13 +419,12 @@ package vector_pkg;
 
     typedef struct packed {
         lanes_issue_port_t [LANE_ISSUE_W-1:0] lane_issue_ports;
-        logic [LANE_FU_COUNT-1:0] wb_ready;
+        
         logic reduction_wb_ready;
     } vector_if_lanes_in_t;
 
     typedef struct packed {
         result_collector_out_t [LANE_FU_COUNT-1:0] result_collectors;
-        logic [LANE_FU_COUNT-1:0] fu_global_status; //can be indexed by fu_t
         vector_if_reduction_out_t reduction;
     } vector_if_lanes_out_t;
 

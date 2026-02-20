@@ -22,6 +22,10 @@ interface vector_if;
   //lanes to writeback
   vector_if_lanes_out_t lanes_out;
 
+  //unit ready and wb ready
+  vector_if_unit_ready_t unit_ready_signals;
+  vector_if_wb_ready_t wb_ready_signals;
+
   modport gsau (
     input gsau_in,
     output gsau_out
@@ -39,16 +43,30 @@ interface vector_if;
 
   modport vif (
     input gsau_in,
-    input sysarr_in,
     input vlsu_in,
-    input sp_in,
     input lanes_in,
+    input unit_ready_signals,
     output gsau_out,
-    output sysarr_out,
     output vlsu_out,
-    output sp_out,
-    output lanes_out
+    output lanes_out,
+    output wb_ready_signals
   );
+
+  modport schedular (
+    input gsau_in,
+    input vlsu_in,
+    input lanes_in,
+    input unit_ready_signals
+  );
+
+  modport writeback (
+    output gsau_out,
+    output vlsu_out,
+    output lanes_out,
+    output wb_ready_signals
+  );
+
+
 
 endinterface
 
