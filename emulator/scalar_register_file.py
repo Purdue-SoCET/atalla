@@ -14,10 +14,12 @@ class ScalarRegisterFile:
             return 0
         return self.regs.get(reg_num, 0)
 
-    def write(self, reg_num, data):
+    def write(self, reg_num, data, file):
         """Write data to a register."""
         if reg_num != 0:
-            self.regs[reg_num] = data & 0xFFFFFFFF  # Mask to 32 bits
+            print(data)
+            self.regs[reg_num] = int(data) & 0xFFFFFFFF  # Mask to 32 bits
+            file.write(f" x{reg_num:<2} <--- 0x{int(data & 0xFFFFFFF):08X}")
 
     def __str__(self):
         s = ""

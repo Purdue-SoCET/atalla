@@ -21,7 +21,8 @@ def scpad_to_vreg(
     rc: int = 0,       # 0 = Row Mode (across banks), 1 = Column Mode (down slots)
     rc_id: int = 0,
     num_rows: int = 31,
-    num_cols: int = 31
+    num_cols: int = 31,
+    file
 ):
     """
     Loads a vector from Scratchpad into a Vector Register.
@@ -57,7 +58,7 @@ def scpad_to_vreg(
             vector_data.append(val)
 
     # Write result to Vector Register
-    vregs.write(vd, vector_data)
+    vregs.write(vd, vector_data, file)
 
 
 # ============================================================

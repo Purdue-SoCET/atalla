@@ -39,7 +39,7 @@ class VectorRegisterFile:
         # Get the register, defaulting to a zero vector if it doesn't exist
         return self.regs.get(reg_num, np.zeros(self.vec_len, dtype=np.float32))
 
-    def write(self, reg_num, data):
+    def write(self, reg_num, data, file):
         """
         Write a vector to a register.
         Handles:
@@ -92,6 +92,18 @@ class VectorRegisterFile:
             
             # Store as NumPy array
             self.regs[reg_num] = np.array(clean_data, dtype=np.float32)
+
+            file.write(f" x{reg_num:<2} <----- ")
+            first = 1
+            #f.write(", ".join([f"0x{e.view(np.uint32):08X}" for e in vec]))
+            for val in clean_data:
+                if(first):
+                    file.write(f"[0x{np.float32(val).view(np.uint32):08X}")
+                    first = 0
+                else:
+                    file.write(f", 0x{np.float32(val).view(np.uint32):08X}")
+                
+            file.write("]")
 
     # def write(self, reg_num, data):
     #     """
