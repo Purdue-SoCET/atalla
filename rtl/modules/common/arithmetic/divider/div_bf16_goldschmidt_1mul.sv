@@ -76,10 +76,9 @@ module div_bf16_goldschmidt_1mul (
     assign f_1 = (16'h7EF3 - divif.in.operand2 & 16'h7FFF) & 16'h7FFF;
 
     // Second Iteration Inputs/Outputs
-    logic [15:0] muln_2, muld_2, f_2;
-    logic [15:0] n_outn_2, n_outd_2, outn_2, outd_2;        // Latched Outputs from Second multiplication
-
-    assign f_2 = subout;
+    logic [15:0] n_muln_2, n_muld_2, muln_2, muld_2, n_f_2, f_2;
+    assign subtr = muld_2;
+    assign n_f_2 = subout;
 
     // Final Output
     logic sign;
@@ -113,7 +112,7 @@ module div_bf16_goldschmidt_1mul (
     always_comb begin : next_state
         n_state = state;
         case(state)
-            INITIAL:  if (divif.in.valid_in) n_state = MULT1;
+            INITIAL:  if (divif.in.valid_in) n_state = MULT1; 
             MULT1:    if(donen && doned) n_state = SUB1;
             SUB1:     n_state = SUB2;
             SUB2:     n_state = INITIAL2;
@@ -132,6 +131,8 @@ module div_bf16_goldschmidt_1mul (
         muld = '0;
         divif.out.ready_in = 0;
         divif.out.valid_out = 0;
+        n_muln_2 = muln_2;
+        n_muld_2 = muld_2;
         case(state)
             INITIAL: begin
                 if (nRST) divif.out.ready_in = 1;
@@ -145,6 +146,10 @@ module div_bf16_goldschmidt_1mul (
                 muln = muln_1;
                 muld = muld_1;
                 f = f_1;
+                if(donen && doned) begin
+                    n_muln_2 = outn;
+                    n_muld_2 = outd;
+                end
             end
             INITIAL2: begin
                 n_startn = 1;
@@ -172,11 +177,17 @@ module div_bf16_goldschmidt_1mul (
             state <= INITIAL;
             startn <= '0;
             startd <= '0;
+            muln_2 <= '0;
+            muld_2 <= '0;
+            f_2 <= '0;
             fin <= '0;
         end else begin
             state <= n_state;
             startn <= n_startn;
             startd <= n_startd;
+            muln_2 <= n_muln_2;
+            muld_2 <= n_muln_2;
+            f_2 <= n_f_2;
             fin <= n_fin;
         end
     end
