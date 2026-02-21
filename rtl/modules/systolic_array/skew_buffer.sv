@@ -66,7 +66,7 @@ module skew_buffer #(
     generate
         for (i = 0; i < NUM_COLS; i++) begin
             // Reverse Triangle logic, flip the direction of the slope
-                if (!REVERSE_TRIANGLE) begin
+                if (REVERSE_TRIANGLE) begin
                     assign waddr[i] = wr_ptr + (DELAY_SLOPE * (NUM_COLS - i - 1));
                 end else begin
                     assign waddr[i] = wr_ptr + (DELAY_SLOPE * i);
