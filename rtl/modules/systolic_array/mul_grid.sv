@@ -89,7 +89,7 @@ module mul_grid (
                     .start(!mul_stall),
                     .a(a_pipe[i][j]),
                     .b(b_pipe[i][j]),
-                    .result(prod[i][j]),
+                    .result(prod[j][i]),
                     //.done(mac_ifs[i][j].value_ready)
                     .done()
                 );
