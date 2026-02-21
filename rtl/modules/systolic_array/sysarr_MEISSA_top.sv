@@ -20,6 +20,10 @@ module sysarr_MEISSA_top #(
     logic [N - 1:0][N - 1:0][DW - 1:0] col_prod;
     logic [N - 1:0][DW - 1:0] adder_sum;
 
+    logic [N - 1:0][DW - 1:0] partial_flipped;
+    logic [N - 1:0][DW - 1:0] partial_sram_out;
+    logic [N - 1:0][DW - 1:0] partial_reverted;
+
     // only stall when gsau indicates stall (consumer module wb buffer needs to stall)
     assign sysarr_stall = ~gsau_if.sa_ready_out;
 
@@ -37,8 +41,8 @@ module sysarr_MEISSA_top #(
         .prod_r(mul_prod)
     );
 
-    // adder trees
-    logic [N - 1:0] [DW - 1:0] adder_tree_psum;
+    // // adder trees
+    // logic [N - 1:0] [DW - 1:0] adder_tree_psum;
 
     genvar j,k;
     generate
@@ -56,7 +60,7 @@ module sysarr_MEISSA_top #(
                 .nRST(nRST),
                 .stall(sysarr_stall),
                 .terms_in(mul_prod[j]),
-                .psum_in(512'b0),
+                .psum_in(partial_reverted[j]),
                 .sum_out(adder_sum[j])
             );
         end
@@ -64,10 +68,12 @@ module sysarr_MEISSA_top #(
 
     // valid pipeline
     /* Formula for total latency:
-     * N - multiplier shifts (i.e. shifts across 32 multipliers, 1 shift per cycle)
+     * N - multiplier shifts (i.e. shifts across 32 multipliers, 1 shift per cycle) + 1 for output registering
      * MUL_LATENCY - Last columns multiplier latency
      * $clog2(N) * ADD_LATENCY - Adder Tree latency (num stages * delay per stage)
      * ADD_LATENCY - last adder for psums
+     * +1 from sram read/write latency
+     * +1 from sram rpt 1 behind wpt
     */
     localparam TOTAL_DELAY = N + MUL_LATENCY + $clog2(N) * ADD_LATENCY + ADD_LATENCY + 2;
     logic [TOTAL_DELAY - 1:0] valid_bits;
@@ -101,19 +107,35 @@ module sysarr_MEISSA_top #(
 
     assign gsau_if.sa_valid_in = valid_bits[TOTAL_DELAY - 1];
 
+    // flip the order of partial sums for reverse triangle delay
+    genvar l;
+    generate
+        for (l = 0; l < N; l++) begin : FLIP_PARTIAL
+            assign partial_flipped[l] = gsau_if.sa_array_in_partials[(N-1-l)*DW +: DW];
+        end
+    endgenerate
+
+    // revert order for parital sums
+    genvar m;
+    generate
+        for (m = 0; m < N; m++) begin : REVERT_PARTIAL
+            assign partial_reverted[m] = partial_sram_out[N - m - 1];
+        end
+    endgenerate
+
     skew_buffer #(
         // see parameter details in skew_buffer module
         .NUM_COLS       (N),
         .COL_WIDTH      (DW),
-        .RECT_DELAY     (MUL_LATENCY + (ADD_LATENCY * $clog2(N))), // latency for first columns add tree to have valid result
+        .RECT_DELAY     (MUL_LATENCY + (ADD_LATENCY * $clog2(N)) - 1), // latency for first columns add tree to have valid result
         .DELAY_SLOPE    (1),
-        .REVERSE_TRIANGLE(0)
+        .REVERSE_TRIANGLE(1)
     ) psum_buffer (
         .clk(clk),
         .n_rst(nRST),
         .stall(sysarr_stall),
-        .wr_data(gsau_if.sa_array_in_partials),
-        .rd_data(adder_tree_psum)
+        .wr_data(partial_flipped),
+        .rd_data(partial_sram_out)
     );
 
     logic [N - 1:0] [DW - 1:0] output_data;
