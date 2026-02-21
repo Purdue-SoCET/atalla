@@ -1,0 +1,136 @@
+[*]
+[*] GTKWave Analyzer v3.3.124 (w)1999-2025 BSI
+[*] Tue Feb 10 16:31:32 2026
+[*]
+[dumpfile] "/home/asicfab/a/pan453/atalla/reports/mul_bf16/rtl/mul_bf16_waves.vcd"
+[dumpfile_mtime] "Tue Feb 10 16:30:04 2026"
+[dumpfile_size] 876784125
+[savefile] "/home/asicfab/a/pan453/atalla/reports/mul_bf16/rtl/mul_bf16_waves.vcd.gtkw"
+[timestart] 11109134000
+[size] 1440 693
+[pos] -1 -94
+*-18.316242 11110669000 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1
+[treeopen] mul_bf16_tb.
+[treeopen] mul_bf16_tb.DUT.
+[sst_width] 275
+[signals_width] 391
+[sst_expanded] 1
+[sst_vpaned_height] 170
+@28
+[color] 7
+mul_bf16_tb.DUT.test
+@24
+mul_bf16_tb.errors[31:0]
+@28
+[color] 6
+mul_bf16_tb.DUT.add_EXPs.edge_case
+mul_bf16_tb.DUT.mul_sign_result
+[color] 3
+(7)mul_bf16_tb.DUT.mul_final_exp[7:0]
+@29
+mul_bf16_tb.DUT.mul_frac_product[8:0]
+@28
+mul_bf16_tb.DUT.mul_product[9:0]
+mul_bf16_tb.DUT.wallaca.product[16:0]
+@200
+-hex
+@22
+mul_bf16_tb.a[15:0]
+mul_bf16_tb.b[15:0]
+mul_bf16_tb.exp_result[15:0]
+mul_bf16_tb.result[15:0]
+@200
+-binary
+@28
+mul_bf16_tb.a[15:0]
+mul_bf16_tb.b[15:0]
+mul_bf16_tb.exp_result[15:0]
+mul_bf16_tb.result[15:0]
+@200
+-special cases
+@28
+mul_bf16_tb.DUT.inf
+[color] 2
+mul_bf16_tb.DUT.mul_ovf
+[color] 3
+mul_bf16_tb.DUT.mul_unf
+[color] 3
+mul_bf16_tb.DUT.a_sub
+[color] 3
+mul_bf16_tb.DUT.b_sub
+@24
+[color] 3
+mul_bf16_tb.expect_inf[31:0]
+[color] 6
+mul_bf16_tb.incorrect_unf[31:0]
+[color] 3
+mul_bf16_tb.expect_subnormal[31:0]
+@28
+mul_bf16_tb.DUT.boundary_case
+mul_bf16_tb.DUT.boundary_push
+mul_bf16_tb.DUT.small_normal
+@200
+-exponent
+@c00028
+[color] 3
+mul_bf16_tb.DUT.mul_final_exp[7:0]
+@28
+[color] 3
+(0)mul_bf16_tb.DUT.mul_final_exp[7:0]
+[color] 3
+(1)mul_bf16_tb.DUT.mul_final_exp[7:0]
+[color] 3
+(2)mul_bf16_tb.DUT.mul_final_exp[7:0]
+[color] 3
+(3)mul_bf16_tb.DUT.mul_final_exp[7:0]
+[color] 3
+(4)mul_bf16_tb.DUT.mul_final_exp[7:0]
+[color] 3
+(5)mul_bf16_tb.DUT.mul_final_exp[7:0]
+[color] 3
+(6)mul_bf16_tb.DUT.mul_final_exp[7:0]
+[color] 3
+(7)mul_bf16_tb.DUT.mul_final_exp[7:0]
+@1401200
+-group_end
+@c00028
+mul_bf16_tb.DUT.mul_significand_rounded[7:0]
+@28
+(0)mul_bf16_tb.DUT.mul_significand_rounded[7:0]
+(1)mul_bf16_tb.DUT.mul_significand_rounded[7:0]
+(2)mul_bf16_tb.DUT.mul_significand_rounded[7:0]
+(3)mul_bf16_tb.DUT.mul_significand_rounded[7:0]
+(4)mul_bf16_tb.DUT.mul_significand_rounded[7:0]
+(5)mul_bf16_tb.DUT.mul_significand_rounded[7:0]
+(6)mul_bf16_tb.DUT.mul_significand_rounded[7:0]
+(7)mul_bf16_tb.DUT.mul_significand_rounded[7:0]
+@1401200
+-group_end
+@28
+mul_bf16_tb.DUT.exp_sum[7:0]
+mul_bf16_tb.DUT.add_EXPs.full_sum[8:0]
+@200
+-adder
+@28
+mul_bf16_tb.DUT.add_EXPs.exp1[7:0]
+mul_bf16_tb.DUT.add_EXPs.exp2[7:0]
+mul_bf16_tb.DUT.add_EXPs.r_exp1[7:0]
+mul_bf16_tb.DUT.add_EXPs.r_exp2[7:0]
+mul_bf16_tb.DUT.add_EXPs.r_sum[7:0]
+mul_bf16_tb.DUT.add_EXPs.sum[7:0]
+mul_bf16_tb.DUT.add_EXPs.carry
+[color] 2
+mul_bf16_tb.DUT.add_EXPs.ovf
+[color] 3
+mul_bf16_tb.DUT.add_EXPs.unf
+@200
+-mantissa
+@28
+mul_bf16_tb.DUT.mul_carryout
+mul_bf16_tb.DUT.mul_round_loss
+mul_bf16_tb.DUT.mul_significand_rounded[7:0]
+mul_bf16_tb.DUT.mul_frac_product[8:0]
+mul_bf16_tb.DUT.mul_product[9:0]
+mul_bf16_tb.DUT.wallaca.product[16:0]
+[pattern_trace] 1
+[pattern_trace] 0

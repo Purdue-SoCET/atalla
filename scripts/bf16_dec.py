@@ -3,6 +3,8 @@
 BF16 Hex to Detailed Format Converter using PyTorch
 Usage: python bf16_decoder.py <hex_value>
 Example: python bf16_decoder.py 0x4040
+
+This script is mainly used for debugging bg16 arithmetic units
 """
 
 import torch

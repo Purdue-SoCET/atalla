@@ -1,94 +1,89 @@
-# Dir structure
-MKDIR = $(abspath $(dir $(lastword $(MAKEFILE_LIST))))
-SRC_DIR = $(MKDIR)/src
-MODULE_DIR = $(SRC_DIR)/modules
-TB_DIR = $(SRC_DIR)/testbench
-INCLUDE_DIR = $(SRC_DIR)/include
-WAVES_DIR = $(SRC_DIR)/waves
-SCRIPTS_DIR = $(SRC_DIR)/scripts
-MEMORY_DIR = $(MKDIR)/memory
+# Top-level Makefile adapted to new layout
+# - RTL modules: ./rtl/
+# - Testbenches: ./tb/
+# - Testbench result outputs: ./tb/result_output/
+# - Waveforms / do files: ./waves/
 
-# Memory config
-MEMINIT ?= $(MEMORY_DIR)/meminit.hex
-MEMDUMP ?= $(MEMORY_DIR)/memdump.hex
-MEMARGS = +meminit=$(MEMINIT) +memdump=$(MEMDUMP) -sv_lib memory 
+MKDIR := $(abspath $(dir $(lastword $(MAKEFILE_LIST))))
 
-# Questa
-VLOG = vlog
-VSIM = vsim
-WARNINGS_IGNORE = -suppress 3015 -suppress 2275 # ignore port mismatch and ignore non-synth
-VLOG_FLAGS = -sv +incdir+./src/include
-VSIM_FLAGS = -voptargs="+acc" $(WARNINGS_IGNORE)
+RTL_DIR := $(MKDIR)/rtl
+TB_DIR := $(MKDIR)/tb
+INCLUDE_DIR := $(MKDIR)/include
+WAVES_DIR := $(MKDIR)/waves
+TB_OUT_DIR := $(TB_DIR)/result_output
 
-# modelsim viewing options
-ifneq (0,$(words $(filter %.wav,$(MAKECMDGOALS))))
-#     # view waveform in graphical mode and load do file if there is one
-	DOFILES = $(notdir $(basename $(wildcard $(shell find . -name "*.do"))))  # Search for all .do files in the project
-	DOFILE = $(filter $(MAKECMDGOALS:%.wav=%) $(MAKECMDGOALS:%_tb.wav=%), $(DOFILES))
-	ifeq (1, $(words $(DOFILE)))
-	WAVDO = do $(firstword $(shell find . -name $(DOFILE).do))  # Load the .do file from anywhere in the project
-	else
-	WAVDO = add wave *
-	endif
-	SIMDO = "view objects; $(WAVDO); run -all;"
-else
-	# view text output in cmdline mode
-	SIMTERM = -c
-	SIMDO = "run -all;"
-endif
+# Simulator config
+VLOG := vlog
+VSIM := vsim
+WARNINGS_IGNORE := -suppress 3015 -suppress 2275
+VLOG_FLAGS := -sv +incdir+$(INCLUDE_DIR)
+VSIM_FLAGS := -voptargs="+acc" $(WARNINGS_IGNORE)
+
+SIMTERM := -c
 
 help:
-	@echo "  source              - Compile all source files"
-	@echo "  <module>            - Run simulation"
-	@echo "  <module>.wav        - Run qsim GUI simulation"
-	@echo "  <module>_vlint      - Lint specific module"
-	@echo "  clean               - Clean"
-	@echo ""
+	@echo "Usage: make <testbench>         - run tb/<testbench>_tb.sv"
+	@echo "       make <testbench>.wav     - run with waveform (waves/<testbench>.do loaded when present)"
+	@echo "       make <module>_vlint      - lint rtl/<module>.sv with verilator"
+	@echo "       make clean               - clean build artifacts and results"
 
-# Generic make targets
-%:
-	$(VLOG) $(VLOG_FLAGS) $(TB_DIR)/$*_tb.sv $(MODULE_DIR)/*.sv
-	$(VSIM) $(VSIM_FLAGS) -c work.$*_tb -do "run -all;"
+# Ensure output directories exist
+.PHONY: dirs
+dirs:
+	@mkdir -p $(TB_OUT_DIR)
+	@mkdir -p $(WAVES_DIR)
 
-%.wav:
-	$(VLOG) $(VLOG_FLAGS) $(TB_DIR)/$*_tb.sv $(MODULE_DIR)/$*.sv
-	$(VSIM) $(VSIM_FLAGS) work.$*_tb -do $(SIMDO) -onfinish stop 
+# Derive a canonical module name from the requested make goal.
+# Examples:
+#  - make mul_bf16        -> MODNAME=mul_bf16
+#  - make mul_bf16.wav    -> MODNAME=mul_bf16
+#  - make mul_bf16_run    -> MODNAME=mul_bf16
+MODNAME := $(patsubst %_run,%,$(patsubst %.wav,%,$(firstword $(MAKECMDGOALS))))
 
+# Generic simulation target: compile TB plus all RTL modules and run
+%: dirs
+	# Compile TB and all rtl files (ensures module dependencies are present)
+	$(VLOG) $(VLOG_FLAGS) $(TB_DIR)/$(MODNAME)_tb.sv $(RTL_DIR)/*.sv; \
+	$(VSIM) $(VSIM_FLAGS) $(SIMTERM) work.$(MODNAME)_tb -do "run -all;"
+
+# Waveform target: compile TB and the named module, run GUI/do
+%.wav: dirs
+	# Compile TB and all rtl files (ensures module dependencies are present)
+	$(VLOG) $(VLOG_FLAGS) $(TB_DIR)/$(MODNAME)_tb.sv $(RTL_DIR)/*.sv; \
+	# If a do file exists under waves, load it; otherwise show default waves
+	if [ -f $(WAVES_DIR)/$(MODNAME)_waves.do ]; then \
+		DO="do $(abspath $(WAVES_DIR)/$(MODNAME)_waves.do);"; \
+	else \
+		DO="add wave *;"; \
+	fi; \
+	$(VSIM) $(VSIM_FLAGS) work.$(MODNAME)_tb -do "view objects; $$DO run -all;" -onfinish stop
+
+# Lint with verilator
 %_vlint:
-	verilator --lint-only src/modules/$*.sv +incdir+$(INCLUDE_DIR) +incdir+$(MODULE_DIR)
+	verilator --lint-only $(RTL_DIR)/$*.sv +incdir+$(INCLUDE_DIR)
 
 clean:
 	rm -rf work transcript vsim.wlf *.log *.jou *.vstf *.vcd
+	rm -rf $(TB_OUT_DIR)/* || true
 
-# Unique targets
-memory_subsystem.wav:
-	$(VLOG) $(VLOG_FLAGS) ./src/include/*.vh ./src/testbench/memory_subsystem_tb.sv ./src/modules/*.sv
-	$(VSIM) $(VSIM_FLAGS) work.memory_subsystem_tb -sv_lib memory -do "do $(WAVES_DIR)/memory_subsystem.do; run $(SIMTIME);"
+# Convenience: run all testbenches found in tb/ (may be slow)
+.PHONY: run_all_tbs
+run_all_tbs: dirs
+	for tb in $(shell ls $(TB_DIR)/*_tb.sv 2>/dev/null | xargs -n1 basename -s _tb.sv); do \
+		echo "Running $$tb"; \
+		$(VLOG) $(VLOG_FLAGS) $(TB_DIR)/$$tb_tb.sv $(RTL_DIR)/*.sv; \
+		$(VSIM) $(VSIM_FLAGS) $(SIMTERM) work.$$tb_tb -do "run -all;"; \
+	done
 
-system.wav:
-	touch $(MEMDUMP)
-	$(VLOG) $(VLOG_FLAGS) ./src/include/*.vh ./src/testbench/system_tb.sv ./src/modules/*.sv
-	$(VSIM) $(VSIM_FLAGS) work.system_tb $(MEMARGS) -do "do $(WAVES_DIR)/system.do; run -a;" -suppress 2275
+# Target: run a specific test that produces VCD into waves/ and writes results into tb/result_output/
+# Example: make add_bf16_test
 
-system:
-	touch $(MEMDUMP)
-	$(VLOG) $(VLOG_FLAGS) ./src/include/*.vh ./src/testbench/system_tb.sv ./src/modules/*.sv
-	$(VSIM) $(VSIM_FLAGS)  -c $(MEMARGS) work.system_tb -sv_lib memory -do $(SIMDO)
 
-test_memory_wav:
-	$(VLOG) $(VLOG_FLAGS) ./src/include/*.vh ./src/testbench/memory_subsystem_tb.sv ./src/modules/*.sv
-	$(VSIM) $(VSIM_FLAGS) work.memory_subsystem_tb -sv_lib memory -do "do $(WAVES_DIR)/memory_subsystem.do; run $(SIMTIME);" -suppress 2275
 
-icache:
-	$(VLOG) $(VLOG_FLAGS) ./src/testbench/icache_tb.sv ./src/modules/icache.sv
-	$(VSIM) $(SIMTERM) $(VSIM_FLAGS) work.icache_tb -do $(SIMDO)
+%_run: dirs
+	# Compile TB and all rtl files (ensures module dependencies are present)
+	$(VLOG) $(VLOG_FLAGS) $(TB_DIR)/$(MODNAME)_tb.sv $(RTL_DIR)/*.sv; \
+	$(VSIM) $(VSIM_FLAGS) $(SIMTERM) work.$(MODNAME)_tb -do "run -all;"
 
-mls:
-	$(VLOG) $(VLOG_FLAGS) ./src/testbench/fu_matrix_ls_tb.sv ./src/modules/fu_matrix_ls.sv
-	$(VSIM) $(VSIM_FLAGS) work.fu_matrix_ls_tb
-
-wb:
-	pwd
-	ls ./src/waves/
-	$(VLOG) $(VLOG_FLAGS) ./src/testbench/writeback_tb.sv ./src/modules/writeback.sv
-	$(VSIM) $(VSIM_FLAGS) work.writeback_tb -do "do $(abspath ./src/waves/writeback.do); run -all"
+.PHONY: all
+all: help

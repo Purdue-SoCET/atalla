@@ -1,0 +1,123 @@
+[*]
+[*] GTKWave Analyzer v3.3.124 (w)1999-2025 BSI
+[*] Wed Feb 18 01:18:52 2026
+[*]
+[dumpfile] "/home/asicfab/a/pan453/atalla/waves/add_bf16_waves.vcd"
+[dumpfile_mtime] "Wed Feb 18 01:18:10 2026"
+[dumpfile_size] 678616700
+[savefile] "/home/asicfab/a/pan453/atalla/waves/add_bf16_waves.vcd.gtkw"
+[timestart] 574952360
+[size] 1440 705
+[pos] -441 -105
+*-12.994315 574969900 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1
+[treeopen] add_bf16_tb.
+[sst_width] 275
+[signals_width] 389
+[sst_expanded] 1
+[sst_vpaned_height] 94
+@28
+add_bf16_tb.DUT.clk
+@420
+[color] 7
+add_bf16_tb.errors
+@200
+-special cases
+@420
+add_bf16_tb.incorrect_round_up
+add_bf16_tb.incorrect_round_down
+@25
+[color] 2
+add_bf16_tb.DUT.exp_diff[7:0]
+@24
+add_bf16_tb.DUT.larger_exponent[7:0]
+add_bf16_tb.DUT.smaller_exponent[7:0]
+@28
+add_bf16_tb.DUT.G
+add_bf16_tb.DUT.R
+[color] 3
+(6)add_bf16_tb.DUT.round_this[8:0]
+add_bf16_tb.DUT.mantissa_sum[10:0]
+[color] 2
+add_bf16_tb.DUT.mantissa_overflow
+add_bf16_tb.DUT.sticky
+@200
+-hex
+@22
+add_bf16_tb.a_in[15:0]
+add_bf16_tb.b_in[15:0]
+add_bf16_tb.exp_result[15:0]
+add_bf16_tb.DUT.bf_out[15:0]
+@200
+-binary
+@28
+add_bf16_tb.a_in[15:0]
+add_bf16_tb.b_in[15:0]
+add_bf16_tb.exp_result[15:0]
+add_bf16_tb.expect_exp[7:0]
+[color] 3
+add_bf16_tb.expect_mantissa[6:0]
+add_bf16_tb.DUT.bf_out[15:0]
+[color] 2
+add_bf16_tb.DUT.roundup
+[color] 3
+(6)add_bf16_tb.DUT.round_this[8:0]
+@200
+-exponent
+@c00028
+add_bf16_tb.DUT.exp_out[7:0]
+@28
+(0)add_bf16_tb.DUT.exp_out[7:0]
+(1)add_bf16_tb.DUT.exp_out[7:0]
+(2)add_bf16_tb.DUT.exp_out[7:0]
+(3)add_bf16_tb.DUT.exp_out[7:0]
+(4)add_bf16_tb.DUT.exp_out[7:0]
+(5)add_bf16_tb.DUT.exp_out[7:0]
+[color] 2
+(6)add_bf16_tb.DUT.exp_out[7:0]
+(7)add_bf16_tb.DUT.exp_out[7:0]
+@1401200
+-group_end
+@28
+add_bf16_tb.DUT.exp_out_adj[7:0]
+@200
+-mantissa
+@28
+[color] 3
+add_bf16_tb.DUT.rounded_fraction[6:0]
+@200
+-shifting
+@28
+add_bf16_tb.DUT.normalized_mantissa_sum[8:0]
+add_bf16_tb.DUT.norm_shift[3:0]
+@200
+-rounding
+@c00028
+[color] 3
+add_bf16_tb.DUT.round_this[8:0]
+@28
+[color] 3
+(0)add_bf16_tb.DUT.round_this[8:0]
+[color] 3
+(1)add_bf16_tb.DUT.round_this[8:0]
+[color] 3
+(2)add_bf16_tb.DUT.round_this[8:0]
+[color] 3
+(3)add_bf16_tb.DUT.round_this[8:0]
+[color] 3
+(4)add_bf16_tb.DUT.round_this[8:0]
+[color] 3
+(5)add_bf16_tb.DUT.round_this[8:0]
+[color] 3
+(7)add_bf16_tb.DUT.round_this[8:0]
+[color] 3
+(6)add_bf16_tb.DUT.round_this[8:0]
+[color] 3
+(8)add_bf16_tb.DUT.round_this[8:0]
+@1401200
+-group_end
+@28
+[color] 3
+add_bf16_tb.DUT.round_sum[7:0]
+add_bf16_tb.DUT.exp_select
+[pattern_trace] 1
+[pattern_trace] 0
