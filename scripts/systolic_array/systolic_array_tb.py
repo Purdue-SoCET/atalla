@@ -182,6 +182,13 @@ def write_line(path, text):
     with open(path, "a") as f:
         f.write(text + "\n")
 
+def sim_val_from_bits(bits, dtype="bf16"):
+    if dtype == "bf16":
+        return bf16_utils.bf16_from_bits(bits)
+    elif dtype == "fp16":
+        return fp16_utils.fp16_from_bits(bits)
+    raise ValueError("dtype must be 'bf16' or 'fp16'")
+
 def sim_add_hw(a: np.uint16, b: np.uint16, dtype="bf16") -> np.uint16:
     if dtype == "bf16":
         return np.uint16(bf16_utils.bf16_add_hw(a, b))

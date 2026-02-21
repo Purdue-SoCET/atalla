@@ -1,6 +1,7 @@
 from __future__ import annotations
 from dataclasses import dataclass
 from typing import List
+import systolic_array_tb
 
 # ---------------- Matrix Data Class ----------------
 
@@ -115,7 +116,7 @@ def compare_matrices(expected_results, results):
         isPass = True
         for r in range(len(A.data)):
             for c in range(len(A.data[r])):
-                if int(A.data[r][c]) != int(B.data[r][c]):
+                if systolic_array_tb.sim_val_from_bits(A.data[r][c]) != systolic_array_tb.sim_val_from_bits(B.data[r][c]):
                     print(f"Test {t} Matrix {mid} FAILED")
                     break
                     isPass = False
@@ -134,8 +135,8 @@ def compare_results(expected_result_path, result_path):
 if __name__ == "__main__":
     import sys
 
-    if len(sys.argv) != 3:
-        print("Usage: python compare_result.py <file1.txt> <file2.txt>")
-        raise SystemExit(2)
+    # if len(sys.argv) != 3:
+    #     print("Usage: python compare_result.py <file1.txt> <file2.txt>")
+    #     raise SystemExit(2)
     
-    compare_results(sys.argv[1], sys.argv[2])
+    compare_results(systolic_array_tb.PATH_TO_EXPECTED_RESULT, systolic_array_tb.PATH_TO_RESULT)
