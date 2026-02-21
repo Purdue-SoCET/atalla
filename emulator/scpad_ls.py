@@ -22,7 +22,7 @@ def scpad_to_vreg(
     rc_id: int = 0,
     num_rows: int = 31,
     num_cols: int = 31,
-    file
+    file,
 ):
     """
     Loads a vector from Scratchpad into a Vector Register.
@@ -73,7 +73,9 @@ def vreg_to_scpad(
     rc: int = 0,       # 0 = Row Mode, 1 = Column Mode
     rc_id: int = 0,
     num_rows: int = 31,
-    num_cols: int = 31
+    num_cols: int = 31,
+    file,
+    scpad_id
 ):
     """
     Stores a Vector Register into the Scratchpad.
@@ -83,25 +85,40 @@ def vreg_to_scpad(
     """
     # Read vector data
     vector_data = vregs.read(vs)
+    first = 1
     
     if rc == 1:
         # --- COL MODE ---
         # Fixed Slot (scpad_addr), Iterate Banks
         slot = int (scpad_addr % scpad.S + rc_id)
+        file.write(f" SP{scpad_id}[0:{num_cols}][{slot}] <--- [")
         for bank, val in enumerate(vector_data):
             if bank >= num_cols + 1:
                 break
+            if first:
+                file.write(f"0x{np.float32(val).view(np.uint32):08X}")
+                first = 0
+            else:
+                file.write(f", 0x{np.float32(val).view(np.uint32):08X}")
             scpad.banks[bank][slot] = val
 
     elif rc == 0:
         # --- ROW MODE ---
         # Fixed Bank (scpad_addr), Iterate Slots
         bank = scpad_addr % scpad.B + rc_id
+        file.write(f" SP{scpad_id}[{bank}][0:{num_rows}] <--- [")
         for i, val in enumerate(vector_data):
             slot = i % scpad.S
             if i >= num_rows + 1:
                 break
+            if first:
+                file.write(f"0x{np.float32(val).view(np.uint32):08X}")
+                first = 0
+            else:
+                file.write(f", 0x{np.float32(val).view(np.uint32):08X}")
             scpad.banks[bank][slot] = val  
+    
+    file.write("]")
 
 
 # ============================================================
@@ -117,6 +134,8 @@ def sdma_load(
     NR: int,
     NC: int,
     swizzle: Callable[[int], int] = identity_swizzle,
+    file,
+    scpad_id,
 ):
     """
     for i in range(NR):
@@ -152,10 +171,18 @@ def sdma_load(
 
         # Write into scratchpad banks
         slot = (scpad_base_row + i) % scpad.S
+        first = 1
+        file.write(f" SP{scpad_id}[0:{NC}][{slot}] <--- [")
         for bank, val in enumerate(row_vals):
             if bank >= scpad.B:
                 break
+            if first:
+                file.write(f"0x{np.float32(val).view(np.uint32):08X}")
+                first = 0
+            else:
+                file.write(f", 0x{np.float32(val).view(np.uint32):08X}")
             scpad.banks[bank][slot] = val
+        file.write("] |")
 
 
 # ============================================================
@@ -171,6 +198,7 @@ def sdma_store(
     NR: int,
     NC: int,
     swizzle: Callable[[int], int] = identity_swizzle,
+    file,
 ):
     """
     for i in range(NR):
@@ -192,7 +220,7 @@ def sdma_store(
             bits = bits >> 16
             #x_shifted = struct.unpack('<f', struct.pack('<I', bits & 0xFFFFFFFF))[0]
             g_addr = gmem_base + (i * (NC+1) + j) * 2
-            gmem.write_data(g_addr, bits)
+            gmem.write_data(g_addr, bits, file, 1)
 
 
 def dump_scpad_rc(

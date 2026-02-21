@@ -76,7 +76,6 @@ def apply_imm_vector_op(
 
     return vd
 
-
 def main():
     mem_file = "Testing/unit_tests/mem-scped-vreg-scpad-mem.txt" # need to change this to target different mem test files
     out_file = "output_mem.txt"
@@ -194,7 +193,7 @@ def main():
                     sregs.write(inst['rd'], mem.read_data(sregs.read(inst['rs1']) + inst['imm']), trace_file)
                 elif(m == "sw.s"):
                     trace_file.write(f"x{inst['rd']} {inst['imm']}(x{inst['rs1']}) |")
-                    mem.write_data(sregs.read(inst['rs1']) + inst['imm'], sregs.read(inst['rd']))
+                    mem.write_data(sregs.read(inst['rs1']) + inst['imm'], sregs.read(inst['rd']), trace_file)
                 elif(m == "lhw.s"):
                     trace_file.write(f"x{inst['rd']} {inst['imm']}(x{inst['rs1']}) |")
                     temp = mem.read_data(sregs.read(inst['rs1']) + inst['imm'])
@@ -205,9 +204,10 @@ def main():
                     trace_file.write(f"x{inst['rd']} {inst['imm']}(x{inst['rs1']}) |")
                     temp = sregs.read(inst['rd'])
                     temp = temp >> 16
-                    mem.write_data(sregs.read(inst['rs1']) + inst['imm'], temp)
+                    mem.write_data(sregs.read(inst['rs1']) + inst['imm'], temp, trace_file)
                 #vector load/store here
                 elif m == "vreg.ld":
+                    trace_file.write(f"v{inst['vd']} SP{inst['sid']} x{inst['rs1']} {inst['rc']} {inst['rc_id']} {inst['num_rows']} {inst['num_cols']} |")
                     # # 1. Select Scratchpad based on 'sp' field (0=SP0, 1=SP1)
                     # if inst.get('sp', 0) == 1 
                     if inst['sid'] == 1:
@@ -232,6 +232,7 @@ def main():
                     )
 
                 elif m == "vreg.st":
+                    trace_file.write(f"v{inst['vd']} SP{inst['sid']} x{inst['rs1']} {inst['rc']} {inst['rc_id']} {inst['num_rows']} {inst['num_cols']} |")
                     # 1. Select Scratchpad
                     # target_sp = SP1 if inst.get('sp', 0) == 1 else SP0
                     if inst['sid'] == 1:
@@ -251,12 +252,15 @@ def main():
                         rc=inst['rc'],
                         rc_id=inst['rc_id'],
                         num_rows=inst['num_rows'],
-                        num_cols=inst['num_cols']
+                        num_cols=inst['num_cols'],
+                        file = trace_file,
+                        scpad_id = inst['sid']
                     )
 
                 #scpad load/store here
 
                 elif(m == "scpad.ld"):
+                    trace_file.write(f"SP{inst['sid']} x{inst['rs1/rd1']} x{inst['rs1/rd1']} x{inst['rs2']} {inst['num_rows']} {inst['num_cols']} |")
                     if inst['sid'] == 0:
                         if(inst['rs1/rd1'] in tileID0Dict.keys()):
                             localID = tileID0Dict[inst['rs1/rd1']]
@@ -264,7 +268,7 @@ def main():
                             tile_id0 += 1
                             tileID0Dict[inst['rs1/rd1']] = tile_id0
                             localID = tileID0Dict[inst['rs1/rd1']]
-                        sdma_load(gmem=mem, scpad=SP0, gmem_base=sregs.read(inst['rs2']), scpad_base_row=int(sregs.read(inst['rs1/rd1'])), tile_id=localID, NR=inst['num_rows'], NC=inst['num_cols'])
+                        sdma_load(gmem=mem, scpad=SP0, gmem_base=sregs.read(inst['rs2']), scpad_base_row=int(sregs.read(inst['rs1/rd1'])), tile_id=localID, NR=inst['num_rows'], NC=inst['num_cols'], file=trace_file, scpad_id = 0)
                     elif inst['sid'] == 1:
                         if(inst['rs1/rd1'] in tileID1Dict.keys()):
                             localID = tileID1Dict[inst['rs1/rd1']]
@@ -272,9 +276,10 @@ def main():
                             tile_id1 += 1
                             tileID1Dict[inst['rs1/rd1']] = tile_id1
                             localID = tileID1Dict[inst['rs1/rd1']]
-                        sdma_load(gmem=mem, scpad=SP1, gmem_base=sregs.read(inst['rs2']), scpad_base_row=int(sregs.read(inst['rs1/rd1'])), tile_id=localID, NR=inst['num_rows'], NC=inst['num_cols'])
+                        sdma_load(gmem=mem, scpad=SP1, gmem_base=sregs.read(inst['rs2']), scpad_base_row=int(sregs.read(inst['rs1/rd1'])), tile_id=localID, NR=inst['num_rows'], NC=inst['num_cols'], file=trace_file, scpad_id = 1)
 
                 elif(m == "scpad.st"):
+                    trace_file.write(f"SP{inst['sid']} x{inst['rs1/rd1']} x{inst['rs1/rd1']} x{inst['rs2']} {inst['num_rows']} {inst['num_cols']} |")
                     if inst['sid'] == 0:
                         if(inst['rs1/rd1'] in tileID0Dict.keys()):
                             localID = tileID0Dict[inst['rs1/rd1']]
@@ -282,7 +287,7 @@ def main():
                             tile_id0 += 1
                             tileID0Dict[inst['rs1/rd1']] = tile_id0
                             localID = tileID0Dict[inst['rs1/rd1']]
-                        sdma_store(gmem=mem, scpad=SP0, scpad_base_row=int(sregs.read(inst['rs1/rd1'])), gmem_base=sregs.read(inst['rs2']), tile_id=tile_id0, NR=inst['num_rows'], NC=inst['num_cols'])
+                        sdma_store(gmem=mem, scpad=SP0, scpad_base_row=int(sregs.read(inst['rs1/rd1'])), gmem_base=sregs.read(inst['rs2']), tile_id=tile_id0, NR=inst['num_rows'], NC=inst['num_cols'], file = trace_file)
                     elif inst['sid'] == 1:
                         if(inst['rs1/rd1'] in tileID1Dict.keys()):
                             localID = tileID1Dict[inst['rs1/rd1']]
@@ -290,22 +295,27 @@ def main():
                             tile_id1 += 1
                             tileID1Dict[inst['rs1/rd1']] = tile_id1
                             localID = tileID1Dict[inst['rs1/rd1']]
-                        sdma_store(gmem=mem, scpad=SP1, scpad_base_row=int(sregs.read(inst['rs1/rd1'])), gmem_base=sregs.read(inst['rs2']), tile_id=tile_id1, NR=inst['num_rows'], NC=inst['num_cols'])
+                        sdma_store(gmem=mem, scpad=SP1, scpad_base_row=int(sregs.read(inst['rs1/rd1'])), gmem_base=sregs.read(inst['rs2']), tile_id=tile_id1, NR=inst['num_rows'], NC=inst['num_cols'], file = trace_file)
                 elif(m == "lui.s"): 
+                    trace_file.write(f"x{inst['rd']} {inst['imm']} |")
                     print(inst['imm'])
                     sregs.write(inst['rd'], (inst['imm']) << 7, trace_file)
                 elif(m == "mv.mts"):
+                    trace_file.write(f"x{inst['rd']} m{inst['vms']} |")
                     sregs.write(inst['rd'], mregs.read(inst['vms']), trace_file)
                 elif(m == "mv.stm"):
-                    mregs.write(inst['vmd'], sregs.read(inst['rs1']))
+                    trace_file.write(f"m{inst['vmd']} x{inst['rs1']} |")
+                    mregs.write(inst['vmd'], sregs.read(inst['rs1']), trace_file, 1)
                 elif m in ("add.s", "addi.s", "add.bf"):
                     if(m == "add.s" or m == "add.bf"):
+                        trace_file.write(f"x{inst['rd']} x{inst['rs1']} x{inst['rs2']} |")
                         src1 = sregs.read(inst['rs1'])
                         src2 = sregs.read(inst['rs2'])
                         if(m == "add.bf"):
                             src1 = hex_to_fp32(src1)
                             src2 = hex_to_fp32(src2)
                     else:
+                        trace_file.write(f"x{inst['rd']} x{inst['rs1']} {inst['imm']} |")
                         src1 = sregs.read(inst['rs1'])
                         src2 = inst['imm']
                     WBdata = EU.execute(m, sA=src1, sB=src2)
@@ -315,12 +325,14 @@ def main():
                     sregs.write(inst['rd'], WBdata, trace_file)
                 elif m in ("sub.s", "subi.s", "sub.bf"):
                     if(m == "sub.s" or m == "sub.bf"):
+                        trace_file.write(f"x{inst['rd']} x{inst['rs1']} x{inst['rs2']} |")
                         src1 = sregs.read(inst['rs1'])
                         src2 = sregs.read(inst['rs2'])
                         if(m == "sub.bf"):
                             src1 = hex_to_fp32(src1)
                             src2 = hex_to_fp32(src2)
                     else:
+                        trace_file.write(f"x{inst['rd']} x{inst['rs1']} {inst['imm']} |")
                         src1 = sregs.read(inst['rs1'])
                         src2 = inst['imm']
                     WBdata = EU.execute(m, sA=src1, sB=src2)
@@ -330,12 +342,14 @@ def main():
                     sregs.write(inst['rd'], WBdata, trace_file)
                 elif m in ("mul.s", "muli.s", "mul.bf"):
                     if(m == "mul.s" or m == "mul.bf"):
+                        trace_file.write(f"x{inst['rd']} x{inst['rs1']} x{inst['rs2']} |")
                         src1 = sregs.read(inst['rs1'])
                         src2 = sregs.read(inst['rs2'])
                         if(m == "mul.bf"):
                             src1 = hex_to_fp32(src1)
                             src2 = hex_to_fp32(src2)
                     else:
+                        trace_file.write(f"x{inst['rd']} x{inst['rs1']} {inst['imm']} |")
                         src1 = sregs.read(inst['rs1'])
                         src2 = inst['imm']
                     WBdata = EU.execute(m, sA=src1, sB=src2)
@@ -344,12 +358,14 @@ def main():
                     sregs.write(inst['rd'], WBdata, trace_file)
                 elif m in ("div.s", "divi.s", "div.bf"):
                     if(m == "div.s" or m == "div.bf"):
+                        trace_file.write(f"x{inst['rd']} x{inst['rs1']} x{inst['rs2']} |")
                         src1 = sregs.read(inst['rs1'])
                         src2 = sregs.read(inst['rs2'])
                         if(m == "div.bf"):
                             src1 = hex_to_fp32(src1)
                             src2 = hex_to_fp32(src2)
                     else:
+                        trace_file.write(f"x{inst['rd']} x{inst['rs1']} {inst['imm']} |")
                         src1 = sregs.read(inst['rs1'])
                         src2 = inst['imm']
                     WBdata = EU.execute(m, sA=src1, sB=src2)
@@ -358,97 +374,117 @@ def main():
                     sregs.write(inst['rd'], WBdata, trace_file)
                 elif m in ("mod.s", "modi.s"):
                     if(m == "mod.s"):
+                        trace_file.write(f"x{inst['rd']} x{inst['rs1']} x{inst['rs2']} |")
                         src1 = sregs.read(inst['rs1'])
                         src2 = sregs.read(inst['rs2'])
                     else:
+                        trace_file.write(f"x{inst['rd']} x{inst['rs1']} {inst['imm']} |")
                         src1 = sregs.read(inst['rs1'])
                         src2 = inst['imm']
                     WBdata = EU.execute(m, sA=src1, sB=src2)
                     sregs.write(inst['rd'], WBdata, trace_file)
                 elif m in ("or.s", "ori.s"):
                     if(m == "or.s"):
+                        trace_file.write(f"x{inst['rd']} x{inst['rs1']} x{inst['rs2']} |")
                         src1 = sregs.read(inst['rs1'])
                         src2 = sregs.read(inst['rs2'])
                     else:
+                        trace_file.write(f"x{inst['rd']} x{inst['rs1']} {inst['imm']} |")
                         src1 = sregs.read(inst['rs1'])
                         src2 = inst['imm']
                     WBdata = EU.execute(m, sA=src1, sB=src2)
                     sregs.write(inst['rd'], WBdata, trace_file)
                 elif m in ("and.s", "andi.s"):
                     if(m == "and.s"):
+                        trace_file.write(f"x{inst['rd']} x{inst['rs1']} x{inst['rs2']} |")
                         src1 = sregs.read(inst['rs1'])
                         src2 = sregs.read(inst['rs2'])
                     else:
+                        trace_file.write(f"x{inst['rd']} x{inst['rs1']} {inst['imm']} |")
                         src1 = sregs.read(inst['rs1'])
                         src2 = inst['imm']
                     WBdata = EU.execute(m, sA=src1, sB=src2)
                     sregs.write(inst['rd'], WBdata, trace_file)
                 elif m in ("xor.s", "xori.s"):
                     if(m == "xor.s"):
+                        trace_file.write(f"x{inst['rd']} x{inst['rs1']} x{inst['rs2']} |")
                         src1 = sregs.read(inst['rs1'])
                         src2 = sregs.read(inst['rs2'])
                     else:
+                        trace_file.write(f"x{inst['rd']} x{inst['rs1']} {inst['imm']} |")
                         src1 = sregs.read(inst['rs1'])
                         src2 = inst['imm']
                     WBdata = EU.execute(m, sA=src1, sB=src2)
                     sregs.write(inst['rd'], WBdata, trace_file)
                 elif m in ("sll.s", "slli.s"):
                     if(m == "sll.s"):
+                        trace_file.write(f"x{inst['rd']} x{inst['rs1']} x{inst['rs2']} |")
                         src1 = sregs.read(inst['rs1'])
                         src2 = sregs.read(inst['rs2'])
                     else:
+                        trace_file.write(f"x{inst['rd']} x{inst['rs1']} {inst['imm']} |")
                         src1 = sregs.read(inst['rs1'])
                         src2 = inst['imm']
                     WBdata = EU.execute(m, sA=src1, sB=src2)
                     sregs.write(inst['rd'], WBdata, trace_file)
                 elif m in ("srl.s", "srli.s"):
                     if(m == "srl.s"):
+                        trace_file.write(f"x{inst['rd']} x{inst['rs1']} x{inst['rs2']} |")
                         src1 = sregs.read(inst['rs1'])
                         src2 = sregs.read(inst['rs2'])
                     else:
+                        trace_file.write(f"x{inst['rd']} x{inst['rs1']} {inst['imm']} |")
                         src1 = sregs.read(inst['rs1'])
                         src2 = inst['imm']
                     WBdata = EU.execute(m, sA=src1, sB=src2)
                     sregs.write(inst['rd'], WBdata, trace_file)
                 elif m in ("sra.s", "srai.s"):
                     if(m == "sra.s"):
+                        trace_file.write(f"x{inst['rd']} x{inst['rs1']} x{inst['rs2']} |")
                         src1 = sregs.read(inst['rs1'])
                         src2 = sregs.read(inst['rs2'])
                     else:
+                        trace_file.write(f"x{inst['rd']} x{inst['rs1']} {inst['imm']} |")
                         src1 = sregs.read(inst['rs1'])
                         src2 = inst['imm']
                     WBdata = EU.execute(m, sA=src1, sB=src2)
                     sregs.write(inst['rd'], WBdata, trace_file)
                 elif m in ("slt.s", "slti.s", "slt.bf"):
                     if(m == "slt.s" or m == "slt.bf"):
+                        trace_file.write(f"x{inst['rd']} x{inst['rs1']} x{inst['rs2']} |")
                         src1 = sregs.read(inst['rs1'])
                         src2 = sregs.read(inst['rs2'])
                         if(m == "slt.bf"):
                             src1 = hex_to_fp32(src1)
                             src2 = hex_to_fp32(src2)
                     else:
+                        trace_file.write(f"x{inst['rd']} x{inst['rs1']} {inst['imm']} |")
                         src1 = sregs.read(inst['rs1'])
                         src2 = inst['imm']
                     WBdata = EU.execute(m, sA=src1, sB=src2)
                     sregs.write(inst['rd'], WBdata, trace_file)
                 elif m in ("sltu.s", "sltui.s", "sltu.bf"):
                     if(m == "sltu.s" or m == "sltu.bf"):
+                        trace_file.write(f"x{inst['rd']} x{inst['rs1']} x{inst['rs2']} |")
                         src1 = sregs.read(inst['rs1'])
                         src2 = sregs.read(inst['rs2'])
                         if(m == "sltu.bf"):
                             src1 = hex_to_fp32(src1)
                             src2 = hex_to_fp32(src2)
                     else:
+                        trace_file.write(f"x{inst['rd']} x{inst['rs1']} {inst['imm']} |")
                         src1 = sregs.read(inst['rs1'])
                         src2 = inst['imm']
                     WBdata = EU.execute(m, sA=src1, sB=src2)
                     sregs.write(inst['rd'], WBdata, trace_file)
                 elif m == "stbf.s":
+                    trace_file.write(f"x{inst['rd']} x{inst['rs1']} |")
                     src1 = sregs.read(inst['rs1'])
                     src1 = np.float32(src1)
                     temp = fp32_to_hex(src1)
                     sregs.write(inst['rd'], temp, trace_file)
                 elif m == "bfts.s":
+                    trace_file.write(f"x{inst['rd']} x{inst['rs1']} |")
                     src1 = sregs.read(inst['rs1'])
                     src1 = hex_to_fp32(src1)
                     src1 = np.int32(src1)
@@ -456,6 +492,7 @@ def main():
                 # ---------------- VV (Vector-Vector) ----------------
                 elif m.endswith(".vv"):
                     # ------------ GEMM ------------------------------
+                    trace_file.write(f"v{inst['vd']} v{inst['vs1']} v{inst['vs2']} |")
                     if (m == "gemm.vv"):
                         vregs.write(inst['vd'], vregs.read(inst['vs1']) @ gemm_weights + vregs.read(inst['vs2']), trace_file)
                     else:
@@ -468,6 +505,7 @@ def main():
                         vregs.write(inst['vd'], new_vec, trace_file)
                 # ---------------- MVV (Vector-Vector) ---------------
                 elif m.endswith(".mvv"):
+                    trace_file.write(f"v{inst['vmd']} v{inst['vs1']} v{inst['vs2']} |")
                     src1 = vregs.read(inst['vs1'])
                     src2 = vregs.read(inst['vs2'])
                     WBdata = EU.execute(m, vA=src1, vB=src2, slr=0)
@@ -480,26 +518,37 @@ def main():
                     value = np.uint32(0)
                     for i, bit in enumerate(new_vec):
                         value |= bit << i
-                    mregs.write(inst['vmd'], value)
+                    mregs.write(inst['vmd'], value, trace_file, 1)
                 # ---------------- VI (WEIGHTS ONLY) ----------------
                 elif (m == "lw.vi"):
+                    trace_file.write(f"v{inst['vs1']} |")
                     src1 = vregs.read(inst['vs1'])
+                    output_string = f" GEMM["
         
                     if num_weights < 32:
                         # Initial fill: Place at the next available slot from left to right
                         gemm_weights[:, num_weights] = src1
+                        output_string += f"{num_weights}] <--- ["
                         num_weights += 1
                     else:
                         # Matrix is full: Shift everything to the right and insert at the left (index 0)
                         # gemm_weights[:, 1:] moves columns 0-30 to positions 1-31
                         gemm_weights[:, 1:] = gemm_weights[:, :-1]
                         gemm_weights[:, 0] = src1
+                        output_string += "[0] <--- ["
+
+                    output_string += ", ".join([f"0x{e.view(np.uint32):08X}" for e in src1])
+                    output_string += "]"
+                    trace_file.write(output_string)
+
                 elif (m == "vmov.vts"):
+                    trace_file.write(f"x{inst['rd']} v{inst['vs1']} 0x{inst['imm8']:08X} |")
                     src1 = vregs.read(inst['vs1'])
                     temp = fp32_to_hex(src1[inst['imm8']])
                     sregs.write(inst['rd'], temp, trace_file)
                 # ---------------- VI (Vector-Immediate) ----------------
                 elif m.endswith(".vi") and (m != "lw.vi"):
+                    trace_file.write(f"v{inst['vd']} v{inst['vs1']} 0x{inst['imm']:08X} |")
                     src1 = vregs.read(inst['vs1'])
                     src2 = inst['imm']
                     nmask = mregs.read(inst['mask'])
@@ -521,6 +570,7 @@ def main():
                     vregs.write(inst['vd'], new_vec, trace_file)
                 # ---------------- VS (Vector-Scalar) ----------------
                 elif m.endswith(".vs"):
+                    trace_file.write(f"v{inst['vd']} x{inst['rs1']} m{inst['mask']} |")
                     src1 = vregs.read(inst['vs1'])
                     if(m == 'shift.vs'):
                         slr = (inst['rs1'] >> 5) & 0b1
@@ -539,6 +589,7 @@ def main():
                     vregs.write(inst['vd'], new_vec, trace_file)
                 # ---------------- MVS (Vector-Scalar) ---------------
                 elif m.endswith(".mvs"):
+                    trace_file.write(f"v{inst['vmd']} x{inst['rs1']} m{inst['mask']} |")
                     src1 = vregs.read(inst['vs1'])
                     slr = 0
                     src2 = sregs.read(inst['rs1'])
@@ -553,7 +604,7 @@ def main():
                     value = np.uint32(0)
                     for i, bit in enumerate(new_vec):
                             value |= bit << i
-                    mregs.write(inst['vmd'], value)
+                    mregs.write(inst['vmd'], value, trace_file, 1)
                 # ---------------- UNKNOWN ----------------
                 else:
                     raise ValueError(f"Unknown mnemonic: {m}")

@@ -85,8 +85,11 @@ class Memory:
         """Read 32-bit data word (default 0)."""
         return self.data_mem.get(addr, 0)
 
-    def write_data(self, addr, data):
+    def write_data(self, addr, data, file, multiple = 0):
         """Write 32-bit data word."""
+        file.write(f" MEM[{addr:08X}] <--- 0x{data:08X}")
+        if(multiple):
+            file.write(f"|")
         addr = int(addr)
         self.data_mem[addr] = data
 

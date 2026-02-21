@@ -93,7 +93,7 @@ class VectorRegisterFile:
             # Store as NumPy array
             self.regs[reg_num] = np.array(clean_data, dtype=np.float32)
 
-            file.write(f" x{reg_num:<2} <----- ")
+            file.write(f" v{reg_num:<2} <--- ")
             first = 1
             #f.write(", ".join([f"0x{e.view(np.uint32):08X}" for e in vec]))
             for val in clean_data:
