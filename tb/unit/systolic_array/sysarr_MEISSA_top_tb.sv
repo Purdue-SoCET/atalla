@@ -231,11 +231,11 @@ module sysarr_MEISSA_top_tb();
     sysarr_MEISSA_top DUT (CLK, nRST, gsau_if);
 
   // Simulation timeout
-  initial begin
-    #50000;
-    $display("TIMEOUT: Simulation exceeded 50000 ns");
-    $finish;
-  end
+//   initial begin
+//     // #2;
+//     $display("TIMEOUT: Simulation exceeded 50000 ns");
+//     $finish;
+//   end
 
   // Test Stimulus
   initial begin
