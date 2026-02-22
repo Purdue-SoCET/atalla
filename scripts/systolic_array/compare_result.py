@@ -117,9 +117,9 @@ def compare_matrices(expected_results, results):
         for r in range(len(A.data)):
             for c in range(len(A.data[r])):
                 if systolic_array_tb.sim_val_from_bits(A.data[r][c]) != systolic_array_tb.sim_val_from_bits(B.data[r][c]):
-                    print(f"Test {t} Matrix {mid} FAILED")
-                    break
+                    print(f"Test {t} Matrix {mid} FAILED at {r},{c}")
                     isPass = False
+                    break
 
         if isPass:
             print(f"Test {t} Matrix {mid} PASSED")

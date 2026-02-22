@@ -443,7 +443,7 @@ if __name__ == "__main__":
         append_matrix(PATH_TO_INPUT, C1)
 
         D = sim_MEISSA(A, B, C, dtype)
-        write_line(PATH_TO_EXPECTED_RESULT, "Test 5: Input matrices back to back")
+        write_line(PATH_TO_EXPECTED_RESULT, "Test 5: Input matrices back to back with zero psum")
         append_matrix(PATH_TO_EXPECTED_RESULT, D)
 
         D1 = sim_MEISSA(A, B1, C1, dtype)
@@ -476,7 +476,7 @@ if __name__ == "__main__":
         append_matrix(PATH_TO_INPUT, C1)
 
         D = sim_MEISSA(A, B, C, dtype)
-        write_line(PATH_TO_EXPECTED_RESULT, "Test 5: Input matrices back to back")
+        write_line(PATH_TO_EXPECTED_RESULT, "Test 6: Input matrices back to back")
         append_matrix(PATH_TO_EXPECTED_RESULT, D)
 
         D1 = sim_MEISSA(A, B1, C1, dtype)
