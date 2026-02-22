@@ -454,7 +454,7 @@ if __name__ == "__main__":
 
         # ---------------------------------------------------------------------
         # Test 6
-        A = gen_matrix(array_dim, array_dim, dtype)
+        A = identity_matrix(array_dim, array_dim, dtype)
         write_line(PATH_TO_INPUT, "Test 6: Input matrices back to back")
         write_line(PATH_TO_INPUT, "Weight")
         append_matrix(PATH_TO_INPUT, A)
