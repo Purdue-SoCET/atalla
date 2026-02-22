@@ -15,7 +15,7 @@ module sysarr_MEISSA_top #(
     input logic clk, nRST,
     gsau_control_unit_if.systolic_array gsau_if
 );
-    logic sysarr_stall;
+    // logic sysarr_stall;
     logic [N - 1:0][N - 1:0][DW - 1:0] mul_prod;
     logic [N - 1:0][N - 1:0][DW - 1:0] col_prod;
     logic [N - 1:0][DW - 1:0] adder_sum;
@@ -27,9 +27,9 @@ module sysarr_MEISSA_top #(
     logic [N - 1:0][DW - 1:0] psum_buffer_out;
 
     // only stall when gsau indicates stall (consumer module wb buffer needs to stall)
-    assign sysarr_stall = ~gsau_if.sa_ready_out;
+    // assign sysarr_stall = ~gsau_if.sa_ready_out;
 
-    assign gsau_if.sa_ready_in = ~sysarr_stall;
+    assign gsau_if.sa_ready_in = gsau_if.sa_ready_out;
 
     //mul grid: input and output is latched
 
@@ -39,7 +39,7 @@ module sysarr_MEISSA_top #(
         .sa_inputs(gsau_if.sa_array_in),
         .act_en(gsau_if.sa_input_en),
         .weight_en(gsau_if.sa_weight_en),
-        .mul_stall(sysarr_stall),
+        .mul_stall(1'b0),
         .prod_r(mul_prod)
     );
 
@@ -60,7 +60,7 @@ module sysarr_MEISSA_top #(
             ) u_piped_addr_tree (
                 .clk(clk),
                 .nRST(nRST),
-                .stall(sysarr_stall),
+                .stall(1'b0),
                 .terms_in(mul_prod[j]),
                 .psum_in(psum_buffer_out[j]),
                 .sum_out(adder_sum[j])
@@ -101,9 +101,10 @@ module sysarr_MEISSA_top #(
         if (!nRST) begin
             valid_bits <= '0;
         end else begin
-            if (!sysarr_stall) begin
-                valid_bits <= {valid_bits[TOTAL_DELAY - 1 : 0], gsau_if.sa_input_en};
-            end
+            // if (!sysarr_stall) begin
+            //     valid_bits <= {valid_bits[TOTAL_DELAY - 1 : 0], gsau_if.sa_input_en};
+            // end
+            valid_bits <= {valid_bits[TOTAL_DELAY - 1 : 0], gsau_if.sa_input_en};
         end
     end
 
@@ -135,7 +136,7 @@ module sysarr_MEISSA_top #(
     ) psum_buffer (
         .clk(clk),
         .n_rst(nRST),
-        .stall(sysarr_stall),
+        .stall(1'b0),
         .wr_data(gsau_if.sa_array_in_partials),
         .rd_data(psum_buffer_out)
     );
@@ -151,7 +152,7 @@ module sysarr_MEISSA_top #(
     ) output_buffer (
         .clk(clk),
         .n_rst(nRST),
-        .stall(sysarr_stall),
+        .stall(1'b0),
         .wr_data(adder_sum),
         .rd_data(output_data)
     );
