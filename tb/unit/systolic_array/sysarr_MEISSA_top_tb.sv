@@ -55,30 +55,32 @@ module sysarr_MEISSA_top_tb();
         end
     endtask
 
-    task get_matrices(output int weights);
+    task get_matrices(output int weights, input int has_weights);
         string token;
         string section;
         weights = 0;
 
-        // Read section header: Weight
-        void'($fgets(line, file));
-        section = line.toupper();
+        if (has_weights) begin
+          // Read section header: Weight
+          void'($fgets(line, file));
+          section = line.toupper();
 
-        if (section.len() >= 5 && section.substr(0,5) == "WEIGHT") begin
-            weights = 1;
-            // Read Weights
-            for (int i = 0; i < ARRAY_DIM; i++) begin
-                void'($fgets(line, file));
-                for (int j = 0; j < ARRAY_DIM; j++) begin
-                    token = line.substr(j*7, (j*7)+6); // "0xXXXX"
-                    void'($sscanf(token, "%h", temp_weights[i][j]));
-                end
-            end
-            // Skip blank line
-            void'($fgets(line, file));
+          if (section.len() >= 5 && section.substr(0,5) == "WEIGHT") begin
+              weights = 1;
+              // Read Weights
+              for (int i = 0; i < ARRAY_DIM; i++) begin
+                  void'($fgets(line, file));
+                  for (int j = 0; j < ARRAY_DIM; j++) begin
+                      token = line.substr(j*7, (j*7)+6); // "0xXXXX"
+                      void'($sscanf(token, "%h", temp_weights[i][j]));
+                  end
+              end
+              // Skip blank line
+              void'($fgets(line, file));
 
-            // Read Input header
-            void'($fgets(line, file));
+              // Read Input header
+              void'($fgets(line, file));
+          end
         end
         
         // Reads Inputs
@@ -215,7 +217,7 @@ module sysarr_MEISSA_top_tb();
 
         for (int row = 0; row < ARRAY_DIM; row++) begin
             for (int column = 0; column < ARRAY_DIM; column++) begin
-                $fwrite(actual_output_file, "0x%04h", temp_act_outputs[row][column]);
+                $fwrite(actual_output_file, "0x%04H", temp_act_outputs[row][column]);
                 
                 if (column != ARRAY_DIM - 1) begin
                     $fwrite(actual_output_file, ",");
@@ -256,24 +258,33 @@ module sysarr_MEISSA_top_tb();
     forever begin
         bit found_test;
         int row;
+        bit found_input;
         found_test = 0;
+        found_input = 0;
         
-        while (!found_test) begin
+        while (!found_test && !found_input) begin
             if ($fgets(line, file) == 0) begin
                break;
             end
-            if (line.len() >= 4 && line.substr(0,3) == "Test") begin
+            if (line.len() >= 4 && (line.substr(0,3) == "Test")) begin
                 test_name = line;
                 found_test = 1;
+            end else if ((line.len() >= 4) && (line.substr(0,4) == "Input")) begin
+                found_input = 1;
+                test_name = "";
             end
         end
 
-        if (!found_test) begin
+        if (!found_test && !found_input) begin
             break;
         end
 
         loaded_weights = 0;
-        get_matrices(.weights(loaded_weights));
+        if (found_test) begin
+          get_matrices(.weights(loaded_weights), .has_weights(1));
+        end else if (found_input) begin
+          get_matrices(.weights(loaded_weights), .has_weights(0));
+        end
 
         if (loaded_weights) begin
             load_weights();
@@ -313,5 +324,4 @@ module sysarr_MEISSA_top_tb();
   end
 
 endmodule
-
 
