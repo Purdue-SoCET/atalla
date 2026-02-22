@@ -20,9 +20,11 @@ module sysarr_MEISSA_top #(
     logic [N - 1:0][N - 1:0][DW - 1:0] col_prod;
     logic [N - 1:0][DW - 1:0] adder_sum;
 
-    logic [N - 1:0][DW - 1:0] partial_flipped;
-    logic [N - 1:0][DW - 1:0] partial_sram_out;
-    logic [N - 1:0][DW - 1:0] partial_reverted;
+    // logic [N - 1:0][DW - 1:0] partial_flipped;
+    // logic [N - 1:0][DW - 1:0] partial_sram_out;
+    // logic [N - 1:0][DW - 1:0] partial_reverted;
+
+    logic [N - 1:0][DW - 1:0] psum_buffer_out;
 
     // only stall when gsau indicates stall (consumer module wb buffer needs to stall)
     assign sysarr_stall = ~gsau_if.sa_ready_out;
@@ -60,7 +62,7 @@ module sysarr_MEISSA_top #(
                 .nRST(nRST),
                 .stall(sysarr_stall),
                 .terms_in(mul_prod[j]),
-                .psum_in(partial_reverted[j]),
+                .psum_in(psum_buffer_out[j]),
                 .sum_out(adder_sum[j])
             );
         end
@@ -107,21 +109,21 @@ module sysarr_MEISSA_top #(
 
     assign gsau_if.sa_valid_in = valid_bits[TOTAL_DELAY - 1];
 
-    // flip the order of partial sums for reverse triangle delay
-    genvar l;
-    generate
-        for (l = 0; l < N; l++) begin : FLIP_PARTIAL
-            assign partial_flipped[l] = gsau_if.sa_array_in_partials[(N-1-l)*DW +: DW];
-        end
-    endgenerate
+    // // flip the order of partial sums for reverse triangle delay
+    // genvar l;
+    // generate
+    //     for (l = 0; l < N; l++) begin : FLIP_PARTIAL
+    //         assign partial_flipped[l] = gsau_if.sa_array_in_partials[(N-1-l)*DW +: DW];
+    //     end
+    // endgenerate
 
-    // revert order for parital sums
-    genvar m;
-    generate
-        for (m = 0; m < N; m++) begin : REVERT_PARTIAL
-            assign partial_reverted[m] = partial_sram_out[N - m - 1];
-        end
-    endgenerate
+    // // revert order for parital sums
+    // genvar m;
+    // generate
+    //     for (m = 0; m < N; m++) begin : REVERT_PARTIAL
+    //         assign partial_reverted[m] = partial_sram_out[N - m - 1];
+    //     end
+    // endgenerate
 
     skew_buffer #(
         // see parameter details in skew_buffer module
@@ -129,13 +131,13 @@ module sysarr_MEISSA_top #(
         .COL_WIDTH      (DW),
         .RECT_DELAY     (MUL_LATENCY + (ADD_LATENCY * $clog2(N)) - 1), // latency for first columns add tree to have valid result
         .DELAY_SLOPE    (1),
-        .REVERSE_TRIANGLE(1)
+        .REVERSE_TRIANGLE(0)
     ) psum_buffer (
         .clk(clk),
         .n_rst(nRST),
         .stall(sysarr_stall),
-        .wr_data(partial_flipped),
-        .rd_data(partial_sram_out)
+        .wr_data(gsau_if.sa_array_in_partials),
+        .rd_data(psum_buffer_out)
     );
 
     logic [N - 1:0] [DW - 1:0] output_data;
