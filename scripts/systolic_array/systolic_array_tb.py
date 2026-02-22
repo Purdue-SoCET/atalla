@@ -431,7 +431,7 @@ if __name__ == "__main__":
         write_line(PATH_TO_INPUT, "Input")
         append_matrix(PATH_TO_INPUT, B)
 
-        C = gen_matrix(array_dim, array_dim, dtype)
+        C = gen_matrix(array_dim, array_dim, dtype, fill_value=1.0)
         write_line(PATH_TO_INPUT, "Psum")
         append_matrix(PATH_TO_INPUT, C)
 
@@ -439,7 +439,7 @@ if __name__ == "__main__":
         write_line(PATH_TO_INPUT, "Input")
         append_matrix(PATH_TO_INPUT, B1)
 
-        C1 = gen_matrix(array_dim, array_dim, dtype)
+        C1 = gen_matrix(array_dim, array_dim, dtype, fill_value=1.0)
         write_line(PATH_TO_INPUT, "Psum")
         append_matrix(PATH_TO_INPUT, C1)
 
