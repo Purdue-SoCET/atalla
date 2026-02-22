@@ -286,7 +286,7 @@ def progress_bar(iteration, total, width=40):
 # ---------------------------------------------------------------------
 if __name__ == "__main__":
 
-    test_total_num = 10
+    test_total_num = 2
     test_num = 0
 
     if gen_pkg_file:
@@ -298,99 +298,132 @@ if __name__ == "__main__":
         Path(PATH_TO_EXPECTED_RESULT).write_text("")
         Path(PATH_TO_RESULT).write_text("")
 
-        # ---------------------------------------------------------------------
-        # Test 1
-        print("Generating test vectors")
-        A = gen_matrix(array_dim, array_dim, dtype, fill_value=0)
-        write_line(PATH_TO_INPUT, "Test 1: Zero weight matrix")
-        write_line(PATH_TO_INPUT, "Weight")
-        append_matrix(PATH_TO_INPUT, A)
+        # # ---------------------------------------------------------------------
+        # # Test 1
+        # print("Generating test vectors")
+        # A = gen_matrix(array_dim, array_dim, dtype, fill_value=0)
+        # write_line(PATH_TO_INPUT, "Test 1: Zero weight matrix")
+        # write_line(PATH_TO_INPUT, "Weight")
+        # append_matrix(PATH_TO_INPUT, A)
 
-        B = gen_matrix(array_dim, array_dim, dtype)
-        write_line(PATH_TO_INPUT, "Input")
-        append_matrix(PATH_TO_INPUT, B)
+        # B = gen_matrix(array_dim, array_dim, dtype)
+        # write_line(PATH_TO_INPUT, "Input")
+        # append_matrix(PATH_TO_INPUT, B)
 
-        C = gen_matrix(array_dim, array_dim, dtype, fill_value=0)
-        write_line(PATH_TO_INPUT, "Psum")
-        append_matrix(PATH_TO_INPUT, C)
+        # C = gen_matrix(array_dim, array_dim, dtype, fill_value=0)
+        # write_line(PATH_TO_INPUT, "Psum")
+        # append_matrix(PATH_TO_INPUT, C)
 
-        test_num += 1
-        progress_bar(test_num, test_total_num)
+        # test_num += 1
+        # progress_bar(test_num, test_total_num)
 
-        D = sim_MEISSA(A, B, C, dtype)
-        write_line(PATH_TO_EXPECTED_RESULT, "Test 1: Zero weight matrix")
-        append_matrix(PATH_TO_EXPECTED_RESULT, D)
+        # D = sim_MEISSA(A, B, C, dtype)
+        # write_line(PATH_TO_EXPECTED_RESULT, "Test 1: Zero weight matrix")
+        # append_matrix(PATH_TO_EXPECTED_RESULT, D)
 
-        # ---------------------------------------------------------------------
-        # Test 2
-        A = identity_matrix(array_dim, array_dim, dtype)
-        write_line(PATH_TO_INPUT, "Test 2: identity weight matrix")
-        write_line(PATH_TO_INPUT, "Weight")
-        append_matrix(PATH_TO_INPUT, A)
+        # # ---------------------------------------------------------------------
+        # # Test 2
+        # A = identity_matrix(array_dim, array_dim, dtype)
+        # write_line(PATH_TO_INPUT, "Test 2: identity weight matrix")
+        # write_line(PATH_TO_INPUT, "Weight")
+        # append_matrix(PATH_TO_INPUT, A)
 
-        B = gen_matrix(array_dim, array_dim, dtype)
-        write_line(PATH_TO_INPUT, "Input")
-        append_matrix(PATH_TO_INPUT, B)
+        # B = gen_matrix(array_dim, array_dim, dtype)
+        # write_line(PATH_TO_INPUT, "Input")
+        # append_matrix(PATH_TO_INPUT, B)
 
-        C = gen_matrix(array_dim, array_dim, dtype, fill_value=0)
-        write_line(PATH_TO_INPUT, "Psum")
-        append_matrix(PATH_TO_INPUT, C)
+        # C = gen_matrix(array_dim, array_dim, dtype, fill_value=0)
+        # write_line(PATH_TO_INPUT, "Psum")
+        # append_matrix(PATH_TO_INPUT, C)
 
-        D = sim_MEISSA(A, B, C, dtype)
-        write_line(PATH_TO_EXPECTED_RESULT, "Test 2: identity weight matrix")
-        append_matrix(PATH_TO_EXPECTED_RESULT, D)
+        # D = sim_MEISSA(A, B, C, dtype)
+        # write_line(PATH_TO_EXPECTED_RESULT, "Test 2: identity weight matrix")
+        # append_matrix(PATH_TO_EXPECTED_RESULT, D)
 
-        test_num += 1
-        progress_bar(test_num, test_total_num)
+        # test_num += 1
+        # progress_bar(test_num, test_total_num)
 
-        # ---------------------------------------------------------------------
-        # Test 3
-        A = gen_matrix_fill_col(array_dim, array_dim, dtype, col_index=0)
-        write_line(PATH_TO_INPUT, "Test 3: one-hot column weight matrix")
-        write_line(PATH_TO_INPUT, "Weight")
-        append_matrix(PATH_TO_INPUT, A)
+        # # ---------------------------------------------------------------------
+        # # Test 3
+        # A = gen_matrix_fill_col(array_dim, array_dim, dtype, col_index=0)
+        # write_line(PATH_TO_INPUT, "Test 3: one-hot column weight matrix")
+        # write_line(PATH_TO_INPUT, "Weight")
+        # append_matrix(PATH_TO_INPUT, A)
 
-        B = gen_matrix(array_dim, array_dim, dtype)
-        write_line(PATH_TO_INPUT, "Input")
-        append_matrix(PATH_TO_INPUT, B)
+        # B = gen_matrix(array_dim, array_dim, dtype)
+        # write_line(PATH_TO_INPUT, "Input")
+        # append_matrix(PATH_TO_INPUT, B)
 
-        C = gen_matrix(array_dim, array_dim, dtype, fill_value=0)
-        write_line(PATH_TO_INPUT, "Psum")
-        append_matrix(PATH_TO_INPUT, C)
+        # C = gen_matrix(array_dim, array_dim, dtype, fill_value=0)
+        # write_line(PATH_TO_INPUT, "Psum")
+        # append_matrix(PATH_TO_INPUT, C)
 
-        D = sim_MEISSA(A, B, C, dtype)
-        write_line(PATH_TO_EXPECTED_RESULT, "Test 3: one-hot column weight matrix")
-        append_matrix(PATH_TO_EXPECTED_RESULT, D)
+        # D = sim_MEISSA(A, B, C, dtype)
+        # write_line(PATH_TO_EXPECTED_RESULT, "Test 3: one-hot column weight matrix")
+        # append_matrix(PATH_TO_EXPECTED_RESULT, D)
 
-        test_num += 1
-        progress_bar(test_num, test_total_num)
+        # test_num += 1
+        # progress_bar(test_num, test_total_num)
 
-        # ---------------------------------------------------------------------
-        # Test 4
-        A = gen_matrix(array_dim, array_dim, dtype)
-        write_line(PATH_TO_INPUT, "Test 4: Non-zero Psum")
-        write_line(PATH_TO_INPUT, "Weight")
-        append_matrix(PATH_TO_INPUT, A)
+        # # ---------------------------------------------------------------------
+        # # Test 4
+        # A = gen_matrix(array_dim, array_dim, dtype)
+        # write_line(PATH_TO_INPUT, "Test 4: Non-zero Psum")
+        # write_line(PATH_TO_INPUT, "Weight")
+        # append_matrix(PATH_TO_INPUT, A)
 
-        B = gen_matrix(array_dim, array_dim, dtype)
-        write_line(PATH_TO_INPUT, "Input")
-        append_matrix(PATH_TO_INPUT, B)
+        # B = gen_matrix(array_dim, array_dim, dtype)
+        # write_line(PATH_TO_INPUT, "Input")
+        # append_matrix(PATH_TO_INPUT, B)
 
-        C = gen_matrix(array_dim, array_dim, dtype)
-        write_line(PATH_TO_INPUT, "Psum")
-        append_matrix(PATH_TO_INPUT, C)
+        # C = gen_matrix(array_dim, array_dim, dtype)
+        # write_line(PATH_TO_INPUT, "Psum")
+        # append_matrix(PATH_TO_INPUT, C)
 
-        D = sim_MEISSA(A, B, C, dtype)
-        write_line(PATH_TO_EXPECTED_RESULT, "Test 4: Non-zero Psum")
-        append_matrix(PATH_TO_EXPECTED_RESULT, D)
+        # D = sim_MEISSA(A, B, C, dtype)
+        # write_line(PATH_TO_EXPECTED_RESULT, "Test 4: Non-zero Psum")
+        # append_matrix(PATH_TO_EXPECTED_RESULT, D)
 
-        test_num += 1
-        progress_bar(test_num, test_total_num)
+        # test_num += 1
+        # progress_bar(test_num, test_total_num)
 
         # ---------------------------------------------------------------------
         # Test 5
         A = gen_matrix(array_dim, array_dim, dtype)
-        write_line(PATH_TO_INPUT, "Test 5: Input matrices back to back")
+        write_line(PATH_TO_INPUT, "Test 5: Input matrices back to back with zero psum")
+        write_line(PATH_TO_INPUT, "Weight")
+        append_matrix(PATH_TO_INPUT, A)
+
+        B = gen_matrix(array_dim, array_dim, dtype)
+        write_line(PATH_TO_INPUT, "Input")
+        append_matrix(PATH_TO_INPUT, B)
+
+        C = gen_matrix(array_dim, array_dim, dtype, fill_value=0)
+        write_line(PATH_TO_INPUT, "Psum")
+        append_matrix(PATH_TO_INPUT, C)
+
+        B1 = gen_matrix(array_dim, array_dim, dtype)
+        write_line(PATH_TO_INPUT, "Input")
+        append_matrix(PATH_TO_INPUT, B1)
+
+        C1 = gen_matrix(array_dim, array_dim, dtype, fill_value=0)
+        write_line(PATH_TO_INPUT, "Psum")
+        append_matrix(PATH_TO_INPUT, C1)
+
+        D = sim_MEISSA(A, B, C, dtype)
+        write_line(PATH_TO_EXPECTED_RESULT, "Test 5: Input matrices back to back")
+        append_matrix(PATH_TO_EXPECTED_RESULT, D)
+
+        D1 = sim_MEISSA(A, B1, C1, dtype)
+        append_matrix(PATH_TO_EXPECTED_RESULT, D1)
+
+        test_num += 1
+        progress_bar(test_num, test_total_num)
+
+        # ---------------------------------------------------------------------
+        # Test 6
+        A = gen_matrix(array_dim, array_dim, dtype)
+        write_line(PATH_TO_INPUT, "Test 6: Input matrices back to back")
         write_line(PATH_TO_INPUT, "Weight")
         append_matrix(PATH_TO_INPUT, A)
 
@@ -420,27 +453,27 @@ if __name__ == "__main__":
         test_num += 1
         progress_bar(test_num, test_total_num)
 
-        # ---------------------------------------------------------------------
-        # Random Tests
-        for i in range(6, test_total_num + 1):
-            A = gen_matrix(array_dim, array_dim, dtype)
-            write_line(PATH_TO_INPUT, f"Test {i}")
-            write_line(PATH_TO_INPUT, "Weight")
-            append_matrix(PATH_TO_INPUT, A)
+        # # ---------------------------------------------------------------------
+        # # Random Tests
+        # for i in range(6, test_total_num + 1):
+        #     A = gen_matrix(array_dim, array_dim, dtype)
+        #     write_line(PATH_TO_INPUT, f"Test {i}")
+        #     write_line(PATH_TO_INPUT, "Weight")
+        #     append_matrix(PATH_TO_INPUT, A)
 
-            B = gen_matrix(array_dim, array_dim, dtype)
-            write_line(PATH_TO_INPUT, "Input")
-            append_matrix(PATH_TO_INPUT, B)
+        #     B = gen_matrix(array_dim, array_dim, dtype)
+        #     write_line(PATH_TO_INPUT, "Input")
+        #     append_matrix(PATH_TO_INPUT, B)
 
-            C = gen_matrix(array_dim, array_dim, dtype)
-            write_line(PATH_TO_INPUT, "Psum")
-            append_matrix(PATH_TO_INPUT, C)
+        #     C = gen_matrix(array_dim, array_dim, dtype)
+        #     write_line(PATH_TO_INPUT, "Psum")
+        #     append_matrix(PATH_TO_INPUT, C)
 
-            D = sim_MEISSA(A, B, C, dtype)
-            write_line(PATH_TO_EXPECTED_RESULT, f"Test {i}")
-            append_matrix(PATH_TO_EXPECTED_RESULT, D)
+        #     D = sim_MEISSA(A, B, C, dtype)
+        #     write_line(PATH_TO_EXPECTED_RESULT, f"Test {i}")
+        #     append_matrix(PATH_TO_EXPECTED_RESULT, D)
 
-            test_num += 1
-            progress_bar(test_num, test_total_num)
+        #     test_num += 1
+        #     progress_bar(test_num, test_total_num)
     
     # compare_result.compare_results(PATH_TO_EXPECTED_RESULT, PATH_TO_RESULT)
