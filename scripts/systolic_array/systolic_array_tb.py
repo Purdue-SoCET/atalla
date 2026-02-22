@@ -178,6 +178,38 @@ def gen_matrix_fill_col(height, width, dtype="bf16", *, col_index,
 
     return mat.cpu().numpy()
 
+def gen_matrix_fill_row(height, width, dtype="bf16", *, row_index,
+                        seed=None,
+                        device="cpu", one_value=1.0):
+
+    if seed is not None:
+        torch.manual_seed(seed)
+
+    # Select dtype
+    if dtype == "bf16":
+        out_dtype = torch.bfloat16
+    elif dtype == "fp16":
+        out_dtype = torch.float16
+    else:
+        raise ValueError("dtype must be 'bf16' or 'fp16'")
+
+    if row_index < 0 or row_index >= width:
+        raise ValueError("col_index must be within [0, width-1]")
+
+    # Base matrix
+    mat_f32 = torch.zeros((height, width),
+                          dtype=torch.float32,
+                          device=device)
+
+    # Fill column
+    mat_f32[row_index, :] = float(one_value)
+
+    # Cast + reinterpret bits
+    mat = mat_f32.to(out_dtype)
+    mat = mat.view(torch.uint16)
+
+    return mat.cpu().numpy()
+
 def write_line(path, text):
     with open(path, "a") as f:
         f.write(text + "\n")
@@ -439,7 +471,7 @@ if __name__ == "__main__":
         write_line(PATH_TO_INPUT, "Input")
         append_matrix(PATH_TO_INPUT, B1)
 
-        C1 = gen_matrix(array_dim, array_dim, dtype, fill_value=1.0)
+        C1 = gen_matrix_fill_row(array_dim, array_dim, dtype, row_index=0)
         write_line(PATH_TO_INPUT, "Psum")
         append_matrix(PATH_TO_INPUT, C1)
 
