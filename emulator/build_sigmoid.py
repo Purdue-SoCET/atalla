@@ -688,7 +688,7 @@ if __name__ == "__main__":
     ap.add_argument("-o", "--output", type=Path, default=None, help="Output test file")
     args = ap.parse_args()
 
-    asmtest = """
+    asm = """
     addi.s  $1, $0, 4   # 4 rows
     addi.s  $7, $0, 8   # 4 cols
 
@@ -740,7 +740,62 @@ if __name__ == "__main__":
     halt.s
 """
 
-    instrs = assemble_file(asmtest)       
+    asm_pipeline = asmtest = """
+    addi.s  $1, $0, 4   # 4 rows
+    addi.s  $7, $0, 8   # 8 cols
+
+    lw.s    $3, 0($0)   # pointer to mem addr of input
+    lw.s    $8, 4($0)   # pointer to mem addr of output
+
+    addi.s  $9, $0, 0   # scpad base
+
+    scpad.ld $9, $3, 8, 4, 0    # load to scpad
+
+    addi.s  $255, $0, -1
+    mv.stm  1, $255             # create mask of all 1s
+
+    addi.vi $2, $0, 1.0, 1      # v2 = all 1s
+
+    # load row0 into v1, load row1 into v4
+    vreg.ld $1, $9, 8, 4, 0, 1, 0      # v1  = row0
+    vreg.ld $4, $9, 8, 4, 0, 1, 1      # v4  = row1
+
+    # sigmoid on v1
+    muli.vi $1, $1, -1.0, 1
+    expi.vi $1, $1, 0, 1
+    addi.vi $1, $1, 1.0, 1
+    div.vv  $1, $2, $1, 1, 0
+    vreg.st $1, $9, 8, 4, 0, 1, 0
+
+    # Sigmoid on v4 while loading row2 into v1
+    vreg.ld $1, $9, 8, 4, 0, 1, 2
+    muli.vi $4, $4, -1.0, 1
+    expi.vi $4, $4, 0, 1
+    addi.vi $4, $4, 1.0, 1
+    div.vv  $4, $2, $4, 1, 0
+    vreg.st $4, $9, 8, 4, 0, 1, 1
+
+    # Sigmoid on v1 while loading row3 into v4
+    vreg.ld $4, $9, 8, 4, 0, 1, 3
+    muli.vi $1, $1, -1.0, 1
+    expi.vi $1, $1, 0, 1
+    addi.vi $1, $1, 1.0, 1
+    div.vv  $1, $2, $1, 1, 0
+    vreg.st $1, $9, 8, 4, 0, 1, 2
+
+    # sigmoid on v4
+    muli.vi $4, $4, -1.0, 1
+    expi.vi $4, $4, 0, 1
+    addi.vi $4, $4, 1.0, 1
+    div.vv  $4, $2, $4, 1, 0
+    vreg.st $4, $9, 8, 4, 0, 1, 3
+
+    # store back into dram
+    scpad.st $9, $8, 8, 4, 0
+    halt.s
+    """
+
+    instrs = assemble_file(asm_pipeline)       
     instr_text = emit_test_format(instrs)
 
     img = DRAMWriter() 

@@ -739,6 +739,56 @@ if __name__ == "__main__":
         halt.s
     """
 
+    asm_pipeline = """
+    addi.s $1, $0, 4
+    addi.s $7, $0, 8
+    lw.s   $3, 0($0)            # input base
+    lw.s   $8, 4($0)            # output base
+
+    addi.s  $9, $0, 0
+    scpad.ld $9, $3, 8, 4, 0    # load tile into SP0
+
+    # mask1 = all enabled lanes
+    addi.s $255, $0, -1
+    mv.stm 1, $255
+
+    # v2 = 0.0 vector
+    addi.vi $2, $0, 0.0, 1
+
+    # load row0 to v4, row1 to v5
+    vreg.ld $4, $9, 8, 4, 0, 1, 0
+    vreg.ld $5, $9, 8, 4, 0, 1, 1
+
+    # relu on v4 (row0)
+    mgt.mvv 2, $4, $2, 1
+    addi.vi $1, $0, 0.0, 1
+    add.vv  $1, $4, $2, 2, 0
+    vreg.st $1, $9, 8, 4, 0, 1, 0
+
+    # relu on v5 (row1) while loading row2 to v4
+    vreg.ld $4, $9, 8, 4, 0, 1, 2
+    mgt.mvv 2, $5, $2, 1
+    addi.vi $1, $0, 0.0, 1
+    add.vv  $1, $5, $2, 2, 0
+    vreg.st $1, $9, 8, 4, 0, 1, 1
+
+    # relu on v4 (row2) while loading row3 to v5
+    vreg.ld $5, $9, 8, 4, 0, 1, 3
+    mgt.mvv 2, $4, $2, 1
+    addi.vi $1, $0, 0.0, 1
+    add.vv  $1, $4, $2, 2, 0
+    vreg.st $1, $9, 8, 4, 0, 1, 2
+
+    # relu on v5 (row 3)
+    mgt.mvv 2, $5, $2, 1
+    addi.vi $1, $0, 0.0, 1
+    add.vv  $1, $5, $2, 2, 0
+    vreg.st $1, $9, 8, 4, 0, 1, 3
+
+    # store back to dram
+    scpad.st $9, $8, 8, 4, 0
+    halt.s
+    """
     instrs = assemble_file(asm)       
     instr_text = emit_test_format(instrs)
 
