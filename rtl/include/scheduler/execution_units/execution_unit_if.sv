@@ -1,27 +1,12 @@
 `ifndef EXECUTION_UNIT_IF_VH
 `define EXECUTION_UNIT_IF_VH
 
-interface execution_unit_if;
+package execution_unit_types_pkg;
 
-  //control signals to decode 2
-  logic ready_DEC2_ex1, ready_DEC2_ex2, ready_DEC2_ex3, ready_DEC2_ex4, ready_DEC2_ex5;
-  //control signals from WB
-  logic ready_WB_ex1, ready_WB_ex2, ready_WB_ex3, ready_WB_ex4, ready_WB_ex5;
-  //branch output
-  logic redirect_valid;
-  logic [31:0] redirect_target;
-  //from dcache
-  logic [31:0] data_load;
-  logic hit;
-  //to dcache 
-  logic WEN, REN;
-  logic [31:0] data_store, data_addr;
-
-  //data struct from decode 2
   typedef struct packed {
     //control signals to guide the packet through the xbar
     logic alu_valid, control_valid, bf_add_valid, bf_sub_valid, bf_mult_valid, bf_slt_valid, bf_div_valid, s_div_valid, s_mod_valid, BF_to_int_valid, int_to_BF_valid, ld_valid, st_valid, halfword, sMult_valid;
-    logic valid_in;
+    logic valid_in, imm_src;
     //data signals
     logic [31:0] rs1_value, rs2_value;
     logic [7:0] rs1_idx, rdIn;
@@ -37,8 +22,26 @@ interface execution_unit_if;
     logic [7:0] rdOut;
   } out_WB_t;
 
+endpackage
+
+interface execution_unit_if;
+  import execution_unit_types_pkg::*;
+
+  //control signals to decode 2
+  logic ready_DEC2_ex1, ready_DEC2_ex2, ready_DEC2_ex3, ready_DEC2_ex4, ready_DEC2_ex5;
+  //control signals from WB
+  logic ready_WB_ex1, ready_WB_ex2, ready_WB_ex3, ready_WB_ex4, ready_WB_ex5;
+  //branch output
+  logic redirect_valid;
+  logic [31:0] redirect_target;
+  //from dcache
+  logic [31:0] data_load;
+  logic hit;
+  //to dcache 
+  logic WEN, REN;
+  logic [31:0] data_store, data_addr;
+
   in_DEC_t  slot_1, slot_2, slot_3, slot_4;
-  in_DEC_t post_xbar_ex1, post_xbar_ex2, post_xbar_ex3, post_xbar_ex4, post_xbar_ex5;
   out_WB_t ex1, ex2, ex3, ex4, ex5;
 
   modport execution_units (

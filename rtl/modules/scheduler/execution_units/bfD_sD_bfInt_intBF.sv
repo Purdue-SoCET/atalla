@@ -15,7 +15,7 @@ div_if divif ();
 
 logic [31:0] bf_int_output, scalar_div_output, scalar_mod_output;
 logic [15:0] int_bf_output, bf_div_output;
-logic [31:0] cur_input_1, cur_input_2, latched_input1, latched_input2, nlatched_input1, nlatched_input2;
+logic [31:0] cur_input_1, cur_input_2, latched_input1, latched_input2, nlatched_input1, nlatched_input2, src2;
 logic latched_BFdiv, nlatched_BFdiv, cur_BFdiv;
 logic latched_Sdiv, nlatched_Sdiv, cur_Sdiv;
 logic latched_Smod, nlatched_Smod, cur_Smod;
@@ -24,6 +24,8 @@ logic latched_Int_BF, nlatched_Int_BF, cur_Int_BF;
 logic counter_enable, counter_clear;
 logic [7:0] nlatchedRD, latchedRD;
 logic [6:0] latency, current_count;
+logic [31:0] cur_imm, nlatched_imm, latched_imm;
+logic cur_imm_src, nlatched_imm_src, latched_imm_src;
 logic start_div_mod, latch_valid;
 logic internal_temp;
 
@@ -40,20 +42,27 @@ assign start_div_mod = (cur_Sdiv || cur_Smod) && (portmap.valid_in);
 div DIVIDER_BF16 (.CLK(clk), .nRST(nRST), .divif(divif));
 bf_to_int BF_INT_CONV (.inputBF(cur_input_1[15:0]), .outputInt(bf_int_output));
 int_to_bf INT_BF_CONV (.inputInt(cur_input_1), .outputBF(int_bf_output));
-socetlib_shift_test_restore_divider DIVIDER_SCALAR (.CLK(clk), .nRST(nRST), .start(start_div_mod), .is_signed(1'b1), .dividend(cur_input_1), .divisor(cur_input_2), .quotient(scalar_div_output), .remainder(scalar_mod_output), .finished(internal_temp));
+socetlib_shift_test_restore_divider DIVIDER_SCALAR (.CLK(clk), .nRST(nRST), .start(start_div_mod), .is_signed(1'b1), .dividend(cur_input_1), .divisor(src2), .quotient(scalar_div_output), .remainder(scalar_mod_output), .finished(internal_temp));
 
 always_comb begin
     latency = 1;
     portmap.data_out = 32'b0;
+    src2 = cur_input_2;
     if(cur_BFdiv == 1) begin
         latency = 11;
         portmap.data_out = {16'b0, bf_div_output};
     end else if(cur_Sdiv == 1) begin
         latency = 66;
         portmap.data_out = scalar_div_output;
+        if(cur_imm_src) begin
+            src2 = cur_imm;
+        end
     end else if(cur_Smod == 1) begin
         latency = 66;
         portmap.data_out = scalar_mod_output;
+        if(cur_imm_src) begin
+            src2 = cur_imm;
+        end
     end else if(cur_BF_Int == 1) begin
         latency = 1;
         portmap.data_out = bf_int_output;
@@ -80,6 +89,12 @@ always_comb begin
     cur_BF_Int = portmap.BF_to_int;
     nlatched_Int_BF = latched_Int_BF;
     cur_Int_BF = portmap.int_to_BF;
+
+    nlatched_imm_src = latched_imm_src;
+    cur_imm_src = portmap.imm_src;
+
+    nlatched_imm = latched_imm;
+    cur_imm = portmap.imm;
 
     portmap.ready_in = 1'b1;
     portmap.valid_out = 1'b0;
@@ -108,6 +123,9 @@ always_comb begin
             nlatched_BF_Int = portmap.BF_to_int;
             nlatched_Int_BF = portmap.int_to_BF;
 
+            nlatched_imm_src = portmap.imm_src;
+            nlatched_imm = portmap.imm;
+
             nlatchedRD = portmap.rdIn;
         end
         latch: begin
@@ -127,6 +145,9 @@ always_comb begin
             cur_Smod = latched_Smod;
             cur_BF_Int = latched_BF_Int;
             cur_Int_BF = latched_Int_BF;
+
+            cur_imm_src = latched_imm_src;
+            cur_imm = latched_imm;
 
             portmap.rdOut = latchedRD;
             latch_valid = 1'b1;
@@ -149,6 +170,9 @@ always_comb begin
             cur_BF_Int = latched_BF_Int;
             cur_Int_BF = latched_Int_BF;
 
+            cur_imm_src = latched_imm_src;
+            cur_imm = latched_imm;
+
             portmap.rdOut = latchedRD;
             latch_valid = 1'b0;
         end
@@ -166,6 +190,8 @@ always_ff @(posedge clk, negedge nRST) begin
         latched_Int_BF <= 1'b0;
         cur_state <= start;
         latchedRD <= 8'b0;
+        latched_imm_src <= 1'b0;
+        latched_imm <= 32'b0;
     end
     else begin
         latched_input1 <= nlatched_input1;
@@ -177,6 +203,8 @@ always_ff @(posedge clk, negedge nRST) begin
         latched_Int_BF <= nlatched_Int_BF;
         cur_state <= n_state;
         latchedRD <= nlatchedRD;
+        latched_imm_src <= nlatched_imm_src;
+        latched_imm <= nlatched_imm;
     end
 end
 

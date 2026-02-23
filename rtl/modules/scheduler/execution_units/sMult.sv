@@ -11,26 +11,32 @@ module mult_wrapper (
 typedef enum {start, latch, done} state;
 state n_state, cur_state;
 
-logic [31:0] cur_input_1, cur_input_2, latched_input1, latched_input2, nlatched_input1, nlatched_input2;
+logic [31:0] cur_input_1, cur_input_2, latched_input1, latched_input2, nlatched_input1, nlatched_input2, src2;
 logic [31:0] mult_output;
 logic latched_sMult, nlatched_sMult, cur_sMult;
 logic counter_enable, counter_clear;
 logic [7:0] nlatchedRD, latchedRD;
 logic [6:0] latency, current_count;
+logic [31:0] cur_imm, nlatched_imm, latched_imm;
+logic cur_imm_src, nlatched_imm_src, latched_imm_src;
 logic ready_latch;
 
 assign ready_latch = cur_sMult && portmap.valid_in;
 
 flex_counter #(.N(7)) counter (.clk(clk), .nrst(nRST), .enable(counter_enable), .clear(counter_clear), .count(current_count));
 
-wt_mult#(.SIGNED(1)) MULTIPLIER (.CLK(clk), .nRST(nRST), .ready(ready_latch), .a(cur_input_1), .b(cur_input_2), .done(), .out(mult_output), .reduce_partial_prods());
+wt_mult#(.SIGNED(1)) MULTIPLIER (.CLK(clk), .nRST(nRST), .ready(ready_latch), .a(cur_input_1), .b(src2), .done(), .out(mult_output), .reduce_partial_prods());
 
 always_comb begin
     latency = 1;
     portmap.data_out = 32'b0;
+    src2 = cur_input_2;
     if(cur_sMult == 1) begin
         latency = 2;
         portmap.data_out = mult_output;
+        if(cur_imm_src) begin
+            src2 = cur_imm;
+        end
     end
 end
 
@@ -43,6 +49,12 @@ always_comb begin
 
     nlatched_sMult = latched_sMult;
     cur_sMult = portmap.sMult;
+
+    nlatched_imm_src = latched_imm_src;
+    cur_imm_src = portmap.imm_src;
+
+    nlatched_imm = latched_imm;
+    cur_imm = portmap.imm;
 
     portmap.ready_in = 1'b1;
     portmap.valid_out = 1'b0;
@@ -64,6 +76,9 @@ always_comb begin
             nlatched_input1 = portmap.input1;
             nlatched_input2 = portmap.input2;
 
+            nlatched_imm_src = portmap.imm_src;
+            nlatched_imm = portmap.imm;
+
             nlatched_sMult = portmap.sMult;
 
             nlatchedRD = portmap.rdIn;
@@ -79,6 +94,9 @@ always_comb begin
 
             cur_input_1 = latched_input1;
             cur_input_2 = latched_input2;
+
+            cur_imm_src = latched_imm_src;
+            cur_imm = latched_imm;
 
             cur_sMult = latched_sMult;
 
@@ -96,6 +114,9 @@ always_comb begin
             cur_input_1 = latched_input1;
             cur_input_2 = latched_input2;
 
+            cur_imm_src = latched_imm_src;
+            cur_imm = latched_imm;
+
             cur_sMult = latched_sMult;
 
             portmap.rdOut = latchedRD;
@@ -110,6 +131,8 @@ always_ff @(posedge clk, negedge nRST) begin
         latched_sMult <= 1'b0;
         cur_state <= start;
         latchedRD <= 8'b0;
+        latched_imm_src <= 1'b0;
+        latched_imm <= 32'b0;
     end
     else begin
         latched_input1 <= nlatched_input1;
@@ -117,6 +140,8 @@ always_ff @(posedge clk, negedge nRST) begin
         latched_sMult <= nlatched_sMult;
         cur_state <= n_state;
         latchedRD <= nlatchedRD;
+        latched_imm_src <= nlatched_imm_src;
+        latched_imm <= nlatched_imm;
     end
 end
 

@@ -69,6 +69,8 @@ module execute_stage
     assign unit2_if.s_mod = post_xbar_ex2.s_mod_valid;
     assign unit2_if.BF_to_int = post_xbar_ex2.BF_to_int_valid;
     assign unit2_if.int_to_BF = post_xbar_ex2.int_to_BF_valid;
+    assign unit2_if.imm = post_xbar_ex2.imm;
+    assign unit2_if.imm_src = post_xbar_ex2.imm_src;
     //outputs
     assign ex_if.ex2.valid_out = unit2_if.valid_out;
     assign ex_if.ex2.data_out = unit2_if.data_out;
@@ -102,6 +104,8 @@ module execute_stage
     assign unit4_if.rdIn = post_xbar_ex4.rdIn;
     assign unit4_if.valid_in = ex4_valid;
     assign unit4_if.sMult = post_xbar_ex4.sMult_valid;
+    assign unit4_if.imm = post_xbar_ex4.imm;
+    assign unit4_if.imm_src = post_xbar_ex4.imm_src;
     //outputs
     assign ex_if.ex4.valid_out = unit4_if.valid_out;
     assign ex_if.ex4.data_out = unit4_if.data_out;
