@@ -1,0 +1,2 @@
+var g_data = ["","./rtl/include/memory/axi_bus/axi_bus_pkg.sv","./rtl/include/memory/axi_bus/axi_bus_params.svh","./rtl/modules/memory/axi_bus/axi_read_arbiter.sv","./tb/unit/memory/axi_bus/axi_write_arbiter_tb.sv","./rtl/include/memory/axi_bus/axi_bus_if.sv","./rtl/modules/memory/axi_bus/axi_write_arbiter.sv"];
+processSrcNamesData(g_data);

@@ -39,40 +39,48 @@ module axi_write_arbiter (
         next_state = state;
         next_grant_sel = '0;
         next_counter = '0;
-        if(!arbw_if.sp0_req_w && !arbw_if.sp1_req_w && !arbw_if.d_req_w) begin
-            next_state = IDLE;
-            next_grant_sel = '0;
-            next_counter = '0;
-        end else begin
-            case(state)
-                IDLE: begin
-                    if      (!arbw_if.skid_ready_w) begin next_state = IDLE;        next_grant_sel = '0;             end 
-                    else if (arbw_if.sp0_req_w)     begin next_state = SP0_GRANTED; next_grant_sel = {1'b1, SP0};    next_counter = arbw_if.sp0_len_w; end
-                    else if (arbw_if.sp1_req_w)     begin next_state = SP1_GRANTED; next_grant_sel = {1'b1, SP1};    next_counter = arbw_if.sp1_len_w; end
-                    else if (arbw_if.d_req_w)       begin next_state = D_GRANTED;   next_grant_sel = {1'b1, DCACHE}; next_counter = arbw_if.d_len_w;   end
-                end 
-                SP0_GRANTED: begin 
-                    if      (!arbw_if.skid_ready_w) begin next_state = SP0_GRANTED; next_grant_sel = {1'b0, SP0};    next_counter = counter;           end
-                    else if (counter != '0)         begin next_state = SP0_GRANTED; next_grant_sel = {1'b1, SP0};    next_counter = counter - 1;       end 
-                    else if (arbw_if.sp1_req_w)     begin next_state = SP1_GRANTED; next_grant_sel = {1'b1, SP1};    next_counter = arbw_if.sp1_len_w; end
+        // if(!arbw_if.sp0_req_w && !arbw_if.sp1_req_w && !arbw_if.d_req_w) begin
+        //     next_state = IDLE;
+        //     next_grant_sel = '0;
+        //     next_counter = '0;
+        // end else begin
+        case(state)
+            IDLE: begin
+                if      (!arbw_if.skid_ready_w) begin next_state = IDLE;        next_grant_sel = '0;             end 
+                else if (arbw_if.sp0_req_w)     begin next_state = SP0_GRANTED; next_grant_sel = {1'b1, SP0};    next_counter = arbw_if.sp0_len_w; end
+                else if (arbw_if.sp1_req_w)     begin next_state = SP1_GRANTED; next_grant_sel = {1'b1, SP1};    next_counter = arbw_if.sp1_len_w; end
+                else if (arbw_if.d_req_w)       begin next_state = D_GRANTED;   next_grant_sel = {1'b1, DCACHE}; next_counter = arbw_if.d_len_w;   end
+            end 
+            SP0_GRANTED: begin 
+                if      (!arbw_if.skid_ready_w) begin next_state = SP0_GRANTED; next_grant_sel = {1'b0, SP0};    next_counter = counter;           end
+                else if (counter != '0)         begin next_state = SP0_GRANTED; next_grant_sel = {1'b1, SP0};    next_counter = counter - 1;       end 
+                else begin
+                    if      (arbw_if.sp1_req_w)     begin next_state = SP1_GRANTED; next_grant_sel = {1'b1, SP1};    next_counter = arbw_if.sp1_len_w; end
                     else if (arbw_if.d_req_w)       begin next_state = D_GRANTED;   next_grant_sel = {1'b1, DCACHE}; next_counter = arbw_if.d_len_w;   end 
                     else if (arbw_if.sp0_req_w)     begin next_state = SP0_GRANTED; next_grant_sel = {1'b1, SP0};    next_counter = arbw_if.sp0_len_w; end 
-                end 
-                SP1_GRANTED: begin 
-                    if      (!arbw_if.skid_ready_w) begin next_state = SP1_GRANTED; next_grant_sel = {1'b0, SP1};    next_counter = counter;           end
-                    else if (counter != '0)         begin next_state = SP1_GRANTED; next_grant_sel = {1'b1, SP1};    next_counter = counter - 1;       end 
-                    else if (arbw_if.d_req_w)       begin next_state = D_GRANTED;   next_grant_sel = {1'b1, DCACHE}; next_counter = arbw_if.d_len_w;   end 
+                    else                            begin next_state = IDLE;        next_grant_sel = '0;             next_counter = '0;                end
+                end
+            end 
+            SP1_GRANTED: begin 
+                if      (!arbw_if.skid_ready_w) begin next_state = SP1_GRANTED; next_grant_sel = {1'b0, SP1};    next_counter = counter;           end
+                else if (counter != '0)         begin next_state = SP1_GRANTED; next_grant_sel = {1'b1, SP1};    next_counter = counter - 1;       end 
+                else begin
+                    if      (arbw_if.d_req_w)       begin next_state = D_GRANTED;   next_grant_sel = {1'b1, DCACHE}; next_counter = arbw_if.d_len_w;   end 
                     else if (arbw_if.sp0_req_w)     begin next_state = SP0_GRANTED; next_grant_sel = {1'b1, SP0};    next_counter = arbw_if.sp0_len_w; end 
                     else if (arbw_if.sp1_req_w)     begin next_state = SP1_GRANTED; next_grant_sel = {1'b1, SP1};    next_counter = arbw_if.sp1_len_w; end 
+                    else                            begin next_state = IDLE;        next_grant_sel = '0;             next_counter = '0;                end
                 end
-                D_GRANTED: begin 
-                    if      (!arbw_if.skid_ready_w) begin next_state = D_GRANTED;   next_grant_sel = {1'b0, DCACHE}; next_counter = counter;           end 
-                    else if (counter != '0)         begin next_state = D_GRANTED;   next_grant_sel = {1'b1, DCACHE}; next_counter = counter - 1;       end 
-                    else if (arbw_if.sp0_req_w)     begin next_state = SP0_GRANTED; next_grant_sel = {1'b1, SP0};    next_counter = arbw_if.sp0_len_w; end
+            end
+            D_GRANTED: begin 
+                if      (!arbw_if.skid_ready_w) begin next_state = D_GRANTED;   next_grant_sel = {1'b0, DCACHE}; next_counter = counter;           end 
+                else if (counter != '0)         begin next_state = D_GRANTED;   next_grant_sel = {1'b1, DCACHE}; next_counter = counter - 1;       end 
+                else begin
+                    if      (arbw_if.sp0_req_w)     begin next_state = SP0_GRANTED; next_grant_sel = {1'b1, SP0};    next_counter = arbw_if.sp0_len_w; end
                     else if (arbw_if.sp1_req_w)     begin next_state = SP1_GRANTED; next_grant_sel = {1'b1, SP1};    next_counter = arbw_if.sp1_len_w; end
                     else if (arbw_if.d_req_w)       begin next_state = D_GRANTED;   next_grant_sel = {1'b1, DCACHE}; next_counter = arbw_if.d_len_w;   end
-                end 
-            endcase
-        end 
+                    else                            begin next_state = IDLE;        next_grant_sel = '0;             next_counter = '0;                end
+                end
+            end 
+        endcase
     end 
 endmodule

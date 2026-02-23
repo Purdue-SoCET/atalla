@@ -150,7 +150,7 @@ test:
 
 	@if [ "$(GUI)" = "ON" ]; then \
 		echo "[$@] launching vsim GUI on work.$$TB_TOP"; \
-		$(VSIM) -coverage -voptargs="+acc" work.$$TB_TOP -do "view objects; do $$WAVEROOT/$$TB_TOP.do; run -all;" -onfinish stop; \
+		$(VSIM) -coverage -voptargs="+acc" work.$$TB_TOP -do "view objects; do $(WAVEROOT)/$$TB_TOP.do; run -all;" -onfinish stop; \   ## do $$WAVEROOT/$$TB_TOP.do;
 	else \
 		echo "[$@] launching vsim on work.$$TB_TOP"; \
 		$(VSIM) -coverage -c -voptargs="+acc"  work.$$TB_TOP -do "run -all"; \
