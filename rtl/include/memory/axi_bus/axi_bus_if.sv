@@ -42,36 +42,26 @@ interface axi_bus_if(input logic clk, input logic nRST);
     logic sp0_req_w, sp1_req_w, d_req_w, skid_ready_w;
     logic [AWGRANT-1:0] aw_grant;
 
-    // SP0 & AR MANAGER READY/VALID
-    logic ar_sp0_i_valid, ar_sp0_i_ready;
+    // SP0 & AR MANAGER
+    logic ar_sp0_valid, ar_sp0_ready, sp0_pop;
 
-    // SP1 & AR MANAGER READY/VALID
-    logic ar_sp1_i_valid, ar_sp1_i_ready;
+    // SP1 & AR MANAGER
+    logic ar_sp1_valid, ar_sp1_ready, sp1_pop;
 
-    // D$ & AR MANAGER READY/VALID
-    logic ar_d_i_valid, ar_d_i_ready;
+    // D$ & AR MANAGER
+    logic ar_d_valid, ar_d_ready, d_pop;
 
-    // I$ & AR MANAGER READY/VALID
-    logic ar_i_i_valid, ar_i_i_ready;
+    // I$ & AR MANAGER
+    logic ar_i_valid, ar_i_ready, i_pop;
+
+    // AR MUX
+    sub_ar_channel_t ar_sp0_o, ar_sp1_o, ar_d_o, ar_i_o;
 
     // DRAM CONTROLLER & READ SKID BUFFER READY/VALID
     logic ar_o_valid, ar_o_ready;
 
     // DRAM CONTROLLER & READ RESPONSE ROUTER READY/VALID
     logic r_valid, r_ready;
-    // r_sp0_ready, r_sp1_ready, r_i_ready, r_d_ready;
-
-    // SP0 R Skid Buffer && SP0 READY/VALID
-    logic r_sp0_o_valid, r_sp0_o_ready;
-
-    // SP1 R Skid Buffer && SP1 READY/VALID
-    logic r_sp1_o_valid, r_sp1_o_ready;
-
-    // D$ R Skid Buffer && D$ READY/VALID
-    logic r_d_o_valid, r_d_o_ready;
-
-    // I$ R Skid Buffer && I$ READY/VALID
-    logic r_i_o_valid, r_i_o_ready;
 
     // SP0 & AW_W MANAGER READY/VALID
     logic aw_sp0_i_valid, aw_sp0_i_ready, w_sp0_i_valid, w_sp0_i_ready;
@@ -100,40 +90,53 @@ interface axi_bus_if(input logic clk, input logic nRST);
     // ----------------------------------------------------------------------
     // READ PATH Definitions
     // ----------------------------------------------------------------------
-    // MASTER <=> SP0 AR MANAGER
+
+    // SP0 MANAGER
     modport ar_sp0_manager (
-        // From Master 
-        input ar_sp0_i_valid, ar_sp0_i,
-
-        // To Master 
-        output ar_sp0_i_ready
+        // from Master
+        input ar_sp0_ready, ar_sp0_i,
+        // from Controller
+        sp0_pop,
+        // to Mux
+        output ar_sp0_o,
+        // to Master
+        ar_sp0_valid,
     );
 
-    // MASTER <=> SP1 AR MANAGER
+    // SP1 MANAGER
     modport ar_sp1_manager (
-        // From Master 
-        input ar_sp1_i_valid, ar_sp1_i,
-
-        // To Master 
-        output ar_sp1_i_ready
+        // from Master
+        input ar_sp1_ready, ar_sp1_i,
+        // from Controller
+        sp1_pop,
+        // to Mux
+        output ar_sp1_o,
+        // to Master
+        ar_sp1_valid,
     );
 
-    // MASTER <=> D$ AR MANAGER
+    // D$ MANAGER
     modport ar_d_manager (
-        // From Master 
-        input ar_d_i_valid, ar_d_i,
-
-        // To Master 
-        output ar_d_i_ready
+        // from Master
+        input ar_d_ready, ar_d_i,
+        // from Controller
+        d_pop,
+        // to Mux
+        output ar_d_o,
+        // to Master
+        ar_d_valid,
     );
 
-    // MASTER <=> I$ AR MANAGER
+    // I$ MANAGER
     modport ar_i_manager (
-        // From Master 
-        input ar_i_i_valid, ar_i_i,
-
-        // To Master 
-        output ar_i_i_ready
+        // from Master
+        input ar_i_ready, ar_i_i,
+        // from Controller
+        i_pop,
+        // to Mux
+        output ar_i_o,
+        // to Master
+        ar_i_valid,
     );
 
     // DRAM CONTROLLER <=> READ SKID BUFFER
@@ -167,7 +170,6 @@ interface axi_bus_if(input logic clk, input logic nRST);
             r_sp0_o_valid, r_sp1_o_valid, r_i_o_valid, r_d_o_valid,
 
         // To Controller
-        // r_sp0_ready, r_sp1_ready, r_i_ready, r_d_ready //TODO do we need saperate ready signals? If we have meta data telling which one receiving, we only need single ready signal.
         r_ready
     );
 

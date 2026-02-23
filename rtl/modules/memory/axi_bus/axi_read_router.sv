@@ -48,7 +48,7 @@ module axi_read_router # (
         .r_out(rif.r_d_o)
     );
 
-    always_comb begin //TODO: how do I know which one I am receiving?
+    always_comb begin
         sp0_sel = 0;
         sp1_sel = 0;
         i_sel = 0;

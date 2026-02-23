@@ -8,7 +8,7 @@ module axi_read_manager_tb ();
     localparam CLK_PERIOD = 10ns;
     string test_case = "";
 
-    logic clk, nrst;
+    logic CLK, nRST;
     logic arvalid, aready, pop, head_valid;
     logic [ARID-1:0]      arid;
     logic [ARADDR-1 :0]   araddr;
@@ -21,40 +21,41 @@ module axi_read_manager_tb ();
     logic [ARSIZE-1 :0]  head_size;
     logic [ARBURST-1:0]  head_burst;
 
-    axi_read_manager DUT (.CLK(clk),
-                          .nRST(nrst),
-                          .arvalid(arvalid),
-                          .arid(arid),
-                          .araddr(araddr),
-                          .arlen(arlen),
-                          .arsize(arsize),
-                          .arburst(arburst),
-                          .aready(aready),
-                          .pop(pop),
-                          .head_valid(head_valid),
-                          .head_addr(head_addr),
-                          .head_id(head_id),
-                          .head_size(head_size),
-                          .head_len(head_len),
-                          .head_burst(head_burst));
+    axi_read_manager DUT #(
+        MASTER_ID = 3
+    )(
+        .CLK(CLK),
+        .nRST(nRST),
+        .arvalid(arvalid),
+        .arid(arid),
+        .araddr(araddr),
+        .arlen(arlen),
+        .arsize(arsize),
+        .arburst(arburst),
+        .aready(aready),
+        .pop(pop),
+        .head_valid(head_valid),
+        .head_addr(head_addr),
+        .head_id(head_id),
+        .head_size(head_size),
+        .head_len(head_len),
+        .head_burst(head_burst)
+    );
 
     // clock gen 
     always begin
-        clk = 0;
+        CLK = 0;
         #(CLK_PERIOD/2);
-        clk = 1;
+        CLK = 1;
         #(CLK_PERIOD/2);
     end
 
     task reset_dut;
     begin
-        nrst = 0;
-        @(posedge clk);
-        @(posedge clk);
-        @(negedge clk);
-        nrst = 1;
-        @(posedge clk);
-        @(posedge clk);
+        nRST = 0;
+        repeat (3) @(negedge CLK);
+        nRST = 1;
+        repeat (3) @(negedge CLK);
     end
     endtask
 
@@ -68,6 +69,7 @@ module axi_read_manager_tb ();
         arlen   = '0;
         arburst = '0;
         pop     =  0;
+        repeat (3) @(negedge CLK);
     end 
     endtask
 

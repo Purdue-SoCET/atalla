@@ -5,21 +5,21 @@
 import axi_bus_pkg::*;
 
 module axi_read_manager #(
-    parameter logic [MID-1:0] MASTER_ID = '0
+    parameter logic [MID-1:0] MASTER_ID = 1
 )(
     input logic                 CLK,
     input logic                 nRST,
     // From Master
-    input logic                 arvalid,
+    input logic                 arready, // master ready to send read request
     input logic [ARID-1:0]      arid,
     input logic [ARADDR-1 :0]   araddr,
     input logic [ARLEN-1  :0]   arlen,
     input logic [ARSIZE-1 :0]   arsize,
     input logic [ARBURST-1:0]   arburst,
     // To Master
-    output logic                aready,
+    output logic                arvalid, // manager valid to take signal
     // From Read Controller
-    input  logic                pop, 
+    input  logic                pop, // AR channel ready to take 
     // To Read Mux
     output logic                head_valid,
     output logic [ARADDR-1 :0]  head_addr,
@@ -30,14 +30,15 @@ module axi_read_manager #(
 );
 
 ar_payload_t fifo [0:AR_DEPTH-1];
-logic [AR_PTR_WIDTH-1:0] wr_ptr, rd_ptr;
+logic [AR_PTR_WIDTH-1:0] wr_ptr, rd_ptr; // wr -> total data ; rd -> current data
 
 logic full, empty;
 assign full  = (wr_ptr + 1'b1 == rd_ptr);
 assign empty = (wr_ptr == rd_ptr);
 
 logic push;
-assign push = (arvalid & aready); 
+assign arvalid = !full;
+assign push = (arready & arvalid); 
 
 always_ff@(posedge CLK, negedge nRST) begin
     if(!nRST) begin 
@@ -46,7 +47,8 @@ always_ff@(posedge CLK, negedge nRST) begin
         if(push && !full) begin 
             fifo[wr_ptr].valid  <= 1'b1;
             fifo[wr_ptr].addr   <= araddr;
-            fifo[wr_ptr].mid_id <= {MASTER_ID, arid};
+            fifo[wr_ptr].mid <= MASTER_ID;
+            fifo[wr_ptr].id <= arid;
             fifo[wr_ptr].size   <= arsize;
             fifo[wr_ptr].len    <= arlen;
             fifo[wr_ptr].burst  <= arburst;
@@ -65,7 +67,7 @@ always_ff@(posedge CLK, negedge nRST) begin
     end
 end 
 
-assign aready = !full;
+
 
 assign head_valid = !empty;
 assign head_addr  = fifo[rd_ptr].addr;

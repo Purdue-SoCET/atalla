@@ -141,7 +141,8 @@ package axi_bus_pkg;
     // AR Channel To Subordiante
     typedef struct packed {
         logic [ARADDR-1:0]   addr;
-        logic [MID_ARID-1:0] mid_id; // Global (4-bit) ID: {MASTER_ID, id}
+        logic [RID-1:0] id;
+        logic [MID-1:0] mid;
         logic [ARSIZE-1:0]   size;
         logic [ARLEN-1:0]    len;
         logic [ARBURST-1:0]  burst;
