@@ -100,6 +100,7 @@ lint:
 # Similar to above! 
 ## Example: 
 ##  make test folder=/common/xbar tb_file=batcher_xbar_tb.sv
+# to turn on the GUI: add GUI=ON
 test:
 	@if [ -z "$(folder)" ] || [ -z "$(tb_file)" ]; then \
 	  echo "Usage: make $@ folder=/sub/dir tb_file=tb_top.sv [include=/foo,/bar]"; exit 1; \
@@ -152,11 +153,11 @@ test:
 
 	[ -d work ] || $(VLIB) work; \
 	echo "[$@] compiling (in-order):"; printf '  %s\n' $$ORDERED_SRCS; \
-	$(VLOG) -sv -mfcu -work work +acc $$INCFLAGS $$ORDERED_SRCS; \
+	$(VLOG) -sv -mfcu -work work +acc -cover bcesft $$INCFLAGS $$ORDERED_SRCS; \
 
 	@if [ "$(GUI)" = "ON" ]; then \
 		echo "[$@] launching vsim GUI on work.$$TB_TOP"; \
-		$(VSIM) -coverage -voptargs="+acc" work.$$TB_TOP -do "view objects; do $$WAVEROOT/$$TB_TOP.do; run -all;" -onfinish stop; \
+		$(VSIM) -coverage -voptargs="+acc" work.$$TB_TOP -do "view objects; do $(WAVEROOT)/$$TB_TOP.do; run -all;" -onfinish stop; \
 	else \
 		echo "[$@] launching vsim on work.$$TB_TOP"; \
 		$(VSIM) -coverage -c -voptargs="+acc"  work.$$TB_TOP -do "run -all"; \
