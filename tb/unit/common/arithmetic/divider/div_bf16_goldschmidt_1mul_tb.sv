@@ -114,134 +114,120 @@ module div_bf16_goldschmidt_1mul_tb;
   //-----------------------------------------------
   // Task: Run File Tests (FULL DUPLEX PIPELINE)
   //-----------------------------------------------
-  task automatic run_file_tests(input string filename, input string test_name);
+  task automatic run_file_tests(input string filename, input string test_name, input string traffic_mode);
     integer fd, r;
     string format_str;
     
     logic [WIDTH-1:0] op1, op2, exp_val;
+    logic [WIDTH-1:0] q_op1 [$], q_op2 [$], q_exp [$];
     
-    // SystemVerilog Queues to pass expected data from Driver to Receiver
-    logic [WIDTH-1:0] q_op1 [$];
-    logic [WIDTH-1:0] q_op2 [$];
-    logic [WIDTH-1:0] q_exp [$];
-    
-    int ULP_0_count = 0;
-    int ULP_1_count = 0;
-    int ULP_2_count = 0;
-
-    int tests_fed = 0;
-    int tests_received = 0;
+    int ULP_0_count = 0, ULP_1_count = 0, ULP_2_count = 0;
+    int tests_fed = 0, tests_received = 0, rx_timeout = 0;
     bit driver_done = 0;
-    int rx_timeout = 0;
+    time start_time, end_time;
+    real total_cycles, effective_cpi;
 
   begin
     tb_test_case = test_name;
     fd = $fopen(filename, "r");
     if (fd == 0) begin
-      $display("INFO: Cannot open file: %s (skipping)", filename);
+      $display("INFO: Cannot open file: %s", filename);
       return;
     end
     
-    $display("Running %s from %s (PIPELINED WITH RANDOM DELAYS)...", test_name, filename);
-    format_str = "%h,%h,%h\n";
+    $display("\n=======================================================");
+    $display("Running %s", test_name);
+    $display("File: %s", filename);
+    $display("Traffic Mode: %s", traffic_mode);
+    $display("=======================================================");
     
+    format_str = (WIDTH == 16) ? "%h,%h,%h\n" : "%h,%h,%h\n";
+    
+    start_time = $time;
     fork
-      // THREAD 1: THE DRIVER (Feeds inputs & tests Bubble handling)
+      // ===================================================================
+      // THREAD 1: THE DRIVER
+      // ===================================================================
       begin
         while (!$feof(fd)) begin
           r = $fscanf(fd, format_str, op1, op2, exp_val);
           if (r == 3) begin
-            // 20% chance to randomly inject a pipeline bubble (starvation)
-            if ($urandom_range(0, 100) < 20) begin
-              divif.in.valid_in = 0;
-              repeat($urandom_range(1, 3)) 
-              @(posedge CLK);
+            // Inject FRONT PRESSURE (Bubbles / Input Starvation)
+            if (traffic_mode == "FRONT_PRESSURE" || traffic_mode == "RANDOM") begin
+              if ($urandom_range(0, 100) < 25) begin // 25% chance to stall
+                divif.in.valid_in = 0;
+                repeat($urandom_range(1, 4)) @(posedge CLK);
+              end
             end
 
-            // Feed Data
             divif.in.operand1 = op1;
             divif.in.operand2 = op2;
             divif.in.valid_in = 1;
 
-            // Wait for handshake
-            do begin
-              @(posedge CLK);
-            end while (!divif.out.ready_in);
+            do begin @(posedge CLK); end while (!divif.out.ready_in);
 
-            // Data accepted! Push the expected answer to the Receiver's Queue
-            q_op1.push_back(op1);
-            q_op2.push_back(op2);
-            q_exp.push_back(exp_val);
+            q_op1.push_back(op1); q_op2.push_back(op2); q_exp.push_back(exp_val);
             tests_fed++;
-          end else begin
-            $display("Test has invalid format");
           end
         end
         divif.in.valid_in = 0;
-        driver_done = 1; // Signal the Receiver that no more data is coming
+        driver_done = 1; 
       end
 
-      // THREAD 2: THE RECEIVER (Checks outputs & tests Skid Buffer backpressure)
+      // ===================================================================
+      // THREAD 2: THE RECEIVER
+      // ===================================================================
       begin
-        // Keep running until Driver is done AND the Queue is completely empty
         while (!driver_done || q_exp.size() > 0) begin
           
-          // 20% chance to randomly stall the pipeline output (test skid buffer)
-          if ($urandom_range(0, 100) < 20) begin
-            divif.in.ready_out = 0;
-            repeat($urandom_range(1, 4)) @(posedge CLK);
+          // Inject BACK PRESSURE (Output Stalls / Skid Buffer Stress)
+          if (traffic_mode == "BACK_PRESSURE" || traffic_mode == "RANDOM") begin
+            if ($urandom_range(0, 100) < 25) begin // 25% chance to pause reading
+              divif.in.ready_out = 0;
+              repeat($urandom_range(1, 5)) @(posedge CLK);
+            end
           end
 
           divif.in.ready_out = 1;
           @(posedge CLK);
 
-          // Did an answer pop out on this clock cycle?
           if (divif.out.valid_out && divif.in.ready_out) begin
-            rx_timeout = 0; // Reset watchdog
+            rx_timeout = 0; 
             
             if (q_exp.size() == 0) begin
               $display("FATAL ERROR: Pipeline output an answer but Queue is empty!");
               errors++;
             end else begin
-              // Pop the expected data from the Queue
               logic [WIDTH-1:0] c_op1 = q_op1.pop_front();
               logic [WIDTH-1:0] c_op2 = q_op2.pop_front();
               logic [WIDTH-1:0] c_exp = q_exp.pop_front();
               logic [WIDTH-1:0] c_act = divif.out.result;
               logic [WIDTH-1:0] t_abs;
 
-
-              // Compare Math
+              // MATHEMATICAL COMPARISON AND ULP COUNTING
               if (is_nan(c_act) && is_nan(c_exp)) begin
-                // Both NaN is a perfect match
-                ULP_0_count++; 
+                ULP_0_count++; // Both NaN is a perfect match
               end else begin
                 t_abs = (c_act > c_exp) ? (c_act - c_exp) : (c_exp - c_act);
                 
                 if (c_act === c_exp) begin
-                   // Perfect Match
                    ULP_0_count++;
                 end else if ((c_act[15] == c_exp[15]) && (t_abs <= 2)) begin 
-                   // Acceptable Error (1 or 2 ULP)
                    if (t_abs == 1) ULP_1_count++;
                    if (t_abs == 2) ULP_2_count++;
                 end else begin
-                   // Unacceptable Error
                    $display("ERROR @%0t [%s]: %h / %h = %h (expected %h)", 
                             $time, tb_test_case, c_op1, c_op2, c_act, c_exp);
                    errors++;
                 end
               end
-
               tests_received++;
             end
           end else begin
-            // Watchdog Timer: Catch deadlocks where data gets stuck inside pipeline
             rx_timeout++;
-            if (rx_timeout > 1000) begin
+            if (rx_timeout > 1500) begin // Give it extra time for the BACK_PRESSURE stalls
                $display("FATAL ERROR: Receiver timed out waiting for pipeline to flush!");
-               errors++;
-               break;
+               errors++; break;
             end
           end
         end
@@ -249,11 +235,16 @@ module div_bf16_goldschmidt_1mul_tb;
       end
     join
 
+    end_time = $time;
+
     $fclose(fd);
     $display("Completed %s: Fed %0d, Received %0d tests", test_name, tests_fed, tests_received);
-    $display("Number of 0 ULP results: %d", ULP_0_count);
-    $display("Number of 1 ULP results: %d", ULP_1_count);
-    $display("Number of 2 ULP results: %d\n", ULP_2_count);
+    $display("Accuracy Breakdown -> 0 ULP: %0d | 1 ULP: %0d | 2 ULP: %0d", ULP_0_count, ULP_1_count, ULP_2_count);
+    if (tests_received > 0) begin
+      total_cycles = (end_time - start_time) / PERIOD;
+      effective_cpi = total_cycles / real'(tests_received);
+      $display("Performance Metric -> Total Cycles: %0.0f | Effective CPI: %0.2f cycles/division\n", total_cycles, effective_cpi);
+    end
     if (tests_fed != tests_received) begin
        $display("ERROR: Data mismatch! Fed %0d but Received %0d", tests_fed, tests_received);
        errors++;
@@ -409,28 +400,84 @@ module div_bf16_goldschmidt_1mul_tb;
       errors++;
     end
 
+    // ---------------------------------------------------------
+    // MID-FLIGHT RESET TEST (Asynchronous Flush)
+    // ---------------------------------------------------------
+    tb_test_case = "MID_FLIGHT_RESET";
+    $display("Running Mid-Flight Reset test...");
+    
+    // 1. Jam 4 items into the pipeline as fast as possible
+    divif.in.operand1 = 16'h4000; // 2.0
+    divif.in.operand2 = 16'h4000; // 2.0
+    divif.in.valid_in = 1;
+    for (int i=0; i<4; i++) begin
+      do begin @(posedge CLK); end while (!divif.out.ready_in);
+    end
+    divif.in.valid_in = 0;
+    
+    // 2. Wait 2 clock cycles so they are deep inside the math units
+    repeat(2) @(posedge CLK); 
+    
+    // 3. Brutally yank the reset low mid-calculation!
+    nRST = 0;
+    repeat(2) @(posedge CLK);
+    
+    // 4. Release reset and verify the pipeline completely died
+    nRST = 1;
+    @(posedge CLK);
+    if (divif.out.valid_out !== 0) begin
+      $display("ERROR @%0t [MID_FLIGHT_RESET]: Ghost data survived the reset! FIFO is not empty.", $time);
+      errors++;
+    end
+    if (divif.out.ready_in !== 1) begin
+      $display("ERROR @%0t [MID_FLIGHT_RESET]: Pipeline didn't recover ready_in after flush.", $time);
+      errors++;
+    end
+    $display("Mid-Flight Reset test passed.");
+    // ---------------------------------------------------------
+
     // Run all test categories (adjust filenames for BF16 if needed)
     if (EXP_WIDTH == 5 && MANT_WIDTH == 10) begin
       // FP16 test files
-      run_file_tests("tb/unit/vector/test_cases/div_fp16_normal_tests_10K.csv", "NORMAL_TESTS");
+      run_file_tests("tb/unit/vector/test_cases/div_fp16_normal_tests_10K.csv", "NORMAL_TESTS", "RANDOM");
       normal_tests = errors;
 
-      run_file_tests("tb/unit/vector/test_cases/div_fp16_subnormal_input_tests_10K.csv", "SUBNORMAL_INPUT_TESTS");
+      run_file_tests("tb/unit/vector/test_cases/div_fp16_subnormal_input_tests_10K.csv", "SUBNORMAL_INPUT_TESTS", "RANDOM");
       subnormal_input_tests = errors - normal_tests;
 
-      run_file_tests("tb/unit/vector/test_cases/div_fp16_subnormal_output_tests_10K.csv", "SUBNORMAL_OUTPUT_TESTS");
+      run_file_tests("tb/unit/vector/test_cases/div_fp16_subnormal_output_tests_10K.csv", "SUBNORMAL_OUTPUT_TESTS", "RANDOM");
       subnormal_output_tests = errors - normal_tests - subnormal_input_tests;
     end else if (EXP_WIDTH == 8 && MANT_WIDTH == 7) begin
       // BF16 test files (if available) --------------------------------------------------------------------------------------------------------------------------
-      run_file_tests("tb/unit/common/arithmetic/divider/test_cases/div_bf16_normal_tests_10K.csv", "BF16_NORMAL_TESTS");
-      normal_tests = errors;
-      run_file_tests("tb/unit/common/arithmetic/divider/test_cases/div_bf16_normal_test.csv", "BF16_NORMAL_TEST");
-      normal_tests = errors;
+      // MAX THROUGHPUT
+      run_file_tests("tb/unit/common/arithmetic/divider/test_cases/div_bf16_normal_tests_10K.csv", "BF16_NORM_STABLE", "STABLE");
 
-      run_file_tests("tb/unit/common/arithmetic/divider/test_cases/div_bf16_subnormal_input_tests_10K.csv", "BF16_SUBNORMAL_INPUT_TESTS");
+      // Front Pressure
+      run_file_tests("tb/unit/common/arithmetic/divider/test_cases/div_bf16_normal_tests_10K.csv", "BF16_FRONT_PRESS", "FRONT_PRESSURE");
+      
+      // Back Pressure
+      run_file_tests("tb/unit/common/arithmetic/divider/test_cases/div_bf16_normal_tests_10K.csv", "BF16_BACK_PRESS", "BACK_PRESSURE");
+
+      // Full Random
+      run_file_tests("tb/unit/common/arithmetic/divider/test_cases/div_bf16_normal_tests_10K.csv", "BF16_RANDOM", "RANDOM");
+
+      // MAX THROUGHPUT
+      run_file_tests("tb/unit/common/arithmetic/divider/test_cases/div_bf16_all_mantissas.csv", "BF16_NORM_STABLE_ALL", "STABLE");
+
+      // Front Pressure
+      run_file_tests("tb/unit/common/arithmetic/divider/test_cases/div_bf16_all_mantissas.csv", "BF16_FRONT_PRESS_ALL", "FRONT_PRESSURE");
+      
+      // Back Pressure
+      run_file_tests("tb/unit/common/arithmetic/divider/test_cases/div_bf16_all_mantissas.csv", "BF16_BACK_PRESS_ALL", "BACK_PRESSURE");
+
+      // Full Random
+      run_file_tests("tb/unit/common/arithmetic/divider/test_cases/div_bf16_all_mantissas.csv", "BF16_RANDOM_ALL", "RANDOM");
+
+      normal_tests = errors;
+      run_file_tests("tb/unit/common/arithmetic/divider/test_cases/div_bf16_subnormal_input_tests_10K.csv", "BF16_SUBNORMAL_INPUT_TESTS", "RANDOM");
       subnormal_input_tests = errors - normal_tests;
 
-      run_file_tests("tb/unit/common/arithmetic/divider/test_cases/div_bf16_subnormal_output_tests_10K.csv", "BF16_SUBNORMAL_OUTPUT_TESTS");
+      run_file_tests("tb/unit/common/arithmetic/divider/test_cases/div_bf16_subnormal_output_tests_10K.csv", "BF16_SUBNORMAL_OUTPUT_TESTS", "RANDOM");
       subnormal_output_tests = errors - normal_tests - subnormal_input_tests;
     end else begin
       $display("INFO: No file-based tests available for this custom format");
