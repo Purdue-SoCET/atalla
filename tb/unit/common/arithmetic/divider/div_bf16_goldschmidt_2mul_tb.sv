@@ -1,8 +1,8 @@
-// make test tb_file=div_bf16_goldschmidt_1mul_tb.sv modules=/common/arithmetic/adders,/common/arithmetic/multipliers,/common/arithmetic/divider packages=/vector/vector_pkg.vh,/memory/scratchpad/scpad_pkg.sv,/common/xbar/xbar_pkg.sv GUI=ON
+// make test tb_file=div_bf16_goldschmidt_2mul_tb.sv modules=/common/arithmetic/adders,/common/arithmetic/multipliers,/common/arithmetic/divider packages=/vector/vector_pkg.vh,/memory/scratchpad/scpad_pkg.sv,/common/xbar/xbar_pkg.sv GUI=ON
 `include "div_if.vh"
 `timescale 1 ns / 1 ns
 
-module div_bf16_goldschmidt_1mul_tb;
+module div_bf16_goldschmidt_2mul_tb;
   //-----------------------------------------------
   // Configuration Parameters
   //-----------------------------------------------

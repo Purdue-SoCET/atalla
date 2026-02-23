@@ -1,6 +1,6 @@
 `include "div_if.vh"
 
-module div_bf16_goldschmidt_1mul (
+module div_bf16_goldschmidt_2mul (
     input logic CLK, nRST,
     div_if.dvif divif
 );
