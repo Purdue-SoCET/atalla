@@ -1,6 +1,6 @@
 `include "vreduction_if.vh"
 `include "vreduction_alu_if.vh"
-`include "reduction_types.vh"
+`include "vector_pkg.vh"
 
 module vreduction #(
     parameter int LANES = 16
@@ -8,99 +8,85 @@ module vreduction #(
     input logic CLK, nRST,
     vreduction_if.ruif vruif
 );
-
-    import reduction_pkg::*;
+    import vector_pkg::*;
     
-    logic busy, broadcast_registered, clear_registered;
-    logic [4:0] imm_registered;
-    logic [1:0] reduction_type_registered;
-    logic [NUM_ELEMENTS-1:0][15:0] vector_registered, output_vector;
-    logic valid_out_reg;
+    vreg_t output_vec, output_vec_n;
+    logic [ESZ-1:0] rtree_result;
+    logic rtree_done;
 
-    //we are ready if ready_out, and not ready until we output valid data again
-    always_ff @(posedge CLK, negedge nRST) begin
-        if (!nRST) begin
-            busy <= 1'b0;
-        end 
-        else begin
-            if (!busy && vruif.in.valid_in && vruif.out.ready_in) begin
-                busy <= 1'b1;
-            end
-            if (busy && vruif.out.valid_out) begin
-                busy <= 1'b0;
-            end
-        end
-    end
+    logic ready_in_r, ready_in_n;
+    logic valid_out_r, valid_out_n;
 
-    always_comb begin
-        vruif.out.ready_in = (!busy) & vruif.in.ready_out;
-    end
-
-    //on a valid input, latch all control signals and data
-    always_ff @(posedge CLK, negedge nRST) begin
-        if (!nRST) begin
-            vector_registered <= 'b0;
-            broadcast_registered <= 'b0;
-            clear_registered <= 'b0;
-            imm_registered <= 'b0;
-            reduction_type_registered <= 'b0;
-        end
-        else begin
-            if (vruif.in.valid_in & vruif.out.ready_in) begin
-                vector_registered <= vruif.in.vector_input;
-                broadcast_registered <= vruif.in.broadcast;
-                clear_registered <= vruif.in.clear;
-                imm_registered <= vruif.in.imm;
-                reduction_type_registered <= vruif.in.reduction_type;
-            end
-        end
-    end
 
     //run the reduction tree with registered alu_op
-    logic [15:0] rtree_result;
-    logic rtree_done;
-    reduction_tree #(
-        .LANES(LANES)
-    ) rTree (
+
+    reduction_tree rTree (
         .CLK(CLK),
         .nRST(nRST),
         .data_in(vruif.in.lane_input),
-        .alu_op(reduction_type_registered),  // Use registered version that stays stable
+        .alu_op(vruif.in.reduction_type),
         .valid_in(vruif.in.valid_in & vruif.out.ready_in),
         .data_out(rtree_result),
         .valid_out(rtree_done)
     );
 
-    //when the tree is done, update output vector
-    always_ff @(posedge CLK, negedge nRST) begin
+    //output vector creation
+    always_ff @(posedge CLK, negedge nRST) begin : output_r
         if (!nRST) begin
-            output_vector <= 'b0;
-            valid_out_reg <= 1'b0;
+            output_vec <= 'b0;
         end
         else begin
-            if (rtree_done) begin
-                // Update output_vector directly when tree is done
-                for (int i = 0; i < NUM_ELEMENTS; i++) begin
-                    if (clear_registered) begin
-                        output_vector[i] <= (i == imm_registered) ? rtree_result : 'b0;
-                    end
-                    else if (broadcast_registered) begin
-                        output_vector[i] <= rtree_result;
-                    end
-                    else begin
-                        output_vector[i] <= (i == imm_registered) ? rtree_result : vector_registered[i];
-                    end
+            output_vec <= output_vec_n;
+        end
+    end
+
+    always_comb begin : output_comb
+        output_vec_n = output_vec;
+        if (rtree_done) begin
+            for (int i = 0; i < NUM_ELEMENTS; i++) begin
+                if (vruif.in.broadcast) begin
+                    output_vec_n[i] = rtree_result;
                 end
-                valid_out_reg <= 1'b1;
-            end
-            else begin
-                if (vruif.in.ready_out) begin
-                    valid_out_reg <= 1'b0;
+                else if (vruif.in.clear) begin
+                    output_vec_n[i] = i == vruif.in.imm ? rtree_result : 'b0;
+                end
+                else begin
+                    output_vec_n[i] = i == vruif.in.imm ? rtree_result : vruif.in.vector_input;
                 end
             end
         end
     end
 
-    assign vruif.out.vector_output = output_vector;
-    assign vruif.out.valid_out = valid_out_reg;
+    assign vruif.out.vector_output = output_vec;
+
+    always_ff @(posedge CLK, negedge nRST) begin : ready_in_seq
+        if (!nRST) begin
+            ready_in_r <= 'b1;
+            valid_out_r <= 'b0;
+        end
+        else begin
+            ready_in_r <= ready_in_n;
+            valid_out_r <= valid_out_n;
+        end
+    end
+
+    always_comb begin : ready_in_comb
+        ready_in_n = ready_in_r;
+        valid_out_n = valid_out_r;
+        if (vruif.in.valid_in & vruif.out.ready_in) begin //if handshake deassert ready
+            ready_in_n = 'b0;
+        end
+        if (rtree_done) begin //if the tree finishes, we have valid data
+            valid_out_n = 'b1;
+        end
+
+        if (vruif.out.valid_out & vruif.in.ready_out) begin //when an output handshake happens we are no longer valid or ready
+            ready_in_n = 'b1;
+            valid_out_n = 'b0;
+        end
+    end
+
+    assign vruif.out.ready_in = ready_in_r;
+    assign vruif.out.valid_out = valid_out_r;
+
 endmodule

@@ -1,4 +1,4 @@
-`include "reduction_types.vh"
+`include "vector_pkg.vh"
 `include "vreduction_alu_if.vh"
 
 module vreduction_alu (
@@ -7,7 +7,7 @@ module vreduction_alu (
     vreduction_alu_if.vralu vraluif
 );
 
-import reduction_pkg::*;
+import vector_pkg::*;
 
 // Signals for addsub_bf16
 logic [15:0] bf1_in, bf2_in, bf_out;
@@ -48,7 +48,7 @@ always_comb begin
     bf2_in = vraluif.value_b;
     
     // For MIN/MAX, we need to subtract to compare
-    op = (vraluif.alu_op == VR_MIN || vraluif.alu_op == VR_MAX) ? 1'b1 : 1'b0;
+    op = (vraluif.alu_op == ALU_MLT || vraluif.alu_op == ALU_MGT) ? 1'b1 : 1'b0;
 end
 
 // Pipeline Stage 1: Register inputs
@@ -87,11 +87,11 @@ always_comb begin
         // If any input was NaN, output NaN (BF16 NaN format)
         vraluif.value_out = 16'h7FC0;
     end
-    else if (alu_op_s2 == VR_SUM) begin
+    else if (alu_op_s2 == ALU_ADD) begin
         // For SUM, use the adder result directly
         vraluif.value_out = bf_out;
     end
-    else if (alu_op_s2 == VR_MIN) begin
+    else if (alu_op_s2 == ALU_MLT) begin
         // For MIN: if (a-b) is negative, a is smaller
         if (bf_out[15]) begin
             vraluif.value_out = value_a_s2;
@@ -99,7 +99,7 @@ always_comb begin
             vraluif.value_out = value_b_s2;
         end
     end
-    else if (alu_op_s2 == VR_MAX) begin
+    else if (alu_op_s2 == ALU_MGT) begin
         // For MAX: if (a-b) is negative, b is larger
         if (bf_out[15]) begin
             vraluif.value_out = value_b_s2;

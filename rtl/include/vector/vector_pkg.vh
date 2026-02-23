@@ -62,15 +62,14 @@ package vector_pkg;
     // =========================================================================
     // Data Structures
     // =========================================================================
-    typedef [ESZ-1:0][VLMAX-1:0]   vreg_t;     // full vector
-
-    // Reduction op (used by VALU for VRMAX/VRMIN/VRSUM/VRSUB)
-    typedef enum logic [1:0] {
-        VR_MAX = 2'b00,
-        VR_MIN = 2'b01,
-        VR_SUM = 2'b10,
-        VR_SUB = 2'b11
-    } valu_op_t;
+    typedef logic [ESZ-1:0][VLMAX-1:0]   vreg_t;     // full vector
+    typedef enum logic [2:0] {
+        VALU = 3'b000,
+        MUL = 3'b001,
+        DIV = 3'b010,
+        EXP = 3'b011,
+        SQRT = 3'b100
+    } fu_t;
 
     // =========================================================================
     // Veggie interface structs
@@ -86,7 +85,7 @@ package vector_pkg;
         logic  [READ_PORTS-1:0] REN;
 
         // MASK Reads/Writes
-        mask_sel_t [MASK_BANK_COUNT-1:0] vmd; 
+        mask_sel_t [MASK_BANK_COUNT-1:0] vmd;
         vmask_t    [MASK_BANK_COUNT-1:0] mvdata;
         logic      [MASK_BANK_COUNT-1:0] MWEN; // mask write enable
 
@@ -160,13 +159,18 @@ package vector_pkg;
     // Lane structs
     // =========================================================================
     // FU selector encoded as 3 bits (0..4) matching LANE_FU_COUNT = 5
-    typedef enum logic [2:0] {
-        VALU = 3'b000,
-        MUL  = 3'b001,
-        DIV  = 3'b010,
-        EXP  = 3'b011,
-        SQRT = 3'b100
-    } fu_t;
+    typedef enum logic [3:0] {
+        ALU_ADD = 4'b0000, // BF16 addition
+        ALU_SUB = 4'b0001, // BF16 subtraction
+        ALU_AND = 4'b0010, // Bitwise AND
+        ALU_OR = 4'b0011, // Bitwise OR
+        ALU_XOR = 4'b0100, // Bitwise XOR
+        ALU_NOT = 4'b0101, // Bitwise NOT (v1 only)
+        ALU_MGT = 4'b0110, // Mask greater than (v1 > v2)
+        ALU_MLT = 4'b0111, // Mask less than (v1 < v2)
+        ALU_MEQ = 4'b1000, // Mask equal (v1 == v2)
+        ALU_MNEQ = 4'b1001 // Mask not equal (v1 != v2)
+    } alu_op_t;
     
     // Lane sequencer in/out (per lane, per issue slot)
     typedef struct packed {
@@ -216,7 +220,7 @@ package vector_pkg;
         logic [VIDX_W-1:0] vd;
         logic rm;
         logic [SLICE_W-1:0] mask;
-        valu_op_t alu_op;
+        alu_op_t alu_op;
     } functional_unit_issue_port_t;
     
     typedef struct packed {
@@ -233,6 +237,29 @@ package vector_pkg;
         logic mask;
     } functional_unit_out_t;
 
+
+    //reduction stuff
+        typedef struct packed {
+        vreg_t vector_input;
+        logic [NUM_LANES-1:0][ESZ-1:0] lane_input;
+        logic [4:0] imm;
+        logic clear, broadcast, valid_in, ready_out;
+        alu_op_t reduction_type;
+    } reduction_if_in_t;
+
+    typedef struct packed {
+        vreg_t vector_output;
+        logic valid_out, ready_in;
+    } reduction_if_out_t;
+
+    typedef struct packed {
+        functional_unit_issue_port_t [LANE_ISSUE_W-1:0] ports;
+        logic wb_ready;
+
+        logic [NUM_LANES-1:0][ESZ-1:0] lane_input;
+        logic lane_valid;
+    } reduction_FU_in_t;
+
     //lane structs
     typedef struct packed {
         logic [LANE_ISSUE_W-1:0] input_valid;
@@ -242,7 +269,7 @@ package vector_pkg;
         logic [LANE_ISSUE_W-1:0][VIDX_W-1:0] vd;
         logic [LANE_ISSUE_W-1:0] rm;
         logic [LANE_ISSUE_W-1:0][SLICE_W - 1:0] mask;
-        valu_op_t [LANE_ISSUE_W-1:0] aluop;
+        alu_op_t [LANE_ISSUE_W-1:0] aluop;
         logic [LANE_FU_COUNT-1:0] ready;
     } lane_in_t;
 
@@ -293,7 +320,7 @@ package vector_pkg;
     // Top-level vector if structs
     // =========================================================================
     
-    typdef struct packed {
+    typedef struct packed {
         logic [LANE_FU_COUNT-1:0] fu_global_status;
         logic gsau_status;
         vlsu_sched_res_t [NUM_SCPADS-1:0] vlsu_status;
@@ -341,7 +368,7 @@ package vector_pkg;
         logic [7:0] vd;
         logic rm;
         vmask_t mask;
-        valu_op_t alu_op;
+        alu_op_t alu_op;
     } lanes_issue_port_t;
 
     typedef struct packed {
