@@ -33,7 +33,8 @@ class lfc_ram_active_driver extends uvm_driver#(lfc_ram_transaction);
 
   virtual lfc_if vif;
   ram_model m_ram;
-  localparam int MEM_LATENCY = 5;
+  //localparam int MEM_LATENCY = 5;
+  int unsigned MEM_LATENCY;
 
   function new(string name, uvm_component parent);
     super.new(name, parent);
@@ -77,6 +78,7 @@ class lfc_ram_active_driver extends uvm_driver#(lfc_ram_transaction);
           tr.ram_mem_data[b]  = m_ram.read(b, vif.ram_mem_addr[b]);
 
           // simulate latency
+	  MEM_LATENCY = $urandom_range(5,1);
           repeat (MEM_LATENCY) @(posedge vif.clk);
           vif.ram_mem_data[b]     = tr.ram_mem_data[b];
           vif.ram_mem_complete[b] = 1'b1;
@@ -102,6 +104,7 @@ class lfc_ram_active_driver extends uvm_driver#(lfc_ram_transaction);
           m_ram.write(b, vif.ram_mem_addr[b], vif.ram_mem_store[b]);
 
           // simulate latency
+	  MEM_LATENCY = $urandom_range(5,1);
           repeat (MEM_LATENCY) @(posedge vif.clk);
           vif.ram_mem_complete[b] = 1'b1;
           @(posedge vif.clk);
