@@ -3,7 +3,7 @@
 
 `include "vector_pkg.vh"
 
-interface v_wb_arbiter;
+interface v_wb_arbiter_if;
   import vector_pkg::*;
 
   // Top level signals
@@ -33,6 +33,7 @@ interface v_wb_arbiter;
   // Output Signals (to veggie x4) 
   // TODO CHECK VEGGIE inputs to determine if i need to se write high or handshake with veggie
   veggie_in_t veggie_in;
+  veggie_out_t veggie_out;
   // DETAILS
   // typedef struct packed {
         // VDATA Writes
@@ -54,10 +55,11 @@ interface v_wb_arbiter;
     //     logic      [MASK_BANK_COUNT-1:0] MREN; // mask read enable
     // } veggie_in_t;
 
-  modport v_wb_arbiter (
+  modport v_wb_arbiter_if (
     // input CLK, nRST,
     input vector_out,
-    output veggie_in
+    output veggie_in,
+    output veggie_out
   );
 
 endinterface
