@@ -5,191 +5,218 @@ import uvm_pkg::*;
 `include "uvm_macros.svh"
 `include "lfc_cpu_transaction.sv"
 `include "lfc_ram_transaction.sv"
-`include "lfc_if.sv"
-
-
 
 `uvm_analysis_imp_decl(_cpu)
 `uvm_analysis_imp_decl(_ram)
 
-// class lfc_predictor extends uvm_subscriber#(lfc_cpu_transaction, lfc_ram_transaction);
-class lfc_predictor extends uvm_component /*#(lfc_cpu_transaction, lfc_ram_transaction)*/;
-    `uvm_component_utils(lfc_predictor)
+class lfc_predictor extends uvm_component;
+  `uvm_component_utils(lfc_predictor)
 
-    parameter NUM_BANKS = 4;
-    parameter UUID_SIZE = 4;
+  parameter NUM_BANKS  = 4;
+  parameter UUID_SIZE  = 4;
+  parameter MAX_MSHR   = 8;
+  parameter CACHE_LINES = 256;
 
-    uvm_analysis_imp_cpu#(lfc_cpu_transaction, lfc_predictor) cpu_imp;
-    uvm_analysis_imp_ram#(lfc_ram_transaction, lfc_predictor) ram_imp;
+  uvm_analysis_imp_cpu #(lfc_cpu_transaction, lfc_predictor) cpu_imp;
+  uvm_analysis_imp_ram #(lfc_ram_transaction, lfc_predictor) ram_imp;
 
-    uvm_analysis_port#(lfc_cpu_transaction) pred_cpu_ap;
-    uvm_analysis_port#(lfc_ram_transaction) pred_ram_ap;
+  uvm_analysis_port #(lfc_cpu_transaction) pred_cpu_ap;
+  uvm_analysis_port #(lfc_ram_transaction) pred_ram_ap;
 
-    // lfc_cpu_transaction output_cpu_tx;
-    // lfc_ram_transaction output_ram_tx;
+  bit [31:0] data_model [0:CACHE_LINES-1];
+  bit        valid      [0:CACHE_LINES-1];
+  int        mshr_occupancy [NUM_BANKS];
 
-    // uvm_tlm_analysis_fifo#(lfc_cpu_transaction) expected_MSHR;
-    int MSHR_occupancy [3:0] = '{default: 0};
-    logic [31:0] data_model [0:31];
-    logic [31:0] data_is_in_cache = 32'b0;
+  bit        uuid_in_flight [0:(1<<UUID_SIZE)-1];
+  bit [31:0] uuid_addr_map  [0:(1<<UUID_SIZE)-1];
 
-    logic [15:0] uuid_in_flight = 16'b0; // UUID allocated or not
-    logic [31:0] uuid_addr_map [15:0]; // maps UUID to the address
-    logic [UUID_SIZE-1:0] next_uuid [NUM_BANKS-1:0];
+  function new(string name, uvm_component parent);
+    super.new(name,parent);
+  endfunction
 
-    // temp variables
-    logic [3:0] bank_id;
-    logic [UUID_SIZE-1:0] completed_uuid;
-    logic [31:0] completed_addr;
-    
+  function void build_phase(uvm_phase phase);
+    super.build_phase(phase);
 
-    function new(string name, uvm_component parent = null);
-        super.new(name, parent);
-    endfunction: new
+    cpu_imp = new("cpu_imp", this);
+    ram_imp = new("ram_imp", this);
 
-    function void build_phase(uvm_phase phase);
-        super.build_phase(phase);
-        cpu_imp = new("cpu_imp", this);
-        ram_imp = new("ram_imp", this);
-        pred_cpu_ap = new("pred_cpu_ap", this);
-        pred_ram_ap = new("pred_ram_ap", this);
+    pred_cpu_ap = new("pred_cpu_ap", this);
+    pred_ram_ap = new("pred_ram_ap", this);
 
-        // initialization of all of next_uuid
-        for (int i = 0; i < NUM_BANKS; i++) begin
-            next_uuid[i] = 4'b0;
+    initialize_model();
+  endfunction
+
+  function void initialize_model();
+    foreach(data_model[i]) data_model[i] = '0;
+    foreach(valid[i]) valid[i] = 0;
+    foreach(mshr_occupancy[i]) mshr_occupancy[i] = 0;
+    foreach(uuid_in_flight[i]) uuid_in_flight[i] = 0;
+  endfunction
+
+  function void write_cpu(lfc_cpu_transaction cpu_t);
+    lfc_cpu_transaction out_tx;
+    out_tx = lfc_cpu_transaction#(NUM_BANKS,UUID_SIZE)::type_id::create("out_tx");
+    out_tx.copy(cpu_t);
+
+    handle_cpu_request(cpu_t, out_tx);
+    update_stall(out_tx);
+
+    pred_cpu_ap.write(out_tx);
+  endfunction
+
+  function void handle_cpu_request(
+        lfc_cpu_transaction cpu_t,
+        ref lfc_cpu_transaction out_tx);
+
+    int index  = get_index(cpu_t.mem_in_addr);
+    int bank   = get_bank(cpu_t.mem_in_addr);
+
+    if (valid[index]) begin
+      process_hit(cpu_t, out_tx, index);
+    end
+    else begin
+      process_miss(cpu_t, out_tx, index, bank);
+    end
+
+  endfunction
+
+  function void process_hit(
+        lfc_cpu_transaction cpu_t,
+        ref lfc_cpu_transaction out_tx,
+        int index);
+
+    out_tx.hit = 1;
+    out_tx.mem_out_uuid = 0;
+
+    if (cpu_t.mem_in_rw_mode) begin
+      // WRITE hit: update data
+      data_model[index] = cpu_t.mem_in_store_value;
+      valid[index] = 1;
+    end
+    else begin
+      // READ hit: return cached data
+      out_tx.hit_load = data_model[index];
+    end
+
+  endfunction
+
+  function void process_miss(
+        lfc_cpu_transaction cpu_t,
+        ref lfc_cpu_transaction out_tx,
+        int index,
+        int bank);
+
+    int new_uuid;
+    lfc_ram_transaction exp_ram; // declare at top
+    out_tx.hit = 0;
+
+    // Allocate a UUID for this transaction
+    new_uuid = allocate_uuid();
+    if (new_uuid == -1) begin
+      `uvm_error("PRED", "No UUID available!")
+      return;
+    end
+
+    uuid_in_flight[new_uuid] = 1;
+    uuid_addr_map[new_uuid]  = cpu_t.mem_in_addr;
+
+    mshr_occupancy[bank]++;
+
+    out_tx.mem_out_uuid = new_uuid;
+
+    // WRITE-allocate policy: store value immediately
+    if (cpu_t.mem_in_rw_mode) begin
+      data_model[index] = cpu_t.mem_in_store_value;
+      valid[index] = 1;
+    end
+
+    // Create predicted RAM transaction
+    exp_ram = lfc_ram_transaction#(NUM_BANKS)::type_id::create("exp_ram");
+
+    for (int b = 0; b < NUM_BANKS; b++) begin
+      if (b == bank) begin
+        if (cpu_t.mem_in_rw_mode) begin
+          // CPU WRITE miss: write-allocate
+          exp_ram.ram_mem_REN[b]  = 0;
+          exp_ram.ram_mem_WEN[b]  = 1;
+          exp_ram.ram_mem_data[b] = cpu_t.mem_in_store_value;
         end
-    endfunction: build_phase
+        else begin
+          // CPU READ miss: fetch from RAM
+          exp_ram.ram_mem_REN[b]  = 1;
+          exp_ram.ram_mem_WEN[b]  = 0;
+          exp_ram.ram_mem_data[b] = 0;
+        end
+        exp_ram.ram_mem_addr[b] = cpu_t.mem_in_addr;
+        exp_ram.ram_mem_complete[b] = 0;
+      end
+      else begin
+        // other banks are idle
+        exp_ram.ram_mem_REN[b]  = 0;
+        exp_ram.ram_mem_WEN[b]  = 0;
+        exp_ram.ram_mem_addr[b] = 0;
+        exp_ram.ram_mem_data[b] = 0;
+        exp_ram.ram_mem_complete[b] = 0;
+      end
+    end
 
-    // --------- CPU transaction analysis write method ---------
-    function void write_cpu(lfc_cpu_transaction cpu_t);
-        lfc_cpu_transaction out_cpu;
-        out_cpu = lfc_cpu_transaction#(NUM_BANKS, UUID_SIZE)::type_id::create("out_cpu");
-        out_cpu.copy(cpu_t);
+    // Send predicted RAM transaction to scoreboard
+    pred_ram_ap.write(exp_ram);
 
-        // calculate which bank this address maps to
-        bank_id = (cpu_t.mem_in_addr >> 4) % NUM_BANKS;
+  endfunction
 
-        // check all block_status signals to see which UUIDs completed
-        for (int i = 0; i < NUM_BANKS; i++) begin
-            if (cpu_t.block_status[i]) begin
-                completed_uuid = cpu_t.uuid_block[i];
-                completed_addr = uuid_addr_map[completed_uuid];
+  function int allocate_uuid();
+    for (int i=0;i<(1<<UUID_SIZE);i++)
+      if (!uuid_in_flight[i])
+        return i;
+    return -1;
+  endfunction
 
-                uuid_in_flight[completed_uuid] = 1'b0; // free the UUID
-                data_is_in_cache[completed_addr] = 1'b1; // data in cache now
-            end
+  function void update_stall(ref lfc_cpu_transaction out_tx);
+    int bank = get_bank(out_tx.mem_in_addr);
+    out_tx.stall = (mshr_occupancy[bank] >= MAX_MSHR);
+  endfunction
+
+  function void write_ram(lfc_ram_transaction ram_t);
+    lfc_ram_transaction out_tx;
+    out_tx = lfc_ram_transaction#(NUM_BANKS)::type_id::create("out_ram");
+    out_tx.copy(ram_t);
+
+    handle_fill_completion(ram_t);
+
+    pred_ram_ap.write(out_tx);
+  endfunction
+
+  function void handle_fill_completion(lfc_ram_transaction ram_t);
+    for (int b=0;b<NUM_BANKS;b++) begin
+      if (ram_t.ram_mem_complete[b]) begin
+        int addr  = ram_t.ram_mem_addr[b];
+        int index = get_index(addr);
+
+        data_model[index] = ram_t.ram_mem_data[b];
+        valid[index]      = 1;
+
+        // free matching UUID
+        for (int u=0;u<(1<<UUID_SIZE);u++) begin
+          if (uuid_in_flight[u] && uuid_addr_map[u] == addr) begin
+            uuid_in_flight[u] = 0;
+            break;
+          end
         end
 
-        out_cpu.hit = data_is_in_cache[cpu_t.mem_in_addr];
+        mshr_occupancy[b]--;
+      end
+    end
+  endfunction
 
-        if (out_cpu.hit) begin // cache data only changes on hits, misses are sent to MSHR instead
-	    MSHR_occupancy[bank_id]--;
-	    `uvm_info("PRED", "hit recorded", UVM_MEDIUM)
-            if (cpu_t.mem_in_rw_mode) begin // write mode
-                data_model[cpu_t.mem_in_addr] = cpu_t.mem_in_store_value;
-            end else begin // read mode
-                out_cpu.hit_load = data_model[cpu_t.mem_in_addr];
-            end
-            out_cpu.mem_out_uuid = 4'b0; // we don't care what uuid is for hits
-        end else begin
-	    //out_cpu.mem_out_uuid = MSHR_occupancy;
-            MSHR_occupancy[bank_id]++;
-	    out_cpu.mem_out_uuid = MSHR_occupancy[bank_id];
+  function int get_index(bit [31:0] addr);
+    return addr[9:4]; // example, 256 lines
+  endfunction
 
-            //out_cpu.mem_out_uuid = next_uuid[bank_id]; // prediction of the UUID that will be assigned
+  function int get_bank(bit [31:0] addr);
+    return get_index(addr) % NUM_BANKS;
+  endfunction
 
-            uuid_in_flight[out_cpu.mem_out_uuid] = 1'b1; // mark UUID as in flight
-            uuid_addr_map[out_cpu.mem_out_uuid] = cpu_t.mem_in_addr; // track the address that corresponds to the UUID
-
-            // UUID counter increment with wraparound
-	    //if(out_cpu.mem_in) begin
-		assert(out_cpu.mem_in) else `uvm_error("Pred", "mem_in=0")
-            	if (next_uuid[bank_id] == 15) next_uuid[bank_id] = 4'b0;
-            	else next_uuid[bank_id] = next_uuid[bank_id] + 1;
-	    //end
-        end 
-
-	out_cpu.stall = 1'b0;
-	for(int i = 0; i < 16; i++) begin
-		if (MSHR_occupancy[i] > 8) begin
-			out_cpu.stall = 1'b1;
-		end
-	end
-	
-	// out_cpu.stall = (MSHR_occupancy > 8);
-
-        pred_cpu_ap.write(out_cpu);
-    endfunction
-
-
-
-    // --------- RAM transaction analysis write method ---------
-    function void write_ram(lfc_ram_transaction ram_t);
-        lfc_ram_transaction out_ram;
-        out_ram = lfc_ram_transaction#(NUM_BANKS)::type_id::create("out_ram");
-        out_ram.copy(ram_t);
-
-        //if (|ram_t.ram_mem_complete && MSHR_occupancy > 0) begin
-        //    MSHR_occupancy--;
-        //end
-
-	if (|ram_t.ram_mem_complete) begin
-            data_model[ram_t.ram_mem_addr[ram_t.ram_mem_complete]] = ram_t.ram_mem_data;
-            data_is_in_cache[ram_t.ram_mem_addr[ram_t.ram_mem_complete]] = 1'b1;
-	end
-
-        pred_ram_ap.write(out_ram);
-    endfunction
-
-
-
-
-
-    // function void write(lfc_cpu_transaction cpu_t, lfc_ram_transaction ram_t);
-    //     output_cpu_tx = lfc_cpu_transaction#(NUM_BANKS, UUID_SIZE)::type_id::create("output_cpu_tx");
-    //     output_ram_tx = lfc_ram_transaction#(NUM_BANKS)::type_id::create("output_ram_tx");
-    //     output_cpu_tx.copy(cpu_t);
-    //     output_ram_tx.copy(ram_t);
-
-    //     // TODO: calculate expected outputs below
-
-    //     cpu_t.hit = data_is_in_cache[cpu_t.mem_in_addr];
-
-    //     if (cpu_t.hit) begin //  cache hit
-    //         if (cpu_t.mem_in_rw_mode) begin // write
-    //             data_model[cpu_t.mem_in_addr] = cpu_t.mem_in_store_value;
-    //             data_is_in_cache[cpu_t.mem_in_addr] = 1'b1;
-    //         end else begin // read
-    //             cpu_t.hit_load = data_model[cpu_t.mem_in_addr];
-    //             `uvm_info("predictor", $sformatf("if hit and doing read:    %0d", cpu_t.hit_load), UVM_NONE)
-    //         end
-    //     end
-        
-    //     if (!cpu_t.hit) begin // cache miss
-    //         MSHR_occupancy++;
-
-    //         // add transaction to a fifo
-    //         // expected_MSHR.push(cpu_t)
-    //     end 
-
-    //     if (ram_t.ram_mem_complete) begin // a cache miss is being serviced
-    //         MSHR_occupancy--;
-
-    //         // remove transaction from fifo corresponding to ram_t.ram_mem_addr
-    //         // expected_MSHR.pop[ram_t.ram_mem_addr];
-    //     end
-
-    //     if (MSHR_occupancy > 8) begin // overflow of MSHR buffer
-    //         cpu_t.stall = 1;
-    //     end else begin
-    //         cpu_t.stall = 0;
-    //     end
-
-    //     pred_cpu_ap.write(output_cpu_tx);
-    //     pred_ram_ap.write(output_ram_tx);
-    // endfunction: write
-
-
-    endclass: lfc_predictor
+endclass
 
 `endif
