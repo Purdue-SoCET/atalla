@@ -18,17 +18,11 @@ module div_bf16_goldschmidt_1mul_tb;
   parameter PERIOD = 10;
   
   // Testbench tracking variables
-  reg [WIDTH-1:0] expected_result;
   integer errors;
   integer normal_tests, subnormal_input_tests, subnormal_output_tests, edge_tests;
-
   integer timeout_counter;
   logic [WIDTH-1:0] abs_diff;
   
-  // File I/O
-  integer fd;
-  integer r;
-
   //-----------------------------------------------
   // Clock generation
   //-----------------------------------------------
@@ -49,7 +43,7 @@ module div_bf16_goldschmidt_1mul_tb;
   );
 
   //-----------------------------------------------
-  // Helper: check if floating point value is NaN
+  // Helper Functions
   //-----------------------------------------------
   function automatic bit is_nan(input logic [WIDTH-1:0] val);
     logic [EXP_WIDTH-1:0] exponent = val[WIDTH-2:MANT_WIDTH];
@@ -65,7 +59,7 @@ module div_bf16_goldschmidt_1mul_tb;
   endfunction
 
   //-----------------------------------------------
-  // Task: apply test vector with proper handshake
+  // Task: Apply Single Vector (For Edge Cases)
   //-----------------------------------------------
   task automatic apply_vector(
     input [WIDTH-1:0] a_in,
@@ -81,88 +75,189 @@ module div_bf16_goldschmidt_1mul_tb;
     divif.in.operand1 = a_in;
     divif.in.operand2 = b_in;
     divif.in.valid_in = 1;
-    expected_result = expected_in;
     
-    // Wait for input to be accepted (ready_in goes low)
     @(posedge CLK);
-    while (divif.out.ready_in) @(posedge CLK);
+    while (!divif.out.ready_in) @(posedge CLK);
     
     // Deassert valid_in after handshake
     divif.in.valid_in = 0;
     
     timeout_counter = 0;
-    // Wait for output to be valid
     while (!divif.out.valid_out) begin
       @(posedge CLK);
       timeout_counter++;
       if (timeout_counter > 500) begin 
-        $display("FATAL ERROR @%0t: Timeout waiting for valid_out. FSM hung?", $time);
-        errors++;
-        break;
+        $display("FATAL ERROR @%0t: Timeout waiting for valid_out.", $time);
+        errors++; break;
       end
     end
     
-    // Assert ready_out to accept the output
-    divif.in.ready_out = 1;
-    
-    // Compare results (special NaN handling)
     abs_diff = (divif.out.result > expected_in) ? (divif.out.result - expected_in) : (expected_in - divif.out.result);
     if (is_nan(divif.out.result) && is_nan(expected_in)) begin
-      // Both NaN — pass
+      // Pass
     end else if (divif.out.result !== expected_in) begin
-      if ((divif.out.result[15] == expected_in[15]) && (abs_diff <= 2)) begin // ABS_DIFF IS ULP RANGE!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
-        $display("INFO: Result: %h (expected %h). Result off by %d ULP - Acceptable for Goldschmidt.", divif.out.result, expected_in, abs_diff);
+      if ((divif.out.result[15] == expected_in[15]) && (abs_diff <= 2)) begin 
+        // Pass ULP
       end else begin
          $display("ERROR @%0t [%s]: %h / %h = %h (expected %h)", 
-                  $time, tb_test_case, divif.in.operand1, divif.in.operand2, divif.out.result, expected_in);
+                  $time, tb_test_case, a_in, b_in, divif.out.result, expected_in);
          errors++;
       end
     end
         
-    
-    // Complete the output handshake
+    divif.in.ready_out = 1;
     @(posedge CLK);
     divif.in.ready_out = 0;
-    
-    // Wait for valid_out to deassert
-    while (divif.out.valid_out) @(posedge CLK);
   end
   endtask
 
   //-----------------------------------------------
-  // Task: run file-based test set
+  // Task: Run File Tests (FULL DUPLEX PIPELINE)
   //-----------------------------------------------
   task automatic run_file_tests(input string filename, input string test_name);
-    integer test_count;
+    integer fd, r;
     string format_str;
-  begin
-    test_count = 0;
-    tb_test_case = test_name;
     
+    logic [WIDTH-1:0] op1, op2, exp_val;
+    
+    // SystemVerilog Queues to pass expected data from Driver to Receiver
+    logic [WIDTH-1:0] q_op1 [$];
+    logic [WIDTH-1:0] q_op2 [$];
+    logic [WIDTH-1:0] q_exp [$];
+    
+    int ULP_0_count = 0;
+    int ULP_1_count = 0;
+    int ULP_2_count = 0;
+
+    int tests_fed = 0;
+    int tests_received = 0;
+    bit driver_done = 0;
+    int rx_timeout = 0;
+
+  begin
+    tb_test_case = test_name;
     fd = $fopen(filename, "r");
     if (fd == 0) begin
       $display("INFO: Cannot open file: %s (skipping)", filename);
       return;
     end
     
-    $display("Running %s from %s...", test_name, filename);
+    $display("Running %s from %s (PIPELINED WITH RANDOM DELAYS)...", test_name, filename);
+    format_str = "%h,%h,%h\n";
     
-    // Construct format string based on WIDTH
-    if (WIDTH == 16)
-      format_str = "%h,%h,%h\n";
-    else
-      format_str = "%h,%h,%h\n"; // Same format, parser handles different widths
-    
-    while (!$feof(fd)) begin
-      r = $fscanf(fd, format_str, divif.in.operand1, divif.in.operand2, expected_result);
-      if (r == 3) begin
-        apply_vector(divif.in.operand1, divif.in.operand2, expected_result);
-        test_count++;
+    fork
+      // THREAD 1: THE DRIVER (Feeds inputs & tests Bubble handling)
+      begin
+        while (!$feof(fd)) begin
+          r = $fscanf(fd, format_str, op1, op2, exp_val);
+          if (r == 3) begin
+            // 20% chance to randomly inject a pipeline bubble (starvation)
+            if ($urandom_range(0, 100) < 20) begin
+              divif.in.valid_in = 0;
+              repeat($urandom_range(1, 3)) 
+              @(posedge CLK);
+            end
+
+            // Feed Data
+            divif.in.operand1 = op1;
+            divif.in.operand2 = op2;
+            divif.in.valid_in = 1;
+
+            // Wait for handshake
+            do begin
+              @(posedge CLK);
+            end while (!divif.out.ready_in);
+
+            // Data accepted! Push the expected answer to the Receiver's Queue
+            q_op1.push_back(op1);
+            q_op2.push_back(op2);
+            q_exp.push_back(exp_val);
+            tests_fed++;
+          end else begin
+            $display("Test has invalid format");
+          end
+        end
+        divif.in.valid_in = 0;
+        driver_done = 1; // Signal the Receiver that no more data is coming
       end
-    end
-    
+
+      // THREAD 2: THE RECEIVER (Checks outputs & tests Skid Buffer backpressure)
+      begin
+        // Keep running until Driver is done AND the Queue is completely empty
+        while (!driver_done || q_exp.size() > 0) begin
+          
+          // 20% chance to randomly stall the pipeline output (test skid buffer)
+          if ($urandom_range(0, 100) < 20) begin
+            divif.in.ready_out = 0;
+            repeat($urandom_range(1, 4)) @(posedge CLK);
+          end
+
+          divif.in.ready_out = 1;
+          @(posedge CLK);
+
+          // Did an answer pop out on this clock cycle?
+          if (divif.out.valid_out && divif.in.ready_out) begin
+            rx_timeout = 0; // Reset watchdog
+            
+            if (q_exp.size() == 0) begin
+              $display("FATAL ERROR: Pipeline output an answer but Queue is empty!");
+              errors++;
+            end else begin
+              // Pop the expected data from the Queue
+              logic [WIDTH-1:0] c_op1 = q_op1.pop_front();
+              logic [WIDTH-1:0] c_op2 = q_op2.pop_front();
+              logic [WIDTH-1:0] c_exp = q_exp.pop_front();
+              logic [WIDTH-1:0] c_act = divif.out.result;
+              logic [WIDTH-1:0] t_abs;
+
+
+              // Compare Math
+              if (is_nan(c_act) && is_nan(c_exp)) begin
+                // Both NaN is a perfect match
+                ULP_0_count++; 
+              end else begin
+                t_abs = (c_act > c_exp) ? (c_act - c_exp) : (c_exp - c_act);
+                
+                if (c_act === c_exp) begin
+                   // Perfect Match
+                   ULP_0_count++;
+                end else if ((c_act[15] == c_exp[15]) && (t_abs <= 2)) begin 
+                   // Acceptable Error (1 or 2 ULP)
+                   if (t_abs == 1) ULP_1_count++;
+                   if (t_abs == 2) ULP_2_count++;
+                end else begin
+                   // Unacceptable Error
+                   $display("ERROR @%0t [%s]: %h / %h = %h (expected %h)", 
+                            $time, tb_test_case, c_op1, c_op2, c_act, c_exp);
+                   errors++;
+                end
+              end
+
+              tests_received++;
+            end
+          end else begin
+            // Watchdog Timer: Catch deadlocks where data gets stuck inside pipeline
+            rx_timeout++;
+            if (rx_timeout > 1000) begin
+               $display("FATAL ERROR: Receiver timed out waiting for pipeline to flush!");
+               errors++;
+               break;
+            end
+          end
+        end
+        divif.in.ready_out = 0;
+      end
+    join
+
     $fclose(fd);
-    $display("Completed %s: %0d tests run", test_name, test_count);
+    $display("Completed %s: Fed %0d, Received %0d tests", test_name, tests_fed, tests_received);
+    $display("Number of 0 ULP results: %d", ULP_0_count);
+    $display("Number of 1 ULP results: %d", ULP_1_count);
+    $display("Number of 2 ULP results: %d\n", ULP_2_count);
+    if (tests_fed != tests_received) begin
+       $display("ERROR: Data mismatch! Fed %0d but Received %0d", tests_fed, tests_received);
+       errors++;
+    end
   end
   endtask
 
