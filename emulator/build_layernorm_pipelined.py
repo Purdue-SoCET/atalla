@@ -40,9 +40,9 @@ def main():
     # 5     holds epsilon address
     # 10-13 holds the original rows
     # 20-23 hold partial sums
+    # 24    holds mean
     # 30-33 hold normalized numerator
     # 34-37 hold variance calculations
-    # 38    holds variance
     # 39    holds normalized denominator
     
     asm = f"""
@@ -60,23 +60,27 @@ def main():
         lui.s    $6, 0x00000                    # load upper 25 bit mask of all 1's into $6
         addi.s   $6, $6, 0xf                        # add lower bit mask of all 1's into $6
         mv.stm   1, $6                              # load '1 into mask 1
+        ############## Begin vector load/mean calculation 
+        vreg.ld  $10, $3, {COLS}, {ROWS}, {SID}, 1, 0    # load row 0 into $10
         
-        vreg.ld  $10, $3, {COLS}, {ROWS}, {SID}, 1, 0  # load row 0 into $10
-        vreg.ld  $11, $3, {COLS}, {ROWS}, {SID}, 1, 1  # load row 1 into $11
-        vreg.ld  $12, $3, {COLS}, {ROWS}, {SID}, 1, 2  # load row 2 into $12
-        vreg.ld  $13, $3, {COLS}, {ROWS}, {SID}, 1, 3  # load row 3 into $13
+        vreg.ld  $11, $3, {COLS}, {ROWS}, {SID}, 1, 1    # load row 1 into $11
+        rsum.vi  $20, $10, {RSUM_MASK}, 1                # reduce row 0 -> write result at lane index 6
+
+        vreg.ld  $12, $3, {COLS}, {ROWS}, {SID}, 1, 2    # load row 2 into $12
+        rsum.vi  $21, $11, {RSUM_MASK}, 1                # reduce row 1 -> write result at lane index 6
         
-        rsum.vi  $20, $10, {RSUM_MASK}, 1                    # reduce row 0 -> partial sum 0, imm = 1 << 6
-        rsum.vi  $21, $11, {RSUM_MASK}, 1                    # reduce row 1 -> partial sum 1, imm = 1 << 6
-        rsum.vi  $22, $12, {RSUM_MASK}, 1                    # reduce row 2 -> partial sum 2, imm = 1 << 6
-        rsum.vi  $23, $13, {RSUM_MASK}, 1                    # reduce row 3 -> partial sum 3, imm = 1 << 6
+        vreg.ld  $13, $3, {COLS}, {ROWS}, {SID}, 1, 3    # load row 3 into $13
+        rsum.vi  $22, $12, {RSUM_MASK}, 1                # reduce row 2 -> write result at lane index 6
+        add.vv   $21, $20, $21, 1, 0                     # partial sum 0 + partial sum 1
         
-        add.vv   $21, $20, $21, 1, 0                # partial sum 0 + partial sum 1
-        add.vv   $22, $22, $23, 1, 0                # partial sum 2 + partial sum 3
-        add.vv   $24, $21, $22, 1, 0                # layer mean sum in $24
+        rsum.vi  $23, $13, {RSUM_MASK}, 1                # reduce row 3 -> write result at lane index 6
+        add.vv   $24, $21, $22, 1, 0                    # Begin final mean sum in $24
+        
+        add.vv   $24, $24, $23, 1, 0                # layer mean sum in $24
         
         divi.vi  $24, $24, {LAYER_ELEMS}, 1         # layer mean sum / 16 -> final mean in $24
-        
+        ########## END vector load/mean calculation 
+        ########## BEGIN variance calculation 
         sub.vv   $30, $10, $24, 1, 0                # normalized numerator row 0 = row 0 - mean
         sub.vv   $31, $11, $24, 1, 0                # normalized numerator row 1 = row 1 - mean
         sub.vv   $32, $12, $24, 1, 0                # normalized numerator row 2 = row 2 - mean
@@ -89,28 +93,31 @@ def main():
 
         rsum.vi  $34, $34, {RSUM_MASK}, 1                    # reduce row variance contribution 0
         rsum.vi  $35, $35, {RSUM_MASK}, 1                    # reduce row variance contribution 1
+        
         rsum.vi  $36, $36, {RSUM_MASK}, 1                    # reduce row variance contribution 2
         rsum.vi  $37, $37, {RSUM_MASK}, 1                    # reduce row variance contribution 3
+        add.vv   $38, $34, $35, 1, 0                # partial variance pair 0+1
 
-        add.vv   $35, $34, $35, 1, 0                # partial variance pair 0+1
         add.vv   $37, $36, $37, 1, 0                # partial variance pair 2+3
-        add.vv   $38, $35, $37, 1, 0                # variance sum in $38
-        
+        add.vv   $38, $38, $37, 1, 0                # variance sum in $38
+        ######### END Variance calculation #######
         divi.vi  $39, $38, {LAYER_ELEMS}, 1         # variance sum / NUM_, final variance in $39
-
-        add.vs   $39, $39, $4, 1                    # denominator seed = variance + epsilon
+        add.vs   $39, $39, $4, 1                    # denominator seed + epsilon
         sqrti.vi $39, $39, 0, 1                     # denominator = sqrt(denominator seed) -> normalized denominator in $39
 
         div.vv   $30, $30, $39, 1, 0                # normalized row 0 / denominator
+        
         div.vv   $31, $31, $39, 1, 0                # normalized row 1 / denominator
-        div.vv   $32, $32, $39, 1, 0                # normalized row 2 / denominator
-        div.vv   $33, $33, $39, 1, 0                # normalized row 3 / denominator
-
         vreg.st  $30, $3, {COLS}, {ROWS}, {SID}, 1, 0  # store normalized row 0 to scratchpad
+        
+        div.vv   $32, $32, $39, 1, 0                # normalized row 2 / denominator
         vreg.st  $31, $3, {COLS}, {ROWS}, {SID}, 1, 1  # store normalized row 1 to scratchpad
+        
+        div.vv   $33, $33, $39, 1, 0                # normalized row 3 / denominator
         vreg.st  $32, $3, {COLS}, {ROWS}, {SID}, 1, 2  # store normalized row 2 to scratchpad
-        vreg.st  $33, $3, {COLS}, {ROWS}, {SID}, 1, 3  # store normalized row 3 to scratchpad
 
+        vreg.st  $33, $3, {COLS}, {ROWS}, {SID}, 1, 3  # store normalized row 3 to scratchpad
+        
         scpad.st $3, $2, {COLS}, {ROWS}, {SID}      # store normalized 4x4 tile back to gmem
 
         halt.s
