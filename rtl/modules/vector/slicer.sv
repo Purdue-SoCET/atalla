@@ -21,11 +21,10 @@ module slicer
     generate
         for (i = 0; i < NUM_LANES; i++) begin : gen_lane_connections
             always_comb begin : connections
-                lif[i].in = '0;
                 for (int j = 0; j < LANE_ISSUE_W; j++) begin
                     lif[i].in.input_valid[j] = vif.lanes_in.lane_issue_ports[j].input_valid;
-                    lif[i].in.v1[j]          = vif.lanes_in.lane_issue_ports[j].v1[i*2 + 1 -: SLICE_W];
-                    lif[i].in.v2[j]          = vif.lanes_in.lane_issue_ports[j].v2[i*2 + 1 -: SLICE_W];
+                    lif[i].in.v1[j] = vif.lanes_in.lane_issue_ports[j].v1[i*SLICE_W +: SLICE_W];
+                    lif[i].in.v2[j] = vif.lanes_in.lane_issue_ports[j].v2[i*SLICE_W +: SLICE_W];
                     lif[i].in.usel[j]        = vif.lanes_in.lane_issue_ports[j].usel;
                     lif[i].in.vd[j]          = vif.lanes_in.lane_issue_ports[j].vd;
                     lif[i].in.rm[j]          = vif.lanes_in.lane_issue_ports[j].rm;

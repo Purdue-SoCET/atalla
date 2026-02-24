@@ -10,6 +10,7 @@ Owner: Jacob Walter
 `include "vector_if.vh"
 `include "lane_if.vh"
 `include "result_collector_if.vh"
+`include "gsau_control_unit_if.vh"
 
 
 module vector_datapath (
@@ -19,6 +20,7 @@ module vector_datapath (
     scpad_if.vec_frontend  sif,
     gsau_control_unit_if.gsau gsauif
 );
+    `include "scpad_params.svh"
     import vector_pkg::*;
     import scpad_pkg::*;
 
@@ -65,12 +67,12 @@ module vector_datapath (
                     end
                     rc_interfaces[i].in.lane_input[j] = lane_interfaces[j].out.units[i].result;
                     rc_interfaces[i].in.mask[j]       = lane_interfaces[j].out.units[i].mask;
+                    lane_interfaces[j].in.ready[i] = rc_interfaces[i].out.input_ready;
                 end
             end : gen_rc_lane
 
             always_comb begin : rc_scalar_connection
                 rc_interfaces[i].in.vd_input  = lane_interfaces[0].out.units[i].vd;
-                lane_interfaces[i].in.ready   = rc_interfaces[i].out.input_ready;
             end
         end : gen_rc_fu
     endgenerate
@@ -94,7 +96,7 @@ module vector_datapath (
         for (rc_vif_i = 0; rc_vif_i < LANE_FU_COUNT; rc_vif_i++) begin : gen_rc_vif_connection
             always_comb begin : rc_vif_connection
                 vif.lanes_out.result_collectors[rc_vif_i] = rc_interfaces[rc_vif_i].out;
-                rc_interfaces[rc_vif_i].in.wb_ready = vif.lanes_in.wb_ready[rc_vif_i];
+                rc_interfaces[rc_vif_i].in.wb_ready = vif.wb_ready_signals.lanes_wb_ready[rc_vif_i];
             end
         end
     endgenerate
@@ -111,7 +113,7 @@ module vector_datapath (
             end
 
             always_comb begin : fu_status_connection
-                vif.lanes_out.fu_global_status[ready_vif_i] = (&fu_lane_readies[ready_vif_i]);
+                vif.unit_ready_signals.fu_global_status[ready_vif_i] = (&fu_lane_readies[ready_vif_i]);
             end
         end
     endgenerate
@@ -120,30 +122,29 @@ module vector_datapath (
     
     //VLSU
     vlsu_if vlsuif (.clk(CLK), .n_rst(nRST));
-    vlsu vlsu (
-        .vif(vlsuif),
-        .sif(sif)
-    );
-
-    //connects the vlsu to the vif
-    //this sucks right now i will make it way more intelligent later, can be a L2 problem
     genvar vlsu_i;
-    generate : gen_vlsu_connections
-        for (vlsu_i = 0; vlsu_i < NUM_SCPADS, vlsu_i++) begin
-            vlsuif.sched_req[vlsu_i] = vif.vlsu_in.sched_req[vlsu_i];
-            vlsuif.vrf_store[vlsu_i] = vif.vlsu_in.vrf_data[vlsu_i];
-            vlsuif.wb_ready[vlsu_i] = vif.vlsu_in.wb_ready[vlsu_i];
+    generate 
+        for (vlsu_i = 0; vlsu_i < NUM_SCPADS; vlsu_i++) begin : gen_vlsu_connections
+            vlsu #(.IDX(vlsu_i)) vlsu_inst (
+                .vif(vlsuif),
+                .sif(sif)
+            );
 
-            vif.vlsu_out.vlsu_out.wb[vlsu_i] = vlsuif.wb_out[vlsu_i];
-            vif.vlsu_out.vlsu_status[vlsu_i] =  vlsuif.status[vlsu_i];
-            vif.vlsu_out.sched_res[vlsu_i] = vlsuif.sched_res[vlsu_i];
+            assign vlsuif.sched_req[vlsu_i] = vif.vlsu_in.sched_req[vlsu_i];
+            assign vlsuif.vrf_store[vlsu_i] = vif.vlsu_in.vrf_data[vlsu_i];
+            assign vlsuif.wb_ready[vlsu_i] = vif.wb_ready_signals.vlsu_wb_ready[vlsu_i];
+
+            assign vif.vlsu_out.wb[vlsu_i] = vlsuif.wb_out[vlsu_i];
+            assign vif.vlsu_out.status[vlsu_i] = vlsuif.status[vlsu_i];
+            assign vif.unit_ready_signals.vlsu_status[vlsu_i] = vlsuif.sched_res[vlsu_i].ready;
         end
     endgenerate
 
 
     //GSAU
-    gsau_control_unit (
-        .clk(CLK),
+    gsau_control_unit_if gsuaif();
+    gsau_control_unit gsau(
+        .CLK(CLK),
         .nRST(nRST),
         .gsau_port(gsauif)
     );
@@ -156,13 +157,27 @@ module vector_datapath (
         gsauif.veg_vdata2 = vif.gsau_in.veg_vdata2;
         gsauif.sb_vdst =  vif.gsau_in.vd;
         gsauif.sb_valid_in = vif.gsau_in.valid_in;
-        gsauif.sb_weight = vif.gasu_in.weight;
-        gsauif.wb_ready_in = vif.gsau_in.wb_ready;
+        gsauif.sb_weight = vif.gsau_in.weight;
+        gsauif.wb_ready_in = vif.wb_ready_signals.gsau_wb_ready;
         //non sysarr gsau outputs
+        vif.unit_ready_signals.gsau_status = gsauif.sb_ready_out;
         vif.gsau_out.ready_out = gsauif.sb_ready_out;
         vif.gsau_out.psum = gsauif.wb_psum;
-        vif.gsau_out.vd = gsauif.sb_vdst;
+        vif.gsau_out.vd = gsauif.wb_wbdst;
         vif.gsau_out.wb_valid = gsauif.wb_valid_out;
+        
     end
+
+    //reduction tree
+    reduction_FU_if ruif();
+    vreduction reduction (
+        .CLK(CLK),
+        .nRST(nRST),
+        .ruif(ruif)
+    );
+
+    //connections to reduction tree
+    
+
 
 endmodule

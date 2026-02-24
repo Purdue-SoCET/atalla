@@ -39,7 +39,6 @@ module sqrt_FU (
     assign lsif.in.v2 = 'b0;
 
     //input port decoding
-    //this is a for loop in case for some reason we ever want to be able to issue more than 2
     always_comb begin : input_checking
         lsif.in.valid_in = 'b0;
         lsif.in.v1 = 'b0;

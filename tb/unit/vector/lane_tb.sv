@@ -79,7 +79,7 @@ module lane_tb;
         input logic [7:0] vd,
         input logic rm,
         input logic [SLICE_W-1:0] mask,
-        input valu_op_t alu_op
+        input alu_op_t alu_op
     );
         lif.in.input_valid[port] = valid;
         lif.in.v1[port] = v1;
@@ -107,7 +107,7 @@ module lane_tb;
         lif.in.vd[port] = '0;
         lif.in.rm[port] = 0;
         lif.in.mask[port] = '0;
-        lif.in.aluop[port] = VR_MAX;  // or whatever default
+        lif.in.aluop[port] = ALU_ADD;  // or whatever default
     endtask
 
     //clears all ports
@@ -166,7 +166,7 @@ module lane_tb;
         input logic [7:0] vd,
         input logic rm,
         input logic [SLICE_W-1:0] mask,
-        input valu_op_t alu_op
+        input alu_op_t alu_op
     );
         issue_to_port(port, 1, v1, v2, usel, vd, rm, mask, alu_op);
         @(posedge CLK);
@@ -179,7 +179,7 @@ module lane_tb;
         input logic [LANE_ISSUE_W-1:0][SLICE_W-1:0][15:0] v1_array, v2_array,
         input fu_t [LANE_ISSUE_W-1:0] usel_array,
         input logic [LANE_ISSUE_W-1:0][7:0] vd_array,
-        input valu_op_t [LANE_ISSUE_W-1:0] alu_op_array
+        input alu_op_t [LANE_ISSUE_W-1:0] alu_op_array
     );
         for (int i = 0; i < num_ports; i++) begin
             issue_to_port(i, 1, v1_array[i], v2_array[i], usel_array[i], 
@@ -204,7 +204,7 @@ module lane_tb;
     task automatic fu_issue_test(
         input int port, 
         input fu_t usel,
-        input valu_op_t op,
+        input alu_op_t op,
         input logic [SLICE_W-1:0][15:0] v1,
         input logic [SLICE_W-1:0][15:0] v2,
         input logic [7:0] vd,
@@ -224,7 +224,7 @@ endtask
     task automatic fu_max_issue(
         input int port,
         input fu_t fu,
-        input valu_op_t op,
+        input alu_op_t op,
         input int num_issues,
         input logic [SLICE_W-1:0] mask = '1
     );
@@ -258,14 +258,14 @@ endtask
 
         end
 
-        repeat(10) @(posedge CLK);
+        wait_for_fu_ready(fu);
 
     endtask
 
     task automatic fu_backpressure_test(
         input int port,
         input fu_t fu,
-        input valu_op_t op
+        input alu_op_t op
     );
 
         logic [SLICE_W-1:0][15:0] v1, v2;
@@ -304,7 +304,7 @@ endtask
         $display("Issued operation 1");
 
         // Hold backpressure for several cycles
-        repeat(6) @(posedge CLK);
+        repeat(12) @(posedge CLK);
 
         // Release backpressure
         drive_ready('1);
@@ -328,36 +328,36 @@ endtask
 
         current_test = "ALU_ADD_PORT0";
         $display("=== Test 1: ALU ADD from Port 0 ===");
-        fu_issue_test(0, VALU, VR_SUM, test_v1, test_v2, 8'd1, 0);
+        fu_issue_test(0, VALU, ALU_ADD, test_v1, test_v2, 8'd1, 0);
         $display("Test 1 Complete\n");
 
         current_test = "ALU_ADD_PORT1";
         $display("=== Test 2: ALU ADD from Port 1 ===");
-        fu_issue_test(1, VALU, VR_SUM, test_v1, test_v2, 8'd2, 0);
+        fu_issue_test(1, VALU, ALU_ADD, test_v1, test_v2, 8'd2, 0);
         $display("Test 2 Complete\n");
 
         current_test = "ALU_MIN_REDUCTION";
         $display("=== Test 3: ALU MIN Reduction ===");
         test_v1 = {16'h4200, 16'h4100};
         test_v2 = {16'h4000, 16'h4300};
-        fu_issue_test(0, VALU, VR_MIN, test_v1, test_v2, 8'd3, 1);
+        fu_issue_test(0, VALU, ALU_MLT, test_v1, test_v2, 8'd3, 1);
         $display("Test 3 Complete\n");
 
         current_test = "ALU_MASK_TEST";
         $display("=== Test 4: ALU Mask Test ===");
         test_v1 = {16'h3f80, 16'h4000};
         test_v2 = {16'h4000, 16'h4100};
-        fu_issue_test(0, VALU, VR_SUM, test_v1, test_v2, 8'd4, 0, 2'b10);
+        fu_issue_test(0, VALU, ALU_ADD, test_v1, test_v2, 8'd4, 0, 2'b10);
         $display("Test 4 Complete\n");
 
         current_test = "ALU_MAX_ISSUE";
         $display("=== Test 5: ALU Maximum Issue Rate ===");
-        fu_max_issue(0, VALU, VR_SUM, 10);
+        fu_max_issue(0, VALU, ALU_ADD, 10);
         $display("Test 5 Complete\n");
 
         current_test = "ALU_BACKPRESSURE";
         $display("=== Test 6: ALU Backpressure Test ===");
-        fu_backpressure_test(0, VALU, VR_SUM);
+        fu_backpressure_test(0, VALU, ALU_ADD);
         $display("Test 6 Complete\n");
 
         current_test = "ALU_COMPLETE";
@@ -376,29 +376,29 @@ endtask
 
         current_test = "MULT_PORT0";
         $display("=== Test 1: MULT from Port 0 ===");
-        fu_issue_test(0, MUL, VR_SUM, test_v1, test_v2, 8'd1, 0);
+        fu_issue_test(0, MUL, ALU_ADD, test_v1, test_v2, 8'd1, 0);
         $display("Test 1 Complete\n");
 
         current_test = "MULT_PORT1";
         $display("=== Test 2: MULT from Port 1 ===");
-        fu_issue_test(1, MUL, VR_SUM, test_v1, test_v2, 8'd2, 0);
+        fu_issue_test(1, MUL, ALU_ADD, test_v1, test_v2, 8'd2, 0);
         $display("Test 2 Complete\n");
 
         current_test = "MULT_MASK_TEST";
         $display("=== Test 3: MULT Mask Test ===");
         test_v1 = {16'h3f80, 16'h4000};
         test_v2 = {16'h4000, 16'h4100};
-        fu_issue_test(0, MUL, VR_SUM, test_v1, test_v2, 8'd3, 0, 2'b10);
+        fu_issue_test(0, MUL, ALU_ADD, test_v1, test_v2, 8'd3, 0, 2'b10);
         $display("Test 3 Complete\n");
 
         current_test = "MULT_MAX_ISSUE";
         $display("=== Test 4: MULT Maximum Issue Rate ===");
-        fu_max_issue(0, MUL, VR_SUM, 10);
+        fu_max_issue(0, MUL, ALU_ADD, 10);
         $display("Test 4 Complete\n");
 
         current_test = "MULT_BACKPRESSURE";
         $display("=== Test 5: MULT Backpressure Test ===");
-        fu_backpressure_test(0, MUL, VR_SUM);
+        fu_backpressure_test(0, MUL, ALU_ADD);
         $display("Test 5 Complete\n");
 
 
@@ -418,29 +418,29 @@ endtask
 
         current_test = "DIV_PORT0";
         $display("=== Test 1: DIV from Port 0 ===");
-        fu_issue_test(0, DIV, VR_SUM, test_v1, test_v2, 8'd1, 0);
+        fu_issue_test(0, DIV, ALU_ADD, test_v1, test_v2, 8'd1, 0);
         $display("Test 1 Complete\n");
 
         current_test = "DIV_PORT1";
         $display("=== Test 2: DIV from Port 1 ===");
-        fu_issue_test(1, DIV, VR_SUM, test_v1, test_v2, 8'd2, 0);
+        fu_issue_test(1, DIV, ALU_ADD, test_v1, test_v2, 8'd2, 0);
         $display("Test 2 Complete\n");
 
         current_test = "DIV_MASK_TEST";
         $display("=== Test 3: DIV Mask Test ===");
         test_v1 = {16'h4000, 16'h4100};
         test_v2 = {16'h3f80, 16'h4000};
-        fu_issue_test(0, DIV, VR_SUM, test_v1, test_v2, 8'd3, 0, 2'b10);
+        fu_issue_test(0, DIV, ALU_ADD, test_v1, test_v2, 8'd3, 0, 2'b10);
         $display("Test 3 Complete\n");
 
         current_test = "DIV_MAX_ISSUE";
         $display("=== Test 4: DIV Maximum Issue Rate ===");
-        fu_max_issue(0, DIV, VR_SUM, 10);
+        fu_max_issue(0, DIV, ALU_ADD, 10);
         $display("Test 4 Complete\n");
 
         current_test = "DIV_BACKPRESSURE";
         $display("=== Test 5: DIV Backpressure Test ===");
-        fu_backpressure_test(0, DIV, VR_SUM);
+        fu_backpressure_test(0, DIV, ALU_ADD);
         $display("Test 5 Complete\n");
 
         current_test = "DIV_COMPLETE";
@@ -459,28 +459,28 @@ endtask
 
         current_test = "EXP_PORT0";
         $display("=== Test 1: EXP from Port 0 ===");
-        fu_issue_test(0, EXP, VR_SUM, test_v1, test_v2, 8'd1, 0);
+        fu_issue_test(0, EXP, ALU_ADD, test_v1, test_v2, 8'd1, 0);
         $display("Test 1 Complete\n");
 
         current_test = "EXP_PORT1";
         $display("=== Test 2: EXP from Port 1 ===");
-        fu_issue_test(1, EXP, VR_SUM, test_v1, test_v2, 8'd2, 0);
+        fu_issue_test(1, EXP, ALU_ADD, test_v1, test_v2, 8'd2, 0);
         $display("Test 2 Complete\n");
 
         current_test = "EXP_MASK_TEST";
         $display("=== Test 3: EXP Mask Test ===");
         test_v1 = {16'h3f80, 16'h4000};
-        fu_issue_test(0, EXP, VR_SUM, test_v1, test_v2, 8'd3, 0, 2'b10);
+        fu_issue_test(0, EXP, ALU_ADD, test_v1, test_v2, 8'd3, 0, 2'b10);
         $display("Test 3 Complete\n");
 
         current_test = "EXP_MAX_ISSUE";
         $display("=== Test 4: EXP Maximum Issue Rate ===");
-        fu_max_issue(0, EXP, VR_SUM, 10);
+        fu_max_issue(0, EXP, ALU_ADD, 10);
         $display("Test 4 Complete\n");
 
         current_test = "EXP_BACKPRESSURE";
         $display("=== Test 5: EXP Backpressure Test ===");
-        fu_backpressure_test(0, EXP, VR_SUM);
+        fu_backpressure_test(0, EXP, ALU_ADD);
         $display("Test 5 Complete\n");
 
         current_test = "EXP_COMPLETE";
@@ -499,28 +499,28 @@ endtask
 
         current_test = "SQRT_PORT0";
         $display("=== Test 1: SQRT from Port 0 ===");
-        fu_issue_test(0, SQRT, VR_SUM, test_v1, test_v2, 8'd1, 0);
+        fu_issue_test(0, SQRT, ALU_ADD, test_v1, test_v2, 8'd1, 0);
         $display("Test 1 Complete\n");
 
         current_test = "SQRT_PORT1";
         $display("=== Test 2: SQRT from Port 1 ===");
-        fu_issue_test(1, SQRT, VR_SUM, test_v1, test_v2, 8'd2, 0);
+        fu_issue_test(1, SQRT, ALU_ADD, test_v1, test_v2, 8'd2, 0);
         $display("Test 2 Complete\n");
 
         current_test = "SQRT_MASK_TEST";
         $display("=== Test 3: SQRT Mask Test ===");
         test_v1 = {16'h4000, 16'h4100};
-        fu_issue_test(0, SQRT, VR_SUM, test_v1, test_v2, 8'd3, 0, 2'b10);
+        fu_issue_test(0, SQRT, ALU_ADD, test_v1, test_v2, 8'd3, 0, 2'b10);
         $display("Test 3 Complete\n");
 
         current_test = "SQRT_MAX_ISSUE";
         $display("=== Test 4: SQRT Maximum Issue Rate ===");
-        fu_max_issue(0, SQRT, VR_SUM, 10);
+        fu_max_issue(0, SQRT, ALU_ADD, 10);
         $display("Test 4 Complete\n");
         
         current_test = "SQRT_BACKPRESSURE";
         $display("=== Test 5: SQRT Backpressure Test ===");
-        fu_backpressure_test(0, SQRT, VR_SUM);
+        fu_backpressure_test(0, SQRT, ALU_ADD);
         $display("Test 5 Complete\n");
 
         current_test = "SQRT_COMPLETE";
@@ -550,8 +550,8 @@ endtask
         wait_for_fu_ready(MUL);
 
         // Issue both in same cycle
-        issue_to_port(0, 1, test_v1_alu,  test_v2_alu,  VALU, 8'd1, 0, '1, VR_SUM);
-        issue_to_port(1, 1, test_v1_mult, test_v2_mult, MUL,  8'd2, 0, '1, VR_SUM);
+        issue_to_port(0, 1, test_v1_alu,  test_v2_alu,  VALU, 8'd1, 0, '1, ALU_ADD);
+        issue_to_port(1, 1, test_v1_mult, test_v2_mult, MUL,  8'd2, 0, '1, ALU_ADD);
 
         @(posedge CLK);
 
@@ -586,8 +586,8 @@ endtask
         wait_for_fu_ready(MUL);
         wait_for_fu_ready(SQRT);
 
-        issue_to_port(0, 1, test_v1_mult, test_v2_mult, MUL,  8'd3, 0, '1, VR_SUM);
-        issue_to_port(1, 1, test_v1_sqrt, test_v2_sqrt, SQRT, 8'd4, 0, '1, VR_SUM);
+        issue_to_port(0, 1, test_v1_mult, test_v2_mult, MUL,  8'd3, 0, '1, ALU_ADD);
+        issue_to_port(1, 1, test_v1_sqrt, test_v2_sqrt, SQRT, 8'd4, 0, '1, ALU_ADD);
 
         @(posedge CLK);
 
@@ -622,8 +622,8 @@ endtask
         wait_for_fu_ready(SQRT);
         wait_for_fu_ready(EXP);
 
-        issue_to_port(0, 1, test_v1_sqrt, test_v2_sqrt, SQRT, 8'd5, 0, '1, VR_SUM);
-        issue_to_port(1, 1, test_v1_exp,  test_v2_exp,  EXP,  8'd6, 0, '1, VR_SUM);
+        issue_to_port(0, 1, test_v1_sqrt, test_v2_sqrt, SQRT, 8'd5, 0, '1, ALU_ADD);
+        issue_to_port(1, 1, test_v1_exp,  test_v2_exp,  EXP,  8'd6, 0, '1, ALU_ADD);
 
         @(posedge CLK);
 
@@ -672,7 +672,7 @@ endtask
                 fu = fu_t'(i);
                 if (fu_issue_count[fu] < num_issues_per_fu && (lif.out.units[fu].input_ready == 1)) begin
                     logic [SLICE_W-1:0][15:0] v2_to_use = (fu == 3 || fu == 4) ? test_v2_zero : test_v2; //FU is exp or sqrt
-                    issue_to_port(0, 1, test_v1, v2_to_use, fu, (fu * 10 + fu_issue_count[fu]), 0, '1, VR_SUM);
+                    issue_to_port(0, 1, test_v1, v2_to_use, fu, (fu * 10 + fu_issue_count[fu]), 0, '1, ALU_ADD);
                     fu_issue_count[fu]++;
                     issue_count++;
                     port0_issued = 1;
@@ -687,7 +687,7 @@ endtask
 
                 if (fu_issue_count[fu] < num_issues_per_fu && lif.out.units[fu].input_ready == 1) begin
                     logic [SLICE_W-1:0][15:0] v2_to_use = (fu == EXP || fu == SQRT) ? test_v2_zero : test_v2;
-                    valu_op_t op = (fu == VALU) ? VR_SUM : VR_SUM;
+                    alu_op_t op = (fu == VALU) ? ALU_ADD : ALU_ADD;
                     
                     issue_to_port(1, 1, test_v1, v2_to_use, fu, (fu * 10 + fu_issue_count[fu]), 0, '1, op);
                     fu_issue_count[fu]++;
@@ -709,8 +709,7 @@ endtask
         reset_dut();
         @(posedge CLK);
         //test_mult();
-        //test_sqrt();
-        test_multi_issue_mult_sqrt();
+        test_sqrt();
 
         $stop;
     end

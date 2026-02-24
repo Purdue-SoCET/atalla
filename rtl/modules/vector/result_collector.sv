@@ -118,17 +118,17 @@ module result_collector (
         end
     end
 
-    always_comb begin : ready_comb
-        for (int i = 0; i < NUM_LANES; i++) begin
-            ready_n[i] = ready[i];
-            if ((rcif.out.wb_valid & !rcif.in.wb_ready & ready[i])) begin
-                ready_n[i] = 1'b0;
-            end
-            else if (rcif.in.wb_ready & !ready[i]) begin
-                ready_n[i] = 1'b1;
-            end
+always_comb begin : ready_comb
+    for (int i = 0; i < NUM_LANES; i++) begin
+        ready_n[i] = ready[i];
+        if ((rcif.out.wb_valid & !rcif.in.wb_ready & ready[i])) begin
+            ready_n[i] = 1'b0;
+        end
+        else if (rcif.in.wb_ready & !ready[i]) begin
+            ready_n[i] = 1'b1;
         end
     end
+end
 
     assign rcif.out.input_ready = ready;
 
@@ -158,7 +158,7 @@ module result_collector (
         end
     end
 
-    assign rcif.out.wb_valid = wb_valid_r;
+    assign rcif.out.wb_valid = (wb_valid_r | (&array_full)) & !(wb_valid_r & rcif.in.wb_ready);
     
 
 

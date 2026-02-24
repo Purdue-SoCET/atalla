@@ -5,8 +5,8 @@
 interface reduction_FU_if;
     import vector_pkg::*;
 
-    reduction_FU_in_t in;
-    functional_unit_out_t out;
+    vector_if_reduction_in_t in;
+    vector_if_reduction_out_t out;
 
     modport ruif (
         input in,

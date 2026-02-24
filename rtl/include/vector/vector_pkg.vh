@@ -62,7 +62,7 @@ package vector_pkg;
     // =========================================================================
     // Data Structures
     // =========================================================================
-    typedef logic [ESZ-1:0][VLMAX-1:0]   vreg_t;     // full vector
+    typedef logic [VLMAX-1:0][ESZ-1:0]   vreg_t;     // full vector
     typedef enum logic [2:0] {
         VALU = 3'b000,
         MUL = 3'b001,
@@ -252,14 +252,6 @@ package vector_pkg;
         logic valid_out, ready_in;
     } reduction_if_out_t;
 
-    typedef struct packed {
-        functional_unit_issue_port_t [LANE_ISSUE_W-1:0] ports;
-        logic wb_ready;
-
-        logic [NUM_LANES-1:0][ESZ-1:0] lane_input;
-        logic lane_valid;
-    } reduction_FU_in_t;
-
     //lane structs
     typedef struct packed {
         logic [LANE_ISSUE_W-1:0] input_valid;
@@ -340,7 +332,6 @@ package vector_pkg;
         logic [7:0] vd;
         logic valid_in;
         logic weight;
-        
     } vector_if_gsau_in_t;
 
     typedef struct packed {
@@ -372,9 +363,17 @@ package vector_pkg;
     } lanes_issue_port_t;
 
     typedef struct packed {
+        lanes_issue_port_t [LANE_ISSUE_W-1:0] ports;
+        logic [NUM_LANES-1:0][ESZ-1:0] lane_input;
+        logic lane_valid;
+        logic wb_ready;        
+    } vector_if_reduction_in_t;
+
+    typedef struct packed {
         logic wb_valid;
         vreg_t vector_output;
         logic [7:0]     vd_output;
+        logic input_ready;
     } vector_if_reduction_out_t;
 
     typedef struct packed {

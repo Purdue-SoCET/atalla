@@ -71,7 +71,7 @@ module general_fu_tb (
             fuif.in.ports[i].vd         = '0;
             fuif.in.ports[i].rm         = '0;
             fuif.in.ports[i].mask       = '0;
-            fuif.in.ports[i].alu_op     = VR_SUM;
+            fuif.in.ports[i].alu_op     = ALU_ADD;
         end
 
         repeat (2) @(posedge CLK);
@@ -88,7 +88,7 @@ module general_fu_tb (
         input logic [7:0] vd,
         input logic rm,
         input logic [SLICE_W-1:0] mask,
-        input valu_op_t alu_op
+        input alu_op_t alu_op
     );
         fuif.in.ports[port_num].input_valid = 1'b1;
         fuif.in.ports[port_num].v1 = v1;
@@ -110,7 +110,7 @@ module general_fu_tb (
         fuif.in.ports[port_num].vd         = '0;
         fuif.in.ports[port_num].rm         = '0;
         fuif.in.ports[port_num].mask       = '0;
-        fuif.in.ports[port_num].alu_op     = VR_SUM;
+        fuif.in.ports[port_num].alu_op     = ALU_ADD;
     endtask
 
     // Generic test: issue operation and wait for writeback
@@ -122,7 +122,7 @@ module general_fu_tb (
         input logic [7:0] vd,
         input logic rm,
         input logic [SLICE_W-1:0] mask,
-        input valu_op_t alu_op,
+        input alu_op_t alu_op,
         input int timeout_cycles = 100
     );
         int wb_count = 0;
@@ -149,7 +149,7 @@ module general_fu_tb (
         input fu_t usel,
         input logic rm,
         input logic [SLICE_W-1:0] mask,
-        input valu_op_t alu_op,
+        input alu_op_t alu_op,
         input int num_issues = 10,
         input logic [SLICE_W-1:0][15:0] base_v1 = '{16'h4000, 16'h4080},
         input logic [SLICE_W-1:0][15:0] base_v2 = '0,
@@ -200,7 +200,7 @@ module general_fu_tb (
         input logic [7:0] vd,
         input logic rm,
         input logic [SLICE_W-1:0] mask,
-        input valu_op_t alu_op,
+        input alu_op_t alu_op,
         input int backpressure_cycles = 5,
         input int timeout_cycles = 100
     );
@@ -250,7 +250,7 @@ module general_fu_tb (
         input logic [7:0] vd,
         input logic rm,
         input logic [SLICE_W-1:0] mask,
-        input valu_op_t alu_op,
+        input alu_op_t alu_op,
         input int timeout_cycles = 1000
     );
         int wb_count = 0;
@@ -278,39 +278,39 @@ module general_fu_tb (
         logic [SLICE_W-1:0][15:0] v1, v2;
         v1 = '{16'h4110, 16'h4080}; //9,4
         v2 = '0;
-        test_issue_port(0, v1, v2, SQRT, 1, 0, '1, VR_SUM);
+        test_issue_port(0, v1, v2, SQRT, 1, 0, '1, ALU_ADD);
     endtask
 
     task automatic sqrt_test_issue_port_1();
         logic [SLICE_W-1:0][15:0] v1, v2;
         v1 = '{16'h4110, 16'h4080}; //9,4
         v2 = '0;
-        test_issue_port(1, v1, v2, SQRT, 2, 0, '1, VR_SUM);
+        test_issue_port(1, v1, v2, SQRT, 2, 0, '1, ALU_ADD);
     endtask
 
     task automatic sqrt_test_masking_1();
         logic [SLICE_W-1:0][15:0] v1, v2;
         v1 = '{16'h4110, 16'h4080}; //9,4
         v2 = '0;
-        test_masking(0, v1, v2, SQRT, 1, 0, 2'b01, VR_SUM);
+        test_masking(0, v1, v2, SQRT, 1, 0, 2'b01, ALU_ADD);
     endtask
 
     task automatic sqrt_test_masking_2();
         logic [SLICE_W-1:0][15:0] v1, v2;
         v1 = '{16'h4110, 16'h4080}; //9,4
         v2 = '0;
-        test_masking(0, v1, v2, SQRT, 1, 0, 2'b10, VR_SUM);
+        test_masking(0, v1, v2, SQRT, 1, 0, 2'b10, ALU_ADD);
     endtask
 
     task automatic sqrt_backpressure();
         logic [SLICE_W-1:0][15:0] v1, v2;
         v1 = '{16'h4110, 16'h4080}; //9,4
         v2 = '0;
-        test_backpressure(0, v1, v2, SQRT, 10, 0, 2'b11, VR_SUM, 5);
+        test_backpressure(0, v1, v2, SQRT, 10, 0, 2'b11, ALU_ADD, 5);
     endtask
 
     task automatic sqrt_max_issue();
-        test_max_issue(0, SQRT, 0, '1, VR_SUM, 10);
+        test_max_issue(0, SQRT, 0, '1, ALU_ADD, 10);
     endtask
 
     task automatic test_all_sqrt();
@@ -326,39 +326,39 @@ module general_fu_tb (
         logic [SLICE_W-1:0][15:0] v1, v2;
         v1 = '{16'h4000, 16'h4080}; // 2.0, 4.0
         v2 = '{16'h3F80, 16'h4000}; // 1.0, 2.0
-        test_issue_port(0, v1, v2, MUL, 1, 0, '1, VR_SUM);
+        test_issue_port(0, v1, v2, MUL, 1, 0, '1, ALU_ADD);
     endtask
 
     task automatic mul_test_issue_port_1();
         logic [SLICE_W-1:0][15:0] v1, v2;
         v1 = '{16'h4000, 16'h4080}; // 2.0, 4.0
         v2 = '{16'h3F80, 16'h4000}; // 1.0, 2.0
-        test_issue_port( 1, v1, v2, MUL, 2, 0, '1, VR_SUM);
+        test_issue_port( 1, v1, v2, MUL, 2, 0, '1, ALU_ADD);
     endtask
 
     task automatic mul_test_masking_1();
         logic [SLICE_W-1:0][15:0] v1, v2;
         v1 = '{16'h4000, 16'h4080}; // 2.0, 4.0
         v2 = '{16'h3F80, 16'h4000}; // 1.0, 2.0
-        test_masking(0, v1, v2, MUL, 1, 0, 2'b01, VR_SUM);
+        test_masking(0, v1, v2, MUL, 1, 0, 2'b01, ALU_ADD);
     endtask
 
     task automatic mul_test_masking_2();
         logic [SLICE_W-1:0][15:0] v1, v2;
         v1 = '{16'h4000, 16'h4080}; // 2.0, 4.0
         v2 = '{16'h3F80, 16'h4000}; // 1.0, 2.0
-        test_masking(0, v1, v2, MUL, 1, 0, 2'b10, VR_SUM);
+        test_masking(0, v1, v2, MUL, 1, 0, 2'b10, ALU_ADD);
     endtask
 
     task automatic mul_backpressure();
         logic [SLICE_W-1:0][15:0] v1, v2;
         v1 = '{16'h4000, 16'h4080}; // 2.0, 4.0
         v2 = '{16'h3F80, 16'h4000}; // 1.0, 2.0
-        test_backpressure(0, v1, v2, MUL, 10, 0, 2'b11, VR_SUM, 5);
+        test_backpressure(0, v1, v2, MUL, 10, 0, 2'b11, ALU_ADD, 5);
     endtask
 
     task automatic mul_max_issue();
-        test_max_issue(0, MUL, 0, '1, VR_SUM, 10);
+        test_max_issue(0, MUL, 0, '1, ALU_ADD, 10);
     endtask
 
     task automatic test_all_mul();

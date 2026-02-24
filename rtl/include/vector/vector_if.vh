@@ -21,6 +21,7 @@ interface vector_if;
   vector_if_lanes_in_t lanes_in;
   //lanes to writeback
   vector_if_lanes_out_t lanes_out;
+  
 
   //unit ready and wb ready
   vector_if_unit_ready_t unit_ready_signals;
