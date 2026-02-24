@@ -1,17 +1,19 @@
-`ifndef DDR_CONTROLLER_IF_VH
-`define DDR_CONTROLLER_IF_VH
-
-`include "dram_pkg.vh"
+`ifndef DDR_CONTROLLER_IF_SV
+`define DDR_CONTROLLER_IF_SV
 
 interface ddr_controller_if;
 
 // 2.5.2025 -> TASK - ADD MODPORTS
 // 2.8.2025 -> TASK - FINISH MODPORTS BY 2.12
 // 2.12.2025 -> TASK - READ ID Q
+`include "dram_pkg.sv"
 import dram_pkg::*;
 
 // AXI -> WDATA_QUEUE
-logic [7:0] wstrb, wvalid, [63:0] wdata, [$clog2(ID_NUM)-1:0] wid, [2:0] wlen; // -> Write Queue
+logic [7:0] wstrb, wvalid;
+logic [63:0] wdata;
+logic [$clog2(ID_NUM)-1:0] wid;
+logic [2:0] wlen; // -> Write Queue
 logic wready, bwvalid, [1:0] bwresp, [$clog2(ID_NUM)-1:0] bwid; // -> AXI
 logic bwready; // -> Write Queue
 
@@ -179,4 +181,4 @@ modport backend_arb (
 
 endinterface
 
-`endif // DDR_CONTROLLER_IF_VH
+`endif // DDR_CONTROLLER_IF_SV
