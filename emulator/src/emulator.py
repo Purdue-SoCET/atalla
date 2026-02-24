@@ -1,5 +1,6 @@
 import struct
 import numpy as np
+import os
 from typing import Sequence, List
 
 from .misc.memory import Memory
@@ -500,6 +501,18 @@ def run(mem: Memory, sregs: ScalarRegisterFile, mregs: ScalarRegisterFile, vregs
         else:
             pc = pc + pc_increment
 
+
+    def _ensure_parent(path: str) -> None:
+        parent = os.path.dirname(os.fspath(path))
+        if parent:
+            os.makedirs(parent, exist_ok=True)
+
+    _ensure_parent(out_sreg_file)
+    _ensure_parent(out_vreg_file)
+    _ensure_parent(out_mreg_file)
+    _ensure_parent(out_file)
+    _ensure_parent(out_scpad_file0)
+    _ensure_parent(out_scpad_file1)
 
     sregs.dump_to_file(out_sreg_file)
     vregs.dump_to_file(out_vreg_file)
