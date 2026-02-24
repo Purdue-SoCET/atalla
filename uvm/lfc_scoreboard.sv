@@ -84,7 +84,7 @@ class lfc_scoreboard extends uvm_scoreboard;
       if (act.hit)
         `uvm_info("SB", $sformatf("CPU HIT addr=%h hit_load=%h", act.mem_in_addr, act.hit_load), UVM_LOW)
       else
-        `uvm_info("SB", $sformatf("CPU MISS addr=%h stall=%0b", act.mem_in_addr, act.stall), UVM_LOW)
+        `uvm_info("SB", $sformatf("CPU MISS act: addr=%h stall=%0b", act.mem_in_addr, act.stall), UVM_LOW)
 
       // load data correctness (only for reads)
       if (!act.mem_in_rw_mode && act.hit) begin

@@ -25,6 +25,8 @@ class lfc_cpu_transaction #(parameter NUM_BANKS = 4, parameter UUID_SIZE = 4) ex
   logic [NUM_BANKS-1:0][UUID_SIZE-1:0] uuid_block;
   logic dp_out_flushed;
 
+  constraint addr_constraint {mem_in_addr[1:0] == 2'b00;}
+
   `uvm_object_utils_begin(lfc_cpu_transaction) // change some of these to uvm_field_int
     `uvm_field_int(n_rst, UVM_DEFAULT)
     `uvm_field_int(mem_in, UVM_DEFAULT)
@@ -40,8 +42,6 @@ class lfc_cpu_transaction #(parameter NUM_BANKS = 4, parameter UUID_SIZE = 4) ex
     `uvm_field_int(uuid_block, UVM_DEFAULT)
     `uvm_field_int(dp_out_flushed, UVM_DEFAULT)
   `uvm_object_utils_end
-
-  // TODO: add constraints for randomization
 
   function new(string name = "lfc_cpu_transaction");
     super.new(name);
