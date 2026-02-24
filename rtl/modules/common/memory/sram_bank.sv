@@ -19,6 +19,7 @@ module sram_bank # (
   input logic [WIDTH-1:0] wdata, 
   output logic wdone
 );  
+// synthesis translate_off
   logic [HEIGHT-1:0][WIDTH-1:0] mem;
 
   localparam int RLW = (READ_LATENCY <= 1) ? 1 : $clog2(READ_LATENCY);
@@ -28,7 +29,7 @@ module sram_bank # (
   logic [WLW-1:0] w_cnt;
   logic w_busy;
 
-  assign busy = r_busy || w_busy; 
+  assign busy = r_busy || w_busy;
 
   always_ff @(posedge clk, negedge n_rst) begin
     if (!n_rst) begin
@@ -36,7 +37,7 @@ module sram_bank # (
       r_cnt  <= '0;
       rdone  <= 1'b0;
     end else begin
-      rdone <= 1'b0; 
+      rdone <= 1'b0;
 
       if (ren && !r_busy) begin
         r_busy <= 1'b1;
@@ -62,7 +63,7 @@ module sram_bank # (
       w_cnt  <= '0;
       wdone  <= 1'b0;
     end else begin
-      wdone <= 1'b0; 
+      wdone <= 1'b0;
 
       if (wen && !w_busy) begin
         w_busy <= 1'b1;
@@ -83,10 +84,10 @@ module sram_bank # (
   end
 
   always_ff @ (posedge clk, negedge n_rst) begin
-    if (!n_rst) begin 
-      mem <= '0; 
-      rdata <= '0; 
-    end else begin 
+    if (!n_rst) begin
+      mem <= '0;
+      rdata <= '0;
+    end else begin
       if (ren) begin
         rdata <= mem[raddr];
       end
@@ -95,5 +96,6 @@ module sram_bank # (
       end
     end
   end
+// synthesis translate_on
 
 endmodule

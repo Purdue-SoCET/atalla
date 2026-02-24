@@ -7,7 +7,8 @@ module skew_buffer #(
     parameter int COL_WIDTH         = 16,   // same as bank width (since one bank per column)
     parameter int RECT_DELAY        = 4,    // base level of delay for EVERY column
     parameter int DELAY_SLOPE       = 1,    // how much delay/skew from one column to next (in addition to rectangle delay)
-    parameter logic REVERSE_TRIANGLE = 0,   // If 1, reverse triangle direction (right is lowest, left is highest)
+    parameter logic REVERSE_TRIANGLE = 0,   // If 1, reverse triangle direction (right is lowest, left is highest), 
+    //if 0 then it's a right triangle with right angle on the right side
     
     // assumption of 1 cycle read/writes
     localparam int READ_LATENCY      = 1,    // sram read latency

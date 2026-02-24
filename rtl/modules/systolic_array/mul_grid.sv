@@ -19,8 +19,6 @@ module mul_grid (
     //DW = 16
     //N = 4
 
-    systolic_array_MAC_if mac_ifs[N-1:0][N-1:0] (); 
-
     logic [N-1:0][N-1:0][DW-1:0] a_pipe;
     logic [N-1:0][N-1:0][DW-1:0] b_pipe;
     logic [N-1:0][N-1:0][DW-1:0] prod;
@@ -74,11 +72,15 @@ module mul_grid (
                     if (!nRST) begin
                         b_pipe[i][j] <= 0;
                     end else if (!mul_stall) begin
-                        if (load_w && j == 0) begin
-                            b_pipe[i][0] <= sa_inputs[DW*i +: DW];
-                        end else if (load_w) begin
-                            b_pipe[i][j] <= b_pipe[i][j-1];
-                        end 
+                        if (j == 0) begin
+                            if (load_w) begin
+                                b_pipe[i][0] <= sa_inputs[DW*i +: DW];
+                            end
+                        end else begin
+                            if (load_w) begin
+                                b_pipe[i][j] <= b_pipe[i][j-1];
+                            end
+                        end
                     end
                 end
 
