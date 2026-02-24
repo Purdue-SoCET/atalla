@@ -1,10 +1,12 @@
 `include "ld_st_unit_if.sv"
+`include "atalla_isa_types.vh"
 
 module ld_st_unit #()
 (
     input logic CLK, nRST,
     ld_st_unit_if.ld_st ld_st_if
 );
+    import atalla_isa_pkg::*;
 
     typedef enum {start, latch} state;
     state n_state, cur_state;
@@ -33,9 +35,9 @@ module ld_st_unit #()
         nlatched_store = latched_store;
         cur_store = ld_st_if.data_in;
         nlatched_REN = latched_REN;
-        cur_REN = portmap.valid_in && (alu_valid == portmap.ld_valid) ? 1 : 0;
+        cur_REN = ld_st_if.valid_in && (4'b1011 == ld_st_if.scalar_type_enable) ? 1 : 0;
         nlatched_WEN = latched_WEN;
-        cur_WEN = portmap.valid_in && (alu_valid == portmap.st_valid) ? 1 : 0;
+        cur_WEN = ld_st_if.valid_in && (4'b1100 == ld_st_if.scalar_type_enable) ? 1 : 0;
         nlatched_halfword = latched_halfword;
         cur_halfword = ld_st_if.halfWord;
         nlatchedRD = latchedRD;
@@ -50,8 +52,8 @@ module ld_st_unit #()
 
                 nlatched_addr = ld_st_if.addr;
                 nlatched_store = ld_st_if.data_in;
-                nlatched_REN = portmap.valid_in && (alu_valid == portmap.ld_valid) ? 1 : 0;
-                nlatched_WEN = portmap.valid_in && (alu_valid == portmap.st_valid) ? 1 : 0;
+                nlatched_REN = ld_st_if.valid_in && (4'b1011 == ld_st_if.scalar_type_enable) ? 1 : 0;
+                nlatched_WEN = ld_st_if.valid_in && (4'b1100 == ld_st_if.scalar_type_enable) ? 1 : 0;
                 nlatched_halfword = ld_st_if.halfWord;
                 nlatchedRD = ld_st_if.rdIn;
 

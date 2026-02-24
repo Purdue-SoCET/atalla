@@ -9,6 +9,8 @@ interface alu_control_if;
     logic [7:0] rs1_idx, rdIn;
     logic ready_in, valid_in;
     logic [31:0] pc;
+    logic predict_taken;
+    logic [31:0] predict_pc;
     logic [31:0] incr7;
     logic [31:0] imm;
     logic [6:0]  op;
@@ -21,13 +23,13 @@ interface alu_control_if;
     logic [31:0] redirect_target;
 
     modport mainport (
-        input rs1_value, rs2_value, rs1_idx, rdIn, ready_out, valid_in, pc, incr7, imm, op, scalar_type_enable,
+        input rs1_value, rs2_value, rs1_idx, rdIn, ready_out, valid_in, pc, incr7, imm, op, scalar_type_enable, predict_taken, predict_pc,
         output rd_value, valid_out, ready_in, rdOut, redirect_valid, redirect_target
     );
 
     modport tb (
         input rd_value, valid_out, ready_in, rdOut, redirect_valid, redirect_target,
-        output rs1_value, rs2_value, rs1_idx, rdIn, ready_out, valid_in, pc, incr7, imm, op, scalar_type_enable
+        output rs1_value, rs2_value, rs1_idx, rdIn, ready_out, valid_in, pc, incr7, imm, op, scalar_type_enable, predict_taken, predict_pc
     );
 
 endinterface

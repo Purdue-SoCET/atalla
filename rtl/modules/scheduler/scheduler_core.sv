@@ -8,6 +8,7 @@
 import execution_unit_types_pkg::*;
 import scalar_wb_pkg::*;
 import scheduler_pkg::*;
+import atalla_isa_pkg::*;
 
 module scheduler_core #(
     parameter NUM_SCALAR_INSTRS = 4,
@@ -18,15 +19,16 @@ module scheduler_core #(
     input logic hit,
     input logic [31:0] data_load,
     //dec2 in
-    input instr_t scalar_instrs [3:0],
+    input instr_t [3:0] scalar_instrs,
     input logic predict_taken_in,
     input word_t pc_in, pc_pred_addr_in,
     output logic ready,
-    output scheduler_pkg::EXEC_WB_LATCH WB_output
 );
 
     scheduler_pkg::EXEC_WB_LATCH n_EX_WB_latch, EX_WB_latch;
     execution_unit_types_pkg::in_DEC2_EX_t [NUM_SCALAR_INSTRS-1:0] n_DEC2_EX_latch, DEC2_EX_latch;
+    scheduler_pkg::DEC2_WB_LATCH_PC n_DEC2_EX_PC_latch, DEC2_EX_PC_latch;
+    logic n_DEC2_EX_halt_latch, DEC2_EX_halt_latch;
 
     //interfaces
     s_wb_arbiter_if scalar_wb_if ();
@@ -38,20 +40,53 @@ module scheduler_core #(
     execute_stage S_EXECUTE(.clk(CLK), .nRST(nRST), .ex_if(scalar_ex_if));
     decode_2 S_V_DECODE_2(.CLK(CLK), .nRST(nRST), .d2if(decode_2_if));
 
+    always_comb begin : DEC2_EX
+        //continuous assignment for DEC2/EX
+        //EX inputs from DEC2
+        if(decode_2_if.ready) begin
+            for(int i = 0; i < NUM_SCALAR_INSTRS; i++) begin
+                n_DEC2_EX_latch[i].scalar_type_enable = decode_2_if.decoded_scalar_instrs[i].fu_enable;
+                n_DEC2_EX_latch[i].valid_in           = decode_2_if.decoded_scalar_instrs[i].valid_in;
+                n_DEC2_EX_latch[i].imm_src            = decode_2_if.decoded_scalar_instrs[i].imm_src;
+                n_DEC2_EX_latch[i].halfWord           = decode_2_if.decoded_scalar_instrs[i].halfword;
+                n_DEC2_EX_latch[i].imm                = decode_2_if.decoded_scalar_instrs[i].imm;
+                n_DEC2_EX_latch[i].incr7              = decode_2_if.decoded_scalar_instrs[i].incr7;
+                n_DEC2_EX_latch[i].op                 = decode_2_if.decoded_scalar_instrs[i].op;
+                n_DEC2_EX_latch[i].rs1_idx            = decode_2_if.decoded_scalar_instrs[i].rs1;
+                n_DEC2_EX_latch[i].rs1_value          = decode_2_if.decoded_scalar_instrs[i].r1_data;
+                n_DEC2_EX_latch[i].rs2_value          = decode_2_if.decoded_scalar_instrs[i].r2_data;
+                n_DEC2_EX_latch[i].rdIn               = decode_2_if.decoded_scalar_instrs[i].rdIn;
+            end
+            n_DEC2_EX_PC_latch.pc                  = decode_2_if.pc_out;
+            n_DEC2_EX_PC_latch.pc_pred_addr_out    = decode_2_if.pc_pred_addr_out;
+            n_DEC2_EX_PC_latch.predict_taken_out   = decode_2_if.predict_taken_out;
 
-    //continuous assignment for DEC2/WB
-    assign n_DEC2_EX_latch.scalar_type_enable = decode_2_if.decoded_scalar_instrs.fu_enable;
-    assign n_DEC2_EX_latch.valid_in = decode_2_if.decoded_scalar_instrs.valid_in;
-    assign n_DEC2_EX_latch.imm_src = decode_2_if.decoded_scalar_instrs.imm_src;
-    assign n_DEC2_EX_latch.valid_in = decode_2_if.decoded_scalar_instrs.valid_in;
-    assign n_DEC2_EX_latch.halfWord = decode_2_if.decoded_scalar_instrs.halfword;
-    assign n_DEC2_EX_latch.imm = decode_2_if.decoded_scalar_instrs.imm;
-    assign n_DEC2_EX_latch.incr7 = decode_2_if.decoded_scalar_instrs.incr7;
-    assign n_DEC2_EX_latch.op = decode_2_if.decoded_scalar_instrs.op;
-    assign n_DEC2_EX_latch.rs1_idx = decode_2_if.decoded_scalar_instrs.rs1;
-    assign n_DEC2_EX_latch.rs1_value = decode_2_if.decoded_scalar_instrs.r1_data;
-    assign n_DEC2_EX_latch.rs2_value = decode_2_if.decoded_scalar_instrs.r2_data;
-    assign n_DEC2_EX_latch.rdIn = decode_2_if.decoded_scalar_instrs.rdIn;
+            n_DEC2_EX_halt_latch = decode_2_if.decoded_scalar_instrs[0].halt || decode_2_if.decoded_scalar_instrs[1].halt || decode_2_if.decoded_scalar_instrs[2].halt || decode_2_if.decoded_scalar_instrs[3].halt;
+        end else begin
+            n_DEC2_EX_latch = '0;
+            n_DEC2_EX_PC_latch = '0;
+        end
+        //EX inputs from DEC2
+        scalar_ex_if.DEC2_inputs = DEC2_EX_latch;
+
+        scalar_ex_if.halt = DEC2_EX_halt_latch;
+        
+        scalar_ex_if.pc = DEC2_EX_PC_latch.pc_out;
+        scalar_ex_if.pc_pred_addr_out = DEC2_EX_PC_latch.pc_pred_addr_out;
+        scalar_ex_if.predict_taken_out = DEC2_EX_PC_latch.predict_taken_out;
+    end
+
+    //DEC2 inputs from EX
+    assign decode_2_if.ready_DEC2_ex1 = scalar_ex_if.ready_DEC2_ex1;
+    assign decode_2_if.ready_DEC2_ex2 = scalar_ex_if.ready_DEC2_ex2;
+    assign decode_2_if.ready_DEC2_ex3 = scalar_ex_if.ready_DEC2_ex3;
+    assign decode_2_if.ready_DEC2_ex4 = scalar_ex_if.ready_DEC2_ex4;
+    assign decode_2_if.ready_DEC2_ex5 = scalar_ex_if.ready_DEC2_ex5;
+
+    //Dec2 inputs from WB
+    assign decode_2_if.scalar_WB_WEN = EX_WB_latch.WEN;
+    assign decode_2_if.scalar_WB_wdata = EX_WB_latch.data;
+    assign decode_2_if.scalar_WB_wsel = EX_WB_latch.rd;
 
     //continuous assignment for EX/WB
     //ld/st unit
@@ -96,19 +131,26 @@ module scheduler_core #(
     assign n_EX_WB_latch.WEN = scalar_wb_if.scalar_wb_out.WEN;
 
     //temporary in/outs
-    assign WB_output = EX_WB_latch;
-    assign scalar_ex_if.slot_1 = slot_1;
-    assign scalar_ex_if.slot_2 = slot_2;
-    assign scalar_ex_if.slot_3 = slot_3;
-    assign scalar_ex_if.slot_4 = slot_4;
     assign scalar_ex_if.hit = hit;
     assign scalar_ex_if.data_load = data_load;
+    assign decode_2_if.scalar_instrs = scalar_instrs;
+    assign decode_2_if.predict_taken_in = predict_taken_in;
+    assign decode_2_if.pc_pred_addr_in = pc_pred_addr_in;
+    assign decode_2_if.pc_in = pc_in;
+    assign ready = decode_2_if.ready;
+
 
     always_ff @( posedge CLK, negedge nRST ) begin : EX_WB_LATCH
         if(!nRST) begin
             EX_WB_latch <= '0;
+            DEC2_EX_latch <= '0;
+            DEC2_EX_PC_latch <= '0;
+            DEC2_EX_halt_latch <= '0;
         end else begin
             EX_WB_latch <= n_EX_WB_latch;
+            DEC2_EX_latch <= n_DEC2_EX_latch;
+            DEC2_EX_PC_latch <= n_DEC2_EX_PC_latch;
+            DEC2_EX_halt_latch <= n_DEC2_EX_halt_latch;
         end
     end
 

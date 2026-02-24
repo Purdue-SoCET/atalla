@@ -15,6 +15,12 @@ package scheduler_pkg;
         logic   [SWRITE_PORTS-1:0] WEN;
     } EXEC_WB_LATCH;
 
+    typedef struct packed {
+        logic [31:0] pc;
+        logic [31:0] pc_pred_addr_out;
+        logic predict_taken_out
+    } DEC2_WB_LATCH_PC;
+
 endpackage
 
 `endif

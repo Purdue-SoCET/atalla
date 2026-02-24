@@ -43,7 +43,9 @@ module execute_stage
     assign unit1_if.rs1_idx = post_xbar_ex1.rs1_idx;
     assign unit1_if.rdIn = post_xbar_ex1.rdIn;
     assign unit1_if.valid_in = ex1_valid;
-    assign unit1_if.pc = post_xbar_ex1.pc;
+    assign unit1_if.pc = ex_if.pc;
+    assign unit1_if.predict_pc = ex_if.pc_pred_addr_out;
+    assign unit1_if.predict_taken = ex_if.predict_taken_out;
     assign unit1_if.incr7 = post_xbar_ex1.incr7;
     assign unit1_if.imm = post_xbar_ex1.imm;
     assign unit1_if.op = post_xbar_ex1.op;

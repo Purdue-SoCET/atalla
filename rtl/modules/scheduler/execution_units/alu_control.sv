@@ -17,6 +17,8 @@ module alu_control #()
     logic [31:0] cur_imm, imm_latch, imm_nlatch;
     logic [31:0] cur_incr7, incr7_latch, incr7_nlatch;
     logic [31:0] cur_pc, pc_latch, pc_nlatch;
+    logic [31:0] cur_predict_pc, predict_pc_latch, predict_pc_nlatch;
+    logic cur_predict_taken, predict_taken_latch, predict_taken_nlatch;
     logic [7:0] cur_rdIn, rdIn_latch, rdIn_nlatch;
     logic [7:0] cur_rs1_idx, rs1_idx_latch, rs1_idx_nlatch;
     logic [6:0] cur_op, op_latch, op_nlatch;
@@ -43,6 +45,8 @@ module alu_control #()
     assign cont_if.imm = cur_imm;
     assign cont_if.incr7 = cur_incr7;
     assign cont_if.pc = cur_pc;
+    assign cont_if.predict_taken = cur_predict_taken;
+    assign cont_if.predict_pc = cur_predict_pc;
     assign cont_if.ctrl_opcode = cur_op;
 
 
@@ -76,6 +80,10 @@ module alu_control #()
         cur_imm = portmap.imm;
         incr7_nlatch = incr7_latch;
         cur_incr7 = portmap.incr7;
+        predict_pc_nlatch = predict_pc_latch;
+        cur_predict_pc = portmap.predict_pc;
+        predict_taken_nlatch = predict_taken_latch;
+        cur_predict_taken = portmap.predict_taken;
         pc_nlatch = pc_latch;
         cur_pc = portmap.pc;
         rdIn_nlatch = rdIn_latch;
@@ -103,6 +111,8 @@ module alu_control #()
                 imm_nlatch = portmap.imm;
                 incr7_nlatch = portmap.incr7;
                 pc_nlatch = portmap.pc;
+                predict_pc_nlatch = portmap.predict_pc;
+                predict_taken_nlatch = portmap.predict_taken;
                 rdIn_nlatch = portmap.rdIn;
                 rs1_idx_nlatch = portmap.rs1_idx;
                 op_nlatch = portmap.op;
@@ -122,6 +132,8 @@ module alu_control #()
                 cur_imm = imm_latch;
                 cur_incr7 = incr7_latch;
                 cur_pc = pc_latch;
+                cur_predict_pc = predict_pc_latch;
+                cur_predict_taken = predict_taken_latch;
                 cur_rdIn = rdIn_latch;
                 cur_rs1_idx = rs1_idx_latch;
                 cur_op = op_latch;
@@ -145,6 +157,8 @@ module alu_control #()
             op_latch <= 7'b0;
             alu_valid_latch <= 1'b0;
             control_valid_latch <= 1'b0;
+            predict_pc_latch <= 32'b0;
+            predict_taken_latch <= 1'b0;
         end
         else begin
             cur_state <= n_state;
@@ -158,6 +172,8 @@ module alu_control #()
             op_latch <= op_nlatch;
             alu_valid_latch <= alu_valid_nlatch;
             control_valid_latch <= control_valid_nlatch;
+            predict_pc_latch <= predict_pc_nlatch;
+            predict_taken_latch <= predict_taken_nlatch;
         end
     end
 
