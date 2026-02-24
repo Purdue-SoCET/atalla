@@ -12,3 +12,4 @@ vsim.*
 reports/ 
 __pycache__/
 *.log
+*out/

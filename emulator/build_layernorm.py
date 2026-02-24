@@ -29,7 +29,7 @@ def main():
     ROWS = 4
     SID = 0
     LAYER_ELEMS = 16
-    RSUM_MASK = 64
+    RSUM_IMM = 64
     
     #
     # ScalarConvention: 
@@ -66,10 +66,10 @@ def main():
         vreg.ld  $12, $3, {COLS}, {ROWS}, {SID}, 1, 2  # load row 2 into $12
         vreg.ld  $13, $3, {COLS}, {ROWS}, {SID}, 1, 3  # load row 3 into $13
         
-        rsum.vi  $20, $10, {RSUM_MASK}, 1                    # reduce row 0 -> partial sum 0, imm = 1 << 6
-        rsum.vi  $21, $11, {RSUM_MASK}, 1                    # reduce row 1 -> partial sum 1, imm = 1 << 6
-        rsum.vi  $22, $12, {RSUM_MASK}, 1                    # reduce row 2 -> partial sum 2, imm = 1 << 6
-        rsum.vi  $23, $13, {RSUM_MASK}, 1                    # reduce row 3 -> partial sum 3, imm = 1 << 6
+        rsum.vi  $20, $10, {RSUM_IMM}, 1                    # reduce row 0 -> partial sum 0, imm = 1 << 6
+        rsum.vi  $21, $11, {RSUM_IMM}, 1                    # reduce row 1 -> partial sum 1, imm = 1 << 6
+        rsum.vi  $22, $12, {RSUM_IMM}, 1                    # reduce row 2 -> partial sum 2, imm = 1 << 6
+        rsum.vi  $23, $13, {RSUM_IMM}, 1                    # reduce row 3 -> partial sum 3, imm = 1 << 6
         
         add.vv   $21, $20, $21, 1, 0                # partial sum 0 + partial sum 1
         add.vv   $22, $22, $23, 1, 0                # partial sum 2 + partial sum 3
@@ -87,10 +87,10 @@ def main():
         mul.vv   $36, $32, $32, 1, 0                # row variance contribution for row 2
         mul.vv   $37, $33, $33, 1, 0                # row variance contribution for row 3
 
-        rsum.vi  $34, $34, {RSUM_MASK}, 1                    # reduce row variance contribution 0
-        rsum.vi  $35, $35, {RSUM_MASK}, 1                    # reduce row variance contribution 1
-        rsum.vi  $36, $36, {RSUM_MASK}, 1                    # reduce row variance contribution 2
-        rsum.vi  $37, $37, {RSUM_MASK}, 1                    # reduce row variance contribution 3
+        rsum.vi  $34, $34, {RSUM_IMM}, 1                    # reduce row variance contribution 0
+        rsum.vi  $35, $35, {RSUM_IMM}, 1                    # reduce row variance contribution 1
+        rsum.vi  $36, $36, {RSUM_IMM}, 1                    # reduce row variance contribution 2
+        rsum.vi  $37, $37, {RSUM_IMM}, 1                    # reduce row variance contribution 3
 
         add.vv   $35, $34, $35, 1, 0                # partial variance pair 0+1
         add.vv   $37, $36, $37, 1, 0                # partial variance pair 2+3
@@ -127,15 +127,13 @@ def main():
     img.f32(EPSILON_LOCATION, 0)
     
     #-----------TILE INITIALIZATION----------
-    # Initialize 4x4 tile of bf16 values (1-16) at base address 0xbaf
-    # Memory layout (row-major): rows 0-3, each with 4 values
     base_addr = TILE_ADDR
     tile_values = list(range(1, 17))  # 1 to 16
     for i, val in enumerate(tile_values):
         addr = base_addr + (i * 2)  # 
         img.bf16(addr, float(val))
 
-    #------------------------------------------
+    # -----------------------------------------
     data_text = img.render_data_mem(include_zeros=False)
 
     final = render_testfile(instr_text, data_text)
