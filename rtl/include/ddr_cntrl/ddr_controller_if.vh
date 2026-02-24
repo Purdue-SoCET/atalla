@@ -7,7 +7,6 @@ interface ddr_controller_if;
 
 // 2.5.2025 -> TASK - ADD MODPORTS
 // 2.8.2025 -> TASK - FINISH MODPORTS BY 2.12
-// 2.12.2025 -> TASK - READ ID Q
 import dram_pkg::*;
 
 // AXI -> WDATA_QUEUE
@@ -27,7 +26,9 @@ logic awready;
 
 // STQ/LQ -> FRONTEND ARBITER
 logic request_l, request_s;
-logic address_l, address_s;
+logic [31:0] address_l, address_s;
+logic [3:0] len_l, len_s;
+logic [$clog2(ID_NUM) - 1:0] id_l, id_s;
 logic grant_l, grant_s;
 
 // FRONTEND ARBITER -> BQ
@@ -35,6 +36,7 @@ logic [BANK_GROUP_BITS-1:0] fe_bg, [$clog2(BANK_NUM)-1:0] fe_b, [ROW_BITS-1:0] f
 logic fe_read, fe_write;
 logic [$clog2(ID_NUM)-1:0] fe_id;
 logic fe_write_bq;
+logic [2:0] fe_len;
 logic [$clog2(BANK_NUM)-1:0] fe_full; // [QUEUE_SIZE-1:0]
 
 // BANK QUEUE -> COMMAND FSM
@@ -107,15 +109,15 @@ modport lq (
     //LQ -> AXI
     output arready, 
     //STQ -> ARB
-    address_l, request_l
+    address_l, request_l, len_l, id_l
 
 );
 
 modport arb (
     //STQ -> ARB
-    input request_s, address_s,
+    input request_s, address_s, id_s, len_s,
     //LQ -> ARB
-    request_l, address_l,
+    request_l, address_l, id_l, len_l,
     //BQ -> ARB
     fe_full, 
     //ARB -> LQ
@@ -123,7 +125,7 @@ modport arb (
     //ARB -> STQ
     grant_s, 
     //ARB -> BQ
-    fe_bg, fe_b, fe_r, fe_c, fe_write, fe_id, fe_write_bq
+    fe_bg, fe_b, fe_r, fe_c, fe_write, fe_id, fe_write_bq, fe_len
 );
 
 modport bq (
