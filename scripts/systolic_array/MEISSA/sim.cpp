@@ -8,7 +8,7 @@
 
 constexpr int ROW = 32;
 constexpr int COL = 32;
-constexpr int TOTAL_TEST_NUM = 100;
+constexpr int TOTAL_TEST_NUM = 100000;
 constexpr int PROBABILITY_OF_NEW_WEIGHT = 250; // 25% chance to generate new weight for each test
 std::string PATH_TO_INPUT = "/home/asicfab/a/yim13/atalla/scripts/systolic_array/systolic_array_tb_input.csv";
 std::string PATH_TO_EXPECTED_RESULT = "/home/asicfab/a/yim13/atalla/scripts/systolic_array/systolic_array_tb_expected_result.csv";
@@ -185,8 +185,8 @@ void create_new_test(int test_num, int max_exponent, const std::string& file_pat
 }
 
 int main() {
-    unsigned int n = std::thread::hardware_concurrency();
-    std::cout << "available logical threads: " << n << std::endl;
+    // unsigned int n = std::thread::hardware_concurrency();
+    // std::cout << "available logical threads: " << n << std::endl;
 
     auto start = std::chrono::steady_clock::now();
 
