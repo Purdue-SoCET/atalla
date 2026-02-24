@@ -75,8 +75,13 @@ module control (
                 rd_write_en_comb     = 1'b1;
                 rd_idx_out_comb      = ctrl_if.rd_idx_in; 
                 rd_value_comb        = pc_plus4;
-                redirect_valid_comb  = 1'b1;
                 redirect_target_comb = ctrl_if.pc + ctrl_if.imm;
+                if(ctrl_if.predict_pc && ctrl_if.predict_taken && redirect_target_comb == ctrl_if.predict_pc) begin
+                    // Perfectly predicted jump - no redirect needed
+                    redirect_valid_comb = 1'b0;
+                end else begin
+                    redirect_valid_comb  = 1'b1;
+                end
             end
 
             OP_JALR: begin
@@ -85,6 +90,12 @@ module control (
                 rd_value_comb        = pc_plus4;
                 redirect_valid_comb  = 1'b1;
                 redirect_target_comb = ctrl_if.rs1_value + ctrl_if.imm;
+                if(ctrl_if.predict_pc && ctrl_if.predict_taken && redirect_target_comb == ctrl_if.predict_pc) begin
+                    // Perfectly predicted jump - no redirect needed
+                    redirect_valid_comb = 1'b0;
+                end else begin
+                    redirect_valid_comb  = 1'b1;
+                end
             end
 
             // -------------------------
@@ -94,8 +105,21 @@ module control (
                 rd_write_en_comb     = 1'b1;
                 rd_value_comb        = ctrl_if.rs1_value + ctrl_if.incr7;
                 rd_idx_out_comb      = ctrl_if.rs1_idx; 
-                redirect_valid_comb  = taken_comb;
                 redirect_target_comb = ctrl_if.pc + ctrl_if.imm;
+            
+                if (taken_comb) begin
+                    redirect_target_comb = ctrl_if.pc + ctrl_if.imm;
+                end else begin
+                    redirect_target_comb = pc_plus4;
+                end
+
+                if (ctrl_if.predict_taken != taken_comb) begin
+                    redirect_valid_comb = 1'b1;
+                end else if (ctrl_if.predict_taken && (ctrl_if.predict_pc != redirect_target_comb)) begin
+                    redirect_valid_comb = 1'b1;
+                end else begin
+                    redirect_valid_comb = 1'b0;
+                end
             end
 
             default: begin

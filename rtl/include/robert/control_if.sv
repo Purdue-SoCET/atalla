@@ -16,6 +16,8 @@ interface control_if;
     // -----------------------------
     // Inputs to resolve unit
     // -----------------------------
+    logic predict_taken;
+    logic [31:0] predict_pc;
     logic [6:0]  ctrl_opcode;
 
     logic [31:0] pc;
@@ -38,6 +40,7 @@ interface control_if;
 
     modport dut (
         input  valid_in, ready_in,
+        input predict_pc, predict_taken,
         input  ctrl_opcode, rd_idx_in, rs1_idx, pc, imm, incr7, rs1_value, rs2_value,
         output ready_out, valid_out,
         output rd_idx_out, rd_write_en, rd_value,
@@ -47,6 +50,7 @@ interface control_if;
     modport tb (
         output valid_in, ready_in,
         output ctrl_opcode, rd_idx_in, rs1_idx, pc, imm, incr7, rs1_value, rs2_value,
+        output predict_pc, predict_taken,
         input  ready_out, valid_out,
         input  rd_idx_out, rd_write_en, rd_value,
         input  redirect_valid, redirect_target
