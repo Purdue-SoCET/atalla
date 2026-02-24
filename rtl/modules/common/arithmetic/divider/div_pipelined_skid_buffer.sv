@@ -13,12 +13,12 @@ module div_pipelined_skid_buffer (
 
 // PIPELINE SHIFT REGISTERS
     // p_valid[1:4] tracks where the valid data is in the 4-stage loop
-    logic [4:1] p_valid, p_is_iter2, p_is_spec, p_sign, p_sub_bound;
-    logic signed [9:0] p_exp_diff [4:1];
-    logic [15:0] p_spec_res [4:1];
+    logic [5:1] p_valid, p_is_iter2, p_is_spec, p_sign, p_sub_bound;
+    logic signed [9:0] p_exp_diff [5:1];
+    logic [15:0] p_spec_res [5:1];
 
     logic [15:0] reg_outn, reg_outd, reg_subout;
-    logic [15:0] delay_n1_3, delay_n1_4;   
+    logic [15:0] delay_n1_3, delay_n1_4, delay_n1_5, delay_n1_6;
     logic [15:0] ip_outn, ip_outd, ip_subout;
 
     logic stage2_done, loopback_req, accept_new;
@@ -28,7 +28,7 @@ module div_pipelined_skid_buffer (
     assign stage2_done = p_valid[2] && p_is_iter2[2];
     
     // Iteration 1 data always loops back to start Iteration 2
-    assign loopback_req = p_valid[4]; 
+    assign loopback_req = p_valid[5]; 
 
 // THE SKID BUFFER (8-Deep FIFO)
     logic [15:0] fifo_data [0:7];
@@ -57,9 +57,9 @@ module div_pipelined_skid_buffer (
     assign fifo_wr_en = stage2_done; 
     assign fifo_rd_en = divif.in.ready_out && (fifo_count > 0);
     
-    // SAFETY THROTTLE: If FIFO hits 4, stop accepting inputs. The 4 currently in-flight
-    // instructions will safely land in the 4 remaining empty slots of the FIFO.
-    assign throttle_input = (fifo_count >= 4);
+    // SAFETY THROTTLE: If FIFO hits 3, stop accepting inputs. The 6 currently in-flight
+    // instructions will safely land in the 5 remaining empty slots of the FIFO.
+    assign throttle_input = (fifo_count >= 3);
     
     // We are ready for new data if there's no loopback traffic AND the FIFO isn't throttled
     assign divif.out.ready_in = (nRST == 1'b1) ? (!loopback_req && !throttle_input) : 1'b0;
@@ -148,14 +148,14 @@ module div_pipelined_skid_buffer (
             // Iteration 2 Traffic (Priority)
             nxt_v0 = 1'b1;
             nxt_iter2 = 1'b1; 
-            nxt_muln = delay_n1_4;
+            nxt_muln = delay_n1_5;
             nxt_muld = 16'h0000;
             nxt_f = reg_subout;
-            nxt_sign = p_sign[4];
-            nxt_exp_diff = p_exp_diff[4];
-            nxt_sub_bound = p_sub_bound[4]; 
-            nxt_spec = p_is_spec[4];
-            nxt_spec_res = p_spec_res[4];
+            nxt_sign = p_sign[5];
+            nxt_exp_diff = p_exp_diff[5];
+            nxt_sub_bound = p_sub_bound[5]; 
+            nxt_spec = p_is_spec[5];
+            nxt_spec_res = p_spec_res[5];
         end else if (accept_new) begin
             // Iteration 1 Traffic (New Inputs)
             nxt_v0 = 1'b1;
@@ -192,6 +192,8 @@ module div_pipelined_skid_buffer (
             reg_subout <= 0;
             delay_n1_3 <= 0;
             delay_n1_4 <= 0;
+            delay_n1_5 <= 0;
+            delay_n1_6 <= 0;
         end else begin
             // --- STAGE 1 (Entering Multipliers) ---
             p_valid[1] <= nxt_v0;
@@ -213,8 +215,7 @@ module div_pipelined_skid_buffer (
             reg_outn <= ip_outn; // Lock in the multiplier result
             reg_outd <= ip_outd; 
 
-            // --- STAGE 3 (Entering Subtractor) ---
-            // Token is consumed if it writes to FIFO. Otherwise it passes to Stage 3.
+            // --- STAGE 3 (Entering Subtractor FF1) ---
             p_valid[3] <= p_valid[2] && !stage2_done; 
             p_is_iter2[3] <= p_is_iter2[2];
             p_is_spec[3] <= p_is_spec[2];
@@ -222,9 +223,9 @@ module div_pipelined_skid_buffer (
             p_exp_diff[3] <= p_exp_diff[2];
             p_sub_bound[3] <= p_sub_bound[2];
             p_spec_res[3] <= p_spec_res[2];
-            delay_n1_3 <= reg_outn; // N1 rides alongside the subtractor
+            delay_n1_3 <= reg_outn; 
 
-            // --- STAGE 4 (Leaving Subtractor) ---
+            // --- STAGE 4 (Entering Subtractor FF2) ---
             p_valid[4] <= p_valid[3];
             p_is_iter2[4] <= p_is_iter2[3];
             p_is_spec[4] <= p_is_spec[3];
@@ -232,8 +233,18 @@ module div_pipelined_skid_buffer (
             p_exp_diff[4] <= p_exp_diff[3];
             p_sub_bound[4] <= p_sub_bound[3];
             p_spec_res[4] <= p_spec_res[3];
-            reg_subout <= ip_subout; // Lock in the subtractor result
-            delay_n1_4 <= delay_n1_3; 
+            delay_n1_4 <= delay_n1_3;
+
+            // --- STAGE 5 (Leaving Subtractor) ---
+            p_valid[5] <= p_valid[4];
+            p_is_iter2[5] <= p_is_iter2[4];
+            p_is_spec[5] <= p_is_spec[4];
+            p_sign[5] <= p_sign[4];
+            p_exp_diff[5] <= p_exp_diff[4];
+            p_sub_bound[5] <= p_sub_bound[4];
+            p_spec_res[5] <= p_spec_res[4];
+            reg_subout <= ip_subout; // Lock in the final subtractor result
+            delay_n1_5 <= delay_n1_4;
         end
     end
 
@@ -267,14 +278,17 @@ module div_pipelined_skid_buffer (
     // Subtractor runs continuously on whatever `reg_outd` feeds it
     addsub_bf16 sub (
         .clk(CLK),
-        .nRST(nRST), 
+        .nRST(nRST),
+        .start(1'b1),
+        .stall(1'b0),
         .bf1_in(TWO),
         .bf2_in(reg_outd),
         .op(1'b1),
         .bf_out(ip_subout),
         .overflow(),
         .underflow(),
-        .invalid()
+        .invalid(),
+        .done()
     );
 
 endmodule
