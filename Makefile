@@ -65,6 +65,18 @@ memory_subsystem.wav:
 	vlog -sv +incdir+./src/include ./src/include/*.vh ./src/testbench/memory_subsystem_tb.sv ./src/modules/*.sv
 	vsim -voptargs="+acc" work.memory_subsystem_tb -sv_lib memory -do "do $(SCRDIR)/memory_subsystem.do; run $(SIMTIME);" -suppress 2275
 
+
+valu.wav:
+	vlog -sv +incdir+./src/include +incdir+./src/include/vector \
+		./src/include/vector_pkg.vh \
+		./src/include/valu_if.vh \
+		./src/modules/left_shift_add_bf16.sv \
+		./src/modules/add_bf16.sv \
+		./src/modules/addsub_bf16.sv \
+		./src/modules/valu.sv \
+		./src/testbench/valu_tb.sv && \
+	vsim -voptargs="+acc" work.valu_tb -do "add wave -r /*; run -all;"
+
 system.wav:
 	vlog -sv +incdir+./src/include ./src/include/*.vh ./src/testbench/system_tb.sv ./src/modules/*.sv
 	vsim -voptargs="+acc" work.system_tb -sv_lib memory -do "do ./src/waves/system.do; run -a;" -suppress 2275
