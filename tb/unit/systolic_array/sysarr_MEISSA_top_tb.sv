@@ -15,6 +15,9 @@ module sysarr_MEISSA_top_tb();
     // parameter int N = 4;
     // parameter WIDTH = 16;
 
+    integer total_passed_tests = 0;
+    integer total_tests = 0;
+
     // clk/reset
     logic nRST;
 
@@ -26,7 +29,7 @@ module sysarr_MEISSA_top_tb();
     logic CLK = 0;
     always #(PERIOD/2) CLK++;
     // FILE I/O
-    int out_file, file, actual_output_file;
+    int expected_out_file, file, actual_output_file;
     /* verilator lint_off UNUSEDSIGNAL */
     string line, test_name;
     /* verilator lint_off UNUSEDSIGNAL */
@@ -115,15 +118,15 @@ module sysarr_MEISSA_top_tb();
         end
     endtask
 
-    task get_m_output();
+    task get_m_expected_output();
         string token;
         for (int i = 0 ; i < ARRAY_DIM; i++) begin
-            void'($fgets(line, out_file));
+            void'($fgets(line, expected_out_file));
             for (int j = 0; j < ARRAY_DIM; j++) begin
-                token = line.substr(j * 7, 6);
+                token = line.substr(j * 7, (j*7)+6);
                 void'($sscanf(token, "%h", temp_exp_outputs[i][j]));
             end
-            m_exp_outputs[i] = {>>{temp_exp_outputs[i]}};
+            // m_exp_outputs[i] = {>>{temp_exp_outputs[i]}};
         end
     endtask
 
@@ -251,16 +254,20 @@ module sysarr_MEISSA_top_tb();
     
     // any file
     file = $fopen(PATH_TO_INPUT, "r");
-    out_file = $fopen(PATH_TO_EXPECTED_RESULT, "r");
+    expected_out_file = $fopen(PATH_TO_EXPECTED_RESULT, "r");
     actual_output_file = $fopen(PATH_TO_RESULT, "w");
     reset();
 
     forever begin
         bit found_test;
+        bit found_expected_result;
         int row;
         bit found_input;
+        bit is_result_correct;
         found_test = 0;
+        found_expected_result = 0;
         found_input = 0;
+        is_result_correct = 1;
         
         while (!found_test && !found_input) begin
             if ($fgets(line, file) == 0) begin
@@ -311,15 +318,53 @@ module sysarr_MEISSA_top_tb();
                 row++;
             end
         end
-        write_matrix(test_name);
+
+        // Read expected result
+        while (!found_expected_result) begin
+            if ($fgets(line, expected_out_file) == 0) begin
+               break;
+            end
+            if (line.len() >= 4 && (line.substr(0,3) == "Test")) begin
+                found_expected_result = 1;
+            end
+        end
+        if (found_expected_result) begin
+            get_m_expected_output();
+        end
+        // Compare actual vs expected
+        for(int i = 0; i < ARRAY_DIM; i++) begin
+            for (int j = 0; j < ARRAY_DIM; j++) begin
+                if (temp_act_outputs[i][j] !== temp_exp_outputs[i][j]) begin
+                    if(temp_act_outputs[i][j] == 16'h8000 && temp_exp_outputs[i][j] == 16'h0000) begin
+                        // Allow 0x8000 and 0x0000 to be considered equal (treating as signed values)
+                        continue;
+                    end
+                    else begin
+                        is_result_correct = 0;
+                    end
+                end
+            end
+        end
+        total_tests++;
+        if(!is_result_correct) begin
+            write_matrix(test_name);
+        end
+        else begin
+            total_passed_tests++;
+        end
+
+        // write_matrix(test_name);
     end
 
     test_name = "End of Tests";
 
     $fclose(file);
-    $fclose(out_file);
+    $fclose(expected_out_file);
     $fclose(actual_output_file);
     #50;
+
+    $display("Passed Tests: %0d / %0d", total_passed_tests, total_tests);
+
     $finish;
   end
 
