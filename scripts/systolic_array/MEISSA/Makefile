@@ -6,9 +6,9 @@ CFLAGS=-std=c++17 -Wall -g
 ALL_SRC=$(wildcard *.cpp)
 
 # The name of the resulting executable
-APP=sim
+APP=generate_test_vectors
 
-sim:
+test_vectors:
 	$(CC) $(CFLAGS) $(ALL_SRC) -o $(APP)	
 
 clean:

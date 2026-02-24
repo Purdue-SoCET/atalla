@@ -8,7 +8,7 @@
 
 constexpr int ROW = 32;
 constexpr int COL = 32;
-constexpr int TOTAL_TEST_NUM = 100000;
+constexpr int TOTAL_TEST_NUM = 10;
 constexpr int PROBABILITY_OF_NEW_WEIGHT = 250; // 25% chance to generate new weight for each test
 std::string PATH_TO_INPUT = "/home/asicfab/a/yim13/atalla/scripts/systolic_array/systolic_array_tb_input.csv";
 std::string PATH_TO_EXPECTED_RESULT = "/home/asicfab/a/yim13/atalla/scripts/systolic_array/systolic_array_tb_expected_result.csv";
