@@ -48,7 +48,7 @@ always_comb begin
     cur_input_2 = portmap.input2;
 
     nlatched_sMult = latched_sMult;
-    cur_sMult = portmap.sMult;
+    cur_sMult = portmap.valid_in && (alu_valid == portmap.sMult_valid) ? 1 : 0;
 
     nlatched_imm_src = latched_imm_src;
     cur_imm_src = portmap.imm_src;
@@ -79,7 +79,7 @@ always_comb begin
             nlatched_imm_src = portmap.imm_src;
             nlatched_imm = portmap.imm;
 
-            nlatched_sMult = portmap.sMult;
+            nlatched_sMult = portmap.valid_in && (alu_valid == portmap.sMult_valid) ? 1 : 0;
 
             nlatchedRD = portmap.rdIn;
         end

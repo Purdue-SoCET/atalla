@@ -33,9 +33,9 @@ module ld_st_unit #()
         nlatched_store = latched_store;
         cur_store = ld_st_if.data_in;
         nlatched_REN = latched_REN;
-        cur_WEN = ld_st_if.st;
+        cur_REN = portmap.valid_in && (alu_valid == portmap.ld_valid) ? 1 : 0;
         nlatched_WEN = latched_WEN;
-        cur_REN = ld_st_if.ld;
+        cur_WEN = portmap.valid_in && (alu_valid == portmap.st_valid) ? 1 : 0;
         nlatched_halfword = latched_halfword;
         cur_halfword = ld_st_if.halfWord;
         nlatchedRD = latchedRD;
@@ -50,8 +50,8 @@ module ld_st_unit #()
 
                 nlatched_addr = ld_st_if.addr;
                 nlatched_store = ld_st_if.data_in;
-                nlatched_REN = ld_st_if.ld;
-                nlatched_WEN = ld_st_if.st;
+                nlatched_REN = portmap.valid_in && (alu_valid == portmap.ld_valid) ? 1 : 0;
+                nlatched_WEN = portmap.valid_in && (alu_valid == portmap.st_valid) ? 1 : 0;
                 nlatched_halfword = ld_st_if.halfWord;
                 nlatchedRD = ld_st_if.rdIn;
 

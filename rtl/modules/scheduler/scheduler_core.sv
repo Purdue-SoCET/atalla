@@ -2,29 +2,56 @@
 `include "scalar_wb_pkg.vh"
 `include "execution_unit_if.sv"
 `include "scheduler_pkg.sv"
+`include "decode_2_if.vh"
+`include "atalla_isa_types.vh"
 
 import execution_unit_types_pkg::*;
 import scalar_wb_pkg::*;
 import scheduler_pkg::*;
 
-module scheduler_core #()
+module scheduler_core #(
+    parameter NUM_SCALAR_INSTRS = 4,
+)
 (
     input logic CLK, nRST,
-    input execution_unit_types_pkg::in_DEC_t slot_1, slot_2, slot_3, slot_4,
+    //dcache
     input logic hit,
     input logic [31:0] data_load,
+    //dec2 in
+    input instr_t scalar_instrs [3:0],
+    input logic predict_taken_in,
+    input word_t pc_in, pc_pred_addr_in,
+    output logic ready,
     output scheduler_pkg::EXEC_WB_LATCH WB_output
 );
 
     scheduler_pkg::EXEC_WB_LATCH n_EX_WB_latch, EX_WB_latch;
+    execution_unit_types_pkg::in_DEC2_EX_t [NUM_SCALAR_INSTRS-1:0] n_DEC2_EX_latch, DEC2_EX_latch;
 
     //interfaces
     s_wb_arbiter_if scalar_wb_if ();
     execution_unit_if scalar_ex_if ();
+    decode_2_if decode_2_if ();
 
     //instantiations
     s_wb_arbiter S_WB_ARBITER(.CLK(CLK), .nRST(nRST), .vif(scalar_wb_if));
     execute_stage S_EXECUTE(.clk(CLK), .nRST(nRST), .ex_if(scalar_ex_if));
+    decode_2 S_V_DECODE_2(.CLK(CLK), .nRST(nRST), .d2if(decode_2_if));
+
+
+    //continuous assignment for DEC2/WB
+    assign n_DEC2_EX_latch.scalar_type_enable = decode_2_if.decoded_scalar_instrs.fu_enable;
+    assign n_DEC2_EX_latch.valid_in = decode_2_if.decoded_scalar_instrs.valid_in;
+    assign n_DEC2_EX_latch.imm_src = decode_2_if.decoded_scalar_instrs.imm_src;
+    assign n_DEC2_EX_latch.valid_in = decode_2_if.decoded_scalar_instrs.valid_in;
+    assign n_DEC2_EX_latch.halfWord = decode_2_if.decoded_scalar_instrs.halfword;
+    assign n_DEC2_EX_latch.imm = decode_2_if.decoded_scalar_instrs.imm;
+    assign n_DEC2_EX_latch.incr7 = decode_2_if.decoded_scalar_instrs.incr7;
+    assign n_DEC2_EX_latch.op = decode_2_if.decoded_scalar_instrs.op;
+    assign n_DEC2_EX_latch.rs1_idx = decode_2_if.decoded_scalar_instrs.rs1;
+    assign n_DEC2_EX_latch.rs1_value = decode_2_if.decoded_scalar_instrs.r1_data;
+    assign n_DEC2_EX_latch.rs2_value = decode_2_if.decoded_scalar_instrs.r2_data;
+    assign n_DEC2_EX_latch.rdIn = decode_2_if.decoded_scalar_instrs.rdIn;
 
     //continuous assignment for EX/WB
     //ld/st unit

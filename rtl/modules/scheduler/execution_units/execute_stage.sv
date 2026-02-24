@@ -5,7 +5,9 @@
 `include "bfD_sD_bfInt_intBF_if.sv"
 `include "bfA_bfM_bfS_bfSLT_if.sv"
 `include "ld_st_unit_if.sv"
+`include "atalla_isa_types.vh"
 import execution_unit_types_pkg::*;
+import atalla_isa_pkg::*;
 
 module execute_stage
 (
@@ -13,7 +15,7 @@ module execute_stage
     execution_unit_if.execution_units ex_if
 );
     logic ex1_valid, ex2_valid, ex3_valid, ex4_valid, ex5_valid;
-    execution_unit_types_pkg::in_DEC_t post_xbar_ex1, post_xbar_ex2, post_xbar_ex3, post_xbar_ex4, post_xbar_ex5;
+    execution_unit_types_pkg::in_DEC2_EX_t post_xbar_ex1, post_xbar_ex2, post_xbar_ex3, post_xbar_ex4, post_xbar_ex5;
     alu_control_if unit1_if ();
     bfD_sD_bfInt_intBF_if unit2_if ();
     bfA_bfM_bfS_bfSLT_if unit3_if ();
@@ -22,7 +24,7 @@ module execute_stage
 
     xbar_4x5_exec_comb crossbar
     (
-        .slot_1(ex_if.slot_1), .slot_2(ex_if.slot_2), .slot_3(ex_if.slot_3), .slot_4(ex_if.slot_4),
+        .slot_1(ex_if.DEC2_inputs[0]), .slot_2(ex_if.DEC2_inputs[1]), .slot_3(ex_if.DEC2_inputs[2]), .slot_4(ex_if.DEC2_inputs[3]),
         .ex1_in(post_xbar_ex1), .ex2_in(post_xbar_ex2), .ex3_in(post_xbar_ex3), .ex4_in(post_xbar_ex4), .ex5_in(post_xbar_ex5),
         .ex1_valid(ex1_valid), .ex2_valid(ex2_valid), .ex3_valid(ex3_valid), .ex4_valid(ex4_valid), .ex5_valid(ex5_valid)
     );
@@ -45,8 +47,7 @@ module execute_stage
     assign unit1_if.incr7 = post_xbar_ex1.incr7;
     assign unit1_if.imm = post_xbar_ex1.imm;
     assign unit1_if.op = post_xbar_ex1.op;
-    assign unit1_if.alu_valid = post_xbar_ex1.alu_valid;
-    assign unit1_if.control_valid = post_xbar_ex1.control_valid;
+    assign unit1_if.scalar_type_enable = post_xbar_ex1.scalar_type_enable;
     //outputs
     assign ex_if.ex1.valid_out = unit1_if.valid_out;
     assign ex_if.ex1.data_out = unit1_if.rd_value;
@@ -64,11 +65,7 @@ module execute_stage
     assign unit2_if.input2 = post_xbar_ex2.rs2_value;
     assign unit2_if.rdIn = post_xbar_ex2.rdIn;
     assign unit2_if.valid_in = ex2_valid;
-    assign unit2_if.bf_div = post_xbar_ex2.bf_div_valid;
-    assign unit2_if.s_div = post_xbar_ex2.s_div_valid;
-    assign unit2_if.s_mod = post_xbar_ex2.s_mod_valid;
-    assign unit2_if.BF_to_int = post_xbar_ex2.BF_to_int_valid;
-    assign unit2_if.int_to_BF = post_xbar_ex2.int_to_BF_valid;
+    assign unit2_if.scalar_type_enable = post_xbar_ex2.scalar_type_enable;
     assign unit2_if.imm = post_xbar_ex2.imm;
     assign unit2_if.imm_src = post_xbar_ex2.imm_src;
     //outputs
@@ -85,10 +82,7 @@ module execute_stage
     assign unit3_if.bf2_in = post_xbar_ex3.rs2_value[15:0];
     assign unit3_if.rdIn = post_xbar_ex3.rdIn;
     assign unit3_if.valid_in = ex3_valid;
-    assign unit3_if.add = post_xbar_ex3.bf_add_valid;
-    assign unit3_if.sub = post_xbar_ex3.bf_sub_valid;
-    assign unit3_if.mult = post_xbar_ex3.bf_mult_valid;
-    assign unit3_if.slt = post_xbar_ex3.bf_slt_valid;
+    assign unit3_if.scalar_type_enable = post_xbar_ex3.scalar_type_enable;
     //outputs
     assign ex_if.ex3.valid_out = unit3_if.valid_out;
     assign ex_if.ex3.data_out = {16'b0, unit3_if.bf_out};
@@ -103,7 +97,7 @@ module execute_stage
     assign unit4_if.input2 = post_xbar_ex4.rs2_value;
     assign unit4_if.rdIn = post_xbar_ex4.rdIn;
     assign unit4_if.valid_in = ex4_valid;
-    assign unit4_if.sMult = post_xbar_ex4.sMult_valid;
+    assign unit4_if.scalar_type_enable = post_xbar_ex4.scalar_type_enable;
     assign unit4_if.imm = post_xbar_ex4.imm;
     assign unit4_if.imm_src = post_xbar_ex4.imm_src;
     //outputs
@@ -120,8 +114,7 @@ module execute_stage
     assign unit5_if.addr = post_xbar_ex5.imm;
     assign unit5_if.rdIn = post_xbar_ex5.rdIn;
     assign unit5_if.valid_in = ex5_valid;
-    assign unit5_if.ld = post_xbar_ex5.ld_valid;
-    assign unit5_if.st = post_xbar_ex5.st_valid;
+    assign unit5_if.scalar_type_enable = post_xbar_ex5.scalar_type_enable;
     assign unit5_if.halfWord = post_xbar_ex5.halfword;
     //outputs
     assign ex_if.ex5.valid_out = unit5_if.valid_out;

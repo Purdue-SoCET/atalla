@@ -1,7 +1,9 @@
 `ifndef LD_ST_UNIT_IF_VH
 `define LD_ST_UNIT_IF_VH
+`include "atalla_isa_types.vh"
 
 interface ld_st_unit_if;
+    import atalla_isa_pkg::*;
 
 
     //to dcache
@@ -15,7 +17,8 @@ interface ld_st_unit_if;
     //from decode 2
     logic [31:0] addr, data_in;
     logic [7:0] rdIn;
-    logic halfWord, valid_in, ld, st;
+    logic halfWord, valid_in;
+    scalar_fu_enable_t scalar_type_enable;
 
     //to decode 2
     logic ready_in;
@@ -29,13 +32,13 @@ interface ld_st_unit_if;
     logic valid_out;
 
     modport ld_st (
-        input rdIn, halfWord, valid_in, ld, st, data_load, hit, ready_out, addr, data_in,
+        input rdIn, halfWord, valid_in, scalar_type_enable, data_load, hit, ready_out, addr, data_in,
         output WEN, REN, data_store, data_addr, ready_in, data_out, rdOut, valid_out
     );
 
     modport tb (
         input WEN, REN, data_store, data_addr, ready_in, data_out, rdOut, valid_out,
-        output rdIn, halfWord, valid_in, ld, st, data_load, hit, ready_out, addr, data_in
+        output rdIn, halfWord, valid_in, scalar_type_enable, data_load, hit, ready_out, addr, data_in
     );
 
 endinterface

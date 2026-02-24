@@ -80,15 +80,15 @@ always_comb begin
     cur_input_2 = portmap.input2;
 
     nlatched_BFdiv = latched_BFdiv;
-    cur_BFdiv = portmap.bf_div;
+    cur_BFdiv = portmap.valid_in && (alu_valid == portmap.bf_div_valid) ? 1 : 0;
     nlatched_Sdiv = latched_Sdiv;
-    cur_Sdiv = portmap.s_div;
+    cur_Sdiv = portmap.valid_in && (alu_valid == portmap.s_div_valid) ? 1 : 0;
     nlatched_Smod = latched_Smod;
-    cur_Smod = portmap.s_mod;
+    cur_Smod = portmap.valid_in && (alu_valid == portmap.s_mod_valid) ? 1 : 0;
     nlatched_BF_Int = latched_BF_Int;
-    cur_BF_Int = portmap.BF_to_int;
+    cur_BF_Int = portmap.valid_in && (alu_valid == portmap.BF_to_int_valid) ? 1 : 0;
     nlatched_Int_BF = latched_Int_BF;
-    cur_Int_BF = portmap.int_to_BF;
+    cur_Int_BF = portmap.valid_in && (alu_valid == portmap.int_to_BF_valid) ? 1 : 0;
 
     nlatched_imm_src = latched_imm_src;
     cur_imm_src = portmap.imm_src;
@@ -117,11 +117,11 @@ always_comb begin
             nlatched_input1 = portmap.input1;
             nlatched_input2 = portmap.input2;
 
-            nlatched_BFdiv = portmap.bf_div;
-            nlatched_Sdiv = portmap.s_div;
-            nlatched_Smod = portmap.s_mod;
-            nlatched_BF_Int = portmap.BF_to_int;
-            nlatched_Int_BF = portmap.int_to_BF;
+            nlatched_BFdiv = portmap.valid_in && (alu_valid == portmap.bf_div_valid) ? 1 : 0;
+            nlatched_Sdiv = portmap.valid_in && (alu_valid == portmap.s_div_valid) ? 1 : 0;
+            nlatched_Smod = portmap.valid_in && (alu_valid == portmap.s_mod_valid) ? 1 : 0;
+            nlatched_BF_Int = portmap.valid_in && (alu_valid == portmap.BF_to_int_valid) ? 1 : 0;
+            nlatched_Int_BF = portmap.valid_in && (alu_valid == portmap.int_to_BF_valid) ? 1 : 0;
 
             nlatched_imm_src = portmap.imm_src;
             nlatched_imm = portmap.imm;

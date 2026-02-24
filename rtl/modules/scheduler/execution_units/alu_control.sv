@@ -1,6 +1,8 @@
 `include "alu_control_if.sv"
 `include "scalar_alu_if.sv"
 `include "control_if.sv"
+`include "atalla_isa_types.vh"
+import atalla_isa_pkg::*;
 
 module alu_control #()
 (
@@ -83,9 +85,9 @@ module alu_control #()
         op_nlatch = op_latch;
         cur_op = portmap.op;
         alu_valid_nlatch = alu_valid_latch;
-        cur_alu_valid = portmap.alu_valid;
+        cur_alu_valid = portmap.valid_in && (alu_valid == portmap.scalar_type_enable) ? 1 : 0;
         control_valid_nlatch = control_valid_latch;
-        cur_control_valid = portmap.control_valid;
+        cur_control_valid = portmap.valid_in && (control_valid == portmap.scalar_type_enable) ? 1 : 0;
 
 
         case (cur_state)
@@ -104,8 +106,8 @@ module alu_control #()
                 rdIn_nlatch = portmap.rdIn;
                 rs1_idx_nlatch = portmap.rs1_idx;
                 op_nlatch = portmap.op;
-                alu_valid_nlatch = portmap.alu_valid;
-                control_valid_nlatch = portmap.control_valid;
+                alu_valid_nlatch = portmap.valid_in && (alu_valid == portmap.scalar_type_enable) ? 1 : 0;
+                control_valid_nlatch = portmap.valid_in && (control_valid == portmap.scalar_type_enable) ? 1 : 0;
 
             end
             latch: begin
