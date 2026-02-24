@@ -15,6 +15,7 @@ from src.misc.opcode_table import OPCODES, name_to_opcode
 INVERT_OPCODES = name_to_opcode()
 VIRTUAL_PACKET_SIZE = 4 
 REAL_PACKET_SIZE = 4
+RAW_VI_IMM_MNEMONICS = {"shift.vi", "rsum.vi", "rmin.vi", "rmax.vi"}
 
 IntLike = int
 BytesLike = Union[bytes, bytearray, memoryview]
@@ -228,6 +229,7 @@ def encode_instruction(instr_dict):
 
 REG_RE = re.compile(r"^\$(?:x)?(\d+)$", re.IGNORECASE)
 IMM_RE = re.compile(r"^[+-]?(?:0x[0-9a-fA-F]+|0b[01]+|\d+)$")
+FLOAT_RE = re.compile(r"^[+-]?(?:\d+\.\d*|\.\d+|\d+)(?:[eE][+-]?\d+)?$")
 MEM_RE = re.compile(r"^([+-]?(?:0x[0-9a-fA-F]+|0b[01]+|\d+))\(\s*\$(?:x)?(\d+)\s*\)$", re.IGNORECASE)
 LABEL_RE = re.compile(r"^[A-Za-z_]\w*:$")
 
@@ -236,6 +238,14 @@ def parse_int(s: str) -> int:
     if not IMM_RE.match(s):
         raise ValueError(f"Bad immediate: {s!r}")
     return int(s, 0)  # supports 123, 0x10, 0b1010, -4
+
+def parse_number(s: str) -> float:
+    s = s.strip()
+    if IMM_RE.match(s):
+        return float(int(s, 0))
+    if FLOAT_RE.match(s):
+        return float(s)
+    raise ValueError(f"Bad numeric immediate: {s!r}")
 
 def parse_reg(s: str) -> int:
     s = s.strip()
@@ -369,15 +379,85 @@ def asm_to_instr_dict(mnemonic: str, ops: list[str]) -> dict:
         return d
 
     if instr_type == "VI":
-        # addi.vi vd, vs1, imm16 [, mask]
+        # VI format supports two immediate encodings:
+        # 1) arithmetic/scalar-style .vi ops use BF16-encoded immediate payload
+        # 2) control-style .vi ops (shift/rsum/rmin/rmax) use raw immediate bits
         d["vd"]  = parse_reg(ops[0])
         d["vs1"] = parse_reg(ops[1])
-        imm16 = parse_int(ops[2])
+        if mnemonic in RAW_VI_IMM_MNEMONICS:
+            imm16 = parse_int(ops[2]) & 0xFFFF
+        else:
+            imm16 = _bf16_bits(parse_number(ops[2]))
         lo, hi = split_imm16(imm16)
         d["imm8_1"] = lo
         d["imm8_2"] = hi
         if len(ops) >= 4:
             d["mask"] = parse_int(ops[3])
+        return d
+
+    if instr_type == "VV":
+        # add.vv vd, vs1, vs2, mask, sac
+        d["vd"] = parse_reg(ops[0])
+        d["vs1"] = parse_reg(ops[1])
+        d["vs2"] = parse_reg(ops[2])
+        d["mask"] = parse_int(ops[3])
+        d["sac"] = parse_int(ops[4])
+        return d
+
+    if instr_type == "VS":
+        # add.vs vd, vs1, rs1, mask
+        d["vd"] = parse_reg(ops[0])
+        d["vs1"] = parse_reg(ops[1])
+        d["rs1"] = parse_reg(ops[2])
+        d["mask"] = parse_int(ops[3])
+        return d
+
+    if instr_type == "VM":
+        # vreg.ld vd, rs1, num_cols, num_rows, sid, rc, rc_id
+        d["vd"] = parse_reg(ops[0])
+        d["rs1"] = parse_reg(ops[1])
+        d["num_cols"] = parse_int(ops[2])
+        d["num_rows"] = parse_int(ops[3])
+        d["sid"] = parse_int(ops[4])
+        d["rc"] = parse_int(ops[5])
+        d["rc_id"] = parse_int(ops[6])
+        return d
+
+    if instr_type == "SDMA":
+        # scpad.ld rs1, rs2, num_cols, num_rows, sid
+        d["rs1"] = parse_reg(ops[0])
+        d["rs2"] = parse_reg(ops[1])
+        d["num_cols"] = parse_int(ops[2])
+        d["num_rows"] = parse_int(ops[3])
+        d["sid"] = parse_int(ops[4])
+        return d
+
+    if instr_type == "MTS":
+        # mv.mts rd, vms
+        d["rd"] = parse_reg(ops[0])
+        d["vms"] = parse_int(ops[1])
+        return d
+
+    if instr_type == "STM":
+        # mv.stm vmd, rs1
+        d["vmd"] = parse_int(ops[0])
+        d["rs1"] = parse_reg(ops[1])
+        return d
+
+    if instr_type == "MVV":
+        # mgt.mvv vmd, vs1, vs2, mask
+        d["vmd"] = parse_int(ops[0])
+        d["vs1"] = parse_reg(ops[1])
+        d["vs2"] = parse_reg(ops[2])
+        d["mask"] = parse_int(ops[3])
+        return d
+
+    if instr_type == "MVS":
+        # mgt.mvs vmd, vs1, rs1, mask
+        d["vmd"] = parse_int(ops[0])
+        d["vs1"] = parse_reg(ops[1])
+        d["rs1"] = parse_reg(ops[2])
+        d["mask"] = parse_int(ops[3])
         return d
 
     if instr_type == "VTS":
@@ -564,18 +644,22 @@ class DRAMWriter:
         self.write_bytes(addr, b)
 
 
-    def _word_addrs(self) -> List[int]:
+    def _word_addrs(self, *, stride: int = 2) -> List[int]:
         if not self._bytes:
             return []
+        if stride <= 0:
+            raise ValueError("stride must be positive")
         mn = min(self._bytes.keys())
         mx = max(self._bytes.keys())
-        start = mn & ~0x3
-        end = (mx & ~0x3)
-        return list(range(start, end + 4, 4))
+        # Emit overlapping 32-bit words at even-byte boundaries by default.
+        # This preserves bf16 placement in output (e.g., words starting at 0x2, 0x4, ...).
+        start = mn - (mn % stride)
+        end = mx - (mx % stride)
+        return list(range(start, end + stride, stride))
 
-    def to_u32_words(self, *, include_zeros: bool = False) -> Dict[int, int]:
+    def to_u32_words(self, *, include_zeros: bool = False, stride: int = 2) -> Dict[int, int]:
         out: Dict[int, int] = {}
-        for wa in self._word_addrs():
+        for wa in self._word_addrs(stride=stride):
             bs = [self._bytes.get(wa + i, 0) for i in range(4)]
             if self.endian == "little":
                 w = bs[0] | (bs[1] << 8) | (bs[2] << 16) | (bs[3] << 24)
@@ -586,8 +670,8 @@ class DRAMWriter:
                 out[wa] = w & 0xFFFFFFFF
         return out
 
-    def render_data_mem(self, *, include_zeros: bool = False) -> str:
-        words = self.to_u32_words(include_zeros=include_zeros)
+    def render_data_mem(self, *, include_zeros: bool = False, stride: int = 2) -> str:
+        words = self.to_u32_words(include_zeros=include_zeros, stride=stride)
         lines = [f"{addr:08X}: {val:08X}" for addr, val in sorted(words.items())]
         return "\n".join(lines)
 

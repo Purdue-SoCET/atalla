@@ -177,7 +177,6 @@ def sdma_store(
 
     for i in range(0, NR):
         slot = (scpad_base_row + i) % scpad.S
-        
         for j in range(0, NC):
             bank = j
             if bank >= scpad.B:

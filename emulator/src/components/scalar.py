@@ -9,14 +9,27 @@ class ScalarALU:
     def __init__(self, num_lanes: int = 32):
         self.num_lanes = int(num_lanes)
 
+    @staticmethod
+    def _word_to_int32(x):
+        """
+        Reinterpret input as a 32-bit word, then view it as signed INT32.
+        This preserves hardware-like wrap semantics for values stored as
+        unsigned 32-bit register words.
+        """
+        return np.uint32(int(x) & 0xFFFFFFFF).view(np.int32).item()
+
     def _as_int32(self, x):
         if isinstance(x, np.ndarray):
+            if np.issubdtype(x.dtype, np.integer):
+                return x.astype(np.uint32).view(np.int32)
             return x.astype(np.int32)
+        if isinstance(x, (int, np.integer)):
+            return np.int32(self._word_to_int32(x))
         return np.int32(x)
 
     def _broadcast_scalar(self, x):
         if isinstance(x, (int, np.integer)):
-            return np.full(self.num_lanes, np.int32(x), dtype=np.int32)
+            return np.full(self.num_lanes, self._word_to_int32(x), dtype=np.int32)
         x = np.asarray(x, dtype=np.int32)
         if x.size == 1:
             return np.full(self.num_lanes, x[0], dtype=np.int32)
