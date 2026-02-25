@@ -28,6 +28,10 @@ module mul_FU (
         .seq_if(lsif)
     );
 
+    //unused, only used in ALU FU
+    assign lsif.in.aluop = ALU_ADD;
+    assign lsif.in.rm = '0;
+
     mul_if mif();
     mul_bf16_fu mul(
         .CLK(CLK),
@@ -64,7 +68,7 @@ module mul_FU (
     assign lsif.in.ready_out = mif.out.ready_in;
 
     //mask
-        lane_unit_fifo #(
+    lane_unit_fifo #(
         .DEPTH(4),   // Twice as big as i think i need
         .DWIDTH(1)    // Single mask bit
     ) mask_fifo (

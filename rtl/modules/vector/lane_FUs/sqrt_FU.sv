@@ -28,6 +28,10 @@ module sqrt_FU (
         .seq_if(lsif)
     );
 
+    //unused, only used in ALU FU
+    assign lsif.in.aluop = ALU_ADD;
+    assign lsif.in.rm = '0;
+
     sqrt_if srif();
     sqrt_bf16 sqrt(
         .CLK(CLK),

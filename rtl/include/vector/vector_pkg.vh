@@ -171,6 +171,22 @@ package vector_pkg;
         ALU_MEQ = 4'b1000, // Mask equal (v1 == v2)
         ALU_MNEQ = 4'b1001 // Mask not equal (v1 != v2)
     } alu_op_t;
+
+    typedef struct packed {
+        logic [ESZ-1:0] v1;
+        logic [ESZ-1:0] v2;
+        alu_op_t aluop;
+        logic rm; // Reduction mode
+        logic mask; // Element mask bit
+        logic valid_in;
+        logic ready_out;
+    } valu_if_in_t;
+
+    typedef struct packed {
+        logic [ESZ-1:0] result;
+        logic valid_out;
+        logic ready_in;
+    } valu_if_out_t;
     
     // Lane sequencer in/out (per lane, per issue slot)
     typedef struct packed {
@@ -179,6 +195,8 @@ package vector_pkg;
         logic [SLICE_W - 1:0] mask;
         logic valid_in;
         logic ready_out;
+        alu_op_t [SLICE_W - 1:0] aluop;
+        logic [SLICE_W - 1:0] rm;
 
     } lane_sequencer_if_in_t;
 
@@ -189,6 +207,8 @@ package vector_pkg;
         logic mask;
         logic valid_out;
         logic ready_in;
+        alu_op_t aluop;
+        logic rm;
     } lane_sequencer_if_out_t;
 
     // =========================================================================

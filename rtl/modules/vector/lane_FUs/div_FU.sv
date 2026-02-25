@@ -28,6 +28,10 @@ module div_FU (
         .seq_if(lsif)
     );
 
+    //unused, only used in ALU FU
+    assign lsif.in.aluop = ALU_ADD;
+    assign lsif.in.rm = '0;
+
     div_if dvif();
     div div(
         .CLK(CLK),

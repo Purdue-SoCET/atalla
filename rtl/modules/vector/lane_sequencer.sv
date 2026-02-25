@@ -28,7 +28,8 @@ module lane_sequencer(
     logic [IDX_WIDTH-1:0] elem_idx, elem_idx_n; // count n track element output
 
     logic [SLICE_W-1:0][ESZ-1:0] v1_reg, v2_reg, v1_reg_n, v2_reg_n; // Registers v1 v2
-    logic [SLICE_W-1:0] mask_reg, mask_reg_n; // Registers for mask bits of elements
+    logic [SLICE_W-1:0] mask_reg, mask_reg_n, rm_reg, rm_n; // Registers for mask bits of elements, and rm
+    alu_op_t [SLICE_W-1:0] aluop_reg, aluop_n;
 
     logic valid_reg, valid_reg_n; // register for valid signal
     logic ready_reg, ready_reg_n; // register for thr ready signal
@@ -66,11 +67,15 @@ module lane_sequencer(
             v1_reg <= '0;
             v2_reg <= '0;
             mask_reg <= '0;
+            rm_reg <= '0;
+            aluop_reg <= '0;
         end
         else begin
             v1_reg <= v1_reg_n;
             v2_reg <= v2_reg_n;
             mask_reg <= mask_reg_n;
+            rm_reg <= rm_n;
+            aluop_reg <= aluop_n;
         end
     end
 
@@ -78,12 +83,16 @@ module lane_sequencer(
         v1_reg_n = v1_reg;
         v2_reg_n = v2_reg;
         mask_reg_n = mask_reg;
+        rm_n = rm_reg;
+        aluop_n = aluop_reg;
 
         // new slice when ready and valid
         if (seq_if.in.valid_in & ready_reg) begin
             v1_reg_n = seq_if.in.v1;
             v2_reg_n = seq_if.in.v2;
             mask_reg_n = seq_if.in.mask;
+            rm_n = seq_if.in.rm;
+            aluop_n = seq_if.in.aluop;
         end
     end
 
@@ -91,6 +100,8 @@ module lane_sequencer(
     assign seq_if.out.v1 = v1_reg[elem_idx];
     assign seq_if.out.v2 = v2_reg[elem_idx];
     assign seq_if.out.mask = mask_reg[elem_idx];
+    assign seq_if.out.rm = rm_reg[elem_idx];
+    assign seq_if.out.aluop = aluop_reg[elem_idx];
 
     always_ff @(posedge CLK or negedge nRST) begin: valid_ff
         if (!nRST) begin
