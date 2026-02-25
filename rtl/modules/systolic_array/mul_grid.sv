@@ -6,7 +6,7 @@
 import sys_arr_pkg::*;
 /* verilator lint_off IMPORTSTAR */
 
-module mul_grid (
+module mul_grid #(
     parameter int FP_BF = 1           // Determine whether to use FP16 (1) or BF16 (0)
 )(
     input logic clk, nRST,
@@ -88,7 +88,7 @@ module mul_grid (
 
                 if (FP_BF) begin: fp16
                     //no input or output latch MAC 
-                    mul_fp16_MAC u_mul (
+                    mul_fp16_MAC u_mul_fp (
                         .clk(clk),
                         .nRST(nRST),
                         .start(!mul_stall),
@@ -100,7 +100,7 @@ module mul_grid (
                     );
                 end else begin: bf16
                     // there's a latch in bf16 
-                    mul_bf16 u_mul (
+                    mul_bf16 u_mul_bf (
                         .clk(clk),
                         .nRST(nRST),
                         .start(!mul_stall),
