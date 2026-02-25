@@ -10,7 +10,7 @@ module mul_grid (
     parameter int FP_BF = 1           // Determine whether to use FP16 (1) or BF16 (0)
 )(
     input logic clk, nRST,
-    input logic [511:0] sa_inputs,
+    input logic [N * DW - 1:0] sa_inputs,
     input logic act_en, weight_en,
     input logic mul_stall,
     output logic [N-1:0][N-1:0][DW-1:0] prod_r
