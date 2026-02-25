@@ -68,6 +68,7 @@ void dpi_set_ready_signals(
     g_sc->ready_signals.sp_ready = sp_ready;
 }
 
+// posedge and nedge, cuz i learned my lesson lol, i think this is fine, ill have to chcek w akshath
 void dpi_scheduler_tick(svBit rst_n)
 {
     if (!g_sc) return;
@@ -85,7 +86,7 @@ void dpi_scheduler_tick(svBit rst_n)
 
 
 
-// Signal readback — all_issued
+// Signal readback - all_issued
 svBit dpi_get_all_issued()
 {
     if (!g_sc) return 1; // safe default: "done"
@@ -154,7 +155,7 @@ void dpi_get_lane_v2_broadcast(int idx, svOpenArrayHandle arr)
     if (!g_sc || idx < 0 || idx > 1) return;
 
     // arr is an SV open array: logic [15:0] vec [0:31]
-    // We write each element individually via svPutBitArrElem
+    // write each element individually via svPutBitArrElem
     for (int i = 0; i < 32; i++) {
         uint16_t val = g_sc->sc_lane_signals[idx].lane_v2_broadcast[i];
         // For open arrays of logic [15:0], use svPutBitArrElem1
