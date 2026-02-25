@@ -42,11 +42,12 @@ module general_fu_tb (
     functional_unit_if fuif();
     //DUT instanciation
     
-    sqrt_FU DUT (
+    /*sqrt_FU DUT (
         .CLK(CLK),
         .nRST(nRST),
         .fuif(fuif)
     );
+    */
     /*
     mul_FU DUT (
         .CLK(CLK),
@@ -54,6 +55,11 @@ module general_fu_tb (
         .fuif(fuif)
     );
     */
+    alu_FU DUT (
+        .CLK(CLK),
+        .nRST(nRST),
+        .fuif(fuif)
+    );
 
 
     task automatic reset_dut();
@@ -370,9 +376,75 @@ module general_fu_tb (
         mul_max_issue();
     endtask
 
+    task automatic valu_test_issue_port_0();
+        logic [SLICE_W-1:0][15:0] v1, v2;
+        v1 = '{16'h4000, 16'h4080}; // 2.0, 4.0
+        v2 = '{16'h3F80, 16'h4000}; // 1.0, 2.0
+        test_issue_port(0, v1, v2, VALU, 1, 0, '1, ALU_ADD);
+    endtask
+
+    task automatic valu_test_issue_port_1();
+        logic [SLICE_W-1:0][15:0] v1, v2;
+        v1 = '{16'h4000, 16'h4080}; // 2.0, 4.0
+        v2 = '{16'h3F80, 16'h4000}; // 1.0, 2.0
+        test_issue_port(1, v1, v2, VALU, 2, 0, '1, ALU_ADD);
+    endtask
+
+    task automatic valu_test_masking_1();
+        logic [SLICE_W-1:0][15:0] v1, v2;
+        v1 = '{16'h4000, 16'h4080}; // 2.0, 4.0
+        v2 = '{16'h3F80, 16'h4000}; // 1.0, 2.0
+        test_masking(0, v1, v2, VALU, 1, 0, 2'b01, ALU_ADD);
+    endtask
+
+    task automatic valu_test_masking_2();
+        logic [SLICE_W-1:0][15:0] v1, v2;
+        v1 = '{16'h4000, 16'h4080}; // 2.0, 4.0
+        v2 = '{16'h3F80, 16'h4000}; // 1.0, 2.0
+        test_masking(0, v1, v2, VALU, 1, 0, 2'b10, ALU_ADD);
+    endtask
+
+    task automatic valu_backpressure();
+        logic [SLICE_W-1:0][15:0] v1, v2;
+        v1 = '{16'h4000, 16'h4080}; // 2.0, 4.0
+        v2 = '{16'h3F80, 16'h4000}; // 1.0, 2.0
+        test_backpressure(0, v1, v2, VALU, 10, 0, 2'b11, ALU_ADD, 5);
+    endtask
+
+    task automatic valu_max_issue();
+        test_max_issue(0, VALU, 0, '1, ALU_ADD, 10);
+    endtask
+
+    task automatic valu_reduction_test();
+        logic [SLICE_W-1:0][15:0] v1, v2;
+        v1 = '{16'h4000, 16'h4080}; // 2.0, 4.0
+        v2 = '{16'h3F80, 16'h4000}; // 1.0, 2.0
+        test_issue_port(0, v1, v2, VALU, 2, 1, 2'b11, ALU_MLT);
+    endtask
+
+    task automatic valu_reduction_test_mask();
+        logic [SLICE_W-1:0][15:0] v1, v2;
+        v1 = '{16'h4000, 16'h4080}; // 2.0, 4.0 
+        v2 = '{16'h3F80, 16'h4000}; // 1.0, 2.0
+        test_issue_port(0, v1, v2, VALU, 2, 1, 2'b01, ALU_MGT);
+    endtask
+
+    task automatic test_all_valu();
+        valu_test_issue_port_0();
+        valu_test_issue_port_1();
+        valu_test_masking_1();
+        valu_test_masking_2();
+        valu_backpressure();
+        valu_max_issue();
+        repeat(10) @(posedge CLK);
+        valu_reduction_test();
+        valu_reduction_test_mask();
+    endtask
+
+
     initial begin
         reset_dut();
-        test_all_sqrt();
+        test_all_valu();
         repeat(3) @(posedge CLK);
         $stop;
     end
