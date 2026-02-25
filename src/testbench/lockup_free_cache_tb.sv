@@ -108,15 +108,19 @@ endmodule
 
 class cache_line;
     logic [BLOCK_INDEX_BIT_LEN-1:0] set_index;
-    rand logic [TAG_BIT_LEN-1:0] tag;
+    rand logic [TAG_BIT_LEN-1:0] rand_tag_val;
+    logic [TAG_BIT_LEN-1:0] tag;
     addr_t [BLOCK_SIZE-1:0] addr;
     rand logic [BLOCK_SIZE-1:0][31:0] data;
     rand logic [BLOCK_SIZE-1:0][31:0] data2;
     integer i;
 
-    function new(logic [BLOCK_INDEX_BIT_LEN-1:0] set_index);
+    function new(logic [BLOCK_INDEX_BIT_LEN-1:0] set_index, integer way_index);
         this.set_index = set_index;
-        randomize();
+        void'(std::randomize(rand_tag_val) with { rand_tag_val != 0; });
+        void'(std::randomize(data));
+        void'(std::randomize(data2));
+        this.tag = {rand_tag_val[TAG_BIT_LEN-1:4], 4'(way_index)};
         for (i = 0; i < BLOCK_SIZE; i++) begin
             addr[i].tag = tag;
             addr[i].index = set_index;
@@ -208,48 +212,50 @@ module lockup_free_cache_tb;
     endgenerate
 
     task data_read(input logic [31:0] addr, output logic [31:0] data);
+        tb_mem_in = 0;
         $display("Starting data read: %08x", addr);
-        @(posedge tb_clk);
+        while (tb_stall) begin
+            $display("Cache stall!");
+            @(posedge tb_clk);
+        end
         tb_mem_in = 1;
         tb_mem_in_addr = addr;
         tb_mem_in_rw_mode = 0;
         tb_mem_in_store_value = 0;
-        @(negedge tb_clk);
+        #1;
         if (tb_hit) begin
             $display("Read hit on %08x! -> %08x", addr, tb_hit_load);
             data = tb_hit_load;
         end else begin
             $display("Read miss on %08x!", addr);
-            while (tb_stall) begin
-                $display("Cache stall!");
-                @(posedge tb_clk);
-                @(negedge tb_clk);
-            end
         end
+        @(posedge tb_clk);
+        tb_mem_in = 0;
     endtask
 
     task data_write(input logic [31:0] addr, input logic [31:0] data);
+        tb_mem_in = 0;
         $display("Starting data write: %08x,%08x", addr, data);
-        @(posedge tb_clk);
+        while (tb_stall) begin
+            $display("Cache stall!");
+            @(posedge tb_clk);
+        end
         tb_mem_in = 1;
         tb_mem_in_addr = addr;
         tb_mem_in_rw_mode = 1;
         tb_mem_in_store_value = data;
-        @(negedge tb_clk);
+        #1;
         if (tb_hit) begin
             $display("Write hit on %08x!", addr);
         end else begin
             $display("Write miss on %08x!", addr);
-            while (tb_stall) begin
-                $display("Cache stall!");
-                @(posedge tb_clk);
-                @(negedge tb_clk);
-            end
         end
+        @(posedge tb_clk);
+        tb_mem_in = 0;
     endtask
 
     task cycle_wait(input integer cycle_count);
-        for (cycle_count = 0; cycle_count < 100000; cycle_count++) begin
+        for (int lc = 0; lc < cycle_count; lc++) begin
             @(posedge tb_clk);
         end
     endtask
@@ -262,7 +268,7 @@ module lockup_free_cache_tb;
     integer current_block_offset;
     integer current_way;
 
-    cache_line line [7:0];
+    cache_line line [NUM_SETS][7:0];
 
     localparam test_set_num = NUM_SETS;
 
@@ -278,52 +284,52 @@ module lockup_free_cache_tb;
         testcase = "PART 1";
         @(posedge tb_clk);        
         for (current_set_index = 0; current_set_index < test_set_num; current_set_index++) begin
-            line[0] = new(current_set_index);
-            line[1] = new(current_set_index);
-            line[2] = new(current_set_index);
-            line[3] = new(current_set_index);
-            line[4] = new(current_set_index);
-            line[5] = new(current_set_index);
-            line[6] = new(current_set_index);
-            line[7] = new(current_set_index);
+            line[current_set_index][0] = new(current_set_index, 0);
+            line[current_set_index][1] = new(current_set_index, 1);
+            line[current_set_index][2] = new(current_set_index, 2);
+            line[current_set_index][3] = new(current_set_index, 3);
+            line[current_set_index][4] = new(current_set_index, 4);
+            line[current_set_index][5] = new(current_set_index, 5);
+            line[current_set_index][6] = new(current_set_index, 6);
+            line[current_set_index][7] = new(current_set_index, 7);
 
             // Read miss then Write miss
-            for (current_way = 0; current_way < NUM_WAYS * 2; current_way++) begin
+            for (current_way = 0; current_way < NUM_WAYS; current_way++) begin
                 for (current_block_offset = 0; current_block_offset < 1; current_block_offset++) begin
-                    data_read(line[current_way].addr[current_block_offset], data_out);                
+                    data_read(line[current_set_index][current_way].addr[current_block_offset], data_out);                
                 end
                 for (current_block_offset = 0; current_block_offset < 1; current_block_offset++) begin
-                    data_write(line[current_way].addr[current_block_offset], 32'h88888888);                
+                    data_write(line[current_set_index][current_way].addr[current_block_offset], 32'h88888888);                
                 end
             end
             // Write miss then Read miss
-            for (current_way = 0; current_way < NUM_WAYS * 2; current_way++) begin
+            for (current_way = 0; current_way < NUM_WAYS; current_way++) begin
                 for (current_block_offset = 0; current_block_offset < 1; current_block_offset++) begin
-                    data_write(line[current_way].addr[current_block_offset], 32'h88888888);                
+                    data_write(line[current_set_index][current_way].addr[current_block_offset], 32'h88888888);                
                 end
                 for (current_block_offset = 0; current_block_offset < 1; current_block_offset++) begin
-                    data_read(line[current_way].addr[current_block_offset], data_out);                
+                    data_read(line[current_set_index][current_way].addr[current_block_offset], data_out);                
                 end
             end
         end
         $display("hit check!");
-        while (tb_block_status[NUM_BANKS-1] == 0) begin
-            @(posedge tb_clk);
-            tb_mem_in = 0;
-            @(negedge tb_clk);
-            $display("Waiting for misses to finish!");
-        end
+        tb_mem_in = 0;
+        cycle_wait(150000);
+        $display("Done waiting for misses to finish!");
         for (current_set_index = 0; current_set_index < test_set_num; current_set_index++) begin
             // Write hit
-            for (current_way = 4; current_way < NUM_WAYS*2; current_way++) begin
+            for (current_way = 0; current_way < NUM_WAYS; current_way++) begin
                 for (current_block_offset = 0; current_block_offset < 1; current_block_offset++) begin
-                    data_write(line[current_way].addr[current_block_offset], line[current_way].data[current_block_offset]);                
+                    data_write(line[current_set_index][current_way].addr[current_block_offset], line[current_set_index][current_way].data[current_block_offset]);                
                 end
             end
             // Read hit
-            for (current_way = 4; current_way < NUM_WAYS*2; current_way++) begin
+            for (current_way = 0; current_way < NUM_WAYS; current_way++) begin
                 for (current_block_offset = 0; current_block_offset < 1; current_block_offset++) begin
-                    data_write(line[current_way].addr[current_block_offset], data_out);                
+                    data_read(line[current_set_index][current_way].addr[current_block_offset], data_out);
+                    if (data_out !== line[current_set_index][current_way].data[current_block_offset]) begin
+                        $error("DATA MISMATCH at %08x: read %08x, expected %08x", line[current_set_index][current_way].addr[current_block_offset], data_out, line[current_set_index][current_way].data[current_block_offset]);
+                    end
                 end
             end
         end

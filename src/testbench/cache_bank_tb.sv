@@ -394,7 +394,7 @@ program test (
     );
         tb_mshr_entry = {1'b1, uuid, addr, BLOCK_SIZE'('0), cache_block'('0)};
 
-        wait(tb_cache_bank_free == 0);
+        
         @(posedge tb_clk);
 
         tb_mshr_entry.valid = 0;
@@ -705,6 +705,44 @@ program test (
         monitor_enable = 1'b1; 
         @(posedge tb_clk);
         monitor_enable = 1'b0; 
+        @(posedge tb_clk);
+
+        ///////////////////////////////////////////////////////
+
+        set_test_id("-------> PIPELINED REQUESTS OVERLAP TEST");
+        
+        // Send first request
+        set_mshr(
+            .valid(1'b1), 
+            .uuid(4'hA),
+            .block_addr(addr_t'{24'hF00D, 4'h1, 2'b00, 2'b00}), 
+            .write_status(4'b1111), 
+            .write_block('{32'h11111111, 32'h22222222, 32'h33333333, 32'h44444444})
+        );
+        
+        wait (dut.curr_state == ADDRESS_CALC || dut.curr_state == FINISH); // wait to enter FSM processing
+        
+        // Stage next request while first one is running
+        @(posedge tb_clk);
+        tb_mshr_entry = '{valid: 1'b1, uuid: 4'hB, block_addr: addr_t'{24'hBEEF, 4'h1, 2'b00, 2'b00}, write_status: 4'b1111, write_block: '{32'h55555555, 32'h66666666, 32'h77777777, 32'h88888888}};
+        
+        // Next request gets sampled and taken in FINISH
+        wait (dut.curr_state == FINISH); 
+        wait (dut.curr_state == ADDRESS_CALC); 
+        
+        // Stage third request right when second is starting
+        @(posedge tb_clk);
+        tb_mshr_entry = '{valid: 1'b1, uuid: 4'hC, block_addr: addr_t'{24'hCAFE, 4'h1, 2'b00, 2'b00}, write_status: 4'b1111, write_block: '{32'h99999999, 32'hAAAAAAAA, 32'hBBBBBBBB, 32'hCCCCCCCC}};
+        
+        wait (dut.curr_state == FINISH);
+        wait (dut.curr_state == ADDRESS_CALC);
+
+        // Terminate pipeline
+        @(posedge tb_clk);
+        tb_mshr_entry = '0; 
+        wait (dut.curr_state == FINISH);
+        wait (dut.curr_state == START);
+
         @(posedge tb_clk);
 
         ///////////////////////////////////////////////////////

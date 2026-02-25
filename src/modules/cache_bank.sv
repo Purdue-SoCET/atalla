@@ -41,7 +41,7 @@ module cache_bank (
     logic [TREE_BITS-1:0] _hit_node, _miss_node, __node;
 
     assign set_index = mem_instr_in.addr.index >> BANKS_LEN;   
-    assign cache_bank_free = !latched_cache_bank_busy;  
+    assign cache_bank_free = !cache_bank_busy;  
 
     always_ff @ (posedge CLK, negedge nRST) begin : sequential_update
         if (!nRST) begin 
@@ -138,6 +138,7 @@ module cache_bank (
         flushed = 0; 
         victim_set_index = latched_victim_set_index; 
         victim_way_index = latched_victim_way_index;
+        new_victim_way_index = latched_victim_way_index;
         mshr_hit_way = latched_mshr_hit_way; 
         mshr_hit = 0;
         mshr_entry = latched_mshr_entry; 
@@ -145,22 +146,7 @@ module cache_bank (
         block_pull_buffer = latched_block_pull_buffer; 
         victim_eject_buffer = latched_victim_eject_buffer; 
 
-        if (instr_valid) begin
-            for (int i = 0; i < NUM_WAYS; i++) begin 
-                if (!scheduler_hit) begin 
-                    if (bank[set_index][i].valid && (bank[set_index][i].tag == mem_instr_in.addr.tag)) begin
-                        if (mem_instr_in.rw_mode) begin
-                            next_bank[set_index][i].block[mem_instr_in.addr.block_offset] = mem_instr_in.store_value;
-                            next_bank[set_index][i].dirty = 1;
-                        end else begin
-                            scheduler_data_out = bank[set_index][i].block[mem_instr_in.addr.block_offset];
-                        end
-                        scheduler_hit = 1'b1;
-                        hit_way_index = WAYS_LEN'(i);
-                    end
-                end
-            end 
-        end 
+
 
         case (curr_state) 
             START: begin 
@@ -179,6 +165,7 @@ module cache_bank (
                 end
             end 
             LRU_CALC: begin 
+                __node = 0;
                 for (int level = 0; level < WAYS_LEN; level++) begin
                     if (tree_lru[latched_victim_set_index].tree[__node] == 0) begin
                         victim_way_index[WAYS_LEN-1 - level] = 0;
@@ -220,7 +207,11 @@ module cache_bank (
                 ram_mem_store = latched_victim_eject_buffer.block[count_FSM];
             end
             FINISH: begin 
+                if (mshr_entry_in.valid) begin
+                    mshr_entry = mshr_entry_in;
+                end
                 next_bank[latched_victim_set_index][latched_victim_way_index] = latched_block_pull_buffer; 
+
                 scheduler_uuid_out = latched_mshr_entry.uuid;
                 scheduler_uuid_ready = 1;
             end
@@ -252,6 +243,24 @@ module cache_bank (
                 flushed = 1; 
             end 
         endcase
+
+        if (instr_valid) begin
+            for (int i = 0; i < NUM_WAYS; i++) begin 
+                if (!scheduler_hit) begin 
+                    if (next_bank[set_index][i].valid && (next_bank[set_index][i].tag == mem_instr_in.addr.tag)) begin
+                        if (mem_instr_in.rw_mode) begin
+                            next_bank[set_index][i].block[mem_instr_in.addr.block_offset] = mem_instr_in.store_value;
+                            next_bank[set_index][i].dirty = 1;
+                        end else begin
+                            scheduler_data_out = next_bank[set_index][i].block[mem_instr_in.addr.block_offset];
+                        end
+                        scheduler_hit = 1'b1;
+                        hit_way_index = WAYS_LEN'(i);
+                    end
+                end
+            end 
+        end 
+
     end 
 
     always_comb begin : fsm_state_logic
