@@ -18,7 +18,7 @@ package scheduler_pkg;
     typedef struct packed {
         logic [31:0] pc;
         logic [31:0] pc_pred_addr_out;
-        logic predict_taken_out
+        logic predict_taken_out;
     } DEC2_WB_LATCH_PC;
 
 endpackage

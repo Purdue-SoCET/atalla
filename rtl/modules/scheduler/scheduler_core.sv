@@ -26,7 +26,8 @@ module scheduler_core #(
 );
 
     scheduler_pkg::EXEC_WB_LATCH n_EX_WB_latch, EX_WB_latch;
-    execution_unit_types_pkg::in_DEC2_EX_t [NUM_SCALAR_INSTRS-1:0] n_DEC2_EX_latch, DEC2_EX_latch;
+    execution_unit_types_pkg::in_DEC2_EX_t n_DEC2_EX_latch [NUM_SCALAR_INSTRS];
+    execution_unit_types_pkg::in_DEC2_EX_t DEC2_EX_latch [NUM_SCALAR_INSTRS];
     scheduler_pkg::DEC2_WB_LATCH_PC n_DEC2_EX_PC_latch, DEC2_EX_PC_latch;
     logic n_DEC2_EX_halt_latch, DEC2_EX_halt_latch;
 
@@ -63,7 +64,9 @@ module scheduler_core #(
 
             n_DEC2_EX_halt_latch = decode_2_if.decoded_scalar_instrs[0].halt || decode_2_if.decoded_scalar_instrs[1].halt || decode_2_if.decoded_scalar_instrs[2].halt || decode_2_if.decoded_scalar_instrs[3].halt;
         end else begin
-            n_DEC2_EX_latch = '0;
+            for(int i = 0; i < NUM_SCALAR_INSTRS; i++) begin
+              n_DEC2_EX_latch[i] = '0;
+            end
             n_DEC2_EX_PC_latch = '0;
         end
         //EX inputs from DEC2
@@ -143,7 +146,10 @@ module scheduler_core #(
     always_ff @( posedge CLK, negedge nRST ) begin : EX_WB_LATCH
         if(!nRST) begin
             EX_WB_latch <= '0;
-            DEC2_EX_latch <= '0;
+            DEC2_EX_latch[0] <= '0;
+            DEC2_EX_latch[1] <= '0;
+            DEC2_EX_latch[2] <= '0;
+            DEC2_EX_latch[3] <= '0;
             DEC2_EX_PC_latch <= '0;
             DEC2_EX_halt_latch <= '0;
         end else begin

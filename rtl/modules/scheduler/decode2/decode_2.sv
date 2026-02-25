@@ -2,7 +2,9 @@
 // `include "reg_file_if.vh"
 `include "dummy_regfile_if.vh"
 `include "atalla_isa_types.vh"
-
+`include "dependency_checker_if.vh"
+`include "source_reg_allocator_if.vh"
+`include "scalar_control_unit_if.vh"
 
 module decode_2 
     import atalla_isa_pkg::*;
@@ -63,9 +65,9 @@ assign dcif.scalar_SDMA_wsel = d2if.scalar_SDMA_wsel;
 assign dcif.scalar_SDMA_WEN = d2if.scalar_SDMA_WEN;
 
 // Check execute signals for structural hazards (scalar)
-scalar_fu_enable_t fu_enables [NUM_SCALAR_INSTRS];
-logic  reg_writes [NUM_SCALAR_INSTRS];
-logic [7:0] rdIns [NUM_SCALAR_INSTRS];
+scalar_fu_enable_t [NUM_SCALAR_INSTRS-1:0] fu_enables;
+logic [NUM_SCALAR_INSTRS-1:0]  reg_writes;
+logic [7:0][NUM_SCALAR_INSTRS-1:0]  rdIns;
 
 // Per-unit need signals: does any instr in this packet need this unit?
 logic need_ex1, need_ex2, need_ex3, need_ex4, need_ex5;

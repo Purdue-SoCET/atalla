@@ -1,4 +1,4 @@
-//Navya Datla 2/23/2026
+// Navya Datla 2/23/2026
 `ifndef SOURCE_REG_ALLOCATOR_IF_VH
 `define SOURCE_REG_ALLOCATOR_IF_VH
 
@@ -11,12 +11,14 @@ interface source_reg_allocator_if
     parameter READ_PORTS       = 4
 );
 
-    decoded_scalar_instr_t instrs_in  [NUM_INSTRUCTIONS];
-    decoded_scalar_instr_t instrs_out [NUM_INSTRUCTIONS];
+    // Packed instruction arrays
+    decoded_scalar_instr_t [NUM_INSTRUCTIONS-1:0] instrs_in;
+    decoded_scalar_instr_t [NUM_INSTRUCTIONS-1:0] instrs_out;
 
-    logic                         REN   [READ_PORTS];
-    logic [SCALAR_REG_W-1:0]      rsel  [READ_PORTS];
-    logic [31:0]                  rdata [READ_PORTS];
+    // Packed read port arrays
+    logic [READ_PORTS-1:0]                     REN;
+    logic [READ_PORTS-1:0][SCALAR_REG_W-1:0]   rsel;
+    logic [READ_PORTS-1:0][31:0]               rdata;
     
     modport allocator (
         input  instrs_in,
