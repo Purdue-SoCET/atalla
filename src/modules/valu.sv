@@ -32,6 +32,9 @@ module valu (
     logic skip_compute;
     assign skip_compute = !alu_if.in.mask && !alu_if.in.rm;
 
+    logic accept;
+    assign accept = alu_if.in.valid_in && alu_if.out.ready_in;
+
     // Cycle 0:
     // Stall logic: stall if valid instruction is in cycle 2 and we're not ready to accept new input (ready_out = 0)
 
@@ -70,7 +73,7 @@ module valu (
     logic addsub_overflow, addsub_underflow, addsub_invalid; // technically could remove these for ALU by leaving them as not connected outs for addsub module, but might help w debug so let it be
 
     // Enable adder only when inputs are valid, we aren't masked, and there's no stall. (stall is based off ready_out)
-    assign addsub_enable = alu_if.in.valid_in && !skip_compute && !stall;
+    assign addsub_enable = accept && !skip_compute;
 
 
     // Instantiate BF16 add/sub module
@@ -122,7 +125,7 @@ module valu (
             is_mneq_s1 <= is_mneq;
             rm_s1 <= alu_if.in.rm;
             skip_s1 <= skip_compute;
-            valid_s1 <= alu_if.in.valid_in;
+            valid_s1 <= accept;
         end
         // else hold values (stall condition)
     end
@@ -147,7 +150,7 @@ module valu (
             skip_s2 <= 1'b0;
             valid_s2 <= 1'b0;
         end
-        else if (!stall) begin
+        else if (alu_if.in.ready_out || !valid_s2) begin
             v1_s2 <= v1_s1;
             v2_s2 <= v2_s1;
             is_mgt_s2 <= is_mgt_s1;

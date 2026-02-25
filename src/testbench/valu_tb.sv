@@ -209,14 +209,17 @@ module valu_tb;
         @(posedge CLK);
         
         // Now valid_out should be 1, apply backpressure
+        // Now valid_out should be 1, apply backpressure
         check_valid(1'b1, "Result ready");
-        
-        alu_if.in.ready_out = 1'b0;  // Stall
-        @(posedge CLK);
-        
+
+        alu_if.in.ready_out = 1'b0;  // Stall!
+        #1;  // Small delay for combinational logic to settle
+
         check_ready(1'b0, "Backpressure: ready_in should be 0");
         check_valid(1'b1, "Backpressure: valid_out should stay 1");
         check_result(BF16_THREE, "Result should hold (1.0 + 2.0 = 3.0)");
+
+        @(posedge CLK);  // Now advance clock
         
         // Hold for a few cycles
         @(posedge CLK);
