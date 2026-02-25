@@ -49,7 +49,7 @@ interface execution_unit_if # (
   logic [31:0] pc, pc_pred_addr_out;
   logic predict_taken_out;
 
-  in_DEC2_EX_t DEC2_inputs[NUM_INSTRUCTIONS-1:0];
+  in_DEC2_EX_t [NUM_INSTRUCTIONS-1:0] DEC2_inputs;
   out_WB_t ex1, ex2, ex3, ex4, ex5;
 
   modport execution_units (

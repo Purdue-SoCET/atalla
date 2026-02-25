@@ -38,6 +38,19 @@ module scheduler_core_tb;
         @(posedge CLK);
 
 
+        @(negedge CLK);
+        scalar_instrs[0] = 48'h000001008181; // ADD_S rd=3, rs1=1, rs2=2
+        scalar_instrs[1] = 48'h2f; //NOP
+        scalar_instrs[2] = 48'h2f; //NOP
+        scalar_instrs[3] = 48'h2f; //NOP
+
+        @(negedge CLK);
+        @(negedge CLK);
+        @(negedge CLK);
+        @(negedge CLK);
+        @(negedge CLK);
+
+
         $display("DONE");
         $finish;
     end

@@ -26,8 +26,7 @@ module scheduler_core #(
 );
 
     scheduler_pkg::EXEC_WB_LATCH n_EX_WB_latch, EX_WB_latch;
-    execution_unit_types_pkg::in_DEC2_EX_t n_DEC2_EX_latch [NUM_SCALAR_INSTRS];
-    execution_unit_types_pkg::in_DEC2_EX_t DEC2_EX_latch [NUM_SCALAR_INSTRS];
+    execution_unit_types_pkg::in_DEC2_EX_t  [NUM_SCALAR_INSTRS-1:0] n_DEC2_EX_latch, DEC2_EX_latch;
     scheduler_pkg::DEC2_WB_LATCH_PC n_DEC2_EX_PC_latch, DEC2_EX_PC_latch;
     logic n_DEC2_EX_halt_latch, DEC2_EX_halt_latch;
 
@@ -146,10 +145,7 @@ module scheduler_core #(
     always_ff @( posedge CLK, negedge nRST ) begin : EX_WB_LATCH
         if(!nRST) begin
             EX_WB_latch <= '0;
-            DEC2_EX_latch[0] <= '0;
-            DEC2_EX_latch[1] <= '0;
-            DEC2_EX_latch[2] <= '0;
-            DEC2_EX_latch[3] <= '0;
+            DEC2_EX_latch <= '0;
             DEC2_EX_PC_latch <= '0;
             DEC2_EX_halt_latch <= '0;
         end else begin
