@@ -7,6 +7,8 @@ import sys_arr_pkg::*;
 /* verilator lint_off IMPORTSTAR */
 
 module mul_grid (
+    parameter int FP_BF = 1           // Determine whether to use FP16 (1) or BF16 (0)
+)(
     input logic clk, nRST,
     input logic [511:0] sa_inputs,
     input logic act_en, weight_en,
@@ -84,17 +86,33 @@ module mul_grid (
                     end
                 end
 
-                //no input or output latch MAC
-                mul_fp16_MAC u_mul (
-                    .clk(clk),
-                    .nRST(nRST),
-                    .start(!mul_stall),
-                    .a(a_pipe[i][j]),
-                    .b(b_pipe[i][j]),
-                    .result(prod[j][i]),
-                    //.done(mac_ifs[i][j].value_ready)
-                    .done()
-                );
+                if (FP_BF) begin: fp16
+                    //no input or output latch MAC 
+                    mul_fp16_MAC u_mul (
+                        .clk(clk),
+                        .nRST(nRST),
+                        .start(!mul_stall),
+                        .a(a_pipe[i][j]),
+                        .b(b_pipe[i][j]),
+                        .result(prod[j][i]),
+                        //.done(mac_ifs[i][j].value_ready)
+                        .done()
+                    );
+                end else begin: bf16
+                    // there's a latch in bf16 
+                    mul_bf16 u_mul (
+                        .clk(clk),
+                        .nRST(nRST),
+                        .start(!mul_stall),
+                        .a(a_pipe[i][j]),
+                        .b(b_pipe[i][j]),
+                        .result(prod[j][i]),
+                        //.done(mac_ifs[i][j].value_ready),
+                        .done(), 
+                        .mul_ovf(),
+                        .mul_unf()
+                    );
+                end
 
                 //register prod for adder tree
                 always_ff @(posedge clk or negedge nRST) begin

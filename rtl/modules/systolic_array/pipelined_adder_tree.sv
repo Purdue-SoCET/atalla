@@ -5,7 +5,8 @@
 module pipelined_adder_tree #(
     parameter int N           = 4,    // Number of inputs to sum (MUST be a power of 2), does not include psum
     parameter int DATA_WIDTH  = 16,   // Element width; must match adder module (FP16 = 16)
-    parameter int ADD_LATENCY = 2     // Pipeline depth of the adder (0 = combinational)
+    parameter int ADD_LATENCY = 2,    // Pipeline depth of the adder (0 = combinational)
+    parameter int FP_BF = 1           // Determine whether to use FP16 (1) or BF16 (0)
 )(
     input  logic                    clk,
     input  logic                    nRST,
@@ -30,17 +31,33 @@ module pipelined_adder_tree #(
             localparam int PAIRS = N >> (l + 1);
 
             for (genvar k = 0; k < PAIRS; k++) begin : pair
-                add_fp16 u_add (
-                    .clk    (clk),
-                    .nRST   (nRST),
-                    .start  (1'b1),
-                    .stall  (stall),
-                    .sub    (1'b0),
-                    .fp1_in (stage_data[l][2 * k]),
-                    .fp2_in (stage_data[l][2 * k + 1]),
-                    .fp_out (stage_data[l + 1][k]),
-                    .done   ()
-                );
+                if (FP_BF) begin: fp16
+                    add_fp16 u_add (
+                        .clk    (clk),
+                        .nRST   (nRST),
+                        .start  (1'b1),
+                        .stall  (stall),
+                        .sub    (1'b0),
+                        .fp1_in (stage_data[l][2 * k]),
+                        .fp2_in (stage_data[l][2 * k + 1]),
+                        .fp_out (stage_data[l + 1][k]),
+                        .done   ()
+                    );
+                end else begin: bf16 
+                    add_bf16 u_add (
+                        .clk    (clk),
+                        .nRST   (nRST),
+                        .start  (1'b1),
+                        .stall  (stall),
+                        .bf1 (stage_data[l][2 * k]),
+                        .bf2 (stage_data[l][2 * k + 1]),
+                        .bf_out (stage_data[l + 1][k]),
+                        .overflow(), 
+                        .underflow(), 
+                        .invalid(), 
+                        .done   ()
+                    );
+                end
             end
         end
     endgenerate
@@ -76,16 +93,32 @@ module pipelined_adder_tree #(
     */
 
     // Final addition :  sum_out = tree_result + psum_delayed
-    add_fp16 u_psum_add (
-        .clk    (clk),
-        .nRST   (nRST),
-        .start  (1'b1),
-        .stall  (stall),
-        .sub    (1'b0),
-        .fp1_in (stage_data[TREE_DEPTH][0]),
-        .fp2_in (psum_in),
-        .fp_out (sum_out),
-        .done   ()
-    );
+    if (FP_BF) begin: final_add_fp16
+        add_fp16 u_psum_add (
+            .clk    (clk),
+            .nRST   (nRST),
+            .start  (1'b1),
+            .stall  (stall),
+            .sub    (1'b0),
+            .fp1_in (stage_data[TREE_DEPTH][0]),
+            .fp2_in (psum_in),
+            .fp_out (sum_out),
+            .done   ()
+        );
+    end else begin: final_add_bf16
+        add_bf16 u_psum_add (
+            .clk    (clk),
+            .nRST   (nRST),
+            .start  (1'b1),
+            .stall  (stall),
+            .bf1 (stage_data[TREE_DEPTH][0]),
+            .bf2 (psum_in),
+            .bf_out (sum_out),
+            .overflow(), 
+            .underflow(), 
+            .invalid(), 
+            .done   ()
+        );
+    end 
 
 endmodule
