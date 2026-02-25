@@ -10,6 +10,7 @@ vsim.*
 __pycache__/
 *.csv
 systolic_array_tb_pkg.sv
+obj_dir/
 
 !.gitignore
 !.gitmodules
