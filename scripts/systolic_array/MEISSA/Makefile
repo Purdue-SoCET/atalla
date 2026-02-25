@@ -8,7 +8,7 @@ ALL_SRC=$(wildcard *.cpp)
 # The name of the resulting executable
 APP=generate_test_vectors
 
-test_vectors:
+test:
 	$(CC) $(CFLAGS) $(ALL_SRC) -o $(APP)	
 
 clean:

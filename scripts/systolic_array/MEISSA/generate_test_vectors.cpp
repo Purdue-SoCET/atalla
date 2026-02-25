@@ -5,11 +5,8 @@
 #include <iomanip>
 #include <chrono>
 #include "fp16_utils.h"
+#include "generate_test_vectors.h"
 
-constexpr int ROW = 32;
-constexpr int COL = 32;
-constexpr int TOTAL_TEST_NUM = 10;
-constexpr int PROBABILITY_OF_NEW_WEIGHT = 250; // 25% chance to generate new weight for each test
 std::string PATH_TO_INPUT = "/home/asicfab/a/yim13/atalla/scripts/systolic_array/systolic_array_tb_input.csv";
 std::string PATH_TO_EXPECTED_RESULT = "/home/asicfab/a/yim13/atalla/scripts/systolic_array/systolic_array_tb_expected_result.csv";
 
@@ -37,7 +34,7 @@ void write_matrix_to_file(const std::vector<std::vector<uint16_t>>& matrix, cons
 
 void progress_bar(std::size_t iteration,
     std::size_t total,
-    std::size_t width = 40)
+    std::size_t width)
 {
     if (total == 0) return;
 
@@ -223,7 +220,7 @@ int main() {
     expected_file << std::endl;
 
     for (int i = 0; i < TOTAL_TEST_NUM; i++) {
-        create_new_test(i + 1, 3, PATH_TO_INPUT, &weight_matrix);
+        create_new_test(i + 1, 5, PATH_TO_INPUT, &weight_matrix);
         progress_bar(i + 1, TOTAL_TEST_NUM);
     }
 
