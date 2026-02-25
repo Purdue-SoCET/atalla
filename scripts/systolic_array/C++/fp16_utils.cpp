@@ -124,6 +124,10 @@ uint16_t fp16_add_hw(uint16_t a_bits, uint16_t b_bits) {
 // i.e. for max_exponent = 3, the random value will be in the range of [-8, 8] with random decimal part
 uint16_t random_fp16(int max_exponent)
 {
+    // Clamp parameter into safe fp16-normal range
+    if (max_exponent < 1)  max_exponent = 1;
+    if (max_exponent > 31) max_exponent = 31;
+
     uint16_t sign = std::rand() % 2; // Random sign bit
     uint16_t exponent = std::rand() % (max_exponent + 1);
     uint16_t mantissa = std::rand() % 0x400; // Random mantissa (10 bits for fp16)
