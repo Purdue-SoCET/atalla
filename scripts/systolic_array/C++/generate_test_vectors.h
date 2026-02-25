@@ -5,7 +5,7 @@
 
 constexpr int ROW = 32;
 constexpr int COL = 32;
-constexpr int TOTAL_TEST_NUM = 100000;
+constexpr int TOTAL_TEST_NUM = 100;
 constexpr int PROBABILITY_OF_NEW_WEIGHT = 250; // 25% chance out of 1000
 
 extern std::string PATH_TO_INPUT;

@@ -4,7 +4,9 @@
 #include <bitset>
 #include <vector>
 #include "fp16_utils.h"
-
+extern "C" {
+    #include "softfloat.h"
+    }
 // Generate random FP16 bits
 uint16_t random_fp16_bits() {
     return static_cast<uint16_t>(std::rand() % 0x10000); // Random 16-bit value
@@ -88,36 +90,42 @@ uint16_t normalize_zero(uint16_t bits) {
 
 // FP16 hardware-like multiplication
 uint16_t fp16_mul_hw(uint16_t a_bits, uint16_t b_bits) {
-    uint16_t a_daz = apply_daz(a_bits);
-    uint16_t b_daz = apply_daz(b_bits);
+    float16_t a, b, result;
 
-    float a_val = fp16_from_bits(a_daz);
-    float b_val = fp16_from_bits(b_daz);
+    /* Apply DAZ */
+    a.v = apply_daz(a_bits);
+    b.v = apply_daz(b_bits);
 
-    float prod = a_val * b_val;
-    uint16_t prod_bits = bits_from_fp16(prod);
+    /* IEEE-754 mul via softfloat (round to nearest even) */
+    softfloat_roundingMode = softfloat_round_near_even;
+    softfloat_exceptionFlags = 0;
+    result = f16_mul(a, b);
 
-    prod_bits = apply_ftz(prod_bits);
-    prod_bits = canonicalize_nan(prod_bits);
+    /* Apply FTZ and canonicalize NaN */
+    result.v = apply_ftz(result.v);
+    result.v = canonicalize_nan(result.v);
 
-    return prod_bits;
+    return result.v;
 }
 
 // FP16 hardware-like addition
 uint16_t fp16_add_hw(uint16_t a_bits, uint16_t b_bits) {
-    uint16_t a_daz = apply_daz(a_bits);
-    uint16_t b_daz = apply_daz(b_bits);
+    float16_t a, b, result;
 
-    float a_val = fp16_from_bits(a_daz);
-    float b_val = fp16_from_bits(b_daz);
+    /* Apply DAZ */
+    a.v = apply_daz(a_bits);
+    b.v = apply_daz(b_bits);
 
-    float sum = a_val + b_val;
-    uint16_t sum_bits = bits_from_fp16(sum);
+    /* IEEE-754 add via softfloat (round to nearest even) */
+    softfloat_roundingMode = softfloat_round_near_even;
+    softfloat_exceptionFlags = 0;
+    result = f16_add(a, b);
 
-    sum_bits = apply_ftz(sum_bits);
-    sum_bits = canonicalize_nan(sum_bits);
+    /* Apply FTZ and canonicalize NaN */
+    result.v = apply_ftz(result.v);
+    result.v = canonicalize_nan(result.v);
 
-    return sum_bits;
+    return result.v;
 }
 
 // Generate random FP16 value within the fp16 exponent of specified exponent range

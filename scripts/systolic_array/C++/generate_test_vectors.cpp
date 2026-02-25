@@ -220,7 +220,7 @@ int main() {
     expected_file << std::endl;
 
     for (int i = 0; i < TOTAL_TEST_NUM; i++) {
-        create_new_test(i + 1, 5, PATH_TO_INPUT, &weight_matrix);
+        create_new_test(i + 1, 30, PATH_TO_INPUT, &weight_matrix);
         progress_bar(i + 1, TOTAL_TEST_NUM);
     }
 
