@@ -32,8 +32,15 @@ module valu (
     logic skip_compute;
     assign skip_compute = !alu_if.in.mask && !alu_if.in.rm;
 
+    logic accept;
+    assign accept = alu_if.in.valid_in && alu_if.out.ready_in;
+
     // Cycle 0:
     // Stall logic: stall if valid instruction is in cycle 2 and we're not ready to accept new input (ready_out = 0)
+
+    // Made an oopsie, cant use w/o valid_s2
+    logic valid_s2;
+
     logic stall;
     assign stall = valid_s2 && !alu_if.in.ready_out;
 
@@ -52,21 +59,25 @@ module valu (
         addsub_op = (alu_if.in.aluop == ALU_SUB) || is_mgt || is_mlt || is_meq || is_mneq;
     end
 
+    /*
+    The prior implementation from chase or whoever made ALU used nan detection, but I'm pretty sure the adder already handles that.
+    My only question is whether its required for the logical ops, bc those completely bypass adder.
+    My thinking is if your feeding a random ahh NaN value into the ALU you're expecting a bitwise op on the actual thing itself so it should be fine.
 
-    // The prior implementation from chase or whoever made ALU used nan detection, but I'm pretty sure the adder already handles that.
-    // My only question is whether its required for the logical ops, bc those completely bypass adder.
-    // My thinking is if your feeding a random ahh NaN value into the ALU you're expecting a bitwise op on the actual thing itself so it should be fine.
+    BF add/sub setup, has 2 cycle latency inside
+    We can now simply turn off adder for when skip compute is true for power savings, which helps a lot. W low hanging fruit.
+    Also has stall now for pipeline backpressure control.
+    Inputs go directly into adder, meaning no extra delays for this
+    */
 
-    // BF add/sub setup, has 2 cycle latency inside
-    // We can now simply turn off adder for when skip compute is true for power savings, which helps a lot. W low hanging fruit.
-    // Also has stall now for pipeline backpressure control.
-    // Inputs go directly into adder, meaning no extra delays for this
     logic [15:0] addsub_out;
     logic addsub_enable;
-    logic addsub_overflow, addsub_underflow, addsub_invalid; // technically could remove these for ALU by leaving them as not connected outs for addsub module, but might help w debug so let it be
+
+    // technically could remove these for ALU by leaving them as not connected outs for addsub module, but might help w debug so let it be
+    logic addsub_overflow, addsub_underflow, addsub_invalid; 
 
     // Enable adder only when inputs are valid, we aren't masked, and there's no stall. (stall is based off ready_out)
-    assign addsub_enable = alu_if.in.valid_in && !skip_compute && !stall;
+    assign addsub_enable = accept && !skip_compute;
 
 
     // Instantiate BF16 add/sub module
@@ -86,10 +97,12 @@ module valu (
 
     // Deleted all logical stuff that was here.
 
-    // Cycle 1:
-    // Finally adding the pipeline stage stuff now.
-    // Need this to delay metadata for some ops to align with add/sub output
-    // Only passes thru when not stalled
+    /*
+    Cycle 1:
+    Finally adding the pipeline stage stuff now.
+    Need this to delay metadata for some ops to align with add/sub output
+    Only passes thru when not stalled
+    */
 
     logic [ESZ-1:0] v1_s1, v2_s1;
     logic is_mgt_s1, is_mlt_s1, is_meq_s1, is_mneq_s1;
@@ -118,7 +131,7 @@ module valu (
             is_mneq_s1 <= is_mneq;
             rm_s1 <= alu_if.in.rm;
             skip_s1 <= skip_compute;
-            valid_s1 <= alu_if.in.valid_in;
+            valid_s1 <= accept;
         end
         // else hold values (stall condition)
     end
@@ -130,7 +143,6 @@ module valu (
     logic is_mgt_s2, is_mlt_s2, is_meq_s2, is_mneq_s2;
     logic rm_s2;
     logic skip_s2;
-    logic valid_s2;
 
     always_ff @(posedge CLK or negedge nRST) begin
         if (!nRST) begin
@@ -144,7 +156,7 @@ module valu (
             skip_s2 <= 1'b0;
             valid_s2 <= 1'b0;
         end
-        else if (!stall) begin
+        else if (alu_if.in.ready_out || !valid_s2) begin
             v1_s2 <= v1_s1;
             v2_s2 <= v2_s1;
             is_mgt_s2 <= is_mgt_s1;
@@ -165,8 +177,6 @@ module valu (
 
     assign v1_lt_v2 = addsub_out[15];
     assign v1_eq_v2 = (addsub_out == 16'h0000) || (addsub_out == 16'h8000); // negative 0 i genuinely hate you with a burning passion...
-
-    
     
     // Output muxing logic:
     logic [ESZ-1:0] result_out;
