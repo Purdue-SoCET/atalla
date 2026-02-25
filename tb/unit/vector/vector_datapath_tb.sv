@@ -256,19 +256,18 @@ module vector_datapath_tb;
     );
 
     while(1) begin //while we still have instructions that we need to issue
-        //check to see if we need to respond to the VLSU
-
-        //check to see if we need to respond to the GSAU
-
-        //writeback any valid data
-
         //decode the new packet from the testcase file
 
         //issue the new packet to whichever port it needs to go to
         
         //clock
-
+        @(posedge CLK);
         //clear all the ports
+        clear_lane_port(0);
+        clear_lane_port(1);
+        clear_vlsu_port(0);
+        clear_vlsu_port(1);
+        clear_gsau_port();
     end
 
     //dump the ram.sv
@@ -295,7 +294,8 @@ module vector_datapath_tb;
 
     initial begin
         apply_reset();
-        /*single_fu_test (
+        /*
+        single_fu_test (
             .port   (0),
             .v1     (bf16_v1),
             .v2     (bf16_v2),
@@ -306,7 +306,7 @@ module vector_datapath_tb;
             .alu_op (ALU_ADD)
         );
         */
-        single_gsau_test(bf16_v1, bf16_v2, 8'd1, 1'b0);
+        //single_gsau_test(bf16_v1, bf16_v2, 8'd1, 1'b0);
         //single_vlsu_test(0, 1'b1, 'h10, 8'd1, 'h0, 'h20, 'h4, 'h0, 1'b0, bf16_v1);
 
         repeat (100) @(posedge CLK);

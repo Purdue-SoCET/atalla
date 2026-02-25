@@ -168,8 +168,8 @@ module sqrt_bf16 (
         .nRST(nRST),
         .start(1'b1),
         .stall(1'b0),
-        .bf1_in(mul_out_reg),
-        .bf2_in(intercept),
+        .bf1(mul_out_reg),
+        .bf2(intercept),
         .bf_out(add_out)
     );
 

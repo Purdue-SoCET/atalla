@@ -150,6 +150,4 @@ module lane_sequencer(
     end
 
     assign seq_if.out.ready_in = ready_reg;
-
-
 endmodule

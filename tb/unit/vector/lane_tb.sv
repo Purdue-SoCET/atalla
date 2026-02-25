@@ -709,7 +709,10 @@ endtask
         reset_dut();
         @(posedge CLK);
         //test_mult();
-        test_sqrt();
+        //test_sqrt();
+        //test_alu();
+        test_multi_issue_mult_sqrt();
+        test_multi_issue_alu_mult();
 
         $stop;
     end

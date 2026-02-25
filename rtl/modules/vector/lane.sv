@@ -19,13 +19,13 @@ module lane #(
 
     //Functional Unit instanciation
     functional_unit_if fu_interfaces [LANE_FU_COUNT]();
-    /*
+    
     alu_FU alu (
         .CLK(CLK),
         .nRST(nRST),
         .fuif(fu_interfaces[0])
     );
-    */
+    
     mul_FU mult (
         .CLK(CLK),
         .nRST(nRST),

@@ -11,6 +11,7 @@ Owner: Jacob Walter
 `include "lane_if.vh"
 `include "result_collector_if.vh"
 `include "gsau_control_unit_if.vh"
+`include "reduction_FU_if.vh"
 
 
 module vector_datapath (
@@ -170,14 +171,29 @@ module vector_datapath (
 
     //reduction tree
     reduction_FU_if ruif();
-    vreduction reduction (
+    reduction_FU reduction (
         .CLK(CLK),
         .nRST(nRST),
         .ruif(ruif)
     );
 
-    //connections to reduction tree
-    
+    //connections to reduction
+    genvar vri;
+    generate
+        for (vri = 0; vri < NUM_LANES; vri++) begin : collect_lane_inputs
+            assign ruif.in.lane_input[vri] = lane_interfaces[vri].out.units[0].result;
+        end
+    endgenerate
+
+    always_comb begin : reduction_connections
+        ruif.in.ports = vif.lanes_in.lane_issue_ports; 
+
+        ruif.in.lane_valid = lane_interfaces[0].out.units[0].wb_valid & lane_interfaces[0].out.units[0].rm;
+        
+        ruif.in.wb_ready = vif.wb_ready_signals.reduction_wb_ready;
+        
+        vif.lanes_out.reduction = ruif.out;
+    end
 
 
 endmodule
