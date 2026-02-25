@@ -181,6 +181,15 @@ module add_bf16 #(
         mantissa_overflow = mantissa_sum[MANT_B+3];  // Correct bit for overflow detection
     end
 
+    /*
+        Fixes for when mantissa sum is zero: equal mag subtractions
+        When subtracting equal values (e.g., 1.0 - 1.0), mantissa_sum is all zeros.
+        The normalizer doesn't handle this case — it returns shifted_amount=0, 
+        leaving the exponent at the original value instead of producing zero.
+    */
+    logic result_is_zero;
+    assign result_is_zero = ~|mantissa_sum;
+
     // Overflow/Underflow detection
     logic [7:0] exp_minus_shift_amount;
 
@@ -263,6 +272,8 @@ module add_bf16 #(
         // overflow 
         end else if (is_inf | (&bf1_in[14:8] & ~bf1_in[7] & &bf1_in[6:0] & |bf2_in[MANT_B+7:0]) | (&bf2_in[MANT_B+7:MANT_B+1] & ~bf2_in[MANT_B] & &bf2_in[MANT_B-1:0] & |bf1_in[14:0]) & ~(bf1_in[15] ^ bf2_in[MANT_B+8])) begin 
             bf_out = bf1_in[15] ? 16'hff80 : 16'h7F80; 
+        end    else if (result_is_zero) begin
+            bf_out = {result_sign, 8'b0, {MANT_B{1'b0}}};
         // result after rounding 
         end else begin 
             bf_out = {result_sign, exp_out_adj, rounded_fraction};
