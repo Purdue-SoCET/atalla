@@ -39,16 +39,12 @@ module scheduler_core_tb;
 
 
         @(negedge CLK);
-        scalar_instrs[0] = 48'h000001008181; // ADD_S rd=3, rs1=1, rs2=2
+        scalar_instrs[0] = 48'h000000810304; // // DIV_S rd=6, rs1=2, rs2=1
         scalar_instrs[1] = 48'h2f; //NOP
         scalar_instrs[2] = 48'h2f; //NOP
         scalar_instrs[3] = 48'h2f; //NOP
 
-        @(negedge CLK);
-        @(negedge CLK);
-        @(negedge CLK);
-        @(negedge CLK);
-        @(negedge CLK);
+        repeat(80) @(negedge CLK);
 
 
         $display("DONE");
