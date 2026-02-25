@@ -33,20 +33,20 @@ module xbar_4x5_exec_comb
 
   function automatic dest_e decode_dest(input execution_unit_types_pkg::in_DEC2_EX_t s);
     // If multiple valids are high in one slot, this imposes priority.
-    if (s.alu_valid || s.control_valid) begin
+    if ((s.scalar_type_enable == 4'b0000 || s.scalar_type_enable == 4'b0001) && s.valid_in) begin
       return DEST_EX1;
     end
-    else if (s.bf_div_valid || s.s_div_valid || s.s_mod_valid ||
-             s.BF_to_int_valid || s.int_to_BF_valid) begin
+    else if ((s.scalar_type_enable == 4'b0110 || s.scalar_type_enable == 4'b0111 || s.scalar_type_enable == 4'b1000 ||
+             s.scalar_type_enable == 4'b1001 || s.scalar_type_enable == 4'b1010) && s.valid_in) begin
       return DEST_EX2;
     end
-    else if (s.bf_add_valid || s.bf_sub_valid || s.bf_mult_valid || s.bf_slt_valid) begin
+    else if ((s.scalar_type_enable == 4'b0010 || s.scalar_type_enable == 4'b0011 || s.scalar_type_enable == 4'b0100 || s.scalar_type_enable == 4'b0101) && s.valid_in) begin
       return DEST_EX3;
     end
-    else if (s.sMult_valid) begin
+    else if (s.scalar_type_enable == 4'b1101 && s.valid_in) begin
       return DEST_EX4;
     end
-    else if (s.ld_valid || s.st_valid) begin
+    else if ((s.scalar_type_enable == 4'b1011 || s.scalar_type_enable == 4'b1100) && s.valid_in) begin
       return DEST_EX5;
     end
     else begin

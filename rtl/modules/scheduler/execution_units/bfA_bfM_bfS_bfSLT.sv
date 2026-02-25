@@ -63,13 +63,13 @@ always_comb begin
     cur_bf_2 = portmap.bf2_in;
 
     nlatched_add = latched_add;
-    cur_add = portmap.valid_in && (alu_valid == portmap.bf_add_valid) ? 1 : 0;
+    cur_add = portmap.valid_in && (4'b0010 == portmap.scalar_type_enable) ? 1 : 0;
     nlatched_sub = latched_sub;
-    cur_sub = portmap.valid_in && (alu_valid == portmap.bf_sub_valid) ? 1 : 0;
+    cur_sub = portmap.valid_in && (4'b0011 == portmap.scalar_type_enable) ? 1 : 0;
     nlatched_mult = latched_mult;
-    cur_mult = portmap.valid_in && (alu_valid == portmap.bf_mult_valid) ? 1 : 0;
+    cur_mult = portmap.valid_in && (4'b0100 == portmap.scalar_type_enable) ? 1 : 0;
     nlatched_slt = latched_slt;
-    cur_slt = portmap.valid_in && (alu_valid == portmap.bf_slt_valid) ? 1 : 0;
+    cur_slt = portmap.valid_in && (4'b0101 == portmap.scalar_type_enable) ? 1 : 0;
 
     portmap.ready_in = 1'b1;
     portmap.valid_out = 1'b0;
@@ -91,10 +91,10 @@ always_comb begin
             nlatched_bf1 = portmap.bf1_in;
             nlatched_bf2 = portmap.bf2_in;
 
-            nlatched_add = portmap.valid_in && (alu_valid == portmap.bf_add_valid) ? 1 : 0;
-            nlatched_sub = portmap.valid_in && (alu_valid == portmap.bf_sub_valid) ? 1 : 0;
-            nlatched_mult = portmap.valid_in && (alu_valid == portmap.bf_mult_valid) ? 1 : 0;
-            nlatched_slt = portmap.valid_in && (alu_valid == portmap.bf_slt_valid) ? 1 : 0;
+            nlatched_add = portmap.valid_in && (4'b0010 == portmap.scalar_type_enable) ? 1 : 0;
+            nlatched_sub = portmap.valid_in && (4'b0011 == portmap.scalar_type_enable) ? 1 : 0;
+            nlatched_mult = portmap.valid_in && (4'b0100 == portmap.scalar_type_enable) ? 1 : 0;
+            nlatched_slt = portmap.valid_in && (4'b0101 == portmap.scalar_type_enable) ? 1 : 0;
 
             nlatchedRD = portmap.rdIn;
         end

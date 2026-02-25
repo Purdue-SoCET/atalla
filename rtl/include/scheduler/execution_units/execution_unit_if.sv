@@ -6,9 +6,9 @@ package execution_unit_types_pkg;
   import atalla_isa_pkg::*;
   typedef struct packed {
     //control signals to guide the packet through the xbar
-    scalar_fu_enable_t scalar_type_enable,
+    scalar_fu_enable_t scalar_type_enable;
     logic valid_in, imm_src;
-    logic halfWord,
+    logic halfWord;
     //data signals
     logic [31:0] rs1_value, rs2_value;
     logic [7:0] rs1_idx, rdIn;

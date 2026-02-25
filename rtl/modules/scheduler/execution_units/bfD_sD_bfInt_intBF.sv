@@ -80,15 +80,15 @@ always_comb begin
     cur_input_2 = portmap.input2;
 
     nlatched_BFdiv = latched_BFdiv;
-    cur_BFdiv = portmap.valid_in && (alu_valid == portmap.bf_div_valid) ? 1 : 0;
+    cur_BFdiv = portmap.valid_in && (4'b0110 == portmap.scalar_type_enable) ? 1 : 0;
     nlatched_Sdiv = latched_Sdiv;
-    cur_Sdiv = portmap.valid_in && (alu_valid == portmap.s_div_valid) ? 1 : 0;
+    cur_Sdiv = portmap.valid_in && (4'b0111 == portmap.scalar_type_enable) ? 1 : 0;
     nlatched_Smod = latched_Smod;
-    cur_Smod = portmap.valid_in && (alu_valid == portmap.s_mod_valid) ? 1 : 0;
+    cur_Smod = portmap.valid_in && (4'b1000 == portmap.scalar_type_enable) ? 1 : 0;
     nlatched_BF_Int = latched_BF_Int;
-    cur_BF_Int = portmap.valid_in && (alu_valid == portmap.BF_to_int_valid) ? 1 : 0;
+    cur_BF_Int = portmap.valid_in && (4'b1001 == portmap.scalar_type_enable) ? 1 : 0;
     nlatched_Int_BF = latched_Int_BF;
-    cur_Int_BF = portmap.valid_in && (alu_valid == portmap.int_to_BF_valid) ? 1 : 0;
+    cur_Int_BF = portmap.valid_in && (4'b1010 == portmap.scalar_type_enable) ? 1 : 0;
 
     nlatched_imm_src = latched_imm_src;
     cur_imm_src = portmap.imm_src;
@@ -117,11 +117,11 @@ always_comb begin
             nlatched_input1 = portmap.input1;
             nlatched_input2 = portmap.input2;
 
-            nlatched_BFdiv = portmap.valid_in && (alu_valid == portmap.bf_div_valid) ? 1 : 0;
-            nlatched_Sdiv = portmap.valid_in && (alu_valid == portmap.s_div_valid) ? 1 : 0;
-            nlatched_Smod = portmap.valid_in && (alu_valid == portmap.s_mod_valid) ? 1 : 0;
-            nlatched_BF_Int = portmap.valid_in && (alu_valid == portmap.BF_to_int_valid) ? 1 : 0;
-            nlatched_Int_BF = portmap.valid_in && (alu_valid == portmap.int_to_BF_valid) ? 1 : 0;
+            nlatched_BFdiv = portmap.valid_in && (4'b0110 == portmap.scalar_type_enable) ? 1 : 0;
+            nlatched_Sdiv = portmap.valid_in && (4'b0111 == portmap.scalar_type_enable) ? 1 : 0;
+            nlatched_Smod = portmap.valid_in && (4'b1000 == portmap.scalar_type_enable) ? 1 : 0;
+            nlatched_BF_Int = portmap.valid_in && (4'b1001 == portmap.scalar_type_enable) ? 1 : 0;
+            nlatched_Int_BF = portmap.valid_in && (4'b1010 == portmap.scalar_type_enable) ? 1 : 0;
 
             nlatched_imm_src = portmap.imm_src;
             nlatched_imm = portmap.imm;

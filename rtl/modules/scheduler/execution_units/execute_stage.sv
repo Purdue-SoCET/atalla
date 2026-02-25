@@ -117,7 +117,7 @@ module execute_stage
     assign unit5_if.rdIn = post_xbar_ex5.rdIn;
     assign unit5_if.valid_in = ex5_valid;
     assign unit5_if.scalar_type_enable = post_xbar_ex5.scalar_type_enable;
-    assign unit5_if.halfWord = post_xbar_ex5.halfword;
+    assign unit5_if.halfWord = post_xbar_ex5.halfWord;
     //outputs
     assign ex_if.ex5.valid_out = unit5_if.valid_out;
     assign ex_if.ex5.data_out = unit5_if.data_out;

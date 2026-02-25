@@ -11,7 +11,7 @@ import scheduler_pkg::*;
 import atalla_isa_pkg::*;
 
 module scheduler_core #(
-    parameter NUM_SCALAR_INSTRS = 4,
+    parameter NUM_SCALAR_INSTRS = 4
 )
 (
     input logic CLK, nRST,
@@ -22,7 +22,7 @@ module scheduler_core #(
     input instr_t [3:0] scalar_instrs,
     input logic predict_taken_in,
     input word_t pc_in, pc_pred_addr_in,
-    output logic ready,
+    output logic ready
 );
 
     scheduler_pkg::EXEC_WB_LATCH n_EX_WB_latch, EX_WB_latch;
@@ -71,7 +71,7 @@ module scheduler_core #(
 
         scalar_ex_if.halt = DEC2_EX_halt_latch;
         
-        scalar_ex_if.pc = DEC2_EX_PC_latch.pc_out;
+        scalar_ex_if.pc = DEC2_EX_PC_latch.pc;
         scalar_ex_if.pc_pred_addr_out = DEC2_EX_PC_latch.pc_pred_addr_out;
         scalar_ex_if.predict_taken_out = DEC2_EX_PC_latch.predict_taken_out;
     end
