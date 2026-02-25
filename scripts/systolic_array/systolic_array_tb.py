@@ -434,6 +434,7 @@ if __name__ == "__main__":
         write_line(PATH_TO_INPUT, "Psum")
         append_matrix(PATH_TO_INPUT, C)
 
+        write_line(PATH_TO_INPUT, f"Test 5.1")
         B1 = gen_matrix(array_dim, array_dim, dtype)
         write_line(PATH_TO_INPUT, "Input")
         append_matrix(PATH_TO_INPUT, B1)
@@ -447,6 +448,7 @@ if __name__ == "__main__":
         append_matrix(PATH_TO_EXPECTED_RESULT, D)
 
         D1 = sim_MEISSA(A, B1, C1, dtype)
+        write_line(PATH_TO_EXPECTED_RESULT, "Test 6.1")
         append_matrix(PATH_TO_EXPECTED_RESULT, D1)
 
         test_num += 1
@@ -467,6 +469,7 @@ if __name__ == "__main__":
         write_line(PATH_TO_INPUT, "Psum")
         append_matrix(PATH_TO_INPUT, C)
 
+        write_line(PATH_TO_INPUT, f"Test 6.1")
         B1 = gen_matrix(array_dim, array_dim, dtype)
         write_line(PATH_TO_INPUT, "Input")
         append_matrix(PATH_TO_INPUT, B1)
@@ -480,6 +483,7 @@ if __name__ == "__main__":
         append_matrix(PATH_TO_EXPECTED_RESULT, D)
 
         D1 = sim_MEISSA(A, B1, C1, dtype)
+        write_line(PATH_TO_EXPECTED_RESULT, "Test 6.1")
         append_matrix(PATH_TO_EXPECTED_RESULT, D1)
 
         test_num += 1
@@ -500,6 +504,7 @@ if __name__ == "__main__":
         write_line(PATH_TO_INPUT, "Psum")
         append_matrix(PATH_TO_INPUT, C)
 
+        write_line(PATH_TO_INPUT, f"Test 7.1")
         B1 = gen_matrix(array_dim, array_dim, dtype)
         write_line(PATH_TO_INPUT, "Input")
         append_matrix(PATH_TO_INPUT, B1)
@@ -513,6 +518,7 @@ if __name__ == "__main__":
         append_matrix(PATH_TO_EXPECTED_RESULT, D)
 
         D1 = sim_MEISSA(A, B1, C1, dtype)
+        write_line(PATH_TO_EXPECTED_RESULT, "Test 7.1")
         append_matrix(PATH_TO_EXPECTED_RESULT, D1)
 
         test_num += 1
@@ -520,28 +526,28 @@ if __name__ == "__main__":
 
         # ---------------------------------------------------------------------
         # Random Tests
+        write_line(PATH_TO_INPUT, f"Test 7")
         A = gen_matrix(array_dim, array_dim, dtype)
-        write_line(PATH_TO_INPUT, f"Test 500")
         write_line(PATH_TO_INPUT, "Weight")
         append_matrix(PATH_TO_INPUT, A)
 
-        # B = gen_matrix(array_dim, array_dim, dtype)
-        # write_line(PATH_TO_INPUT, "Input")
-        # append_matrix(PATH_TO_INPUT, B)
+        B = gen_matrix(array_dim, array_dim, dtype)
+        write_line(PATH_TO_INPUT, "Input")
+        append_matrix(PATH_TO_INPUT, B)
 
-        # C = gen_matrix(array_dim, array_dim, dtype)
-        # write_line(PATH_TO_INPUT, "Psum")
-        # append_matrix(PATH_TO_INPUT, C)
+        C = gen_matrix(array_dim, array_dim, dtype)
+        write_line(PATH_TO_INPUT, "Psum")
+        append_matrix(PATH_TO_INPUT, C)
 
-        # D = sim_MEISSA(A, B, C, dtype)
-        # # write_line(PATH_TO_EXPECTED_RESULT, f"Test {i}")
-        # append_matrix(PATH_TO_EXPECTED_RESULT, D)
+        write_line(PATH_TO_EXPECTED_RESULT, f"Test 7")
+        D = sim_MEISSA(A, B, C, dtype)
+        append_matrix(PATH_TO_EXPECTED_RESULT, D)
 
-        # test_num += 1
-        # progress_bar(test_num, test_total_num)
-        write_line(PATH_TO_EXPECTED_RESULT, f"Test 500")
+        test_num += 1
+        progress_bar(test_num, test_total_num)
 
-        for i in range(7, test_total_num + 1):
+        for i in range(8, test_total_num):
+            write_line(PATH_TO_INPUT, f"Test {i}")
             B = gen_matrix(array_dim, array_dim, dtype)
             write_line(PATH_TO_INPUT, "Input")
             append_matrix(PATH_TO_INPUT, B)
@@ -550,11 +556,14 @@ if __name__ == "__main__":
             write_line(PATH_TO_INPUT, "Psum")
             append_matrix(PATH_TO_INPUT, C)
 
+            write_line(PATH_TO_EXPECTED_RESULT, f"Test {i}")
             D = sim_MEISSA(A, B, C, dtype)
-            # write_line(PATH_TO_EXPECTED_RESULT, f"Test {i}")
             append_matrix(PATH_TO_EXPECTED_RESULT, D)
 
             test_num += 1
             progress_bar(test_num, test_total_num)
+
+            
+            
     
     # compare_result.compare_results(PATH_TO_EXPECTED_RESULT, PATH_TO_RESULT)

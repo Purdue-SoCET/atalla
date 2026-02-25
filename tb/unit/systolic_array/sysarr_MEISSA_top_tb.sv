@@ -331,17 +331,17 @@ module sysarr_MEISSA_top_tb();
         if (found_expected_result) begin
             get_m_expected_output();
         end
+
+        is_result_correct = 1;
         // Compare actual vs expected
         for(int i = 0; i < ARRAY_DIM; i++) begin
             for (int j = 0; j < ARRAY_DIM; j++) begin
+                if(temp_act_outputs[i][j] == 16'h8000) begin
+                    temp_act_outputs[i][j] = 16'h0000;
+                end
                 if (temp_act_outputs[i][j] !== temp_exp_outputs[i][j]) begin
-                    if(temp_act_outputs[i][j] == 16'h8000 && temp_exp_outputs[i][j] == 16'h0000) begin
-                        // Allow 0x8000 and 0x0000 to be considered equal (treating as signed values)
-                        continue;
-                    end
-                    else begin
-                        is_result_correct = 0;
-                    end
+                    is_result_correct = 0;
+                    $display("Test %s Failed at element [%0d][%0d]: Expected 0x%04H, Got 0x%04H", test_name, i, j, temp_exp_outputs[i][j], temp_act_outputs[i][j]);
                 end
             end
         end
