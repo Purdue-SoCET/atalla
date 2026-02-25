@@ -9,3 +9,4 @@ vsim.*
 
 !.gitignore
 !.gitmodules
+*.vcd

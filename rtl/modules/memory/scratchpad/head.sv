@@ -62,7 +62,7 @@ module head #(parameter logic [scpad_pkg::SCPAD_ID_WIDTH-1:0] IDX = '0) (scpad_i
     // 1. It created a combinational loop (be_v depends on be_req.valid, which depends on be_stall)
     // 2. With FIFOs in the pipeline, we can accept requests every cycle until FIFOs are full
     assign downstream_stall = hif.w_stall[IDX] || hif.r_stall[IDX];
-    assign hif.fe_stall[IDX] = downstream_stall || (fe_v && (pipe_busy || be_v));
+    assign hif.fe_stall[IDX] = downstream_stall || pipe_busy || be_v;
     assign hif.be_stall[IDX] = downstream_stall;
 
 endmodule
