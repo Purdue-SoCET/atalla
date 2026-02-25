@@ -18,6 +18,8 @@ logic overflow, underflow, invalid;
 addsub_bf16 adder (
     .clk(CLK),
     .nRST(nRST),
+    .start(1'b1),
+    .stall(1'b0),
     .bf1_in(bf1_in),
     .bf2_in(bf2_in),
     .op(op),
