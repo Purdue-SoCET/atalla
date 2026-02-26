@@ -339,6 +339,9 @@ module sysarr_MEISSA_top_tb();
                 if(temp_act_outputs[i][j] == 16'h8000) begin
                     temp_act_outputs[i][j] = 16'h0000;
                 end
+                if(temp_exp_outputs[i][j] == 16'h8000) begin
+                    temp_exp_outputs[i][j] = 16'h0000;
+                end
                 if (temp_act_outputs[i][j] !== temp_exp_outputs[i][j]) begin
                     is_result_correct = 0;
                     $display("Test %s Failed at element [%0d][%0d]: Expected 0x%04H, Got 0x%04H", test_name, i, j, temp_exp_outputs[i][j], temp_act_outputs[i][j]);
