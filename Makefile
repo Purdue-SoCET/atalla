@@ -138,7 +138,7 @@ test:
 	      PKGS="$$PKGS $$FULL_PATH"; \
 	    elif [ -d "$$FULL_PATH" ]; then \
 	      echo "  Searching for packages in directory: $$FULL_PATH"; \
-	      PKG_FILES=$$(find "$$FULL_PATH" -type f \( -name '*_pkg.sv' -o -name '*_pkg.vh' \) -print 2>/dev/null); \
+	      PKG_FILES=$$(find "$$FULL_PATH" -type f \( -name '*_pkg.sv' -o -name '*_pkg.vh' -o -name '*.sv' ! -name '*_pkg.sv' \) -print 2>/dev/null); \
 	      PKGS="$$PKGS $$PKG_FILES"; \
 	    else \
 	      echo "Error: Package path $$FULL_PATH not found (neither file nor directory)"; exit 1; \
