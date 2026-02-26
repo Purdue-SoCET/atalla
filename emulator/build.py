@@ -8,16 +8,39 @@ import sys, re
 from pathlib import Path
 import argparse
 import numpy as np
-from instruction_latency import latency
 
 from src.misc.opcode_table import OPCODES, name_to_opcode
 
+try:
+    from instruction_latency import latency as DEFAULT_LATENCY_MAP
+except Exception:
+    DEFAULT_LATENCY_MAP: Dict[str, int] = {}
+
 INVERT_OPCODES = name_to_opcode()
-VIRTUAL_PACKET_SIZE = 4 
+VIRTUAL_PACKET_SIZE = 1 
 REAL_PACKET_SIZE = 4
+GRAPH_PACKET_WIDTH = REAL_PACKET_SIZE
 RAW_VI_IMM_MNEMONICS = {"shift.vi", "rsum.vi", "rmin.vi", "rmax.vi"}
 INSTR_BYTE_WIDTH = 6
 INSTR_ADDR_STRIDE = REAL_PACKET_SIZE * INSTR_BYTE_WIDTH
+
+MEM_LOAD_MNEMONICS = {
+    "lw.s",
+    "lhw.s",
+    "vreg.ld",
+    "scpad.ld",
+    "lw.vi",
+}
+MEM_STORE_MNEMONICS = {
+    "sw.s",
+    "shw.s",
+    "vreg.st",
+    "scpad.st",
+}
+CONTROL_MNEMONICS = (
+    {name.lower() for name, instr_type in OPCODES.values() if instr_type == "BR"}
+    | {"jal", "jalr", "halt.s", "barrier.s", "ret"}
+)
 
 IntLike = int
 BytesLike = Union[bytes, bytearray, memoryview]
@@ -591,28 +614,31 @@ def assemble_file(in_data: str) -> list[tuple[str, str]]:
     return out
 # ---- Label Branch Support End ----
 
-def emit_test_format(instrs: list[tuple[str, str]]) -> str:
+def emit_test_format(
+    instrs: list[tuple[str, str]],
+    *,
+    virtual_packet_size: int = VIRTUAL_PACKET_SIZE,
+) -> str:
     nop_hex = encode_instruction({"opcode": INVERT_OPCODES["nop.s"][0]}).upper()
 
     lines = []
     addr = 0
     i = 0
     while i < len(instrs):
-        chunk = instrs[i:i+VIRTUAL_PACKET_SIZE]
+        chunk = instrs[i:i+virtual_packet_size]
         hex_words = [h for (h, _) in chunk]
         comments = [c for (_, c) in chunk if c]
 
         while len(hex_words) < REAL_PACKET_SIZE:
             hex_words.append(nop_hex)
 
-        # Prefer comment from first real instruction, or join if you want
-        comment = comments[0] if comments else ""
+        comment = " | ".join(comments) if comments else ""
         cmt_str = f" # {comment}" if comment else ""
 
         lines.append(f"{addr:08X}: " + " ".join(hex_words) + cmt_str)
 
         addr += INSTR_ADDR_STRIDE
-        i += VIRTUAL_PACKET_SIZE
+        i += virtual_packet_size
 
     return "\n".join(lines)
 
@@ -771,95 +797,264 @@ def render_testfile(instr_lines: str, dram_render: str) -> str:
     parts.append(dram_render)
 
     return "\n".join([p for p in parts if p is not None]).rstrip() + "\n"
-def convert_instructions(instructions_old):
-    #input = hex, comment output = op, dsts, srcs, mem_key
-    instructions = []
-    for instr, comment in instructions_old:
-        if(comment):
-            operation = comment.split()[0]
-        else:
-            operation = "nop.s"
-        instructions.append((operation, [], [], None))
-    return instructions
+def _sign_extend(value: int, bits: int) -> int:
+    sign = 1 << (bits - 1)
+    return (value ^ sign) - sign
 
-def build_dependency_graph(instructions, latency_map, single_lsu=True):
-    last_write = {}
+
+def _base_op(op: str) -> str:
+    return op.lower().split(".", 1)[0]
+
+
+def _is_memory_load(op: str) -> bool:
+    op_norm = op.lower()
+    return op_norm in MEM_LOAD_MNEMONICS or _base_op(op_norm) == "lw"
+
+
+def _is_memory_store(op: str) -> bool:
+    op_norm = op.lower()
+    return op_norm in MEM_STORE_MNEMONICS or _base_op(op_norm) in {"sw", "sd", "shw"}
+
+
+def _is_memory_op(op: str) -> bool:
+    return _is_memory_load(op) or _is_memory_store(op)
+
+
+def _is_control_op(op: str) -> bool:
+    op_norm = op.lower()
+    return op_norm in CONTROL_MNEMONICS or _base_op(op_norm) in {"j", "jal", "jalr", "ret", "halt", "barrier"}
+
+
+def _decode_instruction_for_graph(hex_word: str) -> tuple[str, list[str], list[str], object]:
+    raw = int(hex_word, 16)
+    opcode = raw & 0x7F
+    if opcode not in OPCODES:
+        return "nop.s", [], [], None
+
+    mnemonic, instr_type = OPCODES[opcode]
+    dsts: list[str] = []
+    srcs: list[str] = []
+    mem_key = None
+
+    def r(reg: int) -> str:
+        return f"r{reg}"
+
+    def v(reg: int) -> str:
+        return f"v{reg}"
+
+    if instr_type == "R":
+        rd = (raw >> 7) & 0xFF
+        rs1 = (raw >> 15) & 0xFF
+        rs2 = (raw >> 23) & 0xFF
+        dsts = [r(rd)]
+        srcs = [r(rs1), r(rs2)]
+
+    elif instr_type == "I":
+        rd = (raw >> 7) & 0xFF
+        rs1 = (raw >> 15) & 0xFF
+        dsts = [r(rd)]
+        srcs = [r(rs1)]
+
+    elif instr_type == "M":
+        rd = (raw >> 7) & 0xFF
+        rs1 = (raw >> 15) & 0xFF
+        imm12 = _sign_extend((raw >> 23) & 0xFFF, 12)
+        if _is_memory_load(mnemonic):
+            dsts = [r(rd)]
+            srcs = [r(rs1)]
+            mem_key = (r(rs1), imm12)
+        elif _is_memory_store(mnemonic):
+            srcs = [r(rd), r(rs1)]
+            mem_key = (r(rs1), imm12)
+        else:
+            dsts = [r(rd)]
+            srcs = [r(rs1)]
+
+    elif instr_type == "BR":
+        rs1 = (raw >> 15) & 0xFF
+        rs2 = (raw >> 23) & 0xFF
+        srcs = [r(rs1), r(rs2)]
+
+    elif instr_type == "MI":
+        rd = (raw >> 7) & 0xFF
+        if rd != 0:
+            dsts = [r(rd)]
+
+    elif instr_type == "VV":
+        vd = (raw >> 7) & 0xFF
+        vs1 = (raw >> 15) & 0xFF
+        vs2 = (raw >> 23) & 0xFF
+        dsts = [v(vd)]
+        srcs = [v(vs1), v(vs2)]
+
+    elif instr_type == "VS":
+        vd = (raw >> 7) & 0xFF
+        vs1 = (raw >> 15) & 0xFF
+        rs1 = (raw >> 23) & 0xFF
+        dsts = [v(vd)]
+        srcs = [v(vs1), r(rs1)]
+
+    elif instr_type == "VI":
+        vd = (raw >> 7) & 0xFF
+        vs1 = (raw >> 15) & 0xFF
+        dsts = [v(vd)]
+        srcs = [v(vs1)]
+
+    elif instr_type == "VM":
+        vd = (raw >> 7) & 0xFF
+        rs1 = (raw >> 15) & 0xFF
+        if _is_memory_store(mnemonic):
+            srcs = [v(vd), r(rs1)]
+        else:
+            dsts = [v(vd)]
+            srcs = [r(rs1)]
+        mem_key = (r(rs1), "vreg")
+
+    elif instr_type == "SDMA":
+        rs1_rd1 = (raw >> 7) & 0xFF
+        rs2 = (raw >> 15) & 0xFF
+        if _is_memory_store(mnemonic):
+            srcs = [r(rs1_rd1), r(rs2)]
+        else:
+            dsts = [r(rs1_rd1)]
+            srcs = [r(rs2)]
+        mem_key = (r(rs2), "scpad")
+
+    elif instr_type == "MTS":
+        rd = (raw >> 7) & 0xFF
+        vms = (raw >> 15) & 0xFF
+        dsts = [r(rd)]
+        srcs = [v(vms)]
+
+    elif instr_type == "STM":
+        vmd = (raw >> 7) & 0xFF
+        rs1 = (raw >> 15) & 0xFF
+        dsts = [v(vmd)]
+        srcs = [r(rs1)]
+
+    elif instr_type == "VTS":
+        rd = (raw >> 7) & 0xFF
+        vs1 = (raw >> 15) & 0xFF
+        dsts = [r(rd)]
+        srcs = [v(vs1)]
+
+    elif instr_type == "MVV":
+        vmd = (raw >> 7) & 0xF
+        vs1 = (raw >> 11) & 0xFF
+        vs2 = (raw >> 19) & 0xFF
+        dsts = [v(vmd)]
+        srcs = [v(vs1), v(vs2)]
+
+    elif instr_type == "MVS":
+        vmd = (raw >> 7) & 0xF
+        vs1 = (raw >> 11) & 0xFF
+        rs1 = (raw >> 19) & 0xFF
+        dsts = [v(vmd)]
+        srcs = [v(vs1), r(rs1)]
+
+    return mnemonic, dsts, srcs, mem_key
+
+
+def convert_instructions(instructions_old: list[tuple[str, str]]) -> list[tuple[str, list[str], list[str], object]]:
+    return [_decode_instruction_for_graph(hex_word) for hex_word, _ in instructions_old]
+
+
+def _op_latency(op: str, latency_map: Dict[str, int]) -> int:
+    op_norm = op.lower()
+    op_base = _base_op(op_norm)
+
+    for key in (op_norm, op_base):
+        if key in latency_map:
+            try:
+                return max(1, int(latency_map[key]))
+            except (TypeError, ValueError):
+                pass
+
+    if _is_memory_load(op_norm):
+        return 3
+    if _is_memory_store(op_norm):
+        return 1
+    if _is_control_op(op_norm):
+        return 1
+    if op_base in {"mul", "muli"}:
+        return 3
+    if op_base in {"div", "divi", "mod", "modi", "expi", "sqrti", "gemm"}:
+        return 8
+    return 1
+
+
+def build_dependency_graph(
+    instructions: list[tuple[str, list[str], list[str], object]],
+    latency_map: Dict[str, int],
+    single_lsu: bool = True,
+) -> list[int]:
+    last_write: Dict[str, int] = {}
     last_mem_cycle = -1
-    last_store_at = {}
+    last_store_at: Dict[object, int] = {}
     ready_time = [0 for _ in range(len(instructions))]
 
-    for i in range(len(instructions)):
-        op, dsts, srcs, mem_key = instructions[i] 
+    for i, (op, dsts, srcs, mem_key) in enumerate(instructions):
         start = 0
         for s in srcs:
-            if s in last_write:
-                if last_write[s] > start:
-                    start = last_write[s]
+            if s in last_write and last_write[s] > start:
+                start = last_write[s]
 
-        is_load = op.startswith("lw")
-        is_store = op.startswith("sw") or op.startswith("sd")
+        is_load = _is_memory_load(op)
+        is_store = _is_memory_store(op)
         is_mem = is_load or is_store
 
-        if single_lsu and is_mem:
-            if last_mem_cycle + 1 > start:
-                start = last_mem_cycle + 1
+        if single_lsu and is_mem and (last_mem_cycle + 1 > start):
+            start = last_mem_cycle + 1
 
         if is_mem and mem_key is not None:
-            if is_load:
-                if mem_key in last_store_at and last_store_at[mem_key] > start:
-                    start = last_store_at[mem_key]
-            else:
-                if mem_key in last_store_at and last_store_at[mem_key] > start:
-                    start = last_store_at[mem_key]
+            if mem_key in last_store_at and last_store_at[mem_key] > start:
+                start = last_store_at[mem_key]
 
         ready_time[i] = start
 
-        latency = latency_map.get(op, 1)
+        op_latency = _op_latency(op, latency_map)
         for d in dsts:
-            last_write[d] = start + latency
+            last_write[d] = start + op_latency
 
         if is_mem:
             last_mem_cycle = start
             if is_store and mem_key is not None:
-                last_store_at[mem_key] = start + latency
+                last_store_at[mem_key] = start + op_latency
 
     return ready_time
 
 
-def greedy_pack(instructions, ready_time, max_width=4):
-    packets = []
+def greedy_pack(
+    instructions: list[tuple[str, list[str], list[str], object]],
+    ready_time: list[int],
+    max_width: int = GRAPH_PACKET_WIDTH,
+) -> list[list[int]]:
+    packets: list[list[int]] = []
     scheduled = [False for _ in range(len(instructions))]
     current_cycle = 0
-    
-
-    def is_control(op):
-        if op in {"j", "jal", "jalr"}:
-            return True
-        if op.startswith("b"):
-            return True
-        return False
 
     while not all(scheduled):
-        packet = []
-        packet_reads = set()
-        packet_writes = set()
+        packet: list[int] = []
+        packet_reads: set[str] = set()
+        packet_writes: set[str] = set()
         mem_in_packet = False
         count = 0
 
-        for i in range(len(instructions)):
-            op, dsts, srcs, mem_key = instructions[i]
+        for i, (op, dsts, srcs, _) in enumerate(instructions):
             if scheduled[i]:
                 continue
             if ready_time[i] > current_cycle:
                 continue
 
-            if is_control(op):
+            if _is_control_op(op):
+                if any(not scheduled[j] for j in range(i)):
+                    break
                 if count == 0:
                     packet.append(i)
                     scheduled[i] = True
                 break
 
-            is_mem = op.startswith("lw") or op.startswith("sw") or op.startswith("sd")
+            is_mem = _is_memory_op(op)
             if mem_in_packet and is_mem:
                 continue
 
@@ -897,11 +1092,34 @@ def greedy_pack(instructions, ready_time, max_width=4):
 
     return packets
 
+
+def materialize_scheduled_instructions(
+    instrs: list[tuple[str, str]],
+    packets: list[list[int]],
+    *,
+    packet_width: int = GRAPH_PACKET_WIDTH,
+) -> list[tuple[str, str]]:
+    nop_hex = encode_instruction({"opcode": INVERT_OPCODES["nop.s"][0]}).upper()
+    nop_entry = (nop_hex, "")
+    scheduled: list[tuple[str, str]] = []
+
+    for packet in packets:
+        if not packet:
+            scheduled.extend([nop_entry] * packet_width)
+            continue
+
+        for idx in packet:
+            scheduled.append(instrs[idx])
+        scheduled.extend([nop_entry] * (packet_width - len(packet)))
+
+    return scheduled
+
 if __name__ == "__main__":
     
     ap = argparse.ArgumentParser()
     ap.add_argument("-i", "--input", type=Path, default=None, help="Input assembly file")
     ap.add_argument("-o", "--output", type=Path, default=None, help="Output test file")
+    ap.add_argument("--no-graph", action="store_true", help="Disable dependency graph packet scheduling")
     args = ap.parse_args()
 
     demo_asm = """
@@ -914,22 +1132,22 @@ if __name__ == "__main__":
     """
 
     asm = args.input.read_text() if args.input is not None else demo_asm
-    instrs = assemble_file(asm)       
-
-    instructions = convert_instructions(instrs)
-    ready = build_dependency_graph(convert_instructions(instrs), latency)
-
-    packets = greedy_pack(instructions, ready)
-
-    print("ready:", ready)
-    print("packets:", packets)
-
-    scheduled = []
-    for packet in packets:
-        for i in packet:
-            scheduled.append(instrs[i])
-
-    instr_text = emit_test_format(scheduled)
+    instrs = assemble_file(asm)
+    if args.no_graph:
+        instr_text = emit_test_format(instrs)
+    else:
+        dependency_instrs = convert_instructions(instrs)
+        ready = build_dependency_graph(dependency_instrs, DEFAULT_LATENCY_MAP)
+        packets = greedy_pack(dependency_instrs, ready, max_width=GRAPH_PACKET_WIDTH)
+        scheduled = materialize_scheduled_instructions(
+            instrs,
+            packets,
+            packet_width=GRAPH_PACKET_WIDTH,
+        )
+        instr_text = emit_test_format(
+            scheduled,
+            virtual_packet_size=GRAPH_PACKET_WIDTH,
+        )
 
     if args.input is None:
         img = DRAMWriter() 
