@@ -1,0 +1,71 @@
+`include "atalla_isa_types.vh"
+import atalla_isa_pkg::*;
+`include "BTB_if.vh"
+`include "if_dec1_if.vh"
+`include "datapath_cache_if.vh"
+
+module fetch (
+  input  logic    clk,
+  input  logic    rst_n,
+  input logic     flush,
+  input logic     ready,
+  input word_t    pc_branch,
+
+  // Interfaces
+  datapath_cache_if.dp dc_if,
+  if_dec1_if.src       ifdec1_if,
+  BTB_if.fetch_view            btb_if
+);
+
+  address_t pc;
+  address_t next_pc;
+  logic     pred_taken;
+
+
+  always_comb begin
+    // BTFNT Strategy: Predict taken if BTB hits AND target is backward
+    pred_taken = btb_if.bhit && (btb_if.predict_target < pc);
+  end
+
+
+  always_comb begin
+    if (flush) begin
+      // Priority 1: Redirect from Branch Unit (Misprediction Recovery)
+      next_pc = pc_branch;
+    end
+    else if (pred_taken) begin
+      // Priority 2: BTB Prediction
+      next_pc = btb_if.predict_target;
+    end
+    else begin
+      // Priority 3: Sequential flow
+      next_pc = pc + PACKET_BYTE_W;
+    end
+  end
+
+
+  always_ff @(posedge clk or negedge rst_n) begin
+    if (!rst_n) begin
+      pc <= 32'h0;
+    end
+    else begin
+
+      // Currently unsure
+      if (dc_if.ihit && (ready || flush)) begin
+        pc <= next_pc;
+      end
+    end
+  end
+
+// Instantaneous outputs for current cycle lookup
+  assign dc_if.imemaddr  = pc;
+  assign btb_if.pc_fetch = pc;
+
+  assign ifdec1_if.pc_in            = pc;
+  assign ifdec1_if.predict_taken_in = pred_taken;
+  assign ifdec1_if.pc_pred_addr_in  = btb_if.predict_target;
+
+  assign ifdec1_if.inst_packet_in   = dc_if.imemload; 
+  
+  assign dc_if.imemREN = 1'b1;
+endmodule

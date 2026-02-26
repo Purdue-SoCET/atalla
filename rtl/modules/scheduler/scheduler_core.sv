@@ -4,6 +4,9 @@
 `include "scheduler_pkg.sv"
 `include "decode_2_if.vh"
 `include "atalla_isa_types.vh"
+`include "if_dec1_if.vh"
+
+
 
 import execution_unit_types_pkg::*;
 import scalar_wb_pkg::*;
@@ -19,26 +22,54 @@ module scheduler_core #(
     input logic hit,
     input logic [31:0] data_load,
     //dec2 in
-    input instr_t [3:0] scalar_instrs,
-    input logic predict_taken_in,
-    input word_t pc_in, pc_pred_addr_in,
+    // input instr_t [3:0] scalar_instrs,
+    // input logic predict_taken_in,
+    // input word_t pc_in, pc_pred_addr_in,
+    // output logic ready
+
+    //fetch in
+    input logic ihit,
+    input instruction_packet_t imemload, 
     output logic ready
+
+
 );
 
     scheduler_pkg::EXEC_WB_LATCH n_EX_WB_latch, EX_WB_latch;
     execution_unit_types_pkg::in_DEC2_EX_t  [NUM_SCALAR_INSTRS-1:0] n_DEC2_EX_latch, DEC2_EX_latch;
     scheduler_pkg::DEC2_WB_LATCH_PC n_DEC2_EX_PC_latch, DEC2_EX_PC_latch;
+    scheduler_pkg::DEC1_DEC2_LATCH n_D1_D2_latch, D1_D2_latch;
+
     logic n_DEC2_EX_halt_latch, DEC2_EX_halt_latch;
 
     //interfaces
     s_wb_arbiter_if scalar_wb_if ();
     execution_unit_if scalar_ex_if ();
     decode_2_if decode_2_if ();
+    datapath_cache_if datapath_cache_if ();
+    dec1_dec2_if decode_1_if();
 
     //instantiations
     s_wb_arbiter S_WB_ARBITER(.CLK(CLK), .nRST(nRST), .vif(scalar_wb_if));
     execute_stage S_EXECUTE(.clk(CLK), .nRST(nRST), .ex_if(scalar_ex_if));
     decode_2 S_V_DECODE_2(.CLK(CLK), .nRST(nRST), .d2if(decode_2_if));
+    fetch_decode1 S_FETCH_DECODE_1 (.clk(CLK), .rst_n(nRST), .flush(1'b0), .ready(decode_2_if.ready), .pc_branch(), .btb_update_en(), .btb_pc_update(), .btb_true_target(), .dc_if(datapath_cache_if), .dec12_if(decode_1_if));
+
+
+
+    //DEC1 outputs to latch
+    assign n_D1_D2_latch.scalar_instrs = decode_1_if.scalar_inst_in;
+    assign n_D1_D2_latch.pc = decode_1_if.pc_in;
+    assign n_D1_D2_latch.predict_taken = decode_1_if.predict_taken_in;
+    assign n_D1_D2_latch.pc_pred_addr = decode_1_if.pc_pred_addr_in;
+
+    //DEC2 inputs form D1_D2 latch
+    assign decode_2_if.scalar_instrs = D1_D2_latch.scalar_instrs;
+    assign decode_2_if.pc_in = D1_D2_latch.pc;
+    assign decode_2_if.pc_pred_addr_in = D1_D2_latch.pc_pred_addr;
+    assign decode_2_if.predict_taken_in = D1_D2_latch.predict_taken;
+
+
 
     always_comb begin : DEC2_EX
         //continuous assignment for DEC2/EX
@@ -77,6 +108,10 @@ module scheduler_core #(
         scalar_ex_if.pc_pred_addr_out = DEC2_EX_PC_latch.pc_pred_addr_out;
         scalar_ex_if.predict_taken_out = DEC2_EX_PC_latch.predict_taken_out;
     end
+
+    
+
+
 
     //DEC2 inputs from EX
     assign decode_2_if.ready_DEC2_ex1 = scalar_ex_if.ready_DEC2_ex1;
@@ -135,12 +170,13 @@ module scheduler_core #(
     //temporary in/outs
     assign scalar_ex_if.hit = hit;
     assign scalar_ex_if.data_load = data_load;
-    assign decode_2_if.scalar_instrs = scalar_instrs;
-    assign decode_2_if.predict_taken_in = predict_taken_in;
-    assign decode_2_if.pc_pred_addr_in = pc_pred_addr_in;
-    assign decode_2_if.pc_in = pc_in;
+    // assign decode_2_if.scalar_instrs = scalar_instrs;
+    // assign decode_2_if.predict_taken_in = predict_taken_in;
+    // assign decode_2_if.pc_pred_addr_in = pc_pred_addr_in;
+    // assign decode_2_if.pc_in = pc_in;
     assign ready = decode_2_if.ready;
-
+    assign datapath_cache_if.ihit = ihit;
+    assign datapath_cache_if.imemload = imemload;
 
     always_ff @( posedge CLK, negedge nRST ) begin : EX_WB_LATCH
         if(!nRST) begin
@@ -148,11 +184,13 @@ module scheduler_core #(
             DEC2_EX_latch <= '0;
             DEC2_EX_PC_latch <= '0;
             DEC2_EX_halt_latch <= '0;
+            D1_D2_latch <= '0;
         end else begin
             EX_WB_latch <= n_EX_WB_latch;
             DEC2_EX_latch <= n_DEC2_EX_latch;
             DEC2_EX_PC_latch <= n_DEC2_EX_PC_latch;
             DEC2_EX_halt_latch <= n_DEC2_EX_halt_latch;
+            D1_D2_latch <= n_D1_D2_latch;
         end
     end
 

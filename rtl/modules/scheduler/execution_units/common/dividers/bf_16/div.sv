@@ -1,14 +1,17 @@
 /* FU Vector Divide Code */
 `include "div_if.vh"
 
-module div
-(
+module div #(
+    parameter int EXP_WIDTH  = 8,
+    parameter int MANT_WIDTH = 7
+)(
     input logic CLK, nRST,
-    div_if.div divif
+    div_if #(EXP_WIDTH, MANT_WIDTH).div divif
 );
 
 parameter int EXP_WIDTH = divif.EXP_WIDTH;
 parameter int MANT_WIDTH = divif.MANT_WIDTH;
+
 
 // Sequential logic to pulse done for 1 cycle
 logic done, skip_divider, en_divider, is_ovf, is_sub, first_cycle;
@@ -232,6 +235,7 @@ module mant_div #(
 );
 
 localparam A_WIDTH = MANT_WIDTH * 2 + 3;
+localparam N_WIDTH = $clog2(MANT_WIDTH+2);
 
 typedef enum logic {IDLE, DIV} state_t;
 state_t state, next_state;
@@ -239,7 +243,7 @@ state_t state, next_state;
 logic [MANT_WIDTH+2:0] q, next_q;
 logic [A_WIDTH:0] a, next_a;
 logic [MANT_WIDTH:0] m, next_m;
-logic [$clog2(MANT_WIDTH+2):0] n, next_n;
+logic [N_WIDTH:0] n, next_n;
 always_ff @(posedge CLK) begin
     if (~nRST) begin
         state <= IDLE;
