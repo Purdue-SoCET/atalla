@@ -74,6 +74,7 @@ module scheduler_core #(
     always_comb begin : DEC2_EX
         //continuous assignment for DEC2/EX
         //EX inputs from DEC2
+        n_DEC2_EX_halt_latch = 1'b0;
         if(decode_2_if.ready) begin
             for(int i = 0; i < NUM_SCALAR_INSTRS; i++) begin
                 n_DEC2_EX_latch[i].scalar_type_enable = decode_2_if.decoded_scalar_instrs[i].fu_enable;

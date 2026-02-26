@@ -24,6 +24,10 @@ module int_to_bf #()
     assign sign = inputInt[31];
 
     always_comb begin : conversion
+        msb = 5'd0;
+        guard = 1'b0;
+        sticky = 1'b0;
+
 
         if (inputInt == I32_MIN) begin
             abs_u = I32_MIN;
@@ -52,8 +56,10 @@ module int_to_bf #()
                 tmp_guard = abs_u >> (msb - 8);
                 guard = tmp_guard[0];
                 sticky = 1'b0;
-                for (i = 0; i < (msb-8); i++) begin
-                    sticky |= abs_u[i];
+                for (i = 0; i < 24; i++) begin
+                    if (i < (msb - 8)) begin
+                        sticky |= abs_u[i];
+                    end
                 end
                 lsb = frac_field[0];
                 round_up = guard & (sticky | lsb);

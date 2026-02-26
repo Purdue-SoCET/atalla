@@ -27,6 +27,7 @@ module ld_st_unit #()
 
 
     always_comb begin
+        n_state = cur_state;
         ld_st_if.ready_in = 1'b1;
         ld_st_if.valid_out = 1'b0;
 

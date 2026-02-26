@@ -6,12 +6,11 @@ module div #(
     parameter int MANT_WIDTH = 7
 )(
     input logic CLK, nRST,
-    div_if #(EXP_WIDTH, MANT_WIDTH).div divif
+    div_if.div divif
 );
 
-parameter int EXP_WIDTH = divif.EXP_WIDTH;
-parameter int MANT_WIDTH = divif.MANT_WIDTH;
-
+// parameter int EXP_WIDTH = divif.EXP_WIDTH;
+// parameter int MANT_WIDTH = divif.MANT_WIDTH;
 
 // Sequential logic to pulse done for 1 cycle
 logic done, skip_divider, en_divider, is_ovf, is_sub, first_cycle;
@@ -234,8 +233,8 @@ module mant_div #(
     output logic done
 );
 
-localparam A_WIDTH = MANT_WIDTH * 2 + 3;
 localparam N_WIDTH = $clog2(MANT_WIDTH+2);
+localparam A_WIDTH = MANT_WIDTH * 2 + 3;
 
 typedef enum logic {IDLE, DIV} state_t;
 state_t state, next_state;

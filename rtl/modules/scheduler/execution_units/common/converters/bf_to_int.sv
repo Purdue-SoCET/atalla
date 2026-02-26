@@ -28,6 +28,8 @@ module bf_to_int #()
 
 
     always_comb begin : conversionUnit
+        roundBit = 1'b0;  
+        mag_shifted = 64'b0;
 
         if (exp == 8'hFF) begin
             if(sign == 1'b0) begin

@@ -70,6 +70,7 @@ import atalla_isa_pkg::*;
 
 
     always_comb begin
+        n_state = cur_state;
         portmap.ready_in = 1'b1;
         portmap.valid_out = 1'b0;
 
