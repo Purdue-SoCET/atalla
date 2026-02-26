@@ -4,11 +4,12 @@
 #include <vector>
 #include <iomanip>
 #include <chrono>
+#include <cstdlib>
 #include "fp16_utils.h"
 #include "generate_test_vectors.h"
 
-std::string PATH_TO_INPUT = "/home/asicfab/a/yim13/atalla/scripts/systolic_array/systolic_array_tb_input.csv";
-std::string PATH_TO_EXPECTED_RESULT = "/home/asicfab/a/yim13/atalla/scripts/systolic_array/systolic_array_tb_expected_result.csv";
+std::string PATH_TO_INPUT = "/scripts/systolic_array/systolic_array_tb_input.csv";
+std::string PATH_TO_EXPECTED_RESULT = "/scripts/systolic_array/systolic_array_tb_expected_result.csv";
 
 // Function to write a 2D vector of uint16_t to a file
 void write_matrix_to_file(const std::vector<std::vector<uint16_t>>& matrix, const std::string& file_path) {
@@ -80,18 +81,47 @@ uint16_t sim_adder_tree(const std::vector<uint16_t>& in, uint16_t psum, bool is_
     std::vector<uint16_t> cur = in;          // working copy
     std::vector<uint16_t> next;              // next level
 
-    while (cur.size() > 1) {
-        size_t n = cur.size();
-        next.resize((n + 1) / 2);
+    if(ADDER_INPUT_NUM == 2)
+    {
+        while (cur.size() > 1) {
+            size_t n = cur.size();
+            next.resize((n + 1) / 2);
 
-        for (size_t j = 0; j + 1 < n; j += 2) {
-            next[j / 2] = sim_add(cur[j], cur[j + 1], is_fp16);
-        }
-        if (n & 1) { // odd tail
-            next[n / 2] = cur[n - 1];
-        }
+            for (size_t j = 0; j + 1 < n; j += 2) {
+                next[j / 2] = sim_add(cur[j], cur[j + 1], is_fp16);
+            }
+            if (n & 1) { // odd tail
+                next[n / 2] = cur[n - 1];
+            }
 
-        cur.swap(next);
+            cur.swap(next);
+        }
+    }
+    else if(ADDER_INPUT_NUM == 4)
+    {
+        while (cur.size() > 1) {
+            size_t n = cur.size();
+            next.resize((n + 3) / 4);
+
+            for (size_t j = 0; j + 3 < n; j += 4) {
+                next[j / 4] = fp16_4_input_add_hw(cur[j], cur[j + 1], cur[j + 2], cur[j + 3]);
+            }
+            size_t tail = n % 4;
+            if (tail > 0) {
+                uint16_t sum = cur[n - tail];
+                for (size_t k = n - tail + 1; k < n; ++k) {
+                    sum = sim_add(sum, cur[k], is_fp16);
+                }
+                next[n / 4] = sum;
+            }
+
+            cur.swap(next);
+        }
+    }
+    else
+    {
+        std::cerr << "Error: Unsupported ADDER_INPUT_NUM value: " << ADDER_INPUT_NUM << " ADDER_INPUT_NUM must be 2 or 4" << std::endl;
+        return 0;
     }
 
     // add psum at the end
@@ -185,6 +215,15 @@ int main() {
     // unsigned int n = std::thread::hardware_concurrency();
     // std::cout << "available logical threads: " << n << std::endl;
 
+    std::string input_path_env = std::getenv("ATALLA_ROOT");
+    if (!input_path_env.empty()) {
+        PATH_TO_INPUT = input_path_env + PATH_TO_INPUT;
+        PATH_TO_EXPECTED_RESULT = input_path_env + PATH_TO_EXPECTED_RESULT;
+    }
+    else {
+        std::cerr << "Error: ATALLA_ROOT environment variable not set." << std::endl;
+    }
+
     auto start = std::chrono::steady_clock::now();
 
     std::ofstream file1(PATH_TO_INPUT, std::ios::trunc);
@@ -220,7 +259,8 @@ int main() {
     expected_file << std::endl;
 
     for (int i = 0; i < TOTAL_TEST_NUM; i++) {
-        create_new_test(i + 1, 30, PATH_TO_INPUT, &weight_matrix);
+        // Set the max exponent for random value range
+        create_new_test(i + 1, 12, PATH_TO_INPUT, &weight_matrix);
         progress_bar(i + 1, TOTAL_TEST_NUM);
     }
 

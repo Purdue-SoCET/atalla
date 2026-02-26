@@ -128,6 +128,46 @@ uint16_t fp16_add_hw(uint16_t a_bits, uint16_t b_bits) {
     return result.v;
 }
 
+uint16_t fp16_4_input_add_hw(uint16_t a_bits, uint16_t b_bits, uint16_t c_bits, uint16_t d_bits) {
+    float16_t a16, b16, c16, d16;
+    float64_t a64, b64, c64, d64, sum;
+    float16_t result;
+
+    /* Apply DAZ to inputs */
+    a16.v = apply_daz(a_bits);
+    b16.v = apply_daz(b_bits);
+    c16.v = apply_daz(c_bits);
+    d16.v = apply_daz(d_bits);
+
+    /* Check for NaN inputs — propagate immediately */
+    if (is_nan(a16.v) || is_nan(b16.v) ||
+        is_nan(c16.v) || is_nan(d16.v))
+        return 0x7E00;
+
+    softfloat_roundingMode = softfloat_round_near_even;
+    softfloat_exceptionFlags = 0;
+
+    /* convert to FP64 */
+    a64 = f16_to_f64(a16);
+    b64 = f16_to_f64(b16);
+    c64 = f16_to_f64(c16);
+    d64 = f16_to_f64(d16);
+
+    /* sum in fp64 */
+    sum = f64_add(a64, b64);
+    sum = f64_add(sum, c64);
+    sum = f64_add(sum, d64);
+
+    /* single rounding: FP64 -> FP16 */
+    result = f64_to_f16(sum);
+
+    /*apply FTZ and canonicalize NaN */
+    result.v = apply_ftz(result.v);
+    result.v = canonicalize_nan(result.v);
+
+    return result.v;
+}
+
 // Generate random FP16 value within the fp16 exponent of specified exponent range
 // i.e. for max_exponent = 3, the random value will be in the range of [-8, 8] with random decimal part
 uint16_t random_fp16(int max_exponent)

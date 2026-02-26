@@ -38,6 +38,7 @@ uint16_t fp16_mul_hw(uint16_t a_bits, uint16_t b_bits);
 
 // FP16 hardware-like addition
 uint16_t fp16_add_hw(uint16_t a_bits, uint16_t b_bits);
+uint16_t fp16_4_input_add_hw(uint16_t a_bits, uint16_t b_bits, uint16_t c_bits, uint16_t d_bits);
 
 // Generate random FP16 value within the FP16 exponent of a specified exponent range
 uint16_t random_fp16(int max_exponent);
