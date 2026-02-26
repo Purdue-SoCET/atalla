@@ -10,25 +10,44 @@ import argparse
 import numpy as np
 
 from src.misc.opcode_table import OPCODES, name_to_opcode
-from build import * 
+from build import *
 
 
+def load_tile_data(data_path: Path, n: int) -> list:
+    """Load an N×N tile from a CSV file and return a flat list of floats (row-major)."""
+    tile = np.loadtxt(data_path, delimiter=',')
+    if tile.ndim == 1:
+        tile = tile.reshape(1, -1)
+    if tile.shape != (n, n):
+        raise ValueError(
+            f"Tile shape mismatch: expected ({n}, {n}), got {tile.shape}. "
+            f"Check --n and the data file."
+        )
+    return tile.flatten(order='C').tolist()
 
 
 def main():
     ap = argparse.ArgumentParser()
-    ap.add_argument("-o", "--output", type=Path, default=Path('layernorm.in'), help="Output test file")
+    ap.add_argument("-i", "--input", type=Path, default=None, help="Input assembly file")
+    ap.add_argument("-o", "--output", type=Path, default='./layernorm.in', help="Output test file")
+    ap.add_argument("--no-graph", action="store_true", help="Disable dependency graph packet scheduling")
+    ap.add_argument("--data", type=Path, default=None,
+                    help="Path to input tile CSV data file (N×N). If omitted, uses hardcoded defaults.")
+    ap.add_argument("--n", type=int, default=4,
+                    help="Tile dimension N for an N×N tile (default: 4)")
     args = ap.parse_args()
+
+    N = args.n
 
     TILE_ADDR_LOCATION = 60 # 0x3c
     SCPAD_ADDR_LOCATION = TILE_ADDR_LOCATION + 4
     TILE_ADDR = 0xcafa
     SCPAD_ADDR = 1
     EPSILON_LOCATION = 20
-    COLS = 4
-    ROWS = 4
+    COLS = N
+    ROWS = N
     SID = 0
-    LAYER_ELEMS = 16
+    LAYER_ELEMS = N * N
     RSUM_IMM = 64
     
     #
@@ -117,22 +136,38 @@ def main():
     """
 
     instrs = assemble_file(asm)         
-    instr_text = emit_test_format(instrs)
 
-    img = DRAMWriter() 
+    if args.no_graph:
+        instr_text = emit_test_format(instrs)
+    else:
+        dependency_instrs = convert_instructions(instrs)
+        ready = build_dependency_graph(dependency_instrs, DEFAULT_LATENCY_MAP)
+        packets = greedy_pack(dependency_instrs, ready, max_width=GRAPH_PACKET_WIDTH)
+        scheduled = materialize_scheduled_instructions(
+            instrs,
+            packets,
+            packet_width=GRAPH_PACKET_WIDTH,
+        )
+        instr_text = emit_test_format(
+            scheduled,
+            virtual_packet_size=GRAPH_PACKET_WIDTH,
+        )
+
     
+    img = DRAMWriter() 
     #-----------DEFAULT ADDRESS INITIALIZATIONS--------
     img.u32(TILE_ADDR_LOCATION, TILE_ADDR) # Place tile base address at address 67
     img.u32(SCPAD_ADDR_LOCATION, SCPAD_ADDR)
     img.f32(EPSILON_LOCATION, 0)
-    
     #-----------TILE INITIALIZATION----------
     base_addr = TILE_ADDR
-    tile_values = list(range(1, 17))  # 1 to 16
+    if args.data is not None:
+        tile_values = load_tile_data(args.data, N)
+    else:
+        tile_values = [float(v) for v in range(4, 4 + N * N)]
     for i, val in enumerate(tile_values):
-        addr = base_addr + (i * 2)  # 
+        addr = base_addr + (i * 2)
         img.bf16(addr, float(val))
-
     # -----------------------------------------
     data_text = img.render_data_mem(include_zeros=False)
 

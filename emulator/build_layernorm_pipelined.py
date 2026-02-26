@@ -17,7 +17,9 @@ from build import *
 
 def main():
     ap = argparse.ArgumentParser()
-    ap.add_argument("-o", "--output", type=Path, default=Path('layernorm.in'), help="Output test file")
+    ap.add_argument("-i", "--input", type=Path, default=None, help="Input assembly file")
+    ap.add_argument("-o", "--output", type=Path, default='./layernorm.in', help="Output test file")
+    ap.add_argument("--no-graph", action="store_true", help="Disable dependency graph packet scheduling")
     args = ap.parse_args()
 
     TILE_ADDR_LOCATION = 60 # 0x3c
@@ -93,12 +95,12 @@ def main():
 
         rsum.vi  $34, $34, {RSUM_MASK}, 1                    # reduce row variance contribution 0
         rsum.vi  $35, $35, {RSUM_MASK}, 1                    # reduce row variance contribution 1
-        
         rsum.vi  $36, $36, {RSUM_MASK}, 1                    # reduce row variance contribution 2
         rsum.vi  $37, $37, {RSUM_MASK}, 1                    # reduce row variance contribution 3
+        
         add.vv   $38, $34, $35, 1, 0                # partial variance pair 0+1
-
         add.vv   $37, $36, $37, 1, 0                # partial variance pair 2+3
+        
         add.vv   $38, $38, $37, 1, 0                # variance sum in $38
         ######### END Variance calculation #######
         divi.vi  $39, $38, {LAYER_ELEMS}, 1         # variance sum / NUM_, final variance in $39
@@ -124,25 +126,36 @@ def main():
     """
 
     instrs = assemble_file(asm)         
-    instr_text = emit_test_format(instrs)
 
-    img = DRAMWriter() 
+    if args.no_graph:
+        instr_text = emit_test_format(instrs)
+    else:
+        dependency_instrs = convert_instructions(instrs)
+        ready = build_dependency_graph(dependency_instrs, DEFAULT_LATENCY_MAP)
+        packets = greedy_pack(dependency_instrs, ready, max_width=GRAPH_PACKET_WIDTH)
+        scheduled = materialize_scheduled_instructions(
+            instrs,
+            packets,
+            packet_width=GRAPH_PACKET_WIDTH,
+        )
+        instr_text = emit_test_format(
+            scheduled,
+            virtual_packet_size=GRAPH_PACKET_WIDTH,
+        )
+
     
+    img = DRAMWriter() 
     #-----------DEFAULT ADDRESS INITIALIZATIONS--------
     img.u32(TILE_ADDR_LOCATION, TILE_ADDR) # Place tile base address at address 67
     img.u32(SCPAD_ADDR_LOCATION, SCPAD_ADDR)
     img.f32(EPSILON_LOCATION, 0)
-    
     #-----------TILE INITIALIZATION----------
-    # Initialize 4x4 tile of bf16 values (1-16) at base address 0xbaf
-    # Memory layout (row-major): rows 0-3, each with 4 values
     base_addr = TILE_ADDR
-    tile_values = list(range(1, 17))  # 1 to 16
+    tile_values = list(range(4, 20))  # 1 to 16
     for i, val in enumerate(tile_values):
         addr = base_addr + (i * 2)  # 
         img.bf16(addr, float(val))
-
-    #------------------------------------------
+    # -----------------------------------------
     data_text = img.render_data_mem(include_zeros=False)
 
     final = render_testfile(instr_text, data_text)
