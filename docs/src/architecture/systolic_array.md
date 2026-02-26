@@ -6,7 +6,7 @@
 
 **Description**: The 4-input floating point adder performs fused addition of 4 floating point values. The HDL is parameterized to support various standard and non-standard floating point formats, including FP16, FP32, and BF16. 
 
-**Block Diagram**: ![4-input floating point adder RTL](img/4InputFP16.png)
+**Block Diagram**: ![4-input floating point adder RTL](../img/4InputFP16.png)
 
 **Code**: https://github.com/Purdue-SoCET/atalla/blob/4_input_fp_adder/rtl/modules/systolic_array/sysarr_4_input_fp_adder.sv
 
