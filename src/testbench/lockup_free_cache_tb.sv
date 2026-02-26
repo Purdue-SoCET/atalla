@@ -132,6 +132,7 @@ endclass
 
 module lockup_free_cache_tb;
     localparam CLK_PERIOD = 1;
+    localparam PERF_INTERVAL = 100;
 
     logic tb_clk;
     logic tb_nrst;
@@ -210,6 +211,68 @@ module lockup_free_cache_tb;
             );
         end
     endgenerate
+
+    import "DPI-C" function void cache_update_hit();
+    import "DPI-C" function void cache_update_miss();
+    import "DPI-C" function void cache_update_in_flight(int in_flight);
+    import "DPI-C" function void print_cache_perf(int cycle);
+
+    integer reqs_in_flight;
+    integer cycle_count;
+    int pending_reqs [int];
+
+    logic [31:0] finished_block_addr [NUM_BANKS-1:0];
+    generate
+        for (genvar g = 0; g < NUM_BANKS; g++) begin : GEN_FIN_ADDR
+            assign finished_block_addr[g] = u_lockup_free_cache.BANK_GEN[g].u_cache_bank.latched_mshr_entry.block_addr;
+        end
+    endgenerate
+
+    always_ff @(posedge tb_clk or negedge tb_nrst) begin : PERF_COUNTER
+        if (!tb_nrst) begin
+            reqs_in_flight <= 0;
+            cycle_count <= 0;
+            pending_reqs.delete();
+        end else begin
+            int current_in_flight;
+            current_in_flight = reqs_in_flight;
+            
+            if (tb_mem_in && !tb_stall && !tb_hit) begin
+                int blk_addr;
+                blk_addr = {tb_mem_in_addr[31:(BLOCK_OFF_BIT_LEN+BYTE_OFF_BIT_LEN)], {(BLOCK_OFF_BIT_LEN+BYTE_OFF_BIT_LEN){1'b0}}};
+                if (pending_reqs.exists(blk_addr)) begin
+                    pending_reqs[blk_addr]++;
+                end else begin
+                    pending_reqs[blk_addr] = 1;
+                end
+                current_in_flight++;
+                cache_update_miss();
+            end
+            
+            if (tb_mem_in && !tb_stall && tb_hit) begin
+                cache_update_hit();
+            end
+
+            for (int j = 0; j < NUM_BANKS; j++) begin
+                if (tb_block_status[j]) begin
+                    int finished_blk;
+                    finished_blk = finished_block_addr[j];
+                    if (pending_reqs.exists(finished_blk)) begin
+                        current_in_flight -= pending_reqs[finished_blk];
+                        pending_reqs.delete(finished_blk);
+                    end
+                end
+            end
+
+            reqs_in_flight <= current_in_flight;
+            cache_update_in_flight(current_in_flight);
+            
+            cycle_count <= cycle_count + 1;
+            if (cycle_count > 0 && cycle_count % PERF_INTERVAL == 0) begin
+                print_cache_perf(cycle_count);
+            end
+        end
+    end
 
     task data_read(input logic [31:0] addr, output logic [31:0] data);
         tb_mem_in = 0;
@@ -314,7 +377,7 @@ module lockup_free_cache_tb;
         end
         $display("hit check!");
         tb_mem_in = 0;
-        cycle_wait(150000);
+        cycle_wait(1500);
         $display("Done waiting for misses to finish!");
         for (current_set_index = 0; current_set_index < test_set_num; current_set_index++) begin
             // Write hit
@@ -343,6 +406,7 @@ module lockup_free_cache_tb;
         @(posedge tb_clk);
         monitor_enable = 1; 
         @(posedge tb_clk);
+        print_cache_perf(cycle_count);
         $finish;
     end
 
