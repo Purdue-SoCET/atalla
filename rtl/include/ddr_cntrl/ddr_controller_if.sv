@@ -10,6 +10,14 @@ interface ddr_controller_if;
 `include "dram_pkg.sv"
 import dram_pkg::*;
 
+// BQ/FSM struct
+typedef struct packed {
+    logic [ROW_BITS-1:0] row;
+    logic [COLUMN_BITS-1:0] column;
+    logic write;
+    logic [$clog2(ID_NUM)-1:0] id_addr;
+} bq_slot_t;
+
 // AXI -> WDATA_QUEUE
 logic [7:0] wstrb, wvalid;
 logic [63:0] wdata;
@@ -34,21 +42,18 @@ logic address_l, address_s;
 logic grant_l, grant_s;
 
 // FRONTEND ARBITER -> BQ
-logic [BANK_GROUP_BITS-1:0] fe_bg, [$clog2(BANK_NUM)-1:0] fe_b, [ROW_BITS-1:0] fe_r, [COLUMN_BITS-1:0] fe_c;
-logic fe_read, fe_write;
+// DATA IN
+logic [$clog2(BANK_NUM)-1:0] fe_b, [ROW_BITS-1:0] fe_r, [COLUMN_BITS-1:0] fe_c; // what does bg do?
+logic fe_write;
 logic [$clog2(ID_NUM)-1:0] fe_id;
+// CONTROL SIGNALS
 logic fe_write_bq;
 logic [BANK_NUM-1:0] fe_full; // [QUEUE_SIZE-1:0]
 
 // BANK QUEUE -> COMMAND FSM
-logic [$clog2(BANK_NUM)-1:0] bq_pop; // 16
-logic [$clog2(BANK_NUM)-1:0] bq_rw; // 16
-logic [BANK_GROUP_BITS-1:0][$clog2(BANK_NUM)-1:0] bq_bg; // Maybe delete 
-logic [$clog2(BANK_NUM)-1:0][$clog2(BANK_NUM)-1:0] bq_b; // 2*16
-logic [ROW_BITS-1:0][$clog2(BANK_NUM)-1:0] bq_r; // 15*16
-logic [COLUMN_BITS-1:0][$clog2(BANK_NUM)-1:0]  bq_c; // 10*16
-logic [$clog2(ID_NUM)-1:0][$clog2(BANK_NUM)-1:0]  bq_id; // 4*16
-logic [BANK_NUM-1:0] bq_ready;
+logic       [$clog2(BANK_NUM)-1:0] bq_pop; // BANK_NUM
+bq_slot_t   [BANK_NUM-1:0] bq_slot; // bq_r, bq_c, bq_rw, bq_id; // 4*16
+logic       [BANK_NUM-1:0] bq_ready;
 
 // COMMAND FSM -> BACKEND ARBITER
 logic [$clog2(BANK_NUM)-1:0]  be_arb;
@@ -131,15 +136,18 @@ modport arb (
 );
 
 modport bq (
-    //ARB -> BQ
-    input fe_bg, fe_b, fe_c, fe_r, fe_write, fe_id, fe_write_bq,
-    //FSM -> BQ
+    // ARB -> BQ (DATA)
+    input fe_b, fe_c, fe_r, fe_write, fe_id, 
+    // ARB -> BQ (CNTRL)
+    fe_write_bq,
+    // FSM -> BQ (CNTRL)
     bq_pop, 
-    //BQ -> ARB
+    // BQ -> ARB (CNTRL)
     output fe_full, 
-    //BQ -> FSM
-    bq_rw, bq_ready, bq_bg, bq_b, bq_r, bq_c, bq_id
-
+    // BQ -> FSM (CNTRL)
+    bq_ready, 
+    // BQ -> FSM (DATA)
+    bq_slot
 );
 
 modport read_id_queue (

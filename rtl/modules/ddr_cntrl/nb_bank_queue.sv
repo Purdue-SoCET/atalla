@@ -15,13 +15,6 @@ module nb_bank_queue(
     `include "dram_pkg.sv"
     import dram_pkg::*;
 
-    typedef struct packed {
-        logic [ROW_BITS-1:0] row;
-        logic [COLUMN_BITS-1:0] column;
-        logic write;
-        logic [$clog2(ID_NUM)-1:0] id_addr;
-    } bq_slot_t;
-
     logic [$clog2(BANK_NUM)-1:0] b_wsel;
     logic [$clog2(BANK_NUM)-1:0] b_rsel;
 
@@ -38,7 +31,7 @@ module nb_bank_queue(
                 .wr_en(b_wsel[i]),
                 .din({bqif.fe_r, bqif.fe_c, bqif.fe_write, bqif.fe_id}),
                 .rd_en(b_rsel[i]),
-                .dout(bqif.b[i]{bqif.bq_r, bqif.bq_c, bqif.bq_rw, bqif.bq_id}), // TODO: FIX THE OUTPUT TO THE COMMAND FSM
+                .dout(bqif.bq_slot[i]), 
                 .full(bqif.fe_full[i]),
                 .empty()
             );
