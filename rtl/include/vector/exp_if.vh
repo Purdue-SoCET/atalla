@@ -1,5 +1,5 @@
-`ifndef EX_IF_VH
-`define EX_IF_VH
+`ifndef EXP_IF_VH
+`define EXP_IF_VH
 `include "vector_types.vh"
 
 interface exp_if;
