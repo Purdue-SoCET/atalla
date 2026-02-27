@@ -7,17 +7,37 @@
 // The only addition is a DPI wrapper that has init/tick/readback functions.
 // ============================================================================
 
-#include "instruction_parser_dpi.h"
+#include "inst_parser_dpi.h"
 #include "schedular.hpp"
 
 #include <cstdio>
 #include <cstdlib>
 #include <cstring>
 
+static uint8_t cpp_fu_to_rtl(uint8_t f)
+{
+    switch (f) {
+        case 0: return 0; // VALU
+        case 1: return 3; // EXP
+        case 2: return 4; // SQRT
+        case 3: return 1; // MUL
+        case 4: return 2; // DIV
+        default: return 0;
+    }
+}
+
+
+static uint8_t cpp_aluop_to_rtl(uint8_t op)
+{
+    switch (op) {
+        case 2: return 0x0; // add -> ALU_ADD
+        case 3: return 0x1; // sub -> ALU_SUB
+        default: return 0x0;
+    }
+}
+
 
 // Check w Akshath if this is the right way to do it.
-
-
 // scheduler instance
 static schedular* g_sc = nullptr;
 
@@ -44,6 +64,7 @@ void dpi_scheduler_destroy()
         fprintf(stdout, "[DPI] Scheduler destroyed.\n");
     }
 }
+
 
 
 
@@ -75,10 +96,12 @@ void dpi_scheduler_tick(svBit rst_n)
 
     g_sc->rst_n = rst_n;
 
-    // Rising edge: clk 0->1
+    // posedge for checking outs
+    // Rising edge: clk 0->1 
     g_sc->clk = 1;
     g_sc->tick();
 
+    // negedge for asserting ins
     // Falling edge: clk 1->0  (prepares for next cycle)
     g_sc->clk = 0;
     g_sc->tick();
@@ -111,13 +134,13 @@ uint8_t dpi_get_lane_vd(int idx)
 uint8_t dpi_get_lane_fu_sel(int idx)
 {
     if (!g_sc || idx < 0 || idx > 1) return 0;
-    return g_sc->sc_lane_signals[idx].fu_sel;
+    return cpp_fu_to_rtl(g_sc->sc_lane_signals[idx].fu_sel);
 }
 
 uint8_t dpi_get_lane_alu_op(int idx)
 {
     if (!g_sc || idx < 0 || idx > 1) return 0;
-    return g_sc->sc_lane_signals[idx].alu_op;
+    return cpp_aluop_to_rtl(g_sc->sc_lane_signals[idx].alu_op);
 }
 
 svBit dpi_get_lane_broadcast_v2(int idx)
@@ -154,14 +177,17 @@ void dpi_get_lane_v2_broadcast(int idx, svOpenArrayHandle arr)
 {
     if (!g_sc || idx < 0 || idx > 1) return;
 
-    // arr is an SV open array: logic [15:0] vec [0:31]
-    // write each element individually via svPutBitArrElem
     for (int i = 0; i < 32; i++) {
         uint16_t val = g_sc->sc_lane_signals[idx].lane_v2_broadcast[i];
-        // For open arrays of logic [15:0], use svPutBitArrElem1
         svBitVecVal bv = (svBitVecVal)val;
-        svPutBitArrElem1(arr, &bv, i);
+        svPutBitArrElem1VecVal(arr, &bv, i);
     }
+}
+
+svBit dpi_get_lane_rm(int idx)
+{
+    if (!g_sc || idx < 0 || idx > 1) return 0;
+    return g_sc->sc_reduction_signals.reduction_mode;
 }
 
 

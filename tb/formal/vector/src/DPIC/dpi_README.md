@@ -13,7 +13,7 @@ using the same program functions and logic alrdy in the C++ tb.
 │  "add.vv,0,1,2,0,0|mul.vv,3,4,5,0,0|nop.s|nop.s"             │
 └──────────────────────┬───────────────────────────────────────┘
                        │ dpi_scheduler_init()
-                       ▼
+                       v
 ┌──────────────────────────────────────────────────────────────┐
 │  C++ Scheduler (schedular.cpp — YOUR EXISTING CODE)          │
 │                                                              │
@@ -23,7 +23,7 @@ using the same program functions and logic alrdy in the C++ tb.
 │  • deassert_valids() each cycle                              │
 └──────────────────────┬───────────────────────────────────────┘
                        │ DPI-C function calls
-                       ▼
+                       v
 ┌──────────────────────────────────────────────────────────────┐
 │  SV Testbench (vector_core_tb.sv)                            │
 │                                                              │
@@ -36,7 +36,7 @@ using the same program functions and logic alrdy in the C++ tb.
 │    6. Check dpi_get_all_issued() for completion              │
 └──────────────────────┬───────────────────────────────────────┘
                        │ RTL port connections
-                       ▼
+                       v
 ┌──────────────────────────────────────────────────────────────┐
 │  vector_datapath_wrapper (RTL DUT)                           │
 │                                                              │
@@ -61,12 +61,10 @@ Each instruction is comma-separated: `mnemonic,field1,field2,...`
 
 | Slot | Purpose | Valid opcodes |
 |------|---------|---------------|
-| 0 | Lane operation | add.vv, sub.vv, mul.vv, div.vv, addi.vi, etc. |
-| 1 | Lane operation | Same as slot 0 |
+| 0 | Vector operation | add.vv, sub.vv, mul.vv, div.vv, addi.vi, etc. |
+| 1 | Vector operation | Same as slot 0 |
 | 2 | Systolic array / Scratchpad | gemm.vv, lw.vi, vreg.ld, vreg.st, nop.s |
 | 3 | Scratchpad | vreg.ld, vreg.st, nop.s |
-
-
 
 
 **Note: Still working on completing this, want to add how to use, the API, set-up, etc.**

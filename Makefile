@@ -11,6 +11,15 @@ MODROOT    := $(TOPDIR)/rtl/modules
 TBROOT     := $(TOPDIR)/tb
 UVMTESTROOT  := $(TBROOT)/uvm
 UNITTESTROOT := $(TBROOT)/unit
+
+#DPIC path config
+DPI_INC := $(TBROOT)/formal/vector/include
+DPI_SRC := $(TBROOT)/formal/vector/src/DPIC
+DPI_LIB := libdpi_parser
+QUESTA_INC     := /package/eda/mg/questa2021.4/questasim/include
+CPP_MODEL_DIR := $(TBROOT)/formal/vector/src
+CPP_MODEL_INC := $(TBROOT)//formal/vector/include
+TESTCASEROOT := $(TBROOT)/formal/vector/testcases
 SCRATCH       := work
 
 # Include directory setup
@@ -24,6 +33,7 @@ GUI ?= OFF
 # --- Coverage Controls ---
 COVERAGE ?= OFF           # set to ON to enable coverage
 VLOG_FLAGS ?=
+VSIM_EXTRA_FLAGS ?=
 
 ifeq ($(COVERAGE),ON)
   # Questa coverage switches
@@ -228,3 +238,42 @@ test:
 	
 clean:
 	rm -rf $(SCRATCH) transcript vsim.wlf work modelsim.ini
+
+
+.PHONY: dpi_lib l1_test l1_test_gui
+
+PROGRAM ?= add_vv
+
+dpi_lib:
+	g++ -std=c++20 -fPIC -shared \
+		-I$(DPI_INC) \
+		-I$(CPP_MODEL_INC) \
+		-I$(QUESTA_INC) \
+		-o $(DPI_LIB).so \
+		$(DPI_SRC)/inst_parser_dpi.cpp \
+		$(DPI_SRC)/sysarr_dpi.cpp \
+		$(DPI_SRC)/scratchpad_dpi.cpp \
+		$(DPI_SRC)/veggie_dpi.cpp \
+		$(CPP_MODEL_DIR)/schedular.cpp \
+		$(CPP_MODEL_DIR)/sysarr.cpp \
+		$(CPP_MODEL_DIR)/scratchpad.cpp \
+		$(CPP_MODEL_DIR)/veggie.cpp
+
+L1_PACKAGES := /vector/vector_pkg.vh,/memory/scratchpad/scpad_pkg.sv,/common/xbar/xbar_pkg.sv,/vector/vlsu_if.sv,/memory/scratchpad/scpad_if.sv,/vector/inst_parser_dpi_pkg.sv
+L1_MODULES  := /common/arithmetic/adders,/common/arithmetic/multipliers,/common/arithmetic/sqrt,/vector/reduction,/vector/vector_datapath.sv,/vector/vlsu.sv,/vector/gsau_control_unit.sv,/vector/lane.sv,/vector/lane_sequencer.sv,/vector/result_collector.sv,/vector/result_collector_counter.sv,/vector/lane_FUs/lane_unit_fifo.sv,/vector/lane_FUs/mul_FU.sv,/vector/lane_FUs/sqrt_FU.sv,/vector/slicer.sv,/vector/sync_fifo.sv,/vector/valu.sv,/vector/lane_FUs/alu_FU.sv,/vector/lane_FUs/reduction_FU.sv
+
+l1_test: dpi_lib
+	$(MAKE) test \
+		tb_file=vector_core_dpi_tb.sv \
+		packages=$(L1_PACKAGES) \
+		modules=$(L1_MODULES) \
+		VSIM_EXTRA_FLAGS="-sv_lib ./$(DPI_LIB)" \
+		GUI=OFF
+
+l1_test_gui: dpi_lib
+	$(MAKE) test \
+		tb_file=vector_core_dpi_tb.sv \
+		packages=$(L1_PACKAGES) \
+		modules=$(L1_MODULES) \
+		VSIM_EXTRA_FLAGS="-sv_lib ./$(DPI_LIB)" \
+		GUI=ON
