@@ -1,7 +1,7 @@
 `include "vdiv_if.vh"
 `include "mul_if.vh"
 
-module div_bf16pipeline_1mul (
+module div_bf16pipeline (
     input logic CLK, nRST,
     vdiv_if.div divif
 );
@@ -50,7 +50,7 @@ module div_bf16pipeline_1mul (
   logic [15:0] outn, outd, outfin;
   logic [15:0] subd, subout;
   logic startn, startd, startfin;
-  logic donen, doned, donef;
+  logic donen, doned, donefin;
 
   // Pipeline Registers
   logic [15:0] iter1_outn, iter1_outd, iter1_f;
@@ -59,8 +59,6 @@ module div_bf16pipeline_1mul (
   logic [15:0] next_fin;
 
   // Datapath and Math Signals
-  logic [15:0] muln_1, muld_1, f_1;
-  logic [15:0] n_fin;
   logic sign;
   logic signed [9:0] raw_exp, exp_diff;
   logic [7:0] final_exp;
@@ -113,7 +111,7 @@ module div_bf16pipeline_1mul (
     .a(mulfin), 
     .b(f_2),
     .result(outfin), 
-    .done(donef)
+    .done(donefin)
   );
 
 
@@ -170,10 +168,13 @@ module div_bf16pipeline_1mul (
     else is_special = 1'b0;
   end
 
+  assign divif.out.ready_in =  nRST ? 1:0;
+  assign divif.out.valid_out = donefin ? 1:0;
+
   assign startn = divif.in.valid_in && !is_special ? 1:0;
   assign startd = divif.in.valid_in && !is_special ? 1:0;
 
-  always_comb begin : fetTmul1
+  always_comb begin
     n_fetTmul1.sign           = sign;
     n_fetTmul1.is_special     = is_special;
     n_fetTmul1.exp            = final_exp;
@@ -183,7 +184,7 @@ module div_bf16pipeline_1mul (
 // *********************************************************************************************
 // FET to MUL1
 // *********************************************************************************************
-  always_comb begin : mul1Tmul2
+  always_comb begin
     n_mul1Tmul2.sign           = fetTmul1.sign;
     n_mul1Tmul2.is_special     = fetTmul1.is_special;
     n_mul1Tmul2.exp            = fetTmul1.exp;
@@ -193,7 +194,7 @@ module div_bf16pipeline_1mul (
 // *********************************************************************************************
 // MUL1 to MUL2
 // *********************************************************************************************
-  always_comb begin : mul2Tfin1
+  always_comb begin
     n_mul2Tfin1.sign           = mul1Tmul2.sign;
     n_mul2Tfin1.is_special     = mul1Tmul2.is_special;
     n_mul2Tfin1.exp            = mul1Tmul2.exp;
@@ -204,7 +205,7 @@ module div_bf16pipeline_1mul (
 // MUL2 to FIN1
 // *********************************************************************************************
   assign subd = !is_special ? outd:'0;
-  always_comb begin : mul2Tfin1
+  always_comb begin
     n_fin1Tsub1.sign           = mul2Tfin1.sign;
     n_fin1Tsub1.is_special     = mul2Tfin1.is_special;
     n_fin1Tsub1.exp            = mul2Tfin1.exp;
@@ -215,7 +216,7 @@ module div_bf16pipeline_1mul (
 // *********************************************************************************************
 // FIN1 to SUB1
 // *********************************************************************************************
-  always_comb begin : mul2Tfin1
+  always_comb begin
     n_sub1Tsub2.sign           = fin1Tsub1.sign;
     n_sub1Tsub2.is_special     = fin1Tsub1.is_special;
     n_sub1Tsub2.exp            = fin1Tsub1.exp;
@@ -226,7 +227,7 @@ module div_bf16pipeline_1mul (
 // *********************************************************************************************
 // SUB1 to SUB2
 // *********************************************************************************************
-  always_comb begin : mul2Tfin1
+  always_comb begin
     n_sub2Tfin2.sign           = sub1Tsub2.sign;
     n_sub2Tfin2.is_special     = sub1Tsub2.is_special;
     n_sub2Tfin2.exp            = sub1Tsub2.exp;
@@ -240,7 +241,7 @@ module div_bf16pipeline_1mul (
   assign startfin = !sub2Tfin2.is_special ? 1:0;
   assign mulfin = !sub2Tfin2.is_special ? sub2Tfin2.muln:'0;
   assign f_2 = !sub2Tfin2.is_special ? subout:'0;
-  always_comb begin : mul2Tfin1
+  always_comb begin
     n_fin2Tmul3.sign           = sub2Tfin2.sign;
     n_fin2Tmul3.is_special     = sub2Tfin2.is_special;
     n_fin2Tmul3.exp            = sub2Tfin2.exp;
@@ -250,7 +251,7 @@ module div_bf16pipeline_1mul (
 // *********************************************************************************************
 // FIT2 to MUL3
 // *********************************************************************************************
-  always_comb begin : mul2Tfin1
+  always_comb begin
     n_mul3Tmul4.sign           = fin2Tmul3.sign;
     n_mul3Tmul4.is_special     = fin2Tmul3.is_special;
     n_mul3Tmul4.exp            = fin2Tmul3.exp;
@@ -260,7 +261,7 @@ module div_bf16pipeline_1mul (
 // *********************************************************************************************
 // MUL3 to MUL4
 // *********************************************************************************************
-  always_comb begin : mul2Tfin1
+  always_comb begin
     n_mul4Tfin3.sign           = mul3Tmul4.sign;
     n_mul4Tfin3.is_special     = mul3Tmul4.is_special;
     n_mul4Tfin3.exp            = mul3Tmul4.exp;
