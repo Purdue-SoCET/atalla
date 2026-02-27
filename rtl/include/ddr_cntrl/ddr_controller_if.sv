@@ -37,7 +37,7 @@ logic [BANK_GROUP_BITS-1:0] fe_bg, [$clog2(BANK_NUM)-1:0] fe_b, [ROW_BITS-1:0] f
 logic fe_read, fe_write;
 logic [$clog2(ID_NUM)-1:0] fe_id;
 logic fe_write_bq;
-logic [$clog2(BANK_NUM)-1:0] fe_full; // [QUEUE_SIZE-1:0]
+logic [BANK_NUM-1:0] fe_full; // [QUEUE_SIZE-1:0]
 
 // BANK QUEUE -> COMMAND FSM
 logic [$clog2(BANK_NUM)-1:0] bq_pop; // 16

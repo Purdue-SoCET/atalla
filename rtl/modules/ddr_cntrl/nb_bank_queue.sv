@@ -22,24 +22,28 @@ module nb_bank_queue(
         logic [$clog2(ID_NUM)-1:0] id_addr;
     } bq_slot_t;
 
-    logic [$clog2(BANK_NUM)-1:0] bg_b_wsel;
+    logic [$clog2(BANK_NUM)-1:0] b_wsel;
+    logic [$clog2(BANK_NUM)-1:0] b_rsel;
 
     genvar i;
     generate 
         for (i = 0; i < BANK_NUM; i++) begin
             // Assign the write/read selection signal
-            assign bg_b_wsel[i] = ({bqif.bq_b, bqif.bq_bg} == i) && bqif.fe_write_bq; 
+            assign b_wsel[i] = (bqif.bq_b == i) && bqif.fe_write_bq;
+            assign b_rsel[i] = (bqif.bq_pop == i);
 
             // Generate fifos
-            sync_fifo #(.DEPTH(BANK_NUM), .DWIDTH($bits(bq_slot_t))) bq_fifo_gen ( // TODO: DEPTH NEEDS FINALIZATION, SAME WITH READ LOGIC
+            sync_fifo #(.DEPTH(BANK_NUM), .DWIDTH($bits(bq_slot_t))) bq_fifo_gen ( // TODO: DEPTH NEEDS FINALIZATION
                 .clk(CLK), .rstn(nRST),
-                .wr_en(bg_b_wsel[i]),
+                .wr_en(b_wsel[i]),
                 .din({bqif.fe_r, bqif.fe_c, bqif.fe_write, bqif.fe_id}),
-                .rd_en(),
-                .dout({bqif.bq_r, bqif.bq_c, bqif.fe}),
+                .rd_en(b_rsel[i]),
+                .dout({bqif.bq_r, bqif.bq_c, bqif.bq_rw, bqif.bq_id}),
                 .full(bqif.fe_full[i]),
                 .empty()
             );
+
+            // Full
         end
 
     endgenerate
