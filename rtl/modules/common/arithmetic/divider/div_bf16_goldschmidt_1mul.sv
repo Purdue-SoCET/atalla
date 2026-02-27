@@ -1,9 +1,8 @@
-`include "vdiv_if.vh"
-`include "mul_if.vh"
+`include "div_if.vh"
 
-module div_bf16pipeline (
+module div_bf16_goldschmidt_1mul (
     input logic CLK, nRST,
-    vdiv_if.div divif
+    div_if.dvif divif
 );
   // 6k Area for multiplier and sub
   // PARAMETERS AND TYPES
@@ -12,35 +11,29 @@ module div_bf16pipeline (
   localparam [15:0] TWO = 16'h4000;
   localparam [15:0] qNaN = 16'h7FC0; // NaN
 
-  // Won't Be utilized, simply a marker of how the pipeline goes
   typedef enum logic [2:0] {
-    INITIAL, // Initial guess, clock multiplier
-    MULT1,   // Multiplication Process
-    SUB1,    // Subtract for next F
-    SUB2,    // Lack of done signal requires multiple states
-    INITIAL2,// Let SUB values sit in the register inputs of multiplication    
-    MULT2,   // Multiplication Process
-    EXP,     // Exponent and Sign Calculations
-    DONE    // Self Explanatory
+    IDLE,
+    BUSY,    
+    DONE 
   } state_t;
 
     // Pipeline Structs
   typedef struct packed{
-    logic sign, is_special;
+    logic sign, is_special, valid;
     logic [7:0] exp;
     logic [16:0] special_result;
-  } fetTmul_t;
+  } mul1_t;
 
   typedef struct packed{
-    logic sign, is_special;
+    logic sign, is_special, valid;
     logic [7:0] exp;
     logic [16:0] muln, special_result;
-  } mulTsub_t;
+  } mul2_t;
 
 // SIGNAL DECLARATIONS
   // Pipeline Signals
-  fetTmul_t fetTmul1, n_fetTmul1, mul1Tmul2, n_mul1Tmul2, mul2Tfin1, n_mul2Tfin1, mul3Tmul4, n_mul3Tmul4, mul4Tfin3, n_mul4Tfin3, fin2Tmul3, n_fin2Tmul3;
-  mulTsub_t fin1Tsub1, n_fin1Tsub1, sub1Tsub2, n_sub1Tsub2, sub2Tfin2, n_sub2Tfin2;
+  mul1_t fetTmul1, n_fetTmul1, mul1Tfin1, n_mul1Tfin1, fin2Tmul2, n_fin2Tmul2, mul2Tfin3, n_mul2Tfin3;
+  mul2_t fin1Tsub, n_fin1Tsub, subTfin2, n_subTfin2;
 
   // FSM State
   state_t state, n_state;
@@ -51,12 +44,6 @@ module div_bf16pipeline (
   logic [15:0] subd, subout;
   logic startn, startd, startfin;
   logic donen, doned, donefin;
-
-  // Pipeline Registers
-  logic [15:0] iter1_outn, iter1_outd, iter1_f;
-  logic [15:0] n_iter1_outn, n_iter1_outd, n_iter1_f;
-  logic [15:0] fin;
-  logic [15:0] next_fin;
 
   // Datapath and Math Signals
   logic sign;
@@ -168,8 +155,8 @@ module div_bf16pipeline (
     else is_special = 1'b0;
   end
 
-  assign divif.out.ready_in =  nRST ? 1:0;
-  assign divif.out.valid_out = donefin ? 1:0;
+  // assign divif.out.ready_in =  nRST ? 1:0;
+  // assign divif.out.valid_out = donefin;
 
   assign startn = divif.in.valid_in && !is_special ? 1:0;
   assign startd = divif.in.valid_in && !is_special ? 1:0;
@@ -177,6 +164,7 @@ module div_bf16pipeline (
   always_comb begin
     n_fetTmul1.sign           = sign;
     n_fetTmul1.is_special     = is_special;
+    n_fetTmul1.valid          = divif.in.valid_in;
     n_fetTmul1.exp            = final_exp;
     n_fetTmul1.special_result = special_result;
   end
@@ -185,115 +173,110 @@ module div_bf16pipeline (
 // FET to MUL1
 // *********************************************************************************************
   always_comb begin
-    n_mul1Tmul2.sign           = fetTmul1.sign;
-    n_mul1Tmul2.is_special     = fetTmul1.is_special;
-    n_mul1Tmul2.exp            = fetTmul1.exp;
-    n_mul1Tmul2.special_result = fetTmul1.special_result;
+    n_mul1Tfin1.sign           = fetTmul1.sign;
+    n_mul1Tfin1.is_special     = fetTmul1.is_special;
+    n_mul1Tfin1.valid          = fetTmul1.valid;
+    n_mul1Tfin1.exp            = fetTmul1.exp;
+    n_mul1Tfin1.special_result = fetTmul1.special_result;
   end
 
 // *********************************************************************************************
-// MUL1 to MUL2
+// MUL1 to FIN1
+// *********************************************************************************************
+  assign subd = mul1Tfin1.valid && !mul1Tfin1.is_special && doned ? outd:'0;
+  always_comb begin
+    n_fin1Tsub.sign           = mul1Tfin1.sign;
+    n_fin1Tsub.is_special     = mul1Tfin1.is_special;
+    n_fin1Tsub.valid          = mul1Tfin1.valid;
+    n_fin1Tsub.exp            = mul1Tfin1.exp;
+    n_fin1Tsub.muln           = outn;
+    n_fin1Tsub.special_result = mul1Tfin1.special_result;
+  end
+
+// *********************************************************************************************
+// FIN1 to SUB
+// *********************************************************************************************
+  assign startfin = !fin1Tsub.is_special && fin1Tsub.valid ? 1:0;
+  assign mulfin = !fin1Tsub.is_special && fin1Tsub.valid ? fin1Tsub.muln:'0;
+  assign f_2 = !fin1Tsub.is_special && fin1Tsub.valid ? subout:'0;
+  always_comb begin
+    n_subTfin2.sign           = fin1Tsub.sign;
+    n_subTfin2.is_special     = fin1Tsub.is_special;
+    n_subTfin2.valid          = fin1Tsub.valid;
+    n_subTfin2.exp            = fin1Tsub.exp;
+    n_subTfin2.muln           = fin1Tsub.muln;
+    n_subTfin2.special_result = fin1Tsub.special_result;
+  end
+
+// *********************************************************************************************
+// SUB to FIN2
 // *********************************************************************************************
   always_comb begin
-    n_mul2Tfin1.sign           = mul1Tmul2.sign;
-    n_mul2Tfin1.is_special     = mul1Tmul2.is_special;
-    n_mul2Tfin1.exp            = mul1Tmul2.exp;
-    n_mul2Tfin1.special_result = mul1Tmul2.special_result;
+    n_fin2Tmul2.sign           = subTfin2.sign;
+    n_fin2Tmul2.is_special     = subTfin2.is_special;
+    n_fin2Tmul2.valid          = subTfin2.valid;
+    n_fin2Tmul2.exp            = subTfin2.exp;
+    n_fin2Tmul2.special_result = subTfin2.special_result;
   end
 
 // *********************************************************************************************
-// MUL2 to FIN1
-// *********************************************************************************************
-  assign subd = !is_special ? outd:'0;
-  always_comb begin
-    n_fin1Tsub1.sign           = mul2Tfin1.sign;
-    n_fin1Tsub1.is_special     = mul2Tfin1.is_special;
-    n_fin1Tsub1.exp            = mul2Tfin1.exp;
-    n_fin1Tsub1.muln           = outn;
-    n_fin1Tsub1.special_result = mul2Tfin1.special_result;
-  end
-
-// *********************************************************************************************
-// FIN1 to SUB1
+// FIN2 to MUL2
 // *********************************************************************************************
   always_comb begin
-    n_sub1Tsub2.sign           = fin1Tsub1.sign;
-    n_sub1Tsub2.is_special     = fin1Tsub1.is_special;
-    n_sub1Tsub2.exp            = fin1Tsub1.exp;
-    n_sub1Tsub2.muln           = fin1Tsub1.muln;
-    n_sub1Tsub2.special_result = fin1Tsub1.special_result;
+    n_mul2Tfin3.sign           = fin2Tmul2.sign;
+    n_mul2Tfin3.is_special     = fin2Tmul2.is_special;
+    n_mul2Tfin3.valid          = fin2Tmul2.valid;
+    n_mul2Tfin3.exp            = fin2Tmul2.exp;
+    n_mul2Tfin3.special_result = fin2Tmul2.special_result;
   end
 
 // *********************************************************************************************
-// SUB1 to SUB2
+// MUL2 to FIN3
 // *********************************************************************************************
-  always_comb begin
-    n_sub2Tfin2.sign           = sub1Tsub2.sign;
-    n_sub2Tfin2.is_special     = sub1Tsub2.is_special;
-    n_sub2Tfin2.exp            = sub1Tsub2.exp;
-    n_sub2Tfin2.muln           = sub1Tsub2.muln;
-    n_sub2Tfin2.special_result = sub1Tsub2.special_result;
-  end
-
-// *********************************************************************************************
-// SUB2 to FIT2
-// *********************************************************************************************
-  assign startfin = !sub2Tfin2.is_special ? 1:0;
-  assign mulfin = !sub2Tfin2.is_special ? sub2Tfin2.muln:'0;
-  assign f_2 = !sub2Tfin2.is_special ? subout:'0;
-  always_comb begin
-    n_fin2Tmul3.sign           = sub2Tfin2.sign;
-    n_fin2Tmul3.is_special     = sub2Tfin2.is_special;
-    n_fin2Tmul3.exp            = sub2Tfin2.exp;
-    n_fin2Tmul3.special_result = sub2Tfin2.special_result;
-  end
-
-// *********************************************************************************************
-// FIT2 to MUL3
-// *********************************************************************************************
-  always_comb begin
-    n_mul3Tmul4.sign           = fin2Tmul3.sign;
-    n_mul3Tmul4.is_special     = fin2Tmul3.is_special;
-    n_mul3Tmul4.exp            = fin2Tmul3.exp;
-    n_mul3Tmul4.special_result = fin2Tmul3.special_result;
-  end
-
-// *********************************************************************************************
-// MUL3 to MUL4
-// *********************************************************************************************
-  always_comb begin
-    n_mul4Tfin3.sign           = mul3Tmul4.sign;
-    n_mul4Tfin3.is_special     = mul3Tmul4.is_special;
-    n_mul4Tfin3.exp            = mul3Tmul4.exp;
-    n_mul4Tfin3.special_result = mul3Tmul4.special_result;
-  end
-
-// *********************************************************************************************
-// MUL4 to FIN3
-// *********************************************************************************************
-  assign divif.out.result = (mul4Tfin3.exp == 8'h00) ? {mul4Tfin3.sign, 15'h0000} : {mul4Tfin3.sign, mul4Tfin3.exp, outfin[6:0]};
+  logic [15:0] fin, result;
+  assign fin = (mul2Tfin3.exp == 8'h00) ? {mul2Tfin3.sign, 15'h0000} : {mul2Tfin3.sign, mul2Tfin3.exp, outfin[6:0]};
+  assign result = mul2Tfin3.is_special ? mul2Tfin3.special_result:fin;
+  assign divif.out.result = mul2Tfin3.is_special ? mul2Tfin3.special_result:fin;
 
   always_ff @(posedge CLK, negedge nRST) begin : pipeline_ff
     if(~nRST) begin
       fetTmul1  <= '0;
-      mul1Tmul2 <= '0;
-      mul2Tfin1 <= '0;
-      fin1Tsub1 <= '0;
-      sub1Tsub2 <= '0;
-      sub2Tfin2 <= '0;
-      fin2Tmul3 <= '0;
-      mul3Tmul4 <= '0;
-      mul4Tfin3 <= '0;
+      mul1Tfin1 <= '0;
+      fin1Tsub  <= '0;
+      subTfin2  <= '0;
+      fin2Tmul2 <= '0;
+      mul2Tfin3 <= '0;
     end else begin
       fetTmul1  <= n_fetTmul1;
-      mul1Tmul2 <= n_mul1Tmul2;
-      mul2Tfin1 <= n_mul2Tfin1;
-      fin1Tsub1 <= n_fin1Tsub1;
-      sub1Tsub2 <= n_sub1Tsub2;
-      sub2Tfin2 <= n_sub2Tfin2;
-      fin2Tmul3 <= n_fin2Tmul3;
-      mul3Tmul4 <= n_mul3Tmul4;
-      mul4Tfin3 <= n_mul4Tfin3;
+      mul1Tfin1 <= n_mul1Tfin1;
+      fin1Tsub  <= n_fin1Tsub;
+      subTfin2  <= n_subTfin2;
+      fin2Tmul2 <= n_fin2Tmul2;
+      mul2Tfin3 <= n_mul2Tfin3;
     end
   end
+
+  always_comb begin
+    n_state = state;
+    unique case(state)
+      IDLE: if(divif.in.valid_in)              n_state = BUSY; // Normal path
+      BUSY: if(donefin || mul2Tfin3.is_special) n_state = DONE;
+      DONE: if(divif.in.ready_out)             n_state = IDLE;
+    endcase
+  end
+
+  always_comb begin
+    divif.out.valid_out = 0;
+    divif.out.ready_in = 0;
+    unique case(state)
+      IDLE: if(nRST) divif.out.ready_in = 1;
+      DONE: divif.out.valid_out = 1;
+    endcase
+  end
+
+  always_ff @(posedge CLK, negedge nRST) begin
+    if(~nRST) state <= IDLE;
+    else      state <= n_state;
+  end
+
 endmodule
