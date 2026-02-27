@@ -16,22 +16,22 @@ float fp16_from_bits(uint16_t bits);
 uint16_t bits_from_fp16(float val);
 
 // Check if FP16 value is subnormal
-bool is_subnormal(uint16_t bits);
+inline bool is_subnormal(uint16_t bits);
 
 // Apply DAZ (Denormals Are Zero)
-uint16_t apply_daz(uint16_t bits);
+inline uint16_t apply_daz(uint16_t bits);
 
 // Apply FTZ (Flush To Zero)
-uint16_t apply_ftz(uint16_t bits);
+inline uint16_t apply_ftz(uint16_t bits);
 
 // Check if FP16 value is NaN
-bool is_nan(uint16_t bits);
+inline bool is_nan(uint16_t bits);
 
 // Canonicalize NaN
-uint16_t canonicalize_nan(uint16_t bits);
+inline uint16_t canonicalize_nan(uint16_t bits);
 
 // Normalize zero
-uint16_t normalize_zero(uint16_t bits);
+inline uint16_t normalize_zero(uint16_t bits);
 
 // FP16 hardware-like multiplication
 uint16_t fp16_mul_hw(uint16_t a_bits, uint16_t b_bits);
