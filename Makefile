@@ -2,7 +2,9 @@
 #  Atalla Simulation Makefile
 # ──────────────────────────────────────────────────────────────
 #  Usage:
-#    make <module>.sim          – command-line simulation
+#    make <module>.sim          – command-line simulation (full visibility)
+#    make <module>.sim ACC=1    – with +acc=npr (nets/ports/regs visible)
+#    make <module>.sim ACC=0    – fully optimized (fastest, no visibility)
 #    make <module>.wav          – GUI simulation (with waves)
 #    make <module>.sim FILELIST=path/to/custom.f
 #    make clean
@@ -23,7 +25,14 @@ WORKLIB  := work
 # ── Tools ────────────────────────────────────────────────────
 VLIB ?= vlib
 VLOG ?= vlog
+VOPT ?= vopt
 VSIM ?= vsim
+
+# ── Performance ──────────────────────────────────────────────
+# ACC=2 (default): +acc (full visibility)
+# ACC=1          : +acc=npr (nets, ports, registers visible)
+# ACC=0          : fully optimized, no signal visibility (fastest)
+ACC ?= 2
 
 # ── Include paths (every directory under rtl/) ───────────────
 INCFLAGS := $(shell find $(RTLDIR) -type d -print 2>/dev/null | sed 's/^/+incdir+/')
@@ -76,29 +85,41 @@ endef
 
 # ── Pattern rules ────────────────────────────────────────────
 
-# Command-line simulation
+# Command-line simulation (optimized by default)
 %.sim:
 	$(call do_compile,$(MOD))
-	@echo "[sim] running $(TB_TOP) (command-line) ..."
-	$(VSIM) -c -voptargs="+acc" $(WORKLIB).$(TB_TOP) \
+ifeq ($(ACC),2)
+	@echo "[opt] vopt $(TB_TOP) with +acc (full visibility) ..."
+	$(VOPT) +acc $(WORKLIB).$(TB_TOP) -o $(TB_TOP)_opt -work $(WORKLIB)
+else ifeq ($(ACC),1)
+	@echo "[opt] vopt $(TB_TOP) with +acc=npr (nets/ports/regs) ..."
+	$(VOPT) +acc=npr $(WORKLIB).$(TB_TOP) -o $(TB_TOP)_opt -work $(WORKLIB)
+else
+	@echo "[opt] vopt $(TB_TOP) (fully optimized) ..."
+	$(VOPT) $(WORKLIB).$(TB_TOP) -o $(TB_TOP)_opt -work $(WORKLIB)
+endif
+	@echo "[sim] running $(TB_TOP)_opt (command-line) ..."
+	$(VSIM) -c $(WORKLIB).$(TB_TOP)_opt \
 		-do "run -all; quit -f"
 
 # GUI simulation with waves
 %.wav:
 	$(call do_compile,$(MOD))
-	@echo "[sim] launching $(TB_TOP) (GUI) ..."
+	@echo "[opt] vopt $(TB_TOP) with +acc (full visibility) ..."
+	$(VOPT) +acc $(WORKLIB).$(TB_TOP) -o $(TB_TOP)_opt -work $(WORKLIB)
+	@echo "[sim] launching $(TB_TOP)_opt (GUI) ..."
 	@WAVEDO="$(WAVEDIR)/$(MOD).do"; \
 	if [ -f "$$WAVEDO" ]; then \
 		echo "[sim] loading wave script: $$WAVEDO"; \
-		$(VSIM) -voptargs="+acc" $(WORKLIB).$(TB_TOP) \
+		$(VSIM) $(WORKLIB).$(TB_TOP)_opt \
 			-do "view wave; do $$WAVEDO; run -all" -onfinish stop; \
 	else \
 		echo "[sim] no wave .do file found, opening blank wave viewer"; \
-		$(VSIM) -voptargs="+acc" $(WORKLIB).$(TB_TOP) \
+		$(VSIM) $(WORKLIB).$(TB_TOP)_opt \
 			-do "add wave -r /*; run -all" -onfinish stop; \
 	fi
 
 # ── Utility targets ─────────────────────────────────────────
 .PHONY: clean
 clean:
-	rm -rf $(WORKLIB) transcript vsim.wlf modelsim.ini
+	rm -rf $(WORKLIB) transcript vsim.wlf modelsim.ini obj_dir

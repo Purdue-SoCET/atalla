@@ -40,10 +40,10 @@ uint16_t fp16_mul_hw(uint16_t a_bits, uint16_t b_bits);
 uint16_t fp16_add_hw(uint16_t a_bits, uint16_t b_bits);
 uint16_t fp16_4_input_add_hw(uint16_t a_bits, uint16_t b_bits, uint16_t c_bits, uint16_t d_bits);
 
-// Generate random FP16 value within the FP16 exponent of a specified exponent range
-uint16_t random_fp16(int max_exponent);
+// Generate random FP16 value within the FP16 exponent of a specified exponent range [min_exponent, max_exponent]
+uint16_t random_fp16(int min_exponent, int max_exponent);
 
-// Generate a random matrix of FP16 values
-std::vector<std::vector<uint16_t>> generate_random_matrix_fp16(int rows, int cols, int max_exponent);
+// Generate a random matrix of FP16 values with exponents in [min_exponent, max_exponent]
+std::vector<std::vector<uint16_t>> generate_random_matrix_fp16(int rows, int cols, int min_exponent, int max_exponent);
 
 #endif // FP16_UTILS_H

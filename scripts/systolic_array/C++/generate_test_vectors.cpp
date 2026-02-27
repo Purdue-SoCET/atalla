@@ -168,7 +168,7 @@ std::vector<std::vector<uint16_t>> sim_MEISSA(
     return output;
 }
 
-void create_new_test(int test_num, int max_exponent, const std::string& file_path, std::vector<std::vector<uint16_t>> *weight)
+void create_new_test(int test_num, int min_exponent, int max_exponent, const std::string& file_path, std::vector<std::vector<uint16_t>> *weight)
 {
     // Write test number
     std::ofstream file(file_path, std::ios::app); // Open the file in append mode
@@ -182,7 +182,7 @@ void create_new_test(int test_num, int max_exponent, const std::string& file_pat
     // Conditionally generate new weight
     if(std::rand() % 1000 < PROBABILITY_OF_NEW_WEIGHT) {
         file << "Weight" << std::endl;
-        std::vector<std::vector<uint16_t>> weight_matrix = generate_random_matrix_fp16(ROW, COL, max_exponent);
+        std::vector<std::vector<uint16_t>> weight_matrix = generate_random_matrix_fp16(ROW, COL, min_exponent, max_exponent);
         write_matrix_to_file(weight_matrix, file_path);
         file << "\n";
 
@@ -191,13 +191,13 @@ void create_new_test(int test_num, int max_exponent, const std::string& file_pat
 
     // Generate Input matrix
     file << "Input" << std::endl;
-    std::vector<std::vector<uint16_t>> input_matrix = generate_random_matrix_fp16(ROW, COL, max_exponent);
+    std::vector<std::vector<uint16_t>> input_matrix = generate_random_matrix_fp16(ROW, COL, min_exponent, max_exponent);
     write_matrix_to_file(input_matrix, file_path);
     file << "\n";
 
     // Generate Psum matrix
     file << "Psum" << std::endl;
-    std::vector<std::vector<uint16_t>> psum_matrix = generate_random_matrix_fp16(ROW, COL, max_exponent);
+    std::vector<std::vector<uint16_t>> psum_matrix = generate_random_matrix_fp16(ROW, COL, min_exponent, max_exponent);
     write_matrix_to_file(psum_matrix, file_path);
     file << "\n";
 
@@ -237,19 +237,19 @@ int main() {
     // Initial weight matrix
     file << "Test " << "0" << std::endl;
     file << "Weight" << std::endl;
-    std::vector<std::vector<uint16_t>> weight_matrix = generate_random_matrix_fp16(ROW, COL, 3); 
+    std::vector<std::vector<uint16_t>> weight_matrix = generate_random_matrix_fp16(ROW, COL, 0, 3); 
     write_matrix_to_file(weight_matrix, PATH_TO_INPUT);
     file << std::endl;
 
     // Generate Input matrix
     file << "Input" << std::endl;
-    std::vector<std::vector<uint16_t>> input_matrix = generate_random_matrix_fp16(ROW, COL, 3);
+    std::vector<std::vector<uint16_t>> input_matrix = generate_random_matrix_fp16(ROW, COL, 0, 3);
     write_matrix_to_file(input_matrix, PATH_TO_INPUT);
     file << "\n";
 
     // Generate Psum matrix
     file << "Psum" << std::endl;
-    std::vector<std::vector<uint16_t>> psum_matrix = generate_random_matrix_fp16(ROW, COL, 3);
+    std::vector<std::vector<uint16_t>> psum_matrix = generate_random_matrix_fp16(ROW, COL, 0, 3);
     write_matrix_to_file(psum_matrix, PATH_TO_INPUT);
     file << std::endl;
 
@@ -260,7 +260,7 @@ int main() {
 
     for (int i = 0; i < TOTAL_TEST_NUM; i++) {
         // Set the max exponent for random value range
-        create_new_test(i + 1, 12, PATH_TO_INPUT, &weight_matrix);
+        create_new_test(i + 1, 0, 19, PATH_TO_INPUT, &weight_matrix);
         progress_bar(i + 1, TOTAL_TEST_NUM);
     }
 

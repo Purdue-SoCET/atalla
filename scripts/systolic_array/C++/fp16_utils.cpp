@@ -168,28 +168,31 @@ uint16_t fp16_4_input_add_hw(uint16_t a_bits, uint16_t b_bits, uint16_t c_bits, 
     return result.v;
 }
 
-// Generate random FP16 value within the fp16 exponent of specified exponent range
-// i.e. for max_exponent = 3, the random value will be in the range of [-8, 8] with random decimal part
-uint16_t random_fp16(int max_exponent)
+// Generate random FP16 value within the fp16 exponent of specified exponent range [min_exponent, max_exponent]
+// i.e. for min_exponent = 1, max_exponent = 3, the random exponent will be in [1, 3]
+uint16_t random_fp16(int min_exponent, int max_exponent)
 {
-    // Clamp parameter into safe fp16-normal range
-    if (max_exponent < 1)  max_exponent = 1;
+    // Clamp parameters into safe fp16-normal range
+    if (min_exponent < 0)  min_exponent = 0;
+    if (min_exponent > 31) min_exponent = 31;
+    if (max_exponent < 0)  max_exponent = 0;
     if (max_exponent > 31) max_exponent = 31;
+    if (min_exponent > max_exponent) min_exponent = max_exponent;
 
     uint16_t sign = std::rand() % 2; // Random sign bit
-    uint16_t exponent = std::rand() % (max_exponent + 1);
+    uint16_t exponent = min_exponent + std::rand() % (max_exponent - min_exponent + 1);
     uint16_t mantissa = std::rand() % 0x400; // Random mantissa (10 bits for fp16)
 
     return (sign << 15) | (exponent << 10) | mantissa;
 }
 
 // Generates a random matrix of fp16
-std::vector<std::vector<uint16_t>> generate_random_matrix_fp16(int rows, int cols, int max_exponent)
+std::vector<std::vector<uint16_t>> generate_random_matrix_fp16(int rows, int cols, int min_exponent, int max_exponent)
 {
     std::vector<std::vector<uint16_t>> matrix(rows, std::vector<uint16_t>(cols));
     for (int i = 0; i < rows; ++i) {
         for (int j = 0; j < cols; ++j) {
-            matrix[i][j] = random_fp16(max_exponent);
+            matrix[i][j] = random_fp16(min_exponent, max_exponent);
         }
     }
     return matrix;

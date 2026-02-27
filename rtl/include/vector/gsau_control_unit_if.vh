@@ -60,8 +60,8 @@ interface gsau_control_unit_if;
 
     // SYSTOLIC ARRAY 
     // GSAU To Systolic Array
-    logic [511:0] sa_array_in;          // input data to systolic array
-    logic [511:0] sa_array_in_partials; // partial sum inputs
+    logic [(N * DW) - 1:0] sa_array_in;          // input data to systolic array
+    logic [(N * DW) - 1:0] sa_array_in_partials; // partial sum inputs
     logic         sa_input_en;          // enable data input
     logic         sa_weight_en;         // enable weight load
     logic         sa_partial_en;        // enable partial sum load
@@ -70,7 +70,7 @@ interface gsau_control_unit_if;
    // logic         sa_valid_out;       // gsau have valid data to SA (new) - not needed we have enable signals
 
     // From Systolic Array to GSAU
-    logic [511:0] sa_array_output;      // output data
+    logic [(N * DW) - 1:0] sa_array_output;      // output data
     //logic         sa_out_valid;         // output valid flag
     logic         sa_valid_in;         // output valid flag SA -> GSAU, i have valid output from SA
     logic         sa_ready_in;          // SA ready to accept data from GSAU (new)
