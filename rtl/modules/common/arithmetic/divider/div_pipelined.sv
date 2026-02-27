@@ -30,7 +30,7 @@ module div_pipelined (
     // Iteration 1 data always loops back to start Iteration 2
     assign loopback_req = p_valid[5]; 
 
-// THE SKID BUFFER
+// END FIFO
     logic [15:0] fifo_data [0:7];
     logic [2:0] wr_ptr, rd_ptr;
     logic [3:0] fifo_count;
@@ -183,7 +183,7 @@ module div_pipelined (
         end
     end
 
-// THE CAROUSEL (Main Pipeline Shift Registers)
+// Main CAROUSEL
     always_ff @(posedge CLK, negedge nRST) begin
         if (~nRST) begin
             p_valid <= 5'b0000;
@@ -248,11 +248,8 @@ module div_pipelined (
         end
     end
 
-    // =========================================================================
-    // HARDWARE IP BLOCKS (Completely untouched, free-running)
-    // =========================================================================
+    // HARDWARE BLOCKS
     
-    // Multipliers run continuously, ignoring stall/done handshakes
     mul_bf16 mul_numerator (
         .clk(CLK), 
         .nRST(nRST),
@@ -275,7 +272,6 @@ module div_pipelined (
         .done()
     );
 
-    // Subtractor runs continuously on whatever `reg_outd` feeds it
     addsub_bf16 sub (
         .clk(CLK),
         .nRST(nRST),
