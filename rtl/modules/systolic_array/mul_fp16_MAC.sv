@@ -132,6 +132,13 @@ module mul_fp16_MAC(
             round_bit = mul_product[1];
             sticky_bit = mul_product[0] | mul_round_loss;
         end
+        else if (exp_unf && (exp_sum == 5'd0)) begin
+            // Subnormal boundary: shift right 1 more for 0.1xxx format
+            mul_frac_normalized = mul_product[12:3];
+            guard_bit = mul_product[2];
+            round_bit = mul_product[1];
+            sticky_bit = mul_product[0] | mul_round_loss;
+        end
         else begin
             mul_frac_normalized = mul_product[11:2];
             guard_bit = mul_product[1];
