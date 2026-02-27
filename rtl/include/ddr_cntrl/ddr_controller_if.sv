@@ -3,9 +3,10 @@
 
 interface ddr_controller_if;
 
-// 2.5.2025 -> TASK - ADD MODPORTS
-// 2.8.2025 -> TASK - FINISH MODPORTS BY 2.12
-// 2.12.2025 -> TASK - READ ID Q
+// 2.5.2026 -> TASK - ADD MODPORTS - DONE
+// 2.8.2026 -> TASK - FINISH MODPORTS BY 2.12 - DONE
+// 2.12.2026 -> TASK - READ ID Q - DONE
+// 2.26.2026 -> TASK - TYPEDEF 
 `include "dram_pkg.sv"
 import dram_pkg::*;
 
@@ -42,11 +43,12 @@ logic [BANK_NUM-1:0] fe_full; // [QUEUE_SIZE-1:0]
 // BANK QUEUE -> COMMAND FSM
 logic [$clog2(BANK_NUM)-1:0] bq_pop; // 16
 logic [$clog2(BANK_NUM)-1:0] bq_rw; // 16
-logic [BANK_GROUP_BITS-1:0][$clog2(BANK_NUM)-1:0 ] bq_bg, [$clog2(BANK_NUM)-1:0][$clog2(BANK_NUM)-1:0]   bq_b; // 2*16
+logic [BANK_GROUP_BITS-1:0][$clog2(BANK_NUM)-1:0] bq_bg; // Maybe delete 
+logic [$clog2(BANK_NUM)-1:0][$clog2(BANK_NUM)-1:0] bq_b; // 2*16
 logic [ROW_BITS-1:0][$clog2(BANK_NUM)-1:0] bq_r; // 15*16
 logic [COLUMN_BITS-1:0][$clog2(BANK_NUM)-1:0]  bq_c; // 10*16
 logic [$clog2(ID_NUM)-1:0][$clog2(BANK_NUM)-1:0]  bq_id; // 4*16
-logic [$clog2(BANK_NUM)-1:0] bq_ready ;
+logic [BANK_NUM-1:0] bq_ready;
 
 // COMMAND FSM -> BACKEND ARBITER
 logic [$clog2(BANK_NUM)-1:0]  be_arb;

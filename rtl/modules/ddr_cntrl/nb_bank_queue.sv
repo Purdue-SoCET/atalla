@@ -33,17 +33,16 @@ module nb_bank_queue(
             assign b_rsel[i] = (bqif.bq_pop == i);
 
             // Generate fifos
-            sync_fifo #(.DEPTH(BANK_NUM), .DWIDTH($bits(bq_slot_t))) bq_fifo_gen ( // TODO: DEPTH NEEDS FINALIZATION
+            sync_fifo #(.DEPTH(BANK_NUM), .DWIDTH($bits(bq_slot_t))) bq_fifo_gen ( // TODO: DEPTH NEEDS FINALIZATION - might not matter
                 .clk(CLK), .rstn(nRST),
                 .wr_en(b_wsel[i]),
                 .din({bqif.fe_r, bqif.fe_c, bqif.fe_write, bqif.fe_id}),
                 .rd_en(b_rsel[i]),
-                .dout({bqif.bq_r, bqif.bq_c, bqif.bq_rw, bqif.bq_id}),
+                .dout(bqif.b[i]{bqif.bq_r, bqif.bq_c, bqif.bq_rw, bqif.bq_id}), // TODO: FIX THE OUTPUT TO THE COMMAND FSM
                 .full(bqif.fe_full[i]),
                 .empty()
             );
 
-            // Full
         end
 
     endgenerate
