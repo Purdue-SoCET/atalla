@@ -2,12 +2,15 @@
 #include <cstddef>
 #include <string>
 #include <vector>
+#include "fp16_utils.h"
+#include "bf16_utils.h"
 
 constexpr int ROW = 32;
 constexpr int COL = 32;
 constexpr int TOTAL_TEST_NUM = 100;
 constexpr int PROBABILITY_OF_NEW_WEIGHT = 250; // 25% chance out of 1000
 constexpr int ADDER_INPUT_NUM = 4;
+constexpr bool IS_FP16 = false;
 
 extern std::string PATH_TO_INPUT;
 extern std::string PATH_TO_EXPECTED_RESULT;

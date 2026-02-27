@@ -5,7 +5,6 @@
 #include <iomanip>
 #include <chrono>
 #include <cstdlib>
-#include "fp16_utils.h"
 #include "generate_test_vectors.h"
 
 std::string PATH_TO_INPUT = "/scripts/systolic_array/systolic_array_tb_input.csv";
@@ -61,11 +60,19 @@ void progress_bar(std::size_t iteration,
     }
 }
 
-uint16_t sim_add(uint16_t a, uint16_t b, bool is_fp16) {
+uint16_t sim_2_input_add(uint16_t a, uint16_t b, bool is_fp16) {
     if (is_fp16) {
         return fp16_add_hw(a, b);
     } else {
-        // bf16
+        return bf16_add_hw(a, b);
+    }
+}
+
+uint16_t sim_4_input_add(uint16_t a, uint16_t b, uint16_t c, uint16_t d, bool is_fp16) {
+    if (is_fp16) {
+        return fp16_4_input_add_hw(a, b, c, d);
+    } else {
+        return bf16_4_input_add_hw(a, b, c, d);
     }
 }
 
@@ -73,7 +80,7 @@ uint16_t sim_mul(uint16_t a, uint16_t b, bool is_fp16) {
     if (is_fp16) {
         return fp16_mul_hw(a, b);
     } else {
-        // bf16
+        return bf16_mul_hw(a, b);
     }
 }
 
@@ -88,7 +95,7 @@ uint16_t sim_adder_tree(const std::vector<uint16_t>& in, uint16_t psum, bool is_
             next.resize((n + 1) / 2);
 
             for (size_t j = 0; j + 1 < n; j += 2) {
-                next[j / 2] = sim_add(cur[j], cur[j + 1], is_fp16);
+                next[j / 2] = sim_2_input_add(cur[j], cur[j + 1], is_fp16);
             }
             if (n & 1) { // odd tail
                 next[n / 2] = cur[n - 1];
@@ -104,13 +111,13 @@ uint16_t sim_adder_tree(const std::vector<uint16_t>& in, uint16_t psum, bool is_
             next.resize((n + 3) / 4);
 
             for (size_t j = 0; j + 3 < n; j += 4) {
-                next[j / 4] = fp16_4_input_add_hw(cur[j], cur[j + 1], cur[j + 2], cur[j + 3]);
+                next[j / 4] = sim_4_input_add(cur[j], cur[j + 1], cur[j + 2], cur[j + 3], is_fp16);
             }
             size_t tail = n % 4;
             if (tail > 0) {
                 uint16_t sum = cur[n - tail];
                 for (size_t k = n - tail + 1; k < n; ++k) {
-                    sum = sim_add(sum, cur[k], is_fp16);
+                    sum = sim_2_input_add(sum, cur[k], is_fp16);
                 }
                 next[n / 4] = sum;
             }
@@ -125,7 +132,7 @@ uint16_t sim_adder_tree(const std::vector<uint16_t>& in, uint16_t psum, bool is_
     }
 
     // add psum at the end
-    return sim_add(cur[0], psum, is_fp16);
+    return sim_2_input_add(cur[0], psum, is_fp16);
 }
 
 uint16_t sim_MEISSA_col(
@@ -168,6 +175,14 @@ std::vector<std::vector<uint16_t>> sim_MEISSA(
     return output;
 }
 
+std::vector<std::vector<uint16_t>> generate_random_matrix(int rows, int cols, int min_exponent, int max_exponent, bool is_fp16) {
+    if (is_fp16) {
+        return generate_random_matrix_fp16(rows, cols, min_exponent, max_exponent);
+    } else {
+        return generate_random_matrix_bf16(rows, cols, min_exponent, max_exponent);
+    }
+}
+
 void create_new_test(int test_num, int min_exponent, int max_exponent, const std::string& file_path, std::vector<std::vector<uint16_t>> *weight)
 {
     // Write test number
@@ -182,7 +197,7 @@ void create_new_test(int test_num, int min_exponent, int max_exponent, const std
     // Conditionally generate new weight
     if(std::rand() % 1000 < PROBABILITY_OF_NEW_WEIGHT) {
         file << "Weight" << std::endl;
-        std::vector<std::vector<uint16_t>> weight_matrix = generate_random_matrix_fp16(ROW, COL, min_exponent, max_exponent);
+        std::vector<std::vector<uint16_t>> weight_matrix = generate_random_matrix(ROW, COL, min_exponent, max_exponent, IS_FP16);
         write_matrix_to_file(weight_matrix, file_path);
         file << "\n";
 
@@ -191,19 +206,19 @@ void create_new_test(int test_num, int min_exponent, int max_exponent, const std
 
     // Generate Input matrix
     file << "Input" << std::endl;
-    std::vector<std::vector<uint16_t>> input_matrix = generate_random_matrix_fp16(ROW, COL, min_exponent, max_exponent);
+    std::vector<std::vector<uint16_t>> input_matrix = generate_random_matrix(ROW, COL, min_exponent, max_exponent, IS_FP16);
     write_matrix_to_file(input_matrix, file_path);
     file << "\n";
 
     // Generate Psum matrix
     file << "Psum" << std::endl;
-    std::vector<std::vector<uint16_t>> psum_matrix = generate_random_matrix_fp16(ROW, COL, min_exponent, max_exponent);
+    std::vector<std::vector<uint16_t>> psum_matrix = generate_random_matrix(ROW, COL, min_exponent, max_exponent, IS_FP16);
     write_matrix_to_file(psum_matrix, file_path);
     file << "\n";
 
     std::ofstream expected_file(PATH_TO_EXPECTED_RESULT, std::ios::app);
     expected_file << "Test " << test_num << std::endl;
-    std::vector<std::vector<uint16_t>> output_matrix = sim_MEISSA(input_matrix, *weight, psum_matrix, true);
+    std::vector<std::vector<uint16_t>> output_matrix = sim_MEISSA(input_matrix, *weight, psum_matrix, IS_FP16);
     write_matrix_to_file(output_matrix, PATH_TO_EXPECTED_RESULT);
     expected_file << "\n";
     expected_file.close();
@@ -237,19 +252,19 @@ int main() {
     // Initial weight matrix
     file << "Test " << "0" << std::endl;
     file << "Weight" << std::endl;
-    std::vector<std::vector<uint16_t>> weight_matrix = generate_random_matrix_fp16(ROW, COL, 0, 3); 
+    std::vector<std::vector<uint16_t>> weight_matrix = generate_random_matrix(ROW, COL, 0, 3, IS_FP16); 
     write_matrix_to_file(weight_matrix, PATH_TO_INPUT);
     file << std::endl;
 
     // Generate Input matrix
     file << "Input" << std::endl;
-    std::vector<std::vector<uint16_t>> input_matrix = generate_random_matrix_fp16(ROW, COL, 0, 3);
+    std::vector<std::vector<uint16_t>> input_matrix = generate_random_matrix(ROW, COL, 0, 3, IS_FP16);
     write_matrix_to_file(input_matrix, PATH_TO_INPUT);
     file << "\n";
 
     // Generate Psum matrix
     file << "Psum" << std::endl;
-    std::vector<std::vector<uint16_t>> psum_matrix = generate_random_matrix_fp16(ROW, COL, 0, 3);
+    std::vector<std::vector<uint16_t>> psum_matrix = generate_random_matrix(ROW, COL, 0, 3, IS_FP16);
     write_matrix_to_file(psum_matrix, PATH_TO_INPUT);
     file << std::endl;
 
@@ -266,7 +281,11 @@ int main() {
 
     auto end   = std::chrono::steady_clock::now();
     auto ms = std::chrono::duration_cast<std::chrono::milliseconds>(end - start).count();
-    std::cout << "Created "  << TOTAL_TEST_NUM << " random test cases" << std::endl;
+    std::cout << "Adder input num: " << ADDER_INPUT_NUM << std::endl;
+    std::cout << "Data type: " << (IS_FP16 ? "FP16" : "BF16") << std::endl;
+    PATH_TO_INPUT = PATH_TO_INPUT.erase(0, input_path_env.length());
+    PATH_TO_EXPECTED_RESULT = PATH_TO_EXPECTED_RESULT.erase(0, input_path_env.length());
+    std::cout << "Created "  << TOTAL_TEST_NUM << " random test cases to " << PATH_TO_INPUT << " and " << PATH_TO_EXPECTED_RESULT << std::endl;
     std::cout << "Elapsed: " << ms << " ms\n";
 
     return 0;

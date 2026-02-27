@@ -1,5 +1,5 @@
 CC=g++
-CFLAGS=-std=c++17 -Wall -g
+CFLAGS=-std=c++17 -Wall -g -Wno-sign-compare
 
 # ===== SoftFloat Paths =====
 SOFTFLOAT_ROOT := ../berkeley-softfloat-3
@@ -14,6 +14,7 @@ APP=gen_test_vectors
 
 test:
 	$(CC) $(CFLAGS) -I$(SOFTFLOAT_INC) $(ALL_SRC) $(SOFTFLOAT_LIB) -o $(APP)	
+	./$(APP)
 
 clean:
 	rm -f $(APP)
