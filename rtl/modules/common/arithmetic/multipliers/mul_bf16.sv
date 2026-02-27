@@ -24,11 +24,6 @@ module mul_bf16(
             b_latched <= 0;
             lat1_ready <= 0;
         end
-        else if (stall) begin
-            a_latched <= a_latched;
-            b_latched <= b_latched;
-            lat1_ready <= lat1_ready;
-        end
         else begin
             a_latched <= a_latched;
             b_latched <= b_latched;

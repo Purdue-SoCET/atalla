@@ -9,10 +9,13 @@ module addsub_bf16 (
     input  logic [15:0] bf1_in,
     input  logic [15:0] bf2_in,
     input  logic op, // 0 = add, 1 = sub
+    input  logic start,
+    input  logic stall,
     output logic [15:0] bf_out,
     output logic overflow,
     output logic underflow,
-    output logic invalid
+    output logic invalid,
+    output logic done
 );
 
     logic [15:0] bf2_eff;
@@ -23,12 +26,15 @@ module addsub_bf16 (
     add_bf16 add_sub (
         .clk(clk),
         .nRST(nRST),
-        .bf1_in(bf1_in),
-        .bf2_in(bf2_eff),
+        .start(start),
+        .stall(stall),
+        .bf1(bf1_in),
+        .bf2(bf2_eff),
         .bf_out(bf_out),
         .overflow(overflow),
         .underflow(underflow),
-        .invalid(invalid)
+        .invalid(invalid),
+        .done(done)
         );
 
 endmodule

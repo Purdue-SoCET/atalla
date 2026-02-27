@@ -145,14 +145,12 @@ module div_pipelined_tb;
     
     start_time = $time;
     fork
-      // ===================================================================
-      // THREAD 1: THE DRIVER
-      // ===================================================================
+      // Driver Thread
       begin
         while (!$feof(fd)) begin
           r = $fscanf(fd, format_str, op1, op2, exp_val);
           if (r == 3) begin
-            // Inject FRONT PRESSURE (Bubbles / Input Starvation)
+            // FRONT PRESSURE (Bubbles / Input Starvation)
             if (traffic_mode == "FRONT_PRESSURE" || traffic_mode == "RANDOM") begin
               if ($urandom_range(0, 100) < 25) begin // 25% chance to stall
                 divif.in.valid_in = 0;
@@ -164,7 +162,10 @@ module div_pipelined_tb;
             divif.in.operand2 = op2;
             divif.in.valid_in = 1;
 
-            do begin @(posedge CLK); end while (!divif.out.ready_in);
+            do begin 
+              @(posedge CLK); 
+            end while 
+              (!divif.out.ready_in);
 
             q_op1.push_back(op1); q_op2.push_back(op2); q_exp.push_back(exp_val);
             tests_fed++;
@@ -174,13 +175,11 @@ module div_pipelined_tb;
         driver_done = 1; 
       end
 
-      // ===================================================================
-      // THREAD 2: THE RECEIVER
-      // ===================================================================
+      // Receiver Thread
       begin
         while (!driver_done || q_exp.size() > 0) begin
           
-          // Inject BACK PRESSURE (Output Stalls / Skid Buffer Stress)
+          // BACK PRESSURE (Output Stalls / Skid Buffer Stress)
           if (traffic_mode == "BACK_PRESSURE" || traffic_mode == "RANDOM") begin
             if ($urandom_range(0, 100) < 25) begin // 25% chance to pause reading
               divif.in.ready_out = 0;
@@ -400,9 +399,7 @@ module div_pipelined_tb;
       errors++;
     end
 
-    // ---------------------------------------------------------
     // MID-FLIGHT RESET TEST (Asynchronous Flush)
-    // ---------------------------------------------------------
     tb_test_case = "MID_FLIGHT_RESET";
     $display("Running Mid-Flight Reset test...");
     
@@ -411,14 +408,17 @@ module div_pipelined_tb;
     divif.in.operand2 = 16'h4000; // 2.0
     divif.in.valid_in = 1;
     for (int i=0; i<4; i++) begin
-      do begin @(posedge CLK); end while (!divif.out.ready_in);
+      do begin 
+        @(posedge CLK); 
+      end while 
+        (!divif.out.ready_in);
     end
     divif.in.valid_in = 0;
     
     // 2. Wait 2 clock cycles so they are deep inside the math units
     repeat(2) @(posedge CLK); 
     
-    // 3. Brutally yank the reset low mid-calculation!
+    // 3. Pull reset low mid-calculation
     nRST = 0;
     repeat(2) @(posedge CLK);
     
