@@ -1,5 +1,55 @@
 # Systolic Array
 
+## Systolic Array Architectures
+
+### Weight-Stationary Systolic Array
+
+**Description**: 
+
+**Block Diagram**: [Top Level](../img/systolic_array_diagram.png)
+
+**Code**:
+
+**Important Architecture Decisions**:
+
+**Verification**:
+- The testbeneches are found [here](https://github.com/Purdue-SoCET/atalla/tree/systolic_array_arch/tb/unit/systolic_array)
+- The test generation scripts are found [here](https://github.com/Purdue-SoCET/atalla/tree/systolic_array_arch/scripts/systolic_array)
+
+### MEISSA
+
+**Description**: The MEISSA (Multiplying Matrices Efficiently in a Scalable Systolic Architecture) design performs GEMM (General Matrix Multiplication). The design is parameterized to support FP16 and BF16 data types.
+
+**Block Diagram**: ![MEISSA Architecture](../img/MEISSA_diagram.png)
+                   ![MEISSA Block Diagram](../img/MEISSA_drawio_diagram.png)
+
+**Code**: [here](https://github.com/Purdue-SoCET/atalla/tree/systolic_array_arch/rtl/modules/systolic_array)
+
+**Important Architecture Decisions**: The architecture was based on this [Georgia Tech paper](https://hparch.gatech.edu/papers/bahar_2020_meissa.pdf). The MEISSA design decouples the MAC units into a multiplier grid and an adder tree for each column. This allows inputs to enter the multiplier grid without staggering, removing the need for an input buffer. MEISSA uses a weight stationary approach, where weights are input as columns then held in the multipliers. Activations are then sent in row-wise and stream through the multiplier grid and adders. MEISSA produces outputs along the diagonals of the result matrix. A wraparound output buffer is used to organize these outputs into rows.
+
+**Verification**:
+- The testbeneches are found [here](https://github.com/Purdue-SoCET/atalla/tree/systolic_array_arch/tb/unit/systolic_array)
+- The test generation scripts are found [here](https://github.com/Purdue-SoCET/atalla/tree/systolic_array_arch/scripts/systolic_array)
+
+**Reference Used**: [Georgia Tech Paper](https://hparch.gatech.edu/papers/bahar_2020_meissa.pdf)
+
+### TPU Style
+
+**Description**: The TPU (Tensor Processing Unit) design preforms GEMM. The implementation is parameterized to support FP16 and BF16 data types.
+
+**Block Diagram**: ![Top Level](../img/tpu_systolic_array_diagram.png)
+                   ![4 Input MAC](../img/4_input_mac_tpu.png)
+
+**Code**: [here](https://github.com/Purdue-SoCET/atalla/tree/systolic_array_arch/rtl/modules/systolic_array)
+
+**Important Architecture Decisions**: This architecture is based on this [Google TPU Patent](https://patentimages.storage.googleapis.com/a6/f3/04/8aa9677623fd16/US20200327186A1.pdf). The design uses a weight stationary approach where weights are loaded in columns-wise and held in the multiplier. The activation matrix is stored into an input buffer, and inputs to the multipliers are staggered in groups of 4. The outputs of the TPU are staggered so an output buffer is used to organize the result into rows.
+
+**Verification**:
+- The testbenches are found [here](https://github.com/Purdue-SoCET/atalla/tree/systolic_array_arch/tb/unit/systolic_array)
+- The test generation scripts are found [here](https://github.com/Purdue-SoCET/atalla/tree/systolic_array_arch/scripts/systolic_array)
+
+**Reference Used**: [Google TPU Patent](https://patentimages.storage.googleapis.com/a6/f3/04/8aa9677623fd16/US20200327186A1.pdf)
+
 ## Arithmetic Modules
 
 ### 4-Input Floating Point Adder
