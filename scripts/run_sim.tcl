@@ -114,6 +114,11 @@ puts "Coverage enabled (based on VLOG_FLAGS)? $enable_cov"
 
 # Build vsim command as a Tcl list so flags are separate args
 set vsim_cmd [list vsim]
+if {[info exists VSIM_FLAGS]} {
+    foreach fl $VSIM_FLAGS {
+        lappend vsim_cmd $fl
+    }
+}
 lappend vsim_cmd -voptargs="+acc"
 if {$enable_cov} {
     lappend vsim_cmd -coverage

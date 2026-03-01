@@ -225,6 +225,7 @@ test:
 		             set SRCS {$$ORDERED_SRCS}; \
 		             set INCS {$$ALL_INCS}; \
 		             set VLOG_FLAGS {$(VLOG_FLAGS)}; \
+		             set VSIM_FLAGS {$(VSIM_EXTRA_FLAGS)}; \
 		             do $(SCRIPTROOT)/run_sim.tcl"; \
 	else \
 		$(VSIM) -voptargs="+acc" -c -do "set batch_mode 1; \
@@ -233,6 +234,7 @@ test:
 		                set SRCS {$$ORDERED_SRCS}; \
 		                set INCS {$$ALL_INCS}; \
 		                set VLOG_FLAGS {$(VLOG_FLAGS)}; \
+		                set VSIM_FLAGS {$(VSIM_EXTRA_FLAGS)}; \
 		                do $(SCRIPTROOT)/run_sim.tcl"; \
 	fi
 	

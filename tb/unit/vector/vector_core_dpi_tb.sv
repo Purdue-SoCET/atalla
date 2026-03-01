@@ -56,7 +56,7 @@ module vector_core_dpi_tb;
     bit [15:0] tmp_vec  [0:31];
     bit [15:0] tmp_vec2 [0:31];
 
-    function automatic vreg_t pack_vreg(logic [15:0] arr [0:31]);
+    function automatic vreg_t pack_vreg(bit [15:0] arr [0:31]);
         vreg_t v;
         for (int i = 0; i < 32; i++) v[i] = arr[i];
         return v;
@@ -298,7 +298,7 @@ module vector_core_dpi_tb;
                 p,
                 sif.vec_req[p].valid,
                 sif.vec_req[p].write,
-                sif.vec_req[p].addr,
+                sif.vec_req[p].spad_addr,
                 sif.vec_req[p].row_id,
                 sif.vec_req[p].col_id,
                 sif.vec_req[p].num_rows,
