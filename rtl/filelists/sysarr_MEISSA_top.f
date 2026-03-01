@@ -16,7 +16,7 @@
 
 // Intermediate modules
 ./rtl/modules/common/general/wallacetree_11b_2c.sv
-./rtl/modules/systolic_array/arithmetic/mul_fp16_MAC.sv
+./rtl/modules/systolic_array/arithmetic/mul_fp16.sv
 ./rtl/modules/systolic_array/arithmetic/add_fp16.sv
 ./rtl/modules/common/memory/sram_bank.sv
 

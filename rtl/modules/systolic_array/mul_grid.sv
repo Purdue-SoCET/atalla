@@ -88,7 +88,7 @@ module mul_grid #(
 
                 if (FP_BF) begin: fp16
                     //no input or output latch MAC 
-                    mul_fp16_MAC u_mul_fp (
+                    mul_fp16 u_mul_fp (
                         .clk(clk),
                         .nRST(nRST),
                         .start(!mul_stall),
