@@ -70,8 +70,8 @@ module vector_core_dpi_tb;
     // -----------------------------------------------------------------------
     // Temp arrays for DPI vector transfers
     // -----------------------------------------------------------------------
-    logic [15:0] tmp_vec  [0:31];
-    logic [15:0] tmp_vec2 [0:31];
+    bit [15:0] tmp_vec  [0:31];
+    bit [15:0] tmp_vec2 [0:31];
 
     // -----------------------------------------------------------------------
     // Helper: pack tmp_vec into vreg_t
@@ -85,7 +85,7 @@ module vector_core_dpi_tb;
     // -----------------------------------------------------------------------
     // Helper: unpack vreg_t into tmp_vec
     // -----------------------------------------------------------------------
-    task automatic unpack_vreg(input vreg_t v, output logic [15:0] arr [0:31]);
+    task automatic unpack_vreg(input vreg_t v, output bit [15:0] arr [0:31]);
         for (int i = 0; i < 32; i++) arr[i] = v[i];
     endtask
 
