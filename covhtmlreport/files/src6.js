@@ -1,0 +1,2 @@
+var g_data = {"name":"./rtl/modules/common/arithmetic/multipliers/ha.sv","src":"// 1 bit half adder\n// used in wallace tree multiplier\n// by Mixuan Pan, Sept 2025\n\n`timescale 1ns/1ps\nmodule ha (\n    input logic a, b, \n    output logic s, cout\n);\n    assign s = a ^ b; \n    assign cout = a & b; \nendmodule","lang":"verilog"};
+processSrcData(g_data);

@@ -13,27 +13,27 @@ module div_bf16_goldschmidt_1mul (
 
   typedef enum logic [2:0] {
     IDLE,
-    BUSY,    
+    BUSY, 
     DONE 
   } state_t;
 
     // Pipeline Structs
   typedef struct packed{
-    logic sign, is_special, valid;
-    logic [7:0] exp;
+    logic sign, is_special, valid, is_sub_bound;
+    logic [9:0] exp;
     logic [16:0] special_result;
   } mul1_t;
 
   typedef struct packed{
-    logic sign, is_special, valid;
-    logic [7:0] exp;
+    logic sign, is_special, valid, is_sub_bound;
+    logic [9:0] exp;
     logic [16:0] muln, special_result;
   } mul2_t;
 
 // SIGNAL DECLARATIONS
   // Pipeline Signals
-  mul1_t fetTmul1, n_fetTmul1, mul1Tfin1, n_mul1Tfin1, fin2Tmul2, n_fin2Tmul2, mul2Tfin3, n_mul2Tfin3;
-  mul2_t fin1Tsub, n_fin1Tsub, subTfin2, n_subTfin2;
+  mul1_t fetTmul1, n_fetTmul1, mul1Tfin1, n_mul1Tfin1, fin2Tmul2, n_fin2Tmul2;
+  mul2_t fin1Tsub, n_fin1Tsub, subTmul2, n_subTmul2;
 
   // FSM State
   state_t state, n_state;
@@ -110,13 +110,6 @@ module div_bf16_goldschmidt_1mul (
   // Exponent Calculation
   assign exp_diff = {2'b00, divif.in.operand1[14:7]} - {2'b00, divif.in.operand2[14:7]};
   assign is_subnormal_boundary = (exp_diff == -10'sd126) && (divif.in.operand1[6:0] < divif.in.operand2[6:0]);
-  assign raw_exp = {2'b00, divif.in.operand1[14:7]} - {2'b00, divif.in.operand2[14:7]} + {2'b00, outn[14:7]};
-
-  always_comb begin : exponent_saturation
-    if(raw_exp >= 10'sd255)                             final_exp = 8'hFF; // Overflow -> Infinity
-    else if(raw_exp <= 10'sd0 || is_subnormal_boundary) final_exp = 8'h00; // Underflow -> Flush to Zero
-    else                                                final_exp = raw_exp[7:0];
-  end
 
   // Edge case detection
   assign op1_is_zero = (divif.in.operand1[14:7] == 15'h0000);
@@ -133,7 +126,7 @@ module div_bf16_goldschmidt_1mul (
 
 // COMBINATIONAL LOGIC EDGE CASES
   always_comb begin : edge_cases
-    is_special = 1'b1;
+    is_special = divif.in.valid_in;
     special_result = {sign, 15'h0000};
     // NaN Propagation
     if(op1_is_nan || op2_is_nan)                                        special_result = qNaN;
@@ -165,7 +158,8 @@ module div_bf16_goldschmidt_1mul (
     n_fetTmul1.sign           = sign;
     n_fetTmul1.is_special     = is_special;
     n_fetTmul1.valid          = divif.in.valid_in;
-    n_fetTmul1.exp            = final_exp;
+    n_fetTmul1.is_sub_bound   = is_subnormal_boundary;
+    n_fetTmul1.exp            = exp_diff;
     n_fetTmul1.special_result = special_result;
   end
 
@@ -176,6 +170,7 @@ module div_bf16_goldschmidt_1mul (
     n_mul1Tfin1.sign           = fetTmul1.sign;
     n_mul1Tfin1.is_special     = fetTmul1.is_special;
     n_mul1Tfin1.valid          = fetTmul1.valid;
+    n_mul1Tfin1.is_sub_bound   = fetTmul1.is_sub_bound;
     n_mul1Tfin1.exp            = fetTmul1.exp;
     n_mul1Tfin1.special_result = fetTmul1.special_result;
   end
@@ -188,6 +183,7 @@ module div_bf16_goldschmidt_1mul (
     n_fin1Tsub.sign           = mul1Tfin1.sign;
     n_fin1Tsub.is_special     = mul1Tfin1.is_special;
     n_fin1Tsub.valid          = mul1Tfin1.valid;
+    n_fin1Tsub.is_sub_bound   = mul1Tfin1.is_sub_bound;
     n_fin1Tsub.exp            = mul1Tfin1.exp;
     n_fin1Tsub.muln           = outn;
     n_fin1Tsub.special_result = mul1Tfin1.special_result;
@@ -200,67 +196,50 @@ module div_bf16_goldschmidt_1mul (
   assign mulfin = !fin1Tsub.is_special && fin1Tsub.valid ? fin1Tsub.muln:'0;
   assign f_2 = !fin1Tsub.is_special && fin1Tsub.valid ? subout:'0;
   always_comb begin
-    n_subTfin2.sign           = fin1Tsub.sign;
-    n_subTfin2.is_special     = fin1Tsub.is_special;
-    n_subTfin2.valid          = fin1Tsub.valid;
-    n_subTfin2.exp            = fin1Tsub.exp;
-    n_subTfin2.muln           = fin1Tsub.muln;
-    n_subTfin2.special_result = fin1Tsub.special_result;
+    n_subTmul2.sign           = fin1Tsub.sign;
+    n_subTmul2.is_special     = fin1Tsub.is_special;
+    n_subTmul2.valid          = fin1Tsub.valid;
+    n_subTmul2.is_sub_bound   = fin1Tsub.is_sub_bound;
+    n_subTmul2.exp            = fin1Tsub.exp;
+    n_subTmul2.muln           = outfin;
+    n_subTmul2.special_result = fin1Tsub.special_result;
   end
 
 // *********************************************************************************************
-// SUB to FIN2
-// *********************************************************************************************
-  always_comb begin
-    n_fin2Tmul2.sign           = subTfin2.sign;
-    n_fin2Tmul2.is_special     = subTfin2.is_special;
-    n_fin2Tmul2.valid          = subTfin2.valid;
-    n_fin2Tmul2.exp            = subTfin2.exp;
-    n_fin2Tmul2.special_result = subTfin2.special_result;
-  end
-
-// *********************************************************************************************
-// FIN2 to MUL2
-// *********************************************************************************************
-  always_comb begin
-    n_mul2Tfin3.sign           = fin2Tmul2.sign;
-    n_mul2Tfin3.is_special     = fin2Tmul2.is_special;
-    n_mul2Tfin3.valid          = fin2Tmul2.valid;
-    n_mul2Tfin3.exp            = fin2Tmul2.exp;
-    n_mul2Tfin3.special_result = fin2Tmul2.special_result;
-  end
-
-// *********************************************************************************************
-// MUL2 to FIN3
+// SUB to MUL
 // *********************************************************************************************
   logic [15:0] fin, result;
-  assign fin = (mul2Tfin3.exp == 8'h00) ? {mul2Tfin3.sign, 15'h0000} : {mul2Tfin3.sign, mul2Tfin3.exp, outfin[6:0]};
-  assign result = mul2Tfin3.is_special ? mul2Tfin3.special_result:fin;
-  assign divif.out.result = mul2Tfin3.is_special ? mul2Tfin3.special_result:fin;
+  assign raw_exp = subTmul2.valid ? subTmul2.exp + {2'b00, subTmul2.muln[14:7]}:'0;
+
+  always_comb begin : exponent_saturation
+    if(raw_exp >= 10'sd255)                             final_exp = 8'hFF; // Overflow -> Infinity
+    else if(raw_exp <= 10'sd0 || is_subnormal_boundary) final_exp = 8'h00; // Underflow -> Flush to Zero
+    else                                                final_exp = raw_exp[7:0];
+  end
+
+  assign fin = (final_exp == 8'h00) ? {subTmul2.sign, 15'h0000} : {subTmul2.sign, final_exp, subTmul2.muln[6:0]};
+  assign result = subTmul2.is_special ? subTmul2.special_result:fin;
+  assign divif.out.result = subTmul2.is_special ? subTmul2.special_result:fin;
 
   always_ff @(posedge CLK, negedge nRST) begin : pipeline_ff
     if(~nRST) begin
       fetTmul1  <= '0;
       mul1Tfin1 <= '0;
       fin1Tsub  <= '0;
-      subTfin2  <= '0;
-      fin2Tmul2 <= '0;
-      mul2Tfin3 <= '0;
+      subTmul2  <= '0;
     end else begin
       fetTmul1  <= n_fetTmul1;
       mul1Tfin1 <= n_mul1Tfin1;
       fin1Tsub  <= n_fin1Tsub;
-      subTfin2  <= n_subTfin2;
-      fin2Tmul2 <= n_fin2Tmul2;
-      mul2Tfin3 <= n_mul2Tfin3;
+      subTmul2  <= n_subTmul2;
     end
   end
 
   always_comb begin
     n_state = state;
     unique case(state)
-      IDLE: if(divif.in.valid_in)              n_state = BUSY; // Normal path
-      BUSY: if(donefin || mul2Tfin3.is_special) n_state = DONE;
+      IDLE: if(divif.in.valid_in)              n_state = BUSY;
+      BUSY: if(donefin || subTmul2.is_special) n_state = DONE;
       DONE: if(divif.in.ready_out)             n_state = IDLE;
     endcase
   end
@@ -268,7 +247,7 @@ module div_bf16_goldschmidt_1mul (
   always_comb begin
     divif.out.valid_out = 0;
     divif.out.ready_in = 0;
-    unique case(state)
+    case(state)
       IDLE: if(nRST) divif.out.ready_in = 1;
       DONE: divif.out.valid_out = 1;
     endcase
@@ -278,5 +257,4 @@ module div_bf16_goldschmidt_1mul (
     if(~nRST) state <= IDLE;
     else      state <= n_state;
   end
-
 endmodule

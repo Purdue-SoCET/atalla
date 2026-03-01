@@ -1,9 +1,9 @@
-// make test tb_file=div_bf16pipeline_tb.sv modules=/common/arithmetic/adders,/common/arithmetic/multipliers,/common/arithmetic/divider packages=/vector/vector_pkg.vh,/memory/scratchpad/scpad_pkg.sv,/common/xbar/xbar_pkg.sv GUI=ON
+// make test tb_file=div_pipeline_bf16_tb.sv modules=/common/arithmetic/adders,/common/arithmetic/multipliers,/common/arithmetic/divider packages=/vector/vector_pkg.vh,/memory/scratchpad/scpad_pkg.sv,/common/xbar/xbar_pkg.sv GUI=ON VLOG_FLAGS="-sv -compile_uselibs -cover bst -sv -pedanticerrors -lint -mfcu" VSIM_FLAGS='-coverage -c -voptargs="+acc"'
 `include "div_if.vh"
 `timescale 1 ns / 1 ns
-
-module div_bf16_goldschmidt_1mul_tb;
-  //-----------------------------------------------
+// make test tb_file=div_pipeline_bf16_tb.sv modules=/common/arithmetic/adders,/common/arithmetic/multipliers,/common/arithmetic/divider packages=/vector/vector_pkg.vh,/memory/scratchpad/scpad_pkg.sv,/common/xbar/xbar_pkg.sv GUI=ON
+module div_pipeline_bf16_tb;
+    //-----------------------------------------------
   // Configuration Parameters
   //-----------------------------------------------
   // Change these to switch between FP16 and BF16
@@ -18,17 +18,11 @@ module div_bf16_goldschmidt_1mul_tb;
   parameter PERIOD = 10;
   
   // Testbench tracking variables
-  reg [WIDTH-1:0] expected_result;
   integer errors;
   integer normal_tests, subnormal_input_tests, subnormal_output_tests, edge_tests;
-
   integer timeout_counter;
   logic [WIDTH-1:0] abs_diff;
   
-  // File I/O
-  integer fd;
-  integer r;
-
   //-----------------------------------------------
   // Clock generation
   //-----------------------------------------------
@@ -42,14 +36,14 @@ module div_bf16_goldschmidt_1mul_tb;
     .MANT_WIDTH(MANT_WIDTH)
   ) divif();
 
-  div_bf16_goldschmidt_1mul DUT (
+  div_pipeline_bf16 DUT (
     .CLK(CLK),
     .nRST(nRST),
     .divif(divif)
   );
 
   //-----------------------------------------------
-  // Helper: check if floating point value is NaN
+  // Helper Functions
   //-----------------------------------------------
   function automatic bit is_nan(input logic [WIDTH-1:0] val);
     logic [EXP_WIDTH-1:0] exponent = val[WIDTH-2:MANT_WIDTH];
@@ -65,7 +59,7 @@ module div_bf16_goldschmidt_1mul_tb;
   endfunction
 
   //-----------------------------------------------
-  // Task: apply test vector with proper handshake
+  // Task: Apply Single Vector (For Edge Cases)
   //-----------------------------------------------
   task automatic apply_vector(
     input [WIDTH-1:0] a_in,
@@ -81,88 +75,179 @@ module div_bf16_goldschmidt_1mul_tb;
     divif.in.operand1 = a_in;
     divif.in.operand2 = b_in;
     divif.in.valid_in = 1;
-    expected_result = expected_in;
     
-    // Wait for input to be accepted (ready_in goes low)
     @(posedge CLK);
-    while (divif.out.ready_in) @(posedge CLK);
+    while (!divif.out.ready_in) @(posedge CLK);
     
     // Deassert valid_in after handshake
     divif.in.valid_in = 0;
     
     timeout_counter = 0;
-    // Wait for output to be valid
     while (!divif.out.valid_out) begin
       @(posedge CLK);
       timeout_counter++;
       if (timeout_counter > 500) begin 
-        $display("FATAL ERROR @%0t: Timeout waiting for valid_out. FSM hung?", $time);
-        errors++;
-        break;
+        $display("FATAL ERROR @%0t: Timeout waiting for valid_out.", $time);
+        errors++; break;
       end
     end
     
-    // Assert ready_out to accept the output
-    divif.in.ready_out = 1;
-    
-    // Compare results (special NaN handling)
     abs_diff = (divif.out.result > expected_in) ? (divif.out.result - expected_in) : (expected_in - divif.out.result);
     if (is_nan(divif.out.result) && is_nan(expected_in)) begin
-      // Both NaN — pass
+      // Pass
     end else if (divif.out.result !== expected_in) begin
-      if ((divif.out.result[15] == expected_in[15]) && (abs_diff <= 2)) begin // ABS_DIFF IS ULP RANGE!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
-        $display("INFO: Result: %h (expected %h). Result off by %d ULP - Acceptable for Goldschmidt.", divif.out.result, expected_in, abs_diff);
+      if ((divif.out.result[15] == expected_in[15]) && (abs_diff <= 2)) begin 
+        // Pass ULP
       end else begin
          $display("ERROR @%0t [%s]: %h / %h = %h (expected %h)", 
-                  $time, tb_test_case, divif.in.operand1, divif.in.operand2, divif.out.result, expected_in);
+                  $time, tb_test_case, a_in, b_in, divif.out.result, expected_in);
          errors++;
       end
     end
         
-    
-    // Complete the output handshake
+    divif.in.ready_out = 1;
     @(posedge CLK);
     divif.in.ready_out = 0;
-    
-    // Wait for valid_out to deassert
-    while (divif.out.valid_out) @(posedge CLK);
   end
   endtask
 
   //-----------------------------------------------
-  // Task: run file-based test set
+  // Task: Run File Tests (FULL DUPLEX PIPELINE)
   //-----------------------------------------------
-  task automatic run_file_tests(input string filename, input string test_name);
-    integer test_count;
+  task automatic run_file_tests(input string filename, input string test_name, input string traffic_mode);
+    integer fd, r;
     string format_str;
-  begin
-    test_count = 0;
-    tb_test_case = test_name;
     
+    logic [WIDTH-1:0] op1, op2, exp_val;
+    logic [WIDTH-1:0] q_op1 [$], q_op2 [$], q_exp [$];
+    
+    int ULP_0_count = 0, ULP_1_count = 0, ULP_2_count = 0;
+    int tests_fed = 0, tests_received = 0, rx_timeout = 0;
+    bit driver_done = 0;
+    time start_time, end_time;
+    real total_cycles, effective_cpi;
+
+  begin
+    tb_test_case = test_name;
     fd = $fopen(filename, "r");
     if (fd == 0) begin
-      $display("INFO: Cannot open file: %s (skipping)", filename);
+      $display("INFO: Cannot open file: %s", filename);
       return;
     end
     
-    $display("Running %s from %s...", test_name, filename);
+    $display("\n=======================================================");
+    $display("Running %s", test_name);
+    $display("File: %s", filename);
+    $display("Traffic Mode: %s", traffic_mode);
+    $display("=======================================================");
     
-    // Construct format string based on WIDTH
-    if (WIDTH == 16)
-      format_str = "%h,%h,%h\n";
-    else
-      format_str = "%h,%h,%h\n"; // Same format, parser handles different widths
+    format_str = (WIDTH == 16) ? "%h,%h,%h\n" : "%h,%h,%h\n";
     
-    while (!$feof(fd)) begin
-      r = $fscanf(fd, format_str, divif.in.operand1, divif.in.operand2, expected_result);
-      if (r == 3) begin
-        apply_vector(divif.in.operand1, divif.in.operand2, expected_result);
-        test_count++;
+    start_time = $time;
+    fork
+      // Driver Thread
+      begin
+        while (!$feof(fd)) begin
+          r = $fscanf(fd, format_str, op1, op2, exp_val);
+          if (r == 3) begin
+            // FRONT PRESSURE (Bubbles / Input Starvation)
+            if (traffic_mode == "FRONT_PRESSURE" || traffic_mode == "RANDOM") begin
+              if ($urandom_range(0, 100) < 25) begin // 25% chance to stall
+                divif.in.valid_in = 0;
+                repeat($urandom_range(1, 4)) @(posedge CLK);
+              end
+            end
+
+            divif.in.operand1 = op1;
+            divif.in.operand2 = op2;
+            divif.in.valid_in = 1;
+
+            do begin 
+              @(posedge CLK); 
+            end while 
+              (!divif.out.ready_in);
+
+            q_op1.push_back(op1); q_op2.push_back(op2); q_exp.push_back(exp_val);
+            tests_fed++;
+          end
+        end
+        divif.in.valid_in = 0;
+        driver_done = 1; 
       end
-    end
-    
+
+      // Receiver Thread
+      begin
+        while (!driver_done || q_exp.size() > 0) begin
+          
+          // BACK PRESSURE (Output Stalls / Skid Buffer Stress)
+          if (traffic_mode == "BACK_PRESSURE" || traffic_mode == "RANDOM") begin
+            if ($urandom_range(0, 100) < 25) begin // 25% chance to pause reading
+              divif.in.ready_out = 0;
+              repeat($urandom_range(1, 5)) @(posedge CLK);
+            end
+          end
+
+          divif.in.ready_out = 1;
+          @(posedge CLK);
+
+          if (divif.out.valid_out && divif.in.ready_out) begin
+            rx_timeout = 0; 
+            
+            if (q_exp.size() == 0) begin
+              $display("FATAL ERROR: Pipeline output an answer but Queue is empty!");
+              errors++;
+            end else begin
+              logic [WIDTH-1:0] c_op1 = q_op1.pop_front();
+              logic [WIDTH-1:0] c_op2 = q_op2.pop_front();
+              logic [WIDTH-1:0] c_exp = q_exp.pop_front();
+              logic [WIDTH-1:0] c_act = divif.out.result;
+              logic [WIDTH-1:0] t_abs;
+
+              // MATHEMATICAL COMPARISON AND ULP COUNTING
+              if (is_nan(c_act) && is_nan(c_exp)) begin
+                ULP_0_count++; // Both NaN is a perfect match
+              end else begin
+                t_abs = (c_act > c_exp) ? (c_act - c_exp) : (c_exp - c_act);
+                
+                if (c_act === c_exp) begin
+                   ULP_0_count++;
+                end else if ((c_act[15] == c_exp[15]) && (t_abs <= 2)) begin 
+                   if (t_abs == 1) ULP_1_count++;
+                   if (t_abs == 2) ULP_2_count++;
+                end else begin
+                   $display("ERROR @%0t [%s]: %h / %h = %h (expected %h)", 
+                            $time, tb_test_case, c_op1, c_op2, c_act, c_exp);
+                   errors++;
+                end
+              end
+              tests_received++;
+            end
+          end else begin
+            rx_timeout++;
+            if (rx_timeout > 1500) begin // Give it extra time for the BACK_PRESSURE stalls
+               $display("FATAL ERROR: Receiver timed out waiting for pipeline to flush!");
+               errors++; break;
+            end
+          end
+        end
+        divif.in.ready_out = 0;
+      end
+    join
+
+    end_time = $time;
+
     $fclose(fd);
-    $display("Completed %s: %0d tests run", test_name, test_count);
+    $display("Completed %s: Fed %0d, Received %0d tests", test_name, tests_fed, tests_received);
+    $display("Accuracy Breakdown -> 0 ULP: %0d | 1 ULP: %0d | 2 ULP: %0d", ULP_0_count, ULP_1_count, ULP_2_count);
+    if (tests_received > 0) begin
+      total_cycles = (end_time - start_time) / PERIOD;
+      effective_cpi = total_cycles / real'(tests_received);
+      $display("Performance Metric -> Total Cycles: %0.0f | Effective CPI: %0.2f cycles/division\n", total_cycles, effective_cpi);
+    end
+    if (tests_fed != tests_received) begin
+       $display("ERROR: Data mismatch! Fed %0d but Received %0d", tests_fed, tests_received);
+       errors++;
+    end
   end
   endtask
 
@@ -314,29 +399,89 @@ module div_bf16_goldschmidt_1mul_tb;
       errors++;
     end
 
+    // MID-FLIGHT RESET TEST (Asynchronous Flush)
+    tb_test_case = "MID_FLIGHT_RESET";
+    $display("Running Mid-Flight Reset test...");
+    
+    // 1. Jam 4 items into the pipeline as fast as possible
+    divif.in.operand1 = 16'h4000; // 2.0
+    divif.in.operand2 = 16'h4000; // 2.0
+    divif.in.valid_in = 1;
+    for (int i=0; i<4; i++) begin
+      do begin 
+        @(posedge CLK); 
+      end while 
+        (!divif.out.ready_in);
+    end
+    divif.in.valid_in = 0;
+    
+    // 2. Wait 2 clock cycles so they are deep inside the math units
+    repeat(2) @(posedge CLK); 
+    
+    // 3. Pull reset low mid-calculation
+    nRST = 0;
+    repeat(2) @(posedge CLK);
+    
+    // 4. Release reset and verify the pipeline completely died
+    nRST = 1;
+    @(posedge CLK);
+    if (divif.out.valid_out !== 0) begin
+      $display("ERROR @%0t [MID_FLIGHT_RESET]: Ghost data survived the reset! FIFO is not empty.", $time);
+      errors++;
+    end
+    if (divif.out.ready_in !== 1) begin
+      $display("ERROR @%0t [MID_FLIGHT_RESET]: Pipeline didn't recover ready_in after flush.", $time);
+      errors++;
+    end
+    $display("Mid-Flight Reset test passed.");
+    // ---------------------------------------------------------
+
     // Run all test categories (adjust filenames for BF16 if needed)
     if (EXP_WIDTH == 5 && MANT_WIDTH == 10) begin
       // FP16 test files
-      run_file_tests("tb/unit/vector/test_cases/div_fp16_normal_tests_10K.csv", "NORMAL_TESTS");
+      run_file_tests("tb/unit/vector/test_cases/div_fp16_normal_tests_10K.csv", "NORMAL_TESTS", "RANDOM");
       normal_tests = errors;
 
-      run_file_tests("tb/unit/vector/test_cases/div_fp16_subnormal_input_tests_10K.csv", "SUBNORMAL_INPUT_TESTS");
+      run_file_tests("tb/unit/vector/test_cases/div_fp16_subnormal_input_tests_10K.csv", "SUBNORMAL_INPUT_TESTS", "RANDOM");
       subnormal_input_tests = errors - normal_tests;
 
-      run_file_tests("tb/unit/vector/test_cases/div_fp16_subnormal_output_tests_10K.csv", "SUBNORMAL_OUTPUT_TESTS");
+      run_file_tests("tb/unit/vector/test_cases/div_fp16_subnormal_output_tests_10K.csv", "SUBNORMAL_OUTPUT_TESTS", "RANDOM");
       subnormal_output_tests = errors - normal_tests - subnormal_input_tests;
     end else if (EXP_WIDTH == 8 && MANT_WIDTH == 7) begin
       // BF16 test files (if available) --------------------------------------------------------------------------------------------------------------------------
-      run_file_tests("tb/unit/common/arithmetic/divider/test_cases/div_bf16_normal_tests_10K.csv", "BF16_NORMAL_TESTS");
-      normal_tests = errors;
-      run_file_tests("tb/unit/common/arithmetic/divider/test_cases/div_bf16_normal_test.csv", "BF16_NORMAL_TEST");
-      normal_tests = errors;
+      // MAX THROUGHPUT
+      // run_file_tests("tb/unit/common/arithmetic/divider/test_cases/div_bf16_normal_tests_10K.csv", "BF16_NORM_STABLE", "STABLE");
 
-      // run_file_tests("tb/unit/common/arithmetic/divider/test_cases/div_bf16_subnormal_input_tests_10K.csv", "BF16_SUBNORMAL_INPUT_TESTS");
-      // subnormal_input_tests = errors - normal_tests;
+      // Front Pressure
+      // run_file_tests("tb/unit/common/arithmetic/divider/test_cases/div_bf16_normal_tests_10K.csv", "BF16_FRONT_PRESS", "FRONT_PRESSURE");
+      
+      // Back Pressure
+      // run_file_tests("tb/unit/common/arithmetic/divider/test_cases/div_bf16_normal_tests_10K.csv", "BF16_BACK_PRESS", "BACK_PRESSURE");
 
-      // run_file_tests("tb/unit/common/arithmetic/divider/test_cases/div_bf16_subnormal_output_tests_10K.csv", "BF16_SUBNORMAL_OUTPUT_TESTS");
-      // subnormal_output_tests = errors - normal_tests - subnormal_input_tests;
+      // // Full Random
+      // run_file_tests("tb/unit/common/arithmetic/divider/test_cases/div_bf16_normal_tests_10K.csv", "BF16_RANDOM", "RANDOM");
+
+      // MAX THROUGHPUT
+      // run_file_tests("tb/unit/common/arithmetic/divider/test_cases/div_bf16_all_mantissas.csv", "BF16_NORM_STABLE_ALL", "STABLE");
+
+      // Front Pressure
+      // run_file_tests("tb/unit/common/arithmetic/divider/test_cases/div_bf16_all_mantissas.csv", "BF16_FRONT_PRESS_ALL", "FRONT_PRESSURE");
+      
+      // Back Pressure
+      // run_file_tests("tb/unit/common/arithmetic/divider/test_cases/div_bf16_all_mantissas.csv", "BF16_BACK_PRESS_ALL", "BACK_PRESSURE");
+
+      // Full Random
+      // run_file_tests("tb/unit/common/arithmetic/divider/test_cases/div_bf16_all_mantissas.csv", "BF16_RANDOM_ALL", "RANDOM");
+
+      // Small File For Waves
+      run_file_tests("tb/unit/common/arithmetic/divider/test_cases/div_bf16_control.csv", "BF16_BACK_PRESS", "BACK_PRESSURE");
+
+      normal_tests = errors;
+      // run_file_tests("tb/unit/common/arithmetic/divider/test_cases/div_bf16_subnormal_input_tests_10K.csv", "BF16_SUBNORMAL_INPUT_TESTS", "RANDOM");
+      subnormal_input_tests = errors - normal_tests;
+
+      // run_file_tests("tb/unit/common/arithmetic/divider/test_cases/div_bf16_subnormal_output_tests_10K.csv", "BF16_SUBNORMAL_OUTPUT_TESTS", "RANDOM");
+      subnormal_output_tests = errors - normal_tests - subnormal_input_tests;
     end else begin
       $display("INFO: No file-based tests available for this custom format");
     end

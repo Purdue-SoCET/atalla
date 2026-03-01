@@ -1,0 +1,2 @@
+var g_data = {"10":["work.add_bf16",60.91,1],"8":["work.adder_8b",78.68,1],"9":["work.addsub_bf16",71.90,1],"2":["work.div_if",100.00,1],"3":["work.div_pipeline_bf16",95.31,1],"1":["work.div_pipeline_bf16_tb",46.30,1],"7":["work.fa",100.00,1],"6":["work.ha",100.00,1],"11":["work.left_shift_add_bf16",54.38,1],"4":["work.mul_bf16",79.20,1],"5":["work.wallacetree_8b",99.41,1]};
+processDuLinks(g_data);

@@ -1,11 +1,10 @@
 `timescale 1ns/1ps
 // bf16 multiplier module 
 // Made by Mixuan Pan and Vinay Pundith 
-// Last Modified: 2/3, 2026 by Mixuan Pan for 1M test cases handling 
-// stole from mixuan to add stall - myles :D
+// Last Modified: 2/10, 2026 by Mixuan Pan for 1M test cases handling 
 
 module mul_bf16(
-    input logic clk, nRST, start, stall,
+    input logic clk, nRST, start, 
     input logic [15:0] a, b, 
     output logic [15:0] result, 
     output logic done, mul_ovf, mul_unf
@@ -23,11 +22,6 @@ module mul_bf16(
             a_latched <= 0;
             b_latched <= 0;
             lat1_ready <= 0;
-        end
-        else if (stall) begin
-            a_latched <= a_latched;
-            b_latched <= b_latched;
-            lat1_ready <= lat1_ready;
         end
         else begin
             a_latched <= a_latched;

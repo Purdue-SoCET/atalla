@@ -1,0 +1,2 @@
+var g_data = {"name":"./rtl/modules/common/arithmetic/multipliers/fa.sv","src":"// 1 bit full adder\n// Used in wallace tree multiplier\n// By: Mixuan Pan, Sep 2025\n`timescale 1ns/1ps\nmodule fa (\n  input logic a, b, cin,\n  output logic s, cout\n);\n  assign s = a ^ b ^ cin;\n  assign cout = (a & b) | (cin & (a ^ b));\nendmodule","lang":"verilog"};
+processSrcData(g_data);
