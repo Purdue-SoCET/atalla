@@ -7,8 +7,11 @@
 `define EXP_IF_VH
 `include "vector_types.vh"
 
+
+
 interface exp_if;
     import vector_pkg::*;
+    localparam ESZ = 16;
 
     typedef struct packed {
         logic [ESZ-1:0] operand;

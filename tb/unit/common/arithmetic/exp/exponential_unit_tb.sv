@@ -1,4 +1,4 @@
-`include "exp_if.sv"
+`include "exp_if.vh"
 `include "vector_types.vh"
 `timescale 1 ns / 1 ns
 
