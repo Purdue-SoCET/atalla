@@ -2,15 +2,15 @@
 // vector_core_dpi_tb.sv
 // L1 Integration Testbench — DPI-C driven
 //
-// Uses C++ models via DPI-C:
-//   Scheduler  -> instruction decode -> drive vif, gsauif
-//   Veggie     -> VRF reads/writes   -> feed v1/v2 data to DUT
-//   Sysarr     -> systolic array sim -> respond to gsauif
-//   Scratchpad -> scratchpad sim     -> respond to sif
+//  C++ models using DPI-C:
+//   Scheduler -> instruction decode -> drive vif, gsauif
+//   Veggie -> VRF reads/writes -> feed v1/v2 data to DUT
+//   Sysarr -> systolic array sim -> respond to gsauif
+//   Scratchpad -> scratchpad sim -> respond to sif
 //
-// DUT: vector_datapath (vector_if, gsau_control_unit_if, scpad_if)
 // This part is completely claude based rn, based off the old tb, 
 // just using my new dpi-c stuff, will check later to see. rn just to check if runs
+//
 // Owner: Vedant Sharma
 // ============================================================================
 `timescale 1ns/1ps
@@ -26,8 +26,8 @@ module vector_core_dpi_tb;
     import inst_parser_dpi_pkg::*;
 
     parameter string PROGRAM_PATH = "./testcases/add_vv";
-    parameter int    DRAIN_CYCLES = 40;
-    parameter int    TIMEOUT      = 10000;
+    parameter int DRAIN_CYCLES = 40;
+    parameter int TIMEOUT = 10000;
 
     logic CLK;
     logic nRST;
@@ -43,11 +43,11 @@ module vector_core_dpi_tb;
     scpad_if sif(CLK, nRST);
 
     vector_datapath dut (
-        .CLK    (CLK),
-        .nRST   (nRST),
-        .vif    (vif),
-        .sif    (sif),
-        .gsauif (gsauif)
+        .CLK(CLK),
+        .nRST(nRST),
+        .vif(vif),
+        .sif(sif),
+        .gsauif(gsauif)
     );
 
     int cycle_count;
@@ -67,27 +67,27 @@ module vector_core_dpi_tb;
     endtask
 
     task automatic clear_lane_port(input int port);
-        vif.lanes_in.lane_issue_ports[port].v1          = '0;
-        vif.lanes_in.lane_issue_ports[port].v2          = '0;
-        vif.lanes_in.lane_issue_ports[port].usel        = VALU;
-        vif.lanes_in.lane_issue_ports[port].vd          = '0;
-        vif.lanes_in.lane_issue_ports[port].rm          = 1'b0;
-        vif.lanes_in.lane_issue_ports[port].mask        = '0;
-        vif.lanes_in.lane_issue_ports[port].alu_op      = ALU_ADD;
+        vif.lanes_in.lane_issue_ports[port].v1 = '0;
+        vif.lanes_in.lane_issue_ports[port].v2 = '0;
+        vif.lanes_in.lane_issue_ports[port].usel = VALU;
+        vif.lanes_in.lane_issue_ports[port].vd = '0;
+        vif.lanes_in.lane_issue_ports[port].rm = 1'b0;
+        vif.lanes_in.lane_issue_ports[port].mask = '0;
+        vif.lanes_in.lane_issue_ports[port].alu_op = ALU_ADD;
         vif.lanes_in.lane_issue_ports[port].input_valid = 1'b0;
     endtask
 
     task automatic clear_gsau_port();
         vif.gsau_in.veg_vdata1 = '0;
         vif.gsau_in.veg_vdata2 = '0;
-        vif.gsau_in.vd         = '0;
-        vif.gsau_in.valid_in   = 1'b0;
-        vif.gsau_in.weight     = 1'b0;
+        vif.gsau_in.vd = '0;
+        vif.gsau_in.valid_in = 1'b0;
+        vif.gsau_in.weight = 1'b0;
     endtask
 
     task automatic clear_vlsu_port(input int port);
         vif.vlsu_in.sched_req[port] = '0;
-        vif.vlsu_in.vrf_data[port]  = '0;
+        vif.vlsu_in.vrf_data[port] = '0;
     endtask
 
     task automatic clear_all_ports();
@@ -100,37 +100,37 @@ module vector_core_dpi_tb;
 
     task automatic set_wb_ready(
         input logic [LANE_FU_COUNT-1:0] lane_status,
-        input logic [NUM_SCPADS-1:0]    vlsu_status,
-        input logic                     gsau_status,
-        input logic                     reduction_status
+        input logic [NUM_SCPADS-1:0] vlsu_status,
+        input logic gsau_status,
+        input logic reduction_status
     );
-        vif.wb_ready_signals.lanes_wb_ready     = lane_status;
-        vif.wb_ready_signals.vlsu_wb_ready      = vlsu_status;
-        vif.wb_ready_signals.gsau_wb_ready      = gsau_status;
+        vif.wb_ready_signals.lanes_wb_ready = lane_status;
+        vif.wb_ready_signals.vlsu_wb_ready = vlsu_status;
+        vif.wb_ready_signals.gsau_wb_ready = gsau_status;
         vif.wb_ready_signals.reduction_wb_ready = reduction_status;
     endtask
 
     task automatic drive_gsau_from_sys(
-        input vreg_t data  = '0,
-        input logic  valid = 1'b0,
-        input logic  ready = 1'b0
+        input vreg_t data = '0,
+        input logic valid = 1'b0,
+        input logic ready = 1'b0
     );
         gsauif.sa_array_output = data;
-        gsauif.sa_valid_in     = valid;
-        gsauif.sa_ready_in     = ready;
+        gsauif.sa_valid_in = valid;
+        gsauif.sa_ready_in = ready;
     endtask
 
     task automatic drive_vlsu_from_sp(
-        input int    port,
-        input logic  valid = 1'b0,
-        input logic  write = 1'b0,
-        input vreg_t data  = '0,
-        input logic  stall = 1'b0
+        input int port,
+        input logic valid = 1'b0,
+        input logic write = 1'b0,
+        input vreg_t data = '0,
+        input logic stall = 1'b0
     );
         sif.vec_res[port].valid = valid;
         sif.vec_res[port].write = write;
         sif.vec_res[port].rdata = data;
-        sif.fe_vec_stall[port]  = stall;
+        sif.fe_vec_stall[port] = stall;
     endtask
 
     task automatic apply_reset();
@@ -142,12 +142,12 @@ module vector_core_dpi_tb;
         clear_gsau_port();
         set_wb_ready({LANE_FU_COUNT{1'b1}}, {NUM_SCPADS{1'b1}}, 1'b1, 1'b1);
 
-        sif.fe_vec_stall[0]    = '0;
-        sif.fe_vec_stall[1]    = '0;
-        sif.vec_res[0]         = '0;
-        sif.vec_res[1]         = '0;
-        gsauif.sa_ready_in     = 1'b1;
-        gsauif.sa_valid_in     = 1'b0;
+        sif.fe_vec_stall[0] = '0;
+        sif.fe_vec_stall[1] = '0;
+        sif.vec_res[0] = '0;
+        sif.vec_res[1] = '0;
+        gsauif.sa_ready_in = 1'b1;
+        gsauif.sa_valid_in = 1'b0;
         gsauif.sa_array_output = '0;
 
         dpi_scheduler_tick(1'b0);
@@ -179,12 +179,12 @@ module vector_core_dpi_tb;
                     dpi_veggie_get_lane_rdata(p, tmp_vec2);
                 end
 
-                vif.lanes_in.lane_issue_ports[p].v1          = pack_vreg(tmp_vec);
-                vif.lanes_in.lane_issue_ports[p].v2          = pack_vreg(tmp_vec2);
-                vif.lanes_in.lane_issue_ports[p].usel        = fu_t'(dpi_get_lane_fu_sel(p));
-                vif.lanes_in.lane_issue_ports[p].alu_op      = alu_op_t'(dpi_get_lane_alu_op(p));
-                vif.lanes_in.lane_issue_ports[p].vd          = dpi_get_lane_vd(p);
-                vif.lanes_in.lane_issue_ports[p].rm          = dpi_get_lane_rm(p);
+                vif.lanes_in.lane_issue_ports[p].v1 = pack_vreg(tmp_vec);
+                vif.lanes_in.lane_issue_ports[p].v2 = pack_vreg(tmp_vec2);
+                vif.lanes_in.lane_issue_ports[p].usel = fu_t'(dpi_get_lane_fu_sel(p));
+                vif.lanes_in.lane_issue_ports[p].alu_op = alu_op_t'(dpi_get_lane_alu_op(p));
+                vif.lanes_in.lane_issue_ports[p].vd = dpi_get_lane_vd(p);
+                vif.lanes_in.lane_issue_ports[p].rm = dpi_get_lane_rm(p);
                 vif.lanes_in.lane_issue_ports[p].input_valid = 1'b1;
 
                 // Mask
@@ -217,9 +217,9 @@ module vector_core_dpi_tb;
 
             vif.gsau_in.veg_vdata1 = pack_vreg(tmp_vec);
             vif.gsau_in.veg_vdata2 = pack_vreg(tmp_vec2);
-            vif.gsau_in.vd         = dpi_get_sys_vd();
-            vif.gsau_in.weight     = dpi_get_sys_weight();
-            vif.gsau_in.valid_in   = 1'b1;
+            vif.gsau_in.vd = dpi_get_sys_vd();
+            vif.gsau_in.weight = dpi_get_sys_weight();
+            vif.gsau_in.valid_in = 1'b1;
         end else begin
             clear_gsau_port();
         end
@@ -247,13 +247,13 @@ module vector_core_dpi_tb;
         if (dpi_sysarr_get_valid()) begin
             dpi_sysarr_get_output(tmp_vec);
             drive_gsau_from_sys(
-                .data  (pack_vreg(tmp_vec)),
-                .valid (1'b1),
-                .ready (dpi_sysarr_get_ready())
+                .data(pack_vreg(tmp_vec)),
+                .valid(1'b1),
+                .ready(dpi_sysarr_get_ready())
             );
         end else begin
             drive_gsau_from_sys(
-                .ready (dpi_sysarr_get_ready())
+                .ready(dpi_sysarr_get_ready())
             );
         end
     endtask
@@ -267,12 +267,12 @@ module vector_core_dpi_tb;
                 dpi_veggie_tick(nRST);
                 dpi_veggie_get_sp_rdata(p, tmp_vec);
 
-                vif.vlsu_in.sched_req[p].valid      = 1'b1;
-                vif.vlsu_in.sched_req[p].write      = (dpi_get_sp_rc(p) != 0) ? 1'b1 : 1'b0; // TODO: verify store encoding
-                vif.vlsu_in.sched_req[p].spad_addr  = dpi_get_sp_sid(p);
-                vif.vlsu_in.sched_req[p].vdst       = dpi_get_sp_vd(p);
-                vif.vlsu_in.sched_req[p].num_rows   = dpi_get_sp_num_rows(p);
-                vif.vlsu_in.sched_req[p].num_cols   = dpi_get_sp_num_cols(p);
+                vif.vlsu_in.sched_req[p].valid = 1'b1;
+                vif.vlsu_in.sched_req[p].write = (dpi_get_sp_rc(p) != 0) ? 1'b1 : 1'b0; // TODO: verify store encoding
+                vif.vlsu_in.sched_req[p].spad_addr = dpi_get_sp_sid(p);
+                vif.vlsu_in.sched_req[p].vdst = dpi_get_sp_vd(p);
+                vif.vlsu_in.sched_req[p].num_rows = dpi_get_sp_num_rows(p);
+                vif.vlsu_in.sched_req[p].num_cols = dpi_get_sp_num_cols(p);
                 vif.vlsu_in.sched_req[p].row_or_col = dpi_get_sp_rc(p);
 
                 if (dpi_get_sp_rc(p) == 0) begin
@@ -283,7 +283,7 @@ module vector_core_dpi_tb;
                     vif.vlsu_in.sched_req[p].col_id = dpi_get_sp_rcid(p);
                 end
 
-                vif.vlsu_in.vrf_data[p].data  = pack_vreg(tmp_vec);
+                vif.vlsu_in.vrf_data[p].data = pack_vreg(tmp_vec);
                 vif.vlsu_in.vrf_data[p].valid = 1'b1;
             end else begin
                 clear_vlsu_port(p);
@@ -370,17 +370,17 @@ module vector_core_dpi_tb;
         logic [NUM_SCPADS-1:0] vlsu_rdy;
 
         lane_ready = vif.unit_ready_signals.fu_global_status;
-        gsau_rdy   = gsauif.sb_ready_out;
+        gsau_rdy = gsauif.sb_ready_out;
 
         for (int p = 0; p < NUM_SCPADS; p++)
             vlsu_rdy[p] = vif.unit_ready_signals.vlsu_status[p].ready;
 
         dpi_set_ready_signals(
-            lane_ready[0],  // alu   -> VALU
-            lane_ready[3],  // exp   -> EXP
-            lane_ready[4],  // sqrt  -> SQRT
-            lane_ready[1],  // mul   -> MUL
-            lane_ready[2],  // div   -> DIV
+            lane_ready[0], // alu -> VALU
+            lane_ready[3], // exp -> EXP
+            lane_ready[4], // sqrt -> SQRT
+            lane_ready[1], // mul -> MUL
+            lane_ready[2], // div -> DIV
             gsau_rdy,
             (vlsu_rdy != 0) ? 1'b1 : 1'b0
         );
@@ -483,9 +483,6 @@ module vector_core_dpi_tb;
         $finish;
     end
 
-    // -----------------------------------------------------------------------
-    // Waveform
-    // -----------------------------------------------------------------------
     initial begin
         $dumpfile("vector_core_dpi_tb.vcd");
         $dumpvars(0, vector_core_dpi_tb);
