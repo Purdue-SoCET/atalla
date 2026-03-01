@@ -2,7 +2,7 @@
 `include "vector_types.vh"
 `timescale 1 ns / 1 ns
 
-module exp_tb;
+module exponential_unit_tb;
     import vector_pkg::*;
     
     localparam MULT_LATENCY = 2;
@@ -15,7 +15,7 @@ module exp_tb;
     exp_if exif();
     
     // Instantiate DUT
-    exp dut (
+    exponential_unit dut (
         .CLK(CLK),
         .nRST(nRST),
         .exif(exif)
