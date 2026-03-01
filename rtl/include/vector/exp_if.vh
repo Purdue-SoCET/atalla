@@ -5,8 +5,7 @@
 interface exp_if;
     import vector_pkg::*;
 
-    fp16_t input_val;
-    logic [15:0] output_val;
+    bf16_t input_val, output_val;
     logic valid_data_in, valid_data_out, ready;
 
     modport exif (
