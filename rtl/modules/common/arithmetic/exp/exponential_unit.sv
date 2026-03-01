@@ -2,10 +2,13 @@
 
 module exponential_unit (
     input logic clk, rst_n,
-    input logic [15:0] x_in, // BF16 Input
-    output logic [15:0] result_out, // BF16 Output
-    output logic valid_out
+    exp_if.exif ex_if
 );
+    /* INTERFACE CHANGES.
+    x_in -> ex_if.in.operand;
+    result_out -> ex_if.out.result_out
+    valid_out -> ex_if.out.valid_out
+    */
 
     // Log2(e) ≈ 1.442695. Represented as Q4.12 fixed-point integer (1.442695 * 4096)
     localparam signed [15:0] LOG2_E_Q12 = 16'd5909; 
@@ -41,9 +44,9 @@ module exponential_unit (
             x_fixed <= '0;
             is_zero <= 1'b0;
         end else begin
-            sign_in <= x_in[15];
-            exp_in  <= x_in[14:7];
-            mant_in <= x_in[6:0];
+            sign_in <= ex_if.in.operand[15];
+            exp_in  <= ex_if.in.operand[14:7];
+            mant_in <= ex_if.in.operand[6:0];
             
             // Handle zero
             if (exp_in == 0 && mant_in == 0) begin
@@ -103,12 +106,12 @@ module exponential_unit (
 
     always_ff @(posedge clk or negedge rst_n) begin
         if (!rst_n) begin
-            result_out <= '0;
-            valid_out  <= 1'b0;
+            ex_if.out.result <= '0;
+            ex_if.out.valid_out  <= 1'b0;
         end else begin
             if (stage2_zero) begin
                 // e^0 = 1.0 (BF16: 0x3F80)
-                result_out <= 16'h3F80;
+                ex_if.out.result <= 16'h3F80;
             end else begin
                 // Reconstruct Exponent: Bias (127) + z_int
                 // Ensure we handle the signed addition correctly
@@ -116,15 +119,15 @@ module exponential_unit (
                 
                 // Overflow / Underflow clamping
                 if (final_exp >= 255) begin
-                    result_out <= 16'h7F80; // +Infinity
+                    ex_if.out.result <= 16'h7F80; // +Infinity
                 end else if (final_exp <= 0) begin
-                    result_out <= 16'h0000; // Underflow to 0
+                    ex_if.out.result <= 16'h0000; // Underflow to 0
                 end else begin
                     // Assemble final BF16 value: Sign is always 0 (e^x is always positive)
-                    result_out <= {1'b0, final_exp[7:0], lut_mantissa};
+                    ex_if.out.result <= {1'b0, final_exp[7:0], lut_mantissa};
                 end
             end
-            valid_out <= 1'b1;
+            ex_if.out.valid_out <= 1'b1;
         end
     end
 
