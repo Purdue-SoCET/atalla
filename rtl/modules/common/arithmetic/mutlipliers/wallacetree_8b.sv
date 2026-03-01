@@ -165,7 +165,7 @@ assign product[16:5] = ({1'b0, stage4_sums[14:5]} + stage4_carries);
 
 assign overflow = product[15];
 assign result = product[14:5];      // Multiply result is the num_bits output bits plus two more: the R and S bits for rounding.
-assign round_loss = |product[4:0];
+assign round_loss = overflow ? |product[5:0] :|product[4:0];
 
 // assign debug_output = product[15:0];
 
