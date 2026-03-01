@@ -1,4 +1,4 @@
-`include "exp_if.vh"
+`include "exp_if.sv"
 `include "vector_types.vh"
 `timescale 1 ns / 1 ns
 
@@ -6,24 +6,24 @@ module exponential_unit_tb;
     import vector_pkg::*;
     
     localparam MULT_LATENCY = 2;
-    localparam int MAX_ULP_TOL = 2;
+    localparam int MAX_ULP_TOL = 1;
 
     // Signals
-    logic CLK, nRST;
+    logic clk, rst_n;
 
     // Interface instantiation
-    exp_if exif();
+    exp_if ex_if();
     
     // Instantiate DUT
     exponential_unit dut (
-        .CLK(CLK),
-        .nRST(nRST),
-        .exif(exif)
+        .clk(clk),
+        .rst_n(rst_n),
+        .ex_if(ex_if.exif)
     );
 
     // Clock
-    initial CLK = 0;
-    always #5 CLK = ~CLK;
+    initial clk = 0;
+    always #5 clk = ~clk;
 
     integer input_file, output_file;
     string line;
@@ -59,26 +59,29 @@ module exponential_unit_tb;
     endfunction
     
     initial begin
-        nRST = 0;
-        exif.input_val = '{sign: 1'b0, exp: 5'd0, frac: 10'd0};
-        exif.valid_data_in = 0;
+        rst_n = 0;
+        ex_if.in.operand = 16'd0;
+        ex_if.in.valid_in = 0;
+        ex_if.in.ready_out = 1;
         test_count = 0;
         pass_count = 0;
         fail_count = 0;
         total_abs_ulp = 0;
         max_abs_ulp = 0;
 
-        #12 nRST = 1;
+        #12 rst_n = 1;
 
         // Open input CSV file
         input_file = $fopen("bf16_exp_full_sweep.csv", "r");
         if (input_file == 0) begin
+            $display("ERROR: Could not open bf16_exp_full_sweep.csv!");
             $finish;
         end
 
         // Open output CSV file
-        output_file = $fopen("exp_test_results.csv", "w");
+        output_file = $fopen("exp_bf16_test_results.csv", "w");
         if (output_file == 0) begin
+            $display("ERROR: Could not create output file!");
             $fclose(input_file);
             $finish;
         end
@@ -94,7 +97,7 @@ module exponential_unit_tb;
             $finish;
         end
 
-        $display("\n=== Starting Full Sweep BF16 Expontential Tests ===\n");
+        $display("\n=== Starting BF16 Full Sweep Exponential Unit Tests ===\n");
 
         // Main loop
         while (!$feof(input_file)) begin
@@ -122,18 +125,18 @@ module exponential_unit_tb;
             input_val = parse_hex(input_str);
             expected_val = parse_hex(expected_str);
             
-            // Wait for ready
-            while (!exif.ready) @(posedge CLK);
+            // Wait for ready_input
+            while (!ex_if.out.ready_in) @(posedge clk);
             
-            @(posedge CLK);
-            exif.input_val = fp16_t'(input_val);
-            exif.valid_data_in = 1;
-            @(posedge CLK);
-            exif.valid_data_in = 0;
+            @(posedge clk);
+            ex_if.in.operand = input_val;
+            ex_if.in.valid_in = 1;
+            @(posedge clk);
+            ex_if.in.valid_in = 0;
             
             // Wait for valid output
-            while (!exif.valid_data_out) @(posedge CLK);            
-            output_val = exif.output_val;
+            while (!ex_if.out.valid_out) @(posedge clk);            
+            output_val = ex_if.out.result;
             ulp_error = calc_ulp(expected_val, output_val);
 
             // ULP tracking
@@ -155,14 +158,16 @@ module exponential_unit_tb;
             end
         end
 
-        repeat (10) @(posedge CLK);
+        repeat (10) @(posedge clk);
 
         $fclose(input_file);
         $fclose(output_file);
 
+        $display("\n=== BF16 Exponential Unit Test Results ===");
         $display("Total tests: %0d", test_count);
         $display("Passed: %0d", pass_count);
         $display("Failed: %0d", fail_count);
+        $display("=====================================\n");
         
         $finish;
     end
