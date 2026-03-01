@@ -1,4 +1,5 @@
-
+`include "exp_if.vh"
+`include "vector_types.vh"
 
 module exponential_unit (
     input logic clk, rst_n,
