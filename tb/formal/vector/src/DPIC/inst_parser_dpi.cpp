@@ -1,6 +1,6 @@
 // ============================================================================
 // inst_parser_dpi.cpp
-// DPI-C implementation: wraps existing scheduler class so SystemVerilog can drive it cycle-by-cycle.
+// DPI-C implementation: wraps scheduler class so SV can drive cycle-by-cycle.
 // Owner: Vedant Sharma
 //
 // file reuses scheduler class directly. 
@@ -43,7 +43,7 @@ static schedular* g_sc = nullptr;
 
 
 
-// Sched Lifecycle - init/destroy
+// Sched init/destroy
 void dpi_scheduler_init(const char* program_path)
 {
     if (g_sc) {
@@ -109,10 +109,10 @@ void dpi_scheduler_tick(svBit rst_n)
 
 
 
-// Signal readback - all_issued
+// Signal readback
 svBit dpi_get_all_issued()
 {
-    if (!g_sc) return 1; // safe default: "done"
+    if (!g_sc) return 1;
     return g_sc->all_issued ? 1 : 0;
 }
 
@@ -297,7 +297,7 @@ uint8_t dpi_get_sp_rcid(int idx)
 
 
 
-// Veggie (VRF read control) signals
+// Veggie signals
 uint8_t dpi_get_veggie_vs1(int idx)
 {
     if (!g_sc || idx < 0 || idx > 1) return 0;

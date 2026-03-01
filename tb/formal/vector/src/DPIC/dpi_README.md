@@ -4,8 +4,8 @@
 
 ## Overview
 
-Purpose of this is to birdge the scheduler C++ tb into SystemVerilog thru DPI-C, so that we are able to test L1 Integration of the vector-core datapath RTL
-using the same program functions and logic alrdy in the C++ tb.
+Purpose of this is to bridge the scheduler C++ tb into SystemVerilog through DPI-C, so that we are able to test L1 Integration of the vector-core datapath RTL
+using the same program functions and logic already in the C++ tb.
 
 ```
 ┌──────────────────────────────────────────────────────────────┐
