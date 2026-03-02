@@ -9,12 +9,14 @@ module skew_buffer #(
     parameter int DELAY_SLOPE       = 1,    // how much delay/skew from one column to next (in addition to rectangle delay)
     parameter logic REVERSE_TRIANGLE = 0,   // If 1, reverse triangle direction (right is lowest, left is highest), 
     //if 0 then it's a right triangle with right angle on the right side
+    parameter int GROUP_SIZE        = 1,
     
     // assumption of 1 cycle read/writes
     localparam int READ_LATENCY      = 1,    // sram read latency
     localparam int WRITE_LATENCY     = 1,    // sram write latency (MUST be equal to read latency)
     // since first column gets 0 delay, last column can get NUM_COLS - 1 delay coefficient
-    localparam int SRAM_DEPTH = RECT_DELAY + (DELAY_SLOPE * (NUM_COLS - 1)) + 1,
+    localparam int NUM_GROUPS = (NUM_COLS + GROUP_SIZE - 1) / GROUP_SIZE,
+    localparam int SRAM_DEPTH = RECT_DELAY + (DELAY_SLOPE * (NUM_GROUPS - 1)) + 1,
     localparam int PTR_WIDTH = $clog2(SRAM_DEPTH)
 ) (
     input  logic clk, n_rst,
@@ -68,9 +70,9 @@ module skew_buffer #(
         for (i = 0; i < NUM_COLS; i++) begin
             // Reverse Triangle logic, flip the direction of the slope
                 if (REVERSE_TRIANGLE) begin
-                    assign waddr[i] = wr_ptr + (DELAY_SLOPE * (NUM_COLS - i - 1));
+                    assign waddr[i] = wr_ptr + (DELAY_SLOPE * (NUM_GROUPS - (i / GROUP_SIZE) - 1));
                 end else begin
-                    assign waddr[i] = wr_ptr + (DELAY_SLOPE * i);
+                    assign waddr[i] = wr_ptr + (DELAY_SLOPE * (i / GROUP_SIZE));
                 end
 
                 assign waddr_wrapped[i] = (waddr[i] >= SRAM_DEPTH) ? waddr[i] - SRAM_DEPTH : waddr[i]; 
