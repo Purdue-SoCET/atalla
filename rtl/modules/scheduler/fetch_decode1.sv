@@ -47,7 +47,7 @@ module fetch_decode1 (
 
 
   if_dec1_reg ifdec1_reg (
-    .CLK(clk), .nRST(rst_n), .ifdec1_if(ifdec1_if.latch_view)
+    .CLK(clk), .nRST(rst_n), .ifdec1_if(ifdec1_if)
   );
 
 

@@ -46,7 +46,11 @@ module scheduler_core_tb;
         imemload.inst3 = 48'h2f; //NOP
 
         @(negedge CLK);
-        ihit = 1'b0;
+        imemload.inst0 = 48'h2f; //NOP
+        imemload.inst1 = 48'h2f; //NOP
+        imemload.inst2 = 48'h2f; //NOP
+        imemload.inst3 = 48'h2f; //NOP
+        //ihit = 1'b0;
 
         repeat(80) @(negedge CLK);
 
