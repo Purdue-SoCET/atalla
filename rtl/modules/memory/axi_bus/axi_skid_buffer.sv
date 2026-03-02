@@ -28,17 +28,21 @@ import axi_bus_pkg::*;
     end
 
     always_comb begin
-        n_full = 0;
-        n_out_reg = '0;
+        n_full = full;
+        n_out_reg = out_reg;
         r_out = 0;
 
-        if (~ready && selected) begin
+        if (~ready && selected && !full) begin
             n_out_reg = r_in;
             n_full = 1;
         end
 
         // output logic: if full, get buffer data; else get in pass through
-        if (ready && full) r_out = out_reg;
+        if (ready && full) begin
+            n_out_reg = '0;
+            r_out = out_reg;
+            n_full = 0;
+        end 
         else if (ready && ~full) r_out = r_in;
     end
     

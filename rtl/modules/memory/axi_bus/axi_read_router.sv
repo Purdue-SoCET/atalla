@@ -2,7 +2,7 @@
 `include "axi_bus_pkg.sv"
 
 module axi_read_router # (
-    parameter MID_I = 1, MID_D = 2, MID_SP0 = 3, MID_SP1 = 4
+    parameter MID_I = 0, MID_D = 1, MID_SP0 = 2, MID_SP1 = 3
 ) (
     input logic CLK, nRST,
     axi_bus_if.router rif
@@ -13,37 +13,45 @@ module axi_read_router # (
     logic sp0_sel, sp1_sel, i_sel, d_sel;
 
     axi_skid_buffer SKID_SP0 (
+        .CLK(CLK),
+        .nRST(nRST),
         .r_in(sp0_o),
         .ready(rif.r_sp0_o_ready),
         .selected(sp0_sel),
-        .in_val(r_valid),
+        .in_val(rif.r_valid),
         .out_val(rif.r_sp0_o_valid),
         .r_out(rif.r_sp0_o)
     );
 
     axi_skid_buffer SKID_SP1 (
+        .CLK(CLK),
+        .nRST(nRST),
         .r_in(sp1_o),
         .ready(rif.r_sp1_o_ready),
         .selected(sp1_sel),
-        .in_val(r_valid),
+        .in_val(rif.r_valid),
         .out_val(rif.r_sp1_o_valid),
         .r_out(rif.r_sp1_o)
     );
 
     axi_skid_buffer SKID_I (
+        .CLK(CLK),
+        .nRST(nRST),
         .r_in(i_o),
         .ready(rif.r_i_o_ready),
         .selected(i_sel),
-        .in_val(r_valid),
+        .in_val(rif.r_valid),
         .out_val(rif.r_i_o_valid),
         .r_out(rif.r_i_o)
     );
 
     axi_skid_buffer SKID_D (
+        .CLK(CLK),
+        .nRST(nRST),
         .r_in(d_o),
         .ready(rif.r_d_o_ready),
         .selected(d_sel),
-        .in_val(r_valid),
+        .in_val(rif.r_valid),
         .out_val(rif.r_d_o_valid),
         .r_out(rif.r_d_o)
     );

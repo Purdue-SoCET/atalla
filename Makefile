@@ -12,7 +12,7 @@ SCRATCH := work
 
 %.wav:
 	vlog -sv +incdir+$(INCLUDE) $(TB)$*_tb.sv $(MODULE)$*.sv $(EXTRA_dram_top)
-	vsim -voptargs="+acc" work.$*_tb -do "do $(SCRIPT)$*.do; run $(SIMTIME);" -suppress 2275
+	vsim -coverage -voptargs="+acc" work.$*_tb -do "do $(SCRIPT)$*.do; run $(SIMTIME);" -suppress 2275
 
 clean:
 	rm -rf $(SCRATCH) transcript vsim.wlf work modelsim.ini

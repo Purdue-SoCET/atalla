@@ -1,2 +1,2 @@
-var g_data = ["","./rtl/include/memory/axi_bus//axi_bus_pkg.sv","./tb/unit/memory/axi_bus/axi_read_manager_tb.sv","./rtl/modules/memory/axi_bus//axi_read_manager.sv"];
+var g_data = ["","./rtl/include/memory/axi_bus//axi_bus_pkg.sv","./tb/unit/memory/axi_bus/axi_read_router_tb.sv","./rtl/include/memory/axi_bus//axi_bus_if.sv","./rtl/include/memory/axi_bus//axi_bus_params.svh","./rtl/modules/memory/axi_bus//axi_read_router.sv","./rtl/modules/memory/axi_bus//axi_skid_buffer.sv"];
 processSrcNamesData(g_data);
