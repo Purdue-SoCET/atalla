@@ -1,6 +1,8 @@
 # Vector-Core Documentation Homepage
 Author: Vedant Sharma
+
 Revision #: 0.1.0
+
 Page Status: Under Active Development
 
 
@@ -44,13 +46,13 @@ This is for new students joining the Vector-Core in order to provide ample resou
 
  2. Vector-Core Fall 2025 Report
 
-        The Fall 2025 Vector-Core team's Final Report, if you want to be a master of understanding the base of vector-core, this is the place to look. Although certain designs may have changed it will still provide value in learning design processes. Try to see if you can figure out optimizations on your own, or compare the prior designs to current designs, observe the flaws and how they were fixed.
+    The Fall 2025 Vector-Core team's Final Report, if you want to be a master of understanding the base of vector-core, this is the place to look. Although certain designs may have changed it will still provide value in learning design processes. Try to see if you can figure out optimizations on your own, or compare the prior designs to current designs, observe the flaws and how they were fixed.
 
-	https://docs.google.com/document/d/1cg5F1VhrnKALM-ZJHYC2e-JDQ-3BDk2Ngdvvg9fJhPw/edit?usp=sharing
+	    https://docs.google.com/document/d/1cg5F1VhrnKALM-ZJHYC2e-JDQ-3BDk2Ngdvvg9fJhPw/edit?usp=sharing
 
  3. **ETH Zürich Lecture: SIMD Architecture**
 
-        A detailed lecture covering different SIMD architecures such as a Vector Processing Unit, the limitations & challenges that come with Vector-Processing, and key concepts such as Amdahl's Law. Note that this lecture covers many different topics and is generic, not *specific* to the Vector-Core.
+    A detailed lecture covering different SIMD architecures such as a Vector Processing Unit, the limitations & challenges that come with Vector-Processing, and key concepts such as Amdahl's Law. Note that this lecture covers many different topics and is generic, not *specific* to the Vector-Core.
 
         https://www.youtube.com/watch?v=S2pWIB7KO-A&list=PL5Q2soXY2Zi8tTLVb-9CUHcfKXLWESjOD&index=34
 
@@ -97,12 +99,15 @@ For detailed RTL diagrams regarding microarchitecture of the various units in Ve
 ### Integration Methodology
 
  ## L1 Integration
-    L1 Integration consists of coalesscing all the written SystemVerilog RTL that the Vector-Core consists of and making sure the datapath fully executes without any issues, this is formally done through the use of ready/valid handshaking. In L1 integration the Vector-Core team is simulating the other components of Atalla to drive inputs and propagate outputs, this include Scratchpad, Scheduler, and Systolic Array.
+
+L1 Integration consists of coalesscing all the written SystemVerilog RTL that the Vector-Core consists of and making sure the datapath fully executes without any issues, this is formally done through the use of ready/valid handshaking. In L1 integration the Vector-Core team is simulating the other components of Atalla to drive inputs and propagate outputs, this include Scratchpad, Scheduler, and Systolic Array.
 
  ## L2 Integration
-    L2 Integration sits on top of L1, and consists of dropping in SystemVerilog RTL for the simulated Scratchpad and Systolic Array. The design will then be verified using the same test-cases with more add-ins to come for edge cases.
+
+L2 Integration sits on top of L1, and consists of dropping in SystemVerilog RTL for the simulated Scratchpad and Systolic Array. The design will then be verified using the same test-cases with more add-ins to come for edge cases.
 
  ## L3 Integration
-    L3 Integration is the last step of the integration process where all of Atalla is properly being integrated and tested with performance counters running throughout the accelerator in order to get proper analysis for debugging and optimization purposes.
+
+L3 Integration is the last step of the integration process where all of Atalla is properly being integrated and tested with performance counters running throughout the accelerator in order to get proper analysis for debugging and optimization purposes.
 
 **Note:** Lots of documentation is yet to be inputted due to active branches being constantly reworked. Once base level of arithmetic units is complete this documentation page can truly be done. For noe I've written this abstracted template and saved the RTL's I'll be uploading. @Vector-Core Members, please let me know when active branches for arithmetic units are done so I can simply drop in your documentation and names of your dev branches, while linking the main branch with your working unit.
