@@ -17,3 +17,5 @@ SCRATCH := work
 clean:
 	rm -rf $(SCRATCH) transcript vsim.wlf work modelsim.ini
 
+
+# copy aryan's makefile, VSIM_FLAGS to add coverage report

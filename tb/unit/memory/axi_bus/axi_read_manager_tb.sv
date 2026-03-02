@@ -1,3 +1,6 @@
+/*  
+    Xinyu Liu - liuxinyujames@gmail.com
+*/
 `timescale 1ps/1ps
 `include "axi_bus_pkg.sv"
 
@@ -6,40 +9,27 @@ import axi_bus_pkg::*;
 module axi_read_manager_tb ();
 
     localparam CLK_PERIOD = 10ns;
-    string test_case = "";
 
     logic CLK, nRST;
-    logic arvalid, aready, pop, head_valid;
-    logic [ARID-1:0]      arid;
-    logic [ARADDR-1 :0]   araddr;
-    logic [ARLEN-1  :0]   arlen;
-    logic [ARSIZE-1 :0]   arsize;
-    logic [ARBURST-1:0]   arburst;
-    logic [MID_ARID-1:0] head_id;
-    logic [ARADDR-1 :0]  head_addr;
-    logic [ARLEN-1  :0]  head_len;
-    logic [ARSIZE-1 :0]  head_size;
-    logic [ARBURST-1:0]  head_burst;
+    
+    logic                 arready;
+    master_ar_channel_t   master_in;
+    logic                 arvalid;
+    logic                 pop;
+    sub_ar_channel_t      manager_out;
+    logic                 req;
 
-    axi_read_manager DUT #(
-        MASTER_ID = 3
-    )(
+    axi_read_manager #(
+        .MASTER_ID(3)
+    ) DUT (
         .CLK(CLK),
         .nRST(nRST),
+        .arready(arready),
+        .master_in(master_in),
         .arvalid(arvalid),
-        .arid(arid),
-        .araddr(araddr),
-        .arlen(arlen),
-        .arsize(arsize),
-        .arburst(arburst),
-        .aready(aready),
         .pop(pop),
-        .head_valid(head_valid),
-        .head_addr(head_addr),
-        .head_id(head_id),
-        .head_size(head_size),
-        .head_len(head_len),
-        .head_burst(head_burst)
+        .manager_out(manager_out),
+        .req(req)
     );
 
     // clock gen 
@@ -50,6 +40,36 @@ module axi_read_manager_tb ();
         #(CLK_PERIOD/2);
     end
 
+    test PROG (
+        .CLK(CLK),
+        .nRST(nRST),
+        .arready(arready),
+        .master_in(master_in),
+        .arvalid(arvalid),
+        .pop(pop),
+        .manager_out(manager_out),
+        .req(req)
+    );
+
+    
+
+endmodule
+
+program test (
+    input logic CLK,
+    output logic                 nRST,
+    // From Master
+    output logic                 arready, // master ready to send read request
+    output master_ar_channel_t   master_in,
+    // To Master
+    input logic                arvalid, // manager valid to take signal
+    // From Read Controller
+    output  logic                pop, // AR channel ready to take 
+    // To Read Mux
+    input sub_ar_channel_t     manager_out,
+    input logic req
+);
+    string test_case = "";
     task reset_dut;
     begin
         nRST = 0;
@@ -61,103 +81,254 @@ module axi_read_manager_tb ();
 
     task reset_inputs;
     begin 
-        arvalid =  0;
-        arid    = '0;
-        araddr  = '0;
-        arlen   = '0;
-        arsize  = '0;
-        arlen   = '0;
-        arburst = '0;
-        pop     =  0;
+        arready = 0;
+        master_in = '0;
+        pop = 0;
+
         repeat (3) @(negedge CLK);
     end 
+    endtask
+
+    task check_output(
+        sub_ar_channel_t exp_manager_out,
+        logic exp_req
+    );
+        if (exp_manager_out != manager_out || exp_req != req) begin
+            $display("FAIL: %s", test_case);
+
+            if (exp_manager_out.valid != manager_out.valid) $display("VALID exp: %d, output: %d ", exp_manager_out.valid, manager_out.valid);
+            if (exp_manager_out.addr  != manager_out.addr)  $display("ADDR exp: %h, output: %h " , exp_manager_out.addr , manager_out.addr);
+            if (exp_manager_out.id != manager_out.id) $display("ID exp: %h, output: %h ", exp_manager_out.id, manager_out.id);
+            if (exp_manager_out.mid != manager_out.mid) $display("MID exp: %h, output: %h ", exp_manager_out.mid, manager_out.mid);
+            if (exp_manager_out.size != manager_out.size) $display("SIZE exp: %h, output: %h ", exp_manager_out.size, manager_out.size);
+            if (exp_manager_out.len != manager_out.len) $display("LEN exp: %h, output: %h ", exp_manager_out.len, manager_out.len);
+            if (exp_manager_out.burst != manager_out.burst) $display("BURST exp: %h, output: %h ", exp_manager_out.burst, manager_out.burst);
+            if (exp_req != req) $display("REQ exp: %h, output: %h ", exp_req, req);
+        end else begin
+            $display("PASS: %s", test_case);
+        end
     endtask
 
     // TEST CASE 1: Fill and Pop (1 payload)
     task fill_pop_one;
     begin 
-        test_case = "Test Case 1";
-        reset_dut();
+        test_case = "Push Pop one";
+
         reset_inputs();
-        #(CLK_PERIOD*2);
-        arvalid = 1;
-        arid    = 2'b00;
-        araddr  = 32'hDEADBEEF;
-        arsize  = 3'b011;
-        arlen   = 3'b111;
-        arburst = 3'b01;
-        #(CLK_PERIOD);
-        reset_inputs();
-        #(CLK_PERIOD*5);
+        repeat (3) @(negedge CLK);
+        // master ready
+        arready = 1;
+        // fill master_in
+        master_in.id    = 2'h2;
+        master_in.addr  = 32'hDEADBEEF;
+        master_in.size  = 3'b011;
+        master_in.len   = 3'b111;
+        master_in.burst = 3'b01;
+        repeat (1) @(negedge CLK);
+        reset_inputs;
+        
         pop = 1;
-        #(CLK_PERIOD);
+        check_output('{
+            valid: 1'h1,
+            addr: 32'hDEADBEEF,
+            id: 2'h2,
+            mid: 2'h3,
+            size: 3'h3,
+            len: 3'h7,
+            burst: 3'h1
+        }, 1);
+        @(negedge CLK);
         pop = 0; 
-        #(CLK_PERIOD*5);
+        repeat (3) @(negedge CLK);
     end
     endtask
 
-    // TEST CASE 2: Fill and Pop (3 items)
     task fill_pop_three;
     begin
-        test_case = "Test Case 2";
-        reset_dut();
-        reset_inputs();
-        #(CLK_PERIOD*2);
-        arvalid = 1;
-        arid    = 2'b00;
-        araddr  = 32'hDEADBEEF;
-        arsize  = 3'b011;
-        arlen   = 3'b111;
-        arburst = 3'b01;
-        #(CLK_PERIOD);
-        arvalid = 1;
-        arid    = 2'b01;
-        araddr  = 32'hABCDABCD;
-        arsize  = 3'b011;
-        arlen   = 3'b111;
-        arburst = 3'b01;
-        #(CLK_PERIOD);
-        arvalid = 1;
-        arid    = 2'b10;
-        araddr  = 32'hBEEFDEAD;
-        arsize  = 3'b011;
-        arlen   = 3'b111;
-        arburst = 3'b01;
-        #(CLK_PERIOD);
-        reset_inputs();
-        #(CLK_PERIOD*5);
-        pop = 1; 
-        #(CLK_PERIOD);
-        pop = 0;
-        arvalid = 1;
-        arid    = 2'b11;
-        araddr  = 32'h11110000;
-        arsize  = 3'b011;
-        arlen   = 3'b111;
-        arburst = 3'b01;
-        #(CLK_PERIOD);
-        pop = 1;
-        #(CLK_PERIOD);
-        arvalid = 1;
-        arid    = 2'b00;
-        araddr  = 32'h10101010;
-        arsize  = 3'b011;
-        arlen   = 3'b111;
-        arburst = 3'b01;
-        pop = 0;
-        #(CLK_PERIOD)
-        reset_inputs();
-        #(CLK_PERIOD*5);
-        pop = 1;
-        #(CLK_PERIOD*5);
+        test_case = "Push Pop three";
+        arready = 1;
+
+        // first master_in
+        master_in.id    = 2'h1;
+        master_in.addr  = 32'hBBBB_BBBB;
+        master_in.size  = 3'b011;
+        master_in.len   = 3'b111;
+        master_in.burst = 3'b01;
+        @(negedge CLK);
+
+        // second master_in
+        master_in.id    = 2'h2;
+        master_in.addr  = 32'hCCCC_CCCC;
+        master_in.size  = 3'b011;
+        master_in.len   = 3'b111;
+        master_in.burst = 3'b01;
+        @(negedge CLK);
+
+        // third master_in
+        master_in.id    = 2'h3;
+        master_in.addr  = 32'hDDDD_DDDD;
+        master_in.size  = 3'b011;
+        master_in.len   = 3'b111;
+        master_in.burst = 3'b01;
+        @(negedge CLK);
+
+        reset_inputs;
+
+        pop=1;
+        test_case = "Push Pop three .1";
+        check_output('{
+            valid: 1'h1,
+            addr: 32'hBBBB_BBBB,
+            id: 2'h1,
+            mid: 2'h3,
+            size: 3'h3,
+            len: 3'h7,
+            burst: 3'h1
+        }, 1);
+        @(negedge CLK);
+
+        test_case = "Push Pop three .2";
+        check_output('{
+            valid: 1'h1,
+            addr: 32'hCCCC_CCCC,
+            id: 2'h2,
+            mid: 2'h3,
+            size: 3'h3,
+            len: 3'h7,
+            burst: 3'h1
+        }, 1);
+        @(negedge CLK);
+
+        test_case = "Push Pop three .3";
+        check_output('{
+            valid: 1'h1,
+            addr: 32'hDDDD_DDDD,
+            id: 2'h3,
+            mid: 2'h3,
+            size: 3'h3,
+            len: 3'h7,
+            burst: 3'h1
+        }, 1);
+        @(negedge CLK);
+        pop=0;
+        reset_inputs;
+        repeat (3) @(negedge CLK);
     end
     endtask
 
+    task endless_push;
+    begin
+        reset_dut;
+        reset_inputs;
+
+        arready = 1;
+        // first master_in
+        master_in.id    = 2'h1;
+        master_in.addr  = 32'h1111_1111;
+        master_in.size  = 3'b011;
+        master_in.len   = 3'b111;
+        master_in.burst = 3'b01;
+        @(negedge CLK);
+
+        // second master_in
+        master_in.id    = 2'h2;
+        master_in.addr  = 32'h2222_2222;
+        master_in.size  = 3'b011;
+        master_in.len   = 3'b111;
+        master_in.burst = 3'b01;
+        @(negedge CLK);
+
+        // third master_in
+        master_in.id    = 2'h3;
+        master_in.addr  = 32'h3333_3333;
+        master_in.size  = 3'b011;
+        master_in.len   = 3'b111;
+        master_in.burst = 3'b01;
+        @(negedge CLK);
+
+        // forth master_in
+        master_in.id    = 2'h0;
+        master_in.addr  = 32'h4444_4444;
+        master_in.size  = 3'b011;
+        master_in.len   = 3'b111;
+        master_in.burst = 3'b01;
+        @(negedge CLK);
+
+        // fifth master_in
+        master_in.id    = 2'h1;
+        master_in.addr  = 32'h5555_5555;
+        master_in.size  = 3'b011;
+        master_in.len   = 3'b111;
+        master_in.burst = 3'b01;
+        @(negedge CLK);
+
+        // sixth master_in
+        master_in.id    = 2'h2;
+        master_in.addr  = 32'h6666_6666;
+        master_in.size  = 3'b011;
+        master_in.len   = 3'b111;
+        master_in.burst = 3'b01;
+        @(negedge CLK);
+
+        reset_inputs;
+        repeat (3) @(negedge CLK);
+    end
+    endtask
+
+    task push_pop_sametime; // cannot be full or empty, therefore only 1/2 in fifo
+    begin
+        reset_dut;
+        reset_inputs;
+        test_case = "Push Pop same time";
+
+        arready = 1;
+        // first master_in
+        master_in.id    = 2'h1;
+        master_in.addr  = 32'h1111_1111;
+        master_in.size  = 3'b011;
+        master_in.len   = 3'b111;
+        master_in.burst = 3'b01;
+        @(negedge CLK);
+
+        // second master_in
+        master_in.id    = 2'h2;
+        master_in.addr  = 32'h2222_2222;
+        master_in.size  = 3'b011;
+        master_in.len   = 3'b111;
+        master_in.burst = 3'b01;
+        @(negedge CLK);
+
+        // push and pop same time
+        master_in.id    = 2'h3;
+        master_in.addr  = 32'h3333_3333;
+        master_in.size  = 3'b011;
+        master_in.len   = 3'b111;
+        master_in.burst = 3'b01;
+        pop = 1;
+        check_output('{
+            valid: 1'h1,
+            addr: 32'h1111_1111,
+            id: 2'h1,
+            mid: 2'h3,
+            size: 3'h3,
+            len: 3'h7,
+            burst: 3'h1
+        }, 1);
+        @(negedge CLK);
+
+        reset_inputs;
+    end
+    endtask
+    
 
     initial begin 
-        fill_pop_one();
-        fill_pop_three();
+        reset_dut;
+        fill_pop_one;
+        fill_pop_three;
+        endless_push;
+        push_pop_sametime;
+
         $finish;
     end 
 
-endmodule
+endprogram

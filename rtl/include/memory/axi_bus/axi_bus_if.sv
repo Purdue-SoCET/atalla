@@ -1,9 +1,12 @@
-/*  Aryan Kadakia - kadakia0@purdue.edu */
+/*  
+    Aryan Kadakia - kadakia0@purdue.edu
+    Xinyu Liu - liuxinyujames@gmail.com
+*/
 
 `ifndef AXI_BUS_IF_SV
 `define AXI_BUS_IF_SV
 
-interface axi_bus_if(input logic clk, input logic nRST);
+interface axi_bus_if;
     `include "axi_bus_params.svh"
 
     import axi_bus_pkg::*;
@@ -78,6 +81,10 @@ interface axi_bus_if(input logic clk, input logic nRST);
     // DRAM CONTROLLER & WRITE RESPONSE ROUTER
     logic b_i_valid, b_i_ready;
 
+    // router
+    logic r_sp0_o_valid, r_sp1_o_valid, r_i_o_valid, r_d_o_valid,
+        r_sp0_o_ready, r_sp1_o_ready, r_i_o_ready, r_d_o_ready;
+
     // SP0 B Skid Buffer && SP0 READY/VALID
     logic b_sp0_o_valid, b_sp0_o_ready;
 
@@ -98,9 +105,9 @@ interface axi_bus_if(input logic clk, input logic nRST);
         // from Controller
         sp0_pop,
         // to Mux
-        output ar_sp0_o,
+        output ar_sp0_o, sp0_req_r,
         // to Master
-        ar_sp0_valid,
+        ar_sp0_valid
     );
 
     // SP1 MANAGER
@@ -110,9 +117,9 @@ interface axi_bus_if(input logic clk, input logic nRST);
         // from Controller
         sp1_pop,
         // to Mux
-        output ar_sp1_o,
+        output ar_sp1_o, sp1_req_r,
         // to Master
-        ar_sp1_valid,
+        ar_sp1_valid
     );
 
     // D$ MANAGER
@@ -122,9 +129,9 @@ interface axi_bus_if(input logic clk, input logic nRST);
         // from Controller
         d_pop,
         // to Mux
-        output ar_d_o,
+        output ar_d_o, d_req_r,
         // to Master
-        ar_d_valid,
+        ar_d_valid
     );
 
     // I$ MANAGER
@@ -134,9 +141,9 @@ interface axi_bus_if(input logic clk, input logic nRST);
         // from Controller
         i_pop,
         // to Mux
-        output ar_i_o,
+        output ar_i_o, i_req_r,
         // to Master
-        ar_i_valid,
+        ar_i_valid
     );
 
     // DRAM CONTROLLER <=> READ SKID BUFFER

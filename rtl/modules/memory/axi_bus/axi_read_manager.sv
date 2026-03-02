@@ -1,4 +1,7 @@
-/*  Aryan Kadakia - kadakia0@purdue.edu */
+/*  
+    Aryan Kadakia - kadakia0@purdue.edu
+    Xinyu Liu - liuxinyujames@gmail.com
+*/
 `timescale 1ps/1ps
 `include "axi_bus_pkg.sv"
 
@@ -11,26 +14,18 @@ module axi_read_manager #(
     input logic                 nRST,
     // From Master
     input logic                 arready, // master ready to send read request
-    input logic [ARID-1:0]      arid,
-    input logic [ARADDR-1 :0]   araddr,
-    input logic [ARLEN-1  :0]   arlen,
-    input logic [ARSIZE-1 :0]   arsize,
-    input logic [ARBURST-1:0]   arburst,
+    input master_ar_channel_t   master_in,
     // To Master
     output logic                arvalid, // manager valid to take signal
     // From Read Controller
     input  logic                pop, // AR channel ready to take 
     // To Read Mux
-    output logic                head_valid,
-    output logic [ARADDR-1 :0]  head_addr,
-    output logic [MID_ARID-1:0] head_id,
-    output logic [ARSIZE-1 :0]  head_size,
-    output logic [ARLEN-1  :0]  head_len,
-    output logic [ARBURST-1:0]  head_burst
+    output sub_ar_channel_t     manager_out,
+    output logic req
 );
 
-ar_payload_t fifo [0:AR_DEPTH-1];
-logic [AR_PTR_WIDTH-1:0] wr_ptr, rd_ptr; // wr -> total data ; rd -> current data
+sub_ar_channel_t fifo [AR_DEPTH];
+logic [AR_PTR_WIDTH-1:0] wr_ptr, rd_ptr; // wr -> write in fifo; rd -> read from fifo
 
 logic full, empty;
 assign full  = (wr_ptr + 1'b1 == rd_ptr);
@@ -40,24 +35,29 @@ logic push;
 assign arvalid = !full;
 assign push = (arready & arvalid); 
 
-always_ff@(posedge CLK, negedge nRST) begin
+// input from master
+always_ff @ ( posedge CLK, negedge nRST ) begin
     if(!nRST) begin 
         wr_ptr <= '0;
+
+        for (integer i=0; i<AR_DEPTH; i++) fifo[i] <= '0;
+        
     end else begin
         if(push && !full) begin 
             fifo[wr_ptr].valid  <= 1'b1;
-            fifo[wr_ptr].addr   <= araddr;
+            fifo[wr_ptr].addr   <= master_in.addr;
             fifo[wr_ptr].mid <= MASTER_ID;
-            fifo[wr_ptr].id <= arid;
-            fifo[wr_ptr].size   <= arsize;
-            fifo[wr_ptr].len    <= arlen;
-            fifo[wr_ptr].burst  <= arburst;
+            fifo[wr_ptr].id <= master_in.id;
+            fifo[wr_ptr].size   <= master_in.size;
+            fifo[wr_ptr].len    <= master_in.len;
+            fifo[wr_ptr].burst  <= master_in.burst;
             wr_ptr <= wr_ptr + 1;
         end
     end 
 end
 
-always_ff@(posedge CLK, negedge nRST) begin
+// output to ar mux
+always_ff @ ( posedge CLK, negedge nRST ) begin
     if(!nRST) begin 
         rd_ptr <= '0;
     end else begin
@@ -67,13 +67,8 @@ always_ff@(posedge CLK, negedge nRST) begin
     end
 end 
 
-
-
-assign head_valid = !empty;
-assign head_addr  = fifo[rd_ptr].addr;
-assign head_id    = fifo[rd_ptr].mid_id;
-assign head_size  = fifo[rd_ptr].size;
-assign head_len   = fifo[rd_ptr].len;
-assign head_burst = fifo[rd_ptr].burst;
+// output signal connection
+assign manager_out = fifo[rd_ptr];
+assign req = !empty;
 
 endmodule

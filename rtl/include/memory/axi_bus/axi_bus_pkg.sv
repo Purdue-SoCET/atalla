@@ -1,4 +1,7 @@
-/*  Aryan Kadakia - kadakia0@purdue.edu */
+/*  
+    Aryan Kadakia - kadakia0@purdue.edu
+    Xinyu Liu - liuxinyujames@gmail.com
+*/
 
 `ifndef AXI_BUS_PKG_SV
 `define AXI_BUS_PKG_SV
@@ -140,6 +143,7 @@ package axi_bus_pkg;
 
     // AR Channel To Subordiante
     typedef struct packed {
+        logic valid;
         logic [ARADDR-1:0]   addr;
         logic [RID-1:0] id;
         logic [MID-1:0] mid;
