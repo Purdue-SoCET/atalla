@@ -46,7 +46,7 @@ module sysarr_MAC_fp16_4c(input logic clk, input logic nRST, systolic_array_MAC_
         nxt_input_x = input_x;
         nxt_weight = weight;
         nxt_latched_weight_passon = latched_weight_passon;
-        next_weight_next_en = mac_if.weight_next_en;
+        next_weight_next_en = 0;  // default off - only high for 1 cycle after weight_en
         
         if(mac_if.weight_en) begin
             nxt_weight = mac_if.in_value;
