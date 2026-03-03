@@ -8,55 +8,56 @@ import uvm_pkg::*;
 class lfc_load_miss_seq extends uvm_sequence#(lfc_cpu_transaction);
   `uvm_object_utils(lfc_load_miss_seq)
 
+  localparam NUM_TESTS = 100;
+
   function new(string name = "lfc_load_miss_seq");
     super.new(name);
   endfunction
 
   virtual task body();
-    lfc_cpu_transaction req;
-    
-    logic [31:0] saved_addr;
-    logic [31:0] saved_data;
+    logic [NUM_TRANSACTIONS-1:0][31:0] saved_addrs;
 
-    `uvm_info(get_type_name(), "Starting lfc_load_miss_seq...", UVM_MEDIUM)
+  `uvm_info(get_type_name(), "lfc_load_hit_seq", UVM_MEDIUM)
+	       	  
+    // only reads ensures all transactions are load misses
+    for(int i = 0; i < NUM_TRANSACTIONS; i++) begin
+	    lfc_cpu_transaction req;
+	    req = lfc_cpu_transaction #()::type_id::create("req");
 
-    req = lfc_cpu_transaction #()::type_id::create("req");
+	    `uvm_info(get_type_name(), "Sending READ transaction...", UVM_MEDIUM)
 
-    `uvm_info(get_type_name(), "Sending WRITE transaction...", UVM_MEDIUM)
+	    start_item(req);
+	      req.randomize();
+	      req.n_rst              = 1'b1; 
+	      req.mem_in_rw_mode     = 1'b0;
+	      req.mem_in_store_value = 32'hCAFEBABE; // no matter for read
+	      req.dp_in_halt         = 1'b0;
 
-    saved_addr = 32'h1000;
-    saved_data = 32'hDEADBEEF;
+	      saved_addrs[i] = req.mem_in_addr;
 
-    start_item(req);
-      req.n_rst              = 1'b1;
-      req.mem_in_addr        = saved_addr;
-      req.mem_in_rw_mode     = 1'b1; // 1 = write
-      req.mem_in_store_value = saved_data;
-      req.dp_in_halt         = 1'b0;
-      // req.mem_in             = 1'b1;
-    finish_item(req);
+	      `uvm_info(get_type_name(), $sformatf("READ complete: addr=0x%0h",
+		        req.mem_in_addr), UVM_LOW)
+	    finish_item(req);
+      end
 
-    `uvm_info(get_type_name(),
-      $sformatf("WRITE complete: addr=0x%0h data=0x%0h", saved_addr, saved_data),
-      UVM_LOW)
-    
-    `uvm_info(get_type_name(), "Sending READ transaction h2000...", UVM_MEDIUM)
+    for(int i = 0; i < NUM_TRANSACTIONS; i++) begin // read requests to same addresses (expecting hit)
+	    lfc_cpu_transaction req;
+	    req = lfc_cpu_transaction #()::type_id::create("req");
 
-    saved_addr = 32'h2000; // reading into unknown location
+	    `uvm_info(get_type_name(), "Sending READ transaction...", UVM_MEDIUM)
 
-    start_item(req);
-      req.n_rst              = 1'b1; 
-      req.mem_in_addr        = saved_addr;
-      req.mem_in_rw_mode     = 1'b0;
-      req.mem_in_store_value = 32'hCAFEBABE; // no matter for read
-      req.dp_in_halt         = 1'b0;
-      // req.mem_in             = 1'b1;
-    finish_item(req);
+	    start_item(req);
+	      req.randomize();
+	      req.n_rst              = 1'b1;
+	      req.mem_in_rw_mode     = 1'b0;
+	      req.mem_in_addr = saved_addrs[i];
+	      req.mem_in_store_value = 32'hCAFEBABE; // no matter for read
+	      req.dp_in_halt         = 1'b0;
 
-    `uvm_info(get_type_name(),
-      $sformatf("READ request sent: addr=0x%0h", saved_addr),
-      UVM_LOW)
-
+	      `uvm_info(get_type_name(), $sformatf("READ complete: addr=0x%0h",
+		        req.mem_in_addr), UVM_LOW)
+	    finish_item(req);
+      end
   endtask
 endclass
 

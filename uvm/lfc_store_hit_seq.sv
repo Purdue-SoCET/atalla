@@ -7,6 +7,8 @@ import uvm_pkg::*;
 
 class lfc_store_hit_seq extends uvm_sequence#(lfc_cpu_transaction);
   `uvm_object_utils(lfc_store_hit_seq)
+  
+  localparam NUM_TESTS = 100;
 
   function new(string name = "lfc_store_hit_seq");
     super.new(name);
@@ -113,17 +115,14 @@ class lfc_store_hit_seq extends uvm_sequence#(lfc_cpu_transaction);
 
     `uvm_info(get_type_name(), "Sending multiple read transaction...", UVM_MEDIUM)
 
-    write_data = gen_rand_data();
-    saved_addr = gen_rand_addr();
-    write_addr = gen_rand_addr_2();
+    repeat(NUM_TESTS) begin
+	    write_data = gen_rand_data();
+	    saved_addr = gen_rand_addr();
+	    write_addr = gen_rand_addr_2();
 
-    write_req(write_addr, write_data);
+	    write_req(write_addr, write_data);
+    end
     
-    write_data = gen_rand_data();
-    saved_addr = gen_rand_addr();
-    write_addr = gen_rand_addr_2();
-
-    write_req(write_addr, write_data);
     // read_req(saved_addr);
 
     // for (int i = 0; i < 5; i++) begin
