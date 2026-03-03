@@ -46,7 +46,17 @@ logic [BANK_GROUP_BITS-1:0][$clog2(BANK_NUM)-1:0 ] bq_bg, [$clog2(BANK_NUM)-1:0]
 logic [ROW_BITS-1:0][$clog2(BANK_NUM)-1:0] bq_r; // 15*16
 logic [COLUMN_BITS-1:0][$clog2(BANK_NUM)-1:0]  bq_c; // 10*16
 logic [$clog2(ID_NUM)-1:0][$clog2(BANK_NUM)-1:0]  bq_id; // 4*16
-logic [$clog2(BANK_NUM)-1:0] bq_ready ;
+logic [BANK_NUM-1:0] bq_ready ;
+
+// FSM module signals - bq
+logic fsm_pop;
+logic fsm_rw;
+logic [ROW_BITS-1:0] fsm_r;
+logic [BANK_NUM-1] fsm_bqr;
+// be_arbiter - FSM modules
+logic fsm_arb;
+logic 
+
 
 // COMMAND FSM -> BACKEND ARBITER
 logic [$clog2(BANK_NUM)-1:0]  be_arb;
@@ -72,7 +82,6 @@ logic [63:0] ddr_wdata_data;
 logic ddr_wdata_en;
 logic [7:0] ddr_wdata_mask;
 logic ddr_we;
-
 
 modport axi_sub ( 
     // LQ -> AXI
@@ -167,6 +176,12 @@ modport command_fsm (
     output be_r, be_c, be_b, be_bg, be_cmd, be_id, be_rlen, be_queue_ready
 );
 
+modport fsm_mod (
+    //FSM -> FSMmod
+
+    //FSMmod -> FSM
+);
+
 modport backend_arb (
     //FSM -> BE
     input be_r, be_c, be_b, be_bg, be_cmd, be_id, be_rlen, be_queue_ready,
@@ -177,7 +192,6 @@ modport backend_arb (
     //BE -> R_ID_QUEUE
     be_rid, be_push_id, be_rlen
 );
-
 
 endinterface
 

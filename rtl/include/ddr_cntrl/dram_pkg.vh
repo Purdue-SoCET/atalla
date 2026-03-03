@@ -94,6 +94,20 @@ package dram_pkg;
         REFRESHING
     } dram_state_t; 
 
+    //CMD FSM States
+    typedef enum logic [3:0] {
+        PWR_UP,
+        ACT,
+        ACTing,
+        READ,
+        READing,
+        WRITE,
+        WRITEing,
+        PRE,
+        PREing,
+        REF
+    } fsm_t;
+    
     // {cs, act, ras, cas, we}
     typedef enum logic [4:0] {
         POWER_UP_PRG  = 5'b01111,
