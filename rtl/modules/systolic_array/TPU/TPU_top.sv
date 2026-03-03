@@ -20,14 +20,44 @@ module TPU_top #(
 
     logic [N-1:0][DW-1:0] output_buffer_out;
 
+    logic [N-1:0] in_rd_en, out_wr_en;
+    logic in_buffer_empty;
+
     // TODO: Instantiate control logic module
+    TPU_control_unit #(
+        .N(N),
+        .GROUP_SIZE(4),
+        .ADD_2_INPUT_LATENCY(ADD_2_INPUT_LATENCY),
+        .ADD_4_INPUT_LATENCY(ADD_4_INPUT_LATENCY),
+        .MUL_LATENCY(MUL_LATENCY),
+    ) control_unit (
+        .clk(clk),
+        .nRST(nRST),
+        .in_buffer_empty(in_buffer_empty),
+        .sa_output(gsau_if.sa_valid_in),
+        .in_rd_en(in_rd_en),
+        .out_wr_en(out_wr_en)
+    );
 
     // TODO: Instantiate input buffer
+    TPU_buffer #(
+        .NUM_COLS(N),
+        .DATA_WIDTH(DW)
+    ) input_buffer (
+        .clk(clk),
+        .nRST(nRST),
+        .wr_en(gsau_if.),
+        .wr_data(gsau_if.sa_array_in),
+        .rd_en(in_rd_en),
+        .rd_data(in_vector),
+        .lane0_empty(in_buffer_empty),
+        .full()
+    );
 
 
     // TODO: Connect pipes to output of input buffer
-    assign in_vector = gsau_if.sa_array_in;
-    assign psum_vector = gsau_if.sa_array_in_partials;
+    // assign in_vector = gsau_if.sa_array_in;
+    // assign psum_vector = gsau_if.sa_array_in_partials;
 
     genvar i, j;
     generate
@@ -40,7 +70,7 @@ module TPU_top #(
                         if(j == 0) begin
                             // TODO: registering first input probably won't be necessary
                             if (gsau_if.sa_input_en) begin
-                                in_pipe[i][0] <= in_vector;
+                                in_pipe[i][0] <= in_vector[i];
                             end else begin
                                 in_pipe[i][0] <= '0;
                             end
@@ -99,6 +129,8 @@ module TPU_top #(
             valid_bits <= {valid_bits[TOTAL_DELAY - 1 : 0], gsau_if.sa_input_en};
         end
     end
+
+    // TODO: Weight Loading
     
     // Output buffer
     skew_buffer #(
