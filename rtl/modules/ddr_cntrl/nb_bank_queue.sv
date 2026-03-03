@@ -15,14 +15,13 @@ module nb_bank_queue(
     `include "dram_pkg.sv"
     import dram_pkg::*;
 
-    logic [$clog2(BANK_NUM)-1:0] b_wsel;
-    logic [$clog2(BANK_NUM)-1:0] b_rsel;
+    logic [BANK_NUM-1:0] b_wsel, b_rsel;
 
     genvar i;
     generate 
         for (i = 0; i < BANK_NUM; i++) begin
             // Assign the write/read selection signal
-            assign b_wsel[i] = (bqif.bq_b == i) && bqif.fe_write_bq;
+            assign b_wsel[i] = ({bqif.bq_b, bqif.bg_bg} == i) && bqif.fe_write_bq;
             assign b_rsel[i] = (bqif.bq_pop == i);
 
             // Generate fifos

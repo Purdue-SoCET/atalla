@@ -18,7 +18,15 @@ typedef struct packed {
     logic [$clog2(ID_NUM)-1:0] id_addr;
 } bq_slot_t;
 
-// AXI -> WDATA_QUEUE
+// ARB/BQ
+typedef struct packed {
+    logic [3:0] len;
+    logic [$clog2(ID_NUM) - 1:0] id;
+    logic [31:0] addr;
+    logic valid;
+} buf_slot_t;
+
+// AXI <-> WDATA_QUEUE
 logic [7:0] wstrb, wvalid;
 logic [63:0] wdata;
 logic [$clog2(ID_NUM)-1:0] wid;
@@ -26,59 +34,67 @@ logic [2:0] wlen; // -> Write Queue
 logic wready, bwvalid, [1:0] bwresp, [$clog2(ID_NUM)-1:0] bwid; // -> AXI
 logic bwready; // -> Write Queue
 
-// AXI -> LQ
+// AXI <-> LQ
 logic arvalid, [31:0] araddr, [$clog2(ID_NUM)-1:0] arid, [2:0] arlen; // -> LQ
 logic arready; // -> AXI
 logic rvalid, [63:0] rdata, [$clog2(ID_NUM)-1:0] rid, [1:0] rresp; // -> AXI
 logic rready; // -> LQ
 
-// AXI -> STQ
-logic awvalid, [31:0] awaddr, [$clog2(ID_NUM)-1:0] awid, [2:0] awlen;
-logic awready;
+// AXI <-> STQ
+logic awvalid, [31:0] awaddr, [$clog2(ID_NUM)-1:0] awid, [2:0] awlen; // -> STQ
+logic awready; // -> AXI
 
-// STQ/LQ -> FRONTEND ARBITER
-logic request_l, request_s;
-logic address_l, address_s;
-logic grant_l, grant_s;
+// STQ/LQ <-> FRONTEND ARBITER
+logic request_l, request_s; // -> ARB
+logic address_l, address_s; // -> ARB
+logic grant_l, grant_s; // -> STQ
 
 // FRONTEND ARBITER -> BQ
 // DATA IN
-logic [$clog2(BANK_NUM)-1:0] fe_b, [ROW_BITS-1:0] fe_r, [COLUMN_BITS-1:0] fe_c; // what does bg do?
-logic fe_write;
-logic [$clog2(ID_NUM)-1:0] fe_id;
+logic [BANK_GROUP_BITS-1:0]  fe_bg;
+logic [$clog2(BANK_NUM)-1:0] fe_b; // TODO: find parameter -> banks per bank group
+logic [ROW_BITS-1:0]         fe_r;
+logic [COLUMN_BITS-1:0]      fe_c; 
+logic                        fe_write;
+logic [$clog2(ID_NUM)-1:0]   fe_id;
 // CONTROL SIGNALS
-logic fe_write_bq;
-logic [BANK_NUM-1:0] fe_full; // [QUEUE_SIZE-1:0]
+logic                        fe_write_bq;
+logic [BANK_NUM-1:0]         fe_full; // [QUEUE_SIZE-1:0]
 
-// BANK QUEUE -> COMMAND FSM
+// BANK QUEUE <-> COMMAND FSM
 logic       [$clog2(BANK_NUM)-1:0] bq_pop; // BANK_NUM
-bq_slot_t   [BANK_NUM-1:0] bq_slot; // bq_r, bq_c, bq_rw, bq_id; // 4*16
-logic       [BANK_NUM-1:0] bq_ready;
+bq_slot_t   [BANK_NUM-1:0]         bq_slot; // bq_r, bq_c, bq_rw, bq_id; // 4*16
+logic       [BANK_NUM-1:0]         bq_ready;
 
 // COMMAND FSM -> BACKEND ARBITER
 logic [$clog2(BANK_NUM)-1:0]  be_arb;
 logic [$clog2(BANK_NUM)-1:0]  be_queue_ready;
+// TODO: CLEAN-UP DATA FROM STRUCT
 logic [BANK_GROUP_BITS-1:0][$clog2(BANK_NUM)-1:0]  be_bg, [BANK_BITS-1:0][$clog2(BANK_NUM)-1:0]  be_b; // 2*16
-logic [ROW_BITS-1:0][$clog2(BANK_NUM)-1:0]  be_r; // 15*16
-logic [COLUMN_BITS-1:0][$clog2(BANK_NUM)-1:0]  be_c; // 10*16
+logic [ROW_BITS-1:0][BANK_NUM-1:0]  be_r; // 15*16
+logic [COLUMN_BITS-1:0][BANK_NUM-1:0]  be_c; // 10*16
 logic [$clog2(ID_NUM)-1:0][$clog2(BANK_NUM)-1:0]  be_id; // 4*16
+// TODO: WHAT DOES THIS DO?
 logic [IDK] be_cmd; 
 
 // BACKEND ARBITER -> READ_ID_QUEUE
-logic be_push_id, [$clog2(ID_NUM)-1:0] be_rid, [2:0] be_rlen;
+logic                      be_push_id; 
+logic [$clog2(ID_NUM)-1:0] be_rid;
+logic [2:0]                be_rlen;
 
 // BACKEND ARBITER -> WDATA_QUEUE
 logic [$clog2(ID_NUM)-1:0] be_wid, be_write; 
 
 // AXI -> READ_ID_QUEUE
-logic rready;
-logic [$clog2(ID_NUM)-1:0] rq_rid, rq_rvalid, [2:0] rq_rlen; 
+logic                      rready;
+logic [$clog2(ID_NUM)-1:0] rq_rid, rq_rvalid
+logic [2:0]                rq_rlen; 
 
 // WDATA_QUEUE -> DRAM
 logic [63:0] ddr_wdata_data;
-logic ddr_wdata_en;
-logic [7:0] ddr_wdata_mask;
-logic ddr_we;
+logic        ddr_wdata_en;
+logic [7:0]  ddr_wdata_mask;
+logic        ddr_we;
 
 
 modport axi_sub ( 
@@ -137,11 +153,11 @@ modport arb (
 
 modport bq (
     // ARB -> BQ (DATA)
-    input fe_b, fe_c, fe_r, fe_write, fe_id, 
+    input fe_bg, fe_b, fe_c, fe_r, fe_write, fe_id, 
     // ARB -> BQ (CNTRL)
     fe_write_bq,
     // FSM -> BQ (CNTRL)
-    bq_pop, 
+    bq_pop, // Not a big deal, but confirm with Adrian that this is the concat of {b,bg}
     // BQ -> ARB (CNTRL)
     output fe_full, 
     // BQ -> FSM (CNTRL)
@@ -150,7 +166,7 @@ modport bq (
     bq_slot
 );
 
-modport read_id_queue (
+modport read_id_queue ( // TODO: FILL THIS OUT
     //BQ -> FSM
 
 
