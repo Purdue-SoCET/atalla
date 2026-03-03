@@ -15,13 +15,14 @@ module if_dec1_reg (
       ifdec1_if.pc_pred_addr_out  <= '0;
     end
     else begin
-      if (ifdec1_if.flush) begin
+      if (ifdec1_if.flush && ifdec1_if.ihit) begin
         ifdec1_if.pc_out            <= '0;
         ifdec1_if.inst_packet_out   <= '0; 
         ifdec1_if.predict_taken_out <= '0;
         ifdec1_if.pc_pred_addr_out  <= '0;
       end
-      else if (ifdec1_if.ready) begin
+
+      else if (ifdec1_if.ihit && ifdec1_if.ready) begin
         ifdec1_if.pc_out            <= ifdec1_if.pc_in;
         ifdec1_if.inst_packet_out   <= ifdec1_if.inst_packet_in;
         ifdec1_if.predict_taken_out <= ifdec1_if.predict_taken_in;

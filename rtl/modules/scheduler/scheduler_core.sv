@@ -58,16 +58,10 @@ module scheduler_core #(
 
 
     //DEC1 outputs to latch
-    always_comb begin
-        if(decode_2_if.ready) begin
-            n_D1_D2_latch.scalar_instrs = decode_1_if.scalar_inst_in;
-            n_D1_D2_latch.pc = decode_1_if.pc_in;
-            n_D1_D2_latch.predict_taken = decode_1_if.predict_taken_in;
-            n_D1_D2_latch.pc_pred_addr = decode_1_if.pc_pred_addr_in;
-        end else begin
-            n_D1_D2_latch = D1_D2_latch;
-        end
-    end
+    assign n_D1_D2_latch.scalar_instrs = decode_1_if.scalar_inst_in;
+    assign n_D1_D2_latch.pc = decode_1_if.pc_in;
+    assign n_D1_D2_latch.predict_taken = decode_1_if.predict_taken_in;
+    assign n_D1_D2_latch.pc_pred_addr = decode_1_if.pc_pred_addr_in;
 
     //DEC2 inputs form D1_D2 latch
     assign decode_2_if.scalar_instrs = D1_D2_latch.scalar_instrs;
