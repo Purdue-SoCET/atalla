@@ -27,14 +27,18 @@ typedef struct packed {
 } buf_slot_t;
 
 // AXI <-> WDATA_QUEUE
-logic [7:0] wstrb, wvalid;
-logic [63:0] wdata;
-logic [$clog2(ID_NUM)-1:0] wid;
-logic [2:0] wlen; // -> Write Queue
+// TODO: Data Struct for DATA_Q Slot
+logic [7:0] wvalid; // -> WQ
+logic [63:0] wdata; // -> WQ
+logic [$clog2(ID_NUM)-1:0] wid; // WQ
+// CNTRL
+logic [7:0] wstrb; // -> WQ
+logic [2:0] wlen; // -> WQ
 logic wready, bwvalid, [1:0] bwresp, [$clog2(ID_NUM)-1:0] bwid; // -> AXI
-logic bwready; // -> Write Queue
+logic bwready; // -> WQ
 
 // AXI <-> LQ
+// TODO: Data Struct for READ_ID_Q Slot
 logic arvalid, [31:0] araddr, [$clog2(ID_NUM)-1:0] arid, [2:0] arlen; // -> LQ
 logic arready; // -> AXI
 logic rvalid, [63:0] rdata, [$clog2(ID_NUM)-1:0] rid, [1:0] rresp; // -> AXI
