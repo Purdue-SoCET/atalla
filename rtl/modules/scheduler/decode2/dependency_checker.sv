@@ -19,9 +19,13 @@ module dependency_checker #(
     dependency_checker_if.dc dc_if
 );
 
-    logic scalar_dependency_table [NUM_SCALAR_REGS];
-    logic vector_dependency_table [NUM_VECTOR_REGS];
-    logic mask_dependency_table   [NUM_MASK_REGS];
+    logic [NUM_SCALAR_REGS-1:0] scalar_dependency_table;
+    logic [NUM_VECTOR_REGS-1:0] vector_dependency_table;
+    logic [NUM_MASK_REGS-1:0] mask_dependency_table;
+
+    logic [SCALAR_READ_PORTS-1:0] scalar_hit;
+    logic [VECTOR_READ_PORTS-1:0] vector_hit;
+    logic [MASK_READ_PORTS-1:0]   mask_hit;
 
     logic scalar_hazard;
     logic vector_hazard;
@@ -85,27 +89,42 @@ module dependency_checker #(
     end
 
     always_comb begin
-        int i;
+        // int i;
 
-        // Check source registers for RAW hazards
-        scalar_hazard = 1'b0;
-        vector_hazard = 1'b0;
-        mask_hazard   = 1'b0;
+        // // Check source registers for RAW hazards
+        // scalar_hazard = 1'b0;
+        // vector_hazard = 1'b0;
+        // mask_hazard   = 1'b0;
 
-        for (i = 0; i < SCALAR_READ_PORTS; i++) begin
-            if (dc_if.scalar_REN[i] & scalar_dependency_table[dc_if.scalar_rsel[i]])
-                scalar_hazard = 1'b1;
+        // for (i = 0; i < SCALAR_READ_PORTS; i++) begin
+        //     if (dc_if.scalar_REN[i] & scalar_dependency_table[dc_if.scalar_rsel[i]])
+        //         scalar_hazard = 1'b1;
+        // end
+
+        // for (i = 0; i < VECTOR_READ_PORTS; i++) begin
+        //     if (dc_if.vector_REN[i] & vector_dependency_table[dc_if.vector_rsel[i]])
+        //         vector_hazard = 1'b1;
+        // end
+
+        // for (i = 0; i < MASK_READ_PORTS; i++) begin
+        //     if (dc_if.mask_REN[i] & mask_dependency_table[dc_if.mask_rsel[i]])
+        //         mask_hazard = 1'b1;
+        // end
+        
+        for (int i = 0; i < SCALAR_READ_PORTS; i++) begin
+            scalar_hit[i] = dc_if.scalar_REN[i] & scalar_dependency_table[dc_if.scalar_rsel[i]];
+        end
+        for (int i = 0; i < VECTOR_READ_PORTS; i++) begin
+            vector_hit[i] = dc_if.vector_REN[i] & vector_dependency_table[dc_if.vector_rsel[i]];
+        end
+        for (int i = 0; i < MASK_READ_PORTS; i++) begin
+            mask_hit[i] = dc_if.mask_REN[i] & mask_dependency_table[dc_if.mask_rsel[i]];
         end
 
-        for (i = 0; i < VECTOR_READ_PORTS; i++) begin
-            if (dc_if.vector_REN[i] & vector_dependency_table[dc_if.vector_rsel[i]])
-                vector_hazard = 1'b1;
-        end
+        scalar_hazard = |scalar_hit;
+        vector_hazard = |vector_hit;
+        mask_hazard   = |mask_hit;
 
-        for (i = 0; i < MASK_READ_PORTS; i++) begin
-            if (dc_if.mask_REN[i] & mask_dependency_table[dc_if.mask_rsel[i]])
-                mask_hazard = 1'b1;
-        end
     end
 
     assign dc_if.dependencies_ready = ~(scalar_hazard | vector_hazard | mask_hazard);
