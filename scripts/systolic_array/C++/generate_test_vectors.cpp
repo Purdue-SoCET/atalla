@@ -175,6 +175,64 @@ std::vector<std::vector<uint16_t>> sim_MEISSA(
     return output;
 }
 
+uint16_t sim_TPU_MAC(std::vector<uint16_t>& input, std::vector<uint16_t>& weight, uint16_t psum, bool is_fp16)
+{
+    if(input.size() != 4 || weight.size() != 4)
+    {
+        std::cerr << "Error: Invalid input/weight size for TPU mac input" << std::endl;
+    }
+
+    std::vector<uint16_t> mul_out(4);
+
+    for(int i = 0; i < 4; ++i)
+    {
+        mul_out[i] = sim_mul(input[i], weight[i], is_fp16);
+    }
+
+    uint16_t add_out = sim_4_input_add(mul_out[0], mul_out[1], mul_out[2], mul_out[3], is_fp16);
+
+    return sim_2_input_add(add_out, psum, is_fp16)
+}
+
+std::vector<std::vector<uint16_t>> sim_TPU(
+                                    const std::vector<std::vector<uint16_t>>& input, 
+                                    const std::vector<std::vector<uint16_t>>& weight, 
+                                    const std::vector<std::vector<uint16_t>>& psum, 
+                                    bool is_fp16)
+{
+    std::vector<std::vector<uint16_t>> output(input.size(), std::vector<uint16_t>(input[0].size()));
+
+    const size_t M = input.size();
+    const size_t K = input[0].size();
+    const size_t K_w = weight.size();
+    const size_t N = weight[0].size();
+
+    for (size_t i = 0; i < M; ++i) {
+        for (size_t j = 0; j < N; ++j) {
+            uint16_t acc = psum[i][j];
+
+            for (size_t k = 0; k < K; k += 4) {
+                std::vector<uint16_t> in4 = {
+                    input[i][k + 0],
+                    input[i][k + 1],
+                    input[i][k + 2],
+                    input[i][k + 3]
+                };
+                std::vector<uint16_t> wt4 = {
+                    weight[k + 0][j],
+                    weight[k + 1][j],
+                    weight[k + 2][j],
+                    weight[k + 3][j]
+                };
+
+                acc = sim_TPU_MAC(in4, wt4, acc, is_fp16);
+            }
+
+            output[i][j] = acc;
+        }
+    }
+}
+
 std::vector<std::vector<uint16_t>> generate_random_matrix(int rows, int cols, int min_exponent, int max_exponent, bool is_fp16) {
     if (is_fp16) {
         return generate_random_matrix_fp16(rows, cols, min_exponent, max_exponent);
@@ -218,7 +276,25 @@ void create_new_test(int test_num, int min_exponent, int max_exponent, const std
 
     std::ofstream expected_file(PATH_TO_EXPECTED_RESULT, std::ios::app);
     expected_file << "Test " << test_num << std::endl;
-    std::vector<std::vector<uint16_t>> output_matrix = sim_MEISSA(input_matrix, *weight, psum_matrix, IS_FP16);
+    std::vector<std::vector<uint16_t>> output_matrix;
+    
+    if(VERSION == "MEISSA")
+    {
+        output_matrix = sim_MEISSA(input_matrix, *weight, psum_matrix, IS_FP16);
+    }
+    else if (VERSION == "TPU")
+    {
+        output_matrix = sim_TPU(input_matrix, *weight, psum_matrix, IS_FP16);
+    }
+    else if (VERSION == "STANDARD")
+    {
+        // TODO: add standard simulation
+    }
+    else
+    {
+        std::cerr << "Error: Invalid systolic array version" << std::endl;
+    }
+
     write_matrix_to_file(output_matrix, PATH_TO_EXPECTED_RESULT);
     expected_file << "\n";
     expected_file.close();
