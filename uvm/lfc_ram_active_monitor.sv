@@ -43,6 +43,7 @@ class lfc_ram_active_monitor extends uvm_monitor;
 
       tx.ram_mem_data = vif.ram_mem_data;
       tx.ram_mem_complete = vif.ram_mem_complete;
+      tx.ram_mem_addr = vif.ram_mem_addr;
 
       if(has_run_once > 0) begin // avoids an uninstantiated comparison
         if(tx.ram_mem_complete & ~prev_tx.ram_mem_complete) begin
@@ -61,3 +62,4 @@ class lfc_ram_active_monitor extends uvm_monitor;
 endclass
 
 `endif // LFC_CPU_ACTIVE_MONITOR_SV
+

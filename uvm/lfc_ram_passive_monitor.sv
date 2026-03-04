@@ -13,11 +13,12 @@ class lfc_ram_passive_monitor #(parameter NUM_BANKS = 4) extends uvm_monitor;
 
   lfc_ram_vif_t1 vif;
 
-  uvm_analysis_port#(lfc_ram_transaction) result_ap;
+  uvm_analysis_port#(lfc_ram_transaction) result_ap [NUM_BANKS];
 
   function new(string name, uvm_component parent = null);
     super.new(name, parent);
-    result_ap = new("result", this);
+    for (int b = 0; b < NUM_BANKS; b++)
+      result_ap[b] = new($sformatf("result_ap_%0d", b), this);
   endfunction
 
   virtual function void build_phase(uvm_phase phase);
@@ -40,8 +41,8 @@ class lfc_ram_passive_monitor #(parameter NUM_BANKS = 4) extends uvm_monitor;
 
       for (int b = 0; b < vif.NUM_BANKS; b++) begin
         // sample read or write
-        if ((vif.ram_mem_REN[b] && ~old_ram_mem_REN[b]) || (vif.ram_mem_WEN[b] && ~old_ram_mem_WEN[b]) || 
-	    ($isunknown(vif.ram_mem_REN[b]) && $isunknown(vif.ram_mem_WEN[b]))) begin
+        if ((vif.ram_mem_REN[b] === 1'b1 && old_ram_mem_REN[b] !== 1'b1) ||
+            (vif.ram_mem_WEN[b] === 1'b1 && old_ram_mem_WEN[b] !== 1'b1)) begin
           lfc_ram_transaction tr;
           tr = lfc_ram_transaction #()::type_id::create($sformatf("ram_tr_bank%0d", b));
 
@@ -53,8 +54,8 @@ class lfc_ram_passive_monitor #(parameter NUM_BANKS = 4) extends uvm_monitor;
           tr.ram_mem_data[b]  = vif.ram_mem_data[b];
           tr.ram_mem_complete[b] = vif.ram_mem_complete[b];
 
-          // send to scoreboard or subscribers
-          result_ap.write(tr);
+          // send only to this bank's port
+          result_ap[b].write(tr);
 
           `uvm_info("RAM_PASSIVE_MON",
             $sformatf("Captured bank=%0d REN=%0b WEN=%0b addr=0x%08h store=0x%08h data=0x%08h complete=%0b",
@@ -76,3 +77,4 @@ class lfc_ram_passive_monitor #(parameter NUM_BANKS = 4) extends uvm_monitor;
 endclass
 
 `endif
+

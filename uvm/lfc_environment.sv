@@ -63,10 +63,13 @@ class lfc_environment #(parameter NUM_BANKS = 4) extends uvm_env;
     cpu_passive_agent.mon.result_ap.connect(sb.actual_cpu_export);
     pred.pred_cpu_ap.connect(sb.expected_cpu_export);
 
-    // ram_active_agent.mon.lfc_ap.connect(pred.pred_ram_aep);
-    ram_passive_agent.mon.result_ap.connect(sb.actual_ram_export);
-    pred.pred_ram_ap.connect(sb.expected_ram_export);
+    for (int b = 0; b < NUM_BANKS; b++) begin
+      ram_passive_agent.mon.result_ap[b].connect(sb.actual_ram_req_export[b]);
+      pred.pred_ram_req_ap[b].connect(sb.expected_ram_req_export[b]);
+    end
 
+    ram_active_agent.mon.lfc_ap.connect(sb.actual_ram_cmp_export);
+    pred.pred_ram_cmp_ap.connect(sb.expected_ram_cmp_export);
 
     cpu_active_agent.mon.lfc_ap.connect(pred.cpu_imp);
     ram_active_agent.mon.lfc_ap.connect(pred.ram_imp);
@@ -76,3 +79,4 @@ class lfc_environment #(parameter NUM_BANKS = 4) extends uvm_env;
 endclass
 
 `endif
+
