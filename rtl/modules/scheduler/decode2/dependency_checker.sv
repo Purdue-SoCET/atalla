@@ -110,15 +110,19 @@ module dependency_checker #(
         //     if (dc_if.mask_REN[i] & mask_dependency_table[dc_if.mask_rsel[i]])
         //         mask_hazard = 1'b1;
         // end
+
+        
         
         for (int i = 0; i < SCALAR_READ_PORTS; i++) begin
             scalar_hit[i] = dc_if.scalar_REN[i] & scalar_dependency_table[dc_if.scalar_rsel[i]];
         end
         for (int i = 0; i < VECTOR_READ_PORTS; i++) begin
-            vector_hit[i] = dc_if.vector_REN[i] & vector_dependency_table[dc_if.vector_rsel[i]];
+            //vector_hit[i] = dc_if.vector_REN[i] & vector_dependency_table[dc_if.vector_rsel[i]];
+            vector_hit[i] = '0;
         end
         for (int i = 0; i < MASK_READ_PORTS; i++) begin
-            mask_hit[i] = dc_if.mask_REN[i] & mask_dependency_table[dc_if.mask_rsel[i]];
+            //mask_hit[i] = dc_if.mask_REN[i] & mask_dependency_table[dc_if.mask_rsel[i]];
+            mask_hit[i] = '0;
         end
 
         scalar_hazard = |scalar_hit;
