@@ -73,7 +73,7 @@ module TPU_top #(
                             if (gsau_if.sa_input_en) begin
                                 in_pipe[i][0] <= in_vector[i * 4 * DW +: 4 * DW];
                             end else if (gsau_if.weight_en) begin
-                                in_pipe[i][0] <= gsau_if.sa_array[i * 4 * DW +: 4 * DW];
+                                in_pipe[i][0] <= gsau_if.sa_array_in[i * 4 * DW +: 4 * DW];
                             end else begin
                                 in_pipe[i][0] <= '0;
                             end
@@ -110,16 +110,20 @@ module TPU_top #(
         end
     endgenerate
 
-    // TODO: verify total input latency
-    /* Formula for total input latency:
-     * N - multiplier shifts (i.e. shifts across 32 multipliers, 1 shift per cycle) + 1 for input registering (may change)
+    // TODO: verify total latency for a vector ready to be outputted
+    /* Formula for total latency:
+     * +1 from gsau_if.sa_array_in to input buffer write latency
+     * +1 from control unit to start issue
+     * +1 from input buffer read latency
+     * ADD_2_INPUT_LATENCY * (N/4-1) - last element staggering delay
+     * N - multiplier grid shifts (i.e. shifts across 32 multipliers, 1 shift per cycle) + 1 for input registering (may change)
      * MUL_LATENCY - first multiplier latency
-     * ADD_4_INPUT_LATENCY - first adder latency
-     * N/4 * (ADD_4_INPUT_LATENCY + ADD_2_INPUT_LATENCY) - total latency of adders in column of MACs
-     * +1 from sram read/write latency
-     * +1 from sram rpt 1 behind wpt
+     * ADD_4_INPUT_LATENCY - last 4 input adder latency
+     * ADD_2_INPUT_LATENCY - last 2 input adder latency
+     * +1 from sram write latency
+     Actual delay will be +1 from sram read latency
     */
-    localparam TOTAL_DELAY = N + MUL_LATENCY + ADD_4_INPUT_LATENCY + N/4 * ADD_2_INPUT_LATENCY + 2;
+    localparam TOTAL_DELAY = ADD_2_INPUT_LATENCY * (N/4-1) + N + MUL_LATENCY + ADD_4_INPUT_LATENCY + ADD_2_INPUT_LATENCY + 4;
     logic [TOTAL_DELAY - 1:0] valid_bits;
 
     always_ff @(posedge clk or negedge nRST) begin
@@ -136,11 +140,12 @@ module TPU_top #(
     // TODO: Weight Loading
     
     // Output buffer
+    //TODO: Comment explanation
     TPU_buffer #(
         .NUM_COLS(N),
         .DATA_WIDTH(DW)
         .IN_OUT(1)
-    ) input_buffer (
+    ) output_buffer (
         .clk(clk),
         .nRST(nRST),
         .wr_en(valid_bits[TOTAL_DELAY - 1]),
