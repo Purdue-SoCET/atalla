@@ -16,6 +16,7 @@ module TPU_control_unit #(
     input logic sa_output,
     output logic [N-1:0] in_rd_en,
     output logic [N-1:0] out_wr_en
+    output logic ready_in;
 );
 
     localparam int IN_CNTR_W = $clog2(ADD_2_INPUT_LATENCY);
@@ -90,19 +91,28 @@ module TPU_control_unit #(
         next_out_start_cnt = out_start_cnt;
         next_out_wr_en = out_wr_en;
 
-        if ((|pending_rows) && (out_start_cnt == OUT_START - 1)) begin
+        if ((|pending_rows) && (out_start_cnt < OUT_START - 1)) begin
             next_out_start_cnt = out_start_cnt + 1'b1;
+        end else if (out_start_cnt == OUT_START - 1) begin
+            next_start_cnt = out_start_cnt;
         end else begin
             next_out_start_cnt = '0;
         end
 
-        if ((out_cnt == MUL_LATENCY - 1) && (out_start_cnt == OUT_START - 1)) begin
-            next_out_cnt = '0;
+        if (out_start_cnt == OUT_START - 1) {
             next_out_wr_en = (out_wr_en << 1) | (|pending_rows);
             next_pending_rows = pending_rows - 1'b1;
-        end else begin
-            next_out_cnt = out_cnt + 1'b1;
-        end
+        }
+
+        // if ((out_cnt == MUL_LATENCY - 1) && (out_start_cnt == OUT_START - 1)) begin
+        //     next_out_cnt = '0;
+        //     next_out_wr_en = (out_wr_en << 1) | (|pending_rows);
+        //     next_pending_rows = pending_rows - 1'b1;
+        // end else begin
+        //     next_out_cnt = out_cnt + 1'b1;
+        // end
     end
+
+    assign ready_in = |credits;
 
 endmodule
