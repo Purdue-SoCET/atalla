@@ -37,6 +37,7 @@ module TPU_top #(
         .sa_output(gsau_if.sa_valid_in),
         .in_rd_en(in_rd_en),
         .out_wr_en(out_wr_en)
+        .ready_in(gsau_if.sa_ready_in)
     );
 
     // TODO: Instantiate input buffer
@@ -70,7 +71,7 @@ module TPU_top #(
                     end else begin
                         if(j == 0) begin
                             // TODO: registering first input probably won't be necessary
-                            if (gsau_if.sa_input_en) begin
+                            if (|in_rd_en) begin
                                 in_pipe[i][0] <= in_vector[i * 4 * DW +: 4 * DW];
                             end else if (gsau_if.weight_en) begin
                                 in_pipe[i][0] <= gsau_if.sa_array_in[i * 4 * DW +: 4 * DW];
