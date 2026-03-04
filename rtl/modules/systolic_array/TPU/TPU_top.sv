@@ -10,10 +10,10 @@ module TPU_top #(
     gsau_control_unit_if.systolic_array gsau_if
 );
 
-    logic [N-1:0][N/4-1:0][DW-1:0] in_pipe;
-    logic [N-1:0][N/4-1:0][DW-1:0] psum_pipe;
-    logic [N-1:0][N/4-1:0][DW-1:0] next_psum_pipe;
-    logic [N-1:0][N/4-1:0] weight_en_pipe;
+    logic [N/4-1:0][N-1:0][4*DW-1:0] in_pipe;
+    logic [N/4-1:0][N-1:0][DW-1:0] psum_pipe;
+    logic [N/4-1:0][N-1:0][DW-1:0] next_psum_pipe;
+    logic [N/4-1:0][N-1:0] weight_en_pipe;
 
     logic [N-1:0][DW-1:0] in_vector;
     logic [N-1:0][DW-1:0] psum_vector;
@@ -62,8 +62,8 @@ module TPU_top #(
 
     genvar i, j;
     generate
-        for (i = 0; i < N; i++) begin: row
-            for(j = 0; j < N / 4; j++) begin: col
+        for (i = 0; i < N / 4; i++) begin: row
+            for(j = 0; j < N; j++) begin: col
                 always_ff @ (posedge clk, negededge nRST) begin : in_pipe_register
                     if (!nRST) begin
                         in_pipe <= '0;
@@ -71,7 +71,9 @@ module TPU_top #(
                         if(j == 0) begin
                             // TODO: registering first input probably won't be necessary
                             if (gsau_if.sa_input_en) begin
-                                in_pipe[i][0] <= in_vector[i];
+                                in_pipe[i][0] <= in_vector[i * 4 * DW +: 4 * DW];
+                            end else if (gsau_if.weight_en) begin
+                                in_pipe[i][0] <= gsau_if.sa_array[i * 4 * DW +: 4 * DW];
                             end else begin
                                 in_pipe[i][0] <= '0;
                             end
