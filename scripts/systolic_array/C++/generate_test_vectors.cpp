@@ -191,7 +191,7 @@ uint16_t sim_TPU_MAC(std::vector<uint16_t>& input, std::vector<uint16_t>& weight
 
     uint16_t add_out = sim_4_input_add(mul_out[0], mul_out[1], mul_out[2], mul_out[3], is_fp16);
 
-    return sim_2_input_add(add_out, psum, is_fp16)
+    return sim_2_input_add(add_out, psum, is_fp16);
 }
 
 std::vector<std::vector<uint16_t>> sim_TPU(
@@ -204,7 +204,7 @@ std::vector<std::vector<uint16_t>> sim_TPU(
 
     const size_t M = input.size();
     const size_t K = input[0].size();
-    const size_t K_w = weight.size();
+    // const size_t K_w = weight.size();
     const size_t N = weight[0].size();
 
     for (size_t i = 0; i < M; ++i) {
@@ -231,6 +231,7 @@ std::vector<std::vector<uint16_t>> sim_TPU(
             output[i][j] = acc;
         }
     }
+    return output;
 }
 
 std::vector<std::vector<uint16_t>> generate_random_matrix(int rows, int cols, int min_exponent, int max_exponent, bool is_fp16) {
@@ -357,7 +358,15 @@ int main() {
 
     auto end   = std::chrono::steady_clock::now();
     auto ms = std::chrono::duration_cast<std::chrono::milliseconds>(end - start).count();
-    std::cout << "Adder input num: " << ADDER_INPUT_NUM << std::endl;
+    std::cout << "Systolic array version: " << VERSION << std::endl;
+    if(VERSION == "TPU")
+    {
+        std::cout << "Adder input num: " << "TPU is always " << 4 << std::endl;
+    }
+    else
+    {
+        std::cout << "Adder input num: " << ADDER_INPUT_NUM << std::endl;
+    }
     std::cout << "Data type: " << (IS_FP16 ? "FP16" : "BF16") << std::endl;
     PATH_TO_INPUT = PATH_TO_INPUT.erase(0, input_path_env.length());
     PATH_TO_EXPECTED_RESULT = PATH_TO_EXPECTED_RESULT.erase(0, input_path_env.length());
