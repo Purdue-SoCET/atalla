@@ -29,21 +29,21 @@ module TPU_top #(
         .GROUP_SIZE(4),
         .ADD_2_INPUT_LATENCY(ADD_2_INPUT_LATENCY),
         .ADD_4_INPUT_LATENCY(ADD_4_INPUT_LATENCY),
-        .MUL_LATENCY(MUL_LATENCY),
+        .MUL_LATENCY(MUL_LATENCY)
     ) control_unit (
         .clk(clk),
         .nRST(nRST),
         .in_buffer_empty(in_buffer_empty),
         .sa_output(gsau_if.sa_valid_in),
         .in_rd_en(in_rd_en),
-        .out_wr_en(out_wr_en)
+        .out_wr_en(out_wr_en),
         .ready_in(gsau_if.sa_ready_in)
     );
 
     // TODO: Instantiate input buffer
     TPU_buffer #(
         .NUM_COLS(N),
-        .DATA_WIDTH(DW)
+        .DATA_WIDTH(DW),
         .IN_OUT(0)
     ) input_buffer (
         .clk(clk),
@@ -65,7 +65,7 @@ module TPU_top #(
     generate
         for (i = 0; i < N / 4; i++) begin: row
             for(j = 0; j < N; j++) begin: col
-                always_ff @ (posedge clk, negededge nRST) begin : in_pipe_register
+                always_ff @ (posedge clk, negedge nRST) begin : in_pipe_register
                     if (!nRST) begin
                         in_pipe <= '0;
                     end else begin
@@ -79,7 +79,7 @@ module TPU_top #(
                                 in_pipe[i][0] <= '0;
                             end
                         end else begin
-                            in_pipe[i][j] <= next_in_pipe[i][j-1];
+                            in_pipe[i][j] <= in_pipe[i][j-1];
                         end
                     end
                 end
@@ -144,7 +144,7 @@ module TPU_top #(
     //TODO: Comment explanation
     TPU_buffer #(
         .NUM_COLS(N),
-        .DATA_WIDTH(DW)
+        .DATA_WIDTH(DW),
         .IN_OUT(1)
     ) output_buffer (
         .clk(clk),

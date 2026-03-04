@@ -15,8 +15,8 @@ module TPU_control_unit #(
     input logic in_buffer_empty,
     input logic sa_output,
     output logic [N-1:0] in_rd_en,
-    output logic [N-1:0] out_wr_en
-    output logic ready_in;
+    output logic [N-1:0] out_wr_en,
+    output logic ready_in
 );
 
     localparam int IN_CNTR_W = $clog2(ADD_2_INPUT_LATENCY);
@@ -36,10 +36,12 @@ module TPU_control_unit #(
             credits <= N;
             in_cnt <= '0;
             group_en <= '0;
+            pending_rows <= '0;
         end else begin
             credits <= next_credits;
             in_cnt <= next_in_cnt;
             group_en <= next_group_en;
+            pending_rows <= next_pending_rows;
         end
     end
 
@@ -47,6 +49,7 @@ module TPU_control_unit #(
         next_in_cnt = in_cnt;
         next_group_en = group_en;
         next_credits = credits;
+        next_pending_rows = pending_rows;
 
         if (in_cnt == (ADD_2_INPUT_LATENCY - 1)) begin
             next_in_cnt = 0;
@@ -67,7 +70,7 @@ module TPU_control_unit #(
         end
     end
 
-    always_comb begin : in_rd_en
+    always_comb begin : in_rd_en_block
         in_rd_en = '0;
         for (int i = 0; i < NUM_GROUPS; i++) begin
             in_rd_en[i * GROUP_SIZE +: GROUP_SIZE] = {GROUP_SIZE{group_en[i]}};
@@ -94,15 +97,15 @@ module TPU_control_unit #(
         if ((|pending_rows) && (out_start_cnt < OUT_START - 1)) begin
             next_out_start_cnt = out_start_cnt + 1'b1;
         end else if (out_start_cnt == OUT_START - 1) begin
-            next_start_cnt = out_start_cnt;
+            next_out_start_cnt = out_start_cnt;
         end else begin
             next_out_start_cnt = '0;
         end
 
-        if (out_start_cnt == OUT_START - 1) {
+        if (out_start_cnt == OUT_START - 1) begin
             next_out_wr_en = (out_wr_en << 1) | (|pending_rows);
             next_pending_rows = pending_rows - 1'b1;
-        }
+        end
 
         // if ((out_cnt == MUL_LATENCY - 1) && (out_start_cnt == OUT_START - 1)) begin
         //     next_out_cnt = '0;

@@ -1,7 +1,7 @@
 module TPU_buffer #(
     parameter int NUM_COLS          = 32,
     parameter int DATA_WIDTH        = 16,
-    parameter int IN_OUT            = 0;    // 0 For Input Buffer, 1 for Output Buffer
+    parameter int IN_OUT            = 0,    // 0 For Input Buffer, 1 for Output Buffer
     
 
     localparam int READ_LATENCY     = 1,

@@ -1,12 +1,12 @@
 import sys_arr_pkg::*;
 
 module TPU_mul_cell #(
-    parameter bool IS_FP16 = 1
+    parameter IS_FP16 = 1
 )(
     input logic clk, nRST,
     input logic [DW-1:0] in,
     input logic weight_en,
-    output logic [DW-1:0] result,
+    output logic [DW-1:0] result
 );
 
 logic [DW-1:0] weight;

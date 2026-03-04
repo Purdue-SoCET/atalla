@@ -3,7 +3,7 @@
 import sys_arr_pkg::*;
 
 module TPU_MAC_4_input #(
-    parameter bool IS_FP16 = 1
+    parameter IS_FP16 = 1
 )(
     input logic clk, nRST,
     input logic [3:0][DW-1:0] in,
@@ -51,10 +51,10 @@ generate
     end
 endgenerate
 
-add_4_input_if.a = mul_out[0];
-add_4_input_if.b = mul_out[1];
-add_4_input_if.c = mul_out[2];
-add_4_input_if.d = mul_out[3];
+assign add_4_input_if.a = mul_out[0];
+assign add_4_input_if.b = mul_out[1];
+assign add_4_input_if.c = mul_out[2];
+assign add_4_input_if.d = mul_out[3];
 assign add_4_input_out = add_4_input_if.out;
 
 generate
@@ -62,8 +62,8 @@ generate
         add_fp16_4_input u_adder_fp16_4_input (
             .clk(clk),
             .nRST(nRST),
-            .add(adder_4_input_if)
-        )
+            .add(add_4_input_if)
+        );
         add_fp16 u_add_fp16(
             .clk(clk),
             .nRST(nRST),
@@ -73,7 +73,7 @@ generate
             // .fp2_in(psum_buffer[DELAY_TO_PSUM-1]),
             .fp2_in(psum_in),
             .fp_out(out)
-        )
+        );
     end
     else begin: bf16_adder
         //TODO: Get bf16 4 input adder
