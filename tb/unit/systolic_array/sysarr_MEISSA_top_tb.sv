@@ -231,7 +231,17 @@ module sysarr_MEISSA_top_tb();
         $fwrite(actual_output_file, "\n");
     endtask
 
-    sysarr_MEISSA_top DUT (CLK, nRST, gsau_if);
+generate
+    if(VERSION == "MEISSA") begin
+        sysarr_MEISSA_top DUT (CLK, nRST, gsau_if);
+    end
+    else if (VERSION == "TPU") begin
+        TPU_top DUT(CLK, nRST, gsau_if);
+    end
+    else begin
+        initial $fatal("Unsupported VERSION: %s", VERSION);
+    end
+endgenerate
 
   // Simulation timeout
 //   initial begin

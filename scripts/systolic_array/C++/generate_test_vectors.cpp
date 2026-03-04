@@ -371,6 +371,8 @@ int main() {
     PATH_TO_INPUT = PATH_TO_INPUT.erase(0, input_path_env.length());
     PATH_TO_EXPECTED_RESULT = PATH_TO_EXPECTED_RESULT.erase(0, input_path_env.length());
     std::cout << "Created "  << TOTAL_TEST_NUM << " random test cases to " << PATH_TO_INPUT << " and " << PATH_TO_EXPECTED_RESULT << std::endl;
+    std::string gen_pkg_command = "python3 ../Python/gen_systolic_array_pkg.py --version " + VERSION;
+    system(gen_pkg_command.c_str());
     std::cout << "Elapsed: " << ms << " ms\n";
 
     return 0;
