@@ -91,6 +91,52 @@ For detailed RTL diagrams regarding microarchitecture of the various units in Ve
  ## Multiplier
 
  ## Divider
+ The Vector-Core Divider is a fully pipelined floating-point division unit optimized for the BF16 (Brain Floating Point) format. Rather than using slow, traditional digit-recurrence algorithms (like SRT or restoring division) which require long and deep subtraction chains, the Vector-Core implements the **Goldschmidt Division Algorithm**. 
+
+To optimize for different PPA (Power, Performance, Area) targets within the accelerator, the Vector-Core features two distinct divider architectures that share the same underlying algorithm: an Area-Optimized 2-Multiplier design, and a Throughput-Optimized 3-Multiplier design.
+
+### Shared Algorithm & The "Magic Number"
+The Goldschmidt algorithm computes N / D by repeatedly multiplying both the numerator (N) and denominator (D) by a sequence of factors (F) such that the denominator converges toward 1.0. As D approaches 1.0, N approaches the final quotient.
+
+To minimize the hardware iterations required, the algorithm needs a highly accurate initial guess of the reciprocal (1/D). Instead of wasting silicon area on a large Lookup Table (LUT) for this initial guess, both divider architectures utilize a **Constant Subtraction Trick (Magic Number)**. By exploiting the structure of the IEEE-754 / BF16 floating-point format, we can approximate the inverse by subtracting the denominator from a magic constant:
+
+`new_f = 16'h7EF3 - new_muld;`
+
+This specific magic number (`16'h7EF3`) flips the mantissa bits to yield an initial approximation of 1/D that is accurate enough to require **only 2 hardware iterations** to achieve BF16 precision within a maximum of 2 ULP.
+
+**The Iteration 2 Optimization:**
+Because the algorithm only requires 2 iterations, the mathematical sequence looks like this:
+* **Iteration 1:** N1 = N * F0 |
+                   D1 = D * F0 |
+                   F1 = 2.0 - D1
+
+* **Iteration 2:** N2 = N1 * F1 |
+                   D2 = D1 * F1
+
+### 2 Multiplier Design
+*Primary Author: Akhil Yada*
+
+This architecture instantiates **2 Multipliers and 1 Subtractor** and utilizes a Loopback Pipeline Architecture (a "Carousel") to share the hardware across both iterations.
+
+#### Hardware Architecture (The Carousel)
+Data makes two passes through the same shared hardware blocks. The pipeline depth is meticulously tuned to match the internal latency of the locked arithmetic Hard IPs:
+* The `mul_bf16` Wallace tree multipliers compute in **1 clock cycle**.
+* The `add_bf16` subtractor computes in **2 clock cycles**.
+
+To keep the control signals (exponents, signs, NaN flags) synchronized with the math, the wrapper shift registers are expanded to exactly **5 Stages**:
+* **Stage 1 & 2:** Data enters and exits the multipliers.
+* **Stage 3, 4, & 5:** Data (The denominator) enters, traverses the internal registers, and exits the subtractor. (The numerator rides a parallel 3-deep delay line `delay_n1_3:5` to stay synced).
+
+#### Traffic Control & The FIFO
+Traffic control was a challenge in this architecture. Because the pipeline holds 5 instructions in flight, data finishing its 5th stage must loop back to Stage 1, colliding with new input data. 
+
+* **The Priority Arbiter:** A Stage 0 multiplexer gives absolute priority to Loopback traffic (`loopback_req`). If an instruction is looping back for Iteration 2, the Arbiter drops the `ready_in` signal, which stalls upstream to prevent data collision.
+* **The FIFO:** To handle backpressure and decouple `ready_out` from `ready_in` a **8-Deep FIFO** was placed at the output. The math blocks are hardwired to free-run as they cannot stall in place. This comes with the benefit of being able to finish in flight operations during backpressure, increasing throughput.
+* **Safety Throttle:** The FIFO monitors its own fullness. Because there are exactly 5 stages in flight inside the math units, the input throttle triggers the moment the FIFO holds 3 items (8 - 5 = 3). This guarantees that even if the input shuts off instantly, the 5 active instructions have a safe place to land.
+
+#### Performance
+Because every division must pass through the shared 1-cycle multipliers and 2-cycle subtractor twice (consuming 50% of the datapath's bandwidth for loopbacks), the theoretical maximum throughput is 0.5 instructions per cycle. In testing, the divider successfully achieves an **Effective CPI of 2.0**. It also acheieves a max ULP of 2.0 and a average ULP of around 0.5.
+
 
  ## Exponential
 
