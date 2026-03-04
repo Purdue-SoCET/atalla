@@ -1,6 +1,8 @@
 module TPU_buffer #(
     parameter int NUM_COLS          = 32,
     parameter int DATA_WIDTH        = 16,
+    parameter int IN_OUT            = 0;    // 0 For Input Buffer, 1 for Output Buffer
+    
 
     localparam int READ_LATENCY     = 1,
     localparam int WRITE_LATENCY    = 1,
@@ -58,24 +60,46 @@ module TPU_buffer #(
                 full_vec[i] = (used[i] == SRAM_DEPTH - 1);
             end
 
-            sram_bank #(
-                .READ_LATENCY   (READ_LATENCY),
-                .WRITE_LATENCY  (WRITE_LATENCY),
-                .HEIGHT         (SRAM_DEPTH),
-                .WIDTH          (DATA_WIDTH)
-            ) u_sram (
-                .clk    (clk),
-                .nRST   (nRST),
-                .busy   (),
-                .ren    (rd_en[i]),
-                .raddr (rd_ptr[i]),
-                .rdata  (rd_data[i]),
-                .rdone  (),
-                .wen    (wr_en),
-                .waddr  (wr_ptr),
-                .wdata  (wr_data[i]),
-                .wdone  ()
-            );
+            if (IN_OUT) begin
+                sram_bank #(
+                    .READ_LATENCY   (READ_LATENCY),
+                    .WRITE_LATENCY  (WRITE_LATENCY),
+                    .HEIGHT         (SRAM_DEPTH),
+                    .WIDTH          (DATA_WIDTH)
+                ) u_sram (
+                    .clk    (clk),
+                    .nRST   (nRST),
+                    .busy   (),
+                    .ren    (wr_en),
+                    .raddr  (wr_ptr),
+                    .rdata  (rd_data[i]),
+                    .rdone  (),
+                    .wen    (rd_en[i]),
+                    .waddr  (rd_ptr[i]),
+                    .wdata  (wr_data[i]),
+                    .wdone  ()
+                );
+            end else begin
+                sram_bank #(
+                    .READ_LATENCY   (READ_LATENCY),
+                    .WRITE_LATENCY  (WRITE_LATENCY),
+                    .HEIGHT         (SRAM_DEPTH),
+                    .WIDTH          (DATA_WIDTH)
+                ) u_sram (
+                    .clk    (clk),
+                    .nRST   (nRST),
+                    .busy   (),
+                    .ren    (rd_en[i]),
+                    .raddr  (rd_ptr[i]),
+                    .rdata  (rd_data[i]),
+                    .rdone  (),
+                    .wen    (wr_en),
+                    .waddr  (wr_ptr),
+                    .wdata  (wr_data[i]),
+                    .wdone  ()
+                );
+            end
+
         end
     endgenerate
 

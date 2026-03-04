@@ -43,10 +43,11 @@ module TPU_top #(
     TPU_buffer #(
         .NUM_COLS(N),
         .DATA_WIDTH(DW)
+        .IN_OUT(0)
     ) input_buffer (
         .clk(clk),
         .nRST(nRST),
-        .wr_en(gsau_if.),
+        .wr_en(gsau_if.sa_input_en),
         .wr_data(gsau_if.sa_array_in),
         .rd_en(in_rd_en),
         .rd_data(in_vector),
@@ -133,18 +134,19 @@ module TPU_top #(
     // TODO: Weight Loading
     
     // Output buffer
-    skew_buffer #(
-        .NUM_COLS       (N),
-        .COL_WIDTH      (DW),
-        .RECT_DELAY     (0),
-        .DELAY_SLOPE    (1),
-        .REVERSE_TRIANGLE(1)
-    ) output_buffer (
+    TPU_buffer #(
+        .NUM_COLS(N),
+        .DATA_WIDTH(DW)
+        .IN_OUT(1)
+    ) input_buffer (
         .clk(clk),
-        .n_rst(nRST),
-        .stall(1'b0),
-        .wr_data(next_psum_pipe[N-1]),
-        .rd_data(output_buffer_out)
+        .nRST(nRST),
+        .wr_en(valid_bits[TOTAL_DELAY - 1]),
+        .wr_data(next_psum_pipe[N - 1]),
+        .rd_en(out_wr_en),
+        .rd_data(gsau_if.sa_array_output),
+        .lane0_empty(),
+        .full()
     );
 
     // Always ready
