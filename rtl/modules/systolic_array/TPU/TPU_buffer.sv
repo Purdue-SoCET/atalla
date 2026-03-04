@@ -40,6 +40,7 @@ module TPU_buffer #(
         end
     end
 
+    assign lane0_empty = used[0] == 0;
     genvar i;
     generate
         for (i = 0; i < NUM_COLS; i++) begin
@@ -54,9 +55,9 @@ module TPU_buffer #(
             always_comb begin
                 used[i] = (wr_ptr >= rd_ptr[i]) ? (wr_ptr - rd_ptr[i]) : (wr_ptr + SRAM_DEPTH - rd_ptr[i]);             
                 // empty_vec[i] = (used[i] == 0);
-                if (i == 0) begin
-                    lane0_empty = (used[i] == 0);
-                end
+                // if (i == 0) begin
+                //     lane0_empty = (used[i] == 0);
+                // end
                 full_vec[i] = (used[i] == SRAM_DEPTH - 1);
             end
 
@@ -68,7 +69,7 @@ module TPU_buffer #(
                     .WIDTH          (DATA_WIDTH)
                 ) u_sram (
                     .clk    (clk),
-                    .nRST   (nRST),
+                    .n_rst   (nRST),
                     .busy   (),
                     .ren    (wr_en),
                     .raddr  (wr_ptr),
@@ -87,7 +88,7 @@ module TPU_buffer #(
                     .WIDTH          (DATA_WIDTH)
                 ) u_sram (
                     .clk    (clk),
-                    .nRST   (nRST),
+                    .n_rst   (nRST),
                     .busy   (),
                     .ren    (rd_en[i]),
                     .raddr  (rd_ptr[i]),

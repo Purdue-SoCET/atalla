@@ -73,7 +73,7 @@ module TPU_top #(
                             // TODO: registering first input probably won't be necessary
                             if (|in_rd_en) begin
                                 in_pipe[i][0] <= in_vector[i * 4 * DW +: 4 * DW];
-                            end else if (gsau_if.weight_en) begin
+                            end else if (gsau_if.sa_weight_en) begin
                                 in_pipe[i][0] <= gsau_if.sa_array_in[i * 4 * DW +: 4 * DW];
                             end else begin
                                 in_pipe[i][0] <= '0;
@@ -158,9 +158,9 @@ module TPU_top #(
     );
 
     // Always ready
-    assign gsau_if.sa_ready_in = 1'b1;
+    // assign gsau_if.sa_ready_in = 1'b1;
     // Outputs
     assign gsau_if.sa_valid_in = valid_bits[TOTAL_DELAY - 1];
-    assign gsau_if.sa_array_out = output_buffer_out;
+    // assign gsau_if.sa_array_output = output_buffer_out;
 
 endmodule

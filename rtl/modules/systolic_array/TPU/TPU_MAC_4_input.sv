@@ -43,7 +43,6 @@ generate
         ) u_mul_cell (
             .clk(clk),
             .nRST(nRST),
-            .start(start),
             .in(in[i]),
             .weight_en(weight_en),
             .result(mul_out[i])

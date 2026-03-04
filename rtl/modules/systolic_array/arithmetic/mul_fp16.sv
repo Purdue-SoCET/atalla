@@ -67,7 +67,7 @@ module mul_fp16 (
         .a({frac_leading_bit_fp1, a[9:0]}),
         .b({frac_leading_bit_fp2, b[9:0]}),
         .active(start),
-        .stall(stall),
+        // .stall(stall),
         .result(mul_product),
         .overflow(mul_carryout),
         .round_loss(mul_round_loss),
