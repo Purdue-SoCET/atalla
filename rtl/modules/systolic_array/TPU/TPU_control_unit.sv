@@ -55,15 +55,26 @@ module TPU_control_unit #(
             next_in_cnt = 0;
             if (credits == 0) begin
                 next_group_en = next_group_en << 1;
+                if (sa_output) begin
+                    next_credits = credits + 1'b1;
+                end
             end else if (credits != 0 && !in_buffer_empty) begin
                 next_group_en = (next_group_en << 1) | 1'b1;
 
                 if (!sa_output) begin
-                    next_credits = next_credits - 1'b1;
+                    next_credits = credits - 1'b1;
                 end
                 
                 // Pending Rows
-                next_pending_rows = pending_rows + 1'b1;
+                if (out_start_cnt == OUT_START - 1) begin
+                    next_pending_rows = pending_rows - 1'b1;
+                end else begin 
+                    next_pending_rows = pending_rows + 1'b1;
+                end
+            end else begin
+                if (sa_output) begin
+                    next_credits = credits + 1'b1;
+                end
             end
         end else begin
             next_in_cnt = in_cnt + 1'b1;
@@ -104,7 +115,6 @@ module TPU_control_unit #(
 
         if (out_start_cnt == OUT_START - 1) begin
             next_out_wr_en = (out_wr_en << 1) | (|pending_rows);
-            next_pending_rows = pending_rows - 1'b1;
         end
 
         // if ((out_cnt == MUL_LATENCY - 1) && (out_start_cnt == OUT_START - 1)) begin
