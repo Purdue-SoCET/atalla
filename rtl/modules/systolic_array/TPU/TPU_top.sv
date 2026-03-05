@@ -158,7 +158,7 @@ module TPU_top #(
      Actual delay will be +1 from sram read latency
     */
     localparam TOTAL_DELAY = ADD_2_INPUT_LATENCY * (N/4-1) + N + MUL_LATENCY + ADD_4_INPUT_LATENCY + ADD_2_INPUT_LATENCY + 4;
-    logic [TOTAL_DELAY - 1:0] valid_bits;
+    logic [TOTAL_DELAY : 0] valid_bits;
 
     always_ff @(posedge clk or negedge nRST) begin
         if (!nRST) begin
@@ -182,7 +182,7 @@ module TPU_top #(
     ) output_buffer (
         .clk(clk),
         .nRST(nRST),
-        .wr_en(valid_bits[TOTAL_DELAY - 1]),
+        .wr_en(valid_bits[TOTAL_DELAY - 2]),
         .wr_data(next_psum_pipe[N/4 - 1]),
         .rd_en(out_wr_en),
         .rd_data(gsau_if.sa_array_output),
