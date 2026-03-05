@@ -168,6 +168,17 @@ module scheduler_core_tb;
             .idx(9)
         );
 
+        // Test 9: SLTU.S
+        set_tv(
+            .tv_instr0(48'h00000081060d), // SLTU.S {'opcode': 13, 'rs1': 2, 'rs2': 1, 'rd': 12} (exp value: 1)
+            .tv_instr1(48'h2f), // NOP
+            .tv_instr2(48'h2f), // NOP
+            .tv_instr3(48'h2f), // NOP
+            .idx(9)
+        );
+
+
+
 
         //use this as my bf16's
         set_tv(
@@ -353,6 +364,117 @@ module scheduler_core_tb;
             .idx(23)
         );
 
+        set_tv(
+            .tv_instr0(48'h000000640bab),  // jal {'opcode': 0b0101011, 'rd': 23, 'imm25': 200} #jal
+            .tv_instr1(48'h2f), // NOP
+            .tv_instr2(48'h2f), // NOP
+            .tv_instr3(48'h2f), // NOP
+            .idx(23)
+        );
+
+        set_tv(
+            .tv_instr0(48'h00000b808c2c),  // jalr {'opcode': 0b0101100, 'rd': 24, 'rs1': 1, 'imm12': 23} #jalr
+            .tv_instr1(48'h2f), // NOP
+            .tv_instr2(48'h2f), // NOP
+            .tv_instr3(48'h2f), // NOP
+            .idx(23)
+        );
+
+        set_tv(
+            .tv_instr0(48'h000000008cae),  // lui {'opcode': 0b0101110, 'rd': 25, 'imm25': 1} #lui
+            .tv_instr1(48'h2f), // NOP
+            .tv_instr2(48'h2f), // NOP
+            .tv_instr3(48'h2f), // NOP
+            .idx(23)
+        );
+
+        set_tv(
+            .tv_instr0(48'h000032008d17),  // addi {'opcode': 0b0010111, 'rs1': 1, 'imm12': 100, 'rd': 26} #addi
+            .tv_instr1(48'h2f), // NOP
+            .tv_instr2(48'h2f), // NOP
+            .tv_instr3(48'h2f), // NOP
+            .idx(23)
+        );
+
+        set_tv(
+            .tv_instr0(48'h000032008d18),  // {'opcode': 0b0011000, 'rs1': 1, 'imm12': 100, 'rd': 26} #muli
+            .tv_instr1(48'h2f), // NOP
+            .tv_instr2(48'h2f), // NOP
+            .tv_instr3(48'h2f), // NOP
+            .idx(23)
+        );
+
+        set_tv(
+            .tv_instr0(48'h000032008d1a),  // {'opcode': 0b0011010, 'rs1': 1, 'imm12': 100, 'rd': 26} #modi
+            .tv_instr1(48'h2f), // NOP
+            .tv_instr2(48'h2f), // NOP
+            .tv_instr3(48'h2f), // NOP
+            .idx(23)
+        );
+
+
+        // LW SW TESTS
+        set_tv(
+            .tv_instr0(48'h000000008129),  // LW {'opcode': 41, 'rs1': 1, 'rd': 2, 'imm12': 0}
+            .tv_instr1(48'h2f), // NOP
+            .tv_instr2(48'h2f), // NOP
+            .tv_instr3(48'h2f), // NOP
+            .idx(23)
+        );
+
+        data_load = 32'hDEADBEEF;
+        repeat(10) @(negedge CLK);
+        dhit = 1;
+        @(negedge CLK);
+        dhit = 0;
+
+        set_tv(
+            .tv_instr0(48'h0000000081aa), // SW {'opcode': 42, 'rs1': 1, 'rd': 3, 'imm12': 0}
+            .tv_instr1(48'h2f), // NOP
+            .tv_instr2(48'h2f), // NOP
+            .tv_instr3(48'h2f), // NOP
+            .idx(23)
+        );
+
+        repeat(4) @(negedge CLK);
+        dhit = 1;
+        @(negedge CLK);
+        dhit = 0;
+
+        // LHW SHW TESTS
+        set_tv(
+            .tv_instr0(48'h00000000825a),  // LHW {'opcode': 90, 'rs1': 1, 'rd': 4, 'imm12': 0}
+            .tv_instr1(48'h2f), // NOP
+            .tv_instr2(48'h2f), // NOP
+            .tv_instr3(48'h2f), // NOP
+            .idx(23)
+        );
+
+        data_load = 32'hDEADBEEF;
+        repeat(10) @(negedge CLK);
+        dhit = 1;
+        @(negedge CLK);
+        dhit = 0;
+
+        set_tv(
+            .tv_instr0(48'h0000000082db), // SHW {'opcode': 91, 'rs1': 1, 'rd': 5, 'imm12': 0}
+            .tv_instr1(48'h2f), // NOP
+            .tv_instr2(48'h2f), // NOP
+            .tv_instr3(48'h2f), // NOP
+            .idx(23)
+        );
+
+        repeat(4) @(negedge CLK);
+        dhit = 1;
+        @(negedge CLK);
+        dhit = 0;
+
+
+
+
+
+        //josh conflict stuff
+
         @(negedge CLK);
         ihit = 1'b1;
         imemload.inst0 = 48'h000000800096;  // ADD_I {'opcode': 0b0010110, 'rs1': 0, 'rd': 1, 'imm12': 1}
@@ -424,7 +546,7 @@ module scheduler_core_tb;
         imemload.inst2 = 48'h2f; //NOP
         imemload.inst3 = 48'h2f; //NOP
 
-        // repeat(8) @(posedge CLK);
+        repeat(8) @(posedge CLK);
 
 
 
@@ -439,7 +561,70 @@ module scheduler_core_tb;
 
         repeat(80) @(posedge CLK);
 
-        
+        @(negedge CLK);
+        ihit = 1'b1;
+        imemload.inst0 = 48'h00003c000096;
+        imemload.inst1 = 48'h2f; //NOP
+        imemload.inst2 = 48'h2f; //NOP
+        imemload.inst3 = 48'h2f; //NOP
+        @(negedge CLK);
+        ihit = 1'b0;
+
+        repeat(8) @(posedge CLK);
+
+        @(negedge CLK);
+        ihit = 1'b1;
+        imemload.inst0 = 48'h00003c008196;
+        imemload.inst1 = 48'h000005008119; //NOP
+        imemload.inst2 = 48'h000001008218; //NOP
+        imemload.inst3 = 48'h2f; //NOP
+
+        @(negedge CLK);
+        ihit = 1'b1;
+        imemload.inst0 = 48'h000022800296;
+        imemload.inst1 = 48'h2f; //NOP
+        imemload.inst2 = 48'h2f; //NOP
+        imemload.inst3 = 48'h2f; //NOP
+        @(negedge CLK);
+        ihit = 1'b0;
+
+        repeat(80) @(posedge CLK);
+
+        @(negedge CLK);
+        ihit = 1'b1;
+        imemload.inst0 = 48'h00003c000096;
+        imemload.inst1 = 48'h2f; //NOP
+        imemload.inst2 = 48'h2f; //NOP
+        imemload.inst3 = 48'h2f; //NOP
+        @(negedge CLK);
+        ihit = 1'b0;
+
+        repeat(8) @(posedge CLK);
+
+        @(negedge CLK);
+        ihit = 1'b1;
+        imemload.inst0 = 48'h000007800116;
+        imemload.inst1 = 48'h2f; //NOP
+        imemload.inst2 = 48'h2f; //NOP
+        imemload.inst3 = 48'h2f; //NOP
+        @(negedge CLK);
+        ihit = 1'b0;
+
+        repeat(8) @(posedge CLK);
+
+        @(negedge CLK);
+        ihit = 1'b1;
+        imemload.inst0 = 48'h000000810183;
+        imemload.inst1 = 48'h2f; //NOP
+        imemload.inst2 = 48'h2f; //NOP
+        imemload.inst3 = 48'h2f; //NOP
+        @(negedge CLK);
+        ihit = 1'b0;
+
+        repeat(8) @(posedge CLK);
+
+
+
 
 
 
