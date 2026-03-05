@@ -22,13 +22,17 @@ interface alu_control_if;
     logic redirect_valid;
     logic [31:0] redirect_target;
 
+    //////
+    logic [31:0] pc_out;
+    /////
+
     modport mainport (
         input rs1_value, rs2_value, rs1_idx, rdIn, ready_out, valid_in, pc, incr7, imm, op, scalar_type_enable, predict_taken, predict_pc,
-        output rd_value, valid_out, ready_in, rdOut, redirect_valid, redirect_target
+        output rd_value, valid_out, ready_in, rdOut, redirect_valid, redirect_target, pc_out
     );
 
     modport tb (
-        input rd_value, valid_out, ready_in, rdOut, redirect_valid, redirect_target,
+        input rd_value, valid_out, ready_in, rdOut, redirect_valid, redirect_target, pc_out,
         output rs1_value, rs2_value, rs1_idx, rdIn, ready_out, valid_in, pc, incr7, imm, op, scalar_type_enable, predict_taken, predict_pc
     );
 

@@ -52,13 +52,16 @@ interface execution_unit_if # (
   in_DEC2_EX_t [NUM_INSTRUCTIONS-1:0] DEC2_inputs;
   out_WB_t ex1, ex2, ex3, ex4, ex5;
 
+  logic [31:0] pc_out;
+
   modport execution_units (
     input ready_WB_ex1, ready_WB_ex2, ready_WB_ex3, ready_WB_ex4, ready_WB_ex5, 
     input data_load, hit, 
     input DEC2_inputs, halt, pc, pc_pred_addr_out, predict_taken_out,
     output ready_DEC2_ex1, ready_DEC2_ex2, ready_DEC2_ex3, ready_DEC2_ex4, ready_DEC2_ex5,
     output redirect_valid, redirect_target, WEN, REN, data_store, data_addr,
-    output ex1, ex2, ex3, ex4, ex5
+    output ex1, ex2, ex3, ex4, ex5,
+    output pc_out
   );
 
   modport tb (
@@ -67,7 +70,8 @@ interface execution_unit_if # (
     output DEC2_inputs, halt, pc, pc_pred_addr_out, predict_taken_out,
     input ready_DEC2_ex1, ready_DEC2_ex2, ready_DEC2_ex3, ready_DEC2_ex4, ready_DEC2_ex5,
     input redirect_valid, redirect_target, WEN, REN, data_store, data_addr,
-    input ex1, ex2, ex3, ex4, ex5
+    input ex1, ex2, ex3, ex4, ex5,
+    input pc_out
   );
 
 endinterface

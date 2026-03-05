@@ -37,6 +37,7 @@ interface control_if;
 
     logic        redirect_valid;
     logic [31:0] redirect_target;
+    logic [31:0] pc_out;
 
     modport dut (
         input  valid_in, ready_in,
@@ -44,7 +45,7 @@ interface control_if;
         input  ctrl_opcode, rd_idx_in, rs1_idx, pc, imm, incr7, rs1_value, rs2_value,
         output ready_out, valid_out,
         output rd_idx_out, rd_write_en, rd_value,
-        output redirect_valid, redirect_target
+        output redirect_valid, redirect_target, pc_out
     );
 
     modport tb (
@@ -53,7 +54,7 @@ interface control_if;
         output predict_pc, predict_taken,
         input  ready_out, valid_out,
         input  rd_idx_out, rd_write_en, rd_value,
-        input  redirect_valid, redirect_target
+        input  redirect_valid, redirect_target, pc_out
     );
 
 endinterface

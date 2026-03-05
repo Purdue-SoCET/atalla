@@ -56,6 +56,9 @@ import atalla_isa_pkg::*;
         portmap.rdOut = 8'b0;
         portmap.redirect_valid = 1'b0;
         portmap.redirect_target = 32'b0;
+        /////
+        portmap.pc_out = '0;
+        /////
         if(cur_alu_valid == 1) begin
             portmap.rd_value = alu_if.rdResult;
             portmap.rdOut = alu_if.rdOut;
@@ -64,6 +67,9 @@ import atalla_isa_pkg::*;
             portmap.rdOut = cont_if.rd_idx_out;
             portmap.redirect_valid = cont_if.redirect_valid && portmap.ready_out;
             portmap.redirect_target = cont_if.redirect_target;
+            //////
+            portmap.pc_out = cont_if.pc_out;
+            //////
         end
     end
 

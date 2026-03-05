@@ -141,5 +141,6 @@ module control (
 
     assign ctrl_if.redirect_valid  = redirect_valid_comb;
     assign ctrl_if.redirect_target = redirect_target_comb;
+    assign ctrl_if.pc_out          = ctrl_if.pc;
 
 endmodule
