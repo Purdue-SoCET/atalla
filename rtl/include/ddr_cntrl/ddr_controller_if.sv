@@ -10,76 +10,108 @@ interface ddr_controller_if;
 `include "dram_pkg.sv"
 import dram_pkg::*;
 
-// BQ/FSM struct
+// // STRUCTS
+
+// BQ -> FSM struct
 typedef struct packed {
-    logic [ROW_BITS-1:0] row;
-    logic [COLUMN_BITS-1:0] column;
-    logic write;
+    logic [ROW_BITS-1:0]       row;
+    logic [COLUMN_BITS-1:0]    column;
+    logic                      write;
     logic [$clog2(ID_NUM)-1:0] id_addr;
 } bq_slot_t;
 
-// AXI -> WDATA_QUEUE
-logic [7:0] wstrb, wvalid;
-logic [63:0] wdata;
-logic [$clog2(ID_NUM)-1:0] wid;
-logic [2:0] wlen; // -> Write Queue
-logic wready, bwvalid, [1:0] bwresp, [$clog2(ID_NUM)-1:0] bwid; // -> AXI
-logic bwready; // -> Write Queue
+// AXI -> LQ/STQ (LQ/STQ have the same struct, but diff signal names)
+typedef struct packed {
+    logic [3:0]                  len;
+    logic [$clog2(ID_NUM) - 1:0] id;
+    logic [31:0]                 addr;
+} lstq_slot_t;
 
-// AXI -> LQ
-logic arvalid, [31:0] araddr, [$clog2(ID_NUM)-1:0] arid, [2:0] arlen; // -> LQ
-logic arready; // -> AXI
-logic rvalid, [63:0] rdata, [$clog2(ID_NUM)-1:0] rid, [1:0] rresp; // -> AXI
-logic rready; // -> LQ
+// LQ -> AXI // 
+typedef struct packed {
+    logic [63:0]               rdata;
+    logic [$clog2(ID_NUM)-1:0] rid;
+} lqaxi_slot_t;
 
-// AXI -> STQ
-logic awvalid, [31:0] awaddr, [$clog2(ID_NUM)-1:0] awid, [2:0] awlen;
-logic awready;
+// AXI->WDQ
+typedef struct packed {
+    logic [7:0] wvalid; // -> WQ
+    logic [63:0] wdata; // -> WQ
+    logic [$clog2(ID_NUM)-1:0] wid; // WQ
+} wdq_slot_t; 
 
-// STQ/LQ -> FRONTEND ARBITER
-logic request_l, request_s;
-logic address_l, address_s;
-logic grant_l, grant_s;
+// // SIGNALS
 
-// FRONTEND ARBITER -> BQ
-// DATA IN
-logic [$clog2(BANK_NUM)-1:0] fe_b, [ROW_BITS-1:0] fe_r, [COLUMN_BITS-1:0] fe_c; // what does bg do?
-logic fe_write;
-logic [$clog2(ID_NUM)-1:0] fe_id;
+// AXI <-> WDQ
+wdq_slot_t wdq_slot;
+// CNTRL
+logic [7:0]                wstrb; // -> WQ
+logic [2:0]                wlen; // -> WQ
+logic                      wready, bwvalid; // -> AXI
+logic [1:0]                bwresp; // -> AXI
+logic [$clog2(ID_NUM)-1:0] bwid; // -> AXI
+logic                      bwready; // -> WQ
+
+// AXI <-> LQ
+lstq_slot_t  lq_slot; // -> LQ
+lqaxi_slot_t lqaxi_slot; // -> AXI
+// CNTRL
+logic       arvalid; // -> LQ
+logic       arready; // -> AXI
+logic       rvalid;  // -> AXI 
+logic [1:0] rresp;   // -> AXI 
+logic       rready;  // -> LQ
+
+// AXI <-> STQ
+lstq_slot_t stq_slot; // -> STQ
+// CNTRL
+logic awvalid; // -> STQ
+logic awready; // -> AXI
+
+// STQ/LQ <-> FRONTEND ARBITER
+logic request_l, request_s; // -> ARB
+logic address_l, address_s; // -> ARB
+logic grant_l,   grant_s;   // -> STQ
+
+// FRONTEND ARBITER <-> BQ
+bq_slot_t                  fe_bq_slot; // -> BQ
+bq_slot_t [BANK_NUM-1:0]   bq_slot; // -> FSM
 // CONTROL SIGNALS
-logic fe_write_bq;
-logic [BANK_NUM-1:0] fe_full; // [QUEUE_SIZE-1:0]
+logic [BANK_GROUP_BITS-1:0]  fe_bg; // -> BQ
+logic [BANK_BITS-1:0]        fe_b;  // -> BQ
+logic                        fe_write_bq; // -> BQ
+logic [BANK_NUM-1:0]         fe_full; // -> FE & FSM
 
-// BANK QUEUE -> COMMAND FSM
-logic       [$clog2(BANK_NUM)-1:0] bq_pop; // BANK_NUM
-bq_slot_t   [BANK_NUM-1:0] bq_slot; // bq_r, bq_c, bq_rw, bq_id; // 4*16
-logic       [BANK_NUM-1:0] bq_ready;
+// BQ <-> COMMAND FSM
+logic [$clog2(BANK_NUM)-1:0] bq_pop; // -> FSM
+logic [BANK_NUM-1:0]         bq_ready; // -> FSM
 
 // COMMAND FSM -> BACKEND ARBITER
-logic [$clog2(BANK_NUM)-1:0]  be_arb;
-logic [$clog2(BANK_NUM)-1:0]  be_queue_ready;
-logic [BANK_GROUP_BITS-1:0][$clog2(BANK_NUM)-1:0]  be_bg, [BANK_BITS-1:0][$clog2(BANK_NUM)-1:0]  be_b; // 2*16
-logic [ROW_BITS-1:0][$clog2(BANK_NUM)-1:0]  be_r; // 15*16
-logic [COLUMN_BITS-1:0][$clog2(BANK_NUM)-1:0]  be_c; // 10*16
-logic [$clog2(ID_NUM)-1:0][$clog2(BANK_NUM)-1:0]  be_id; // 4*16
-logic [IDK] be_cmd; 
+bq_slot_t [BANK_NUM-1:0]          be_slot;
+logic     [$clog2(BANK_NUM)-1:0]  be_arb;
+logic     [$clog2(BANK_NUM)-1:0]  be_queue_ready;
+// logic [IDK] be_cmd; 
 
 // BACKEND ARBITER -> READ_ID_QUEUE
-logic be_push_id, [$clog2(ID_NUM)-1:0] be_rid, [2:0] be_rlen;
+logic                      be_push_id; 
+logic [$clog2(ID_NUM)-1:0] be_rid;
+logic [2:0]                be_rlen;
 
 // BACKEND ARBITER -> WDATA_QUEUE
 logic [$clog2(ID_NUM)-1:0] be_wid, be_write; 
 
 // AXI -> READ_ID_QUEUE
-logic rready;
-logic [$clog2(ID_NUM)-1:0] rq_rid, rq_rvalid, [2:0] rq_rlen; 
+logic                      rq_rready;
+logic [$clog2(ID_NUM)-1:0] rq_rid, rq_rvalid;
+logic [2:0]                rq_rlen; 
 
 // WDATA_QUEUE -> DRAM
 logic [63:0] ddr_wdata_data;
-logic ddr_wdata_en;
-logic [7:0] ddr_wdata_mask;
-logic ddr_we;
+logic        ddr_wdata_en;
+logic [7:0]  ddr_wdata_mask;
+logic        ddr_we;
 
+// // MODPORTS
 
 modport axi_sub ( 
     // LQ -> AXI
@@ -91,15 +123,15 @@ modport axi_sub (
     // WDATA_QUEUE -> AXI
     wready, bwvalid, bwresp, bwid,
     // AXI -> WDATA_QUEUE
-    output wstrb, wvalid, wdata, wid, wlen, bwready,
+    output wstrb, wvalid, wdq_slot, bwready,
     // AXI -> LQ
-    arvalid, araddr, arid, arsize, arlen, arburst, 
+    arvalid, lq_slot, arsize, arburst, 
     // AXI -> STQ
-    awvalid, awaddr, awid, awsize, awlen, awburst,
+    awvalid, stq_slot, awsize, awburst,
 );
 
 modport stq ( // AXI -> STQ
-    input awvalid, awaddr, awid, awsize, awlen, awburst,
+    input awvalid, stq_slot, awsize, awburst,
     // ARB -> STQ
     grant_s, 
     // STQ -> AXI
@@ -110,7 +142,7 @@ modport stq ( // AXI -> STQ
 
 modport lq (
     //AXI -> LQ
-    input arvalid, araddr, arid, arsize, arlen, arburst, 
+    input arvalid, lq_slot, arsize, arburst, 
     //ARB -> LQ
     grant_l, 
     //LQ -> AXI
@@ -132,16 +164,16 @@ modport arb (
     //ARB -> STQ
     grant_s, 
     //ARB -> BQ
-    fe_bg, fe_b, fe_r, fe_c, fe_write, fe_id, fe_write_bq
+    fe_bg, fe_b, fe_bq_slot, fe_write_bq
 );
 
 modport bq (
     // ARB -> BQ (DATA)
-    input fe_b, fe_c, fe_r, fe_write, fe_id, 
+    input fe_bg, fe_b, fe_bq_slot, 
     // ARB -> BQ (CNTRL)
     fe_write_bq,
     // FSM -> BQ (CNTRL)
-    bq_pop, 
+    bq_pop, // Not a big deal, but confirm with Adrian that this is the concat of {b,bg}
     // BQ -> ARB (CNTRL)
     output fe_full, 
     // BQ -> FSM (CNTRL)
@@ -150,15 +182,15 @@ modport bq (
     bq_slot
 );
 
-modport read_id_queue (
+modport read_id_queue ( 
     //BQ -> FSM
-
-
+    input  be_push_id, be_rid, be_rlen, rready,
+    output rq_rid, rq_rvalid, rq_rlen
 );
 
 modport wdata_queue (
     //AXI -> WDATA_QUEUE
-    input wstrb, wvalid, wdata, wid, wlen, bwready,
+    input wstrb, wdq_slot, bwready,
     //BE -> WDATA_QUEUE
     be_wid, be_write, 
     //WDATA_QUEUE -> AXI
@@ -170,7 +202,7 @@ modport wdata_queue (
 
 modport command_fsm (
     //BQ -> FSM
-    input     bq_rw, bq_ready, bq_bg, bq_b, bq_r, bq_c, bq_id,
+    input bq_ready, bq_bg, bq_b, bq_slot,
     //BE -> FSM
     be_arb,
     //FSM -> BE 
