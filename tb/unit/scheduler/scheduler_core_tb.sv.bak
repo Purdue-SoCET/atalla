@@ -223,7 +223,6 @@ module scheduler_core_tb;
             .idx(15)
         );
 
-
         //Test 14: SLT.BF
         set_tv(
             .tv_instr0(48'h000006870992), // {'opcode': 0b0010010, 'rs1': 14, 'rs2': 13, 'rd': 19} #slt
@@ -251,8 +250,6 @@ module scheduler_core_tb;
             .idx(18)
         );
 
-        repeat(70) @(negedge CLK);
-
         //Test 17: MOD_S
         set_tv(
             .tv_instr0(48'h000001008b05), // {'opcode': 5, 'rs1': 1, 'rs2': 2, 'rd': 22} #mod
@@ -262,7 +259,7 @@ module scheduler_core_tb;
             .idx(19)
         );
 
-        repeat(70) @(negedge CLK);
+
 
         //conversion tests
 
@@ -306,7 +303,7 @@ module scheduler_core_tb;
             .tv_instr1(48'h2f), // NOP
             .tv_instr2(48'h2f), // NOP
             .tv_instr3(48'h2f), // NOP
-            .idx(23)
+            .idx(24)
         );
 
         //Test 19: BLT.S
@@ -315,131 +312,54 @@ module scheduler_core_tb;
             .tv_instr1(48'h2f), // NOP
             .tv_instr2(48'h2f), // NOP
             .tv_instr3(48'h2f), // NOP
-            .idx(23)
+            .idx(25)
         );
 
-        // Test 20: BGE.S
+        //Test 20: BGE.S
         set_tv(
-            .tv_instr0(48'h0018010082a6),  // 
+            .tv_instr0(48'h0018010082a6),  // {'opcode': 0b0100101, 'rs1': 1, 'rs2': 2, 'rd': 5, 'imm9': 48, 'incr_imm': 5} #blt
             .tv_instr1(48'h2f), // NOP
             .tv_instr2(48'h2f), // NOP
             .tv_instr3(48'h2f), // NOP
-            .idx(23)
+            .idx(26)
         );
 
-        // Test 21: BGT.S
+        //Test 21: BGT.S
         set_tv(
-            .tv_instr0(48'h0018010082a7),  // 
+            .tv_instr0(48'h0018010082a7),  // {'opcode': 0b0100101, 'rs1': 1, 'rs2': 2, 'rd': 5, 'imm9': 48, 'incr_imm': 5} #blt
             .tv_instr1(48'h2f), // NOP
             .tv_instr2(48'h2f), // NOP
             .tv_instr3(48'h2f), // NOP
-            .idx(23)
+            .idx(27)
         );
 
-        // Test 22: BLE.S
+        //Test 22: BLE.S
         set_tv(
-            .tv_instr0(48'h0018010082a8),  // 
+            .tv_instr0(48'h0018010082a8),  // {'opcode': 0b0100101, 'rs1': 1, 'rs2': 2, 'rd': 5, 'imm9': 48, 'incr_imm': 5} #blt
             .tv_instr1(48'h2f), // NOP
             .tv_instr2(48'h2f), // NOP
             .tv_instr3(48'h2f), // NOP
-            .idx(23)
+            .idx(28)
         );
 
+
+        //Test 23: HALT
         set_tv(
             .tv_instr0(48'h000000000030),  // halt
             .tv_instr1(48'h2f), // NOP
             .tv_instr2(48'h2f), // NOP
             .tv_instr3(48'h2f), // NOP
-            .idx(23)
+            .idx(29)
         );
 
-        @(negedge CLK);
-        ihit = 1'b1;
-        imemload.inst0 = 48'h000000800096;  // ADD_I {'opcode': 0b0010110, 'rs1': 0, 'rd': 1, 'imm12': 1}
-        imemload.inst1 = 48'h2f; //NOP
-        imemload.inst2 = 48'h2f; //NOP
-        imemload.inst3 = 48'h2f; //NOP
-        @(negedge CLK);
-        ihit = 1'b0;
-
-        repeat(8) @(posedge CLK);
-
-        @(negedge CLK);
-        ihit = 1'b1;
-        imemload.inst0 = 48'h000002000116; // ADD_I {'opcode': 0b0010110, 'rs1': 0, 'rd': 2, 'imm12': 4}
-        imemload.inst1 = 48'h2f; //NOP
-        imemload.inst2 = 48'h2f; //NOP
-        imemload.inst3 = 48'h2f; //NOP
-        @(negedge CLK);
-        ihit = 1'b0;
-
-        repeat(8) @(posedge CLK);
-
-
-        @(negedge CLK);
-        ihit = 1'b1;
-        imemload.inst0 = 48'h000000810204; // DIV_S {'opcode': 4, 'rs1': 2, 'rs2': 1, 'rd': 4} 
-        imemload.inst1 = 48'h2f; //NOP
-        imemload.inst2 = 48'h2f; //NOP
-        imemload.inst3 = 48'h2f; //NOP
 
 
 
-        @(negedge CLK);
-        ihit = 1'b1;
-        imemload.inst0 = 48'h000000810184; // DIV_S {'opcode': 4, 'rs1': 2, 'rs2': 1, 'rd': 3} 
-        imemload.inst1 = 48'h000000810683; //MUL_S {'opcode': 0b0000011, 'rs1': 2, 'rs2': 1, 'rd': 13} #mul
-        imemload.inst2 = 48'h2f; //NOP
-        imemload.inst3 = 48'h2f; //NOP
-        @(negedge CLK);
-        ihit = 1'b0;
-
-        repeat(70) @(posedge CLK);
-
-        @(negedge CLK);
-        ihit = 1'b1;
-        imemload.inst0 = 48'h000000800096;  // ADD_I {'opcode': 0b0010110, 'rs1': 0, 'rd': 1, 'imm12': 1}
-        imemload.inst1 = 48'h2f; //NOP
-        imemload.inst2 = 48'h2f; //NOP
-        imemload.inst3 = 48'h2f; //NOP
-        @(negedge CLK);
-        ihit = 1'b0;
-
-        repeat(8) @(posedge CLK);
-
-        @(negedge CLK);
-        ihit = 1'b1;
-        imemload.inst0 = 48'h000002000116; // ADD_I {'opcode': 0b0010110, 'rs1': 0, 'rd': 2, 'imm12': 4}
-        imemload.inst1 = 48'h2f; //NOP
-        imemload.inst2 = 48'h2f; //NOP
-        imemload.inst3 = 48'h2f; //NOP
-
-        repeat(8) @(posedge CLK);
-
-
-        @(negedge CLK);
-        ihit = 1'b1;
-        imemload.inst0 = 48'h000001010119; // DIV_I {'opcode': 0b0011001, 'rs1': 2, 'rd': 2, 'imm12': 2}
-        imemload.inst1 = 48'h2f; //NOP
-        imemload.inst2 = 48'h2f; //NOP
-        imemload.inst3 = 48'h2f; //NOP
-
-        // repeat(8) @(posedge CLK);
 
 
 
-        @(negedge CLK);
-        ihit = 1'b1;
-        imemload.inst0 = 48'h000001008181; // ADD_S rd=3 (exp value: 6), rs1=1, rs2=2
-        imemload.inst1 = 48'h000001008683; //MUL_S {'opcode': 0b0000011, 'rs1': 1, 'rs2': 2, 'rd': 13} #mul
-        imemload.inst2 = 48'h2f; //NOP
-        imemload.inst3 = 48'h2f; //NOP
-        @(negedge CLK);
-        ihit = 1'b0;
 
-        repeat(80) @(posedge CLK);
 
-        
 
 
 
