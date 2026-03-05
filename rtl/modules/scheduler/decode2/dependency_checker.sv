@@ -132,5 +132,5 @@ module dependency_checker #(
     end
 
     assign dc_if.dependencies_ready = ~(scalar_hazard | vector_hazard | mask_hazard);
-
+    
 endmodule

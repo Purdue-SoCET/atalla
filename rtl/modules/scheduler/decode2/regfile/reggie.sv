@@ -74,10 +74,9 @@ module reggie #(
     // Conflict detection + arbitration
     // -----------------------------------------------------------------------
 
-    logic dependencies_ready;
     logic [DREAD_PORTS-1:0] REN;
 
-    assign REN = (rif.REN | rif.dependencies_ready);
+    assign REN = (rif.REN & rif.dependencies_ready);
 
     always_comb begin : CONFLICT_FSM
 
