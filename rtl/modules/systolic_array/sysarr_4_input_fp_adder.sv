@@ -18,7 +18,7 @@ module sysarr_4_input_fp_adder #(
     localparam RES_WIDTH      = 1 + EXPONENT_SIZE + OUT_MANTISSA_SIZE; // Total width of result
 
     // Internal Signal Declarations
-    logic [15:0] a_daz, b_daz, c_daz, d_daz;
+    logic [EXPONENT_SIZE+MANTISSA_SIZE:0] a_daz, b_daz, c_daz, d_daz;
     logic [EXPONENT_SIZE-1:0] exp_a, exp_b, exp_c, exp_d;
     logic [MANTISSA_SIZE-1:0] frac_a, frac_b, frac_c, frac_d;
     logic sign_a, sign_b, sign_c, sign_d;
