@@ -42,6 +42,7 @@ std::vector<std::vector<uint16_t>> sim_MEISSA(
     bool is_fp16);
 
 void create_new_test(int test_num,
+                     int min_exponent,
                      int max_exponent,
                      const std::string& file_path,
                      std::vector<std::vector<uint16_t>>* weight);
