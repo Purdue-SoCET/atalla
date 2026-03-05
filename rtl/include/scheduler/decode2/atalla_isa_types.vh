@@ -191,6 +191,14 @@ package atalla_isa_pkg;
   } instruction_packet_t;
 
   // ============================================================
+  // 7. VLIW PACKET
+  // ============================================================
+
+  parameter r_t NOP_R = '{reserved:'0, rs2:'0, rs1:'0, rd:'0, opcode:NOP_S};
+  parameter instr_t NOP_INST = instr_t'(NOP_R);
+  parameter instruction_packet_t NOP_PACKET = '{inst0: NOP_INST, inst1: NOP_INST, inst2: NOP_INST, inst3: NOP_INST};
+
+  // ============================================================
   // 8. DECODE STRUCTURES (Scalar / Vector / SDMA)
   // ============================================================
 

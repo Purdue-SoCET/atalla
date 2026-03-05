@@ -4,7 +4,7 @@
 `include "atalla_isa_types.vh"
 
 
-module scheduler_core_tb;
+module scheduler_core_smult_tb;
     import execution_unit_types_pkg::*;
     import atalla_isa_pkg::*;
 

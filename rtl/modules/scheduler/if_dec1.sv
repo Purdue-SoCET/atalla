@@ -6,6 +6,9 @@ module if_dec1_reg (
     input logic CLK, nRST,
     if_dec1_if.latch_view ifdec1_if
 );
+  //localparam r_t NOP_R = '{reserved:'0, rs2:'0, rs1:'0, rd:'0, opcode:NOP_S};
+  //localparam logic [INST_W-1:0] NOP_INST = logic'(NOP_R);
+  //localparam instruction_packet_t NOP_PACKET = '{inst0: NOP_INST, inst1: NOP_INST, inst2: NOP_INST, inst3: NOP_INST};
 
   always_ff @(posedge CLK or negedge nRST) begin
     if (!nRST) begin
@@ -17,8 +20,8 @@ module if_dec1_reg (
     else begin
       if (ifdec1_if.flush) begin
         ifdec1_if.pc_out            <= '0;
-        ifdec1_if.inst_packet_out   <= '0; 
-        ifdec1_if.predict_taken_out <= '0;
+        ifdec1_if.inst_packet_out   <= NOP_PACKET;
+        ifdec1_if.predict_taken_out <= '0; 
         ifdec1_if.pc_pred_addr_out  <= '0;
       end
 

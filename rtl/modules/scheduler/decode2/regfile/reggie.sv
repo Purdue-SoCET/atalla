@@ -196,6 +196,7 @@ module reggie #(
                 .ADDR_WIDTH  (ADDR_IDX)
             ) u_bank (
                 .clk  (CLK),
+                .nRST (nRST),
                 .ren  (bank_ren  [i_db]),
                 .raddr(bank_raddr[i_db]),
                 .rdata(bank_rdata[i_db]),

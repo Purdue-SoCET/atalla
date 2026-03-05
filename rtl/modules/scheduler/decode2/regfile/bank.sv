@@ -8,7 +8,7 @@ module bank #(
     parameter NUM_ROWS     = 64,
     parameter ADDR_WIDTH   = $clog2(NUM_ROWS)
 )(
-    input  logic clk,
+    input  logic clk, nRST,
 
     input  logic                                  ren,
     input  logic   [ADDR_WIDTH-1:0]               raddr,
@@ -20,9 +20,15 @@ module bank #(
     input  logic   [NUM_ELEMENTS-1:0]             wstrb
 );
 
-    logic [DATA_WIDTH-1:0] mem [NUM_ROWS-1:0][NUM_ELEMENTS-1:0];
+    logic [DATA_WIDTH-1:0][NUM_ROWS-1:0][NUM_ELEMENTS-1:0] mem;
 
     always_ff @(posedge clk) begin
+        if (nRST) begin
+            for (int i = 0; i < NUM_ROWS; i++) begin
+                if (wstrb[i])
+                    mem[i] <= {DATA_WIDTH{1'b0}};
+            end
+        end
         if (wen) begin
             for (int i = 0; i < NUM_ELEMENTS; i++) begin
                 if (wstrb[i])

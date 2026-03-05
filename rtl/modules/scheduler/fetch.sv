@@ -14,13 +14,19 @@ module fetch (
   // Interfaces
   datapath_cache_if.dp dc_if,
   if_dec1_if.src       ifdec1_if,
-  BTB_if.fetch_view            btb_if
+  BTB_if.fetch_view    btb_if
 );
 
   address_t pc;
   address_t next_pc;
   logic     pred_taken;
 
+  // --------------------------------------------------------------------------
+  // Pass NOP when there's no ihit.
+  // --------------------------------------------------------------------------
+  //localparam r_t NOP_R = '{reserved:'0, rs2:'0, rs1:'0, rd:'0, opcode:NOP_S};
+  //localparam logic [INST_W-1:0] NOP_INST = logic'(NOP_R);
+  //localparam instruction_packet_t NOP_PACKET = '{inst0: NOP_INST, inst1: NOP_INST, inst2: NOP_INST, inst3: NOP_INST};
 
   always_comb begin
     // BTFNT Strategy: Predict taken if BTB hits AND target is backward
@@ -62,10 +68,10 @@ module fetch (
   assign btb_if.pc_fetch = pc;
 
   assign ifdec1_if.pc_in            = pc;
-  assign ifdec1_if.predict_taken_in = pred_taken;
-  assign ifdec1_if.pc_pred_addr_in  = btb_if.predict_target;
+  assign ifdec1_if.predict_taken_in = dc_if.ihit ? pred_taken : 1'b0;
+  assign ifdec1_if.pc_pred_addr_in  = dc_if.ihit ? btb_if.predict_target : '0;
 
-  assign ifdec1_if.inst_packet_in   = dc_if.imemload; 
+  assign ifdec1_if.inst_packet_in   = dc_if.ihit ? dc_if.imemload : NOP_PACKET;
   
   assign dc_if.imemREN = 1'b1;
 endmodule

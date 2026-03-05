@@ -40,15 +40,38 @@ module scheduler_core_tb;
 
         @(negedge CLK);
         ihit = 1'b1;
-        imemload.inst0 = 48'h000000810304; // // DIV_S rd=6, rs1=2, rs2=1
+        imemload.inst0 = 48'h00003c000096;
         imemload.inst1 = 48'h2f; //NOP
         imemload.inst2 = 48'h2f; //NOP
         imemload.inst3 = 48'h2f; //NOP
-
         @(negedge CLK);
         ihit = 1'b0;
 
-        repeat(80) @(negedge CLK);
+        repeat(8) @(posedge CLK);
+
+        @(negedge CLK);
+        ihit = 1'b1;
+        imemload.inst0 = 48'h000007800116;
+        imemload.inst1 = 48'h2f; //NOP
+        imemload.inst2 = 48'h2f; //NOP
+        imemload.inst3 = 48'h2f; //NOP
+        @(negedge CLK);
+        ihit = 1'b0;
+
+        repeat(8) @(posedge CLK);
+
+        @(negedge CLK);
+        ihit = 1'b1;
+        imemload.inst0 = 48'h000000810183;
+        imemload.inst1 = 48'h2f; //NOP
+        imemload.inst2 = 48'h2f; //NOP
+        imemload.inst3 = 48'h2f; //NOP
+        @(negedge CLK);
+        ihit = 1'b0;
+
+        repeat(8) @(posedge CLK);
+
+
 
 
         $display("DONE");
