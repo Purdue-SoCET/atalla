@@ -22,8 +22,9 @@ module bank #(
 );
 
     logic [DATA_WIDTH-1:0] mem [NUM_ROWS-1:0][NUM_ELEMENTS-1:0];
+    logic [DATA_WIDTH-1:0] n_mem [NUM_ROWS-1:0][NUM_ELEMENTS-1:0];
 
-    always_ff @(posedge clk) begin
+    always_ff @(posedge clk, negedge nRST) begin
         if (!nRST) begin
             // Clear the whole bank
             for (int r = 0; r < NUM_ROWS; r++) begin
@@ -32,15 +33,30 @@ module bank #(
                 end
             end
         end
+        else begin
+            for (int r = 0; r < NUM_ROWS; r++) begin
+                for (int i = 0; i < NUM_ELEMENTS; i++) begin
+                    mem[r][i] <= n_mem[r][i];
+                end
+            end
+        end
+    end
+
+    always_comb begin
+        for (int r = 0; r < NUM_ROWS; r++) begin
+            for (int i = 0; i < NUM_ELEMENTS; i++) begin
+                n_mem[r][i] <= mem[r][i];
+            end
+        end
         if (wen) begin
             for (int i = 0; i < NUM_ELEMENTS; i++) begin
                 if (wstrb[i])
-                    mem[waddr][i] <= wdata[i*DATA_WIDTH +: DATA_WIDTH];
+                    n_mem[waddr][i] <= wdata[i*DATA_WIDTH +: DATA_WIDTH];
             end
         end
-        if (ren) begin
+        else if (ren) begin
             for (int i = 0; i < NUM_ELEMENTS; i++) begin
-                rdata[i*DATA_WIDTH +: DATA_WIDTH] <= mem[raddr][i];
+                rdata[i*DATA_WIDTH +: DATA_WIDTH] = mem[raddr][i];
             end
         end
     end

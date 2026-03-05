@@ -9,8 +9,8 @@ interface reg_file_if #(
     parameter BANK_REGS    = 64,
     parameter DREAD_PORTS  = 4,
     parameter DWRITE_PORTS = 4,
-    parameter NUM_ELEMENTS = 32,
-    parameter DATA_WIDTH   = 16,
+    parameter NUM_ELEMENTS = 1,
+    parameter DATA_WIDTH   = 32,
 
     // Derived — do not override
     parameter BANK_IDX  = $clog2(BANK_COUNT),
