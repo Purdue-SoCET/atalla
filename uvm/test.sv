@@ -12,6 +12,7 @@ import uvm_pkg::*;
 `include "lfc_multiple_miss_seq.sv"
 `include "lfc_store_hit_seq.sv"
 
+`include "lfc_flush_seq.sv"
 
 class test extends uvm_test;
     `uvm_component_utils(test)
@@ -31,6 +32,8 @@ class test extends uvm_test;
     lfc_load_hit_seq load_hit;
     lfc_load_miss_seq load_miss;
 
+    lfc_flush_seq flush_seq;
+
     function new(string name = "test", uvm_component parent);
         super.new(name, parent);
     endfunction
@@ -49,6 +52,8 @@ class test extends uvm_test;
         mshr_overflow_seq = lfc_MSHR_overflow_seq::type_id::create("mshr_overflow_seq", this);
         multiple_miss_seq = lfc_multiple_miss_seq::type_id::create("multiple_miss_seq", this);
         store_hit_seq = lfc_store_hit_seq::type_id::create("store_hit_seq", this);
+	
+	flush_seq = lfc_flush_seq::type_id::create("flush_seq", this);
 
         // Retrieve and send interface down
         if (!uvm_config_db#(virtual lfc_if)::get(this, "", "lfc_vif", vif)) begin
@@ -63,20 +68,20 @@ class test extends uvm_test;
         $display("%t Starting sequence run_phase", $time);
         //basic_seq.start(env.cpu_active_agent.sqr);
         //#1000ns;
-        //load_hit.start(env.cpu_active_agent.sqr);
-        //#1000ns;
-        //load_miss.start(env.cpu_active_agent.sqr);
-        //#1000ns;
+        load_hit.start(env.cpu_active_agent.sqr);
+        #1000ns;
         // miss_coal.start(env.cpu_active_agent.sqr);
         // #1000ns;
         // mshr_overflow_seq.start(env.cpu_active_agent.sqr);
         // #1000ns;
         //multiple_miss_seq.start(env.cpu_active_agent.sqr);
         //#1000ns;
-        store_hit_seq.start(env.cpu_active_agent.sqr);
-        #1000ns;
+        //store_hit_seq.start(env.cpu_active_agent.sqr);
+        //#1000ns;
         // wr_seq.start(env.cpu_active_agent.sqr);
         // #1000ns;
+	//flush_seq.start(env.cpu_active_agent.sqr);
+	//#1000ns;
         phase.drop_objection(this, "Finished in main phase");
     endtask
 

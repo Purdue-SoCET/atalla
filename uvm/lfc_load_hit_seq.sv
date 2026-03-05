@@ -14,7 +14,7 @@ class lfc_load_hit_seq extends uvm_sequence#(lfc_cpu_transaction);
     super.new(name);
   endfunction
   
-  virtual task body(); // TODO: Fix this (only getting like 5 hits from this... maybe requesting bad addresses?)
+  virtual task body();
   logic [NUM_TRANSACTIONS-1:0][31:0] saved_addrs;
 
   `uvm_info(get_type_name(), "lfc_load_hit_seq", UVM_MEDIUM)
@@ -54,6 +54,40 @@ class lfc_load_hit_seq extends uvm_sequence#(lfc_cpu_transaction);
 		        req.mem_in_addr), UVM_LOW)
 	    finish_item(req);
       end
+
+   for(int i = 0; i < NUM_TRANSACTIONS; i++) begin
+    lfc_cpu_transaction req;
+
+    // write to address
+    req = lfc_cpu_transaction #()::type_id::create("req");
+
+    `uvm_info(get_type_name(), "Sending WRITE transaction...", UVM_MEDIUM)
+
+    start_item(req);
+      req.randomize();
+      req.n_rst              = 1'b1;
+      req.mem_in_rw_mode     = 1'b1; // 1 = write
+      req.dp_in_halt         = 1'b0;
+      saved_addrs[i] = req.mem_in_addr;
+
+      `uvm_info(get_type_name(), $sformatf("WRITE complete: addr=0x%0h data0x%0h",
+       	        req.mem_in_addr, req.mem_in_store_value), UVM_LOW)
+    finish_item(req);
+
+    // immediate read from address
+    `uvm_info(get_type_name(), "Sending READ transaction...", UVM_MEDIUM)
+
+    start_item(req);
+      req.n_rst              = 1'b1; 
+      req.mem_in_addr        = saved_addrs[i];
+      req.mem_in_rw_mode     = 1'b0;
+      req.mem_in_store_value = 32'hCAFEBABE; // no matter for read
+      req.dp_in_halt         = 1'b0;
+
+      `uvm_info(get_type_name(), $sformatf("READ complete: addr=0x%0h",
+	        req.mem_in_addr), UVM_LOW)
+    finish_item(req);
+   end
   endtask
 endclass
 

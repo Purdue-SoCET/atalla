@@ -19,7 +19,7 @@ class lfc_store_hit_seq extends uvm_sequence#(lfc_cpu_transaction);
 
   `uvm_info(get_type_name(), "lfc_load_hit_seq", UVM_MEDIUM)
 
-  for(int i = 0; i < NUM_TRANSACTIONS; i++) begin
+  for(int i = 0; i < NUM_TRANSACTIONS; i++) begin // TODO: only getting ~5 hits of an expected 100 hits (maybe most of our addresses are invalid?)
 	    lfc_cpu_transaction req;
 	    lfc_cpu_transaction re_req;
             
