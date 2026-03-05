@@ -79,10 +79,10 @@ module sysarr_4_input_fp_adder #(
 
     always_comb begin : stage1_logic
         // -- Standard Sorting & Exception Logic --
-        a_daz = (add.a[14:10] == 0) ? {add.a[15], 15'd0} : add.a;
-        b_daz = (add.b[14:10] == 0) ? {add.b[15], 15'd0} : add.b;
-        c_daz = (add.c[14:10] == 0) ? {add.c[15], 15'd0} : add.c;
-        d_daz = (add.d[14:10] == 0) ? {add.d[15], 15'd0} : add.d;
+        a_daz = (add.a[MANTISSA_SIZE +: EXPONENT_SIZE] == 0) ? {add.a[EXPONENT_SIZE+MANTISSA_SIZE], {(EXPONENT_SIZE+MANTISSA_SIZE){1'b0}}} : add.a;
+        b_daz = (add.b[MANTISSA_SIZE +: EXPONENT_SIZE] == 0) ? {add.b[EXPONENT_SIZE+MANTISSA_SIZE], {(EXPONENT_SIZE+MANTISSA_SIZE){1'b0}}} : add.b;
+        c_daz = (add.c[MANTISSA_SIZE +: EXPONENT_SIZE] == 0) ? {add.c[EXPONENT_SIZE+MANTISSA_SIZE], {(EXPONENT_SIZE+MANTISSA_SIZE){1'b0}}} : add.c;
+        d_daz = (add.d[MANTISSA_SIZE +: EXPONENT_SIZE] == 0) ? {add.d[EXPONENT_SIZE+MANTISSA_SIZE], {(EXPONENT_SIZE+MANTISSA_SIZE){1'b0}}}   : add.d;
         {sign_a, exp_a, frac_a} = a_daz; {sign_b, exp_b, frac_b} = b_daz;
         {sign_c, exp_c, frac_c} = c_daz; {sign_d, exp_d, frac_d} = d_daz;
 
@@ -234,7 +234,7 @@ module sysarr_4_input_fp_adder #(
         final_mant = rounded_mant_int[OUT_MANTISSA_SIZE] ? 0 : rounded_mant_int[OUT_MANTISSA_SIZE-1:0];
         
         // Exponent Adjustment
-        final_exp_calc = $signed({2'b00, st2_exp_base}) + 2 - $signed({2'b00, lead_zeros}) + $signed({10'd0, rounded_mant_int[OUT_MANTISSA_SIZE]});
+        final_exp_calc = $signed({2'b00, st2_exp_base}) + 2 - $signed({2'b00, lead_zeros}) + $signed({{EXPONENT_SIZE+1{1'b0}}, rounded_mant_int[OUT_MANTISSA_SIZE]});
 
         // 4. Output Packing
         if (st2_sum_mag == 0) result_out = {st2_res_sign, {RES_WIDTH-1{1'b0}}};
