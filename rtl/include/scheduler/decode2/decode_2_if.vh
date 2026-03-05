@@ -26,7 +26,7 @@ interface decode_2_if #(
     word_t pc_in, pc_out, pc_pred_addr_in, pc_pred_addr_out;
     logic  predict_taken_in, predict_taken_out;
 
-    logic scalar_WB_WEN;
+    logic [WRITE_PORTS-1:0]scalar_WB_WEN;
 
     logic [WRITE_PORTS-1:0][SCALAR_REG_BITS-1:0] scalar_WB_wsel;
     logic [WRITE_PORTS-1:0][31:0]                scalar_WB_wdata;
