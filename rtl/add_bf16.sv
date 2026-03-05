@@ -24,7 +24,7 @@ module add_bf16 #(
     logic [15:0] bf1_in; 
     logic [MANT_B+8:0] bf2_in; 
 
-    always_ff @(posedge, negedge nRST) begin 
+    always_ff @(posedge clk, negedge nRST) begin 
         if (~nRST) begin
             bf1_in <= 0; 
             bf2_in <= 0; 
