@@ -137,6 +137,31 @@ Traffic control was a challenge in this architecture. Because the pipeline holds
 #### Performance
 Because every division must pass through the shared 1-cycle multipliers and 2-cycle subtractor twice (consuming 50% of the datapath's bandwidth for loopbacks), the theoretical maximum throughput is 0.5 instructions per cycle. In testing, the divider successfully achieves an **Effective CPI of 2.0**. It also acheieves a max ULP of 2.0 and a average ULP of around 0.5.
 
+### 3 Multiplier Design
+*Primary Author: Brian Zhuang*
+
+This architecture instantiates **3 Multipliers and 1 Subtractor** and is completely pipelined. 
+
+#### Hardware Architecture
+Data makes two total multiplication processes, first through one pair of multipliers, then the final multiplier for the second iteration:
+* The `mul_bf16` Wallace tree multipliers compute in **1 clock cycle**.
+* The `add_bf16` subtractor computes in **2 clock cycles**.
+
+To match the timing requirement, the pipeline is split up to **9 Stages**:
+* **Stage 1, 2:** Initial exponent difference calculated. Data enters the multipliers, numerator and denominators getting their own multiplier, and is multiplied by the magic number. Output is latched in stage 2 for next process.
+* **Stage 3, 4, 5:** Data (The denominator) enters, traverses the internal registers, and exits the subtractor. Latches output value at stage 5.
+* **Stage 6, 7:** The numerator from stage 2 is multiplied by the new "guess" from stage 5. Latches output value at stage 7.
+registers, and exits the subtractor. Latches output value at stage 5.
+* **Stage 8, 9:** Final exponent is calculated from initial exponent calculation in stage 1. Final answer then is latched in stage 9, into a FIFO in case of back pressure. 
+
+#### Traffic Control & The FIFO
+The primary struggle with traffic control was the fact that the subtraction module lacked true stall capabilities. As such a FIFO was implemented to catch the latched output and ensure it is correctly outputted at the right time. 
+
+* **The FIFO:** To handle backpressure and decouple `ready_out` from `ready_in` a **16-Deep FIFO** was placed at the output. The subtraction block doesn't properly stall, so the pipeline cannot stall conventionally. This comes with the benefit of being able to finish in flight operations during backpressure, increasing throughput.The FIFO monitors its own fullness. It will keep reading from the FIFO so long as there is a valid value inside, and write a value as long as its valid. When valid values are able to be outputted, but the reciever is not ready for a new value, pause is triggered.
+* **Pause:** Pause will not stop the pipeline, merely introduce bubbles into and sends a low ready_in signal until it unpauses, which will not get written into the FIFO. The pause will only stop when new outputs are accepted.
+
+#### Performance
+he divider being fully pipelined achieves an **Effective CPI of 1.0** with max throughput. It also acheieves a max ULP of 2.0 and a average ULP of around 0.5, a value slightly lower than predicted.
 
  ## Exponential
 
