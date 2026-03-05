@@ -271,7 +271,7 @@ void create_new_test(int test_num, int min_exponent, int max_exponent, const std
 
     // Generate Psum matrix
     file << "Psum" << std::endl;
-    std::vector<std::vector<uint16_t>> psum_matrix = generate_random_matrix(ROW, COL, min_exponent, max_exponent, IS_FP16);
+    std::vector<std::vector<uint16_t>> psum_matrix(ROW, std::vector<uint16_t>(COL, 0));
     write_matrix_to_file(psum_matrix, file_path);
     file << "\n";
 
@@ -329,19 +329,19 @@ int main() {
     // Initial weight matrix
     file << "Test " << "0" << std::endl;
     file << "Weight" << std::endl;
-    std::vector<std::vector<uint16_t>> weight_matrix = generate_random_matrix(ROW, COL, 0, 3, IS_FP16); 
+    std::vector<std::vector<uint16_t>> weight_matrix = generate_random_matrix(ROW, COL, 0, 19, IS_FP16); 
     write_matrix_to_file(weight_matrix, PATH_TO_INPUT);
     file << std::endl;
 
     // Generate Input matrix
     file << "Input" << std::endl;
-    std::vector<std::vector<uint16_t>> input_matrix = generate_random_matrix(ROW, COL, 0, 3, IS_FP16);
+    std::vector<std::vector<uint16_t>> input_matrix = generate_random_matrix(ROW, COL, 0, 19, IS_FP16);
     write_matrix_to_file(input_matrix, PATH_TO_INPUT);
     file << "\n";
 
     // Generate Psum matrix
     file << "Psum" << std::endl;
-    std::vector<std::vector<uint16_t>> psum_matrix = generate_random_matrix(ROW, COL, 0, 3, IS_FP16);
+    std::vector<std::vector<uint16_t>> psum_matrix(ROW, std::vector<uint16_t>(COL, 0));
     write_matrix_to_file(psum_matrix, PATH_TO_INPUT);
     file << std::endl;
 
