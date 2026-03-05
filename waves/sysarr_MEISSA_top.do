@@ -18,52 +18,26 @@ add wave -noupdate /sysarr_MEISSA_top_tb/temp_weights
 add wave -noupdate /sysarr_MEISSA_top_tb/temp_inputs
 add wave -noupdate /sysarr_MEISSA_top_tb/temp_partials
 add wave -noupdate -divider psum_buffer
-add wave -noupdate /sysarr_MEISSA_top_tb/DUT/psum_buffer/clk
-add wave -noupdate /sysarr_MEISSA_top_tb/DUT/psum_buffer/n_rst
-add wave -noupdate /sysarr_MEISSA_top_tb/DUT/psum_buffer/stall
-add wave -noupdate /sysarr_MEISSA_top_tb/DUT/psum_buffer/wr_data
-add wave -noupdate /sysarr_MEISSA_top_tb/DUT/psum_buffer/rd_data
-add wave -noupdate /sysarr_MEISSA_top_tb/DUT/psum_buffer/wr_ptr
-add wave -noupdate /sysarr_MEISSA_top_tb/DUT/psum_buffer/rd_ptr
-add wave -noupdate /sysarr_MEISSA_top_tb/DUT/psum_buffer/next_wr_ptr
-add wave -noupdate /sysarr_MEISSA_top_tb/DUT/psum_buffer/next_rd_ptr
-add wave -noupdate /sysarr_MEISSA_top_tb/DUT/psum_buffer/waddr
-add wave -noupdate /sysarr_MEISSA_top_tb/DUT/psum_buffer/waddr_wrapped
 add wave -noupdate -divider output_buffer
-add wave -noupdate /sysarr_MEISSA_top_tb/DUT/output_buffer/wr_data
-add wave -noupdate /sysarr_MEISSA_top_tb/DUT/output_buffer/rd_data
-add wave -noupdate /sysarr_MEISSA_top_tb/DUT/output_buffer/wr_ptr
-add wave -noupdate /sysarr_MEISSA_top_tb/DUT/output_buffer/rd_ptr
-add wave -noupdate /sysarr_MEISSA_top_tb/DUT/output_buffer/next_wr_ptr
-add wave -noupdate /sysarr_MEISSA_top_tb/DUT/output_buffer/next_rd_ptr
-add wave -noupdate /sysarr_MEISSA_top_tb/DUT/output_buffer/waddr
-add wave -noupdate /sysarr_MEISSA_top_tb/DUT/output_buffer/waddr_wrapped
-add wave -noupdate /sysarr_MEISSA_top_tb/DUT/u_mul_grid/clk
-add wave -noupdate /sysarr_MEISSA_top_tb/DUT/u_mul_grid/nRST
-add wave -noupdate /sysarr_MEISSA_top_tb/DUT/u_mul_grid/sa_inputs
-add wave -noupdate /sysarr_MEISSA_top_tb/DUT/u_mul_grid/act_en
-add wave -noupdate /sysarr_MEISSA_top_tb/DUT/u_mul_grid/weight_en
-add wave -noupdate /sysarr_MEISSA_top_tb/DUT/u_mul_grid/mul_stall
-add wave -noupdate /sysarr_MEISSA_top_tb/DUT/u_mul_grid/prod_r
-add wave -noupdate /sysarr_MEISSA_top_tb/DUT/u_mul_grid/a_pipe
-add wave -noupdate /sysarr_MEISSA_top_tb/DUT/u_mul_grid/b_pipe
-add wave -noupdate /sysarr_MEISSA_top_tb/DUT/u_mul_grid/prod
-add wave -noupdate /sysarr_MEISSA_top_tb/DUT/u_mul_grid/load_w
-add wave -noupdate /sysarr_MEISSA_top_tb/DUT/u_mul_grid/load_a
-add wave -noupdate -subitemconfig {{/sysarr_MEISSA_top_tb/DUT/col[31]/u_piped_addr_tree/stage_data[0]} -expand} {/sysarr_MEISSA_top_tb/DUT/col[31]/u_piped_addr_tree/stage_data}
-add wave -noupdate {/sysarr_MEISSA_top_tb/DUT/u_mul_grid/row[31]/column[0]/u_mul/clk}
-add wave -noupdate {/sysarr_MEISSA_top_tb/DUT/u_mul_grid/row[31]/column[0]/u_mul/nRST}
-add wave -noupdate {/sysarr_MEISSA_top_tb/DUT/u_mul_grid/row[31]/column[0]/u_mul/start}
-add wave -noupdate {/sysarr_MEISSA_top_tb/DUT/u_mul_grid/row[31]/column[0]/u_mul/a}
-add wave -noupdate {/sysarr_MEISSA_top_tb/DUT/u_mul_grid/row[31]/column[0]/u_mul/b}
-add wave -noupdate {/sysarr_MEISSA_top_tb/DUT/u_mul_grid/row[31]/column[0]/u_mul/result}
-add wave -noupdate {/sysarr_MEISSA_top_tb/DUT/u_mul_grid/row[31]/column[0]/u_mul/done}
-add wave -noupdate {/sysarr_MEISSA_top_tb/DUT/u_mul_grid/row[31]/column[1]/u_mul/a}
-add wave -noupdate {/sysarr_MEISSA_top_tb/DUT/u_mul_grid/row[31]/column[1]/u_mul/b}
-add wave -noupdate {/sysarr_MEISSA_top_tb/DUT/u_mul_grid/row[31]/column[1]/u_mul/result}
-add wave -noupdate {/sysarr_MEISSA_top_tb/DUT/u_mul_grid/row[31]/column[1]/u_mul/done}
+add wave -noupdate /sysarr_MEISSA_top_tb/genblk1/DUT/output_buffer/wr_en
+add wave -noupdate /sysarr_MEISSA_top_tb/genblk1/DUT/output_buffer/wr_data
+add wave -noupdate /sysarr_MEISSA_top_tb/genblk1/DUT/output_buffer/rd_en
+add wave -noupdate /sysarr_MEISSA_top_tb/genblk1/DUT/output_buffer/rd_data
+add wave -noupdate -divider {Array COlumn 0}
+add wave -noupdate /sysarr_MEISSA_top_tb/genblk1/DUT/in_pipe
+add wave -noupdate /sysarr_MEISSA_top_tb/genblk1/DUT/psum_pipe
+add wave -noupdate /sysarr_MEISSA_top_tb/genblk1/DUT/next_psum_pipe
+add wave -noupdate -divider MAC
+add wave -noupdate {/sysarr_MEISSA_top_tb/genblk1/DUT/row[0]/col[0]/u_mac_4_input/add_4_input_out}
+add wave -noupdate {/sysarr_MEISSA_top_tb/genblk1/DUT/row[0]/col[0]/u_mac_4_input/out}
+add wave -noupdate {/sysarr_MEISSA_top_tb/genblk1/DUT/row[0]/col[0]/u_mac_4_input/mul_out}
+add wave -noupdate -divider {Mul 3}
+add wave -noupdate {/sysarr_MEISSA_top_tb/genblk1/DUT/row[0]/col[0]/u_mac_4_input/mul_cells[3]/u_mul_cell/in}
+add wave -noupdate {/sysarr_MEISSA_top_tb/genblk1/DUT/row[0]/col[0]/u_mac_4_input/mul_cells[3]/u_mul_cell/weight_en}
+add wave -noupdate {/sysarr_MEISSA_top_tb/genblk1/DUT/row[0]/col[0]/u_mac_4_input/mul_cells[3]/u_mul_cell/result}
+add wave -noupdate {/sysarr_MEISSA_top_tb/genblk1/DUT/row[0]/col[0]/u_mac_4_input/mul_cells[3]/u_mul_cell/weight}
 TreeUpdate [SetDefaultTree]
-WaveRestoreCursors {{Cursor 1} {1490193 ps} 0}
+WaveRestoreCursors {{Cursor 1} {1679472 ps} 0}
 quietly wave cursor active 1
 configure wave -namecolwidth 150
 configure wave -valuecolwidth 100
@@ -79,4 +53,4 @@ configure wave -griddelta 40
 configure wave -timeline 0
 configure wave -timelineunits ns
 update
-WaveRestoreZoom {1220090 ps} {1819904 ps}
+WaveRestoreZoom {1079658 ps} {1679472 ps}

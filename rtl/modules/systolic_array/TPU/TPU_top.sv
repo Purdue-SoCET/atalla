@@ -92,7 +92,25 @@ module TPU_top #(
                             // TODO: registering first psum probably won't be necessary
                             psum_pipe[i][0] <= psum_vector[i];
                         end else begin
-                            psum_pipe[i][j] <= next_psum_pipe[i][j-1];
+                            psum_pipe[i][j] <= next_psum_pipe[i][j];
+                        end
+                    end
+                end
+
+                always_ff @ (posedge clk, negedge nRST) begin :weight_en_pipe_register
+                    if(!nRST) begin
+                        weight_en_pipe <= '0;
+                    end
+                    else begin
+                        if(j == 0) begin
+                            if (gsau_if.sa_weight_en) begin
+                                if (j == 0) begin
+                                    weight_en_pipe[i][0] <= 1'b1;
+                                end
+                                else begin
+                                    weight_en_pipe[i][j] <= weight_en_pipe[i][j-1];
+                                end
+                            end
                         end
                     end
                 end
@@ -104,7 +122,7 @@ module TPU_top #(
                     .nRST(nRST),
                     .in(in_pipe[i][j]),
                     .psum_in(psum_pipe[i][j]),
-                    .weight_en(weight_en_pipe[i][j]),
+                    .weight_en(gsau_if.sa_weight_en),
                     .out(next_psum_pipe[i][j])
                 );
             end
