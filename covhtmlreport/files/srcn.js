@@ -1,0 +1,2 @@
+var g_data = ["","./tb/unit/scheduler/decode2/reg_file_tb.sv","./rtl/include/scheduler/reg_file_if.sv","./rtl/modules/scheduler/decode2/regfile/reg_file.sv","./rtl/modules/scheduler/decode2/regfile/reggie.sv","./rtl/modules/scheduler/decode2/regfile/bank.sv","./rtl/modules/scheduler/decode2/regfile/op_buffer.sv"];
+processSrcNamesData(g_data);

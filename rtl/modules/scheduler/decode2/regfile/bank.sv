@@ -1,0 +1,39 @@
+// bank.sv ================================================================
+// Parametrizable register bank
+// No external package dependencies
+// ========================================================================
+module bank #(
+    parameter NUM_ELEMENTS = 32,
+    parameter DATA_WIDTH   = 16,
+    parameter NUM_ROWS     = 64,
+    parameter ADDR_WIDTH   = $clog2(NUM_ROWS)
+)(
+    input  logic clk,
+
+    input  logic                                  ren,
+    input  logic   [ADDR_WIDTH-1:0]               raddr,
+    output logic   [DATA_WIDTH*NUM_ELEMENTS-1:0]  rdata,
+
+    input  logic                                  wen,
+    input  logic   [ADDR_WIDTH-1:0]               waddr,
+    input  logic   [DATA_WIDTH*NUM_ELEMENTS-1:0]  wdata,
+    input  logic   [NUM_ELEMENTS-1:0]             wstrb
+);
+
+    logic [DATA_WIDTH-1:0] mem [NUM_ROWS-1:0][NUM_ELEMENTS-1:0];
+
+    always_ff @(posedge clk) begin
+        if (wen) begin
+            for (int i = 0; i < NUM_ELEMENTS; i++) begin
+                if (wstrb[i])
+                    mem[waddr][i] <= wdata[i*DATA_WIDTH +: DATA_WIDTH];
+            end
+        end
+        if (ren) begin
+            for (int i = 0; i < NUM_ELEMENTS; i++) begin
+                rdata[i*DATA_WIDTH +: DATA_WIDTH] <= mem[raddr][i];
+            end
+        end
+    end
+
+endmodule

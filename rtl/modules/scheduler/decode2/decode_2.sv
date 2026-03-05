@@ -1,6 +1,7 @@
 `include "decode_2_if.vh"
 // `include "reg_file_if.vh"
-`include "dummy_regfile_if.vh"
+// `include "dummy_regfile_if.vh"
+`include "reg_file_if.sv"
 `include "atalla_isa_types.vh"
 `include "dependency_checker_if.vh"
 `include "source_reg_allocator_if.vh"
@@ -25,7 +26,8 @@ scalar_control_unit_if scif();
 // vector_control_unit_if vcif();
 // sdma_control_unit_if sdmacif();
 // reg_file_if srfif ();
-dummy_regfile_if srfif (); // TODO currently using the dummy reg file
+// dummy_regfile_if srfif (); // TODO currently using the dummy reg file
+reg_file_if srfif();
 
 // reg_file_if #(.DATA_WIDTH(16), .NUM_ELEMENTS(32)) vrfif ();
 // reg_file_if #(.NUM_REGS(16), .NUM_BANKS(2), .READ_PORTS(2), .WRITE_PORTS(2)) mrfif ();
@@ -36,7 +38,8 @@ source_reg_allocator_if saif_temp ();
 scalar_control_unit scu1(CLK, scif);
 // vector_control_unit vcu1(CLK, nRST, vcif);
 // sdma_control_unit sdmacu1(CLK, nRST, sdmacif);
-dummy_regfile srf1(CLK, nRST, srfif);
+reg_file srf1(CLK, nRST, srfif);
+
 // reg_file vrf1(CLK, nRST, vrfif);
 // reg_file mrf1(CLK, nRST, mrfif);
 dependency_checker dc1 (CLK, nRST, dcif);
@@ -66,19 +69,21 @@ assign d2if.decoded_scalar_instrs = scalarsraif.instrs_out;
 assign scalarsraif.instrs_in = decoded_scalar_instrs_latch;
 
 //dont latch
-assign scalarsraif.rdata = srfif.rdata;
+assign scalarsraif.rdata = srfif.opbuff_vreg; //data read from reg file
 
 //dont latch
 assign saif_temp.instrs_in = scif.decoded_scalar_instrs;
 
 //dont latch
 assign srfif.REN = scalarsraif.REN;
-assign srfif.rsel = scalarsraif.rsel;
+assign srfif.vs = scalarsraif.rsel;
+assign srfif.dependencies_ready = dcif.dependencies_ready;
+assign srfif.accomplished = d2if.ready;
 
 //comes from WB dont latch
 assign srfif.WEN = d2if.scalar_WB_WEN;
-assign srfif.wsel = d2if.scalar_WB_wsel;
-assign srfif.wdata = d2if.scalar_WB_wdata;
+assign srfif.vd = d2if.scalar_WB_wsel;
+assign srfif.vdata = d2if.scalar_WB_wdata;
 
 //from WB dont latch
 assign dcif.scalar_WB_wsel = d2if.scalar_WB_wsel;
@@ -132,7 +137,7 @@ assign FU_ready = (~need_ex1 | d2if.ready_DEC2_ex1) &
                          (~need_ex4 | d2if.ready_DEC2_ex4) &
                          (~need_ex5 | d2if.ready_DEC2_ex5);
 
-assign d2if.ready = dcif.dependencies_ready & FU_ready;
+assign d2if.ready = dcif.dependencies_ready & FU_ready & (srfif.vrf_ready & srfif.opbuff_ivalid);
 
 
 

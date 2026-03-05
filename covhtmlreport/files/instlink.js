@@ -1,0 +1,2 @@
+var g_data = {"12":[11,"DATA_BANK_GEN[3]/u_bank",1],"13":[11,"DATA_BANK_GEN[2]/u_bank",1],"14":[11,"DATA_BANK_GEN[1]/u_bank",1],"15":[11,"DATA_BANK_GEN[0]/u_bank",1],"11":[10,"u_reggie",1],"16":[10,"u_op_buffer",1],"10":[7,"v_dut",1],"19":[18,"DATA_BANK_GEN[3]/u_bank",1],"20":[18,"DATA_BANK_GEN[2]/u_bank",1],"21":[18,"DATA_BANK_GEN[1]/u_bank",1],"22":[18,"DATA_BANK_GEN[0]/u_bank",1],"18":[17,"u_reggie",1],"23":[17,"u_op_buffer",1],"17":[7,"s_dut",1],"7":[-1,"reg_file_tb",1]};
+processInstLinks(g_data);
