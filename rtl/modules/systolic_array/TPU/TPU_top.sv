@@ -3,7 +3,7 @@ import sys_arr_pkg::*;
 
 module TPU_top #(
     parameter int ADD_2_INPUT_LATENCY = 2,
-    parameter int ADD_4_INPUT_LATENCY = 2,
+    parameter int ADD_4_INPUT_LATENCY = 3,
     parameter int MUL_LATENCY = 2
 )(
     input logic clk, nRST,
@@ -22,6 +22,17 @@ module TPU_top #(
 
     logic [N-1:0] in_rd_en, out_wr_en, in_rdone;
     logic in_buffer_empty;
+
+    logic weight_delay;
+
+    always_ff @ (posedge clk, negedge nRST) begin
+        if(!nRST) begin
+            weight_delay <= '0;
+        end
+        else begin
+            weight_delay <= gsau_if.sa_weight_en;
+        end
+    end
 
     // TODO: Instantiate control logic module
     TPU_control_unit #(
@@ -126,7 +137,7 @@ module TPU_top #(
                     .nRST(nRST),
                     .in(in_pipe[i][j]),
                     .psum_in(psum_pipe[i][j]),
-                    .weight_en(gsau_if.sa_weight_en),
+                    .weight_en(weight_delay),
                     .out(next_psum_pipe[i][j])
                 );
             end
@@ -156,7 +167,7 @@ module TPU_top #(
             // if (!sysarr_stall) begin
             //     valid_bits <= {valid_bits[TOTAL_DELAY - 1 : 0], gsau_if.sa_input_en};
             // end
-            valid_bits <= {valid_bits[TOTAL_DELAY - 1 : 0], gsau_if.sa_input_en};
+            valid_bits <= {valid_bits[TOTAL_DELAY - 1 : 0], in_rd_en[0]};
         end
     end
 
@@ -172,7 +183,7 @@ module TPU_top #(
         .clk(clk),
         .nRST(nRST),
         .wr_en(valid_bits[TOTAL_DELAY - 1]),
-        .wr_data(next_psum_pipe[N - 1]),
+        .wr_data(next_psum_pipe[N/4 - 1]),
         .rd_en(out_wr_en),
         .rd_data(gsau_if.sa_array_output),
         .lane0_empty(),

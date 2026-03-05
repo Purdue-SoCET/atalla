@@ -31,6 +31,7 @@ generate
             .start(1'b1),
             .a(in),
             .b(weight),
+            .stall(1'b0),
             .result(result)
         );
     end

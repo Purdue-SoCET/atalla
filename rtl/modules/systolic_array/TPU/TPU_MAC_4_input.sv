@@ -68,6 +68,7 @@ generate
             .nRST(nRST),
             .start(1'b1),
             .sub(1'b0),
+            .stall(1'b0),
             .fp1_in(add_4_input_out),
             // .fp2_in(psum_buffer[DELAY_TO_PSUM-1]),
             .fp2_in(psum_in),
