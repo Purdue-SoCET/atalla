@@ -21,14 +21,14 @@ module nb_bank_queue(
     generate 
         for (i = 0; i < BANK_NUM; i++) begin
             // Assign the write/read selection signal
-            assign b_wsel[i] = ({bqif.bq_b, bqif.bg_bg} == i) && bqif.fe_write_bq;
+            assign b_wsel[i] = ({bqif.fe_b, bqif.fe_bg} == i) && bqif.fe_write_bq;
             assign b_rsel[i] = (bqif.bq_pop == i);
 
             // Generate fifos
             sync_fifo #(.DEPTH(BANK_NUM), .DWIDTH($bits(bq_slot_t))) bq_fifo_gen ( // TODO: DEPTH NEEDS FINALIZATION - might not matter
                 .clk(CLK), .rstn(nRST),
                 .wr_en(b_wsel[i]),
-                .din({bqif.fe_r, bqif.fe_c, bqif.fe_write, bqif.fe_id}),
+                .din(bqif.fe_bq_slot),
                 .rd_en(b_rsel[i]),
                 .dout(bqif.bq_slot[i]), 
                 .full(bqif.fe_full[i]),
