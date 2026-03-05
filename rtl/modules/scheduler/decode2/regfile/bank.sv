@@ -3,12 +3,13 @@
 // No external package dependencies
 // ========================================================================
 module bank #(
-    parameter NUM_ELEMENTS = 32,
-    parameter DATA_WIDTH   = 16,
-    parameter NUM_ROWS     = 64,
+    parameter NUM_ELEMENTS = 1,
+    parameter DATA_WIDTH   = 32,
+    parameter NUM_ROWS     = 128,
     parameter ADDR_WIDTH   = $clog2(NUM_ROWS)
 )(
-    input  logic clk, nRST,
+    input  logic clk,
+    input logic nRST,
 
     input  logic                                  ren,
     input  logic   [ADDR_WIDTH-1:0]               raddr,
@@ -20,13 +21,15 @@ module bank #(
     input  logic   [NUM_ELEMENTS-1:0]             wstrb
 );
 
-    logic [DATA_WIDTH-1:0][NUM_ROWS-1:0][NUM_ELEMENTS-1:0] mem;
+    logic [DATA_WIDTH-1:0] mem [NUM_ROWS-1:0][NUM_ELEMENTS-1:0];
 
     always_ff @(posedge clk) begin
-        if (nRST) begin
-            for (int i = 0; i < NUM_ROWS; i++) begin
-                if (wstrb[i])
-                    mem[i] <= {DATA_WIDTH{1'b0}};
+        if (!nRST) begin
+            // Clear the whole bank
+            for (int r = 0; r < NUM_ROWS; r++) begin
+                for (int i = 0; i < NUM_ELEMENTS; i++) begin
+                    mem[r][i] <= '0;  // DATA_WIDTH-wide zero
+                end
             end
         end
         if (wen) begin

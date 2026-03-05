@@ -15,8 +15,8 @@ module reggie #(
     parameter BANK_REGS    = 64,
     parameter DREAD_PORTS  = 4,
     parameter DWRITE_PORTS = 4,
-    parameter NUM_ELEMENTS = 32,
-    parameter DATA_WIDTH   = 16,
+    parameter NUM_ELEMENTS = 1,
+    parameter DATA_WIDTH   = 32,
 
     parameter BANK_IDX  = $clog2(BANK_COUNT),
     parameter ADDR_IDX  = $clog2(BANK_REGS),
@@ -196,7 +196,7 @@ module reggie #(
                 .ADDR_WIDTH  (ADDR_IDX)
             ) u_bank (
                 .clk  (CLK),
-                .nRST (nRST),
+                .nRST (nRST), 
                 .ren  (bank_ren  [i_db]),
                 .raddr(bank_raddr[i_db]),
                 .rdata(bank_rdata[i_db]),
