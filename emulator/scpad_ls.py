@@ -91,7 +91,7 @@ def vreg_to_scpad(
         # --- COL MODE ---
         # Fixed Slot (scpad_addr), Iterate Banks
         slot = int (scpad_addr % scpad.S + rc_id)
-        file.write(f" SP{scpad_id}[0:{num_cols}][{slot}] <--- [")
+        file.write(f" SP{scpad_id}[{num_cols}:0][{slot}] <--- [")
         for bank, val in enumerate(vector_data):
             if bank >= num_cols + 1:
                 break
@@ -106,7 +106,7 @@ def vreg_to_scpad(
         # --- ROW MODE ---
         # Fixed Bank (scpad_addr), Iterate Slots
         bank = scpad_addr % scpad.B + rc_id
-        file.write(f" SP{scpad_id}[{bank}][0:{num_rows}] <--- [")
+        file.write(f" SP{scpad_id}[{bank}][{num_rows}:0] <--- [")
         for i, val in enumerate(vector_data):
             slot = i % scpad.S
             if i >= num_rows + 1:
@@ -172,7 +172,7 @@ def sdma_load(
         # Write into scratchpad banks
         slot = (scpad_base_row + i) % scpad.S
         first = 1
-        file.write(f" SP{scpad_id}[0:{NC}][{slot}] <--- [")
+        file.write(f" SP{scpad_id}[{NC}:0][{slot}] <--- [")
         for bank, val in enumerate(row_vals):
             if bank >= scpad.B:
                 break

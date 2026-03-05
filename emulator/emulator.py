@@ -77,7 +77,7 @@ def apply_imm_vector_op(
     return vd
 
 def main():
-    mem_file = "Testing/unit_tests/mem-scped-vreg-scpad-mem.txt" # need to change this to target different mem test files
+    mem_file = "Testing/unit_tests/scalar_R.txt" # need to change this to target different mem test files
     out_file = "output_mem.txt"
     out_sreg_file = "output_sregs.txt"
     out_vreg_file = "output_vregs.txt"
