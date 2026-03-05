@@ -2,8 +2,6 @@
 
 This document should list any and all required steps to get yourselves setup to run Atalla. Specific setup scripts (like for the PyTorch infrastructure, or PPCI infrastructure) will be defined in sub-team homepages. 
 
-## Basics 
-
 #### SSH into asicfab
 
 The preferred IDE by the AI-HW team is VSCode. Please follow the instructions in [DigitalOcean's tutorial](https://www.digitalocean.com/community/tutorials/how-to-configure-ssh-key-based-authentication-on-a-linux-server#step-2-copying-an-ssh-public-key-to-your-server) on connecting to a remote server. 

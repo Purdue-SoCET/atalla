@@ -9,6 +9,7 @@
     - [Verification](./misc/verification.md)
     - [Style-Guide](./misc/style_guide.md)
     - [DPI-C Tutorial](./misc/dpi.md)
+    - [Programming Model](./sw-systems/programming_model.md)
 - [HW Architecture](./architecture/overview.md)
     - [Caches](./architecture/caches.md)
     - [DRAM Controller](./architecture/dram_cntrl.md)
@@ -19,5 +20,4 @@
 - [SW Systems](./sw-systems/overview.md)
     - [Compiler](./sw-systems/compiler.md)
     - [Kernels](./sw-systems/kernels.md)
-    - [Programming Model](./sw-systems/programming_model.md)
     - [PyTorch Infrastructure](./sw-systems/pytorch.md)

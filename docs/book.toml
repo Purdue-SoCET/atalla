@@ -1,5 +1,16 @@
 [book]
-authors = ["Sooraj Chetput", "Timothy Hein", "Malcolm Mcclymont", "Fan Jing Hoon", "Rishikesh Bathina", "Akshath Raghav Ravikiran"]
+title = "Atalla Ax01 Documentation"
+authors = ["Sooraj Chetput", "Timothy Hein", "Malcolm Mcclymont", "Fan Jing Hoon", "Rishikesh Reddy Bathina", "Akshath Raghav Ravikiran"]
 language = "en"
 src = "src"
-title = "Atalla AIHW Documentation"
+text-direction = "ltr"
+
+[output.html]
+theme = "theme"
+default-theme = "light"
+additional-css = ["custom.css"]
+
+[output.html.search]
+enable = true
+copy-js = true
+limit-results = 30
