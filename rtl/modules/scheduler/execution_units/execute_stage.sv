@@ -60,6 +60,9 @@ module execute_stage
     //branch side
     assign ex_if.redirect_valid = unit1_if.redirect_valid;
     assign ex_if.redirect_target = unit1_if.redirect_target;
+    /////
+    assign ex_if.pc_out = unit1_if.pc_out;
+    /////
 
     //UNIT_2 CONNECTIONS
     //inputs
