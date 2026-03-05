@@ -5,7 +5,7 @@
 module pipelined_adder_tree #(
     parameter int N           = 4,    // Number of inputs to sum (MUST be a power of 2), does not include psum
     parameter int DATA_WIDTH  = 16,   // Element width; must match adder module (FP16 = 16)
-    parameter int ADD_LATENCY = 2,    // Pipeline depth of the adder (0 = combinational)
+    // parameter int ADD_LATENCY = 2,    // Pipeline depth of the adder (0 = combinational)
     parameter int FP_BF = 1           // Determine whether to use FP16 (1) or BF16 (0)
 )(
     input  logic                    clk,
@@ -17,7 +17,7 @@ module pipelined_adder_tree #(
 );
 
     localparam int TREE_DEPTH = $clog2(N); // number of tree levels
-    localparam int PSUM_DELAY = TREE_DEPTH * ADD_LATENCY;  // cycles psum_in must be held before final add
+    // localparam int PSUM_DELAY = TREE_DEPTH * ADD_LATENCY;  // cycles psum_in must be held before final add
 
     // Inter-stage wires
     // stage_data[l][k]  – data at tree level l, element k
