@@ -15,6 +15,7 @@ module TPU_buffer #(
     input logic [NUM_COLS-1:0][DATA_WIDTH-1:0] wr_data,
     input logic [NUM_COLS-1:0] rd_en,
     output logic [NUM_COLS-1:0][DATA_WIDTH-1:0] rd_data,
+    output logic [NUM_COLS-1:0] rdone,
     output logic lane0_empty, full
 );
 
@@ -74,7 +75,7 @@ module TPU_buffer #(
                     .ren    (wr_en),
                     .raddr  (wr_ptr),
                     .rdata  (rd_data[i]),
-                    .rdone  (),
+                    .rdone  (rdone[i]),
                     .wen    (rd_en[i]),
                     .waddr  (rd_ptr[i]),
                     .wdata  (wr_data[i]),
@@ -93,7 +94,7 @@ module TPU_buffer #(
                     .ren    (rd_en[i]),
                     .raddr  (rd_ptr[i]),
                     .rdata  (rd_data[i]),
-                    .rdone  (),
+                    .rdone  (rdone[i]),
                     .wen    (wr_en),
                     .waddr  (wr_ptr),
                     .wdata  (wr_data[i]),

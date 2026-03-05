@@ -20,7 +20,7 @@ module TPU_top #(
 
     logic [N-1:0][DW-1:0] output_buffer_out;
 
-    logic [N-1:0] in_rd_en, out_wr_en;
+    logic [N-1:0] in_rd_en, out_wr_en, in_rdone;
     logic in_buffer_empty;
 
     // TODO: Instantiate control logic module
@@ -52,6 +52,7 @@ module TPU_top #(
         .wr_data(gsau_if.sa_array_in),
         .rd_en(in_rd_en),
         .rd_data(in_vector),
+        .rdone(in_rdone),
         .lane0_empty(in_buffer_empty),
         .full()
     );
@@ -71,8 +72,9 @@ module TPU_top #(
                     end else begin
                         if(j == 0) begin
                             // TODO: registering first input probably won't be necessary
-                            if (|in_rd_en) begin
-                                in_pipe[i][0] <= in_vector[i * 4 * DW +: 4 * DW];
+                            if (in_rd_en[i/4] && in_rdone[i]) begin
+                                // in_pipe[i][0] <= in_vector[i * 4 * DW +: 4 * DW];
+                                in_pipe[i][0] <= {in_vector[i * 4 + 3], in_vector[i*4 + 2], in_vector[i*4 + 1], in_vector[i*4]};
                             end else if (gsau_if.sa_weight_en) begin
                                 in_pipe[i][0] <= gsau_if.sa_array_in[i * 4 * DW +: 4 * DW];
                             end else begin
@@ -90,7 +92,9 @@ module TPU_top #(
                     end else begin
                         if(j == 0) begin
                             // TODO: registering first psum probably won't be necessary
-                            psum_pipe[i][0] <= psum_vector[i];
+                            // No Psums currently
+                            // psum_pipe[i][0] <= psum_vector[i];
+                            psum_pipe[i][0] <= '0;
                         end else begin
                             psum_pipe[i][j] <= next_psum_pipe[i][j];
                         end
