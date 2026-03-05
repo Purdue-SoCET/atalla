@@ -14,7 +14,7 @@ class lfc_load_hit_seq extends uvm_sequence#(lfc_cpu_transaction);
     super.new(name);
   endfunction
   
-  virtual task body();
+  virtual task body(); // TODO: Fix this (only getting like 5 hits from this... maybe requesting bad addresses?)
   logic [NUM_TRANSACTIONS-1:0][31:0] saved_addrs;
 
   `uvm_info(get_type_name(), "lfc_load_hit_seq", UVM_MEDIUM)
