@@ -233,6 +233,10 @@ module sysarr_MEISSA_top_tb();
 
 generate
     if(VERSION == "MEISSA") begin
+        // DUT Instantiation: MIXED ADDER TREE
+        // sysarr_MEISSA_top #(.USE_MIXED_ADDER(1)) DUT (CLK, nRST, gsau_if);
+
+        // DUT Instantiation: 2-INPUT ADDER TREE
         sysarr_MEISSA_top DUT (CLK, nRST, gsau_if);
     end
     else if (VERSION == "TPU") begin
