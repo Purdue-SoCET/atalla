@@ -70,14 +70,14 @@ module scheduler_core_tb;
 
         @(negedge CLK);
         ihit = 1'b1;
-        imemload.inst0 = 48'h000002000116; // ADD_I {'opcode': 0b0010110, 'rs1': 0, 'rd': 2, 'imm12': 2}
+        imemload.inst0 = 48'h000002000116; // ADD_I {'opcode': 0b0010110, 'rs1': 0, 'rd': 2, 'imm12': 4}
         imemload.inst1 = 48'h2f; //NOP
         imemload.inst2 = 48'h2f; //NOP
         imemload.inst3 = 48'h2f; //NOP
 
         @(negedge CLK);
         ihit = 1'b1;
-        imemload.inst0 = 48'h000001008181; // ADD_S rd=3, rs1=1, rs2=2
+        imemload.inst0 = 48'h000001008181; // ADD_S rd=3 (exp value: 5), rs1=1, rs2=2
         imemload.inst1 = 48'h2f; //NOP
         imemload.inst2 = 48'h2f; //NOP
         imemload.inst3 = 48'h2f; //NOP
@@ -90,7 +90,7 @@ module scheduler_core_tb;
         // Test 1: SUB_S, 
         set_tv(
             .tv_instr0(48'h2f), // NOP
-            .tv_instr1(48'h000000810202), // SUB_S rd=4, rs1=2, rs2=1
+            .tv_instr1(48'h000000810202), // SUB_S rd=4 (exp value: 3), rs1=2, rs2=1
             .tv_instr2(48'h2f), // NOP
             .tv_instr3(48'h2f), // NOP
             .idx(1)
@@ -98,7 +98,7 @@ module scheduler_core_tb;
 
         // Test 2: OR.S
         set_tv(
-            .tv_instr0(48'h000001008286), // OR.S {'opcode': 6, 'rs1': 1, 'rs2': 2, 'rd': 3}
+            .tv_instr0(48'h000001008286), // OR.S {'opcode': 6, 'rs1': 1, 'rs2': 2, 'rd': 5}, (exp value: 5)
             .tv_instr1(48'h2f), // NOP
             .tv_instr2(48'h2f), // NOP
             .tv_instr3(48'h2f), // NOP
@@ -107,7 +107,7 @@ module scheduler_core_tb;
 
         // Test 3: AND.S
         set_tv(
-            .tv_instr0(48'h000001008307), // AND.S {'opcode': 7, 'rs1': 1, 'rs2': 2, 'rd': 4}
+            .tv_instr0(48'h000002808307), // AND.S {'opcode': 0b0000111, 'rs1': 1, 'rs2': 5, 'rd': 6} (exp value: 1)
             .tv_instr1(48'h2f), // NOP
             .tv_instr2(48'h2f), // NOP
             .tv_instr3(48'h2f), // NOP
@@ -116,7 +116,7 @@ module scheduler_core_tb;
 
         // Test 4: XOR.S
         set_tv(
-            .tv_instr0(48'h000001008388), // XOR.S {'opcode': 8, 'rs1': 1, 'rs2': 2, 'rd': 5}
+            .tv_instr0(48'h000001008388), // XOR.S {'opcode': 8, 'rs1': 1, 'rs2': 2, 'rd': 7} (exp value: 5)
             .tv_instr1(48'h2f), // NOP
             .tv_instr2(48'h2f), // NOP
             .tv_instr3(48'h2f), // NOP
@@ -125,8 +125,8 @@ module scheduler_core_tb;
 
         // Test 5: SLL.S
         set_tv(
-            .tv_instr0(48'h000001008409), // SLL.S{'opcode': 9, 'rs1': 1, 'rs2': 2, 'rd': 6}
-            .tv_instr1(48'h2f), // NOP
+            .tv_instr0(48'h000001008409), // SLL.S{'opcode': 9, 'rs1': 1, 'rs2': 2, 'rd': 8} (exp value: 16)
+            .tv_instr1(48'h2f), // NOP 
             .tv_instr2(48'h2f), // NOP
             .tv_instr3(48'h2f), // NOP
             .idx(5)
@@ -134,7 +134,7 @@ module scheduler_core_tb;
 
         // Test 6: SRL.S
         set_tv(
-            .tv_instr0(48'h00000100848a), // SRL.S{'opcode': 10, 'rs1': 1, 'rs2': 2, 'rd': 7}
+            .tv_instr0(48'h00000081048a), // SRL.S{'opcode': 10, 'rs1': 2, 'rs2': 1, 'rd': 9} (exp value: 2)
             .tv_instr1(48'h2f), // NOP
             .tv_instr2(48'h2f), // NOP
             .tv_instr3(48'h2f), // NOP
@@ -143,7 +143,7 @@ module scheduler_core_tb;
 
         // Test 7: SRA.S
         set_tv(
-            .tv_instr0(48'h00000100850b), // SRA.S {'opcode': 11, 'rs1': 1, 'rs2': 2, 'rd': 8}
+            .tv_instr0(48'h00000081050b), // SRA.S {'opcode': 11, 'rs1': 2, 'rs2': 1, 'rd': 10} (exp value: 2)
             .tv_instr1(48'h2f), // NOP
             .tv_instr2(48'h2f), // NOP
             .tv_instr3(48'h2f), // NOP
@@ -152,7 +152,7 @@ module scheduler_core_tb;
 
         // Test 8: SLT.S
         set_tv(
-            .tv_instr0(48'h00000100858c), // SLT.S {'opcode': 12, 'rs1': 1, 'rs2': 2, 'rd': 9}
+            .tv_instr0(48'h00000100858c), // SLT.S {'opcode': 12, 'rs1': 1, 'rs2': 2, 'rd': 11} (exp value: 1)
             .tv_instr1(48'h2f), // NOP
             .tv_instr2(48'h2f), // NOP
             .tv_instr3(48'h2f), // NOP
@@ -161,7 +161,7 @@ module scheduler_core_tb;
 
         // Test 9: SLTU.S
         set_tv(
-            .tv_instr0(48'h00000100860d), // SLTU.S {'opcode': 13, 'rs1': 1, 'rs2': 2, 'rd': 10}
+            .tv_instr0(48'h00000100860d), // SLTU.S {'opcode': 13, 'rs1': 1, 'rs2': 2, 'rd': 12} (exp value: 1)
             .tv_instr1(48'h2f), // NOP
             .tv_instr2(48'h2f), // NOP
             .tv_instr3(48'h2f), // NOP
