@@ -3,7 +3,7 @@
 `include "atalla_isa_types.vh"
 `include "source_reg_allocator_if.vh"
 
-module source_reg_allocator
+module source_reg_allocator_minimized
     import atalla_isa_pkg::*;
 #(
     parameter NUM_INSTRUCTIONS = 4,

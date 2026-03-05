@@ -138,6 +138,7 @@ assign FU_ready = (~need_ex1 | d2if.ready_DEC2_ex1) &
                          (~need_ex5 | d2if.ready_DEC2_ex5);
 
 assign d2if.ready = dcif.dependencies_ready & FU_ready & (srfif.vrf_ready);
+assign srfif.dec2_ready = d2if.ready;
 //& srfif.opbuff_ivalid);
 
 

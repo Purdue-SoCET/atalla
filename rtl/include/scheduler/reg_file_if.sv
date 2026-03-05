@@ -32,6 +32,8 @@ interface reg_file_if #(
 
     logic accomplished;
     logic dependencies_ready;
+    logic dec2_ready;
+    logic done_state;
 
     // -----------------------------------------------------------------------
     // Driven by reggie → consumed by op_buffer
@@ -57,20 +59,20 @@ interface reg_file_if #(
     modport reggie (
         input  vs, REN,
         input  vd, vdata, WEN,
-        input dependencies_ready,
-        output reggie_vreg, reggie_dvalid, reggie_ready
+        input dependencies_ready, dec2_ready,
+        output reggie_vreg, reggie_dvalid, reggie_ready, done_state
     );
 
     modport op_buffer (
         input  accomplished,
-        input  reggie_vreg, reggie_dvalid, reggie_ready,
+        input  reggie_vreg, reggie_dvalid, reggie_ready, done_state,
         output opbuff_vreg, opbuff_ivalid
     );
 
     modport reg_file (
         input  vs, REN,
         input  vd, vdata, WEN,
-        input  accomplished,
+        input  accomplished, dec2_ready,
         input  dependencies_ready, // from dependency checker
         output opbuff_vreg, opbuff_ivalid,
         output vrf_ready

@@ -63,7 +63,7 @@ module op_buffer #(
             vreg_tmp    <= '{default:'0};
             no_conflict <= 1'b0;
         end else begin
-            no_conflict <= rif.reggie_ready;
+            no_conflict <= (rif.reggie_ready && !rif.done_state);
 
             if (done) begin
                 dready   <= '0;

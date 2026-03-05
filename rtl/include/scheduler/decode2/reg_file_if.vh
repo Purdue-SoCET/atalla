@@ -30,6 +30,8 @@ interface reg_file_if #(
     logic [READ_PORTS-1:0][DATA_BITS-1:0]     rdata;
     logic [READ_PORTS-1:0]                    dvalid;
     logic                                     rf_ready;
+    logic                                     dec2_ready;
+    logic done_state;
 
     // Op buffer signals
     logic                                     accomplished;
@@ -43,13 +45,13 @@ interface reg_file_if #(
     modport reggie (
         input  CLK, nRST,
         input  REN, rsel,
-        input  WEN, wsel, wdata,
-        output rdata, dvalid, rf_ready
+        input  WEN, wsel, wdata, dec2_ready,
+        output rdata, dvalid, rf_ready, done_state
     );
 
     modport op_buffer (
         input  CLK, nRST,
-        input  rdata, dvalid, rf_ready,
+        input  rdata, dvalid, rf_ready, done_state,
         input  accomplished,
         output ivalid, opbuff_rdata
     );
@@ -57,7 +59,7 @@ interface reg_file_if #(
     modport reg_file (
         input  CLK, nRST,
         input  REN, rsel,
-        input  WEN, wsel, wdata,
+        input  WEN, wsel, wdata, dec2_ready,
         input  accomplished,
         output ivalid, opbuff_rdata,
         output rf_ready
@@ -66,7 +68,7 @@ interface reg_file_if #(
     modport tb (
         input  CLK, nRST,
         output REN, rsel,
-        output WEN, wsel, wdata,
+        output WEN, wsel, wdata, dec2_ready,
         output accomplished,
         input  ivalid, opbuff_rdata,
         input  rf_ready

@@ -76,7 +76,8 @@ module reggie #(
 
     logic [DREAD_PORTS-1:0] REN;
 
-    assign REN = (rif.REN & rif.dependencies_ready);
+    assign REN = (rif.REN);
+    // & rif.dependencies_ready);
 
     always_comb begin : CONFLICT_FSM
 
@@ -97,6 +98,7 @@ module reggie #(
         bank_rpend_nxt = bank_rpend;
         bank_wpend_nxt = bank_wpend;
         nxt_conflict   = 1'b0;
+        rif.done_state = 1'b0;
 
         unique case (state)
             READY_S: begin
@@ -104,7 +106,9 @@ module reggie #(
                 bank_wpend_nxt   = bank_wreqs;
                 rif.reggie_ready = 1'b1;
                 if(conflict) begin
-                    state_nxt = CONFLICT_S;
+                    if(rif.dependencies_ready == 1) begin
+                        state_nxt = CONFLICT_S;
+                    end
                     rif.reggie_ready = 1'b0;
                 end
                 else begin
@@ -127,8 +131,15 @@ module reggie #(
             end
 
             DONE: begin
+                bank_rpend_nxt   = bank_rreqs;
+                bank_wpend_nxt   = bank_wreqs;
                 rif.reggie_ready = 1'b1;
-                state_nxt = READY_S;
+                rif.done_state = 1'b1;
+                if(rif.dec2_ready) begin
+                    state_nxt = READY_S;
+                end else begin
+                    state_nxt = DONE;
+                end
             end
 
             default: begin
