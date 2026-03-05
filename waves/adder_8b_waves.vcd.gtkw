@@ -1,0 +1,46 @@
+[*]
+[*] GTKWave Analyzer v3.3.124 (w)1999-2025 BSI
+[*] Mon Feb  9 23:35:30 2026
+[*]
+[dumpfile] "/home/asicfab/a/pan453/atalla/reports/mul_bf16/rtl/adder_8b_waves.vcd"
+[dumpfile_mtime] "Mon Feb  9 23:29:06 2026"
+[dumpfile_size] 21412359
+[savefile] "/home/asicfab/a/pan453/atalla/reports/mul_bf16/rtl/adder_8b_waves.vcd.gtkw"
+[timestart] 0
+[size] 1440 693
+[pos] -1 -94
+*-24.859772 65536000 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1
+[treeopen] adder_8b_tb.
+[treeopen] adder_8b_tb.unnamedblk1.unnamedblk2.
+[sst_width] 275
+[signals_width] 278
+[sst_expanded] 1
+[sst_vpaned_height] 229
+@24
+adder_8b_tb.errors[31:0]
+@23
+adder_8b_tb.sum_mismatches[31:0]
+@24
+adder_8b_tb.ovf_mismatches[31:0]
+adder_8b_tb.unf_mismatches[31:0]
+@200
+-inputs
+@24
+adder_8b_tb.carry
+adder_8b_tb.exp1[7:0]
+adder_8b_tb.exp2[7:0]
+@200
+-expected
+@24
+adder_8b_tb.expected_sum[7:0]
+@28
+adder_8b_tb.expected_ovf
+adder_8b_tb.expected_unf
+@200
+-outputs
+@24
+adder_8b_tb.sum[7:0]
+adder_8b_tb.ovf
+adder_8b_tb.unf
+[pattern_trace] 1
+[pattern_trace] 0

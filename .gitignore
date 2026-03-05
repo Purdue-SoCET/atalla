@@ -7,3 +7,4 @@ vsim.*
 =======
 obj_dir/
 >>>>>>> charlie-final-array
+*.vcd
