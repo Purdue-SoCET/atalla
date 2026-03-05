@@ -3,7 +3,7 @@
 `include "atalla_isa_types.vh"
 `include "source_reg_allocator_if.vh"
 
-module source_reg_allocator_minimized
+module source_reg_allocator
     import atalla_isa_pkg::*;
 #(
     parameter NUM_INSTRUCTIONS = 4,
@@ -26,6 +26,15 @@ module source_reg_allocator_minimized
         for (int p = 0; p < READ_PORTS; p++) begin
             saif.REN[p]   = 1'b0;
             saif.rsel[p]  = '0;
+            port_instr[p] = '0;
+            port_src[p]   = 1'b0;
+            port_valid[p] = 1'b0;
+        end
+
+        for (int i = 0; i < NUM_INSTRUCTIONS; i++) begin
+            saif.instrs_out[i]         = saif.instrs_in[i]; //initializes everything else to what decoded instrs came from ctrl unit
+            saif.instrs_out[i].r1_data = '0;
+            saif.instrs_out[i].r2_data = '0;
         end
 
         // walk instructions in order, assign next free port to each source
@@ -35,12 +44,18 @@ module source_reg_allocator_minimized
             if (saif.instrs_in[i].use_rs1 && next_port < READ_PORTS) begin
                 saif.REN[next_port]   = 1'b1;
                 saif.rsel[next_port]  = saif.instrs_in[i].rs1;
+                port_instr[next_port] = INSTR_IDX'(i);
+                port_src[next_port]   = 1'b0; //rs1
+                port_valid[next_port] = 1'b1;
                 next_port++;
             end
             //assigning rs2 to a read port
             if (saif.instrs_in[i].use_rs2 && next_port < READ_PORTS) begin
                 saif.REN[next_port]   = 1'b1;
                 saif.rsel[next_port]  = saif.instrs_in[i].rs2;
+                port_instr[next_port] = INSTR_IDX'(i);
+                port_src[next_port]   = 1'b1; //rs2
+                port_valid[next_port] = 1'b1;
                 next_port++;
             end
         end

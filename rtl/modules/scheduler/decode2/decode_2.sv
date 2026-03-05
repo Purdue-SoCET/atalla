@@ -62,7 +62,7 @@ assign d2if.predict_taken_out = predict_taken_latch;
 
 //dont latch
 assign scif.scalar_instrs = d2if.scalar_instrs;
-assign d2if.decoded_scalar_instrs = scalarsraif.instrs_out;
+assign d2if.decoded_scalar_instrs = d2if.ready ? scalarsraif.instrs_out : '0;
 
 //connecting to soruce reg allocator
 //latch
@@ -94,7 +94,7 @@ assign dcif.scalar_SDMA_WEN = d2if.scalar_SDMA_WEN;
 // Check execute signals for structural hazards (scalar)
 scalar_fu_enable_t [NUM_SCALAR_INSTRS-1:0] fu_enables_nlatch, fu_enables_latch;
 logic [NUM_SCALAR_INSTRS-1:0] reg_writes_nlatch, reg_writes_latch;
-logic [7:0][NUM_SCALAR_INSTRS-1:0] rdIns_nlatch, rdIns_latch;
+logic [READ_PORTS-1:0][SCALAR_REG_W-1:0] rdIns_nlatch, rdIns_latch;
 
 // Per-unit need signals: does any instr in this packet need this unit?
 logic need_ex1, need_ex2, need_ex3, need_ex4, need_ex5;

@@ -27,7 +27,7 @@ module reggie #(
     reg_file_if.reggie rif
 );
 
-    typedef enum logic [0:0] { READY_S = 1'b0, CONFLICT_S = 1'b1 } cstate_t;
+    typedef enum logic [1:0] { READY_S = 2'b00, CONFLICT_S = 2'b01, DONE = 2'b10 } cstate_t;
 
     // -----------------------------------------------------------------------
     // Bank-number extraction
@@ -104,7 +104,13 @@ module reggie #(
                 bank_rpend_nxt   = bank_rreqs;
                 bank_wpend_nxt   = bank_wreqs;
                 rif.reggie_ready = 1'b1;
-                state_nxt        = conflict ? CONFLICT_S : READY_S;
+                if(conflict) begin
+                    state_nxt = CONFLICT_S;
+                    rif.reggie_ready = 1'b0;
+                end
+                else begin
+                    state_nxt = READY_S;
+                end
             end
 
             CONFLICT_S: begin
@@ -118,7 +124,12 @@ module reggie #(
                         ($countones(bank_wpend_nxt[b]) > 1))
                         nxt_conflict = 1'b1;
                 end
-                state_nxt = nxt_conflict ? CONFLICT_S : READY_S;
+                state_nxt = nxt_conflict ? CONFLICT_S : DONE;
+            end
+
+            DONE: begin
+                rif.reggie_ready = 1'b1;
+                state_nxt = READY_S;
             end
 
             default: begin

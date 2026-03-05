@@ -42,23 +42,26 @@ module bank #(
         end
     end
 
+
     always_comb begin
+        rdata = '0;
         for (int r = 0; r < NUM_ROWS; r++) begin
             for (int i = 0; i < NUM_ELEMENTS; i++) begin
-                n_mem[r][i] <= mem[r][i];
+                n_mem[r][i] = mem[r][i];
             end
         end
         if (wen) begin
             for (int i = 0; i < NUM_ELEMENTS; i++) begin
                 if (wstrb[i])
-                    n_mem[waddr][i] <= wdata[i*DATA_WIDTH +: DATA_WIDTH];
+                    n_mem[waddr][i] = wdata[i*DATA_WIDTH +: DATA_WIDTH];
             end
         end
-        else if (ren) begin
+        if (ren) begin
             for (int i = 0; i < NUM_ELEMENTS; i++) begin
                 rdata[i*DATA_WIDTH +: DATA_WIDTH] = mem[raddr][i];
             end
         end
     end
+    
 
 endmodule
