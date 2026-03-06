@@ -8,7 +8,6 @@ module scpad_cntrl #(parameter logic [scpad_pkg::SCPAD_ID_WIDTH-1:0] IDX = '0) (
     logic req_fifo_empty; 
     logic req_fifo_full;
     logic rd_en;
-    logic rd_valid;  // Delayed rd_en - indicates dout is valid
     sel_req_t fifo_out;
 
     // FIFO depth based on MAX_SRAM_DELAY, minimum 4 for proper fifo operation
@@ -56,16 +55,7 @@ module scpad_cntrl #(parameter logic [scpad_pkg::SCPAD_ID_WIDTH-1:0] IDX = '0) (
         .empty(req_fifo_empty)
     );
 
-    // Track when a read was issued - dout is valid 1 cycle after rd_en
-    always_ff @(posedge srif.clk or negedge srif.n_rst) begin
-        if (!srif.n_rst)
-            rd_valid <= 1'b0;
-        else
-            rd_valid <= rd_en;
-    end
-
-    // Gate output by rd_valid - matches when dout is actually valid
-    assign srif.cntrl_spad_req[IDX].valid      = rd_valid && fifo_out.valid;
+    assign srif.cntrl_spad_req[IDX].valid      = rd_en && fifo_out.valid;
     assign srif.cntrl_spad_req[IDX].write      = fifo_out.write;
     assign srif.cntrl_spad_req[IDX].src        = fifo_out.src;
     assign srif.cntrl_spad_req[IDX].xbar       = fifo_out.xbar;

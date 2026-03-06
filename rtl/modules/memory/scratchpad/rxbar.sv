@@ -18,7 +18,7 @@ module rxbar #(parameter logic [scpad_pkg::SCPAD_ID_WIDTH-1:0] IDX = '0) (scpad_
     localparam FIFO_DEPTH = 16;
     
     logic fifo_empty, fifo_full;
-    logic rd_en, rd_valid;
+    logic rd_en;
     pass_t fifo_in, fifo_out;
     scpad_data_t rdata_fifo_out;
     
@@ -51,16 +51,29 @@ module rxbar #(parameter logic [scpad_pkg::SCPAD_ID_WIDTH-1:0] IDX = '0) (scpad_
         .empty()
     );
     
+    logic rd_valid;
+    pass_t out_meta;
+    scpad_data_t out_rdata;
+
     always_ff @(posedge rif.clk or negedge rif.n_rst) begin
-        if (!rif.n_rst) rd_valid <= 1'b0;
-        else rd_valid <= rd_en;
+        if (!rif.n_rst) begin
+            rd_valid <= 1'b0;
+            out_meta <= '0;
+            out_rdata <= '0;
+        end else begin
+            rd_valid <= rd_en;
+            if (rd_en) begin
+                out_meta  <= fifo_out;
+                out_rdata <= rdata_fifo_out;
+            end
+        end
     end
     
     // Outputs
-    assign rif.stomach_tail_res[IDX].valid = rd_valid && fifo_out.valid;
-    assign rif.stomach_tail_res[IDX].write = fifo_out.write;
-    assign rif.stomach_tail_res[IDX].src   = fifo_out.src;
-    assign rif.stomach_tail_res[IDX].rdata = rdata_fifo_out;
+    assign rif.stomach_tail_res[IDX].valid = rd_valid && out_meta.valid;
+    assign rif.stomach_tail_res[IDX].write = out_meta.write;
+    assign rif.stomach_tail_res[IDX].src   = out_meta.src;
+    assign rif.stomach_tail_res[IDX].rdata = out_rdata;
 
 endmodule
 

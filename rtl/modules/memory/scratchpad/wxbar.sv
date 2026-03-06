@@ -16,7 +16,7 @@ module wxbar #(parameter logic [scpad_pkg::SCPAD_ID_WIDTH-1:0] IDX = '0) (scpad_
     localparam FIFO_DEPTH = 16;
     
     logic fifo_empty, fifo_full;
-    logic rd_en, rd_valid;
+    logic rd_en;
     pass_t fifo_in, fifo_out;
     scpad_data_t wdata_fifo_out;
     
@@ -51,13 +51,8 @@ module wxbar #(parameter logic [scpad_pkg::SCPAD_ID_WIDTH-1:0] IDX = '0) (scpad_
         .empty()
     );
     
-    always_ff @(posedge wif.clk or negedge wif.n_rst) begin
-        if (!wif.n_rst) rd_valid <= 1'b0;
-        else rd_valid <= rd_en;
-    end
-    
     // Outputs
-    assign wif.xbar_cntrl_req[IDX].valid           = rd_valid && fifo_out.valid;
+    assign wif.xbar_cntrl_req[IDX].valid           = !fifo_empty && fifo_out.valid;
     assign wif.xbar_cntrl_req[IDX].write           = fifo_out.write;
     assign wif.xbar_cntrl_req[IDX].src             = fifo_out.src;
     assign wif.xbar_cntrl_req[IDX].xbar.slot       = fifo_out.slot;

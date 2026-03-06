@@ -1,6 +1,6 @@
 module sram_bank # ( 
   parameter int READ_LATENCY = 2, 
-  parameter int WRITE_LATENCY = 4
+  parameter int WRITE_LATENCY = 4,
   parameter int HEIGHT = 16,
   parameter int WIDTH = 16,
   localparam int ROW_IDX_WIDTH = $clog2(HEIGHT)

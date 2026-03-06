@@ -32,9 +32,8 @@ module head #(parameter logic [scpad_pkg::SCPAD_ID_WIDTH-1:0] IDX = '0) (scpad_i
         be_v = hif.be_req[IDX].valid;
         fe_v = hif.fe_req[IDX].valid;
 
-        // w_stall is an array, need [IDX]
         grant_be = (!hif.w_stall[IDX]) && be_v;
-        grant_fe = (!hif.w_stall[IDX]) && (!be_v) && fe_v;
+        grant_fe = (!hif.w_stall[IDX]) && (!pipe_busy) && (!be_v) && fe_v;
 
         // Convert req_t to sel_req_t
         if (grant_be) begin
@@ -57,10 +56,6 @@ module head #(parameter logic [scpad_pkg::SCPAD_ID_WIDTH-1:0] IDX = '0) (scpad_i
     assign hif.head_stomach_req[IDX] = sel_req_d;
 
     // w_stall and r_stall are arrays, need [IDX]
-    // NOTE: be_stall should only go high on actual backpressure from downstream FIFOs.
-    // We removed the (be_v && pipe_busy) term because:
-    // 1. It created a combinational loop (be_v depends on be_req.valid, which depends on be_stall)
-    // 2. With FIFOs in the pipeline, we can accept requests every cycle until FIFOs are full
     assign downstream_stall = hif.w_stall[IDX] || hif.r_stall[IDX];
     assign hif.fe_stall[IDX] = downstream_stall || pipe_busy || be_v;
     assign hif.be_stall[IDX] = downstream_stall;
