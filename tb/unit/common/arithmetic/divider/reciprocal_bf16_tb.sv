@@ -1,7 +1,7 @@
-// make test tb_file=div_pipeline_bf16_tb.sv modules=/common/arithmetic/adders,/common/arithmetic/multipliers,/common/arithmetic/divider packages=/vector/vector_pkg.vh,/memory/scratchpad/scpad_pkg.sv,/common/xbar/xbar_pkg.sv GUI=ON VLOG_FLAGS="-sv -compile_uselibs -cover bst -sv -pedanticerrors -lint -mfcu" VSIM_FLAGS='-coverage -c -voptargs="+acc"'
-`include "div_if.vh"
+// make test tb_file=reciprocal_bf16_tb.sv modules=/common/arithmetic/adders,/common/arithmetic/multipliers,/common/arithmetic/divider packages=/vector/vector_pkg.vh,/memory/scratchpad/scpad_pkg.sv,/common/xbar/xbar_pkg.sv GUI=ON VLOG_FLAGS="-sv -compile_uselibs -cover bst -sv -pedanticerrors -lint -mfcu" VSIM_FLAGS='-coverage -c -voptargs="+acc"'
+`include "reciprocal_if.vh"
 `timescale 1 ns / 1 ns
-module div_pipeline_bf16_tb;
+module reciprocal_bf16_tb;
     //-----------------------------------------------
   // Configuration Parameters
   //-----------------------------------------------
@@ -30,15 +30,15 @@ module div_pipeline_bf16_tb;
   //-----------------------------------------------
   // Interface and DUT instantiation
   //-----------------------------------------------
-  div_if #(
+  reciprocal_if #(
     .EXP_WIDTH(EXP_WIDTH),
     .MANT_WIDTH(MANT_WIDTH)
-  ) divif();
+  ) rif();
 
-  div_pipeline_bf16 DUT (
+  reciprocal_bf16 DUT (
     .CLK(CLK),
     .nRST(nRST),
-    .divif(divif)
+    .rif(rif)
   );
 
   //-----------------------------------------------
@@ -68,21 +68,20 @@ module div_pipeline_bf16_tb;
   begin
     // Wait until DUT is ready to accept input
     @(posedge CLK);
-    while (!divif.out.ready_in) @(posedge CLK);
+    while (!rif.out.ready_in) @(posedge CLK);
     
     // Apply inputs and assert valid_in
-    divif.in.operand1 = a_in;
-    divif.in.operand2 = b_in;
-    divif.in.valid_in = 1;
+    rif.in.divisor = b_in;
+    rif.in.valid_in = 1;
     
     @(posedge CLK);
-    while (!divif.out.ready_in) @(posedge CLK);
+    while (!rif.out.ready_in) @(posedge CLK);
     
     // Deassert valid_in after handshake
-    divif.in.valid_in = 0;
+    rif.in.valid_in = 0;
     
     timeout_counter = 0;
-    while (!divif.out.valid_out) begin
+    while (!rif.out.valid_out) begin
       @(posedge CLK);
       timeout_counter++;
       if (timeout_counter > 500) begin 
@@ -91,22 +90,22 @@ module div_pipeline_bf16_tb;
       end
     end
     
-    abs_diff = (divif.out.result > expected_in) ? (divif.out.result - expected_in) : (expected_in - divif.out.result);
-    if (is_nan(divif.out.result) && is_nan(expected_in)) begin
+    abs_diff = (rif.out.result > expected_in) ? (rif.out.result - expected_in) : (expected_in - rif.out.result);
+    if (is_nan(rif.out.result) && is_nan(expected_in)) begin
       // Pass
-    end else if (divif.out.result !== expected_in) begin
-      if ((divif.out.result[15] == expected_in[15]) && (abs_diff <= 2)) begin 
+    end else if (rif.out.result !== expected_in) begin
+      if ((rif.out.result[15] == expected_in[15]) && (abs_diff <= 2)) begin 
         // Pass ULP
       end else begin
          $display("ERROR @%0t [%s]: %h / %h = %h (expected %h)", 
-                  $time, tb_test_case, a_in, b_in, divif.out.result, expected_in);
+                  $time, tb_test_case, a_in, b_in, rif.out.result, expected_in);
          errors++;
       end
     end
         
-    divif.in.ready_out = 1;
+    rif.in.ready_out = 1;
     @(posedge CLK);
-    divif.in.ready_out = 0;
+    rif.in.ready_out = 0;
   end
   endtask
 
@@ -152,25 +151,24 @@ module div_pipeline_bf16_tb;
             // FRONT PRESSURE (Bubbles / Input Starvation)
             if (traffic_mode == "FRONT_PRESSURE" || traffic_mode == "RANDOM") begin
               if ($urandom_range(0, 100) < 25) begin // 25% chance to stall
-                divif.in.valid_in = 0;
+                rif.in.valid_in = 0;
                 repeat($urandom_range(1, 4)) @(posedge CLK);
               end
             end
 
-            divif.in.operand1 = op1;
-            divif.in.operand2 = op2;
-            divif.in.valid_in = 1;
+            rif.in.divisor = op2;
+            rif.in.valid_in = 1;
 
             do begin 
               @(posedge CLK); 
             end while 
-              (!divif.out.ready_in);
+              (!rif.out.ready_in);
 
             q_op1.push_back(op1); q_op2.push_back(op2); q_exp.push_back(exp_val);
             tests_fed++;
           end
         end
-        divif.in.valid_in = 0;
+        rif.in.valid_in = 0;
         driver_done = 1; 
       end
 
@@ -181,15 +179,15 @@ module div_pipeline_bf16_tb;
           // BACK PRESSURE (Output Stalls / Skid Buffer Stress)
           if (traffic_mode == "BACK_PRESSURE" || traffic_mode == "RANDOM") begin
             if ($urandom_range(0, 100) < 25) begin // 25% chance to pause reading
-              divif.in.ready_out = 0;
+              rif.in.ready_out = 0;
               repeat($urandom_range(1, 5)) @(posedge CLK);
             end
           end
 
-          divif.in.ready_out = 1;
+          rif.in.ready_out = 1;
           @(posedge CLK);
 
-          if (divif.out.valid_out && divif.in.ready_out) begin
+          if (rif.out.valid_out && rif.in.ready_out) begin
             rx_timeout = 0; 
             
             if (q_exp.size() == 0) begin
@@ -199,7 +197,7 @@ module div_pipeline_bf16_tb;
               logic [WIDTH-1:0] c_op1 = q_op1.pop_front();
               logic [WIDTH-1:0] c_op2 = q_op2.pop_front();
               logic [WIDTH-1:0] c_exp = q_exp.pop_front();
-              logic [WIDTH-1:0] c_act = divif.out.result;
+              logic [WIDTH-1:0] c_act = rif.out.result;
               logic [WIDTH-1:0] t_abs;
 
               // MATHEMATICAL COMPARISON AND ULP COUNTING
@@ -229,7 +227,7 @@ module div_pipeline_bf16_tb;
             end
           end
         end
-        divif.in.ready_out = 0;
+        rif.in.ready_out = 0;
       end
     join
 
@@ -357,10 +355,9 @@ module div_pipeline_bf16_tb;
     $display("=============================================\n");
     
     // Init handshake signals
-    divif.in.valid_in = 0;
-    divif.in.ready_out = 0;
-    divif.in.operand1 = 0;
-    divif.in.operand2 = 0;
+    rif.in.valid_in = 0;
+    rif.in.ready_out = 0;
+    rif.in.divisor = 0;
     errors = 0;
     normal_tests = 0;
     subnormal_input_tests = 0;
@@ -372,14 +369,14 @@ module div_pipeline_bf16_tb;
     $display("Running power-on reset test...");
     
     @(posedge CLK);
-    if (divif.out.valid_out !== 0) begin
+    if (rif.out.valid_out !== 0) begin
       $display("ERROR @%0t [POWER_ON_RESET]: valid_out should be 0 during reset, got %b", 
-                $time, divif.out.valid_out);
+                $time, rif.out.valid_out);
       errors++;
     end
-    if (divif.out.ready_in !== 0) begin
+    if (rif.out.ready_in !== 0) begin
       $display("ERROR @%0t [POWER_ON_RESET]: ready_in should be 0 during reset, got %b", 
-                $time, divif.out.ready_in);
+                $time, rif.out.ready_in);
       errors++;
     end
     
@@ -392,9 +389,9 @@ module div_pipeline_bf16_tb;
     
     // Check that ready_in goes high after reset
     @(posedge CLK);
-    if (divif.out.ready_in !== 1) begin
+    if (rif.out.ready_in !== 1) begin
       $display("ERROR @%0t [POST_RESET]: ready_in should be 1 after reset, got %b", 
-                $time, divif.out.ready_in);
+                $time, rif.out.ready_in);
       errors++;
     end
 
@@ -403,16 +400,15 @@ module div_pipeline_bf16_tb;
     $display("Running Mid-Flight Reset test...");
     
     // 1. Jam 4 items into the pipeline as fast as possible
-    divif.in.operand1 = 16'h4000; // 2.0
-    divif.in.operand2 = 16'h4000; // 2.0
-    divif.in.valid_in = 1;
+    rif.in.divisor = 16'h4000; // 2.0
+    rif.in.valid_in = 1;
     for (int i=0; i<4; i++) begin
       do begin 
         @(posedge CLK); 
       end while 
-        (!divif.out.ready_in);
+        (!rif.out.ready_in);
     end
-    divif.in.valid_in = 0;
+    rif.in.valid_in = 0;
     
     // 2. Wait 2 clock cycles so they are deep inside the math units
     repeat(2) @(posedge CLK); 
@@ -424,11 +420,11 @@ module div_pipeline_bf16_tb;
     // 4. Release reset and verify the pipeline completely died
     nRST = 1;
     @(posedge CLK);
-    if (divif.out.valid_out !== 0) begin
+    if (rif.out.valid_out !== 0) begin
       $display("ERROR @%0t [MID_FLIGHT_RESET]: Ghost data survived the reset! FIFO is not empty.", $time);
       errors++;
     end
-    if (divif.out.ready_in !== 1) begin
+    if (rif.out.ready_in !== 1) begin
       $display("ERROR @%0t [MID_FLIGHT_RESET]: Pipeline didn't recover ready_in after flush.", $time);
       errors++;
     end
