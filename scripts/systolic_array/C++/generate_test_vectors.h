@@ -7,11 +7,11 @@
 
 constexpr int ROW = 32;
 constexpr int COL = 32;
-constexpr int TOTAL_TEST_NUM = 5;
+constexpr int TOTAL_TEST_NUM = 10000;
 constexpr int PROBABILITY_OF_NEW_WEIGHT = 250; // 25% chance out of 1000
 constexpr int ADDER_INPUT_NUM = 2;
 constexpr bool IS_FP16 = true;
-std::string VERSION = "TPU";
+std::string VERSION = "MEISSA";
 
 extern std::string PATH_TO_INPUT;
 extern std::string PATH_TO_EXPECTED_RESULT;
@@ -23,7 +23,8 @@ void progress_bar(std::size_t iteration,
                   std::size_t total,
                   std::size_t width = 40);
 
-uint16_t sim_add(uint16_t a, uint16_t b, bool is_fp16);
+uint16_t sim_2_input_add(uint16_t a, uint16_t b, bool is_fp16);
+uint16_t sim_4_input_add(uint16_t a, uint16_t b, uint16_t c, uint16_t d, bool is_fp16);
 uint16_t sim_mul(uint16_t a, uint16_t b, bool is_fp16);
 
 uint16_t sim_adder_tree(const std::vector<uint16_t>& in,
@@ -40,6 +41,8 @@ std::vector<std::vector<uint16_t>> sim_MEISSA(
     const std::vector<std::vector<uint16_t>>& weight,
     const std::vector<std::vector<uint16_t>>& psum,
     bool is_fp16);
+
+std::vector<std::vector<uint16_t>> generate_random_matrix(int rows, int cols, int min_exponent, int max_exponent, bool is_fp16);
 
 void create_new_test(int test_num,
                      int min_exponent,

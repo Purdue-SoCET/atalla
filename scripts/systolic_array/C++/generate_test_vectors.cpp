@@ -346,7 +346,23 @@ int main() {
     file << std::endl;
 
     expected_file << "Test " << "0" << std::endl;
-    std::vector<std::vector<uint16_t>> output_matrix = sim_MEISSA(input_matrix, weight_matrix, psum_matrix, true);
+    std::vector<std::vector<uint16_t>> output_matrix;
+    if(VERSION == "MEISSA")
+    {
+        output_matrix = sim_MEISSA(input_matrix, weight_matrix, psum_matrix, IS_FP16);
+    }
+    else if (VERSION == "TPU")
+    {
+        output_matrix = sim_TPU(input_matrix, weight_matrix, psum_matrix, IS_FP16);
+    }
+    else if (VERSION == "STANDARD")
+    {
+        // TODO: add standard simulation
+    }
+    else
+    {
+        std::cerr << "Error: Invalid systolic array version" << std::endl;
+    }
     write_matrix_to_file(output_matrix, PATH_TO_EXPECTED_RESULT);
     expected_file << std::endl;
 

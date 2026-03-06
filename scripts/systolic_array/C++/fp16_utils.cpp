@@ -43,14 +43,14 @@ uint16_t bits_from_fp16(float val) {
 }
 
 // Check if FP16 value is subnormal
-inline bool is_subnormal(uint16_t bits) {
+static bool is_subnormal(uint16_t bits) {
     uint16_t exponent = (bits >> 10) & 0x1F;
     uint16_t mantissa = bits & 0x3FF;
     return exponent == 0 && mantissa != 0;
 }
 
 // Apply DAZ (Denormals Are Zero)
-inline uint16_t apply_daz(uint16_t bits) {
+static uint16_t apply_daz(uint16_t bits) {
     if (is_subnormal(bits)) {
         return bits & 0x8000; // Preserve the sign bit
     }
@@ -58,7 +58,7 @@ inline uint16_t apply_daz(uint16_t bits) {
 }
 
 // Apply FTZ (Flush To Zero)
-inline uint16_t apply_ftz(uint16_t bits) {
+static uint16_t apply_ftz(uint16_t bits) {
     if (is_subnormal(bits)) {
         return bits & 0x8000; // Preserve the sign bit
     }
@@ -66,14 +66,14 @@ inline uint16_t apply_ftz(uint16_t bits) {
 }
 
 // Check if FP16 value is NaN
-inline bool is_nan(uint16_t bits) {
+static bool is_nan(uint16_t bits) {
     uint16_t exponent = (bits >> 10) & 0x1F;
     uint16_t mantissa = bits & 0x3FF;
     return exponent == 0x1F && mantissa != 0;
 }
 
 // Canonicalize NaN
-inline uint16_t canonicalize_nan(uint16_t bits) {
+static uint16_t canonicalize_nan(uint16_t bits) {
     if (is_nan(bits)) {
         return 0x7E00; // Canonical NaN
     }
@@ -81,7 +81,7 @@ inline uint16_t canonicalize_nan(uint16_t bits) {
 }
 
 // Normalize zero
-inline uint16_t normalize_zero(uint16_t bits) {
+static uint16_t normalize_zero(uint16_t bits) {
     if ((bits & 0x7FFF) == 0) {
         return 0x0000; // Normalize to positive zero
     }
