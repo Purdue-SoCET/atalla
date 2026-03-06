@@ -11,8 +11,8 @@ module TPU_top #(
 );
 
     logic [N/4-1:0][N-1:0][4*DW-1:0] in_pipe;
-    logic [N/4-1:0][N-1:0][DW-1:0] psum_pipe;
-    logic [N/4-1:0][N-1:0][DW-1:0] next_psum_pipe;
+    logic [N/4:0][N-1:0][DW-1:0] psum_pipe;
+    logic [N/4:0][N-1:0][DW-1:0] next_psum_pipe;
     logic [N/4-1:0][N-1:0] weight_en_pipe;
 
     logic [N-1:0][DW-1:0] in_vector;
@@ -68,6 +68,14 @@ module TPU_top #(
         .full()
     );
 
+genvar k;
+    generate
+        for(k=0; k < N; k++) begin
+            assign psum_pipe[0][k] = '0;
+        end
+    endgenerate
+
+
 
     // TODO: Connect pipes to output of input buffer
     // assign in_vector = gsau_if.sa_array_in;
@@ -97,20 +105,20 @@ module TPU_top #(
                     end
                 end
 
-                always_ff @ (posedge clk, negedge nRST) begin : psum_pipe_register
-                    if (!nRST) begin
-                        psum_pipe <= '0;
-                    end else begin
-                        if(j == 0) begin
-                            // TODO: registering first psum probably won't be necessary
-                            // No Psums currently
-                            // psum_pipe[i][0] <= psum_vector[i];
-                            psum_pipe[i][0] <= '0;
-                        end else begin
-                            psum_pipe[i][j] <= next_psum_pipe[i][j];
-                        end
-                    end
-                end
+                // always_ff @ (posedge clk, negedge nRST) begin : psum_pipe_register
+                //     if (!nRST) begin
+                //         psum_pipe <= '0;
+                //     end else begin
+                //         if(i == 0) begin
+                //             // TODO: registering first psum probably won't be necessary
+                //             // No Psums currently
+                //             // psum_pipe[i][0] <= psum_vector[i];
+                //             psum_pipe[0][j] <= '0;
+                //         end else begin
+                //             psum_pipe[i][j] <= next_psum_pipe[i][j];
+                //         end
+                //     end
+                // end
 
                 always_ff @ (posedge clk, negedge nRST) begin :weight_en_pipe_register
                     if(!nRST) begin
@@ -138,7 +146,7 @@ module TPU_top #(
                     .in(in_pipe[i][j]),
                     .psum_in(psum_pipe[i][j]),
                     .weight_en(weight_delay),
-                    .out(next_psum_pipe[i][j])
+                    .out(psum_pipe[i+1][j])
                 );
             end
         end
@@ -158,7 +166,7 @@ module TPU_top #(
      Actual delay will be +1 from sram read latency
     */
     localparam TOTAL_DELAY = ADD_2_INPUT_LATENCY * (N/4-1) + N + MUL_LATENCY + ADD_4_INPUT_LATENCY + ADD_2_INPUT_LATENCY + 4;
-    logic [TOTAL_DELAY : 0] valid_bits;
+    logic [TOTAL_DELAY - 1:0] valid_bits;
 
     always_ff @(posedge clk or negedge nRST) begin
         if (!nRST) begin
@@ -182,8 +190,8 @@ module TPU_top #(
     ) output_buffer (
         .clk(clk),
         .nRST(nRST),
-        .wr_en(valid_bits[TOTAL_DELAY - 2]),
-        .wr_data(next_psum_pipe[N/4 - 1]),
+        .wr_en(valid_bits[TOTAL_DELAY - 1]),
+        .wr_data(psum_pipe[N/4]),
         .rd_en(out_wr_en),
         .rd_data(gsau_if.sa_array_output),
         .lane0_empty(),
