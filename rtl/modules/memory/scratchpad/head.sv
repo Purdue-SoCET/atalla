@@ -1,8 +1,12 @@
 /*  Akshath Raghav Ravikiran - araviki@purdue.edu */
 
-import scpad_pkg::*;
+`include "scpad_pkg.sv"
+`include "scpad_if.sv"
 
-module head #(parameter logic [SCPAD_ID_WIDTH-1:0] IDX = '0) (scpad_if.spad_head hif);
+
+module head #(parameter logic [scpad_pkg::SCPAD_ID_WIDTH-1:0] IDX = '0) (scpad_if.spad_head hif);
+
+    import scpad_pkg::*;
 
     // Stalls
     logic downstream_stall;
@@ -13,8 +17,8 @@ module head #(parameter logic [SCPAD_ID_WIDTH-1:0] IDX = '0) (scpad_if.spad_head
     logic be_v, fe_v;
     logic grant_be, grant_fe;
 
-    // Intermediate
-    req_t req_d;
+    // Intermediate - use sel_req_t since that's what head_stomach_req expects
+    sel_req_t sel_req_d;
 
     always_ff @(posedge hif.clk, negedge hif.n_rst) begin
         if (!hif.n_rst) pipe_busy <= 1'b0;
@@ -22,24 +26,49 @@ module head #(parameter logic [SCPAD_ID_WIDTH-1:0] IDX = '0) (scpad_if.spad_head
     end
 
     always_comb begin
-        req_d = '0;
+        sel_req_d = '0;
 
-        be_v = hif.be_req_valid[IDX];
-        fe_v = hif.fe_req_valid[IDX];
+        // Access .valid field from req_t struct
+        be_v = hif.be_req[IDX].valid;
+        fe_v = hif.fe_req[IDX].valid;
 
-        grant_be = (!hif.w_stall) && be_v;
-        grant_fe = (!hif.w_stall) && (!be_v) && fe_v;
+        // w_stall is an array, need [IDX]
+        grant_be = (!hif.w_stall[IDX]) && be_v;
+        grant_fe = (!hif.w_stall[IDX]) && (!be_v) && fe_v;
 
-        if (grant_be) req_d = hif.be_req[IDX];
-        else if (grant_fe) req_d = hif.fe_req[IDX];
+        // Convert req_t to sel_req_t
+        if (grant_be) begin
+            sel_req_d.valid = hif.be_req[IDX].valid;
+            sel_req_d.write = hif.be_req[IDX].write;
+            sel_req_d.src   = SRC_BE;
+            sel_req_d.xbar  = hif.be_req[IDX].xbar;
+            sel_req_d.wdata = hif.be_req[IDX].wdata;
+        end
+        else if (grant_fe) begin
+            sel_req_d.valid = hif.fe_req[IDX].valid;
+            sel_req_d.write = hif.fe_req[IDX].write;
+            sel_req_d.src   = SRC_FE;
+            sel_req_d.xbar  = hif.fe_req[IDX].xbar;
+            sel_req_d.wdata = hif.fe_req[IDX].wdata;
+        end
     end
  
     // head_stomach_req will either go into the scpad_cntrl FIFO or xbar. 
-    // No need to latch here -> LATCH_INT
-    assign hif.head_stomach_req = fvif.vec_req[IDX];
+    assign hif.head_stomach_req[IDX] = sel_req_d;
 
-    assign downstream_stall = hif.w_stall || hif.r_stall;
-    assign hif.fe_stall[IDX] = downstream_stall || (fe_v && (pipe_busy || be_v));
-    assign hif.be_stall[IDX] = downstream_stall || (be_v && pipe_busy);
+    // w_stall and r_stall are arrays, need [IDX]
+    // NOTE: be_stall should only go high on actual backpressure from downstream FIFOs.
+    // We removed the (be_v && pipe_busy) term because:
+    // 1. It created a combinational loop (be_v depends on be_req.valid, which depends on be_stall)
+    // 2. With FIFOs in the pipeline, we can accept requests every cycle until FIFOs are full
+    assign downstream_stall = hif.w_stall[IDX] || hif.r_stall[IDX];
+    assign hif.fe_stall[IDX] = downstream_stall || pipe_busy || be_v;
+    assign hif.be_stall[IDX] = downstream_stall;
 
 endmodule
+
+`ifndef SYNTHESIS
+
+
+
+`endif
