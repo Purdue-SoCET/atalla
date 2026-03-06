@@ -26,6 +26,10 @@ localparam int FAST_PATH_DELAY = PIPELINE_LATENCY - 1;  // Delay skip_divider by
 // Internal result ready (before fixed-latency delay)
 logic result_ready_internal;
 
+//registered signals to fix BANB
+logic valid_out_r;
+logic ready_in_r;
+
 // Delay pipeline for fast-path results
 logic [FAST_PATH_DELAY-1:0] fast_path_valid_shift;
 logic fast_path_delayed;
@@ -47,19 +51,19 @@ assign fast_path_delayed = fast_path_valid_shift[FAST_PATH_DELAY-1];
 // Handshake state machine
 always_ff @(posedge CLK, negedge nRST) begin
     if (~nRST) begin
-        divif.out.valid_out <= 0;
-        divif.out.ready_in <= 0;
+        valid_out_r <= 0;
+        ready_in_r <= 0;
         first_cycle <= 1;
     end else begin
-        if (first_cycle) divif.out.ready_in <= 1;
+        if (first_cycle) ready_in_r <= 1;
         first_cycle <= 0;
         
         // Assert valid_out after fixed latency for all operations
-        if (done || fast_path_delayed) divif.out.valid_out <= 1;
-        else if (divif.in.ready_out && divif.out.valid_out) divif.out.valid_out <= 0;
+        if (done || fast_path_delayed) valid_out_r <= 1;
+        else if (divif.in.ready_out && divif.out.valid_out) valid_out_r <= 0;
         
-        if (divif.out.valid_out && divif.in.ready_out) divif.out.ready_in <= 1;
-        else if (divif.in.valid_in && divif.out.ready_in) divif.out.ready_in <= 0;
+        if (divif.out.valid_out && divif.in.ready_out) ready_in_r <= 1;
+        else if (divif.in.valid_in && divif.out.ready_in) ready_in_r <= 0;
     end
 end
 
@@ -209,6 +213,9 @@ always_comb begin
     else
         divif.out.result = {final_sign, final_exp, final_mant};
 end
+
+assign divif.out.valid_out = valid_out_r;
+assign divif.out.ready_in = ready_in_r;
 
 endmodule
 

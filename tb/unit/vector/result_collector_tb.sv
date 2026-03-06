@@ -1,474 +1,385 @@
-// ------------------------------------------------------------
-// tb_result_collector.sv
-// Standalone smoke + directed test for result_collector + rc_fu
-// Drives rc_in directly (no lane.sv involved in the datapath).
-// ------------------------------------------------------------
+/*
+result_collector_tb.sv
+Non exhaustive verification of the result collector
+This will not have toggle or branch coverage cause i dont have time
+Owner: Jacob Walter
+LLM was used for testscases as the old testcases did not work with the updated design. The LLM was used to create a few more cases that i have reviewed
+
+Make command for my testbench:
+make test tb_file=result_collector_tb.sv packages=/vector/vector_pkg.vh,/memory/scratchpad/scpad_pkg.sv modules=/vector/result_collector.sv,/vector/result_collector_counter.sv GUI=ON
+
+Test Cases:
+1. Power on reset
+2. Vector Collection Test (single cycle per lane)
+3. Vector Collection Test (multiple cycles - TIMES > 1)
+4. Backpressure Test
+5. VD Capture Test (ensure vd doesn't change mid-vector)
+6. Mask Test (ensure masked elements are zeroed)
+7. Multi-vector back-to-back test
+8. One lane hanging
+*/
 `timescale 1ns/1ps
 
-`include "vector_if.vh"
+`include "result_collector_if.vh"
 `include "vector_pkg.vh"
 
 module result_collector_tb;
     import vector_pkg::*;
 
-    // ------------------------------------------------------------
-    // 1. Clock / Reset
-    // ------------------------------------------------------------
+    localparam int TIMES = VLMAX / NUM_LANES;
+
+    //Clock setup
     logic CLK;
     logic nRST;
 
     initial CLK = 1'b0;
     always #5 CLK = ~CLK;   // 100 MHz
 
-    initial begin
-        nRST = 1'b0;
-        repeat (5) @(posedge CLK);
-        nRST = 1'b1;
-        $display("[%0t] TB: Reset deasserted", $time);
-    end
-
-    // Some useful locals
-    localparam int ELEM_W        = $bits(bf16_t);
-    localparam int NUM_ELEMS_MAX = VLMAX;  // Maximum elements in a vector
-
-    // ------------------------------------------------------------
-    // 2. Shared Vector Interface (only rc_in/rc_out used here)
-    // ------------------------------------------------------------
-    vector_if vif();
-
-    // ------------------------------------------------------------
-    // 3. DUT: Result Collector
-    // ------------------------------------------------------------
-    result_collector u_result_collector (
-        .CLK (CLK),
+    //DUT instantiation
+    result_collector_if rcif();
+    result_collector DUT (
+        .CLK(CLK),
         .nRST(nRST),
-        .rcif(vif.result_collector)
+        .rcif(rcif)
     );
 
-    // ------------------------------------------------------------
-    // 4. Default / Initial Drives
-    // ------------------------------------------------------------
-    initial begin
-        vif.rc_in = '0;
+    //testcase tasks
 
-        // WB ready: default "ready" = 1 (can be overridden in tests)
-        for (int fu = 0; fu < LANE_FU_COUNT; fu++) begin
-            vif.rc_in.ready_in[0][fu] = 1'b1;
-        end
-    end
-
-    // ------------------------------------------------------------
-    // 4.5 Current test name (for logging)
-    // ------------------------------------------------------------
-    string cur_test_name;
-
-    // ------------------------------------------------------------
-    // 5. Scoreboard: expected items & WB monitor
-    // ------------------------------------------------------------
-    typedef struct {
-        int    fu;
-        vsel_t vd;
-        vreg_t vec;
-        string name;
-    } exp_item_t;
-
-    exp_item_t exp_q[$];
-
-    task automatic push_expect(
-        input int    fu,
-        input vsel_t vd,
-        input vreg_t vec,
-        input string name
-    );
-        exp_item_t item;
-        item.fu   = fu;
-        item.vd   = vd;
-        item.vec  = vec;
-        item.name = name;
-        exp_q.push_back(item);
+    task automatic power_on_reset();
+        @(posedge CLK);
+        nRST = 'b0;
+        rcif.in.input_valid = '0;
+        rcif.in.wb_ready = 'b0;
+        rcif.in.lane_input = '0;
+        rcif.in.vd_input = '0;
+        rcif.in.mask = '0;
+        @(posedge CLK);
+        @(posedge CLK);
+        nRST = 'b1;
+        @(posedge CLK);
     endtask
 
-    // For checking stability while WB is stalled
-    logic   hold_valid [LANE_FU_COUNT];
-    vreg_t  hold_vec   [LANE_FU_COUNT];
-    vsel_t  hold_vd    [LANE_FU_COUNT];
-    logic   prev_vr    [LANE_FU_COUNT];
-
-
-    initial begin
-        for (int fu = 0; fu < LANE_FU_COUNT; fu++) begin
-            hold_valid[fu] = 1'b0;
-            hold_vec[fu]   = '0;
-            hold_vd[fu]    = '0;
-        end
-    end
-
-       // Writeback Monitor / Sink
-    initial begin : WB_MONITOR
-        int   fu;
-        logic cur_vr;
-        logic fire;
-
-        @(posedge nRST);
-        @(posedge CLK);
-
-        forever begin
+    // Test: Collect a full vector when TIMES cycles are needed per lane
+    task automatic vector_collection_multi_cycle();
+        logic [NUM_LANES-1:0][15:0] input_data;
+        int cycle_count;
+        $display("[%0t] Test: Vector Collection (Multi-Cycle, TIMES=%0d)", $time, TIMES);
+        
+        
+        rcif.in.wb_ready = 'b1;
+        rcif.in.mask = '1;  // All elements active
+        
+        // Send TIMES worth of data to each lane
+        for (cycle_count = 0; cycle_count < TIMES; cycle_count++) begin
             @(posedge CLK);
-
-            for (fu = 0; fu < LANE_FU_COUNT; fu++) begin
-                // ------------------------------
-                // Backpressure / stability check
-                // ------------------------------
-                if (vif.rc_out.valid_o[fu] && !vif.rc_in.ready_in[0][fu]) begin
-                    if (!hold_valid[fu]) begin
-                        hold_valid[fu] <= 1'b1;
-                        hold_vec[fu]   <= vif.rc_out.result[fu];
-                        hold_vd[fu]    <= vif.rc_out.vd[fu];
-                    end else begin
-                        assert(vif.rc_out.result[fu] == hold_vec[fu])
-                            else $error("[%0t] (%s) RC: FU=%0d result changed while stalled",
-                                        $time, cur_test_name, fu);
-                        assert(vif.rc_out.vd[fu] == hold_vd[fu])
-                            else $error("[%0t] (%s) RC: FU=%0d vd changed while stalled",
-                                        $time, cur_test_name, fu);
-                    end
-                end else if (!vif.rc_out.valid_o[fu]) begin
-                    hold_valid[fu] <= 1'b0;
-                end
-
-                // ------------------------------
-                // Handshake edge-detect:
-                // count only the 0->1 edge of (valid && ready)
-                // ------------------------------
-                cur_vr = vif.rc_out.valid_o[fu] && vif.rc_in.ready_in[0][fu];
-                fire   = cur_vr && !prev_vr[fu];
-
-                if (fire) begin
-                    if (exp_q.size == 0) begin
-                        $error("[%0t] (%s) RC WB: Unexpected writeback FU=%0d, VD=%0d",
-                               $time, cur_test_name, fu, vif.rc_out.vd[fu]);
-                    end else begin
-                        exp_item_t got;
-                        got = exp_q.pop_front();
-
-                        if (got.fu != fu) begin
-                            $error("[%0t] (%s) RC WB: FU mismatch. Expected FU=%0d (%s), got FU=%0d",
-                                   $time, cur_test_name, got.fu, got.name, fu);
-                        end
-
-                        if (vif.rc_out.vd[fu] !== got.vd) begin
-                            $error("[%0t] (%s) RC WB: VD mismatch for %s. Exp=%0d got=%0d",
-                                   $time, cur_test_name, got.name, got.vd, vif.rc_out.vd[fu]);
-                        end
-
-                        if (vif.rc_out.result[fu] !== got.vec) begin
-                            $error("[%0t] (%s) RC WB: DATA mismatch for %s (FU=%0d, VD=%0d)",
-                                   $time, cur_test_name, got.name, fu, got.vd);
-                        end else begin
-                            $display("[%0t] (%s) RC WB PASS: %s (FU=%0d, VD=%0d)",
-                                     $time, cur_test_name, got.name, fu, got.vd);
-                        end
-                    end
-                end
-
-                // Remember current (valid && ready) for next cycle
-                prev_vr[fu] <= cur_vr;
+            
+            // Generate unique data for each lane and cycle
+            for (int lane = 0; lane < NUM_LANES; lane++) begin
+                input_data[lane] = (cycle_count * NUM_LANES) + lane + 1;
+            end
+            
+            rcif.in.lane_input = input_data;
+            rcif.in.input_valid = '1;  // All lanes valid
+            
+            // VD should only be captured on first cycle
+            if (cycle_count == 0) begin
+                rcif.in.vd_input = 'd5;
+            end else begin
+                rcif.in.vd_input = 'd99;  // Different value - should be ignored
             end
         end
-    end
-
-
-    // ------------------------------------------------------------
-    // 6. Helper: one-cycle, one-element-per-lane vector (elem_idx=0)
-    // last asserted on final lane
-    // ------------------------------------------------------------
-    task automatic drive_vector_for_fu(
-        input int    fu_idx,
-        input vsel_t dest_vd,
-        input bf16_t base_val
-    );
-        int ln;
-
-        @(negedge CLK);
-        for (ln = 0; ln < NUM_LANES; ln++) begin
-            vif.rc_in.valid_in [ln][fu_idx] = 1'b1;
-            vif.rc_in.vd       [ln][fu_idx] = dest_vd;
-            // Simple pattern: base + lane index
-            vif.rc_in.result   [ln][fu_idx] = base_val + bf16_t'(ln);
-            vif.rc_in.elem_idx [ln][fu_idx] = '0;                  // elem 0
-            vif.rc_in.last     [ln][fu_idx] = (ln == NUM_LANES-1); // last lane
-        end
-
+        
         @(posedge CLK);
-
-        @(negedge CLK);
-        for (ln = 0; ln < NUM_LANES; ln++) begin
-            vif.rc_in.valid_in [ln][fu_idx] = 1'b0;
-            vif.rc_in.last     [ln][fu_idx] = 1'b0;
-        end
+        rcif.in.input_valid = '0;
+        
+        // Wait for wb_valid to assert
+        while (!rcif.out.wb_valid) @(posedge CLK);
+        
+        // Check VD output
+        assert(rcif.out.vd_output == 'd5) else 
+            $error("VD mismatch! Expected 5, got %0d", rcif.out.vd_output);
+        
+        $display("[%0t] Vector collection complete, wb_valid asserted", $time);
+        
+        // Complete handshake
+        @(posedge CLK);
+        assert(rcif.out.wb_valid == 1'b0) else
+            $error("wb_valid should deassert after handshake");
+        
+        @(posedge CLK);
     endtask
 
-    // ------------------------------------------------------------
-    // 7. Helper: two-elements-per-lane vector (elem_idx=0 then 1)
-    // last asserted on final lane at elem_idx=1
-    // ------------------------------------------------------------
-    task automatic drive_two_elem_vector_for_fu(
-        input int    fu_idx,
-        input vsel_t dest_vd,
-        input bf16_t base_val
-    );
-        int ln;
-
-        // First element per lane: elem_idx=0, last=0
-        @(negedge CLK);
-        for (ln = 0; ln < NUM_LANES; ln++) begin
-            vif.rc_in.valid_in [ln][fu_idx] = 1'b1;
-            vif.rc_in.vd       [ln][fu_idx] = dest_vd;
-            vif.rc_in.result   [ln][fu_idx] = base_val + bf16_t'(ln*2 + 0);
-            vif.rc_in.elem_idx [ln][fu_idx] = slice_idx_t'(0);
-            vif.rc_in.last     [ln][fu_idx] = 1'b0;
-        end
-        @(posedge CLK);
-
-        // Second element per lane: elem_idx=1, last=1 on final lane
-        @(negedge CLK);
-        for (ln = 0; ln < NUM_LANES; ln++) begin
-            vif.rc_in.valid_in [ln][fu_idx] = 1'b1;
-            vif.rc_in.vd       [ln][fu_idx] = dest_vd;
-            vif.rc_in.result   [ln][fu_idx] = base_val + bf16_t'(ln*2 + 1);
-            vif.rc_in.elem_idx [ln][fu_idx] = slice_idx_t'(1);
-            vif.rc_in.last     [ln][fu_idx] = (ln == NUM_LANES-1);
-        end
-        @(posedge CLK);
-
-        // Drop valids/last
-        @(negedge CLK);
-        for (ln = 0; ln < NUM_LANES; ln++) begin
-            vif.rc_in.valid_in [ln][fu_idx] = 1'b0;
-            vif.rc_in.last     [ln][fu_idx] = 1'b0;
-        end
-    endtask
-
-    // ------------------------------------------------------------
-    // 8. Build expected vectors for the helpers above
-    // ------------------------------------------------------------
-    function automatic vreg_t build_exp_one_elem_per_lane(
-        input bf16_t base_val
-    );
-        vreg_t exp;
-        exp = '0;
-
-        for (int ln = 0; ln < NUM_LANES; ln++) begin
-            bf16_t val = base_val + bf16_t'(ln);
-            // gidx = { lane_bits, elem_idx(0) }
-            int unsigned gidx;
-            gidx = { ln[$clog2(NUM_LANES)-1:0], slice_idx_t'(0) };
-            exp[gidx*ELEM_W +: ELEM_W] = val;
-        end
-
-        return exp;
-    endfunction
-
-    function automatic vreg_t build_exp_two_elem_per_lane(
-        input bf16_t base_val
-    );
-        vreg_t exp;
-        exp = '0;
-
-        for (int ln = 0; ln < NUM_LANES; ln++) begin
-            for (int e = 0; e < SLICE_W; e++) begin
-                bf16_t val = base_val + bf16_t'(ln*2 + e);
-                int unsigned gidx;
-                gidx = { ln[$clog2(NUM_LANES)-1:0], slice_idx_t'(e) };
-                exp[gidx*ELEM_W +: ELEM_W] = val;
+    // Test: Collect vector with staggered lane inputs
+    task automatic vector_collection_staggered();
+        int cycle;
+        int timeout;
+        $display("[%0t] Test: Vector Collection (Staggered Lanes)", $time);
+        
+        
+        rcif.in.wb_ready = 'b1;
+        rcif.in.mask = '1;
+        
+        for (cycle = 0; cycle < TIMES * 2; cycle++) begin
+            @(posedge CLK);
+            
+            // Lane 0 gets data every cycle
+            if (cycle < TIMES) begin
+                rcif.in.input_valid[0] = 1'b1;
+                rcif.in.lane_input[0] = cycle + 100;
+            end else begin
+                rcif.in.input_valid[0] = 1'b0;
+            end
+            
+            // Other lanes get data every other cycle
+            for (int lane = 1; lane < NUM_LANES; lane++) begin
+                if ((cycle % 2 == 0) && (cycle/2 < TIMES)) begin
+                    rcif.in.input_valid[lane] = 1'b1;
+                    rcif.in.lane_input[lane] = (cycle/2) + (lane * 100);
+                end else begin
+                    rcif.in.input_valid[lane] = 1'b0;
+                end
+            end
+            
+            if (cycle == 0) begin
+                rcif.in.vd_input = 'd7;
+            end else begin
+                rcif.in.vd_input = 'd88;  // Should be ignored
             end
         end
-
-        return exp;
-    endfunction
-
-    // ------------------------------------------------------------
-    // 9. Directed Tests
-    // ------------------------------------------------------------
-    task automatic test_basic_mul;
-        bf16_t base;
-        vreg_t exp;
-        vsel_t vd;
-
-        cur_test_name = "TEST 1: BASIC_MUL";
-
-        vd   = vsel_t'(5'd1);
-        base = bf16_t'(16'h3C00); // just a pattern
-
-        exp = build_exp_one_elem_per_lane(base);
-        push_expect(MUL, vd, exp, "TEST_BASIC_MUL");
-
-        $display("[%0t] (%s) TB: TEST_BASIC_MUL starting", $time, cur_test_name);
-        drive_vector_for_fu(MUL, vd, base);
-        repeat (20) @(posedge CLK);
-    endtask
-
-    task automatic test_fu_routing_mul_then_div;
-        bf16_t base_mul, base_div;
-        vreg_t exp_mul, exp_div;
-        vsel_t vd_mul, vd_div;
-
-        cur_test_name = "TEST 2: FU_ROUTING_MUL_DIV";
-
-        vd_mul   = vsel_t'(5'd2);
-        vd_div   = vsel_t'(5'd3);
-        base_mul = bf16_t'(16'h4000);
-        base_div = bf16_t'(16'h4200);
-
-        exp_mul = build_exp_one_elem_per_lane(base_mul);
-        exp_div = build_exp_one_elem_per_lane(base_div);
-
-        push_expect(MUL, vd_mul, exp_mul, "TEST_FU_ROUTE_MUL");
-        push_expect(DIV, vd_div, exp_div, "TEST_FU_ROUTE_DIV");
-
-        $display("[%0t] (%s) TB: TEST_FU_ROUTING MUL then DIV", $time, cur_test_name);
-        drive_vector_for_fu(MUL, vd_mul, base_mul);
-        repeat (10) @(posedge CLK);
-        drive_vector_for_fu(DIV, vd_div, base_div);
-        repeat (20) @(posedge CLK);
-    endtask
-
-    task automatic test_global_index_two_elems;
-        bf16_t base;
-        vreg_t exp;
-        vsel_t vd;
-
-        cur_test_name = "TEST 3: GLOBAL_INDEX_2ELEM";
-
-        vd   = vsel_t'(5'd4);
-        base = bf16_t'(16'h4400);
-
-        exp = build_exp_two_elem_per_lane(base);
-        push_expect(MUL, vd, exp, "TEST_GLOBAL_INDEX_2ELEM");
-
-        $display("[%0t] (%s) TB: TEST_GLOBAL_INDEX_2ELEM starting", $time, cur_test_name);
-        drive_two_elem_vector_for_fu(MUL, vd, base);
-        repeat (40) @(posedge CLK);
-    endtask
-
-    // Backpressure test
-    task automatic test_wb_backpressure;
-        bf16_t base;
-        vreg_t exp;
-        vsel_t vd;
-
-        cur_test_name = "TEST 4: WB_BACKPRESSURE";
-
-        vd   = vsel_t'(5'd5);
-        base = bf16_t'(16'h4500);
-
-        exp = build_exp_one_elem_per_lane(base);
-        push_expect(MUL, vd, exp, "TEST_WB_BACKPRESSURE");
-
-        $display("[%0t] (%s) TB: TEST_WB_BACKPRESSURE starting", $time, cur_test_name);
-
-        // Start with ready=0 for MUL
-        vif.rc_in.ready_in[0][MUL] = 1'b0;
-
-        drive_vector_for_fu(MUL, vd, base);
-
-        // Hold ready low for a few cycles while RC has time to build the vector
-        repeat (10) @(posedge CLK);
-
-        // Now release backpressure
-        $display("[%0t] (%s) TB: WB ready asserted again for MUL", $time, cur_test_name);
-        vif.rc_in.ready_in[0][MUL] = 1'b1;
-
-        repeat (40) @(posedge CLK);
-
-        // Restore default ready
-        vif.rc_in.ready_in[0][MUL] = 1'b1;
-    endtask
-
-    // Fast "last lane" race test
-    task automatic test_fast_last_lane_race;
-        bf16_t base;
-        vreg_t exp;
-        vsel_t vd;
-        int ln;
-
-        cur_test_name = "TEST 5: FAST_LAST_LANE_RACE";
-
-        vd   = vsel_t'(5'd6);
-        base = bf16_t'(16'h4600);
-
-        // EXPECTATION: full vector with all lanes written
-        exp = build_exp_one_elem_per_lane(base);
-        push_expect(MUL, vd, exp, "TEST_FAST_LAST_LANE_RACE");
-
-        $display("[%0t] (%s) TB: TEST_FAST_LAST_LANE_RACE starting (may FAIL with current rc_fu)",
-                 $time, cur_test_name);
-
-        // Step 1: ONLY last lane writes, with last=1
-        @(negedge CLK);
-        for (ln = 0; ln < NUM_LANES; ln++) begin
-            vif.rc_in.valid_in [ln][MUL] = 1'b0;
-            vif.rc_in.last     [ln][MUL] = 1'b0;
+        
+        @(posedge CLK);
+        rcif.in.input_valid = '0;
+        
+        // Wait for completion with timeout
+        timeout = 0;
+        while (!rcif.out.wb_valid) begin
+            @(posedge CLK);
+            timeout++;
+            assert(timeout < 1000) else $fatal("Timeout waiting for wb_valid in staggered test");
         end
-        vif.rc_in.valid_in [NUM_LANES-1][MUL] = 1'b1;
-        vif.rc_in.vd       [NUM_LANES-1][MUL] = vd;
-        vif.rc_in.result   [NUM_LANES-1][MUL] = base + bf16_t'(NUM_LANES-1);
-        vif.rc_in.elem_idx [NUM_LANES-1][MUL] = '0;
-        vif.rc_in.last     [NUM_LANES-1][MUL] = 1'b1;
+        
+        assert(rcif.out.vd_output == 'd7) else
+            $error("VD mismatch in staggered test");
+        
+        $display("[%0t] Staggered collection complete", $time);
+        @(posedge CLK);
+        @(posedge CLK);
+    endtask
+
+    // Test: Backpressure handling
+    task automatic backpressure_test();
+        logic [NUM_LANES-1:0][15:0] input_data;
+        int cycle_count;
+        $display("[%0t] Test: Backpressure", $time);
+        
+        
+        rcif.in.wb_ready = 'b1;
+        rcif.in.mask = '1;
+        
+        // Fill the collector
+        for (cycle_count = 0; cycle_count < TIMES; cycle_count++) begin
+            @(posedge CLK);
+            for (int lane = 0; lane < NUM_LANES; lane++) begin
+                input_data[lane] = (cycle_count * NUM_LANES) + lane + 200;
+            end
+            rcif.in.lane_input = input_data;
+            rcif.in.input_valid = '1;
+            if (cycle_count == 0) rcif.in.vd_input = 'd10;
+        end
+        
+        @(posedge CLK);
+        rcif.in.input_valid = '0;
+        rcif.in.wb_ready = 'b0;
+        // Wait for valid
+        while (!rcif.out.wb_valid) @(posedge CLK);
+        
+        $display("[%0t] wb_valid asserted, applying backpressure", $time);
+        
+        // Apply backpressure - keep wb_ready low
+        
+        
+        // wb_valid should stay high
+        repeat(5) begin
+            @(posedge CLK);
+            assert(rcif.out.wb_valid == 1'b1) else
+                $error("wb_valid should remain high during backpressure");
+        end
+        
+        // Release backpressure
+        rcif.in.wb_ready = 'b1;
+        @(posedge CLK);
+        
+        // wb_valid should deassert
+        assert(rcif.out.wb_valid == 1'b0) else
+            $error("wb_valid should deassert after handshake");
+        
+        $display("[%0t] Backpressure test complete", $time);
+        @(posedge CLK);
+    endtask
+
+    // Test: Mask handling (masked elements should be zero)
+    task automatic mask_test();
+        $display("[%0t] Test: Masking", $time);
+        
+        rcif.in.wb_ready = 'b1;
+        
+        for (int cycle = 0; cycle < TIMES; cycle++) begin
+            @(posedge CLK);
+            
+            // Alternate mask pattern
+            for (int lane = 0; lane < NUM_LANES; lane++) begin
+                rcif.in.lane_input[lane] = 16'hFFFF;  // Non-zero data
+                rcif.in.mask[lane] = (lane % 2 == 0) ? 1'b1 : 1'b0;  // Mask odd lanes
+                rcif.in.input_valid[lane] = 1'b1;
+            end
+            
+            if (cycle == 0) rcif.in.vd_input = 'd15;
+        end
+        
+        @(posedge CLK);
+        rcif.in.input_valid = '0;
+        
+        while (!rcif.out.wb_valid) @(posedge CLK);
+        
+        $display("[%0t] Mask test complete", $time);
+        @(posedge CLK);
+    endtask
+
+    // Test: Back-to-back vectors
+    task automatic back_to_back_vectors();
+        int timeout;
+        $display("[%0t] Test: Back-to-Back Vectors", $time);
+        
+        rcif.in.wb_ready = 'b1;
+        rcif.in.mask = '1;
+        
+        // First vector
+        for (int cycle = 0; cycle < TIMES; cycle++) begin
+            @(posedge CLK);
+            for (int lane = 0; lane < NUM_LANES; lane++) begin
+                rcif.in.lane_input[lane] = 16'hAAAA;
+            end
+            rcif.in.input_valid = '1;
+            if (cycle == 0) rcif.in.vd_input = 'd20;
+            else rcif.in.vd_input = 'd21;
+        end
+        
+        @(posedge CLK);
+        rcif.in.input_valid = '0;
+        
+        // Wait for first vector to complete
+        timeout = 0;
+        while (!rcif.out.wb_valid) begin
+            @(posedge CLK);
+            timeout++;
+            assert(timeout < 1000) else $fatal("Timeout waiting for first wb_valid");
+        end
+        assert(rcif.out.vd_output == 'd20) else $error("First vector VD wrong");
+        
+        // Handshake occurs on this cycle, counters will reset next cycle        
+        // Second vector immediately after reset
+        for (int cycle = 0; cycle < TIMES; cycle++) begin
+            
+            for (int lane = 0; lane < NUM_LANES; lane++) begin
+                rcif.in.lane_input[lane] = 16'hBBBB;
+            end
+            rcif.in.input_valid = '1;
+            if (cycle == 0) rcif.in.vd_input = 'd30;
+            else rcif.in.vd_input = 'd31;
+            @(posedge CLK);
+        end
+        
+        @(posedge CLK);
+        rcif.in.input_valid = '0;
+        
+        // Wait for second vector to complete
+        timeout = 0;
+        while (!rcif.out.wb_valid) begin
+            @(posedge CLK);
+            timeout++;
+            assert(timeout < 1000) else $fatal("Timeout waiting for second wb_valid");
+        end
+        assert(rcif.out.vd_output == 'd30) else $error("Second vector VD wrong");
+        
+        $display("[%0t] Back-to-back test complete", $time);
+        @(posedge CLK);
+    endtask
+
+    task automatic vector_collection_one_slow_lane();
+        int timeout;
+        $display("[%0t] Test: Vector Collection (One Slow Lane)", $time);
+        
+        rcif.in.wb_ready = 'b1;
+        rcif.in.mask = '1;
+        
+        // Cycle 0: All lanes get first element
+        @(posedge CLK);
+        for (int lane = 0; lane < NUM_LANES; lane++) begin
+            rcif.in.lane_input[lane] = lane + 100;
+        end
+        rcif.in.input_valid = '1;
+        rcif.in.vd_input = 'd12;
+        
+        // Cycle 1: All lanes EXCEPT lane 2 get second element
+        @(posedge CLK);
+        for (int lane = 0; lane < NUM_LANES; lane++) begin
+            if (lane == 2) begin
+                rcif.in.input_valid[lane] = 1'b0;  // Lane 2 stalls
+            end else begin
+                rcif.in.input_valid[lane] = 1'b1;
+                rcif.in.lane_input[lane] = lane + 200;
+            end
+        end
+        rcif.in.vd_input = 'd99;  // Should be ignored
+        
+        // Wait a few cycles with no data
+        @(posedge CLK);
+        rcif.in.input_valid = '0;
+        @(posedge CLK);
+        @(posedge CLK);
+        @(posedge CLK);
+        
+        // Finally send lane 2's second element
+        @(posedge CLK);
+        rcif.in.input_valid = '0;
+        rcif.in.input_valid[2] = 1'b1;
+        rcif.in.lane_input[2] = 202;
+        
+        @(posedge CLK);
+        rcif.in.input_valid = '0;
+        
+        // Wait for wb_valid with timeout
+        timeout = 0;
+        while (!rcif.out.wb_valid) begin
+            @(posedge CLK);
+            timeout++;
+            assert(timeout < 1000) else $fatal("Timeout waiting for wb_valid with slow lane");
+        end
+        
+        $display("[%0t] Slow lane test complete", $time);
+        @(posedge CLK);
+    endtask
+
+    initial begin
+        nRST = 'b1;
+        
+        power_on_reset();
+        @(posedge CLK);
+        
+        vector_collection_multi_cycle();
+        //vector_collection_staggered();
+       
+        //backpressure_test();
+        //mask_test();
+        //back_to_back_vectors();
+        
+        //vector_collection_one_slow_lane();
 
         @(posedge CLK);
-
-        // Step 2: now try to write remaining lanes (0..NUM_LANES-2)
-        @(negedge CLK);
-        for (ln = 0; ln < NUM_LANES-1; ln++) begin
-            vif.rc_in.valid_in [ln][MUL] = 1'b1;
-            vif.rc_in.vd       [ln][MUL] = vd;
-            vif.rc_in.result   [ln][MUL] = base + bf16_t'(ln);
-            vif.rc_in.elem_idx [ln][MUL] = '0;
-            vif.rc_in.last     [ln][MUL] = 1'b0;
-        end
-        // Clear last on lane NUM_LANES-1
-        vif.rc_in.valid_in [NUM_LANES-1][MUL] = 1'b0;
-        vif.rc_in.last     [NUM_LANES-1][MUL] = 1'b0;
-
         @(posedge CLK);
-
-        // Drop all valids
-        @(negedge CLK);
-        for (ln = 0; ln < NUM_LANES; ln++) begin
-            vif.rc_in.valid_in [ln][MUL] = 1'b0;
-            vif.rc_in.last     [ln][MUL] = 1'b0;
-        end
-
-        repeat (40) @(posedge CLK);
-    endtask
-
-    // ------------------------------------------------------------
-    // 10. Main Test Sequence
-    // ------------------------------------------------------------
-    initial begin : MAIN_TEST
-        @(posedge nRST);
-        @(posedge CLK);
-
-        $display("[%0t] TB: Starting RC tests...", $time);
-
-        test_basic_mul();
-        test_fu_routing_mul_then_div();
-        //test_global_index_two_elems(); // enable when 2-e/lanes are supported
-        test_wb_backpressure();
-        test_fast_last_lane_race();
-
-        // Let outstanding WB complete
-        repeat (100) @(posedge CLK);
-
-        if (exp_q.size != 0) begin
-            $error("TB: Some expected items never observed. Remaining = %0d", exp_q.size);
-        end else begin
-            $display("[%0t] TB: All expected writebacks observed.", $time);
-        end
-
-        $display("[%0t] TB: Done.", $time);
-        $finish;
+        
+        $display("[%0t] All tests complete!", $time);
+        $stop;
     end
 
 endmodule

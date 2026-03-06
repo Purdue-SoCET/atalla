@@ -11,6 +11,15 @@ MODROOT    := $(TOPDIR)/rtl/modules
 TBROOT     := $(TOPDIR)/tb
 UVMTESTROOT  := $(TBROOT)/uvm
 UNITTESTROOT := $(TBROOT)/unit
+
+#DPIC path config
+DPI_INC := $(TBROOT)/formal/vector/include
+DPI_SRC := $(TBROOT)/formal/vector/src/DPIC
+DPI_LIB := libdpi_parser
+QUESTA_INC     := /package/eda/mg/questa2021.4/questasim/include
+CPP_MODEL_DIR := $(TBROOT)/formal/vector/src
+CPP_MODEL_INC := $(TBROOT)//formal/vector/include
+TESTCASEROOT := $(TBROOT)/formal/vector/testcases
 SCRATCH       := work
 
 # Include directory setup
@@ -24,6 +33,7 @@ GUI ?= OFF
 # --- Coverage Controls ---
 COVERAGE ?= OFF           # set to ON to enable coverage
 VLOG_FLAGS ?=
+VSIM_EXTRA_FLAGS ?=
 
 ifeq ($(COVERAGE),ON)
   # Questa coverage switches
@@ -103,7 +113,7 @@ lint:
 
 test:
 	@if [ -z "$(tb_file)" ]; then \
-	  echo "Usage: make $@ tb_file=tb_top.sv [folder=/sub/dir] [dut=file1.sv,file2.sv] [GUI=ON/OFF]"; exit 1; \
+	  echo "Usage: make $@ tb_file=tb_top.sv [folder=/sub/dir] [dut=file1.sv,file2.sv] [modules=/path/to/dir,/path/to/file.sv] [packages=/path/to/pkg.sv,/path/to/dir] [GUI=ON/OFF]"; exit 1; \
 	fi; \
 	\
 	# 1. Locate Testbench File \
@@ -122,42 +132,76 @@ test:
 	TB_RELPATH=$$(echo "$$TB_DIR" | sed "s|$(UNITTESTROOT)||"); \
 	\
 	# 2. Identify Include Sources and PACKAGES \
-	INCSRCS=""; \
-	if [ -n "$$TB_RELPATH" ] && [ "$$TB_RELPATH" != "/" ]; then \
-	  INCSRCS=$$(find "$(INCDIRROOT)/common" "$(INCDIRROOT)$$TB_RELPATH" -type f \( -name '*.sv' -o -name '*_pkg.sv' -o -name '*_pkg.vh' \) -print 2>/dev/null | sort); \
+	PKGS=""; \
+	INC_OTHERS=""; \
+	\
+	if [ -n "$(packages)" ]; then \
+	  echo "[$@] compiling specified packages: $(packages)"; \
+	  for p in $$(echo "$(packages)" | tr ',' ' '); do \
+	    if [[ "$$p" = /* ]]; then \
+	      FULL_PATH="$(INCDIRROOT)$$p"; \
+	    else \
+	      FULL_PATH="$$p"; \
+	    fi; \
+	    if [ -f "$$FULL_PATH" ]; then \
+	      echo "  Adding package file: $$FULL_PATH"; \
+	      PKGS="$$PKGS $$FULL_PATH"; \
+	    elif [ -d "$$FULL_PATH" ]; then \
+	      echo "  Searching for packages in directory: $$FULL_PATH"; \
+	      PKG_FILES=$$(find "$$FULL_PATH" -type f \( -name '*_pkg.sv' -o -name '*_pkg.vh' -o -name '*.sv' ! -name '*_pkg.sv' \) -print 2>/dev/null); \
+	      PKGS="$$PKGS $$PKG_FILES"; \
+	    else \
+	      echo "Error: Package path $$FULL_PATH not found (neither file nor directory)"; exit 1; \
+	    fi; \
+	  done; \
+	  PKGS=$$(printf '%s\n' $$PKGS | sed '/^$$/d' | sort -u); \
 	else \
-	  INCSRCS=$$(find "$(INCDIRROOT)" -type f \( -name '*.sv' -o -name '*_pkg.sv' -o -name '*_pkg.vh' \) -print 2>/dev/null | sort); \
+	  echo "[$@] auto-discovering packages from include directories"; \
+	  INCSRCS=""; \
+	  if [ -n "$$TB_RELPATH" ] && [ "$$TB_RELPATH" != "/" ]; then \
+	    INCSRCS=$$(find "$(INCDIRROOT)/common" "$(INCDIRROOT)$$TB_RELPATH" -type f \( -name '*.sv' -o -name '*_pkg.sv' -o -name '*_pkg.vh' \) -print 2>/dev/null | sort); \
+	  else \
+	    INCSRCS=$$(find "$(INCDIRROOT)" -type f \( -name '*.sv' -o -name '*_pkg.sv' -o -name '*_pkg.vh' \) -print 2>/dev/null | sort); \
+	  fi; \
+	  PKGS=$$(printf '%s\n' $$INCSRCS | grep -E '_pkg\.(sv|vh)$$' || true); \
+	  INC_OTHERS=$$(printf '%s\n' $$INCSRCS | grep -Ev '_pkg\.(sv|vh)$$' || true); \
 	fi; \
-	PKGS=$$(printf '%s\n' $$INCSRCS | grep -E '_pkg\.(sv|vh)$$' || true); \
-	INC_OTHERS=$$(printf '%s\n' $$INCSRCS | grep -Ev '_pkg\.(sv|vh)$$' || true); \
 	\
 	# 3. Identify Module Sources \
 	MODSRCS=""; \
 	MOD_SEARCH_PATH="$(MODROOT)$$TB_RELPATH"; \
 	\
-	# For vector unit tests (tb/unit/vector/*), compile the whole vector + sqrt + adders + multipliers + dividers + general subsystem \
-	if [ "$$TB_RELPATH" = "/vector" ]; then \
-	  echo "[$@] vector TB detected -> compiling all vector + sqrt + adders + multipliers + dividers + general modules"; \
-	  MOD_SEARCH_PATH="$(MODROOT)/vector \
-	                    $(MODROOT)/common/arithmetic/sqrt \
-	                    $(MODROOT)/common/arithmetic/adders \
-	                    $(MODROOT)/common/arithmetic/mutlipliers \
-	                    $(MODROOT)/common/arithmetic/dividers \
-	                    $(MODROOT)/common/general"; \
-	  MODSRCS=$$(find $$MOD_SEARCH_PATH -type f -name '*.sv' ! -name '*_pkg.sv' -print 2>/dev/null | sort); \
+	if [ -n "$(modules)" ]; then \
+	  echo "[$@] compiling modules from specified paths: $(modules)"; \
+	  for p in $$(echo "$(modules)" | tr ',' ' '); do \
+	    if [[ "$$p" = /* ]] && [[ ! "$$p" = $(MODROOT)* ]]; then \
+	      FULL_PATH="$(MODROOT)$$p"; \
+	    else \
+	      FULL_PATH="$$p"; \
+	    fi; \
+	    if [ -f "$$FULL_PATH" ]; then \
+	      echo "  Adding file: $$FULL_PATH"; \
+	      MODSRCS="$$MODSRCS $$FULL_PATH"; \
+	    elif [ -d "$$FULL_PATH" ]; then \
+	      echo "  Searching directory: $$FULL_PATH"; \
+	      DIR_FILES=$$(find "$$FULL_PATH" -type f -name '*.sv' ! -name '*_pkg.sv' -print 2>/dev/null); \
+	      MODSRCS="$$MODSRCS $$DIR_FILES"; \
+	    else \
+	      echo "Error: Path $$FULL_PATH not found (neither file nor directory)"; exit 1; \
+	    fi; \
+	  done; \
+	  MODSRCS=$$(printf '%s\n' $$MODSRCS | sed '/^$$/d' | sort -u); \
+	elif [ -n "$(dut)" ]; then \
+	  echo "[$@] compiling specific DUT files: $(dut)"; \
+	  for f in $$(echo "$(dut)" | tr ',' ' '); do \
+	    FOUND=$$(find $$MOD_SEARCH_PATH -name "$$f" -print); \
+	    [ -n "$$FOUND" ] || { echo "Error: DUT file $$f not found in $$MOD_SEARCH_PATH"; exit 1; }; \
+	    MODSRCS="$$MODSRCS $$FOUND"; \
+	  done; \
+	  MODSRCS=$$(printf '%s\n' $$MODSRCS | sed '/^$$/d' | sort -u); \
 	else \
-	  if [ -n "$(dut)" ]; then \
-	    echo "[$@] compiling specific DUT files: $(dut)"; \
-	    for f in $$(echo "$(dut)" | tr ',' ' '); do \
-	      FOUND=$$(find $$MOD_SEARCH_PATH -name "$$f" -print); \
-	      [ -n "$$FOUND" ] || { echo "Error: DUT file $$f not found in $$MOD_SEARCH_PATH"; exit 1; }; \
-	      MODSRCS="$$MODSRCS $$FOUND"; \
-	    done; \
-	    MODSRCS=$$(printf '%s\n' $$MODSRCS | sed '/^$$/d' | sort -u); \
-	  else \
-	    echo "[$@] compiling all modules in: $$MOD_SEARCH_PATH"; \
-	    MODSRCS=$$(find $$MOD_SEARCH_PATH -type f -name '*.sv' ! -name '*_pkg.sv' -print 2>/dev/null | sort); \
-	  fi; \
+	  echo "[$@] compiling all modules in: $$MOD_SEARCH_PATH"; \
+	  MODSRCS=$$(find $$MOD_SEARCH_PATH -type f -name '*.sv' ! -name '*_pkg.sv' -print 2>/dev/null | sort); \
 	fi; \
 	\
 	# 4. Testbench Sources \
@@ -171,24 +215,67 @@ test:
 	INCDIRS_ALL=$$(find "$(INCDIRROOT)" "$(MODROOT)" "$(UNITTESTROOT)" -type d -print 2>/dev/null | sed 's/^/+incdir+/'); \
 	ALL_INCS="$$BASE_INCS $$INCDIRS_ALL"; \
 	\
+	echo "[$@] Ensuring work library exists..."; \
+	$(VLIB) work 2>/dev/null || true; \
 	echo "[$@] Running generic simulation script..."; \
 	if [ "$(GUI)" = "ON" ]; then \
-		$(VSIM) -do "set batch_mode 0; \
+		$(VSIM) -voptargs="+acc" -do "set batch_mode 0; \
 		             set WAVE_ROOT $(WAVEROOT); \
 		             set TB_NAME $$TB_TOP; \
 		             set SRCS {$$ORDERED_SRCS}; \
 		             set INCS {$$ALL_INCS}; \
 		             set VLOG_FLAGS {$(VLOG_FLAGS)}; \
+		             set VSIM_FLAGS {$(VSIM_EXTRA_FLAGS)}; \
 		             do $(SCRIPTROOT)/run_sim.tcl"; \
 	else \
-		$(VSIM) -c -do "set batch_mode 1; \
+		$(VSIM) -voptargs="+acc" -c -do "set batch_mode 1; \
 		                set WAVE_ROOT $(WAVEROOT); \
 		                set TB_NAME $$TB_TOP; \
 		                set SRCS {$$ORDERED_SRCS}; \
 		                set INCS {$$ALL_INCS}; \
 		                set VLOG_FLAGS {$(VLOG_FLAGS)}; \
+		                set VSIM_FLAGS {$(VSIM_EXTRA_FLAGS)}; \
 		                do $(SCRIPTROOT)/run_sim.tcl"; \
 	fi
 	
 clean:
 	rm -rf $(SCRATCH) transcript vsim.wlf work modelsim.ini
+
+
+.PHONY: dpi_lib l1_test l1_test_gui
+
+PROGRAM ?= add_vv
+
+dpi_lib:
+	g++ -std=c++20 -fPIC -shared \
+		-I$(DPI_INC) \
+		-I$(CPP_MODEL_INC) \
+		-I$(QUESTA_INC) \
+		-o $(DPI_LIB).so \
+		$(DPI_SRC)/inst_parser_dpi.cpp \
+		$(DPI_SRC)/sysarr_dpi.cpp \
+		$(DPI_SRC)/scratchpad_dpi.cpp \
+		$(DPI_SRC)/veggie_dpi.cpp \
+		$(CPP_MODEL_DIR)/schedular.cpp \
+		$(CPP_MODEL_DIR)/sysarr.cpp \
+		$(CPP_MODEL_DIR)/scratchpad.cpp \
+		$(CPP_MODEL_DIR)/veggie.cpp
+
+L1_PACKAGES := /vector/vector_pkg.vh,/memory/scratchpad/scpad_pkg.sv,/common/xbar/xbar_pkg.sv,/vector/vlsu_if.sv,/memory/scratchpad/scpad_if.sv,/vector/inst_parser_dpi_pkg.sv
+L1_MODULES  := /common/arithmetic/adders,/common/arithmetic/multipliers,/common/arithmetic/sqrt,/vector/reduction,/vector/vector_datapath.sv,/vector/vlsu.sv,/vector/gsau_control_unit.sv,/vector/lane.sv,/vector/lane_sequencer.sv,/vector/result_collector.sv,/vector/result_collector_counter.sv,/vector/lane_FUs/lane_unit_fifo.sv,/vector/lane_FUs/mul_FU.sv,/vector/lane_FUs/sqrt_FU.sv,/vector/slicer.sv,/vector/sync_fifo.sv,/vector/valu.sv,/vector/lane_FUs/alu_FU.sv,/vector/lane_FUs/reduction_FU.sv
+
+l1_test: dpi_lib
+	$(MAKE) test \
+		tb_file=vector_core_dpi_tb.sv \
+		packages=$(L1_PACKAGES) \
+		modules=$(L1_MODULES) \
+		VSIM_EXTRA_FLAGS="-sv_lib ./$(DPI_LIB)" \
+		GUI=OFF
+
+l1_test_gui: dpi_lib
+	$(MAKE) test \
+		tb_file=vector_core_dpi_tb.sv \
+		packages=$(L1_PACKAGES) \
+		modules=$(L1_MODULES) \
+		VSIM_EXTRA_FLAGS="-sv_lib ./$(DPI_LIB)" \
+		GUI=ON

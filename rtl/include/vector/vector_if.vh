@@ -7,110 +7,67 @@
 interface vector_if;
   import vector_pkg::*;
 
-  // Top level signals
+  //schedular to gsau
+  vector_if_gsau_in_t gsau_in;
+  //gasu to writeback
+  vector_if_gsau_out_t gsau_out;
+
+  //schedular to vlsu
+  vector_if_vlsu_in_t vlsu_in;
+  //vlsu to writeback
+  vector_if_vlsu_out_t vlsu_out;
+
+  //schedular to lanes
+  vector_if_lanes_in_t lanes_in;
+  //lanes to writeback
+  vector_if_lanes_out_t lanes_out;
   
-  logic CLK, nRST;
-  /*
-  control_t control;
-  vreg_t v1, v2, vdata; // FP16 Vector Data
-  vsel_t vd;
-  logic [NUM_ELEMENTS-1:0] vmask; 
-  logic [31:0] r1; 
-  logic swizzle, wen;
-  logic [11:0] row, col;
-  logic [5:0] row_id;
-  dtype_t datatype;
-  logic [4:0] error;
-  logic [IMM_W-1:0] imm;
-  
-  // Scheduler Core Interface Signals
 
-  // Scratchpad Interface Signals
+  //unit ready and wb ready
+  vector_if_unit_ready_t unit_ready_signals;
+  vector_if_wb_ready_t wb_ready_signals;
 
-  // VALU Signals GOING TO DELETE
-  vreg_t vdat1, vdat2, result;
-  */
-  // Top Level SIGNALS
-  vector_in_t vector_in; 
-  vector_out_t vector_out;
-
-  // VEGGIE SIGNALS
-  veggie_in_t veggie_in; 
-  veggie_out_t veggie_out;
-
-  // Op Buffer Signal
-  veggie_out_t opbuff_in;
-  opbuff_out_t opbuff_out;
-
-  // VRF Signals
-  logic iready;               // consumer-ready into the buffer (driven by top)
-  logic vrf_ready;            // surfaced VRF ready (driven by wrapper from veggie_out.ready)\
-  logic accomplished;        // indicates operation is complet
-
-  // Lane Signals 
-  lane_in_t lane_in;
-  lane_out_t lane_out;
-
-  // Mask Unit Signals
-  masku_in_t masku_in;
-  masku_out_t masku_out;
-
-  // Result Collector Signals
-  result_collector_in_t rc_in;
-  result_collector_out_t rc_out;
-
-
-  modport vector (
-    input vector_in,
-    output vector_out
-  );
-  
-  /*
-  // Scoreboard will handle taking imm or
-  modport valu (
-    input vdat1, vdat2, vop, vmask,
-    output result
-  );
-  */
-  // Veggie
-  modport veggie (
-    input veggie_in,
-    output veggie_out
+  modport gsau (
+    input gsau_in,
+    output gsau_out
   );
 
-  modport op_buffer (
-    input opbuff_in,
-    output opbuff_out
+  modport vlsu (
+    input vlsu_in,
+    output vlsu_out
   );
 
-  modport vregfile  (
-    input  CLK, nRST,
-    input  veggie_in,
-    input  iready,
-    output opbuff_out,
-    output vrf_ready
+  modport lanes (
+    input lanes_in,
+    output lanes_out
   );
 
-  // Lane
-  modport lane (
-    input CLK, nRST,
-    input lane_in,
-    output lane_out
-  );  
-
-  // Mask Unit
-  modport masku (
-    input CLK, nRST,
-    input masku_in,
-    output masku_out
+  modport vif (
+    input gsau_in,
+    input vlsu_in,
+    input lanes_in,
+    input unit_ready_signals,
+    output gsau_out,
+    output vlsu_out,
+    output lanes_out,
+    output wb_ready_signals
   );
 
-  // Result Collector
-  modport result_collector (
-    input CLK, nRST,
-    input rc_in,
-    output rc_out
-  );  
+  modport schedular (
+    input gsau_in,
+    input vlsu_in,
+    input lanes_in,
+    input unit_ready_signals
+  );
+
+  modport writeback (
+    output gsau_out,
+    output vlsu_out,
+    output lanes_out,
+    output wb_ready_signals
+  );
+
+
 
 endinterface
 

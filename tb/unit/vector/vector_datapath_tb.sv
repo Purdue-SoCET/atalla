@@ -1,779 +1,316 @@
+/*
+Full testbench for the vector datapath
+Testscases can be found in the test_cases folder
+Owner: Jacob Walter
+
+One horrindus make command coming up
+make test tb_file=vector_datapath_tb.sv packages=/vector/vector_pkg.vh,/memory/scratchpad/scpad_pkg.sv,/common/xbar/xbar_pkg.sv modules=/vector/vector_datapath.sv,/vector/slicer.sv,/vector/lane.sv,/vector/lane_sequencer.sv,/vector/result_collector.sv,/vector/result_collector_counter.sv,/common/arithmetic/adders,/common/arithmetic/multipliers,/common/arithmetic/sqrt,/vector/lane_FUs/mul_FU.sv,/vector/lane_FUs/sqrt_FU.sv,/vector/lane_FUs/lane_unit_fifo.sv GUI=ON
+
+
+*/
+
 `timescale 1ns/1ps
 
 `include "vector_pkg.vh"
 `include "vector_if.vh"
-`include "vreduction_if.vh"
-`include "reduction_types.vh"
+`include "gsau_control_unit_if.vh"
 
 module vector_datapath_tb;
+    `include "scpad_params.svh"
     import vector_pkg::*;
+    import scpad_pkg::*;
 
-    // ------------------------------------------------------------
-    // Clock / Reset
-    // ------------------------------------------------------------
     logic CLK;
     logic nRST;
 
     localparam int CLK_PERIOD      = 10;
-    localparam int DIR_MAX_CYCLES  = 200_000;
-    localparam int RAND_MAX_CYCLES = 200_000;
 
     initial begin
         CLK = 1'b0;
         forever #(CLK_PERIOD/2) CLK = ~CLK;
     end
 
+
+
+    //instanciation
+    vector_if vif();
+    gsau_control_unit_if gsauif();
+    scpad_if sif(CLK, nRST);
+
+    vector_datapath dut (
+        .CLK (CLK),
+        .nRST(nRST),
+        .vif (vif),
+        .sif(sif),
+        .gsauif(gsauif)
+    );
+
+    //task to drive the signals to one of the vector issue ports
+    task automatic issue_to_lane_port(
+        input int port,
+        input vreg_t v1,
+        input vreg_t v2,
+        input fu_t usel,
+        input logic [7:0] vd,
+        input logic rm,
+        input vmask_t mask,
+        input alu_op_t alu_op
+    );
+        
+        vif.lanes_in.lane_issue_ports[port].v1 = v1;
+        vif.lanes_in.lane_issue_ports[port].v2 = v2;
+        vif.lanes_in.lane_issue_ports[port].usel = usel;
+        vif.lanes_in.lane_issue_ports[port].vd = vd;
+        vif.lanes_in.lane_issue_ports[port].rm = rm;
+        vif.lanes_in.lane_issue_ports[port].mask = mask;
+        vif.lanes_in.lane_issue_ports[port].alu_op = alu_op;
+        vif.lanes_in.lane_issue_ports[port].input_valid = 1;
+    endtask
+
+    task automatic issue_to_gsau_port(
+        input vreg_t v1,
+        input vreg_t v2,
+        input logic [7:0] vd,
+        input logic weight
+    );
+        vif.gsau_in.veg_vdata1 = v1;
+        vif.gsau_in.veg_vdata2 = v2;
+        vif.gsau_in.vd = vd;
+        vif.gsau_in.weight = weight;
+        vif.gsau_in.valid_in = 'b1;
+    endtask
+
+    task automatic issue_to_vlsu_port(
+        input int port,
+        input logic write,
+        input logic [SCPAD_ADDR_WIDTH-1:0] spad_addr,
+        input logic [VIDX_W-1:0]          vd,
+        input logic [MAX_DIM_WIDTH-1:0]   num_rows,
+        input logic [MAX_DIM_WIDTH-1:0]   num_cols,
+        input logic [MAX_DIM_WIDTH-1:0]   row_id,
+        input logic [MAX_DIM_WIDTH-1:0]   col_id,
+        input logic                       row_or_col,
+
+        input vreg_t                      data                 
+    );
+        vif.vlsu_in.sched_req[port].valid       = 'b1;
+        vif.vlsu_in.sched_req[port].write       = write;
+        vif.vlsu_in.sched_req[port].spad_addr   = spad_addr;
+        vif.vlsu_in.sched_req[port].vdst        = vd;
+        vif.vlsu_in.sched_req[port].num_rows    = num_rows;
+        vif.vlsu_in.sched_req[port].num_cols    = num_cols;
+        vif.vlsu_in.sched_req[port].row_id      = row_id;
+        vif.vlsu_in.sched_req[port].col_id      = col_id;
+        vif.vlsu_in.sched_req[port].row_or_col  = row_or_col;
+
+        vif.vlsu_in.vrf_data[port].data         = data;
+        vif.vlsu_in.vrf_data[port].valid        = 'b1;
+    endtask
+
+    task automatic clear_lane_port(
+        input int port
+    );
+        vif.lanes_in.lane_issue_ports[port].v1 = 'b0;
+        vif.lanes_in.lane_issue_ports[port].v2 = 'b0;
+        vif.lanes_in.lane_issue_ports[port].usel = VALU;
+        vif.lanes_in.lane_issue_ports[port].vd = 'b0;
+        vif.lanes_in.lane_issue_ports[port].rm = 0;
+        vif.lanes_in.lane_issue_ports[port].mask = 'b0;
+        vif.lanes_in.lane_issue_ports[port].alu_op = ALU_ADD;
+        vif.lanes_in.lane_issue_ports[port].input_valid = 0;
+    endtask
+
+    task automatic clear_vlsu_port(
+        input int port
+    );
+        vif.vlsu_in.sched_req[port] = 'b0;
+        vif.vlsu_in.vrf_data[port] = 'b0;
+    endtask
+
+    task automatic clear_gsau_port();
+        vif.gsau_in.veg_vdata1 = 'b0;
+        vif.gsau_in.veg_vdata2 = 'b0;
+        vif.gsau_in.vd = 'b0;
+        vif.gsau_in.valid_in = 'b0;
+        vif.gsau_in.weight = 'b0;
+    endtask
+
+    task automatic drive_gsau_from_sys(
+        input vreg_t data = '0,
+        input logic valid = 'b0,
+        input logic ready = 'b0
+    );
+        gsauif.sa_array_output = data;
+        gsauif.sa_valid_in = valid;
+        gsauif.sa_ready_in = ready;
+        
+    endtask
+
+    task automatic drive_vlsu_from_sp(
+        input int port,
+        input logic valid = 'b0,
+        input logic write = 'b0,
+        input vreg_t data = 'b0,
+        input logic stall = 'b0
+    );
+        sif.vec_res[port].valid = valid;
+        sif.vec_res[port].write = write;
+        sif.vec_res[port].rdata = data;
+        sif.fe_vec_stall[port] = stall;
+    endtask
+
+    //used to set the ready state of each FU, set the bits for the index of the FU you want to make ready or not ready
+    task automatic set_wb_ready(
+        input logic [LANE_FU_COUNT-1:0] lane_status,
+        input logic [NUM_SCPADS-1:0] vlsu_status,
+        input logic gsau_status,
+        input logic reduction_status
+    );
+        vif.wb_ready_signals.lanes_wb_ready = lane_status;
+        vif.wb_ready_signals.vlsu_wb_ready = vlsu_status;
+        vif.wb_ready_signals.gsau_wb_ready = gsau_status;
+        vif.wb_ready_signals.reduction_wb_ready = reduction_status;
+    endtask
+
+    task automatic single_fu_test(
+        input int port,
+        input vreg_t v1,
+        input vreg_t v2,
+        input fu_t usel,
+        input logic [7:0] vd,
+        input logic rm,
+        input vmask_t mask,
+        input alu_op_t alu_op
+    );
+        issue_to_lane_port(port, v1, v2, usel, vd, rm, mask, alu_op);
+        @(posedge CLK);
+        clear_lane_port(port);
+
+    endtask
+
+    task automatic single_gsau_test(
+        input vreg_t v1,
+        input vreg_t v2,
+        input logic [7:0] vd,
+        input logic weight
+    );
+        issue_to_gsau_port(v1, v2, vd, weight);
+        @(posedge CLK);
+        clear_gsau_port();
+        @(posedge CLK);
+        @(posedge CLK);
+        @(posedge CLK);
+        drive_gsau_from_sys(v1, 1, 1);
+        @(posedge CLK);
+        drive_gsau_from_sys(.ready('b1));
+        @(posedge CLK);
+    endtask
+
+    task automatic single_vlsu_test(
+        input int port,
+        input logic write,
+        input logic [SCPAD_ADDR_WIDTH-1:0] spad_addr,
+        input logic [VIDX_W-1:0]          vd,
+        input logic [MAX_DIM_WIDTH-1:0]   num_rows,
+        input logic [MAX_DIM_WIDTH-1:0]   num_cols,
+        input logic [MAX_DIM_WIDTH-1:0]   row_id,
+        input logic [MAX_DIM_WIDTH-1:0]   col_id,
+        input logic                       row_or_col,
+        input vreg_t                      data
+    );
+        issue_to_vlsu_port(port, write, spad_addr, vd, num_rows, num_cols, row_id, col_id, row_or_col, data);
+        @(posedge CLK);
+        clear_vlsu_port(port);
+        
+    endtask
+
     task automatic apply_reset;
         begin
             nRST = 1'b0;
+            clear_lane_port(0);
+            clear_lane_port(1);
+            clear_vlsu_port(0);
+            clear_vlsu_port(1);
+            clear_gsau_port();
+            set_wb_ready(5'b11111, 2'b11, 1'b1, 1'b1);
+
+            //set the interface inputs to defaults
+            sif.fe_vec_stall[0] = 'b0;
+            sif.fe_vec_stall[1] = 'b0;
+            sif.vec_res[0] = 'b0;
+            sif.vec_res[1] = 'b0;
+
+            gsauif.sa_ready_in = 'b1;
+            gsauif.sa_valid_in = 'b0;
+            gsauif.sa_array_output = 'b0;
+
+
             repeat (5) @(posedge CLK);
             nRST = 1'b1;
             repeat (5) @(posedge CLK);
         end
     endtask
 
-    // ------------------------------------------------------------
-    // Interface + DUT
-    // ------------------------------------------------------------
-    vector_if vif();
-
-    vector_datapath dut (
-        .CLK (CLK),
-        .nRST(nRST),
-        .vif (vif)
+    task automatic basic_test_case_loop(
+        
     );
 
-    // Alias lane 0 so lane_tb-style code still reads naturally
-    `define lane_if dut.lane_if[0]
+    while(1) begin //while we still have instructions that we need to issue
+        //decode the new packet from the testcase file
 
-    // ------------------------------------------------------------
-    // FU indices (must match fu_t encoding)
-    // ------------------------------------------------------------
-    localparam int FU_VALU = VALU;
-    localparam int FU_EXP  = EXP;
-    localparam int FU_SQRT = SQRT;
-    localparam int FU_MUL  = MUL;
-    localparam int FU_DIV  = DIV;
+        //issue the new packet to whichever port it needs to go to
+        
+        //clock
+        @(posedge CLK);
+        //clear all the ports
+        clear_lane_port(0);
+        clear_lane_port(1);
+        clear_vlsu_port(0);
+        clear_vlsu_port(1);
+        clear_gsau_port();
+    end
 
-    // ------------------------------------------------------------
-    // Scoreboard types / state
-    // ------------------------------------------------------------
-    typedef struct packed {
-        vsel_t      vd;
-        slice_idx_t elem_idx;
-    } obs_t;
+    //dump the ram.sv
 
-    obs_t exp_q[$];
-
-    string cur_test;
-    int    total_errors;
-
-    int seen;
-    int errors;
-
-    // For random driver/monitor coordination
-    logic driver_done_mul;
-
-    // ------------------------------------------------------------
-    // Helper: expand lane slice → full vreg/vmask
-    // ------------------------------------------------------------
-    task automatic make_full_vector_from_slice(
-        input  slice_vt slice_v1,
-        input  slice_vt slice_v2,
-        input  slice_mt slice_mask,
-        output vreg_t   v1_full,
-        output vreg_t   v2_full,
-        output vmask_t  mask_full
-    );
-        int i;
-        begin
-            v1_full   = '0;
-            v2_full   = '0;
-            mask_full = '0;
-
-            // Lane 0 occupies indices [0 .. SLICE_W-1]
-            for (i = 0; i < SLICE_W; i++) begin
-                v1_full[i]   = slice_v1[i];
-                v2_full[i]   = slice_v2[i];
-                mask_full[i] = slice_mask[i];
-            end
-        end
     endtask
 
-    // ------------------------------------------------------------
-    // Helper: drive WB ready for MUL into Result Collector
-    // (this drives rc_in.ready_in[ln][FU_MUL], which RC uses as wb_ready)
-    // ------------------------------------------------------------
-    task automatic set_wb_ready_mul(input logic val);
-        int ln;
-        begin
-            for (ln = 0; ln < NUM_LANES; ln++) begin
-                vif.rc_in.ready_in[ln][FU_MUL] <= val;
-            end
-        end
-    endtask
+    vreg_t bf16_v1 = '{0: 16'h4120, 1: 16'h4140, 2: 16'h4160, 3: 16'h4180,
+                    4: 16'h41a0, 5: 16'h41c0, 6: 16'h41e0, 7: 16'h4200,
+                    8: 16'h4210, 9: 16'h4220, 10: 16'h4230, 11: 16'h4240,
+                    12: 16'h4250, 13: 16'h4260, 14: 16'h4270, 15: 16'h4280,
+                    16: 16'h4290, 17: 16'h42a0, 18: 16'h42b0, 19: 16'h42c0,
+                    20: 16'h42d0, 21: 16'h42e0, 22: 16'h42f0, 23: 16'h4300,
+                    24: 16'h4308, 25: 16'h4310, 26: 16'h4318, 27: 16'h4320,
+                    28: 16'h4328, 29: 16'h4330, 30: 16'h4338, 31: 16'h4340};
+
+    vreg_t bf16_v2 = '{0: 16'h41a0, 1: 16'h41c0, 2: 16'h41e0, 3: 16'h4200,
+                    4: 16'h4210, 5: 16'h4220, 6: 16'h4230, 7: 16'h4240,
+                    8: 16'h4250, 9: 16'h4260, 10: 16'h4270, 11: 16'h4280,
+                    12: 16'h4290, 13: 16'h42a0, 14: 16'h42b0, 15: 16'h42c0,
+                    16: 16'h42d0, 17: 16'h42e0, 18: 16'h42f0, 19: 16'h4300,
+                    20: 16'h4308, 21: 16'h4310, 22: 16'h4318, 23: 16'h4320,
+                    24: 16'h4328, 25: 16'h4330, 26: 16'h4338, 27: 16'h4340,
+                    28: 16'h4348, 29: 16'h4350, 30: 16'h4358, 31: 16'h4360};
 
-    // WB backpressure driver for MUL via RC (no TB poking lane ready)
-    task automatic wb_backpressure_mul(
-        input int max_cycles,
-        input int stall_prob  // 0..100
-    );
-        int cycles;
-        begin
-            cycles = 0;
-            while (cycles < max_cycles) begin
-                @(posedge CLK);
-                cycles++;
-
-                if ($urandom_range(99,0) < stall_prob)
-                    set_wb_ready_mul(1'b0);
-                else
-                    set_wb_ready_mul(1'b1);
-            end
-
-            // Leave WB ready high at the end
-            set_wb_ready_mul(1'b1);
-        end
-    endtask
-
-    // ------------------------------------------------------------
-    // Generic FU driver via vector_in[0]
-    // ------------------------------------------------------------
-    task automatic drive_fu_slice_vec(
-        input int        fu_idx,
-        input slice_vt   slice_v1,
-        input slice_vt   slice_v2,
-        input slice_mt   slice_mask,
-        input vsel_t     vd_tag,
-        input opcode_t   op
-    );
-        vreg_t  v1_full, v2_full;
-        vmask_t mask_full;
-        int     wait_cycles;
-        fu_t    fu_local;
-        begin
-            make_full_vector_from_slice(slice_v1, slice_v2, slice_mask,
-                                        v1_full, v2_full, mask_full);
-
-            fu_local = fu_t'(fu_idx);
-
-            // Wait for lane 0 FU ready_o (through full datapath)
-            wait_cycles = 0;
-            @(posedge CLK);
-            while (!`lane_if.lane_out.ready_o[fu_idx] && nRST &&
-                   wait_cycles < 1000) begin
-                @(posedge CLK);
-                wait_cycles++;
-            end
-
-            if (wait_cycles >= 1000) begin
-                $error("drive_fu_slice_vec(FU=%0d): lane never became ready!", fu_idx);
-            end
-
-            @(posedge CLK);
-            // Issue slot 0
-            vif.vector_in.v1[0]       <= v1_full;
-            vif.vector_in.v2[0]       <= v2_full;
-            vif.vector_in.vmask[0]    <= mask_full;
-            vif.vector_in.vd[0]       <= vd_tag;
-            vif.vector_in.vop[0]      <= op;
-            vif.vector_in.rm[0]       <= 1'b0;
-            vif.vector_in.fu_sel[0]   <= fu_local;
-            vif.vector_in.valid_in[0] <= 1'b1;
-
-            // one-cycle pulse
-            @(posedge CLK);
-            vif.vector_in.valid_in[0] <= 1'b0;
-        end
-    endtask
-
-    // Convenience wrappers
-    task automatic drive_sqrt_slice_vec(
-        input slice_vt slice_v1,
-        input slice_vt slice_v2,
-        input slice_mt slice_mask,
-        input vsel_t   vd_tag,
-        input opcode_t op
-    );
-        drive_fu_slice_vec(FU_SQRT, slice_v1, slice_v2, slice_mask, vd_tag, op);
-    endtask
-
-    task automatic drive_mul_slice_vec(
-        input slice_vt slice_v1,
-        input slice_vt slice_v2,
-        input slice_mt slice_mask,
-        input vsel_t   vd_tag,
-        input opcode_t op
-    );
-        drive_fu_slice_vec(FU_MUL, slice_v1, slice_v2, slice_mask, vd_tag, op);
-    endtask
-
-    // ------------------------------------------------------------
-    // Simple directed FU monitor (used by tests 1 & 2)
-    // ------------------------------------------------------------
-    task automatic wait_and_check_fu(
-        input int fu_idx,
-        input int expected_results
-    );
-        obs_t exp_item;
-        begin
-            seen   = 0;
-            errors = 0;
-
-            while (seen < expected_results) begin
-                @(posedge CLK);
-
-                if (`lane_if.lane_out.valid_o[fu_idx] &&
-                    `lane_if.lane_in.ready_in[fu_idx]) begin
-
-                    if (exp_q.size() == 0) begin
-                        $error("[%s] FU%0d unexpected result: queue empty",
-                               cur_test, fu_idx);
-                        errors++;
-                    end else begin
-                        exp_item = exp_q.pop_front();
-
-                        if (`lane_if.lane_out.vd[fu_idx]       !== exp_item.vd ||
-                            `lane_if.lane_out.elem_idx[fu_idx] !== exp_item.elem_idx) begin
-                            $error("[%s] FU%0d meta mismatch: exp vd=%0d idx=%0d, got vd=%0d idx=%0d",
-                                  cur_test, fu_idx,
-                                  exp_item.vd, exp_item.elem_idx,
-                                  `lane_if.lane_out.vd[fu_idx],
-                                  `lane_if.lane_out.elem_idx[fu_idx]);
-                            errors++;
-                        end
-                        $display("[MUL DEBUG] t=%0t fu=%0d vd=%0d elem_idx=%0d",
-                                $time,
-                                fu_idx,
-                                `lane_if.lane_out.vd[fu_idx],
-                                `lane_if.lane_out.elem_idx[fu_idx]);
-
-                        $display("[%0t] %s: FU%0d result=%h vd=%0d elem_idx=%0d",
-                                 $time, cur_test, fu_idx,
-                                 `lane_if.lane_out.result[fu_idx],
-                                 `lane_if.lane_out.vd[fu_idx],
-                                 `lane_if.lane_out.elem_idx[fu_idx]);
-                        seen++;
-                    end
-                end
-            end
-
-            if (errors == 0 && exp_q.size() == 0 && seen == expected_results) begin
-                $display("%s PASSED (results=%0d)", cur_test, seen);
-            end else begin
-                $error("%s FAILED (errors=%0d, results=%0d, expected=%0d, remaining=%0d)",
-                       cur_test, errors, seen, expected_results, exp_q.size());
-                total_errors += (errors == 0 ? 1 : errors);
-            end
-        end
-    endtask
-
-    // ============================================================
-    //  SQRT TESTS
-    // ============================================================
-
-    task automatic test1_sqrt_all_unmasked;
-        slice_vt v1, v2;
-        slice_mt mask;
-        int      expected_results;
-        int      i;
-        obs_t    item;
-        opcode_t op;
-        begin
-            cur_test = "TEST 1_SQRT_ALL";
-            $display("\n=== %s ===", cur_test);
-            exp_q.delete();
-
-            for (i = 0; i < SLICE_W; i++) begin
-                v1[i]   = bf16_t'(i + 3);
-                v2[i]   = '0;
-                mask[i] = 1'b1;
-            end
-
-            expected_results = SLICE_W;
-            for (i = 0; i < SLICE_W; i++) begin
-                item.vd       = vsel_t'(39);
-                item.elem_idx = slice_idx_t'(i);
-                exp_q.push_back(item);
-            end
-
-            op = '0;
-            drive_sqrt_slice_vec(v1, v2, mask, vsel_t'(39), op);
-            wait_and_check_fu(FU_SQRT, expected_results);
-        end
-    endtask
-
-    task automatic test2_sqrt_partial_mask;
-        slice_vt v1, v2;
-        slice_mt mask;
-        int      expected_results;
-        int      i;
-        obs_t    item;
-        opcode_t op;
-        begin
-            cur_test = "TEST 2_SQRT_PARTIAL_MASK";
-            $display("\n=== %s ===", cur_test);
-            exp_q.delete();
-
-            for (i = 0; i < SLICE_W; i++) begin
-                v1[i]   = bf16_t'(i + 11);
-                v2[i]   = '0;
-                mask[i] = (i % 2);
-            end
-
-            expected_results = 0;
-            for (i = 0; i < SLICE_W; i++) begin
-                if (mask[i]) begin
-                    item.vd       = vsel_t'(40);
-                    item.elem_idx = slice_idx_t'(i);
-                    exp_q.push_back(item);
-                    expected_results++;
-                end
-            end
-
-            op = '0;
-            drive_sqrt_slice_vec(v1, v2, mask, vsel_t'(40), op);
-            wait_and_check_fu(FU_SQRT, expected_results);
-        end
-    endtask
-
-    // ============================================================
-    //  MUL TESTS 1 & 2 (directed)
-    // ============================================================
-
-    task automatic test1_mul_all_unmasked;
-        slice_vt v1, v2;
-        slice_mt mask;
-        int      expected_results;
-        int      i;
-        obs_t    item;
-        opcode_t op;
-        begin
-            cur_test = "TEST 1_MUL_ALL";
-            $display("\n=== %s ===", cur_test);
-            exp_q.delete();
-
-            for (i = 0; i < SLICE_W; i++) begin
-                v1[i]   = bf16_t'(i + 5);
-                v2[i]   = bf16_t'(i + 1);
-                mask[i] = 1'b1;
-            end
-
-            expected_results = SLICE_W;
-            for (i = 0; i < SLICE_W; i++) begin
-                item.vd       = vsel_t'(30);
-                item.elem_idx = slice_idx_t'(i);
-                exp_q.push_back(item);
-            end
-
-            op = '0;
-            drive_mul_slice_vec(v1, v2, mask, vsel_t'(30), op);
-            wait_and_check_fu(FU_MUL, expected_results);
-        end
-    endtask
-
-    task automatic test2_mul_partial_mask;
-        slice_vt v1, v2;
-        slice_mt mask;
-        int      expected_results;
-        int      i;
-        obs_t    item;
-        opcode_t op;
-        begin
-            cur_test = "TEST 2_MUL_PARTIAL_MASK";
-            $display("\n=== %s ===", cur_test);
-            exp_q.delete();
-
-            for (i = 0; i < SLICE_W; i++) begin
-                v1[i]   = bf16_t'(i + 10);
-                v2[i]   = bf16_t'((i + 2));
-                mask[i] = (i % 2);
-            end
-
-            expected_results = 0;
-            for (i = 0; i < SLICE_W; i++) begin
-                if (mask[i]) begin
-                    item.vd       = vsel_t'(31);
-                    item.elem_idx = slice_idx_t'(i);
-                    exp_q.push_back(item);
-                    expected_results++;
-                end
-            end
-
-            op = '0;
-            drive_mul_slice_vec(v1, v2, mask, vsel_t'(31), op);
-            wait_and_check_fu(FU_MUL, expected_results);
-        end
-    endtask
-
-    // ============================================================
-    //  MUL Random driver / monitor (for tests 3,4,7)
-    // ============================================================
-
-    task automatic random_driver_mul_vec(
-        input int   num_slices,
-        input int   back_to_back_prob,  // 0..100
-        input vsel_t base_vd,
-        output int total_expected
-    );
-        int     s, i;
-        slice_vt v1, v2;
-        slice_mt mask;
-        opcode_t op;
-        obs_t    item;
-        begin
-            total_expected  = 0;
-            driver_done_mul = 1'b0;
-
-            for (s = 0; s < num_slices; s++) begin
-                // random data
-                for (i = 0; i < SLICE_W; i++) begin
-                    v1[i]   = bf16_t'($urandom_range(1000, 0));
-                    v2[i]   = bf16_t'($urandom_range(1000, 0));
-                    mask[i] = $urandom_range(1, 0);
-                end
-                op = '0;
-
-                // enqueue expected for unmasked elems
-                for (i = 0; i < SLICE_W; i++) begin
-                    if (mask[i]) begin
-                        item.vd       = base_vd;
-                        item.elem_idx = slice_idx_t'(i);
-                        exp_q.push_back(item);
-                        total_expected++;
-                    end
-                end
-
-                if ((base_vd == 31 || base_vd == 33) && mask != 0) begin
-                    $display("[%0t] TB ACTIVE SLICE s=%0d vd=%0d MASK=%b",
-                             $time, s, base_vd, mask);
-                end
-
-                drive_mul_slice_vec(v1, v2, mask, base_vd, op);
-
-                // Upstream starvation: random gaps
-                if ($urandom_range(99,0) > back_to_back_prob) begin
-                    repeat ($urandom_range(4,1)) @(posedge CLK);
-                end
-            end
-
-            driver_done_mul = 1'b1;
-        end
-    endtask
-    task automatic random_monitor_mul(
-        input  int    max_cycles,
-        output int    seen_o,
-        output int    errors_o,
-        input  string label
-    );
-        int   cycles;
-        obs_t exp;
-        int   hit_idx;
-        begin
-            seen_o   = 0;
-            errors_o = 0;
-            cycles   = 0;
-
-            // Pure observer: handshake == what the DUT sees
-            while (cycles < max_cycles) begin
-                @(posedge CLK);
-                cycles++;
-
-                if (`lane_if.lane_out.valid_o[FU_MUL] &&
-                    `lane_if.lane_in.ready_in[FU_MUL]) begin
-
-                    // Observed metadata
-                    vsel_t      obs_vd   = `lane_if.lane_out.vd[FU_MUL];
-                    slice_idx_t obs_idx  = `lane_if.lane_out.elem_idx[FU_MUL];
-
-                    // ---- Bag-style check: find *any* matching expected entry ----
-                    if (exp_q.size() == 0) begin
-                        $error("[%s] Unexpected MUL result: queue empty (vd=%0d idx=%0d)",
-                               label, obs_vd, obs_idx);
-                        errors_o++;
-                    end else begin
-                        hit_idx = -1;
-                        // Search for a matching (vd, elem_idx) anywhere in the queue
-                        for (int j = 0; j < exp_q.size(); j++) begin
-                            if (exp_q[j].vd == obs_vd &&
-                                exp_q[j].elem_idx == obs_idx) begin
-                                hit_idx = j;
-                                break;
-                            end
-                        end
-
-                        if (hit_idx < 0) begin
-                            // No matching expected entry → duplicate/wrong elem
-                            $error("[%s] MUL IDX mismatch: saw vd=%0d idx=%0d with no matching expected entry",
-                                   label, obs_vd, obs_idx);
-                            errors_o++;
-                        end else begin
-                            // Found a match: remove that expected item (bag semantics)
-                            exp_q.delete(hit_idx);
-                            seen_o++;
-                        end
-                    end
-                end
-
-                // If driver is done and we matched all expected items, we can quit early
-                if (driver_done_mul && exp_q.size() == 0)
-                    break;
-            end
-        end
-    endtask
-
-
-    // ============================================================
-    //  TEST 3_MUL: Upstream starvation (random gaps, WB always ready)
-    // ============================================================
-    task automatic test3_mul_upstream_starvation;
-        int exp_total;
-        begin
-            cur_test = "TEST 3_MUL";
-            $display("\n=== %s: Upstream Starvation (random gaps) ===", cur_test);
-            exp_q.delete();
-
-            // WB always ready, only upstream random gaps
-            set_wb_ready_mul(1'b1);
-
-            $display("[TB] %s using max_cycles=%0d", cur_test, RAND_MAX_CYCLES);
-
-            fork
-                random_driver_mul_vec(10, /*back_to_back_prob=*/50,
-                                      vsel_t'(31), exp_total);
-                random_monitor_mul(/*max_cycles=*/RAND_MAX_CYCLES,
-                                   seen, errors,
-                                   cur_test);
-            join
-
-            if (errors == 0 && exp_q.size() == 0 && seen == exp_total) begin
-                $display("%s PASSED (errors=%0d, results=%0d, expected=%0d)",
-                         cur_test, errors, seen, exp_total);
-            end else begin
-                $error("%s FAILED (errors=%0d, results=%0d, expected=%0d, remaining=%0d)",
-                       cur_test, errors, seen, exp_total, exp_q.size());
-                total_errors += (errors == 0 ? 1 : errors);
-            end
-
-            repeat (20) @(posedge CLK);
-        end
-    endtask
-
-    // ============================================================
-    //  TEST 4_MUL: Heavy WB backpressure (random stalls)
-    // ============================================================
-    task automatic test4_mul_heavy_backpressure;
-        int exp_total;
-        begin
-            cur_test = "TEST 4_MUL";
-            $display("\n=== %s: Heavy WB Backpressure ===", cur_test);
-            exp_q.delete();
-
-            // Default WB ready high, then wb_backpressure_mul will toggle
-            set_wb_ready_mul(1'b1);
-
-            $display("[TB] %s using max_cycles=%0d", cur_test, RAND_MAX_CYCLES);
-
-            fork
-                // Driver: fully back-to-back MUL slices
-                random_driver_mul_vec(10, /*back_to_back_prob=*/100,
-                                      vsel_t'(33), exp_total);
-
-                // Monitor: pure observer on real handshake
-                random_monitor_mul(/*max_cycles=*/RAND_MAX_CYCLES,
-                                   seen, errors,
-                                   cur_test);
-
-                // WB backpressure: randomly stall RC WB
-                wb_backpressure_mul(/*max_cycles=*/RAND_MAX_CYCLES,
-                                    /*stall_prob=*/75);
-            join
-
-            if (errors == 0 && exp_q.size() == 0 && seen == exp_total) begin
-                $display("%s PASSED (errors=%0d, results=%0d, expected=%0d)",
-                         cur_test, errors, seen, exp_total);
-            end else begin
-                $error("%s FAILED (errors=%0d, results=%0d, expected=%0d, remaining=%0d)",
-                       cur_test, errors, seen, exp_total, exp_q.size());
-                total_errors += (errors == 0 ? 1 : errors);
-            end
-
-            repeat (20) @(posedge CLK);
-            $display("[TB TEST4] exp_total=%0d lane0_mul_issue=%0d lane0_mul_wb=%0d",
-             exp_total,
-             vector_datapath_tb.dut.GEN_LANES[0].u_lane.mul_issue_cnt,
-             //vector_datapath_tb.dut.GEN_LANES[0].u_lane.mul_fire_cnt,
-             vector_datapath_tb.dut.GEN_LANES[0].u_lane.mul_wb_cnt);
-        end
-    endtask
-
-    // ============================================================
-    //  TEST 5_MUL: All-zero masks (no results allowed)
-    // ============================================================
-    task automatic test5_mul_all_zero_mask;
-        int cycles_5mul;
-        begin
-            cur_test = "TEST 5_MUL";
-            $display("\n=== %s: All-zero masks (multiple slices) ===", cur_test);
-            exp_q.delete();
-
-            set_wb_ready_mul(1'b1);
-
-            seen   = 0;
-            errors = 0;
-            cycles_5mul = 0;
-
-            fork
-                // driver: many slices, all masked off
-                begin
-                    int s, i;
-                    slice_vt v1, v2;
-                    slice_mt mask;
-
-                    for (s = 0; s < 20; s++) begin
-                        for (i = 0; i < SLICE_W; i++) begin
-                            v1[i]   = bf16_t'($urandom_range(1000, 0));
-                            v2[i]   = bf16_t'($urandom_range(1000, 0));
-                            mask[i] = 1'b0;
-                        end
-
-                        drive_mul_slice_vec(v1, v2, mask, vsel_t'(35), '0);
-                    end
-                end
-
-                // monitor: any MUL retire is an error
-                begin
-                    while (cycles_5mul < RAND_MAX_CYCLES) begin
-                        @(posedge CLK);
-                        cycles_5mul++;
-
-                        if (`lane_if.lane_out.valid_o[FU_MUL] &&
-                            `lane_if.lane_in.ready_in[FU_MUL]) begin
-                            $error("[%s] Unexpected MUL result under all-zero mask: vd=%0d elem_idx=%0d result=%h",
-                                  cur_test,
-                                  `lane_if.lane_out.vd[FU_MUL],
-                                  `lane_if.lane_out.elem_idx[FU_MUL],
-                                  `lane_if.lane_out.result[FU_MUL]);
-                            errors++;
-                            seen++;
-                        end
-                    end
-                end
-            join
-
-            if (errors == 0 && seen == 0) begin
-                $display("%s PASSED (no MUL results, as expected)", cur_test);
-            end else begin
-                $error("%s FAILED (errors=%0d, results=%0d, remaining=%0d)",
-                       cur_test, errors, seen, exp_q.size());
-                total_errors += (errors == 0 ? 1 : errors);
-            end
-
-            repeat (20) @(posedge CLK);
-        end
-    endtask
-
-    // ============================================================
-    //  TEST 7_MUL: Long random run (stress)
-    // ============================================================
-    task automatic test7_mul_long_random;
-        int exp_total;
-        begin
-            cur_test = "TEST 7_MUL";
-            $display("\n=== %s: Long random run ===", cur_test);
-            exp_q.delete();
-
-            set_wb_ready_mul(1'b1);
-
-            fork
-                // Heavy sustained traffic
-                random_driver_mul_vec(100, /*back_to_back_prob=*/100,
-                                      vsel_t'(37), exp_total);
-
-                random_monitor_mul(/*max_cycles=*/10*RAND_MAX_CYCLES,
-                                   seen, errors,
-                                   cur_test);
-
-                wb_backpressure_mul(/*max_cycles=*/10*RAND_MAX_CYCLES,
-                                    /*stall_prob=*/50);
-            join
-
-            if (errors == 0 && exp_q.size() == 0 && seen == exp_total) begin
-                $display("%s PASSED (errors=%0d, results=%0d, expected=%0d)",
-                         cur_test, errors, seen, exp_total);
-            end else begin
-                $error("%s FAILED (errors=%0d, results=%0d, expected=%0d, remaining=%0d)",
-                       cur_test, errors, seen, exp_total, exp_q.size());
-                total_errors += (errors == 0 ? 1 : errors);
-            end
-
-            repeat (20) @(posedge CLK);
-            $display("[TB TEST7] exp_total=%0d lane0_mul_issue=%0d lane0_mul_wb=%0d",
-                exp_total,
-                vector_datapath_tb.dut.GEN_LANES[0].u_lane.mul_issue_cnt,
-                //vector_datapath_tb.dut.GEN_LANES[0].u_lane.mul_fire_cnt,
-                vector_datapath_tb.dut.GEN_LANES[0].u_lane.mul_wb_cnt);
-        end
-    endtask
-
-    // ------------------------------------------------------------
-    // Main stimulus
-    // ------------------------------------------------------------
     initial begin
-        string testname;
-        int testnum;
-
-        total_errors = 0;
-        vif.vector_in = '0;
-
-        // default WB ready high for all FUs/lanes unless tests override
-        for (int ln = 0; ln < NUM_LANES; ln++) begin
-            for (int fu = 0; fu < LANE_FU_COUNT; fu++) begin
-                vif.rc_in.ready_in[ln][fu] = 1'b1;
-            end
-        end
-
         apply_reset();
-        testnum = 0;
+        /*
+        single_fu_test (
+            .port   (0),
+            .v1     (bf16_v1),
+            .v2     (bf16_v2),
+            .usel   (SQRT),
+            .vd     (8'h01),
+            .rm     (1'b0),
+            .mask   ('1),
+            .alu_op (ALU_ADD)
+        );
+        */
+        //single_gsau_test(bf16_v1, bf16_v2, 8'd1, 1'b0);
+        //single_vlsu_test(0, 1'b1, 'h10, 8'd1, 'h0, 'h20, 'h4, 'h0, 1'b0, bf16_v1);
 
-        // SQRT basic directed tests
-        testnum += 1;
-        testname = $sformatf("Test %0d - SQRT all unmasked", testnum);
-        test1_sqrt_all_unmasked();
-
-        testnum += 1;
-        testname = $sformatf("Test %0d - SQRT partial mask", testnum);
-        test2_sqrt_partial_mask();
-
-        // MUL directed + random tests (1–5 & 7)
-        testnum += 1;
-        testname = $sformatf("Test %0d - MUL all unmasked", testnum);
-        //test1_mul_all_unmasked();
-
-        testnum += 1;
-        testname = $sformatf("Test %0d - MUL partial mask", testnum);
-        //test2_mul_partial_mask();
-
-        testnum += 1;
-        testname = $sformatf("Test %0d - MUL upstream starvation", testnum);
-        //test3_mul_upstream_starvation();
-
-        testnum += 1;
-        testname = $sformatf("Test %0d - MUL heavy backpressure", testnum);
-        test4_mul_heavy_backpressure();
-
-        testnum += 1;
-        testname = $sformatf("Test %0d - MUL all zero mask", testnum);
-        //test5_mul_all_zero_mask();
-
-        testnum += 1;
-        testname = $sformatf("Test %0d - MUL long random", testnum);
-        test7_mul_long_random();
-
-
-        $display("\n========== ALL TESTS COMPLETE, total_errors = %0d ==========",
-                 total_errors);
-        $finish;
+        repeat (100) @(posedge CLK);
+        $stop;
     end
 
 endmodule
