@@ -64,28 +64,17 @@ class alignas(VL_CACHE_LINE_BYTES) Vadd4_fp16_tb_softfloat___024root final : pub
         CData/*0:0*/ add4_fp16_tb_softfloat__DOT__etchedfp4adder__DOT__special_case;
         CData/*0:0*/ add4_fp16_tb_softfloat__DOT__etchedfp4adder__DOT__any_pos_inf;
         CData/*0:0*/ add4_fp16_tb_softfloat__DOT__etchedfp4adder__DOT__any_neg_inf;
-        CData/*0:0*/ add4_fp16_tb_softfloat__DOT__etchedfp4adder__DOT__st1_y_op;
-        CData/*0:0*/ add4_fp16_tb_softfloat__DOT__etchedfp4adder__DOT__st1_m_op;
-        CData/*0:0*/ add4_fp16_tb_softfloat__DOT__etchedfp4adder__DOT__st1_n_op;
-        CData/*4:0*/ add4_fp16_tb_softfloat__DOT__etchedfp4adder__DOT__st1_exp_x;
-        CData/*0:0*/ add4_fp16_tb_softfloat__DOT__etchedfp4adder__DOT__st1_sign_x;
+        CData/*4:0*/ add4_fp16_tb_softfloat__DOT__etchedfp4adder__DOT__st1_a_e;
+        CData/*0:0*/ add4_fp16_tb_softfloat__DOT__etchedfp4adder__DOT__st1_a_s;
         CData/*0:0*/ add4_fp16_tb_softfloat__DOT__etchedfp4adder__DOT__st1_align_sticky;
         CData/*0:0*/ add4_fp16_tb_softfloat__DOT__etchedfp4adder__DOT__st1_special_case;
-        CData/*1:0*/ add4_fp16_tb_softfloat__DOT__etchedfp4adder__DOT__st2_hot_ones;
+        CData/*1:0*/ add4_fp16_tb_softfloat__DOT__etchedfp4adder__DOT__st1_hot_ones;
         CData/*0:0*/ add4_fp16_tb_softfloat__DOT__etchedfp4adder__DOT__res_sign;
         CData/*4:0*/ add4_fp16_tb_softfloat__DOT__etchedfp4adder__DOT__st2_exp_base;
         CData/*0:0*/ add4_fp16_tb_softfloat__DOT__etchedfp4adder__DOT__st2_res_sign;
         CData/*0:0*/ add4_fp16_tb_softfloat__DOT__etchedfp4adder__DOT__st2_sticky;
         CData/*0:0*/ add4_fp16_tb_softfloat__DOT__etchedfp4adder__DOT__st2_special;
         CData/*6:0*/ add4_fp16_tb_softfloat__DOT__etchedfp4adder__DOT__lead_zeros;
-        CData/*6:0*/ add4_fp16_tb_softfloat__DOT__etchedfp4adder__DOT__st3_lead_zeros;
-        CData/*4:0*/ add4_fp16_tb_softfloat__DOT__etchedfp4adder__DOT__st3_exp_base;
-        CData/*0:0*/ add4_fp16_tb_softfloat__DOT__etchedfp4adder__DOT__st3_res_sign;
-        CData/*0:0*/ add4_fp16_tb_softfloat__DOT__etchedfp4adder__DOT__st3_sticky;
-        CData/*0:0*/ add4_fp16_tb_softfloat__DOT__etchedfp4adder__DOT__st3_special;
-        CData/*0:0*/ add4_fp16_tb_softfloat__DOT__etchedfp4adder__DOT__st3_sum_is_zero;
-    };
-    struct {
         CData/*7:0*/ add4_fp16_tb_softfloat__DOT__etchedfp4adder__DOT__final_exp_calc;
         CData/*0:0*/ add4_fp16_tb_softfloat__DOT__etchedfp4adder__DOT__guard_bit;
         CData/*0:0*/ add4_fp16_tb_softfloat__DOT__etchedfp4adder__DOT__round_bit;
@@ -95,6 +84,8 @@ class alignas(VL_CACHE_LINE_BYTES) Vadd4_fp16_tb_softfloat___024root final : pub
         CData/*0:0*/ __Vtrigprevexpr___TOP__add4_fp16_tb_softfloat__DOT__tb_clk__0;
         CData/*0:0*/ __Vtrigprevexpr___TOP__add4_fp16_tb_softfloat__DOT__tb_nrst__0;
         CData/*0:0*/ __VactContinue;
+    };
+    struct {
         SData/*15:0*/ add4_fp16_tb_softfloat__DOT__tb_a;
         SData/*15:0*/ add4_fp16_tb_softfloat__DOT__tb_b;
         SData/*15:0*/ add4_fp16_tb_softfloat__DOT__tb_c;
@@ -124,7 +115,6 @@ class alignas(VL_CACHE_LINE_BYTES) Vadd4_fp16_tb_softfloat___024root final : pub
         SData/*15:0*/ add4_fp16_tb_softfloat__DOT__etchedfp4adder__DOT__special_result;
         SData/*15:0*/ add4_fp16_tb_softfloat__DOT__etchedfp4adder__DOT__st1_special_result;
         SData/*15:0*/ add4_fp16_tb_softfloat__DOT__etchedfp4adder__DOT__st2_spec_res;
-        SData/*15:0*/ add4_fp16_tb_softfloat__DOT__etchedfp4adder__DOT__st3_spec_res;
         SData/*9:0*/ add4_fp16_tb_softfloat__DOT__etchedfp4adder__DOT__raw_mant;
         SData/*9:0*/ add4_fp16_tb_softfloat__DOT__etchedfp4adder__DOT__final_mant;
         SData/*10:0*/ add4_fp16_tb_softfloat__DOT__etchedfp4adder__DOT__rounded_mant_int;
@@ -148,26 +138,23 @@ class alignas(VL_CACHE_LINE_BYTES) Vadd4_fp16_tb_softfloat___024root final : pub
         QData/*33:0*/ add4_fp16_tb_softfloat__DOT__etchedfp4adder__DOT__y_mant_base;
         QData/*33:0*/ add4_fp16_tb_softfloat__DOT__etchedfp4adder__DOT__m_mant_base;
         QData/*33:0*/ add4_fp16_tb_softfloat__DOT__etchedfp4adder__DOT__n_mant_base;
-        QData/*33:0*/ add4_fp16_tb_softfloat__DOT__etchedfp4adder__DOT__st1_x_mant;
-        QData/*33:0*/ add4_fp16_tb_softfloat__DOT__etchedfp4adder__DOT__st1_y_shifted;
-    };
-    struct {
-        QData/*33:0*/ add4_fp16_tb_softfloat__DOT__etchedfp4adder__DOT__st1_m_shifted;
-        QData/*33:0*/ add4_fp16_tb_softfloat__DOT__etchedfp4adder__DOT__st1_n_shifted;
-        QData/*36:0*/ add4_fp16_tb_softfloat__DOT__etchedfp4adder__DOT__op_x;
-        QData/*36:0*/ add4_fp16_tb_softfloat__DOT__etchedfp4adder__DOT__op_y;
-        QData/*36:0*/ add4_fp16_tb_softfloat__DOT__etchedfp4adder__DOT__op_m;
-        QData/*36:0*/ add4_fp16_tb_softfloat__DOT__etchedfp4adder__DOT__op_n;
-        QData/*36:0*/ add4_fp16_tb_softfloat__DOT__etchedfp4adder__DOT__csa_s1;
-        QData/*36:0*/ add4_fp16_tb_softfloat__DOT__etchedfp4adder__DOT__csa_c1;
-        QData/*36:0*/ add4_fp16_tb_softfloat__DOT__etchedfp4adder__DOT__csa_s2;
-        QData/*36:0*/ add4_fp16_tb_softfloat__DOT__etchedfp4adder__DOT__csa_c2;
+        QData/*36:0*/ add4_fp16_tb_softfloat__DOT__etchedfp4adder__DOT__st1_sum_vec;
+        QData/*36:0*/ add4_fp16_tb_softfloat__DOT__etchedfp4adder__DOT__st1_carry_vec;
         QData/*37:0*/ add4_fp16_tb_softfloat__DOT__etchedfp4adder__DOT__raw_sum;
         QData/*35:0*/ add4_fp16_tb_softfloat__DOT__etchedfp4adder__DOT__mag_sum;
         QData/*35:0*/ add4_fp16_tb_softfloat__DOT__etchedfp4adder__DOT__st2_sum_mag;
         QData/*35:0*/ add4_fp16_tb_softfloat__DOT__etchedfp4adder__DOT__lzd_scan;
         QData/*35:0*/ add4_fp16_tb_softfloat__DOT__etchedfp4adder__DOT__norm_val;
-        QData/*35:0*/ add4_fp16_tb_softfloat__DOT__etchedfp4adder__DOT__st3_norm_val;
+        QData/*36:0*/ add4_fp16_tb_softfloat__DOT__etchedfp4adder__DOT__op_x;
+        QData/*36:0*/ add4_fp16_tb_softfloat__DOT__etchedfp4adder__DOT__op_y;
+        QData/*36:0*/ add4_fp16_tb_softfloat__DOT__etchedfp4adder__DOT__op_m;
+        QData/*36:0*/ add4_fp16_tb_softfloat__DOT__etchedfp4adder__DOT__op_n;
+        QData/*36:0*/ add4_fp16_tb_softfloat__DOT__etchedfp4adder__DOT__csa_s1;
+    };
+    struct {
+        QData/*36:0*/ add4_fp16_tb_softfloat__DOT__etchedfp4adder__DOT__csa_c1;
+        QData/*36:0*/ add4_fp16_tb_softfloat__DOT__etchedfp4adder__DOT__csa_s2;
+        QData/*36:0*/ add4_fp16_tb_softfloat__DOT__etchedfp4adder__DOT__csa_c2;
         VlUnpacked<CData/*0:0*/, 6> __Vm_traceActivity;
     };
     VlDelayScheduler __VdlySched;

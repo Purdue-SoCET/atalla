@@ -56,20 +56,20 @@ VL_INLINE_OPT void Vadd4_bf16_tb_softfloat___024root___act_comb__TOP__0(Vadd4_bf
     auto& vlSelfRef = std::ref(*vlSelf).get();
     // Body
     vlSelfRef.add4_bf16_tb_softfloat__DOT__etchedfp4adder__DOT__a_daz 
-        = ((0U == (0x1fU & ((IData)(vlSelfRef.add4_bf16_tb_softfloat__DOT__tb_a) 
-                            >> 0xaU))) ? (0x8000U & (IData)(vlSelfRef.add4_bf16_tb_softfloat__DOT__tb_a))
+        = ((0U == (0xffU & ((IData)(vlSelfRef.add4_bf16_tb_softfloat__DOT__tb_a) 
+                            >> 7U))) ? (0x8000U & (IData)(vlSelfRef.add4_bf16_tb_softfloat__DOT__tb_a))
             : (IData)(vlSelfRef.add4_bf16_tb_softfloat__DOT__tb_a));
     vlSelfRef.add4_bf16_tb_softfloat__DOT__etchedfp4adder__DOT__b_daz 
-        = ((0U == (0x1fU & ((IData)(vlSelfRef.add4_bf16_tb_softfloat__DOT__tb_b) 
-                            >> 0xaU))) ? (0x8000U & (IData)(vlSelfRef.add4_bf16_tb_softfloat__DOT__tb_b))
+        = ((0U == (0xffU & ((IData)(vlSelfRef.add4_bf16_tb_softfloat__DOT__tb_b) 
+                            >> 7U))) ? (0x8000U & (IData)(vlSelfRef.add4_bf16_tb_softfloat__DOT__tb_b))
             : (IData)(vlSelfRef.add4_bf16_tb_softfloat__DOT__tb_b));
     vlSelfRef.add4_bf16_tb_softfloat__DOT__etchedfp4adder__DOT__c_daz 
-        = ((0U == (0x1fU & ((IData)(vlSelfRef.add4_bf16_tb_softfloat__DOT__tb_c) 
-                            >> 0xaU))) ? (0x8000U & (IData)(vlSelfRef.add4_bf16_tb_softfloat__DOT__tb_c))
+        = ((0U == (0xffU & ((IData)(vlSelfRef.add4_bf16_tb_softfloat__DOT__tb_c) 
+                            >> 7U))) ? (0x8000U & (IData)(vlSelfRef.add4_bf16_tb_softfloat__DOT__tb_c))
             : (IData)(vlSelfRef.add4_bf16_tb_softfloat__DOT__tb_c));
     vlSelfRef.add4_bf16_tb_softfloat__DOT__etchedfp4adder__DOT__d_daz 
-        = ((0U == (0x1fU & ((IData)(vlSelfRef.add4_bf16_tb_softfloat__DOT__tb_d) 
-                            >> 0xaU))) ? (0x8000U & (IData)(vlSelfRef.add4_bf16_tb_softfloat__DOT__tb_d))
+        = ((0U == (0xffU & ((IData)(vlSelfRef.add4_bf16_tb_softfloat__DOT__tb_d) 
+                            >> 7U))) ? (0x8000U & (IData)(vlSelfRef.add4_bf16_tb_softfloat__DOT__tb_d))
             : (IData)(vlSelfRef.add4_bf16_tb_softfloat__DOT__tb_d));
     vlSelfRef.add4_bf16_tb_softfloat__DOT__etchedfp4adder__DOT__sign_a 
         = (1U & ((IData)(vlSelfRef.add4_bf16_tb_softfloat__DOT__etchedfp4adder__DOT__a_daz) 
@@ -283,38 +283,38 @@ VL_INLINE_OPT void Vadd4_bf16_tb_softfloat___024root___act_comb__TOP__0(Vadd4_bf
                      - (IData)(vlSelfRef.add4_bf16_tb_softfloat__DOT__etchedfp4adder__DOT__exp_nx_eff)));
     vlSelfRef.add4_bf16_tb_softfloat__DOT__etchedfp4adder__DOT__x_mant 
         = (((IData)((0U != (IData)(vlSelfRef.add4_bf16_tb_softfloat__DOT__etchedfp4adder__DOT__exp_x))) 
-            << 0x12U) | ((IData)(vlSelfRef.add4_bf16_tb_softfloat__DOT__etchedfp4adder__DOT__frac_x) 
-                         << 0xbU));
+            << 0x15U) | ((IData)(vlSelfRef.add4_bf16_tb_softfloat__DOT__etchedfp4adder__DOT__frac_x) 
+                         << 0xeU));
     vlSelfRef.add4_bf16_tb_softfloat__DOT__etchedfp4adder__DOT__y_mant_base 
         = (((IData)((0U != (IData)(vlSelfRef.add4_bf16_tb_softfloat__DOT__etchedfp4adder__DOT__exp_y))) 
-            << 0x12U) | ((IData)(vlSelfRef.add4_bf16_tb_softfloat__DOT__etchedfp4adder__DOT__frac_y) 
-                         << 0xbU));
+            << 0x15U) | ((IData)(vlSelfRef.add4_bf16_tb_softfloat__DOT__etchedfp4adder__DOT__frac_y) 
+                         << 0xeU));
     vlSelfRef.add4_bf16_tb_softfloat__DOT__etchedfp4adder__DOT__m_mant_base 
         = (((IData)((0U != (IData)(vlSelfRef.add4_bf16_tb_softfloat__DOT__etchedfp4adder__DOT__exp_mx))) 
-            << 0x12U) | ((IData)(vlSelfRef.add4_bf16_tb_softfloat__DOT__etchedfp4adder__DOT__frac_mx) 
-                         << 0xbU));
+            << 0x15U) | ((IData)(vlSelfRef.add4_bf16_tb_softfloat__DOT__etchedfp4adder__DOT__frac_mx) 
+                         << 0xeU));
     vlSelfRef.add4_bf16_tb_softfloat__DOT__etchedfp4adder__DOT__n_mant_base 
         = (((IData)((0U != (IData)(vlSelfRef.add4_bf16_tb_softfloat__DOT__etchedfp4adder__DOT__exp_nx))) 
-            << 0x12U) | ((IData)(vlSelfRef.add4_bf16_tb_softfloat__DOT__etchedfp4adder__DOT__frac_nx) 
-                         << 0xbU));
+            << 0x15U) | ((IData)(vlSelfRef.add4_bf16_tb_softfloat__DOT__etchedfp4adder__DOT__frac_nx) 
+                         << 0xeU));
     vlSelfRef.add4_bf16_tb_softfloat__DOT__etchedfp4adder__DOT__y_shifted 
-        = ((0x13U <= (IData)(vlSelfRef.add4_bf16_tb_softfloat__DOT__etchedfp4adder__DOT__y_shift))
-            ? 0U : (0x7ffffU & VL_SHIFTR_III(32,32,9, vlSelfRef.add4_bf16_tb_softfloat__DOT__etchedfp4adder__DOT__y_mant_base, (IData)(vlSelfRef.add4_bf16_tb_softfloat__DOT__etchedfp4adder__DOT__y_shift))));
+        = ((0x16U <= (IData)(vlSelfRef.add4_bf16_tb_softfloat__DOT__etchedfp4adder__DOT__y_shift))
+            ? 0U : (0x3fffffU & VL_SHIFTR_III(32,32,9, vlSelfRef.add4_bf16_tb_softfloat__DOT__etchedfp4adder__DOT__y_mant_base, (IData)(vlSelfRef.add4_bf16_tb_softfloat__DOT__etchedfp4adder__DOT__y_shift))));
     vlSelfRef.add4_bf16_tb_softfloat__DOT__etchedfp4adder__DOT__sticky_y 
         = (0U != (vlSelfRef.add4_bf16_tb_softfloat__DOT__etchedfp4adder__DOT__y_mant_base 
-                  & (~ VL_SHIFTL_III(19,19,9, (IData)(0x7ffffU), (IData)(vlSelfRef.add4_bf16_tb_softfloat__DOT__etchedfp4adder__DOT__y_shift)))));
+                  & (~ VL_SHIFTL_III(22,22,9, (IData)(0x3fffffU), (IData)(vlSelfRef.add4_bf16_tb_softfloat__DOT__etchedfp4adder__DOT__y_shift)))));
     vlSelfRef.add4_bf16_tb_softfloat__DOT__etchedfp4adder__DOT__m_shifted 
-        = ((0x13U <= (IData)(vlSelfRef.add4_bf16_tb_softfloat__DOT__etchedfp4adder__DOT__m_shift))
-            ? 0U : (0x7ffffU & VL_SHIFTR_III(32,32,9, vlSelfRef.add4_bf16_tb_softfloat__DOT__etchedfp4adder__DOT__m_mant_base, (IData)(vlSelfRef.add4_bf16_tb_softfloat__DOT__etchedfp4adder__DOT__m_shift))));
+        = ((0x16U <= (IData)(vlSelfRef.add4_bf16_tb_softfloat__DOT__etchedfp4adder__DOT__m_shift))
+            ? 0U : (0x3fffffU & VL_SHIFTR_III(32,32,9, vlSelfRef.add4_bf16_tb_softfloat__DOT__etchedfp4adder__DOT__m_mant_base, (IData)(vlSelfRef.add4_bf16_tb_softfloat__DOT__etchedfp4adder__DOT__m_shift))));
     vlSelfRef.add4_bf16_tb_softfloat__DOT__etchedfp4adder__DOT__sticky_m 
         = (0U != (vlSelfRef.add4_bf16_tb_softfloat__DOT__etchedfp4adder__DOT__m_mant_base 
-                  & (~ VL_SHIFTL_III(19,19,9, (IData)(0x7ffffU), (IData)(vlSelfRef.add4_bf16_tb_softfloat__DOT__etchedfp4adder__DOT__m_shift)))));
+                  & (~ VL_SHIFTL_III(22,22,9, (IData)(0x3fffffU), (IData)(vlSelfRef.add4_bf16_tb_softfloat__DOT__etchedfp4adder__DOT__m_shift)))));
     vlSelfRef.add4_bf16_tb_softfloat__DOT__etchedfp4adder__DOT__n_shifted 
-        = ((0x13U <= (IData)(vlSelfRef.add4_bf16_tb_softfloat__DOT__etchedfp4adder__DOT__n_shift))
-            ? 0U : (0x7ffffU & VL_SHIFTR_III(32,32,9, vlSelfRef.add4_bf16_tb_softfloat__DOT__etchedfp4adder__DOT__n_mant_base, (IData)(vlSelfRef.add4_bf16_tb_softfloat__DOT__etchedfp4adder__DOT__n_shift))));
+        = ((0x16U <= (IData)(vlSelfRef.add4_bf16_tb_softfloat__DOT__etchedfp4adder__DOT__n_shift))
+            ? 0U : (0x3fffffU & VL_SHIFTR_III(32,32,9, vlSelfRef.add4_bf16_tb_softfloat__DOT__etchedfp4adder__DOT__n_mant_base, (IData)(vlSelfRef.add4_bf16_tb_softfloat__DOT__etchedfp4adder__DOT__n_shift))));
     vlSelfRef.add4_bf16_tb_softfloat__DOT__etchedfp4adder__DOT__sticky_n 
         = (0U != (vlSelfRef.add4_bf16_tb_softfloat__DOT__etchedfp4adder__DOT__n_mant_base 
-                  & (~ VL_SHIFTL_III(19,19,9, (IData)(0x7ffffU), (IData)(vlSelfRef.add4_bf16_tb_softfloat__DOT__etchedfp4adder__DOT__n_shift)))));
+                  & (~ VL_SHIFTL_III(22,22,9, (IData)(0x3fffffU), (IData)(vlSelfRef.add4_bf16_tb_softfloat__DOT__etchedfp4adder__DOT__n_shift)))));
     vlSelfRef.add4_bf16_tb_softfloat__DOT__etchedfp4adder__DOT__y_op 
         = ((IData)(vlSelfRef.add4_bf16_tb_softfloat__DOT__etchedfp4adder__DOT__sign_x) 
            ^ (IData)(vlSelfRef.add4_bf16_tb_softfloat__DOT__etchedfp4adder__DOT__sign_y));
@@ -324,6 +324,42 @@ VL_INLINE_OPT void Vadd4_bf16_tb_softfloat___024root___act_comb__TOP__0(Vadd4_bf
     vlSelfRef.add4_bf16_tb_softfloat__DOT__etchedfp4adder__DOT__n_op 
         = ((IData)(vlSelfRef.add4_bf16_tb_softfloat__DOT__etchedfp4adder__DOT__sign_x) 
            ^ (IData)(vlSelfRef.add4_bf16_tb_softfloat__DOT__etchedfp4adder__DOT__sign_nx));
+    vlSelfRef.add4_bf16_tb_softfloat__DOT__etchedfp4adder__DOT__op_x 
+        = vlSelfRef.add4_bf16_tb_softfloat__DOT__etchedfp4adder__DOT__x_mant;
+    vlSelfRef.add4_bf16_tb_softfloat__DOT__etchedfp4adder__DOT__op_y 
+        = (0x1ffffffU & ((IData)(vlSelfRef.add4_bf16_tb_softfloat__DOT__etchedfp4adder__DOT__y_op)
+                          ? (~ vlSelfRef.add4_bf16_tb_softfloat__DOT__etchedfp4adder__DOT__y_shifted)
+                          : vlSelfRef.add4_bf16_tb_softfloat__DOT__etchedfp4adder__DOT__y_shifted));
+    vlSelfRef.add4_bf16_tb_softfloat__DOT__etchedfp4adder__DOT__op_m 
+        = (0x1ffffffU & ((IData)(vlSelfRef.add4_bf16_tb_softfloat__DOT__etchedfp4adder__DOT__m_op)
+                          ? (~ vlSelfRef.add4_bf16_tb_softfloat__DOT__etchedfp4adder__DOT__m_shifted)
+                          : vlSelfRef.add4_bf16_tb_softfloat__DOT__etchedfp4adder__DOT__m_shifted));
+    vlSelfRef.add4_bf16_tb_softfloat__DOT__etchedfp4adder__DOT__op_n 
+        = (0x1ffffffU & ((IData)(vlSelfRef.add4_bf16_tb_softfloat__DOT__etchedfp4adder__DOT__n_op)
+                          ? (~ vlSelfRef.add4_bf16_tb_softfloat__DOT__etchedfp4adder__DOT__n_shifted)
+                          : vlSelfRef.add4_bf16_tb_softfloat__DOT__etchedfp4adder__DOT__n_shifted));
+    vlSelfRef.add4_bf16_tb_softfloat__DOT__etchedfp4adder__DOT__csa_s1 
+        = ((vlSelfRef.add4_bf16_tb_softfloat__DOT__etchedfp4adder__DOT__op_x 
+            ^ vlSelfRef.add4_bf16_tb_softfloat__DOT__etchedfp4adder__DOT__op_y) 
+           ^ vlSelfRef.add4_bf16_tb_softfloat__DOT__etchedfp4adder__DOT__op_m);
+    vlSelfRef.add4_bf16_tb_softfloat__DOT__etchedfp4adder__DOT__csa_c1 
+        = (((vlSelfRef.add4_bf16_tb_softfloat__DOT__etchedfp4adder__DOT__op_x 
+             & vlSelfRef.add4_bf16_tb_softfloat__DOT__etchedfp4adder__DOT__op_y) 
+            | (vlSelfRef.add4_bf16_tb_softfloat__DOT__etchedfp4adder__DOT__op_y 
+               & vlSelfRef.add4_bf16_tb_softfloat__DOT__etchedfp4adder__DOT__op_m)) 
+           | (vlSelfRef.add4_bf16_tb_softfloat__DOT__etchedfp4adder__DOT__op_m 
+              & vlSelfRef.add4_bf16_tb_softfloat__DOT__etchedfp4adder__DOT__op_x));
+    vlSelfRef.add4_bf16_tb_softfloat__DOT__etchedfp4adder__DOT__csa_s2 
+        = (0x1ffffffU & ((vlSelfRef.add4_bf16_tb_softfloat__DOT__etchedfp4adder__DOT__csa_s1 
+                          ^ VL_SHIFTL_III(25,25,32, vlSelfRef.add4_bf16_tb_softfloat__DOT__etchedfp4adder__DOT__csa_c1, 1U)) 
+                         ^ vlSelfRef.add4_bf16_tb_softfloat__DOT__etchedfp4adder__DOT__op_n));
+    vlSelfRef.add4_bf16_tb_softfloat__DOT__etchedfp4adder__DOT__csa_c2 
+        = (((vlSelfRef.add4_bf16_tb_softfloat__DOT__etchedfp4adder__DOT__csa_s1 
+             & VL_SHIFTL_III(25,25,32, vlSelfRef.add4_bf16_tb_softfloat__DOT__etchedfp4adder__DOT__csa_c1, 1U)) 
+            | (VL_SHIFTL_III(25,25,32, vlSelfRef.add4_bf16_tb_softfloat__DOT__etchedfp4adder__DOT__csa_c1, 1U) 
+               & vlSelfRef.add4_bf16_tb_softfloat__DOT__etchedfp4adder__DOT__op_n)) 
+           | (vlSelfRef.add4_bf16_tb_softfloat__DOT__etchedfp4adder__DOT__op_n 
+              & vlSelfRef.add4_bf16_tb_softfloat__DOT__etchedfp4adder__DOT__csa_s1));
 }
 
 void Vadd4_bf16_tb_softfloat___024root___nba_sequent__TOP__0(Vadd4_bf16_tb_softfloat___024root* vlSelf);

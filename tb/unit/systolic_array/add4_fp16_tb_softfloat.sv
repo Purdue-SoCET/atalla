@@ -23,6 +23,8 @@ module add4_fp16_tb_softfloat;
     localparam PERIOD = 2;
     localparam LATENCY = 4;  // 3 pipeline stages + 1 output register
     localparam PRECISION_BITS = 22;
+    localparam EXPONENT_SIZE = 5;
+    localparam MANTISSA_SIZE = 10;
 
     logic tb_clk;
     logic tb_nrst;
@@ -58,6 +60,7 @@ module add4_fp16_tb_softfloat;
     sysarr_4_input_fp_adder #(
         .MANTISSA_SIZE(MANTISSA_SIZE),
         .EXPONENT_SIZE(EXPONENT_SIZE),
+        .OUT_MANTISSA_SIZE(MANTISSA_SIZE),
         .PRECISION_BITS(PRECISION_BITS)
     ) etchedfp4adder (
         .clk(tb_clk),
