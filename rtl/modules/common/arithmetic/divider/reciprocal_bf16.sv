@@ -61,9 +61,8 @@ module reciprocal_bf16 (
   logic [15:0][15:0] fifo, n_fifo;
 
   // Edge case flags
-  logic op1_is_zero, op1_is_inf, op1_is_nan;
   logic op2_is_zero, op2_is_inf, op2_is_nan;
-  logic op1_op2_same, op2_is_one;
+  logic op2_is_one;
   logic is_special;
   logic [15:0] special_result;
 
@@ -228,6 +227,7 @@ module reciprocal_bf16 (
     n_mul2Tfin3.valid          = fin2Tmul2.valid;
     n_mul2Tfin3.is_sub_bound   = fin2Tmul2.is_sub_bound;
     n_mul2Tfin3.exp            = fin2Tmul2.exp;
+    n_mul2Tfin3.muln           = '0;
     n_mul2Tfin3.special_result = fin2Tmul2.special_result;
   end
 
@@ -250,9 +250,7 @@ module reciprocal_bf16 (
   assign raw_exp = fin3Texp.valid ? fin3Texp.exp + {2'b00, fin3Texp.muln[14:7]}:'0;
 
   always_comb begin : exponent_saturation
-    if(raw_exp >= 10'sd255)                             final_exp = 8'hFF; // Overflow -> Infinity
-    else if(raw_exp == 10'h001 && fin3Texp.muln[14:7] < TWO)   final_exp = 8'h00;
-    else if(raw_exp <= 10'sd0 || is_subnormal_boundary) final_exp = 8'h00; // Underflow -> Flush to Zero
+    if(raw_exp <= 10'sd0 || is_subnormal_boundary) final_exp = 8'h00; // Underflow -> Flush to Zero
     else                                                final_exp = raw_exp[7:0];
   end
 
