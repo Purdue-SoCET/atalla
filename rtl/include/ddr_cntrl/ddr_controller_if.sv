@@ -27,12 +27,6 @@ typedef struct packed {
     logic [31:0]                 addr;
 } lstq_slot_t;
 
-// LQ -> AXI // 
-typedef struct packed {
-    logic [63:0]               rdata;
-    logic [$clog2(ID_NUM)-1:0] rid;
-} lqaxi_slot_t;
-
 // AXI->WDQ
 typedef struct packed {
     logic [7:0] wvalid; // -> WQ
@@ -54,7 +48,6 @@ logic                      bwready; // -> WQ
 
 // AXI <-> LQ
 lstq_slot_t  lq_slot; // -> LQ
-lqaxi_slot_t lqaxi_slot; // -> AXI
 // CNTRL
 logic       arvalid; // -> LQ
 logic       arready; // -> AXI
