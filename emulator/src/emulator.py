@@ -151,24 +151,21 @@ def run(mem: Memory, sregs: ScalarRegisterFile, mregs: ScalarRegisterFile, vregs
                 mem.write_data(sregs.read(inst['rs1']) + inst['imm'], temp)
             #vector load/store here
             elif m == "vreg.ld":
-                # # 1. Select Scratchpad based on 'sp' field (0=SP0, 1=SP1)
-                # if inst.get('sp', 0) == 1 
                 if inst['sid'] == 1:
                     target_sp = SP1 
                 else:
                     target_sp = SP0
                 
-                # 2. Get address from Scalar Register (rs1)
                 addr = sregs.read(inst['rs1'])
+                rc_id_val = sregs.read(inst['rc_id']) if inst.get('rc_id_is_reg', 0) else inst['rc_id']
                 
-                # 3. Call the interface function
                 scpad_to_vreg(
                     scpad=target_sp,
                     vregs=vregs,
                     scpad_addr=addr,
-                    vd=inst['vd'],        # Destination Vector Reg
+                    vd=inst['vd'],
                     rc=inst['rc'],
-                    rc_id=inst['rc_id'],
+                    rc_id=rc_id_val,
                     num_rows=inst['num_rows'],
                     num_cols=inst['num_cols']
                 )
@@ -179,17 +176,16 @@ def run(mem: Memory, sregs: ScalarRegisterFile, mregs: ScalarRegisterFile, vregs
                 else:
                     target_sp = SP0
                 
-                # 2. Get address
                 addr = sregs.read(inst['rs1'])
+                rc_id_val = sregs.read(inst['rc_id']) if inst.get('rc_id_is_reg', 0) else inst['rc_id']
                 
-                # 3. Call the interface function
                 vreg_to_scpad(
                     scpad=target_sp,
                     vregs=vregs,
                     scpad_addr=addr,
-                    vs=inst['vd'],        # VM-type uses 'vd' field as the register index
+                    vs=inst['vd'],
                     rc=inst['rc'],
-                    rc_id=inst['rc_id'],
+                    rc_id=rc_id_val,
                     num_rows=inst['num_rows'],
                     num_cols=inst['num_cols']
                 )

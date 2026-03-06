@@ -9,10 +9,11 @@ from pathlib import Path
 import argparse
 import numpy as np
 
-from src.misc.opcode_table import OPCODES, name_to_opcode
+from .src.misc.opcode_table import OPCODES, name_to_opcode
+from kernels.utils.dataloader import load_tile_data
 
 try:
-    from instruction_latency import latency as DEFAULT_LATENCY_MAP
+    from .instruction_latency import latency as DEFAULT_LATENCY_MAP
 except Exception:
     DEFAULT_LATENCY_MAP: Dict[str, int] = {}
 
@@ -171,7 +172,7 @@ def encode_instruction(instr_dict):
         instruction |= (imm8_2 & 0xFF) << 35
         
     elif instr_type == "VM":
-        # VM-Type: vd 7-14, rs1 15-22, num_cols 23-27, num_rows 28-32, sid 33, rc 34, rc_id 35-39
+        # VM-Type: vd 7-14, rs1 15-22, num_cols 23-27, num_rows 28-32, sid 33, rc 34, rc_id 35-39, rc_id_is_reg 40
         vd = instr_dict.get('vd', 0)
         rs1 = instr_dict.get('rs1', 0)
         num_cols = instr_dict.get('num_cols', 0)
@@ -179,6 +180,7 @@ def encode_instruction(instr_dict):
         sid = instr_dict.get('sid', 0)
         rc = instr_dict.get('rc', 0)
         rc_id = instr_dict.get('rc_id', 0)
+        rc_id_is_reg = int(instr_dict.get('rc_id_is_reg', False))
         
         instruction |= (vd & 0xFF) << 7
         instruction |= (rs1 & 0xFF) << 15
@@ -187,6 +189,7 @@ def encode_instruction(instr_dict):
         instruction |= (sid & 0x1) << 33
         instruction |= (rc & 0x1) << 34
         instruction |= (rc_id & 0x1F) << 35
+        instruction |= (rc_id_is_reg & 0x1) << 40
         
     elif instr_type == "SDMA":
         # SDMA: rs1/rd1 7-14, rs2 15-22, num_cols 23-27, num_rows 28-32, sid 33
@@ -511,7 +514,16 @@ def asm_to_instr_dict(
         d["num_rows"] = parse_int(ops[3])
         d["sid"] = parse_int(ops[4])
         d["rc"] = parse_int(ops[5])
-        d["rc_id"] = parse_int(ops[6])
+        
+        # FIXME: rc_id might eventually come from a register rather than an immediate
+        # d["rc_id"] = parse_reg(ops[6])
+        target_rc_id = ops[6].strip()
+        if target_rc_id.startswith("$"):
+            d["rc_id"] = parse_reg(target_rc_id)
+            d["rc_id_is_reg"] = True
+        else:
+            d["rc_id"] = parse_int(target_rc_id)
+            d["rc_id_is_reg"] = False
         return d
 
     if instr_type == "SDMA":
@@ -903,11 +915,15 @@ def _decode_instruction_for_graph(hex_word: str) -> tuple[str, list[str], list[s
     elif instr_type == "VM":
         vd = (raw >> 7) & 0xFF
         rs1 = (raw >> 15) & 0xFF
+        rc_id_is_reg = (raw >> 40) & 0x1
+        rc_id_reg = (raw >> 35) & 0x1F
         if _is_memory_store(mnemonic):
             srcs = [v(vd), r(rs1)]
         else:
             dsts = [v(vd)]
             srcs = [r(rs1)]
+        if rc_id_is_reg:
+            srcs.append(r(rc_id_reg))
         mem_key = (r(rs1), "vreg")
 
     elif instr_type == "SDMA":

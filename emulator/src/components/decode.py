@@ -169,7 +169,8 @@ def decode_instruction(instr):
             "num_rows": get_bits(instr, 32, 28),
             "sid": get_bits(instr, 33, 33),
             "rc": get_bits(instr, 34, 34),
-            "rc_id": get_bits(instr, 39, 35)
+            "rc_id": get_bits(instr, 39, 35),
+            "rc_id_is_reg": get_bits(instr, 40, 40)
         })
 
     elif instr_type == "SDMA": 

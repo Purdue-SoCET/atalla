@@ -133,7 +133,7 @@ def main():
     # Configuration
     ap.add_argument("--epsilon", type=float, default=0.0,
                     help="Epsilon for layernorm (default: 0.0, matching emulator default)")
-    ap.add_argument("--scpad_base_row", type=int, default=1,
+    ap.add_argument("--scpad_base_row", type=int, default=0,
                     help="Scratchpad base row where tile starts (default: 1)")
     ap.add_argument("--verbose", action="store_true", help="Print per-element difference matrix")
 

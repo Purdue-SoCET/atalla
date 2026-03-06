@@ -3,18 +3,22 @@
 # layernorm.sh — End-to-end kernel emulation + PyTorch comparison for LayerNorm
 #
 # Usage:
-#   bash kernels/layernorm/layernorm.sh [--n 4] [--data kernels/layernorm/layernorm_data.csv] [--debug]
+#   bash kernels/layernorm/layernorm.sh [--n 4] [--debug]
 #
 # This script:
-#   1. Builds the emulator input image via build_layernorm.py
-#   2. Runs the emulator on that image
-#   3. Compares the emulator output against a PyTorch golden reference
+#   1. Generates random N×N tile data as CSV (bf16-bounded, seed 67)
+#   2. Builds the parameterized emulator input image via build_layernorm_param.py
+#   3. Runs the emulator on that image
+#   4. Compares the emulator output against a PyTorch golden reference
 # =============================================================================
 set -euo pipefail
 
 # ---------- Resolve project root (atalla/) from this script's location ------
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 ATALLA_ROOT="$(cd "$SCRIPT_DIR/../.." && pwd)"
+
+# ---------- Run from project root for module-based execution -----------------
+cd "$ATALLA_ROOT"
 
 # ---------- Detect Python ---------------------------------------------------
 if command -v python3 &>/dev/null; then
@@ -45,24 +49,29 @@ fi
 
 # ---------- Defaults --------------------------------------------------------
 KERNEL="layernorm"
+BUILD_NAME="layernorm_param"
 N=4
-DATA="$SCRIPT_DIR/layernorm_data.csv"
 DEBUG_FLAG=""
+
+# bf16 practical bounds for stable layernorm computation.
+# bf16 max ≈ 3.39e38, but variance calculation (sum of squares over N^2
+# elements) overflows float32 at large magnitudes. Use ±100 which is
+# exactly representable in bf16 and safe for tiles up to 32×32.
+BF16_MAX=100
+BF16_MIN=-100
+DATA_SEED=67
 
 # ---------- Argument parsing ------------------------------------------------
 while [[ $# -gt 0 ]]; do
     case "$1" in
         --n)
             N="$2"; shift 2 ;;
-        --data)
-            DATA="$2"; shift 2 ;;
         --debug)
             DEBUG_FLAG="--debug"; shift ;;
         -h|--help)
-            echo "Usage: bash $0 [--n N] [--data DATA_CSV] [--debug]"
+            echo "Usage: bash $0 [--n N] [--debug]"
             echo ""
             echo "  --n N          Tile dimension N×N (default: 4)"
-            echo "  --data PATH    Path to tile data CSV (default: kernels/layernorm/layernorm_data.csv)"
             echo "  --debug        Enable verbose emulator output"
             exit 0 ;;
         *)
@@ -71,10 +80,9 @@ while [[ $# -gt 0 ]]; do
 done
 
 # ---------- Derived paths ---------------------------------------------------
-OUTPUT_DIR="$SCRIPT_DIR/${KERNEL}_output"
-BUILD_SCRIPT="$ATALLA_ROOT/emulator/build_${KERNEL}.py"
-IN_FILE="$SCRIPT_DIR/${KERNEL}.in"
-COMPARE_SCRIPT="$ATALLA_ROOT/kernels/utils/compare_pytorch.py"
+DATA="$SCRIPT_DIR/layernorm_data.csv"
+OUTPUT_DIR="$SCRIPT_DIR/${BUILD_NAME}_output"
+IN_FILE="$SCRIPT_DIR/${BUILD_NAME}.in"
 
 OUT_MEM="$OUTPUT_DIR/output_mem.out"
 OUT_SREGS="$OUTPUT_DIR/output_sregs.out"
@@ -84,18 +92,33 @@ OUT_SCPAD0="$OUTPUT_DIR/output_scpad0.out"
 OUT_SCPAD1="$OUTPUT_DIR/output_scpad1.out"
 
 echo "============================================================"
-echo "  Kernel Emulation Pipeline: $KERNEL  (${N}×${N})"
+echo "  Kernel Emulation Pipeline: $BUILD_NAME  (${N}×${N})"
 echo "============================================================"
 echo ""
 
+# ---------- Step 0: Generate tile data --------------------------------------
+echo "[GEN_DATA] Generating ${N}×${N} random tile (seed=$DATA_SEED, bf16 bounds) ..."
+echo "  Output    : $DATA"
+echo ""
+
+$PYTHON -m kernels.utils.gen_data \
+    --n "$N" \
+    --mode random \
+    --seed "$DATA_SEED" \
+    --low="$BF16_MIN" \
+    --high="$BF16_MAX" \
+    --output "$DATA"
+
+echo ""
+
 # ---------- Step 1: Build ---------------------------------------------------
-echo "[BUILD] Running build_${KERNEL}.py ..."
+echo "[BUILD] Running emulator.build_${BUILD_NAME} ..."
 echo "  Data file : $DATA"
 echo "  Output    : $IN_FILE"
 echo ""
 
-cd "$ATALLA_ROOT/emulator"
-$PYTHON "build_${KERNEL}.py" \
+$PYTHON -m "emulator.build_${BUILD_NAME}" \
+    --no-graph \
     --data "$DATA" \
     --n "$N" \
     --output "$IN_FILE"
@@ -107,8 +130,7 @@ echo ""
 echo "[EMULATE] Running emulator ..."
 mkdir -p "$OUTPUT_DIR"
 
-cd "$ATALLA_ROOT/emulator"
-$PYTHON -m run \
+$PYTHON -m emulator.run \
     --input_file "$IN_FILE" \
     --output_mem_file   "$OUT_MEM" \
     --output_sreg_file  "$OUT_SREGS" \
@@ -125,8 +147,7 @@ echo ""
 echo "[COMPARE] Running PyTorch comparison ..."
 echo ""
 
-cd "$ATALLA_ROOT"
-$PYTHON "$COMPARE_SCRIPT" \
+$PYTHON -m kernels.utils.compare_pytorch \
     --kernel "$KERNEL" \
     --n "$N" \
     --data "$DATA" \
