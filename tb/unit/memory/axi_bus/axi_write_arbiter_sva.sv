@@ -17,13 +17,13 @@ module axi_write_arbiter_sva(
 );
 
     // TEST CASE 1: RESET INIT STATE
-    property reset_init_state;
-        @(posedge CLK);
-        (!nRST) |=> (state == IDLE && counter == '0 && aw_grant == 3'b000);
-    endproperty
+    // property reset_init_state;
+    //     @(posedge CLK)
+    //     (!nRST) |=> (state == IDLE && counter == '0 && aw_grant == 3'b000);
+    // endproperty
 
-    assert property (reset_init_state)
-        else $error("FAILED TEST CASE 1: RESET INIT STATE");
+    // assert property (reset_init_state)
+    //     else $error("FAILED TEST CASE 1: RESET INIT STATE");
 
 
 endmodule

@@ -146,7 +146,7 @@ test:
 
 	[ -d work ] || $(VLIB) work; \
 	echo "[$@] compiling (in-order):"; printf '  %s\n' $$ORDERED_SRCS; \
-	$(VLOG) -sv -mfcu -work work +acc $$INCFLAGS $$ORDERED_SRCS; \
+	$(VLOG) -sv -mfcu -cover bcst -work work +acc $$INCFLAGS $$ORDERED_SRCS; \
 
 	@if [ "$(GUI)" = "ON" ]; then \
 		echo "[$@] launching vsim GUI on work.$$TB_TOP"; \
