@@ -10,6 +10,15 @@ module nb_barb_prop(
     import dram_pkg::*;
     import cpu_types_pkg::*;
 
+    covergroup nb_cg @(posedge CLK) // TODO: FIX COVERPOINTS 
+        fsm_be : coverpoint {be_r, be_c, be_b, be_bg, be_cmd, be_id, be_rlen, be_queue_ready};
+        be_fsm : coverpoint {be_arb};
+        be_wdq : coverpoint {be_wid, be_write};
+        be_riq : coverpoint {be_rid, be_push_id, be_rlen}; 
+    endgroup
+
+    nb_cg nbcg;
+
     function automatic integer encode (input logic [15:0] in);
         for (int i = 0; i < 16; i++) begin
             if (in[i]) return i;

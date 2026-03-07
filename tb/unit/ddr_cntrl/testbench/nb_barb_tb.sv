@@ -35,7 +35,7 @@ program test(
         reset_dut();
         @(negedge CLK);
 
-
+        $display ("Coverage = %0.2f %%", nbcg.get_inst_coverage());
         $finish;
     end
 
