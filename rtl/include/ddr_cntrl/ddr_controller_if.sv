@@ -214,6 +214,30 @@ modport backend_arb (
 );
 
 
+// // BIND MODPORTS
+
+modport barb_prop (
+    //FSM -> BE
+    input be_r, be_c, be_b, be_bg, be_cmd, be_id, be_rlen, be_queue_ready,
+    //BE -> FSM
+    be_arb, 
+    //BE -> WDATA_QUEUE
+    be_wid, be_write, 
+    //BE -> R_ID_QUEUE
+    be_rid, be_push_id, be_rlen
+);
+
+modport wdq_prop (
+    //AXI -> WDATA_QUEUE
+    input wstrb, wdq_slot, bwready,
+    //BE -> WDATA_QUEUE
+    be_wid, be_write, 
+    //WDATA_QUEUE -> AXI
+    wready, bwvalid, bwresp, bwid, 
+    //WDATA_QUEUE -> DRAM
+    ddr_wdata_data, ddr_wdata_en, ddr_wdata_mask, ddr_we  
+);
+
 endinterface
 
 `endif // DDR_CONTROLLER_IF_SV
