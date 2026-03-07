@@ -3,14 +3,14 @@
 `include "ddr_controller_if.sv"
 
 
-module backend_arbiter_tb;
+module nb_barb_tb;
     logic CLK, nRST;
 
     // clock
     always #(PERIOD/2) CLK++;
     
     ddr_controller_if ddrif;
-    backend_arbiter DUT(
+    nb_barb DUT(
 
     );
 

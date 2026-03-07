@@ -65,7 +65,7 @@ module #(Q_ID = 0) nb_wdata_queue_prop(
 
     if(wdq.valid && (wdq.wid == Q_ID) && !full && !wdq.wlast) begin
 
-        write_ptr_next = write_ptr + 'b1;
+        write_ptr_next = write_ptr + 32'b1;
 
     end else if(wdq.valid && (wdq.wid == Q_ID) && !full && wdq.wlast) begin
         write_ptr_next = write_ptr + ('d8 - wdq.wlen);
@@ -111,8 +111,8 @@ module #(Q_ID = 0) nb_wdata_queue_prop(
   logic [PTR_W-1:0] inc_w_ptr;
   logic [PTR_W-1:0] inc_r_ptr;
 
-  assign inc_w_ptr = write_ptr + 'b1;
-  assign inc_r_ptr = dram_ptr + 'b1;
+  assign inc_w_ptr = write_ptr + 32'b1;
+  assign inc_r_ptr = dram_ptr + 32'b1;
   
   always_comb begin : FSM_NEXT_STATE
     
