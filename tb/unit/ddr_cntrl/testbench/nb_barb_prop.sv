@@ -5,9 +5,7 @@
 module nb_barb_prop(
     input logic CLK,
     input logic nRST,
-    // 2/13 - TODO: ADD SIGNALS, DONT ADD SIGNALS, ADD PROPERTIES
-    ddr_controller_if.backend_arb barb,
-    ddr_controller_if.wdata_queue wdq
+    ddr_controller_if.barb_prop barb,
 );
     import dram_pkg::*;
     import cpu_types_pkg::*;
