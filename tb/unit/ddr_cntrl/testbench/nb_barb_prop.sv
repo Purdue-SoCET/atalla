@@ -6,7 +6,8 @@ module nb_barb_prop(
     input logic CLK,
     input logic nRST,
     // 2/13 - TODO: ADD SIGNALS, DONT ADD SIGNALS, ADD PROPERTIES
-    ddr_controller_if.backend_arb barb
+    ddr_controller_if.backend_arb barb,
+    ddr_controller_if.wdata_queue wdq
 );
     import dram_pkg::*;
     import cpu_types_pkg::*;
@@ -53,7 +54,14 @@ module nb_barb_prop(
     property check_refresh_sending;
         @(posedge CLK) disable iff (!nRST)
         
-        ( (barb.be_cmd[BANK_NUM-1:0]) == ((BANK_NUM){REFRESH})  & &(barb.be_queue_ready) ) 
+        ( (barb.be_cmd[BANK_NUM-1:0]) == ((BANK_NUM){REFRESH})  & &(barb.be_queue_ready) ) ;
+    endproperty
+
+
+    /////COMMENT THE BELOW PROPERTY OUT IF WDATA_QUEUE IS NOT YET CONNECTED OR VERIFIED.
+    property timing_tCWL;
+        @(posedge CLK) disable iff(!nRST)
+        (|(barb.be_queue_ready & barb.be_arb) ) &&  ( (barb.be_cmd[encode(barb.be_queue_ready & barb.be_arb)]) == WRITE ) |-> [*tCWL](!wdq.ddr_we) ##1 $rose(wdq.ddr_we) ##1 $fell(wdq.ddr_we);
     endproperty
 
 endmodule 
