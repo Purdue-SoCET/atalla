@@ -33,6 +33,7 @@ program test(
     initial begin 
         nRST = 1;
         reset_dut();
+        @(negedge CLK);
 
 
         $finish;
