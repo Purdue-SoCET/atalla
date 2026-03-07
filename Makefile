@@ -26,6 +26,9 @@ VLOG ?= vlog
 VSIM ?= vsim
 GUI ?= OFF
 
+VLOG_FLAGS ?= -sv -compile_uselibs -cover bst -pedanticerrors -lint -mfcu
+VSIM_FLAGS ?= -coverage -c -voptargs="+acc"
+
 .PHONY: setup lint test clean_lib
 
 setup:
@@ -88,7 +91,7 @@ lint:
 	echo "[lint] compiling (in-order):"; 
 	printf '  %s\n' $$ORDERED_SRCS; 
 	
-	$(VLOG) -sv -mfcu -work work +acc $$INCFLAGS $$ORDERED_SRCS; 
+	$(VLOG) $(VLOG_FLAGS) -sv -mfcu -work work +acc $$INCFLAGS $$ORDERED_SRCS; 
 	echo "[lint] done"
 
 # Similar to above! 
@@ -153,7 +156,7 @@ test:
 		$(VSIM) -coverage -voptargs="+acc" work.$$TB_TOP -do "view objects; do $(WAVEROOT)/$$TB_TOP.do; run -all;" -onfinish stop; \   ## do $$WAVEROOT/$$TB_TOP.do;
 	else \
 		echo "[$@] launching vsim on work.$$TB_TOP"; \
-		$(VSIM) -coverage -c -voptargs="+acc"  work.$$TB_TOP -do "run -all"; \
+		$(VSIM) $(VSIM_FLAGS) -coverage -c -voptargs="+acc"  work.$$TB_TOP -do "run -all"; \
 	fi 
 
 clean:
