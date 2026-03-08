@@ -86,9 +86,7 @@ module scratchpad_tb;
             sif.vec_req[0].wdata[col] = 16'((row_id * 32) + col + 1);
         end
         
-        // Present data on posedge, then check stall.
-        // do-while ensures data is stable on the posedge where
-        // the head samples it, and re-presents if pipe_busy blocked the grant.
+        // Present data on posedge, then check stall
         do begin
             @(posedge clk);
             stall_timeout++;
@@ -555,8 +553,7 @@ module scratchpad_tb;
                 sif.vec_req[0].wdata[col] = 16'(base_addr[7:0] + row * 32 + col);
             end
             
-            while (sif.fe_vec_stall[0]) @(posedge clk);
-            @(posedge clk);
+            do @(posedge clk); while (sif.fe_vec_stall[0]);
             sif.vec_req[0].valid = 1'b0;
             repeat(2) @(posedge clk);
         end
@@ -615,9 +612,7 @@ module scratchpad_tb;
                 sif.vec_req[0].wdata[col] = 16'(row * 100 + col);
             end
             
-            // Present data on posedge, then check stall. do-while ensures
-            // data is stable on the sampling edge and re-presents if
-            // pipe_busy blocked the grant.
+            // Wait ONLY for stall to clear - no extra cycles
             do @(posedge clk); while (sif.fe_vec_stall[0]);
         end
         
@@ -747,8 +742,7 @@ module scratchpad_tb;
                 sif.vec_req[0].wdata[col] = 16'(row * 32 + col + 1);
             end
             
-            while (sif.fe_vec_stall[0]) @(posedge clk);
-            @(posedge clk);
+            do @(posedge clk); while (sif.fe_vec_stall[0]);
             sif.vec_req[0].valid = 1'b0;
             repeat(2) @(posedge clk);
         end
@@ -866,8 +860,7 @@ module scratchpad_tb;
                 sif.vec_req[1].wdata[col] = 16'(16'hB000 + row * 32 + col);
 
             // Wait for both stalls to clear
-            while (sif.fe_vec_stall[0] || sif.fe_vec_stall[1]) @(posedge clk);
-            @(posedge clk);
+            do @(posedge clk); while (sif.fe_vec_stall[0] || sif.fe_vec_stall[1]);
             sif.vec_req[0].valid = 1'b0;
             sif.vec_req[1].valid = 1'b0;
             repeat(3) @(posedge clk);
@@ -1322,6 +1315,294 @@ module scratchpad_tb;
     endtask
     
     //==========================================================================
+    // Phase 12: Concurrent Read+Write Tests (dual FIFO verification)
+    //==========================================================================
+
+    // Test: DMA writes to region B while vector core reads from region A.
+    // With dual FIFOs in scpad_cntrl, reads and writes overlap in SRAM.
+    // With a single FIFO, reads would serialize behind writes.
+    task automatic test_concurrent_dma_write_vec_read();
+        automatic logic [ELEM_BITS-1:0] rdata [NUM_COLS];
+        automatic logic success;
+        automatic int errors = 0;
+        automatic int vec_read_cycles = 0;
+        automatic int dma_done = 0;
+        automatic int vec_done = 0;
+        automatic int timeout = 0;
+        automatic int num_cols = 7;
+        automatic int dma_rows = 7;  // 8 rows of DMA — takes many cycles
+        automatic int vec_read_rows = 3;  // 4 rows to read back
+
+        current_test_type = "CONC_DMA_WR_VEC_RD";
+        current_num_rows = dma_rows;
+        current_num_cols = num_cols;
+
+        // Step 1: Pre-load region A (addr 0x000) via vector writes
+        for (int row = 0; row <= vec_read_rows; row++) begin
+            sif.vec_req[0].valid = 1'b1;
+            sif.vec_req[0].write = 1'b1;
+            sif.vec_req[0].spad_addr = 20'h0;
+            sif.vec_req[0].num_rows = 5'(0);
+            sif.vec_req[0].num_cols = 5'(num_cols);
+            sif.vec_req[0].row_id = 5'(row);
+            for (int col = 0; col < NUM_COLS; col++)
+                sif.vec_req[0].wdata[col] = 16'(16'hA000 + row * 32 + col);
+            do @(posedge clk); while (sif.fe_vec_stall[0]);
+            sif.vec_req[0].valid = 1'b0;
+        end
+        repeat(10) @(posedge clk);
+
+        // Step 2: Start DMA LOAD to region B (addr 0x200) — this takes many cycles
+        // Simultaneously issue vector reads from region A
+        fork
+            // DMA thread: load 8 rows to region B
+            begin
+                automatic int resp_count = 0;
+                automatic int dma_timeout = 0;
+                sif.sched_req[0].valid = 1'b1;
+                sif.sched_req[0].write = 1'b0;  // DMA LOAD (DRAM→SRAM, i.e. SRAM write)
+                sif.sched_req[0].spad_addr = 20'h200;
+                sif.sched_req[0].dram_addr = 32'd0;
+                sif.sched_req[0].num_rows = 5'(dma_rows);
+                sif.sched_req[0].num_cols = 5'(num_cols);
+                sif.sched_req[0].scpad_id = '0;
+                sif.dram_be_stall[0] = 1'b0;
+
+                @(posedge clk);
+
+                while (!sif.sched_res[0].valid && dma_timeout < 500) begin
+                    @(posedge clk);
+                    if (sif.be_dram_req[0].valid) begin
+                        automatic logic [7:0] rid = sif.be_dram_req[0].id;
+                        automatic int r = rid[7:3];
+                        automatic int s = rid[2:0];
+                        sif.dram_be_res[0].valid = 1'b1;
+                        sif.dram_be_res[0].id = rid;
+                        sif.dram_be_res[0].rdata = {
+                            16'(16'hB000 + r * 32 + s * 4 + 3),
+                            16'(16'hB000 + r * 32 + s * 4 + 2),
+                            16'(16'hB000 + r * 32 + s * 4 + 1),
+                            16'(16'hB000 + r * 32 + s * 4 + 0)
+                        };
+                        resp_count++;
+                    end else begin
+                        sif.dram_be_res[0].valid = 1'b0;
+                    end
+                    dma_timeout++;
+                end
+                sif.sched_req[0].valid = 1'b0;
+                sif.dram_be_res[0] = '0;
+                dma_done = 1;
+            end
+
+            // Vector read thread: read region A while DMA is in progress
+            begin
+                automatic int start_time;
+                // Small delay to let DMA get started first
+                repeat(5) @(posedge clk);
+                start_time = $time;
+
+                for (int row = 0; row <= vec_read_rows; row++) begin
+                    vec_read_row(row, num_cols, 20'h0, rdata, success);
+                    if (!success) begin
+                        errors++;
+                    end else begin
+                        for (int col = 0; col <= num_cols; col++) begin
+                            if (rdata[col] !== 16'(16'hA000 + row * 32 + col)) begin
+                                errors++;
+                            end
+                        end
+                    end
+                end
+                vec_read_cycles = ($time - start_time) / CLK_PERIOD;
+                vec_done = 1;
+            end
+        join
+
+        // Step 3: Verify region B (DMA data) is also correct
+        repeat(10) @(posedge clk);
+        for (int row = 0; row <= dma_rows; row++) begin
+            vec_read_row(row, num_cols, 20'h200, rdata, success);
+            if (!success) begin
+                errors++;
+            end else begin
+                for (int col = 0; col <= num_cols; col++) begin
+                    if (rdata[col] !== 16'(16'hB000 + row * 32 + col))
+                        errors++;
+                end
+            end
+        end
+
+        if (errors == 0)
+            report_success($sformatf("Vec reads completed in %0d cycles while DMA active, both regions correct", vec_read_cycles));
+        else
+            report_error($sformatf("%0d errors in concurrent DMA write + vec read", errors));
+    endtask
+
+    // Test: Rapid alternating FE writes and FE reads to different addresses.
+    // With dual FIFOs, a read issued right after a write doesn't wait for
+    // the write's SRAM latency — they go to separate FIFOs and overlap.
+    task automatic test_concurrent_interleaved_rw();
+        automatic logic [ELEM_BITS-1:0] rdata [NUM_COLS];
+        automatic logic success;
+        automatic int errors = 0;
+        automatic int num_cols = 31;
+
+        current_test_type = "CONC_INTERLEAVE";
+        current_num_rows = 7;
+        current_num_cols = num_cols;
+
+        // Pre-load 8 rows at addr 0x000 with known data
+        for (int row = 0; row < 8; row++) begin
+            sif.vec_req[0].valid = 1'b1;
+            sif.vec_req[0].write = 1'b1;
+            sif.vec_req[0].spad_addr = 20'h0;
+            sif.vec_req[0].num_rows = 5'(0);
+            sif.vec_req[0].num_cols = 5'(num_cols);
+            sif.vec_req[0].row_id = 5'(row);
+            for (int col = 0; col < NUM_COLS; col++)
+                sif.vec_req[0].wdata[col] = 16'(16'hC000 + row * 32 + col);
+            do @(posedge clk); while (sif.fe_vec_stall[0]);
+            sif.vec_req[0].valid = 1'b0;
+        end
+        repeat(10) @(posedge clk);
+
+        // Interleave: write row N to addr 0x400, then immediately read row N from addr 0x000
+        // The read should not be blocked by the write's SRAM latency
+        for (int row = 0; row < 8; row++) begin
+            // Write to region B
+            sif.vec_req[0].valid = 1'b1;
+            sif.vec_req[0].write = 1'b1;
+            sif.vec_req[0].spad_addr = 20'h400;
+            sif.vec_req[0].num_rows = 5'(0);
+            sif.vec_req[0].num_cols = 5'(num_cols);
+            sif.vec_req[0].row_id = 5'(row);
+            for (int col = 0; col < NUM_COLS; col++)
+                sif.vec_req[0].wdata[col] = 16'(16'hD000 + row * 32 + col);
+            do @(posedge clk); while (sif.fe_vec_stall[0]);
+            sif.vec_req[0].valid = 1'b0;
+
+            // Immediately read from region A
+            vec_read_row(row, num_cols, 20'h0, rdata, success);
+            if (!success) begin
+                errors++;
+            end else begin
+                for (int col = 0; col <= num_cols; col++) begin
+                    if (rdata[col] !== 16'(16'hC000 + row * 32 + col))
+                        errors++;
+                end
+            end
+        end
+
+        repeat(10) @(posedge clk);
+
+        // Verify region B writes also completed correctly
+        for (int row = 0; row < 8; row++) begin
+            vec_read_row(row, num_cols, 20'h400, rdata, success);
+            if (!success) begin
+                errors++;
+            end else begin
+                for (int col = 0; col <= num_cols; col++) begin
+                    if (rdata[col] !== 16'(16'hD000 + row * 32 + col))
+                        errors++;
+                end
+            end
+        end
+
+        if (errors == 0)
+            report_success("8 interleaved write+read pairs, both regions correct");
+        else
+            report_error($sformatf("%0d errors in interleaved R+W", errors));
+    endtask
+
+    // Test: Verify no data corruption when reads and writes target the SAME
+    // bank but different rows. This is the concurrent access stress case.
+    task automatic test_concurrent_same_bank_diff_row();
+        automatic logic [ELEM_BITS-1:0] rdata [NUM_COLS];
+        automatic logic success;
+        automatic int errors = 0;
+        automatic int num_cols = 31;
+
+        current_test_type = "CONC_SAME_BANK";
+        current_num_rows = 3;
+        current_num_cols = num_cols;
+
+        // Pre-load rows 0-3 at addr 0x000
+        for (int row = 0; row < 4; row++) begin
+            sif.vec_req[0].valid = 1'b1;
+            sif.vec_req[0].write = 1'b1;
+            sif.vec_req[0].spad_addr = 20'h0;
+            sif.vec_req[0].num_rows = 5'(0);
+            sif.vec_req[0].num_cols = 5'(num_cols);
+            sif.vec_req[0].row_id = 5'(row);
+            for (int col = 0; col < NUM_COLS; col++)
+                sif.vec_req[0].wdata[col] = 16'(16'hE000 + row * 32 + col);
+            do @(posedge clk); while (sif.fe_vec_stall[0]);
+            sif.vec_req[0].valid = 1'b0;
+        end
+        repeat(10) @(posedge clk);
+
+        // Write row 4-7 (same banks, different rows) while reading rows 0-3
+        for (int i = 0; i < 4; i++) begin
+            // Write row i+4
+            sif.vec_req[0].valid = 1'b1;
+            sif.vec_req[0].write = 1'b1;
+            sif.vec_req[0].spad_addr = 20'h0;
+            sif.vec_req[0].num_rows = 5'(0);
+            sif.vec_req[0].num_cols = 5'(num_cols);
+            sif.vec_req[0].row_id = 5'(i + 4);
+            for (int col = 0; col < NUM_COLS; col++)
+                sif.vec_req[0].wdata[col] = 16'(16'hF000 + (i + 4) * 32 + col);
+            do @(posedge clk); while (sif.fe_vec_stall[0]);
+            sif.vec_req[0].valid = 1'b0;
+
+            // Read row i (same bank, different row — concurrent in SRAM)
+            vec_read_row(i, num_cols, 20'h0, rdata, success);
+            if (!success) begin
+                errors++;
+            end else begin
+                for (int col = 0; col <= num_cols; col++) begin
+                    if (rdata[col] !== 16'(16'hE000 + i * 32 + col))
+                        errors++;
+                end
+            end
+        end
+
+        repeat(10) @(posedge clk);
+
+        // Verify the written rows are also correct
+        for (int row = 4; row < 8; row++) begin
+            vec_read_row(row, num_cols, 20'h0, rdata, success);
+            if (!success) begin
+                errors++;
+            end else begin
+                for (int col = 0; col <= num_cols; col++) begin
+                    if (rdata[col] !== 16'(16'hF000 + row * 32 + col))
+                        errors++;
+                end
+            end
+        end
+
+        if (errors == 0)
+            report_success("Same-bank concurrent R+W to different rows, no corruption");
+        else
+            report_error($sformatf("%0d errors in same-bank concurrent R+W", errors));
+    endtask
+
+    task automatic run_concurrent_rw_tests();
+        $display("\n======== CONCURRENT R+W TESTS (dual FIFO) ========\n");
+
+        do_reset();
+        test_concurrent_dma_write_vec_read();
+
+        do_reset();
+        test_concurrent_interleaved_rw();
+
+        do_reset();
+        test_concurrent_same_bank_diff_row();
+    endtask
+
+    //==========================================================================
     // Test Suites
     //==========================================================================
     
@@ -1558,6 +1839,9 @@ module scratchpad_tb;
 
         // Phase 11: Random toggle coverage sweep
         run_random_sweep_tests();
+
+        // Phase 12: Concurrent R+W (dual FIFO verification)
+        run_concurrent_rw_tests();
         
         print_summary();
         

@@ -53,7 +53,8 @@ interface scpad_if (input logic clk, input logic n_rst);
     // Head => Stomach => Tail (Write)
     sel_req_t head_stomach_req [NUM_SCPADS]; // into wr xbar
     sel_req_t xbar_cntrl_req [NUM_SCPADS]; // into body fifo 
-    sel_req_t cntrl_spad_req [NUM_SCPADS]; // into spad 
+    sel_req_t cntrl_spad_req [NUM_SCPADS]; // read requests into spad
+    sel_req_t cntrl_spad_wr_req [NUM_SCPADS]; // write requests into spad (concurrent with reads)
     sel_res_t spad_xbar_req [NUM_SCPADS]; // into rd xbar
     sel_res_t stomach_tail_res [NUM_SCPADS]; // into tail 
 
@@ -156,7 +157,7 @@ interface scpad_if (input logic clk, input logic n_rst);
         input  head_stomach_req,
         input  spad_cntrl_res,
         input  xbar_cntrl_req,
-        output cntrl_spad_req,
+        output cntrl_spad_req, cntrl_spad_wr_req,
         output spad_xbar_req,
         output stomach_tail_res
     );
@@ -264,7 +265,7 @@ interface scpad_if (input logic clk, input logic n_rst);
     modport sram_ctrl_tb (
         input clk, n_rst, 
         input w_stall, r_stall,
-        input cntrl_spad_req, spad_xbar_req, 
+        input cntrl_spad_req, cntrl_spad_wr_req, spad_xbar_req, 
         input stomach_tail_res,
 
         output spad_busy, head_stomach_req,

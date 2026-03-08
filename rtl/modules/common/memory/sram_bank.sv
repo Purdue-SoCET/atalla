@@ -19,7 +19,7 @@ module sram_bank # (
   input logic [WIDTH-1:0] wdata, 
   output logic wdone
 );  
-  logic [HEIGHT-1:0][WIDTH-1:0] mem;
+  logic [WIDTH-1:0] mem [logic [ROW_IDX_WIDTH-1:0]];
 
   localparam int RLW = (READ_LATENCY <= 1) ? 1 : $clog2(READ_LATENCY);
   localparam int WLW = (WRITE_LATENCY <= 1) ? 1 : $clog2(WRITE_LATENCY);
@@ -84,15 +84,17 @@ module sram_bank # (
 
   always_ff @ (posedge clk, negedge n_rst) begin
     if (!n_rst) begin 
-      mem <= '0; 
       rdata <= '0; 
     end else begin 
       if (ren) begin
-        rdata <= mem[raddr];
+        rdata <= mem.exists(raddr) ? mem[raddr] : '0;
       end
-      if (wen) begin
-        mem[waddr] <= wdata;
-      end
+    end
+  end
+
+  always @(posedge clk) begin
+    if (wen) begin
+      mem[waddr] = wdata;
     end
   end
 
