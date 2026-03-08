@@ -15,12 +15,12 @@ class lfc_load_miss_seq extends uvm_sequence#(lfc_cpu_transaction);
   endfunction
 
   virtual task body();
-    logic [NUM_TRANSACTIONS-1:0][31:0] saved_addrs;
+    logic [NUM_TESTS-1:0][31:0] saved_addrs;
 
   `uvm_info(get_type_name(), "lfc_load_hit_seq", UVM_MEDIUM)
 	       	  
     // only reads ensures all transactions are load misses
-    for(int i = 0; i < NUM_TRANSACTIONS; i++) begin
+    for(int i = 0; i < NUM_TESTS; i++) begin
 	    lfc_cpu_transaction req;
 	    req = lfc_cpu_transaction #()::type_id::create("req");
 
@@ -40,7 +40,7 @@ class lfc_load_miss_seq extends uvm_sequence#(lfc_cpu_transaction);
 	    finish_item(req);
       end
 
-    for(int i = 0; i < NUM_TRANSACTIONS; i++) begin // read requests to same addresses (expecting hit)
+    for(int i = 0; i < NUM_TESTS; i++) begin // read requests to same addresses (expecting hit)
 	    lfc_cpu_transaction req;
 	    req = lfc_cpu_transaction #()::type_id::create("req");
 
