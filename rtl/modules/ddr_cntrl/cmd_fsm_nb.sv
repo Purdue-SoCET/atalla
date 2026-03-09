@@ -1,39 +1,68 @@
-// // BANK QUEUE -> COMMAND FSM
-// logic [$clog2(BANK_NUM)-1:0] bq_pop; // 16
-// logic [$clog2(BANK_NUM)-1:0] bq_rw; // 16
-// logic [BANK_GROUP_BITS-1:0][$clog2(BANK_NUM)-1:0 ] bq_bg, [$clog2(BANK_NUM)-1:0][$clog2(BANK_NUM)-1:0]   bq_b; // 2*16
-// logic [ROW_BITS-1:0][$clog2(BANK_NUM)-1:0] bq_r; // 15*16
-// logic [COLUMN_BITS-1:0][$clog2(BANK_NUM)-1:0]  bq_c; // 10*16
-// logic [$clog2(ID_NUM)-1:0][$clog2(BANK_NUM)-1:0]  bq_id; // 4*16
-// logic [$clog2(BANK_NUM)-1:0] bq_ready ;
-
-// // COMMAND FSM -> BACKEND ARBITER
-// logic [$clog2(BANK_NUM)-1:0]  be_arb;
-// logic [$clog2(BANK_NUM)-1:0]  be_queue_ready;
-// logic [BANK_GROUP_BITS-1:0][$clog2(BANK_NUM)-1:0]  be_bg, [BANK_BITS-1:0][$clog2(BANK_NUM)-1:0]  be_b; // 2*16
-// logic [ROW_BITS-1:0][$clog2(BANK_NUM)-1:0]  be_r; // 15*16
-// logic [COLUMN_BITS-1:0][$clog2(BANK_NUM)-1:0]  be_c; // 10*16
-// logic [$clog2(ID_NUM)-1:0][$clog2(BANK_NUM)-1:0]  be_id; // 4*16
-// logic [IDK] be_cmd; 
-
-// modport command_fsm (
-//     //BQ -> FSM
-//     input     bq_rw, bq_ready, bq_bg, bq_b, bq_r, bq_c, bq_id,
-//     //BE -> FSM
-//     be_arb,
-//     //FSM -> BE 
-//     output be_r, be_c, be_b, be_bg, be_cmd, be_id, be_rlen, be_queue_ready
-// );
-
-// FSM Top Level //
+// CMD FSM Top Level
+//
+// Instantiates BANK_NUM per-bank FSM modules (fsm_mod).  Each FSM is
+// fed by its bank's queue entry and controlled by the backend arbiter.
+// When the arbiter acknowledges a bank (be_arb), that bank's address
+// signals are routed to the backend arbiter outputs.
 
 `include "ddr_controller_if.vh"
 `include "dram_pkg.vh"
 
 module cmd_fsm (
-    input logic CLK, nRST, 
-    ddr_controleer_if.command_fsm fsm
+    input logic CLK, nRST,
+    ddr_controller_if.command_fsm fsm
 );
 
+    import dram_pkg::*;
+
+    logic [BANK_NUM-1:0] bank_ready;
+    logic [BANK_NUM-1:0] bank_pop;
+    logic [3:0]          bank_cmd [BANK_NUM-1:0];
+
+    genvar i;
+    generate
+        for (i = 0; i < BANK_NUM; i++) begin : gen_bank
+
+            // Per-bank interface instance for fsm_mod connection
+            ddr_controller_if bank_if();
+
+            // --- Wire bank queue inputs to this bank's FSM ---
+            assign bank_if.fsm_rw      = fsm.bq_rw[i];
+            assign bank_if.fsm_r       = fsm.bq_r[i];
+            assign bank_if.fsm_bqready = fsm.bq_ready[i];
+
+            // Refresh: fan out external refresh to every bank
+            assign bank_if.fsm_ref     = fsm.fsm_ref;
+
+            // Arbiter ack: decode be_arb to the matching bank
+            assign bank_if.fsm_arb     = (fsm.be_arb == i[$clog2(BANK_NUM)-1:0]);
+
+            // --- Instantiate per-bank FSM ---
+            fsm_mod u_fsm_mod (
+                .CLK  (CLK),
+                .nRST (nRST),
+                .fsm  (bank_if.fsm_mod)
+            );
+
+            // --- Collect per-bank outputs ---
+            assign bank_pop[i]   = bank_if.fsm_pop;
+            assign bank_ready[i] = bank_if.fsm_ready;
+            assign bank_cmd[i]   = bank_if.fsm_cmd;
+        end
+    endgenerate
+
+    assign fsm.be_queue_ready = bank_ready;
+
+    assign fsm.bq_pop = bank_pop;
+
+    always_comb begin
+        fsm.be_bg   = fsm.bq_bg[fsm.be_arb];
+        fsm.be_b    = fsm.bq_b[fsm.be_arb];
+        fsm.be_r    = fsm.bq_r[fsm.be_arb];
+        fsm.be_c    = fsm.bq_c[fsm.be_arb];
+        fsm.be_id   = fsm.bq_id[fsm.be_arb];
+        fsm.be_cmd  = bank_cmd[fsm.be_arb];
+        fsm.be_rlen = '0;
+    end
 
 endmodule

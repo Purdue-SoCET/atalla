@@ -40,32 +40,36 @@ logic [2:0] fe_len;
 logic [$clog2(BANK_NUM)-1:0] fe_full; // [QUEUE_SIZE-1:0]
 
 // BANK QUEUE -> COMMAND FSM
-logic [$clog2(BANK_NUM)-1:0] bq_pop; // 16
-logic [$clog2(BANK_NUM)-1:0] bq_rw; // 16
-logic [BANK_GROUP_BITS-1:0][$clog2(BANK_NUM)-1:0 ] bq_bg, [$clog2(BANK_NUM)-1:0][$clog2(BANK_NUM)-1:0]   bq_b; // 2*16
-logic [ROW_BITS-1:0][$clog2(BANK_NUM)-1:0] bq_r; // 15*16
-logic [COLUMN_BITS-1:0][$clog2(BANK_NUM)-1:0]  bq_c; // 10*16
-logic [$clog2(ID_NUM)-1:0][$clog2(BANK_NUM)-1:0]  bq_id; // 4*16
+logic [BANK_NUM-1:0] bq_pop;
+logic [BANK_NUM-1:0] bq_rw;
+logic [BANK_NUM-1:0][BANK_GROUP_BITS-1:0] bq_bg;
+logic [BANK_NUM-1:0][BANK_BITS-1:0]      bq_b;
+logic [BANK_NUM-1:0][ROW_BITS-1:0]       bq_r;
+logic [BANK_NUM-1:0][COLUMN_BITS-1:0]    bq_c;
+logic [BANK_NUM-1:0][$clog2(ID_NUM)-1:0] bq_id;
 logic [BANK_NUM-1:0] bq_ready ;
 
-// FSM module signals - bq
+// BQ <-> FSM mod
 logic fsm_pop;
 logic fsm_rw;
 logic [ROW_BITS-1:0] fsm_r;
-logic [BANK_NUM-1] fsm_bqr;
-// be_arbiter - FSM modules
+logic [BANK_NUM-1] fsm_bqready;
+// FSM mod <-> BE_ARB
 logic fsm_arb;
-logic 
-
+logic fsm_ready;
+logic [3:0] fsm_cmd;
+// External refresh request -> FSM mod
+logic fsm_ref;
 
 // COMMAND FSM -> BACKEND ARBITER
-logic [$clog2(BANK_NUM)-1:0]  be_arb;
-logic [$clog2(BANK_NUM)-1:0]  be_queue_ready;
-logic [BANK_GROUP_BITS-1:0][$clog2(BANK_NUM)-1:0]  be_bg, [BANK_BITS-1:0][$clog2(BANK_NUM)-1:0]  be_b; // 2*16
-logic [ROW_BITS-1:0][$clog2(BANK_NUM)-1:0]  be_r; // 15*16
-logic [COLUMN_BITS-1:0][$clog2(BANK_NUM)-1:0]  be_c; // 10*16
-logic [$clog2(ID_NUM)-1:0][$clog2(BANK_NUM)-1:0]  be_id; // 4*16
-logic [IDK] be_cmd; 
+logic [$clog2(BANK_NUM)-1:0] be_arb;
+logic [BANK_NUM-1:0]         be_queue_ready;
+logic [BANK_GROUP_BITS-1:0]  be_bg;
+logic [BANK_BITS-1:0]        be_b;
+logic [ROW_BITS-1:0]         be_r;
+logic [COLUMN_BITS-1:0]      be_c;
+logic [$clog2(ID_NUM)-1:0]   be_id;
+logic [3:0] be_cmd; 
 
 // BACKEND ARBITER -> READ_ID_QUEUE
 logic be_push_id, [$clog2(ID_NUM)-1:0] be_rid, [2:0] be_rlen;
@@ -172,14 +176,21 @@ modport command_fsm (
     input     bq_rw, bq_ready, bq_bg, bq_b, bq_r, bq_c, bq_id,
     //BE -> FSM
     be_arb,
+    //External refresh request
+    fsm_ref,
+    //FSM -> BQ
+    output bq_pop,
     //FSM -> BE 
-    output be_r, be_c, be_b, be_bg, be_cmd, be_id, be_rlen, be_queue_ready
+    be_r, be_c, be_b, be_bg, be_cmd, be_id, be_rlen, be_queue_ready
 );
 
 modport fsm_mod (
     //FSM -> FSMmod
-
+    input fsm_rw, fsm_r, fsm_bqready, fsm_arb,
+    //External refresh request
+    fsm_ref,
     //FSMmod -> FSM
+    output fsm_pop, fsm_ready, fsm_cmd
 );
 
 modport backend_arb (

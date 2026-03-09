@@ -97,6 +97,7 @@ package dram_pkg;
     //CMD FSM States
     typedef enum logic [3:0] {
         PWR_UP,
+        IDLE,
         ACT,
         ACTing,
         READ,
@@ -105,7 +106,8 @@ package dram_pkg;
         WRITEing,
         PRE,
         PREing,
-        REF
+        REF,
+        REFing
     } fsm_t;
     
     // {cs, act, ras, cas, we}
