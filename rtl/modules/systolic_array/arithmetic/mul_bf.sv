@@ -1,15 +1,15 @@
 `timescale 1ns/1ps
 // bf16 multiplier module -> exact FP32 product (no rounding)
-// Made by Mixuan Pan and Vinay Pundith 
+// Made by Mixuan Pan and Vinay Pundith
 // Last Modified: BF16 inputs, FP32 output for exact accumulation path. (myles "agentic" querimit)
 
 module mul_bf (
-    input logic clk, nRST, start, 
-    input logic [15:0] a, b, 
-    output logic [31:0] result, 
+    input logic clk, nRST, start,
+    input logic [15:0] a, b,
+    output logic [31:0] result,
     output logic done, mul_ovf, mul_unf
     );
-    
+
     logic lat1_ready;               // Signals to denote when the value is ready at each stage of the multiply unit pipeline.
     assign done = lat1_ready;                   // Mul result is ready when the value-latch register is ready - everything downstream of that is combinational.
 
@@ -17,55 +17,51 @@ module mul_bf (
     logic [15:0] a_latched, b_latched;
     always_ff @(posedge clk, negedge nRST) begin
         if(nRST == 1'b0) begin
-            a_latched <= 0;
-            b_latched <= 0;
             lat1_ready <= 0;
         end
         else begin
-            a_latched <= a_latched;
-            b_latched <= b_latched;
             lat1_ready <= 0;
-
             if(start == 1'b1) begin
-                a_latched <= a;
-                b_latched <= b;
                 lat1_ready <= 1;
             end
         end
     end
 
-    // Step 0: Edge cases detection 
+    assign a_latched = a;
+    assign b_latched = b;
+
+    // Step 0: Edge cases detection
     localparam logic [31:0] QNAN = 32'h7FC00000; // Quiet NaN (FP32)
     localparam logic [31:0] POS_INF = 32'h7F800000; // Positive Infinity (FP32)
 
-    logic inf, nan, is_nan, a_inf, b_inf; 
-    assign nan = is_nan | (a_inf & ~|b_latched[14:7]) | (b_inf & ~|a_latched[14:7]); 
-    assign inf = ~nan & (a_inf | b_inf); 
+    logic inf, nan, is_nan, a_inf, b_inf;
+    assign nan = is_nan | (a_inf & ~|b_latched[14:7]) | (b_inf & ~|a_latched[14:7]);
+    assign inf = ~nan & (a_inf | b_inf);
 
-    always_comb begin: nan_inf_detection 
-        a_inf = 1'b0; 
-        b_inf = 1'b0;  
-        is_nan= 1'b0; 
+    always_comb begin: nan_inf_detection
+        a_inf = 1'b0;
+        b_inf = 1'b0;
+        is_nan= 1'b0;
 
-        // a detection 
-        if (&a_latched[14:7]) begin 
-            if (|a_latched[6:0]) begin 
-                // a is nan 
-                is_nan = 1'b1; 
-            end else begin 
-                // a is inf 
-                a_inf = 1'b1; 
+        // a detection
+        if (&a_latched[14:7]) begin
+            if (|a_latched[6:0]) begin
+                // a is nan
+                is_nan = 1'b1;
+            end else begin
+                // a is inf
+                a_inf = 1'b1;
             end
         end
 
-        // b detection 
-        if (&b_latched[14:7]) begin 
-            if (|b_latched[6:0]) begin 
-                // b is nan 
-                is_nan = 1'b1; 
-            end else begin 
-                // b is inf 
-                b_inf = 1'b1; 
+        // b detection
+        if (&b_latched[14:7]) begin
+            if (|b_latched[6:0]) begin
+                // b is nan
+                is_nan = 1'b1;
+            end else begin
+                // b is inf
+                b_inf = 1'b1;
             end
         end
     end
@@ -104,7 +100,7 @@ module mul_bf (
     );
 
     // Step 2: Exponent addition, mantissa formatting. All combinational.
-    
+
     // Step 2.1: calculate sign of result. Simple XOR
     logic mul_sign_result;
     assign mul_sign_result = a_latched[15] ^ b_latched[15];
@@ -129,7 +125,7 @@ module mul_bf (
     // Underflow: exponent <= 0 (signed negative or zero)
     assign unf = exp_sum_raw[9] | (~|exp_sum_raw[8:0]);
 
-    // Subnormal inputs 
+    // Subnormal inputs
     logic a_sub, b_sub;
     assign a_sub = ~|a_latched[14:7];
     assign b_sub = ~|b_latched[14:7];
@@ -141,12 +137,21 @@ module mul_bf (
     assign mul_ovf = ~mul_unf & ovf & ~a_sub & ~b_sub;
 
     // Concatenation to produce final FP32 result.
-    assign result =  nan ? QNAN :   
-                     inf ? {mul_sign_result, POS_INF[30:0]} : 
+    logic [31:0] result_comb;
+    assign result_comb =  nan ? QNAN :
+                     inf ? {mul_sign_result, POS_INF[30:0]} :
                      a_sub || b_sub ? {mul_sign_result, 31'b0} :  // subnormal inputs flush to zero (FTZ/DAZ)
                      mul_ovf ? {mul_sign_result, POS_INF[30:0]} :
                      mul_unf ? {mul_sign_result, 31'b0} :
                      {mul_sign_result, exp_fp32, frac_fp32};
-                
+
+    always_ff @(posedge clk, negedge nRST) begin
+        if (!nRST) begin
+            result <= '0;
+        end else begin
+            result <= result_comb;
+        end
+    end
+
 endmodule
 // required next line after endmodule for some verilog parsers

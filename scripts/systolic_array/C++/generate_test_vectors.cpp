@@ -214,7 +214,7 @@ std::vector<std::vector<uint16_t>> sim_MEISSA32(
                 weight_col[i] = weight[i][col];
             }
 
-            output[row][col] = sim_MEISSA32_col(input[row], weight_col, psum[row][col], is_fp16);
+            output[row][col] = fp32_to_bf16_bits(sim_MEISSA32_col(input[row], weight_col, psum[row][col], is_fp16));
         }
     }
 

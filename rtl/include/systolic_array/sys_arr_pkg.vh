@@ -4,6 +4,7 @@
 package sys_arr_pkg;
   parameter N = 32; // dimensions of the systolic array
   parameter DW = 16; // data width
+  parameter DW_ACC = 32; // accumulator width
 endpackage
 
 function automatic int compute_tree_latency(input int N, add4_lat, add2_lat);

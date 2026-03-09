@@ -144,3 +144,21 @@ uint32_t bf16_to_ui32(uint16_t bits)
     uint32_t value = bits;
     return value << 16;
 }
+
+uint16_t fp32_to_bf16_bits(uint32_t fp32_bits)
+{
+    float32_t f;
+    f.v = fp32_bits;
+    bfloat16_t result = f32_to_bf16(f);
+    // Apply FTZ: BF16 subnormal = exponent[14:7] == 0, mantissa[6:0] != 0
+    uint16_t bf16_exp  = (result.v >> 7) & 0xFF;
+    uint16_t bf16_mant = result.v & 0x7F;
+    if (bf16_exp == 0 && bf16_mant != 0) {
+        result.v = result.v & 0x8000; // flush to zero, preserve sign
+    }
+    // Canonicalize NaN: BF16 NaN = exponent == 0xFF, mantissa != 0
+    if (bf16_exp == 0xFF && bf16_mant != 0) {
+        result.v = 0x7E00;
+    }
+    return result.v;
+}

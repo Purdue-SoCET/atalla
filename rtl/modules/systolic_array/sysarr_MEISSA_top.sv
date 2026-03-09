@@ -16,20 +16,18 @@ module sysarr_MEISSA_top #(
     gsau_control_unit_if.systolic_array gsau_if
 );
     // logic sysarr_stall;
-    logic [N - 1:0][N - 1:0][DW - 1:0] mul_prod;
+    logic [N - 1:0][N - 1:0][DW_ACC - 1:0] mul_prod;
     logic [N - 1:0][N - 1:0][DW - 1:0] col_prod;
-    logic [N - 1:0][DW - 1:0] adder_sum;
+    logic [N - 1:0][DW_ACC - 1:0] adder_sum;
 
     // logic [N - 1:0][DW - 1:0] partial_flipped;
     // logic [N - 1:0][DW - 1:0] partial_sram_out;
     // logic [N - 1:0][DW - 1:0] partial_reverted;
 
-    logic [N - 1:0][DW - 1:0] psum_buffer_out;
+    logic [N - 1:0][DW_ACC - 1:0] psum_buffer_out;
 
-    // only stall when gsau indicates stall (consumer module wb buffer needs to stall)
-    // assign sysarr_stall = ~gsau_if.sa_ready_out;
-
-    assign gsau_if.sa_ready_in = gsau_if.sa_ready_out;
+    // Credit-based flow control — ready_in driven by output buffer credits
+    // (replaces old pass-through: assign gsau_if.sa_ready_in = gsau_if.sa_ready_out)
 
     //mul grid: input and output is latched
 
@@ -155,6 +153,51 @@ module sysarr_MEISSA_top #(
         .stall(1'b0),
         .wr_data(adder_sum),
         .rd_data(output_data)
+    ); */
+
+    logic [N-1:0] out_wr_en;
+
+    MEISSA_control_unit #(
+        .N(N),
+        .GROUP_SIZE(1),
+        .ADD_2_INPUT_LATENCY(ADD_LATENCY),
+        .MUL_LATENCY(MUL_LATENCY)
+    ) control_unit (
+        .clk(clk),
+        .nRST(nRST),
+        .sa_output_valid(gsau_if.sa_valid_in),
+        .sa_input_en(gsau_if.sa_input_en),
+        .out_wr_en(out_wr_en),
+        .ready_in(gsau_if.sa_ready_in)
+    );
+
+    localparam PIPELINE_DELAY = MUL_LATENCY + $clog2(N) * ADD_LATENCY + N;
+    logic [PIPELINE_DELAY - 1:0] pipe_valid_bits;
+
+    always_ff @(posedge clk or negedge nRST) begin
+        if (!nRST) begin
+            pipe_valid_bits <= '0;
+        end else begin
+            // if (!sysarr_stall) begin
+            //     valid_bits <= {valid_bits[TOTAL_DELAY - 1 : 0], gsau_if.sa_input_en};
+            // end
+            pipe_valid_bits <= {pipe_valid_bits[PIPELINE_DELAY - 1 : 0], gsau_if.sa_input_en};
+        end
+    end
+
+    TPU_buffer #(
+        .NUM_COLS(N),
+        .DATA_WIDTH(DW),
+        .IN_OUT(1) // output
+    ) output_buffer (
+        .clk(clk),
+        .nRST(nRST),
+        .wr_en(pipe_valid_bits[PIPELINE_DELAY - 1]),
+        .wr_data(reduced_data),
+        .rd_en(out_wr_en),
+        .rd_data(output_data),
+        .lane0_empty(),
+        .full()
     );
 
     // Drive GSAU output interface
