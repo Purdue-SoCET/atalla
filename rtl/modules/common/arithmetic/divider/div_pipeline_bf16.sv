@@ -11,12 +11,6 @@ module div_pipeline_bf16 (
   localparam [15:0] TWO = 16'h4000;
   localparam [15:0] qNaN = 16'h7FC0; // NaN
 
-  // typedef enum logic [2:0] {
-  //   IDLE,
-  //   BUSY, 
-  //   DONE 
-  // } state_t;
-
     // Pipeline Structs
   typedef struct packed{
     logic sign, is_special, valid, is_sub_bound;
@@ -48,9 +42,6 @@ module div_pipeline_bf16 (
   mul2_t sub1Tsub2, n_sub1Tsub2, sub2Tfin2, n_sub2Tfin2, fin3Texp, n_fin3Texp;
   fin_t expTout, n_expTout;
 
-  // FSM State
-  // state_t state, n_state;
-
   // Mult and Sub signals
   logic [15:0] muln, muld, mulfin, f_1, f_2;
   logic [15:0] outn, outd, outfin;
@@ -66,10 +57,7 @@ module div_pipeline_bf16 (
   logic is_subnormal_boundary;
 
   // Pipeline Signals
-  logic pause, wen, ren, flush;
-  logic [3:0] ir, iw;
-  logic [3:0] fifo_count;
-  logic [15:0][15:0] fifo, n_fifo;
+  logic [7:0] pipe_en;
 
   // Edge case flags
   logic op1_is_zero, op1_is_inf, op1_is_nan;
@@ -110,7 +98,7 @@ module div_pipeline_bf16 (
     .bf2_in(subd),
     .op(1'b1), 
     .start(startsub),
-    .stall(0),
+    .stall(pipe_en[1]),
     .bf_out(subout), 
     .overflow(),
     .underflow(),
@@ -129,10 +117,10 @@ module div_pipeline_bf16 (
     .mul_unf()
   );
   
-  // Pipeline Signal
-  assign flush = pause ? 1:0;
-  assign divif.out.ready_in = pause ? 0:nRST;
-  assign divif.out.valid_out = fifo_count > 0;
+  // Pipeline Signals
+  assign pipe_en = !divif.in.ready_out && divif.out.valid_out ? 8'h00 : 8'hFF;
+  assign divif.out.ready_in = pipe_en ? 0:nRST;
+  assign divif.out.valid_out = expTout.valid;
 
   // Mantissa Normalization
   assign muln = (divif.in.operand1[14:7] == 8'h00) ? 16'h8000 : {1'b0, BIAS, divif.in.operand1[6:0]};
@@ -180,12 +168,12 @@ module div_pipeline_bf16 (
     else is_special = 0;
   end
 
-  assign startn = divif.in.valid_in && !is_special && !flush;
-  assign startd = divif.in.valid_in && !is_special && !flush;
+  assign startn = divif.in.valid_in && !is_special && pipe_en[0];
+  assign startd = divif.in.valid_in && !is_special && pipe_en[0];
 
   always_comb begin
-    if(flush) n_mul1Tfin1 = '0;  // For feeding in bubbles on pauses
-    else begin
+    n_mul1Tfin1 = mul1Tfin1;
+    if(pipe_en[0]) begin
       n_mul1Tfin1.sign           = sign;
       n_mul1Tfin1.is_special     = is_special;
       n_mul1Tfin1.valid          = divif.in.valid_in;
@@ -199,14 +187,17 @@ module div_pipeline_bf16 (
 // MUL1 to FIN1
 // *********************************************************************************************
   always_comb begin
-    n_fin1Tsub1.sign           = mul1Tfin1.sign;
-    n_fin1Tsub1.is_special     = mul1Tfin1.is_special;
-    n_fin1Tsub1.valid          = mul1Tfin1.valid;
-    n_fin1Tsub1.is_sub_bound   = mul1Tfin1.is_sub_bound;
-    n_fin1Tsub1.exp            = mul1Tfin1.exp;
-    n_fin1Tsub1.muln           = outn;
-    n_fin1Tsub1.muld           = outd;
-    n_fin1Tsub1.special_result = mul1Tfin1.special_result;
+    n_fin1Tsub1 = fin1Tsub1;
+    if(pipe_en[1]) begin
+      n_fin1Tsub1.sign           = mul1Tfin1.sign;
+      n_fin1Tsub1.is_special     = mul1Tfin1.is_special;
+      n_fin1Tsub1.valid          = mul1Tfin1.valid;
+      n_fin1Tsub1.is_sub_bound   = mul1Tfin1.is_sub_bound;
+      n_fin1Tsub1.exp            = mul1Tfin1.exp;
+      n_fin1Tsub1.muln           = outn;
+      n_fin1Tsub1.muld           = outd;
+      n_fin1Tsub1.special_result = mul1Tfin1.special_result;
+    end
   end
 
 // *********************************************************************************************
@@ -304,33 +295,7 @@ module div_pipeline_bf16 (
 // *********************************************************************************************
 // EXP to OUT
 // *********************************************************************************************
-  assign ren = divif.in.ready_out && fifo_count > 0;
-  assign wen = expTout.valid;
-  assign pause = !divif.in.ready_out && divif.out.valid_out;
-  always_comb begin
-    n_fifo = fifo;
-    if(wen) n_fifo[iw] = expTout.fin;
-  end
-
-  always_ff @(posedge CLK, negedge nRST) begin
-    if(~nRST) begin
-      fifo       <= '0;
-      fifo_count <= '0;
-      ir         <= '0;
-      iw         <= '0;
-    end else begin
-      case({wen, ren})
-        2'b10: begin iw <= iw + 1; fifo_count <= fifo_count + 1; end 
-        2'b01: begin ir <= ir + 1; fifo_count <= fifo_count - 1; end 
-        2'b11: begin iw <= iw + 1; ir <= ir + 1; end 
-        default: ;
-      endcase
-      fifo <= n_fifo;
-    end
-  end
-
-  // Output
-  assign divif.out.result = fifo[ir];
+  assign divif.out.result = expTout.fin;
 
   always_ff @(posedge CLK, negedge nRST) begin : pipeline_ff
     if(~nRST) begin
