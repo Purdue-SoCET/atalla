@@ -190,7 +190,7 @@ genvar k;
     ) output_buffer (
         .clk(clk),
         .nRST(nRST),
-        .wr_en(valid_bits[TOTAL_DELAY - 1]),
+        .wr_en(valid_bits[TOTAL_DELAY - 2]),
         .wr_data(psum_pipe[N/4]),
         .rd_en(out_wr_en),
         .rd_data(gsau_if.sa_array_output),
