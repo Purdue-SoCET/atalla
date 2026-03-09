@@ -40,6 +40,7 @@ module add4_fp16_tb_softfloat;
     systolic_array_4_input_adder_if #(
         .EXPONENT_SIZE(EXPONENT_SIZE),
         .MANTISSA_SIZE(MANTISSA_SIZE),
+        .OUT_MANTISSA_SIZE(MANTISSA_SIZE),
         .PRECISION_BITS(PRECISION_BITS)
     ) add_if();
 

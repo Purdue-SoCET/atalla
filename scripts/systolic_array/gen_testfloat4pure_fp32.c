@@ -140,10 +140,10 @@ int main(int argc, char *argv[]) {
     printf("a,b,c,d,expected\n");
 
     for (int i = 0; i < n/4; i++) {
-        uint32_t a = random_f32_clustered(0x40);
-        uint32_t b = random_f32_clustered(0x40);
-        uint32_t c = random_f32_clustered(0x40);
-        uint32_t d = random_f32_clustered(0x40);
+        uint32_t a = random_f32_clustered(127);
+        uint32_t b = random_f32_clustered(127);
+        uint32_t c = random_f32_clustered(127);
+        uint32_t d = random_f32_clustered(127);
 
         uint32_t result = true_4input_add_f32(a, b, c, d);
         printf("%08x,%08x,%08x,%08x,%08x\n", a, b, c, d, result);

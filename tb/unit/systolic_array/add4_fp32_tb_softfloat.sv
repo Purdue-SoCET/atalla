@@ -22,7 +22,7 @@ module add4_fp32_tb_softfloat;
 
     localparam PERIOD = 2;
     localparam LATENCY = 4;  // 3 pipeline stages + 1 output register
-    localparam PRECISION_BITS = 22;
+    localparam PRECISION_BITS = 50;
     localparam EXPONENT_SIZE = 8;
     localparam MANTISSA_SIZE = 23; 
 
@@ -40,6 +40,7 @@ module add4_fp32_tb_softfloat;
     systolic_array_4_input_adder_if #(
         .EXPONENT_SIZE(EXPONENT_SIZE),
         .MANTISSA_SIZE(MANTISSA_SIZE),
+        .OUT_MANTISSA_SIZE(MANTISSA_SIZE),
         .PRECISION_BITS(PRECISION_BITS)
     ) add_if();
 
@@ -60,6 +61,7 @@ module add4_fp32_tb_softfloat;
     sysarr_4_input_fp_adder #(
         .MANTISSA_SIZE(MANTISSA_SIZE),
         .EXPONENT_SIZE(EXPONENT_SIZE),
+        .OUT_MANTISSA_SIZE(MANTISSA_SIZE),
         .PRECISION_BITS(PRECISION_BITS)
     ) etchedfp4adder (
         .clk(tb_clk),
@@ -99,17 +101,17 @@ module add4_fp32_tb_softfloat;
         end
     endtask
 
-    localparam logic [31:0] P_INF      = 32'b0_11111111_0000000000000000;
-    localparam logic [31:0] N_INF      = 32'b1_11111111_0000000000000000;
-    localparam logic [31:0] NAN        = 32'b0_11111111_010000000000000;
-    localparam logic [31:0] P_ZERO     = 32'b0_00000_...;
-    localparam logic [31:0] N_ZERO     = 32'b1_...;
-    localparam logic [31:0] ONE        = 32'b...;
-    localparam logic [31:0] TWO        = 32'b...;
-    localparam logic [31:0] THREE      = 32'b...;
-    localparam logic [31:0] FOUR       = 32'b0_10001_0000000000;
-    localparam logic [31:0] MIN_SUB    = 32'b0_00000_0000000001;
-    localparam logic [31:0] MAX_FINITE = 32'b1_11111111_1111111111;
+    localparam logic [31:0] P_INF      = 32'b0_11111111_00000000000000000000000;
+    localparam logic [31:0] N_INF      = 32'b1_11111111_00000000000000000000000;
+    localparam logic [31:0] NAN        = 32'b0_11111111_10000000000000000000000;
+    localparam logic [31:0] P_ZERO     = 32'b0_00000000_00000000000000000000000;
+    localparam logic [31:0] N_ZERO     = 32'b1_00000000_00000000000000000000000;
+    localparam logic [31:0] ONE        = 32'b0_01111111_00000000000000000000000;
+    localparam logic [31:0] TWO        = 32'b0_10000000_00000000000000000000000;
+    localparam logic [31:0] THREE      = 32'b0_10000000_10000000000000000000000;
+    localparam logic [31:0] FOUR       = 32'b0_10000001_00000000000000000000000;
+    localparam logic [31:0] MIN_SUB    = 32'b0_00000000_00000000000000000000001;
+    localparam logic [31:0] MAX_FINITE = 32'b0_11111110_11111111111111111111111;
 
     integer fd;
     integer fail_fd;
@@ -118,11 +120,11 @@ module add4_fp32_tb_softfloat;
 
 initial begin
     // waveform stuff
-    $dumpfile("waves/add4_fp16_waves.vcd");
-    $dumpvars(0, add4_fp16_tb_softfloat);
+    $dumpfile("waves/add4_fp32_waves.vcd");
+    $dumpvars(0, add4_fp32_tb_softfloat);
 
     // failure file
-    fail_fd = $fopen("test_failures_pure.csv", "w");
+    fail_fd = $fopen("test_failures_pure_fp32.csv", "w");
     $fwrite(fail_fd, "a,b,c,d,expected,got\n");
 
     pass_count = 0;
@@ -130,10 +132,10 @@ initial begin
     off_by_one = 0; 
     off_by_two = 0; 
     tb_nrst = 1'b0;
-    tb_a = 16'h0;
-    tb_b = 16'h0;
-    tb_c = 16'h0;
-    tb_d = 16'h0;
+    tb_a = 32'h0;
+    tb_b = 32'h0;
+    tb_c = 32'h0;
+    tb_d = 32'h0;
 
     #(PERIOD);
     tb_nrst = 1;
@@ -150,7 +152,7 @@ initial begin
 
     // 2+2+2+2 = 8
     test_case(TWO, TWO, TWO, TWO);
-    exp = 16'b0_10010_0000000000;  // 8
+    exp = 32'b0_10000010_00000000000000000000000;
     #(PERIOD * (LATENCY + 1));
     check_case("2+2+2+2 = 8", exp);
     #(PERIOD);
@@ -212,16 +214,16 @@ initial begin
     #(PERIOD);
 
     // Cancellation: 1 + (-1) + 1 + (-1) = 0
-    test_case(ONE, 16'b1_01111_0000000000, ONE, 16'b1_01111_0000000000);
+    test_case(ONE, 32'b1_01111111_00000000000000000000000, ONE, 32'b1_01111111_00000000000000000000000);
     exp = P_ZERO;
     #(PERIOD * (LATENCY + 1));
     check_case("1+(-1)+1+(-1) = 0", exp);
     #(PERIOD);
 
     // Negative sum: -2 + -2 + -2 + -2 = -8
-    test_case(16'b1_10000_0000000000, 16'b1_10000_0000000000,
-              16'b1_10000_0000000000, 16'b1_10000_0000000000);
-    exp = 16'b1_10010_0000000000;  // -8
+    test_case(32'b1_10000000_00000000000000000000000, 32'b1_10000000_00000000000000000000000,
+              32'b1_10000000_00000000000000000000000, 32'b1_10000000_00000000000000000000000);
+    exp = 32'b1_10000010_00000000000000000000000;
     #(PERIOD * (LATENCY + 1));
     check_case("-2+-2+-2+-2 = -8", exp);
     #(PERIOD);
@@ -229,7 +231,7 @@ initial begin
     $display("");
     $display("--- Berkeley SoftFloat Random Test Cases ---");
 
-    fd = $fopen("scripts/systolic_array/testfloat_cases_4_pure.csv", "r");
+    fd = $fopen("scripts/systolic_array/testfloat_cases_4_pure_fp32.csv", "r");
     if (fd == 0) begin
         $display("error: could not open testfloat_cases_4_pure.csv");
         $display("make sure it is in the right directory! check tb for pathing"); 
@@ -257,8 +259,8 @@ initial begin
         #(PERIOD * LATENCY);  // wait for pipeline latency lmk if this is right so i can edit it 
 
         // relaxation for zero 
-        is_zero_result = (tb_result == 16'h0000 || tb_result == 16'h8000) &&
-                         (expected == 16'h0000 || expected == 16'h8000);
+        is_zero_result = (tb_result == 32'h00000000 || tb_result == 32'h80000000) &&
+                         (expected == 32'h00000000 || expected == 32'h80000000);
 
         if (is_nan(tb_result) && is_nan(expected)) begin
             pass_count++;
@@ -304,7 +306,7 @@ initial begin
 
     $display("");
     $display("=== test summary ===");
-    $display("PRECISION BITS: %0d", 16);
+    $display("PRECISION BITS: %0d", PRECISION_BITS);
     $display("PASSED: %0d", pass_count);
     $display("FAILED: %0d", fail_count);
     $display("OFF-BY-ONE: %0d", off_by_one);
