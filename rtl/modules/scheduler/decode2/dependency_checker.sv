@@ -35,6 +35,7 @@ module dependency_checker #(
     always_ff @(posedge clk, negedge n_rst) begin
         int i;
         int w;
+        // Reset
         if (!n_rst) begin
             for (i = 0; i < NUM_SCALAR_REGS; i++)
                 scalar_dependency_table[i] <= 1'b0;
@@ -114,14 +115,14 @@ module dependency_checker #(
         
         
         for (int i = 0; i < SCALAR_READ_PORTS; i++) begin
-            scalar_hit[i] = dc_if.scalar_REN[i] & scalar_dependency_table[dc_if.scalar_rsel[i]];
+            scalar_hit[i] = (dc_if.scalar_REN[i] & scalar_dependency_table[dc_if.scalar_rsel[i]]) | (dc_if.scalar_WEN[w] & scalar_dependency_table[dc_if.scalar_wsel[w]]);
         end
         for (int i = 0; i < VECTOR_READ_PORTS; i++) begin
-            //vector_hit[i] = dc_if.vector_REN[i] & vector_dependency_table[dc_if.vector_rsel[i]];
+            //vector_hit[i] = (dc_if.vector_REN[i] & vector_dependency_table[dc_if.vector_rsel[i]]) | (dc_if.vector_WEN[w] & vector_dependency_table[dc_if.vector_wsel[w]]);
             vector_hit[i] = '0;
         end
         for (int i = 0; i < MASK_READ_PORTS; i++) begin
-            //mask_hit[i] = dc_if.mask_REN[i] & mask_dependency_table[dc_if.mask_rsel[i]];
+            //mask_hit[i] = (dc_if.mask_REN[i] & mask_dependency_table[dc_if.mask_rsel[i]]) | (dc_if.mask_WEN[w] & mask_dependency_table[dc_if.mask_wsel[w]]);
             mask_hit[i] = '0;
         end
 
