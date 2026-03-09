@@ -1,7 +1,6 @@
 // make test tb_file=div_pipeline_bf16_tb.sv modules=/common/arithmetic/adders,/common/arithmetic/multipliers,/common/arithmetic/divider packages=/vector/vector_pkg.vh,/memory/scratchpad/scpad_pkg.sv,/common/xbar/xbar_pkg.sv GUI=ON VLOG_FLAGS="-sv -compile_uselibs -cover bst -sv -pedanticerrors -lint -mfcu" VSIM_FLAGS='-coverage -c -voptargs="+acc"'
 `include "div_if.vh"
 `timescale 1 ns / 1 ns
-// make test tb_file=div_pipeline_bf16_tb.sv modules=/common/arithmetic/adders,/common/arithmetic/multipliers,/common/arithmetic/divider packages=/vector/vector_pkg.vh,/memory/scratchpad/scpad_pkg.sv,/common/xbar/xbar_pkg.sv GUI=ON
 module div_pipeline_bf16_tb;
     //-----------------------------------------------
   // Configuration Parameters
