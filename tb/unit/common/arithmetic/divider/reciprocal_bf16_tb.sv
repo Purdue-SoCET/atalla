@@ -206,11 +206,10 @@ module reciprocal_bf16_tb;
                 
                 if (c_act === c_exp) begin
                    ULP_0_count++;
-                end else if ((c_act[15] == c_exp[15]) && (t_abs <= 2)) begin 
+                end else if ((c_act[15] == c_exp[15]) && (t_abs <= 1)) begin 
                    if (t_abs == 1) ULP_1_count++;
-                   if (t_abs == 2) ULP_2_count++;
-                end else if ((c_act[14:0] == 15'h0000) && (c_exp[14:0] <= 15'h0083) && (c_act[15] == c_exp[15])) begin
-                   ULP_2_count++;
+                // end else if ((c_act[14:0] == 15'h0000) && (c_exp[14:0] <= 15'h0083) && (c_act[15] == c_exp[15])) begin
+                //    ULP_2_count++;
                 end else begin
                     $display("ERROR @%0t [%s]: Reciprocal of %h = %h (expected %h)", 
                             $time, tb_test_case, c_in, c_act, c_exp);
@@ -399,10 +398,10 @@ module reciprocal_bf16_tb;
       subnormal_output_tests = errors - normal_tests - subnormal_input_tests;
     end else if (EXP_WIDTH == 8 && MANT_WIDTH == 7) begin
       // BF16 test files (if available) --------------------------------------------------------------------------------------------------------------------------
-      run_file_tests("tb/unit/common/arithmetic/divider/test_cases/recip_bf16_normal_tests_all.csv", "BF16_NORM_STABLE", "STABLE");
-      run_file_tests("tb/unit/common/arithmetic/divider/test_cases/recip_bf16_normal_tests_all.csv", "BF16_FRONT_PRESS", "FRONT_PRESSURE");
-      run_file_tests("tb/unit/common/arithmetic/divider/test_cases/recip_bf16_normal_tests_all.csv", "BF16_BACK_PRESS", "BACK_PRESSURE");
-      run_file_tests("tb/unit/common/arithmetic/divider/test_cases/recip_bf16_normal_tests_all.csv", "BF16_RANDOM", "RANDOM");
+      run_file_tests("tb/unit/common/arithmetic/divider/test_cases/reciprocal_sweep.csv", "BF16_NORM_STABLE", "STABLE");
+      run_file_tests("tb/unit/common/arithmetic/divider/test_cases/reciprocal_sweep.csv", "BF16_FRONT_PRESS", "FRONT_PRESSURE");
+      run_file_tests("tb/unit/common/arithmetic/divider/test_cases/reciprocal_sweep.csv", "BF16_BACK_PRESS", "BACK_PRESSURE");
+      run_file_tests("tb/unit/common/arithmetic/divider/test_cases/reciprocal_sweep.csv", "BF16_RANDOM", "RANDOM");
 
       normal_tests = errors;
     end else begin
