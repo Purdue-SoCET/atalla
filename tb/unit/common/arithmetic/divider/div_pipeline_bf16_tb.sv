@@ -95,7 +95,7 @@ module div_pipeline_bf16_tb;
     if (is_nan(divif.out.result) && is_nan(expected_in)) begin
       // Pass
     end else if (divif.out.result !== expected_in) begin
-      if ((divif.out.result[15] == expected_in[15]) && (abs_diff <= 2)) begin 
+      if ((divif.out.result[15] == expected_in[15]) && (abs_diff <= 1)) begin 
         // Pass ULP
       end else begin
          $display("ERROR @%0t [%s]: %h / %h = %h (expected %h)", 
@@ -210,7 +210,7 @@ module div_pipeline_bf16_tb;
                 
                 if (c_act === c_exp) begin
                    ULP_0_count++;
-                end else if ((c_act[15] == c_exp[15]) && (t_abs <= 2)) begin 
+                end else if ((c_act[15] == c_exp[15]) && (t_abs <= 1)) begin 
                    if (t_abs == 1) ULP_1_count++;
                    if (t_abs == 2) ULP_2_count++;
                 end else begin
