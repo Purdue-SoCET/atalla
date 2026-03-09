@@ -1,0 +1,2 @@
+var g_data = {"data":[{"n":"work.axi_bus_if","id":4,"zf":1,"tc":16.60,"t":16.60},{"n":"work.axi_read_router","id":5,"zf":1,"tc":87.35,"s":100.00,"b":100.00,"t":62.05},{"n":"work.axi_read_router_tb","id":3,"zf":1,"tc":100.00,"s":100.00,"t":100.00},{"n":"work.axi_skid_buffer","id":6,"zf":1,"tc":91.72,"s":100.00,"b":100.00,"t":75.17},{"n":"work.test","id":7,"zf":1,"tc":80.15,"s":100.00,"t":60.30}]};
+processDuData(g_data);

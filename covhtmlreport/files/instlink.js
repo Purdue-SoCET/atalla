@@ -1,0 +1,2 @@
+var g_data = {"9":[8,"rif",1],"11":[10,"SKID_SP0",1],"12":[10,"SKID_SP1",1],"13":[10,"SKID_I",1],"14":[10,"SKID_D",1],"10":[8,"DUT",1],"15":[8,"PROG",1],"8":[-1,"axi_read_router_tb",1]};
+processInstLinks(g_data);

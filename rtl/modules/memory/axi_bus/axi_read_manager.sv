@@ -13,10 +13,10 @@ module axi_read_manager #(
     input logic                 CLK,
     input logic                 nRST,
     // From Master
-    input logic                 arready, // master ready to send read request
+    input logic                 arvalid, // master ready to send read request
     input master_ar_channel_t   master_in,
     // To Master
-    output logic                arvalid, // manager valid to take signal
+    output logic                arready, // manager valid to take signal
     // From Read Controller
     input  logic                pop, // AR channel ready to take 
     // To Read Mux
@@ -32,8 +32,8 @@ assign full  = (wr_ptr + 1'b1 == rd_ptr);
 assign empty = (wr_ptr == rd_ptr);
 
 logic push;
-assign arvalid = !full;
-assign push = (arready & arvalid); 
+assign arready = !full;
+assign push = (arvalid & arready); 
 
 // input from master
 always_ff @ ( posedge CLK, negedge nRST ) begin

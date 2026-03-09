@@ -88,7 +88,7 @@ program test (
         repeat (3) @(negedge CLK);
     end 
     endtask
-
+    // assertion learn
     task check_output(
         sub_ar_channel_t exp_manager_out,
         logic exp_req

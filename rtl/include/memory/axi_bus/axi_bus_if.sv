@@ -97,72 +97,71 @@ interface axi_bus_if;
     // ----------------------------------------------------------------------
     // READ PATH Definitions
     // ----------------------------------------------------------------------
+    
+    // Top Level
+    modport axi_read(
+        // input from master
+        input ar_sp0_valid, ar_sp0_i, ar_sp1_valid, ar_sp1_i, ar_d_valid, ar_d_i, ar_i_valid, ar_i_i,
+
+        // input from controller
+        r_valid, r_i, // sub_r_channel_t 
+        ar_o_ready,
+
+        // output to master
+        output r_sp0_o, r_sp1_o, r_i_o, r_d_o, // master_r_channel_t
+        r_sp0_o_valid, r_sp1_o_valid, r_i_o_valid, r_d_o_valid,
+
+        // output to controller
+        ar_o_valid, r_ready, ar_o
+    );
 
     // SP0 MANAGER
     modport ar_sp0_manager (
         // from Master
-        input ar_sp0_ready, ar_sp0_i,
+        input ar_sp0_valid, ar_sp0_i,
         // from Controller
         sp0_pop,
         // to Mux
         output ar_sp0_o, sp0_req_r,
         // to Master
-        ar_sp0_valid
+        ar_sp0_ready
     );
 
     // SP1 MANAGER
     modport ar_sp1_manager (
         // from Master
-        input ar_sp1_ready, ar_sp1_i,
+        input ar_sp1_valid, ar_sp1_i,
         // from Controller
         sp1_pop,
         // to Mux
         output ar_sp1_o, sp1_req_r,
         // to Master
-        ar_sp1_valid
+        ar_sp1_ready
     );
 
     // D$ MANAGER
     modport ar_d_manager (
         // from Master
-        input ar_d_ready, ar_d_i,
+        input ar_d_valid, ar_d_i,
         // from Controller
         d_pop,
         // to Mux
         output ar_d_o, d_req_r,
         // to Master
-        ar_d_valid
+        ar_d_ready
     );
 
     // I$ MANAGER
     modport ar_i_manager (
         // from Master
-        input ar_i_ready, ar_i_i,
+        input ar_i_valid, ar_i_i,
         // from Controller
         i_pop,
         // to Mux
         output ar_i_o, i_req_r,
         // to Master
-        ar_i_valid
+        ar_i_ready
     );
-
-    // DRAM CONTROLLER <=> READ SKID BUFFER
-    modport ar_to_subordinate (
-        // To Subordinate
-        output ar_o_valid, ar_o,
-
-        // From Subordinate
-        input ar_o_ready
-    );
-
-    // // DRAM CONTROLLER <=> READ RESPONSE ROUTER
-    // modport subordinate_to_r (
-    //     // To Subordinate
-    //     output r_i_ready, 
-
-    //     // From Subordinate
-    //     input r_i_valid, r_i
-    // );
 
     // READ RESPONSE ROUTER
     modport router (
@@ -178,54 +177,6 @@ interface axi_bus_if;
 
         // To Controller
         r_ready
-    );
-
-    // SP0 R Skid Buffer <=> SP0
-    modport r_to_sp0 (
-        // To Master 
-        output r_sp0_o_valid, r_sp0_o,
-
-        // From Master
-        input r_sp0_o_ready
-    );
-
-    // SP1 R Skid Buffer <=> SP1
-    modport r_to_sp1 (
-        // To Master 
-        output r_sp1_o_valid, r_sp1_o,
-
-        // From Master
-        input r_sp1_o_ready
-    );
-
-    // D$ R Skid Buffer <=> D$
-    modport r_to_d (
-        // To Master 
-        output r_d_o_valid, r_d_o,
-
-        // From Master
-        input r_d_o_ready
-    );
-
-    // I$ R Skid Buffer <=> I$
-    modport r_to_i (
-        // To Master 
-        output r_i_o_valid, r_i_o,
-
-        // From Master
-        input r_i_o_ready
-    );
-
-    // AR MANAGERS <=> READ ARBITER
-    modport read_arbiter (
-        // From Manager
-        input sp0_req_r, sp1_req_r, d_req_r, i_req_r,
-
-        // From Skid Buffer
-        input skid_ready_r,
-
-        // To Read Mux
-        output ar_grant
     );
 
     // ----------------------------------------------------------------------

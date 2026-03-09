@@ -5,9 +5,11 @@ import axi_bus_pkg::*;
 (
     input logic CLK, nRST,
     input master_r_channel_t r_in,
-    input logic ready, selected, in_val,
+    input logic ready, // downstream ready to take
+    selected, // current skid buffer is selected
+    in_val, // upstream valid to pass
     output master_r_channel_t r_out,
-    output logic out_val
+    output logic out_val // data valid to pass through
 );
     
 

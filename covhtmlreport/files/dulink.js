@@ -1,0 +1,2 @@
+var g_data = {"4":["work.axi_bus_if",16.60,1],"5":["work.axi_read_router",87.35,1],"3":["work.axi_read_router_tb",100.00,1],"6":["work.axi_skid_buffer",91.72,1],"7":["work.test",80.15,1]};
+processDuLinks(g_data);
