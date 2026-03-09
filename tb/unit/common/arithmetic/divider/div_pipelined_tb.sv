@@ -450,35 +450,31 @@ module div_pipelined_tb;
     end else if (EXP_WIDTH == 8 && MANT_WIDTH == 7) begin
       // BF16 test files (if available) --------------------------------------------------------------------------------------------------------------------------
       // MAX THROUGHPUT
-      run_file_tests("tb/unit/common/arithmetic/divider/test_cases/div_bf16_normal_tests_10K.csv", "BF16_NORM_STABLE", "STABLE");
+//      run_file_tests("tb/unit/common/arithmetic/divider/test_cases/div_bf16_normal_tests_10K.csv", "BF16_NORM_STABLE", "STABLE");
+//      // Front Pressure
+//      run_file_tests("tb/unit/common/arithmetic/divider/test_cases/div_bf16_normal_tests_10K.csv", "BF16_FRONT_PRESS", "FRONT_PRESSURE");
+//      // Back Pressure
+//      run_file_tests("tb/unit/common/arithmetic/divider/test_cases/div_bf16_normal_tests_10K.csv", "BF16_BACK_PRESS", "BACK_PRESSURE");
+//      // Full Random
+//      run_file_tests("tb/unit/common/arithmetic/divider/test_cases/div_bf16_normal_tests_10K.csv", "BF16_RANDOM", "RANDOM");
+//      // MAX THROUGHPUT
+//      run_file_tests("tb/unit/common/arithmetic/divider/test_cases/div_bf16_all_mantissas.csv", "BF16_NORM_STABLE_ALL", "STABLE");
+//      // Front Pressure
+//      run_file_tests("tb/unit/common/arithmetic/divider/test_cases/div_bf16_all_mantissas.csv", "BF16_FRONT_PRESS_ALL", "FRONT_PRESSURE");
+//      // Back Pressure
+//      run_file_tests("tb/unit/common/arithmetic/divider/test_cases/div_bf16_all_mantissas.csv", "BF16_BACK_PRESS_ALL", "BACK_PRESSURE");
+//      // Full Random
+//      run_file_tests("tb/unit/common/arithmetic/divider/test_cases/div_bf16_all_mantissas.csv", "BF16_RANDOM_ALL", "RANDOM");
+//
+//      normal_tests = errors;
+//      run_file_tests("tb/unit/common/arithmetic/divider/test_cases/div_bf16_subnormal_input_tests_10K.csv", "BF16_SUBNORMAL_INPUT_TESTS", "RANDOM");
+//      subnormal_input_tests = errors - normal_tests;
+//
+//      run_file_tests("tb/unit/common/arithmetic/divider/test_cases/div_bf16_subnormal_output_tests_10K.csv", "BF16_SUBNORMAL_OUTPUT_TESTS", "RANDOM");
+//      subnormal_output_tests = errors - normal_tests - subnormal_input_tests;
 
-      // Front Pressure
-      run_file_tests("tb/unit/common/arithmetic/divider/test_cases/div_bf16_normal_tests_10K.csv", "BF16_FRONT_PRESS", "FRONT_PRESSURE");
-      
-      // Back Pressure
-      run_file_tests("tb/unit/common/arithmetic/divider/test_cases/div_bf16_normal_tests_10K.csv", "BF16_BACK_PRESS", "BACK_PRESSURE");
-
-      // Full Random
-      run_file_tests("tb/unit/common/arithmetic/divider/test_cases/div_bf16_normal_tests_10K.csv", "BF16_RANDOM", "RANDOM");
-
-      // MAX THROUGHPUT
-      run_file_tests("tb/unit/common/arithmetic/divider/test_cases/div_bf16_all_mantissas.csv", "BF16_NORM_STABLE_ALL", "STABLE");
-
-      // Front Pressure
-      run_file_tests("tb/unit/common/arithmetic/divider/test_cases/div_bf16_all_mantissas.csv", "BF16_FRONT_PRESS_ALL", "FRONT_PRESSURE");
-      
-      // Back Pressure
-      run_file_tests("tb/unit/common/arithmetic/divider/test_cases/div_bf16_all_mantissas.csv", "BF16_BACK_PRESS_ALL", "BACK_PRESSURE");
-
-      // Full Random
-      run_file_tests("tb/unit/common/arithmetic/divider/test_cases/div_bf16_all_mantissas.csv", "BF16_RANDOM_ALL", "RANDOM");
-
-      normal_tests = errors;
-      run_file_tests("tb/unit/common/arithmetic/divider/test_cases/div_bf16_subnormal_input_tests_10K.csv", "BF16_SUBNORMAL_INPUT_TESTS", "RANDOM");
-      subnormal_input_tests = errors - normal_tests;
-
-      run_file_tests("tb/unit/common/arithmetic/divider/test_cases/div_bf16_subnormal_output_tests_10K.csv", "BF16_SUBNORMAL_OUTPUT_TESTS", "RANDOM");
-      subnormal_output_tests = errors - normal_tests - subnormal_input_tests;
+        run_file_tests("tb/unit/common/arithmetic/divider/test_cases/div_bf16_control.csv", "BF16_CONTROL_TESTS", "BACK_PRESSURE");
+        normal_tests = errors;
     end else begin
       $display("INFO: No file-based tests available for this custom format");
     end

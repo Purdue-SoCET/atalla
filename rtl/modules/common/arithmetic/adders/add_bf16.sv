@@ -149,7 +149,7 @@ module add_bf16 #(
             sign_shifted_l <= 0;
             sign_not_shifted_l <= 0;
         end
-        else begin
+        else if (~stall) begin
             smaller_mantissa_l <= smaller_mantissa;
             larger_mantissa_l <= larger_mantissa;
             exp_max_l <= exp_max;

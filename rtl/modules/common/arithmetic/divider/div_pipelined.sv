@@ -18,27 +18,26 @@ module div_pipelined (
     logic [15:0] p_spec_res [5:1];
 
     logic [15:0] reg_outn, reg_outd, reg_subout;
-    logic [15:0] delay_n1_3, delay_n1_4, delay_n1_5, delay_n1_6;
+    logic [15:0] delay_n1_3, delay_n1_4, delay_n1_5;
     logic [15:0] ip_outn, ip_outd, ip_subout;
 
     logic stage2_done, loopback_req, accept_new;
-    
+    logic global_stall;
+
     // Data is ONLY done when it has completed Iteration 2. 
     // Special cases ride the pipeline for the full 2 iterations to guarantee inorder output
     assign stage2_done = p_valid[2] && p_is_iter2[2];
-    
+
     // Iteration 1 data always loops back to start Iteration 2
     assign loopback_req = p_valid[5]; 
 
-// END FIFO
-    logic [15:0] fifo_data [0:7];
-    logic [2:0] wr_ptr, rd_ptr;
-    logic [3:0] fifo_count;
 
-    logic fifo_wr_en, fifo_rd_en, throttle_input;
+    // OUTPUT LOGIC
+    assign divif.out.valid_out = stage2_done;
+
     logic signed [9:0] raw_exp;
     logic [7:0] final_exp;
-    logic [15:0] calculated_fin, fifo_in_data;
+    logic [15:0] calculated_fin;
 
     // Splice the final mathematical answer
     assign raw_exp = p_exp_diff[2] + {2'b00, reg_outn[14:7]};
@@ -49,55 +48,11 @@ module div_pipelined (
     end
     
     assign calculated_fin = (final_exp == 8'h00) ? {p_sign[2], 15'h0000} : {p_sign[2], final_exp, reg_outn[6:0]};
+    assign divif.out.result = p_is_spec[2] ? p_spec_res[2] : calculated_fin;
+    assign global_stall = stage2_done && !divif.in.ready_out;
     
-    // Mux between the math answer and the special edge-case answer
-    assign fifo_in_data = p_is_spec[2] ? p_spec_res[2] : calculated_fin;
-
-    // FIFO Control
-    assign fifo_wr_en = stage2_done; 
-    assign fifo_rd_en = divif.in.ready_out && (fifo_count > 0);
-    
-    // SAFETY THROTTLE: If FIFO hits 3, stop accepting inputs. The 6 currently in-flight
-    // instructions will safely land in the 5 remaining empty slots of the FIFO.
-    assign throttle_input = (fifo_count >= 3);
-    
-    // We are ready for new data if there's no loopback traffic AND the FIFO isn't throttled
-    assign divif.out.ready_in = (nRST == 1'b1) ? (!loopback_req && !throttle_input) : 1'b0;
+    assign divif.out.ready_in = (nRST == 1'b1) ? (!loopback_req && !global_stall) : 1'b0;
     assign accept_new = divif.in.valid_in && divif.out.ready_in;
-
-    always_ff @(posedge CLK, negedge nRST) begin
-        if (~nRST) begin
-            wr_ptr <= 0;
-            rd_ptr <= 0;
-            fifo_count <= 0;
-            for (int i=0; i<8; i++) begin
-                fifo_data[i] <= 16'h0000;
-            end
-        end else begin
-            case ({fifo_wr_en, fifo_rd_en})
-                2'b10: begin
-                    wr_ptr <= wr_ptr + 1;
-                    fifo_count <= fifo_count + 1;
-                end
-                2'b01: begin
-                    rd_ptr <= rd_ptr + 1;
-                    fifo_count <= fifo_count - 1;
-                end
-                2'b11: begin
-                    wr_ptr <= wr_ptr + 1;
-                    rd_ptr <= rd_ptr + 1;
-                end
-                default: ; 
-            endcase
-            if (fifo_wr_en) begin
-                fifo_data[wr_ptr] <= fifo_in_data;
-            end
-        end
-    end
-
-    // Direct interface output from the FIFO
-    assign divif.out.valid_out = (fifo_count > 0);
-    assign divif.out.result = fifo_data[rd_ptr];
 
 // STAGE 0: The Arbiter & Combinational Pre-Compute
     logic op1_is_zero, op2_is_zero, op1_is_inf, op2_is_inf, op1_is_nan, op2_is_nan, op1_op2_same, op2_is_one;
@@ -193,8 +148,7 @@ module div_pipelined (
             delay_n1_3 <= 0;
             delay_n1_4 <= 0;
             delay_n1_5 <= 0;
-            delay_n1_6 <= 0;
-        end else begin
+        end else if (!global_stall) begin
             // --- STAGE 1 (Entering Multipliers) ---
             p_valid[1] <= nxt_v0;
             p_is_iter2[1] <= nxt_iter2;
@@ -253,7 +207,7 @@ module div_pipelined (
     mul_bf16 mul_numerator (
         .clk(CLK), 
         .nRST(nRST),
-        .start(1'b1),
+        .start(!global_stall),
         .a(nxt_muln),
         .b(nxt_f),
         .result(ip_outn),
@@ -263,7 +217,7 @@ module div_pipelined (
     mul_bf16 mul_denominator (
         .clk(CLK), 
         .nRST(nRST),
-        .start(1'b1),
+        .start(!global_stall),
         .a(nxt_muld),
         .b(nxt_f),
         .result(ip_outd),
@@ -273,8 +227,8 @@ module div_pipelined (
     addsub_bf16 sub (
         .clk(CLK),
         .nRST(nRST),
-        .start(1'b1),
-        .stall(1'b0),
+        .start(!global_stall),
+        .stall(global_stall),
         .bf1_in(TWO),
         .bf2_in(reg_outd),
         .op(1'b1),
