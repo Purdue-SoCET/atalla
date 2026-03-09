@@ -45,6 +45,8 @@ module sysarr_MEISSA_top_tb();
     logic [(ARRAY_DIM*DATA_WIDTH)-1:0] m_exp_outputs[ARRAY_DIM];
     logic [(ARRAY_DIM*DATA_WIDTH)-1:0] m_act_outputs[ARRAY_DIM];
     int loaded_weights;
+    string test_name_queue[$];
+    bit input_eof = 0;
 
     task reset();
         begin
@@ -232,7 +234,7 @@ module sysarr_MEISSA_top_tb();
     endtask
 
 generate
-    if(VERSION == "MEISSA") begin
+    if(VERSION == "MEISSA" || VERSION == "MEISSA32") begin
         // DUT Instantiation: MIXED ADDER TREE
         // sysarr_MEISSA_top #(.USE_MIXED_ADDER(1)) DUT (CLK, nRST, gsau_if);
 
@@ -254,136 +256,183 @@ endgenerate
 //     $finish;
 //   end
 
-  // Test Stimulus
-  initial begin
-    //$dumpfile("dump.vcd");  // For VCD format
-    //$dumpvars(0, sysarr_MEISSA_top_tb);
-
-    gsau_if.sa_array_in = '0;
+// Initialize signals and files
+initial begin
+    gsau_if.sa_array_in        = '0;
     gsau_if.sa_array_in_partials = '0;
-    gsau_if.sa_input_en = 1'b0;
-    gsau_if.sa_weight_en = 1'b0;
-    gsau_if.sa_partial_en = 1'b0;
-    gsau_if.sa_ready_out = 1'b1;
-    
-    // any file
-    file = $fopen(PATH_TO_INPUT, "r");
-    expected_out_file = $fopen(PATH_TO_EXPECTED_RESULT, "r");
+    gsau_if.sa_input_en        = 1'b0;
+    gsau_if.sa_weight_en       = 1'b0;
+    gsau_if.sa_partial_en      = 1'b0;
+    gsau_if.sa_ready_out       = 1'b1;
+
+    file               = $fopen(PATH_TO_INPUT, "r");
+    expected_out_file  = $fopen(PATH_TO_EXPECTED_RESULT, "r");
     actual_output_file = $fopen(PATH_TO_RESULT, "w");
+end
+
+// Process 1: Feed inputs
+initial begin
+    int input_row;
+    bit found_test;
+    bit found_input;
+    bit loaded_weights;
+    input_row = 0;
+
     reset();
 
     forever begin
-        bit found_test;
-        bit found_expected_result;
-        int row;
-        bit found_input;
-        bit is_result_correct;
-        found_test = 0;
-        found_expected_result = 0;
-        found_input = 0;
-        is_result_correct = 1;
-        
-        while (!found_test && !found_input) begin
-            if ($fgets(line, file) == 0) begin
-               break;
-            end
-            if (line.len() >= 4 && (line.substr(0,3) == "Test")) begin
-                test_name = line;
-                found_test = 1;
-            end else if ((line.len() >= 4) && (line.substr(0,4) == "Input")) begin
-                found_input = 1;
-                test_name = "";
-            end
-        end
+        @(posedge CLK);
+        if (gsau_if.sa_ready_in) begin
 
-        if (!found_test && !found_input) begin
+            if (input_row == 0) begin
+                // Find next test or input label
+                found_test  = 0;
+                found_input = 0;
+                while (!found_test && !found_input) begin
+                    if ($fgets(line, file) == 0) begin
+                        break;
+                    end
+                    if (line.len() >= 4 && line.substr(0,3) == "Test") begin
+                        // test_name  = line;
+                        test_name_queue.push_front(line);
+                        test_name = line;
+                        found_test = 1;
+                    end else if (line.len() >= 5 && line.substr(0,4) == "Input") begin
+                        found_input = 1;
+                        test_name   = "";
+                    end
+                end
+
+                if (!found_test && !found_input) begin
+                    input_eof = 1'b1;
+                    gsau_if.sa_input_en   = 1'b0;
+                    gsau_if.sa_partial_en = 1'b0;
+                    gsau_if.sa_array_in = '0;
+                    gsau_if.sa_array_in_partials = '0;
+                    break; // EOF
+                end
+
+                // Load weights/inputs from file
+                loaded_weights = 0;
+                if (found_test) begin
+                    get_matrices(.weights(loaded_weights), .has_weights(1));
+                end else if (found_input) begin
+                    get_matrices(.weights(loaded_weights), .has_weights(0));
+                end
+
+                if (loaded_weights) begin
+                    load_weights();
+                end
+            end
+
+
+            gsau_if.sa_input_en   = 1'b0;
+            gsau_if.sa_partial_en = 1'b0;
+            // Drive inputs for current row
+            for (int col = 0; col < ARRAY_DIM; col++) begin
+                gsau_if.sa_array_in[DATA_WIDTH*col +: DATA_WIDTH] = temp_inputs[input_row][col];
+                gsau_if.sa_array_in_partials[DATA_WIDTH*col +: DATA_WIDTH] = temp_partials[input_row][col];
+            end
+            gsau_if.sa_input_en   = 1'b1;
+            gsau_if.sa_partial_en = 1'b1;
+
+            input_row++;
+            if (input_row == ARRAY_DIM) input_row = 0;
+
+        end else begin
+            gsau_if.sa_input_en   = 1'b0;
+            gsau_if.sa_partial_en = 1'b0;
+        end
+    end
+end
+
+// Process 2: Collect and check outputs
+initial begin
+    int result_row;
+    bit found_expected_result;
+    bit is_result_correct;
+    result_row = 0;
+
+    for (int i = 0; i < ARRAY_DIM; i++) begin
+        m_act_outputs[i] = '0;
+        for (int j = 0; j < ARRAY_DIM; j++) begin
+            temp_act_outputs[i][j] = '0;
+        end
+    end
+
+    forever begin
+        @(posedge CLK);
+        if (input_eof && test_name_queue.size() == 0 && result_row == 0) begin
+            $display("All queued tests processed. Ending simulation.");
             break;
         end
 
-        loaded_weights = 0;
-        if (found_test) begin
-          get_matrices(.weights(loaded_weights), .has_weights(1));
-        end else if (found_input) begin
-          get_matrices(.weights(loaded_weights), .has_weights(0));
-        end
-
-        if (loaded_weights) begin
-            load_weights();
-        end
-
-
-        load_inputs();
-
-        for (int i = 0; i < ARRAY_DIM; i++) begin
-            m_act_outputs[i] = '0;
-            for (int j = 0; j < ARRAY_DIM; j++) begin
-                temp_act_outputs[i][j] = '0;
+        if (gsau_if.sa_valid_in) begin
+            // Collect output row
+            m_act_outputs[result_row] = gsau_if.sa_array_output;
+            for (int col = 0; col < ARRAY_DIM; col++) begin
+                temp_act_outputs[result_row][col] = gsau_if.sa_array_output[DATA_WIDTH*col +: DATA_WIDTH];
             end
-        end
 
-        row = 0;
-        while (row < ARRAY_DIM) begin
-            @(posedge CLK);
-            if (gsau_if.sa_valid_in) begin
-                m_act_outputs[row] = gsau_if.sa_array_output;
+            result_row++;
+
+            if (result_row == ARRAY_DIM) begin
+                result_row = 0;
+
+                // Read expected result
+                found_expected_result = 0;
+                while (!found_expected_result) begin
+                    if ($fgets(line, expected_out_file) == 0) begin
+                        break;
+                    end
+                    if (line.len() >= 4 && line.substr(0,3) == "Test")
+                        found_expected_result = 1;
+                end
+
+                if (found_expected_result) begin
+                    get_m_expected_output();
+                end else begin
+                    $display("Reached EOF in expected result file. Ending simulation.");
+                    break;
+                end
+
+                // Compare actual vs expected
+                is_result_correct = 1;
                 for (int i = 0; i < ARRAY_DIM; i++) begin
-                    temp_act_outputs[row][i] = gsau_if.sa_array_output[DATA_WIDTH*i +: DATA_WIDTH];
+                    for (int j = 0; j < ARRAY_DIM; j++) begin
+                        if (temp_act_outputs[i][j] == 16'h8000) temp_act_outputs[i][j] = 16'h0000;
+                        if (temp_exp_outputs[i][j] == 16'h8000) temp_exp_outputs[i][j] = 16'h0000;
+                        if (temp_act_outputs[i][j] !== temp_exp_outputs[i][j]) begin
+                            is_result_correct = 0;
+                            $display("Test %s Failed at [%0d][%0d]: Expected 0x%04H Got 0x%04H",
+                                test_name_queue[$ - 1], i, j, temp_exp_outputs[i][j], temp_act_outputs[i][j]);
+                        end
+                    end
                 end
-                row++;
-            end
-        end
 
-        // Read expected result
-        while (!found_expected_result) begin
-            if ($fgets(line, expected_out_file) == 0) begin
-               break;
-            end
-            if (line.len() >= 4 && (line.substr(0,3) == "Test")) begin
-                found_expected_result = 1;
-            end
-        end
-        if (found_expected_result) begin
-            get_m_expected_output();
-        end
+                total_tests++;
+                // if (!is_result_correct) write_matrix(test_name);
+                write_matrix(test_name_queue.pop_back());
+                if (is_result_correct) begin 
+                    total_passed_tests++;
+                end
 
-        is_result_correct = 1;
-        // Compare actual vs expected
-        for(int i = 0; i < ARRAY_DIM; i++) begin
-            for (int j = 0; j < ARRAY_DIM; j++) begin
-                if(temp_act_outputs[i][j] == 16'h8000) begin
-                    temp_act_outputs[i][j] = 16'h0000;
-                end
-                if(temp_exp_outputs[i][j] == 16'h8000) begin
-                    temp_exp_outputs[i][j] = 16'h0000;
-                end
-                if (temp_act_outputs[i][j] !== temp_exp_outputs[i][j]) begin
-                    is_result_correct = 0;
-                    $display("Test %s Failed at element [%0d][%0d]: Expected 0x%04H, Got 0x%04H", test_name, i, j, temp_exp_outputs[i][j], temp_act_outputs[i][j]);
+                for (int i = 0; i < ARRAY_DIM; i++) begin
+                    m_act_outputs[i] = '0;
+                    for (int j = 0; j < ARRAY_DIM; j++) begin
+                        temp_act_outputs[i][j] = '0;
+                    end
                 end
             end
         end
-        total_tests++;
-        if(!is_result_correct) begin
-            write_matrix(test_name);
-        end
-        else begin
-            total_passed_tests++;
-        end
-
-        // write_matrix(test_name);
-    end
-
-    test_name = "End of Tests";
+    end 
 
     $fclose(file);
     $fclose(expected_out_file);
     $fclose(actual_output_file);
     #50;
-
     $display("Passed Tests: %0d / %0d", total_passed_tests, total_tests);
-
     $finish;
-  end
+end
 
 endmodule
-
