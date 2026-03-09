@@ -34,7 +34,7 @@ module nb_wdata_queue_prop(
         (wdq.be_write && (wdq.be_id == Q_ID) ) |-> [*(tCWL-1)](!wdq.ddr_we) ##1 $rose(wdq.ddr_we) ##1 $fell(wdq.ddr_we);
     endproperty
 
-
+    
         
 endmodule 
 
