@@ -33,7 +33,7 @@ module nb_barb_prop(
     property timing_tCCD_L;
         integer bg_last; 
         @(posedge CLK) disable iff (!nRST)
-        ( $onehot(barb.be_queue_ready & barb.be_arb), bg_last = encode(barb.be_queue_ready & barb.be_arb) ) |=> [*tCCD_L] (~|(barb.be_arb) || encode(barb.be_queue_ready & barb.be_arb) != bg_last);
+        ( $onehot(barb.be_queue_ready & barb.be_arb), bg_last = encode(barb.be_queue_ready & barb.be_arb) ) |-> [*tCCD_L] (~|(barb.be_arb) || encode(barb.be_queue_ready & barb.be_arb) != bg_last);
     endproperty 
 
     property timing_tCCD_S;
