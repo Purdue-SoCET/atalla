@@ -1,3 +1,6 @@
+This implementation was largely based off this research paper
+Roy, Taposh Dutta. "Implementation of Goldschmidt's Algorithm with hardware reduction." arXiv preprint arXiv:1909.10154 (2019).
+
 # Divider Documentation
 
 The Vector-Core Divider is a fully pipelined floating-point division unit optimized for the BF16 (Brain Floating Point) format. Rather than using slow, traditional digit-recurrence algorithms (like SRT or restoring division) which require long and deep subtraction chains, the Vector-Core implements the **Goldschmidt Division Algorithm**.
