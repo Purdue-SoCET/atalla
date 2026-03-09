@@ -11,7 +11,13 @@ module div_pipeline_bf16 (
   localparam [15:0] TWO = 16'h4000;
   localparam [15:0] qNaN = 16'h7FC0; // NaN
 
-  // Pipeline Structs
+  // typedef enum logic [2:0] {
+  //   IDLE,
+  //   BUSY, 
+  //   DONE 
+  // } state_t;
+
+    // Pipeline Structs
   typedef struct packed{
     logic sign, is_special, valid, is_sub_bound;
     logic [9:0] exp;
@@ -36,6 +42,9 @@ module div_pipeline_bf16 (
   sub_t mul1Tfin1, n_mul1Tfin1;
   mul2_t fin1Tsub1, n_fin1Tsub1, sub1Tsub2, n_sub1Tsub2;
 
+  // FSM State
+  // state_t state, n_state;
+
   // Mult and Sub signals
   logic [15:0] muln, muld, mulfin, f_1, f_2;
   logic [15:0] outn, outd, outfin;
@@ -50,7 +59,7 @@ module div_pipeline_bf16 (
   logic [7:0] final_exp;
   logic is_subnormal_boundary;
 
-  // Pipeline Control Signals
+  // Pipeline Signals
   logic pause, wen, ren, flush;
   logic [2:0] ir, iw;
   logic [2:0] fifo_count;

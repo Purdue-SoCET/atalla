@@ -1,11 +1,3 @@
-// BF16 Adder 
-//By            : Mixuan Pan 
-//Last Updated  : 2/17/2026 - Convert it to parametrizable bf16 adder 
-//
-//Module Summary:
-//    BF16 adder with an option to pad one of the input mantissa to 23, making the input 32 bits long 
-//    Subtraction is supported when the input signs differ
-
 `timescale 1ns/1ps
 
 module add_bf16 #(
@@ -23,16 +15,17 @@ module add_bf16 #(
     
     logic [15:0] bf1_in; 
     logic [MANT_B+8:0] bf2_in; 
+    logic done_s1; // done signal for stage 1
 
     always_ff @(posedge clk, negedge nRST) begin 
         if (~nRST) begin
             bf1_in <= 0; 
             bf2_in <= 0; 
-            done <= 0; 
-        end else if (start & ~stall) begin
+            done_s1 <= 0; 
+        end else if (~stall) begin
             bf1_in <= bf1; 
             bf2_in <= bf2; 
-            done <= 1; 
+            done_s1 <= start; 
         end 
     end
 
@@ -148,8 +141,9 @@ module add_bf16 #(
             signs_differ_l <= 0;
             sign_shifted_l <= 0;
             sign_not_shifted_l <= 0;
+            done <= 0;
         end
-        else begin
+        else if (~stall) begin
             smaller_mantissa_l <= smaller_mantissa;
             larger_mantissa_l <= larger_mantissa;
             exp_max_l <= exp_max;
@@ -157,6 +151,7 @@ module add_bf16 #(
             signs_differ_l <= signs_differ;
             sign_shifted_l <= sign_shifted;
             sign_not_shifted_l <= sign_not_shifted;
+            done <= done_s1;
         end
     end
 
@@ -180,15 +175,6 @@ module add_bf16 #(
         end
         mantissa_overflow = mantissa_sum[MANT_B+3];  // Correct bit for overflow detection
     end
-
-    /*
-        Fixes for when mantissa sum is zero: equal mag subtractions
-        When subtracting equal values (e.g., 1.0 - 1.0), mantissa_sum is all zeros.
-        The normalizer doesn't handle this case — it returns shifted_amount=0, 
-        leaving the exponent at the original value instead of producing zero.
-    */
-    logic result_is_zero;
-    assign result_is_zero = ~|mantissa_sum;
 
     // Overflow/Underflow detection
     logic [7:0] exp_minus_shift_amount;
@@ -271,14 +257,11 @@ module add_bf16 #(
             bf_out = QNAN; 
         // overflow 
         end else if (is_inf | (&bf1_in[14:8] & ~bf1_in[7] & &bf1_in[6:0] & |bf2_in[MANT_B+7:0]) | (&bf2_in[MANT_B+7:MANT_B+1] & ~bf2_in[MANT_B] & &bf2_in[MANT_B-1:0] & |bf1_in[14:0]) & ~(bf1_in[15] ^ bf2_in[MANT_B+8])) begin 
-            bf_out = bf1_in[15] ? 16'hff80 : 16'h7F80;
-        end else if (result_is_zero) begin
-            // handle zero result from equal mag subtraction
-            bf_out = {result_sign, 8'b0, {MANT_B{1'b0}}};
+            bf_out = bf1_in[15] ? 16'hff80 : 16'h7F80; 
         // result after rounding 
         end else begin 
             bf_out = {result_sign, exp_out_adj, rounded_fraction};
         end
     end
 endmodule
-// blank last line for verilator & synthesis
+// blank last line for verilator & synthesis 
