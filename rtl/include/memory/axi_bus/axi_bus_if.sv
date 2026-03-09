@@ -27,12 +27,22 @@ interface axi_bus_if(input logic CLK, input logic nRST);
     master_b_channel_t  b_sp1_o;  // Scratchpad1 B channel
     master_b_channel_t  b_d_o;    // D$ B channel
 
+    // general aw channel struct (master side)
+    master_aw_channel_t aw_gen_i; // General AW Channel for Write Manager
+    // general w channel struct (master side)
+    master_w_channel_t w_gen_i; // General W Channel for Write Manager
+
     // subordinate side channel structs
     sub_ar_channel_t ar_o;     // Controller AR channel
     sub_r_channel_t  r_i;      // Controller R channel
     sub_aw_channel_t aw_o;     // Controller AW channel
     sub_w_channel_t  w_o;      // Controller W channel
     sub_b_channel_t  b_i;      // Controller B channel
+
+    // general aw channel struct (subordinate side)
+    sub_aw_channel_t head_aw_o; // General AW Channel for Write Manager
+    // general w channel struct (subordinate side)
+    sub_w_channel_t head_w_o; // General W Channel for Write Manager
 
     // read arbiter signals 
     logic sp0_req_r, sp1_req_r, d_req_r, i_req_r, skid_ready_r;
@@ -96,6 +106,12 @@ interface axi_bus_if(input logic CLK, input logic nRST);
 
     // D$ R Skid Buffer && D$ READY/VALID
     logic b_d_o_valid, b_d_o_ready;
+
+    // WRITE MANAGER SIGNALS
+    logic awvalid, awready; // GENERAL AW WRITE MANAGER READY/VALID
+    logic wvalid, wready;   // GENERAL W WRITE MANAGER READY/VALID
+    logic aw_pop, w_pop; 
+    logic head_awvalid, head_wvalid;
 
     // ----------------------------------------------------------------------
     // READ PATH Definitions
@@ -299,6 +315,24 @@ interface axi_bus_if(input logic CLK, input logic nRST);
         output aw_grant
     );
 
+    // WRITE MANAGER
+    modport write_manager (
+        // From Master AW Channel
+        input awvalid, aw_gen_i,
+        // To Master AW Channel
+        output awready,
+        // From Master W Channel
+        input wvalid, w_gen_i,
+        // To Master W Channel
+        output wready, 
+        // From Write Controller
+        input aw_pop, w_pop,
+        // To AW MUX
+        output head_awvalid, head_aw_o,
+        // To W MUX
+        output head_wvalid, head_w_o
+    );
+
     // ----------------------------------------------------------------------
     // WRITE PATH TB Definitions
     // ----------------------------------------------------------------------
@@ -315,7 +349,23 @@ interface axi_bus_if(input logic CLK, input logic nRST);
         input aw_grant
     );
 
-
+    // WRITE MANAGER TB
+    modport write_manager_tb (
+        // From Master AW Channel
+        output awvalid, aw_gen_i,
+        // To Master AW Channel
+        input awready,
+        // From Master W Channel
+        output wvalid, w_gen_i,
+        // To Master W Channel
+        input wready, 
+        // From Write Controller
+        output aw_pop, w_pop,
+        // To AW MUX
+        input head_awvalid, head_aw_o,
+        // To W MUX
+        input head_wvalid, head_w_o 
+    );
 
 endinterface
 `endif // AXI_BUS_IF_SV
