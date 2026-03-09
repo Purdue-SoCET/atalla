@@ -201,7 +201,7 @@ module sysarr_MEISSA_top #(
             2'b10 : next_credits = credits + 1;
             2'b01 : next_credits = credits - 1;
             // if 2'b11 or 2'b00, number of credits stays the same
-            default : ;
+            default : next_credits = credits;
         endcase
     end
 
@@ -254,8 +254,8 @@ module sysarr_MEISSA_top #(
     TPU_buffer #(
         .NUM_COLS(N),
         .DATA_WIDTH(DW),
-        .IN_OUT(1), // output
-        .SRAM_DEPTH(PIPELINE_DEPTH + N)
+        .IN_OUT(1) // output
+        // .SRAM_DEPTH(PIPELINE_DEPTH + N)
     ) output_buffer (
         .clk(clk),
         .nRST(nRST),

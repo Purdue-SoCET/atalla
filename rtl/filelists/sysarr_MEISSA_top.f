@@ -13,6 +13,8 @@
 ./rtl/modules/common/general/fa.sv
 ./rtl/modules/common/general/adder_5b.sv
 ./rtl/modules/systolic_array/left_shift.sv
+./rtl/modules/systolic_array/arithmetic/reducer.sv
+./rtl/modules/common/general/wtm_bf.sv
 
 // Intermediate modules
 ./rtl/modules/common/general/wallacetree_11b_2c.sv
@@ -28,7 +30,7 @@
 ./rtl/modules/systolic_array/mul_grid.sv
 ./rtl/modules/systolic_array/pipelined_adder_tree.sv
 ./rtl/modules/systolic_array/skew_buffer.sv
-./rtl/modules/systolic_array/MEISSA_control_unit.sv
+// ./rtl/modules/systolic_array/MEISSA_control_unit.sv
 // TPU
 ./rtl/modules/systolic_array/TPU/TPU_buffer.sv
 // ./rtl/modules/systolic_array/TPU/TPU_control_unit.sv

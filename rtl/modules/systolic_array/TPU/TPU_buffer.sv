@@ -7,7 +7,7 @@ module TPU_buffer #(
     localparam int READ_LATENCY     = 1,
     localparam int WRITE_LATENCY    = 1,
 
-    localparam int SRAM_DEPTH = NUM_COLS + 1,
+    localparam int SRAM_DEPTH = 128,
     localparam int PTR_WIDTH = $clog2(SRAM_DEPTH)
 )(
     input logic clk, nRST,

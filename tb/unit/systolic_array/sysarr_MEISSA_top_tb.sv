@@ -45,8 +45,10 @@ module sysarr_MEISSA_top_tb();
     logic [(ARRAY_DIM*DATA_WIDTH)-1:0] m_exp_outputs[ARRAY_DIM];
     logic [(ARRAY_DIM*DATA_WIDTH)-1:0] m_act_outputs[ARRAY_DIM];
     int loaded_weights;
+    int pending_gemms = 0;
     string test_name_queue[$];
     bit input_eof = 0;
+    event gemm_completed;
 
     task reset();
         begin
@@ -65,27 +67,26 @@ module sysarr_MEISSA_top_tb();
         string section;
         weights = 0;
 
-        if (has_weights) begin
-          // Read section header: Weight
-          void'($fgets(line, file));
-          section = line.toupper();
 
-          if (section.len() >= 5 && section.substr(0,5) == "WEIGHT") begin
-              weights = 1;
-              // Read Weights
-              for (int i = 0; i < ARRAY_DIM; i++) begin
-                  void'($fgets(line, file));
-                  for (int j = 0; j < ARRAY_DIM; j++) begin
-                      token = line.substr(j*7, (j*7)+6); // "0xXXXX"
-                      void'($sscanf(token, "%h", temp_weights[i][j]));
-                  end
-              end
-              // Skip blank line
-              void'($fgets(line, file));
+        // Read section header: Weight
+        void'($fgets(line, file));
+        section = line.toupper();
 
-              // Read Input header
-              void'($fgets(line, file));
-          end
+        if (section.len() >= 5 && section.substr(0,5) == "WEIGHT") begin
+            weights = 1;
+            // Read Weights
+            for (int i = 0; i < ARRAY_DIM; i++) begin
+                void'($fgets(line, file));
+                for (int j = 0; j < ARRAY_DIM; j++) begin
+                    token = line.substr(j*7, (j*7)+6); // "0xXXXX"
+                    void'($sscanf(token, "%h", temp_weights[i][j]));
+                end
+            end
+            // Skip blank line
+            void'($fgets(line, file));
+
+            // Read Input header
+            void'($fgets(line, file));
         end
         
         // Reads Inputs
@@ -288,7 +289,11 @@ initial begin
                 // Find next test or input label
                 found_test  = 0;
                 found_input = 0;
-                while (!found_test && !found_input) begin
+                gsau_if.sa_input_en   = 1'b0;
+                gsau_if.sa_partial_en = 1'b0;
+                gsau_if.sa_array_in = '0;
+                gsau_if.sa_array_in_partials = '0;
+                while (!found_test) begin
                     if ($fgets(line, file) == 0) begin
                         break;
                     end
@@ -297,13 +302,10 @@ initial begin
                         test_name_queue.push_front(line);
                         test_name = line;
                         found_test = 1;
-                    end else if (line.len() >= 5 && line.substr(0,4) == "Input") begin
-                        found_input = 1;
-                        test_name   = "";
-                    end
+                    end 
                 end
 
-                if (!found_test && !found_input) begin
+                if (!found_test) begin
                     input_eof = 1'b1;
                     gsau_if.sa_input_en   = 1'b0;
                     gsau_if.sa_partial_en = 1'b0;
@@ -311,18 +313,21 @@ initial begin
                     gsau_if.sa_array_in_partials = '0;
                     break; // EOF
                 end
+                
 
                 // Load weights/inputs from file
                 loaded_weights = 0;
                 if (found_test) begin
                     get_matrices(.weights(loaded_weights), .has_weights(1));
-                end else if (found_input) begin
-                    get_matrices(.weights(loaded_weights), .has_weights(0));
+                    if (loaded_weights) begin
+                        while (pending_gemms != 0) begin
+                            @(gemm_completed);
+                        end
+                        load_weights();
+                    end
                 end
 
-                if (loaded_weights) begin
-                    load_weights();
-                end
+                pending_gemms++;
             end
 
 
@@ -416,6 +421,10 @@ initial begin
                 if (is_result_correct) begin 
                     total_passed_tests++;
                 end
+                if (pending_gemms > 0) begin
+                    pending_gemms--;
+                end
+                -> gemm_completed;
 
                 for (int i = 0; i < ARRAY_DIM; i++) begin
                     m_act_outputs[i] = '0;
