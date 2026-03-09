@@ -71,8 +71,9 @@ logic be_push_id, [$clog2(ID_NUM)-1:0] be_rid, [2:0] be_rlen;
 logic [$clog2(ID_NUM)-1:0] be_wid, be_write; 
 
 // AXI -> READ_ID_QUEUE
-logic rready;
-logic [$clog2(ID_NUM)-1:0] rq_rid, rq_rvalid, [2:0] rq_rlen; 
+logic rready, rq_rvalid;
+logic [$clog2(ID_NUM)-1:0] rq_rid, [2:0] rq_rlen; 
+logic dqs_strobe; 
 
 // WDATA_QUEUE -> DRAM
 logic [63:0] ddr_wdata_data;
@@ -152,8 +153,8 @@ modport bq (
 
 modport read_id_queue (
     //BQ -> FSM
-
-
+    input be_push_id, be_rid, be_rlen, dqs_done, rready,
+    output rq_rvalid, rq_rid, rq_rlen
 );
 
 modport wdata_queue (
