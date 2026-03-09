@@ -7,12 +7,6 @@ interface control_if;
     // Ready/Valid handshake signals
     // -----------------------------
 
-    logic        valid_in;
-    logic        ready_out;  
-
-    logic        valid_out;
-    logic        ready_in;   
-
     // -----------------------------
     // Inputs to resolve unit
     // -----------------------------
@@ -40,19 +34,15 @@ interface control_if;
     logic [31:0] pc_out;
 
     modport dut (
-        input  valid_in, ready_in,
         input predict_pc, predict_taken,
         input  ctrl_opcode, rd_idx_in, rs1_idx, pc, imm, incr7, rs1_value, rs2_value,
-        output ready_out, valid_out,
         output rd_idx_out, rd_write_en, rd_value,
         output redirect_valid, redirect_target, pc_out
     );
 
     modport tb (
-        output valid_in, ready_in,
         output ctrl_opcode, rd_idx_in, rs1_idx, pc, imm, incr7, rs1_value, rs2_value,
         output predict_pc, predict_taken,
-        input  ready_out, valid_out,
         input  rd_idx_out, rd_write_en, rd_value,
         input  redirect_valid, redirect_target, pc_out
     );

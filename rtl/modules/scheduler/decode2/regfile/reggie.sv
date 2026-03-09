@@ -1,6 +1,7 @@
 // reggie.sv ==============================================================
 // Banked vector register file with conflict-detection FSM
 // ========================================================================
+`include "reg_file_if.sv"
 
 `define priority_encode(one_hot_vec, index_var)                          \
     for (int _pe_i = 0; _pe_i < $bits(one_hot_vec); _pe_i++) begin      \
@@ -99,6 +100,8 @@ module reggie #(
         bank_wpend_nxt = bank_wpend;
         nxt_conflict   = 1'b0;
         rif.done_state = 1'b0;
+
+        state_nxt = state;
 
         unique case (state)
             READY_S: begin

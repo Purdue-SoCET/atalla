@@ -1,6 +1,8 @@
 // op_buffer.sv ===========================================================
 // Operand buffer — holds read values across bank-conflict cycles
 // ========================================================================
+`include "reg_file_if.sv"
+
 module op_buffer #(
     parameter DREAD_PORTS = 4,
     parameter VREG_W      = 512,

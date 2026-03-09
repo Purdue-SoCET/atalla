@@ -19,8 +19,6 @@ interface scalar_alu_if;
     logic [6:0]  salu_op;      // scalar ALU opcode
     logic [7:0]  rdIn;
 
-    logic        valid_in;
-    logic        ready_out;
 
     // -----------------------------
     // Outputs 
@@ -28,23 +26,17 @@ interface scalar_alu_if;
     logic [31:0] rdResult;
     logic [7:0]  rdOut;
 
-    logic        valid_out;
-    logic        ready_in;
 
     // Execution unit view
     modport dut (
         input  srcA, srcB, imm, salu_op, rdIn,
-        input  valid_in, ready_in,
-        output rdResult, rdOut,
-        output valid_out, ready_out
+        output rdResult, rdOut
     );
 
     // Testbench view
     modport tb (
         output srcA, srcB, imm, salu_op, rdIn,
-        output valid_in, ready_in,
-        input  rdResult, rdOut,
-        input  valid_out, ready_out
+        input  rdResult, rdOut
     );
 
 endinterface

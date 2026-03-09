@@ -75,8 +75,6 @@ module scalar_alu (
     // -----------------------------
     // 0-cycle handshake passthrough
     // -----------------------------
-    assign salu_if.valid_out = salu_if.valid_in;
-    assign salu_if.ready_out = salu_if.ready_in;
 
     assign salu_if.rdOut     = salu_if.rdIn;
     assign salu_if.rdResult    = result_comb;

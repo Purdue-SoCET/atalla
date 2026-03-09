@@ -1,6 +1,8 @@
 // reg_file.sv ============================================================
 // Top-level wrapper — instantiates reggie and op_buffer
 // ========================================================================
+`include "reg_file_if.sv"
+
 module reg_file #(
     parameter BANK_COUNT   = 4,
     parameter BANK_REGS    = 64,
@@ -16,8 +18,31 @@ module reg_file #(
     parameter LOG_BANKS = BANK_COUNT / 2
 )(
     input  logic CLK, nRST,
-    reg_file_if rif
+    reg_file_if.reg_file rif
 );
+
+    reg_file_if rif_reggie ();
+    reg_file_if rif_opbuffer ();
+
+    assign rif_reggie.REN = rif.REN;
+    assign rif_reggie.vs = rif.vs;
+    assign rif_reggie.WEN = rif.WEN;
+    assign rif_reggie.vd = rif.vd;
+    assign rif_reggie.vdata = rif.vdata;
+    assign rif_reggie.dependencies_ready = rif.dependencies_ready;
+    assign rif_reggie.dec2_ready = rif.dec2_ready;
+
+    assign rif_opbuffer.done_state = rif_reggie.done_state;
+    assign rif_opbuffer.reggie_vreg = rif_reggie.reggie_vreg;
+    assign rif_opbuffer.reggie_dvalid = rif_reggie.reggie_dvalid;
+    assign rif_opbuffer.reggie_ready = rif_reggie.reggie_ready;
+
+
+    assign rif_opbuffer.accomplished = rif.accomplished;
+    assign rif.opbuff_vreg = rif_opbuffer.opbuff_vreg;
+    assign rif.opbuff_ivalid = rif_opbuffer.opbuff_ivalid;
+
+
 
     reggie #(
         .BANK_COUNT  (BANK_COUNT),
@@ -29,7 +54,7 @@ module reg_file #(
     ) u_reggie (
         .CLK (CLK),
         .nRST(nRST),
-        .rif (rif.reggie)
+        .rif (rif_reggie)
     );
 
     op_buffer #(
@@ -39,9 +64,9 @@ module reg_file #(
     ) u_op_buffer (
         .CLK (CLK),
         .nRST(nRST),
-        .rif (rif.op_buffer)
+        .rif (rif_opbuffer)
     );
 
-    assign rif.vrf_ready = rif.reggie_ready;
+    assign rif.vrf_ready = rif_reggie.reggie_ready;
 
 endmodule
