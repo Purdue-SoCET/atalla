@@ -31,7 +31,6 @@ module div_pipelined (
     // Iteration 1 data always loops back to start Iteration 2
     assign loopback_req = p_valid[5]; 
 
-
     // OUTPUT LOGIC
     assign divif.out.valid_out = stage2_done;
 
