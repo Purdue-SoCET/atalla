@@ -81,12 +81,15 @@ always_ff@(posedge CLK, negedge nRST) begin
     end 
     else begin 
         if(aw_push) begin
+            assert(wrmgr_if.awvalid == wrmgr_if.awready)
+                else $error("valid or ready not high");
             aw_fifo[aw_wr_ptr].valid  <= wrmgr_if.awvalid;
             aw_fifo[aw_wr_ptr].addr   <= wrmgr_if.aw_gen_i.addr;
             aw_fifo[aw_wr_ptr].mid_id <= {MASTER_ID, wrmgr_if.aw_gen_i.id};
             aw_fifo[aw_wr_ptr].size   <= wrmgr_if.aw_gen_i.size;
             aw_fifo[aw_wr_ptr].len    <= wrmgr_if.aw_gen_i.len;
             aw_fifo[aw_wr_ptr].burst  <= wrmgr_if.aw_gen_i.burst;
+            aw_wr_ptr <= aw_wr_ptr + 1'b1;
         end 
     end 
 end
@@ -110,11 +113,14 @@ always_ff@(posedge CLK, negedge nRST) begin
     end 
     else begin 
         if(w_push) begin
+            assert(wrmgr_if.wvalid == wrmgr_if.wready)
+                else $error("w ready or valid not high");
             w_fifo[w_wr_ptr].valid  <= wrmgr_if.wvalid;
             w_fifo[w_wr_ptr].mid_id <= {MASTER_ID, wrmgr_if.w_gen_i.id};
             w_fifo[w_wr_ptr].data   <= wrmgr_if.w_gen_i.data;
             w_fifo[w_wr_ptr].last   <= wrmgr_if.w_gen_i.last;
             w_fifo[w_wr_ptr].strb   <= wrmgr_if.w_gen_i.strb;
+            w_wr_ptr <= w_wr_ptr + 1'b1;
         end 
     end 
 end
@@ -145,5 +151,23 @@ assign wrmgr_if.head_w_o.mid_id = w_fifo[w_rd_ptr].mid_id;
 assign wrmgr_if.head_w_o.data   = w_fifo[w_rd_ptr].data;
 assign wrmgr_if.head_w_o.strb   = w_fifo[w_rd_ptr].strb;
 assign wrmgr_if.head_w_o.last   = w_fifo[w_rd_ptr].last;
+
+property aw_wrt_pointer;
+    @(posedge CLK)
+    wrmgr_if.awvalid && wrmgr_if.awready |=> (aw_wr_ptr == ($past(aw_wr_ptr) + 1'b1));
+endproperty
+
+assert property (aw_wrt_pointer)
+    else $error("aw write pointer did not increment");
+
+property w_wrt_pointer;
+    @(posedge CLK)
+    wrmgr_if.wvalid && wrmgr_if.wready |=> (w_wr_ptr == ($past(w_wr_ptr) + 1'b1));
+endproperty
+
+assert property (w_wrt_pointer)
+    else $error("w write pointer did not increment");
+
+
 
 endmodule

@@ -120,8 +120,45 @@ class axi_scoreboard;
             (exp.wdata  == obs.wdata)  &&
             (exp.wlast  == obs.wlast)) begin
             $display("SCOREBOARD PASS");
+
+        assert(exp.awid == exp.wid)
+            else $error("id mismatch");
         end
     endtask
+endclass
+
+class axi_coverage_collector;
+    // Local variables used by covergroup
+    logic [AWID-1:0]   cov_awid;
+    logic [AWLEN-1:0]  cov_awlen;
+    logic              cov_wlast;
+
+    covergroup axi_cg;
+        cp_awid : coverpoint cov_awid;
+        cp_awlen : coverpoint cov_awlen {
+            bins beat_1 = {0};
+            bins beat_2 = {1};
+            bins beat_4 = {3};
+            bins beat_8 = {7};
+        }
+        cp_wlast : coverpoint cov_wlast {
+            bins last = {1};
+        }
+        awid_x_len : cross cp_awid, cp_awlen; // cross coverage
+    endgroup
+    // Constructor
+    function new();
+        axi_cg = new();
+    endfunction
+
+    // Sample method
+    function void sample(axi_write_txn txn);
+        cov_awid  = txn.awid;
+        cov_awlen = txn.awlen;
+        cov_wlast = txn.wlast;
+        axi_cg.sample(); // built in sample function to record current values of all coverpoints right now
+    endfunction
+
 endclass
 
 module axi_write_manager_tb ();
@@ -159,6 +196,7 @@ module axi_write_manager_tb ();
     axi_driver drv;
     axi_monitor mon;
     axi_scoreboard scb;
+    axi_coverage_collector cov;
 
     axi_write_txn exp_txn;
     axi_write_txn obs_txn;
@@ -171,6 +209,7 @@ module axi_write_manager_tb ();
         mon = new(busif);
         scb = new();
         exp_txn = new();
+        cov = new();
 
         repeat (2) @(posedge CLK);
         nRST = 1;
@@ -187,6 +226,7 @@ module axi_write_manager_tb ();
         obs_txn = mon.sample();
          $display("TB: sampled txn");
 
+        cov.sample(obs_txn);
         scb.check(exp_txn, obs_txn);
         $display("TB: checked txn");
         repeat (2) @(posedge CLK);

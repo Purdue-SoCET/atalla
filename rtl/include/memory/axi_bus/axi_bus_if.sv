@@ -113,6 +113,15 @@ interface axi_bus_if(input logic CLK, input logic nRST);
     logic aw_pop, w_pop; 
     logic head_awvalid, head_wvalid;
 
+    // test assertions
+    property wrt_valid_ready;
+        @(posedge CLK)
+        (awvalid && !awready) |-> $stable(aw_gen_i);
+    endproperty
+
+    assert property (wrt_valid_ready)
+        else $error("data changed during low ready");
+
     // ----------------------------------------------------------------------
     // READ PATH Definitions
     // ----------------------------------------------------------------------
