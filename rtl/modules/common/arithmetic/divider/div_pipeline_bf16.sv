@@ -11,7 +11,7 @@ module div_pipeline_bf16 (
   localparam [15:0] TWO = 16'h4000;
   localparam [15:0] qNaN = 16'h7FC0; // NaN
 
-  // Pipeline Structs
+    // Pipeline Structs
   typedef struct packed{
     logic sign, is_special, valid, is_sub_bound;
     logic [9:0] exp;
@@ -30,11 +30,17 @@ module div_pipeline_bf16 (
     logic [15:0] muln, special_result;
   } mul2_t;
 
+  typedef struct packed{
+    logic valid;
+    logic [15:0] fin;
+  } fin_t;
+
 // SIGNAL DECLARATIONS
   // Pipeline Signals
-  mul1_t fetTmul1, n_fetTmul1, subTmul2, n_subTmul2;
-  sub_t mul1Tfin1, n_mul1Tfin1;
-  mul2_t fin1Tsub1, n_fin1Tsub1, sub1Tsub2, n_sub1Tsub2;
+  mul1_t mul1Tfin1, n_mul1Tfin1, mul2Tfin3, n_mul2Tfin3;
+  sub_t fin1Tsub1, n_fin1Tsub1, fin2Tmul2, n_fin2Tmul2;
+  mul2_t sub1Tsub2, n_sub1Tsub2, sub2Tfin2, n_sub2Tfin2, fin3Texp, n_fin3Texp;
+  fin_t expTout, n_expTout;
 
   // Mult and Sub signals
   logic [15:0] muln, muld, mulfin, f_1, f_2;
@@ -50,11 +56,8 @@ module div_pipeline_bf16 (
   logic [7:0] final_exp;
   logic is_subnormal_boundary;
 
-  // Pipeline Control Signals
-  logic pause, wen, ren, flush;
-  logic [2:0] ir, iw;
-  logic [2:0] fifo_count;
-  logic [7:0][15:0] fifo, n_fifo;
+  // Pipeline Signals
+  logic [7:0] pipe_en;
 
   // Edge case flags
   logic op1_is_zero, op1_is_inf, op1_is_nan;
@@ -95,7 +98,7 @@ module div_pipeline_bf16 (
     .bf2_in(subd),
     .op(1'b1), 
     .start(startsub),
-    .stall(0),
+    .stall(pipe_en[1]),
     .bf_out(subout), 
     .overflow(),
     .underflow(),
@@ -114,10 +117,10 @@ module div_pipeline_bf16 (
     .mul_unf()
   );
   
-  // Pipeline Signal
-  assign flush = pause ? 1:0;
-  assign divif.out.ready_in = pause ? 0:nRST;
-  assign divif.out.valid_out = fifo_count > 0;
+  // Pipeline Signals
+  assign pipe_en = !divif.in.ready_out && divif.out.valid_out ? 8'h00 : 8'hFF;
+  assign divif.out.ready_in = pipe_en ? 0:nRST;
+  assign divif.out.valid_out = expTout.valid;
 
   // Mantissa Normalization
   assign muln = (divif.in.operand1[14:7] == 8'h00) ? 16'h8000 : {1'b0, BIAS, divif.in.operand1[6:0]};
@@ -165,53 +168,43 @@ module div_pipeline_bf16 (
     else is_special = 0;
   end
 
-  assign startn = divif.in.valid_in && !is_special && !flush;
-  assign startd = divif.in.valid_in && !is_special && !flush;
+  assign startn = divif.in.valid_in && !is_special && pipe_en[0];
+  assign startd = divif.in.valid_in && !is_special && pipe_en[0];
 
   always_comb begin
-    if(flush) n_fetTmul1 = '0;  // For feeding in bubbles on pauses
-    else begin
-      n_fetTmul1.sign           = sign;
-      n_fetTmul1.is_special     = is_special;
-      n_fetTmul1.valid          = divif.in.valid_in;
-      n_fetTmul1.is_sub_bound   = is_subnormal_boundary;
-      n_fetTmul1.exp            = exp_diff;
-      n_fetTmul1.special_result = special_result;
+    n_mul1Tfin1 = mul1Tfin1;
+    if(pipe_en[0]) begin
+      n_mul1Tfin1.sign           = sign;
+      n_mul1Tfin1.is_special     = is_special;
+      n_mul1Tfin1.valid          = divif.in.valid_in;
+      n_mul1Tfin1.is_sub_bound   = is_subnormal_boundary;
+      n_mul1Tfin1.exp            = exp_diff;
+      n_mul1Tfin1.special_result = special_result;
     end
-  end
-
-// *********************************************************************************************
-// FET to MUL1
-// *********************************************************************************************
-  always_comb begin
-    n_mul1Tfin1.sign           = fetTmul1.sign;
-    n_mul1Tfin1.is_special     = fetTmul1.is_special;
-    n_mul1Tfin1.valid          = fetTmul1.valid;
-    n_mul1Tfin1.is_sub_bound   = fetTmul1.is_sub_bound;
-    n_mul1Tfin1.exp            = fetTmul1.exp;
-    n_mul1Tfin1.muln           = outn;
-    n_mul1Tfin1.muld           = outd;
-    n_mul1Tfin1.special_result = fetTmul1.special_result;
   end
 
 // *********************************************************************************************
 // MUL1 to FIN1
 // *********************************************************************************************
-  assign startsub = !mul1Tfin1.is_special && mul1Tfin1.valid;
-  assign subd = mul1Tfin1.valid && !mul1Tfin1.is_special ? mul1Tfin1.muld:'0;
   always_comb begin
-    n_fin1Tsub1.sign           = mul1Tfin1.sign;
-    n_fin1Tsub1.is_special     = mul1Tfin1.is_special;
-    n_fin1Tsub1.valid          = mul1Tfin1.valid;
-    n_fin1Tsub1.is_sub_bound   = mul1Tfin1.is_sub_bound;
-    n_fin1Tsub1.exp            = mul1Tfin1.exp;
-    n_fin1Tsub1.muln           = mul1Tfin1.muln;
-    n_fin1Tsub1.special_result = mul1Tfin1.special_result;
+    n_fin1Tsub1 = fin1Tsub1;
+    if(pipe_en[1]) begin
+      n_fin1Tsub1.sign           = mul1Tfin1.sign;
+      n_fin1Tsub1.is_special     = mul1Tfin1.is_special;
+      n_fin1Tsub1.valid          = mul1Tfin1.valid;
+      n_fin1Tsub1.is_sub_bound   = mul1Tfin1.is_sub_bound;
+      n_fin1Tsub1.exp            = mul1Tfin1.exp;
+      n_fin1Tsub1.muln           = outn;
+      n_fin1Tsub1.muld           = outd;
+      n_fin1Tsub1.special_result = mul1Tfin1.special_result;
+    end
   end
 
 // *********************************************************************************************
 // FIN1 to SUB1
 // *********************************************************************************************
+  assign startsub = !fin1Tsub1.is_special && fin1Tsub1.valid;
+  assign subd = fin1Tsub1.valid && !fin1Tsub1.is_special ? fin1Tsub1.muld:'0;
   always_comb begin
     n_sub1Tsub2.sign           = fin1Tsub1.sign;
     n_sub1Tsub2.is_special     = fin1Tsub1.is_special;
@@ -225,76 +218,104 @@ module div_pipeline_bf16 (
 // *********************************************************************************************
 // SUB1 to SUB2
 // *********************************************************************************************
-  // For Back Pressure Store Sub Values Stall Fetch stages and let it flow out for 2 cycles, then resetn_ir
-  assign startfin = !sub1Tsub2.is_special && sub1Tsub2.valid;
-  assign mulfin = !sub1Tsub2.is_special && sub1Tsub2.valid ? sub1Tsub2.muln:'0;
-  assign f_2 = !sub1Tsub2.is_special && sub1Tsub2.valid ? subout:'0;
   always_comb begin
-    n_subTmul2.sign           = sub1Tsub2.sign;
-    n_subTmul2.is_special     = sub1Tsub2.is_special;
-    n_subTmul2.valid          = sub1Tsub2.valid;
-    n_subTmul2.is_sub_bound   = sub1Tsub2.is_sub_bound;
-    n_subTmul2.exp            = sub1Tsub2.exp;
-    n_subTmul2.special_result = sub1Tsub2.special_result;
+    n_sub2Tfin2.sign           = sub1Tsub2.sign;
+    n_sub2Tfin2.is_special     = sub1Tsub2.is_special;
+    n_sub2Tfin2.valid          = sub1Tsub2.valid;
+    n_sub2Tfin2.is_sub_bound   = sub1Tsub2.is_sub_bound;
+    n_sub2Tfin2.exp            = sub1Tsub2.exp;
+    n_sub2Tfin2.muln           = sub1Tsub2.muln;
+    n_sub2Tfin2.special_result = sub1Tsub2.special_result;
   end
 
 // *********************************************************************************************
-// SUB2 to MUL2
+// SUB2 to FIN2
 // *********************************************************************************************
-  assign raw_exp = subTmul2.valid ? subTmul2.exp + {2'b00, outfin[14:7]}:'0;
+  always_comb begin
+    n_fin2Tmul2.sign           = sub2Tfin2.sign;
+    n_fin2Tmul2.is_special     = sub2Tfin2.is_special;
+    n_fin2Tmul2.valid          = sub2Tfin2.valid;
+    n_fin2Tmul2.is_sub_bound   = sub2Tfin2.is_sub_bound;
+    n_fin2Tmul2.exp            = sub2Tfin2.exp;
+    n_fin2Tmul2.muln           = sub2Tfin2.muln;
+    n_fin2Tmul2.muld           = subout; 
+    n_fin2Tmul2.special_result = sub2Tfin2.special_result;
+  end
+
+// *********************************************************************************************
+// FIN2 to MUL2
+// *********************************************************************************************
+  // For Back Pressure Store Sub Values Stall Fetch stages and let it flow out for 2 cycles, then resetn_ir
+  assign startfin = !fin2Tmul2.is_special && fin2Tmul2.valid;
+  assign mulfin = !fin2Tmul2.is_special && fin2Tmul2.valid ? fin2Tmul2.muln:'0;
+  assign f_2 = !fin2Tmul2.is_special && fin2Tmul2.valid ? fin2Tmul2.muld:'0;
+  always_comb begin
+    n_mul2Tfin3.sign           = fin2Tmul2.sign;
+    n_mul2Tfin3.is_special     = fin2Tmul2.is_special;
+    n_mul2Tfin3.valid          = fin2Tmul2.valid;
+    n_mul2Tfin3.is_sub_bound   = fin2Tmul2.is_sub_bound;
+    n_mul2Tfin3.exp            = fin2Tmul2.exp;
+    n_mul2Tfin3.special_result = fin2Tmul2.special_result;
+  end
+
+// *********************************************************************************************
+// MUL2 to FIN3
+// *********************************************************************************************
+  always_comb begin
+    n_fin3Texp.sign           = mul2Tfin3.sign;
+    n_fin3Texp.is_special     = mul2Tfin3.is_special;
+    n_fin3Texp.valid          = mul2Tfin3.valid;
+    n_fin3Texp.is_sub_bound   = mul2Tfin3.is_sub_bound;
+    n_fin3Texp.exp            = mul2Tfin3.exp;
+    n_fin3Texp.muln           = outfin;
+    n_fin3Texp.special_result = mul2Tfin3.special_result;
+  end
+
+// *********************************************************************************************
+// FIN3 to EXP
+// *********************************************************************************************
+  assign raw_exp = fin3Texp.valid ? fin3Texp.exp + {2'b00, fin3Texp.muln[14:7]}:'0;
 
   always_comb begin : exponent_saturation
     if(raw_exp >= 10'sd255)                             final_exp = 8'hFF; // Overflow -> Infinity
-    else if(raw_exp == 10'h001 && outfin[14:7] < TWO)   final_exp = 8'h00;
+    else if(raw_exp == 10'h001 && fin3Texp.muln[14:7] < TWO)   final_exp = 8'h00;
     else if(raw_exp <= 10'sd0 || is_subnormal_boundary) final_exp = 8'h00; // Underflow -> Flush to Zero
     else                                                final_exp = raw_exp[7:0];
   end
 
   // De-Normalize
-  assign fin = (final_exp == 8'h00) ? {subTmul2.sign, 15'h0000} : {subTmul2.sign, final_exp, outfin[6:0]};
-  assign result = subTmul2.is_special ? subTmul2.special_result:fin;
+  assign fin = (final_exp == 8'h00) ? {fin3Texp.sign, 15'h0000} : {fin3Texp.sign, final_exp, fin3Texp.muln[6:0]};
+  assign result = fin3Texp.is_special ? fin3Texp.special_result:fin;
+
+  always_comb begin
+    n_expTout.valid = fin3Texp.valid;
+    n_expTout.fin   = result;
+  end
+
+// *********************************************************************************************
+// EXP to OUT
+// *********************************************************************************************
+  assign divif.out.result = expTout.fin;
 
   always_ff @(posedge CLK, negedge nRST) begin : pipeline_ff
     if(~nRST) begin
-      fetTmul1  <= '0;
-      mul1Tfin1 <= '0;
+      mul1Tfin1  <= '0;
       fin1Tsub1 <= '0;
       sub1Tsub2 <= '0;
-      subTmul2  <= '0;
+      sub2Tfin2 <= '0;
+      fin2Tmul2 <= '0;
+      mul2Tfin3 <= '0;
+      fin3Texp <= '0;
+      expTout <= '0;
     end else begin
-      fetTmul1  <= n_fetTmul1;
-      mul1Tfin1 <= n_mul1Tfin1;
+      mul1Tfin1  <= n_mul1Tfin1;
       fin1Tsub1 <= n_fin1Tsub1;
       sub1Tsub2 <= n_sub1Tsub2;
-      subTmul2  <= n_subTmul2;
+      sub2Tfin2 <= n_sub2Tfin2;
+      fin2Tmul2 <= n_fin2Tmul2;
+      mul2Tfin3 <= n_mul2Tfin3;
+      fin3Texp <= n_fin3Texp;
+      expTout <= n_expTout;
     end
   end
-
-  assign ren = divif.in.ready_out && fifo_count > 0;
-  assign wen = subTmul2.valid;
-  assign pause = !divif.in.ready_out && divif.out.valid_out;
-  always_comb begin
-    n_fifo = fifo;
-    if(wen) n_fifo[iw] = result;
-  end
-
-  always_ff @(posedge CLK, negedge nRST) begin
-    if(~nRST) begin
-      fifo       <= '0;
-      fifo_count <= '0;
-      ir         <= '0;
-      iw         <= '0;
-    end else begin
-      case({wen, ren})
-        2'b10: begin iw <= iw + 1; fifo_count <= fifo_count + 1; end 
-        2'b01: begin ir <= ir + 1; fifo_count <= fifo_count - 1; end 
-        2'b11: begin iw <= iw + 1; ir <= ir + 1; end 
-        default: ;
-      endcase
-      fifo <= n_fifo;
-    end
-  end
-
-  // Output
-  assign divif.out.result = fifo[ir];
 endmodule
