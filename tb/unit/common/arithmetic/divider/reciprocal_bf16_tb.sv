@@ -93,7 +93,7 @@ module reciprocal_bf16_tb;
     if (is_nan(rif.out.result) && is_nan(expected_in)) begin
       // Pass
     end else if (rif.out.result !== expected_in) begin
-      if ((rif.out.result[15] == expected_in[15]) && (abs_diff <= 2)) begin 
+      if ((rif.out.result[15] == expected_in[15]) && (abs_diff <= 1)) begin 
         // Pass ULP
       end else begin
          $display("ERROR @%0t [%s]: Reciprocal of %h = %h (expected %h)",
