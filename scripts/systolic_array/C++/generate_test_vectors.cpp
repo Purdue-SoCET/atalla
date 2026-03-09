@@ -68,6 +68,10 @@ uint16_t sim_2_input_add(uint16_t a, uint16_t b, bool is_fp16) {
     }
 }
 
+uint32_t sim_2_input_add32(uint32_t a, uint32_t b, bool is_fp16) {
+    return fp32_add_hw(a, b);
+}
+
 uint16_t sim_4_input_add(uint16_t a, uint16_t b, uint16_t c, uint16_t d, bool is_fp16) {
     if (is_fp16) {
         return fp16_4_input_add_hw(a, b, c, d);
@@ -82,6 +86,11 @@ uint16_t sim_mul(uint16_t a, uint16_t b, bool is_fp16) {
     } else {
         return bf16_mul_hw(a, b);
     }
+}
+
+uint32_t sim_mul32(uint32_t a, uint32_t b)
+{
+    return fp32_mul_hw(a, b);
 }
 
 uint16_t sim_adder_tree(const std::vector<uint16_t>& in, uint16_t psum, bool is_fp16) {
@@ -133,6 +142,83 @@ uint16_t sim_adder_tree(const std::vector<uint16_t>& in, uint16_t psum, bool is_
 
     // add psum at the end
     return sim_2_input_add(cur[0], psum, is_fp16);
+}
+
+uint32_t sim_adder_tree32(const std::vector<uint32_t>& in, uint32_t psum, bool is_fp16) {
+    std::vector<uint32_t> cur = in;          // working copy
+    std::vector<uint32_t> next;              // next level
+
+    if(ADDER_INPUT_NUM == 2)
+    {
+        while (cur.size() > 1) {
+            size_t n = cur.size();
+            next.resize((n + 1) / 2);
+
+            for (size_t j = 0; j + 1 < n; j += 2) {
+                next[j / 2] = sim_2_input_add32(cur[j], cur[j + 1], is_fp16);
+            }
+            if (n & 1) { // odd tail
+                next[n / 2] = cur[n - 1];
+            }
+
+            cur.swap(next);
+        }
+    }
+    else if(ADDER_INPUT_NUM == 4)
+    {
+        //
+    }
+    else
+    {
+        std::cerr << "Error: Unsupported ADDER_INPUT_NUM value: " << ADDER_INPUT_NUM << " ADDER_INPUT_NUM must be 2 or 4" << std::endl;
+        return 0;
+    }
+
+    // add psum at the end
+    return sim_2_input_add32(cur[0], psum, is_fp16);
+}
+
+uint32_t sim_MEISSA32_col(
+                        const std::vector<uint16_t>& input_row, 
+                        const std::vector<uint16_t>& weight_col, 
+                        uint16_t psum, 
+                        bool is_fp16) 
+{
+    std::vector<uint32_t> mul_results(input_row.size());
+
+    for (size_t i = 0; i < input_row.size(); ++i) {
+        uint32_t input32 = bf16_to_ui32(input_row[i]);
+        uint32_t weight32 = bf16_to_ui32(weight_col[i]);
+            
+        mul_results[i] = sim_mul32(input32, weight32);
+    }
+
+    return sim_adder_tree32(mul_results, psum, is_fp16);
+}
+
+std::vector<std::vector<uint16_t>> sim_MEISSA32(
+                                    const std::vector<std::vector<uint16_t>>& input, 
+                                    const std::vector<std::vector<uint16_t>>& weight, 
+                                    const std::vector<std::vector<uint16_t>>& psum, 
+                                    bool is_fp16) 
+{
+    std::vector<std::vector<uint16_t>> output(input.size(), std::vector<uint16_t>(input[0].size()));
+
+    for(int row = 0; row < input.size(); ++row)
+    {
+        for(int col = 0; col < input[0].size(); ++col)
+        {
+            std::vector<uint16_t> weight_col(weight.size());
+            for(int i = 0; i < weight.size(); ++i)
+            {
+                weight_col[i] = weight[i][col];
+            }
+
+            output[row][col] = sim_MEISSA32_col(input[row], weight_col, psum[row][col], is_fp16);
+        }
+    }
+
+    return output;
 }
 
 uint16_t sim_MEISSA_col(
@@ -287,6 +373,10 @@ void create_new_test(int test_num, int min_exponent, int max_exponent, const std
     {
         output_matrix = sim_TPU(input_matrix, *weight, psum_matrix, IS_FP16);
     }
+    else if (VERSION == "MEISSA32")
+    {
+        output_matrix = sim_MEISSA32(input_matrix, *weight, psum_matrix, IS_FP16);
+    }
     else if (VERSION == "STANDARD")
     {
         // TODO: add standard simulation
@@ -315,6 +405,12 @@ int main() {
     else {
         std::cerr << "Error: ATALLA_ROOT environment variable not set." << std::endl;
     }
+
+    if(VERSION == "MEISSA32") 
+    {
+        IS_FP16 = false;
+    }
+
 
     auto start = std::chrono::steady_clock::now();
 
@@ -355,6 +451,10 @@ int main() {
     {
         output_matrix = sim_TPU(input_matrix, weight_matrix, psum_matrix, IS_FP16);
     }
+    if(VERSION == "MEISSA32")
+    {
+        output_matrix = sim_MEISSA32(input_matrix, weight_matrix, psum_matrix, IS_FP16);
+    }
     else if (VERSION == "STANDARD")
     {
         // TODO: add standard simulation
@@ -383,7 +483,16 @@ int main() {
     {
         std::cout << "Adder input num: " << ADDER_INPUT_NUM << std::endl;
     }
-    std::cout << "Data type: " << (IS_FP16 ? "FP16" : "BF16") << std::endl;
+
+    if(VERSION == "MEISSA32")
+    {
+        std::cout << "Data type: " << "MEISSA32 is always bf16 with fp32 accumulation" << std::endl;
+    }
+    else
+    {
+        std::cout << "Data type: " << (IS_FP16 ? "FP16" : "BF16") << std::endl;
+    }
+
     PATH_TO_INPUT = PATH_TO_INPUT.erase(0, input_path_env.length());
     PATH_TO_EXPECTED_RESULT = PATH_TO_EXPECTED_RESULT.erase(0, input_path_env.length());
     std::cout << "Created "  << TOTAL_TEST_NUM << " random test cases to " << PATH_TO_INPUT << " and " << PATH_TO_EXPECTED_RESULT << std::endl;

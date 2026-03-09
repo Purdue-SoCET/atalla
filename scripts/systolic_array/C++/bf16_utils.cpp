@@ -159,6 +159,8 @@ uint16_t bf16_4_input_add_hw(uint16_t a_bits, uint16_t b_bits, uint16_t c_bits, 
 // i.e. for max_exponent = 3, the random value will be in the range of [-8, 8] with random decimal part
 uint16_t random_bf16(int min_exponent, int max_exponent)
 {
+    min_exponent += 127;
+    max_exponent += 127;
     // Clamp parameters into safe BF16 exponent range (8-bit exponent: 0..255)
     if (min_exponent < 0)   min_exponent = 0;
     if (min_exponent > 255) min_exponent = 255;
