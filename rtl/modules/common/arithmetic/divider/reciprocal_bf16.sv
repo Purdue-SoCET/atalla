@@ -272,8 +272,9 @@ module reciprocal_bf16 (
   assign raw_exp = fin3Texp.valid ? fin3Texp.exp + {2'b00, fin3Texp.muln[14:7]}:'0;
 
   always_comb begin : exponent_saturation
-    if(raw_exp <= 10'sd0 || fin3Texp.is_sub_bound)                 final_exp = 8'h00; // Underflow -> Flush to Zero
+    if(raw_exp >= 10'sd255)                                        final_exp = 8'hFF; // Overflow -> Infinity
     else if(raw_exp == 10'h001 && fin3Texp.muln[14:7] < TWO[14:7]) final_exp = 8'h00;
+    else if(raw_exp <= 10'sd0 || fin3Texp.is_sub_bound)             final_exp = 8'h00; // Underflow -> Flush to Zero
     else                                                           final_exp = raw_exp[7:0];
   end
 
@@ -297,23 +298,23 @@ module reciprocal_bf16 (
 
   always_ff @(posedge CLK, negedge nRST) begin : pipeline_ff
     if(~nRST) begin
-      mul1Tfin1  <= '0;
+      mul1Tfin1 <= '0;
       fin1Tsub1 <= '0;
       sub1Tsub2 <= '0;
       sub2Tfin2 <= '0;
       fin2Tmul2 <= '0;
       mul2Tfin3 <= '0;
-      fin3Texp <= '0;
-      expTout <= '0;
+      fin3Texp  <= '0;
+      expTout   <= '0;
     end else begin
-      mul1Tfin1  <= n_mul1Tfin1;
+      mul1Tfin1 <= n_mul1Tfin1;
       fin1Tsub1 <= n_fin1Tsub1;
       sub1Tsub2 <= n_sub1Tsub2;
       sub2Tfin2 <= n_sub2Tfin2;
       fin2Tmul2 <= n_fin2Tmul2;
       mul2Tfin3 <= n_mul2Tfin3;
-      fin3Texp <= n_fin3Texp;
-      expTout <= n_expTout;
+      fin3Texp  <= n_fin3Texp;
+      expTout   <= n_expTout;
     end
   end
 endmodule
