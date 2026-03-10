@@ -253,7 +253,7 @@ module reciprocal_bf16 (
 // MUL2 to FIN3
 // *********************************************************************************************
   always_comb begin
-    n_fin3Texp = mul2Tfin3;
+    n_fin3Texp = fin3Texp;
     if(flush[6]) n_fin3Texp = '0;
     else if(pipe_en[6]) begin
       n_fin3Texp.sign           = mul2Tfin3.sign;
