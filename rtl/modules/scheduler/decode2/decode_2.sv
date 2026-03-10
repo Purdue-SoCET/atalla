@@ -16,7 +16,7 @@ module decode_2
     parameter NUM_INSTRUCTIONS = 4,
     parameter READ_PORTS       = 4
 ) (
-  input logic CLK, nRST,
+  input logic CLK, nRST, flush,
   decode_2_if.dec d2if
 );
 
@@ -153,7 +153,18 @@ assign dcif.scalar_WEN = reg_writes_latch;
 
 
 always_comb begin
-    if(d2if.ready) begin
+    if(flush) begin
+        pc_nlatch = 32'b0;
+        pc_pred_addr_nlatch = 32'b0;
+        predict_taken_nlatch = 1'b0;
+        decoded_scalar_instrs_nlatch = '0;
+        REN_nlatch = 1'b0;
+        rsel_nlatch = '0;
+        fu_enables_nlatch = '0;
+        reg_writes_nlatch = '0;
+        rdIns_nlatch = '0; 
+    end
+    else if(d2if.ready) begin
         pc_nlatch = d2if.pc_in;
         pc_pred_addr_nlatch = d2if.pc_pred_addr_in;
         predict_taken_nlatch = d2if.predict_taken_in;
