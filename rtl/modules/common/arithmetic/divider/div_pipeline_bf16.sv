@@ -46,7 +46,7 @@ module div_pipeline_bf16 (
   logic [15:0] muln, muld, mulfin, f_1, f_2;
   logic [15:0] outn, outd, outfin;
   logic [15:0] subd, subout;
-  logic startn, startd, startfin, startsub;
+  logic startd, startfin, startsub;
   logic donen, doned, donefin;
 
   // Math Signals
@@ -260,7 +260,6 @@ module div_pipeline_bf16 (
 // *********************************************************************************************
 // FIN2 to MUL2
 // *********************************************************************************************
-  // For Back Pressure Store Sub Values Stall Fetch stages and let it flow out for 2 cycles, then resetn_ir
   assign startfin = !fin2Tmul2.is_special && fin2Tmul2.valid && pipe_en[5];
   assign mulfin = !fin2Tmul2.is_special && fin2Tmul2.valid ? fin2Tmul2.muln:'0;
   assign f_2 = !fin2Tmul2.is_special && fin2Tmul2.valid ? fin2Tmul2.muld:'0;
@@ -300,10 +299,10 @@ module div_pipeline_bf16 (
   assign raw_exp = fin3Texp.valid ? fin3Texp.exp + {2'b00, fin3Texp.muln[14:7]}:'0;
 
   always_comb begin : exponent_saturation
-    if(raw_exp >= 10'sd255)                             final_exp = 8'hFF; // Overflow -> Infinity
-    else if(raw_exp == 10'h001 && fin3Texp.muln[14:7] < TWO)   final_exp = 8'h00;
-    else if(raw_exp <= 10'sd0 || is_subnormal_boundary) final_exp = 8'h00; // Underflow -> Flush to Zero
-    else                                                final_exp = raw_exp[7:0];
+    if(raw_exp >= 10'sd255)                                        final_exp = 8'hFF; // Overflow -> Infinity
+    else if(raw_exp == 10'h001 && fin3Texp.muln[14:7] < TWO[14:7]) final_exp = 8'h00;
+    else if(raw_exp <= 10'sd0 || fin3Texp.is_sub_bound)            final_exp = 8'h00; // Underflow -> Flush to Zero
+    else                                                           final_exp = raw_exp[7:0];
   end
 
   // De-Normalize
@@ -347,4 +346,4 @@ module div_pipeline_bf16 (
   end
 endmodule
 // *********************************************************************************************
-
+  
