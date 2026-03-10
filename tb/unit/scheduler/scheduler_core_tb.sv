@@ -94,557 +94,555 @@ module scheduler_core_tb;
         );
 
 
-        // @(negedge CLK);
-        // ihit = 1'b1;
-        // imemload.inst0 = 48'h000001008181; // ADD_S rd=3 (exp value: 5), rs1=1, rs2=2
-        // imemload.inst1 = 48'h2f; //NOP
-        // imemload.inst2 = 48'h2f; //NOP
-        // imemload.inst3 = 48'h2f; //NOP
-        // @(negedge CLK);
-        // ihit = 1'b0;
+        @(negedge CLK);
+        ihit = 1'b1;
+        imemload.inst0 = 48'h000001008181; // ADD_S rd=3 (exp value: 5), rs1=1, rs2=2
+        imemload.inst1 = 48'h2f; //NOP
+        imemload.inst2 = 48'h2f; //NOP
+        imemload.inst3 = 48'h2f; //NOP
+        @(negedge CLK);
+        ihit = 1'b0;
 
         repeat(75) @(posedge CLK);
 
 
-        // // Test 1: SUB_S, 
-        // set_tv(
-        //     .tv_instr0(48'h2f), // NOP
-        //     .tv_instr1(48'h000000810202), // SUB_S rd=4 (exp value: 3), rs1=2, rs2=1
-        //     .tv_instr2(48'h2f), // NOP
-        //     .tv_instr3(48'h2f), // NOP
-        //     .idx(1)
-        // );
-
-        // // Test 2: OR.S
-        // set_tv(
-        //     .tv_instr0(48'h000001008286), // OR.S {'opcode': 6, 'rs1': 1, 'rs2': 2, 'rd': 5}, (exp value: 5)
-        //     .tv_instr1(48'h2f), // NOP
-        //     .tv_instr2(48'h2f), // NOP
-        //     .tv_instr3(48'h2f), // NOP
-        //     .idx(2)
-        // );
-
-        // // Test 3: AND.S
-        // set_tv(
-        //     .tv_instr0(48'h000002808307), // AND.S {'opcode': 0b0000111, 'rs1': 1, 'rs2': 5, 'rd': 6} (exp value: 1)
-        //     .tv_instr1(48'h2f), // NOP
-        //     .tv_instr2(48'h2f), // NOP
-        //     .tv_instr3(48'h2f), // NOP
-        //     .idx(3)
-        // );
-
-        // // Test 4: XOR.S
-        // set_tv(
-        //     .tv_instr0(48'h000001008388), // XOR.S {'opcode': 8, 'rs1': 1, 'rs2': 2, 'rd': 7} (exp value: 5)
-        //     .tv_instr1(48'h2f), // NOP
-        //     .tv_instr2(48'h2f), // NOP
-        //     .tv_instr3(48'h2f), // NOP
-        //     .idx(4)
-        // );
-
-        // // Test 5: SLL.S
-        // set_tv(
-        //     .tv_instr0(48'h000001008409), // SLL.S{'opcode': 9, 'rs1': 1, 'rs2': 2, 'rd': 8} (exp value: 16)
-        //     .tv_instr1(48'h2f), // NOP 
-        //     .tv_instr2(48'h2f), // NOP
-        //     .tv_instr3(48'h2f), // NOP
-        //     .idx(5)
-        // );
-
-        // // Test 6: SRL.S
-        // set_tv(
-        //     .tv_instr0(48'h00000081048a), // SRL.S{'opcode': 10, 'rs1': 2, 'rs2': 1, 'rd': 9} (exp value: 2)
-        //     .tv_instr1(48'h2f), // NOP
-        //     .tv_instr2(48'h2f), // NOP
-        //     .tv_instr3(48'h2f), // NOP
-        //     .idx(6)
-        // );
-
-        // // Test 7: SRA.S
-        // set_tv(
-        //     .tv_instr0(48'h00000081050b), // SRA.S {'opcode': 11, 'rs1': 2, 'rs2': 1, 'rd': 10} (exp value: 2)
-        //     .tv_instr1(48'h2f), // NOP
-        //     .tv_instr2(48'h2f), // NOP
-        //     .tv_instr3(48'h2f), // NOP
-        //     .idx(7)
-        // );
-
-        // // Test 8: SLT.S
-        // set_tv(
-        //     .tv_instr0(48'h00000100858c), // SLT.S {'opcode': 12, 'rs1': 1, 'rs2': 2, 'rd': 11} (exp value: 1)
-        //     .tv_instr1(48'h2f), // NOP
-        //     .tv_instr2(48'h2f), // NOP
-        //     .tv_instr3(48'h2f), // NOP
-        //     .idx(8)
-        // );
-
-        // // Test 9: SLTU.S
-        // set_tv(
-        //     .tv_instr0(48'h00000100860d), // SLTU.S {'opcode': 13, 'rs1': 1, 'rs2': 2, 'rd': 12} (exp value: 1)
-        //     .tv_instr1(48'h2f), // NOP
-        //     .tv_instr2(48'h2f), // NOP
-        //     .tv_instr3(48'h2f), // NOP
-        //     .idx(9)
-        // );
-
-        // // Test 9: SLTU.S
-        // set_tv(
-        //     .tv_instr0(48'h00000081060d), // SLTU.S {'opcode': 13, 'rs1': 2, 'rs2': 1, 'rd': 12} (exp value: 1)
-        //     .tv_instr1(48'h2f), // NOP
-        //     .tv_instr2(48'h2f), // NOP
-        //     .tv_instr3(48'h2f), // NOP
-        //     .idx(9)
-        // );
-
-
-
-
-        // //use this as my bf16's
-        // set_tv(
-        //     .tv_instr0(48'h0007a0000696), // ADDI {'opcode': 0b0010110, 'rs1': 0, 'rd': 13, 'imm12': 16192} #imm is 0x3F40, which in bf16 is 0.75
-        //     .tv_instr1(48'h2f), // NOP
-        //     .tv_instr2(48'h2f), // NOP
-        //     .tv_instr3(48'h2f), // NOP
-        //     .idx(10)
-        // );
-
-        // set_tv(
-        //     .tv_instr0(48'h000740000716), // ADDI {'opcode': 0b0010110, 'rs1': 0, 'rd': 14, 'imm12': 16000} #imm is 0x3E80, which in bf16 is 0.25
-        //     .tv_instr1(48'h2f), // NOP
-        //     .tv_instr2(48'h2f), // NOP
-        //     .tv_instr3(48'h2f), // NOP
-        //     .idx(11)
-        // );
-
-
-        // //Test 10: ADD.BF
-        // set_tv(
-        //     .tv_instr0(48'h00000706878e), //ADD_BF {'opcode': 0b0001110, 'rs1': 13, 'rs2': 14, 'rd': 15}
-        //     .tv_instr1(48'h2f), // NOP
-        //     .tv_instr2(48'h2f), // NOP
-        //     .tv_instr3(48'h2f), // NOP
-        //     .idx(12)
-        // );
-
-        // //Test 11: SUB.BF
-        // set_tv(
-        //     .tv_instr0(48'h00000706880f), // {'opcode': 0b0001111, 'rs1': 13, 'rs2': 14, 'rd': 16} #sub
-        //     .tv_instr1(48'h2f), // NOP
-        //     .tv_instr2(48'h2f), // NOP
-        //     .tv_instr3(48'h2f), // NOP
-        //     .idx(13)
-        // );
-
-        // //Test 12: MUL.BF
-        // set_tv(
-        //     .tv_instr0(48'h000007068890), // {'opcode': 0b0010000, 'rs1': 13, 'rs2': 14, 'rd': 17} #mul
-        //     .tv_instr1(48'h2f), // NOP
-        //     .tv_instr2(48'h2f), // NOP
-        //     .tv_instr3(48'h2f), // NOP
-        //     .idx(14)
-        // );
-
-        // //Test 13: DIV.BF
-        // set_tv(
-        //     .tv_instr0(48'h000007068911), // {'opcode': 0b0010001, 'rs1': 13, 'rs2': 14, 'rd': 18} #div
-        //     .tv_instr1(48'h2f), // NOP
-        //     .tv_instr2(48'h2f), // NOP
-        //     .tv_instr3(48'h2f), // NOP
-        //     .idx(15)
-        // );
-
-
-        // //Test 14: SLT.BF
-        // set_tv(
-        //     .tv_instr0(48'h000006870992), // {'opcode': 0b0010010, 'rs1': 14, 'rs2': 13, 'rd': 19} #slt
-        //     .tv_instr1(48'h2f), // NOP
-        //     .tv_instr2(48'h2f), // NOP
-        //     .tv_instr3(48'h2f), // NOP
-        //     .idx(16)
-        // );
-
-        // //Test 15: MUL_S
-        // set_tv(
-        //     .tv_instr0(48'h000001008a03), // {'opcode': 3, 'rs1': 1, 'rs2': 2, 'rd': 20} #mul
-        //     .tv_instr1(48'h2f), // NOP
-        //     .tv_instr2(48'h2f), // NOP
-        //     .tv_instr3(48'h2f), // NOP
-        //     .idx(17)
-        // );
-
-        // //Test 16: DIV_S
-        // set_tv(
-        //     .tv_instr0(48'h000000810a84), // {'opcode': 4, 'rs1': 2, 'rs2': 1, 'rd': 21} #div
-        //     .tv_instr1(48'h2f), // NOP
-        //     .tv_instr2(48'h2f), // NOP
-        //     .tv_instr3(48'h2f), // NOP
-        //     .idx(18)
-        // );
-
-        // repeat(70) @(negedge CLK);
-
-        // //Test 17: MOD_S
-        // set_tv(
-        //     .tv_instr0(48'h000001008b05), // {'opcode': 5, 'rs1': 1, 'rs2': 2, 'rd': 22} #mod
-        //     .tv_instr1(48'h2f), // NOP
-        //     .tv_instr2(48'h2f), // NOP
-        //     .tv_instr3(48'h2f), // NOP
-        //     .idx(19)
-        // );
-
-        // repeat(70) @(negedge CLK);
-
-        // //conversion tests
-
-        // set_tv(
-        //     .tv_instr0(48'h000005000096), // ADD.I {'opcode': 22, 'rs1': 0, 'rd': 1, 'imm12': 10}
-        //     .tv_instr1(48'h2f), // NOP
-        //     .tv_instr2(48'h2f), // NOP
-        //     .tv_instr3(48'h2f), // NOP
-        //     .idx(20)
-        // );
-
-        // set_tv(
-        //     .tv_instr0(48'h000000008114), // STBF {'opcode': 20, 'rs1': 1, 'rd': 2, 'rs2': 0}
-        //     .tv_instr1(48'h2f), // NOP
-        //     .tv_instr2(48'h2f), // NOP
-        //     .tv_instr3(48'h2f), // NOP
-        //     .idx(21)
-        // );
-
-        // set_tv(
-        //     .tv_instr0(48'h000000010195), // BFTS {'opcode': 21, 'rs1': 2, 'rd': 3, 'rs2': 0}
-        //     .tv_instr1(48'h2f), // NOP
-        //     .tv_instr2(48'h2f), // NOP
-        //     .tv_instr3(48'h2f), // NOP
-        //     .idx(22)
-        // );
-
-
-        // //Test 17: BEQ.S
-        // set_tv(
-        //     .tv_instr0(48'h0018010082a3),  // {'opcode': 0b0100011, 'rs1': 1, 'rs2': 2, 'rd': 5, 'imm9': 48, 'incr_imm': 5} #beq
-        //     .tv_instr1(48'h2f), // NOP
-        //     .tv_instr2(48'h2f), // NOP
-        //     .tv_instr3(48'h2f), // NOP
-        //     .idx(23)
-        // );
-
-        // //Test 18: BNE.S
-        // set_tv(
-        //     .tv_instr0(48'h0018010082a4),  // {'opcode': 0b0100100, 'rs1': 1, 'rs2': 2, 'rd': 5, 'imm9': 48, 'incr_imm': 5} #bne
-        //     .tv_instr1(48'h2f), // NOP
-        //     .tv_instr2(48'h2f), // NOP
-        //     .tv_instr3(48'h2f), // NOP
-        //     .idx(23)
-        // );
-
-        // //Test 19: BLT.S
-        // set_tv(
-        //     .tv_instr0(48'h0018010082a5),  // {'opcode': 0b0100101, 'rs1': 1, 'rs2': 2, 'rd': 5, 'imm9': 48, 'incr_imm': 5} #blt
-        //     .tv_instr1(48'h2f), // NOP
-        //     .tv_instr2(48'h2f), // NOP
-        //     .tv_instr3(48'h2f), // NOP
-        //     .idx(23)
-        // );
-
-        // // Test 20: BGE.S
-        // set_tv(
-        //     .tv_instr0(48'h0018010082a6),  // 
-        //     .tv_instr1(48'h2f), // NOP
-        //     .tv_instr2(48'h2f), // NOP
-        //     .tv_instr3(48'h2f), // NOP
-        //     .idx(23)
-        // );
-
-        // // Test 21: BGT.S
-        // set_tv(
-        //     .tv_instr0(48'h0018010082a7),  // 
-        //     .tv_instr1(48'h2f), // NOP
-        //     .tv_instr2(48'h2f), // NOP
-        //     .tv_instr3(48'h2f), // NOP
-        //     .idx(23)
-        // );
-
-        // // Test 22: BLE.S
-        // set_tv(
-        //     .tv_instr0(48'h0018010082a8),  // 
-        //     .tv_instr1(48'h2f), // NOP
-        //     .tv_instr2(48'h2f), // NOP
-        //     .tv_instr3(48'h2f), // NOP
-        //     .idx(23)
-        // );
-
-        // set_tv(
-        //     .tv_instr0(48'h000000000030),  // halt
-        //     .tv_instr1(48'h2f), // NOP
-        //     .tv_instr2(48'h2f), // NOP
-        //     .tv_instr3(48'h2f), // NOP
-        //     .idx(23)
-        // );
-
-        // set_tv(
-        //     .tv_instr0(48'h000000640bab),  // jal {'opcode': 0b0101011, 'rd': 23, 'imm25': 200} #jal
-        //     .tv_instr1(48'h2f), // NOP
-        //     .tv_instr2(48'h2f), // NOP
-        //     .tv_instr3(48'h2f), // NOP
-        //     .idx(23)
-        // );
-
-        // set_tv(
-        //     .tv_instr0(48'h00000b808c2c),  // jalr {'opcode': 0b0101100, 'rd': 24, 'rs1': 1, 'imm12': 23} #jalr
-        //     .tv_instr1(48'h2f), // NOP
-        //     .tv_instr2(48'h2f), // NOP
-        //     .tv_instr3(48'h2f), // NOP
-        //     .idx(23)
-        // );
-
-        // set_tv(
-        //     .tv_instr0(48'h000000008cae),  // lui {'opcode': 0b0101110, 'rd': 25, 'imm25': 1} #lui
-        //     .tv_instr1(48'h2f), // NOP
-        //     .tv_instr2(48'h2f), // NOP
-        //     .tv_instr3(48'h2f), // NOP
-        //     .idx(23)
-        // );
-
-        // set_tv(
-        //     .tv_instr0(48'h000032008d17),  // addi {'opcode': 0b0010111, 'rs1': 1, 'imm12': 100, 'rd': 26} #addi
-        //     .tv_instr1(48'h2f), // NOP
-        //     .tv_instr2(48'h2f), // NOP
-        //     .tv_instr3(48'h2f), // NOP
-        //     .idx(23)
-        // );
-
-        // set_tv(
-        //     .tv_instr0(48'h000032008d18),  // {'opcode': 0b0011000, 'rs1': 1, 'imm12': 100, 'rd': 26} #muli
-        //     .tv_instr1(48'h2f), // NOP
-        //     .tv_instr2(48'h2f), // NOP
-        //     .tv_instr3(48'h2f), // NOP
-        //     .idx(23)
-        // );
-
-        // set_tv(
-        //     .tv_instr0(48'h000032008d1a),  // {'opcode': 0b0011010, 'rs1': 1, 'imm12': 100, 'rd': 26} #modi
-        //     .tv_instr1(48'h2f), // NOP
-        //     .tv_instr2(48'h2f), // NOP
-        //     .tv_instr3(48'h2f), // NOP
-        //     .idx(23)
-        // );
-
-
-        // // LW SW TESTS
-        // set_tv(
-        //     .tv_instr0(48'h000000008129),  // LW {'opcode': 41, 'rs1': 1, 'rd': 2, 'imm12': 0}
-        //     .tv_instr1(48'h2f), // NOP
-        //     .tv_instr2(48'h2f), // NOP
-        //     .tv_instr3(48'h2f), // NOP
-        //     .idx(23)
-        // );
-
-        // data_load = 32'hDEADBEEF;
-        // repeat(10) @(negedge CLK);
-        // dhit = 1;
-        // @(negedge CLK);
-        // dhit = 0;
-
-        // set_tv(
-        //     .tv_instr0(48'h0000000081aa), // SW {'opcode': 42, 'rs1': 1, 'rd': 3, 'imm12': 0}
-        //     .tv_instr1(48'h2f), // NOP
-        //     .tv_instr2(48'h2f), // NOP
-        //     .tv_instr3(48'h2f), // NOP
-        //     .idx(23)
-        // );
-
-        // repeat(4) @(negedge CLK);
-        // dhit = 1;
-        // @(negedge CLK);
-        // dhit = 0;
-
-        // // LHW SHW TESTS
-        // set_tv(
-        //     .tv_instr0(48'h00000000825a),  // LHW {'opcode': 90, 'rs1': 1, 'rd': 4, 'imm12': 0}
-        //     .tv_instr1(48'h2f), // NOP
-        //     .tv_instr2(48'h2f), // NOP
-//             .tv_instr3(48'h2f), // NOP
-//             .idx(23)
-//         );
-
-//         data_load = 32'hDEADBEEF;
-//         repeat(10) @(negedge CLK);
-//         dhit = 1;
-//         @(negedge CLK);
-//         dhit = 0;
-
-//         set_tv(
-//             .tv_instr0(48'h0000000082db), // SHW {'opcode': 91, 'rs1': 1, 'rd': 5, 'imm12': 0}
-//             .tv_instr1(48'h2f), // NOP
-//             .tv_instr2(48'h2f), // NOP
-//             .tv_instr3(48'h2f), // NOP
-//             .idx(23)
-//         );
-
-//         repeat(4) @(negedge CLK);
-//         dhit = 1;
-//         @(negedge CLK);
-//         dhit = 0;
-
-
-
-
-
-//         //josh conflict stuff
-
-//         @(negedge CLK);
-//         ihit = 1'b1;
-//         imemload.inst0 = 48'h000000800096;  // ADD_I {'opcode': 0b0010110, 'rs1': 0, 'rd': 1, 'imm12': 1}
-//         imemload.inst1 = 48'h2f; //NOP
-//         imemload.inst2 = 48'h2f; //NOP
-//         imemload.inst3 = 48'h2f; //NOP
-//         @(negedge CLK);
-//         ihit = 1'b0;
-
-//         repeat(8) @(posedge CLK);
-
-//         @(negedge CLK);
-//         ihit = 1'b1;
-//         imemload.inst0 = 48'h000002000116; // ADD_I {'opcode': 0b0010110, 'rs1': 0, 'rd': 2, 'imm12': 4}
-//         imemload.inst1 = 48'h2f; //NOP
-//         imemload.inst2 = 48'h2f; //NOP
-//         imemload.inst3 = 48'h2f; //NOP
-//         @(negedge CLK);
-//         ihit = 1'b0;
-
-//         repeat(8) @(posedge CLK);
-
-
-//         @(negedge CLK);
-//         ihit = 1'b1;
-//         imemload.inst0 = 48'h000000810204; // DIV_S {'opcode': 4, 'rs1': 2, 'rs2': 1, 'rd': 4} 
-//         imemload.inst1 = 48'h2f; //NOP
-//         imemload.inst2 = 48'h2f; //NOP
-//         imemload.inst3 = 48'h2f; //NOP
-
-
-
-//         @(negedge CLK);
-//         ihit = 1'b1;
-//         imemload.inst0 = 48'h000000810184; // DIV_S {'opcode': 4, 'rs1': 2, 'rs2': 1, 'rd': 3} 
-//         imemload.inst1 = 48'h000000810683; //MUL_S {'opcode': 0b0000011, 'rs1': 2, 'rs2': 1, 'rd': 13} #mul
-//         imemload.inst2 = 48'h2f; //NOP
-//         imemload.inst3 = 48'h2f; //NOP
-//         @(negedge CLK);
-//         ihit = 1'b0;
-
-//         repeat(70) @(posedge CLK);
-
-//         @(negedge CLK);
-//         ihit = 1'b1;
-//         imemload.inst0 = 48'h000000800096;  // ADD_I {'opcode': 0b0010110, 'rs1': 0, 'rd': 1, 'imm12': 1}
-//         imemload.inst1 = 48'h2f; //NOP
-//         imemload.inst2 = 48'h2f; //NOP
-//         imemload.inst3 = 48'h2f; //NOP
-//         @(negedge CLK);
-//         ihit = 1'b0;
-
-//         repeat(8) @(posedge CLK);
-
-//         @(negedge CLK);
-//         ihit = 1'b1;
-//         imemload.inst0 = 48'h000002000116; // ADD_I {'opcode': 0b0010110, 'rs1': 0, 'rd': 2, 'imm12': 4}
-//         imemload.inst1 = 48'h2f; //NOP
-//         imemload.inst2 = 48'h2f; //NOP
-//         imemload.inst3 = 48'h2f; //NOP
-
-//         repeat(8) @(posedge CLK);
-
-
-//         @(negedge CLK);
-//         ihit = 1'b1;
-//         imemload.inst0 = 48'h000001010119; // DIV_I {'opcode': 0b0011001, 'rs1': 2, 'rd': 2, 'imm12': 2}
-//         imemload.inst1 = 48'h2f; //NOP
-//         imemload.inst2 = 48'h2f; //NOP
-//         imemload.inst3 = 48'h2f; //NOP
-
-//         repeat(8) @(posedge CLK);
-
-
-
-//         @(negedge CLK);
-//         ihit = 1'b1;
-//         imemload.inst0 = 48'h000001008181; // ADD_S rd=3 (exp value: 6), rs1=1, rs2=2
-//         imemload.inst1 = 48'h000001008683; //MUL_S {'opcode': 0b0000011, 'rs1': 1, 'rs2': 2, 'rd': 13} #mul
-//         imemload.inst2 = 48'h2f; //NOP
-//         imemload.inst3 = 48'h2f; //NOP
-//         @(negedge CLK);
-//         ihit = 1'b0;
-
-//         repeat(80) @(posedge CLK);
-
-//         @(negedge CLK);
-//         ihit = 1'b1;
-//         imemload.inst0 = 48'h00003c000096;
-//         imemload.inst1 = 48'h2f; //NOP
-//         imemload.inst2 = 48'h2f; //NOP
-//         imemload.inst3 = 48'h2f; //NOP
-//         @(negedge CLK);
-//         ihit = 1'b0;
-
-//         repeat(8) @(posedge CLK);
-
-//         @(negedge CLK);
-//         ihit = 1'b1;
-//         imemload.inst0 = 48'h00003c008196;
-//         imemload.inst1 = 48'h000005008119; //NOP
-//         imemload.inst2 = 48'h000001008218; //NOP
-//         imemload.inst3 = 48'h2f; //NOP
-
-//         @(negedge CLK);
-//         ihit = 1'b1;
-//         imemload.inst0 = 48'h000022800296;
-//         imemload.inst1 = 48'h2f; //NOP
-//         imemload.inst2 = 48'h2f; //NOP
-//         imemload.inst3 = 48'h2f; //NOP
-//         @(negedge CLK);
-//         ihit = 1'b0;
-
-//         repeat(80) @(posedge CLK);
-
-//         @(negedge CLK);
-//         ihit = 1'b1;
-//         imemload.inst0 = 48'h00003c000096;
-//         imemload.inst1 = 48'h2f; //NOP
-//         imemload.inst2 = 48'h2f; //NOP
-//         imemload.inst3 = 48'h2f; //NOP
-//         @(negedge CLK);
-//         ihit = 1'b0;
-
-//         repeat(8) @(posedge CLK);
-
-//         @(negedge CLK);
-//         ihit = 1'b1;
-//         imemload.inst0 = 48'h000007800116;
-//         imemload.inst1 = 48'h2f; //NOP
-//         imemload.inst2 = 48'h2f; //NOP
-//         imemload.inst3 = 48'h2f; //NOP
-//         @(negedge CLK);
-//         ihit = 1'b0;
-
-//         repeat(8) @(posedge CLK);
-
-//         @(negedge CLK);
-//         ihit = 1'b1;
-//         imemload.inst0 = 48'h000000810183;
-//         imemload.inst1 = 48'h2f; //NOP
-//         imemload.inst2 = 48'h2f; //NOP
-//         imemload.inst3 = 48'h2f; //NOP
-//         @(negedge CLK);
-//         ihit = 1'b0;
-
-//         repeat(8) @(posedge CLK);
-
-
-
-
+        // Test 1: SUB_S, 
+        set_tv(
+            .tv_instr0(48'h2f), // NOP
+            .tv_instr1(48'h000000810202), // SUB_S rd=4 (exp value: 3), rs1=2, rs2=1
+            .tv_instr2(48'h2f), // NOP
+            .tv_instr3(48'h2f), // NOP
+            .idx(1)
+        );
+
+        // Test 2: OR.S
+        set_tv(
+            .tv_instr0(48'h000001008286), // OR.S {'opcode': 6, 'rs1': 1, 'rs2': 2, 'rd': 5}, (exp value: 5)
+            .tv_instr1(48'h2f), // NOP
+            .tv_instr2(48'h2f), // NOP
+            .tv_instr3(48'h2f), // NOP
+            .idx(2)
+        );
+
+        // Test 3: AND.S
+        set_tv(
+            .tv_instr0(48'h000002808307), // AND.S {'opcode': 0b0000111, 'rs1': 1, 'rs2': 5, 'rd': 6} (exp value: 1)
+            .tv_instr1(48'h2f), // NOP
+            .tv_instr2(48'h2f), // NOP
+            .tv_instr3(48'h2f), // NOP
+            .idx(3)
+        );
+
+        // Test 4: XOR.S
+        set_tv(
+            .tv_instr0(48'h000001008388), // XOR.S {'opcode': 8, 'rs1': 1, 'rs2': 2, 'rd': 7} (exp value: 5)
+            .tv_instr1(48'h2f), // NOP
+            .tv_instr2(48'h2f), // NOP
+            .tv_instr3(48'h2f), // NOP
+            .idx(4)
+        );
+
+        // Test 5: SLL.S
+        set_tv(
+            .tv_instr0(48'h000001008409), // SLL.S{'opcode': 9, 'rs1': 1, 'rs2': 2, 'rd': 8} (exp value: 16)
+            .tv_instr1(48'h2f), // NOP 
+            .tv_instr2(48'h2f), // NOP
+            .tv_instr3(48'h2f), // NOP
+            .idx(5)
+        );
+
+        // Test 6: SRL.S
+        set_tv(
+            .tv_instr0(48'h00000081048a), // SRL.S{'opcode': 10, 'rs1': 2, 'rs2': 1, 'rd': 9} (exp value: 2)
+            .tv_instr1(48'h2f), // NOP
+            .tv_instr2(48'h2f), // NOP
+            .tv_instr3(48'h2f), // NOP
+            .idx(6)
+        );
+
+        // Test 7: SRA.S
+        set_tv(
+            .tv_instr0(48'h00000081050b), // SRA.S {'opcode': 11, 'rs1': 2, 'rs2': 1, 'rd': 10} (exp value: 2)
+            .tv_instr1(48'h2f), // NOP
+            .tv_instr2(48'h2f), // NOP
+            .tv_instr3(48'h2f), // NOP
+            .idx(7)
+        );
+
+        // Test 8: SLT.S
+        set_tv(
+            .tv_instr0(48'h00000100858c), // SLT.S {'opcode': 12, 'rs1': 1, 'rs2': 2, 'rd': 11} (exp value: 1)
+            .tv_instr1(48'h2f), // NOP
+            .tv_instr2(48'h2f), // NOP
+            .tv_instr3(48'h2f), // NOP
+            .idx(8)
+        );
+
+        // Test 9: SLTU.S
+        set_tv(
+            .tv_instr0(48'h00000100860d), // SLTU.S {'opcode': 13, 'rs1': 1, 'rs2': 2, 'rd': 12} (exp value: 1)
+            .tv_instr1(48'h2f), // NOP
+            .tv_instr2(48'h2f), // NOP
+            .tv_instr3(48'h2f), // NOP
+            .idx(9)
+        );
+
+        // Test 9: SLTU.S
+        set_tv(
+            .tv_instr0(48'h00000081060d), // SLTU.S {'opcode': 13, 'rs1': 2, 'rs2': 1, 'rd': 12} (exp value: 1)
+            .tv_instr1(48'h2f), // NOP
+            .tv_instr2(48'h2f), // NOP
+            .tv_instr3(48'h2f), // NOP
+            .idx(9)
+        );
+
+
+
+
+        //use this as my bf16's
+        set_tv(
+            .tv_instr0(48'h0007a0000696), // ADDI {'opcode': 0b0010110, 'rs1': 0, 'rd': 13, 'imm12': 16192} #imm is 0x3F40, which in bf16 is 0.75
+            .tv_instr1(48'h2f), // NOP
+            .tv_instr2(48'h2f), // NOP
+            .tv_instr3(48'h2f), // NOP
+            .idx(10)
+        );
+
+        set_tv(
+            .tv_instr0(48'h000740000716), // ADDI {'opcode': 0b0010110, 'rs1': 0, 'rd': 14, 'imm12': 16000} #imm is 0x3E80, which in bf16 is 0.25
+            .tv_instr1(48'h2f), // NOP
+            .tv_instr2(48'h2f), // NOP
+            .tv_instr3(48'h2f), // NOP
+            .idx(11)
+        );
+
+
+        //Test 10: ADD.BF
+        set_tv(
+            .tv_instr0(48'h00000706878e), //ADD_BF {'opcode': 0b0001110, 'rs1': 13, 'rs2': 14, 'rd': 15}
+            .tv_instr1(48'h2f), // NOP
+            .tv_instr2(48'h2f), // NOP
+            .tv_instr3(48'h2f), // NOP
+            .idx(12)
+        );
+
+        //Test 11: SUB.BF
+        set_tv(
+            .tv_instr0(48'h00000706880f), // {'opcode': 0b0001111, 'rs1': 13, 'rs2': 14, 'rd': 16} #sub
+            .tv_instr1(48'h2f), // NOP
+            .tv_instr2(48'h2f), // NOP
+            .tv_instr3(48'h2f), // NOP
+            .idx(13)
+        );
+
+        //Test 12: MUL.BF
+        set_tv(
+            .tv_instr0(48'h000007068890), // {'opcode': 0b0010000, 'rs1': 13, 'rs2': 14, 'rd': 17} #mul
+            .tv_instr1(48'h2f), // NOP
+            .tv_instr2(48'h2f), // NOP
+            .tv_instr3(48'h2f), // NOP
+            .idx(14)
+        );
+
+        //Test 13: DIV.BF
+        set_tv(
+            .tv_instr0(48'h000007068911), // {'opcode': 0b0010001, 'rs1': 13, 'rs2': 14, 'rd': 18} #div
+            .tv_instr1(48'h2f), // NOP
+            .tv_instr2(48'h2f), // NOP
+            .tv_instr3(48'h2f), // NOP
+            .idx(15)
+        );
+
+
+        //Test 14: SLT.BF
+        set_tv(
+            .tv_instr0(48'h000006870992), // {'opcode': 0b0010010, 'rs1': 14, 'rs2': 13, 'rd': 19} #slt
+            .tv_instr1(48'h2f), // NOP
+            .tv_instr2(48'h2f), // NOP
+            .tv_instr3(48'h2f), // NOP
+            .idx(16)
+        );
+
+        //Test 15: MUL_S
+        set_tv(
+            .tv_instr0(48'h000001008a03), // {'opcode': 3, 'rs1': 1, 'rs2': 2, 'rd': 20} #mul
+            .tv_instr1(48'h2f), // NOP
+            .tv_instr2(48'h2f), // NOP
+            .tv_instr3(48'h2f), // NOP
+            .idx(17)
+        );
+
+        //Test 16: DIV_S
+        set_tv(
+            .tv_instr0(48'h000000810a84), // {'opcode': 4, 'rs1': 2, 'rs2': 1, 'rd': 21} #div
+            .tv_instr1(48'h2f), // NOP
+            .tv_instr2(48'h2f), // NOP
+            .tv_instr3(48'h2f), // NOP
+            .idx(18)
+        );
+
+        repeat(70) @(negedge CLK);
+
+        //Test 17: MOD_S
+        set_tv(
+            .tv_instr0(48'h000001008b05), // {'opcode': 5, 'rs1': 1, 'rs2': 2, 'rd': 22} #mod
+            .tv_instr1(48'h2f), // NOP
+            .tv_instr2(48'h2f), // NOP
+            .tv_instr3(48'h2f), // NOP
+            .idx(19)
+        );
+
+        repeat(70) @(negedge CLK);
+
+        //conversion tests
+
+        set_tv(
+            .tv_instr0(48'h000005000096), // ADD.I {'opcode': 22, 'rs1': 0, 'rd': 1, 'imm12': 10}
+            .tv_instr1(48'h2f), // NOP
+            .tv_instr2(48'h2f), // NOP
+            .tv_instr3(48'h2f), // NOP
+            .idx(20)
+        );
+
+        set_tv(
+            .tv_instr0(48'h000000008114), // STBF {'opcode': 20, 'rs1': 1, 'rd': 2, 'rs2': 0}
+            .tv_instr1(48'h2f), // NOP
+            .tv_instr2(48'h2f), // NOP
+            .tv_instr3(48'h2f), // NOP
+            .idx(21)
+        );
+
+        set_tv(
+            .tv_instr0(48'h000000010195), // BFTS {'opcode': 21, 'rs1': 2, 'rd': 3, 'rs2': 0}
+            .tv_instr1(48'h2f), // NOP
+            .tv_instr2(48'h2f), // NOP
+            .tv_instr3(48'h2f), // NOP
+            .idx(22)
+        );
+
+
+        //Test 17: BEQ.S
+        set_tv(
+            .tv_instr0(48'h0018010082a3),  // {'opcode': 0b0100011, 'rs1': 1, 'rs2': 2, 'rd': 5, 'imm9': 48, 'incr_imm': 5} #beq
+            .tv_instr1(48'h2f), // NOP
+            .tv_instr2(48'h2f), // NOP
+            .tv_instr3(48'h2f), // NOP
+            .idx(23)
+        );
+
+        //Test 18: BNE.S
+        set_tv(
+            .tv_instr0(48'h0018010082a4),  // {'opcode': 0b0100100, 'rs1': 1, 'rs2': 2, 'rd': 5, 'imm9': 48, 'incr_imm': 5} #bne
+            .tv_instr1(48'h2f), // NOP
+            .tv_instr2(48'h2f), // NOP
+            .tv_instr3(48'h2f), // NOP
+            .idx(23)
+        );
+
+        //Test 19: BLT.S
+        set_tv(
+            .tv_instr0(48'h0018010082a5),  // {'opcode': 0b0100101, 'rs1': 1, 'rs2': 2, 'rd': 5, 'imm9': 48, 'incr_imm': 5} #blt
+            .tv_instr1(48'h2f), // NOP
+            .tv_instr2(48'h2f), // NOP
+            .tv_instr3(48'h2f), // NOP
+            .idx(23)
+        );
+
+        // Test 20: BGE.S
+        set_tv(
+            .tv_instr0(48'h0018010082a6),  // 
+            .tv_instr1(48'h2f), // NOP
+            .tv_instr2(48'h2f), // NOP
+            .tv_instr3(48'h2f), // NOP
+            .idx(23)
+        );
+
+        // Test 21: BGT.S
+        set_tv(
+            .tv_instr0(48'h0018010082a7),  // 
+            .tv_instr1(48'h2f), // NOP
+            .tv_instr2(48'h2f), // NOP
+            .tv_instr3(48'h2f), // NOP
+            .idx(23)
+        );
+
+        // Test 22: BLE.S
+        set_tv(
+            .tv_instr0(48'h0018010082a8),  // 
+            .tv_instr1(48'h2f), // NOP
+            .tv_instr2(48'h2f), // NOP
+            .tv_instr3(48'h2f), // NOP
+            .idx(23)
+        );
+
+        set_tv(
+            .tv_instr0(48'h000000640bab),  // jal {'opcode': 0b0101011, 'rd': 23, 'imm25': 200} #jal
+            .tv_instr1(48'h2f), // NOP
+            .tv_instr2(48'h2f), // NOP
+            .tv_instr3(48'h2f), // NOP
+            .idx(23)
+        );
+
+        set_tv(
+            .tv_instr0(48'h00000b808c2c),  // jalr {'opcode': 0b0101100, 'rd': 24, 'rs1': 1, 'imm12': 23} #jalr
+            .tv_instr1(48'h2f), // NOP
+            .tv_instr2(48'h2f), // NOP
+            .tv_instr3(48'h2f), // NOP
+            .idx(23)
+        );
+
+        set_tv(
+            .tv_instr0(48'h000000008cae),  // lui {'opcode': 0b0101110, 'rd': 25, 'imm25': 1} #lui
+            .tv_instr1(48'h2f), // NOP
+            .tv_instr2(48'h2f), // NOP
+            .tv_instr3(48'h2f), // NOP
+            .idx(23)
+        );
+
+        set_tv(
+            .tv_instr0(48'h000032008d17),  // addi {'opcode': 0b0010111, 'rs1': 1, 'imm12': 100, 'rd': 26} #addi
+            .tv_instr1(48'h2f), // NOP
+            .tv_instr2(48'h2f), // NOP
+            .tv_instr3(48'h2f), // NOP
+            .idx(23)
+        );
+
+        set_tv(
+            .tv_instr0(48'h000032008d18),  // {'opcode': 0b0011000, 'rs1': 1, 'imm12': 100, 'rd': 26} #muli
+            .tv_instr1(48'h2f), // NOP
+            .tv_instr2(48'h2f), // NOP
+            .tv_instr3(48'h2f), // NOP
+            .idx(23)
+        );
+
+        set_tv(
+            .tv_instr0(48'h000032008d1a),  // {'opcode': 0b0011010, 'rs1': 1, 'imm12': 100, 'rd': 26} #modi
+            .tv_instr1(48'h2f), // NOP
+            .tv_instr2(48'h2f), // NOP
+            .tv_instr3(48'h2f), // NOP
+            .idx(23)
+        );
+
+
+        // LW SW TESTS
+        set_tv(
+            .tv_instr0(48'h000000008129),  // LW {'opcode': 41, 'rs1': 1, 'rd': 2, 'imm12': 0}
+            .tv_instr1(48'h2f), // NOP
+            .tv_instr2(48'h2f), // NOP
+            .tv_instr3(48'h2f), // NOP
+            .idx(23)
+        );
+
+        data_load = 32'hDEADBEEF;
+        repeat(10) @(negedge CLK);
+        dhit = 1;
+        @(negedge CLK);
+        dhit = 0;
+
+        set_tv(
+            .tv_instr0(48'h0000000081aa), // SW {'opcode': 42, 'rs1': 1, 'rd': 3, 'imm12': 0}
+            .tv_instr1(48'h2f), // NOP
+            .tv_instr2(48'h2f), // NOP
+            .tv_instr3(48'h2f), // NOP
+            .idx(23)
+        );
+
+        repeat(4) @(negedge CLK);
+        dhit = 1;
+        @(negedge CLK);
+        dhit = 0;
+
+        // LHW SHW TESTS
+        set_tv(
+            .tv_instr0(48'h00000000825a),  // LHW {'opcode': 90, 'rs1': 1, 'rd': 4, 'imm12': 0}
+            .tv_instr1(48'h2f), // NOP
+            .tv_instr2(48'h2f), // NOP
+            .tv_instr3(48'h2f), // NOP
+            .idx(23)
+        );
+
+        data_load = 32'hDEADBEEF;
+        repeat(10) @(negedge CLK);
+        dhit = 1;
+        @(negedge CLK);
+        dhit = 0;
+
+        set_tv(
+            .tv_instr0(48'h0000000082db), // SHW {'opcode': 91, 'rs1': 1, 'rd': 5, 'imm12': 0}
+            .tv_instr1(48'h2f), // NOP
+            .tv_instr2(48'h2f), // NOP
+            .tv_instr3(48'h2f), // NOP
+            .idx(23)
+        );
+
+        repeat(4) @(negedge CLK);
+        dhit = 1;
+        @(negedge CLK);
+        dhit = 0;
+
+
+
+
+
+        //josh conflict stuff
+
+        @(negedge CLK);
+        ihit = 1'b1;
+        imemload.inst0 = 48'h000000800096;  // ADD_I {'opcode': 0b0010110, 'rs1': 0, 'rd': 1, 'imm12': 1}
+        imemload.inst1 = 48'h2f; //NOP
+        imemload.inst2 = 48'h2f; //NOP
+        imemload.inst3 = 48'h2f; //NOP
+        @(negedge CLK);
+        ihit = 1'b0;
+
+        repeat(8) @(posedge CLK);
+
+        @(negedge CLK);
+        ihit = 1'b1;
+        imemload.inst0 = 48'h000002000116; // ADD_I {'opcode': 0b0010110, 'rs1': 0, 'rd': 2, 'imm12': 4}
+        imemload.inst1 = 48'h2f; //NOP
+        imemload.inst2 = 48'h2f; //NOP
+        imemload.inst3 = 48'h2f; //NOP
+        @(negedge CLK);
+        ihit = 1'b0;
+
+        repeat(8) @(posedge CLK);
+
+
+        @(negedge CLK);
+        ihit = 1'b1;
+        imemload.inst0 = 48'h000000810204; // DIV_S {'opcode': 4, 'rs1': 2, 'rs2': 1, 'rd': 4} 
+        imemload.inst1 = 48'h2f; //NOP
+        imemload.inst2 = 48'h2f; //NOP
+        imemload.inst3 = 48'h2f; //NOP
+
+
+
+        @(negedge CLK);
+        ihit = 1'b1;
+        imemload.inst0 = 48'h000000810184; // DIV_S {'opcode': 4, 'rs1': 2, 'rs2': 1, 'rd': 3} 
+        imemload.inst1 = 48'h000000810683; //MUL_S {'opcode': 0b0000011, 'rs1': 2, 'rs2': 1, 'rd': 13} #mul
+        imemload.inst2 = 48'h2f; //NOP
+        imemload.inst3 = 48'h2f; //NOP
+        @(negedge CLK);
+        ihit = 1'b0;
+
+        repeat(70) @(posedge CLK);
+
+        @(negedge CLK);
+        ihit = 1'b1;
+        imemload.inst0 = 48'h000000800096;  // ADD_I {'opcode': 0b0010110, 'rs1': 0, 'rd': 1, 'imm12': 1}
+        imemload.inst1 = 48'h2f; //NOP
+        imemload.inst2 = 48'h2f; //NOP
+        imemload.inst3 = 48'h2f; //NOP
+        @(negedge CLK);
+        ihit = 1'b0;
+
+        repeat(8) @(posedge CLK);
+
+        @(negedge CLK);
+        ihit = 1'b1;
+        imemload.inst0 = 48'h000002000116; // ADD_I {'opcode': 0b0010110, 'rs1': 0, 'rd': 2, 'imm12': 4}
+        imemload.inst1 = 48'h2f; //NOP
+        imemload.inst2 = 48'h2f; //NOP
+        imemload.inst3 = 48'h2f; //NOP
+
+        repeat(8) @(posedge CLK);
+
+
+        @(negedge CLK);
+        ihit = 1'b1;
+        imemload.inst0 = 48'h000001010119; // DIV_I {'opcode': 0b0011001, 'rs1': 2, 'rd': 2, 'imm12': 2}
+        imemload.inst1 = 48'h2f; //NOP
+        imemload.inst2 = 48'h2f; //NOP
+        imemload.inst3 = 48'h2f; //NOP
+
+        repeat(8) @(posedge CLK);
+
+
+
+        @(negedge CLK);
+        ihit = 1'b1;
+        imemload.inst0 = 48'h000001008181; // ADD_S rd=3 (exp value: 6), rs1=1, rs2=2
+        imemload.inst1 = 48'h000001008683; //MUL_S {'opcode': 0b0000011, 'rs1': 1, 'rs2': 2, 'rd': 13} #mul
+        imemload.inst2 = 48'h2f; //NOP
+        imemload.inst3 = 48'h2f; //NOP
+        @(negedge CLK);
+        ihit = 1'b0;
+
+        repeat(80) @(posedge CLK);
+
+        @(negedge CLK);
+        ihit = 1'b1;
+        imemload.inst0 = 48'h00003c000096;
+        imemload.inst1 = 48'h2f; //NOP
+        imemload.inst2 = 48'h2f; //NOP
+        imemload.inst3 = 48'h2f; //NOP
+        @(negedge CLK);
+        ihit = 1'b0;
+
+        repeat(8) @(posedge CLK);
+
+        @(negedge CLK);
+        ihit = 1'b1;
+        imemload.inst0 = 48'h00003c008196;
+        imemload.inst1 = 48'h000005008119; //NOP
+        imemload.inst2 = 48'h000001008218; //NOP
+        imemload.inst3 = 48'h2f; //NOP
+
+        @(negedge CLK);
+        ihit = 1'b1;
+        imemload.inst0 = 48'h000022800296;
+        imemload.inst1 = 48'h2f; //NOP
+        imemload.inst2 = 48'h2f; //NOP
+        imemload.inst3 = 48'h2f; //NOP
+        @(negedge CLK);
+        ihit = 1'b0;
+
+        repeat(80) @(posedge CLK);
+
+        @(negedge CLK);
+        ihit = 1'b1;
+        imemload.inst0 = 48'h00003c000096;
+        imemload.inst1 = 48'h2f; //NOP
+        imemload.inst2 = 48'h2f; //NOP
+        imemload.inst3 = 48'h2f; //NOP
+        @(negedge CLK);
+        ihit = 1'b0;
+
+        repeat(8) @(posedge CLK);
+
+        @(negedge CLK);
+        ihit = 1'b1;
+        imemload.inst0 = 48'h000007800116;
+        imemload.inst1 = 48'h2f; //NOP
+        imemload.inst2 = 48'h2f; //NOP
+        imemload.inst3 = 48'h2f; //NOP
+        @(negedge CLK);
+        ihit = 1'b0;
+
+        repeat(8) @(posedge CLK);
+
+        @(negedge CLK);
+        ihit = 1'b1;
+        imemload.inst0 = 48'h000000810183;
+        imemload.inst1 = 48'h2f; //NOP
+        imemload.inst2 = 48'h2f; //NOP
+        imemload.inst3 = 48'h2f; //NOP
+        @(negedge CLK);
+        ihit = 1'b0;
+
+        repeat(8) @(posedge CLK);
+
+        set_tv(
+            .tv_instr0(48'h000000000030),  // halt
+            .tv_instr1(48'h2f), // NOP
+            .tv_instr2(48'h2f), // NOP
+            .tv_instr3(48'h2f), // NOP
+            .idx(23)
+        );
+
+        repeat(80) @(posedge CLK);
 
 
         $display("DONE");
