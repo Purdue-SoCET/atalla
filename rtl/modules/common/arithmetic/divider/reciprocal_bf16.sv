@@ -55,7 +55,7 @@ module reciprocal_bf16 (
   logic is_subnormal_boundary;
 
   // Pipeline Signals
-  logic [7:0] pipe_en, flush;
+  logic [7:0] pipe_en;
 
   // Edge case flags
   logic op2_is_zero, op2_is_inf, op2_is_nan;
@@ -108,9 +108,9 @@ module reciprocal_bf16 (
   );
   
   // Pipeline Signals
-  assign pipe_en = !rif.in.ready_out && rif.out.valid_out || !nRST ? 8'h00 : 8'hFF;
+  assign pipe_en = !rif.in.ready_in && rif.out.valid_out || !nRST ? 8'h00 : 8'hFF;
   assign flush = !nRST;
-  assign rif.out.ready_in = pipe_en ? nRST:0;
+  assign rif.out.ready_out = pipe_en ? nRST:0;
   assign rif.out.valid_out = expTout.valid;
 
   // Mantissa Normalization
@@ -150,8 +150,7 @@ module reciprocal_bf16 (
 
   always_comb begin
     n_mul1Tfin1 = mul1Tfin1;
-    if(flush[0]) n_mul1Tfin1 = '0;  // For feeding in bubbles on pauses
-    else if(pipe_en[0]) begin
+    if(pipe_en[0]) begin
       n_mul1Tfin1.sign           = sign;
       n_mul1Tfin1.is_special     = is_special;
       n_mul1Tfin1.valid          = rif.in.valid_in;
@@ -167,8 +166,7 @@ module reciprocal_bf16 (
 // *********************************************************************************************
   always_comb begin
     n_fin1Tsub1 = fin1Tsub1;
-    if(flush[1]) n_fin1Tsub1 = '0;
-    else if(pipe_en[1]) begin
+    if(pipe_en[1]) begin
       n_fin1Tsub1.sign           = mul1Tfin1.sign;
       n_fin1Tsub1.is_special     = mul1Tfin1.is_special;
       n_fin1Tsub1.valid          = mul1Tfin1.valid;
@@ -187,8 +185,7 @@ module reciprocal_bf16 (
   assign subd = fin1Tsub1.valid && !fin1Tsub1.is_special ? fin1Tsub1.muld:'0;
   always_comb begin
     n_sub1Tsub2 = sub1Tsub2;
-    if(flush[2]) n_sub1Tsub2 = '0;
-    else if(pipe_en[2]) begin
+    if(pipe_en[2]) begin
       n_sub1Tsub2.sign           = fin1Tsub1.sign;
       n_sub1Tsub2.is_special     = fin1Tsub1.is_special;
       n_sub1Tsub2.valid          = fin1Tsub1.valid;
@@ -204,8 +201,7 @@ module reciprocal_bf16 (
 // *********************************************************************************************
   always_comb begin
     n_sub2Tfin2 = sub2Tfin2;
-    if(flush[3]) n_sub2Tfin2 = '0;
-    else if(pipe_en[3]) begin
+    if(pipe_en[3]) begin
       n_sub2Tfin2.sign           = sub1Tsub2.sign;
       n_sub2Tfin2.is_special     = sub1Tsub2.is_special;
       n_sub2Tfin2.valid          = sub1Tsub2.valid;
@@ -221,8 +217,7 @@ module reciprocal_bf16 (
 // *********************************************************************************************
   always_comb begin
     n_fin2Tmul2 = fin2Tmul2;
-    if(flush[4]) n_fin2Tmul2 = '0;
-    else if(pipe_en[4]) begin
+    if(pipe_en[4]) begin
       n_fin2Tmul2.sign           = sub2Tfin2.sign;
       n_fin2Tmul2.is_special     = sub2Tfin2.is_special;
       n_fin2Tmul2.valid          = sub2Tfin2.valid;
@@ -242,8 +237,7 @@ module reciprocal_bf16 (
   assign f_2 = !fin2Tmul2.is_special && fin2Tmul2.valid ? fin2Tmul2.muld:'0;
   always_comb begin
     n_mul2Tfin3 = mul2Tfin3;
-    if(flush[5]) n_mul2Tfin3 = '0;
-    else if(pipe_en[5]) begin
+    if(pipe_en[5]) begin
       n_mul2Tfin3.sign           = fin2Tmul2.sign;
       n_mul2Tfin3.is_special     = fin2Tmul2.is_special;
       n_mul2Tfin3.valid          = fin2Tmul2.valid;
@@ -259,8 +253,7 @@ module reciprocal_bf16 (
 // *********************************************************************************************
   always_comb begin
     n_fin3Texp = fin3Texp;
-    if(flush[6]) n_fin3Texp = '0;
-    else if(pipe_en[6]) begin
+    if(pipe_en[6]) begin
       n_fin3Texp.sign           = mul2Tfin3.sign;
       n_fin3Texp.is_special     = mul2Tfin3.is_special;
       n_fin3Texp.valid          = mul2Tfin3.valid;
@@ -288,8 +281,7 @@ module reciprocal_bf16 (
 
   always_comb begin
     n_expTout = expTout;
-    if(flush[7])  n_expTout = '0;
-    else if(pipe_en[7]) begin
+    if(pipe_en[7]) begin
       n_expTout.valid = fin3Texp.valid;
       n_expTout.fin   = result;
     end

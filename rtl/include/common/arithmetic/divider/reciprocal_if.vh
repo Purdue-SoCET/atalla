@@ -9,12 +9,12 @@ interface reciprocal_if #(
   localparam int WIDTH = EXP_WIDTH + MANT_WIDTH;
 
   typedef struct packed {
-    logic valid_in, ready_out;
+    logic valid_in, ready_in;
     logic [WIDTH:0] divisor;
   } div_in_t;
 
   typedef struct packed {
-    logic valid_out, ready_in;
+    logic valid_out, ready_out;
     logic [WIDTH:0] result;
   } div_out_t;
 

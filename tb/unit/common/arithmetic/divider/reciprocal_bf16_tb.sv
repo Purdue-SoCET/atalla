@@ -67,14 +67,14 @@ module reciprocal_bf16_tb;
   begin
     // Wait until DUT is ready to accept input
     @(posedge CLK);
-    while (!rif.out.ready_in) @(posedge CLK);
+    while (!rif.out.ready_out) @(posedge CLK);
     
     // Apply inputs and assert valid_in
     rif.in.divisor = in_val;
     rif.in.valid_in = 1;
     
     @(posedge CLK);
-    while (!rif.out.ready_in) @(posedge CLK);
+    while (!rif.out.ready_out) @(posedge CLK);
     
     // Deassert valid_in after handshake
     rif.in.valid_in = 0;
@@ -102,9 +102,9 @@ module reciprocal_bf16_tb;
       end
     end
         
-    rif.in.ready_out = 1;
+    rif.in.ready_in = 1;
     @(posedge CLK);
-    rif.in.ready_out = 0;
+    rif.in.ready_in = 0;
   end
   endtask
 
@@ -161,7 +161,7 @@ module reciprocal_bf16_tb;
             do begin 
               @(posedge CLK); 
             end while 
-              (!rif.out.ready_in);
+              (!rif.out.ready_out);
 
             q_in.push_back(in_val); q_exp.push_back(exp_val);
             tests_fed++;
@@ -178,15 +178,15 @@ module reciprocal_bf16_tb;
           // BACK PRESSURE (Output Stalls / Skid Buffer Stress)
           if (traffic_mode == "BACK_PRESSURE" || traffic_mode == "RANDOM") begin
             if ($urandom_range(0, 100) < 25) begin // 25% chance to pause reading
-              rif.in.ready_out = 0;
+              rif.in.ready_in = 0;
               repeat($urandom_range(1, 5)) @(posedge CLK);
             end
           end
 
-          rif.in.ready_out = 1;
+          rif.in.ready_in = 1;
           @(posedge CLK);
 
-          if (rif.out.valid_out && rif.in.ready_out) begin
+          if (rif.out.valid_out && rif.in.ready_in) begin
             rx_timeout = 0; 
             
             if (q_exp.size() == 0) begin
@@ -227,7 +227,7 @@ module reciprocal_bf16_tb;
             end
           end
         end
-        rif.in.ready_out = 0;
+        rif.in.ready_in = 0;
       end
     join
 
@@ -311,7 +311,7 @@ module reciprocal_bf16_tb;
     
     // Init handshake signals
     rif.in.valid_in = 0;
-    rif.in.ready_out = 0;
+    rif.in.ready_in = 0;
     rif.in.divisor = 0;
     errors = 0;
     normal_tests = 0;
@@ -329,9 +329,9 @@ module reciprocal_bf16_tb;
                 $time, rif.out.valid_out);
       errors++;
     end
-    if (rif.out.ready_in !== 0) begin
+    if (rif.out.ready_out !== 0) begin
       $display("ERROR @%0t [POWER_ON_RESET]: ready_in should be 0 during reset, got %b", 
-                $time, rif.out.ready_in);
+                $time, rif.out.ready_out);
       errors++;
     end
     
@@ -344,9 +344,9 @@ module reciprocal_bf16_tb;
     
     // Check that ready_in goes high after reset
     @(posedge CLK);
-    if (rif.out.ready_in !== 1) begin
+    if (rif.out.ready_out !== 1) begin
       $display("ERROR @%0t [POST_RESET]: ready_in should be 1 after reset, got %b", 
-                $time, rif.out.ready_in);
+                $time, rif.out.ready_out);
       errors++;
     end
 
@@ -361,7 +361,7 @@ module reciprocal_bf16_tb;
       do begin 
         @(posedge CLK); 
       end while 
-        (!rif.out.ready_in);
+        (!rif.out.ready_out);
     end
     rif.in.valid_in = 0;
     
@@ -379,7 +379,7 @@ module reciprocal_bf16_tb;
       $display("ERROR @%0t [MID_FLIGHT_RESET]: Ghost data survived the reset! FIFO is not empty.", $time);
       errors++;
     end
-    if (rif.out.ready_in !== 1) begin
+    if (rif.out.ready_out !== 1) begin
       $display("ERROR @%0t [MID_FLIGHT_RESET]: Pipeline didn't recover ready_in after flush.", $time);
       errors++;
     end

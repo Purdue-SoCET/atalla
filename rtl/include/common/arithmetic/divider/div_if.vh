@@ -9,13 +9,13 @@ interface div_if #(
   localparam int WIDTH = EXP_WIDTH + MANT_WIDTH;
 
   typedef struct packed {
-    logic valid_in, ready_out;
+    logic valid_in, ready_in;
     logic [WIDTH:0] operand1;
     logic [WIDTH:0] operand2;
   } div_in_t;
 
   typedef struct packed {
-    logic valid_out, ready_in;
+    logic valid_out, ready_out;
     logic [WIDTH:0] result;
   } div_out_t;
 
