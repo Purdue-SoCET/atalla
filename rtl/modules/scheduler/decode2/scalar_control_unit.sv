@@ -336,7 +336,7 @@ module scalar_control_unit
                 // HALT
                 // ----------------------------------------------------------------
                 HALT_S: begin
-                    cuif.decoded_scalar_instrs[i].fu_enable  = control_valid;
+                    cuif.decoded_scalar_instrs[i].fu_enable  = halt_valid;
                     cuif.decoded_scalar_instrs[i].valid_in   = 1'b1;
                     cuif.decoded_scalar_instrs[i].halt       = 1'b1;
                     cuif.decoded_scalar_instrs[i].imm_src    = 1'b0;
