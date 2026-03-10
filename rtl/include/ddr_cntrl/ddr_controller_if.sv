@@ -83,7 +83,7 @@ logic [BANK_NUM-1:0]         bq_ready; // -> FSM
 bq_slot_t [BANK_NUM-1:0]          be_slot;
 logic     [$clog2(BANK_NUM)-1:0]  be_arb;
 logic     [$clog2(BANK_NUM)-1:0]  be_queue_ready;
-// logic [IDK] be_cmd; 
+fsm_t [BANK_NUM-1:0] be_cmd; 
 
 // BACKEND ARBITER -> READ_ID_QUEUE
 logic                      be_push_id; 
