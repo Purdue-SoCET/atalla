@@ -26,7 +26,7 @@ module add4_fp32accum_fp16_tb_softfloat;
     localparam EXPONENT_SIZE     = 8;
     localparam IN_MANTISSA_SIZE = 10; // Output Mantissa Width (New Parameter)
     localparam IN_EXPONENT_SIZE = 5;
-    localparam PRECISION_BITS = 10;
+    localparam PRECISION_BITS = 0;
 
     logic tb_clk;
     logic tb_nrst;
@@ -51,7 +51,9 @@ module add4_fp32accum_fp16_tb_softfloat;
     logic [31:0] tb_result;
     logic [31:0] exp;
 
-    int pass_count, fail_count, off_by_one, off_by_two, off_by_five_plus, diff; 
+    int pass_count, fail_count, off_by_one, off_by_two, off_by_five_plus, ulp_diff, ulp_big_count; 
+    real total_ulp_diff; 
+    shortreal diff, total_diff; 
 
     // con testbench signals to interface
     assign add_if.a = tb_a;
@@ -116,6 +118,13 @@ module add4_fp32accum_fp16_tb_softfloat;
 
         if (int_a > int_b) return (int_a - int_b);
         else               return (int_b - int_a);
+    endfunction
+
+    function shortreal get_float_difference(input logic [31:0] a, input logic [31:0] b);
+        shortreal real_a, real_b;
+        real_a = $bitstoshortreal(a);
+        real_b = $bitstoshortreal(b);
+        return (real_a - real_b);
     endfunction
 
     localparam logic [15:0] P_INF      = 16'b0_11111_0000000000;
@@ -257,6 +266,13 @@ initial begin
     check_case("-2+-2+-2+-2 = -8", exp);
     #(PERIOD);
 
+    //NOTE: Failure detected in test case A=00008b43 B=00002c95 C=0000838c D=0000ad8b | Got=bc79a180 Exp=bc7a8480 (diff=58112)
+    test_case(16'h8b43, 16'h2c95, 16'h838c, 16'had8b);
+    exp = 32'hbc7a8480;
+    #(PERIOD * (LATENCY + 1));
+    check_case("A=00008b43 B=00002c95 C=0000838c D=0000ad8b | Got=bc79a180 Exp=bc7a8480 (diff=58112)", exp);
+    #(PERIOD);
+
     $display("");
     $display("--- Berkeley SoftFloat Random Test Cases ---");
 
@@ -307,24 +323,13 @@ initial begin
                 $display("... (suppressing further terminal output, all failures logged to test_failures.csv) ...");
             end
 
-            diff = get_ulp_distance(tb_result, expected);
-            // Check for off-by-one (either +1 or -1)
-            if ((diff == 1 || diff == -1)) begin
-                // $display("NOTE: off-by-one detected...");
-                off_by_one++;
-            end else if (diff >= 2 && diff <= 10) begin
-                // $display("NOTE: off-by-two detected...");
-                off_by_two++;
-            end
-            else if (diff >= 10) begin
-                if (off_by_five_plus < 10) begin
-                    $display("NOTE: Failure detected in test case A=%h B=%h C=%h D=%h | Got=%h Exp=%h (diff=%0d)", 
-                         a, b, c, d, tb_result, expected, diff);
-                end
-                else if (off_by_five_plus == 10) begin
-                    $display("Many large errors, suppressing output....");
-                end
-                off_by_five_plus++;
+            diff = get_float_difference(tb_result, expected);
+            ulp_diff = get_ulp_distance(tb_result, expected);
+            total_ulp_diff += ulp_diff;
+            total_diff += diff; 
+            if (ulp_diff >= 100 && ulp_big_count < 10) begin
+                $display("Difference (Got - Exp): %e, ULP difference: %0d", diff, ulp_diff);
+                ulp_big_count++; 
             end
         end else begin
             pass_count++;
@@ -343,9 +348,11 @@ initial begin
     $display("PRECISION_BITS: %0d", PRECISION_BITS);
     $display("PASSED: %0d", pass_count);
     $display("FAILED: %0d", fail_count);
-    $display("ULP 1 Difference: %0d", off_by_one);
-    $display("ULP 2-10 Difference %0d", off_by_two);
-    $display("ULP >10 Difference: %0d", off_by_five_plus);
+    $display("Average error (Got - Exp): %e", total_diff / fail_count);
+    $display("Average ULP difference: %f", total_ulp_diff / fail_count);
+    // $display("ULP 1 Difference: %0d", off_by_one);
+    // $display("ULP 2-10 Difference %0d", off_by_two);
+    // $display("ULP >10 Difference: %0d", off_by_five_plus);
     $display("failure cases logged to: test_failures_pure.csv");
 
     if (fail_count == 0)

@@ -12,7 +12,7 @@ module sysarr_4_input_fp_adder #(
     systolic_array_4_input_adder_if.add add
 );
     // Ensure internal width covers the larger of input or output mantissa to prevent precision loss before rounding
-    localparam NEW_MANT_WIDTH = MANTISSA_SIZE + PRECISION_BITS + 2;
+    localparam NEW_MANT_WIDTH = MANTISSA_SIZE + PRECISION_BITS + 1;
     localparam SUM_WIDTH      = NEW_MANT_WIDTH + 2; 
     localparam MAX_EXP        = (1 << EXPONENT_SIZE) - 1;
     localparam RES_WIDTH      = 1 + EXPONENT_SIZE + MANTISSA_SIZE; // Total width of result
@@ -20,19 +20,19 @@ module sysarr_4_input_fp_adder #(
     localparam IN_WIDTH = 1 + IN_EXPONENT_SIZE + IN_MANTISSA_SIZE; // Total width of input
 
     // Internal Signal Declarations
-    logic [EXPONENT_SIZE+MANTISSA_SIZE:0] a_daz, b_daz, c_daz, d_daz;
-    logic [EXPONENT_SIZE-1:0] exp_a, exp_b, exp_c, exp_d;
-    logic [MANTISSA_SIZE-1:0] frac_a, frac_b, frac_c, frac_d;
+    logic [IN_EXPONENT_SIZE+IN_MANTISSA_SIZE:0] a_daz, b_daz, c_daz, d_daz;
+    logic [IN_EXPONENT_SIZE-1:0] exp_a, exp_b, exp_c, exp_d;
+    logic [IN_MANTISSA_SIZE-1:0] frac_a, frac_b, frac_c, frac_d;
     logic sign_a, sign_b, sign_c, sign_d;
     
     // Sorting signals
-    logic [EXPONENT_SIZE-1:0] exp_p, exp_m, exp_r, exp_n, exp_x, exp_y, exp_mx, exp_nx;
-    logic [MANTISSA_SIZE-1:0] frac_p, frac_m, frac_r, frac_n, frac_x, frac_y, frac_mx, frac_nx;
+    logic [IN_EXPONENT_SIZE-1:0] exp_p, exp_m, exp_r, exp_n, exp_x, exp_y, exp_mx, exp_nx;
+    logic [IN_MANTISSA_SIZE-1:0] frac_p, frac_m, frac_r, frac_n, frac_x, frac_y, frac_mx, frac_nx;
     logic sign_p, sign_m, sign_r, sign_n, sign_x, sign_y, sign_mx, sign_nx;
     
     // Align signals
-    logic [EXPONENT_SIZE-1:0] exp_x_eff, exp_y_eff, exp_mx_eff, exp_nx_eff;
-    logic [EXPONENT_SIZE:0]   y_shift, m_shift, n_shift;
+    logic [IN_EXPONENT_SIZE-1:0] exp_x_eff, exp_y_eff, exp_mx_eff, exp_nx_eff;
+    logic [IN_EXPONENT_SIZE:0]   y_shift, m_shift, n_shift;
     logic [NEW_MANT_WIDTH-1:0] x_mant, y_shifted, m_shifted, n_shifted;
     logic [NEW_MANT_WIDTH-1:0] y_mant_base, m_mant_base, n_mant_base;
     logic sticky_y, sticky_m, sticky_n;
@@ -43,7 +43,7 @@ module sysarr_4_input_fp_adder #(
     logic [RES_WIDTH-1:0] special_result; // Scaled to output width
 
     // --- Pipeline Stage 1 Registers (Compressed Vectors) ---
-    logic [EXPONENT_SIZE-1:0]  st1_a_e;
+    logic [IN_EXPONENT_SIZE-1:0]  st1_a_e;
     logic st1_a_s, st1_align_sticky, st1_special_case;
     logic [RES_WIDTH-1:0] st1_special_result;
     logic [SUM_WIDTH:0] st1_sum_vec;
@@ -56,7 +56,7 @@ module sysarr_4_input_fp_adder #(
     logic res_sign;
 
     // --- Pipeline Stage 2 Registers (Result Magnitude ONLY) ---
-    logic [EXPONENT_SIZE-1:0] st2_exp_base;
+    logic [IN_EXPONENT_SIZE-1:0] st2_exp_base;
     logic [SUM_WIDTH-1:0]      st2_sum_mag;
     logic [RES_WIDTH-1:0]      st2_spec_res;
     logic st2_res_sign, st2_sticky, st2_special;
@@ -79,71 +79,17 @@ module sysarr_4_input_fp_adder #(
     logic [SUM_WIDTH:0] op_x, op_y, op_m, op_n;
     logic [SUM_WIDTH:0] csa_s1, csa_c1, csa_s2, csa_c2;
 
-    // Array to hold output after conversion for each input, indexed by the generate loop
-    logic [31:0] out_v[4];
-
-    genvar i;
-
-    generate
-        for (i = 0; i < 4; i++) begin : fp16_to_fp32_conversion
-            // We create local logic for each instance to prevent variable shadowing/overwriting
-            logic [IN_WIDTH-1:0]  local_in;
-            logic                 local_s;
-            logic [IN_EXPONENT_SIZE-1:0] local_e;
-            logic [IN_MANTISSA_SIZE-1:0] local_f;
-            logic [$clog2(IN_MANTISSA_SIZE):0] local_lzd;
-
-            always_comb begin
-                // 1. Assign input based on index
-                case (i)
-                    0: local_in = add.a;
-                    1: local_in = add.b;
-                    2: local_in = add.c;
-                    default: local_in = add.d;
-                endcase
-
-                {local_s, local_e, local_f} = local_in;
-
-                // 2. Parameterized LZD (Scans MSB to LSB)
-                local_lzd = IN_MANTISSA_SIZE; 
-                for (int j = IN_MANTISSA_SIZE - 1; j >= 0; j--) begin
-                    if (local_f[j]) begin
-                        local_lzd = (IN_MANTISSA_SIZE - 1) - j;
-                        break; // Exit the inner simulation loop
-                    end
-                end
-
-                // 3. Conversion Mux Logic
-                if (local_e == {IN_EXPONENT_SIZE{1'b1}}) begin
-                    // Infinity or NaN
-                    out_v[i] = {local_s, {EXPONENT_SIZE{1'b1}}, local_f, {(MANTISSA_SIZE - IN_MANTISSA_SIZE){1'b0}}};
-                end 
-                else if (local_e == 0) begin
-                    if (local_f == 0) begin
-                        // True Zero
-                        out_v[i] = {local_s, {(RES_WIDTH-1){1'b0}}};
-                    end else begin
-                        // Subnormal Promotion
-                        // Exp = (127 - 15) - lzd_cnt = 112 - lzd_cnt
-                        logic [EXPONENT_SIZE-1:0] promoted_exp;
-                        promoted_exp = (BIAS_DIFF) - local_lzd;
-                        out_v[i] = {local_s, promoted_exp, (local_f << (local_lzd + 1'b1)), {(MANTISSA_SIZE - IN_MANTISSA_SIZE){1'b0}}};
-                    end
-                end 
-                else begin
-                    // Normal Number - Correct re-biasing
-                    // Ensure the addition doesn't overflow 5 bits by casting BIAS_DIFF
-                    out_v[i] = {local_s, (local_e + BIAS_DIFF[EXPONENT_SIZE-1:0]), local_f, {(MANTISSA_SIZE - IN_MANTISSA_SIZE){1'b0}}};
-                end
-            end
-        end
-    endgenerate
-
     always_comb begin : stage1_logic
 
         // Take fp32 representation from conversion logic and proceed as expected
-        {sign_a, exp_a, frac_a} = out_v[0]; {sign_b, exp_b, frac_b} = out_v[1];
-        {sign_c, exp_c, frac_c} = out_v[2]; {sign_d, exp_d, frac_d} = out_v[3];
+
+        a_daz = (add.a[IN_MANTISSA_SIZE +: IN_EXPONENT_SIZE] == 0) ? {add.a[IN_EXPONENT_SIZE+IN_MANTISSA_SIZE], {(IN_EXPONENT_SIZE+IN_MANTISSA_SIZE){1'b0}}} : add.a;
+        b_daz = (add.b[IN_MANTISSA_SIZE +: IN_EXPONENT_SIZE] == 0) ? {add.b[IN_EXPONENT_SIZE+IN_MANTISSA_SIZE], {(IN_EXPONENT_SIZE+IN_MANTISSA_SIZE){1'b0}}} : add.b;
+        c_daz = (add.c[IN_MANTISSA_SIZE +: IN_EXPONENT_SIZE] == 0) ? {add.c[IN_EXPONENT_SIZE+IN_MANTISSA_SIZE], {(IN_EXPONENT_SIZE+IN_MANTISSA_SIZE){1'b0}}} : add.c;
+        d_daz = (add.d[IN_MANTISSA_SIZE +: IN_EXPONENT_SIZE] == 0) ? {add.d[IN_EXPONENT_SIZE+IN_MANTISSA_SIZE], {(IN_EXPONENT_SIZE+IN_MANTISSA_SIZE){1'b0}}}   : add.d;
+        
+        {sign_a, exp_a, frac_a} = a_daz; {sign_b, exp_b, frac_b} = b_daz;
+        {sign_c, exp_c, frac_c} = c_daz; {sign_d, exp_d, frac_d} = d_daz;
 
         is_nan_any = (&exp_a & |frac_a) | (&exp_b & |frac_b) | (&exp_c & |frac_c) | (&exp_d & |frac_d);
         any_pos_inf = (&exp_a & ~sign_a & ~|frac_a) | (&exp_b & ~sign_b & ~|frac_b) | (&exp_c & ~sign_c & ~|frac_c) | (&exp_d & ~sign_d & ~|frac_d);
@@ -184,22 +130,22 @@ module sysarr_4_input_fp_adder #(
         y_shift = exp_x_eff - exp_y_eff; m_shift = exp_x_eff - exp_mx_eff; n_shift = exp_x_eff - exp_nx_eff;
 
         // Note: Inputs still use MANTISSA_SIZE, internal math uses NEW_MANT_WIDTH
-        x_mant      = { (|exp_x),  frac_x,  {PRECISION_BITS{1'b0}}, 1'b0 };
-        y_mant_base = { (|exp_y),  frac_y,  {PRECISION_BITS{1'b0}}, 1'b0 };
-        m_mant_base = { (|exp_mx), frac_mx, {PRECISION_BITS{1'b0}}, 1'b0 };
-        n_mant_base = { (|exp_nx), frac_nx, {PRECISION_BITS{1'b0}}, 1'b0 };
+        x_mant      = { (|exp_x),  frac_x, {MANTISSA_SIZE-IN_MANTISSA_SIZE{1'b0}} ,{PRECISION_BITS{1'b0}}};
+        y_mant_base = { (|exp_y),  frac_y, {MANTISSA_SIZE-IN_MANTISSA_SIZE{1'b0}} ,{PRECISION_BITS{1'b0}}};
+        m_mant_base = { (|exp_mx), frac_mx, {MANTISSA_SIZE-IN_MANTISSA_SIZE{1'b0}} ,{PRECISION_BITS{1'b0}}};
+        n_mant_base = { (|exp_nx), frac_nx, {MANTISSA_SIZE-IN_MANTISSA_SIZE{1'b0}} ,{PRECISION_BITS{1'b0}}};
 
-        sticky_y  = |(y_mant_base & ~({NEW_MANT_WIDTH{1'b1}} << y_shift));
+        // sticky_y  = |(y_mant_base & ~({NEW_MANT_WIDTH{1'b1}} << y_shift));
         y_shifted = (y_shift >= NEW_MANT_WIDTH) ? 0 : (y_mant_base >> y_shift);
-        y_shifted[0] = y_shifted[0] | sticky_y; // OR sticky bit into LSB of shifted mantissa
+        // y_shifted[0] = y_shifted[0] | sticky_y; // OR sticky bit into LSB of shifted mantissa
 
-        sticky_m  = |(m_mant_base & ~({NEW_MANT_WIDTH{1'b1}} << m_shift));
+        // sticky_m  = |(m_mant_base & ~({NEW_MANT_WIDTH{1'b1}} << m_shift));
         m_shifted = (m_shift >= NEW_MANT_WIDTH) ? 0 : (m_mant_base >> m_shift);
-        m_shifted[0] = m_shifted[0] | sticky_m; // OR sticky bit into LSB of shifted mantissa
+        // m_shifted[0] = m_shifted[0] | sticky_m; // OR sticky bit into LSB of shifted mantissa
 
-        sticky_n  = |(n_mant_base & ~({NEW_MANT_WIDTH{1'b1}} << n_shift));
+        // sticky_n  = |(n_mant_base & ~({NEW_MANT_WIDTH{1'b1}} << n_shift));
         n_shifted = (n_shift >= NEW_MANT_WIDTH) ? 0 : (n_mant_base >> n_shift);
-        n_shifted[0] = n_shifted[0] | sticky_n; // OR sticky bit into LSB of shifted mantissa
+        // n_shifted[0] = n_shifted[0] | sticky_n; // OR sticky bit into LSB of shifted mantissa
         
         y_op = sign_x ^ sign_y; m_op = sign_x ^ sign_mx; n_op = sign_x ^ sign_nx;
 
@@ -235,7 +181,7 @@ module sysarr_4_input_fp_adder #(
     // STAGE 2: Final Add (Critical Path Isolation)
     // =================================================================================
     always_comb begin : stage2_logic
-        raw_sum = $signed(st1_sum_vec) + $signed(st1_carry_vec << 1) + $signed({{(SUM_WIDTH){1'b0}}, st1_hot_ones});
+        raw_sum = $signed({1'b0, st1_sum_vec}) + $signed( st1_carry_vec << 1) + $signed({{(SUM_WIDTH){1'b0}}, st1_hot_ones});
 
         if (raw_sum[SUM_WIDTH]) begin
             mag_sum = ~raw_sum + 1'b1;
@@ -261,7 +207,7 @@ module sysarr_4_input_fp_adder #(
     // =================================================================================
     // STAGE 3: LZD, Normalization and Rounding
     // =================================================================================
-
+    
     always_comb begin : stage3_logic
         // 1. Tree-based LZD
         if (st2_sum_mag == 0) begin
@@ -286,12 +232,11 @@ module sysarr_4_input_fp_adder #(
         final_mant = norm_val[SUM_WIDTH-2 -: MANTISSA_SIZE];
         
         // Exponent Adjustment
-        final_exp_calc = $signed({2'b00, st2_exp_base}) + 2 - $signed({2'b00, lead_zeros});
+        final_exp_calc = $signed({2'b00, st2_exp_base}) + 2 - $signed({2'b00, lead_zeros}) + BIAS_DIFF;
 
         // 4. Output Packing
-        if (st2_sum_mag == 0) result_out = {st2_res_sign, {RES_WIDTH-1{1'b0}}};
+        if (st2_sum_mag == 0 || final_exp_calc <= 0 || st2_exp_base == 0) result_out = {st2_res_sign, {RES_WIDTH-1{1'b0}}};
         else if (final_exp_calc >= MAX_EXP) result_out = {st2_res_sign, {EXPONENT_SIZE{1'b1}}, {MANTISSA_SIZE{1'b0}}}; 
-        else if (final_exp_calc <= 0)  result_out = {st2_res_sign, {RES_WIDTH-1{1'b0}}};
         else result_out = {st2_res_sign, final_exp_calc[EXPONENT_SIZE-1:0], final_mant};
 
         if (st2_special) result_out = st2_spec_res;
