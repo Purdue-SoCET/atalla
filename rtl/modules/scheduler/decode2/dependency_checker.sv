@@ -48,20 +48,22 @@ module dependency_checker #(
         end
         else begin
 
-            // Mark destination registers as busy in Decode 2
-            for (w = 0; w < SCALAR_WRITE_PORTS; w++) begin
-                if (dc_if.scalar_WEN[w])
-                    scalar_dependency_table[dc_if.scalar_wsel[w]] <= 1'b1;
-            end
+            // Mark destination registers as busy only when source regs are already ready (prevents issue where a instr uses a packet as src and dest but it's not ready yet)
+            if (dc_if.ready) begin
+                for (w = 0; w < SCALAR_WRITE_PORTS; w++) begin
+                    if (dc_if.scalar_WEN[w])
+                        scalar_dependency_table[dc_if.scalar_wsel[w]] <= 1'b1;
+                end
 
-            for (w = 0; w < VECTOR_WRITE_PORTS; w++) begin
-                if (dc_if.vector_WEN[w])
-                    vector_dependency_table[dc_if.vector_wsel[w]] <= 1'b1;
-            end
+                for (w = 0; w < VECTOR_WRITE_PORTS; w++) begin
+                    if (dc_if.vector_WEN[w])
+                        vector_dependency_table[dc_if.vector_wsel[w]] <= 1'b1;
+                end
 
-            for (w = 0; w < MASK_WRITE_PORTS; w++) begin
-                if (dc_if.mask_WEN[w])
-                    mask_dependency_table[dc_if.mask_wsel[w]] <= 1'b1;
+                for (w = 0; w < MASK_WRITE_PORTS; w++) begin
+                    if (dc_if.mask_WEN[w])
+                        mask_dependency_table[dc_if.mask_wsel[w]] <= 1'b1;
+                end
             end
 
             // Clear scalar bits on WB
@@ -89,40 +91,17 @@ module dependency_checker #(
         end
     end
 
-    always_comb begin
-        // int i;
-
-        // // Check source registers for RAW hazards
-        // scalar_hazard = 1'b0;
-        // vector_hazard = 1'b0;
-        // mask_hazard   = 1'b0;
-
-        // for (i = 0; i < SCALAR_READ_PORTS; i++) begin
-        //     if (dc_if.scalar_REN[i] & scalar_dependency_table[dc_if.scalar_rsel[i]])
-        //         scalar_hazard = 1'b1;
-        // end
-
-        // for (i = 0; i < VECTOR_READ_PORTS; i++) begin
-        //     if (dc_if.vector_REN[i] & vector_dependency_table[dc_if.vector_rsel[i]])
-        //         vector_hazard = 1'b1;
-        // end
-
-        // for (i = 0; i < MASK_READ_PORTS; i++) begin
-        //     if (dc_if.mask_REN[i] & mask_dependency_table[dc_if.mask_rsel[i]])
-        //         mask_hazard = 1'b1;
-        // end
-
-        
+    always_comb begin        
         
         for (int i = 0; i < SCALAR_READ_PORTS; i++) begin
-            scalar_hit[i] = (dc_if.scalar_REN[i] & scalar_dependency_table[dc_if.scalar_rsel[i]]) | (dc_if.scalar_WEN[w] & scalar_dependency_table[dc_if.scalar_wsel[w]]);
+            scalar_hit[i] = (dc_if.scalar_REN[i] & scalar_dependency_table[dc_if.scalar_rsel[i]]) | (dc_if.scalar_WEN[i] & scalar_dependency_table[dc_if.scalar_wsel[i]]);
         end
         for (int i = 0; i < VECTOR_READ_PORTS; i++) begin
-            //vector_hit[i] = (dc_if.vector_REN[i] & vector_dependency_table[dc_if.vector_rsel[i]]) | (dc_if.vector_WEN[w] & vector_dependency_table[dc_if.vector_wsel[w]]);
+            //vector_hit[i] = (dc_if.vector_REN[i] & vector_dependency_table[dc_if.vector_rsel[i]]) | (dc_if.vector_WEN[i] & vector_dependency_table[dc_if.vector_wsel[i]]);
             vector_hit[i] = '0;
         end
         for (int i = 0; i < MASK_READ_PORTS; i++) begin
-            //mask_hit[i] = (dc_if.mask_REN[i] & mask_dependency_table[dc_if.mask_rsel[i]]) | (dc_if.mask_WEN[w] & mask_dependency_table[dc_if.mask_wsel[w]]);
+            //mask_hit[i] = (dc_if.mask_REN[i] & mask_dependency_table[dc_if.mask_rsel[i]]) | (dc_if.mask_WEN[i] & mask_dependency_table[dc_if.mask_wsel[i]]);
             mask_hit[i] = '0;
         end
 

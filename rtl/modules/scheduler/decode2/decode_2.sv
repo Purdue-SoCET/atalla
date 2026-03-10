@@ -64,7 +64,7 @@ assign d2if.predict_taken_out = predict_taken_latch;
 assign scif.scalar_instrs = d2if.scalar_instrs;
 assign d2if.decoded_scalar_instrs = d2if.ready ? scalarsraif.instrs_out : '0;
 
-//connecting to soruce reg allocator
+//connecting to source reg allocator
 //latch
 assign scalarsraif.instrs_in = decoded_scalar_instrs_latch;
 
@@ -90,6 +90,7 @@ assign dcif.scalar_WB_wsel = d2if.scalar_WB_wsel;
 assign dcif.scalar_WB_WEN = d2if.scalar_WB_WEN;
 assign dcif.scalar_SDMA_wsel = d2if.scalar_SDMA_wsel;
 assign dcif.scalar_SDMA_WEN = d2if.scalar_SDMA_WEN;
+assign dcif.ready = d2if.ready; 
 
 // Check execute signals for structural hazards (scalar)
 scalar_fu_enable_t [NUM_SCALAR_INSTRS-1:0] fu_enables_nlatch, fu_enables_latch;

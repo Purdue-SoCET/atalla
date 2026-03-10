@@ -51,6 +51,7 @@ interface dependency_checker_if #(
     logic [MASK_WRITE_PORTS-1:0]                    mask_WB_WEN;
 
     logic dependencies_ready;
+    logic ready;
     
     
     modport dc (
@@ -61,6 +62,7 @@ interface dependency_checker_if #(
         input  vector_WB_wsel, vector_WB_WEN,
         input  mask_REN, mask_rsel, mask_wsel, mask_WEN,
         input  mask_WB_wsel, mask_WB_WEN,
+        input ready, //for when to mark dest registers as busy
         output dependencies_ready
     );
 
