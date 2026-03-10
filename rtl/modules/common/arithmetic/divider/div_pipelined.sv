@@ -48,10 +48,10 @@ module div_pipelined (
     
     assign calculated_fin = (final_exp == 8'h00) ? {p_sign[2], 15'h0000} : {p_sign[2], final_exp, reg_outn[6:0]};
     assign divif.out.result = p_is_spec[2] ? p_spec_res[2] : calculated_fin;
-    assign global_stall = stage2_done && !divif.in.ready_out;
+    assign global_stall = stage2_done && !divif.in.ready_in;
     
-    assign divif.out.ready_in = (nRST == 1'b1) ? (!loopback_req && !global_stall) : 1'b0;
-    assign accept_new = divif.in.valid_in && divif.out.ready_in;
+    assign divif.out.ready_out = (nRST == 1'b1) ? (!loopback_req && !global_stall) : 1'b0;
+    assign accept_new = divif.in.valid_in && divif.out.ready_out;
 
 // STAGE 0: The Arbiter & Combinational Pre-Compute
     logic op1_is_zero, op2_is_zero, op1_is_inf, op2_is_inf, op1_is_nan, op2_is_nan, op1_op2_same, op2_is_one;

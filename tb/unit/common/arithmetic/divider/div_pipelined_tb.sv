@@ -69,7 +69,7 @@ module div_pipelined_tb;
   begin
     // Wait until DUT is ready to accept input
     @(posedge CLK);
-    while (!divif.out.ready_in) @(posedge CLK);
+    while (!divif.out.ready_out) @(posedge CLK);
     
     // Apply inputs and assert valid_in
     divif.in.operand1 = a_in;
@@ -77,7 +77,7 @@ module div_pipelined_tb;
     divif.in.valid_in = 1;
     
     @(posedge CLK);
-    while (!divif.out.ready_in) @(posedge CLK);
+    while (!divif.out.ready_out) @(posedge CLK);
     
     // Deassert valid_in after handshake
     divif.in.valid_in = 0;
@@ -105,9 +105,9 @@ module div_pipelined_tb;
       end
     end
         
-    divif.in.ready_out = 1;
+    divif.in.ready_in = 1;
     @(posedge CLK);
-    divif.in.ready_out = 0;
+    divif.in.ready_in = 0;
   end
   endtask
 
@@ -165,7 +165,7 @@ module div_pipelined_tb;
             do begin 
               @(posedge CLK); 
             end while 
-              (!divif.out.ready_in);
+              (!divif.out.ready_out);
 
             q_op1.push_back(op1); q_op2.push_back(op2); q_exp.push_back(exp_val);
             tests_fed++;
@@ -182,15 +182,15 @@ module div_pipelined_tb;
           // BACK PRESSURE (Output Stalls / Skid Buffer Stress)
           if (traffic_mode == "BACK_PRESSURE" || traffic_mode == "RANDOM") begin
             if ($urandom_range(0, 100) < 25) begin // 25% chance to pause reading
-              divif.in.ready_out = 0;
+              divif.in.ready_in = 0;
               repeat($urandom_range(1, 5)) @(posedge CLK);
             end
           end
 
-          divif.in.ready_out = 1;
+          divif.in.ready_in = 1;
           @(posedge CLK);
 
-          if (divif.out.valid_out && divif.in.ready_out) begin
+          if (divif.out.valid_out && divif.in.ready_in) begin
             rx_timeout = 0; 
             
             if (q_exp.size() == 0) begin
@@ -230,7 +230,7 @@ module div_pipelined_tb;
             end
           end
         end
-        divif.in.ready_out = 0;
+        divif.in.ready_in = 0;
       end
     join
 
@@ -359,7 +359,7 @@ module div_pipelined_tb;
     
     // Init handshake signals
     divif.in.valid_in = 0;
-    divif.in.ready_out = 0;
+    divif.in.ready_in = 0;
     divif.in.operand1 = 0;
     divif.in.operand2 = 0;
     errors = 0;
@@ -378,9 +378,9 @@ module div_pipelined_tb;
                 $time, divif.out.valid_out);
       errors++;
     end
-    if (divif.out.ready_in !== 0) begin
+    if (divif.out.ready_out !== 0) begin
       $display("ERROR @%0t [POWER_ON_RESET]: ready_in should be 0 during reset, got %b", 
-                $time, divif.out.ready_in);
+                $time, divif.out.ready_out);
       errors++;
     end
     
@@ -393,9 +393,9 @@ module div_pipelined_tb;
     
     // Check that ready_in goes high after reset
     @(posedge CLK);
-    if (divif.out.ready_in !== 1) begin
+    if (divif.out.ready_out !== 1) begin
       $display("ERROR @%0t [POST_RESET]: ready_in should be 1 after reset, got %b", 
-                $time, divif.out.ready_in);
+                $time, divif.out.ready_out);
       errors++;
     end
 
@@ -411,7 +411,7 @@ module div_pipelined_tb;
       do begin 
         @(posedge CLK); 
       end while 
-        (!divif.out.ready_in);
+        (!divif.out.ready_out);
     end
     divif.in.valid_in = 0;
     
@@ -429,7 +429,7 @@ module div_pipelined_tb;
       $display("ERROR @%0t [MID_FLIGHT_RESET]: Ghost data survived the reset! FIFO is not empty.", $time);
       errors++;
     end
-    if (divif.out.ready_in !== 1) begin
+    if (divif.out.ready_out !== 1) begin
       $display("ERROR @%0t [MID_FLIGHT_RESET]: Pipeline didn't recover ready_in after flush.", $time);
       errors++;
     end
