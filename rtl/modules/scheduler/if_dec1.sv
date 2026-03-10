@@ -3,7 +3,7 @@
 import atalla_isa_pkg::*;
 
 module if_dec1_reg (
-    input logic CLK, nRST,
+    input logic CLK, nRST, halt,
     if_dec1_if.latch_view ifdec1_if
 );
   //localparam r_t NOP_R = '{reserved:'0, rs2:'0, rs1:'0, rd:'0, opcode:NOP_S};
@@ -18,7 +18,7 @@ module if_dec1_reg (
       ifdec1_if.pc_pred_addr_out  <= '0;
     end
     else begin
-      if (ifdec1_if.flush) begin
+      if (ifdec1_if.flush || halt) begin
         ifdec1_if.pc_out            <= '0;
         ifdec1_if.inst_packet_out   <= NOP_PACKET;
         ifdec1_if.predict_taken_out <= '0; 

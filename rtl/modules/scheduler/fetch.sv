@@ -9,6 +9,7 @@ module fetch (
   input  logic    rst_n,
   input logic     flush,
   input logic     ready,
+  input logic     halt,
   input word_t    pc_branch,
 
   // Interfaces
@@ -35,7 +36,10 @@ module fetch (
 
 
   always_comb begin
-    if (flush) begin
+    if (halt) begin
+      next_pc = '0;
+    end
+    else if (flush) begin
       // Priority 1: Redirect from Branch Unit (Misprediction Recovery)
       next_pc = pc_branch;
     end
@@ -71,7 +75,7 @@ module fetch (
   assign ifdec1_if.predict_taken_in = dc_if.ihit ? pred_taken : 1'b0;
   assign ifdec1_if.pc_pred_addr_in  = dc_if.ihit ? btb_if.predict_target : '0;
 
-  assign ifdec1_if.inst_packet_in   = dc_if.ihit ? dc_if.imemload : NOP_PACKET;
+  assign ifdec1_if.inst_packet_in   = (dc_if.ihit && !halt) ? dc_if.imemload : NOP_PACKET;
   
   assign dc_if.imemREN = 1'b1;
 endmodule

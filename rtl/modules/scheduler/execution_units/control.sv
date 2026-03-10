@@ -128,10 +128,6 @@ module control (
         endcase
     end
 
-
-    assign ctrl_if.valid_out = ctrl_if.valid_in;
-    assign ctrl_if.ready_out = ctrl_if.ready_in;
-
     // -----------------------------
     // Drive outputs
     // -----------------------------

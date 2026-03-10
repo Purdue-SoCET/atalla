@@ -14,6 +14,7 @@ module fetch_decode1 (
     input logic     flush,
     input logic     ready,
     input word_t    pc_branch,
+    input logic     halt,
 
 
     input logic     btb_update_en,
@@ -42,12 +43,12 @@ module fetch_decode1 (
 
 
   fetch fu (
-    .clk(clk), .rst_n(rst_n), .flush(flush), .ready(ready), .pc_branch(pc_branch), .dc_if(dc_if), .ifdec1_if(ifdec1_if.src), .btb_if(btb_if.fetch_view)
+    .clk(clk), .rst_n(rst_n), .flush(flush), .ready(ready), .halt(halt), .pc_branch(pc_branch), .dc_if(dc_if), .ifdec1_if(ifdec1_if.src), .btb_if(btb_if.fetch_view)
   );
 
 
   if_dec1_reg ifdec1_reg (
-    .CLK(clk), .nRST(rst_n), .ifdec1_if(ifdec1_if.latch_view)
+    .CLK(clk), .nRST(rst_n), .ifdec1_if(ifdec1_if.latch_view), .halt(halt)
   );
 
 

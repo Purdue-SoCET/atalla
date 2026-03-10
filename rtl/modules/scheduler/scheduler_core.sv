@@ -52,14 +52,17 @@ module scheduler_core #(
     //instantiations
     s_wb_arbiter S_WB_ARBITER(.CLK(CLK), .nRST(nRST), .vif(scalar_wb_if));
     execute_stage S_EXECUTE(.clk(CLK), .nRST(nRST), .ex_if(scalar_ex_if));
-    decode_2 S_V_DECODE_2(.CLK(CLK), .nRST(nRST), .d2if(decode_2_if));
-    fetch_decode1 S_FETCH_DECODE_1 (.clk(CLK), .rst_n(nRST), .flush(scalar_ex_if.redirect_valid), .ready(decode_2_if.ready), .pc_branch(scalar_ex_if.redirect_target), .btb_update_en(scalar_ex_if.redirect_valid), .btb_pc_update(scalar_ex_if.pc_out), .btb_true_target(scalar_ex_if.redirect_target), .dc_if(datapath_cache_if), .dec12_if(decode_1_if));
+    decode_2 S_V_DECODE_2(.CLK(CLK), .nRST(nRST), .flush(scalar_ex_if.redirect_valid), .halt(scalar_ex_if.halt_out), .d2if(decode_2_if));
+    fetch_decode1 S_FETCH_DECODE_1 (.clk(CLK), .rst_n(nRST), .flush(scalar_ex_if.redirect_valid), .ready(decode_2_if.ready), .pc_branch(scalar_ex_if.redirect_target), .halt(scalar_ex_if.halt_out), .btb_update_en(scalar_ex_if.redirect_valid), .btb_pc_update(scalar_ex_if.pc_out), .btb_true_target(scalar_ex_if.redirect_target), .dc_if(datapath_cache_if), .dec12_if(decode_1_if));
 
 
 
     //DEC1 outputs to latch
     always_comb begin
-        if(decode_2_if.ready) begin
+        if(scalar_ex_if.redirect_valid || scalar_ex_if.halt_out) begin
+            n_D1_D2_latch.scalar_instrs = NOP_PACKET;
+        end
+        else if(decode_2_if.ready) begin
             n_D1_D2_latch.scalar_instrs = decode_1_if.scalar_inst_in;
             n_D1_D2_latch.pc = decode_1_if.pc_in;
             n_D1_D2_latch.predict_taken = decode_1_if.predict_taken_in;
@@ -81,7 +84,7 @@ module scheduler_core #(
         //continuous assignment for DEC2/EX
         //EX inputs from DEC2
         n_DEC2_EX_halt_latch = 1'b0;
-        if(decode_2_if.ready) begin
+        if(decode_2_if.ready && !scalar_ex_if.redirect_valid && !scalar_ex_if.halt_out) begin
             for(int i = 0; i < NUM_SCALAR_INSTRS; i++) begin
                 n_DEC2_EX_latch[i].scalar_type_enable = decode_2_if.decoded_scalar_instrs[i].fu_enable;
                 n_DEC2_EX_latch[i].valid_in           = decode_2_if.decoded_scalar_instrs[i].valid_in;
@@ -103,6 +106,7 @@ module scheduler_core #(
         end else begin
             for(int i = 0; i < NUM_SCALAR_INSTRS; i++) begin
               n_DEC2_EX_latch[i] = '0;
+              n_DEC2_EX_latch[i].op = 7'b0101111;
             end
             n_DEC2_EX_PC_latch = '0;
         end

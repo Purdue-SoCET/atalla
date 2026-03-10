@@ -1,7 +1,3 @@
-`include "wt_mult_pkg.sv"
-
-import wt_mult_pkg::*;
-
 /// Fully pipelined wallace tree multiplier
 /// Three stages:
 ///     1) Generate partial products (1 stage)

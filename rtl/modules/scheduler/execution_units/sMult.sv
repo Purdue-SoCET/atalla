@@ -12,7 +12,7 @@ typedef enum {start, latch, done} state;
 state n_state, cur_state;
 
 logic [31:0] cur_input_1, cur_input_2, latched_input1, latched_input2, nlatched_input1, nlatched_input2, src2;
-logic [31:0] mult_output;
+logic [63:0] mult_output;
 logic latched_sMult, nlatched_sMult, cur_sMult;
 logic counter_enable, counter_clear;
 logic [7:0] nlatchedRD, latchedRD;
@@ -33,7 +33,7 @@ always_comb begin
     src2 = cur_input_2;
     if(cur_sMult == 1) begin
         latency = 2;
-        portmap.data_out = mult_output;
+        portmap.data_out = mult_output[31:0];
         if(cur_imm_src) begin
             src2 = cur_imm;
         end
