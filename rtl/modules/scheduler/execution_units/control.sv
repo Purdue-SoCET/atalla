@@ -32,7 +32,7 @@ module control (
 
     // Convenience
     logic [31:0] pc_plus4;
-    assign pc_plus4 = ctrl_if.pc + 32'd4;
+    assign pc_plus4 = ctrl_if.pc + 32'd24;
 
     // -----------------------------
     // Branch condition evaluation
