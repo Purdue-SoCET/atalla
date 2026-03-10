@@ -68,7 +68,7 @@ registers, and exits the subtractor. Latches output value at stage 5.
 * **Stage 8, 9:** Final exponent is calculated from initial exponent calculation in stage 1. Final answer then is latched in stage 9 where it is outputted.
 
 #### Traffic Control
-There are two signals controlling, pipe enable and flush, flush only occurs when a asynchronous reset occurs, pipe enable goes low when backpressure occurs (when the pipeline fills up).
+The pipe enable signals controls traffic and goes low when backpressure occurs (when the pipeline fills up).
 
 #### Performance
 The divider being fully pipelined achieves an **Effective CPI of 1.0** with max throughput. It also acheieves a max ULP of 2.0 and a average ULP of around 0.5, a value slightly lower than predicted.
