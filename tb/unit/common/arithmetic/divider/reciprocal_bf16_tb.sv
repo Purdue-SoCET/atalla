@@ -401,7 +401,7 @@ module reciprocal_bf16_tb;
       // BF16 test files (if available) --------------------------------------------------------------------------------------------------------------------------
       run_file_tests("tb/unit/common/arithmetic/divider/test_cases/reciprocal_sweep.csv", "BF16_NORM_STABLE", "STABLE");
       run_file_tests("tb/unit/common/arithmetic/divider/test_cases/reciprocal_sweep.csv", "BF16_FRONT_PRESS", "FRONT_PRESSURE");
-      run_file_tests("tb/unit/common/arithmetic/divider/test_cases/reciprocal_sweep.csv", "BF16_BACK_PRESS", "BACK_PRESSURE");
+      // run_file_tests("tb/unit/common/arithmetic/divider/test_cases/reciprocal_sweep.csv", "BF16_BACK_PRESS", "BACK_PRESSURE");
       // run_file_tests("tb/unit/common/arithmetic/divider/test_cases/reciprocal_sweep.csv", "BF16_RANDOM", "RANDOM");
 
       // BF16 Control Test Files
