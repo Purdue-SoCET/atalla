@@ -4,8 +4,7 @@
  * single rounding version 
  *
  * Build:
-    gcc -O2 -I ~/berkeley-softfloat-3/source/include         -I ~/berkeley-testfloat-3/build/Linux-x86_64-GCC         gen_testfloat4pure_fp32accum_fp16.c         ~/berkeley-softfloat-3/build/Linux-x86_64
-    -GCC/softfloat.a         -o gen_testfloat4pure_fp32accum_fp16
+    gcc -O2 -I ~/berkeley-softfloat-3/source/include -I ~/berkeley-testfloat-3/build/Linux-x86_64-GCC  gen_testfloat4pure_fp32accum_fp16.c  ~/berkeley-softfloat-3/build/Linux-x86_64-GCC/softfloat.a -o gen_testfloat4pure_fp32accum_fp16
  *
  * Usage:
  *   ./gen_testfloat4pure [options] > testfloat_cases_4_pure.csv
@@ -65,10 +64,30 @@ static uint32_t apply_ftz(uint32_t bits) {
     return bits;
 }
 
+/* DAZ: flush subnormal input to signed zero */
+static uint16_t apply_daz_16(uint16_t bits) {
+    if (ENABLE_DAZ && is_subnormal_f16(bits))
+        return bits & 0x8000;
+    return bits;
+}
+
+/* FTZ: flush subnormal result to signed zero */
+static uint16_t apply_ftz_16(uint16_t bits) {
+    if (ENABLE_FTZ && is_subnormal_f16(bits))
+        return bits & 0x8000;
+    return bits;
+}
 
 static uint32_t canonicalize_nan(uint32_t bits) {
     if (is_nan_f32(bits))
         return 0x7FC00000; // Standard QNaN
+    return bits;
+}
+
+/* Canonicalize NaN to 0x7E00 (positive quiet NaN) */
+static uint16_t canonicalize_nan_16(uint16_t bits) {
+    if (is_nan_f16(bits))
+        return 0x7E00;
     return bits;
 }
 
@@ -80,50 +99,45 @@ static uint32_t canonicalize_nan(uint32_t bits) {
 static uint32_t true_4input_add(uint16_t a_bits, uint16_t b_bits,
                                 uint16_t c_bits, uint16_t d_bits) {
     float16_t a16, b16, c16, d16;
-    float64_t a64, b64, c64, d64, sum;
-    float32_t a32, b32, c32, d32; 
-    float32_t result;
+    float64_t a64, b64, c64, d64, sum; 
+    float32_t a32, b32, c32, d32;
+    float16_t result;
 
     a16.v = a_bits;
     b16.v = b_bits;
     c16.v = c_bits;
     d16.v = d_bits;
 
-    softfloat_roundingMode = softfloat_round_minMag;
+    softfloat_roundingMode = softfloat_round_near_even;
     softfloat_exceptionFlags = 0;
 
     if (is_nan_f16(a16.v) || is_nan_f16(b16.v) ||
         is_nan_f16(c16.v) || is_nan_f16(d16.v))
-        return 0x7FC00000; // Canonical QNaN in FP32
+        return 0x7E00; // Canonical QNaN in FP32
+
+    a16.v = apply_daz_16(a_bits);
+    b16.v = apply_daz_16(b_bits);
+    c16.v = apply_daz_16(c_bits);
+    d16.v = apply_daz_16(d_bits);
 
     /* convert to FP32 */
-    a32 = f16_to_f32(a16);
-    b32 = f16_to_f32(b16);
-    c32 = f16_to_f32(c16);
-    d32 = f16_to_f32(d16);
-
-    // Check DAZ and NaN
-    a32.v = apply_daz(a32.v);
-    b32.v = apply_daz(b32.v);
-    c32.v = apply_daz(c32.v);
-    d32.v = apply_daz(d32.v);
-
-    // Convert to fp64
-    a64 = f32_to_f64(a32);
-    b64 = f32_to_f64(b32);
-    c64 = f32_to_f64(c32);
-    d64 = f32_to_f64(d32);
+    a64 = f16_to_f64(a16);
+    b64 = f16_to_f64(b16);
+    c64 = f16_to_f64(c16);
+    d64 = f16_to_f64(d16);
 
     /* sum in fp32 */
     sum = f64_add(a64, b64);
     sum = f64_add(sum, c64);
     sum = f64_add(sum, d64);
 
-    // truncate to fp32 wihtout rounding
-    result = f64_to_f32(sum);
+    // return sum.v;
+
+    // fp64 to fp16 with round to nearest even
+    result = f64_to_f16(sum);
     /*apply FTZ and canonicalize NaN */
-    result.v = apply_ftz(result.v);
-    result.v = canonicalize_nan(result.v);
+    result.v = apply_ftz_16(result.v);
+    result.v = canonicalize_nan_16(result.v);
 
     return result.v;
 }
@@ -174,7 +188,7 @@ int main(int argc, char *argv[]) {
         /* True 4-input add: single rounding via FP64 */
         uint32_t result = true_4input_add(a, b, c, d);
 
-        printf("%04x,%04x,%04x,%04x,%08x\n", a, b, c, d, result);
+        printf("%04x,%04x,%04x,%04x,%04x\n", a, b, c, d, result);
     }
 
     return 0;

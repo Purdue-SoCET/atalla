@@ -135,25 +135,25 @@ module sysarr_4_input_fp_adder #(
         m_mant_base = { (|exp_mx), frac_mx, {MANTISSA_SIZE-IN_MANTISSA_SIZE{1'b0}} ,{PRECISION_BITS{1'b0}}};
         n_mant_base = { (|exp_nx), frac_nx, {MANTISSA_SIZE-IN_MANTISSA_SIZE{1'b0}} ,{PRECISION_BITS{1'b0}}};
 
-        // sticky_y  = |(y_mant_base & ~({NEW_MANT_WIDTH{1'b1}} << y_shift));
+        sticky_y  = |(y_mant_base & ~({NEW_MANT_WIDTH{1'b1}} << y_shift));
         y_shifted = (y_shift >= NEW_MANT_WIDTH) ? 0 : (y_mant_base >> y_shift);
         // y_shifted[0] = y_shifted[0] | sticky_y; // OR sticky bit into LSB of shifted mantissa
 
-        // sticky_m  = |(m_mant_base & ~({NEW_MANT_WIDTH{1'b1}} << m_shift));
+        sticky_m  = |(m_mant_base & ~({NEW_MANT_WIDTH{1'b1}} << m_shift));
         m_shifted = (m_shift >= NEW_MANT_WIDTH) ? 0 : (m_mant_base >> m_shift);
         // m_shifted[0] = m_shifted[0] | sticky_m; // OR sticky bit into LSB of shifted mantissa
 
-        // sticky_n  = |(n_mant_base & ~({NEW_MANT_WIDTH{1'b1}} << n_shift));
+        sticky_n  = |(n_mant_base & ~({NEW_MANT_WIDTH{1'b1}} << n_shift));
         n_shifted = (n_shift >= NEW_MANT_WIDTH) ? 0 : (n_mant_base >> n_shift);
         // n_shifted[0] = n_shifted[0] | sticky_n; // OR sticky bit into LSB of shifted mantissa
         
         y_op = sign_x ^ sign_y; m_op = sign_x ^ sign_mx; n_op = sign_x ^ sign_nx;
 
         // -- COMPRESS (CSA Tree) --
-        op_x = {2'b00, x_mant};
-        op_y = y_op ? ~{2'b00, y_shifted} : {2'b00, y_shifted};
-        op_m = m_op ? ~{2'b00, m_shifted} : {2'b00, m_shifted};
-        op_n = n_op ? ~{2'b00, n_shifted} : {2'b00, n_shifted};
+        op_x = {3'b000, x_mant};
+        op_y = y_op ? ~{3'b000, y_shifted} : {3'b000, y_shifted};
+        op_m = m_op ? ~{3'b000, m_shifted} : {3'b000, m_shifted};
+        op_n = n_op ? ~{3'b000, n_shifted} : {3'b000, n_shifted};
 
         csa_s1 = op_x ^ op_y ^ op_m;
         csa_c1 = (op_x & op_y) | (op_y & op_m) | (op_m & op_x);
@@ -184,10 +184,10 @@ module sysarr_4_input_fp_adder #(
         raw_sum = $signed({1'b0, st1_sum_vec}) + $signed( st1_carry_vec << 1) + $signed({{(SUM_WIDTH){1'b0}}, st1_hot_ones});
 
         if (raw_sum[SUM_WIDTH]) begin
-            mag_sum = ~raw_sum + 1'b1;
+            mag_sum = SUM_WIDTH'((~raw_sum + 1'b1));
             res_sign = ~st1_a_s;
         end else begin
-            mag_sum = raw_sum;
+            mag_sum = SUM_WIDTH'(raw_sum[SUM_WIDTH-1:0]);
             res_sign = st1_a_s;
         end
     end
@@ -235,7 +235,7 @@ module sysarr_4_input_fp_adder #(
         final_exp_calc = $signed({2'b00, st2_exp_base}) + 2 - $signed({2'b00, lead_zeros}) + BIAS_DIFF;
 
         // 4. Output Packing
-        if (st2_sum_mag == 0 || final_exp_calc <= 0 || st2_exp_base == 0) result_out = {st2_res_sign, {RES_WIDTH-1{1'b0}}};
+        if (st2_sum_mag == 0 || final_exp_calc <= 0 || st2_exp_base == 0) result_out = {1'b0, {RES_WIDTH-1{1'b0}}};
         else if (final_exp_calc >= MAX_EXP) result_out = {st2_res_sign, {EXPONENT_SIZE{1'b1}}, {MANTISSA_SIZE{1'b0}}}; 
         else result_out = {st2_res_sign, final_exp_calc[EXPONENT_SIZE-1:0], final_mant};
 

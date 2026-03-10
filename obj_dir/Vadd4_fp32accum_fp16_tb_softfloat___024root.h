@@ -7,7 +7,7 @@
 
 #include "verilated.h"
 #include "verilated_timing.h"
-class Vadd4_fp32accum_fp16_tb_softfloat_systolic_array_4_input_adder_if;
+class Vadd4_fp32accum_fp16_tb_softfloat_systolic_array_4_input_adder_if__pi1;
 
 
 class Vadd4_fp32accum_fp16_tb_softfloat__Syms;
@@ -15,7 +15,7 @@ class Vadd4_fp32accum_fp16_tb_softfloat__Syms;
 class alignas(VL_CACHE_LINE_BYTES) Vadd4_fp32accum_fp16_tb_softfloat___024root final : public VerilatedModule {
   public:
     // CELLS
-    Vadd4_fp32accum_fp16_tb_softfloat_systolic_array_4_input_adder_if* __PVT__add4_fp32accum_fp16_tb_softfloat__DOT__add_if;
+    Vadd4_fp32accum_fp16_tb_softfloat_systolic_array_4_input_adder_if__pi1* __PVT__add4_fp32accum_fp16_tb_softfloat__DOT__add_if;
 
     // DESIGN SPECIFIC STATE
     // Anonymous structures to workaround compiler member-count bugs
@@ -79,16 +79,27 @@ class alignas(VL_CACHE_LINE_BYTES) Vadd4_fp32accum_fp16_tb_softfloat___024root f
         CData/*0:0*/ add4_fp32accum_fp16_tb_softfloat__DOT__etchedfp4adder__DOT__round_bit;
         CData/*0:0*/ add4_fp32accum_fp16_tb_softfloat__DOT__etchedfp4adder__DOT__sticky_bit;
         CData/*0:0*/ add4_fp32accum_fp16_tb_softfloat__DOT__etchedfp4adder__DOT__round_up;
+        CData/*0:0*/ add4_fp32accum_fp16_tb_softfloat__DOT__reduce__DOT__guard;
+        CData/*0:0*/ add4_fp32accum_fp16_tb_softfloat__DOT__reduce__DOT__rnd;
+        CData/*0:0*/ add4_fp32accum_fp16_tb_softfloat__DOT__reduce__DOT__sticky;
+        CData/*0:0*/ add4_fp32accum_fp16_tb_softfloat__DOT__reduce__DOT__round_up;
         CData/*0:0*/ __VstlFirstIteration;
+    };
+    struct {
         CData/*0:0*/ __Vtrigprevexpr___TOP__add4_fp32accum_fp16_tb_softfloat__DOT__tb_clk__0;
         CData/*0:0*/ __Vtrigprevexpr___TOP__add4_fp32accum_fp16_tb_softfloat__DOT__tb_nrst__0;
         CData/*0:0*/ __VactContinue;
         SData/*15:0*/ add4_fp32accum_fp16_tb_softfloat__DOT__tb_a;
-    };
-    struct {
         SData/*15:0*/ add4_fp32accum_fp16_tb_softfloat__DOT__tb_b;
         SData/*15:0*/ add4_fp32accum_fp16_tb_softfloat__DOT__tb_c;
         SData/*15:0*/ add4_fp32accum_fp16_tb_softfloat__DOT__tb_d;
+        SData/*15:0*/ add4_fp32accum_fp16_tb_softfloat__DOT__tb_result;
+        SData/*15:0*/ add4_fp32accum_fp16_tb_softfloat__DOT__exp;
+        SData/*15:0*/ add4_fp32accum_fp16_tb_softfloat__DOT__a;
+        SData/*15:0*/ add4_fp32accum_fp16_tb_softfloat__DOT__b;
+        SData/*15:0*/ add4_fp32accum_fp16_tb_softfloat__DOT__c;
+        SData/*15:0*/ add4_fp32accum_fp16_tb_softfloat__DOT__d;
+        SData/*15:0*/ add4_fp32accum_fp16_tb_softfloat__DOT__expected;
         SData/*15:0*/ add4_fp32accum_fp16_tb_softfloat__DOT__etchedfp4adder__DOT__a_daz;
         SData/*15:0*/ add4_fp32accum_fp16_tb_softfloat__DOT__etchedfp4adder__DOT__b_daz;
         SData/*15:0*/ add4_fp32accum_fp16_tb_softfloat__DOT__etchedfp4adder__DOT__c_daz;
@@ -106,7 +117,8 @@ class alignas(VL_CACHE_LINE_BYTES) Vadd4_fp32accum_fp16_tb_softfloat___024root f
         SData/*9:0*/ add4_fp32accum_fp16_tb_softfloat__DOT__etchedfp4adder__DOT__frac_mx;
         SData/*9:0*/ add4_fp32accum_fp16_tb_softfloat__DOT__etchedfp4adder__DOT__frac_nx;
         SData/*10:0*/ add4_fp32accum_fp16_tb_softfloat__DOT__etchedfp4adder__DOT__final_exp_calc;
-        IData/*31:0*/ add4_fp32accum_fp16_tb_softfloat__DOT__exp;
+        SData/*9:0*/ add4_fp32accum_fp16_tb_softfloat__DOT__reduce__DOT__new_exp;
+        SData/*10:0*/ add4_fp32accum_fp16_tb_softfloat__DOT__reduce__DOT__rounded;
         IData/*31:0*/ add4_fp32accum_fp16_tb_softfloat__DOT__pass_count;
         IData/*31:0*/ add4_fp32accum_fp16_tb_softfloat__DOT__fail_count;
         IData/*31:0*/ add4_fp32accum_fp16_tb_softfloat__DOT__off_by_one;
@@ -116,44 +128,39 @@ class alignas(VL_CACHE_LINE_BYTES) Vadd4_fp32accum_fp16_tb_softfloat___024root f
         IData/*31:0*/ add4_fp32accum_fp16_tb_softfloat__DOT__ulp_big_count;
         IData/*31:0*/ add4_fp32accum_fp16_tb_softfloat__DOT__fd;
         IData/*31:0*/ add4_fp32accum_fp16_tb_softfloat__DOT__fail_fd;
-        IData/*31:0*/ add4_fp32accum_fp16_tb_softfloat__DOT__a;
-        IData/*31:0*/ add4_fp32accum_fp16_tb_softfloat__DOT__b;
-        IData/*31:0*/ add4_fp32accum_fp16_tb_softfloat__DOT__c;
-        IData/*31:0*/ add4_fp32accum_fp16_tb_softfloat__DOT__d;
-        IData/*31:0*/ add4_fp32accum_fp16_tb_softfloat__DOT__expected;
         IData/*31:0*/ add4_fp32accum_fp16_tb_softfloat__DOT__unnamedblk1__DOT__ret;
         IData/*31:0*/ add4_fp32accum_fp16_tb_softfloat__DOT__unnamedblk1__DOT__total_count;
-        IData/*23:0*/ add4_fp32accum_fp16_tb_softfloat__DOT__etchedfp4adder__DOT__x_mant;
-        IData/*23:0*/ add4_fp32accum_fp16_tb_softfloat__DOT__etchedfp4adder__DOT__y_shifted;
-        IData/*23:0*/ add4_fp32accum_fp16_tb_softfloat__DOT__etchedfp4adder__DOT__m_shifted;
-        IData/*23:0*/ add4_fp32accum_fp16_tb_softfloat__DOT__etchedfp4adder__DOT__n_shifted;
-        IData/*23:0*/ add4_fp32accum_fp16_tb_softfloat__DOT__etchedfp4adder__DOT__y_mant_base;
-        IData/*23:0*/ add4_fp32accum_fp16_tb_softfloat__DOT__etchedfp4adder__DOT__m_mant_base;
-        IData/*23:0*/ add4_fp32accum_fp16_tb_softfloat__DOT__etchedfp4adder__DOT__n_mant_base;
+        IData/*24:0*/ add4_fp32accum_fp16_tb_softfloat__DOT__etchedfp4adder__DOT__x_mant;
+        IData/*24:0*/ add4_fp32accum_fp16_tb_softfloat__DOT__etchedfp4adder__DOT__y_shifted;
+        IData/*24:0*/ add4_fp32accum_fp16_tb_softfloat__DOT__etchedfp4adder__DOT__m_shifted;
+        IData/*24:0*/ add4_fp32accum_fp16_tb_softfloat__DOT__etchedfp4adder__DOT__n_shifted;
+        IData/*24:0*/ add4_fp32accum_fp16_tb_softfloat__DOT__etchedfp4adder__DOT__y_mant_base;
+        IData/*24:0*/ add4_fp32accum_fp16_tb_softfloat__DOT__etchedfp4adder__DOT__m_mant_base;
+        IData/*24:0*/ add4_fp32accum_fp16_tb_softfloat__DOT__etchedfp4adder__DOT__n_mant_base;
         IData/*31:0*/ add4_fp32accum_fp16_tb_softfloat__DOT__etchedfp4adder__DOT__special_result;
         IData/*31:0*/ add4_fp32accum_fp16_tb_softfloat__DOT__etchedfp4adder__DOT__st1_special_result;
-        IData/*26:0*/ add4_fp32accum_fp16_tb_softfloat__DOT__etchedfp4adder__DOT__st1_sum_vec;
-        IData/*26:0*/ add4_fp32accum_fp16_tb_softfloat__DOT__etchedfp4adder__DOT__st1_carry_vec;
-        IData/*27:0*/ add4_fp32accum_fp16_tb_softfloat__DOT__etchedfp4adder__DOT__raw_sum;
-        IData/*25:0*/ add4_fp32accum_fp16_tb_softfloat__DOT__etchedfp4adder__DOT__mag_sum;
-        IData/*25:0*/ add4_fp32accum_fp16_tb_softfloat__DOT__etchedfp4adder__DOT__st2_sum_mag;
+        IData/*27:0*/ add4_fp32accum_fp16_tb_softfloat__DOT__etchedfp4adder__DOT__st1_sum_vec;
+        IData/*27:0*/ add4_fp32accum_fp16_tb_softfloat__DOT__etchedfp4adder__DOT__st1_carry_vec;
+        IData/*28:0*/ add4_fp32accum_fp16_tb_softfloat__DOT__etchedfp4adder__DOT__raw_sum;
+        IData/*26:0*/ add4_fp32accum_fp16_tb_softfloat__DOT__etchedfp4adder__DOT__mag_sum;
+        IData/*26:0*/ add4_fp32accum_fp16_tb_softfloat__DOT__etchedfp4adder__DOT__st2_sum_mag;
         IData/*31:0*/ add4_fp32accum_fp16_tb_softfloat__DOT__etchedfp4adder__DOT__st2_spec_res;
-        IData/*25:0*/ add4_fp32accum_fp16_tb_softfloat__DOT__etchedfp4adder__DOT__lzd_scan;
-        IData/*25:0*/ add4_fp32accum_fp16_tb_softfloat__DOT__etchedfp4adder__DOT__norm_val;
+        IData/*26:0*/ add4_fp32accum_fp16_tb_softfloat__DOT__etchedfp4adder__DOT__lzd_scan;
+        IData/*26:0*/ add4_fp32accum_fp16_tb_softfloat__DOT__etchedfp4adder__DOT__norm_val;
         IData/*22:0*/ add4_fp32accum_fp16_tb_softfloat__DOT__etchedfp4adder__DOT__raw_mant;
         IData/*22:0*/ add4_fp32accum_fp16_tb_softfloat__DOT__etchedfp4adder__DOT__final_mant;
         IData/*23:0*/ add4_fp32accum_fp16_tb_softfloat__DOT__etchedfp4adder__DOT__rounded_mant_int;
-        IData/*31:0*/ add4_fp32accum_fp16_tb_softfloat__DOT__etchedfp4adder__DOT__result_out;
-        IData/*26:0*/ add4_fp32accum_fp16_tb_softfloat__DOT__etchedfp4adder__DOT__op_x;
-        IData/*26:0*/ add4_fp32accum_fp16_tb_softfloat__DOT__etchedfp4adder__DOT__op_y;
-        IData/*26:0*/ add4_fp32accum_fp16_tb_softfloat__DOT__etchedfp4adder__DOT__op_m;
-        IData/*26:0*/ add4_fp32accum_fp16_tb_softfloat__DOT__etchedfp4adder__DOT__op_n;
-        IData/*26:0*/ add4_fp32accum_fp16_tb_softfloat__DOT__etchedfp4adder__DOT__csa_s1;
-        IData/*26:0*/ add4_fp32accum_fp16_tb_softfloat__DOT__etchedfp4adder__DOT__csa_c1;
     };
     struct {
-        IData/*26:0*/ add4_fp32accum_fp16_tb_softfloat__DOT__etchedfp4adder__DOT__csa_s2;
-        IData/*26:0*/ add4_fp32accum_fp16_tb_softfloat__DOT__etchedfp4adder__DOT__csa_c2;
+        IData/*31:0*/ add4_fp32accum_fp16_tb_softfloat__DOT__etchedfp4adder__DOT__result_out;
+        IData/*27:0*/ add4_fp32accum_fp16_tb_softfloat__DOT__etchedfp4adder__DOT__op_x;
+        IData/*27:0*/ add4_fp32accum_fp16_tb_softfloat__DOT__etchedfp4adder__DOT__op_y;
+        IData/*27:0*/ add4_fp32accum_fp16_tb_softfloat__DOT__etchedfp4adder__DOT__op_m;
+        IData/*27:0*/ add4_fp32accum_fp16_tb_softfloat__DOT__etchedfp4adder__DOT__op_n;
+        IData/*27:0*/ add4_fp32accum_fp16_tb_softfloat__DOT__etchedfp4adder__DOT__csa_s1;
+        IData/*27:0*/ add4_fp32accum_fp16_tb_softfloat__DOT__etchedfp4adder__DOT__csa_c1;
+        IData/*27:0*/ add4_fp32accum_fp16_tb_softfloat__DOT__etchedfp4adder__DOT__csa_s2;
+        IData/*27:0*/ add4_fp32accum_fp16_tb_softfloat__DOT__etchedfp4adder__DOT__csa_c2;
         IData/*31:0*/ add4_fp32accum_fp16_tb_softfloat__DOT__etchedfp4adder__DOT__stage3_logic__DOT__unnamedblk1__DOT__i;
         IData/*31:0*/ __VactIterCount;
         QData/*63:0*/ add4_fp32accum_fp16_tb_softfloat__DOT__get_ulp_distance__Vstatic__int_a;
@@ -161,10 +168,6 @@ class alignas(VL_CACHE_LINE_BYTES) Vadd4_fp32accum_fp16_tb_softfloat___024root f
         VlUnpacked<CData/*0:0*/, 6> __Vm_traceActivity;
     };
     double add4_fp32accum_fp16_tb_softfloat__DOT__total_ulp_diff;
-    double add4_fp32accum_fp16_tb_softfloat__DOT__diff;
-    double add4_fp32accum_fp16_tb_softfloat__DOT__total_diff;
-    double add4_fp32accum_fp16_tb_softfloat__DOT__get_float_difference__Vstatic__real_a;
-    double add4_fp32accum_fp16_tb_softfloat__DOT__get_float_difference__Vstatic__real_b;
     VlDelayScheduler __VdlySched;
     VlTriggerScheduler __VtrigSched_h8c095862__0;
     VlTriggerVec<1> __VstlTriggered;

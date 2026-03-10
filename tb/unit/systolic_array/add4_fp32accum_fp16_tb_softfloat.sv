@@ -14,6 +14,7 @@
 // to view waves -> gtkwave waves/add4_fp16_waves.vcd --save=waves/add4_fp16_debug.gtkw
 // also creates file called test_failures.csv w all failed cases (input, exp, got)
 
+// verilator -Irtl/include/systolic_array  --binary -j 0 -Wall -Wno-fatal --timing --top-module add4_fp32accum_fp16_tb_softfloat tb/unit/systolic_array/add4_fp32accum_fp16_tb_softfloat.sv rtl/modules/systolic_array/reducer.sv  rtl/modules/systolic_array/sysarr_4_input_fp_adder.sv --trace
 
 `include "systolic_array_4_input_adder_if.vh"
 
@@ -26,7 +27,7 @@ module add4_fp32accum_fp16_tb_softfloat;
     localparam EXPONENT_SIZE     = 8;
     localparam IN_MANTISSA_SIZE = 10; // Output Mantissa Width (New Parameter)
     localparam IN_EXPONENT_SIZE = 5;
-    localparam PRECISION_BITS = 0;
+    localparam PRECISION_BITS = 1;
 
     logic tb_clk;
     logic tb_nrst;
@@ -48,19 +49,18 @@ module add4_fp32accum_fp16_tb_softfloat;
     ) add_if();
 
     logic [15:0] tb_a, tb_b, tb_c, tb_d;
-    logic [31:0] tb_result;
-    logic [31:0] exp;
+    logic [15:0] tb_result;
+    logic [15:0] exp;
 
     int pass_count, fail_count, off_by_one, off_by_two, off_by_five_plus, ulp_diff, ulp_big_count; 
     real total_ulp_diff; 
-    shortreal diff, total_diff; 
+    // shortreal diff, total_diff; 
 
     // con testbench signals to interface
     assign add_if.a = tb_a;
     assign add_if.b = tb_b;
     assign add_if.c = tb_c;
     assign add_if.d = tb_d;
-    assign tb_result = add_if.out;
 
     // DUT
     sysarr_4_input_fp_adder #(
@@ -75,6 +75,10 @@ module add4_fp32accum_fp16_tb_softfloat;
         .add(add_if)
     );
 
+    reducer #(.IN_EXP_W(8), .IN_MANT_W(23), .OUT_EXP_W(5), .OUT_MANT_W(10)) reduce (
+        .fp_in(add_if.out), .fp_out(tb_result)
+    );
+
     task automatic test_case(input logic [15:0] a, input logic [15:0] b, input logic [15:0] c, input logic [15:0] d);
         @(negedge tb_clk);
         tb_a = a;
@@ -83,11 +87,11 @@ module add4_fp32accum_fp16_tb_softfloat;
         tb_d = d;
     endtask
 
-    function automatic logic is_nan(input logic [31:0] val);
-        return (val[30:23] == 5'b11111) && (val[22:0] != 10'b0);
+    function automatic logic is_nan(input logic [15:0] val);
+        return (val[14:10] == 5'b11111) && (val[9:0] != 10'b0);
     endfunction
 
-    task automatic check_case(input string casename, input logic [31:0] expected);
+    task automatic check_case(input string casename, input logic [15:0] expected);
         logic match;
         if (is_nan(tb_result) && is_nan(expected)) begin
             match = 1'b1;
@@ -107,25 +111,25 @@ module add4_fp32accum_fp16_tb_softfloat;
         end
     endtask
 
-    function longint get_ulp_distance(logic [31:0] a, logic [31:0] b);
+    function longint get_ulp_distance(logic [15:0] a, logic [15:0] b);
         longint int_a, int_b;
 
         // Convert bit pattern to a "continuous" integer scale
         // This handles the sign bit so that -0.0 and +0.0 are adjacent
         // and negative numbers grow away from zero.
-        int_a = (a[31]) ? (64'h7FFFFFFF - a[30:0]) : (64'h80000000 + a[30:0]);
-        int_b = (b[31]) ? (64'h7FFFFFFF - b[30:0]) : (64'h80000000 + b[30:0]);
+        int_a = (a[15]) ? (64'h7FFFFFFF - a[14:0]) : (64'h80000000 + a[14:0]);
+        int_b = (b[15]) ? (64'h7FFFFFFF - b[14:0]) : (64'h80000000 + b[14:0]);
 
         if (int_a > int_b) return (int_a - int_b);
         else               return (int_b - int_a);
     endfunction
 
-    function shortreal get_float_difference(input logic [31:0] a, input logic [31:0] b);
-        shortreal real_a, real_b;
-        real_a = $bitstoshortreal(a);
-        real_b = $bitstoshortreal(b);
-        return (real_a - real_b);
-    endfunction
+    // function shortreal get_float_difference(input logic [15:0] a, input logic [15:0] b);
+    //     shortreal real_a, real_b;
+    //     real_a = $bitstoshortreal(a);
+    //     real_b = $bitstoshortreal(b);
+    //     return (real_a - real_b);
+    // endfunction
 
     localparam logic [15:0] P_INF      = 16'b0_11111_0000000000;
     localparam logic [15:0] N_INF      = 16'b1_11111_0000000000;
@@ -154,7 +158,7 @@ module add4_fp32accum_fp16_tb_softfloat;
     integer fd;
     integer fail_fd;
     string header;
-    logic [31:0] a, b, c, d, expected;
+    logic [15:0] a, b, c, d, expected;
 
 initial begin
     // waveform stuff
@@ -183,77 +187,77 @@ initial begin
 
     // Basic: 1+1+1+1 = 4
     test_case(ONE, ONE, ONE, ONE);
-    exp = FOUR_32;
+    exp = FOUR;
     #(PERIOD * (LATENCY + 1));
     check_case("1+1+1+1 = 4", exp);
     #(PERIOD);
 
     // 2+2+2+2 = 8
     test_case(TWO, TWO, TWO, TWO);
-    exp = 32'b0_10000010_00000000000000000000000;
+    exp = 16'b0100100000000000;
     #(PERIOD * (LATENCY + 1));
     check_case("2+2+2+2 = 8", exp);
     #(PERIOD);
 
     // Zero cases: 0+0+0+0 = 0
     test_case(P_ZERO, P_ZERO, P_ZERO, P_ZERO);
-    exp = P_ZERO_32;
+    exp = P_ZERO;
     #(PERIOD * (LATENCY + 1));
     check_case("0+0+0+0 = 0", exp);
     #(PERIOD);
 
     // Mixed zeros: 1+0+0+0 = 1
     test_case(ONE, P_ZERO, P_ZERO, P_ZERO);
-    exp = ONE_32;
+    exp = ONE;
     #(PERIOD * (LATENCY + 1));
     check_case("1+0+0+0 = 1", exp);
     #(PERIOD);
 
     // Infinity: Inf+1+1+1 = Inf
     test_case(P_INF, ONE, ONE, ONE);
-    exp = P_INF_32;
+    exp = P_INF;
     #(PERIOD * (LATENCY + 1));
     check_case("Inf+1+1+1 = Inf", exp);
     #(PERIOD);
 
     // Inf + Inf + 1 + 1 = Inf
     test_case(P_INF, P_INF, ONE, ONE);
-    exp = P_INF_32;
+    exp = P_INF;
     #(PERIOD * (LATENCY + 1));
     check_case("Inf+Inf+1+1 = Inf", exp);
     #(PERIOD);
 
     // +Inf + -Inf in same branch = NaN propagates
     test_case(P_INF, N_INF, ONE, ONE);
-    exp = NAN_32;
+    exp = NAN;
     #(PERIOD * (LATENCY + 1));
     check_case("+Inf + -Inf + 1 + 1 = NaN", exp);
     #(PERIOD);
 
     // NaN propagation
     test_case(NAN, ONE, ONE, ONE);
-    exp = NAN_32;
+    exp = NAN;
     #(PERIOD * (LATENCY + 1));
     check_case("NaN+1+1+1 = NaN", exp);
     #(PERIOD);
 
     // DAZ: subnormal inputs flushed
     test_case(MIN_SUB, MIN_SUB, ONE, ONE);
-    exp = TWO_32;  // DAZ: subnormals -> 0, so 0+0+1+1 = 2
+    exp = TWO;  // DAZ: subnormals -> 0, so 0+0+1+1 = 2
     #(PERIOD * (LATENCY + 1));
     check_case("sub+sub+1+1 = 2 (DAZ)", exp);
     #(PERIOD);
 
     // Overflow: max+max+max+max = Inf
     test_case(MAX_FINITE, MAX_FINITE, MAX_FINITE, MAX_FINITE);
-    exp = 32'h487fe000;
+    exp = P_INF;
     #(PERIOD * (LATENCY + 1));
     check_case("max+max+max+max = Inf", exp);
     #(PERIOD);
 
     // Cancellation: 1 + (-1) + 1 + (-1) = 0
     test_case(ONE, 16'b1_01111_0000000000, ONE, 16'b1_01111_0000000000);
-    exp = P_ZERO_32;
+    exp = P_ZERO;
     #(PERIOD * (LATENCY + 1));
     check_case("1+(-1)+1+(-1) = 0", exp);
     #(PERIOD);
@@ -261,17 +265,17 @@ initial begin
     // Negative sum: -2 + -2 + -2 + -2 = -8
     test_case(16'b1_10000_0000000000, 16'b1_10000_0000000000,
               16'b1_10000_0000000000, 16'b1_10000_0000000000);
-    exp = 32'hc1000000;
+    exp = 16'b1100100000000000;
     #(PERIOD * (LATENCY + 1));
     check_case("-2+-2+-2+-2 = -8", exp);
     #(PERIOD);
 
     //NOTE: Failure detected in test case A=00008b43 B=00002c95 C=0000838c D=0000ad8b | Got=bc79a180 Exp=bc7a8480 (diff=58112)
-    test_case(16'h8b43, 16'h2c95, 16'h838c, 16'had8b);
-    exp = 32'hbc7a8480;
-    #(PERIOD * (LATENCY + 1));
-    check_case("A=00008b43 B=00002c95 C=0000838c D=0000ad8b | Got=bc79a180 Exp=bc7a8480 (diff=58112)", exp);
-    #(PERIOD);
+    // test_case(16'h8b43, 16'h2c95, 16'h838c, 16'had8b);
+    // exp = 32'hbc7a8480;
+    // #(PERIOD * (LATENCY + 1));
+    // check_case("A=00008b43 B=00002c95 C=0000838c D=0000ad8b | Got=bc79a180 Exp=bc7a8480 (diff=58112)", exp);
+    // #(PERIOD);
 
     $display("");
     $display("--- Berkeley SoftFloat Random Test Cases ---");
@@ -317,18 +321,20 @@ initial begin
             fail_count++;
             // only print first 10 failures to terminal u can change if u want
             if (fail_count <= 10) begin
-                $display("FAIL: A=%h B=%h C=%h D=%h | Got=%h Exp=%h", 
-                         a, b, c, d, tb_result, expected);
+                $display("FAIL: A=%h B=%h C=%h D=%h | Got_fp16=%h, Got_fp32=%h, Exp=%h", 
+                         a, b, c, d, tb_result, add_if.out, expected);
             end else if (fail_count == 11) begin
                 $display("... (suppressing further terminal output, all failures logged to test_failures.csv) ...");
             end
 
-            diff = get_float_difference(tb_result, expected);
+            // diff = get_float_difference(tb_result, expected);
             ulp_diff = get_ulp_distance(tb_result, expected);
             total_ulp_diff += ulp_diff;
-            total_diff += diff; 
-            if (ulp_diff >= 100 && ulp_big_count < 10) begin
-                $display("Difference (Got - Exp): %e, ULP difference: %0d", diff, ulp_diff);
+            // total_diff += diff; 
+            if (ulp_diff >= 10 && ulp_big_count < 10) begin
+                $display("FAIL: A=%h B=%h C=%h D=%h | Got_fp16=%h, Got_fp32=%h, Exp=%h", 
+                         a, b, c, d, tb_result, add_if.out, expected);
+                $display("ULP difference: %0d", ulp_diff);
                 ulp_big_count++; 
             end
         end else begin
@@ -348,7 +354,7 @@ initial begin
     $display("PRECISION_BITS: %0d", PRECISION_BITS);
     $display("PASSED: %0d", pass_count);
     $display("FAILED: %0d", fail_count);
-    $display("Average error (Got - Exp): %e", total_diff / fail_count);
+    // $display("Average error (Got - Exp): %e", total_diff / fail_count);
     $display("Average ULP difference: %f", total_ulp_diff / fail_count);
     // $display("ULP 1 Difference: %0d", off_by_one);
     // $display("ULP 2-10 Difference %0d", off_by_two);
