@@ -109,7 +109,6 @@ module reciprocal_bf16 (
   
   // Pipeline Signals
   assign pipe_en = !rif.in.ready_in && rif.out.valid_out || !nRST ? 8'h00 : 8'hFF;
-  assign flush = !nRST;
   assign rif.out.ready_out = pipe_en ? nRST:0;
   assign rif.out.valid_out = expTout.valid;
 
