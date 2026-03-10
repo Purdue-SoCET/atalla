@@ -1,4 +1,5 @@
 This implementation was largely based off this research paper
+
 Roy, Taposh Dutta. "Implementation of Goldschmidt's Algorithm with hardware reduction." arXiv preprint arXiv:1909.10154 (2019).
 
 # Divider Documentation
