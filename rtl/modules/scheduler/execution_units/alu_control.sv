@@ -12,7 +12,9 @@ import atalla_isa_pkg::*;
 );
 
     typedef enum {start, latch} state;
+    typedef enum {pulse, stall} s_pulse;
     state n_state, cur_state;
+    s_pulse n_pulse, cur_pulse;
 
     logic [31:0] cur_rs1_value, cur_rs2_value, rs1_value_latch, rs2_value_latch, rs1_value_nlatch, rs2_value_nlatch;
     logic [31:0] cur_imm, imm_latch, imm_nlatch;
@@ -50,11 +52,30 @@ import atalla_isa_pkg::*;
     assign cont_if.predict_pc = cur_predict_pc;
     assign cont_if.ctrl_opcode = cur_op;
 
+    always_comb begin
+        portmap.redirect_valid = 1'b0;
+        n_pulse = cur_pulse;
+
+        case (cur_pulse)
+            pulse: begin
+                portmap.redirect_valid = cont_if.redirect_valid;
+                if(cont_if.redirect_valid && !portmap.ready_out) begin
+                    n_pulse = stall;
+                end
+            end
+            stall: begin
+                if(portmap.ready_out) begin
+                    n_pulse = pulse;
+                end
+            end
+        endcase
+        
+    end
+
 
     always_comb begin
         portmap.rd_value = 32'b0;
         portmap.rdOut = 8'b0;
-        portmap.redirect_valid = 1'b0;
         portmap.redirect_target = 32'b0;
         /////
         portmap.pc_out = '0;
@@ -65,7 +86,6 @@ import atalla_isa_pkg::*;
         end else if(cur_control_valid == 1) begin
             portmap.rd_value = cont_if.rd_value;
             portmap.rdOut = cont_if.rd_idx_out;
-            portmap.redirect_valid = cont_if.redirect_valid && portmap.ready_out;
             portmap.redirect_target = cont_if.redirect_target;
             //////
             portmap.pc_out = cont_if.pc_out;
@@ -167,6 +187,7 @@ import atalla_isa_pkg::*;
             control_valid_latch <= 1'b0;
             predict_pc_latch <= 32'b0;
             predict_taken_latch <= 1'b0;
+            cur_pulse <= pulse;
         end
         else begin
             cur_state <= n_state;
@@ -182,6 +203,7 @@ import atalla_isa_pkg::*;
             control_valid_latch <= control_valid_nlatch;
             predict_pc_latch <= predict_pc_nlatch;
             predict_taken_latch <= predict_taken_nlatch;
+            cur_pulse <= n_pulse;
         end
     end
 
