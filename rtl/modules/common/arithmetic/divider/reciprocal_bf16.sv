@@ -64,6 +64,11 @@ module reciprocal_bf16 (
   logic [15:0] special_result;
 
 // MODULE INSTANTIATIONS
+  div_lut reciprocal_lut (
+    .index({3'h0, rif.in.divisor[6:3]}),
+    .reciprocal(f_1)
+  );
+
   mul_bf16 mul_denominator (
     .clk(CLK), 
     .nRST(nRST),
@@ -110,7 +115,7 @@ module reciprocal_bf16 (
 
   // Mantissa Normalization
   assign muld = (rif.in.divisor[14:7] == 8'h00) ? 16'h8000 : {1'b0, BIAS, rif.in.divisor[6:0]};
-  assign f_1 = 16'h7EF3 - muld;
+  // assign f_1 = 16'h7EF3 - muld;
 
   // Exponent Calculation
   assign exp_diff = {2'b00, ONE[14:7]} - {2'b00, rif.in.divisor[14:7]};
