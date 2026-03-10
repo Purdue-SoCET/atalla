@@ -15,6 +15,27 @@ module execute_stage
     execution_unit_if.execution_units ex_if
 );
     logic ex1_valid, ex2_valid, ex3_valid, ex4_valid, ex5_valid;
+    logic n_halt_latch, halt_latch;
+
+    assign ex_if.halt_out = halt_latch;
+
+    always_comb begin
+        if(ex_if.halt == 1) begin
+            n_halt_latch = 1'b1;
+        end
+        else begin
+            n_halt_latch = halt_latch;
+        end
+    end
+
+    always_ff @( posedge clk, negedge nRST ) begin
+        if(!nRST) begin
+            halt_latch <= 1'b0;
+        end else begin
+            halt_latch <= n_halt_latch;
+        end
+    end
+
     execution_unit_types_pkg::in_DEC2_EX_t post_xbar_ex1, post_xbar_ex2, post_xbar_ex3, post_xbar_ex4, post_xbar_ex5;
     alu_control_if unit1_if ();
     bfD_sD_bfInt_intBF_if unit2_if ();

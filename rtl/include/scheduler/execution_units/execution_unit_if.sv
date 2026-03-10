@@ -44,7 +44,7 @@ interface execution_unit_if # (
   logic WEN, REN;
   logic [31:0] data_store, data_addr;
   //halt
-  logic halt;
+  logic halt, halt_out;
   //branch stuff
   logic [31:0] pc, pc_pred_addr_out;
   logic predict_taken_out;
@@ -58,7 +58,7 @@ interface execution_unit_if # (
     input ready_WB_ex1, ready_WB_ex2, ready_WB_ex3, ready_WB_ex4, ready_WB_ex5, 
     input data_load, hit, 
     input DEC2_inputs, halt, pc, pc_pred_addr_out, predict_taken_out,
-    output ready_DEC2_ex1, ready_DEC2_ex2, ready_DEC2_ex3, ready_DEC2_ex4, ready_DEC2_ex5,
+    output ready_DEC2_ex1, ready_DEC2_ex2, ready_DEC2_ex3, ready_DEC2_ex4, ready_DEC2_ex5, halt_out,
     output redirect_valid, redirect_target, WEN, REN, data_store, data_addr,
     output ex1, ex2, ex3, ex4, ex5,
     output pc_out
@@ -68,7 +68,7 @@ interface execution_unit_if # (
     output ready_WB_ex1, ready_WB_ex2, ready_WB_ex3, ready_WB_ex4, ready_WB_ex5, 
     output data_load, hit, 
     output DEC2_inputs, halt, pc, pc_pred_addr_out, predict_taken_out,
-    input ready_DEC2_ex1, ready_DEC2_ex2, ready_DEC2_ex3, ready_DEC2_ex4, ready_DEC2_ex5,
+    input ready_DEC2_ex1, ready_DEC2_ex2, ready_DEC2_ex3, ready_DEC2_ex4, ready_DEC2_ex5, halt_out,
     input redirect_valid, redirect_target, WEN, REN, data_store, data_addr,
     input ex1, ex2, ex3, ex4, ex5,
     input pc_out
