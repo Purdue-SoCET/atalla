@@ -7,6 +7,7 @@
 #include <cstdlib>
 #include "generate_test_vectors.h"
 
+
 std::string PATH_TO_INPUT = "/scripts/systolic_array/systolic_array_tb_input.csv";
 std::string PATH_TO_EXPECTED_RESULT = "/scripts/systolic_array/systolic_array_tb_expected_result.csv";
 
@@ -396,6 +397,8 @@ void create_new_test(int test_num, int min_exponent, int max_exponent, const std
 int main() {
     // unsigned int n = std::thread::hardware_concurrency();
     // std::cout << "available logical threads: " << n << std::endl;
+
+    std::srand(RANDOM_SEED);
 
     std::string input_path_env = std::getenv("ATALLA_ROOT");
     if (!input_path_env.empty()) {

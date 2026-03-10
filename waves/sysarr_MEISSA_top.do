@@ -23,7 +23,7 @@ add wave -noupdate /sysarr_MEISSA_top_tb/genblk1/DUT/output_buffer/clk
 add wave -noupdate /sysarr_MEISSA_top_tb/genblk1/DUT/output_buffer/nRST
 add wave -noupdate /sysarr_MEISSA_top_tb/genblk1/DUT/output_buffer/wr_en
 add wave -noupdate /sysarr_MEISSA_top_tb/genblk1/DUT/output_buffer/wr_data
-add wave -noupdate -expand /sysarr_MEISSA_top_tb/genblk1/DUT/output_buffer/rd_en
+add wave -noupdate /sysarr_MEISSA_top_tb/genblk1/DUT/output_buffer/rd_en
 add wave -noupdate /sysarr_MEISSA_top_tb/genblk1/DUT/output_buffer/rd_data
 add wave -noupdate /sysarr_MEISSA_top_tb/genblk1/DUT/output_buffer/rdone
 add wave -noupdate /sysarr_MEISSA_top_tb/genblk1/DUT/output_buffer/lane0_empty
@@ -37,6 +37,8 @@ add wave -noupdate -divider {control logic}
 add wave -noupdate /sysarr_MEISSA_top_tb/genblk1/DUT/credits
 add wave -noupdate /sysarr_MEISSA_top_tb/genblk1/DUT/next_credits
 add wave -noupdate /sysarr_MEISSA_top_tb/genblk1/DUT/shift_reg
+add wave -noupdate /sysarr_MEISSA_top_tb/genblk1/DUT/special_counter
+add wave -noupdate /sysarr_MEISSA_top_tb/genblk1/DUT/next_special_counter
 add wave -noupdate -divider {New Divider}
 add wave -noupdate /sysarr_MEISSA_top_tb/genblk1/DUT/output_data
 add wave -noupdate -divider {mul grid}
@@ -62,7 +64,7 @@ add wave -noupdate -divider {reducer 31}
 add wave -noupdate {/sysarr_MEISSA_top_tb/genblk1/DUT/reduce[31]/u_reducer/fp_in}
 add wave -noupdate {/sysarr_MEISSA_top_tb/genblk1/DUT/reduce[31]/u_reducer/fp_out}
 TreeUpdate [SetDefaultTree]
-WaveRestoreCursors {{Cursor 1} {790444 ps} 0}
+WaveRestoreCursors {{Cursor 1} {1694755 ps} 0}
 quietly wave cursor active 1
 configure wave -namecolwidth 150
 configure wave -valuecolwidth 100
@@ -78,4 +80,4 @@ configure wave -griddelta 40
 configure wave -timeline 0
 configure wave -timelineunits ns
 update
-WaveRestoreZoom {0 ps} {599814 ps}
+WaveRestoreZoom {1509276 ps} {2109090 ps}

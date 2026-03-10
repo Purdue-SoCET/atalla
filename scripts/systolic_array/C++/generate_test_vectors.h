@@ -11,6 +11,7 @@ constexpr int COL = 32;
 constexpr int TOTAL_TEST_NUM = 100;
 constexpr int PROBABILITY_OF_NEW_WEIGHT = 250; // 25% chance out of 1000
 constexpr int ADDER_INPUT_NUM = 2;
+constexpr unsigned int RANDOM_SEED = 42;
 bool IS_FP16 = false;
 std::string VERSION = "MEISSA32";
 

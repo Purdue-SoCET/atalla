@@ -88,7 +88,7 @@ module sysarr_MEISSA_top_tb();
             // Read Input header
             void'($fgets(line, file));
         end
-        
+
         // Reads Inputs
         for (int i = 0; i < ARRAY_DIM; i++) begin
             void'($fgets(line, file));
@@ -140,6 +140,10 @@ module sysarr_MEISSA_top_tb();
         gsau_if.sa_array_in   = '0;
 
         for (int column = ARRAY_DIM - 1; column >= 0; column--) begin
+            // Deassert enables while waiting for ready
+            gsau_if.sa_weight_en = 1'b0;
+            gsau_if.sa_array_in  = '0;
+
             while (!gsau_if.sa_ready_in) @(posedge CLK);
 
             // Pack column k of W into the bus
@@ -163,6 +167,12 @@ module sysarr_MEISSA_top_tb();
         gsau_if.sa_array_in = '0;
 
         for (int row = 0; row < ARRAY_DIM; row++) begin
+            // Deassert enables while waiting for ready
+            gsau_if.sa_input_en          = 1'b0;
+            gsau_if.sa_partial_en        = 1'b0;
+            gsau_if.sa_array_in          = '0;
+            gsau_if.sa_array_in_partials = '0;
+
             while (!gsau_if.sa_ready_in) @(posedge CLK);
 
             gsau_if.sa_array_in = '0;
@@ -224,7 +234,7 @@ module sysarr_MEISSA_top_tb();
         for (int row = 0; row < ARRAY_DIM; row++) begin
             for (int column = 0; column < ARRAY_DIM; column++) begin
                 $fwrite(actual_output_file, "0x%04H", temp_act_outputs[row][column]);
-                
+
                 if (column != ARRAY_DIM - 1) begin
                     $fwrite(actual_output_file, ",");
                 end
@@ -283,6 +293,7 @@ initial begin
 
     forever begin
         @(posedge CLK);
+        #(1)
         if (gsau_if.sa_ready_in) begin
 
             if (input_row == 0) begin
@@ -302,7 +313,7 @@ initial begin
                         test_name_queue.push_front(line);
                         test_name = line;
                         found_test = 1;
-                    end 
+                    end
                 end
 
                 if (!found_test) begin
@@ -313,7 +324,7 @@ initial begin
                     gsau_if.sa_array_in_partials = '0;
                     break; // EOF
                 end
-                
+
 
                 // Load weights/inputs from file
                 loaded_weights = 0;
@@ -356,6 +367,7 @@ initial begin
     int result_row;
     bit found_expected_result;
     bit is_result_correct;
+    int stall_counter = 0;
     result_row = 0;
 
     for (int i = 0; i < ARRAY_DIM; i++) begin
@@ -367,19 +379,28 @@ initial begin
 
     forever begin
         @(posedge CLK);
+        #(1)
         if (input_eof && test_name_queue.size() == 0 && result_row == 0) begin
             $display("All queued tests processed. Ending simulation.");
             break;
         end
 
-        // Randomly stall output for 1-5 cycles (30% chance)
-        if ($urandom_range(0,99) < 30) begin
-            gsau_if.sa_ready_out = 1'b0;
-            for (int i = 0; i < $urandom_range(1, 5); i++) begin
-                @(posedge CLK);
-            end
-        end
+        //Randomly stall output for 1-5 cycles (30% chance)
+        stall_counter++;
         gsau_if.sa_ready_out = 1'b1;
+        if(stall_counter >= 5) begin
+            gsau_if.sa_ready_out = 1'b0;
+        end
+        if(stall_counter > $urandom_range(0, 10)) begin
+            stall_counter = 0;
+        end
+        // if ($urandom_range(0,99) < 30) begin
+        //     gsau_if.sa_ready_out = 1'b0;
+        //     for (int k = 0; k < $urandom_range(1, 20); k++) begin
+        //         @(posedge CLK);
+        //     end
+        //     gsau_if.sa_ready_out = 1'b1;
+        // end
 
         if (gsau_if.sa_valid_in) begin
             // Collect output row
@@ -416,7 +437,7 @@ initial begin
                     for (int j = 0; j < ARRAY_DIM; j++) begin
                         if (temp_act_outputs[i][j] == 16'h8000) temp_act_outputs[i][j] = 16'h0000;
                         if (temp_exp_outputs[i][j] == 16'h8000) temp_exp_outputs[i][j] = 16'h0000;
-                        if (temp_act_outputs[i][j] !== temp_exp_outputs[i][j]) begin
+                        if (temp_act_outputs[i][j] != temp_exp_outputs[i][j]) begin
                             is_result_correct = 0;
                             $display("Test %s Failed at [%0d][%0d]: Expected 0x%04H Got 0x%04H",
                                 test_name_queue[$ - 1], i, j, temp_exp_outputs[i][j], temp_act_outputs[i][j]);
@@ -427,7 +448,7 @@ initial begin
                 total_tests++;
                 // if (!is_result_correct) write_matrix(test_name);
                 write_matrix(test_name_queue.pop_back());
-                if (is_result_correct) begin 
+                if (is_result_correct) begin
                     total_passed_tests++;
                 end
                 if (pending_gemms > 0) begin
@@ -443,7 +464,7 @@ initial begin
                 end
             end
         end
-    end 
+    end
 
     $fclose(file);
     $fclose(expected_out_file);

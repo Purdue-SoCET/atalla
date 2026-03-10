@@ -178,7 +178,7 @@ module sysarr_MEISSA_top #(
         .rd_data(output_data)
     ); */
 
-    logic [$clog2(N):0] credits, next_credits;
+    logic [$clog2(N + PIPELINE_DEPTH) - 1:0] credits, next_credits;
 
     localparam int PIPELINE_DEPTH = MUL_LATENCY + $clog2(N) * ADD_LATENCY;
     localparam int OUTPUT_READ_ENABLE = N;
@@ -198,7 +198,7 @@ module sysarr_MEISSA_top #(
 
     always_comb begin
         case ({gsau_if.sa_valid_in, gsau_if.sa_input_en})
-            2'b10 : next_credits = credits + 1;
+            2'b10 : next_credits = credits < (PIPELINE_DEPTH + N) ? credits + 1 : credits;
             2'b01 : next_credits = credits - 1;
             // if 2'b11 or 2'b00, number of credits stays the same
             default : next_credits = credits;
@@ -252,17 +252,20 @@ module sysarr_MEISSA_top #(
     end */
 
     logic [$clog2(N + PIPELINE_DEPTH) - 1:0] special_counter, next_special_counter;
+    logic sa_valid_in;
 
     always_ff @ (posedge clk, negedge nRST) begin
         if(!nRST) begin
             special_counter <= '0;
-            gsau_if.sa_valid_in <= 0;
+            sa_valid_in <= 0;
         end
         else begin
             special_counter <= next_special_counter;
-            gsau_if.sa_valid_in <= |special_counter & gsau_if.sa_ready_out;
+            sa_valid_in <= |special_counter;
         end
     end
+
+    assign gsau_if.sa_valid_in = sa_valid_in & gsau_if.sa_ready_out;
 
     always_comb begin
         case ({shift_reg[TOTAL_DELAY - 3], |special_counter & gsau_if.sa_ready_out})
@@ -281,7 +284,8 @@ module sysarr_MEISSA_top #(
     ) output_buffer (
         .clk(clk),
         .nRST(nRST),
-        .wr_en(|special_counter & gsau_if.sa_ready_out),
+        .stall(!gsau_if.sa_ready_out),
+        .wr_en(|special_counter),
         .wr_data(reduced_data),
         .rd_en(shift_reg[TOTAL_DELAY - 3 : PIPELINE_DEPTH]), // width of N bits
         .rd_data(output_data),

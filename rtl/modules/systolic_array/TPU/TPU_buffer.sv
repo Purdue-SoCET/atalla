@@ -10,6 +10,7 @@ module TPU_buffer #(
     localparam int PTR_WIDTH = $clog2(SRAM_DEPTH)
 )(
     input logic clk, nRST,
+    input logic stall,
     input logic wr_en,
     input logic [NUM_COLS-1:0][DATA_WIDTH-1:0] wr_data,
     input logic [NUM_COLS-1:0] rd_en,
@@ -35,7 +36,7 @@ module TPU_buffer #(
 
     always_comb begin : next_write_pointer
         next_wr_ptr = wr_ptr;
-        if (wr_en) begin
+        if (wr_en && !stall) begin
             next_wr_ptr = (wr_ptr >= SRAM_DEPTH - 1) ? '0 : wr_ptr + 1;
         end
     end
