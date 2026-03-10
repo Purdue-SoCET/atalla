@@ -273,8 +273,7 @@ module reciprocal_bf16 (
 
   always_comb begin : exponent_saturation
     if(raw_exp >= 10'sd255)                                        final_exp = 8'hFF; // Overflow -> Infinity
-    else if(raw_exp == 10'h001 && fin3Texp.muln[14:7] < TWO[14:7]) final_exp = 8'h00;
-    else if(raw_exp <= 10'sd0 || fin3Texp.is_sub_bound)             final_exp = 8'h00; // Underflow -> Flush to Zero
+    else if(raw_exp <= 10'sd0 || fin3Texp.is_sub_bound)            final_exp = 8'h00; // Underflow -> Flush to Zero
     else                                                           final_exp = raw_exp[7:0];
   end
 
