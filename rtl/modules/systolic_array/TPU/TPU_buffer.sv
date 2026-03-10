@@ -2,12 +2,11 @@ module TPU_buffer #(
     parameter int NUM_COLS          = 32,
     parameter int DATA_WIDTH        = 16,
     parameter int IN_OUT            = 0,    // 0 For Input Buffer, 1 for Output Buffer
-    
+    parameter int SRAM_DEPTH = 128,
 
     localparam int READ_LATENCY     = 1,
     localparam int WRITE_LATENCY    = 1,
 
-    localparam int SRAM_DEPTH = 128,
     localparam int PTR_WIDTH = $clog2(SRAM_DEPTH)
 )(
     input logic clk, nRST,
@@ -54,7 +53,7 @@ module TPU_buffer #(
             end
 
             always_comb begin
-                used[i] = (wr_ptr >= rd_ptr[i]) ? (wr_ptr - rd_ptr[i]) : (wr_ptr + SRAM_DEPTH - rd_ptr[i]);             
+                used[i] = (wr_ptr >= rd_ptr[i]) ? (wr_ptr - rd_ptr[i]) : (wr_ptr + SRAM_DEPTH - rd_ptr[i]);
                 // empty_vec[i] = (used[i] == 0);
                 // if (i == 0) begin
                 //     lane0_empty = (used[i] == 0);

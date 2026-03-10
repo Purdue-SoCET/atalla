@@ -206,7 +206,7 @@ module sysarr_MEISSA_top #(
     end
 
     assign gsau_if.sa_ready_in = |credits;
-    assign gsau_if.sa_valid_in = shift_reg[TOTAL_DELAY - 1];
+    // assign gsau_if.sa_valid_in = shift_reg[TOTAL_DELAY - 1];
 
 
     /*
@@ -251,15 +251,37 @@ module sysarr_MEISSA_top #(
         end
     end */
 
+    logic [$clog2(N + PIPELINE_DEPTH) - 1:0] special_counter, next_special_counter;
+
+    always_ff @ (posedge clk, negedge nRST) begin
+        if(!nRST) begin
+            special_counter <= '0;
+            gsau_if.sa_valid_in <= 0;
+        end
+        else begin
+            special_counter <= next_special_counter;
+            gsau_if.sa_valid_in <= |special_counter & gsau_if.sa_ready_out;
+        end
+    end
+
+    always_comb begin
+        case ({shift_reg[TOTAL_DELAY - 3], |special_counter & gsau_if.sa_ready_out})
+            2'b01: next_special_counter = special_counter - 1;
+            2'b10: next_special_counter = special_counter + 1;
+            default: next_special_counter = special_counter;
+        endcase
+    end
+
+
     TPU_buffer #(
         .NUM_COLS(N),
         .DATA_WIDTH(DW),
+        .SRAM_DEPTH(N + PIPELINE_DEPTH),
         .IN_OUT(1) // output
-        // .SRAM_DEPTH(PIPELINE_DEPTH + N)
     ) output_buffer (
         .clk(clk),
         .nRST(nRST),
-        .wr_en(shift_reg[TOTAL_DELAY - 2]),
+        .wr_en(|special_counter & gsau_if.sa_ready_out),
         .wr_data(reduced_data),
         .rd_en(shift_reg[TOTAL_DELAY - 3 : PIPELINE_DEPTH]), // width of N bits
         .rd_data(output_data),

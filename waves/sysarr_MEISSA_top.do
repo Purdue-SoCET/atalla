@@ -34,24 +34,11 @@ add wave -noupdate /sysarr_MEISSA_top_tb/genblk1/DUT/output_buffer/rd_ptr
 add wave -noupdate /sysarr_MEISSA_top_tb/genblk1/DUT/output_buffer/next_rd_ptr
 add wave -noupdate /sysarr_MEISSA_top_tb/genblk1/DUT/output_buffer/used
 add wave -noupdate -divider {control logic}
-add wave -noupdate /sysarr_MEISSA_top_tb/genblk1/DUT/control_unit/clk
-add wave -noupdate /sysarr_MEISSA_top_tb/genblk1/DUT/control_unit/nRST
-add wave -noupdate /sysarr_MEISSA_top_tb/genblk1/DUT/control_unit/sa_output_valid
-add wave -noupdate /sysarr_MEISSA_top_tb/genblk1/DUT/control_unit/sa_input_en
-add wave -noupdate /sysarr_MEISSA_top_tb/genblk1/DUT/control_unit/out_wr_en
-add wave -noupdate /sysarr_MEISSA_top_tb/genblk1/DUT/control_unit/ready_in
-add wave -noupdate /sysarr_MEISSA_top_tb/genblk1/DUT/control_unit/credits
-add wave -noupdate /sysarr_MEISSA_top_tb/genblk1/DUT/control_unit/next_credits
-add wave -noupdate /sysarr_MEISSA_top_tb/genblk1/DUT/control_unit/out_start_cnt
-add wave -noupdate /sysarr_MEISSA_top_tb/genblk1/DUT/control_unit/next_out_start_cnt
-add wave -noupdate /sysarr_MEISSA_top_tb/genblk1/DUT/control_unit/next_out_wr_en
-add wave -noupdate /sysarr_MEISSA_top_tb/genblk1/DUT/control_unit/pending_rows
-add wave -noupdate /sysarr_MEISSA_top_tb/genblk1/DUT/control_unit/next_pending_rows
+add wave -noupdate /sysarr_MEISSA_top_tb/genblk1/DUT/credits
+add wave -noupdate /sysarr_MEISSA_top_tb/genblk1/DUT/next_credits
+add wave -noupdate /sysarr_MEISSA_top_tb/genblk1/DUT/shift_reg
 add wave -noupdate -divider {New Divider}
-add wave -noupdate /sysarr_MEISSA_top_tb/genblk1/DUT/valid_bits
 add wave -noupdate /sysarr_MEISSA_top_tb/genblk1/DUT/output_data
-add wave -noupdate /sysarr_MEISSA_top_tb/genblk1/DUT/out_wr_en
-add wave -noupdate /sysarr_MEISSA_top_tb/genblk1/DUT/pipe_valid_bits
 add wave -noupdate -divider {mul grid}
 add wave -noupdate /sysarr_MEISSA_top_tb/genblk1/DUT/u_mul_grid/clk
 add wave -noupdate /sysarr_MEISSA_top_tb/genblk1/DUT/u_mul_grid/nRST
