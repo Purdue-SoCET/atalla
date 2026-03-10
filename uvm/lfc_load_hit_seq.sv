@@ -7,10 +7,10 @@ import uvm_pkg::*;
 
 `include "../src/include/cache_types_pkg.svh"
 
-localparam int NUM_TESTS = 25;
-
 class lfc_load_hit_seq extends uvm_sequence#(lfc_cpu_transaction);
   `uvm_object_utils(lfc_load_hit_seq)
+
+  localparam int NUM_TESTS = 25;
 
   function new(string name = "lfc_load_hit_seq");
     super.new(name);

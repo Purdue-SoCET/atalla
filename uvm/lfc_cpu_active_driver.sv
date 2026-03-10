@@ -32,12 +32,13 @@ class lfc_cpu_active_driver extends uvm_driver#(lfc_cpu_transaction);
 
     task run_phase(uvm_phase phase);
         lfc_cpu_transaction req_item;
+	int down_time;
 
         DUT_reset(); // 3 clock cycles
-        forever begin // TODO: transaction "overlap" should be variable
+        forever begin 
             seq_item_port.get_next_item(req_item);
 
-            
+	    down_time = req_item.down_time;
             vif.mem_in = 1'b1; // not random
             vif.mem_in_addr = req_item.mem_in_addr;
             vif.mem_in_rw_mode = req_item.mem_in_rw_mode; // not random
@@ -47,9 +48,9 @@ class lfc_cpu_active_driver extends uvm_driver#(lfc_cpu_transaction);
             @(posedge vif.clk);
             vif.mem_in = 1'b0;
 	    @(posedge vif.clk);
-            seq_item_port.item_done();
+	    seq_item_port.item_done();
 	    wait(!vif.stall);
-	    #(700ns);
+	    repeat(down_time) @(posedge vif.clk);
         end
     endtask
 

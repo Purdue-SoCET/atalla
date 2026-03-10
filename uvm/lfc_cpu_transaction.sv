@@ -13,7 +13,7 @@ class lfc_cpu_transaction #(parameter NUM_BANKS = 4, parameter UUID_SIZE = 4) ex
   // CPU Inputs
   logic mem_in;
   rand addr_t mem_in_addr;
-  logic mem_in_rw_mode; // 0 = read, 1 = write
+  rand logic mem_in_rw_mode; // 0 = read, 1 = write
   rand logic [31:0] mem_in_store_value;
   logic dp_in_halt;
 
@@ -25,6 +25,9 @@ class lfc_cpu_transaction #(parameter NUM_BANKS = 4, parameter UUID_SIZE = 4) ex
   logic [NUM_BANKS-1:0] block_status;
   logic [NUM_BANKS-1:0][UUID_SIZE-1:0] uuid_block;
   logic dp_out_flushed;
+
+  // timing control (for driver)
+  int down_time = 40; // cycles waited between transactions, 40 (800ns) is default
 
   constraint addr_constraint {mem_in_addr[1:0] == 2'b00;}
 
@@ -42,6 +45,7 @@ class lfc_cpu_transaction #(parameter NUM_BANKS = 4, parameter UUID_SIZE = 4) ex
     `uvm_field_int(block_status, UVM_DEFAULT)
     `uvm_field_int(uuid_block, UVM_DEFAULT)
     `uvm_field_int(dp_out_flushed, UVM_DEFAULT)
+    `uvm_field_int(down_time, UVM_DEFAULT)
   `uvm_object_utils_end
 
   function new(string name = "lfc_cpu_transaction");
