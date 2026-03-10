@@ -4,7 +4,7 @@ Roy, T. D. (2019). Implementation of Goldschmidt's algorithm with hardware reduc
 
 # Divider Documentation
 
-The Vector-Core Divider is a fully pipelined floating-point division unit optimized for the BF16 (Brain Floating Point) format. Rather than using slow, traditional digit-recurrence algorithms (like SRT or restoring division) which require long and deep subtraction chains, the Vector-Core implements the **Goldschmidt Division Algorithm**.
+The Scalar-Core Divider is a fully pipelined floating-point division unit optimized for the BF16 (Brain Floating Point) format. Rather than using slow, traditional digit-recurrence algorithms (like SRT or restoring division) which require long and deep subtraction chains, the Vector-Core implements the **Goldschmidt Division Algorithm**.
 To optimize for different PPA (Power, Performance, Area) targets within the accelerator, the Vector-Core features two distinct divider architectures that share the same underlying algorithm: an Area-Optimized 2-Multiplier design, and a Throughput-Optimized 3-Multiplier design.
 
 ### Shared Algorithm & The "Magic Number"
@@ -79,4 +79,9 @@ Below is a table of results for both dividers. The ULP numbers are pulled from a
 | Divider Version | # of 0 ULP | # of 1 ULP | # of 2 ULP | Avg ULP | Max ULP | Total Area (um^2) |
 |---|---|---|---|---|---|---|
 | 2-Multiplier Design | 8,687 | 7,052 | 645 | 0.51 | 2 | 18433.437 |
-| 3-Multiplier Design | 8,687 | 7,052 | 645 | 0.51 | 2 | 11231213211 |
+| 3-Multiplier Design | 8,687 | 7,052 | 645 | 0.51 | 2 | 22283.246 |
+
+### Simulation
+Below is a picture of the simulated ULP error at each iteration of the Goldschmidt division algorithm using both a magic number and LUT approach. This was simulated using the PyTorch library in Python.
+
+![img](img/Goldschmidt_ULP_Analysis.jpg)
