@@ -73,6 +73,9 @@ The pipe enable signals controls traffic and goes low when backpressure occurs (
 #### Performance
 The divider being fully pipelined achieves an **Effective CPI of 1.0** with max throughput. It also acheieves a max ULP of 2.0 and a average ULP of around 0.5, a value slightly lower than predicted.
 
+### Comparison
+Below is a table of results for both dividers. The ULP numbers are pulled from a test of all possible mantissas (16,384). Note that subnormals have been excluded as their ULP numbers will always be 0.
+
 | Divider Version | # of 0 ULP | # of 1 ULP | # of 2 ULP | Avg ULP | Max ULP | Total Area (um^2) |
 |---|---|---|---|---|---|---|
 | 2-Multiplier Design | 8,687 | 7,052 | 645 | 0.51 | 2 | 18433.437 |
