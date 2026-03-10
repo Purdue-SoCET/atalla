@@ -264,7 +264,7 @@ initial begin
     gsau_if.sa_input_en        = 1'b0;
     gsau_if.sa_weight_en       = 1'b0;
     gsau_if.sa_partial_en      = 1'b0;
-    gsau_if.sa_ready_out       = 1'b1;
+    // gsau_if.sa_ready_out       = 1'b1;
 
     file               = $fopen(PATH_TO_INPUT, "r");
     expected_out_file  = $fopen(PATH_TO_EXPECTED_RESULT, "r");
@@ -371,6 +371,15 @@ initial begin
             $display("All queued tests processed. Ending simulation.");
             break;
         end
+
+        // Randomly stall output for 1-5 cycles (30% chance)
+        if ($urandom_range(0,99) < 30) begin
+            gsau_if.sa_ready_out = 1'b0;
+            for (int i = 0; i < $urandom_range(1, 5); i++) begin
+                @(posedge CLK);
+            end
+        end
+        gsau_if.sa_ready_out = 1'b1;
 
         if (gsau_if.sa_valid_in) begin
             // Collect output row
