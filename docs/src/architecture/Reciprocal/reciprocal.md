@@ -10,16 +10,34 @@ To optimize for different PPA (Power, Performance, Area) targets within the acce
 ### Algorithm & LUT
 The Goldschmidt algorithm computes N / D by repeatedly multiplying both the numerator (N) and denominator (D) by a sequence of factors (F) such that the denominator converges toward 1.0. As D approaches 1.0, N approaches the final quotient.
 
-To minimize the hardware iterations required, the algorithm needs a highly accurate initial guess of the reciprocal (1/D). Instead of wasting silicon area on a large Lookup Table (LUT) for this initial guess, both divider architectures utilize a **Constant Subtraction Trick (Magic Number)**. By exploiting the structure of the IEEE-754 / BF16 floating-point format, we can approximate the inverse by subtracting the denominator from a magic constant:
+To minimize the hardware iterations required, the algorithm needs a highly accurate initial guess of the reciprocal (1/D). The reciprocal unit uses a small LUT to get an intial guess for the factor. Based on the most significant mantissa bits, the initial guess from the LUT prioritizes accuracy. Below is a code snippet of the generation used to create the LUT.
+
+```entries = 16
+def generate_lut(size):
+    step = 1.0 / size
+    seeds = torch.zeros(size, dtype=torch.bfloat16)
+    for i in range(size):
+        a = 1.0 + (i * step)
+        b = 1.0 + ((i + 1) * step)
+        seeds[i] = 2.0 / (a + b)
+    return seeds
+
+lut = generate_lut(entries)
+
+with open("lut_values.txt", "w") as f:
+    for value in lut:
+        raw_bits = value.view(torch.int16).item()
+        hex_val = f"0x{raw_bits & 0xFFFF:04x}"
+        f.write(f"{hex_val}\n")
+```
 
 **The Iteration 2 Optimization:**
 Because the algorithm only requires 2 iterations, the mathematical sequence looks like this:
-* **Iteration 1:** N1 = 1 * F0 |
-                   D1 = D * F0 |
+* **Iteration 1:** F0 = LUT guess   |
+                   D1 = D * F0      |
                    F1 = 2.0 - D1
 
-* **Iteration 2:** N2 = N1 * F1 |
-                   D2 = D1 * F1
+* **Iteration 2:** Result = F0 * F1 |
 
 ### 2 Multiplier Design
 *Primary Author: Brian Zhuang*
@@ -31,7 +49,7 @@ Data makes two total multiplication processes, first through one pair of multipl
 * The `common/arithmetic/multipliers/add_bf16` subtractor computes in **2 clock cycles**.
 
 To match the timing requirement, the pipeline is split up to **9 Stages**:
-* **Stage 1, 2:** Initial exponent difference calculated. Data enters the multiplier, and is multiplied by the LUT. Output is latched in stage 2 for next process.
+* **Stage 1, 2:** Initial exponent difference calculated. Data enters the multiplier, and is multiplied by the LUT value. Output is latched in stage 2 for next process.
 * **Stage 3, 4, 5:** Data (The denominator) enters, traverses the internal registers, and exits the subtractor. Latches output value at stage 5.
 * **Stage 6, 7:** The result from stage 2 is multiplied by the new "guess" from stage 5. Latches output value at stage 7.
 registers, and exits the subtractor. Latches output value at stage 5.
@@ -41,7 +59,7 @@ registers, and exits the subtractor. Latches output value at stage 5.
 The pipe enable signals controls traffic and goes low when backpressure occurs (when the pipeline fills up).
 
 #### Performance
-The divider being fully pipelined achieves an **Effective CPI of 1.0** with max throughput. It also acheieves a max ULP of 2.0 and a average ULP of around 0.5, a value slightly lower than predicted.
+The reciprocal unit being fully pipelined achieves an **Effective CPI of 1.0** with max throughput. It also acheieves a max ULP of 2.0 and a average ULP of around 0.5, a value slightly lower than predicted.
 
 ### Results
 Below is a table of results for the reciprocal unit. The ULP numbers are pulled from a test of all possible BF16 values (65,536).
