@@ -16,8 +16,8 @@ module addn_8_fp32accum_fp16_tb_softfloat;
     localparam LATENCY          = 7;  // 3 pipeline stages + 1 output register
     localparam MANTISSA_SIZE    = 23; // Internal Accum Mantissa Width
     localparam EXPONENT_SIZE    = 8;  // Internal Accum Exponent Width
-    localparam IN_MANTISSA_SIZE = 10; // Input/Output Mantissa Width 
-    localparam IN_EXPONENT_SIZE = 5;  // Input/Output Exponent Width
+    localparam IN_MANTISSA_SIZE = 23; // Input/Output Mantissa Width 
+    localparam IN_EXPONENT_SIZE = 8.;  // Input/Output Exponent Width
     localparam PRECISION_BITS   = 1;
 
     logic tb_clk;
