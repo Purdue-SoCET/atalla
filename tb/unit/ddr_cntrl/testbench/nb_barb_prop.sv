@@ -1,14 +1,12 @@
-`include "dram_pkg.vh"
-`include "cpu_types_pkg.vh"
-`include "ddr_controller_if.vh"
+`include "dram_pkg.svh"
+`include "ddr_controller_if.sv"
 
 module nb_barb_prop(
     input logic CLK,
     input logic nRST,
-    ddr_controller_if.barb_prop barb,
+    ddr_controller_if.barb_prop barb
 );
     import dram_pkg::*;
-    import cpu_types_pkg::*;
 
     covergroup nb_cg @(posedge CLK) // TODO: FIX COVERPOINTS 
         fsm_be : coverpoint {be_r, be_c, be_b, be_bg, be_cmd, be_id, be_rlen, be_queue_ready};
