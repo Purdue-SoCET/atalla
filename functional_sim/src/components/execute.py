@@ -32,7 +32,6 @@ MNEMONIC_SCALAR = {
     "add.s": "add",
     "sub.s": "sub",
     "mul.s": "mul",
-    "div.s": "div",
     "mod.s": "mod",
     "or.s":  "or",
     "and.s": "and",
@@ -46,7 +45,7 @@ MNEMONIC_SCALAR = {
     "add.bf": "addbf",
     "sub.bf": "subbf",
     "mul.bf": "mulbf",
-    "div.bf": "divbf",
+    "rcp.bf": "rcpbf",
     "slt.bf": "sltbf",
     "sltu.bf": "sltubf",
     "addi.s": "add",
@@ -72,7 +71,6 @@ MNEMONIC_VECTOR = {
     "add.vv": "add",
     "sub.vv": "sub",
     "mul.vv": "mul",
-    "div.vv": "div",
     "and.vv": "bw_and",
     "or.vv":  "bw_or",
     "xor.vv": "bw_xor",
@@ -80,7 +78,6 @@ MNEMONIC_VECTOR = {
     "addi.vi": "add_scalar",
     "subi.vi": "sub_scalar",
     "muli.vi": "mul_scalar",
-    "divi.vi": "div_scalar",
     "expi.vi":  "exp",
     "sqrti.vi": "sqrt",
     "not.vi":  "bw_not",
@@ -97,8 +94,6 @@ MNEMONIC_VECTOR = {
     "sub.vs": "sub_scalar",
     "rsub.vs": "scalar_sub",
     "mul.vs": "mul_scalar",
-    "div.vs": "div_scalar",
-    "rdiv.vs": "scalar_div",
     
     "mgt.mvv":  "cmp_gt",
     "mlt.mvv":  "cmp_lt",
@@ -220,7 +215,7 @@ if __name__ == "__main__":
     print("add.s   =", EU.execute("add.s", sA=10, sB=4))
     print("sub.s   =", EU.execute("sub.s", sA=10, sB=4))
     print("mul.s   =", EU.execute("mul.s", sA=10, sB=4))
-    print("div.s   =", EU.execute("div.s", sA=20, sB=5))
+    print("divi.s  =", EU.execute("divi.s", sA=20, sB=5))
     print("mod.s   =", EU.execute("mod.s", sA=22, sB=5))
 
     print("or.s    =", EU.execute("or.s",  sA=0b1010, sB=0b1100))
@@ -247,7 +242,6 @@ if __name__ == "__main__":
     print("add.vv        =", EU.execute("add.vv", vA=vA, vB=vB))
     print("sub.vv        =", EU.execute("sub.vv", vA=vA, vB=vB))
     print("mul.vv        =", EU.execute("mul.vv", vA=vA, vB=vB))
-    print("div.vv        =", EU.execute("div.vv", vA=vA+1, vB=vB))
 
     print("add.vv (mask) =", EU.execute("add.vv", vA=vA, vB=vB))
     print("mul.vv (mask) =", EU.execute("mul.vv", vA=vA, vB=vB))
@@ -256,8 +250,6 @@ if __name__ == "__main__":
     print("sub.vs        =", EU.execute("sub.vs", vA=vA, sA=10))
     print("rsub.vs       =", EU.execute("rsub.vs", vA=vA, sA=10))
     print("mul.vs        =", EU.execute("mul.vs", vA=vA, sA=10))
-    print("div.vs        =", EU.execute("div.vs", vA=vA+1, sA=10))
-    print("rdiv.vs       =", EU.execute("rdiv.vs", vA=vA+1, sA=10))
 
     print("and.vv        =", EU.execute("and.vv", vA=vA.view(np.int32), vB=vB.view(np.int32)))
     print("or.vv         =", EU.execute("or.vv",  vA=vA.view(np.int32), vB=vB.view(np.int32)))

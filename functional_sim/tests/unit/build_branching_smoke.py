@@ -3,12 +3,12 @@ from __future__ import annotations
 from pathlib import Path
 import sys
 
-EMU_DIR = Path(__file__).resolve().parents[2]
+EMU_DIR = Path(__file__).resolve().parents[3]
 if str(EMU_DIR) not in sys.path:
     sys.path.insert(0, str(EMU_DIR))
 
-from build import DRAMWriter, assemble_file, emit_test_format, render_testfile
-from src.components.decode import decode_instruction
+from functional_sim.build import DRAMWriter, assemble_file, emit_test_format, render_testfile
+from functional_sim.src.components.decode import decode_instruction
 
 ASM_PATH = Path(__file__).with_name("branching_smoke.asm")
 OUT_PATH = Path(__file__).with_name("branching_smoke.txt")

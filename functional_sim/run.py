@@ -1,6 +1,6 @@
 import argparse
 
-from .src.emulator import run 
+from .src.functional_sim import run
 from .src.misc.memory import Memory
 from .src.components.scalar_register_file import ScalarRegisterFile
 from .src.components.vector_register_file import VectorRegisterFile

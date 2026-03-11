@@ -242,10 +242,10 @@ class ScalarALU:
     def mulbf(self, a, b):
         return (a * b)
 
-    def divbf(self, a, b):
-        if np.any(b == 0.0):
-            raise ZeroDivisionError("BF16 division by zero")
-        return a / b
+    def rcpbf(self, a, b=None):
+        if np.any(a == 0.0):
+            raise ZeroDivisionError("BF16 reciprocal of zero")
+        return 1.0 / a
 
     # -------------------------
     # BF16 comparisons
@@ -302,8 +302,8 @@ class ScalarALU:
             return self.subbf(a, b)
         elif op == "mulbf":
             return self.mulbf(a, b)
-        elif op == "divbf":
-            return self.divbf(a, b)
+        elif op == "rcpbf":
+            return self.rcpbf(a, b)
         elif op == "sltbf":
             return self.sltbf(a, b)
         elif op == "sltubf":
@@ -342,7 +342,7 @@ if __name__ == "__main__":
     print("addbf:", alu.execute("addbf", [1.0], [2.0]))
     print("subbf:", alu.execute("subbf", [5.5], [1.25]))
     print("mulbf:", alu.execute("mulbf", [3.0], [4.0]))
-    print("divbf:", alu.execute("divbf", [8.0], [2.0]))
+    print("rcpbf:", alu.execute("rcpbf", [8.0]))
     print("sltbf:", alu.execute("sltbf", [1.0], [2.0]))
     print("sltubf:", alu.execute("sltubf", np.uint16([0x3f80]), np.uint16([0x4000])))
     print("sgtu:", alu.execute("sgtu", [-1], [0])) 

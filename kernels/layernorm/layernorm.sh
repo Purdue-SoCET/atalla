@@ -112,12 +112,12 @@ $PYTHON -m kernels.utils.gen_data \
 echo ""
 
 # ---------- Step 1: Build ---------------------------------------------------
-echo "[BUILD] Running emulator.build_${BUILD_NAME} ..."
+echo "[BUILD] Running functional_sim.build_${BUILD_NAME} ..."
 echo "  Data file : $DATA"
 echo "  Output    : $IN_FILE"
 echo ""
 
-$PYTHON -m "emulator.build_${BUILD_NAME}" \
+$PYTHON -m "functional_sim.build_${BUILD_NAME}" \
     --no-graph \
     --data "$DATA" \
     --n "$N" \
@@ -127,10 +127,10 @@ echo "[BUILD] Done."
 echo ""
 
 # ---------- Step 2: Emulate -------------------------------------------------
-echo "[EMULATE] Running emulator ..."
+echo "[EMULATE] Running functional_sim ..."
 mkdir -p "$OUTPUT_DIR"
 
-$PYTHON -m emulator.run \
+$PYTHON -m functional_sim.run \
     --input_file "$IN_FILE" \
     --output_mem_file   "$OUT_MEM" \
     --output_sreg_file  "$OUT_SREGS" \

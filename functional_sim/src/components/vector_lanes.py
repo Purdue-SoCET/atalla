@@ -62,7 +62,6 @@ class VectorLanes:
         VL: int = 32,
         adders: Optional[int] = None,
         multipliers: Optional[int] = None,
-        dividers: Optional[int] = None,
         exps: Optional[int] = None,
         sqrts: Optional[int] = None,
         reducers: Optional[int] = None,
@@ -72,7 +71,6 @@ class VectorLanes:
         self.VL = int(VL)
         self.adders = int(adders) if adders is not None else self.VL
         self.multipliers = int(multipliers) if multipliers is not None else self.VL
-        self.dividers = int(dividers) if dividers is not None else self.VL
         self.exps = int(exps) if exps is not None else self.VL
         self.sqrts = int(sqrts) if sqrts is not None else self.VL
         self.reducers = int(reducers) if reducers is not None else self.VL
@@ -83,7 +81,6 @@ class VectorLanes:
             ("VL", self.VL),
             ("adders", self.adders),
             ("multipliers", self.multipliers),
-            ("dividers", self.dividers),
             ("exps", self.exps),
             ("sqrts", self.sqrts),
             ("reducers", self.reducers),
@@ -132,12 +129,6 @@ class VectorLanes:
     def mul(self, a: np.ndarray, b: np.ndarray) -> np.ndarray:
         return self._elementwise_op(a, b, lambda x, y: x * y, self.multipliers)
 
-    def div(self, a: np.ndarray, b: np.ndarray, eps: float = 1e-6) -> np.ndarray:
-        def safe_div(x, y):
-            y_safe = np.where(np.abs(y) < eps, np.sign(y) * eps + eps, y)
-            return x / y_safe
-        return self._elementwise_op(a, b, safe_div, self.dividers)
-
     def exp(self, a: np.ndarray) -> np.ndarray:
         a = self._ensure_vec(a)
         L = a.size
@@ -176,20 +167,6 @@ class VectorLanes:
     def mul_scalar(self, a: np.ndarray, s: float) -> np.ndarray:
         return self._elementwise_op(a, np.array([s], dtype=np.float32),
                                     lambda x, y: x * y, self.multipliers)
-
-    def div_scalar(self, a: np.ndarray, s: float, eps: float = 1e-6) -> np.ndarray:
-        # a / s
-        return self._elementwise_op(a, np.array([s], dtype=np.float32),
-                                    lambda x, y: x / (np.where(np.abs(y) < eps,
-                                                               np.sign(y)*eps + eps, y)),
-                                    self.dividers)
-
-    def scalar_div(self, s: float, a: np.ndarray, eps: float = 1e-6) -> np.ndarray:
-        # s / a
-        return self._elementwise_op(np.array([s], dtype=np.float32), a,
-                                    lambda x, y: x / (np.where(np.abs(y) < eps,
-                                                               np.sign(y)*eps + eps, y)),
-                                    self.dividers)
 
     # --------------------------------------------------------
     # Vector << scalar   and   Vector >> scalar (logical shifts)
@@ -458,7 +435,6 @@ class VectorLanes:
             if new_op == "add":           return self.add(vA, vB)
             if new_op == "sub":           return self.sub(vA, vB)
             if new_op == "mul":           return self.mul(vA, vB)
-            if new_op == "div":           return self.div(vA, vB)
             if new_op == "and":        return self.bitwise_and(vA, vB)
             if new_op == "or":         return self.bitwise_or(vA, vB)
             if new_op == "xor":        return self.bitwise_xor(vA, vB)
@@ -474,7 +450,6 @@ class VectorLanes:
             if new_op == "subi":    return self.sub_scalar(vA, sA)
             #if new_op == "scalar_sub":    return self.scalar_sub(sA, vA)
             if new_op == "muli":    return self.mul_scalar(vA, sA)
-            if new_op == "divi":    return self.div_scalar(vA, sA)
             #if new_op == "scalar_div":    return self.scalar_div(sA, vA)
             if new_op == "expi":           return self.exp(vA)
             if new_op == "sqrti":          return self.sqrt(vA)
@@ -498,7 +473,6 @@ class VectorLanes:
             if new_op == "add":    return self.add_scalar(vA, sA)
             if new_op == "sub":    return self.sub_scalar(vA, sA)
             if new_op == "mul":    return self.mul(vA, sA)
-            if new_op == "div":           return self.div(vA, sA)
             if new_op == "mgt":        return self.cmp_gt_vs(vA, sA)
             if new_op == "mlt":        return self.cmp_lt_vs(vA, sA)
             if new_op == "meq":        return self.cmp_eq_vs(vA, sA)
@@ -530,15 +504,12 @@ if __name__ == "__main__":
     print("add        =", V.execute("add", vA=vA, vB=vB))
     print("sub        =", V.execute("sub", vA=vA, vB=vB))
     print("mul        =", V.execute("mul", vA=vA, vB=vB))
-    print("div        =", V.execute("div", vA=vA, vB=vB))
 
     print("\n===== VECTOR–SCALAR ARITHMETIC =====")
     print("add_scalar =", V.execute("add_scalar", vA=vA, sA=s))
     print("sub_scalar =", V.execute("sub_scalar", vA=vA, sA=s))
     print("scalar_sub =", V.execute("scalar_sub", vA=vA, sA=s))
     print("mul_scalar =", V.execute("mul_scalar", vA=vA, sA=s))
-    print("div_scalar =", V.execute("div_scalar", vA=vA, sA=s))
-    print("scalar_div =", V.execute("scalar_div", vA=vA, sA=s))
 
     print("\n===== BITWISE OPS (BF16 bit-level) =====")
     print("bw_and     =", V.execute("bw_and", vA=vA, vB=vB))

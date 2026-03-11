@@ -276,19 +276,16 @@ def run(mem: Memory, sregs: ScalarRegisterFile, mregs: ScalarRegisterFile, vregs
                 if(m == "mul.bf"):
                     WBdata = fp32_to_hex(WBdata)
                 sregs.write(inst['rd'], int(WBdata))
-            elif m in ("div.s", "divi.s", "div.bf"):
-                if(m == "div.s" or m == "div.bf"):
-                    src1 = sregs.read(inst['rs1'])
-                    src2 = sregs.read(inst['rs2'])
-                    if(m == "div.bf"):
-                        src1 = hex_to_fp32(src1)
-                        src2 = hex_to_fp32(src2)
-                else:
-                    src1 = sregs.read(inst['rs1'])
-                    src2 = inst['imm']
+            elif m == "divi.s":
+                src1 = sregs.read(inst['rs1'])
+                src2 = inst['imm']
                 WBdata = EU.execute(m, sA=src1, sB=src2)
-                if(m == "div.bf"):
-                    WBdata = fp32_to_hex(WBdata)
+                sregs.write(inst['rd'], int(WBdata))
+            elif m == "rcp.bf":
+                src1 = sregs.read(inst['rs1'])
+                src1 = hex_to_fp32(src1)
+                WBdata = EU.execute(m, sA=src1)
+                WBdata = fp32_to_hex(WBdata)
                 sregs.write(inst['rd'], int(WBdata))
             elif m in ("mod.s", "modi.s"):
                 if(m == "mod.s"):

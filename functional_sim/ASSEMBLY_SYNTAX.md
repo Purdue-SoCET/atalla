@@ -20,12 +20,6 @@ mul.s rd, rs1, rs2
 - `rs1`: multiplicand.
 - `rs2`: multiplier.
 
-div.s rd, rs1, rs2
-- Operation: Divide (`rd = rs1 / rs2`).
-- `rd`: quotient output.
-- `rs1`: numerator.
-- `rs2`: denominator.
-
 mod.s rd, rs1, rs2
 - Operation: Modulo (`rd = rs1 % rs2`).
 - `rd`: remainder output.
@@ -98,11 +92,11 @@ mul.bf rd, rs1, rs2
 - `rs1`: BF16 multiplicand.
 - `rs2`: BF16 multiplier.
 
-div.bf rd, rs1, rs2
-- Operation: BF16 divide.
-- `rd`: BF16 quotient.
-- `rs1`: BF16 numerator.
-- `rs2`: BF16 denominator.
+rcp.bf rd, rs1, rs2
+- Operation: BF16 reciprocal (`rd = 1 / rs1`).
+- `rd`: BF16 reciprocal output.
+- `rs1`: BF16 input value.
+- `rs2`: unused.
 
 slt.bf rd, rs1, rs2
 - Operation: BF16 set-less-than.
@@ -339,14 +333,6 @@ mul.vv vd, vs1, vs2, mask, sac
 - `mask`: lane-enable mask register index.
 - `sac`: vector control field.
 
-div.vv vd, vs1, vs2, mask, sac
-- Operation: Element-wise divide.
-- `vd`: vector destination.
-- `vs1`: vector numerator.
-- `vs2`: vector denominator.
-- `mask`: lane-enable mask register index.
-- `sac`: vector control field.
-
 and.vv vd, vs1, vs2, mask, sac
 - Operation: Element-wise bitwise AND.
 - `vd`: vector destination.
@@ -400,13 +386,6 @@ muli.vi vd, vs1, imm, mask
 - `vd`: vector destination.
 - `vs1`: vector source.
 - `imm`: per-lane multiplier.
-- `mask`: lane-enable mask register index.
-
-divi.vi vd, vs1, imm, mask
-- Operation: Element-wise divide immediate.
-- `vd`: vector destination.
-- `vs1`: vector source.
-- `imm`: per-lane divisor.
 - `mask`: lane-enable mask register index.
 
 expi.vi vd, vs1, imm, mask
@@ -486,13 +465,6 @@ mul.vs vd, vs1, rs1, mask
 - `vd`: vector destination.
 - `vs1`: vector input.
 - `rs1`: scalar multiplier.
-- `mask`: lane-enable mask register index.
-
-div.vs vd, vs1, rs1, mask
-- Operation: Element-wise divide scalar.
-- `vd`: vector destination.
-- `vs1`: vector numerator input.
-- `rs1`: scalar denominator.
 - `mask`: lane-enable mask register index.
 
 shift.vs vd, vs1, shamt, mask

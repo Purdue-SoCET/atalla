@@ -1,4 +1,4 @@
-from src.misc.opcode_table import OPCODES
+from .src.misc.opcode_table import OPCODES
 
 # Base latency defaults used by the graph dependency scheduler.
 # Keys are base op names (before ".suffix"), plus a few explicit full mnemonic
@@ -29,11 +29,11 @@ BASE_LATENCY = {
     "lui": 1,
     "stbf": 1,
     "bfts": 1,
+    "rcp": 8,
 
     # Scalar long latency
     "mul": 3,
     "muli": 3,
-    "div": 8,
     "divi": 8,
     "mod": 8,
     "modi": 8,
@@ -75,8 +75,6 @@ BASE_LATENCY = {
     # Vector long latency
     "mul": 3,
     "muli": 3,
-    "div": 8,
-    "divi": 8,
     "expi": 8,
     "sqrti": 8,
     "rsum": 4,
