@@ -21,11 +21,11 @@ FLOWKIT_DIR="$HOME/Flowkit2/Flowkit"
 SDC_FILE="$FLOWKIT_DIR/scripts/constraints/sysarr_4_input_fp_adder.sdc"
 REPORTS_SRC="$FLOWKIT_DIR/reports"
 QOR_FILE="$REPORTS_SRC/syn_opt/qor.rpt"
-DEST_BASE="$HOME/atalla/reports/sysarr_4_input_fp_adder_norounding_noprecision"
+DEST_BASE="$HOME/atalla/reports/sysarr_4_input_fp_adder_norounding_noprecision2"
 MD_FILE="$FLOWKIT_DIR/rpt.md"
 
 # Which MHz to sweep (inclusive). Edit as needed.
-START_MHZ=970 # 1 GHZ 
+START_MHZ=720 # 1 GHZ 
 END_MHZ=600 
 STEP=-10     # go down by 5 MHz; use +5 if going up
 

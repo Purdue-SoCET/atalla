@@ -25,8 +25,8 @@ DEST_BASE="$HOME/atalla/reports/sysarr_4_input_fp_adder_norounding_noprecision"
 MD_FILE="$FLOWKIT_DIR/rpt.md"
 
 # Which MHz to sweep (inclusive). Edit as needed.
-START_MHZ=970 # 1 GHZ 
-END_MHZ=600 
+START_MHZ=850 # 1 GHZ 
+END_MHZ=730 
 STEP=-10     # go down by 5 MHz; use +5 if going up
 
 # TCL file for Genus commands only (not flowtool commands)
