@@ -2,7 +2,7 @@
 `define SYSTOLIC_ARRAY_n_INPUT_ADDER_IF_VH
 
 interface systolic_array_n_input_adder_if #(
-    parameter NUM_INPUTS       = 8,  
+    parameter NUM_INPUTS       = 16,  
     parameter MANTISSA_SIZE     = 23, // Input Mantissa Width
     parameter EXPONENT_SIZE     = 8,
     parameter IN_MANTISSA_SIZE = 23, // Output Mantissa Width (New Parameter)
