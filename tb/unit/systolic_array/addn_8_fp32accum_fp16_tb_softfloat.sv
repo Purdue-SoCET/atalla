@@ -13,7 +13,7 @@ module addn_8_fp32accum_fp16_tb_softfloat;
 
     localparam NUM_INPUTS       = 8; // Parameterized for 8 inputs
     localparam PERIOD           = 2;
-    localparam LATENCY          = 4;  // 3 pipeline stages + 1 output register
+    localparam LATENCY          = 7;  // 3 pipeline stages + 1 output register
     localparam MANTISSA_SIZE    = 23; // Internal Accum Mantissa Width
     localparam EXPONENT_SIZE    = 8;  // Internal Accum Exponent Width
     localparam IN_MANTISSA_SIZE = 10; // Input/Output Mantissa Width 

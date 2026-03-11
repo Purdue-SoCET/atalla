@@ -1,10 +1,11 @@
 module sysarr_n_input_fp_adder #(
-    parameter NUM_INPUTS       = 4,  
+    parameter NUM_INPUTS       = 8,  
     parameter MANTISSA_SIZE    = 23, 
     parameter EXPONENT_SIZE    = 8,  
     parameter IN_MANTISSA_SIZE = 10,  
     parameter IN_EXPONENT_SIZE = 5,  
-    parameter PRECISION_BITS   = 0 
+    parameter PRECISION_BITS   = 0,
+    parameter EXTRA_STAGES     = 3 
 ) (
     input  logic clk, 
     input  logic nRST,
@@ -255,9 +256,23 @@ module sysarr_n_input_fp_adder #(
         if (st2_special) result_out = st2_spec_res;
     end
 
-    always_ff @(posedge clk or negedge nRST) begin
-        if (!nRST) out_data <= 0;
-        else out_data <= result_out;
+// =================================================================================
+    // EXTRA PIPELINE STAGES (For Synthesis Retiming)
+    // =================================================================================
+    
+    (* retiming_backward = 1 *)       // For Xilinx Vivado
+    /* synopsys optimize_registers */ // For Synopsys Design Compiler
+    logic [RES_WIDTH-1:0] pipe_regs [EXTRA_STAGES+1];
+
+    // NOTE: nRST is intentionally removed here! 
+    // Synthesis tools cannot safely retime flops that have asynchronous resets.
+    always_ff @(posedge clk) begin
+        pipe_regs[0] <= result_out; // End of original Stage 3 combinational logic
+        for (int i = 1; i <= EXTRA_STAGES; i++) begin
+            pipe_regs[i] <= pipe_regs[i-1];
+        end
     end
+
+    assign out_data = pipe_regs[EXTRA_STAGES];
 
 endmodule

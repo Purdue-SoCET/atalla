@@ -54,7 +54,7 @@ void Vaddn_8_fp32accum_fp16_tb_softfloat___024root__trace_chg_0_sub_0(Vaddn_8_fp
     }
     if (VL_UNLIKELY(((vlSelfRef.__Vm_traceActivity[3U] 
                       | vlSelfRef.__Vm_traceActivity
-                      [5U])))) {
+                      [6U])))) {
         bufp->chgSData(oldp+31,(vlSelfRef.addn_8_fp32accum_fp16_tb_softfloat__DOT__etchedfpNadder__DOT__daz_in[0]),16);
         bufp->chgSData(oldp+32,(vlSelfRef.addn_8_fp32accum_fp16_tb_softfloat__DOT__etchedfpNadder__DOT__daz_in[1]),16);
         bufp->chgSData(oldp+33,(vlSelfRef.addn_8_fp32accum_fp16_tb_softfloat__DOT__etchedfpNadder__DOT__daz_in[2]),16);
@@ -290,47 +290,58 @@ void Vaddn_8_fp32accum_fp16_tb_softfloat___024root__trace_chg_0_sub_0(Vaddn_8_fp
         bufp->chgIData(oldp+199,(vlSelfRef.addn_8_fp32accum_fp16_tb_softfloat__DOT__etchedfpNadder__DOT__csa_c[7]),28);
     }
     if (VL_UNLIKELY((vlSelfRef.__Vm_traceActivity[4U]))) {
-        bufp->chgIData(oldp+200,(vlSelfRef.addn_8_fp32accum_fp16_tb_softfloat__DOT__tb_raw_out),32);
-        bufp->chgSData(oldp+201,(vlSelfRef.addn_8_fp32accum_fp16_tb_softfloat__DOT__tb_result),16);
-        bufp->chgCData(oldp+202,(vlSelfRef.addn_8_fp32accum_fp16_tb_softfloat__DOT__etchedfpNadder__DOT__st1_a_e),5);
-        bufp->chgBit(oldp+203,(vlSelfRef.addn_8_fp32accum_fp16_tb_softfloat__DOT__etchedfpNadder__DOT__st1_a_s));
-        bufp->chgBit(oldp+204,(vlSelfRef.addn_8_fp32accum_fp16_tb_softfloat__DOT__etchedfpNadder__DOT__st1_align_sticky));
-        bufp->chgBit(oldp+205,(vlSelfRef.addn_8_fp32accum_fp16_tb_softfloat__DOT__etchedfpNadder__DOT__st1_special_case));
-        bufp->chgIData(oldp+206,(vlSelfRef.addn_8_fp32accum_fp16_tb_softfloat__DOT__etchedfpNadder__DOT__st1_special_result),32);
-        bufp->chgIData(oldp+207,(vlSelfRef.addn_8_fp32accum_fp16_tb_softfloat__DOT__etchedfpNadder__DOT__st1_sum_vec),28);
-        bufp->chgIData(oldp+208,(vlSelfRef.addn_8_fp32accum_fp16_tb_softfloat__DOT__etchedfpNadder__DOT__st1_carry_vec),28);
-        bufp->chgCData(oldp+209,(vlSelfRef.addn_8_fp32accum_fp16_tb_softfloat__DOT__etchedfpNadder__DOT__st1_hot_ones),4);
-        bufp->chgIData(oldp+210,(vlSelfRef.addn_8_fp32accum_fp16_tb_softfloat__DOT__etchedfpNadder__DOT__raw_sum),29);
-        bufp->chgIData(oldp+211,(vlSelfRef.addn_8_fp32accum_fp16_tb_softfloat__DOT__etchedfpNadder__DOT__mag_sum),27);
-        bufp->chgBit(oldp+212,(vlSelfRef.addn_8_fp32accum_fp16_tb_softfloat__DOT__etchedfpNadder__DOT__res_sign));
-        bufp->chgCData(oldp+213,(vlSelfRef.addn_8_fp32accum_fp16_tb_softfloat__DOT__etchedfpNadder__DOT__st2_exp_base),5);
-        bufp->chgIData(oldp+214,(vlSelfRef.addn_8_fp32accum_fp16_tb_softfloat__DOT__etchedfpNadder__DOT__st2_sum_mag),27);
-        bufp->chgIData(oldp+215,(vlSelfRef.addn_8_fp32accum_fp16_tb_softfloat__DOT__etchedfpNadder__DOT__st2_spec_res),32);
-        bufp->chgBit(oldp+216,(vlSelfRef.addn_8_fp32accum_fp16_tb_softfloat__DOT__etchedfpNadder__DOT__st2_res_sign));
-        bufp->chgBit(oldp+217,(vlSelfRef.addn_8_fp32accum_fp16_tb_softfloat__DOT__etchedfpNadder__DOT__st2_sticky));
-        bufp->chgBit(oldp+218,(vlSelfRef.addn_8_fp32accum_fp16_tb_softfloat__DOT__etchedfpNadder__DOT__st2_special));
-        bufp->chgIData(oldp+219,(vlSelfRef.addn_8_fp32accum_fp16_tb_softfloat__DOT__etchedfpNadder__DOT__lzd_scan),27);
-        bufp->chgCData(oldp+220,(vlSelfRef.addn_8_fp32accum_fp16_tb_softfloat__DOT__etchedfpNadder__DOT__lead_zeros),6);
-        bufp->chgIData(oldp+221,(vlSelfRef.addn_8_fp32accum_fp16_tb_softfloat__DOT__etchedfpNadder__DOT__norm_val),27);
-        bufp->chgIData(oldp+222,(vlSelfRef.addn_8_fp32accum_fp16_tb_softfloat__DOT__etchedfpNadder__DOT__final_mant),23);
-        bufp->chgSData(oldp+223,(vlSelfRef.addn_8_fp32accum_fp16_tb_softfloat__DOT__etchedfpNadder__DOT__final_exp_calc),11);
-        bufp->chgIData(oldp+224,(vlSelfRef.addn_8_fp32accum_fp16_tb_softfloat__DOT__etchedfpNadder__DOT__result_out),32);
-        bufp->chgIData(oldp+225,(vlSelfRef.addn_8_fp32accum_fp16_tb_softfloat__DOT__etchedfpNadder__DOT__stage3_logic__DOT__unnamedblk9__DOT__i),32);
-        bufp->chgIData(oldp+226,(vlSelfRef.addn_8_fp32accum_fp16_tb_softfloat__DOT__etchedfpNadder__DOT__unnamedblk7__DOT__i),32);
-        bufp->chgIData(oldp+227,(vlSelfRef.addn_8_fp32accum_fp16_tb_softfloat__DOT__etchedfpNadder__DOT__unnamedblk8__DOT__i),32);
-        bufp->chgBit(oldp+228,((vlSelfRef.addn_8_fp32accum_fp16_tb_softfloat__DOT__tb_raw_out 
-                                >> 0x1fU)));
-        bufp->chgCData(oldp+229,((0xffU & (vlSelfRef.addn_8_fp32accum_fp16_tb_softfloat__DOT__tb_raw_out 
-                                           >> 0x17U))),8);
-        bufp->chgIData(oldp+230,((0x7fffffU & vlSelfRef.addn_8_fp32accum_fp16_tb_softfloat__DOT__tb_raw_out)),23);
-        bufp->chgSData(oldp+231,(vlSelfRef.addn_8_fp32accum_fp16_tb_softfloat__DOT__reduce__DOT__new_exp),10);
-        bufp->chgSData(oldp+232,(vlSelfRef.addn_8_fp32accum_fp16_tb_softfloat__DOT__reduce__DOT__rounded),11);
-        bufp->chgBit(oldp+233,(vlSelfRef.addn_8_fp32accum_fp16_tb_softfloat__DOT__reduce__DOT__guard));
-        bufp->chgBit(oldp+234,(vlSelfRef.addn_8_fp32accum_fp16_tb_softfloat__DOT__reduce__DOT__rnd));
-        bufp->chgBit(oldp+235,(vlSelfRef.addn_8_fp32accum_fp16_tb_softfloat__DOT__reduce__DOT__sticky));
-        bufp->chgBit(oldp+236,(vlSelfRef.addn_8_fp32accum_fp16_tb_softfloat__DOT__reduce__DOT__round_up));
+        bufp->chgCData(oldp+200,(vlSelfRef.addn_8_fp32accum_fp16_tb_softfloat__DOT__etchedfpNadder__DOT__st1_a_e),5);
+        bufp->chgBit(oldp+201,(vlSelfRef.addn_8_fp32accum_fp16_tb_softfloat__DOT__etchedfpNadder__DOT__st1_a_s));
+        bufp->chgBit(oldp+202,(vlSelfRef.addn_8_fp32accum_fp16_tb_softfloat__DOT__etchedfpNadder__DOT__st1_align_sticky));
+        bufp->chgBit(oldp+203,(vlSelfRef.addn_8_fp32accum_fp16_tb_softfloat__DOT__etchedfpNadder__DOT__st1_special_case));
+        bufp->chgIData(oldp+204,(vlSelfRef.addn_8_fp32accum_fp16_tb_softfloat__DOT__etchedfpNadder__DOT__st1_special_result),32);
+        bufp->chgIData(oldp+205,(vlSelfRef.addn_8_fp32accum_fp16_tb_softfloat__DOT__etchedfpNadder__DOT__st1_sum_vec),28);
+        bufp->chgIData(oldp+206,(vlSelfRef.addn_8_fp32accum_fp16_tb_softfloat__DOT__etchedfpNadder__DOT__st1_carry_vec),28);
+        bufp->chgCData(oldp+207,(vlSelfRef.addn_8_fp32accum_fp16_tb_softfloat__DOT__etchedfpNadder__DOT__st1_hot_ones),4);
+        bufp->chgIData(oldp+208,(vlSelfRef.addn_8_fp32accum_fp16_tb_softfloat__DOT__etchedfpNadder__DOT__raw_sum),29);
+        bufp->chgIData(oldp+209,(vlSelfRef.addn_8_fp32accum_fp16_tb_softfloat__DOT__etchedfpNadder__DOT__mag_sum),27);
+        bufp->chgBit(oldp+210,(vlSelfRef.addn_8_fp32accum_fp16_tb_softfloat__DOT__etchedfpNadder__DOT__res_sign));
+        bufp->chgCData(oldp+211,(vlSelfRef.addn_8_fp32accum_fp16_tb_softfloat__DOT__etchedfpNadder__DOT__st2_exp_base),5);
+        bufp->chgIData(oldp+212,(vlSelfRef.addn_8_fp32accum_fp16_tb_softfloat__DOT__etchedfpNadder__DOT__st2_sum_mag),27);
+        bufp->chgIData(oldp+213,(vlSelfRef.addn_8_fp32accum_fp16_tb_softfloat__DOT__etchedfpNadder__DOT__st2_spec_res),32);
+        bufp->chgBit(oldp+214,(vlSelfRef.addn_8_fp32accum_fp16_tb_softfloat__DOT__etchedfpNadder__DOT__st2_res_sign));
+        bufp->chgBit(oldp+215,(vlSelfRef.addn_8_fp32accum_fp16_tb_softfloat__DOT__etchedfpNadder__DOT__st2_sticky));
+        bufp->chgBit(oldp+216,(vlSelfRef.addn_8_fp32accum_fp16_tb_softfloat__DOT__etchedfpNadder__DOT__st2_special));
+        bufp->chgIData(oldp+217,(vlSelfRef.addn_8_fp32accum_fp16_tb_softfloat__DOT__etchedfpNadder__DOT__stage3_logic__DOT__unnamedblk9__DOT__i),32);
+        bufp->chgIData(oldp+218,(vlSelfRef.addn_8_fp32accum_fp16_tb_softfloat__DOT__etchedfpNadder__DOT__unnamedblk7__DOT__i),32);
+        bufp->chgIData(oldp+219,(vlSelfRef.addn_8_fp32accum_fp16_tb_softfloat__DOT__etchedfpNadder__DOT__unnamedblk8__DOT__i),32);
     }
-    bufp->chgBit(oldp+237,(vlSelfRef.addn_8_fp32accum_fp16_tb_softfloat__DOT__tb_clk));
+    if (VL_UNLIKELY((vlSelfRef.__Vm_traceActivity[5U]))) {
+        bufp->chgIData(oldp+220,(vlSelfRef.addn_8_fp32accum_fp16_tb_softfloat__DOT__etchedfpNadder__DOT__pipe_regs
+                                 [3U]),32);
+        bufp->chgSData(oldp+221,(vlSelfRef.addn_8_fp32accum_fp16_tb_softfloat__DOT__tb_result),16);
+        bufp->chgIData(oldp+222,(vlSelfRef.addn_8_fp32accum_fp16_tb_softfloat__DOT__etchedfpNadder__DOT__pipe_regs[0]),32);
+        bufp->chgIData(oldp+223,(vlSelfRef.addn_8_fp32accum_fp16_tb_softfloat__DOT__etchedfpNadder__DOT__pipe_regs[1]),32);
+        bufp->chgIData(oldp+224,(vlSelfRef.addn_8_fp32accum_fp16_tb_softfloat__DOT__etchedfpNadder__DOT__pipe_regs[2]),32);
+        bufp->chgIData(oldp+225,(vlSelfRef.addn_8_fp32accum_fp16_tb_softfloat__DOT__etchedfpNadder__DOT__pipe_regs[3]),32);
+        bufp->chgIData(oldp+226,(vlSelfRef.addn_8_fp32accum_fp16_tb_softfloat__DOT__etchedfpNadder__DOT__unnamedblk10__DOT__i),32);
+        bufp->chgBit(oldp+227,((vlSelfRef.addn_8_fp32accum_fp16_tb_softfloat__DOT__etchedfpNadder__DOT__pipe_regs
+                                [3U] >> 0x1fU)));
+        bufp->chgCData(oldp+228,((0xffU & (vlSelfRef.addn_8_fp32accum_fp16_tb_softfloat__DOT__etchedfpNadder__DOT__pipe_regs
+                                           [3U] >> 0x17U))),8);
+        bufp->chgIData(oldp+229,((0x7fffffU & vlSelfRef.addn_8_fp32accum_fp16_tb_softfloat__DOT__etchedfpNadder__DOT__pipe_regs
+                                  [3U])),23);
+        bufp->chgSData(oldp+230,(vlSelfRef.addn_8_fp32accum_fp16_tb_softfloat__DOT__reduce__DOT__new_exp),10);
+        bufp->chgSData(oldp+231,(vlSelfRef.addn_8_fp32accum_fp16_tb_softfloat__DOT__reduce__DOT__rounded),11);
+        bufp->chgBit(oldp+232,(vlSelfRef.addn_8_fp32accum_fp16_tb_softfloat__DOT__reduce__DOT__guard));
+        bufp->chgBit(oldp+233,(vlSelfRef.addn_8_fp32accum_fp16_tb_softfloat__DOT__reduce__DOT__rnd));
+        bufp->chgBit(oldp+234,(vlSelfRef.addn_8_fp32accum_fp16_tb_softfloat__DOT__reduce__DOT__sticky));
+        bufp->chgBit(oldp+235,(vlSelfRef.addn_8_fp32accum_fp16_tb_softfloat__DOT__reduce__DOT__round_up));
+    }
+    if (VL_UNLIKELY((vlSelfRef.__Vm_traceActivity[7U]))) {
+        bufp->chgIData(oldp+236,(vlSelfRef.addn_8_fp32accum_fp16_tb_softfloat__DOT__etchedfpNadder__DOT__lzd_scan),27);
+        bufp->chgCData(oldp+237,(vlSelfRef.addn_8_fp32accum_fp16_tb_softfloat__DOT__etchedfpNadder__DOT__lead_zeros),6);
+        bufp->chgIData(oldp+238,(vlSelfRef.addn_8_fp32accum_fp16_tb_softfloat__DOT__etchedfpNadder__DOT__norm_val),27);
+        bufp->chgIData(oldp+239,(vlSelfRef.addn_8_fp32accum_fp16_tb_softfloat__DOT__etchedfpNadder__DOT__final_mant),23);
+        bufp->chgSData(oldp+240,(vlSelfRef.addn_8_fp32accum_fp16_tb_softfloat__DOT__etchedfpNadder__DOT__final_exp_calc),11);
+        bufp->chgIData(oldp+241,(vlSelfRef.addn_8_fp32accum_fp16_tb_softfloat__DOT__etchedfpNadder__DOT__result_out),32);
+    }
+    bufp->chgBit(oldp+242,(vlSelfRef.addn_8_fp32accum_fp16_tb_softfloat__DOT__tb_clk));
 }
 
 void Vaddn_8_fp32accum_fp16_tb_softfloat___024root__trace_cleanup(void* voidSelf, VerilatedVcd* /*unused*/) {
@@ -346,4 +357,6 @@ void Vaddn_8_fp32accum_fp16_tb_softfloat___024root__trace_cleanup(void* voidSelf
     vlSymsp->TOP.__Vm_traceActivity[3U] = 0U;
     vlSymsp->TOP.__Vm_traceActivity[4U] = 0U;
     vlSymsp->TOP.__Vm_traceActivity[5U] = 0U;
+    vlSymsp->TOP.__Vm_traceActivity[6U] = 0U;
+    vlSymsp->TOP.__Vm_traceActivity[7U] = 0U;
 }

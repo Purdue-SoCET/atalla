@@ -238,7 +238,7 @@ VL_INLINE_OPT VlCoroutine Vaddn_8_fp32accum_fp16_tb_softfloat___024root___eval_i
         = (((IData)(__Vtask_addn_8_fp32accum_fp16_tb_softfloat__DOT__test_case__0__h) 
             << 0x10U) | (IData)(__Vtask_addn_8_fp32accum_fp16_tb_softfloat__DOT__test_case__0__g));
     vlSelfRef.addn_8_fp32accum_fp16_tb_softfloat__DOT__exp = 0x4800U;
-    co_await vlSelfRef.__VdlySched.delay(0x2710ULL, 
+    co_await vlSelfRef.__VdlySched.delay(0x3e80ULL, 
                                          nullptr, "tb/unit/systolic_array/addn_8_fp32accum_fp16_tb_softfloat.sv", 
                                          141);
     vlSelfRef.__Vm_traceActivity[2U] = 1U;
@@ -330,7 +330,7 @@ VL_INLINE_OPT VlCoroutine Vaddn_8_fp32accum_fp16_tb_softfloat___024root___eval_i
         = (((IData)(__Vtask_addn_8_fp32accum_fp16_tb_softfloat__DOT__test_case__4__h) 
             << 0x10U) | (IData)(__Vtask_addn_8_fp32accum_fp16_tb_softfloat__DOT__test_case__4__g));
     vlSelfRef.addn_8_fp32accum_fp16_tb_softfloat__DOT__exp = 0U;
-    co_await vlSelfRef.__VdlySched.delay(0x2710ULL, 
+    co_await vlSelfRef.__VdlySched.delay(0x3e80ULL, 
                                          nullptr, "tb/unit/systolic_array/addn_8_fp32accum_fp16_tb_softfloat.sv", 
                                          146);
     vlSelfRef.__Vm_traceActivity[2U] = 1U;
@@ -422,7 +422,7 @@ VL_INLINE_OPT VlCoroutine Vaddn_8_fp32accum_fp16_tb_softfloat___024root___eval_i
         = (((IData)(__Vtask_addn_8_fp32accum_fp16_tb_softfloat__DOT__test_case__8__h) 
             << 0x10U) | (IData)(__Vtask_addn_8_fp32accum_fp16_tb_softfloat__DOT__test_case__8__g));
     vlSelfRef.addn_8_fp32accum_fp16_tb_softfloat__DOT__exp = 0U;
-    co_await vlSelfRef.__VdlySched.delay(0x2710ULL, 
+    co_await vlSelfRef.__VdlySched.delay(0x3e80ULL, 
                                          nullptr, "tb/unit/systolic_array/addn_8_fp32accum_fp16_tb_softfloat.sv", 
                                          151);
     vlSelfRef.__Vm_traceActivity[2U] = 1U;
@@ -514,7 +514,7 @@ VL_INLINE_OPT VlCoroutine Vaddn_8_fp32accum_fp16_tb_softfloat___024root___eval_i
         = (((IData)(__Vtask_addn_8_fp32accum_fp16_tb_softfloat__DOT__test_case__12__h) 
             << 0x10U) | (IData)(__Vtask_addn_8_fp32accum_fp16_tb_softfloat__DOT__test_case__12__g));
     vlSelfRef.addn_8_fp32accum_fp16_tb_softfloat__DOT__exp = 0x7c00U;
-    co_await vlSelfRef.__VdlySched.delay(0x2710ULL, 
+    co_await vlSelfRef.__VdlySched.delay(0x3e80ULL, 
                                          nullptr, "tb/unit/systolic_array/addn_8_fp32accum_fp16_tb_softfloat.sv", 
                                          156);
     vlSelfRef.__Vm_traceActivity[2U] = 1U;
@@ -606,7 +606,7 @@ VL_INLINE_OPT VlCoroutine Vaddn_8_fp32accum_fp16_tb_softfloat___024root___eval_i
         = (((IData)(__Vtask_addn_8_fp32accum_fp16_tb_softfloat__DOT__test_case__16__h) 
             << 0x10U) | (IData)(__Vtask_addn_8_fp32accum_fp16_tb_softfloat__DOT__test_case__16__g));
     vlSelfRef.addn_8_fp32accum_fp16_tb_softfloat__DOT__exp = 0x7d00U;
-    co_await vlSelfRef.__VdlySched.delay(0x2710ULL, 
+    co_await vlSelfRef.__VdlySched.delay(0x3e80ULL, 
                                          nullptr, "tb/unit/systolic_array/addn_8_fp32accum_fp16_tb_softfloat.sv", 
                                          161);
     vlSelfRef.__Vm_traceActivity[2U] = 1U;
@@ -721,7 +721,7 @@ VL_INLINE_OPT VlCoroutine Vaddn_8_fp32accum_fp16_tb_softfloat___024root___eval_i
             vlSelfRef.addn_8_fp32accum_fp16_tb_softfloat__DOT__tb_in_data[3U] 
                 = (((IData)(vlSelfRef.addn_8_fp32accum_fp16_tb_softfloat__DOT__h) 
                     << 0x10U) | (IData)(vlSelfRef.addn_8_fp32accum_fp16_tb_softfloat__DOT__g));
-            co_await vlSelfRef.__VdlySched.delay(0x1f40ULL, 
+            co_await vlSelfRef.__VdlySched.delay(0x36b0ULL, 
                                                  nullptr, 
                                                  "tb/unit/systolic_array/addn_8_fp32accum_fp16_tb_softfloat.sv", 
                                                  189);
@@ -776,8 +776,8 @@ VL_INLINE_OPT VlCoroutine Vaddn_8_fp32accum_fp16_tb_softfloat___024root___eval_i
                 if (VL_UNLIKELY((VL_GTES_III(32, 0xaU, vlSelfRef.addn_8_fp32accum_fp16_tb_softfloat__DOT__fail_count)))) {
                     VL_WRITEF_NX("FAIL: Got_fp16=%x, Got_fp32=%x, Exp=%x\n",0,
                                  16,vlSelfRef.addn_8_fp32accum_fp16_tb_softfloat__DOT__tb_result,
-                                 32,vlSelfRef.addn_8_fp32accum_fp16_tb_softfloat__DOT__tb_raw_out,
-                                 16,(IData)(vlSelfRef.addn_8_fp32accum_fp16_tb_softfloat__DOT__expected));
+                                 32,vlSelfRef.addn_8_fp32accum_fp16_tb_softfloat__DOT__etchedfpNadder__DOT__pipe_regs
+                                 [3U],16,vlSelfRef.addn_8_fp32accum_fp16_tb_softfloat__DOT__expected);
                 } else if (VL_UNLIKELY(((0xbU == vlSelfRef.addn_8_fp32accum_fp16_tb_softfloat__DOT__fail_count)))) {
                     VL_WRITEF_NX("... (suppressing terminal output) ...\n",0);
                 }

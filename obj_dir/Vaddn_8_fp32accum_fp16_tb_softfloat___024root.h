@@ -62,7 +62,6 @@ class alignas(VL_CACHE_LINE_BYTES) Vaddn_8_fp32accum_fp16_tb_softfloat___024root
         SData/*10:0*/ addn_8_fp32accum_fp16_tb_softfloat__DOT__etchedfpNadder__DOT__final_exp_calc;
         SData/*9:0*/ addn_8_fp32accum_fp16_tb_softfloat__DOT__reduce__DOT__new_exp;
         SData/*10:0*/ addn_8_fp32accum_fp16_tb_softfloat__DOT__reduce__DOT__rounded;
-        IData/*31:0*/ addn_8_fp32accum_fp16_tb_softfloat__DOT__tb_raw_out;
         IData/*31:0*/ addn_8_fp32accum_fp16_tb_softfloat__DOT__pass_count;
         IData/*31:0*/ addn_8_fp32accum_fp16_tb_softfloat__DOT__fail_count;
         IData/*31:0*/ addn_8_fp32accum_fp16_tb_softfloat__DOT__off_by_one;
@@ -81,9 +80,9 @@ class alignas(VL_CACHE_LINE_BYTES) Vaddn_8_fp32accum_fp16_tb_softfloat___024root
         IData/*27:0*/ addn_8_fp32accum_fp16_tb_softfloat__DOT__etchedfpNadder__DOT__st1_carry_vec;
         IData/*28:0*/ addn_8_fp32accum_fp16_tb_softfloat__DOT__etchedfpNadder__DOT__raw_sum;
         IData/*26:0*/ addn_8_fp32accum_fp16_tb_softfloat__DOT__etchedfpNadder__DOT__mag_sum;
+        IData/*26:0*/ addn_8_fp32accum_fp16_tb_softfloat__DOT__etchedfpNadder__DOT__st2_sum_mag;
     };
     struct {
-        IData/*26:0*/ addn_8_fp32accum_fp16_tb_softfloat__DOT__etchedfpNadder__DOT__st2_sum_mag;
         IData/*31:0*/ addn_8_fp32accum_fp16_tb_softfloat__DOT__etchedfpNadder__DOT__st2_spec_res;
         IData/*26:0*/ addn_8_fp32accum_fp16_tb_softfloat__DOT__etchedfpNadder__DOT__lzd_scan;
         IData/*26:0*/ addn_8_fp32accum_fp16_tb_softfloat__DOT__etchedfpNadder__DOT__norm_val;
@@ -92,6 +91,7 @@ class alignas(VL_CACHE_LINE_BYTES) Vaddn_8_fp32accum_fp16_tb_softfloat___024root
         IData/*31:0*/ addn_8_fp32accum_fp16_tb_softfloat__DOT__etchedfpNadder__DOT__unnamedblk7__DOT__i;
         IData/*31:0*/ addn_8_fp32accum_fp16_tb_softfloat__DOT__etchedfpNadder__DOT__unnamedblk8__DOT__i;
         IData/*31:0*/ addn_8_fp32accum_fp16_tb_softfloat__DOT__etchedfpNadder__DOT__stage3_logic__DOT__unnamedblk9__DOT__i;
+        IData/*31:0*/ addn_8_fp32accum_fp16_tb_softfloat__DOT__etchedfpNadder__DOT__unnamedblk10__DOT__i;
         IData/*31:0*/ __VactIterCount;
         QData/*63:0*/ addn_8_fp32accum_fp16_tb_softfloat__DOT__get_ulp_distance__Vstatic__int_a;
         QData/*63:0*/ addn_8_fp32accum_fp16_tb_softfloat__DOT__get_ulp_distance__Vstatic__int_b;
@@ -109,7 +109,8 @@ class alignas(VL_CACHE_LINE_BYTES) Vaddn_8_fp32accum_fp16_tb_softfloat___024root
         VlUnpacked<IData/*27:0*/, 8> addn_8_fp32accum_fp16_tb_softfloat__DOT__etchedfpNadder__DOT__op;
         VlUnpacked<IData/*27:0*/, 8> addn_8_fp32accum_fp16_tb_softfloat__DOT__etchedfpNadder__DOT__csa_s;
         VlUnpacked<IData/*27:0*/, 8> addn_8_fp32accum_fp16_tb_softfloat__DOT__etchedfpNadder__DOT__csa_c;
-        VlUnpacked<CData/*0:0*/, 6> __Vm_traceActivity;
+        VlUnpacked<IData/*31:0*/, 4> addn_8_fp32accum_fp16_tb_softfloat__DOT__etchedfpNadder__DOT__pipe_regs;
+        VlUnpacked<CData/*0:0*/, 8> __Vm_traceActivity;
     };
     double addn_8_fp32accum_fp16_tb_softfloat__DOT__total_ulp_diff;
     VlDelayScheduler __VdlySched;

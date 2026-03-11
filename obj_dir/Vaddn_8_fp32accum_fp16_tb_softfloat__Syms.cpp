@@ -43,7 +43,7 @@ Vaddn_8_fp32accum_fp16_tb_softfloat__Syms::Vaddn_8_fp32accum_fp16_tb_softfloat__
     , TOP{this, namep}
 {
         // Check resources
-        Verilated::stackCheck(213);
+        Verilated::stackCheck(245);
     // Configure time unit / time precision
     _vm_contextp__->timeunit(-9);
     _vm_contextp__->timeprecision(-12);
