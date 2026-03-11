@@ -2,8 +2,8 @@ module sysarr_n_input_fp_adder #(
     parameter NUM_INPUTS       = 8,  
     parameter MANTISSA_SIZE    = 23, 
     parameter EXPONENT_SIZE    = 8,  
-    parameter IN_MANTISSA_SIZE = 10,  
-    parameter IN_EXPONENT_SIZE = 5,  
+    parameter IN_MANTISSA_SIZE = 23,  
+    parameter IN_EXPONENT_SIZE = 8,  
     parameter PRECISION_BITS   = 0,
     parameter EXTRA_STAGES     = 3 
 ) (
