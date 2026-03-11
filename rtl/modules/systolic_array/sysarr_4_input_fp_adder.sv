@@ -132,8 +132,8 @@ module sysarr_4_input_fp_adder #(
         // Note: Inputs still use MANTISSA_SIZE, internal math uses NEW_MANT_WIDTH
         x_mant      = { (|exp_x),  frac_x, {MANTISSA_SIZE-IN_MANTISSA_SIZE{1'b0}} ,{PRECISION_BITS{1'b0}}};
         y_mant_base = { (|exp_y),  frac_y, {MANTISSA_SIZE-IN_MANTISSA_SIZE{1'b0}} ,{PRECISION_BITS{1'b0}}};
-        m_mant_base = { (|exp_mx), frac_mx, {MANTISSA_SIZE-IN_MANTISSA_SIZE{1'b0}} ,{PRECISION_BITS{1'b0}}};
-        n_mant_base = { (|exp_nx), frac_nx, {MANTISSA_SIZE-IN_MANTISSA_SIZE{1'b0}} ,{PRECISION_BITS{1'b0}}};
+        m_mant_base = { (|exp_mx), frac_mx, {MANTISSA_SIZE-IN_MANTISSA_SIZE{1'b0}} ,{PRECISION_BITS{2'b0}}};
+        n_mant_base = { (|exp_nx), frac_nx, {MANTISSA_SIZE-IN_MANTISSA_SIZE{2'b0}} ,{PRECISION_BITS{1'b0}}};
 
         sticky_y  = |(y_mant_base & ~({NEW_MANT_WIDTH{1'b1}} << y_shift));
         y_shifted = (y_shift >= NEW_MANT_WIDTH) ? 0 : (y_mant_base >> y_shift);
