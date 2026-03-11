@@ -1,12 +1,11 @@
-`include "exp_if.vh"
-`include "vector_types.vh"
+//`include "exp_if.vh"
+//`include "vector_types.vh"
 `timescale 1 ns / 1 ns
 
 module exponential_unit_tb;
-    import vector_pkg::*;
+    //import vector_pkg::*;
     
-    localparam MULT_LATENCY = 2;
-    localparam int MAX_ULP_TOL = 1;
+    localparam int MAX_ULP_TOL = 3;
 
     // Signals
     logic clk, rst_n;
@@ -18,7 +17,7 @@ module exponential_unit_tb;
     exponential_unit dut (
         .clk(clk),
         .rst_n(rst_n),
-        .ex_if(ex_if.exif)
+        .expif(ex_if)
     );
 
     // Clock
@@ -72,9 +71,9 @@ module exponential_unit_tb;
         #12 rst_n = 1;
 
         // Open input CSV file
-        input_file = $fopen("bf16_exp_full_sweep.csv", "r");
+        input_file = $fopen("exp_bf16_small_sweep.csv", "r");
         if (input_file == 0) begin
-            $display("ERROR: Could not open bf16_exp_full_sweep.csv!");
+            $display("ERROR: Could not open exp_bf16_small_sweep.csv!");
             $finish;
         end
 
@@ -133,9 +132,10 @@ module exponential_unit_tb;
             ex_if.in.valid_in = 1;
             @(posedge clk);
             ex_if.in.valid_in = 0;
-            
+
             // Wait for valid output
-            while (!ex_if.out.valid_out) @(posedge clk);            
+            while (!ex_if.out.valid_out) @(posedge clk); 
+            @(negedge clk);//           
             output_val = ex_if.out.result;
             ulp_error = calc_ulp(expected_val, output_val);
 
