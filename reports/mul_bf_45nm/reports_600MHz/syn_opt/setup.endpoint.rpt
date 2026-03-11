@@ -1,0 +1,13 @@
+
+#-----------------------------------------------------
+#  ID Slack      Endpoint        Group       View     
+#      (ps)                                           
+#-----------------------------------------------------
+    1     0   result_reg[22]/D   clock1   view_1p2_25 
+    2    20   result_reg[9]/D    clock1   view_1p2_25 
+    3    22   result_reg[18]/D   clock1   view_1p2_25 
+    4    22   result_reg[15]/D   clock1   view_1p2_25 
+    5    22   result_reg[16]/D   clock1   view_1p2_25 
+#-----------------------------------------------------
+
+

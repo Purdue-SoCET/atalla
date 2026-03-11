@@ -1,0 +1,165 @@
+
+
+Path 1: MET (484 ps) Setup Check with Pin result_reg[22]/clk->d
+           View: view_1p2_25
+          Group: clock1
+     Startpoint: (R) b[4]
+          Clock: (R) clock1
+       Endpoint: (R) result_reg[22]/d
+          Clock: (R) clock1
+
+                     Capture       Launch     
+        Clock Edge:+    1667            0     
+        Drv Adjust:+       0            0     
+       Src Latency:+       0            0     
+       Net Latency:+       0 (I)        0 (I) 
+           Arrival:=    1667            0     
+                                              
+             Setup:-      38                  
+       Uncertainty:-       0                  
+     Required Time:=    1629                  
+      Launch Clock:-       0                  
+       Input Delay:-       1                  
+         Data Path:-    1144                  
+             Slack:=     484                  
+
+Exceptions/Constraints:
+  input_delay              1              mul_bf.sdc_line_20_29_1 
+
+#---------------------------------------------------------------------------------------------------
+#  Timing Point    Flags    Arc    Edge       Cell         Fanout Load Trans Delay Arrival Instance 
+#                                                                 (fF)  (ps)  (ps)   (ps)  Location 
+#---------------------------------------------------------------------------------------------------
+  b[4]             (u)     -       R     (arrival)             11 46.2     0     0       1    (-,-) 
+  b[4]             -       -       -     (net)                  -    -     -     -       -    (-,-) 
+  g4057/z          (u)     in_1->z F     unmapped_nand2         3 12.0     0    22      23    (-,-) 
+  n_1420           -       -       -     (net)                  -    -     -     -       -    (-,-) 
+  g3979/z          (u)     in_1->z F     unmapped_complex2      1  4.0     0    16      39    (-,-) 
+  n_2445           -       -       -     (net)                  -    -     -     -       -    (-,-) 
+  g3980/z          (u)     in_1->z R     unmapped_nand2         3 12.6     0    22      61    (-,-) 
+  n_1422           -       -       -     (net)                  -    -     -     -       -    (-,-) 
+  g3895/z          (u)     in_0->z R     unmapped_or2           1  4.2     0    16      77    (-,-) 
+  n_2409           -       -       -     (net)                  -    -     -     -       -    (-,-) 
+  g3896/z          (u)     in_1->z F     unmapped_nand2         3 12.0     0    22      99    (-,-) 
+  n_1441           -       -       -     (net)                  -    -     -     -       -    (-,-) 
+  g4193/z          (u)     in_1->z F     unmapped_complex2      1  4.0     0    16     114    (-,-) 
+  n_2397           -       -       -     (net)                  -    -     -     -       -    (-,-) 
+  g3851/z          (u)     in_1->z R     unmapped_nand2         3 12.6     0    22     137    (-,-) 
+  n_1452           -       -       -     (net)                  -    -     -     -       -    (-,-) 
+  g3771/z          (u)     in_0->z R     unmapped_complex2      1  4.2     0    16     152    (-,-) 
+  n_2361           -       -       -     (net)                  -    -     -     -       -    (-,-) 
+  g3772/z          (u)     in_1->z F     unmapped_nand2         3 12.0     0    22     174    (-,-) 
+  n_1462           -       -       -     (net)                  -    -     -     -       -    (-,-) 
+  g4216/z          (u)     in_1->z F     unmapped_complex2      1  4.0     0    16     190    (-,-) 
+  n_2334           -       -       -     (net)                  -    -     -     -       -    (-,-) 
+  g3708/z          (u)     in_1->z R     unmapped_nand2         3 12.6     0    22     212    (-,-) 
+  n_1474           -       -       -     (net)                  -    -     -     -       -    (-,-) 
+  g3664/z          (u)     in_0->z R     unmapped_or2           1  4.2     0    16     228    (-,-) 
+  n_2314           -       -       -     (net)                  -    -     -     -       -    (-,-) 
+  g3665/z          (u)     in_1->z F     unmapped_nand2         3 12.0     0    22     250    (-,-) 
+  n_1476           -       -       -     (net)                  -    -     -     -       -    (-,-) 
+  g3651/z          (u)     in_0->z F     unmapped_or2           1  4.0     0    16     266    (-,-) 
+  n_2310           -       -       -     (net)                  -    -     -     -       -    (-,-) 
+  g3652/z          (u)     in_1->z R     unmapped_nand2         3 12.6     0    22     288    (-,-) 
+  n_1488           -       -       -     (net)                  -    -     -     -       -    (-,-) 
+  g3620/z          (u)     in_0->z F     unmapped_complex2      3 12.0     0    22     310    (-,-) 
+  n_1498           -       -       -     (net)                  -    -     -     -       -    (-,-) 
+  g3598/z          (u)     in_0->z F     unmapped_complex2      1  4.0     0    16     326    (-,-) 
+  n_2005           -       -       -     (net)                  -    -     -     -       -    (-,-) 
+  g3583/z          (u)     in_1->z R     unmapped_nand2         3 12.6     0    22     348    (-,-) 
+  n_1504           -       -       -     (net)                  -    -     -     -       -    (-,-) 
+  g3581/z          (u)     in_0->z F     unmapped_nand2         1  4.0     0    16     364    (-,-) 
+  n_2020           -       -       -     (net)                  -    -     -     -       -    (-,-) 
+  g3573/z          (u)     in_1->z R     unmapped_nand2         3 12.6     0    22     386    (-,-) 
+  n_1508           -       -       -     (net)                  -    -     -     -       -    (-,-) 
+  g3569/z          (u)     in_1->z F     unmapped_nand2         1  4.0     0    16     401    (-,-) 
+  n_2025           -       -       -     (net)                  -    -     -     -       -    (-,-) 
+  g3568/z          (u)     in_0->z R     unmapped_nand2         4 16.8     0    25     427    (-,-) 
+  n_1509           -       -       -     (net)                  -    -     -     -       -    (-,-) 
+  g3567/z          (u)     in_0->z F     unmapped_complex2      1  4.0     0    16     442    (-,-) 
+  n_2032           -       -       -     (net)                  -    -     -     -       -    (-,-) 
+  g3561/z          (u)     in_1->z R     unmapped_nand2         3 12.6     0    22     464    (-,-) 
+  n_1605           -       -       -     (net)                  -    -     -     -       -    (-,-) 
+  g3554/z          (u)     in_1->z F     unmapped_nand2         1  4.0     0    16     480    (-,-) 
+  n_2035           -       -       -     (net)                  -    -     -     -       -    (-,-) 
+  g3553/z          (u)     in_1->z R     unmapped_nand2         3 12.6     0    22     502    (-,-) 
+  n_1606           -       -       -     (net)                  -    -     -     -       -    (-,-) 
+  g3552/z          (u)     in_0->z F     unmapped_nand2         1  4.0     0    16     518    (-,-) 
+  n_2233           -       -       -     (net)                  -    -     -     -       -    (-,-) 
+  g3548/z          (u)     in_1->z R     unmapped_nand2         3 12.6     0    22     540    (-,-) 
+  n_1510           -       -       -     (net)                  -    -     -     -       -    (-,-) 
+  g3544/z          (u)     in_1->z F     unmapped_nand2         1  4.0     0    16     556    (-,-) 
+  n_2038           -       -       -     (net)                  -    -     -     -       -    (-,-) 
+  g3543/z          (u)     in_1->z R     unmapped_nand2         3 12.6     0    22     578    (-,-) 
+  n_1623           -       -       -     (net)                  -    -     -     -       -    (-,-) 
+  g4235/z          (u)     in_0->z R     unmapped_complex2      1  4.2     0    16     593    (-,-) 
+  n_1511           -       -       -     (net)                  -    -     -     -       -    (-,-) 
+  g4236/z          (u)     in_1->z R     unmapped_complex2      7 29.4     0    34     627    (-,-) 
+  n_1512           -       -       -     (net)                  -    -     -     -       -    (-,-) 
+  g3531/z          (u)     in_1->z R     unmapped_complex2      1  4.2     0    16     643    (-,-) 
+  n_2043           -       -       -     (net)                  -    -     -     -       -    (-,-) 
+  g3523/z          (u)     in_0->z F     unmapped_nand2         3 12.0     0    22     665    (-,-) 
+  n_1513           -       -       -     (net)                  -    -     -     -       -    (-,-) 
+  g3522/z          (u)     in_1->z R     unmapped_nand2         1  4.2     0    16     681    (-,-) 
+  n_2049           -       -       -     (net)                  -    -     -     -       -    (-,-) 
+  g3516/z          (u)     in_0->z F     unmapped_nand2         3 12.0     0    22     703    (-,-) 
+  n_1533           -       -       -     (net)                  -    -     -     -       -    (-,-) 
+  g3515/z          (u)     in_0->z R     unmapped_nand2         1  4.2     0    16     718    (-,-) 
+  n_2053           -       -       -     (net)                  -    -     -     -       -    (-,-) 
+  g3510/z          (u)     in_1->z F     unmapped_nand2         3 12.0     0    22     741    (-,-) 
+  n_1561           -       -       -     (net)                  -    -     -     -       -    (-,-) 
+  g3505/z          (u)     in_0->z R     unmapped_nand2         1  4.2     0    16     756    (-,-) 
+  n_2056           -       -       -     (net)                  -    -     -     -       -    (-,-) 
+  g3502/z          (u)     in_1->z F     unmapped_nand2         3 12.0     0    22     778    (-,-) 
+  n_1534           -       -       -     (net)                  -    -     -     -       -    (-,-) 
+  g3498/z          (u)     in_1->z R     unmapped_nand2         1  4.2     0    16     794    (-,-) 
+  n_2059           -       -       -     (net)                  -    -     -     -       -    (-,-) 
+  g3497/z          (u)     in_1->z F     unmapped_nand2         3 12.0     0    22     816    (-,-) 
+  n_1554           -       -       -     (net)                  -    -     -     -       -    (-,-) 
+  g3494/z          (u)     in_0->z R     unmapped_nand2         1  4.2     0    16     832    (-,-) 
+  n_2062           -       -       -     (net)                  -    -     -     -       -    (-,-) 
+  g3490/z          (u)     in_1->z F     unmapped_nand2         3 12.0     0    22     854    (-,-) 
+  n_1543           -       -       -     (net)                  -    -     -     -       -    (-,-) 
+  g3487/z          (u)     in_0->z R     unmapped_nand2         1  4.2     0    16     870    (-,-) 
+  n_2065           -       -       -     (net)                  -    -     -     -       -    (-,-) 
+  g3481/z          (u)     in_1->z F     unmapped_nand2         3 12.0     0    22     892    (-,-) 
+  n_1551           -       -       -     (net)                  -    -     -     -       -    (-,-) 
+  g3477/z          (u)     in_0->z R     unmapped_nand2         1  4.2     0    16     907    (-,-) 
+  n_2068           -       -       -     (net)                  -    -     -     -       -    (-,-) 
+  g3476/z          (u)     in_1->z F     unmapped_nand2         2  8.0     0    20     927    (-,-) 
+  n_1544           -       -       -     (net)                  -    -     -     -       -    (-,-) 
+  g3471/z          (u)     in_0->z R     unmapped_nand2         2  8.4     0    20     946    (-,-) 
+  n_2243           -       -       -     (net)                  -    -     -     -       -    (-,-) 
+  g4247/z          (u)     in_0->z F     unmapped_nand2         1  4.0     0    16     962    (-,-) 
+  n_1647           -       -       -     (net)                  -    -     -     -       -    (-,-) 
+  g3466/z          (u)     in_0->z R     unmapped_nand2         2  8.4     0    20     981    (-,-) 
+  n_1565           -       -       -     (net)                  -    -     -     -       -    (-,-) 
+  g4248/z          (u)     in_0->z F     unmapped_complex2      9 36.0     0    37    1018    (-,-) 
+  n_1568           -       -       -     (net)                  -    -     -     -       -    (-,-) 
+  g3461/z          (u)     in_1->z F     unmapped_or2          10 40.0     0    38    1056    (-,-) 
+  n_1570           -       -       -     (net)                  -    -     -     -       -    (-,-) 
+  g3460/z          (u)     in_0->z F     unmapped_or2          14 56.0     0    42    1098    (-,-) 
+  n_1571           -       -       -     (net)                  -    -     -     -       -    (-,-) 
+  g3422/z          (u)     in_0->z F     unmapped_complex2      1  4.0     0    16    1114    (-,-) 
+  n_2225           -       -       -     (net)                  -    -     -     -       -    (-,-) 
+  g4272/z          (u)     in_0->z R     unmapped_complex2      1  4.2     0    16    1129    (-,-) 
+  n_2227           -       -       -     (net)                  -    -     -     -       -    (-,-) 
+  g3398/z          (u)     in_1->z R     unmapped_complex2      1  4.2     0    16    1145    (-,-) 
+  n_1625           -       -       -     (net)                  -    -     -     -       -    (-,-) 
+  result_reg[22]/d <<<     -       R     unmapped_d_flop        1    -     -     0    1145    (-,-) 
+#---------------------------------------------------------------------------------------------------
+
+(u) : Net has unmapped pin(s).
+
+Capture clock path:
+#-------------------------------------------------------------------------------------------------
+#   Timing Point     Flags   Arc   Edge      Cell        Fanout Load Trans Delay Arrival Instance 
+#                                                               (fF)  (ps)  (ps)   (ps)  Location 
+#-------------------------------------------------------------------------------------------------
+  clk                (i,u)   -     R     (arrival)           25  0.0     0     0    1667    (-,-) 
+  clk                -       -     -     (net)                -    -     -     -       -    (-,-) 
+  clk                -       -     -     (net)                -    -     -     -       -    (-,-) 
+  result_reg[22]/clk <<<     -     R     unmapped_d_flop     25    -     1     0    1667    (-,-) 
+#-------------------------------------------------------------------------------------------------
+
+

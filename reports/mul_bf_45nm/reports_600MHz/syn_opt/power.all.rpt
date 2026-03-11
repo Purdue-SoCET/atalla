@@ -1,0 +1,48 @@
+
+                                Leakage    Internal                            Library 
+   Gate    Instances   Area   Power (nW)  Power (nW)          Library           Domain 
+---------------------------------------------------------------------------------------
+AND2_X1           30   31.920    767.670   16372.945    NangateOpenCellLibrary       0 
+AND4_X1            1    1.596     27.043     804.570    NangateOpenCellLibrary       0 
+AOI21_X1          18   19.152    432.197   11659.716    NangateOpenCellLibrary       0 
+AOI21_X2           1    1.862     39.379     511.876    NangateOpenCellLibrary       0 
+AOI22_X1          13   17.290    377.733   16140.535    NangateOpenCellLibrary       0 
+DFFR_X1           25  133.000   2202.552  190675.931    NangateOpenCellLibrary       0 
+FA_X1             25  106.400   1782.056   41905.356    NangateOpenCellLibrary       0 
+HA_X1             21   55.860   1190.472   22075.996    NangateOpenCellLibrary       0 
+INV_X1            67   35.644   1012.308   21465.990    NangateOpenCellLibrary       0 
+NAND2_X1          60   47.880   1093.905   15318.702    NangateOpenCellLibrary       0 
+NAND2_X2           1    1.330     34.787     348.327    NangateOpenCellLibrary       0 
+NAND2_X4           2    4.788    139.146    1312.571    NangateOpenCellLibrary       0 
+NAND3_X1           3    3.192     10.779      96.126    NangateOpenCellLibrary       0 
+NAND4_X1           5    6.650     77.438     716.367    NangateOpenCellLibrary       0 
+NOR2_X1           31   24.738    683.351    7835.118    NangateOpenCellLibrary       0 
+NOR2_X2            1    1.330     39.896    1117.834    NangateOpenCellLibrary       0 
+NOR3_X1            2    2.128     53.663     322.989    NangateOpenCellLibrary       0 
+NOR3_X2            1    1.862     52.995    1043.334    NangateOpenCellLibrary       0 
+NOR4_X1            7    9.310    232.288     948.005    NangateOpenCellLibrary       0 
+OAI21_X1           7    7.448    238.366    3755.393    NangateOpenCellLibrary       0 
+OAI221_X1          1    1.596     50.216    1600.322    NangateOpenCellLibrary       0 
+OAI22_X1           2    2.660     89.720     932.745    NangateOpenCellLibrary       0 
+OR2_X1            13   13.832    313.786   10310.221    NangateOpenCellLibrary       0 
+OR3_X1             1    1.330     22.454     439.434    NangateOpenCellLibrary       0 
+OR3_X2             1    1.596     62.483    1266.823    NangateOpenCellLibrary       0 
+OR4_X1             1    1.596     26.761     812.572    NangateOpenCellLibrary       0 
+XNOR2_X1          17   27.132    611.401   18638.679    NangateOpenCellLibrary       0 
+XNOR2_X2           9   23.940    656.748   11623.825    NangateOpenCellLibrary       0 
+XOR2_X1           21   33.516    718.097   30107.615    NangateOpenCellLibrary       0 
+XOR2_X2            2    4.788    139.353    3697.376    NangateOpenCellLibrary       0 
+---------------------------------------------------------------------------------------
+total            389  625.366  13179.045  433857.296                           
+
+
+                                          Leakage  Leakage  Internal  Internal 
+     Type      Instances   Area  Area % Power (nW) Power % Power (nW)  Power % 
+-------------------------------------------------------------------------------
+sequential            25 133.000   21.3   2202.552    16.7 190675.931     43.9 
+inverter              67  35.644    5.7   1012.308     7.7  21465.990      4.9 
+logic                297 456.722   73.0   9964.184    75.6 221715.375     51.1 
+physical_cells         0   0.000    0.0      0.000     0.0      0.000      0.0 
+-------------------------------------------------------------------------------
+total                389 625.366  100.0  13179.045   100.0 433857.296    100.0 
+
