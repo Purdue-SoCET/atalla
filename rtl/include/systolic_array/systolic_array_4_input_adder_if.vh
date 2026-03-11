@@ -4,8 +4,8 @@
 interface systolic_array_4_input_adder_if #(
     parameter MANTISSA_SIZE     = 23, // Input Mantissa Width
     parameter EXPONENT_SIZE     = 8,
-    parameter IN_MANTISSA_SIZE = 10, // Output Mantissa Width (New Parameter)
-    parameter IN_EXPONENT_SIZE = 5,
+    parameter IN_MANTISSA_SIZE = 23, // Output Mantissa Width (New Parameter)
+    parameter IN_EXPONENT_SIZE = 8,
     parameter PRECISION_BITS    = 0 
 );
     localparam WIDTH = IN_MANTISSA_SIZE + IN_EXPONENT_SIZE + 1;

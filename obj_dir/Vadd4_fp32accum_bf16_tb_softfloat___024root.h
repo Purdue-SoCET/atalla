@@ -7,7 +7,7 @@
 
 #include "verilated.h"
 #include "verilated_timing.h"
-class Vadd4_fp32accum_bf16_tb_softfloat_systolic_array_4_input_adder_if__pi1;
+class Vadd4_fp32accum_bf16_tb_softfloat_systolic_array_4_input_adder_if;
 
 
 class Vadd4_fp32accum_bf16_tb_softfloat__Syms;
@@ -15,7 +15,7 @@ class Vadd4_fp32accum_bf16_tb_softfloat__Syms;
 class alignas(VL_CACHE_LINE_BYTES) Vadd4_fp32accum_bf16_tb_softfloat___024root final : public VerilatedModule {
   public:
     // CELLS
-    Vadd4_fp32accum_bf16_tb_softfloat_systolic_array_4_input_adder_if__pi1* __PVT__add4_fp32accum_bf16_tb_softfloat__DOT__add_if;
+    Vadd4_fp32accum_bf16_tb_softfloat_systolic_array_4_input_adder_if* __PVT__add4_fp32accum_bf16_tb_softfloat__DOT__add_if;
 
     // DESIGN SPECIFIC STATE
     // Anonymous structures to workaround compiler member-count bugs

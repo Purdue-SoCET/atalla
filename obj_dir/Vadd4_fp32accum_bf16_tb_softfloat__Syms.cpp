@@ -4,7 +4,7 @@
 #include "Vadd4_fp32accum_bf16_tb_softfloat__pch.h"
 #include "Vadd4_fp32accum_bf16_tb_softfloat.h"
 #include "Vadd4_fp32accum_bf16_tb_softfloat___024root.h"
-#include "Vadd4_fp32accum_bf16_tb_softfloat_systolic_array_4_input_adder_if__pi1.h"
+#include "Vadd4_fp32accum_bf16_tb_softfloat_systolic_array_4_input_adder_if.h"
 
 // FUNCTIONS
 Vadd4_fp32accum_bf16_tb_softfloat__Syms::~Vadd4_fp32accum_bf16_tb_softfloat__Syms()

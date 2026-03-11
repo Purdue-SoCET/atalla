@@ -3,6 +3,16 @@
 // 4-input BF16 Adder Testbench using SoftFloat test vectors
 // Tests sysarr_4_input_bf_adder (3-stage pipelined CSA-based adder)
 
+/*
+
+First run: verilator -Irtl/include/systolic_array  --binary -j 0 -Wall -Wno-fatal --timing --top-module add4_fp32accum_bf16_tb_softfloat  \ 
+    tb/unit/systolic_array/add4_fp32accum_bf16_tb_softfloat.sv rtl/modules/systolic_array/reducer.sv  rtl/modules/systolic_array/sysarr_4_input_fp_adder.sv --trace
+
+Then: ./obj_dir/Vadd4_fp32accum_bf16_tb_softfloat
+
+Modify sysarr_4_input_fp_adder to another 4 input adder, and change latency, to test different adder pipelines
+*/
+
 `include "systolic_array_4_input_adder_if.vh"
 
 /* verilator lint_off UNUSEDSIGNAL */

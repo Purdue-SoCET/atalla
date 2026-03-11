@@ -22,7 +22,7 @@ module add4_fp32_tb_softfloat;
 
     localparam PERIOD = 2;
     localparam LATENCY = 4;  // 3 pipeline stages + 1 output register
-    localparam PRECISION_BITS = 50;
+    localparam PRECISION_BITS = 3;
     localparam EXPONENT_SIZE = 8;
     localparam MANTISSA_SIZE = 23; 
 
@@ -38,9 +38,10 @@ module add4_fp32_tb_softfloat;
 
     // interface
     systolic_array_4_input_adder_if #(
-        .EXPONENT_SIZE(EXPONENT_SIZE),
         .MANTISSA_SIZE(MANTISSA_SIZE),
-        .OUT_MANTISSA_SIZE(MANTISSA_SIZE),
+        .EXPONENT_SIZE(EXPONENT_SIZE),
+        .IN_MANTISSA_SIZE(MANTISSA_SIZE),
+        .IN_EXPONENT_SIZE(EXPONENT_SIZE),
         .PRECISION_BITS(PRECISION_BITS)
     ) add_if();
 
@@ -48,7 +49,8 @@ module add4_fp32_tb_softfloat;
     logic [31:0] tb_result;
     logic [31:0] exp;
 
-    int pass_count, fail_count, off_by_one, off_by_two, off_by_five_plus, diff; 
+    int pass_count, fail_count;
+    real total_ulp_error;  
 
     // con testbench signals to interface
     assign add_if.a = tb_a;
@@ -61,13 +63,41 @@ module add4_fp32_tb_softfloat;
     sysarr_4_input_fp_adder #(
         .MANTISSA_SIZE(MANTISSA_SIZE),
         .EXPONENT_SIZE(EXPONENT_SIZE),
-        .OUT_MANTISSA_SIZE(MANTISSA_SIZE),
+        .IN_MANTISSA_SIZE(MANTISSA_SIZE),
+        .IN_EXPONENT_SIZE(EXPONENT_SIZE),
         .PRECISION_BITS(PRECISION_BITS)
     ) etchedfp4adder (
         .clk(tb_clk),
         .nRST(tb_nrst),
         .add(add_if)
     );
+
+    function int get_ulp_err(logic [31:0] hw_bits, logic [31:0] ref_bits);
+        // 1. Handle exact bit match
+        if (hw_bits == ref_bits) return 0;
+
+        // 2. Handle NaN: If either is NaN, ULP is undefined (return -1 or max int)
+        // FP32 NaN: Exponent is all 1s (bits 30:23) and Mantissa is non-zero (bits 22:0)
+        if ((hw_bits[30:23] == 8'hFF && hw_bits[22:0] != 0) || 
+            (ref_bits[30:23] == 8'hFF && ref_bits[22:0] != 0)) begin
+            return -1; 
+        end
+
+        // 3. Handle Sign: If signs differ, ULP distance is massive. 
+        // Usually, you treat this as a functional failure.
+        if (hw_bits[31] != ref_bits[31]) begin
+            return 2147483647; // Max signed 32-bit int
+        end
+
+        // 4. Calculate ULP
+        // For same-signed numbers, the ULP distance is just the 
+        // integer difference of the bit patterns.
+        if (hw_bits > ref_bits) 
+            return int'(hw_bits - ref_bits);
+        else 
+            return int'(ref_bits - hw_bits);
+
+    endfunction
 
     task automatic test_case(input logic [31:0] a, input logic [31:0] b, input logic [31:0] c, input logic [31:0] d);
         @(negedge tb_clk);
@@ -129,8 +159,7 @@ initial begin
 
     pass_count = 0;
     fail_count = 0;
-    off_by_one = 0; 
-    off_by_two = 0; 
+    total_ulp_error = 0; 
     tb_nrst = 1'b0;
     tb_a = 32'h0;
     tb_b = 32'h0;
@@ -270,28 +299,15 @@ initial begin
             // log to fail file
             $fwrite(fail_fd, "%h,%h,%h,%h,%h,%h\n", a, b, c, d, expected, tb_result);
             fail_count++;
+            total_ulp_error += get_ulp_err(tb_result, expected);
             // only print first 10 failures to terminal u can change if u want
-            if (fail_count <= 10) begin
-                $display("FAIL: A=%h B=%h C=%h D=%h | Got=%h Exp=%h", 
-                         a, b, c, d, tb_result, expected);
+            if (fail_count <= 10 || get_ulp_err(tb_result, expected) > 1000) begin
+                $display("FAIL: A=%h B=%h C=%h D=%h | Got=%h Exp=%h, ULP Diff: %0d", 
+                         a, b, c, d, tb_result, expected, get_ulp_err(tb_result, expected));
             end else if (fail_count == 11) begin
                 $display("... (suppressing further terminal output, all failures logged to test_failures.csv) ...");
             end
 
-            diff = int'(tb_result) - int'(expected);
-            // Check for off-by-one (either +1 or -1)
-            if ((diff == 1 || diff == -1)) begin
-                // $display("NOTE: off-by-one detected...");
-                off_by_one++;
-            end else if ((diff == 2 || diff == -2)) begin
-                // $display("NOTE: off-by-two detected...");
-                off_by_two++;
-            end
-            else if (diff >= 2 || diff <= -2) begin
-                $display("NOTE: off-by-two-plus detected in test case A=%h B=%h C=%h D=%h | Got=%h Exp=%h (diff=%0d)", 
-                         a, b, c, d, tb_result, expected, diff);
-                off_by_five_plus++;
-            end
         end else begin
             pass_count++;
         end
@@ -309,9 +325,9 @@ initial begin
     $display("PRECISION BITS: %0d", PRECISION_BITS);
     $display("PASSED: %0d", pass_count);
     $display("FAILED: %0d", fail_count);
-    $display("OFF-BY-ONE: %0d", off_by_one);
-    $display("OFF-BY-TWO: %0d", off_by_two);
-    $display("OFF-BY-TWO-PLUS: %0d", off_by_five_plus);
+    $display("AVERAGE ULP ERROR: %f", total_ulp_error / fail_count);
+    // $display("OFF-BY-TWO: %0d", off_by_two);
+    // $display("OFF-BY-TWO-PLUS: %0d", off_by_five_plus);
     $display("failure cases logged to: test_failures_pure.csv");
 
     if (fail_count == 0)
