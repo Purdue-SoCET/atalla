@@ -50,6 +50,10 @@ To handle backpressure, there is a global stall signal that stalls all the pipes
 #### Performance
 Because every division must pass through the shared 1-cycle multipliers and 2-cycle subtractor twice (consuming 50% of the datapath's bandwidth for loopbacks), the theoretical maximum throughput is 0.5 instructions per cycle. In testing, the divider successfully achieves an **Effective CPI of 2.0**. It also acheieves a max ULP of 2.0 and a average ULP of around 0.5.
 
+Below is a block diagram and RTL diagram of the design
+
+![2MulDesign](img/2-Multiplier-Divider.png)
+
 ### 3 Multiplier Design
 *Primary Author: Brian Zhuang*
 
@@ -73,6 +77,9 @@ The pipe enable signals controls traffic and goes low when backpressure occurs (
 #### Performance
 The divider being fully pipelined achieves an **Effective CPI of 1.0** with max throughput. It also acheieves a max ULP of 2.0 and a average ULP of around 0.5, a value slightly lower than predicted.
 
+Below is a block diagram and RTL diagram of the design
+![3MulDesign](img/3-Multiplier-Divider.png)
+
 ### Comparison
 Below is a table of results for both dividers. The ULP numbers are pulled from a test of all possible mantissas (16,384). Note that subnormals have been excluded as their ULP numbers will always be 0.
 
@@ -84,4 +91,4 @@ Below is a table of results for both dividers. The ULP numbers are pulled from a
 ### Simulation
 Below is a picture of the simulated ULP error at each iteration of the Goldschmidt division algorithm using both a magic number and LUT approach. This was simulated using the PyTorch library in Python.
 
-![img](img/Goldschmidt_ULP_Analysis.jpg)
+![ULP_Analysis](img/Goldschmidt_ULP_Analysis.jpg)
