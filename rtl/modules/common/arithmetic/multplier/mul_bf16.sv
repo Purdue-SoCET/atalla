@@ -1,8 +1,12 @@
 `timescale 1ns/1ps
-// bf16 multiplier module 
+// BF16 multiplier module 
 // Made by Mixuan Pan and Vinay Pundith 
-// Last Modified: 2/3, 2026 by Mixuan Pan for 1M test cases handling 
-// stole from mixuan to add stall - myles :D
+//
+// Timing: reg > comb 
+// Submodules: wtm_bf, adder_8b
+//   Cycle 0: input latch (a_latched, b_latched)
+//   Cycle 0 (comb): NaN/Inf detect, implicit bit, WTM 8b (comb), exponent add, normalize, round, output mux
+//   done pulse same cycle as latched inputs are valid
 
 module mul_bf16(
     input logic clk, nRST, start, stall,
@@ -108,7 +112,7 @@ module mul_bf16(
     logic mul_carryout;
     logic mul_round_loss;
 
-    wallacetree_8b wallaca (
+    wtm_bf wallaca (
         .a({frac_leading_bit_fp1, a_latched[6:0]}),
         .b({frac_leading_bit_fp2, b_latched[6:0]}),
         .result(mul_product),

@@ -1,11 +1,11 @@
-`timescale 1ns/1ps
-// FP16 Pipelined Multiplier for Vector Core 
-// 2-cycle latency using wallacetree_11b_2c (pipeline split inside wallace tree) w stall
-// Author : Myles Querimit (Reference Vinay Pundith)
-// passes 999,997 out of 1 mil, the 3 wrong are boundry based on how hardware v numpy treats ftz 
-// output diff is smallest subnormal in to zero 
+`timescale 1ps/1ps
+// FP16 multiplier core with DAZ/FTZ
+// Original - Vinay | Modified - Myles 
+//
+// Timing: comb > reg > comb > reg
+// Submodules: wtm_fp_2c, adder_5b 
 
-module mul_fp16_VC(
+module mul_fp16 (
     input logic clk,
     input logic nRST,
     input logic start,
@@ -15,38 +15,13 @@ module mul_fp16_VC(
     output logic done
 );
 
-
-    // Cycle 1: Input Latch
-    logic [15:0] a_lat, b_lat;
-    logic stage0_valid;
-
-    always_ff @(posedge clk, negedge nRST) begin
-        if (!nRST) begin
-            a_lat <= '0;
-            b_lat <= '0;
-            stage0_valid <= '0;
-        end
-        else if (stall) begin
-            a_lat <= a_lat;
-            b_lat <= b_lat;
-            stage0_valid <= stage0_valid;
-        end
-        else begin
-            a_lat <= a;
-            b_lat <= b;
-            stage0_valid <= start;
-        end
-    end
-
-    // Cycle 2: WTM stages 1-4 (combinational)
-
-    // Extract fields from latched inputs
+    // Extract fields directly from inputs (no input latch - MAC provides latched values)
     logic [4:0] exp_a, exp_b;
     logic [9:0] mant_a, mant_b;
-    assign exp_a = a_lat[14:10];
-    assign exp_b = b_lat[14:10];
-    assign mant_a = a_lat[9:0];
-    assign mant_b = b_lat[9:0];
+    assign exp_a = a[14:10];
+    assign exp_b = b[14:10];
+    assign mant_a = a[9:0];
+    assign mant_b = b[9:0];
 
     // Special value detection (combinational, parallel with WTM)
     logic a_exp_zero, b_exp_zero;
@@ -75,7 +50,7 @@ module mul_fp16_VC(
 
     // Sign calculation
     logic mul_sign;
-    assign mul_sign = a_lat[15] ^ b_lat[15];
+    assign mul_sign = a[15] ^ b[15];
 
     // Implicit leading bits
     logic frac_leading_bit_fp1, frac_leading_bit_fp2;
@@ -88,13 +63,13 @@ module mul_fp16_VC(
     logic mul_round_loss;
     logic wtm_ready;
 
-    wallacetree_11b_2c wallaca (
+    wtm_fp_2c wallaca (
         .clk(clk),
         .nRST(nRST),
-        .a({frac_leading_bit_fp1, a_lat[9:0]}),
-        .b({frac_leading_bit_fp2, b_lat[9:0]}),
-        .active(stage0_valid),
-        .stall(stall),
+        .a({frac_leading_bit_fp1, a[9:0]}),
+        .b({frac_leading_bit_fp2, b[9:0]}),
+        .active(start),
+        // .stall(stall),
         .result(mul_product),
         .overflow(mul_carryout),
         .round_loss(mul_round_loss),
@@ -136,9 +111,7 @@ module mul_fp16_VC(
         end
     end
 
-    // Cycle 3
-    
-    // Exponent addition (uses mul_carryout from WTM)
+    // Cycle 2: Exponent addition (uses mul_carryout from WTM)
     logic [4:0] exp_sum;
     logic exp_ovf, exp_unf;
     
@@ -156,6 +129,13 @@ module mul_fp16_VC(
     logic guard_bit, round_bit, sticky_bit;
     always_comb begin
         if (mul_carryout) begin
+            mul_frac_normalized = mul_product[12:3];
+            guard_bit = mul_product[2];
+            round_bit = mul_product[1];
+            sticky_bit = mul_product[0] | mul_round_loss;
+        end
+        else if (exp_unf && (exp_sum == 5'd0)) begin
+            // Subnormal boundary: shift right 1 more for 0.1xxx format
             mul_frac_normalized = mul_product[12:3];
             guard_bit = mul_product[2];
             round_bit = mul_product[1];
@@ -220,6 +200,20 @@ module mul_fp16_VC(
     // Combinational output (no output register)
     assign result = has_special_case ? special_result : 
                     {mul_sign_r1, mul_final_exp, mul_significand_rounded[9:0]};
-    assign done = wtm_ready;
+    
+        
+    // done must be delayed by 1 more cycle to align with result validity
+    // wtm_ready goes high when WTM internal register captures (after comb1)
+    // but result is valid after comb2, so we need another cycle
+    logic done_r;
+    always_ff @(posedge clk, negedge nRST) begin
+        if (!nRST)
+            done_r <= 1'b0;
+        else if (stall)
+            done_r <= done_r;
+        else
+            done_r <= wtm_ready;
+    end
+    assign done = done_r & ~stall;
 
 endmodule

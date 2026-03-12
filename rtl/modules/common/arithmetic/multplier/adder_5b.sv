@@ -1,14 +1,17 @@
-//By            : Joe Nasti
-//Last Updated  : 1/23/2024 by Myles Querimit - Fixed ovf and unf
+// FP16 exponent adder (bias-15 removal).
 //
-//Module summary:
-//    Adds two unsigned 5 bit integers with ofset of 16 and signals if there is an over/underflow
-//Inputs:
-//    exp1/2 - 5 bit values to be summed
-//Outputs:
-//    sum    - 5 bit result of addition regardless of ovf/unf
-//    ovf    - signal overflow has occurred
-//    unf    - signal underflow has occurred
+// Timing: comb only
+//
+// Module summary:
+//    Adds two unsigned 5-bit exponents with bias offset of 15
+//    and signals overflow/underflow.
+// Inputs:
+//    carry  - carry-in from mantissa multiply overflow
+//    exp1/2 - 5-bit biased exponents
+// Outputs:
+//    sum    - 5-bit result (raw_sum - 15)
+//    ovf    - result exponent >= 31 (Inf/NaN range)
+//    unf    - result exponent <= 0 (zero/subnormal range)
 
 `timescale 1ns/1ps
 

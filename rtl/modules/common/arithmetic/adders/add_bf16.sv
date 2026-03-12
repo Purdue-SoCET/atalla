@@ -5,6 +5,14 @@
 //Module Summary:
 //    BF16 adder with an option to pad one of the input mantissa to 23, making the input 32 bits long 
 //    Subtraction is supported when the input signs differ
+//
+// Timing: latch > comb > reg > comb (3-cycle latency, stall-able)
+// Submodule: normalize_bf
+//   Cycle 1: input latch
+//   Cycle 1 (comb): exponent compare, implicit bit, mantissa alignment, magnitude compare
+//   Cycle 2: pipeline reg
+//   Cycle 2 (comb): signed add/sub, normalization, exponent adjust, rounding, output mux
+//   done pulse on cycle 2
 
 `timescale 1ns/1ps
 
@@ -201,7 +209,7 @@ module add_bf16 #(
     logic [MANT_B+1:0] normalized_mantissa_sum;
     logic [$clog2(MANT_B):0] norm_shift;
     
-    left_shift_add_bf16 #(.MANT_B(MANT_B)) normalizer (
+    normalize_bf #(.MANT_B(MANT_B)) normalizer (
         .fraction(mantissa_sum[MANT_B+2:0]), 
         .result(normalized_mantissa_sum), 
         .shifted_amount(norm_shift));

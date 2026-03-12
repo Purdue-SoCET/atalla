@@ -1,15 +1,22 @@
-//By            : Joe Nasti
-//Last Updated  : 10/27/2025 by Vinay Pundith - Converted to 8 bit adder for TPU Systolic Array BF16 MAC Unit
-//                02/10/2006 by Mixuan Pan - extra bit for sum to handle negative value for 127 subtration that should go to underflow instead of all 1's in the exponent bit for a bf16 multiplier 
+// BF16 exponent adder (bias-127 removal).
 //
-//Module summary:
-//    Adds two unsigned 8 bit integers with ofset of 16 and signals if there is an over/underflow
-//Inputs:
-//    exp1/2 - 8 bit values to be summed
-//Outputs:
-//    sum    - 8 bit result of addition regardless of ovf/unf
-//    ovf    - signal overflow has occurred
-//    unf    - signal underflow has occurred
+// By            : Joe Nasti
+// Last Updated  : 10/27/2025 by Vinay Pundith - Converted to 8 bit adder for TPU Systolic Array BF16 MAC Unit
+//                 02/10/2026 by Mixuan Pan - extra bit for sum to handle negative value for 127 subtraction
+//
+// Timing: comb only
+//
+// Module summary:
+//    Adds two unsigned 8-bit biased exponents, subtracts bias (127),
+//    and signals overflow/underflow.
+// Inputs:
+//    carry      - carry-in from mantissa multiply overflow
+//    exp1/2     - 8-bit biased exponents
+// Outputs:
+//    sum        - 8-bit result (exp1 + exp2 + carry - 127)
+//    ovf        - overflow detected
+//    unf        - underflow detected
+//    edge_case  - result lands exactly at 0x80 boundary
 
 /* verilator lint_off UNUSEDSIGNAL */
 

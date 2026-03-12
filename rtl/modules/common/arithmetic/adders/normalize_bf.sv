@@ -1,21 +1,24 @@
-
-// Fancy left shifter used for floating-point addition.
-
-//By            : Joe Nasti
-//Modified By   : Mixuan Pan 
-//Last Updated  : 2/17/2026 - Convert it to parametrizable bf16 adder
+// BF16 fraction normalizer (leading-one detector + barrel shift via casez).
 //
-//Module Summary:
-//    Left shifts an unsigned 10 bit value until the first '1' is the most significant bit and returns the amount shifted
+// By            : Joe Nasti
+// Modified By   : Mixuan Pan 
+// Last Updated  : 2/17/2026 - Convert it to parametrizable bf16 adder
 //
-//Inputs:
-//    fraction - 10 bit value to be shifted
-//Outputs:
-//    result   - resulting 9 bit value with a '1' in most significance and zeros shifted in from the right
+// Timing: comb only
+//
+// Module Summary:
+//   Left shifts an unsigned value until the leading '1' is the MSB.
+//   Supports MANT_B=7 (BF16) and MANT_B=23 (FP32 accumulation path).
+//
+// Inputs:
+//   fraction - (MANT_B+3)-bit value to be shifted
+// Outputs:
+//   result         - (MANT_B+2)-bit normalized value with '1' in MSB
+//   shifted_amount - number of positions shifted
 
 `timescale 1ns/1ps
 
-module left_shift_add_bf16 #(
+module normalize_bf #(
     parameter MANT_B = 7
 )(
     input      [MANT_B+2:0] fraction,

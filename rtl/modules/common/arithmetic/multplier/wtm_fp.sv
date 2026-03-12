@@ -1,14 +1,13 @@
-// 11 bit wallace tree multiplier.
-// tell me to parameterize this, and i will throw a snowball at you.
-// use for FP16 multiplication.
+// 11-bit wallace tree multiplier. Single cycle edition, no pipelining.
 // by: Mixuan Pan and Vinay Pundith, September 2025
-// added stall - Myles Querimit feb 2026
+//
+// Timing: comb only (single-cycle)
 
 `timescale 1ns/1ps
 
-/* verilator lint_off UNUSEDSIGNAL */
+// module mul_wallacetree #(parameter num_bits = 11) (input logic clk, nRST, start, stop, input logic [num_bits-1:0] op1, op2, output logic [num_bits-1:0] result, output logic overflow, round_loss);
+module wtm_fp (input logic [10:0] a, b, output logic [12:0] result, output logic overflow, round_loss);
 
-module wallacetree_11b_2c (input logic clk, nRST, [10:0] a, b, input logic active, stall, output logic [12:0] result, output logic overflow, round_loss, value_ready);
 logic [2:0][12:0] stage1_sums;
 logic [2:0][10:0] stage1_carries;
 
@@ -150,68 +149,32 @@ ha ha_s4_l1_b18 (.a(stage3_level1_sums[18]), .b(stage3_level2_sums[11]), .s(stag
 // bits 19, 20 come straight from stage3
 assign stage4_level1_sums[20:19] = stage3_level2_sums[13:12];
 
-// register between stage4 and stage5
-logic [20:0] stage4_level1_sums_lat;
-logic [14:0] stage4_level1_carries_lat;
-logic [12:0] stage3_level2_carries_lat;
 
-
-always_ff @(posedge clk, negedge nRST)
-begin
-    if(nRST == 1'b0)
-    begin
-        stage4_level1_sums_lat <= 0;
-        stage4_level1_carries_lat <= 0;
-        stage3_level2_carries_lat <= 0;
-        value_ready <= 0;
-    end
-    else if (stall) begin
-        stage4_level1_sums_lat <= stage4_level1_sums_lat;
-        stage4_level1_carries_lat <= stage4_level1_carries_lat;
-        stage3_level2_carries_lat <= stage3_level2_carries_lat;
-        value_ready <= value_ready;
-    end
-    else begin
-        value_ready <= active;
-        if(active)
-        begin
-            stage4_level1_sums_lat <= stage4_level1_sums;
-            stage4_level1_carries_lat <= stage4_level1_carries;
-            stage3_level2_carries_lat <= stage3_carries[1];
-        end
-        else begin
-            stage4_level1_sums_lat <= stage4_level1_sums_lat;
-            stage4_level1_carries_lat <= stage4_level1_carries_lat;
-            stage3_level2_carries_lat <= stage3_level2_carries_lat;
-        end
-        
-    end
-end
 
 // stage5
 logic [20:0] stage5_sums;
 logic [15:0] stage5_carries;
 
 // bits 0 to 4
-assign stage5_sums[4:0] = stage4_level1_sums_lat[4:0];
+assign stage5_sums[4:0] = stage4_level1_sums[4:0];
 
 // bits 5 to 9
-ha ha_s5_b5 (.a(stage4_level1_sums_lat[5]), .b(stage4_level1_carries_lat[0]), .s(stage5_sums[5]), .cout(stage5_carries[0]));
-ha ha_s5_b6 (.a(stage4_level1_sums_lat[6]), .b(stage4_level1_carries_lat[1]), .s(stage5_sums[6]), .cout(stage5_carries[1]));
-ha ha_s5_b7 (.a(stage4_level1_sums_lat[7]), .b(stage4_level1_carries_lat[2]), .s(stage5_sums[7]), .cout(stage5_carries[2]));
-ha ha_s5_b8 (.a(stage4_level1_sums_lat[8]), .b(stage4_level1_carries_lat[3]), .s(stage5_sums[8]), .cout(stage5_carries[3]));
-ha ha_s5_b9 (.a(stage4_level1_sums_lat[9]), .b(stage4_level1_carries_lat[4]), .s(stage5_sums[9]), .cout(stage5_carries[4]));
+ha ha_s5_b5 (.a(stage4_level1_sums[5]), .b(stage4_level1_carries[0]), .s(stage5_sums[5]), .cout(stage5_carries[0]));
+ha ha_s5_b6 (.a(stage4_level1_sums[6]), .b(stage4_level1_carries[1]), .s(stage5_sums[6]), .cout(stage5_carries[1]));
+ha ha_s5_b7 (.a(stage4_level1_sums[7]), .b(stage4_level1_carries[2]), .s(stage5_sums[7]), .cout(stage5_carries[2]));
+ha ha_s5_b8 (.a(stage4_level1_sums[8]), .b(stage4_level1_carries[3]), .s(stage5_sums[8]), .cout(stage5_carries[3]));
+ha ha_s5_b9 (.a(stage4_level1_sums[9]), .b(stage4_level1_carries[4]), .s(stage5_sums[9]), .cout(stage5_carries[4]));
 
 // bits 10 to 19
 generate
     for(q = 10; q <= 19; q++)
     begin
-        fa fa_s5 (.a(stage4_level1_sums_lat[q]), .b(stage4_level1_carries_lat[q-5]), .cin(stage3_level2_carries_lat[q-10]), .s(stage5_sums[q]), .cout(stage5_carries[q-5]));
+        fa fa_s5 (.a(stage4_level1_sums[q]), .b(stage4_level1_carries[q-5]), .cin(stage3_carries[1][q-10]), .s(stage5_sums[q]), .cout(stage5_carries[q-5]));
     end
 endgenerate
 
 // bit 20
-ha ha_s5_b20 (.a(stage4_level1_sums_lat[20]), .b(stage3_level2_carries_lat[10]), .s(stage5_sums[20]), .cout(stage5_carries[15]));
+ha ha_s5_b20 (.a(stage4_level1_sums[20]), .b(stage3_carries[1][10]), .s(stage5_sums[20]), .cout(stage5_carries[15]));
 
 logic [22:0] product;
 
