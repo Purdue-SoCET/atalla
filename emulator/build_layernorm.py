@@ -29,7 +29,7 @@ def load_tile_data(data_path: Path, n: int) -> list:
 def main():
     ap = argparse.ArgumentParser()
     ap.add_argument("-i", "--input", type=Path, default=None, help="Input assembly file")
-    ap.add_argument("-o", "--output", type=Path, default='./layernorm.in', help="Output test file")
+    ap.add_argument("-o", "--output", type=Path, default='./tests/layernorm.in', help="Output test file")
     ap.add_argument("--no-graph", action="store_true", help="Disable dependency graph packet scheduling")
     ap.add_argument("--data", type=Path, default=None,
                     help="Path to input tile CSV data file (N×N). If omitted, uses hardcoded defaults.")
@@ -94,8 +94,8 @@ def main():
         add.vv   $22, $22, $23, 1, 0                # partial sum 2 + partial sum 3
         add.vv   $24, $21, $22, 1, 0                # layer mean sum in $24
         
-        divi.vi  $24, $24, {LAYER_ELEMS}, 1         # layer mean sum / 16 -> final mean in $24
-        
+        divi.vi  $24, $24, {LAYER_ELEMS}, 1         # layer mean sum / 16 -> final mean in $24        
+
         sub.vv   $30, $10, $24, 1, 0                # normalized numerator row 0 = row 0 - mean
         sub.vv   $31, $11, $24, 1, 0                # normalized numerator row 1 = row 1 - mean
         sub.vv   $32, $12, $24, 1, 0                # normalized numerator row 2 = row 2 - mean
@@ -158,7 +158,8 @@ def main():
     #-----------DEFAULT ADDRESS INITIALIZATIONS--------
     img.u32(TILE_ADDR_LOCATION, TILE_ADDR) # Place tile base address at address 67
     img.u32(SCPAD_ADDR_LOCATION, SCPAD_ADDR)
-    img.f32(EPSILON_LOCATION, 0)
+    # img.f32(EPSILON_LOCATION, 0)
+    img.f32(EPSILON_LOCATION, 1e-5)     # fix
     #-----------TILE INITIALIZATION----------
     base_addr = TILE_ADDR
     if args.data is not None:

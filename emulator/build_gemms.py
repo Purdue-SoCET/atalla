@@ -10,7 +10,7 @@ import argparse
 import numpy as np
 
 from src.misc.opcode_table import OPCODES, name_to_opcode
-from build_emulator_mary import *
+from build import *
 
 
 def bf16_round(x: float) -> int:
