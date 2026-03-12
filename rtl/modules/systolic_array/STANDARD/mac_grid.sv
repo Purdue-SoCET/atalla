@@ -23,24 +23,43 @@ module mac_grid #(
 
     systolic_array_MAC_if mac_ifs[N*N-1:0] ();
 
-    // todo!!! control logic 
-    // per mac signals are mac shift and start 
-    // mac shift - latch input now (mac captures invalue) 
-    // start - just start signal
- 
+    // Staged control signals - inputs propagate horizontally, so start signal must be delayed per column
+    logic [N-1:0] input_en_sr, weight_en_sr;  // shift registers for input_en and weight_en per column
+    genvar col_sr;
+    generate
+        for (col_sr = 0; col_sr < N; col_sr++) begin : stage_shift_regs
+            always_ff @(posedge clk, negedge nRST) begin
+                if (!nRST) begin
+                    input_en_sr[col_sr]  <= '0;
+                    weight_en_sr[col_sr] <= '0;
+                end else begin
+                    if (col_sr == 0) begin
+                        input_en_sr[col_sr]  <= input_en;
+                        weight_en_sr[col_sr] <= weight_en;
+                    end else begin
+                        input_en_sr[col_sr]  <= input_en_sr[col_sr-1];
+                        weight_en_sr[col_sr] <= weight_en_sr[col_sr-1];
+                    end
+                end
+            end
+        end
+    endgenerate
 
-    // placeholder below until control logic is wired 
+    // Control logic for MAC_shift and start signals
+    // MAC_shift: latch input now (mac captures invalue) - asserted during weight loading and input loading
+    // start: begin MAC operation - asserted when input arrives at this column (staged by column position)
+    
     genvar cm, cn;
     generate
         for (cm = 0; cm < N; cm++) begin : ctrl_row
             for (cn = 0; cn < N; cn++) begin : ctrl_col
-                // replace ts w actual logic 
-                assign mac_ifs[cm*N + cn].MAC_shift = '0;
-                assign mac_ifs[cm*N + cn].start     = '0;
+                // Shift data through when weights or inputs are being loaded
+                assign mac_ifs[cm*N + cn].MAC_shift = weight_en_sr[cn] | input_en_sr[cn];
+                // Start MAC operations when input arrives at this column
+                assign mac_ifs[cm*N + cn].start     = input_en_sr[cn];
             end
         end
     endgenerate
-    // place holder above 
 
   
     logic [DW-1:0] MAC_outputs     [N-1:0][N-1:0];
