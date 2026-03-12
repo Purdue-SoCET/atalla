@@ -276,22 +276,37 @@ module sysarr_MEISSA_top #(
     end
 
 
-    TPU_buffer #(
+    // TPU_buffer #(
+    //     .NUM_COLS(N),
+    //     .DATA_WIDTH(DW),
+    //     .SRAM_DEPTH(N + PIPELINE_DEPTH),
+    //     .IN_OUT(1) // output
+    // ) output_buffer (
+    //     .clk(clk),
+    //     .nRST(nRST),
+    //     .stall(!gsau_if.sa_ready_out),
+    //     .wr_en(|special_counter),
+    //     .wr_data(reduced_data),
+    //     .rd_en(shift_reg[TOTAL_DELAY - 3 : PIPELINE_DEPTH]), // width of N bits
+    //     .rd_data(output_data),
+    //     .rdone(),
+    //     .lane0_empty(),
+    //     .full()
+    // );
+
+    output_buffer #(
         .NUM_COLS(N),
         .DATA_WIDTH(DW),
-        .SRAM_DEPTH(N + PIPELINE_DEPTH),
-        .IN_OUT(1) // output
-    ) output_buffer (
+        .SRAM_DEPTH(N + PIPELINE_DEPTH)
+    ) u_output_buffer (
         .clk(clk),
         .nRST(nRST),
         .stall(!gsau_if.sa_ready_out),
-        .wr_en(|special_counter),
+        .wr_en(shift_reg[TOTAL_DELAY - 3 : PIPELINE_DEPTH]),
         .wr_data(reduced_data),
-        .rd_en(shift_reg[TOTAL_DELAY - 3 : PIPELINE_DEPTH]), // width of N bits
+        .rd_en(|special_counter),
         .rd_data(output_data),
-        .rdone(),
-        .lane0_empty(),
-        .full()
+        .rdone()
     );
 
     // Drive GSAU output interface

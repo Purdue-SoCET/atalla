@@ -32,7 +32,7 @@
 ./rtl/modules/systolic_array/skew_buffer.sv
 // ./rtl/modules/systolic_array/MEISSA_control_unit.sv
 // TPU
-./rtl/modules/systolic_array/TPU/TPU_buffer.sv
+./rtl/modules/systolic_array/output_buffer.sv
 // ./rtl/modules/systolic_array/TPU/TPU_control_unit.sv
 // ./rtl/modules/systolic_array/TPU/TPU_MAC_4_input.sv
 // ./rtl/modules/systolic_array/TPU/TPU_mul_cell.sv
