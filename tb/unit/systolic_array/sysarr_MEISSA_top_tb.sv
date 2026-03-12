@@ -134,30 +134,32 @@ module sysarr_MEISSA_top_tb();
     endtask
 
     task load_weights();
-        gsau_if.sa_input_en   = 1'b0;
-        gsau_if.sa_partial_en = 1'b0;
-        gsau_if.sa_weight_en  = 1'b0;
-        gsau_if.sa_array_in   = '0;
+        /* verilator lint_off INITIALDLY */
+        gsau_if.sa_input_en   <= 1'b0;
+        gsau_if.sa_partial_en <= 1'b0;
+        gsau_if.sa_weight_en  <= 1'b0;
+        gsau_if.sa_array_in   <= '0;
 
         for (int column = ARRAY_DIM - 1; column >= 0; column--) begin
             // Deassert enables while waiting for ready
-            gsau_if.sa_weight_en = 1'b0;
-            gsau_if.sa_array_in  = '0;
+            gsau_if.sa_weight_en <= 1'b0;
+            gsau_if.sa_array_in  <= '0;
 
             while (!gsau_if.sa_ready_in) @(posedge CLK);
 
             // Pack column k of W into the bus
-            gsau_if.sa_array_in = '0;
+            gsau_if.sa_array_in <= '0;
             for (int row = 0; row < ARRAY_DIM; row++) begin
-                gsau_if.sa_array_in[DATA_WIDTH*row +: DATA_WIDTH] = temp_weights[row][column];
+                gsau_if.sa_array_in[DATA_WIDTH*row +: DATA_WIDTH] <= temp_weights[row][column];
             end
 
-            gsau_if.sa_weight_en = 1'b1;
+            gsau_if.sa_weight_en <= 1'b1;
             @(posedge CLK);
         end
 
-        gsau_if.sa_weight_en = 1'b0;
-        gsau_if.sa_array_in  = '0;
+        gsau_if.sa_weight_en <= 1'b0;
+        gsau_if.sa_array_in  <= '0;
+        /* verilator lint_on INITIALDLY */
     endtask
 
     task load_inputs();
@@ -269,20 +271,23 @@ endgenerate
 
 // Initialize signals and files
 initial begin
-    gsau_if.sa_array_in        = '0;
-    gsau_if.sa_array_in_partials = '0;
-    gsau_if.sa_input_en        = 1'b0;
-    gsau_if.sa_weight_en       = 1'b0;
-    gsau_if.sa_partial_en      = 1'b0;
+    /* verilator lint_off INITIALDLY */
+    gsau_if.sa_array_in        <= '0;
+    gsau_if.sa_array_in_partials <= '0;
+    gsau_if.sa_input_en        <= 1'b0;
+    gsau_if.sa_weight_en       <= 1'b0;
+    gsau_if.sa_partial_en      <= 1'b0;
     // gsau_if.sa_ready_out       = 1'b1;
 
     file               = $fopen(PATH_TO_INPUT, "r");
     expected_out_file  = $fopen(PATH_TO_EXPECTED_RESULT, "r");
     actual_output_file = $fopen(PATH_TO_RESULT, "w");
+    /* verilator lint_on INITIALDLY */
 end
 
 // Process 1: Feed inputs
 initial begin
+    /* verilator lint_off INITIALDLY */
     int input_row;
     bit found_test;
     bit found_input;
@@ -293,17 +298,17 @@ initial begin
 
     forever begin
         @(posedge CLK);
-        #(1)
+        // #(1)
         if (gsau_if.sa_ready_in) begin
 
             if (input_row == 0) begin
                 // Find next test or input label
                 found_test  = 0;
                 found_input = 0;
-                gsau_if.sa_input_en   = 1'b0;
-                gsau_if.sa_partial_en = 1'b0;
-                gsau_if.sa_array_in = '0;
-                gsau_if.sa_array_in_partials = '0;
+                gsau_if.sa_input_en   <= 1'b0;
+                gsau_if.sa_partial_en <= 1'b0;
+                gsau_if.sa_array_in <= '0;
+                gsau_if.sa_array_in_partials <= '0;
                 while (!found_test) begin
                     if ($fgets(line, file) == 0) begin
                         break;
@@ -318,10 +323,10 @@ initial begin
 
                 if (!found_test) begin
                     input_eof = 1'b1;
-                    gsau_if.sa_input_en   = 1'b0;
-                    gsau_if.sa_partial_en = 1'b0;
-                    gsau_if.sa_array_in = '0;
-                    gsau_if.sa_array_in_partials = '0;
+                    gsau_if.sa_input_en   <= 1'b0;
+                    gsau_if.sa_partial_en <= 1'b0;
+                    gsau_if.sa_array_in <= '0;
+                    gsau_if.sa_array_in_partials <= '0;
                     break; // EOF
                 end
 
@@ -342,28 +347,31 @@ initial begin
             end
 
 
-            gsau_if.sa_input_en   = 1'b0;
-            gsau_if.sa_partial_en = 1'b0;
+            gsau_if.sa_input_en   <= 1'b0;
+            gsau_if.sa_partial_en <= 1'b0;
             // Drive inputs for current row
             for (int col = 0; col < ARRAY_DIM; col++) begin
-                gsau_if.sa_array_in[DATA_WIDTH*col +: DATA_WIDTH] = temp_inputs[input_row][col];
-                gsau_if.sa_array_in_partials[DATA_WIDTH*col +: DATA_WIDTH] = temp_partials[input_row][col];
+                gsau_if.sa_array_in[DATA_WIDTH*col +: DATA_WIDTH] <= temp_inputs[input_row][col];
+                gsau_if.sa_array_in_partials[DATA_WIDTH*col +: DATA_WIDTH] <= temp_partials[input_row][col];
             end
-            gsau_if.sa_input_en   = 1'b1;
-            gsau_if.sa_partial_en = 1'b1;
+            gsau_if.sa_input_en   <= 1'b1;
+            gsau_if.sa_partial_en <= 1'b1;
 
             input_row++;
             if (input_row == ARRAY_DIM) input_row = 0;
 
         end else begin
-            gsau_if.sa_input_en   = 1'b0;
-            gsau_if.sa_partial_en = 1'b0;
+            gsau_if.sa_input_en   <= 1'b0;
+            gsau_if.sa_partial_en <= 1'b0;
         end
     end
+
+    /* verilator lint_on INITIALDLY */
 end
 
 // Process 2: Collect and check outputs
 initial begin
+    /* verilator lint_off INITIALDLY */
     int result_row;
     bit found_expected_result;
     bit is_result_correct;
@@ -379,7 +387,7 @@ initial begin
 
     forever begin
         @(posedge CLK);
-        #(1)
+        // #(1)
         if (input_eof && test_name_queue.size() == 0 && result_row == 0) begin
             $display("All queued tests processed. Ending simulation.");
             break;
@@ -387,7 +395,7 @@ initial begin
 
         //Randomly stall output for 1-5 cycles (30% chance)
         stall_counter++;
-        gsau_if.sa_ready_out = 1'b1;
+        gsau_if.sa_ready_out <= 1'b1;
         if(stall_counter >= 5) begin
             gsau_if.sa_ready_out = 1'b0;
         end
@@ -466,12 +474,15 @@ initial begin
         end
     end
 
+    /* verilator lint_on INITIALDLY */
+
     $fclose(file);
     $fclose(expected_out_file);
     $fclose(actual_output_file);
     #50;
     $display("Passed Tests: %0d / %0d", total_passed_tests, total_tests);
     $finish;
+    
 end
 
 endmodule
