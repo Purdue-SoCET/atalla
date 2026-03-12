@@ -14,31 +14,39 @@ module sysarr_STANDARD #(
     gsau_control_unit_if.systolic_array gsau_if
 );
 
+    localparam int PIPELINE_DEPTH = MAC_LATENCY + (N - 1);  // MAC latency + vertical accumulation depth
+    localparam int SRAM_DEPTH = N + PIPELINE_DEPTH;
 
-// TODO !!! FIX MAC GRID CONTROL LOGIC 
+    // Control signals
+    logic [N-1:0] in_rd_en, out_wr_en, in_rdone;
+    logic in_buffer_empty;
 
-// input skew buffer logic
-    logic [N*DW-1:0] skewed_inputs;
+    // Input buffer logic with credit-based flow control
+    logic [N-1:0][DW-1:0] buffered_inputs;
 
-    skew_buffer #(
+    sysarr_buffer #(
         .NUM_COLS(N),
-        .COL_WIDTH(DW),
-        .RECT_DELAY(0),
-        .DELAY_SLOPE(MAC_LATENCY), // issue timer, if u want to do add_lat just do mac_latency/2
-        .REVERSE_TRIANGLE(0)
+        .DATA_WIDTH(DW),
+        .SRAM_DEPTH(SRAM_DEPTH),
+        .IN_OUT(0)  // input buffer
     ) input_buffer (
         .clk(clk),
-        .n_rst(nRST),
+        .nRST(nRST),
         .stall(1'b0),
+        .wr_en(gsau_if.sa_input_en),
         .wr_data(gsau_if.sa_array_in),
-        .rd_data(skewed_inputs)
+        .rd_en(in_rd_en),
+        .rd_data(buffered_inputs),
+        .rdone(in_rdone),
+        .lane0_empty(in_buffer_empty),
+        .full()
     );
 
-    // weights bypass the input buffer right
+    // Weights bypass the input buffer
     logic [N*DW-1:0] grid_inputs;
-    assign grid_inputs = gsau_if.sa_weight_en ? gsau_if.sa_array_in : skewed_inputs;
+    assign grid_inputs = gsau_if.sa_weight_en ? gsau_if.sa_array_in : buffered_inputs;
 
-// bf16 to fp32 conversion for partial sums
+    // bf16 to fp32 conversion for partial sums
     logic [N - 1:0][DW_ACC - 1:0] psum_wr_data;
     genvar m;
     generate
@@ -49,13 +57,13 @@ module sysarr_STANDARD #(
         end
     endgenerate
 
-// psum skew buffer logic 
+    // Partial sum buffer (skew buffer for timing alignment)
     logic [N*DW_ACC-1:0] skewed_partials;
 
     skew_buffer #(
         .NUM_COLS(N),
         .COL_WIDTH(DW_ACC),
-        .RECT_DELAY(MAC_LATENCY), // rect = mac delay so psums arrive when the adder is ready.
+        .RECT_DELAY(MAC_LATENCY),
         .DELAY_SLOPE(1),
         .REVERSE_TRIANGLE(0)
     ) psum_buffer (
@@ -66,23 +74,19 @@ module sysarr_STANDARD #(
         .rd_data(skewed_partials)
     );
 
-// MAC grid logic 
+    // MAC grid logic
     logic [N*DW_ACC-1:0] grid_out;
 
-    // delay input_en by 2 cycles to match skew buffer base latency (1c wr_ptr + 1c sram?)
-    logic input_en_d1, input_en_d;
+    // Delay input_en to align with buffer read latency
+    logic input_en_d;
     always_ff @(posedge clk, negedge nRST) begin
         if (!nRST) begin
-            input_en_d1 <= 0;
-            input_en_d  <= 0;
+            input_en_d <= 0;
         end else begin
-            input_en_d1 <= gsau_if.sa_input_en;
-            input_en_d  <= input_en_d1;
+            input_en_d <= |in_rd_en;  // any lane reading
         end
     end
 
-
-    // FIX THIS INTERNALLY (control signals for macs r not wired)
     mac_grid #(
         .MAC_LATENCY(MAC_LATENCY)
     ) u_mac_grid (
@@ -96,7 +100,7 @@ module sysarr_STANDARD #(
         .grid_out(grid_out)
     );
 
-// fp32 to bf16 reducers (one per column)
+    // fp32 to bf16 reducers (one per column)
     logic [N - 1:0][DW - 1:0] reduced_data;
     genvar r;
     generate
@@ -113,40 +117,59 @@ module sysarr_STANDARD #(
         end
     endgenerate
 
-// output deskew buffer 
-    skew_buffer #(
-        .NUM_COLS(N),
-        .COL_WIDTH(DW),
-        .RECT_DELAY(0),
-        .DELAY_SLOPE(1),
-        .REVERSE_TRIANGLE(1)
-    ) output_buffer (
-        .clk(clk),
-        .n_rst(nRST),
-        .stall(1'b0),
-        .wr_data(reduced_data),
-        .rd_data(gsau_if.sa_array_output)
-    );
-
-// valid pipeline (delay from sa_input_en to sa_valid_in). need to double check if tis right 
-//  MAC_LATENCY - last column's MAC pipeline
-//  (N-1)*MAC_LATENCY - vert accumulation stagger across N-1 rows
-//  +2 - input buffer latency
-//  +2 - output deskew buffer
-//  +1 - mac output reg
-    localparam int VALID_DELAY = N + MAC_LATENCY + (N - 1) * MAC_LATENCY + 2 + 2 + 1; // i think this is right? double check
+    // valid pipeline sr 
+    // Total latency: buffer read (1) + MAC grid horizontal (N) + MAC vertical accum ((N-1)*MAC_LATENCY) + MAC pipeline (MAC_LATENCY) + output reg (1)
+    localparam int VALID_DELAY = 1 + N + (N - 1) * MAC_LATENCY + MAC_LATENCY + 1;
     logic [VALID_DELAY-1:0] valid_sr;
 
     always_ff @(posedge clk, negedge nRST) begin
         if (!nRST)
             valid_sr <= '0;
         else
-            valid_sr <= {valid_sr[VALID_DELAY-2:0], gsau_if.sa_input_en};
+            valid_sr <= {valid_sr[VALID_DELAY-2:0], in_rd_en[0]};
     end
 
-    assign gsau_if.sa_valid_in = valid_sr[VALID_DELAY-1];
+    // Output buffer
+    // wr_en = valid_sr[VALID_DELAY-2] triggers SRAM write (data ready 1 cycle before valid)
+    // rd_en = out_wr_en from control unit triggers SRAM read (consumer pull)
+    logic [N-1:0][DW-1:0] output_data;
 
-    // ready passthrough
-    assign gsau_if.sa_ready_in = gsau_if.sa_ready_out;
+    sysarr_buffer #(
+        .NUM_COLS(N),
+        .DATA_WIDTH(DW),
+        .SRAM_DEPTH(SRAM_DEPTH),
+        .IN_OUT(1)  // output buffer
+    ) output_buffer (
+        .clk(clk),
+        .nRST(nRST),
+        .stall(!gsau_if.sa_ready_out),
+        .wr_en(valid_sr[VALID_DELAY - 2]),
+        .wr_data(reduced_data),
+        .rd_en(out_wr_en),
+        .rd_data(output_data),
+        .rdone(),
+        .lane0_empty(),
+        .full()
+    );
+
+    assign gsau_if.sa_array_output = output_data;
+    assign gsau_if.sa_valid_in = valid_sr[VALID_DELAY - 1];
+
+    // Control unit for credit-based flow control
+    sysarr_control_unit #(
+        .N(N),
+        .GROUP_SIZE(N),  // all lanes read together (entire row at once for OS dataflow)
+        .ADD_2_INPUT_LATENCY(2),  // must be >= 2 to avoid 0-bit counter in control unit
+        .ADD_4_INPUT_LATENCY(0),
+        .MUL_LATENCY(MAC_LATENCY)
+    ) control_unit (
+        .clk(clk),
+        .nRST(nRST),
+        .in_buffer_empty(in_buffer_empty),
+        .sa_output(gsau_if.sa_valid_in),
+        .in_rd_en(in_rd_en),
+        .out_wr_en(out_wr_en),
+        .ready_in(gsau_if.sa_ready_in)
+    );
 
 endmodule
