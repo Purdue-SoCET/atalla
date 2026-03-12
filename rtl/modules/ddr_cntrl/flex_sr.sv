@@ -20,8 +20,8 @@ module flex_sr #(
     logic serial_in_feed;
     assign serial_in_feed = RING ? serial_out : serial_in;
 
-    always_ff @(posedge clk, negedge n_rst) begin
-        if(!n_rst)
+    always_ff @(posedge CLK, negedge nRST) begin
+        if(!nRST)
             sr <= RING ? 'b1 : 'b0;
         else  
             sr <= load_enable  ? parallel_in : (shift_enable ? (MSB_FIRST ? {sr[SIZE - 2:0], serial_in_feed} : {serial_in_feed, sr[SIZE - 1:1]}) : sr);

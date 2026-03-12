@@ -5,7 +5,7 @@
 //   out   [3:0] - encoded index of the highest-priority (lowest) active bit
 //   valid       - high when at least one input bit is active; low when in == 16'h0
 
-module priority_encoder_16to4 (
+module priority_enc (
     input  logic [15:0] in,
     output logic [3:0]  out,
     output logic        valid

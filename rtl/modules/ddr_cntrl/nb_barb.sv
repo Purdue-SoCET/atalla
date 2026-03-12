@@ -1,22 +1,25 @@
-`timescale 1ns/10ps
+`timescale 1ns/1ps
+`include "ddr_controller_if.sv"
+`include "dram_pkg.svh"
 
-module nb_bank_queue(
+module nb_barb(
     input logic CLK, nRST,
     ddr_controller_if.backend_arb barb
 );
-
+    import dram_pkg::*;
+ 
     //Selected bank priority encoder instantiation and logic. 
     logic [$clog2(BANK_NUM)-1:0] selected_bank;
     logic selected_bank_ready;
-    priority_encoder_16to4 ENCODER_SEL ((barb.be_queue_ready & barb.be_arb), selected_bank, selected_bank_ready);
+    priority_enc ENCODER_SEL ((barb.be_queue_ready & barb.be_arb), selected_bank, selected_bank_ready);
 
     //tCCD timers instantiations.
     logic rollover_L, rollover_S;
     logic en_L, en_S;
-    flex_counter #(SIZE = 12) TCCD_L_TIM ( //these timers are cleared on successful handshakes.
+    flex_counter #(.SIZE(12)) TCCD_L_TIM ( //these timers are cleared on successful handshakes.
         CLK, nRST, selected_bank_ready, en_L, tCCD_L, rollover_L
     );
-    flex_counter #(SIZE = 12) TCCD_S_TIM (
+    flex_counter #(.SIZE(12)) TCCD_S_TIM (
         CLK, nRST, selected_bank_ready, en_S , tCCD_S, rollover_S
     );
     //tCCD timers enable logic.
@@ -34,10 +37,10 @@ module nb_bank_queue(
     logic [tFAW:0] sr_window;
     logic four_access; 
     logic [3:0] access_cnt;
-    flex_sr #(.SIZE(tFAW + 'b1)) ACTIVATE_WINDOW (CLK, nRST, 1'b1, 1'b0, selected_bank_ready & (barb.cmd[selected_bank] == ACT) , 'b0, sr_window);
+    flex_sr #(.SIZE(tFAW + 'b1)) ACTIVATE_WINDOW (CLK, nRST, 1'b1, 1'b0, selected_bank_ready & (barb.be_cmd[selected_bank] == ACT) , 'b0, sr_window);
     
     integer i;
-    four_access = (access_cnt >= 'd4);
+    assign four_access = (access_cnt >= 'd4);
     always_comb begin : COUNT_ACCESSES
         access_cnt = 'b0;
 
@@ -50,12 +53,12 @@ module nb_bank_queue(
 
     //simple round robin logic for priority.
     logic [BANK_NUM-1:0] priority_sr;
-    flex_sr #(.SIZE(BANK_NUM), .RING(1'b1)) PRIORITY_SR (CLK, nRST, selected_bank_ready, 1'b0, 1'b0,  'b0, priority);
+    flex_sr #(.SIZE(BANK_NUM), .RING(1'b1)) PRIORITY_SR (CLK, nRST, selected_bank_ready, 1'b0, 1'b0,  'b0, priority_sr); 
 
     //Priority encoder for finding bank with priority.
-    logic [$clog(BANK_NUM)-1:0] priority_idx;
+    logic [$clog2(BANK_NUM)-1:0] priority_idx;
     logic idrc; //I don't really care about what this bit is, it should always be one. 
-    priority_encoder_16to4 ENCODER_PRI (priority_sr, priority_idx, idrc);
+    priority_enc ENCODER_PRI (priority_sr, priority_idx, idrc);
 
     //  register storing bank group of the last command. This ensures the compliance of timing parameters of two 
     //  successive transactions that target the same bank group. This timimg parameter, tCCD_L, is slightly more 

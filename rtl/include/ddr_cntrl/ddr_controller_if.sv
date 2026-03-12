@@ -1,5 +1,6 @@
 `ifndef DDR_CONTROLLER_IF_SV
 `define DDR_CONTROLLER_IF_SV
+`include "dram_pkg.svh"
 
 interface ddr_controller_if;
 
@@ -7,7 +8,6 @@ interface ddr_controller_if;
 // 2.8.2026 -> TASK - FINISH MODPORTS BY 2.12 - DONE
 // 2.12.2026 -> TASK - READ ID Q - DONE
 // 2.26.2026 -> TASK - TYPEDEF 
-`include "dram_pkg.sv"
 import dram_pkg::*;
 
 // // STRUCTS
@@ -78,12 +78,19 @@ logic [BANK_NUM-1:0]         fe_full; // -> FE & FSM
 // BQ <-> COMMAND FSM
 logic [$clog2(BANK_NUM)-1:0] bq_pop; // -> FSM
 logic [BANK_NUM-1:0]         bq_ready; // -> FSM
+logic [BANK_GROUP_BITS-1:0]  bq_bg; // -> BQ
+logic [BANK_BITS-1:0]        bq_b;  // -> BQ
 
 // COMMAND FSM -> BACKEND ARBITER
-bq_slot_t [BANK_NUM-1:0]          be_slot;
-logic     [$clog2(BANK_NUM)-1:0]  be_arb;
-logic     [$clog2(BANK_NUM)-1:0]  be_queue_ready;
-fsm_t [BANK_NUM-1:0] be_cmd; 
+logic [BANK_GROUP_BITS-1:0][$clog2(BANK_NUM)-1:0] be_bg; 
+logic [BANK_BITS-1:0][$clog2(BANK_NUM)-1:0]       be_b; // 2*16
+logic [ROW_BITS-1:0][BANK_NUM-1:0]                be_r; // 15*16
+logic [COLUMN_BITS-1:0][BANK_NUM-1:0]             be_c; // 10*16
+logic [$clog2(ID_NUM)-1:0][$clog2(BANK_NUM)-1:0]  be_id; // 4*16
+logic [$clog2(BANK_NUM)-1:0]                      be_arb;
+logic [$clog2(BANK_NUM)-1:0]                      be_queue_ready;
+logic [2:0]                                       be_len;
+fsm_t [BANK_NUM-1:0]                              be_cmd; 
 
 // BACKEND ARBITER -> READ_ID_QUEUE
 logic                      be_push_id; 
@@ -109,22 +116,21 @@ logic        ddr_we;
 modport axi_sub ( 
     // LQ -> AXI
     input arready, 
-    // Write Queue -> AXI
-    wready, 
     // STQ -> AXI
     awready, 
     // WDATA_QUEUE -> AXI
     wready, bwvalid, bwresp, bwid,
     // AXI -> WDATA_QUEUE
-    output wstrb, wvalid, wdq_slot, bwready,
+    output wstrb, wdq_slot, bwready,
     // AXI -> LQ
-    arvalid, lq_slot, arsize, arburst, 
+    arvalid, lq_slot, 
     // AXI -> STQ
-    awvalid, stq_slot, awsize, awburst,
+    awvalid, stq_slot
 );
 
-modport stq ( // AXI -> STQ
-    input awvalid, stq_slot, awsize, awburst,
+modport stq ( 
+    // AXI -> STQ
+    input awvalid, stq_slot,
     // ARB -> STQ
     grant_s, 
     // STQ -> AXI
@@ -135,7 +141,7 @@ modport stq ( // AXI -> STQ
 
 modport lq (
     //AXI -> LQ
-    input arvalid, lq_slot, arsize, arburst, 
+    input arvalid, lq_slot, 
     //ARB -> LQ
     grant_l, 
     //LQ -> AXI
@@ -170,7 +176,7 @@ modport bq (
     // BQ -> ARB (CNTRL)
     output fe_full, 
     // BQ -> FSM (CNTRL)
-    bq_ready, 
+    bq_ready, bq_bg, bq_b,
     // BQ -> FSM (DATA)
     bq_slot
 );
@@ -204,7 +210,7 @@ modport command_fsm (
 
 modport backend_arb (
     //FSM -> BE
-    input be_r, be_c, be_b, be_bg, be_cmd, be_id, be_rlen, be_queue_ready,
+    input be_r, be_c, be_b, be_bg, be_cmd, be_id, be_queue_ready, be_len,
     //BE -> FSM
     output be_arb, 
     //BE -> WDATA_QUEUE
@@ -218,7 +224,7 @@ modport backend_arb (
 
 modport barb_prop (
     //FSM -> BE
-    input be_r, be_c, be_b, be_bg, be_cmd, be_id, be_rlen, be_queue_ready,
+    input be_r, be_c, be_b, be_bg, be_cmd, be_id, be_queue_ready,
     //BE -> FSM
     be_arb, 
     //BE -> WDATA_QUEUE

@@ -12,8 +12,8 @@ module flex_counter #(SIZE = 4) (
                                 logic [SIZE - 1: 0] count_out;
                                 logic [SIZE - 1:0] next_count;
                                 logic next_rollover_flag;
-                                always_ff @(posedge clk, negedge n_rst) begin
-                                    if(!n_rst) begin
+                                always_ff @(posedge CLK, negedge nRST) begin
+                                    if(!nRST) begin
                                         count_out <= 0;
                                         rollover_flag <= 0;
                                     end else begin 
