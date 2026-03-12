@@ -11,14 +11,14 @@ import sys_arr_pkg::*;
 module mac_grid #(
     parameter MAC_LATENCY = 2
 ) (
-    input  logic             clk,
-    input  logic             nRST,
-    input  logic [N*DW-1:0]  sa_inputs,
-    input  logic             weight_en,
-    input  logic             input_en,  
-    input  logic [N*DW-1:0]  partial_in,
-    input  logic             stall,  // unused 
-    output logic [N*DW-1:0]  grid_out
+    input  logic                 clk,
+    input  logic                 nRST,
+    input  logic [N*DW-1:0]      sa_inputs,      // BF16 activations (16-bit)
+    input  logic                 weight_en,
+    input  logic                 input_en,  
+    input  logic [N*DW_ACC-1:0]  partial_in,     // FP32 partial sums (32-bit)
+    input  logic                 stall,          // unused 
+    output logic [N*DW_ACC-1:0]  grid_out        // FP32 outputs (32-bit)
 );
 
     systolic_array_MAC_if mac_ifs[N*N-1:0] ();
@@ -62,8 +62,8 @@ module mac_grid #(
     endgenerate
 
   
-    logic [DW-1:0] MAC_outputs     [N-1:0][N-1:0];
-    logic [DW-1:0] nxt_MAC_outputs [N-1:0][N-1:0];
+    logic [DW_ACC-1:0] MAC_outputs     [N-1:0][N-1:0];  // FP32 accumulator outputs
+    logic [DW_ACC-1:0] nxt_MAC_outputs [N-1:0][N-1:0];
 
     integer z, y;
     always_ff @(posedge clk, negedge nRST) begin
@@ -71,6 +71,10 @@ module mac_grid #(
             for (z = 0; z < N; z++)
                 for (y = 0; y < N; y++)
                     MAC_outputs[z][y] <= '0;
+        end else begin
+            for (z = 0; z < N; z++)
+                for (y = 0; y < N; y++)
+                    MAC_outputs[z][y] <= nxt_MAC_outputs[z][y];
         end
     end
 
@@ -108,9 +112,9 @@ module mac_grid #(
                 else
                     assign mac_ifs[m*N + n].weight_en = mac_ifs[m*N + (n-1)].weight_next_en;
 
-                // vertical accumulation - row 0 takes partial_in, rest take from row above
+                // vertical accumulation - row 0 takes partial_in (FP32), rest take from row above
                 if (m == 0) begin : top_row
-                    assign mac_ifs[m*N + n].in_accumulate = partial_in[DW*n +: DW];
+                    assign mac_ifs[m*N + n].in_accumulate = partial_in[DW_ACC*n +: DW_ACC];
                 end else begin : accum_row
                     assign mac_ifs[m*N + n].in_accumulate = MAC_outputs[m-1][n];
                 end
@@ -122,11 +126,11 @@ module mac_grid #(
         end
     endgenerate
 
-    // grid outputs 
+    // grid outputs (FP32)
     genvar oc;
     generate
         for (oc = 0; oc < N; oc++) begin : output_pack
-            assign grid_out[DW*oc +: DW] = MAC_outputs[N-1][oc];
+            assign grid_out[DW_ACC*oc +: DW_ACC] = MAC_outputs[N-1][oc];
         end
     endgenerate
 
