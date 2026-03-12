@@ -158,8 +158,7 @@ def main():
     #-----------DEFAULT ADDRESS INITIALIZATIONS--------
     img.u32(TILE_ADDR_LOCATION, TILE_ADDR) # Place tile base address at address 67
     img.u32(SCPAD_ADDR_LOCATION, SCPAD_ADDR)
-    # img.f32(EPSILON_LOCATION, 0)
-    img.f32(EPSILON_LOCATION, 1e-5)     # fix
+    img.f32(EPSILON_LOCATION, 0)
     #-----------TILE INITIALIZATION----------
     base_addr = TILE_ADDR
     if args.data is not None:
