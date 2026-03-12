@@ -4,13 +4,10 @@ Roy, T. D. (2019). Implementation of Goldschmidt's algorithm with hardware reduc
 
 # Reciprocal Unit Documentation
 
-The Scalar-Core Reciprocal unit is a fully pipelined floating-point reciprocal unit optimized for the BF16 (Brain Floating Point) format. Rather than using slow, traditional digit-recurrence algorithms (like SRT or restoring division) which require long and deep subtraction chains, the Vector-Core implements the **Goldschmidt Division Algorithm**.
-To optimize for different PPA (Power, Performance, Area) targets within the accelerator, the Scalar-Core features a 2 multiplier, fully pipelined design.
+The Reciprocal Unit largely follows the implemenation outlined in divider.md
 
 ### Algorithm & LUT
-The Goldschmidt algorithm computes N / D by repeatedly multiplying both the numerator (N) and denominator (D) by a sequence of factors (F) such that the denominator converges toward 1.0. As D approaches 1.0, N approaches the final quotient.
-
-To minimize the hardware iterations required, the algorithm needs a highly accurate initial guess of the reciprocal (1/D). The reciprocal unit uses a small LUT to get an intial guess for the factor. Based on the most significant mantissa bits, the initial guess from the LUT prioritizes accuracy. Below is a code snippet of the generation used to create the LUT.
+The main difference between the reciprocal unit and the divider lies in the handling of the numerator. Because the numerator is guarenteed to be 1, the need for a multiplier for the numerator is eliminated and the N1 can be effectively written as F0 (the initial guess). With this new area, we can use a small LUT to get an intial guess for the factor that will guarantee a max ULP of 1. Based on the most significant mantissa bits, the initial guess from the LUT prioritizes accuracy. Below is a code snippet of the generation used to create the LUT.
 
 ```entries = 16
 def generate_lut(size):
@@ -33,18 +30,19 @@ with open("lut_values.txt", "w") as f:
 
 **The Iteration 2 Optimization:**
 Because the algorithm only requires 2 iterations, the mathematical sequence looks like this:
+```
 * **Iteration 1:** F0 = LUT guess   |
                    D1 = D * F0      |
                    F1 = 2.0 - D1
 
 * **Iteration 2:** Result = F0 * F1 |
-
+```
 ### 2 Multiplier Design
 *Primary Author: Brian Zhuang*
 This architecture instantiates **2 Multipliers and 1 Subtractor** and is completely pipelined. 
 
 #### Hardware Architecture
-Data makes two total multiplication processes, first through one pair of multipliers, then the final multiplier for the second iteration:
+Data makes two total multiplication processes:
 * The `common/arithmetic/multipliers/mul_bf16` Wallace tree multipliers compute in **1 clock cycle**.
 * The `common/arithmetic/multipliers/add_bf16` subtractor computes in **2 clock cycles**.
 
