@@ -17,7 +17,7 @@
 set -euo pipefail
 
 # -------- CONFIG --------
-FLOWKIT_DIR="$HOME/Flowkit2/Flowkit"
+FLOWKIT_DIR="$HOME/Flowkit"
 SDC_FILE="$FLOWKIT_DIR/scripts/constraints/sysarr_n_input_fp_adder_noretime.sdc"
 REPORTS_SRC="$FLOWKIT_DIR/reports"
 QOR_FILE="$REPORTS_SRC/syn_opt/qor.rpt"
