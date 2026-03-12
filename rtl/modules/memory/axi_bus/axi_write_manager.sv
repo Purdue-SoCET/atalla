@@ -78,6 +78,10 @@ assign w_push  = (wrmgr_if.wvalid && wrmgr_if.wready);
 always_ff@(posedge CLK, negedge nRST) begin 
     if(!nRST) begin 
         aw_wr_ptr <= '0;
+        aw_rd_ptr <= '0;
+        for (int i = 0; i < AW_DEPTH; i++) begin 
+            aw_fifo[i] <= 1'b0;
+        end 
     end 
     else begin 
         if(aw_push) begin
@@ -91,25 +95,21 @@ always_ff@(posedge CLK, negedge nRST) begin
             aw_fifo[aw_wr_ptr].burst  <= wrmgr_if.aw_gen_i.burst;
             aw_wr_ptr <= aw_wr_ptr + 1'b1;
         end 
-    end 
-end
-
-// aw read
-always_ff@(posedge CLK, negedge nRST) begin
-    if(!nRST) begin 
-        aw_rd_ptr <= '0;
-    end
-    else begin 
         if (!aw_empty && wrmgr_if.aw_pop) begin 
+            aw_fifo[aw_rd_ptr].valid <= 1'b0;
             aw_rd_ptr <= aw_rd_ptr + 1;
         end 
     end 
-end 
+end
 
-// w write
+// w write or w read
 always_ff@(posedge CLK, negedge nRST) begin 
     if(!nRST) begin 
         w_wr_ptr <= '0;
+        w_rd_ptr <= '0;
+        for (int i = 0; i < W_DEPTH; i++) begin
+            w_fifo[i] <= 1'b0;
+        end
     end 
     else begin 
         if(w_push) begin
@@ -122,20 +122,12 @@ always_ff@(posedge CLK, negedge nRST) begin
             w_fifo[w_wr_ptr].strb   <= wrmgr_if.w_gen_i.strb;
             w_wr_ptr <= w_wr_ptr + 1'b1;
         end 
-    end 
-end
-
-// w read
-always_ff@(posedge CLK, negedge nRST) begin
-    if(!nRST) begin 
-        w_rd_ptr <= '0;
-    end
-    else begin 
         if (!w_empty && wrmgr_if.w_pop) begin 
+            w_fifo[w_rd_ptr].valid <= 1'b0;
             w_rd_ptr <= w_rd_ptr + 1;
         end 
     end 
-end 
+end
 
 // aw outputs 
 assign wrmgr_if.head_awvalid     = aw_fifo[aw_rd_ptr].valid;
