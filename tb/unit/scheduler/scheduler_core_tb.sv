@@ -632,7 +632,7 @@ module scheduler_core_tb;
         @(negedge CLK);
         ihit = 1'b0;
 
-        repeat(8) @(posedge CLK);
+        repeat(150) @(posedge CLK);
 
         set_tv(
             .tv_instr0(48'h000000000030),  // halt
@@ -642,7 +642,7 @@ module scheduler_core_tb;
             .idx(23)
         );
 
-        repeat(80) @(posedge CLK);
+        repeat(150) @(posedge CLK);
 
 
         $display("DONE");
