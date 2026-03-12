@@ -86,13 +86,13 @@ module mac_grid #(
 
                 // 2 or 4 cycle mac
                 if (MAC_LATENCY == 2) begin : mac_2c
-                    sysarr_MAC_fp16_2c mac_inst (
+                    sysarr_MAC_2c mac_inst (
                         .clk(clk),
                         .nRST(nRST),
                         .mac_if(mac_ifs[m*N + n].MAC)
                     );
                 end else if (MAC_LATENCY == 4) begin : mac_4c
-                    sysarr_MAC_fp16_4c mac_inst (
+                    sysarr_MAC_4c mac_inst (
                         .clk(clk),
                         .nRST(nRST),
                         .mac_if(mac_ifs[m*N + n].MAC)
