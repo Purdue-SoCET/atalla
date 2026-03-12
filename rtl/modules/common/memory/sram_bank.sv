@@ -19,6 +19,8 @@ module sram_bank # (
   input logic [WIDTH-1:0] wdata, 
   output logic wdone
 );  
+
+`ifndef SYNTHESIS
   logic [WIDTH-1:0] mem [logic [ROW_IDX_WIDTH-1:0]];
 
   localparam int RLW = (READ_LATENCY <= 1) ? 1 : $clog2(READ_LATENCY);
@@ -97,5 +99,6 @@ module sram_bank # (
       mem[waddr] = wdata;
     end
   end
+`endif
 
 endmodule

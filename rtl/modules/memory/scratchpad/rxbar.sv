@@ -76,9 +76,3 @@ module rxbar #(parameter logic [scpad_pkg::SCPAD_ID_WIDTH-1:0] IDX = '0) (scpad_
     assign rif.stomach_tail_res[IDX].rdata = out_rdata;
 
 endmodule
-
-`ifndef SYNTHESIS
-
-
-
-`endif

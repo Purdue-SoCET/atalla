@@ -32,9 +32,3 @@ module tail #(parameter logic [scpad_pkg::SCPAD_ID_WIDTH-1:0] IDX = '0) (scpad_i
     end
 
 endmodule
-
-`ifndef SYNTHESIS
-
-
-
-`endif

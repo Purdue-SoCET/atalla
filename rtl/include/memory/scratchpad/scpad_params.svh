@@ -8,7 +8,6 @@ parameter int unsigned SRAM_VERT_FOLD_FACTOR = 2; // how many elements to pack h
 parameter int unsigned MAX_SRAM_DELAY = 3;
 parameter int unsigned DRAM_ADDR_WIDTH  = 32;
 parameter int unsigned MAX_DRAM_BUS_BITS = 64; // Our dram can only handle 64 bits at a time
-parameter string XBAR_TYPE = "NAIVE";
 parameter int unsigned NUM_SCPADS   = 4;
 parameter int unsigned DRAM_ID_WIDTH  = 8;
 parameter int unsigned MAX_REQ  = 8;
