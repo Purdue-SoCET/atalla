@@ -14,6 +14,15 @@ module nb_wdata_queue_prop(
     // // PROPERTIES
     // 2/13 - TODO: Figure out proper syntax
 
+    covergroup wdq_cg @(posedge CLK) // TODO: FIX COVERPOINTS 
+        awdata : coverpoint {wstrb, wdq_slot, wready};
+        barb_wdata : coverpoint {be_wid, be_write};
+        bresp : coverpoint {bwready, bwvalid, bwresp, bwid};
+        
+    endgroup
+
+    wdq_cg wdqcg;
+
     property AXI_wdata_handshake;
         @(posedge CLK) disable iff (!nRST)
         (wdq.bwvalid && wdq.bwready) |=> !wdq.bwvalid;

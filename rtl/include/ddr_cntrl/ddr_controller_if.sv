@@ -29,9 +29,10 @@ typedef struct packed {
 
 // AXI->WDQ
 typedef struct packed {
-    logic [7:0] wvalid; // -> WQ
+    logic [7:0] wstrb; // -> WQ
     logic [63:0] wdata; // -> WQ
     logic [$clog2(ID_NUM)-1:0] wid; // WQ
+    logic [2:0] wlen;
 } wdq_slot_t; 
 
 // // SIGNALS
@@ -45,6 +46,7 @@ logic                      wready, bwvalid; // -> AXI
 logic [1:0]                bwresp; // -> AXI
 logic [$clog2(ID_NUM)-1:0] bwid; // -> AXI
 logic                      bwready; // -> WQ
+logic                      wlast; // -> AXI  - WDQ 
 
 // AXI <-> LQ
 lstq_slot_t  lq_slot; // -> LQ
@@ -189,7 +191,7 @@ modport read_id_queue (
 
 modport wdata_queue (
     //AXI -> WDATA_QUEUE
-    input wstrb, wdq_slot, bwready,
+    input  wdq_slot, bwready, wvalid,
     //BE -> WDATA_QUEUE
     be_wid, be_write, 
     //WDATA_QUEUE -> AXI
