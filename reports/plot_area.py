@@ -35,6 +35,6 @@ def plot_power(rows, title, filename):
     print(f'Saved {filename}')
 
 if __name__ == '__main__':
-    data = collect_data('sysarr_8_input_fp_adder_noretime_schmoo')
-    plot_area(data, 'sysarr_8_input_fp_adder_noretime — Total Area vs Clock Speed', 'sysarr_8_input_fp_adder_noretime_area.png')
-    plot_power(data, 'sysarr_8_input_fp_adder_noretime — Total Power vs Clock Speed', 'sysarr_8_input_fp_adder_noretime_power.png')
+    data = collect_data('sysarr_16_input_fp_adder_data')
+    plot_area(data, 'sysarr_16_input_fp_adder_noretime — Total Area vs Clock Speed', 'sysarr_16_input_fp_adder_noretime_area.png')
+    plot_power(data, 'sysarr_16_input_fp_adder_noretime — Total Power vs Clock Speed', 'sysarr_16_input_fp_adder_noretime_power.png')

@@ -44,10 +44,10 @@ def write_table(f, title, rows):
     f.write('\n')
 
 if __name__ == '__main__':
-    add_rows = collect_data('sysarr_8_input_fp_adder_noretime_schmoo')
+    add_rows = collect_data('sysarr_16_input_fp_adder_data')
 
-    with open('qor_summary_sysarr_8_input_fp_adder_noretime.md', 'w') as f:
+    with open('qor_summary_sysarr_16_input_fp_adder_noretime.md', 'w') as f:
         f.write('# QoR Summary\n\n')
-        write_table(f, 'sysarr_8_input_fp_adder_noretime', add_rows)
+        write_table(f, 'sysarr_16_input_fp_adder_noretime', add_rows)
 
-    print(f'Done — wrote qor_summary_sysarr_8_input_fp_adder_noretime.md ({len(add_rows)} sysarr_8_input_fp_adder_noretime rows')
+    print(f'Done — wrote qor_summary_sysarr_16_input_fp_adder_noretime.md ({len(add_rows)} sysarr_16_input_fp_adder_noretime rows')
