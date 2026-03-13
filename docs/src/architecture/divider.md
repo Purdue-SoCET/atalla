@@ -44,7 +44,7 @@ The LUT method has an array of preset values, in which the initial guess of the 
 
 The LUT is the most commonly referred to method in selecting the initial guess for division, especially if area is not a large concern. Below is a python script that shows the methodology behind the generation. All that is being done is an accurate "in between" value between each step to best bring a denominator to the value of 1. 
 ```
-entries = 16
+entries = x
 def generate_lut(size):
     step = 1.0 / size
     seeds = torch.zeros(size, dtype=torch.bfloat16)
@@ -65,9 +65,9 @@ This specific magic number (`16'h7EF3`) was calculated using a python script on 
 
 ## Finalized Design Choices
 
-### Simulation
 Before deciding which design we'd stick to, we utilized a Python simulation to see if our math would work, as well giving ourselves the perspective to pick the design best suited for our needs. 
 
+### Simulation
 Below is a picture of the simulated ULP error at each iteration of the Goldschmidt division algorithm using both a magic number and LUT approach. This was simulated using the PyTorch library in Python. Example pseudo code and simulated graph is below. 
 ```
 def goldschmidt_div(method, dividend, divisor, iterations):
@@ -153,7 +153,7 @@ Below is a block diagram and RTL diagram of the design
 
 ![2MulDesign](../img/2-Multiplier-Divider.png)
 
-## 3 Multiplier Design
+## Pipelined Design
 *Primary Author: Brian Zhuang*
 
 This architecture instantiates **3 Multipliers and 1 Subtractor** and is completely pipelined. 

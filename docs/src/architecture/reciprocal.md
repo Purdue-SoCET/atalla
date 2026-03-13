@@ -4,9 +4,9 @@ Roy, T. D. (2019). Implementation of Goldschmidt's algorithm with hardware reduc
 
 # Reciprocal Unit Documentation
 
-The Reciprocal Unit largely follows the implemenation outlined in `divider.md`
+The Reciprocal Unit largely follows the implemenation outlined in `divider.md`. A more thorough explaination of the Goldschmidt Algorithm and various design decesions is located there. This document expects you to have a decent understanding of `divider.md`
 
-### Algorithm & LUT
+## Algorithm & LUT
 The main difference between the reciprocal unit and the divider lies in the handling of the numerator. Because the numerator is guaranteed to be 1, the need for a multiplier for the numerator is eliminated and the N1 can be effectively written as F0 (the initial guess). With this new area, we can use a small 16-entry LUT to get an initial guess for the factor that will guarantee a max ULP of 1. The initial guess is indexed using the most significant bits of the denominator's manitssa. Below is a code snippet of the generation used to create the LUT.
 
 ```
@@ -32,13 +32,13 @@ with open("lut_values.txt", "w") as f:
 **The Iteration 2 Optimization:**
 Because the algorithm only requires 2 iterations, the mathematical sequence looks like this:
 ```
-* **Iteration 1:** F0 = LUT guess   
+Iteration 1: F0 = LUT guess   
                    D1 = D * F0      
                    F1 = 2.0 - D1
 
-* **Iteration 2:** Result = F0 * F1 
+Iteration 2: Result = F0 * F1 
 ```
-### 2 Multiplier Design
+## Pipelined Design
 *Primary Author: Brian Zhuang*
 
 This architecture instantiates **2 Multipliers and 1 Subtractor** and is completely pipelined. 
@@ -55,8 +55,9 @@ To match the timing requirement, the pipeline is split up to **9 Stages**:
 registers, and exits the subtractor. Latches output value at stage 5.
 * **Stage 8, 9:** Final exponent is calculated from initial exponent calculation in stage 1. Final answer then is latched in stage 9 where it is outputted.
 
-Included below is a block diagram (top) and a RTL diagram (below)
-![img](img/Recip_unit_diagrams.png)
+Included below is a block diagram (top) and a RTL diagram (bottom)
+![recb](../img/recip_block.png)
+![recr](../img/recip_rtl.png)
 
 #### Traffic Control
 Backpressure occurs when the downstream consumer (writeback in our case) is not ready to accept the divider's output. When this occurs, the pipe enable signals goes low and stalls through to the upstream producer.
@@ -72,6 +73,10 @@ Below is a table of results for the reciprocal unit. The ULP numbers are pulled 
 | 44,368 | 21,168 | 0 | 0.65 | 1 | 15030.467 |
 
 ### Simulation
-Below is a picture of the simulated ULP error at each iteration of the Goldschmidt division algorithm using both a magic number and LUT approach. This was simulated using the PyTorch library in Python.
+Below is a picture of the simulated ULP error at each iteration of the Goldschmidt division algorithm using both a magic number and LUT approach. This was simulated using the PyTorch library in Python. This is the same one seen in `divider.md`
 
 ![img](../img/Goldschmidt_ULP_Analysis.jpg)
+
+## Potential Changes
+### Please read this in case future changes are required
+We are choosing to utilize an LUT since unlike the pipelined divider which is the design we are utilizing for this reciprocal unit utilizes one less multiplier, the area is still overall less. However it is important to point back, to the average ULP (discussed ``in divider.md`` in the "Finalized Design Choices" section) is a decent bit less than magic number. This is because the LUT being utilized being 16 elements is very small. If average accuracy ever becomes a problem the simplest solution would be to increase the LUT size. If the area is too high, switch to magic number. 
