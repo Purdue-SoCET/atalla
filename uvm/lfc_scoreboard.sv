@@ -142,31 +142,34 @@ class lfc_scoreboard extends uvm_scoreboard;
   // ============================================================
   // RAM REQUEST COMPARISON, one task per bank
   // ============================================================
+  // Expected REQs arrive at CPU request time; actual REN fires much later.
+  // Using an address-keyed pending set instead of in-order FIFO pairing.
+
+  bit pending_ram_req [NUM_BANKS][bit [31:0]];
 
   task compare_ram_req_bank(int b);
-    lfc_ram_transaction exp, act;
-    forever begin
-      expected_ram_req_fifo[b].get(exp);
-      actual_ram_req_fifo[b].get(act);
-
-      if (exp == null || act == null) begin
-        `uvm_error("SB", $sformatf("Null RAM request transaction bank=%0d", b))
-        continue;
+    lfc_ram_transaction tr;
+    fork
+      forever begin // expected side: add to pending set
+        expected_ram_req_fifo[b].get(tr);
+        if (tr == null) continue;
+        pending_ram_req[b][tr.ram_mem_addr[b]] = 1;
       end
-
-      if (exp.ram_mem_REN[b] !== act.ram_mem_REN[b] ||
-          exp.ram_mem_WEN[b] !== act.ram_mem_WEN[b]) begin
-        mismatch_count++;
-        `uvm_error("SB",
-          $sformatf("RAM REQ mismatch bank=%0d addr=%h exp: REN=%0b WEN=%0b act: REN=%0b WEN=%0b",
-          b, act.ram_mem_addr[b],
-          exp.ram_mem_REN[b], exp.ram_mem_WEN[b],
-          act.ram_mem_REN[b], act.ram_mem_WEN[b]))
-      end else begin
-        match_count++;
-        `uvm_info("SB", $sformatf("RAM REQ match bank=%0d addr=%h", b, act.ram_mem_addr[b]), UVM_LOW)
+      forever begin // actual side: look up in pending set
+        actual_ram_req_fifo[b].get(tr);
+        if (tr == null) continue;
+        if (pending_ram_req[b].exists(tr.ram_mem_addr[b])) begin
+          pending_ram_req[b].delete(tr.ram_mem_addr[b]);
+          match_count++;
+          `uvm_info("SB", $sformatf("RAM REQ match bank=%0d addr=%h", b, tr.ram_mem_addr[b]), UVM_LOW)
+        end else begin
+          mismatch_count++;
+          `uvm_error("SB",
+            $sformatf("RAM REQ unexpected bank=%0d addr=%h (no matching expected)",
+            b, tr.ram_mem_addr[b]))
+        end
       end
-    end
+    join
   endtask
 
   // ============================================================
@@ -199,6 +202,12 @@ class lfc_scoreboard extends uvm_scoreboard;
               `uvm_error("SB",
                 $sformatf("RAM CMP mismatch bank=%0d: exp complete=%0b act complete=%0b",
                 b, exp.ram_mem_complete[b], act.ram_mem_complete[b]))
+            end else if (exp.ram_mem_addr[b] !== act.ram_mem_addr[b]) begin
+              ok = 0;
+              mismatch_count++;
+              `uvm_error("SB",
+                $sformatf("RAM CMP ADDR mismatch bank=%0d: exp=%h act=%h",
+                b, exp.ram_mem_addr[b], act.ram_mem_addr[b]))
             end
           end
         end
@@ -231,4 +240,5 @@ class lfc_scoreboard extends uvm_scoreboard;
 endclass
 
 `endif
+
 

@@ -28,8 +28,9 @@ class lfc_predictor extends uvm_component;
 
   parameter BLOCK_SIZE  = 4;
 
-  bit [31:0] data_model [0:CACHE_LINES-1];
+  bit [31:0] data_model [0:CACHE_LINES-1][0:BLOCK_SIZE-1];
   bit        valid      [0:CACHE_LINES-1];
+  bit [21:0] tag_model  [0:CACHE_LINES-1]; // addr[31:10]
   int        mshr_occupancy [NUM_BANKS];
 
   bit        uuid_in_flight [0:(1<<UUID_SIZE)-1];
@@ -37,6 +38,8 @@ class lfc_predictor extends uvm_component;
   int        uuid_bank_map  [0:(1<<UUID_SIZE)-1];
   int        uuid_index_map [0:(1<<UUID_SIZE)-1];
   int        fill_word_count [0:(1<<UUID_SIZE)-1];
+  int        fill_next_word  [0:(1<<UUID_SIZE)-1]; // next RAM word offset expected
+  int        fill_skip_word  [0:(1<<UUID_SIZE)-1]; // word offset pre-filled by write (-1 = none)
 
   function new(string name, uvm_component parent);
     super.new(name,parent);
@@ -57,14 +60,17 @@ class lfc_predictor extends uvm_component;
   endfunction
 
   function void initialize_model();
-    foreach(data_model[i]) data_model[i] = '0;
+    foreach(data_model[i,w]) data_model[i][w] = '0;
     foreach(valid[i]) valid[i] = 0;
+    foreach(tag_model[i]) tag_model[i] = '0;
     foreach(mshr_occupancy[i]) mshr_occupancy[i] = 0;
     foreach(uuid_in_flight[i]) uuid_in_flight[i] = 0;
     foreach(uuid_addr_map[i])  uuid_addr_map[i]  = 0;
     foreach(uuid_bank_map[i])  uuid_bank_map[i]  = -1;
     foreach(uuid_index_map[i]) uuid_index_map[i] = -1;
-    foreach(fill_word_count[i]) fill_word_count[i]  = 0;
+    foreach(fill_word_count[i]) fill_word_count[i] = 0;
+    foreach(fill_next_word[i])  fill_next_word[i]  = 0;
+    foreach(fill_skip_word[i])  fill_skip_word[i]  = -1;
   endfunction
 
   function void write_cpu(lfc_cpu_transaction cpu_t);
@@ -89,7 +95,7 @@ class lfc_predictor extends uvm_component;
     int index = get_index(cpu_t.mem_in_addr);
     int bank  = get_bank(cpu_t.mem_in_addr);
 
-    if (valid[index]) begin
+    if (valid[index] && tag_model[index] == cpu_t.mem_in_addr[31:10]) begin
       process_hit(cpu_t, out_tx, index);
     end else begin
       process_miss(cpu_t, out_tx, index, bank);
@@ -105,10 +111,11 @@ class lfc_predictor extends uvm_component;
     out_tx.mem_out_uuid = 0;
 
     if (cpu_t.mem_in_rw_mode) begin
-      data_model[index] = cpu_t.mem_in_store_value;
-      valid[index] = 1;
+      data_model[index][cpu_t.mem_in_addr[3:2]] = cpu_t.mem_in_store_value;
+      valid[index]     = 1;
+      tag_model[index] = cpu_t.mem_in_addr[31:10];
     end else begin
-      out_tx.hit_load = data_model[index];
+      out_tx.hit_load = data_model[index][cpu_t.mem_in_addr[3:2]];
     end
   endfunction
 
@@ -139,7 +146,25 @@ class lfc_predictor extends uvm_component;
 
     new_uuid = allocate_uuid();
     if (new_uuid == -1) begin
-      `uvm_info("PRED", "UUID pool full, DUT is also stalling new misses", UVM_LOW)
+      `uvm_info("PRED", "UUID pool full, DUT stalling — still emitting expected REQ for eventual service", UVM_LOW)
+      // DUT stalls but does NOT drop the miss; it will service it once a UUID frees.
+      // Emit the expected RAM REQ now so it is in the pending set when REN eventually fires.
+      begin
+        int first_w = -1;
+        for (int w = 0; w < BLOCK_SIZE; w++) begin
+          if (cpu_t.mem_in_rw_mode && w == cpu_t.mem_in_addr[3:2]) continue;
+          first_w = w;
+          break;
+        end
+        if (first_w != -1) begin
+          exp_req = lfc_ram_transaction#(NUM_BANKS)::type_id::create("exp_req_stall");
+          exp_req.ram_mem_REN[bank]      = 1;
+          exp_req.ram_mem_WEN[bank]      = 0;
+          exp_req.ram_mem_addr[bank]     = block_base_addr + (first_w * 4);
+          exp_req.ram_mem_complete[bank] = 0;
+          pred_ram_req_ap[bank].write(exp_req);
+        end
+      end
       return;
     end
 
@@ -154,20 +179,34 @@ class lfc_predictor extends uvm_component;
     // For write misses, the written word is pre-filled in the MSHR and skips RAM read.
     // The data_model is updated now; valid[] is set when all RAM words arrive (at FREE).
     if (cpu_t.mem_in_rw_mode) begin
+      int written_word = cpu_t.mem_in_addr[3:2];
       fill_word_count[new_uuid] = 1; // one word already supplied by the store
-      data_model[index] = cpu_t.mem_in_store_value; // store the written value
+      data_model[index][written_word] = cpu_t.mem_in_store_value;
+      fill_skip_word[new_uuid] = written_word;
+      // DUT issues words in order starting from 0, skipping the written word
+      fill_next_word[new_uuid] = (written_word == 0) ? 1 : 0;
+    end else begin
+      fill_next_word[new_uuid] = 0;
+      fill_skip_word[new_uuid] = -1;
     end
 
-    // Emit expected REN for only the words that will come from RAM
-    for (int w = 0; w < BLOCK_SIZE; w++) begin
-      // Skip the written word for write misses (DUT sets write_status and won't issue REN)
-      if (cpu_t.mem_in_rw_mode && w == cpu_t.mem_in_addr[3:2]) continue;
-      exp_req = lfc_ram_transaction#(NUM_BANKS)::type_id::create("exp_req");
-      exp_req.ram_mem_REN[bank]      = 1;
-      exp_req.ram_mem_WEN[bank]      = 0;
-      exp_req.ram_mem_addr[bank]     = block_base_addr + (w * 4);
-      exp_req.ram_mem_complete[bank] = 0;
-      pred_ram_req_ap[bank].write(exp_req);
+    // Emit one expected REN for the first word fetched from RAM.
+    // The passive monitor fires only on the rising edge of REN (first word), so emitting one expected per miss keeps the FIFOs in sync.
+    begin
+      int first_w = -1;
+      for (int w = 0; w < BLOCK_SIZE; w++) begin
+        if (cpu_t.mem_in_rw_mode && w == cpu_t.mem_in_addr[3:2]) continue;
+        first_w = w;
+        break;
+      end
+      if (first_w != -1) begin
+        exp_req = lfc_ram_transaction#(NUM_BANKS)::type_id::create("exp_req");
+        exp_req.ram_mem_REN[bank]      = 1;
+        exp_req.ram_mem_WEN[bank]      = 0;
+        exp_req.ram_mem_addr[bank]     = block_base_addr + (first_w * 4);
+        exp_req.ram_mem_complete[bank] = 0;
+        pred_ram_req_ap[bank].write(exp_req);
+      end
     end
 
   endfunction
@@ -195,17 +234,25 @@ class lfc_predictor extends uvm_component;
       if (ram_t.ram_mem_complete[b]) begin
         for (int u = 0; u < (1<<UUID_SIZE); u++) begin
           if (uuid_in_flight[u] && uuid_bank_map[u] == b) begin
+            int w = fill_next_word[u];
+            int index = uuid_index_map[u];
+            data_model[index][w] = ram_t.ram_mem_data[b];
             fill_word_count[u]++;
+            // advance to next word, skipping the pre-filled write word if present
+            w++;
+            if (w == fill_skip_word[u]) w++;
+            fill_next_word[u] = w;
             `uvm_info("PRED", $sformatf("WORD uuid=%0d bank=%0d word=%0d/%0d", u, b, fill_word_count[u], BLOCK_SIZE), UVM_LOW)
             if (fill_word_count[u] == BLOCK_SIZE) begin
               bit [31:0] block_base = uuid_addr_map[u];
-              int index = uuid_index_map[u];
-              data_model[index] = ram_t.ram_mem_data[b];
               valid[index]      = 1;
+              tag_model[index]  = block_base[31:10];
               uuid_in_flight[u] = 0;
               uuid_bank_map[u]  = -1;
               uuid_index_map[u] = -1;
               fill_word_count[u] = 0;
+              fill_next_word[u]  = 0;
+              fill_skip_word[u]  = -1;
               mshr_occupancy[b]--;
               `uvm_info("PRED", $sformatf("FREE uuid=%0d bank=%0d addr=%h mshr_occ=%0d", u, b, block_base, mshr_occupancy[b]), UVM_LOW)
             end
@@ -227,4 +274,5 @@ class lfc_predictor extends uvm_component;
 endclass
 
 `endif
+
 
