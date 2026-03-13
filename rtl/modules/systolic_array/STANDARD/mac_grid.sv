@@ -84,20 +84,11 @@ module mac_grid #(
         for (m = 0; m < N; m++) begin : mac_row_gen
             for (n = 0; n < N; n++) begin : mac_col_gen
 
-                // 2 or 4 cycle mac
-                if (MAC_LATENCY == 2) begin : mac_2c
-                    sysarr_MAC_2c mac_inst (
-                        .clk(clk),
-                        .nRST(nRST),
-                        .mac_if(mac_ifs[m*N + n].MAC)
-                    );
-                end else if (MAC_LATENCY == 4) begin : mac_4c
-                    sysarr_MAC_4c mac_inst (
-                        .clk(clk),
-                        .nRST(nRST),
-                        .mac_if(mac_ifs[m*N + n].MAC)
-                    );
-                end
+                sysarr_MAC_bf #(.LATENCY(MAC_LATENCY)) mac_inst (
+                    .clk(clk),
+                    .nRST(nRST),
+                    .mac_if(mac_ifs[m*N + n].MAC)
+                );
 
                 // horizontal pass thru - col 0 takes from sa_inputs, others chain from left neighbor
                 if (n == 0) begin : first_col
