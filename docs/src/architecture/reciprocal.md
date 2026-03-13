@@ -9,7 +9,8 @@ The Reciprocal Unit largely follows the implemenation outlined in `divider.md`
 ### Algorithm & LUT
 The main difference between the reciprocal unit and the divider lies in the handling of the numerator. Because the numerator is guaranteed to be 1, the need for a multiplier for the numerator is eliminated and the N1 can be effectively written as F0 (the initial guess). With this new area, we can use a small 16-entry LUT to get an initial guess for the factor that will guarantee a max ULP of 1. The initial guess is indexed using the most significant bits of the denominator's manitssa. Below is a code snippet of the generation used to create the LUT.
 
-```entries = 16
+```
+entries = 16
 def generate_lut(size):
     step = 1.0 / size
     seeds = torch.zeros(size, dtype=torch.bfloat16)
@@ -31,11 +32,11 @@ with open("lut_values.txt", "w") as f:
 **The Iteration 2 Optimization:**
 Because the algorithm only requires 2 iterations, the mathematical sequence looks like this:
 ```
-* **Iteration 1:** F0 = LUT guess   |
-                   D1 = D * F0      |
+* **Iteration 1:** F0 = LUT guess   
+                   D1 = D * F0      
                    F1 = 2.0 - D1
 
-* **Iteration 2:** Result = F0 * F1 |
+* **Iteration 2:** Result = F0 * F1 
 ```
 ### 2 Multiplier Design
 *Primary Author: Brian Zhuang*
@@ -73,4 +74,4 @@ Below is a table of results for the reciprocal unit. The ULP numbers are pulled 
 ### Simulation
 Below is a picture of the simulated ULP error at each iteration of the Goldschmidt division algorithm using both a magic number and LUT approach. This was simulated using the PyTorch library in Python.
 
-![img](img/Goldschmidt_ULP_Analysis.jpg)
+![img](../img/Goldschmidt_ULP_Analysis.jpg)
