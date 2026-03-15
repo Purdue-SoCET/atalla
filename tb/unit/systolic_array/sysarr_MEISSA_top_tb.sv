@@ -261,7 +261,7 @@ generate
         sysarr_STANDARD #(.MAC_LATENCY(2)) DUT (
             .clk(CLK),
             .nRST(nRST),
-            .gsau_if(gsau_if)
+            .gsau_if(gsau_if.systolic_array)
         );
     end
     else begin
