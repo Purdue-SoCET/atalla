@@ -166,19 +166,16 @@ module sysarr_STANDARD #(
     logic [$clog2(N+1)-1:0] out_row_cnt;
     logic out_batch_done;
 
-    // wen: 2-stage registered follow of row_valid 
+    // wen: registered follow of row_valid (1 cycle delay to let grid_out settle)
     logic out_buf_wr_en;
     logic sa_valid;
     logic next_out_batch_done;
-    logic row_valid_d1;
 
     always_ff @(posedge clk, negedge nRST) begin
         if (!nRST) begin
-            row_valid_d1  <= 0;
             out_buf_wr_en <= 0;
         end else begin
-            row_valid_d1  <= row_valid;
-            out_buf_wr_en <= row_valid_d1 && !next_out_batch_done;
+            out_buf_wr_en <= row_valid && !next_out_batch_done;
         end
     end
 
@@ -201,10 +198,14 @@ module sysarr_STANDARD #(
     end
 
     // Output buffer
-    // wr_en = out_buf_wr_en triggers SRAM write (reduced_data → buffer)
-    // rd_en = out_wr_en from control unit triggers SRAM read (buffer → consumer)
+    // For IN_OUT=1 the buffer swaps SRAM ports internally:
+    //   buffer wr_en -> SRAM ren (reads data OUT to consumer)
+    //   buffer rd_en -> SRAM wen (writes data IN from MAC grid)
+    // So we swap the connections accordingly.
     logic [N-1:0][DW-1:0] output_data;
     logic out_buf_empty;
+    logic gated_buf_ren;
+    assign gated_buf_ren = (|out_wr_en) && gsau_if.sa_ready_out;
 
     sysarr_buffer #(
         .NUM_COLS(N),
@@ -214,10 +215,10 @@ module sysarr_STANDARD #(
     ) output_buffer (
         .clk(clk),
         .nRST(nRST),
-        .stall(!gsau_if.sa_ready_out),
-        .wr_en(out_buf_wr_en),
+        .stall(1'b0),
+        .wr_en(gated_buf_ren),                      // read out to consumer (SRAM ren)
         .wr_data(reduced_data),
-        .rd_en(out_wr_en),
+        .rd_en({N{out_buf_wr_en}}),                  // write in from MAC grid (SRAM wen)
         .rd_data(output_data),
         .rdone(),
         .lane0_empty(out_buf_empty),
@@ -226,14 +227,12 @@ module sysarr_STANDARD #(
 
     assign gsau_if.sa_array_output = output_data;
 
-    // sa_valid_in tracks the read side: output_data is valid 1 cycle after
-    // out_wr_en fires (SRAM read latency = 1).  This tells the consumer
-    // exactly when sa_array_output holds real data.
+    // sa_valid_in: valid 1 cycle after a gated read fires (SRAM read latency = 1)
     always_ff @(posedge clk, negedge nRST) begin
         if (!nRST)
             sa_valid <= 1'b0;
         else
-            sa_valid <= |out_wr_en;
+            sa_valid <= gated_buf_ren;
     end
 
     assign gsau_if.sa_valid_in = sa_valid;

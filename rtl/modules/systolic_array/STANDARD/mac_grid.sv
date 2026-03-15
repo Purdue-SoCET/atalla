@@ -137,11 +137,28 @@ module mac_grid #(
         end
     endgenerate
 
-    // grid outputs (FP32)
+    // Latch each column's bottom-row output when its col_valid fires.
+    // This captures the result before the next row's value_ready overwrites
+    // MAC_outputs. Without this, columns that complete early get corrupted
+    // by the time row_valid (col_valid[N-1]) fires.
+    logic [DW_ACC-1:0] latched_outputs [N-1:0];
+    genvar lc;
+    generate
+        for (lc = 0; lc < N; lc++) begin : latch_out
+            always_ff @(posedge clk, negedge nRST) begin
+                if (!nRST)
+                    latched_outputs[lc] <= '0;
+                else if (col_valid[lc])
+                    latched_outputs[lc] <= MAC_outputs[N-1][lc];
+            end
+        end
+    endgenerate
+
+    // grid outputs (FP32) — use latched values
     genvar oc;
     generate
         for (oc = 0; oc < N; oc++) begin : output_pack
-            assign grid_out[DW_ACC*oc +: DW_ACC] = MAC_outputs[N-1][oc];
+            assign grid_out[DW_ACC*oc +: DW_ACC] = latched_outputs[oc];
         end
     endgenerate
 
