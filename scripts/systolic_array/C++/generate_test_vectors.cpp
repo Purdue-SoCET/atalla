@@ -380,7 +380,8 @@ void create_new_test(int test_num, int min_exponent, int max_exponent, const std
     }
     else if (VERSION == "STANDARD")
     {
-        // TODO: add standard simulation
+        // STANDARD: weight-stationary, BF16 mul -> FP32 acc -> BF16 reduce (same math as MEISSA32)
+        output_matrix = sim_MEISSA32(input_matrix, *weight, psum_matrix, IS_FP16);
     }
     else
     {
@@ -409,7 +410,7 @@ int main() {
         std::cerr << "Error: ATALLA_ROOT environment variable not set." << std::endl;
     }
 
-    if(VERSION == "MEISSA32") 
+    if(VERSION == "MEISSA32" || VERSION == "STANDARD") 
     {
         IS_FP16 = false;
     }
@@ -460,7 +461,8 @@ int main() {
     }
     else if (VERSION == "STANDARD")
     {
-        // TODO: add standard simulation
+        // STANDARD: same BF16 mul -> FP32 acc -> BF16 reduce math as MEISSA32
+        output_matrix = sim_MEISSA32(input_matrix, weight_matrix, psum_matrix, IS_FP16);
     }
     else
     {

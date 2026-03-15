@@ -6,8 +6,6 @@
 import sys_arr_pkg::*;
 /* verilator lint_on IMPORTSTAR */
 
-// only thing i connected are the computational stuff 
-
 module mac_grid #(
     parameter MAC_LATENCY = 2
 ) (
@@ -18,32 +16,44 @@ module mac_grid #(
     input  logic                 input_en,  
     input  logic [N*DW_ACC-1:0]  partial_in,     // FP32 partial sums (32-bit)
     input  logic                 stall,          // unused 
-    output logic [N*DW_ACC-1:0]  grid_out        // FP32 outputs (32-bit)
+    output logic [N*DW_ACC-1:0]  grid_out,       // FP32 outputs (32-bit)
+    output logic [N-1:0]         col_valid       // bottom-row value_ready per column
 );
 
     systolic_array_MAC_if mac_ifs[N*N-1:0] ();
 
     // Staged control signals - inputs propagate horizontally, so start signal must be delayed per column
-    logic [N-1:0] input_en_sr, weight_en_sr;  // shift registers for input_en and weight_en per column
+    logic [N-1:0] input_en_sr, weight_en_sr;
+
+    // Registered portion: cols 1..N-1
+    logic [N-1:1] input_en_sr_reg, weight_en_sr_reg;
     genvar col_sr;
     generate
-        for (col_sr = 0; col_sr < N; col_sr++) begin : stage_shift_regs
+        for (col_sr = 1; col_sr < N; col_sr++) begin : stage_shift_regs
             always_ff @(posedge clk, negedge nRST) begin
                 if (!nRST) begin
-                    input_en_sr[col_sr]  <= '0;
-                    weight_en_sr[col_sr] <= '0;
+                    input_en_sr_reg[col_sr]  <= '0;
+                    weight_en_sr_reg[col_sr] <= '0;
                 end else begin
-                    if (col_sr == 0) begin
-                        input_en_sr[col_sr]  <= input_en;
-                        weight_en_sr[col_sr] <= weight_en;
+                    if (col_sr == 1) begin
+                        input_en_sr_reg[col_sr]  <= input_en_sr[0];
+                        weight_en_sr_reg[col_sr] <= weight_en_sr[0];
                     end else begin
-                        input_en_sr[col_sr]  <= input_en_sr[col_sr-1];
-                        weight_en_sr[col_sr] <= weight_en_sr[col_sr-1];
+                        input_en_sr_reg[col_sr]  <= input_en_sr_reg[col_sr-1];
+                        weight_en_sr_reg[col_sr] <= weight_en_sr_reg[col_sr-1];
                     end
                 end
             end
         end
     endgenerate
+
+    // Combine: col 0 = combinational, cols 1..N-1 = registered
+    always_comb begin
+        input_en_sr[0]      = input_en;
+        weight_en_sr[0]     = weight_en;
+        input_en_sr[N-1:1]  = input_en_sr_reg;
+        weight_en_sr[N-1:1] = weight_en_sr_reg;
+    end
 
     // Control logic for MAC_shift and start signals
     // MAC_shift: latch input now (mac captures invalue) - asserted during weight loading and input loading
@@ -53,8 +63,8 @@ module mac_grid #(
     generate
         for (cm = 0; cm < N; cm++) begin : ctrl_row
             for (cn = 0; cn < N; cn++) begin : ctrl_col
-                // Shift data through when weights or inputs are being loaded
-                assign mac_ifs[cm*N + cn].MAC_shift = weight_en_sr[cn] | input_en_sr[cn];
+                // Shift data through only during input loading, not weight loading
+                assign mac_ifs[cm*N + cn].MAC_shift = input_en_sr[cn];
                 // Start MAC operations when input arrives at this column
                 assign mac_ifs[cm*N + cn].start     = input_en_sr[cn];
             end
@@ -114,6 +124,14 @@ module mac_grid #(
                 assign nxt_MAC_outputs[m][n] = mac_ifs[m*N + n].value_ready ?
                     mac_ifs[m*N + n].out_accumulate : MAC_outputs[m][n];
             end
+        end
+    endgenerate
+
+    // Per-column valid: bottom-row value_ready signals
+    genvar cv;
+    generate
+        for (cv = 0; cv < N; cv++) begin : col_valid_gen
+            assign col_valid[cv] = mac_ifs[(N-1)*N + cv].value_ready;
         end
     endgenerate
 

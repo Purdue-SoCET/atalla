@@ -13,7 +13,7 @@ constexpr int PROBABILITY_OF_NEW_WEIGHT = 250; // 25% chance out of 1000
 constexpr int ADDER_INPUT_NUM = 2;
 constexpr unsigned int RANDOM_SEED = 42;
 bool IS_FP16 = false;
-std::string VERSION = "MEISSA32";
+std::string VERSION = "STANDARD";
 
 extern std::string PATH_TO_INPUT;
 extern std::string PATH_TO_EXPECTED_RESULT;

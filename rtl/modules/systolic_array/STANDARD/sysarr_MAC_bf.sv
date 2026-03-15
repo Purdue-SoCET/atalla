@@ -61,16 +61,16 @@ module sysarr_MAC_bf #(
         nxt_input_x = input_x;
         nxt_weight  = weight;
         nxt_latched_weight_passon = latched_weight_passon;
-        next_weight_next_en = mac_if.weight_next_en;
+        // weight_next_en must be a one-cycle pulse following weight_en,
+        // not a latch. Previously it stayed high until MAC_shift cleared it,
+        // causing stale weight data to smear into right-neighbor PEs.
+        next_weight_next_en = mac_if.weight_en;
 
         if (mac_if.weight_en) begin
             nxt_weight = mac_if.in_value;
-            next_weight_next_en = 1;
             nxt_latched_weight_passon = weight;
-        end
-        if (mac_if.MAC_shift) begin
+        end else if (mac_if.MAC_shift) begin
             nxt_input_x = mac_if.in_value;
-            next_weight_next_en = 0;
         end
     end
 
