@@ -1,22 +1,22 @@
 `timescale 1ps/1ps
 
-`include "cache_types_pkg.svh";
+`include "cache_types_pkg.svh"
 
 module RAM (
     input logic CLK, nRST,
     input logic [31:0] ram_addr,
     input logic [31:0] ram_store,
     input logic ram_REN, ram_WEN,
-    input logic [BANKS_LEN-1:0] bank_id,
-    output logic [31:0] ram_load,
+    input logic[BANKS_LEN-1:0] bank_id,
+    output logic[31:0] ram_load,
     output logic ram_ready
 );
 
     localparam cycle_delay = 5;
 
-    logic [31:0] ram_data [logic [31:0]];
+    logic[31:0] ram_data [logic [31:0]];
     logic [31:0] current_addr, prev_addr;
-    logic [31:0] counter, next_counter;
+    logic[31:0] counter, next_counter;
     typedef enum logic [5:0] { start, ram_read, ram_write } state_t;
     state_t state, next_state;
 
@@ -102,20 +102,18 @@ module RAM (
             end   
         endcase
     end
-
-
 endmodule
 
 class cache_line;
-    logic [BLOCK_INDEX_BIT_LEN-1:0] set_index;
-    rand logic [TAG_BIT_LEN-1:0] rand_tag_val;
-    logic [TAG_BIT_LEN-1:0] tag;
-    addr_t [BLOCK_SIZE-1:0] addr;
+    logic[BLOCK_INDEX_BIT_LEN-1:0] set_index;
+    rand logic[TAG_BIT_LEN-1:0] rand_tag_val;
+    logic[TAG_BIT_LEN-1:0] tag;
+    addr_t[BLOCK_SIZE-1:0] addr;
     rand logic [BLOCK_SIZE-1:0][31:0] data;
-    rand logic [BLOCK_SIZE-1:0][31:0] data2;
+    rand logic[BLOCK_SIZE-1:0][31:0] data2;
     integer i;
 
-    function new(logic [BLOCK_INDEX_BIT_LEN-1:0] set_index, integer way_index);
+    function new(logic[BLOCK_INDEX_BIT_LEN-1:0] set_index, integer way_index);
         this.set_index = set_index;
         void'(std::randomize(rand_tag_val) with { rand_tag_val != 0; });
         void'(std::randomize(data));
@@ -146,8 +144,8 @@ module lockup_free_cache_tb;
     end
 
     logic tb_mem_in;
-    logic [UUID_SIZE-1:0] tb_mem_out_uuid;
-    logic [31:0] tb_mem_in_addr;
+    logic[UUID_SIZE-1:0] tb_mem_out_uuid;
+    logic[31:0] tb_mem_in_addr;
     logic tb_mem_in_rw_mode;
     logic [31:0] tb_mem_in_store_value;
     logic tb_stall;
@@ -155,11 +153,11 @@ module lockup_free_cache_tb;
     logic tb_halt;
     logic tb_flushed;
     logic [31:0] tb_hit_load;
-    logic [NUM_BANKS-1:0] tb_block_status;
+    logic[NUM_BANKS-1:0] tb_block_status;
     logic [NUM_BANKS-1:0][3:0] tb_uuid_block;
     logic [NUM_BANKS-1:0] tb_ram_mem_REN;
     logic [NUM_BANKS-1:0] tb_ram_mem_WEN;
-    logic [NUM_BANKS-1:0][31:0] tb_ram_mem_addr;
+    logic[NUM_BANKS-1:0][31:0] tb_ram_mem_addr;
     logic [NUM_BANKS-1:0][31:0] tb_ram_mem_store;
     logic [NUM_BANKS-1:0][31:0] tb_ram_mem_data;
     logic [NUM_BANKS-1:0] tb_ram_mem_complete;
@@ -171,7 +169,6 @@ module lockup_free_cache_tb;
         .mem_out_uuid           (tb_mem_out_uuid),
         .mem_in_addr           (tb_mem_in_addr),
         .mem_in_rw_mode        (tb_mem_in_rw_mode),
-        // 0 = read, 1 = writetb_
         .mem_in_store_value    (tb_mem_in_store_value),
         .dp_in_halt            (tb_halt),
         .stall                 (tb_stall),
@@ -180,7 +177,6 @@ module lockup_free_cache_tb;
         .block_status          (tb_block_status),
         .uuid_block            (tb_uuid_block),
         .dp_out_flushed        (tb_flushed),
-        // RAM Signalstb_
         .ram_mem_REN           (tb_ram_mem_REN),
         .ram_mem_WEN           (tb_ram_mem_WEN),
         .ram_mem_addr          (tb_ram_mem_addr),
@@ -201,12 +197,16 @@ module lockup_free_cache_tb;
                 .ram_WEN      (tb_ram_mem_WEN[i]),
                 .ram_load     (tb_ram_mem_data[i]),
                 .ram_ready    (tb_ram_mem_complete[i]),
-                .bank_id (BANKS_LEN'(i))
+                .bank_id      (BANKS_LEN'(i))
             );
+
+            cache_set [NUM_SETS_PER_BANK-1:0] monitor_bank_view;
+            assign monitor_bank_view = u_lockup_free_cache.BANK_GEN[i].u_sram.mem;
+
             cache_bank_monitor u_monitor_inst (
                 .CLK          (tb_clk),
                 .nRST         (tb_nrst),
-                .bank         (u_lockup_free_cache.BANK_GEN[i].u_cache_bank.bank), 
+                .bank         (monitor_bank_view), 
                 .enable       (monitor_enable)
             );
         end
@@ -221,7 +221,7 @@ module lockup_free_cache_tb;
     integer cycle_count;
     int pending_reqs [int];
 
-    logic [31:0] finished_block_addr [NUM_BANKS-1:0];
+    logic [31:0] finished_block_addr[NUM_BANKS-1:0];
     generate
         for (genvar g = 0; g < NUM_BANKS; g++) begin : GEN_FIN_ADDR
             assign finished_block_addr[g] = u_lockup_free_cache.BANK_GEN[g].u_cache_bank.latched_mshr_entry.block_addr;
@@ -274,18 +274,27 @@ module lockup_free_cache_tb;
         end
     end
 
-    task data_read(input logic [31:0] addr, output logic [31:0] data);
+    task data_read(input logic[31:0] addr, output logic[31:0] data);
         tb_mem_in = 0;
         $display("Starting data read: %08x", addr);
+        #1;
         while (tb_stall) begin
             $display("Cache stall!");
             @(posedge tb_clk);
+            #1;
         end
         tb_mem_in = 1;
         tb_mem_in_addr = addr;
         tb_mem_in_rw_mode = 0;
         tb_mem_in_store_value = 0;
+        
+        @(posedge tb_clk);
         #1;
+        while (tb_stall) begin
+            @(posedge tb_clk);
+            #1;
+        end
+
         if (tb_hit) begin
             $display("Read hit on %08x! -> %08x", addr, tb_hit_load);
             data = tb_hit_load;
@@ -296,18 +305,27 @@ module lockup_free_cache_tb;
         tb_mem_in = 0;
     endtask
 
-    task data_write(input logic [31:0] addr, input logic [31:0] data);
+    task data_write(input logic [31:0] addr, input logic[31:0] data);
         tb_mem_in = 0;
         $display("Starting data write: %08x,%08x", addr, data);
+        #1;
         while (tb_stall) begin
             $display("Cache stall!");
             @(posedge tb_clk);
+            #1;
         end
         tb_mem_in = 1;
         tb_mem_in_addr = addr;
         tb_mem_in_rw_mode = 1;
         tb_mem_in_store_value = data;
+        
+        @(posedge tb_clk);
         #1;
+        while (tb_stall) begin
+            @(posedge tb_clk);
+            #1;
+        end
+
         if (tb_hit) begin
             $display("Write hit on %08x!", addr);
         end else begin
@@ -324,14 +342,14 @@ module lockup_free_cache_tb;
     endtask
 
 
-    logic [31:0] data_out;
+    logic[31:0] data_out;
     string testcase; 
 
     integer current_set_index;
     integer current_block_offset;
     integer current_way;
 
-    cache_line line [NUM_SETS][7:0];
+    cache_line line[NUM_SETS][7:0];
 
     localparam test_set_num = NUM_SETS;
 
@@ -356,7 +374,6 @@ module lockup_free_cache_tb;
             line[current_set_index][6] = new(current_set_index, 6);
             line[current_set_index][7] = new(current_set_index, 7);
 
-            // Read miss then Write miss
             for (current_way = 0; current_way < NUM_WAYS; current_way++) begin
                 for (current_block_offset = 0; current_block_offset < 1; current_block_offset++) begin
                     data_read(line[current_set_index][current_way].addr[current_block_offset], data_out);                
@@ -365,7 +382,6 @@ module lockup_free_cache_tb;
                     data_write(line[current_set_index][current_way].addr[current_block_offset], 32'h88888888);                
                 end
             end
-            // Write miss then Read miss
             for (current_way = 0; current_way < NUM_WAYS; current_way++) begin
                 for (current_block_offset = 0; current_block_offset < 1; current_block_offset++) begin
                     data_write(line[current_set_index][current_way].addr[current_block_offset], 32'h88888888);                
@@ -380,13 +396,11 @@ module lockup_free_cache_tb;
         cycle_wait(1500);
         $display("Done waiting for misses to finish!");
         for (current_set_index = 0; current_set_index < test_set_num; current_set_index++) begin
-            // Write hit
             for (current_way = 0; current_way < NUM_WAYS; current_way++) begin
                 for (current_block_offset = 0; current_block_offset < 1; current_block_offset++) begin
                     data_write(line[current_set_index][current_way].addr[current_block_offset], line[current_set_index][current_way].data[current_block_offset]);                
                 end
             end
-            // Read hit
             for (current_way = 0; current_way < NUM_WAYS; current_way++) begin
                 for (current_block_offset = 0; current_block_offset < 1; current_block_offset++) begin
                     data_read(line[current_set_index][current_way].addr[current_block_offset], data_out);
