@@ -201,10 +201,10 @@ module sysarr_STANDARD #(
     end
 
     // Output buffer
-    // wr_en = out_buf_wr_en triggers SRAM write (reduced_data → buffer)
-    // rd_en = out_wr_en from control unit triggers SRAM read (buffer → consumer)
     logic [N-1:0][DW-1:0] output_data;
     logic out_buf_empty;
+    logic [N-1:0] gated_out_rd_en;
+    assign gated_out_rd_en = gsau_if.sa_ready_out ? out_wr_en : '0;
 
     sysarr_buffer #(
         .NUM_COLS(N),
@@ -214,10 +214,10 @@ module sysarr_STANDARD #(
     ) output_buffer (
         .clk(clk),
         .nRST(nRST),
-        .stall(!gsau_if.sa_ready_out),
+        .stall(1'b0),              // never stall writes — wr_ptr always tracks real occupancy
         .wr_en(out_buf_wr_en),
         .wr_data(reduced_data),
-        .rd_en(out_wr_en),
+        .rd_en(gated_out_rd_en),   // reads gated by consumer readiness
         .rd_data(output_data),
         .rdone(),
         .lane0_empty(out_buf_empty),
@@ -227,13 +227,13 @@ module sysarr_STANDARD #(
     assign gsau_if.sa_array_output = output_data;
 
     // sa_valid_in tracks the read side: output_data is valid 1 cycle after
-    // out_wr_en fires (SRAM read latency = 1).  This tells the consumer
+    // a gated read fires (SRAM read latency = 1).  This tells the consumer
     // exactly when sa_array_output holds real data.
     always_ff @(posedge clk, negedge nRST) begin
         if (!nRST)
             sa_valid <= 1'b0;
         else
-            sa_valid <= |out_wr_en;
+            sa_valid <= |gated_out_rd_en;
     end
 
     assign gsau_if.sa_valid_in = sa_valid;
