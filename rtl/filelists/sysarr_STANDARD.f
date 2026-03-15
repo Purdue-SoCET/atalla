@@ -37,3 +37,5 @@
 
 // Testbench package
 ./tb/unit/systolic_array/systolic_array_tb_pkg.sv
+
+// Note: testbench is sysarr_STANDARD_tb.sv (found automatically by Makefile)
