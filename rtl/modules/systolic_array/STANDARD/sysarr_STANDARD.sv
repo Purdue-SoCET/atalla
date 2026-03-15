@@ -201,10 +201,8 @@ module sysarr_STANDARD #(
     end
 
     // Output buffer
-    // For IN_OUT=1 the buffer internally swaps SRAM read/write ports.
-    // From the caller's perspective the port names still mean:
-    //   wr_en  = write data INTO the buffer  (from MAC grid)
-    //   rd_en  = read  data OUT of the buffer (to consumer)
+    // wr_en = out_buf_wr_en triggers SRAM write (reduced_data → buffer)
+    // rd_en = out_wr_en from control unit triggers SRAM read (buffer → consumer)
     logic [N-1:0][DW-1:0] output_data;
     logic out_buf_empty;
 
@@ -229,7 +227,8 @@ module sysarr_STANDARD #(
     assign gsau_if.sa_array_output = output_data;
 
     // sa_valid_in tracks the read side: output_data is valid 1 cycle after
-    // out_wr_en fires (SRAM read latency = 1).
+    // out_wr_en fires (SRAM read latency = 1).  This tells the consumer
+    // exactly when sa_array_output holds real data.
     always_ff @(posedge clk, negedge nRST) begin
         if (!nRST)
             sa_valid <= 1'b0;
