@@ -67,6 +67,8 @@ module mac_grid #(
                 assign mac_ifs[cm*N + cn].MAC_shift = input_en_sr[cn];
                 // Start MAC operations when input arrives at this column
                 assign mac_ifs[cm*N + cn].start     = input_en_sr[cn];
+                // No stall support — tie low so MAC pipeline always advances
+                assign mac_ifs[cm*N + cn].stall_sa  = 1'b0;
             end
         end
     endgenerate
