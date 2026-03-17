@@ -404,7 +404,7 @@ initial begin
         stall_counter++;
         gsau_if.sa_ready_out <= 1'b1;
         if(stall_counter >= 5) begin
-            gsau_if.sa_ready_out = 1'b0;
+            gsau_if.sa_ready_out <= 1'b0;
         end
         if(stall_counter > $urandom_range(0, 10)) begin
             stall_counter = 0;
