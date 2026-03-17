@@ -55,9 +55,14 @@ program test(
     } barb_slot_t; //Driver from backend arbiter.
 
     typedef struct packed {
-        logic bwread;
+        logic bwready;
         integer delay;
     } bresp_t; //Driver from AXI bresp channel.
+
+    typdef struct packed {
+
+        logic bwready
+    } 
 
     initial begin 
         nRST = 1;
