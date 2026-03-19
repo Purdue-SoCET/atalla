@@ -24,7 +24,9 @@ module sysarr_MEISSA_top #(
     // logic [N - 1:0][DW - 1:0] partial_sram_out;
     // logic [N - 1:0][DW - 1:0] partial_reverted;
 
-    logic [N - 1:0][DW_ACC - 1:0] psum_buffer_out;
+    // logic [N - 1:0][DW_ACC - 1:0] psum_buffer_out;
+
+    logic rdone, vector_done;
 
     // Credit-based flow control — ready_in driven by output buffer credits
     // (replaces old pass-through: assign gsau_if.sa_ready_in = gsau_if.sa_ready_out)
@@ -62,7 +64,7 @@ module sysarr_MEISSA_top #(
                 .nRST(nRST),
                 .stall(1'b0),
                 .terms_in(mul_prod[j]),
-                .psum_in(psum_buffer_out[j]),
+                .psum_in(),
                 .sum_out(adder_sum[j])
             );
         end
@@ -189,23 +191,24 @@ module sysarr_MEISSA_top #(
     always_ff @(posedge clk or negedge nRST) begin
         if (!nRST) begin
             shift_reg <= '0;
-            credits <= PIPELINE_DEPTH + N;
+            credits <= PIPELINE_DEPTH + N - 1;
         end else begin
-            shift_reg <= {shift_reg[TOTAL_DELAY - 1 : 0], gsau_if.sa_input_en};
+            shift_reg <= {shift_reg[TOTAL_DELAY - 2 : 0], gsau_if.sa_input_en};
             credits <= next_credits;
         end
     end
 
     always_comb begin
         case ({gsau_if.sa_valid_in, gsau_if.sa_input_en})
-            2'b10 : next_credits = credits < (PIPELINE_DEPTH + N) ? credits + 1 : credits;
+            2'b10 : next_credits = credits < (PIPELINE_DEPTH + N - 1) ? credits + 1 : credits;
+            // 2'b01 : next_credits = (credits == 0) ? 0 : credits - 1;
             2'b01 : next_credits = credits - 1;
             // if 2'b11 or 2'b00, number of credits stays the same
             default : next_credits = credits;
         endcase
     end
 
-    assign gsau_if.sa_ready_in = |credits;
+    assign gsau_if.sa_ready_in = |next_credits;
     // assign gsau_if.sa_valid_in = shift_reg[TOTAL_DELAY - 1];
 
 
@@ -252,27 +255,23 @@ module sysarr_MEISSA_top #(
     end */
 
     logic [$clog2(N + PIPELINE_DEPTH) - 1:0] special_counter, next_special_counter;
-    logic sa_valid_in;
 
     always_ff @ (posedge clk, negedge nRST) begin
         if(!nRST) begin
             special_counter <= '0;
-            sa_valid_in <= 0;
-        end
-        else begin
+        end else begin
             special_counter <= next_special_counter;
-            sa_valid_in <= |special_counter;
         end
     end
 
-    assign gsau_if.sa_valid_in = sa_valid_in & gsau_if.sa_ready_out;
+    // assign gsau_if.sa_valid_in = sa_valid_in & gsau_if.sa_ready_out;
 
     always_comb begin
-        case ({shift_reg[TOTAL_DELAY - 3], |special_counter & gsau_if.sa_ready_out})
-            2'b01: next_special_counter = special_counter - 1;
+        case ({vector_done, gsau_if.sa_valid_in})
+            2'b01: next_special_counter = (special_counter > 0) ? special_counter - 1 : special_counter;
             2'b10: next_special_counter = special_counter + 1;
             default: next_special_counter = special_counter;
-        endcase
+        endcase 
     end
 
 
@@ -304,10 +303,13 @@ module sysarr_MEISSA_top #(
         .stall(!gsau_if.sa_ready_out),
         .wr_en(shift_reg[TOTAL_DELAY - 3 : PIPELINE_DEPTH]),
         .wr_data(reduced_data),
-        .rd_en(|special_counter),
+        .rd_en(|next_special_counter),
         .rd_data(output_data),
-        .rdone()
+        .vector_done(vector_done),
+        .rdone(rdone)
     );
+
+    assign gsau_if.sa_valid_in = rdone && gsau_if.sa_ready_out;
 
     // Drive GSAU output interface
     // Pack N columns of DW bits into sa_array_output (full vector width)
