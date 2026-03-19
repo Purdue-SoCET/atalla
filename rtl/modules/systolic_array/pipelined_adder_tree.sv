@@ -32,32 +32,26 @@ module pipelined_adder_tree #(
 
             for (genvar k = 0; k < PAIRS; k++) begin : pair
                 if (FP_BF) begin: fp16
-                    add_fp16 u_add (
+                    add_fp16_1c u_add (
                         .clk    (clk),
                         .nRST   (nRST),
-                        .start  (1'b1),
-                        .stall  (stall),
                         .sub    (1'b0),
                         .fp1_in (stage_data[l][2 * k]),
                         .fp2_in (stage_data[l][2 * k + 1]),
-                        .fp_out (stage_data[l + 1][k]),
-                        .done   ()
+                        .fp_out (stage_data[l + 1][k])
                     );
                 end else begin: bf16
                     // FP32 accumulation: add_fp16 parameterized for 8-bit exp, 23-bit mantissa
-                    add_fp16 #(
+                    add_fp16_1c #(
                         .MANT_W(23),
                         .EXP_W(8)
                     ) u_add (
                         .clk    (clk),
                         .nRST   (nRST),
-                        .start  (1'b1),
-                        .stall  (stall),
                         .sub    (1'b0),
                         .fp1_in (stage_data[l][2 * k]),
                         .fp2_in (stage_data[l][2 * k + 1]),
-                        .fp_out (stage_data[l + 1][k]),
-                        .done   ()
+                        .fp_out (stage_data[l + 1][k])
                     );
                 end
             end

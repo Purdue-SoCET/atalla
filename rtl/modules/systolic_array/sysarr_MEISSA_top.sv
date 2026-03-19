@@ -9,8 +9,8 @@ import sys_arr_pkg::*;
 /* verilator lint_off IMPORTSTAR */
 
 module sysarr_MEISSA_top #(
-    parameter int ADD_LATENCY = 2,
-    parameter int MUL_LATENCY = 2
+    parameter int ADD_LATENCY = 1,
+    parameter int MUL_LATENCY = 1
 )(
     input logic clk, nRST,
     gsau_control_unit_if.systolic_array gsau_if
@@ -180,9 +180,9 @@ module sysarr_MEISSA_top #(
         .rd_data(output_data)
     ); */
 
-    logic [$clog2(N + PIPELINE_DEPTH) - 1:0] credits, next_credits;
-
     localparam int PIPELINE_DEPTH = MUL_LATENCY + $clog2(N) * ADD_LATENCY;
+
+    logic [$clog2(N + PIPELINE_DEPTH) - 1:0] credits, next_credits;
     localparam int OUTPUT_READ_ENABLE = N;
     localparam int TOTAL_DELAY = PIPELINE_DEPTH + OUTPUT_READ_ENABLE + 2; // 2 because extra flags, valid bit & read enable
 
