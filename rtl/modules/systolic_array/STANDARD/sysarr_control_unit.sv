@@ -38,7 +38,7 @@ module sysarr_control_unit #(
         next_rd_cycle = rd_cycle;
         in_rd_en = '0;
 
-        if (sa_input_en && credits > 0) begin
+        if (sa_input_en) begin
             next_vec_cnt = vec_cnt + 1;
         end
 
