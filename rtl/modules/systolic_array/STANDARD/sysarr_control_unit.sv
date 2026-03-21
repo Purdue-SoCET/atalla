@@ -73,7 +73,7 @@ module sysarr_control_unit #(
         end
     end
 
-    // --- Registers ---
+    // registers
     always_ff @(posedge clk or negedge nRST) begin
         if (!nRST) begin
             credits      <= N;
