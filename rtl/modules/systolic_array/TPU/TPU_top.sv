@@ -4,7 +4,10 @@ import sys_arr_pkg::*;
 module TPU_top #(
     parameter int ADD_2_INPUT_LATENCY = 2,
     parameter int ADD_4_INPUT_LATENCY = 3,
-    parameter int MUL_LATENCY = 2
+    parameter int MUL_LATENCY = 2,
+    parameter int GROUP_SIZE = 4,
+
+    localparam int PIPELINE_DEPTH = MUL_LATENCY + ADD_4_INPUT_LATENCY + $clog2(N / GROUP_SIZE) * ADD_2_INPUT_LATENCY
 )(
     input logic clk, nRST,
     gsau_control_unit_if.systolic_array gsau_if
@@ -21,9 +24,7 @@ module TPU_top #(
     logic [N-1:0][DW-1:0] output_buffer_out;
 
     logic [N-1:0] in_rd_en, out_wr_en, in_rdone;
-    logic in_buffer_empty;
-
-    logic weight_delay;
+    logic in_buffer_empty, out_rd_en, weight_delay, rdone, vector_done;
 
     always_ff @ (posedge clk, negedge nRST) begin
         if(!nRST) begin
@@ -40,32 +41,39 @@ module TPU_top #(
         .GROUP_SIZE(4),
         .ADD_2_INPUT_LATENCY(ADD_2_INPUT_LATENCY),
         .ADD_4_INPUT_LATENCY(ADD_4_INPUT_LATENCY),
-        .MUL_LATENCY(MUL_LATENCY)
+        .MUL_LATENCY(MUL_LATENCY),
+        .PIPELINE_DEPTH(PIPELINE_DEPTH)
     ) control_unit (
         .clk(clk),
         .nRST(nRST),
         .in_buffer_empty(in_buffer_empty),
-        .sa_output(gsau_if.sa_valid_in),
+        .vector_in(gsau_if.sa_input_en),
+        .vector_out(gsau_if.sa_valid_in),
+        .rdone(rdone),
+        .vector_done(vector_done),
+        .ready_out(gsau_if.sa_ready_out),
         .in_rd_en(in_rd_en),
         .out_wr_en(out_wr_en),
-        .ready_in(gsau_if.sa_ready_in)
+        .ready_in(gsau_if.sa_ready_in),
+        .out_rd_en(out_rd_en)
     );
 
     // TODO: Instantiate input buffer
-    TPU_buffer #(
+
+    input_buffer #(
         .NUM_COLS(N),
         .DATA_WIDTH(DW),
-        .IN_OUT(0)
-    ) input_buffer (
+        .SRAM_DEPTH(N + PIPELINE_DEPTH)
+    ) u_input_buffer (
         .clk(clk),
         .nRST(nRST),
+        .stall(1'b0),
         .wr_en(gsau_if.sa_input_en),
         .wr_data(gsau_if.sa_array_in),
         .rd_en(in_rd_en),
         .rd_data(in_vector),
         .rdone(in_rdone),
-        .lane0_empty(in_buffer_empty),
-        .full()
+        .lane0_empty(in_buffer_empty)
     );
 
 genvar k;
@@ -90,35 +98,16 @@ genvar k;
                         in_pipe <= '0;
                     end else begin
                         if(j == 0) begin
-                            // TODO: registering first input probably won't be necessary
-                            if (in_rd_en[i/4] && in_rdone[i]) begin
-                                // in_pipe[i][0] <= in_vector[i * 4 * DW +: 4 * DW];
-                                in_pipe[i][0] <= {in_vector[i * 4 + 3], in_vector[i*4 + 2], in_vector[i*4 + 1], in_vector[i*4]};
-                            end else if (gsau_if.sa_weight_en) begin
+                            if (gsau_if.sa_weight_en) begin
                                 in_pipe[i][0] <= gsau_if.sa_array_in[i * 4 * DW +: 4 * DW];
                             end else begin
-                                in_pipe[i][0] <= '0;
+                                in_pipe[i][0] <= {in_vector[i * 4 + 3], in_vector[i * 4 + 2], in_vector[i * 4 + 1], in_vector[i * 4]};
                             end
                         end else begin
                             in_pipe[i][j] <= in_pipe[i][j-1];
                         end
                     end
                 end
-
-                // always_ff @ (posedge clk, negedge nRST) begin : psum_pipe_register
-                //     if (!nRST) begin
-                //         psum_pipe <= '0;
-                //     end else begin
-                //         if(i == 0) begin
-                //             // TODO: registering first psum probably won't be necessary
-                //             // No Psums currently
-                //             // psum_pipe[i][0] <= psum_vector[i];
-                //             psum_pipe[0][j] <= '0;
-                //         end else begin
-                //             psum_pipe[i][j] <= next_psum_pipe[i][j];
-                //         end
-                //     end
-                // end
 
                 always_ff @ (posedge clk, negedge nRST) begin :weight_en_pipe_register
                     if(!nRST) begin
@@ -152,7 +141,6 @@ genvar k;
         end
     endgenerate
 
-    // TODO: verify total latency for a vector ready to be outputted
     /* Formula for total latency:
      * +1 from gsau_if.sa_array_in to input buffer write latency
      * +1 from control unit to start issue
@@ -172,36 +160,24 @@ genvar k;
         if (!nRST) begin
             valid_bits <= '0;
         end else begin
-            // if (!sysarr_stall) begin
-            //     valid_bits <= {valid_bits[TOTAL_DELAY - 1 : 0], gsau_if.sa_input_en};
-            // end
             valid_bits <= {valid_bits[TOTAL_DELAY - 1 : 0], in_rd_en[0]};
         end
     end
 
-    // TODO: Weight Loading
-    
-    // Output buffer
-    //TODO: Comment explanation
-    TPU_buffer #(
+    output_buffer #(
         .NUM_COLS(N),
         .DATA_WIDTH(DW),
-        .IN_OUT(1)
-    ) output_buffer (
+        .SRAM_DEPTH(N + PIPELINE_DEPTH)
+    ) u_output_buffer (
         .clk(clk),
         .nRST(nRST),
-        .wr_en(valid_bits[TOTAL_DELAY - 2]),
-        .wr_data(psum_pipe[N/4]),
-        .rd_en(out_wr_en),
+        .stall(!gsau_if.sa_ready_out),
+        .wr_en(out_wr_en),
+        .wr_data(psum_pipe[N / 4]),
+        .rd_en(out_rd_en),
         .rd_data(gsau_if.sa_array_output),
-        .lane0_empty(),
-        .full()
+        .vector_done(vector_done),
+        .rdone(rdone)
     );
-
-    // Always ready
-    // assign gsau_if.sa_ready_in = 1'b1;
-    // Outputs
-    assign gsau_if.sa_valid_in = valid_bits[TOTAL_DELAY - 1];
-    // assign gsau_if.sa_array_output = output_buffer_out;
 
 endmodule

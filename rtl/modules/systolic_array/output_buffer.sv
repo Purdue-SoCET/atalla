@@ -14,8 +14,8 @@ module output_buffer #(
     input logic [NUM_COLS-1:0][DATA_WIDTH-1:0] wr_data,
     input logic [NUM_COLS-1:0] wr_en,
     output logic [NUM_COLS-1:0][DATA_WIDTH-1:0] rd_data,
-    output logic vector_done,
-    output logic rdone
+    output logic vector_done,   // Vector done being written.
+    output logic rdone          // Vector done being read.
 );
 
     logic [PTR_WIDTH-1:0] rd_ptr, next_rd_ptr, stall_rd_ptr, next_stall_rd_ptr, rd_addr;

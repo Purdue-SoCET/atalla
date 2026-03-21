@@ -1,4 +1,4 @@
-module TPU_buffer #(
+module input_buffer #(
     parameter int NUM_COLS          = 32,
     parameter int DATA_WIDTH        = 16,
     parameter int SRAM_DEPTH = 128,

@@ -199,7 +199,7 @@ module sysarr_MEISSA_top #(
     end
 
     always_comb begin
-        case ({gsau_if.sa_valid_in, gsau_if.sa_input_en})
+        case ({rdone && gsau_if.sa_ready_out, gsau_if.sa_input_en})
             2'b10 : next_credits = credits < (PIPELINE_DEPTH + N - 1) ? credits + 1 : credits;
             // 2'b01 : next_credits = (credits == 0) ? 0 : credits - 1;
             2'b01 : next_credits = credits - 1;
@@ -267,7 +267,7 @@ module sysarr_MEISSA_top #(
     // assign gsau_if.sa_valid_in = sa_valid_in & gsau_if.sa_ready_out;
 
     always_comb begin
-        case ({vector_done, gsau_if.sa_valid_in})
+        case ({vector_done, rdone && gsau_if.sa_ready_out})
             2'b01: next_special_counter = (special_counter > 0) ? special_counter - 1 : special_counter;
             2'b10: next_special_counter = special_counter + 1;
             default: next_special_counter = special_counter;
@@ -310,7 +310,7 @@ module sysarr_MEISSA_top #(
     );
 
     assign gsau_if.sa_valid_in = rdone && gsau_if.sa_ready_out;
-
+    
     // Drive GSAU output interface
     // Pack N columns of DW bits into sa_array_output (full vector width)
     // assign gsau_if.sa_array_output = {adder_sum[N - 1], output_data[N - 2:0]};

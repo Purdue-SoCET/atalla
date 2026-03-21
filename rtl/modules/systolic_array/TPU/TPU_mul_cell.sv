@@ -36,7 +36,7 @@ generate
         );
     end
     else begin: bf16_multiplier
-        mul_bf16 u_mul_bf16 (
+        mul_bf u_mul_bf16 (
             .clk(clk),
             .nRST(nRST),
             .start(1'b1),
