@@ -6,13 +6,19 @@ import axi_bus_pkg::*;
 (
     input logic CLK, nRST,
     axi_bus_if abif
-);
+); //TODO: one beat of transaction size is fixed? what does the request 'size' do?
+    localparam MID_SP0 = 0;
+    localparam MID_SP1 = 1;
+    localparam MID_I = 2;
+    localparam MID_D = 3;
 
     logic [ARGRANT-1:0] grant_sel;
-    sub_ar_channel_t ar_o_buf, ar_o;
+    logic ar_valid;
 
     // ============== AR BEGIN =============
-    axi_read_manager SP0_M (
+    axi_read_manager #(
+        .MASTER_ID(MID_SP0)
+    ) SP0_M (
         .CLK(CLK),
         .nRST(nRST),
         .arvalid(abif.ar_sp0_valid),
@@ -23,7 +29,9 @@ import axi_bus_pkg::*;
         .req(abif.sp0_req_r)
     );
 
-    axi_read_manager SP1_M (
+    axi_read_manager #(
+        .MASTER_ID(MID_SP1)
+    ) SP1_M (
         .CLK(CLK),
         .nRST(nRST),
         .arvalid(abif.ar_sp1_valid),
@@ -34,7 +42,9 @@ import axi_bus_pkg::*;
         .req(abif.sp1_req_r)
     );
 
-    axi_read_manager D_M (
+    axi_read_manager #(
+        .MASTER_ID(MID_D)
+    ) D_M (
         .CLK(CLK),
         .nRST(nRST),
         .arvalid(abif.ar_d_valid),
@@ -45,7 +55,9 @@ import axi_bus_pkg::*;
         .req(abif.d_req_r)
     );
 
-    axi_read_manager I_M (
+    axi_read_manager #(
+        .MASTER_ID(MID_I)
+    ) I_M (
         .CLK(CLK),
         .nRST(nRST),
         .arvalid(abif.ar_i_valid),
@@ -69,30 +81,44 @@ import axi_bus_pkg::*;
 
     // AR MUX
     always_comb begin
-        ar_o_buf = '0;
-        casez (grant_sel)
-            //TODO: ask Aryan
-
-
-        endcase
-
+        abif.ar_o = '0;
+        abif.sp0_pop = 0;
+        abif.sp1_pop = 0;
+        abif.i_pop = 0;
+        abif.d_pop = 0;
+        if (grant_sel[2]) begin
+            casez (grant_sel[1:0])
+                2'b00: begin
+                    abif.sp0_pop = 1;
+                    abif.ar_o = abif.ar_sp0_o;
+                end
+                2'b01: begin
+                    abif.sp1_pop = 1;
+                    abif.ar_o = abif.ar_sp1_o;
+                end 
+                2'b10: begin
+                    abif.d_pop = 1;
+                    abif.ar_o = abif.ar_d_o;
+                end 
+                2'b11: begin
+                    abif.i_pop = 1;
+                    abif.ar_o = abif.ar_i_o;
+                end
+                default: ;
+            endcase
+        end
     end
 
-    axi_skid_buffer SKID (
-        .CLK(CLK),
-        .nRST(nRST),
-        .r_in(ar_o_buf),
-        .ready(abif.ar_o_ready),
-        .selected(1),
-        .in_val(grant_sel!=0), //TODO: ask aryan
-        .r_out(abif.ar_o),
-        .out_val(ar_o_valid)
-    );
-
+    assign abif.ar_o_valid = abif.i_req_r | abif.d_req_r | abif.sp0_req_r | abif.sp1_req_r;
     // ============== AR END =============
 
     // ============== R BEGIN =============
-    axi_read_router ROUTER (
+    axi_read_router #(
+        .MID_SP0(0),
+        .MID_SP1(1),
+        .MID_I(2),
+        .MID_D(3)
+    ) ROUTER (
         CLK, nRST, abif
     );
     // ============== R END =============

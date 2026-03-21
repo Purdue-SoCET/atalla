@@ -101,8 +101,10 @@ interface axi_bus_if;
     // Top Level
     modport axi_read(
         // input from master
-        input ar_sp0_valid, ar_sp0_i, ar_sp1_valid, ar_sp1_i, ar_d_valid, ar_d_i, ar_i_valid, ar_i_i,
-
+        input ar_sp0_valid, ar_sp1_valid, ar_d_valid, ar_i_valid, 
+            ar_sp0_i, ar_sp1_i, ar_d_i, ar_i_i,
+            r_sp0_o_ready, r_sp1_o_ready, r_i_o_ready, r_d_o_ready,
+            
         // input from controller
         r_valid, r_i, // sub_r_channel_t 
         ar_o_ready,

@@ -16,8 +16,6 @@ import axi_bus_pkg::*;
     master_r_channel_t out_reg, n_out_reg;
     logic full, n_full;
 
-    assign out_val = in_val & selected;
-
     always_ff @ ( posedge CLK, negedge nRST ) begin
         if (~nRST) begin
             out_reg <= '0;
@@ -33,6 +31,7 @@ import axi_bus_pkg::*;
         n_full = full;
         n_out_reg = out_reg;
         r_out = 0;
+        out_val = (in_val & selected) || full;
 
         if (~ready && selected && !full) begin
             n_out_reg = r_in;
@@ -44,6 +43,7 @@ import axi_bus_pkg::*;
             n_out_reg = '0;
             r_out = out_reg;
             n_full = 0;
+            out_val = 0;
         end 
         else if (ready && ~full) r_out = r_in;
     end

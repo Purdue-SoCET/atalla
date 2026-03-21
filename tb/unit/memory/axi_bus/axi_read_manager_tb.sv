@@ -12,9 +12,9 @@ module axi_read_manager_tb ();
 
     logic CLK, nRST;
     
-    logic                 arready;
-    master_ar_channel_t   master_in;
     logic                 arvalid;
+    master_ar_channel_t   master_in;
+    logic                 arready;
     logic                 pop;
     sub_ar_channel_t      manager_out;
     logic                 req;
@@ -59,10 +59,10 @@ program test (
     input logic CLK,
     output logic                 nRST,
     // From Master
-    output logic                 arready, // master ready to send read request
+    output logic                 arvalid, // master ready to send read request
     output master_ar_channel_t   master_in,
     // To Master
-    input logic                arvalid, // manager valid to take signal
+    input logic                arready, // manager valid to take signal
     // From Read Controller
     output  logic                pop, // AR channel ready to take 
     // To Read Mux
@@ -81,7 +81,7 @@ program test (
 
     task reset_inputs;
     begin 
-        arready = 0;
+        arvalid = 0;
         master_in = '0;
         pop = 0;
 
@@ -117,7 +117,7 @@ program test (
         reset_inputs();
         repeat (3) @(negedge CLK);
         // master ready
-        arready = 1;
+        arvalid = 1;
         // fill master_in
         master_in.id    = 2'h2;
         master_in.addr  = 32'hDEADBEEF;
@@ -146,7 +146,7 @@ program test (
     task fill_pop_three;
     begin
         test_case = "Push Pop three";
-        arready = 1;
+        arvalid = 1;
 
         // first master_in
         master_in.id    = 2'h1;
@@ -221,7 +221,7 @@ program test (
         reset_dut;
         reset_inputs;
 
-        arready = 1;
+        arvalid = 1;
         // first master_in
         master_in.id    = 2'h1;
         master_in.addr  = 32'h1111_1111;
@@ -281,7 +281,7 @@ program test (
         reset_inputs;
         test_case = "Push Pop same time";
 
-        arready = 1;
+        arvalid = 1;
         // first master_in
         master_in.id    = 2'h1;
         master_in.addr  = 32'h1111_1111;

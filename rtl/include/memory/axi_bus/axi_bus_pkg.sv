@@ -105,9 +105,9 @@ package axi_bus_pkg;
     typedef struct packed {
         logic [ARADDR-1:0]   addr;
         logic [ARID-1:0]     id;     // Local (2-bit) ID: index within master
-        logic [ARSIZE-1:0]   size;
-        logic [ARLEN-1:0]    len;
-        logic [ARBURST-1:0]  burst;
+        logic [ARSIZE-1:0]   size;   // beat size
+        logic [ARLEN-1:0]    len;    // burst length
+        logic [ARBURST-1:0]  burst;  // burst mode (WRAP, INCR)
     } master_ar_channel_t;
 
     // R Channel To Master 

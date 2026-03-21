@@ -25,11 +25,12 @@ module axi_read_manager #(
 );
 
 sub_ar_channel_t fifo [AR_DEPTH];
-logic [AR_PTR_WIDTH-1:0] wr_ptr, rd_ptr; // wr -> write in fifo; rd -> read from fifo
+logic wrap_table [AR_DEPTH];
+logic [AR_PTR_WIDTH:0] wr_ptr, rd_ptr; // wr -> write in fifo; rd -> read from fifo
 
 logic full, empty;
-assign full  = (wr_ptr + 1'b1 == rd_ptr);
-assign empty = (wr_ptr == rd_ptr);
+assign full  = (wr_ptr[AR_PTR_WIDTH-1:0] == rd_ptr[AR_PTR_WIDTH-1:0]) && (wr_ptr[AR_PTR_WIDTH] != rd_ptr[AR_PTR_WIDTH]);
+assign empty = (wr_ptr[AR_PTR_WIDTH-1:0] == rd_ptr[AR_PTR_WIDTH-1:0]) && (wr_ptr[AR_PTR_WIDTH] == rd_ptr[AR_PTR_WIDTH]);
 
 logic push;
 assign arready = !full;
@@ -44,13 +45,13 @@ always_ff @ ( posedge CLK, negedge nRST ) begin
         
     end else begin
         if(push && !full) begin 
-            fifo[wr_ptr].valid  <= 1'b1;
-            fifo[wr_ptr].addr   <= master_in.addr;
-            fifo[wr_ptr].mid <= MASTER_ID;
-            fifo[wr_ptr].id <= master_in.id;
-            fifo[wr_ptr].size   <= master_in.size;
-            fifo[wr_ptr].len    <= master_in.len;
-            fifo[wr_ptr].burst  <= master_in.burst;
+            fifo[wr_ptr[AR_PTR_WIDTH-1:0]].valid  <= 1'b1;
+            fifo[wr_ptr[AR_PTR_WIDTH-1:0]].addr <= master_in.addr;
+            fifo[wr_ptr[AR_PTR_WIDTH-1:0]].mid <= MASTER_ID;
+            fifo[wr_ptr[AR_PTR_WIDTH-1:0]].id <= master_in.id;
+            fifo[wr_ptr[AR_PTR_WIDTH-1:0]].size <= master_in.size;
+            fifo[wr_ptr[AR_PTR_WIDTH-1:0]].len <= master_in.len;
+            fifo[wr_ptr[AR_PTR_WIDTH-1:0]].burst <= master_in.burst;
             wr_ptr <= wr_ptr + 1;
         end
     end 
@@ -68,7 +69,7 @@ always_ff @ ( posedge CLK, negedge nRST ) begin
 end 
 
 // output signal connection
-assign manager_out = fifo[rd_ptr];
+assign manager_out = fifo[rd_ptr[AR_PTR_WIDTH-1:0]];
 assign req = !empty;
 
 endmodule
