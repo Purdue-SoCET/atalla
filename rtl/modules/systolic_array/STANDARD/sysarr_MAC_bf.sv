@@ -61,9 +61,6 @@ module sysarr_MAC_bf #(
         nxt_input_x = input_x;
         nxt_weight  = weight;
         nxt_latched_weight_passon = latched_weight_passon;
-        // weight_next_en must be a one-cycle pulse following weight_en,
-        // not a latch. Previously it stayed high until MAC_shift cleared it,
-        // causing stale weight data to smear into right-neighbor PEs.
         next_weight_next_en = mac_if.weight_en;
 
         if (mac_if.weight_en) begin
@@ -127,15 +124,16 @@ module sysarr_MAC_bf #(
         logic [31:0] mul_result_comb;
 
         mul_bf_nolatch multply (
-            .a(input_x),
+            .a(nxt_input_x),
             .b(weight),
             .result(mul_result_comb),
             .mul_ovf(),
             .mul_unf()
         );
 
-        // Latch multiply result + start signal
+        // Latch multiply result, start signal, AND in_accumulate together.
         logic [31:0] mul_result_latched;
+        logic [DW_ACC-1:0] accum_latched;
         logic mul_ready, next_mul_ready;
 
         always_comb begin
@@ -148,9 +146,11 @@ module sysarr_MAC_bf #(
         always_ff @(posedge clk, negedge nRST) begin
             if (!nRST) begin
                 mul_result_latched <= '0;
+                accum_latched      <= '0;
                 mul_ready          <= 1'b0;
             end else if (!mac_if.stall_sa) begin
                 mul_result_latched <= mul_result_comb;
+                accum_latched      <= mac_if.in_accumulate;
                 mul_ready          <= next_mul_ready;
             end
         end
@@ -159,7 +159,7 @@ module sysarr_MAC_bf #(
         add_fp16_nolatch #(.MANT_W(23), .EXP_W(8)) adder (
             .sub(1'b0),
             .fp1_in(mul_result_latched),
-            .fp2_in(mac_if.in_accumulate),
+            .fp2_in(accum_latched),
             .fp_out(mac_if.out_accumulate)
         );
 
