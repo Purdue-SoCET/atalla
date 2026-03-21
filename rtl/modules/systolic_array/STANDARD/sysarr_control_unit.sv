@@ -21,13 +21,13 @@ module sysarr_control_unit #(
     // Total read-out cycles: lane N-1 starts at (N-1)*SKEW, reads N times
     localparam int BATCH_CYCLES = (N - 1) * SKEW + N;
 
-    // Credits: how many more input vectors we can accept 
+    // Credits: how many more input vectors we can accept
     logic [$clog2(N+1):0] credits, next_credits;
 
-    // Vector counter: how many vectors written since last batch start 
+    // Vector counter: how many vectors written since last batch start
     logic [$clog2(N+1):0] vec_cnt, next_vec_cnt;
 
-    // Batch read state 
+    // Batch read state
     logic batch_active, next_batch_active;
     logic [$clog2(BATCH_CYCLES):0] rd_cycle, next_rd_cycle;
 
@@ -42,17 +42,18 @@ module sysarr_control_unit #(
             next_vec_cnt = vec_cnt + 1;
         end
 
-        // credit logic 
+        // credit logic
         if (sa_input_en && credits > 0 && !sa_output)
             next_credits = credits - 1;
         else if (!(sa_input_en && credits > 0) && sa_output && credits < N)
             next_credits = credits + 1;
-        // else: both or neither so no change
 
+        // Start batch when N vectors accumulated
         if (!batch_active && next_vec_cnt >= N) begin
             next_batch_active = 1'b1;
             next_rd_cycle = '0;
-            next_vec_cnt = '0;
+            // Pipelined: subtract N instead of zeroing (preserve early next-GEMM vectors)
+            next_vec_cnt = next_vec_cnt - N;
         end
 
         // Batch read-out
@@ -88,7 +89,7 @@ module sysarr_control_unit #(
         end
     end
 
-    assign ready_in = (credits > 0) && !batch_active;
+    assign ready_in = (credits > 0);
     assign out_wr_en = '0;
 
 endmodule
