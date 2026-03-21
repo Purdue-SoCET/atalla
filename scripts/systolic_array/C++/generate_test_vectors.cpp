@@ -197,6 +197,45 @@ uint32_t sim_MEISSA32_col(
     return sim_adder_tree32(mul_results, psum, is_fp16);
 }
 
+uint32_t sim_STANDARD_col(
+                        const std::vector<uint16_t>& input_row,
+                        const std::vector<uint16_t>& weight_col,
+                        uint16_t psum,
+                        bool is_fp16)
+{
+    uint32_t acc = bf16_to_ui32(psum);
+
+    for (size_t i = 0; i < input_row.size(); ++i) {
+        uint32_t input32  = bf16_to_ui32(input_row[i]);
+        uint32_t weight32 = bf16_to_ui32(weight_col[i]);
+        uint32_t product  = sim_mul32(input32, weight32);
+        acc = sim_2_input_add32(acc, product, is_fp16);
+    }
+
+    return acc;
+}
+
+std::vector<std::vector<uint16_t>> sim_STANDARD(
+                                    const std::vector<std::vector<uint16_t>>& input,
+                                    const std::vector<std::vector<uint16_t>>& weight,
+                                    const std::vector<std::vector<uint16_t>>& psum,
+                                    bool is_fp16)
+{
+    std::vector<std::vector<uint16_t>> output(input.size(), std::vector<uint16_t>(input[0].size()));
+
+    for (int row = 0; row < (int)input.size(); ++row) {
+        for (int col = 0; col < (int)input[0].size(); ++col) {
+            std::vector<uint16_t> weight_col(weight.size());
+            for (int i = 0; i < (int)weight.size(); ++i) {
+                weight_col[i] = weight[i][col];
+            }
+            output[row][col] = fp32_to_bf16_bits(sim_STANDARD_col(input[row], weight_col, psum[row][col], is_fp16));
+        }
+    }
+
+    return output;
+}
+
 std::vector<std::vector<uint16_t>> sim_MEISSA32(
                                     const std::vector<std::vector<uint16_t>>& input, 
                                     const std::vector<std::vector<uint16_t>>& weight, 
@@ -380,8 +419,8 @@ void create_new_test(int test_num, int min_exponent, int max_exponent, const std
     }
     else if (VERSION == "STANDARD")
     {
-        // STANDARD: weight-stationary, BF16 mul -> FP32 acc -> BF16 reduce (same math as MEISSA32)
-        output_matrix = sim_MEISSA32(input_matrix, *weight, psum_matrix, IS_FP16);
+        // STANDARD: weight-stationary, sequential FP32 MAC accumulation
+        output_matrix = sim_STANDARD(input_matrix, *weight, psum_matrix, IS_FP16);
     }
     else
     {
@@ -461,8 +500,8 @@ int main() {
     }
     else if (VERSION == "STANDARD")
     {
-        // STANDARD: same BF16 mul -> FP32 acc -> BF16 reduce math as MEISSA32
-        output_matrix = sim_MEISSA32(input_matrix, weight_matrix, psum_matrix, IS_FP16);
+        // STANDARD: sequential FP32 MAC accumulation
+        output_matrix = sim_STANDARD(input_matrix, weight_matrix, psum_matrix, IS_FP16);
     }
     else
     {
