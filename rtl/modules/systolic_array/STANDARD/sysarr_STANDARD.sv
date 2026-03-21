@@ -128,6 +128,9 @@ module sysarr_STANDARD #(
 
     // track complete rows: col_valid[N-1] fires when the last column writes,
     logic [$clog2(N+1):0] rows_ready;
+    logic gated_buf_ren;
+    assign gated_buf_ren = (rows_ready > 0) && gsau_if.sa_ready_out;
+
     always_ff @(posedge clk, negedge nRST) begin
         if (!nRST)
             rows_ready <= '0;
@@ -139,9 +142,6 @@ module sysarr_STANDARD #(
             endcase
         end
     end
-
-    logic gated_buf_ren;
-    assign gated_buf_ren = (rows_ready > 0) && gsau_if.sa_ready_out;
 
     sysarr_buffer #(
         .NUM_COLS(N),
