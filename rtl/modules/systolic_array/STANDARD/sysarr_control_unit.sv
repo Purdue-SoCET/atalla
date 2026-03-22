@@ -10,7 +10,7 @@ module sysarr_control_unit #(
 )(
     input logic clk, nRST,
     input logic sa_input_en,        // external write to input buffer this cycle
-    input logic in_buffer_empty,    // lane0 of input buffer is empty (unused, kept for compat)
+    input logic in_buffer_empty,    // lane0 of input buffer is empty
     input logic sa_output,          // credit return pulse (sa_valid_in)
     output logic [N-1:0] in_rd_en,
     output logic [N-1:0] out_wr_en, // unused, kept for interface compat
@@ -18,77 +18,49 @@ module sysarr_control_unit #(
 );
 
     localparam int SKEW = ADD_2_INPUT_LATENCY;
-    // Total read-out cycles: lane N-1 starts at (N-1)*SKEW, reads N times
-    localparam int BATCH_CYCLES = (N - 1) * SKEW + N;
+    localparam int SR_LEN = (N - 1) * SKEW;
 
-    // Credits: how many more input vectors we can accept 
+    // Credits: how many more input vectors we can accept
     logic [$clog2(N+1):0] credits, next_credits;
 
-    // Vector counter: how many vectors written since last batch start 
-    logic [$clog2(N+1):0] vec_cnt, next_vec_cnt;
+    // Skew shift register: lane0_rd enters at bit 0, propagates right.
+    // Lane m taps bit (m*SKEW - 1).
+    logic [SR_LEN-1:0] skew_sr;
 
-    // Batch read state 
-    logic batch_active, next_batch_active;
-    logic [$clog2(BATCH_CYCLES):0] rd_cycle, next_rd_cycle;
+    // Lane 0 reads whenever buffer has data
+    logic lane0_rd;
+    assign lane0_rd = !in_buffer_empty;
 
+    // Per-lane read enables from shift register taps
+    always_comb begin
+        in_rd_en[0] = lane0_rd;
+        for (int m = 1; m < N; m++) begin
+            in_rd_en[m] = skew_sr[m * SKEW - 1];
+        end
+    end
+
+    // Credit logic
     always_comb begin
         next_credits = credits;
-        next_vec_cnt = vec_cnt;
-        next_batch_active = batch_active;
-        next_rd_cycle = rd_cycle;
-        in_rd_en = '0;
-
-        if (sa_input_en) begin
-            next_vec_cnt = vec_cnt + 1;
-        end
-
-        // credit logic 
-        if (sa_input_en && credits > 0 && !sa_output)
+        if (sa_input_en && !sa_output && credits > 0)
             next_credits = credits - 1;
-        else if (!(sa_input_en && credits > 0) && sa_output && credits < N)
+        else if (!sa_input_en && sa_output && credits < N)
             next_credits = credits + 1;
-        // else: both or neither so no change
-
-        if (!batch_active && next_vec_cnt >= N) begin
-            next_batch_active = 1'b1;
-            next_rd_cycle = '0;
-            next_vec_cnt = '0;
-        end
-
-        // Batch read-out
-        if (batch_active) begin
-            for (int m = 0; m < N; m++) begin
-                if (rd_cycle >= m * SKEW && rd_cycle < m * SKEW + N) begin
-                    in_rd_en[m] = 1'b1;
-                end
-            end
-
-            if (rd_cycle < BATCH_CYCLES - 1) begin
-                next_rd_cycle = rd_cycle + 1;
-            end else begin
-                // Batch complete
-                next_batch_active = 1'b0;
-                next_rd_cycle = '0;
-            end
-        end
     end
 
-    // --- Registers ---
+    // Registers
     always_ff @(posedge clk or negedge nRST) begin
         if (!nRST) begin
-            credits      <= N;
-            vec_cnt      <= '0;
-            batch_active <= 1'b0;
-            rd_cycle     <= '0;
+            credits <= N;
+            skew_sr <= '0;
         end else begin
-            credits      <= next_credits;
-            vec_cnt      <= next_vec_cnt;
-            batch_active <= next_batch_active;
-            rd_cycle     <= next_rd_cycle;
+            credits <= next_credits;
+            skew_sr <= {skew_sr[SR_LEN-2:0], lane0_rd};
         end
     end
 
-    assign ready_in = |next_credits;
+    assign ready_in  = |next_credits;
     assign out_wr_en = '0;
 
 endmodule
+  
