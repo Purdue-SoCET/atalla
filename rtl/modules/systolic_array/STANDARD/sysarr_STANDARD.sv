@@ -1,197 +1,94 @@
-`timescale 1ns/1ps
-`include "gsau_control_unit_if.vh"
-`include "sys_arr_pkg.vh"
+// sysarr_control_unit.sv
+// rewrote it bc i couldnt get it to work on the other one sorry
 
-/* verilator lint_off IMPORTSTAR */
-import sys_arr_pkg::*;
-/* verilator lint_on IMPORTSTAR */
-
-module sysarr_STANDARD #(
-    parameter int MAC_LATENCY = 2 // 2 or 4c macs
+module sysarr_control_unit #(
+    parameter int N = 8,
+    parameter int GROUP_SIZE = 1,
+    parameter int ADD_2_INPUT_LATENCY = 2,
+    parameter int ADD_4_INPUT_LATENCY = 0,
+    parameter int MUL_LATENCY = 2
 )(
-    input logic clk,
-    input logic nRST,
-    gsau_control_unit_if.systolic_array gsau_if
+    input logic clk, nRST,
+    input logic sa_input_en,        // external write to input buffer this cycle
+    input logic in_buffer_empty,    // lane0 of input buffer is empty (unused, kept for compat)
+    input logic sa_output,          // credit return pulse (sa_valid_in)
+    output logic [N-1:0] in_rd_en,
+    output logic [N-1:0] out_wr_en, // unused, kept for interface compat
+    output logic ready_in
 );
 
-    localparam int PIPELINE_DEPTH = MAC_LATENCY + (N - 1);
-    localparam int SRAM_DEPTH = N + PIPELINE_DEPTH;
+    localparam int SKEW = ADD_2_INPUT_LATENCY;
+    // Total read-out cycles: lane N-1 starts at (N-1)*SKEW, reads N times
+    localparam int BATCH_CYCLES = (N - 1) * SKEW + N;
 
-    // Control signals
-    logic [N-1:0] in_rd_en, out_wr_en, in_rdone;
-    logic in_buffer_empty;
-    logic batch_gen;
+    // Credits: how many more input vectors we can accept 
+    logic [$clog2(N+1):0] credits, next_credits;
 
-    // Input buffer: per-lane circular SRAM with independent read pointers.
-    // Control unit skews reads so lane m fires m*MAC_LATENCY cycles after lane 0.
-    logic [N-1:0][DW-1:0] buffered_inputs;
+    // Vector counter: how many vectors written since last batch start 
+    logic [$clog2(N+1):0] vec_cnt, next_vec_cnt;
 
-    sysarr_buffer #(
-        .NUM_COLS(N),
-        .DATA_WIDTH(DW),
-        .SRAM_DEPTH(SRAM_DEPTH),
-        .IN_OUT(0)
-    ) input_buffer (
-        .clk(clk),
-        .nRST(nRST),
-        .stall(1'b0),
-        .wr_en(gsau_if.sa_input_en),
-        .wr_data(gsau_if.sa_array_in),
-        .rd_en(in_rd_en),
-        .rd_data(buffered_inputs),
-        .rdone(in_rdone),
-        .lane0_empty(in_buffer_empty),
-        .full()
-    );
+    // Batch read state 
+    logic batch_active, next_batch_active;
+    logic [$clog2(BATCH_CYCLES):0] rd_cycle, next_rd_cycle;
 
-    // Weights bypass the input buffer — driven directly to mac_grid
-    logic [N*DW-1:0] grid_inputs;
-    assign grid_inputs = gsau_if.sa_weight_en ? gsau_if.sa_array_in : buffered_inputs;
+    always_comb begin
+        next_credits = credits;
+        next_vec_cnt = vec_cnt;
+        next_batch_active = batch_active;
+        next_rd_cycle = rd_cycle;
+        in_rd_en = '0;
 
-    // BF16 to FP32 conversion for partial sums
-    logic [N - 1:0][DW_ACC - 1:0] psum_wr_data;
-    genvar m;
-    generate
-        for (m = 0; m < N; m++) begin: psum_widen
-            logic [DW - 1:0] bf16_psum;
-            assign bf16_psum = gsau_if.sa_array_in_partials[m * DW +: DW];
-            assign psum_wr_data[m] = {bf16_psum[15], bf16_psum[14:7], bf16_psum[6:0], 16'b0};
+        if (sa_input_en) begin
+            next_vec_cnt = vec_cnt + 1;
         end
-    endgenerate
 
-    // Partial sum skew buffer for timing alignment
-    logic [N*DW_ACC-1:0] skewed_partials;
+        // credit logic 
+        if (sa_input_en && credits > 0 && !sa_output)
+            next_credits = credits - 1;
+        else if (!(sa_input_en && credits > 0) && sa_output && credits < N)
+            next_credits = credits + 1;
+        // else: both or neither so no change
 
-    skew_buffer #(
-        .NUM_COLS(N),
-        .COL_WIDTH(DW_ACC),
-        .RECT_DELAY(MAC_LATENCY),
-        .DELAY_SLOPE(1),
-        .REVERSE_TRIANGLE(0)
-    ) psum_buffer (
-        .clk(clk),
-        .n_rst(nRST),
-        .stall(1'b0),
-        .wr_data(psum_wr_data),
-        .rd_data(skewed_partials)
-    );
-
-    // Per-row enable for mac_grid, derived from in_rd_en delayed by SRAM read latency (1 cycle).
-    logic [N-1:0] row_en;
-
-    always_ff @(posedge clk, negedge nRST) begin
-        if (!nRST)
-            row_en <= '0;
-        else
-            row_en <= in_rd_en;
-    end
-
-    // MAC grid
-    logic [N*DW_ACC-1:0] grid_out;
-    logic [N-1:0] col_valid;
-
-    mac_grid #(
-        .MAC_LATENCY(MAC_LATENCY)
-    ) u_mac_grid (
-        .clk(clk),
-        .nRST(nRST),
-        .sa_inputs(grid_inputs),
-        .weight_en(gsau_if.sa_weight_en),
-        .row_en(row_en),
-        .partial_in(skewed_partials),
-        .stall(1'b0),
-        .batch_gen(batch_gen),
-        .grid_out(grid_out),
-        .col_valid(col_valid)
-    );
-
-    // FP32 to BF16 reducers (one per column)
-    logic [N - 1:0][DW - 1:0] reduced_data;
-    genvar r;
-    generate
-        for (r = 0; r < N; r++) begin: reduce
-            reducer #(
-                .IN_EXP_W(8),
-                .IN_MANT_W(23),
-                .OUT_EXP_W(8),
-                .OUT_MANT_W(7)
-            ) u_reducer (
-                .fp_in(grid_out[r*DW_ACC +: DW_ACC]),
-                .fp_out(reduced_data[r])
-            );
+        if (!batch_active && next_vec_cnt >= N) begin
+            next_batch_active = 1'b1;
+            next_rd_cycle = '0;
+            next_vec_cnt = '0;
         end
-    endgenerate
 
-    // Output buffer (IN_OUT=1: wr_en=SRAM read, rd_en=SRAM write)
-    logic [N-1:0][DW-1:0] output_data;
-    logic out_buf_empty;
+        // Batch read-out
+        if (batch_active) begin
+            for (int m = 0; m < N; m++) begin
+                if (rd_cycle >= m * SKEW && rd_cycle < m * SKEW + N) begin
+                    in_rd_en[m] = 1'b1;
+                end
+            end
 
-    // Track complete rows: col_valid[N-1] fires when the last column writes,
-    // meaning all N columns for that result row are in the buffer.
-    logic [$clog2(N+1):0] rows_ready;
-    logic gated_buf_ren;
-    assign gated_buf_ren = (rows_ready > 0) && gsau_if.sa_ready_out;
-
-    always_ff @(posedge clk, negedge nRST) begin
-        if (!nRST)
-            rows_ready <= '0;
-        else begin
-            case ({col_valid[N-1], gated_buf_ren})
-                2'b10:   rows_ready <= rows_ready + 1;
-                2'b01:   rows_ready <= rows_ready - 1;
-                default: rows_ready <= rows_ready;
-            endcase
+            if (rd_cycle < BATCH_CYCLES - 1) begin
+                next_rd_cycle = rd_cycle + 1;
+            end else begin
+                // Batch complete
+                next_batch_active = 1'b0;
+                next_rd_cycle = '0;
+            end
         end
     end
 
-    sysarr_buffer #(
-        .NUM_COLS(N),
-        .DATA_WIDTH(DW),
-        .SRAM_DEPTH(SRAM_DEPTH),
-        .IN_OUT(1)
-    ) output_buffer (
-        .clk(clk),
-        .nRST(nRST),
-        .stall(1'b0),
-        .wr_en(gated_buf_ren),
-        .wr_data(reduced_data),
-        .rd_en(col_valid),
-        .rd_data(output_data),
-        .rdone(),
-        .lane0_empty(out_buf_empty),
-        .full()
-    );
-
-    assign gsau_if.sa_array_output = output_data;
-
-    // sa_valid_in: valid 1 cycle after a gated read fires (SRAM read latency = 1)
-    logic sa_valid;
-    always_ff @(posedge clk, negedge nRST) begin
-        if (!nRST)
-            sa_valid <= 1'b0;
-        else
-            sa_valid <= gated_buf_ren;
+    // registers
+    always_ff @(posedge clk or negedge nRST) begin
+        if (!nRST) begin
+            credits      <= N;
+            vec_cnt      <= '0;
+            batch_active <= 1'b0;
+            rd_cycle     <= '0;
+        end else begin
+            credits      <= next_credits;
+            vec_cnt      <= next_vec_cnt;
+            batch_active <= next_batch_active;
+            rd_cycle     <= next_rd_cycle;
+        end
     end
 
-    assign gsau_if.sa_valid_in = sa_valid;
-
-    // Control unit with per-lane skewing (GROUP_SIZE=1)
-    sysarr_control_unit #(
-        .N(N),
-        .GROUP_SIZE(1),
-        .ADD_2_INPUT_LATENCY(MAC_LATENCY),
-        .ADD_4_INPUT_LATENCY(0),
-        .MUL_LATENCY(MAC_LATENCY)
-    ) control_unit (
-        .clk(clk),
-        .nRST(nRST),
-        .sa_input_en(gsau_if.sa_input_en),
-        .in_buffer_empty(in_buffer_empty),
-        .sa_output(gsau_if.sa_valid_in),
-        .in_rd_en(in_rd_en),
-        .out_wr_en(out_wr_en),
-        .ready_in(gsau_if.sa_ready_in),
-        .batch_gen(batch_gen)
-    );
+    assign ready_in = (credits > 0) && !batch_active;
+    assign out_wr_en = '0;
 
 endmodule
