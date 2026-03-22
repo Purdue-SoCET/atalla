@@ -14,7 +14,8 @@ module sysarr_control_unit #(
     input logic sa_output,          // credit return pulse (sa_valid_in)
     output logic [N-1:0] in_rd_en,
     output logic [N-1:0] out_wr_en, // unused, kept for interface compat
-    output logic ready_in
+    output logic ready_in,
+    output logic batch_gen           // generation tag: toggles each batch start
 );
 
     localparam int SKEW = ADD_2_INPUT_LATENCY;
@@ -31,11 +32,15 @@ module sysarr_control_unit #(
     logic batch_active, next_batch_active;
     logic [$clog2(BATCH_CYCLES):0] rd_cycle, next_rd_cycle;
 
+    // Generation tag
+    logic next_batch_gen;
+
     always_comb begin
         next_credits = credits;
         next_vec_cnt = vec_cnt;
         next_batch_active = batch_active;
         next_rd_cycle = rd_cycle;
+        next_batch_gen = batch_gen;
         in_rd_en = '0;
 
         if (sa_input_en) begin
@@ -47,6 +52,7 @@ module sysarr_control_unit #(
             next_credits = credits - 1;
         else if (!(sa_input_en && credits > 0) && sa_output && credits < N)
             next_credits = credits + 1;
+        // else: both or neither so no change
 
         // Start batch when N vectors accumulated
         if (!batch_active && next_vec_cnt >= N) begin
@@ -54,6 +60,8 @@ module sysarr_control_unit #(
             next_rd_cycle = '0;
             // Pipelined: subtract N instead of zeroing (preserve early next-GEMM vectors)
             next_vec_cnt = next_vec_cnt - N;
+            // Toggle generation tag
+            next_batch_gen = ~batch_gen;
         end
 
         // Batch read-out
@@ -81,14 +89,17 @@ module sysarr_control_unit #(
             vec_cnt      <= '0;
             batch_active <= 1'b0;
             rd_cycle     <= '0;
+            batch_gen    <= 1'b0;
         end else begin
             credits      <= next_credits;
             vec_cnt      <= next_vec_cnt;
             batch_active <= next_batch_active;
             rd_cycle     <= next_rd_cycle;
+            batch_gen    <= next_batch_gen;
         end
     end
 
+    // Pipelined: ready_in depends only on credits, not batch_active
     assign ready_in = (credits > 0);
     assign out_wr_en = '0;
 

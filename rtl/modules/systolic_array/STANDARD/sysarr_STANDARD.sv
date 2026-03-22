@@ -20,6 +20,7 @@ module sysarr_STANDARD #(
     // Control signals
     logic [N-1:0] in_rd_en, out_wr_en, in_rdone;
     logic in_buffer_empty;
+    logic batch_gen;
 
     // Input buffer: per-lane circular SRAM with independent read pointers.
     // Control unit skews reads so lane m fires m*MAC_LATENCY cycles after lane 0.
@@ -43,7 +44,7 @@ module sysarr_STANDARD #(
         .full()
     );
 
-    // Weights bypass the input buffer driven directly to mac_grid
+    // Weights bypass the input buffer — driven directly to mac_grid
     logic [N*DW-1:0] grid_inputs;
     assign grid_inputs = gsau_if.sa_weight_en ? gsau_if.sa_array_in : buffered_inputs;
 
@@ -99,6 +100,7 @@ module sysarr_STANDARD #(
         .row_en(row_en),
         .partial_in(skewed_partials),
         .stall(1'b0),
+        .batch_gen(batch_gen),
         .grid_out(grid_out),
         .col_valid(col_valid)
     );
@@ -121,12 +123,11 @@ module sysarr_STANDARD #(
     endgenerate
 
     // Output buffer (IN_OUT=1: wr_en=SRAM read, rd_en=SRAM write)
-    // Use col_valid as per-lane write enables - each column's result arrives
-    // at a different time due to horizontal shift, so they write ind
     logic [N-1:0][DW-1:0] output_data;
     logic out_buf_empty;
 
-    // track complete rows: col_valid[N-1] fires when the last column writes,
+    // Track complete rows: col_valid[N-1] fires when the last column writes,
+    // meaning all N columns for that result row are in the buffer.
     logic [$clog2(N+1):0] rows_ready;
     logic gated_buf_ren;
     assign gated_buf_ren = (rows_ready > 0) && gsau_if.sa_ready_out;
@@ -174,7 +175,7 @@ module sysarr_STANDARD #(
 
     assign gsau_if.sa_valid_in = sa_valid;
 
-    // control unit with per-lane skewing 
+    // Control unit with per-lane skewing (GROUP_SIZE=1)
     sysarr_control_unit #(
         .N(N),
         .GROUP_SIZE(1),
@@ -189,7 +190,8 @@ module sysarr_STANDARD #(
         .sa_output(gsau_if.sa_valid_in),
         .in_rd_en(in_rd_en),
         .out_wr_en(out_wr_en),
-        .ready_in(gsau_if.sa_ready_in)
+        .ready_in(gsau_if.sa_ready_in),
+        .batch_gen(batch_gen)
     );
 
 endmodule
