@@ -47,33 +47,33 @@ module sysarr_STANDARD #(
     logic [N*DW-1:0] grid_inputs;
     assign grid_inputs = gsau_if.sa_weight_en ? gsau_if.sa_array_in : buffered_inputs;
 
-    // BF16 to FP32 conversion for partial sums
-    logic [N - 1:0][DW_ACC - 1:0] psum_wr_data;
-    genvar m;
-    generate
-        for (m = 0; m < N; m++) begin: psum_widen
-            logic [DW - 1:0] bf16_psum;
-            assign bf16_psum = gsau_if.sa_array_in_partials[m * DW +: DW];
-            assign psum_wr_data[m] = {bf16_psum[15], bf16_psum[14:7], bf16_psum[6:0], 16'b0};
-        end
-    endgenerate
+    // // BF16 to FP32 conversion for partial sums
+    // logic [N - 1:0][DW_ACC - 1:0] psum_wr_data;
+    // genvar m;
+    // generate
+    //     for (m = 0; m < N; m++) begin: psum_widen
+    //         logic [DW - 1:0] bf16_psum;
+    //         assign bf16_psum = gsau_if.sa_array_in_partials[m * DW +: DW];
+    //         assign psum_wr_data[m] = {bf16_psum[15], bf16_psum[14:7], bf16_psum[6:0], 16'b0};
+    //     end
+    // endgenerate
 
-    // Partial sum skew buffer for timing alignment
-    logic [N*DW_ACC-1:0] skewed_partials;
+    // // Partial sum skew buffer for timing alignment
+    // logic [N*DW_ACC-1:0] skewed_partials;
 
-    skew_buffer #(
-        .NUM_COLS(N),
-        .COL_WIDTH(DW_ACC),
-        .RECT_DELAY(MAC_LATENCY),
-        .DELAY_SLOPE(1),
-        .REVERSE_TRIANGLE(0)
-    ) psum_buffer (
-        .clk(clk),
-        .n_rst(nRST),
-        .stall(1'b0),
-        .wr_data(psum_wr_data),
-        .rd_data(skewed_partials)
-    );
+    // skew_buffer #(
+    //     .NUM_COLS(N),
+    //     .COL_WIDTH(DW_ACC),
+    //     .RECT_DELAY(MAC_LATENCY),
+    //     .DELAY_SLOPE(1),
+    //     .REVERSE_TRIANGLE(0)
+    // ) psum_buffer (
+    //     .clk(clk),
+    //     .n_rst(nRST),
+    //     .stall(1'b0),
+    //     .wr_data(psum_wr_data),
+    //     .rd_data(skewed_partials)
+    // );
 
     // Per-row enable for mac_grid, derived from in_rd_en delayed by SRAM read latency (1 cycle).
     logic [N-1:0] row_en;
@@ -97,7 +97,7 @@ module sysarr_STANDARD #(
         .sa_inputs(grid_inputs),
         .weight_en(gsau_if.sa_weight_en),
         .row_en(row_en),
-        .partial_in(skewed_partials),
+        .partial_in('0),
         .stall(1'b0),
         .grid_out(grid_out),
         .col_valid(col_valid)
