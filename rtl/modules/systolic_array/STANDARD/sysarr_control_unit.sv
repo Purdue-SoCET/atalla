@@ -88,7 +88,7 @@ module sysarr_control_unit #(
         end
     end
 
-    assign ready_in = (credits > 0) && !batch_active;
+    assign ready_in = |next_credits;
     assign out_wr_en = '0;
 
 endmodule
