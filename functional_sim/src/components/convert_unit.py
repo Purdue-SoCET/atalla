@@ -1,5 +1,6 @@
 import numpy as np
 from typing import Optional, Union
+from .perf_metrics import PerfMetrics
 
 
 # -------------------------
@@ -40,9 +41,13 @@ class MoveConvertUnit:
       - BF16 -> INT32: numeric conversion (trunc toward zero)
     """
 
-    def __init__(self, default_VL: int = 32, bf16_rounding: bool = True):
+    def __init__(self, default_VL: int = 32, bf16_rounding: bool = True, perf_metrics: PerfMetrics = None):
         self.default_VL = int(default_VL)
         self.bf16_rounding = bool(bf16_rounding)
+        self.perf_metrics = perf_metrics if perf_metrics is not None else PerfMetrics()
+
+    def _count_ops(self, amount: int = 1):
+        self.perf_metrics.increment("moveconvert_ops", int(max(0, amount)))
 
     # -------------------------
     # INT32 -> BF16 (numeric)
@@ -53,6 +58,7 @@ class MoveConvertUnit:
         - x: int or array-like
         Returns: numpy array of dtype float32 containing BF16-quantized values.
         """
+        self._count_ops(1)
         arr = np.asarray(x, dtype=np.int32)
         # numeric convert: int -> float32 -> bf16-quantize
         f = arr.astype(np.float32)
@@ -68,6 +74,7 @@ class MoveConvertUnit:
         - bf16_arr: numpy array containing BF16-emulated float32 values (or float32)
         Returns: numpy array of dtype int32
         """
+        self._count_ops(1)
         f = np.asarray(bf16_arr, dtype=np.float32)
         # numeric truncation toward zero
         i = np.trunc(f.astype(np.float32)).astype(np.int32)
@@ -81,6 +88,7 @@ class MoveConvertUnit:
         Extract element vec[index] and return it as BF16-emulated float32 scalar.
         Index supports negative indexing like Python.
         """
+        self._count_ops(1)
         v = np.asarray(vec, dtype=np.float32)
         if v.ndim != 1:
             raise ValueError("vector_extract expects a 1D vector")
@@ -104,6 +112,7 @@ class MoveConvertUnit:
         If scalar is float (or BF16-emulated float32), quantize to BF16 and broadcast.
         Returns BF16-emulated float32 vector of length VL.
         """
+        self._count_ops(1)
         vl = int(VL) if VL is not None else self.default_VL
 
         # If scalar is array-like with length matching vl, just quantize/broadcast elementwise.
