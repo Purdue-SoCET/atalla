@@ -15,7 +15,7 @@ from .build import *
 def main():
     ap = argparse.ArgumentParser()
     ap.add_argument("-i", "--input", type=Path, default=None, help="Input assembly file")
-    ap.add_argument("-o", "--output", type=Path, default='./layernorm.in', help="Output test file")
+    ap.add_argument("-o", "--output", type=Path, default='./tests/layernorm.in', help="Output test file")
     ap.add_argument("--no-graph", action="store_true", help="Disable dependency graph packet scheduling")
     ap.add_argument("--data", type=Path, default=None,
                     help="Path to input tile CSV data file (N×N). If omitted, uses hardcoded defaults.")
@@ -82,9 +82,9 @@ def main():
         add.vv   $21, $20, $21, 1, 0                # partial sum 0 + partial sum 1
         add.vv   $22, $22, $23, 1, 0                # partial sum 2 + partial sum 3
         add.vv   $24, $21, $22, 1, 0                # layer mean sum in $24
-        
+
         mul.vs   $24, $24, $14, 1                   # layer mean sum * inv(N^2) -> final mean in $24
-        
+
         sub.vv   $30, $10, $24, 1, 0                # normalized numerator row 0 = row 0 - mean
         sub.vv   $31, $11, $24, 1, 0                # normalized numerator row 1 = row 1 - mean
         sub.vv   $32, $12, $24, 1, 0                # normalized numerator row 2 = row 2 - mean
