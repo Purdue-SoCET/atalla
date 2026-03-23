@@ -42,6 +42,7 @@ wdq_slot_t wdq_slot;
 // CNTRL
 logic [7:0]                wstrb; // -> WQ
 logic [2:0]                wlen; // -> WQ
+logic                      wvalid; // -> WQ
 logic                      wready, bwvalid; // -> AXI
 logic [1:0]                bwresp; // -> AXI
 logic [$clog2(ID_NUM)-1:0] bwid; // -> AXI

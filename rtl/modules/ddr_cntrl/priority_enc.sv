@@ -5,6 +5,7 @@
 //   out   [3:0] - encoded index of the highest-priority (lowest) active bit
 //   valid       - high when at least one input bit is active; low when in == 16'h0
 
+
 module priority_enc (
     input  logic [BANK_NUM-1:0] in,
     output logic [$clog2(BANK_NUM)-1:0]  out,

@@ -45,8 +45,7 @@ module nb_barb_tb;
         end
     endtask
 
-    initial begin 
-initial begin 
+    initial begin  
         // 1. Initialization
         nRST = 1;
         ddrif.be_queue_ready = '0;
@@ -90,7 +89,6 @@ initial begin
         @(negedge CLK);
         $display("\n--- All DRAM behavior tests passed ---");
         $finish;
-    end
     end
 
 endmodule
