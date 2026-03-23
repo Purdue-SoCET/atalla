@@ -48,14 +48,14 @@ module TPU_top #(
         .nRST(nRST),
         .in_buffer_empty(in_buffer_empty),
         .vector_in(gsau_if.sa_input_en),
-        .vector_out(gsau_if.sa_valid_in),
         .rdone(rdone),
         .vector_done(vector_done),
         .ready_out(gsau_if.sa_ready_out),
         .in_rd_en(in_rd_en),
         .out_wr_en(out_wr_en),
         .ready_in(gsau_if.sa_ready_in),
-        .out_rd_en(out_rd_en)
+        .out_rd_en(out_rd_en),
+        .vector_out(gsau_if.sa_valid_in)
     );
 
     // TODO: Instantiate input buffer
@@ -95,7 +95,9 @@ genvar k;
             for(j = 0; j < N; j++) begin: col
                 always_ff @ (posedge clk, negedge nRST) begin : in_pipe_register
                     if (!nRST) begin
+                        /* verilator lint_off WIDTHCONCAT */
                         in_pipe <= '0;
+                        /* verilator lint_on WIDTHCONCAT */
                     end else begin
                         if(j == 0) begin
                             if (gsau_if.sa_weight_en) begin

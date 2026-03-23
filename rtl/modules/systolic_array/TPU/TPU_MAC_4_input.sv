@@ -72,7 +72,8 @@ generate
             .fp1_in(add_4_input_out),
             // .fp2_in(psum_buffer[DELAY_TO_PSUM-1]),
             .fp2_in(psum_in),
-            .fp_out(out)
+            .fp_out(out),
+            .done()
         );
     end
     else begin: bf16_adder

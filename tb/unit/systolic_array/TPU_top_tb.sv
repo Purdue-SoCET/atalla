@@ -409,13 +409,6 @@ initial begin
         if(stall_counter > $urandom_range(10, 0)) begin
             stall_counter = 0;
         end
-        // if ($urandom_range(0,99) < 30) begin
-        //     gsau_if.sa_ready_out = 1'b0;
-        //     for (int k = 0; k < $urandom_range(1, 20); k++) begin
-        //         @(posedge CLK);
-        //     end
-        //     gsau_if.sa_ready_out = 1'b1;
-        // end
 
         if (gsau_if.sa_valid_in) begin
             // Collect output row

@@ -32,7 +32,8 @@ generate
             .a(in),
             .b(weight),
             .stall(1'b0),
-            .result(result)
+            .result(result),
+            .done()
         );
     end
     else begin: bf16_multiplier
@@ -42,7 +43,10 @@ generate
             .start(1'b1),
             .a(in),
             .b(weight),
-            .result(result)
+            .result(result),
+            .mul_unf(),
+            .mul_ovf(),
+            .done()
         );
     end
 endgenerate
