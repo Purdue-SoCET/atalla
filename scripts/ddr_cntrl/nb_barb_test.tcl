@@ -58,7 +58,7 @@ puts "=============================================================="
 
 # --- Elaboration & Simulation ---
 # +acc enables visibility for waveform debugging
-vsim -voptargs="+acc" work.$TB_TOP
+vsim -c -voptargs="+acc" work.$TB_TOP
 
 run -all
 

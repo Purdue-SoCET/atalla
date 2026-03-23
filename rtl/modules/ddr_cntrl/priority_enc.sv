@@ -6,7 +6,9 @@
 //   valid       - high when at least one input bit is active; low when in == 16'h0
 
 
-module priority_enc (
+module priority_enc #(
+    BANK_NUM = 8
+)(
     input  logic [BANK_NUM-1:0] in,
     output logic [$clog2(BANK_NUM)-1:0]  out,
     output logic        valid

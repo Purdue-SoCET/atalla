@@ -11,7 +11,7 @@ module nb_barb(
     //Selected bank priority encoder instantiation and logic. 
     logic [$clog2(BANK_NUM)-1:0] selected_bank;
     logic selected_bank_ready;
-    priority_enc ENCODER_SEL ((barb.be_queue_ready & barb.be_arb), selected_bank, selected_bank_ready);
+    priority_enc #(.BANK_NUM(16)) ENCODER_SEL ((barb.be_queue_ready & barb.be_arb), selected_bank, selected_bank_ready);
 
     //tCCD timers instantiations.
     logic rollover_L, rollover_S;
@@ -58,7 +58,7 @@ module nb_barb(
     //Priority encoder for finding bank with priority.
     logic [$clog2(BANK_NUM)-1:0] priority_idx;
     logic idrc; //I don't really care about what this bit is, it should always be one. 
-    priority_enc ENCODER_PRI (priority_sr, priority_idx, idrc);
+    priority_enc #(.BANK_NUM(16)) ENCODER_PRI (priority_sr, priority_idx, idrc);
 
     //  register storing bank group of the last command. This ensures the compliance of timing parameters of two 
     //  successive transactions that target the same bank group. This timimg parameter, tCCD_L, is slightly more 
