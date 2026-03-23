@@ -19,10 +19,12 @@ Opcode format: INT8 (0-255)
 """
 
 import numpy as np
+from typing import Optional
 from .gemm import SystolicArray, to_bf16
 from .vector_lanes import VectorLanes
 from .scalar import ScalarALU
 from .convert_unit import MoveConvertUnit
+from .perf_metrics import PerfMetrics
 
 # ============================================================
 # Mnemonic tables
@@ -124,15 +126,29 @@ class ExecuteUnit:
     def __init__(self,
                  vector_length: int = 32,
                  matmul_tile: int = 32,
-                 num_scalar_lanes: int = 1):
+                 num_scalar_lanes: int = 1,
+                 perf_metrics: Optional[PerfMetrics] = None):
         self.vl = int(vector_length)
         self.matmul_tile = int(matmul_tile)
+        self.perf_metrics = perf_metrics if perf_metrics is not None else PerfMetrics()
 
         # instantiate sub-units
-        self.vec = VectorLanes(VL=self.vl)
-        self.scalar = ScalarALU(num_lanes=num_scalar_lanes)
-        self.matmul = SystolicArray(size=self.matmul_tile)
-        self.mov = MoveConvertUnit(default_VL=self.vl)
+        self.vec = VectorLanes(VL=self.vl, perf_metrics=self.perf_metrics)
+        self.scalar = ScalarALU(num_lanes=num_scalar_lanes, perf_metrics=self.perf_metrics)
+        self.matmul = SystolicArray(size=self.matmul_tile, perf_metrics=self.perf_metrics)
+        self.mov = MoveConvertUnit(default_VL=self.vl, perf_metrics=self.perf_metrics)
+
+    def reset_flops(self):
+        self.perf_metrics.set_metric("flops_total", 0)
+        self.perf_metrics.set_metric("flops_scalar", 0)
+        self.perf_metrics.set_metric("flops_vector", 0)
+        self.perf_metrics.set_metric("flops_matmul", 0)
+        self.vec.reset_flops()
+        self.matmul.reset_flops()
+
+    @property
+    def flops(self) -> int:
+        return int(self.perf_metrics.get_metric("flops_total", 0))
 
     # ----------------------------------------------------------
     # Decode helper
@@ -172,7 +188,6 @@ class ExecuteUnit:
         # VECTOR
         # =======================================================
         if instr in MNEMONIC_VECTOR:
-            op = MNEMONIC_VECTOR[instr]
             return self.vec.execute(instr, vA, vB, sA, slr, mask)
 
         # =======================================================

@@ -18,6 +18,7 @@ if __name__ == "__main__":
     ap.add_argument("--output_mreg_file", type=str, default="./out/output_mregs.out", help="Path to output matrix registers file")
     ap.add_argument("--output_scpad_file0", type=str, default="./out/output_scpad0.out", help="Path to output scratchpad 0 file")
     ap.add_argument("--output_scpad_file1", type=str, default="./out/output_scpad1.out", help="Path to output scratchpad 1 file")
+    ap.add_argument("--output_perf_file", type=str, default="./out/output_perf_metrics.out", help="Path to output performance metrics file")
     ap.add_argument("--debug", action="store_true", help="Enable debug mode with verbose output")
     args = ap.parse_args()
 
@@ -34,6 +35,6 @@ if __name__ == "__main__":
 
     print(f"[INFO] Setup complete. Starting emulation with packet length {args.packet_length}...\n")
 
-    run(mem, sregs, mregs, vregs, SP0, SP1, EU, pc, args.packet_length, args.output_mem_file, args.output_sreg_file, args.output_vreg_file, args.output_mreg_file, args.output_scpad_file0, args.output_scpad_file1, debug=args.debug)
+    run(mem, sregs, mregs, vregs, SP0, SP1, EU, pc, args.packet_length, args.output_mem_file, args.output_sreg_file, args.output_vreg_file, args.output_mreg_file, args.output_scpad_file0, args.output_scpad_file1, args.output_perf_file, debug=args.debug)
 
 # python3 -m run --input_file ./tests/complex/edit_mem.in 

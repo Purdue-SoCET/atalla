@@ -1,4 +1,5 @@
 import numpy as np
+from .perf_metrics import PerfMetrics
 
 class ScalarALU:
     """
@@ -6,8 +7,18 @@ class ScalarALU:
     - num_lanes: number of parallel scalar ALU lanes
     """
 
-    def __init__(self, num_lanes: int = 32):
+    def __init__(self, num_lanes: int = 32, perf_metrics: PerfMetrics = None):
         self.num_lanes = int(num_lanes)
+        self.perf_metrics = perf_metrics if perf_metrics is not None else PerfMetrics()
+
+    def _count_flops(self, amount: int = 1):
+        flop_inc = int(max(0, amount))
+        self.perf_metrics.increment("flops_scalar", flop_inc)
+        self.perf_metrics.increment("flops_total", flop_inc)
+
+    @property
+    def flops(self) -> int:
+        return int(self.perf_metrics.get_metric("flops_scalar", 0))
 
     @staticmethod
     def _word_to_int32(x):
@@ -268,6 +279,7 @@ class ScalarALU:
     # -------------------------
     def execute(self, op: str, a=None, b=None):
         op = op.lower()
+        self._count_flops(1)
         if op == "add":
             return self.add(a, b)
         elif op == "sub":

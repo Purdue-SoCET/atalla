@@ -12,6 +12,7 @@ You will use the following steps to compile each of your modules to get area and
 
 0. Ensure you are in the `atallax01` branch. 
 ```
+git checkout atallax01
 git submodule update --init --recursive
 ```
 
@@ -102,7 +103,10 @@ constraint_modes:
       - scripts/constraints/cache_bank.sdc
 ```
 
-6. RUN - 
+6. RUN
+
+Run the following commands in the `Flowkit/` folder.
+
 ```
 # Takes a long time
 flowtool -reset -to synthesis 

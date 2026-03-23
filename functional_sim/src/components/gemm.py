@@ -1,5 +1,6 @@
 import numpy as np
 from typing import Tuple
+from .perf_metrics import PerfMetrics
 
 # -------------------------
 # BF16 helpers
@@ -39,9 +40,23 @@ class SystolicArray:
     - Accumulation is always performed in BF16 precision
     """
 
-    def __init__(self, size: int = 32, bf16_rounding: bool = True):
+    def __init__(self, size: int = 32, bf16_rounding: bool = True, perf_metrics: PerfMetrics = None):
         self.size = int(size)
         self.bf16_rounding = bool(bf16_rounding)
+        self.perf_metrics = perf_metrics if perf_metrics is not None else PerfMetrics()
+
+    def reset_flops(self):
+        self.perf_metrics.set_metric("flops_matmul", 0)
+
+    def _count_matmul_flops(self, m: int, n: int, k: int) -> None:
+        # Count multiply and accumulate separately per MAC.
+        flop_inc = int(2 * m * n * k)
+        self.perf_metrics.increment("flops_matmul", flop_inc)
+        self.perf_metrics.increment("flops_total", flop_inc)
+
+    @property
+    def flops(self) -> int:
+        return int(self.perf_metrics.get_metric("flops_matmul", 0))
 
     def _quantize_weights(self, B_tile: np.ndarray) -> np.ndarray:
         """Quantize weight tile into BF16 semantics (stored as float32)."""
@@ -59,6 +74,7 @@ class SystolicArray:
         m, k1 = A_tile.shape
         k2, n = B_tile.shape
         assert k1 == k2, "K dimension mismatch"
+        self._count_matmul_flops(m, n, k1)
 
         A_q = self._quantize_activations(A_tile)
         B_q = self._quantize_weights(B_tile)

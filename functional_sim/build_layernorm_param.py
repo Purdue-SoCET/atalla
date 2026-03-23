@@ -30,6 +30,7 @@ def main():
     TILE_ADDR = 0xcafa
     SCPAD_ADDR = 0
     EPSILON_LOCATION = 20
+    INV_LAYER_ELEMS_LOCATION = 24
     MAX_COL_IND = N - 1
     MAX_ROW_IND = N - 1
     SID = 0
@@ -68,6 +69,8 @@ def main():
         
         addi.s   $5, $0, {EPSILON_LOCATION}          # load epsilon address into $5
         lw.s     $4, 0($5)                           # load epsilon into $4
+        addi.s   $14, $0, {INV_LAYER_ELEMS_LOCATION} # load inv(N^2) location into $14
+        lw.s     $14, 0($14)                         # load inv(N^2) as fp32 bit-pattern
 
         lui.s    $6, {MASK_VAL >> 7}
         addi.s   $6, $6, {MASK_VAL & 0x7f}
@@ -91,7 +94,7 @@ def main():
     MEAN_DONE:
         rsum.vi  $11, $10, {RSUM_IMM}, 1              # reduce last row
         add.vv   $20, $20, $11, 1, 0                  # accumulate last partial sum
-        divi.vi  $24, $20, {LAYER_ELEMS}, 1            # mean = total_sum / N^2
+        mul.vs   $24, $20, $14, 1                      # mean = total_sum * inv(N^2)
 
         ############## PHASE 2: VARIANCE (pipelined) ##############
         sub.vv   $38, $38, $38, 1, 0                  # zero variance accumulator
@@ -113,15 +116,18 @@ def main():
         mul.vv   $12, $30, $30, 1, 0                   # square last diff
         rsum.vi  $12, $12, {RSUM_IMM}, 1                # reduce last squared diff
         add.vv   $38, $38, $12, 1, 0                    # accumulate last variance contribution
-        divi.vi  $39, $38, {LAYER_ELEMS}, 1              # variance = sum / N^2
+        mul.vs   $39, $38, $14, 1                        # variance = sum * inv(N^2)
         add.vs   $39, $39, $4, 1                         # add epsilon for stability
         sqrti.vi $39, $39, 0, 1                          # denominator = sqrt(variance + epsilon)
+
+        vmov.vts $15, $39, 0                             # extract denominator lane 0 to scalar
+        rcp.bf   $15, $15, $0                            # reciprocal(denominator)
 
         ############## PHASE 3: NORMALIZE + STORE (pipelined) ##############
         addi.s   $7, $0, 0                              # i = 0
         vreg.ld  $10, $3, {MAX_COL_IND}, {MAX_ROW_IND}, {SID}, 1, $7  # load row 0
         sub.vv   $30, $10, $24, 1, 0                     # row 0 - mean
-        div.vv   $30, $30, $39, 1, 0                     # normalize row 0
+        mul.vs   $30, $30, $15, 1                        # normalize row 0 via reciprocal multiply
         addi.s   $7, $7, 1                                # i = 1
         bge.s    $7, $8, NORM_DONE                        # skip loop if N == 1
     NORM_LOOP:
@@ -129,7 +135,7 @@ def main():
         subi.s   $9, $7, 1                                # prev = i - 1
         vreg.st  $30, $3, {MAX_COL_IND}, {MAX_ROW_IND}, {SID}, 1, $9   # store prev normalized row (pipelined)
         sub.vv   $30, $10, $24, 1, 0                      # row i - mean
-        div.vv   $30, $30, $39, 1, 0                      # normalize row i
+        mul.vs   $30, $30, $15, 1                         # normalize row i via reciprocal multiply
         addi.s   $7, $7, 1                                 # i++
         blt.s    $7, $8, NORM_LOOP                         # loop while i < N
 
@@ -166,6 +172,7 @@ def main():
     img.u32(TILE_ADDR_LOCATION, TILE_ADDR) # Place tile base address at address 0x3c
     img.u32(SCPAD_ADDR_LOCATION, SCPAD_ADDR)
     img.f32(EPSILON_LOCATION, 0)
+    img.f32(INV_LAYER_ELEMS_LOCATION, float(1.0 / LAYER_ELEMS))
     #-----------TILE INITIALIZATION----------
     base_addr = TILE_ADDR
     if args.data is not None:

@@ -63,7 +63,8 @@ def run(mem: Memory, sregs: ScalarRegisterFile, mregs: ScalarRegisterFile, vregs
         EU: ExecuteUnit, pc: int, packet_length: int,
         out_file: str = "../out/output_mem.txt", out_sreg_file: str = "../out/output_sregs.txt", 
         out_vreg_file: str = "../out/output_vregs.txt", out_mreg_file: str = "../out/output_mregs.txt", 
-        out_scpad_file0: str = "../out/output_scpad0.txt", out_scpad_file1: str = "../out/output_scpad1.txt",
+    out_scpad_file0: str = "../out/output_scpad0.txt", out_scpad_file1: str = "../out/output_scpad1.txt",
+    out_perf_file: str = "../out/output_perf_metrics.txt",
         debug: bool = False):
         
     pc_increment = packet_length * 6
@@ -200,7 +201,7 @@ def run(mem: Memory, sregs: ScalarRegisterFile, mregs: ScalarRegisterFile, vregs
                         tile_id0 += 1
                         tileID0Dict[inst['rs1/rd1']] = tile_id0
                         localID = tileID0Dict[inst['rs1/rd1']]
-                    sdma_load(gmem=mem, scpad=SP0, gmem_base=sregs.read(inst['rs2']), scpad_base_row=int(sregs.read(inst['rs1/rd1'])), tile_id=localID, NR=inst['num_rows'], NC=inst['num_cols'])
+                    sdma_load(gmem=mem, scpad=SP0, gmem_base=sregs.read(inst['rs2']), scpad_base_row=int(sregs.read(inst['rs1/rd1'])), tile_id=localID, NR=inst['num_rows'], NC=inst['num_cols'], perf_metrics=EU.perf_metrics)
                 elif inst['sid'] == 1:
                     if(inst['rs1/rd1'] in tileID1Dict.keys()):
                         localID = tileID1Dict[inst['rs1/rd1']]
@@ -208,7 +209,7 @@ def run(mem: Memory, sregs: ScalarRegisterFile, mregs: ScalarRegisterFile, vregs
                         tile_id1 += 1
                         tileID1Dict[inst['rs1/rd1']] = tile_id1
                         localID = tileID1Dict[inst['rs1/rd1']]
-                    sdma_load(gmem=mem, scpad=SP1, gmem_base=sregs.read(inst['rs2']), scpad_base_row=int(sregs.read(inst['rs1/rd1'])), tile_id=localID, NR=inst['num_rows'], NC=inst['num_cols'])
+                    sdma_load(gmem=mem, scpad=SP1, gmem_base=sregs.read(inst['rs2']), scpad_base_row=int(sregs.read(inst['rs1/rd1'])), tile_id=localID, NR=inst['num_rows'], NC=inst['num_cols'], perf_metrics=EU.perf_metrics)
 
             elif (m == "scpad.st"):
                 if inst['sid'] == 0:
@@ -506,11 +507,13 @@ def run(mem: Memory, sregs: ScalarRegisterFile, mregs: ScalarRegisterFile, vregs
     _ensure_parent(out_file)
     _ensure_parent(out_scpad_file0)
     _ensure_parent(out_scpad_file1)
+    _ensure_parent(out_perf_file)
 
     sregs.dump_to_file(out_sreg_file)
     vregs.dump_to_file(out_vreg_file)
     mregs.dump_to_file(out_mreg_file)
     mem.dump_to_file(out_file)
+    EU.perf_metrics.dump_to_file(out_perf_file)
 
     dump_scpad_rc(scpad=SP0, file=out_scpad_file0)
     dump_scpad_rc(scpad=SP1, file=out_scpad_file1)

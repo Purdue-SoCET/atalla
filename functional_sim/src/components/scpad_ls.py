@@ -6,6 +6,7 @@ from typing import Callable
 from ..misc.memory import Memory
 from .scpad import Scratchpad
 from .vector_register_file import VectorRegisterFile
+from .perf_metrics import PerfMetrics
 
 def identity_swizzle(addr: int) -> int:
     return addr
@@ -116,6 +117,7 @@ def sdma_load(
     tile_id: str,
     NR: int,
     NC: int,
+    perf_metrics: PerfMetrics = None,
     swizzle: Callable[[int], int] = identity_swizzle,
 ):
     """
@@ -138,6 +140,9 @@ def sdma_load(
         for j in range(0, NC+1):
             g_addr = gmem_base + (i * (NC+1) + j) * 2
             raw_val = gmem.read_data(g_addr)
+            if perf_metrics is not None:
+                # GMEM BF16 payload is 2 bytes per element.
+                perf_metrics.increment("bytes_loaded", 2)
             raw_val = raw_val << 16
 
 

@@ -50,7 +50,7 @@ fi
 # ---------- Defaults --------------------------------------------------------
 KERNEL="layernorm"
 BUILD_NAME="layernorm_param"
-N=4
+N=32
 DEBUG_FLAG=""
 
 # bf16 practical bounds for stable layernorm computation.
@@ -90,6 +90,7 @@ OUT_VREGS="$OUTPUT_DIR/output_vregs.out"
 OUT_MREGS="$OUTPUT_DIR/output_mregs.out"
 OUT_SCPAD0="$OUTPUT_DIR/output_scpad0.out"
 OUT_SCPAD1="$OUTPUT_DIR/output_scpad1.out"
+OUT_PERF="$OUTPUT_DIR/output_perf_metrics.out"
 
 echo "============================================================"
 echo "  Kernel Emulation Pipeline: $BUILD_NAME  (${N}×${N})"
@@ -138,6 +139,7 @@ $PYTHON -m functional_sim.run \
     --output_mreg_file  "$OUT_MREGS" \
     --output_scpad_file0 "$OUT_SCPAD0" \
     --output_scpad_file1 "$OUT_SCPAD1" \
+    --output_perf_file  "$OUT_PERF"
     $DEBUG_FLAG
 
 echo "[EMULATE] Done.  Outputs in $OUTPUT_DIR"

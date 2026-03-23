@@ -30,6 +30,7 @@ def main():
     TILE_ADDR = 0xcafa
     SCPAD_ADDR = 1
     EPSILON_LOCATION = 20
+    INV_LAYER_ELEMS_LOCATION = 24
     COLS = N
     ROWS = N
     SID = 0
@@ -61,6 +62,8 @@ def main():
 
         addi.s   $5, $0, {EPSILON_LOCATION}         # load epsilon location into $5
         lw.s     $4, 0($5)                          # load epsilon into $4
+        addi.s   $14, $0, {INV_LAYER_ELEMS_LOCATION} # load inv(N^2) location into $14
+        lw.s     $14, 0($14)                        # load inv(N^2) as fp32 bit-pattern
 
         lui.s    $6, 0x00000                    # load upper 25 bit mask of all 1's into $6
         addi.s   $6, $6, 0xf                        # add lower bit mask of all 1's into $6
@@ -80,7 +83,7 @@ def main():
         add.vv   $22, $22, $23, 1, 0                # partial sum 2 + partial sum 3
         add.vv   $24, $21, $22, 1, 0                # layer mean sum in $24
         
-        divi.vi  $24, $24, {LAYER_ELEMS}, 1         # layer mean sum / 16 -> final mean in $24
+        mul.vs   $24, $24, $14, 1                   # layer mean sum * inv(N^2) -> final mean in $24
         
         sub.vv   $30, $10, $24, 1, 0                # normalized numerator row 0 = row 0 - mean
         sub.vv   $31, $11, $24, 1, 0                # normalized numerator row 1 = row 1 - mean
@@ -101,15 +104,18 @@ def main():
         add.vv   $37, $36, $37, 1, 0                # partial variance pair 2+3
         add.vv   $38, $35, $37, 1, 0                # variance sum in $38
         
-        divi.vi  $39, $38, {LAYER_ELEMS}, 1         # variance sum / NUM_, final variance in $39
+        mul.vs   $39, $38, $14, 1                   # variance sum * inv(N^2) -> final variance in $39
 
         add.vs   $39, $39, $4, 1                    # denominator seed = variance + epsilon
         sqrti.vi $39, $39, 0, 1                     # denominator = sqrt(denominator seed) -> normalized denominator in $39
 
-        div.vv   $30, $30, $39, 1, 0                # normalized row 0 / denominator
-        div.vv   $31, $31, $39, 1, 0                # normalized row 1 / denominator
-        div.vv   $32, $32, $39, 1, 0                # normalized row 2 / denominator
-        div.vv   $33, $33, $39, 1, 0                # normalized row 3 / denominator
+        vmov.vts $15, $39, 0                        # extract denominator lane 0 to scalar
+        rcp.bf   $15, $15, $0                       # reciprocal(denominator)
+
+        mul.vs   $30, $30, $15, 1                   # normalized row 0 * reciprocal(denominator)
+        mul.vs   $31, $31, $15, 1                   # normalized row 1 * reciprocal(denominator)
+        mul.vs   $32, $32, $15, 1                   # normalized row 2 * reciprocal(denominator)
+        mul.vs   $33, $33, $15, 1                   # normalized row 3 * reciprocal(denominator)
 
         vreg.st  $30, $3, {COLS}, {ROWS}, {SID}, 1, 0  # store normalized row 0 to scratchpad
         vreg.st  $31, $3, {COLS}, {ROWS}, {SID}, 1, 1  # store normalized row 1 to scratchpad
@@ -145,6 +151,7 @@ def main():
     img.u32(TILE_ADDR_LOCATION, TILE_ADDR) # Place tile base address at address 67
     img.u32(SCPAD_ADDR_LOCATION, SCPAD_ADDR)
     img.f32(EPSILON_LOCATION, 0)
+    img.f32(INV_LAYER_ELEMS_LOCATION, float(1.0 / LAYER_ELEMS))
     #-----------TILE INITIALIZATION----------
     base_addr = TILE_ADDR
     if args.data is not None:

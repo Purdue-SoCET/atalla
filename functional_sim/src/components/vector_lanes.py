@@ -1,5 +1,6 @@
 import numpy as np
 from typing import Callable, Optional
+from .perf_metrics import PerfMetrics
 
 # -------------------------
 # BF16 helpers (same semantics as systolic module)
@@ -66,7 +67,8 @@ class VectorLanes:
         sqrts: Optional[int] = None,
         reducers: Optional[int] = None,
         bf16_rounding: bool = True,
-        debug: bool = False
+        debug: bool = False,
+        perf_metrics: Optional[PerfMetrics] = None
     ):
         self.VL = int(VL)
         self.adders = int(adders) if adders is not None else self.VL
@@ -76,6 +78,7 @@ class VectorLanes:
         self.reducers = int(reducers) if reducers is not None else self.VL
         self.bf16_rounding = bool(bf16_rounding)
         self.debug = bool(debug)
+        self.perf_metrics = perf_metrics if perf_metrics is not None else PerfMetrics()
         
         for name, val in [
             ("VL", self.VL),
@@ -87,6 +90,18 @@ class VectorLanes:
         ]:
             if val <= 0:
                 raise ValueError(f"{name} must be positive integer")
+
+    def reset_flops(self):
+        self.perf_metrics.set_metric("flops_vector", 0)
+
+    def _count_flops(self, work_items: int) -> None:
+        flop_inc = int(max(0, work_items))
+        self.perf_metrics.increment("flops_vector", flop_inc)
+        self.perf_metrics.increment("flops_total", flop_inc)
+
+    @property
+    def flops(self) -> int:
+        return int(self.perf_metrics.get_metric("flops_vector", 0))
 
     def _q(self, x: np.ndarray) -> np.ndarray:
         return to_bf16(x.astype(np.float32), rounding=self.bf16_rounding)
@@ -109,6 +124,7 @@ class VectorLanes:
                 raise ValueError("Shapes must match for elementwise op (or one operand scalar)")
 
         L = a.size
+        self._count_flops(L)
         out = np.empty_like(a, dtype=np.float32)
 
         for s, e in iterate_chunks(L, resources):
@@ -132,6 +148,7 @@ class VectorLanes:
     def exp(self, a: np.ndarray) -> np.ndarray:
         a = self._ensure_vec(a)
         L = a.size
+        self._count_flops(L)
         out = np.empty_like(a, dtype=np.float32)
         for s, e in iterate_chunks(L, self.exps):
             a_chunk = self._q(a[s:e])
@@ -142,6 +159,7 @@ class VectorLanes:
     def sqrt(self, a: np.ndarray) -> np.ndarray:
         a = self._ensure_vec(a)
         L = a.size
+        self._count_flops(L)
         out = np.empty_like(a, dtype=np.float32)
         for s, e in iterate_chunks(L, self.sqrts):
             a_chunk = self._q(a[s:e])
@@ -222,24 +240,28 @@ class VectorLanes:
     def cmp_gt(self, a: np.ndarray, b: np.ndarray) -> np.ndarray:
         a = self._ensure_vec(a)
         b = self._ensure_vec(b)
+        self._count_flops(a.size)
         mask = (a > b).astype(np.float32)
         return self._q(mask)
 
     def cmp_lt(self, a: np.ndarray, b: np.ndarray) -> np.ndarray:
         a = self._ensure_vec(a)
         b = self._ensure_vec(b)
+        self._count_flops(a.size)
         mask = (a < b).astype(np.float32)
         return self._q(mask)
 
     def cmp_eq(self, a: np.ndarray, b: np.ndarray) -> np.ndarray:
         a = self._ensure_vec(a)
         b = self._ensure_vec(b)
+        self._count_flops(a.size)
         mask = (a == b).astype(np.float32)
         return self._q(mask)
 
     def cmp_neq(self, a: np.ndarray, b: np.ndarray) -> np.ndarray:
         a = self._ensure_vec(a)
         b = self._ensure_vec(b)
+        self._count_flops(a.size)
         mask = (a != b).astype(np.float32)
         return self._q(mask)
     
@@ -251,24 +273,28 @@ class VectorLanes:
     def cmp_gt_vs(self, a: np.ndarray, rs1) -> np.ndarray:
         a = self._ensure_vec(a)
         rs1 = np.float32(rs1)
+        self._count_flops(a.size)
         mask = (a > rs1).astype(np.float32)
         return self._q(mask)
 
     def cmp_lt_vs(self, a: np.ndarray, rs1) -> np.ndarray:
         a = self._ensure_vec(a)
         rs1 = np.float32(rs1)
+        self._count_flops(a.size)
         mask = (a < rs1).astype(np.float32)
         return self._q(mask)
 
     def cmp_eq_vs(self, a: np.ndarray, rs1) -> np.ndarray:
         a = self._ensure_vec(a)
         rs1 = np.float32(rs1)
+        self._count_flops(a.size)
         mask = (a == rs1).astype(np.float32)
         return self._q(mask)
 
     def cmp_neq_vs(self, a: np.ndarray, rs1) -> np.ndarray:
         a = self._ensure_vec(a)
         rs1 = np.float32(rs1)
+        self._count_flops(a.size)
         mask = (a != rs1).astype(np.float32)
         return self._q(mask)
 
@@ -283,6 +309,7 @@ class VectorLanes:
         a = self._ensure_vec(a)
         q = self._q(a).astype(np.float32, copy=False)
         L = q.size
+        self._count_flops(L)
         R = int(self.reducers)
 
         if R <= 0:
@@ -314,6 +341,7 @@ class VectorLanes:
         a = self._ensure_vec(a)
         q = self._q(a).astype(np.float32, copy=False)
         L = q.size
+        self._count_flops(L)
         R = int(self.reducers)
 
         if R <= 0:
@@ -346,6 +374,7 @@ class VectorLanes:
         a = self._ensure_vec(a)
         q = self._q(a).astype(np.float32, copy=False)
         L = q.size
+        self._count_flops(L)
         R = int(self.reducers)
 
         if R <= 0:
@@ -395,6 +424,7 @@ class VectorLanes:
                 raise ValueError("Shapes must match for bitwise op (or one operand scalar)")
 
         L = a.size
+        self._count_flops(L)
         out = np.empty_like(a, dtype=np.float32)
 
         for s, e in iterate_chunks(L, resources):
