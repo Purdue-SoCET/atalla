@@ -17,7 +17,7 @@ interface fu_gemm_if;
         rs2_in: source reg
         rs3_in: source reg
     */
-    logic gemm_enable, new_weight_in;
+    logic gemm_enable, new_weight_in; // new_weight_in logic still needs to be added
     matbits_t rs1_in, rs2_in, rs3_in, rd_in;
 
 

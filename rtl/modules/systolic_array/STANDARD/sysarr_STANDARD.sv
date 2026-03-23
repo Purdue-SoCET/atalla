@@ -47,7 +47,9 @@ module sysarr_STANDARD #(
     logic [N*DW-1:0] grid_inputs;
     assign grid_inputs = gsau_if.sa_weight_en ? gsau_if.sa_array_in : buffered_inputs;
 
-    // // BF16 to FP32 conversion for partial sums
+    // BF16 to FP32 conversion for partial sums
+    // Commented out for synthesis — slice indexing on sa_array_in_partials
+    // triggers CDFG-221. Zeroed partials fed to mac_grid instead.
     // logic [N - 1:0][DW_ACC - 1:0] psum_wr_data;
     // genvar m;
     // generate
@@ -60,7 +62,7 @@ module sysarr_STANDARD #(
 
     // // Partial sum skew buffer for timing alignment
     // logic [N*DW_ACC-1:0] skewed_partials;
-
+    //
     // skew_buffer #(
     //     .NUM_COLS(N),
     //     .COL_WIDTH(DW_ACC),
@@ -74,6 +76,10 @@ module sysarr_STANDARD #(
     //     .wr_data(psum_wr_data),
     //     .rd_data(skewed_partials)
     // );
+
+    // Zero partial sums for synthesis
+    logic [N*DW_ACC-1:0] skewed_partials;
+    assign skewed_partials = '0;
 
     // Per-row enable for mac_grid, derived from in_rd_en delayed by SRAM read latency (1 cycle).
     logic [N-1:0] row_en;
@@ -97,7 +103,7 @@ module sysarr_STANDARD #(
         .sa_inputs(grid_inputs),
         .weight_en(gsau_if.sa_weight_en),
         .row_en(row_en),
-        .partial_in('0),
+        .partial_in(skewed_partials),
         .stall(1'b0),
         .grid_out(grid_out),
         .col_valid(col_valid)
