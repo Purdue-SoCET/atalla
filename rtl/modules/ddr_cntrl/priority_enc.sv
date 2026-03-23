@@ -6,16 +6,16 @@
 //   valid       - high when at least one input bit is active; low when in == 16'h0
 
 module priority_enc (
-    input  logic [15:0] in,
-    output logic [3:0]  out,
+    input  logic [BANK_NUM-1:0] in,
+    output logic [$clog2(BANK_NUM)-1:0]  out,
     output logic        valid
 );
 
-    function automatic logic [3:0] encode (input logic [15:0] in);
-        for (int i = 0; i < 16; i++) begin
-            if (in[i]) return 4'(i);
+    function automatic logic [$clog2(BANK_NUM)-1:0] encode (input logic [BANK_NUM-1:0] in);
+        for (int i = 0; i < BANK_NUM; i++) begin
+            if (in[i]) return i[$clog2(BANK_NUM)-1:0];
         end
-        return 4'd0;
+        return {BANK_NUM{1'b0}};
     endfunction
 
     always_comb begin

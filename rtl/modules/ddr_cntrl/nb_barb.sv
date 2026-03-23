@@ -17,10 +17,10 @@ module nb_barb(
     logic rollover_L, rollover_S;
     logic en_L, en_S;
     flex_counter #(.SIZE(12)) TCCD_L_TIM ( //these timers are cleared on successful handshakes.
-        CLK, nRST, selected_bank_ready, en_L, tCCD_L, rollover_L
+        CLK, nRST, selected_bank_ready, en_L, tCCD_L[11:0], rollover_L
     );
     flex_counter #(.SIZE(12)) TCCD_S_TIM (
-        CLK, nRST, selected_bank_ready, en_S , tCCD_S, rollover_S
+        CLK, nRST, selected_bank_ready, en_S , tCCD_S[11:0], rollover_S
     );
     //tCCD timers enable logic.
     always_ff @(posedge CLK, negedge nRST) begin
@@ -37,7 +37,7 @@ module nb_barb(
     logic [tFAW:0] sr_window;
     logic four_access; 
     logic [3:0] access_cnt;
-    flex_sr #(.SIZE(tFAW + 'b1)) ACTIVATE_WINDOW (CLK, nRST, 1'b1, 1'b0, selected_bank_ready & (barb.be_cmd[selected_bank] == ACT) , 'b0, sr_window);
+    flex_sr #(.SIZE(tFAW + 'b1)) ACTIVATE_WINDOW (CLK, nRST, 1'b1, 1'b0, selected_bank_ready & (barb.be_cmd[selected_bank] == ACT) , {(tFAW + 'b1){1'b0}}, sr_window);
     
     integer i;
     assign four_access = (access_cnt >= 'd4);
@@ -53,7 +53,7 @@ module nb_barb(
 
     //simple round robin logic for priority.
     logic [BANK_NUM-1:0] priority_sr;
-    flex_sr #(.SIZE(BANK_NUM), .RING(1'b1)) PRIORITY_SR (CLK, nRST, selected_bank_ready, 1'b0, 1'b0,  'b0, priority_sr); 
+    flex_sr #(.SIZE(BANK_NUM), .RING(1'b1)) PRIORITY_SR (CLK, nRST, selected_bank_ready, 1'b0, 1'b0,  {BANK_NUM{1'b0}} , priority_sr); 
 
     //Priority encoder for finding bank with priority.
     logic [$clog2(BANK_NUM)-1:0] priority_idx;
