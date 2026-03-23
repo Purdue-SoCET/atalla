@@ -10,6 +10,7 @@ import uvm_pkg::*;
 class ram_model;
   parameter int NUM_BANKS = 4;
   bit [31:0] mem [longint unsigned];  // key = {bank, addr}
+  logic [31:0] data_out;
 
   function longint unsigned flat_addr(int bank, bit [31:0] addr);
     return (longint'(bank) << 32) | addr;
@@ -22,8 +23,12 @@ class ram_model;
   function bit [31:0] read(int bank, bit [31:0] addr);
     if (mem.exists(flat_addr(bank, addr)))
       return mem[flat_addr(bank, addr)];
-    else
-      return '0;
+    else // generate random output data and place in RAM
+	 // simulates a RAM module with data in it
+      `uvm_info("RAM_DRV", "mem did not exist", UVM_MEDIUM)
+      data_out = $urandom_range(2147483648);
+      mem[flat_addr(bank, addr)] = data_out;
+      return data_out;
   endfunction
 endclass
 
@@ -78,7 +83,7 @@ class lfc_ram_active_driver extends uvm_driver#(lfc_ram_transaction);
           tr.ram_mem_data[b]  = m_ram.read(b, vif.ram_mem_addr[b]);
 
           // simulate latency
-	  MEM_LATENCY = $urandom_range(5,1);
+	  MEM_LATENCY = 0; //$urandom_range(5,1);
           repeat (MEM_LATENCY) @(posedge vif.clk);
           vif.ram_mem_data[b]     = tr.ram_mem_data[b];
           vif.ram_mem_complete[b] = 1'b1;

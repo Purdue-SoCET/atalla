@@ -70,25 +70,17 @@ class test extends uvm_test;
         phase.raise_objection(this, "Starting sequence in main phase");
         $display("%t Starting sequence run_phase", $time);
 	//load_miss.start(env.cpu_active_agent.sqr);
-	//#1000ns;
         //basic_seq.start(env.cpu_active_agent.sqr);
-        //#1000ns;
         //load_hit.start(env.cpu_active_agent.sqr);
-        //#1000ns;
         // miss_coal.start(env.cpu_active_agent.sqr);
-        // #1000ns;
         // mshr_overflow_seq.start(env.cpu_active_agent.sqr);
-        // #1000ns;
         //multiple_miss_seq.start(env.cpu_active_agent.sqr);
-        //#1000ns;
         //store_hit_seq.start(env.cpu_active_agent.sqr);
-        //#1000ns;
 	hit_under_miss_seq.start(env.cpu_active_agent.sqr);
-	#1000ns;
+	#5000ns;
         // wr_seq.start(env.cpu_active_agent.sqr);
-        // #1000ns;
 	//flush_seq.start(env.cpu_active_agent.sqr);
-	//#1000ns;
+	//TODO: implement drain time
         phase.drop_objection(this, "Finished in main phase");
     endtask
 

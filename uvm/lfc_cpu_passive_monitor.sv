@@ -50,19 +50,28 @@ class lfc_cpu_passive_monitor extends uvm_monitor;
     
     if (has_run_once > 0 && vif.n_rst) begin
         if(tx.hit == 1 && prev_tx.hit == 0) begin // if new hit, send to scoreboad
-              `uvm_info("CPU_PASSIVE_MON", "Hit recorded", UVM_MEDIUM)
+              `uvm_info("CITER1: CPU_PASSIVE_MON", "Hit recorded", UVM_MEDIUM)
               `uvm_info("CPU_PASSIVE_MON", $sformatf("Sent read tx: uuid=%0h stall=%0b hit=%0b flushed=%0b",
                     tx.mem_out_uuid, tx.stall, tx.hit, tx.dp_out_flushed), UVM_LOW)
               result_ap.write(tx);
-        end 
+      end 
+
+      if(tx.stall == 1 && prev_tx.stall == 0) begin // if new miss, send to scoreboard
+	`uvm_info("CITER2: CPU_PASSIVE_MON", "Miss recorded", UVM_LOW)
+	`uvm_info("CPU_PASSIVE_MON", $sformatf("Sent read tx: uuid=%0h stall=%0b hit=%0b flushed=%0b",
+		    tx.mem_out_uuid, tx.stall, tx.hit, tx.dp_out_flushed), UVM_LOW)
+	result_ap.write(tx);
+
+	end else begin
 
 	    for(int i = 0; i < tx.NUM_BANKS; i++) begin // TODO: this logic is sketchy
 	      if(tx.block_status[i] && !prev_tx.block_status[i]) begin // uuid is valid, new cache miss, send to scoreboad
-		`uvm_info("CPU_PASSIVE_MON", "Miss recorded", UVM_LOW)
+		`uvm_info("CITER2: CPU_PASSIVE_MON", "Miss recorded", UVM_LOW)
 		`uvm_info("CPU_PASSIVE_MON", $sformatf("Sent read tx: uuid=%0h stall=%0b hit=%0b flushed=%0b",
 		    tx.mem_out_uuid, tx.stall, tx.hit, tx.dp_out_flushed), UVM_LOW)
 		result_ap.write(tx);
 	      end
+    	    end
     	end
     end
 
