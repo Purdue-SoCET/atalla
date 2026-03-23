@@ -230,6 +230,42 @@ interface axi_bus_if(input logic CLK, input logic nRST);
     // ----------------------------------------------------------------------
     // WRITE PATH Definitions
     // ----------------------------------------------------------------------
+    // WRITE TOP LEVEL MODPORT
+    modport write_path(
+        // From Master
+        input aw_sp0_i_valid, aw_sp0_i, w_sp0_i_valid, w_sp0_i,
+        input aw_sp1_i_valid, aw_sp1_i, w_sp1_i_valid, w_sp1_i,
+        input aw_d_i_valid, aw_d_i, w_d_i_valid, w_d_i,
+
+        // To Master 
+        output aw_sp0_i_ready, w_sp0_i_ready,
+        output aw_sp1_i_ready, w_sp1_i_ready,
+        output aw_d_i_ready, w_d_i_ready, 
+
+        // To Master 
+        output b_sp0_o_valid, b_sp0_o,
+        output b_sp1_o_valid, b_sp1_o,
+        output b_d_o_valid, b_d_o,
+        
+        // From Master
+        input b_sp0_o_ready,
+        input b_sp1_o_ready,
+        input b_d_o_ready,
+
+        // To Subordinate
+        output aw_o_valid, aw_o,
+        output w_o_valid, w_o,
+
+        // From Subordinate
+        input aw_o_ready,
+        input w_o_ready,
+
+        // To Subordinate
+        output b_i_ready,
+
+        // From Subordinate
+        input b_i_valid, b_i  
+    );
     // MASTER <=> SP0 AW_W MANAGER
     modport aw_w_sp0_manager (
         // From Master 
