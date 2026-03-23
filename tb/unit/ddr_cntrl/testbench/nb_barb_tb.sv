@@ -54,12 +54,7 @@ initial begin
         ddrif.be_r           = '0;
         ddrif.be_c           = '0;
         ddrif.be_id          = '0;
-        
-        // 2. Reset
-        nRST = 0;
-        repeat (5) @(negedge CLK);
-        nRST = 1;
-        repeat (2) @(negedge CLK);
+        reset_dut();
 
         // --- PHASE 1: Sequential Barrel Rolling ---
         $display("\n--- Starting Sequential Test ---");
