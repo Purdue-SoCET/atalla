@@ -38,8 +38,8 @@ module mul_fp16_VC(
         end
     end
 
-    // multiply core 
-    mul_fp16 multy (
+    // multiply core
+    mul_fp16_param #(.LATENCY(2)) multy (
         .clk(clk),
         .nRST(nRST),
         .stall(stall),

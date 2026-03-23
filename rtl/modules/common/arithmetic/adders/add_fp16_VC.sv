@@ -54,9 +54,10 @@ module add_fp16_VC #(
     end
 
     // Adder core
-    add_fp #(
+    add_fp_param #(
         .MANT_W(MANT_W),
-        .EXP_W(EXP_W)
+        .EXP_W(EXP_W),
+        .LATENCY(2)
     ) addy (
         .clk(clk),
         .nRST(nRST),
