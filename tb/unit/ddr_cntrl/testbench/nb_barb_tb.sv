@@ -17,7 +17,7 @@ module nb_barb_tb;
 
     // test PROG(CLK, nRST, ddrif);
 
-    // bind nb_barb nb_barb_prop barb_monitor(CLK, nRST, ddrif);
+    bind nb_barb nb_barb_prop barb_monitor(CLK, nRST, barb);
 
     task reset_dut();
         begin
