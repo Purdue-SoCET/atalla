@@ -22,7 +22,7 @@ module nb_barb_tb;
     task reset_dut();
         begin
             nRST = 0;
-            repeat (5) @(negedge CLK);
+            repeat(2) @(negedge CLK);
             nRST = 1;
         end
     endtask
@@ -31,9 +31,9 @@ module nb_barb_tb;
     task drive_bank_request(
         input int bank_id,
         input fsm_t cmd,
-        input [ROW_BITS-1:0] row,
-        input [COLUMN_BITS-1:0] col,
-        input [$clog2(ID_NUM)-1:0] id
+        input logic [ROW_BITS-1:0] row,
+        input logic [COLUMN_BITS-1:0] col,
+        input logic [$clog2(ID_NUM)-1:0] id
     );
         begin
             ddrif.be_queue_ready[bank_id] = 1'b1; // Setting the bit for this bank
@@ -49,20 +49,21 @@ module nb_barb_tb;
         // 1. Initialization
         nRST = 1;
         ddrif.be_queue_ready = '0;
-        ddrif.be_cmd         = '{default: FSM_IDLE};
+        ddrif.be_cmd         =  PWR_UP;
         ddrif.be_r           = '0;
         ddrif.be_c           = '0;
         ddrif.be_id          = '0;
+
         reset_dut();
 
         // --- PHASE 1: Sequential Barrel Rolling ---
         $display("\n--- Starting Sequential Test ---");
-        /* drive_bank_request(0, ACT, 15'h1111, 10'h001, 4'h0);
+        drive_bank_request(0, ACT, 15'h1111, 10'h001, 4'h0);
         drive_bank_request(1, ACT, 15'h2222, 10'h002, 4'h1);
         drive_bank_request(2, ACT, 15'h3333, 10'h003, 4'h2);
 
         // Wait for Bank 0 to be serviced (be_arb points to the winning bank)
-        wait(ddrif.be_arb == 0);
+        wait(ddrif.be_arb[0] == 1);
         @(negedge CLK);
         ddrif.be_queue_ready[0] = 0; // Clear bank 0 request
 
@@ -72,7 +73,7 @@ module nb_barb_tb;
         drive_bank_request(12, FSM_READ, 15'hAAAA, 10'h0AA, 4'hF);
 
         // Verify the arbiter jumps to Bank 12
-        wait(ddrif.be_arb == 12);
+        wait(ddrif.be_arb[12] == 1);
         $display("T=%0t | SUCCESS: Arbiter jumped to Bank 12", $time);
         
         @(negedge CLK);
@@ -80,12 +81,11 @@ module nb_barb_tb;
 
         // --- PHASE 3: The Return ---
         // The roller should now return to the next sequential value (Bank 1)
-        wait(ddrif.be_arb == 1);
+        wait(ddrif.be_arb[1] == 1);
         $display("T=%0t | SUCCESS: Arbiter returned to sequential Bank 1", $time);
         
         @(negedge CLK);
         ddrif.be_queue_ready[1] = 0;
-        */
         @(negedge CLK);
         $display("\n--- All DRAM behavior tests passed ---");
         $finish;
