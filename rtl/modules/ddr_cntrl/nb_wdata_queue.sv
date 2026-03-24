@@ -2,7 +2,7 @@
 `include "ddr_controller_if.vh"
 `include "dram_pkg.vh"
 
-module #(Q_ID = 0) nb_wdata_queue_prop(
+module #(Q_ID = 0) nb_wdata_queue (
     input logic CLK, nRST,
     ddr_controller_if.wdata_queue wdq
 );
@@ -39,7 +39,7 @@ module #(Q_ID = 0) nb_wdata_queue_prop(
     
     if(!nRST) begin
       for(int i = 0; i < DEPTH; i++)
-        regs[i] <= 'b0;
+        regs[i] = DATA_Q_Slot_t'({ 32'b0, 8'b1111_1111, 1'b0})
     end else if(wen)
       regs[dram_ptr] <= data_in;
     else
@@ -93,9 +93,9 @@ module #(Q_ID = 0) nb_wdata_queue_prop(
   
   //pop data logic
   
-  assign ddr_wdata_data = (regs[dram_ptr]).wdata; 
-  assign ddr_wdata_en = (regs[dram_ptr]).valid;
-  assign ddr_wdata_mask = (regs[dram_ptr]).wstrb;
+  assign wdq.ddr_wdata_data[Q_ID] = (regs[dram_ptr]).wdata; 
+  assign wdq.ddr_wdata_en[Q_ID] = (regs[dram_ptr]).valid;
+  assign wdq.ddr_wdata_mask[Q_ID] = (regs[dram_ptr]).wstrb;
   
   //fsm for everything full or empty
   
@@ -179,7 +179,7 @@ module #(Q_ID = 0) nb_wdata_queue_prop(
 //   assign full_o = full;
 //   assign empty_o = empty;
 
-  assign wdq.ready = !full;
+  assign wdq.ready[Q_ID] = !full;
 
   logic wen; //write enable for wdata queue to fifo.
   logic clear; //clears beat counter for bursts.
@@ -204,7 +204,7 @@ module #(Q_ID = 0) nb_wdata_queue_prop(
         IDLE: if( (wdq.be_wid == Q_ID) && wdq.be_write) cnt_ctrl_next = CWL_WAIT; else cnt_ctrl_next = IDLE;
         CWL_WAIT: if( rollover_cwl ) cnt_ctrl_next = WRITING; else cnt_ctrl_next = CWL_WAIT;
         WRITING: if( rollover ) cnt_ctrl_next = RESP; else cnt_ctrl_next = WRITING;
-        RESP: if(wdq.bwready) cnt_ctrl_next = IDLE;   else cnt_ctrl_next = RESP;
+        RESP: if(wdq.bwready && (wdq.wrap_bw_arb == Q_ID)) cnt_ctrl_next = IDLE;   else cnt_ctrl_next = RESP;
 
     endcase
 
@@ -217,14 +217,14 @@ module #(Q_ID = 0) nb_wdata_queue_prop(
     cnt_en = 'b0;
     clear_cwl = 'b1;
     cnt_en_cwl = 'b0;
-    wdq.bwid = Q_ID;
-    wdq.bwresp = OKAY; 
-    wdq.bwvalid = 'b0;
-    wdq.ddr_we = 'b0;
+    wdq.bwid[Q_ID] = Q_ID;
+    wdq.bwresp[Q_ID] = 2'b0; 
+    wdq.bwvalid[Q_ID] = 'b0;
+    wdq.ddr_we[Q_ID] = 'b0;
     case(cnt_ctrl)
         CWL_WAIT: cnt_en_cwl = 'b1; clear_cwl = 'b0;
-        WRITING: wen = 'b1; clear = 'b0; cnt_en = 'b1; wdq.ddr_we = 'b1;
-        RESP : wdq.bwvalid = 'b1;
+        WRITING: wen = 'b1; clear = 'b0; cnt_en = 'b1; wdq.ddr_we[Q_ID] = 'b1;
+        RESP : wdq.bwvalid[Q_ID] = 'b1;
     endcase
 
   end
