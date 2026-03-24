@@ -3,13 +3,13 @@
 import sys_arr_pkg::*;
 
 module TPU_MAC_4_input #(
-    parameter IS_FP16 = 1
+    localparam int ACC_WIDTH = IS_FP16 ? DW : DW_ACC
 )(
     input logic clk, nRST,
     input logic [3:0][DW-1:0] in,
-    input logic [DW-1:0] psum_in,
+    input logic [ACC_WIDTH-1:0] psum_in,
     input logic weight_en,
-    output logic [DW-1:0] out
+    output logic [ACC_WIDTH-1:0] out
 );
 
 // TODO: Check if psum buffer is necessary
@@ -19,8 +19,8 @@ localparam int MUL_LATENCY = 2;
 localparam int DELAY_TO_PSUM = MUL_LATENCY + ADD_4_INPUT_LATENCY;
 
 // logic [DELAY_TO_PSUM-1:0][DW-1:0] psum_buffer;
-logic [3:0][DW-1:0] mul_out;
-logic [DW-1:0] add_4_input_out;
+logic [3:0][ACC_WIDTH-1:0] mul_out;
+logic [ACC_WIDTH-1:0] add_4_input_out;
 
 systolic_array_4_input_adder_if add_4_input_if();
 
@@ -38,15 +38,16 @@ systolic_array_4_input_adder_if add_4_input_if();
 generate
     genvar i;
     for (i = 0; i < 4; i++) begin: mul_cells
-        TPU_mul_cell #(
-            .IS_FP16(IS_FP16)
-        ) u_mul_cell (
-            .clk(clk),
-            .nRST(nRST),
-            .in(in[i]),
-            .weight_en(weight_en),
-            .result(mul_out[i])
-        );
+
+            TPU_mul_cell #(
+                // .IS_FP16(IS_FP16)
+            ) u_mul_cell (
+                .clk(clk),
+                .nRST(nRST),
+                .in(in[i]),
+                .weight_en(weight_en),
+                .result(mul_out[i])
+            );
     end
 endgenerate
 
@@ -78,6 +79,27 @@ generate
     end
     else begin: bf16_adder
         //TODO: Get bf16 4 input adder
+        add_fp16_4_input #(
+            .MANTISSA_SIZE(23),
+            .EXPONENET_SIZE(8),
+            .OUT_MANTISSA_SIZE(23)
+        ) u_adder_fp16_4_input (
+            .clk(clk),
+            .nRST(nRST),
+            .add(add_4_input_if)
+        );
+
+        add_fp16_1c #(
+            .MANT_W(23),
+            .EXP_W(8)
+        ) u_add_fp16_1c (
+            .clk(clk),
+            .nRST(nRST),
+            .sub(1'b0),
+            .fp1_in(add_4_input_out),
+            .fp2_in(psum_in),
+            .fp_out(out)
+        );
     end
 endgenerate
 

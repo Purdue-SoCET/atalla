@@ -247,26 +247,26 @@ module TPU_top_tb();
     endtask
 
 generate
-    if(VERSION == "MEISSA" || VERSION == "MEISSA32") begin
-        // DUT Instantiation: MIXED ADDER TREE
-        // sysarr_MEISSA_top #(.USE_MIXED_ADDER(1)) DUT (CLK, nRST, gsau_if);
+    // if(VERSION == "MEISSA" || VERSION == "MEISSA32") begin
+    //     // DUT Instantiation: MIXED ADDER TREE
+    //     // sysarr_MEISSA_top #(.USE_MIXED_ADDER(1)) DUT (CLK, nRST, gsau_if);
 
-        // DUT Instantiation: 2-INPUT ADDER TREE
-        sysarr_MEISSA_top DUT (CLK, nRST, gsau_if);
-    end
-    else if (VERSION == "TPU") begin
-        TPU_top DUT(CLK, nRST, gsau_if);
-    end
-    else if (VERSION == "STANDARD") begin
-        sysarr_STANDARD #(.MAC_LATENCY(2)) DUT (
-            .clk(CLK),
-            .nRST(nRST),
-            .gsau_if(gsau_if.systolic_array)
-        );
-    end
-    else begin
-        initial $fatal("Unsupported VERSION: %s", VERSION);
-    end
+    //     // DUT Instantiation: 2-INPUT ADDER TREE
+    //     sysarr_MEISSA_top DUT (CLK, nRST, gsau_if);
+    // end
+    // else if (VERSION == "TPU") begin
+    TPU_top DUT(CLK, nRST, gsau_if);
+    // end
+    // else if (VERSION == "STANDARD") begin
+    //     sysarr_STANDARD #(.MAC_LATENCY(2)) DUT (
+    //         .clk(CLK),
+    //         .nRST(nRST),
+    //         .gsau_if(gsau_if.systolic_array)
+    //     );
+    // end
+    // else begin
+    //     initial $fatal("Unsupported VERSION: %s", VERSION);
+    // end
 endgenerate
 
   // Simulation timeout

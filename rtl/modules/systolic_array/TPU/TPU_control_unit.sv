@@ -35,28 +35,29 @@ module TPU_control_unit #(
     logic [IN_CNTR_W-1:0] in_cnt, next_in_cnt;
 
     logic [N-1:0] next_out_wr_en;
-    logic [$clog2(N+1)-1:0] pending_rows, next_pending_rows;
+    // logic [$clog2(N+1)-1:0] pending_rows, next_pending_rows;
     logic [$clog2(N + PIPELINE_DEPTH + 1):0] output_vector_counter, next_output_vector_counter;
     
     logic [TOTAL_DELAY-1:0] shift_reg;
 
+    logic [NUM_GROUPS * ADD_2_INPUT_LATENCY - 1 : 0] group_en_shift_reg;
+    logic input_bit;
+
     always_ff @(posedge clk or negedge nRST) begin : input_buffer_reg
         if (!nRST) begin
-            credits <= N + PIPELINE_DEPTH - 1;
+            credits <= N + PIPELINE_DEPTH - 2;
             in_cnt <= '0;
-            group_en <= '0;
-            pending_rows <= '0;
+            // group_en <= '0;
             vector_cnt <= '0;
-
             shift_reg <= '0;
+            group_en_shift_reg <= '0;
         end else begin
             credits <= next_credits;
             in_cnt <= next_in_cnt;
-            group_en <= next_group_en;
-            pending_rows <= next_pending_rows;
+            // group_en <= next_group_en;
             vector_cnt <= next_vector_cnt;
-
-            shift_reg <= {shift_reg[TOTAL_DELAY-1:0], group_en[0]};
+            shift_reg <= {shift_reg[TOTAL_DELAY-2:0], group_en[0]};
+            group_en_shift_reg <= {group_en_shift_reg[NUM_GROUPS * ADD_2_INPUT_LATENCY - 2:0], input_bit};
         end
     end
 
@@ -65,25 +66,38 @@ module TPU_control_unit #(
     always_comb begin : input_buffer
         next_in_cnt = in_cnt;
         next_group_en = group_en;
-        // next_credits = credits;
 
-        if (in_cnt == (ADD_2_INPUT_LATENCY - 1)) begin
-            next_in_cnt = 0;
-            if (next_credits == 0 || next_vector_cnt == 0) begin    // No new Vector
-                next_group_en = group_en << 1;
-
-            end else if (|next_credits && |next_vector_cnt) begin   // New Vector
-                next_group_en = (group_en << 1) | 1'b1;     
-            end
+        if (|next_credits && |next_vector_cnt) begin
+            input_bit = 1'b1;
         end else begin
-            next_in_cnt = in_cnt + 1'b1;
+            input_bit = 1'b0;
         end
+
+        for (int i = 0; i < NUM_GROUPS; i++) begin
+            group_en[i] = group_en_shift_reg[i * ADD_2_INPUT_LATENCY];
+        end
+
+
+
+        // if (in_cnt == (ADD_2_INPUT_LATENCY - 1)) begin
+        //     next_in_cnt = 0;
+        //     if (next_credits == 0 || next_vector_cnt == 0) begin    // No new Vector
+        //         next_group_en = group_en << 1;
+
+        //     end else if (|next_credits && |next_vector_cnt) begin   // New Vector
+        //         next_group_en = (group_en << 1) | 1'b1;     
+        //     end
+        // end else begin
+        //     next_in_cnt = in_cnt + 1'b1;
+        // end
     end
 
     always_comb begin : next_credit_logic
         case ({vector_out, group_en[0]})
-            2'b01: next_credits = (credits > 0) ? credits - 1'b1 : credits;
-            2'b10: next_credits = (credits < (PIPELINE_DEPTH + N - 1)) ? credits + 1'b1 : credits;
+            // 2'b01: next_credits = (credits > 0) ? credits - 1'b1 : credits;
+            // 2'b10: next_credits = (credits < (PIPELINE_DEPTH + N - 2)) ? credits + 1'b1 : credits;
+            2'b01: next_credits = credits - 1'b1;
+            2'b10: next_credits = credits + 1'b1;
             default: next_credits = credits;
         endcase
     end
@@ -96,18 +110,10 @@ module TPU_control_unit #(
     end
 
     always_comb begin : Vector_Count
-        case ({|vector_in, group_en[0]}) 
+        case ({vector_in, group_en[0]}) 
             2'b10: next_vector_cnt = vector_cnt + 1;
             2'b01: next_vector_cnt = vector_cnt - 1;
             default : next_vector_cnt = vector_cnt;
-        endcase
-    end
-
-    always_comb begin : Pending_Rows
-        case({group_en[0], out_wr_en[0]}) 
-            2'b10: next_pending_rows = pending_rows + 1;
-            2'b01: next_pending_rows = pending_rows - 1;
-            default: next_pending_rows = pending_rows;
         endcase
     end
 

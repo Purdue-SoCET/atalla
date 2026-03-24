@@ -7,7 +7,8 @@ module TPU_top #(
     parameter int MUL_LATENCY = 2,
     parameter int GROUP_SIZE = 4,
 
-    localparam int PIPELINE_DEPTH = MUL_LATENCY + ADD_4_INPUT_LATENCY + $clog2(N / GROUP_SIZE) * ADD_2_INPUT_LATENCY
+    localparam int PIPELINE_DEPTH = MUL_LATENCY + ADD_4_INPUT_LATENCY + $clog2(N / GROUP_SIZE) * ADD_2_INPUT_LATENCY,
+    localparam int PSUM_WIDTH = IS_FP16 ? DW : DW_ACC
 )(
     input logic clk, nRST,
     gsau_control_unit_if.systolic_array gsau_if
@@ -19,7 +20,7 @@ module TPU_top #(
     logic [N/4-1:0][N-1:0] weight_en_pipe;
 
     logic [N-1:0][DW-1:0] in_vector;
-    logic [N-1:0][DW-1:0] psum_vector;
+    logic [N-1:0][PSUM_WIDTH-1:0] psum_vector;
 
     logic [N-1:0][DW-1:0] output_buffer_out;
 
@@ -129,17 +130,49 @@ genvar k;
                     end
                 end
 
-                TPU_MAC_4_input #(
-                    .IS_FP16(1)
-                ) u_mac_4_input (
-                    .clk(clk),
-                    .nRST(nRST),
-                    .in(in_pipe[i][j]),
-                    .psum_in(psum_pipe[i][j]),
-                    .weight_en(weight_delay),
-                    .out(psum_pipe[i+1][j])
-                );
+                if (IS_FP16) begin
+                    TPU_MAC_4_input #(
+                        // .IS_FP16(IS_FP16)
+                    ) u_mac_4_input (
+                        .clk(clk),
+                        .nRST(nRST),
+                        .in(in_pipe[i][j]),
+                        .psum_in(psum_pipe[i][j]),
+                        .weight_en(weight_delay),
+                        .out(psum_pipe[i+1][j])
+                    );
+                end else begin
+                    TPU_MAC_4_input #(
+                        .IS_FP16(IS_FP16)
+                    ) u_mac_4_input (
+                        .clk(clk),
+                        .nRST(nRST),
+                        .in(in_pipe[i][j]),
+                        .psum_in(psum_pipe[i][j]),
+                        .weight_en(weight_delay),
+                        .out(psum_pipe[i +  1][j])
+                    );
+                end
             end
+        end
+    endgenerate
+
+    logic [N - 1:0][DW - 1:0] reduced_data;
+
+    genvar r;
+    generate
+        if (!IS_FP16) begin
+            for (r = 0; r < N; r++) begin: reduce
+                reducer #(
+                    .IN_EXP_W(8),
+                    .IN_MANT_W(23),
+                    .OUT_EXP_W(8),
+                    .OUT_MANT_W(7)
+                ) u_reducer (
+                    .fp_in(psum_pipe[N / 4]),
+                    .fp_out(reduced_data[r])
+                );
+            end 
         end
     endgenerate
 
@@ -166,20 +199,38 @@ genvar k;
         end
     end
 
-    output_buffer #(
-        .NUM_COLS(N),
-        .DATA_WIDTH(DW),
-        .SRAM_DEPTH(N + PIPELINE_DEPTH)
-    ) u_output_buffer (
-        .clk(clk),
-        .nRST(nRST),
-        .stall(!gsau_if.sa_ready_out),
-        .wr_en(out_wr_en),
-        .wr_data(psum_pipe[N / 4]),
-        .rd_en(out_rd_en),
-        .rd_data(gsau_if.sa_array_output),
-        .vector_done(vector_done),
-        .rdone(rdone)
-    );
+    if (IS_FP16) begin
+        output_buffer #(
+            .NUM_COLS(N),
+            .DATA_WIDTH(DW),
+            .SRAM_DEPTH(N + PIPELINE_DEPTH)
+        ) u_output_buffer (
+            .clk(clk),
+            .nRST(nRST),
+            .stall(!gsau_if.sa_ready_out),
+            .wr_en(out_wr_en),
+            .wr_data(psum_pipe[N / 4]),
+            .rd_en(out_rd_en),
+            .rd_data(gsau_if.sa_array_output),
+            .vector_done(vector_done),
+            .rdone(rdone)
+        );
+    end else begin
+        output_buffer #(
+            .NUM_COLS(N),
+            .DATA_WIDTH(DW),
+            .SRAM_DEPTH(N + PIPELINE_DEPTH)
+        ) u_output_buffer (
+            .clk(clk),
+            .nRST(nRST),
+            .stall(!gsau_if.sa_ready_out),
+            .wr_en(out_wr_en),
+            .wr_data(reduced_data),
+            .rd_en(out_rd_en),
+            .rd_data(gsau_if.sa_array_output),
+            .vector_done(vector_done),
+            .rdone(rdone)
+        );
+    end
 
 endmodule
