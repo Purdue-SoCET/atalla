@@ -123,3 +123,44 @@ Create a folder for each submodule within `tensor-core/reports`, and store the r
 
 1. To get the clock speed, take the {-period} value you set in /scripts/constraint/*.sdc file, and add the slack value. If clock period is (1000) and total slack is (-555) then the clock speed = (1/1555ps)MHz. If clock period is (3000) and total slack is (0) and Critical Path Slack is (1580.8), then your frequency is (1/(3000ps – 1580.8ps)) = 704.8MHz.
 2. To get the area, look under the Area section. Values are in (um)^2. 1(mm^2) = 1e-6(um)^2.
+
+### Switching Design Nodes 
+Under the atallax01 branch, there are 3 different pdk files that are working, the 90, 45, and 15nm! 
+
+
+[Atallax01 Scripts](https://github.com/Purdue-SoCET/Flowkit/tree/atallax01/scripts)
+
+
+When you run synthesis, it will utilize whatever information is in the setup.yaml file, to change what process node you are running, copy/replace over the existing information in it with the node that you want to run. Please note that the default node loaded in when you initially clone is 90nm.
+
+#### Top Level Description 
+- 90nm: Old default Process Node 
+- 45nm: New target node
+- 15nm: Smallest process node
+
+Commands to this in terminal would look similar to 
+```
+# Switch to 90nm (default)
+cp scripts/90nm.yaml scripts/setup.yaml
+
+# Switch to 45nm
+cp scripts/45nm.yaml scripts/setup.yaml
+
+# Switch back to default (90nm)
+cp scripts/90nm.yaml scripts/setup.yaml
+
+
+# Confirm the active node 
+head -15 scripts/setup.yaml
+(Or vim/nano and check)
+```
+
+From there follow the rest of the standard synthesis steps described above in the document.
+
+**WARNING**
+Please note that in the normal sdc file that you make for 90nm contains this line :
+```
+set_driving_cell -lib_cell inv_8x -pin X [ all_inputs ] -min -max
+```
+
+This works normally on 90nm pdk but **DOES NOT** work on the others and will throw you errors, so just remove it.
