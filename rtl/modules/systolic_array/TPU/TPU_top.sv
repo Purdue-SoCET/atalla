@@ -2,7 +2,7 @@
 import sys_arr_pkg::*;
 
 module TPU_top #(
-    parameter int ADD_2_INPUT_LATENCY = 2,
+    parameter int ADD_2_INPUT_LATENCY = 1,
     parameter int ADD_4_INPUT_LATENCY = 3,
     parameter int MUL_LATENCY = 2,
     parameter int GROUP_SIZE = 4,
@@ -143,7 +143,7 @@ genvar k;
                     );
                 end else begin
                     TPU_MAC_4_input #(
-                        .IS_FP16(IS_FP16)
+                        // .IS_FP16(IS_FP16)
                     ) u_mac_4_input (
                         .clk(clk),
                         .nRST(nRST),

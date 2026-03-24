@@ -21,6 +21,7 @@
 ./rtl/modules/systolic_array/arithmetic/mul_fp16.sv
 ./rtl/modules/systolic_array/arithmetic/add_fp16.sv
 ./rtl/modules/systolic_array/arithmetic/add_fp16_4_input.sv
+./rtl/modules/systolic_array/arithmetic/add_fp16_1c.sv
 ./rtl/modules/common/memory/sram_bank.sv
 ./rtl/modules/systolic_array/arithmetic/mul_bf.sv
 ./rtl/modules/systolic_array/arithmetic/reducer.sv

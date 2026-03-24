@@ -81,7 +81,7 @@ generate
         //TODO: Get bf16 4 input adder
         add_fp16_4_input #(
             .MANTISSA_SIZE(23),
-            .EXPONENET_SIZE(8),
+            .EXPONENT_SIZE(8),
             .OUT_MANTISSA_SIZE(23)
         ) u_adder_fp16_4_input (
             .clk(clk),
