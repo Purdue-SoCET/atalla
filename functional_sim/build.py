@@ -9,13 +9,11 @@ from pathlib import Path
 import argparse
 import numpy as np
 
-# from src.misc.opcode_table import OPCODES, name_to_opcode
-# from kernels.utils.dataloader import load_tile_data
-from src.misc.opcode_table import OPCODES, name_to_opcode
+from kernels.utils.dataloader import load_tile_data
+from .src.misc.opcode_table import OPCODES, name_to_opcode
 
 try:
-    # from .instruction_latency import latency as DEFAULT_LATENCY_MAP
-    from instruction_latency import latency as DEFAULT_LATENCY_MAP
+    from .instruction_latency import latency as DEFAULT_LATENCY_MAP
 
 except Exception:
     DEFAULT_LATENCY_MAP: Dict[str, int] = {}
