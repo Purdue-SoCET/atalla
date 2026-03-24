@@ -15,12 +15,12 @@ module TPU_top #(
 );
 
     logic [N/4-1:0][N-1:0][4*DW-1:0] in_pipe;
-    logic [N/4:0][N-1:0][DW-1:0] psum_pipe;
-    logic [N/4:0][N-1:0][DW-1:0] next_psum_pipe;
+    logic [N/4:0][N-1:0][PSUM_WIDTH-1:0] psum_pipe;
+    // logic [N/4:0][N-1:0][DW-1:0] next_psum_pipe;
     logic [N/4-1:0][N-1:0] weight_en_pipe;
 
     logic [N-1:0][DW-1:0] in_vector;
-    logic [N-1:0][PSUM_WIDTH-1:0] psum_vector;
+    // logic [N-1:0][PSUM_WIDTH-1:0] psum_vector;
 
     logic [N-1:0][DW-1:0] output_buffer_out;
 

@@ -21,41 +21,7 @@ add wave -noupdate -radix unsigned /TPU_top_tb/#ublk#112448274#296/input_row
 add wave -noupdate -radix unsigned /TPU_top_tb/#ublk#112448274#380/result_row
 add wave -noupdate -divider psum_buffer
 add wave -noupdate -divider {Array COlumn 0}
-add wave -noupdate /TPU_top_tb/genblk1/DUT/in_pipe
-add wave -noupdate /TPU_top_tb/genblk1/DUT/psum_pipe
 add wave -noupdate -divider {Control Unit}
-add wave -noupdate -expand -group {Control Unit} -group {Control Unit Parameters} /TPU_top_tb/genblk1/DUT/control_unit/N
-add wave -noupdate -expand -group {Control Unit} -group {Control Unit Parameters} /TPU_top_tb/genblk1/DUT/control_unit/GROUP_SIZE
-add wave -noupdate -expand -group {Control Unit} -group {Control Unit Parameters} /TPU_top_tb/genblk1/DUT/control_unit/ADD_2_INPUT_LATENCY
-add wave -noupdate -expand -group {Control Unit} -group {Control Unit Parameters} /TPU_top_tb/genblk1/DUT/control_unit/ADD_4_INPUT_LATENCY
-add wave -noupdate -expand -group {Control Unit} -group {Control Unit Parameters} /TPU_top_tb/genblk1/DUT/control_unit/MUL_LATENCY
-add wave -noupdate -expand -group {Control Unit} -group {Control Unit Parameters} /TPU_top_tb/genblk1/DUT/control_unit/PIPELINE_DEPTH
-add wave -noupdate -expand -group {Control Unit} -group {Control Unit Parameters} /TPU_top_tb/genblk1/DUT/control_unit/NUM_GROUPS
-add wave -noupdate -expand -group {Control Unit} -group {Control Unit Parameters} /TPU_top_tb/genblk1/DUT/control_unit/OUT_START
-add wave -noupdate -expand -group {Control Unit} -group {Control Unit Parameters} /TPU_top_tb/genblk1/DUT/control_unit/IN_CNTR_W
-add wave -noupdate -expand -group {Control Unit} -group {Control Unit Parameters} /TPU_top_tb/genblk1/DUT/control_unit/OUT_CNTR_W
-add wave -noupdate -expand -group {Control Unit} /TPU_top_tb/genblk1/DUT/control_unit/in_buffer_empty
-add wave -noupdate -expand -group {Control Unit} /TPU_top_tb/genblk1/DUT/control_unit/vector_in
-add wave -noupdate -expand -group {Control Unit} /TPU_top_tb/genblk1/DUT/control_unit/ready_out
-add wave -noupdate -expand -group {Control Unit} /TPU_top_tb/genblk1/DUT/control_unit/rdone
-add wave -noupdate -expand -group {Control Unit} /TPU_top_tb/genblk1/DUT/control_unit/vector_done
-add wave -noupdate -expand -group {Control Unit} /TPU_top_tb/genblk1/DUT/control_unit/in_rd_en
-add wave -noupdate -expand -group {Control Unit} /TPU_top_tb/genblk1/DUT/control_unit/out_wr_en
-add wave -noupdate -expand -group {Control Unit} /TPU_top_tb/genblk1/DUT/control_unit/ready_in
-add wave -noupdate -expand -group {Control Unit} /TPU_top_tb/genblk1/DUT/control_unit/out_rd_en
-add wave -noupdate -expand -group {Control Unit} /TPU_top_tb/genblk1/DUT/control_unit/vector_out
-add wave -noupdate -expand -group {Control Unit} -radix unsigned /TPU_top_tb/genblk1/DUT/control_unit/vector_cnt
-add wave -noupdate -expand -group {Control Unit} -radix unsigned /TPU_top_tb/genblk1/DUT/control_unit/next_vector_cnt
-add wave -noupdate -expand -group {Control Unit} -radix unsigned /TPU_top_tb/genblk1/DUT/control_unit/credits
-add wave -noupdate -expand -group {Control Unit} -radix unsigned /TPU_top_tb/genblk1/DUT/control_unit/next_credits
-add wave -noupdate -expand -group {Control Unit} -radix binary /TPU_top_tb/genblk1/DUT/control_unit/group_en
-add wave -noupdate -expand -group {Control Unit} -radix binary /TPU_top_tb/genblk1/DUT/control_unit/next_group_en
-add wave -noupdate -expand -group {Control Unit} -radix unsigned /TPU_top_tb/genblk1/DUT/control_unit/in_cnt
-add wave -noupdate -expand -group {Control Unit} -radix unsigned /TPU_top_tb/genblk1/DUT/control_unit/next_in_cnt
-add wave -noupdate -expand -group {Control Unit} -radix unsigned /TPU_top_tb/genblk1/DUT/control_unit/next_output_vector_counter
-add wave -noupdate -expand -group {Control Unit} -radix unsigned /TPU_top_tb/genblk1/DUT/control_unit/output_vector_counter
-add wave -noupdate -expand -group {Control Unit} /TPU_top_tb/genblk1/DUT/control_unit/shift_reg
-add wave -noupdate -expand -group {Control Unit} /TPU_top_tb/genblk1/DUT/control_unit/group_en_shift_reg
 add wave -noupdate -expand -group {Control Unit} -group {Control Unit Parameters} /TPU_top_tb/DUT/control_unit/N
 add wave -noupdate -expand -group {Control Unit} -group {Control Unit Parameters} /TPU_top_tb/DUT/control_unit/GROUP_SIZE
 add wave -noupdate -expand -group {Control Unit} -group {Control Unit Parameters} /TPU_top_tb/DUT/control_unit/ADD_2_INPUT_LATENCY
@@ -92,22 +58,6 @@ add wave -noupdate -expand -group {Control Unit} /TPU_top_tb/DUT/control_unit/sh
 add wave -noupdate -expand -group {Control Unit} /TPU_top_tb/DUT/control_unit/group_en_shift_reg
 add wave -noupdate -expand -group {Control Unit} /TPU_top_tb/DUT/control_unit/input_bit
 add wave -noupdate -divider {Input Buffer}
-add wave -noupdate -expand -group {Input Buffer} -group Parameters /TPU_top_tb/genblk1/DUT/u_input_buffer/NUM_COLS
-add wave -noupdate -expand -group {Input Buffer} -group Parameters /TPU_top_tb/genblk1/DUT/u_input_buffer/DATA_WIDTH
-add wave -noupdate -expand -group {Input Buffer} -group Parameters /TPU_top_tb/genblk1/DUT/u_input_buffer/SRAM_DEPTH
-add wave -noupdate -expand -group {Input Buffer} -group Parameters /TPU_top_tb/genblk1/DUT/u_input_buffer/READ_LATENCY
-add wave -noupdate -expand -group {Input Buffer} -group Parameters /TPU_top_tb/genblk1/DUT/u_input_buffer/WRITE_LATENCY
-add wave -noupdate -expand -group {Input Buffer} -group Parameters /TPU_top_tb/genblk1/DUT/u_input_buffer/PTR_WIDTH
-add wave -noupdate -expand -group {Input Buffer} /TPU_top_tb/genblk1/DUT/u_input_buffer/stall
-add wave -noupdate -expand -group {Input Buffer} /TPU_top_tb/genblk1/DUT/u_input_buffer/wr_en
-add wave -noupdate -expand -group {Input Buffer} /TPU_top_tb/genblk1/DUT/u_input_buffer/wr_data
-add wave -noupdate -expand -group {Input Buffer} /TPU_top_tb/genblk1/DUT/u_input_buffer/rd_en
-add wave -noupdate -expand -group {Input Buffer} /TPU_top_tb/genblk1/DUT/u_input_buffer/rd_data
-add wave -noupdate -expand -group {Input Buffer} /TPU_top_tb/genblk1/DUT/u_input_buffer/rdone
-add wave -noupdate -expand -group {Input Buffer} /TPU_top_tb/genblk1/DUT/u_input_buffer/lane0_empty
-add wave -noupdate -expand -group {Input Buffer} /TPU_top_tb/genblk1/DUT/u_input_buffer/wr_ptr
-add wave -noupdate -expand -group {Input Buffer} /TPU_top_tb/genblk1/DUT/u_input_buffer/rd_ptr
-add wave -noupdate -expand -group {Input Buffer} /TPU_top_tb/genblk1/DUT/u_input_buffer/used
 add wave -noupdate -expand -group {Input Buffer} -group Parameters /TPU_top_tb/DUT/u_input_buffer/NUM_COLS
 add wave -noupdate -expand -group {Input Buffer} -group Parameters /TPU_top_tb/DUT/u_input_buffer/DATA_WIDTH
 add wave -noupdate -expand -group {Input Buffer} -group Parameters /TPU_top_tb/DUT/u_input_buffer/SRAM_DEPTH
@@ -127,29 +77,6 @@ add wave -noupdate -expand -group {Input Buffer} /TPU_top_tb/DUT/u_input_buffer/
 add wave -noupdate -expand -group {Input Buffer} /TPU_top_tb/DUT/u_input_buffer/next_rd_ptr
 add wave -noupdate -expand -group {Input Buffer} /TPU_top_tb/DUT/u_input_buffer/used
 add wave -noupdate -divider output_buffer
-add wave -noupdate -expand -group {Output Buffer} -group {Output Buffer Parameter} /TPU_top_tb/genblk1/DUT/genblk4/u_output_buffer/NUM_COLS
-add wave -noupdate -expand -group {Output Buffer} -group {Output Buffer Parameter} /TPU_top_tb/genblk1/DUT/genblk4/u_output_buffer/DATA_WIDTH
-add wave -noupdate -expand -group {Output Buffer} -group {Output Buffer Parameter} /TPU_top_tb/genblk1/DUT/genblk4/u_output_buffer/SRAM_DEPTH
-add wave -noupdate -expand -group {Output Buffer} -group {Output Buffer Parameter} /TPU_top_tb/genblk1/DUT/genblk4/u_output_buffer/READ_LATENCY
-add wave -noupdate -expand -group {Output Buffer} -group {Output Buffer Parameter} /TPU_top_tb/genblk1/DUT/genblk4/u_output_buffer/WRITE_LATENCY
-add wave -noupdate -expand -group {Output Buffer} -group {Output Buffer Parameter} /TPU_top_tb/genblk1/DUT/genblk4/u_output_buffer/PTR_WIDTH
-add wave -noupdate -expand -group {Output Buffer} /TPU_top_tb/genblk1/DUT/genblk4/u_output_buffer/stall
-add wave -noupdate -expand -group {Output Buffer} /TPU_top_tb/genblk1/DUT/genblk4/u_output_buffer/rd_en
-add wave -noupdate -expand -group {Output Buffer} /TPU_top_tb/genblk1/DUT/genblk4/u_output_buffer/wr_data
-add wave -noupdate -expand -group {Output Buffer} /TPU_top_tb/genblk1/DUT/genblk4/u_output_buffer/wr_en
-add wave -noupdate -expand -group {Output Buffer} /TPU_top_tb/genblk1/DUT/genblk4/u_output_buffer/rd_data
-add wave -noupdate -expand -group {Output Buffer} /TPU_top_tb/genblk1/DUT/genblk4/u_output_buffer/vector_done
-add wave -noupdate -expand -group {Output Buffer} /TPU_top_tb/genblk1/DUT/genblk4/u_output_buffer/rdone
-add wave -noupdate -expand -group {Output Buffer} -radix unsigned /TPU_top_tb/genblk1/DUT/genblk4/u_output_buffer/rd_ptr
-add wave -noupdate -expand -group {Output Buffer} -radix unsigned /TPU_top_tb/genblk1/DUT/genblk4/u_output_buffer/next_rd_ptr
-add wave -noupdate -expand -group {Output Buffer} -radix unsigned /TPU_top_tb/genblk1/DUT/genblk4/u_output_buffer/stall_rd_ptr
-add wave -noupdate -expand -group {Output Buffer} -radix unsigned /TPU_top_tb/genblk1/DUT/genblk4/u_output_buffer/next_stall_rd_ptr
-add wave -noupdate -expand -group {Output Buffer} -radix unsigned /TPU_top_tb/genblk1/DUT/genblk4/u_output_buffer/rd_addr
-add wave -noupdate -expand -group {Output Buffer} -radix unsigned /TPU_top_tb/genblk1/DUT/genblk4/u_output_buffer/wr_ptr
-add wave -noupdate -expand -group {Output Buffer} -radix unsigned /TPU_top_tb/genblk1/DUT/genblk4/u_output_buffer/next_wr_ptr
-add wave -noupdate -expand -group {Output Buffer} /TPU_top_tb/genblk1/DUT/genblk4/u_output_buffer/used
-add wave -noupdate -expand -group {Output Buffer} /TPU_top_tb/genblk1/DUT/genblk4/u_output_buffer/rdone_arr
-add wave -noupdate -expand -group {Output Buffer} /TPU_top_tb/genblk1/DUT/genblk4/u_output_buffer/wdone_arr
 add wave -noupdate -expand -group {Output Buffer} -group {Output Buffer Parameter} /TPU_top_tb/DUT/genblk4/u_output_buffer/NUM_COLS
 add wave -noupdate -expand -group {Output Buffer} -group {Output Buffer Parameter} /TPU_top_tb/DUT/genblk4/u_output_buffer/DATA_WIDTH
 add wave -noupdate -expand -group {Output Buffer} -group {Output Buffer Parameter} /TPU_top_tb/DUT/genblk4/u_output_buffer/SRAM_DEPTH
@@ -172,6 +99,15 @@ add wave -noupdate -expand -group {Output Buffer} /TPU_top_tb/DUT/genblk4/u_outp
 add wave -noupdate -expand -group {Output Buffer} /TPU_top_tb/DUT/genblk4/u_output_buffer/next_wr_ptr
 add wave -noupdate -expand -group {Output Buffer} /TPU_top_tb/DUT/genblk4/u_output_buffer/rdone_arr
 add wave -noupdate -expand -group {Output Buffer} /TPU_top_tb/DUT/genblk4/u_output_buffer/wdone_arr
+add wave -noupdate -divider {New Divider}
+add wave -noupdate {/TPU_top_tb/DUT/row[0]/col[0]/genblk1/u_mac_4_input/clk}
+add wave -noupdate {/TPU_top_tb/DUT/row[0]/col[0]/genblk1/u_mac_4_input/nRST}
+add wave -noupdate {/TPU_top_tb/DUT/row[0]/col[0]/genblk1/u_mac_4_input/in}
+add wave -noupdate {/TPU_top_tb/DUT/row[0]/col[0]/genblk1/u_mac_4_input/psum_in}
+add wave -noupdate {/TPU_top_tb/DUT/row[0]/col[0]/genblk1/u_mac_4_input/weight_en}
+add wave -noupdate {/TPU_top_tb/DUT/row[0]/col[0]/genblk1/u_mac_4_input/out}
+add wave -noupdate {/TPU_top_tb/DUT/row[0]/col[0]/genblk1/u_mac_4_input/mul_out}
+add wave -noupdate {/TPU_top_tb/DUT/row[0]/col[0]/genblk1/u_mac_4_input/add_4_input_out}
 TreeUpdate [SetDefaultTree]
 WaveRestoreCursors {{Cursor 13} {15439148 ps} 0}
 quietly wave cursor active 1
@@ -189,4 +125,4 @@ configure wave -griddelta 40
 configure wave -timeline 0
 configure wave -timelineunits ns
 update
-WaveRestoreZoom {275237 ps} {525469 ps}
+WaveRestoreZoom {1087280 ps} {1337512 ps}
