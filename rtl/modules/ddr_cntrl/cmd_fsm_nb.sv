@@ -5,8 +5,8 @@
 // When the arbiter acknowledges a bank (be_arb), that bank's address
 // signals are routed to the backend arbiter outputs.
 
-`include "ddr_controller_if.vh"
-`include "dram_pkg.vh"
+`include "ddr_controller_if.sv"
+`include "dram_pkg.svh"
 
 module cmd_fsm (
     input logic CLK, nRST,
@@ -27,8 +27,8 @@ module cmd_fsm (
             ddr_controller_if bank_if();
 
             // --- Wire bank queue inputs to this bank's FSM ---
-            assign bank_if.fsm_rw      = fsm.bq_rw[i];
-            assign bank_if.fsm_r       = fsm.bq_r[i];
+            assign bank_if.fsm_rw      = fsm.bq_slot[i].write;
+            assign bank_if.fsm_r       = fsm.bq_slot[i].row;
             assign bank_if.fsm_bqready = fsm.bq_ready[i];
 
             // Refresh: fan out external refresh to every bank
@@ -58,9 +58,9 @@ module cmd_fsm (
     always_comb begin
         fsm.be_bg   = fsm.bq_bg[fsm.be_arb];
         fsm.be_b    = fsm.bq_b[fsm.be_arb];
-        fsm.be_r    = fsm.bq_r[fsm.be_arb];
-        fsm.be_c    = fsm.bq_c[fsm.be_arb];
-        fsm.be_id   = fsm.bq_id[fsm.be_arb];
+        fsm.be_r    = fsm.bq_slot[fsm.be_arb].row;
+        fsm.be_c    = fsm.bq_slot[fsm.be_arb].column;
+        fsm.be_id   = fsm.bq_slot[fsm.be_arb].id_addr;
         fsm.be_cmd  = bank_cmd[fsm.be_arb];
         fsm.be_rlen = '0;
     end

@@ -79,7 +79,7 @@ logic                        fe_write_bq; // -> BQ
 logic [BANK_NUM-1:0]         fe_full; // -> FE & FSM
 
 // BQ <-> COMMAND FSM
-logic [$clog2(BANK_NUM)-1:0] bq_pop; // -> FSM
+logic [BANK_NUM-1:0]         bq_pop; // -> BQ (per-bank pop from FSM)
 logic [BANK_NUM-1:0]         bq_ready; // -> FSM
 logic [BANK_GROUP_BITS-1:0]  bq_bg; // -> BQ
 logic [BANK_BITS-1:0]        bq_b;  // -> BQ
@@ -94,6 +94,16 @@ logic [BANK_NUM-1:0]                      be_arb;
 logic [BANK_NUM-1:0]                      be_queue_ready;
 logic [2:0]                                       be_len;
 fsm_t [BANK_NUM-1:0]                              be_cmd; 
+
+// COMMAND FSM <-> FSM_MOD (per-bank internal signals)
+logic                      fsm_rw;      // Read(0) / Write(1) from bank queue
+logic [ROW_BITS-1:0]       fsm_r;       // Row address from bank queue
+logic                      fsm_bqready; // Bank queue has a pending request
+logic                      fsm_arb;     // Backend arbiter acknowledges this bank
+logic                      fsm_ref;     // External refresh request
+logic                      fsm_pop;     // Pop front entry from bank queue
+logic                      fsm_ready;   // Command eligible for arbiter scheduling
+fsm_t                      fsm_cmd;     // Current command
 
 // BACKEND ARBITER -> READ_ID_QUEUE
 logic                      be_push_id; 
@@ -207,8 +217,19 @@ modport command_fsm (
     input bq_ready, bq_bg, bq_b, bq_slot,
     //BE -> FSM
     be_arb,
+    //REFRESH
+    fsm_ref,
     //FSM -> BE 
-    output be_r, be_c, be_b, be_bg, be_cmd, be_id, be_rlen, be_queue_ready
+    output be_r, be_c, be_b, be_bg, be_cmd, be_id, be_rlen, be_queue_ready,
+    //FSM -> BQ
+    bq_pop
+);
+
+modport fsm_mod (
+    // Inputs from cmd_fsm (per-bank wiring)
+    input  fsm_rw, fsm_r, fsm_bqready, fsm_arb, fsm_ref,
+    // Outputs to cmd_fsm
+    output fsm_pop, fsm_ready, fsm_cmd
 );
 
 modport backend_arb (

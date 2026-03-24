@@ -1,4 +1,4 @@
-`include "ddr_controller_if.vh"
+`include "ddr_controller_if.sv"
 `timescale 1 ns / 1 ps
 
 module command_FSM_nb_tb();
@@ -20,7 +20,7 @@ module command_FSM_nb_tb();
     ddr_controller_if ddrif();
 
     // DUT Instantiation
-    command_FSM_nb DUT(CLK, nRST, ddrif);
+    cmd_fsm DUT(CLK, nRST, ddrif);
 
     // HELPER TASKS:
     
@@ -30,6 +30,7 @@ module command_FSM_nb_tb();
         ddrif.bq_ready = '0; // Which bank has request
         ddrif.bq_slot  = '{default: '0}; // BQ Slot --> holds row, col, write, id data
         ddrif.be_arb   = '0; // Tells FSM which bank has been given bus
+        ddrif.fsm_ref  = '0; // No refresh request
         repeat(2) @(posedge CLK);
         nRST = 1'b1;
         @(posedge CLK);
