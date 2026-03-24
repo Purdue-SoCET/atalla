@@ -8,10 +8,8 @@ import sys, re
 from pathlib import Path
 import argparse
 import numpy as np
-from instruction_latency import latency
 
-from src.misc.opcode_table import OPCODES, name_to_opcode
-
+from .build import *
 INVERT_OPCODES = name_to_opcode()
 VIRTUAL_PACKET_SIZE = 4 
 REAL_PACKET_SIZE = 4
