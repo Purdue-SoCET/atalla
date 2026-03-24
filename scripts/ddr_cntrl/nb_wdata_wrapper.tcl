@@ -1,6 +1,6 @@
 # --- Configuration ---
-set TB_FILE ./tb/unit/ddr_cntrl/testbench/nb_barb_tb.sv
-set TB_TOP  nb_barb_tb
+set TB_FILE ./tb/unit/ddr_cntrl/testbench/nb_wdata_queue_tb.sv
+set TB_TOP  nb_wdata_queue_tb
 
 if {![info exists TB_FILE]} {
     puts "ERROR: TB_FILE not set. Use:  vsim -c -do \"set TB_FILE <path>; set TB_TOP <top>; do test.tcl\""
@@ -25,9 +25,8 @@ set DESIGN_SRCS {
     ./rtl/include/ddr_cntrl/dram_pkg.svh
     ./rtl/include/ddr_cntrl/ddr_controller_if.sv
     ./rtl/modules/ddr_cntrl/flex_counter.sv
-    ./rtl/modules/ddr_cntrl/flex_sr.sv
-    ./rtl/modules/ddr_cntrl/priority_enc.sv
-    ./rtl/modules/ddr_cntrl/nb_barb.sv
+    ./rtl/modules/ddr_cntrl/nb_wdata_queue.sv
+    ./rtl/modules/ddr_cntrl/nb_wdata_wrapper.sv
 }
 
 # --- Verification / Bind Sources ---
