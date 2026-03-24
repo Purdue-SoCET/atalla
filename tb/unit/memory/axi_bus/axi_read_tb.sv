@@ -60,15 +60,18 @@ endclass
 // ================================================================
 typedef class scoreboard;
 
+// Per-master AR driver — each instance owns one master port
 class ar_driver;
     virtual axi_bus_if vif;
-    mailbox #(ar_txn) mbx;          // from test → driver
+    mailbox #(ar_txn) mbx;
     scoreboard scb;
+    int mid;  // fixed master this driver serves
 
-    function new(virtual axi_bus_if vif, mailbox #(ar_txn) mbx, scoreboard scb);
+    function new(virtual axi_bus_if vif, mailbox #(ar_txn) mbx, scoreboard scb, int mid);
         this.vif = vif;
         this.mbx = mbx;
         this.scb = scb;
+        this.mid = mid;
     endfunction
 
     task run();
@@ -82,7 +85,7 @@ class ar_driver;
 
     task drive(ar_txn t);
         @(negedge axi_read_tb.CLK);
-        case (t.mid)
+        case (mid)
             0: begin vif.ar_sp0_valid=1; vif.ar_sp0_i.addr=t.addr; vif.ar_sp0_i.id=t.id;
                      vif.ar_sp0_i.size=t.size; vif.ar_sp0_i.len=t.len; vif.ar_sp0_i.burst=t.burst; end
             1: begin vif.ar_sp1_valid=1; vif.ar_sp1_i.addr=t.addr; vif.ar_sp1_i.id=t.id;
@@ -94,7 +97,7 @@ class ar_driver;
         endcase
         @(negedge axi_read_tb.CLK);
         // Hold valid until ready (AXI handshake rule)
-        case (t.mid) // trap original signal in while loop, release value when ready
+        case (mid)
             0: begin while (!vif.ar_sp0_ready) @(negedge axi_read_tb.CLK); vif.ar_sp0_valid=0; vif.ar_sp0_i='0; end
             1: begin while (!vif.ar_sp1_ready) @(negedge axi_read_tb.CLK); vif.ar_sp1_valid=0; vif.ar_sp1_i='0; end
             2: begin while (!vif.ar_i_ready)   @(negedge axi_read_tb.CLK); vif.ar_i_valid=0;   vif.ar_i_i='0;   end
@@ -163,7 +166,7 @@ endclass
 // ================================================================
 class ar_monitor;
     virtual axi_bus_if vif;
-    mailbox #(sub_ar_channel_t) mon2scb;   // observed transactions → scoreboard
+    mailbox #(sub_ar_channel_t) mon2scb;
     int txn_cnt = 0;
 
     function new(virtual axi_bus_if vif, mailbox #(sub_ar_channel_t) mon2scb);
@@ -171,7 +174,6 @@ class ar_monitor;
         this.mon2scb = mon2scb;
     endfunction
 
-    // Runs forever, samples ar_o on every valid+ready handshake
     task run();
         forever begin
             @(posedge axi_read_tb.CLK);#1;
@@ -185,8 +187,6 @@ endclass
 
 // ================================================================
 //                     SCOREBOARD
-//   Receives expected (from driver) and observed (from monitor),
-//   matches them per-master using queues
 // ================================================================
 class scoreboard;
     mailbox #(sub_ar_channel_t)  mon_mbx;
@@ -197,18 +197,15 @@ class scoreboard;
         this.mon_mbx = mon_mbx;
     endfunction
 
-    // Collector: pull from driver mailbox into per-master queues
     function void push_expected(ar_txn t);
         exp_q[t.mid].push_back(t);
     endfunction
 
-    // Checker: pull from monitor mailbox and compare
     task check_observed();
         sub_ar_channel_t obs;
         ar_txn exp;
         forever begin
             mon_mbx.get(obs);
-            // Find which master this came from
             if (exp_q[obs.mid].size() == 0) begin
                 $error("[SCB] Unexpected txn on mid=%0d addr=%08h; expected value", obs.mid, obs.addr);
                 fail_cnt++;
@@ -249,45 +246,51 @@ endclass
 
 // ================================================================
 //                     ENVIRONMENT
-//   Wires everything together. Tests interact with env.
+//   4 per-master AR drivers run concurrently.
+//   send_ar() routes by t.mid to the correct mailbox.
 // ================================================================
 class environment;
     virtual axi_bus_if vif;
 
-    mailbox #(ar_txn)            ar_drv_mbx;
+    mailbox #(ar_txn)            ar_mbx[4];   // per-master mailboxes
     mailbox #(r_txn)             r_drv_mbx;
     mailbox #(sub_ar_channel_t)  mon2scb;
 
-    ar_driver  ar_drv;
+    ar_driver  ar_drv[4];                      // per-master drivers
     r_driver   r_drv;
     ar_monitor ar_mon;
     scoreboard scb;
 
     function new(virtual axi_bus_if vif);
-        this.vif    = vif;
-        ar_drv_mbx  = new();
-        r_drv_mbx   = new();
-        mon2scb     = new();
+        this.vif = vif;
+        r_drv_mbx = new();
+        mon2scb   = new();
+        scb       = new(mon2scb);
 
-        scb    = new(mon2scb);
-        ar_drv = new(vif, ar_drv_mbx, scb);
+        for (int m = 0; m < 4; m++) begin
+            ar_mbx[m] = new();
+            ar_drv[m] = new(vif, ar_mbx[m], scb, m);
+        end
+
         r_drv  = new(vif, r_drv_mbx);
         ar_mon = new(vif, mon2scb);
-        
     endfunction
 
     task start();
         fork
-            ar_drv.run();
+            ar_drv[0].run();
+            ar_drv[1].run();
+            ar_drv[2].run();
+            ar_drv[3].run();
             r_drv.run();
             ar_mon.run();
         join_none
         scb.run();
     endtask
 
-    // Send AR transaction through proper driver→monitor→scoreboard pipeline
+    // Routes to the correct per-master mailbox — concurrent by design
     task send_ar(ar_txn t);
-        ar_drv_mbx.put(t);
+        ar_mbx[t.mid].put(t);
     endtask
 
     task send_r(r_txn t);
@@ -313,10 +316,9 @@ module axi_read_tb;
     axi_read DUT (CLK, nRST, abif);
 
     // ----------------------------------------------------------
-    //  FUNCTIONAL COVERAGE (sampled automatically every cycle)
+    //  FUNCTIONAL COVERAGE
     // ----------------------------------------------------------
 
-    // AR output
     covergroup ar_out_cg @(posedge CLK);
         option.per_instance = 1;
 
@@ -338,14 +340,12 @@ module axi_read_tb;
             bins b1={3'b000}; bins b2={3'b001}; bins b4={3'b010};
         }
 
-        // cross to cover all combinations
         mid_x_len:   cross cp_mid, cp_len;
         mid_x_burst: cross cp_mid, cp_burst;
         mid_x_size:  cross cp_mid, cp_size;
         mid_x_id:    cross cp_mid, cp_id;
     endgroup
 
-    // Arbiter request combinations
     covergroup arb_cg @(posedge CLK);
         option.per_instance = 1;
 
@@ -367,7 +367,6 @@ module axi_read_tb;
         grant_x_ready: cross cp_grant, cp_ready;
     endgroup
 
-    // R channel
     covergroup r_cg @(posedge CLK);
         option.per_instance = 1;
 
@@ -384,7 +383,6 @@ module axi_read_tb;
         cp_last: coverpoint abif.r_i.last iff (abif.r_valid);
         mid_x_resp: cross cp_mid, cp_resp;
 
-        // Backpressure on each port
         cp_sp0_bp: coverpoint {abif.r_sp0_o_valid, abif.r_sp0_o_ready} {
             bins idle={2'b00}; bins stall={2'b10}; bins accept={2'b11};
         }
@@ -400,14 +398,13 @@ module axi_read_tb;
     endgroup
 
     ar_out_cg ar_out_cov = new();
-    arb_cg    arb_cov    = new();
-    r_cg      r_cov      = new();
+    arb_cg arb_cov    = new();
+    r_cg  r_cov      = new();
 
     // ----------------------------------------------------------
     //  SVA — PROTOCOL ASSERTIONS
     // ----------------------------------------------------------
 
-    // ar_o_valid / r_ready no X after reset
     a_valid_known: assert property (
         @(posedge CLK) disable iff (!nRST) !$isunknown(abif.ar_o_valid)
     ) else $error("SVA: ar_o_valid X/Z");
@@ -420,26 +417,22 @@ module axi_read_tb;
         @(posedge CLK) disable iff (!nRST) !$isunknown(DUT.grant_sel)
     ) else $error("SVA: grant_sel X/Z");
 
-    // AR handshake: fields not X
     a_ar_hsk_clean: assert property (
         @(posedge CLK) disable iff (!nRST)
         (abif.ar_o_valid && abif.ar_o_ready) |->
             !$isunknown(abif.ar_o.addr) && !$isunknown(abif.ar_o.id)
     ) else $error("SVA: ar_o X during handshake");
 
-    // Mutual exclusion: at most one pop
     a_pop_mutex: assert property (
         @(posedge CLK) disable iff (!nRST)
         $onehot0({abif.sp0_pop, abif.sp1_pop, abif.i_pop, abif.d_pop})
     ) else $error("SVA: multiple simultaneous pops");
 
-    // Pop implies request
     a_sp0_pop: assert property (@(posedge CLK) disable iff (!nRST) abif.sp0_pop |-> abif.sp0_req_r) else $error("SVA: sp0 pop w/o req");
     a_sp1_pop: assert property (@(posedge CLK) disable iff (!nRST) abif.sp1_pop |-> abif.sp1_req_r) else $error("SVA: sp1 pop w/o req");
     a_i_pop:   assert property (@(posedge CLK) disable iff (!nRST) abif.i_pop   |-> abif.i_req_r)   else $error("SVA: i pop w/o req");
     a_d_pop:   assert property (@(posedge CLK) disable iff (!nRST) abif.d_pop   |-> abif.d_req_r)   else $error("SVA: d pop w/o req");
 
-    // Router: one-hot output during R handshake
     a_router_1hot: assert property (
         @(posedge CLK) disable iff (!nRST)
         (abif.r_valid && abif.r_ready) |->
@@ -447,13 +440,11 @@ module axi_read_tb;
                      abif.r_i_o_valid,   abif.r_d_o_valid})
     ) else $error("SVA: router not one-hot");
 
-    // Router: correct destination
     a_r_sp0: assert property (@(posedge CLK) disable iff (!nRST) (abif.r_valid && abif.r_ready && abif.r_i.mid==0) |-> abif.r_sp0_o_valid) else $error("SVA: R mid=0 wrong dest");
     a_r_sp1: assert property (@(posedge CLK) disable iff (!nRST) (abif.r_valid && abif.r_ready && abif.r_i.mid==1) |-> abif.r_sp1_o_valid) else $error("SVA: R mid=1 wrong dest");
     a_r_i:   assert property (@(posedge CLK) disable iff (!nRST) (abif.r_valid && abif.r_ready && abif.r_i.mid==2) |-> abif.r_i_o_valid)   else $error("SVA: R mid=2 wrong dest");
     a_r_d:   assert property (@(posedge CLK) disable iff (!nRST) (abif.r_valid && abif.r_ready && abif.r_i.mid==3) |-> abif.r_d_o_valid)   else $error("SVA: R mid=3 wrong dest");
 
-    // No phantom output when r_valid=0
     a_no_phantom: assert property (
         @(posedge CLK) disable iff (!nRST)
         !abif.r_valid |->
@@ -511,20 +502,17 @@ program test (
         repeat (3) @(negedge CLK);
     endtask
 
-    // Background: random ar_o_ready toggling (mimics slow subordinate)
     task automatic random_ar_ready(int cycles);
         @(posedge CLK);
         for (int i = 0; i < cycles; i++) begin
             abif.ar_o_ready = $urandom_range(0, 1);
             @(posedge CLK);
         end
-        // Drain at end
         abif.ar_o_ready = 1;
         repeat (20) @(posedge CLK);
         abif.ar_o_ready = 0;
     endtask
 
-    // Background: steady ar_o_ready
     task automatic steady_ar_ready(int cycles);
         @(posedge CLK);
         abif.ar_o_ready = 1;
@@ -532,7 +520,6 @@ program test (
         abif.ar_o_ready = 0;
     endtask
 
-    // Watchdog
     task automatic watchdog(int cycles);
         repeat (cycles) @(negedge CLK);
         $fatal("[WATCHDOG] Timeout after %0d cycles", cycles);
@@ -545,7 +532,7 @@ program test (
         ref ar_txn txns[$],
         input int  n,
         input bit  single_only = 0,
-        input int  force_mid   = -1   // -1 = no constraint
+        input int  force_mid   = -1
     );
         for (int i = 0; i < n; i++) begin
             ar_txn t = new();
@@ -572,13 +559,11 @@ program test (
 
     // ----------------------------------------------------------
     //  TEST 1: Directed smoke — one txn per master, immediate pop
-    //  Goal: basic datapath sanity, toggle ar_o bits
     // ----------------------------------------------------------
     task automatic test_smoke();
         ar_txn t;
         $display("\n===== TEST 1: Smoke =====");
 
-        // Use contrasting bit patterns to maximize toggle
         for (int m = 0; m < 16; m++) begin
             t = new();
             t.c_single.constraint_mode(1);
@@ -592,7 +577,6 @@ program test (
 
     // ----------------------------------------------------------
     //  TEST 2: Toggle coverage — all-1s then all-0s addresses
-    //  Goal: every bit of ar_o.addr, ar_o.id etc. toggles
     // ----------------------------------------------------------
     task automatic test_toggle();
         ar_txn t;
@@ -638,53 +622,27 @@ program test (
 
     // ----------------------------------------------------------
     //  TEST 3: All-4-masters simultaneous contention
-    //  Goal: hit all arbiter priority branches, all req combos
     // ----------------------------------------------------------
     task automatic test_contention();
         ar_txn q[$];
         $display("\n===== TEST 3: Contention =====");
 
-        // Load all 4 masters with multiple requests each
+        // 4 txns per master → 16 total, routed to 4 per-master mailboxes
         for (int m = 0; m < 4; m++)
             gen_random_ar(q, 4, .force_mid(m));
 
-        // Fire them all rapidly (driver serializes per-master,
-        // but multiple masters fill concurrently via fork in driver)
+        // All puts happen in zero sim-time; 4 drivers pick up concurrently
         foreach (q[i]) env.send_ar(q[i]);
 
-        // Slow drain: creates contention
+        // Slow drain creates real contention at the arbiter
         random_ar_ready(80);
     endtask
 
     // ----------------------------------------------------------
-    //  TEST 4: Arbiter stall — grant active, ready drops
-    //  Goal: hit the "!ready" branches in each GRANTED state
-    // ----------------------------------------------------------
-    task automatic test_arbiter_stall();
-        ar_txn q[$];
-        $display("\n===== TEST 4: Arbiter stall (ready toggling) =====");
-
-        for (int m = 0; m < 4; m++)
-            gen_random_ar(q, 2, .force_mid(m));
-        foreach (q[i]) env.send_ar(q[i]);
-
-        // Pattern: ready on→off→on to hit !ready in each GRANTED state
-        for (int i = 0; i < 8; i++) begin
-            abif.ar_o_ready = 1;
-            @(negedge CLK);          // accept one
-            abif.ar_o_ready = 0;
-            repeat (2) @(negedge CLK); // stall in GRANTED
-        end
-        steady_ar_ready(20);
-    endtask
-
-    // ----------------------------------------------------------
     //  TEST 5: Idle with ready (no requests) — "All False" branch
-    //  Goal: ready=1, no master requesting
     // ----------------------------------------------------------
     task automatic test_idle_ready();
         $display("\n===== TEST 5: Idle + ready (all-false branch) =====");
-        // Just assert ready with nothing pending
         abif.ar_o_ready = 1;
         repeat (5) @(negedge CLK);
         abif.ar_o_ready = 0;
@@ -693,27 +651,23 @@ program test (
 
     // ----------------------------------------------------------
     //  TEST 6: FIFO fill/drain per master
-    //  Goal: fill each manager FIFO to capacity, then drain all
     // ----------------------------------------------------------
     task automatic test_fifo_pressure();
         ar_txn q[$];
         $display("\n===== TEST 6: FIFO pressure =====");
 
-        // No ready yet — let FIFOs fill
         abif.ar_o_ready = 0;
         for (int m = 0; m < 4; m++)
             gen_random_ar(q, NUM_U_READS, .force_mid(m));
         foreach (q[i]) env.send_ar(q[i]);
 
-        repeat (NUM_U_READS * 5) @(negedge CLK); // let them fill
+        repeat (NUM_U_READS * 5) @(negedge CLK);
 
-        // Now drain
         steady_ar_ready(NUM_U_READS * 8);
     endtask
 
     // ----------------------------------------------------------
     //  TEST 7: R channel — all response types, all masters
-    //  Goal: route coverage, resp coverage, last toggle
     // ----------------------------------------------------------
     task automatic test_r_directed();
         r_txn t;
@@ -736,7 +690,6 @@ program test (
 
     // ----------------------------------------------------------
     //  TEST 8: R backpressure — ready drops mid-burst
-    //  Goal: stall bins in R coverage, stress router
     // ----------------------------------------------------------
     task automatic test_r_backpressure();
         r_txn t;
@@ -755,7 +708,6 @@ program test (
 
     // ----------------------------------------------------------
     //  TEST 9: Fully constrained-random — AR + R concurrent
-    //  Goal: cross-coverage, corner cases via random exploration
     // ----------------------------------------------------------
     task automatic test_random(int n_ar, int n_r);
         ar_txn aq[$];
@@ -766,11 +718,8 @@ program test (
         gen_random_r(rq, n_r);
 
         fork
-            // AR stimulus
             foreach (aq[i]) env.send_ar(aq[i]);
-            // AR consumer (random ready)
             random_ar_ready(n_ar * 4);
-            // R stimulus (delayed start)
             begin
                 repeat (10) @(negedge CLK);
                 foreach (rq[i]) env.send_r(rq[i]);
@@ -781,15 +730,12 @@ program test (
 
     // ----------------------------------------------------------
     //  TEST 10: Starvation — one master floods, others trickle
-    //  Goal: fairness, check other masters still get served
     // ----------------------------------------------------------
     task automatic test_starvation();
         ar_txn q[$];
         $display("\n===== TEST 10: Starvation =====");
 
-        // SP0 floods 16 txns
         gen_random_ar(q, 16, .force_mid(0));
-        // Others trickle 2 each
         for (int m = 1; m < 4; m++)
             gen_random_ar(q, 2, .force_mid(m));
 
@@ -799,7 +745,6 @@ program test (
 
     // ----------------------------------------------------------
     //  TEST 11: Back-to-back — no idle cycles between handshakes
-    //  Goal: pipe full throughput, no bubble
     // ----------------------------------------------------------
     task automatic test_back2back();
         ar_txn q[$];
@@ -807,7 +752,6 @@ program test (
 
         gen_random_ar(q, 20, .single_only(1));
         foreach (q[i]) env.send_ar(q[i]);
-        // Keep ready always high
         steady_ar_ready(40);
     endtask
 
@@ -826,37 +770,28 @@ program test (
         env.start();
 
         fork
-            // Global watchdog
             watchdog(TIMEOUT_CYCLES);
         join_none
 
         reset_dut();
-        
-        
 
-        // Run all tests sequentially
         for (i = 0; i < iteration; i++) begin
             $display("=========== Iteration %d ===========", i);
-            
-            test_smoke();           reset_dut();
-            test_toggle();          reset_dut();
-            test_contention();      reset_dut();
-            test_idle_ready();      reset_dut();
-            test_fifo_pressure();   reset_dut();
-            test_r_directed();      reset_dut();
-            test_r_backpressure();  reset_dut();
-            test_random(100, 50);   reset_dut();
-            test_starvation();      reset_dut();
-            test_back2back();       reset_dut();
+
+            test_smoke();          reset_dut();
+            test_toggle();         reset_dut();
+            test_contention();     reset_dut();
+            test_idle_ready();     reset_dut();
+            test_fifo_pressure();  reset_dut();
+            test_r_directed();     reset_dut();
+            test_r_backpressure(); reset_dut();
+            test_random(100, 50);  reset_dut();
+            test_starvation();     reset_dut();
+            test_back2back();      reset_dut();
         end
-        
 
-        // test_arbiter_stall();   reset_dut(); // bad one
-
-        // Let scoreboard drain remaining comparisons
         repeat (50) @(negedge CLK);
 
-        // Final reports
         env.report();
         $display("\n  AR output cov: %.1f%%", axi_read_tb.ar_out_cov.get_coverage());
         $display("  Arbiter cov:   %.1f%%", axi_read_tb.arb_cov.get_coverage());
