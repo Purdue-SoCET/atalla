@@ -52,7 +52,7 @@ module scheduler_core #(
     //instantiations
     s_wb_arbiter S_WB_ARBITER(.CLK(CLK), .nRST(nRST), .vif(scalar_wb_if));
     execute_stage S_EXECUTE(.clk(CLK), .nRST(nRST), .ex_if(scalar_ex_if));
-    decode_2 S_V_DECODE_2(.CLK(CLK), .nRST(nRST), .flush(scalar_ex_if.redirect_valid), .halt(scalar_ex_if.halt_out), .d2if(decode_2_if));
+    decode_2 S_V_DECODE_2(.CLK(CLK), .nRST(nRST), .d2if(decode_2_if));
     fetch_decode1 S_FETCH_DECODE_1 (.clk(CLK), .rst_n(nRST), .flush(scalar_ex_if.redirect_valid), .ready(decode_2_if.ready), .pc_branch(scalar_ex_if.redirect_target), .halt(scalar_ex_if.halt_out), .btb_update_en(scalar_ex_if.redirect_valid), .btb_pc_update(scalar_ex_if.pc_out), .btb_true_target(scalar_ex_if.redirect_target), .dc_if(datapath_cache_if), .dec12_if(decode_1_if));
 
 
