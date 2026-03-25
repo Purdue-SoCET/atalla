@@ -15,7 +15,8 @@ def git_path() -> str:
 ROOT_PATH = git_path()
 OUT_DIR = f"{ROOT_PATH}/out"
 os.makedirs(OUT_DIR, exist_ok=True)
+path = os.path.expanduser("~/.bashrc")
 
-with open(f"~/.bashrc", "a") as f:
+with open(path, "a") as f:
     f.write(f"\nexport ATALLA_ROOT={ROOT_PATH}\n")
     f.write(f"\nexport UVM_HOME={ROOT_PATH}/UVM_1.2\n")
