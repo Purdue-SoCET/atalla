@@ -15,12 +15,3 @@ __pycache__/
 *out/
 kernels/*/*/*.out
 kernels/**/*.in
-*ini
-*.deps/
-build/
-waves/
-*.log
-*.jou
-*waves*/
-out/
-waves/
