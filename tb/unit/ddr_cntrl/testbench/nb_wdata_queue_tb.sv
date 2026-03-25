@@ -1,9 +1,9 @@
 `include "dram_pkg.svh"
-`include "cpu_types_pkg.svh"
 `include "ddr_controller_if.sv"
 
 
-module nb_wdata_queue_tb;
+module nb_wdata_queue_tb; 
+    import dram_pkg::*;
     logic CLK, nRST;
     parameter PERIOD = 5ns;
 
