@@ -43,7 +43,7 @@ def scpad_to_vreg(
         # --- COL MODE ---
         # Fixed Slot (scpad_addr), Iterate Banks
         slot = int(scpad_addr % scpad.S + rc_id)
-        for bank in range(0, length):
+        for bank in range(0, length+1):
             if bank >= scpad.B:
                 break
             val = scpad.banks[bank][slot]
@@ -53,7 +53,7 @@ def scpad_to_vreg(
         # --- ROW MODE ---
         # Fixed Bank (scpad_addr), Iterate Slots
         bank = scpad_addr % scpad.B + rc_id
-        for i in range(0,length):
+        for i in range(0,length+1):
             slot = i % scpad.S 
             val = scpad.banks[bank][slot]
             vector_data.append(val)
@@ -90,7 +90,7 @@ def vreg_to_scpad(
         # Fixed Slot (scpad_addr), Iterate Banks
         slot = int (scpad_addr % scpad.S + rc_id)
         for bank, val in enumerate(vector_data):
-            if bank >= num_cols :
+            if bank >= num_cols + 1:
                 break
             scpad.banks[bank][slot] = val
 
@@ -100,7 +100,7 @@ def vreg_to_scpad(
         bank = scpad_addr % scpad.B + rc_id
         for i, val in enumerate(vector_data):
             slot = i % scpad.S
-            if i >= num_rows :
+            if i >= num_rows + 1:
                 break
             scpad.banks[bank][slot] = val  
 
@@ -133,12 +133,12 @@ def sdma_load(
         "base_row": scpad_base_row
     }
 
-    for i in range(0, NR):
+    for i in range(0, NR+1):
         row_vals = []
 
         # Read from GMEM
-        for j in range(0, NC):
-            g_addr = gmem_base + (i * (NC) + j) * 2
+        for j in range(0, NC+1):
+            g_addr = gmem_base + (i * (NC+1) + j) * 2
             raw_val = gmem.read_data(g_addr)
             if perf_metrics is not None:
                 # GMEM BF16 payload is 2 bytes per element.
@@ -180,9 +180,9 @@ def sdma_store(
             GMEM[(gmem_ptr * i) + j] = SCPAD[ swizzle((scpad_ptr * i) + j) ]
     """
 
-    for i in range(0, NR):
+    for i in range(0, NR+1):
         slot = (scpad_base_row + i) % scpad.S
-        for j in range(0, NC):
+        for j in range(0, NC+1):
             bank = j
             if bank >= scpad.B:
                 break
@@ -190,7 +190,7 @@ def sdma_store(
             bits = struct.unpack('<I', struct.pack('<f', val))[0]
             bits = bits >> 16
             #x_shifted = struct.unpack('<f', struct.pack('<I', bits & 0xFFFFFFFF))[0]
-            g_addr = gmem_base + (i * (NC) + j) * 2
+            g_addr = gmem_base + (i * (NC+1) + j) * 2
             gmem.write_data(g_addr, bits)
 
 
