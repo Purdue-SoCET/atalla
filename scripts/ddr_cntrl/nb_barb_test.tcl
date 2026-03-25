@@ -50,7 +50,7 @@ vmap work work
 
 # --- Compilation ---
 # -mfcu (Multi-File Compilation Unit) is good here to resolve cross-file dependencies
-vlog -sv -mfcu {*}$INC_FLAGS {*}$SRC_FILES
+vlog -sv -compile_uselibs -cover bst -sv -pedanticerrors -lint -mfcu {*}$INC_FLAGS {*}$SRC_FILES
 
 puts "=============================================================="
 puts "Compilation complete. Launching simulation for $TB_TOP"
@@ -58,12 +58,20 @@ puts "=============================================================="
 
 # --- Elaboration & Simulation ---
 # +acc enables visibility for waveform debugging
-vsim -c -voptargs="+acc" work.$TB_TOP
+vsim -coverage -voptargs="+acc" work.$TB_TOP -onfinish stop;
+
+if {[file exists "./waves/nb_barb_tb.do"]} {
+    puts "Applying wave configurations from ./waves/nb_barb_tb.do"
+    do ./waves/nb_barb_tb.do
+} else {
+    puts "WARNING: No .do file found at ./waves/nb_barb_tb.do"
+    quit -f
+}
+
+# 4. Execution
+# We use a small delay or manual run to ensure the GUI is ready
+puts "=============================================================="
+puts "Starting Simulation..."
+puts "=============================================================="
 
 run -all
-
-puts "=============================================================="
-puts "Simulation finished."
-puts "=============================================================="
-
-quit -f

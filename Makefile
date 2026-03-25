@@ -37,6 +37,8 @@ setup:
 ## 		make run FILE=./scripts/xbar/benes_rom/verify.tcl
 ## 		make run FILE=./scripts/memory/scratchpad/swizzle/verify.tcl
 run:
+	vsim -do "source $(FILE)"
+run_sim:
 	vsim -c -do "source $(FILE)"
 
 # Usage: make lint folder=/sub/dir [file=name.sv[,name2.sv,...]] [include=/foo/bar,/baz/qux ...]
@@ -152,11 +154,11 @@ test:
 
 	[ -d work ] || $(VLIB) work; \
 	echo "[$@] compiling (in-order):"; printf '  %s\n' $$ORDERED_SRCS; \
-	$(VLOG) -sv -mfcu -work work +acc $$INCFLAGS $$ORDERED_SRCS; \
+	$(VLOG) -sv -compile_uselibs -cover bst -sv -pedanticerrors -lint -mfcu -work work +acc $$INCFLAGS $$ORDERED_SRCS; \
 
 	@if [ "$(GUI)" = "ON" ]; then \
 		echo "[$@] launching vsim GUI on work.$$TB_TOP"; \
-		$(VSIM) -coverage -voptargs="+acc" work.$$TB_TOP -do "view objects; do $$WAVEROOT/$$TB_TOP.do; run -all;" -onfinish stop; \
+		$(VSIM) -coverage -voptargs="+acc" work.$$TB_TOP -do "view objects; do ./nb_barb_tb.do; run -all;" -onfinish stop; \
 	else \
 		echo "[$@] launching vsim on work.$$TB_TOP"; \
 		$(VSIM) -coverage -c -voptargs="+acc"  work.$$TB_TOP -do "run -all"; \
