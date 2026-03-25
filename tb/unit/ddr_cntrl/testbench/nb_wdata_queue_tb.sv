@@ -1,5 +1,5 @@
 `include "dram_pkg.svh"
-// `include "cpu_types_pkg.svh"
+`include "cpu_types_pkg.svh"
 `include "ddr_controller_if.sv"
 
 
@@ -12,7 +12,7 @@ module nb_wdata_queue_tb;
     
     ddr_controller_if ddrif0;
     // ddr_controller_if ddrif1;
-    nb_barb DUT(CLK, nRST, ddrif0);
+    nb_wdata_queue_wrapper DUT(CLK, nRST, ddrif0, ddrif0);
 
     test PROG(CLK, nRST, ddrif0, ddrif0);
 
@@ -26,7 +26,7 @@ program test(
     ddr_controller_if.wdata_wrapper wdw
 );
 
-    paremeter NUM_REQS = 1000;
+    parameter NUM_REQS = 1000;
     task reset_dut();
         begin
             nRST = 0;
