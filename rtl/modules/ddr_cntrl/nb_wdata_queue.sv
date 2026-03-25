@@ -1,8 +1,8 @@
 `timescale 1ps / 1ps
-`include "ddr_controller_if.vh"
-`include "dram_pkg.vh"
+`include "ddr_controller_if.sv"
+`include "dram_pkg.svh"
 
-module #(Q_ID = 0) nb_wdata_queue (
+module nb_wdata_queue  #(Q_ID = 0) (
     input logic CLK, nRST,
     ddr_controller_if.wdata_queue wdq
 );

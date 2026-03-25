@@ -1,10 +1,11 @@
-`include "dram_pkg.sv"
-`include "cpu_types_pkg.sv"
+`include "dram_pkg.svh"
+// `include "cpu_types_pkg.svh"
 `include "ddr_controller_if.sv"
 
 
 module nb_wdata_queue_tb;
     logic CLK, nRST;
+    parameter PERIOD = 5ns;
 
     // clock
     always #(PERIOD/2) CLK++;
