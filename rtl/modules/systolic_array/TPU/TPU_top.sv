@@ -130,29 +130,40 @@ genvar k;
                     end
                 end
 
-                if (IS_FP16) begin
-                    TPU_MAC_4_input #(
-                        // .IS_FP16(IS_FP16)
-                    ) u_mac_4_input (
-                        .clk(clk),
-                        .nRST(nRST),
-                        .in(in_pipe[i][j]),
-                        .psum_in(psum_pipe[i][j]),
-                        .weight_en(weight_delay),
-                        .out(psum_pipe[i+1][j])
-                    );
-                end else begin
-                    TPU_MAC_4_input #(
-                        // .IS_FP16(IS_FP16)
-                    ) u_mac_4_input (
-                        .clk(clk),
-                        .nRST(nRST),
-                        .in(in_pipe[i][j]),
-                        .psum_in(psum_pipe[i][j]),
-                        .weight_en(weight_delay),
-                        .out(psum_pipe[i +  1][j])
-                    );
-                end
+                TPU_MAC_4_input #(
+                    // .IS_FP16(IS_FP16)
+                ) u_mac_4_input (
+                    .clk(clk),
+                    .nRST(nRST),
+                    .in(in_pipe[i][j]),
+                    .psum_in(psum_pipe[i][j]),
+                    .weight_en(weight_delay),
+                    .out(psum_pipe[i +  1][j])
+                );
+
+                // if (IS_FP16) begin
+                //     TPU_MAC_4_input #(
+                //         // .IS_FP16(IS_FP16)
+                //     ) u_mac_4_input (
+                //         .clk(clk),
+                //         .nRST(nRST),
+                //         .in(in_pipe[i][j]),
+                //         .psum_in(psum_pipe[i][j]),
+                //         .weight_en(weight_delay),
+                //         .out(psum_pipe[i+1][j])
+                //     );
+                // end else begin
+                //     TPU_MAC_4_input #(
+                //         // .IS_FP16(IS_FP16)
+                //     ) u_mac_4_input (
+                //         .clk(clk),
+                //         .nRST(nRST),
+                //         .in(in_pipe[i][j]),
+                //         .psum_in(psum_pipe[i][j]),
+                //         .weight_en(weight_delay),
+                //         .out(psum_pipe[i +  1][j])
+                //     );
+                // end
             end
         end
     endgenerate
@@ -169,7 +180,7 @@ genvar k;
                     .OUT_EXP_W(8),
                     .OUT_MANT_W(7)
                 ) u_reducer (
-                    .fp_in(psum_pipe[N / 4]),
+                    .fp_in(psum_pipe[N / 4][r]),
                     .fp_out(reduced_data[r])
                 );
             end 
@@ -199,38 +210,40 @@ genvar k;
         end
     end
 
-    if (IS_FP16) begin
-        output_buffer #(
-            .NUM_COLS(N),
-            .DATA_WIDTH(DW),
-            .SRAM_DEPTH(N + PIPELINE_DEPTH)
-        ) u_output_buffer (
-            .clk(clk),
-            .nRST(nRST),
-            .stall(!gsau_if.sa_ready_out),
-            .wr_en(out_wr_en),
-            .wr_data(psum_pipe[N / 4]),
-            .rd_en(out_rd_en),
-            .rd_data(gsau_if.sa_array_output),
-            .vector_done(vector_done),
-            .rdone(rdone)
-        );
-    end else begin
-        output_buffer #(
-            .NUM_COLS(N),
-            .DATA_WIDTH(DW),
-            .SRAM_DEPTH(N + PIPELINE_DEPTH)
-        ) u_output_buffer (
-            .clk(clk),
-            .nRST(nRST),
-            .stall(!gsau_if.sa_ready_out),
-            .wr_en(out_wr_en),
-            .wr_data(reduced_data),
-            .rd_en(out_rd_en),
-            .rd_data(gsau_if.sa_array_output),
-            .vector_done(vector_done),
-            .rdone(rdone)
-        );
-    end
+    generate
+        if (IS_FP16) begin
+            output_buffer #(
+                .NUM_COLS(N),
+                .DATA_WIDTH(DW),
+                .SRAM_DEPTH(N + PIPELINE_DEPTH)
+            ) u_output_buffer (
+                .clk(clk),
+                .nRST(nRST),
+                .stall(!gsau_if.sa_ready_out),
+                .wr_en(out_wr_en),
+                .wr_data(psum_pipe[N / 4]),
+                .rd_en(out_rd_en),
+                .rd_data(gsau_if.sa_array_output),
+                .vector_done(vector_done),
+                .rdone(rdone)
+            );
+        end else begin
+            output_buffer #(
+                .NUM_COLS(N),
+                .DATA_WIDTH(DW),
+                .SRAM_DEPTH(N + PIPELINE_DEPTH)
+            ) u_output_buffer (
+                .clk(clk),
+                .nRST(nRST),
+                .stall(!gsau_if.sa_ready_out),
+                .wr_en(out_wr_en),
+                .wr_data(reduced_data),
+                .rd_en(out_rd_en),
+                .rd_data(gsau_if.sa_array_output),
+                .vector_done(vector_done),
+                .rdone(rdone)
+            );
+        end
+    endgenerate
 
 endmodule

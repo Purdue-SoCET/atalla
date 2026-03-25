@@ -99,17 +99,8 @@ add wave -noupdate -expand -group {Output Buffer} /TPU_top_tb/DUT/genblk4/u_outp
 add wave -noupdate -expand -group {Output Buffer} /TPU_top_tb/DUT/genblk4/u_output_buffer/next_wr_ptr
 add wave -noupdate -expand -group {Output Buffer} /TPU_top_tb/DUT/genblk4/u_output_buffer/rdone_arr
 add wave -noupdate -expand -group {Output Buffer} /TPU_top_tb/DUT/genblk4/u_output_buffer/wdone_arr
-add wave -noupdate -divider {New Divider}
-add wave -noupdate {/TPU_top_tb/DUT/row[0]/col[0]/genblk1/u_mac_4_input/clk}
-add wave -noupdate {/TPU_top_tb/DUT/row[0]/col[0]/genblk1/u_mac_4_input/nRST}
-add wave -noupdate {/TPU_top_tb/DUT/row[0]/col[0]/genblk1/u_mac_4_input/in}
-add wave -noupdate {/TPU_top_tb/DUT/row[0]/col[0]/genblk1/u_mac_4_input/psum_in}
-add wave -noupdate {/TPU_top_tb/DUT/row[0]/col[0]/genblk1/u_mac_4_input/weight_en}
-add wave -noupdate {/TPU_top_tb/DUT/row[0]/col[0]/genblk1/u_mac_4_input/out}
-add wave -noupdate {/TPU_top_tb/DUT/row[0]/col[0]/genblk1/u_mac_4_input/mul_out}
-add wave -noupdate {/TPU_top_tb/DUT/row[0]/col[0]/genblk1/u_mac_4_input/add_4_input_out}
 TreeUpdate [SetDefaultTree]
-WaveRestoreCursors {{Cursor 13} {15439148 ps} 0}
+WaveRestoreCursors {{Cursor 13} {447520 ps} 0}
 quietly wave cursor active 1
 configure wave -namecolwidth 231
 configure wave -valuecolwidth 225
@@ -125,4 +116,4 @@ configure wave -griddelta 40
 configure wave -timeline 0
 configure wave -timelineunits ns
 update
-WaveRestoreZoom {1087280 ps} {1337512 ps}
+WaveRestoreZoom {1211293 ps} {1332263 ps}
