@@ -49,7 +49,8 @@ vmap work work
 
 # --- Compilation ---
 # -mfcu (Multi-File Compilation Unit) is good here to resolve cross-file dependencies
-vlog -sv -mfcu {*}$INC_FLAGS {*}$SRC_FILES
+vlog -sv -compile_uselibs -cover bst -sv -pedanticerrors -lint -mfcu {*}$INC_FLAGS {*}$SRC_FILES
+
 
 puts "=============================================================="
 puts "Compilation complete. Launching simulation for $TB_TOP"
