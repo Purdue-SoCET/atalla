@@ -31,11 +31,11 @@ set DESIGN_SRCS {
 
 # --- Verification / Bind Sources ---
 # If you decide to use the bind file or a aseparate property module, add it here
-# set VERIF_SRCS [list \
-    # ./ddr_cntrl/nb_barb_prop.sv \ 
-# ] $VERIF_SRCS
+set VERIF_SRCS [list \
+     ./tb/unit/ddr_cntrl/testbench/nb_wdata_queue_prop.sv \ 
+] 
 
-set SRC_FILES [concat $DESIGN_SRCS [list $TB_FILE]]
+set SRC_FILES [concat $DESIGN_SRCS $VERIF_SRCS [list $TB_FILE]]
 
 puts "INC_FLAGS  : $INC_FLAGS"
 puts "SRC_FILES  : $SRC_FILES"
@@ -57,7 +57,20 @@ puts "=============================================================="
 
 # --- Elaboration & Simulation ---
 # +acc enables visibility for waveform debugging
-vsim -c -voptargs="+acc" work.$TB_TOP
+vsim -coverage -voptargs="+acc" work.$TB_TOP -onfinish stop;
+
+if {[file exists "./waves/nb_barb_tb.do"]} {
+    puts "Applying wave configurations from ./waves/nb_barb_tb.do"
+    do ./waves/nb_barb_tb.do
+} else {
+    puts "WARNING: No .do file found at ./waves/nb_barb_tb.do"
+    quit -f
+}
+
+puts "=============================================================="
+puts "Starting Simulation."
+puts "=============================================================="
+
 
 run -all
 
