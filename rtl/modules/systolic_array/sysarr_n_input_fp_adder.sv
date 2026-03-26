@@ -256,18 +256,18 @@ module sysarr_n_input_fp_adder #(
         if (st2_special) result_out = st2_spec_res;
     end
 
-// =================================================================================
-    // EXTRA PIPELINE STAGES (For Synthesis Retiming)
+    // =================================================================================
+    // EXTRA PIPELINE STAGES (For Synthesis Retiming in Genus)
     // =================================================================================
     
-    (* retiming_backward = 1 *)       // For Xilinx Vivado
-    /* synopsys optimize_registers */ // For Synopsys Design Compiler
-    logic [RES_WIDTH-1:0] pipe_regs [EXTRA_STAGES+1];
+    // Genus-compatible retime attribute.
+    // Note: To guarantee execution, ensure retiming is enabled in your synthesis TCL script.
+    (* retime *) logic [RES_WIDTH-1:0] pipe_regs [EXTRA_STAGES+1];
 
-    // NOTE: nRST is intentionally removed here! 
-    // Synthesis tools cannot safely retime flops that have asynchronous resets.
     always_ff @(posedge clk) begin
-        pipe_regs[0] <= result_out; // End of original Stage 3 combinational logic
+        // Leaving these registers un-reset allows the Genus retiming engine to move 
+        // them backward/forward across your combinational logic without altering functionality.
+        pipe_regs[0] <= result_out; 
         for (int i = 1; i <= EXTRA_STAGES; i++) begin
             pipe_regs[i] <= pipe_regs[i-1];
         end
