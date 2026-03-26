@@ -81,6 +81,10 @@ uint16_t sim_4_input_add(uint16_t a, uint16_t b, uint16_t c, uint16_t d, bool is
     }
 }
 
+uint32_t sim_4_input_add32(uint32_t a, uint32_t b, uint32_t c, uint32_t d, bool is_fp16) {
+    return fp32_4_input_add_hw(a, b, c, d);
+}
+
 uint16_t sim_mul(uint16_t a, uint16_t b, bool is_fp16) {
     if (is_fp16) {
         return fp16_mul_hw(a, b);
@@ -320,6 +324,25 @@ uint16_t sim_TPU_MAC(std::vector<uint16_t>& input, std::vector<uint16_t>& weight
     return sim_2_input_add(add_out, psum, is_fp16);
 }
 
+uint32_t sim_TPU_MAC32(std::vector<uint32_t>& input, std::vector<uint32_t>& weight, uint32_t psum, bool is_fp16)
+{
+    if(input.size() != 4 || weight.size() != 4)
+    {
+        std::cerr << "Error: Invalid input/weight size for TPU mac input" << std::endl;
+    }
+
+    std::vector<uint32_t> mul_out(4);
+
+    for(int i = 0; i < 4; ++i)
+    {
+        mul_out[i] = sim_mul32(input[i], weight[i]);
+    }
+
+    uint32_t add_out = sim_4_input_add32(mul_out[0], mul_out[1], mul_out[2], mul_out[3], is_fp16);
+
+    return sim_2_input_add32(add_out, psum, is_fp16);
+}
+
 std::vector<std::vector<uint16_t>> sim_TPU(
                                     const std::vector<std::vector<uint16_t>>& input, 
                                     const std::vector<std::vector<uint16_t>>& weight, 
@@ -360,12 +383,96 @@ std::vector<std::vector<uint16_t>> sim_TPU(
     return output;
 }
 
+std::vector<std::vector<uint16_t>> sim_TPU32(
+                                    const std::vector<std::vector<uint16_t>>& input, 
+                                    const std::vector<std::vector<uint16_t>>& weight, 
+                                    const std::vector<std::vector<uint16_t>>& psum, 
+                                    bool is_fp16)
+{
+    std::vector<std::vector<uint32_t>> temp_output(input.size(), std::vector<uint32_t>(input[0].size()));
+    std::vector<std::vector<uint16_t>> output(input.size(), std::vector<uint16_t>(input[0].size()));
+
+    const size_t M = input.size();
+    const size_t K = input[0].size();
+    // const size_t K_w = weight.size();
+    const size_t N = weight[0].size();
+
+    for (size_t i = 0; i < M; ++i) {
+        for (size_t j = 0; j < N; ++j) {
+            // uint16_t acc = psum[i][j];
+            uint32_t acc = 0;
+
+            for (size_t k = 0; k < K; k += 4) {
+                std::vector<uint32_t> in4 = {
+                    bf16_to_ui32(input[i][k + 0]),
+                    bf16_to_ui32(input[i][k + 1]),
+                    bf16_to_ui32(input[i][k + 2]),
+                    bf16_to_ui32(input[i][k + 3])
+                };
+                std::vector<uint32_t> wt4 = {
+                    bf16_to_ui32(weight[k + 0][j]),
+                    bf16_to_ui32(weight[k + 1][j]),
+                    bf16_to_ui32(weight[k + 2][j]),
+                    bf16_to_ui32(weight[k + 3][j])
+                };
+
+                acc = sim_TPU_MAC32(in4, wt4, acc, is_fp16);
+            }
+
+            temp_output[i][j] = acc;
+        }
+    }
+
+    for(int i = 0; i < M; i++)
+    {
+        for(int j = 0; j < N; j++) 
+        {
+            output[i][j] = fp32_to_bf16_bits(temp_output[i][j]);
+        }
+    }
+
+    return output;
+}
+
 std::vector<std::vector<uint16_t>> generate_random_matrix(int rows, int cols, int min_exponent, int max_exponent, bool is_fp16) {
     if (is_fp16) {
         return generate_random_matrix_fp16(rows, cols, min_exponent, max_exponent);
     } else {
         return generate_random_matrix_bf16(rows, cols, min_exponent, max_exponent);
     }
+}
+
+std::vector<std::vector<uint16_t>> sim_output_matrix(std::vector<std::vector<uint16_t>> input_matrix, std::vector<std::vector<uint16_t>> weight_matrix, std::vector<std::vector<uint16_t>> psum_matrix)
+{
+    std::vector<std::vector<uint16_t>> output_matrix;
+
+    if(VERSION == "MEISSA")
+    {
+        output_matrix = sim_MEISSA(input_matrix, weight_matrix, psum_matrix, IS_FP16);
+    }
+    else if (VERSION == "MEISSA32")
+    {
+        output_matrix = sim_MEISSA32(input_matrix, weight_matrix, psum_matrix, IS_FP16);
+    }
+    else if (VERSION == "TPU")
+    {
+        output_matrix = sim_TPU(input_matrix, weight_matrix, psum_matrix, IS_FP16);
+    }
+    else if (VERSION == "TPU32")
+    {
+        output_matrix = sim_TPU32(input_matrix, weight_matrix, psum_matrix, IS_FP16);
+    }
+    else if (VERSION == "STANDARD")
+    {
+        // STANDARD: weight-stationary, sequential FP32 MAC accumulation
+        output_matrix = sim_STANDARD(input_matrix, weight_matrix, psum_matrix, IS_FP16);
+    }
+    else
+    {
+        std::cerr << "Error: Invalid systolic array version" << std::endl;
+    }
+
+    return output_matrix;
 }
 
 void create_new_test(int test_num, int min_exponent, int max_exponent, const std::string& file_path, std::vector<std::vector<uint16_t>> *weight)
@@ -405,27 +512,7 @@ void create_new_test(int test_num, int min_exponent, int max_exponent, const std
     expected_file << "Test " << test_num << std::endl;
     std::vector<std::vector<uint16_t>> output_matrix;
     
-    if(VERSION == "MEISSA")
-    {
-        output_matrix = sim_MEISSA(input_matrix, *weight, psum_matrix, IS_FP16);
-    }
-    else if (VERSION == "TPU")
-    {
-        output_matrix = sim_TPU(input_matrix, *weight, psum_matrix, IS_FP16);
-    }
-    else if (VERSION == "MEISSA32")
-    {
-        output_matrix = sim_MEISSA32(input_matrix, *weight, psum_matrix, IS_FP16);
-    }
-    else if (VERSION == "STANDARD")
-    {
-        // STANDARD: weight-stationary, sequential FP32 MAC accumulation
-        output_matrix = sim_STANDARD(input_matrix, *weight, psum_matrix, IS_FP16);
-    }
-    else
-    {
-        std::cerr << "Error: Invalid systolic array version" << std::endl;
-    }
+    output_matrix = sim_output_matrix(input_matrix, *weight, psum_matrix);
 
     write_matrix_to_file(output_matrix, PATH_TO_EXPECTED_RESULT);
     expected_file << "\n";
@@ -453,7 +540,6 @@ int main() {
     {
         IS_FP16 = false;
     }
-
 
     auto start = std::chrono::steady_clock::now();
 
@@ -486,27 +572,9 @@ int main() {
 
     expected_file << "Test " << "0" << std::endl;
     std::vector<std::vector<uint16_t>> output_matrix;
-    if(VERSION == "MEISSA")
-    {
-        output_matrix = sim_MEISSA(input_matrix, weight_matrix, psum_matrix, IS_FP16);
-    }
-    else if (VERSION == "TPU")
-    {
-        output_matrix = sim_TPU(input_matrix, weight_matrix, psum_matrix, IS_FP16);
-    }
-    if(VERSION == "MEISSA32")
-    {
-        output_matrix = sim_MEISSA32(input_matrix, weight_matrix, psum_matrix, IS_FP16);
-    }
-    else if (VERSION == "STANDARD")
-    {
-        // STANDARD: sequential FP32 MAC accumulation
-        output_matrix = sim_STANDARD(input_matrix, weight_matrix, psum_matrix, IS_FP16);
-    }
-    else
-    {
-        std::cerr << "Error: Invalid systolic array version" << std::endl;
-    }
+
+    output_matrix = sim_output_matrix(input_matrix, weight_matrix, psum_matrix);
+
     write_matrix_to_file(output_matrix, PATH_TO_EXPECTED_RESULT);
     expected_file << std::endl;
 
@@ -519,7 +587,7 @@ int main() {
     auto end   = std::chrono::steady_clock::now();
     auto ms = std::chrono::duration_cast<std::chrono::milliseconds>(end - start).count();
     std::cout << "Systolic array version: " << VERSION << std::endl;
-    if(VERSION == "TPU")
+    if(VERSION == "TPU" || VERSION == "TPU32")
     {
         std::cout << "Adder input num: " << "TPU is always " << 4 << std::endl;
     }

@@ -43,6 +43,8 @@ uint32_t fp32_4_input_add_hw(uint32_t a_bits, uint32_t b_bits, uint32_t c_bits, 
 uint32_t bf16_to_ui32(uint16_t bits);
 uint16_t fp32_to_bf16_bits(uint32_t fp32_bits);
 
+uint32_t fp16_to_fp32_bits(uint16_t fp16_bits);
+
 // // Generate random FP32 value within the FP32 exponent of a specified exponent range [min_exponent, max_exponent]
 // uint32_t random_fp32(int min_exponent, int max_exponent);
 

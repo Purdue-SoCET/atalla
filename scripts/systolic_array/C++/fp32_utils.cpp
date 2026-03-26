@@ -162,3 +162,11 @@ uint16_t fp32_to_bf16_bits(uint32_t fp32_bits)
     }
     return result.v;
 }
+
+uint32_t fp16_to_fp32_bits(uint16_t fp16_bits)
+{
+    float16_t f;
+    f.v = fp16_bits;
+    float32_t f32 = f16_to_f32(f);
+    return f32.v;
+}
