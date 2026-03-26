@@ -32,7 +32,7 @@ set DESIGN_SRCS {
 # --- Verification / Bind Sources ---
 # If you decide to use the bind file or a aseparate property module, add it here
 set VERIF_SRCS [list \
-     ./tb/unit/ddr_cntrl/testbench/nb_wdata_queue_prop.sv \ 
+     ./tb/unit/ddr_cntrl/testbench/nb_wdata_queue_prop.sv \
 ] 
 
 set SRC_FILES [concat $DESIGN_SRCS $VERIF_SRCS [list $TB_FILE]]
