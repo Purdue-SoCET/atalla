@@ -2,8 +2,10 @@
 set -e
 
 # Edit these two lines (keep in sync)
-BUILD_SCRIPT="build_conv.py"                 # or build_conv_pipelined.py
-OUT_FILE="tests/conv_sa.in"                  # or tests/conv_sa_pipelined.in
+# BUILD_SCRIPT: build_conv.py | build_conv_pipelined.py | build_conv_unrolled_pipelined.py
+# OUT_FILE:     tests/conv_sa.in | tests/conv_sa_pipelined.in | tests/conv_sa_unrolled_pipelined.in
+BUILD_SCRIPT="build_conv.py"
+OUT_FILE="tests/conv_sa.in"
 
 echo "=== Conv: build, run, validate (functional_sim) ==="
 echo "  $BUILD_SCRIPT -> $OUT_FILE"

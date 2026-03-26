@@ -27,6 +27,8 @@ python3 validate_<kernel>.py --mem out/output_mem.out
 ## conv naming
 - Baseline builder: `build_conv.py`
 - Pipelined builder: `build_conv_pipelined.py`
+- Unrolled+pipelined builder: `build_conv_unrolled_pipelined.py`
 - Runner switch:
   - `BUILD_SCRIPT="build_conv.py"` + `OUT_FILE="tests/conv_sa.in"`
   - `BUILD_SCRIPT="build_conv_pipelined.py"` + `OUT_FILE="tests/conv_sa_pipelined.in"`
+  - `BUILD_SCRIPT="build_conv_unrolled_pipelined.py"` + `OUT_FILE="tests/conv_sa_unrolled_pipelined.in"`
