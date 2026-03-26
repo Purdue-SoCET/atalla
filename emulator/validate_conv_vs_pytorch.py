@@ -32,6 +32,18 @@ def load_data_mem(mem_path: Path) -> dict[int, int]:
     return mem
 
 
+def bf16_quantize_scalar(x: float) -> float:
+    u32 = np.frombuffer(np.float32(x).tobytes(), dtype=np.uint32)[0]
+    u32_bf16 = u32 & np.uint32(0xFFFF0000)
+    return float(np.frombuffer(u32_bf16.tobytes(), dtype=np.float32)[0])
+
+
+def bf16_quantize_array(arr: np.ndarray) -> np.ndarray:
+    u = arr.astype(np.float32).view(np.uint32)
+    u_bf16 = u & np.uint32(0xFFFF0000)
+    return u_bf16.view(np.float32)
+
+
 def build_ifmap_weights(
     N: int,
     H: int,
@@ -86,6 +98,24 @@ def conv_ref(
     return out
 
 
+def conv_ref_bf16_io(
+    ifmap: np.ndarray,
+    weights: np.ndarray,
+    stride: int,
+    pad: int,
+):
+    """
+    Reference aligned with emulator data path:
+    - ifmap and weights are first quantized to BF16-representable fp32 values
+    - accumulation is float32
+    - final output is quantized to BF16-representable fp32 values
+    """
+    if_q = bf16_quantize_array(ifmap.astype(np.float32))
+    w_q = bf16_quantize_array(weights.astype(np.float32))
+    out = conv_ref(if_q, w_q, stride=stride, pad=pad)
+    return bf16_quantize_array(out)
+
+
 def main():
     ap = argparse.ArgumentParser()
     ap.add_argument("--mem", type=Path, default=Path("emulator/out/output_mem.out"))
@@ -99,6 +129,8 @@ def main():
     ap.add_argument("--stride", type=int, default=1)
     ap.add_argument("--pad", type=int, default=0)
     ap.add_argument("--ofmap_base", type=lambda x: int(x, 0), default="0x3000")
+    ap.add_argument("--ref_mode", choices=["bf16_io", "fp32"], default="bf16_io")
+    ap.add_argument("--tol", type=float, default=0.1)
     args = ap.parse_args()
 
     N, H, W, C = args.N, args.H, args.W, args.C
@@ -113,7 +145,10 @@ def main():
     ifmap_i32, weights_i32 = build_ifmap_weights(N, H, W, C, K, R, S, stride, pad)
     ifmap = ifmap_i32.astype(np.float32)
     weights = weights_i32.astype(np.float32)
-    ref = conv_ref(ifmap, weights, stride=stride, pad=pad)
+    if args.ref_mode == "bf16_io":
+        ref = conv_ref_bf16_io(ifmap, weights, stride=stride, pad=pad)
+    else:
+        ref = conv_ref(ifmap, weights, stride=stride, pad=pad)
 
     mem = load_data_mem(args.mem)
     M = N * Ho * Wo
@@ -139,12 +174,13 @@ def main():
     max_abs = float(np.max(np.abs(diff)))
     max_ref = float(np.max(np.abs(ref))) if ref.size else 0.0
     rel_err = max_abs / max_ref if max_ref > 0 else 0.0
-    ok = rel_err <= 0.1  # bf16/SA tolerance
+    ok = rel_err <= args.tol
 
     print(f"Conv config: N={N}, H={H}, W={W}, C={C}, K={K}, R={R}, S={S}, stride={stride}, pad={pad}")
     print(f"Output shape Ho={Ho}, Wo={Wo}")
+    print(f"Ref mode: {args.ref_mode}  tol={args.tol:.3g}")
     print(f"Max abs diff: {max_abs:.4e}  (rel_err={rel_err:.4e})")
-    print("MATCH (rel_err <= 0.1)" if ok else "MISMATCH")
+    print(f"MATCH (rel_err <= {args.tol:.3g})" if ok else "MISMATCH")
 
     if not ok:
         print("Example emulator ofmap[0, :, :, 0]:")

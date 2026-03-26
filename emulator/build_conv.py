@@ -7,11 +7,24 @@ import numpy as np
 from build import assemble_file, emit_test_format, DRAMWriter, render_testfile
 
 
-def make_conv_sa_asm(M: int, K_flat: int, K_out: int, cfg_base: int) -> str:
+def make_conv_sa_asm(
+    M: int,
+    K_flat: int,
+    K_out: int,
+    cfg_base: int,
+    marker_addr: int,
+) -> str:
     """Im2col conv on SA: SDMA A,W,C -> load W into SA -> per-row gemm.vv -> scpad.st C."""
     K_out_m1 = K_out - 1
     asm = f"""
-        lui.s   $20, 0
+        jal     $30, conv_kernel
+        halt.s
+
+conv_kernel:
+        addi.s  $31, $0, {marker_addr}
+        addi.s  $29, $0, 1
+        sw.s    $29, 0($31)
+
         addi.s  $20, $0, {cfg_base}
         lw.s    $2, 0($20)
         lw.s    $3, 4($20)
@@ -25,7 +38,6 @@ def make_conv_sa_asm(M: int, K_flat: int, K_out: int, cfg_base: int) -> str:
 
         scpad.ld $3, $2, {K_flat}, {M}, 0
         scpad.ld $5, $4, {K_out}, {K_flat}, 1
-        scpad.ld $7, $6, {K_out}, {M}, 1
 
         lui.s   $8, 0xFFFFF
         addi.s  $8, $8, -1
@@ -40,12 +52,15 @@ weight_loop:
         addi.s  $27, $27, 1
         blt.s   $27, $28, weight_loop
 
+        # W no longer needed in SP1 after lw.vi; load C tile now.
+        scpad.ld $7, $6, {K_out}, {M}, 1
+
         addi.s  $25, $0, 0
         addi.s  $26, $0, {M}
 m_loop:
         beq.s   $25, $26, end_m
         add.s   $13, $3, $25
-        vreg.ld $4, $13, {K_flat}, {M}, 0, 1, 0
+        vreg.ld $4, $13, {K_flat - 1}, {M}, 0, 1, 0
         add.s   $14, $7, $25
         vreg.ld $5, $14, {K_out_m1}, {M}, 1, 1, 0
         gemm.vv $6, $4, $5, 0, 0
@@ -54,7 +69,9 @@ m_loop:
         blt.s   $25, $26, m_loop
 end_m:
         scpad.st $7, $6, {K_out}, {M}, 1
-        halt.s
+        addi.s  $29, $0, 0
+        sw.s    $29, 0($31)
+        jalr    $0, $30, 0
     """
     return asm
 
@@ -88,6 +105,7 @@ def main():
         raise ValueError("This SA conv builder currently supports only K_flat<=32, K<=32, M<=32.")
 
     CFG_BASE = 0x3C
+    MARKER_ADDR = 0x90
     A_GMEM_ADDR = 0x00001000
     W_GMEM_ADDR = 0x00002000
     C_GMEM_ADDR = 0x00003000
@@ -101,6 +119,7 @@ def main():
         K_flat=K_flat,
         K_out=K,
         cfg_base=CFG_BASE,
+        marker_addr=MARKER_ADDR,
     )
 
     instrs = assemble_file(asm)

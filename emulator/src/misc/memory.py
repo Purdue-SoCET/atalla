@@ -19,6 +19,13 @@ class Memory:
     def __init__(self, filename=None):
         self.instr_mem = {}  # {address: 160-bit word}
         self.data_mem = {}   # {address: 32-bit word}
+        self.stats = {
+            "instr_fetches": 0,
+            "data_reads": 0,
+            "data_writes": 0,
+            "data_read_bytes": 0,
+            "data_write_bytes": 0,
+        }
 
         if filename:
             self.load_from_file(filename)
@@ -72,6 +79,7 @@ class Memory:
     # ------------------------------------------------------------
     def read_instr(self, addr):
         """Read 160-bit instruction word (default 0)."""
+        self.stats["instr_fetches"] += 1
         return self.instr_mem.get(addr, 0)
 
     def write_instr(self, addr, data):
@@ -83,12 +91,19 @@ class Memory:
     # ------------------------------------------------------------
     def read_data(self, addr):
         """Read 32-bit data word (default 0)."""
+        self.stats["data_reads"] += 1
+        self.stats["data_read_bytes"] += 4
         return self.data_mem.get(addr, 0)
 
     def write_data(self, addr, data):
         """Write 32-bit data word."""
         addr = int(addr)
+        self.stats["data_writes"] += 1
+        self.stats["data_write_bytes"] += 4
         self.data_mem[addr] = data
+
+    def snapshot_stats(self):
+        return dict(self.stats)
 
     # ------------------------------------------------------------
     # Dump to file

@@ -5,6 +5,7 @@ set -e
 BUILD_SCRIPT="build_conv.py"
 OUT_FILE="conv_sa.in"
 # Data: ifmap = 0,1,2,... (NHWC), weights = 100,101,... (RSCK), C = zeros. See build_conv.py.
+METRICS_JSON="out/conv_metrics.json"
 
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 EMULATOR_DIR="$(dirname "$SCRIPT_DIR")"
@@ -21,9 +22,10 @@ echo "  Created $OUT_FILE"
 echo
 
 echo "[2/3] Run emulator on $OUT_FILE..."
-python3 run.py --input_file "$OUT_FILE"
+python3 run.py --input_file "$OUT_FILE" --metrics_json "$METRICS_JSON"
 echo "  Emulator finished"
 echo "  Outputs in: $EMULATOR_DIR/out/ (mem/sregs/vregs/scpad)"
+echo "  Perf JSON: $EMULATOR_DIR/$METRICS_JSON"
 echo
 
 echo "[3/3] Validate emulator conv vs NumPy reference..."

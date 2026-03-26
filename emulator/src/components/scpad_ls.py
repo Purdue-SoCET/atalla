@@ -22,7 +22,8 @@ def scpad_to_vreg(
     rc: int = 0,       # 0 = Row Mode (across banks), 1 = Column Mode (down slots)
     rc_id: int = 0,
     num_rows: int = 31,
-    num_cols: int = 31
+    num_cols: int = 31,
+    stats: dict | None = None,
 ):
     """
     Loads a vector from Scratchpad into a Vector Register.
@@ -59,6 +60,8 @@ def scpad_to_vreg(
 
     # Write result to Vector Register
     vregs.write(vd, vector_data)
+    if stats is not None:
+        stats["scpad_to_vreg_bytes"] = stats.get("scpad_to_vreg_bytes", 0) + (len(vector_data) * 2)
 
 
 # ============================================================
@@ -73,7 +76,8 @@ def vreg_to_scpad(
     rc: int = 0,       # 0 = Row Mode, 1 = Column Mode
     rc_id: int = 0,
     num_rows: int = 31,
-    num_cols: int = 31
+    num_cols: int = 31,
+    stats: dict | None = None,
 ):
     """
     Stores a Vector Register into the Scratchpad.
@@ -101,7 +105,14 @@ def vreg_to_scpad(
             slot = i % scpad.S
             if i >= num_rows + 1:
                 break
-            scpad.banks[bank][slot] = val  
+            scpad.banks[bank][slot] = val
+
+    if stats is not None:
+        if rc == 1:
+            moved = min(len(vector_data), num_cols + 1)
+        else:
+            moved = min(len(vector_data), num_rows + 1)
+        stats["vreg_to_scpad_bytes"] = stats.get("vreg_to_scpad_bytes", 0) + (moved * 2)
 
 
 # ============================================================
@@ -117,6 +128,7 @@ def sdma_load(
     NR: int,
     NC: int,
     swizzle: Callable[[int], int] = identity_swizzle,
+    stats: dict | None = None,
 ):
     """
     for i in range(NR):
@@ -153,6 +165,8 @@ def sdma_load(
             if bank >= scpad.B:
                 break
             scpad.banks[bank][slot] = val
+    if stats is not None:
+        stats["scpad_dma_load_bytes"] = stats.get("scpad_dma_load_bytes", 0) + (NR * NC * 2)
 
 
 # ============================================================
@@ -168,6 +182,7 @@ def sdma_store(
     NR: int,
     NC: int,
     swizzle: Callable[[int], int] = identity_swizzle,
+    stats: dict | None = None,
 ):
     """
     for i in range(NR):
@@ -187,6 +202,8 @@ def sdma_store(
             #x_shifted = struct.unpack('<f', struct.pack('<I', bits & 0xFFFFFFFF))[0]
             g_addr = gmem_base + (i * (NC) + j) * 2
             gmem.write_data(g_addr, bits)
+    if stats is not None:
+        stats["scpad_dma_store_bytes"] = stats.get("scpad_dma_store_bytes", 0) + (NR * NC * 2)
 
 
 def dump_scpad_rc(scpad: Scratchpad, file=None):

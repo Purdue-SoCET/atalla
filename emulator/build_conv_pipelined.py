@@ -8,13 +8,25 @@ import numpy as np
 from build import assemble_file, emit_test_format, DRAMWriter, render_testfile
 
 
-def make_conv_sa_pipelined_asm(M: int, K_flat: int, K_out: int, cfg_base: int) -> str:
+def make_conv_sa_pipelined_asm(
+    M: int,
+    K_flat: int,
+    K_out: int,
+    cfg_base: int,
+    marker_addr: int,
+) -> str:
     K_out_m1 = K_out - 1
 
     asm = f"""
-        lui.s   $20, 0
-        addi.s  $20, $0, {cfg_base}
+        jal     $30, conv_kernel
+        halt.s
 
+conv_kernel:
+        addi.s  $31, $0, {marker_addr}
+        addi.s  $29, $0, 1
+        sw.s    $29, 0($31)
+
+        addi.s  $20, $0, {cfg_base}
         lw.s    $2, 0($20)
         lw.s    $3, 4($20)
         lw.s    $4, 8($20)
@@ -28,7 +40,6 @@ def make_conv_sa_pipelined_asm(M: int, K_flat: int, K_out: int, cfg_base: int) -
 
         scpad.ld $3, $2, {K_flat}, {M}, 0
         scpad.ld $5, $4, {K_out}, {K_flat}, 1
-        scpad.ld $7, $6, {K_out}, {M}, 1
 
         lui.s   $8, 0xFFFFF
         addi.s  $8, $8, -1
@@ -43,11 +54,14 @@ weight_loop:
         addi.s  $27, $27, 1
         blt.s   $27, $28, weight_loop
 
+        # W has been copied into SA; reuse SP1 space for C tile.
+        scpad.ld $7, $6, {K_out}, {M}, 1
+
         addi.s  $27, $0, 0
         addi.s  $26, $0, {M}
         add.s   $13, $3, $27
         add.s   $24, $7, $27
-        vreg.ld $4, $13, {K_flat}, {M}, 0, 1, 0
+        vreg.ld $4, $13, {K_flat - 1}, {M}, 0, 1, 0
         vreg.ld $5, $24, {K_out_m1}, {M}, 1, 1, 0
         addi.s  $28, $0, 1
 
@@ -60,7 +74,7 @@ pipeline_loop:
         add.s   $21, $3, $28
         add.s   $22, $7, $28
         bge.s   $28, $26, skip_fetch_2
-        vreg.ld $14, $21, {K_flat}, {M}, 0, 1, 0
+        vreg.ld $14, $21, {K_flat - 1}, {M}, 0, 1, 0
         vreg.ld $15, $22, {K_out_m1}, {M}, 1, 1, 0
 skip_fetch_2:
         addi.s  $28, $28, 1
@@ -72,7 +86,7 @@ skip_fetch_2:
         add.s   $13, $3, $28
         add.s   $24, $7, $28
         bge.s   $28, $26, skip_fetch_1
-        vreg.ld $4, $13, {K_flat}, {M}, 0, 1, 0
+        vreg.ld $4, $13, {K_flat - 1}, {M}, 0, 1, 0
         vreg.ld $5, $24, {K_out_m1}, {M}, 1, 1, 0
 skip_fetch_1:
         addi.s  $28, $28, 1
@@ -80,8 +94,9 @@ skip_fetch_1:
 
 pipeline_done:
         scpad.st $7, $6, {K_out}, {M}, 1
-
-        halt.s
+        addi.s  $29, $0, 0
+        sw.s    $29, 0($31)
+        jalr    $0, $30, 0
     """
     return asm
 
@@ -115,6 +130,7 @@ def main():
         raise ValueError("This SA conv builder currently supports only K_flat<=32, K<=32, M<=32.")
 
     CFG_BASE = 0x3C
+    MARKER_ADDR = 0x90
     A_GMEM_ADDR = 0x00001000
     W_GMEM_ADDR = 0x00002000
     C_GMEM_ADDR = 0x00003000
@@ -128,6 +144,7 @@ def main():
         K_flat=K_flat,
         K_out=K,
         cfg_base=CFG_BASE,
+        marker_addr=MARKER_ADDR,
     )
 
     instrs = assemble_file(asm)

@@ -433,13 +433,21 @@ def asm_to_instr_dict(
         return d
 
     if instr_type == "MI":
-        # jal rd, imm25  OR jal imm25 (rd defaults 0)
+        # jal rd, target  OR jal target (rd defaults 0)
+        # target can be a byte immediate or a label.
         if len(ops) == 1:
             d["rd"] = 0
-            d["imm25"] = parse_int(ops[0])
+            target = ops[0].strip()
         else:
             d["rd"] = parse_reg(ops[0])
-            d["imm25"] = parse_int(ops[1])
+            target = ops[1].strip()
+
+        if labels is not None and target in labels:
+            if pc is None:
+                raise ValueError("Internal error: missing PC for label-based jal")
+            d["imm25"] = labels[target] - pc
+        else:
+            d["imm25"] = parse_int(target)
         return d
 
     if instr_type == "VI":

@@ -2,6 +2,7 @@ import struct
 import numpy as np
 import os
 from typing import Sequence, List
+from collections import Counter
 
 from .misc.memory import Memory
 from .components.scalar_register_file import ScalarRegisterFile
@@ -10,6 +11,11 @@ from .components.execute import ExecuteUnit
 from .components.scpad import Scratchpad
 from .components.scpad_ls import *
 from .components.decode import decode_packet
+
+try:
+    from instruction_latency import latency as INSTR_LATENCY
+except Exception:
+    INSTR_LATENCY = {}
 
 def apply_mask(
         v1: np.ndarray, #the old vector
@@ -59,12 +65,52 @@ def apply_imm_vector_op(
     return vd
 
 
+def _new_scope_stats():
+    return {
+        "packet_count": 0,
+        "instr_retired": 0,
+        "ops_modeled": 0.0,
+        "estimated_cycles": 0.0,
+        "gmem_read_bytes": 0,
+        "gmem_write_bytes": 0,
+        "scpad_dma_load_bytes": 0,
+        "scpad_dma_store_bytes": 0,
+        "scpad_to_vreg_bytes": 0,
+        "vreg_to_scpad_bytes": 0,
+        "mnemonic_counts": Counter(),
+    }
+
+
+def _estimate_ops(mnemonic: str) -> float:
+    # Approximate op model for quick intensity reporting (not cycle-accurate).
+    if mnemonic == "gemm.vv":
+        return float(2 * 32 * 32)
+    if mnemonic.endswith(".vv") or mnemonic.endswith(".vs") or mnemonic.endswith(".vi"):
+        if mnemonic.startswith("rsum") or mnemonic.startswith("rmin") or mnemonic.startswith("rmax"):
+            return 31.0
+        return 32.0
+    if mnemonic.startswith(("add.", "sub.", "mul.", "div.", "mod.", "and.", "or.", "xor.", "sll.", "srl.", "sra.", "slt.", "sltu.", "addi.", "subi.", "muli.", "divi.", "modi.")):
+        return 1.0
+    return 0.0
+
+
+def _estimate_cycles(mnemonic: str) -> float:
+    key = mnemonic.lower()
+    if key in INSTR_LATENCY:
+        return float(INSTR_LATENCY[key])
+    base = key.split(".", 1)[0]
+    return float(INSTR_LATENCY.get(base, 1))
+
+
 def run(mem: Memory, sregs: ScalarRegisterFile, mregs: ScalarRegisterFile, vregs: VectorRegisterFile, SP0: Scratchpad, SP1: Scratchpad, 
         EU: ExecuteUnit, pc: int, packet_length: int,
         out_file: str = "../out/output_mem.txt", out_sreg_file: str = "../out/output_sregs.txt", 
         out_vreg_file: str = "../out/output_vregs.txt", out_mreg_file: str = "../out/output_mregs.txt", 
         out_scpad_file0: str = "../out/output_scpad0.txt", out_scpad_file1: str = "../out/output_scpad1.txt",
-        debug: bool = False):
+        debug: bool = False,
+        conv_marker_addr: int = 0x90,
+        conv_start_val: int = 1,
+        conv_end_val: int = 0):
         
     pc_increment = packet_length * 6
 
@@ -76,9 +122,16 @@ def run(mem: Memory, sregs: ScalarRegisterFile, mregs: ScalarRegisterFile, vregs
     tileID0Dict = {}
     tileID1Dict = {}
 
+    total_stats = _new_scope_stats()
+    conv_stats = _new_scope_stats()
+    in_conv_region = False
+
     halt = False
     while (not(halt)):
         dec_packet = decode_packet(packet=mem.read_instr(pc), packet_length=packet_length, debug=debug)
+        total_stats["packet_count"] += 1
+        if in_conv_region:
+            conv_stats["packet_count"] += 1
 
         if debug: 
             print(f"PC: 0x{pc:08X}")
@@ -90,7 +143,16 @@ def run(mem: Memory, sregs: ScalarRegisterFile, mregs: ScalarRegisterFile, vregs
             m = inst['mnemonic']
             if(m == "nop.s" or m == "barrier.s"):
                 continue
-            elif (m == "halt.s"):
+            total_stats["instr_retired"] += 1
+            total_stats["mnemonic_counts"][m] += 1
+            total_stats["ops_modeled"] += _estimate_ops(m)
+            total_stats["estimated_cycles"] += _estimate_cycles(m)
+            if in_conv_region:
+                conv_stats["instr_retired"] += 1
+                conv_stats["mnemonic_counts"][m] += 1
+                conv_stats["ops_modeled"] += _estimate_ops(m)
+                conv_stats["estimated_cycles"] += _estimate_cycles(m)
+            if (m == "halt.s"):
                 halt = True
             elif (m == "jal" or m == "jalr" or inst['type'] == "BR"):
                 br = True
@@ -137,15 +199,34 @@ def run(mem: Memory, sregs: ScalarRegisterFile, mregs: ScalarRegisterFile, vregs
                         brtarg = pc + pc_increment
                     sregs.write(inst['rs1'], sregs.read(inst['rs1']) + inst['incr_imm'])
             elif (m == "lw.s"):
+                total_stats["gmem_read_bytes"] += 4
+                if in_conv_region:
+                    conv_stats["gmem_read_bytes"] += 4
                 sregs.write(inst['rd'], mem.read_data(sregs.read(inst['rs1']) + inst['imm']))
             elif (m == "sw.s"):
-                mem.write_data(sregs.read(inst['rs1']) + inst['imm'], sregs.read(inst['rd']))
+                addr = sregs.read(inst['rs1']) + inst['imm']
+                val = sregs.read(inst['rd'])
+                total_stats["gmem_write_bytes"] += 4
+                if in_conv_region:
+                    conv_stats["gmem_write_bytes"] += 4
+                mem.write_data(addr, val)
+                if addr == conv_marker_addr:
+                    if val == conv_start_val:
+                        in_conv_region = True
+                    elif val == conv_end_val:
+                        in_conv_region = False
             elif (m == "lhw.s"):
+                total_stats["gmem_read_bytes"] += 2
+                if in_conv_region:
+                    conv_stats["gmem_read_bytes"] += 2
                 temp = mem.read_data(sregs.read(inst['rs1']) + inst['imm'])
                 temp = temp << 16
                 if debug: print(temp)
                 sregs.write(inst['rd'], temp)
             elif (m == "shw.s"):
+                total_stats["gmem_write_bytes"] += 2
+                if in_conv_region:
+                    conv_stats["gmem_write_bytes"] += 2
                 temp = sregs.read(inst['rd'])
                 temp = temp >> 16
                 mem.write_data(sregs.read(inst['rs1']) + inst['imm'], temp)
@@ -170,8 +251,12 @@ def run(mem: Memory, sregs: ScalarRegisterFile, mregs: ScalarRegisterFile, vregs
                     rc=inst['rc'],
                     rc_id=inst['rc_id'],
                     num_rows=inst['num_rows'],
-                    num_cols=inst['num_cols']
+                    num_cols=inst['num_cols'],
+                    stats=total_stats,
                 )
+                if in_conv_region:
+                    moved = ((inst['num_rows'] + 1) if inst['rc'] == 0 else (inst['num_cols'] + 1)) * 2
+                    conv_stats["scpad_to_vreg_bytes"] += moved
 
             elif m == "vreg.st":
                 if inst['sid'] == 1:
@@ -191,8 +276,12 @@ def run(mem: Memory, sregs: ScalarRegisterFile, mregs: ScalarRegisterFile, vregs
                     rc=inst['rc'],
                     rc_id=inst['rc_id'],
                     num_rows=inst['num_rows'],
-                    num_cols=inst['num_cols']
+                    num_cols=inst['num_cols'],
+                    stats=total_stats,
                 )
+                if in_conv_region:
+                    moved = ((inst['num_cols'] + 1) if inst['rc'] == 1 else (inst['num_rows'] + 1)) * 2
+                    conv_stats["vreg_to_scpad_bytes"] += moved
 
             #scpad load/store here
 
@@ -204,7 +293,7 @@ def run(mem: Memory, sregs: ScalarRegisterFile, mregs: ScalarRegisterFile, vregs
                         tile_id0 += 1
                         tileID0Dict[inst['rs1/rd1']] = tile_id0
                         localID = tileID0Dict[inst['rs1/rd1']]
-                    sdma_load(gmem=mem, scpad=SP0, gmem_base=sregs.read(inst['rs2']), scpad_base_row=int(sregs.read(inst['rs1/rd1'])), tile_id=localID, NR=inst['num_rows'], NC=inst['num_cols'])
+                    sdma_load(gmem=mem, scpad=SP0, gmem_base=sregs.read(inst['rs2']), scpad_base_row=int(sregs.read(inst['rs1/rd1'])), tile_id=localID, NR=inst['num_rows'], NC=inst['num_cols'], stats=total_stats)
                 elif inst['sid'] == 1:
                     if(inst['rs1/rd1'] in tileID1Dict.keys()):
                         localID = tileID1Dict[inst['rs1/rd1']]
@@ -212,7 +301,12 @@ def run(mem: Memory, sregs: ScalarRegisterFile, mregs: ScalarRegisterFile, vregs
                         tile_id1 += 1
                         tileID1Dict[inst['rs1/rd1']] = tile_id1
                         localID = tileID1Dict[inst['rs1/rd1']]
-                    sdma_load(gmem=mem, scpad=SP1, gmem_base=sregs.read(inst['rs2']), scpad_base_row=int(sregs.read(inst['rs1/rd1'])), tile_id=localID, NR=inst['num_rows'], NC=inst['num_cols'])
+                    sdma_load(gmem=mem, scpad=SP1, gmem_base=sregs.read(inst['rs2']), scpad_base_row=int(sregs.read(inst['rs1/rd1'])), tile_id=localID, NR=inst['num_rows'], NC=inst['num_cols'], stats=total_stats)
+                moved = inst['num_rows'] * inst['num_cols'] * 2
+                total_stats["gmem_read_bytes"] += moved
+                if in_conv_region:
+                    conv_stats["scpad_dma_load_bytes"] += moved
+                    conv_stats["gmem_read_bytes"] += moved
 
             elif (m == "scpad.st"):
                 if inst['sid'] == 0:
@@ -222,7 +316,7 @@ def run(mem: Memory, sregs: ScalarRegisterFile, mregs: ScalarRegisterFile, vregs
                         tile_id0 += 1
                         tileID0Dict[inst['rs1/rd1']] = tile_id0
                         localID = tileID0Dict[inst['rs1/rd1']]
-                    sdma_store(gmem=mem, scpad=SP0, scpad_base_row=int(sregs.read(inst['rs1/rd1'])), gmem_base=sregs.read(inst['rs2']), tile_id=tile_id0, NR=inst['num_rows'], NC=inst['num_cols'])
+                    sdma_store(gmem=mem, scpad=SP0, scpad_base_row=int(sregs.read(inst['rs1/rd1'])), gmem_base=sregs.read(inst['rs2']), tile_id=tile_id0, NR=inst['num_rows'], NC=inst['num_cols'], stats=total_stats)
                 elif inst['sid'] == 1:
                     if(inst['rs1/rd1'] in tileID1Dict.keys()):
                         localID = tileID1Dict[inst['rs1/rd1']]
@@ -230,7 +324,12 @@ def run(mem: Memory, sregs: ScalarRegisterFile, mregs: ScalarRegisterFile, vregs
                         tile_id1 += 1
                         tileID1Dict[inst['rs1/rd1']] = tile_id1
                         localID = tileID1Dict[inst['rs1/rd1']]
-                    sdma_store(gmem=mem, scpad=SP1, scpad_base_row=int(sregs.read(inst['rs1/rd1'])), gmem_base=sregs.read(inst['rs2']), tile_id=tile_id1, NR=inst['num_rows'], NC=inst['num_cols'])
+                    sdma_store(gmem=mem, scpad=SP1, scpad_base_row=int(sregs.read(inst['rs1/rd1'])), gmem_base=sregs.read(inst['rs2']), tile_id=tile_id1, NR=inst['num_rows'], NC=inst['num_cols'], stats=total_stats)
+                moved = inst['num_rows'] * inst['num_cols'] * 2
+                total_stats["gmem_write_bytes"] += moved
+                if in_conv_region:
+                    conv_stats["scpad_dma_store_bytes"] += moved
+                    conv_stats["gmem_write_bytes"] += moved
             elif (m == "lui.s"): 
                 if debug: print(inst['imm'])
                 sregs.write(inst['rd'], (inst['imm']) << 7)
@@ -523,3 +622,23 @@ def run(mem: Memory, sregs: ScalarRegisterFile, mregs: ScalarRegisterFile, vregs
     dump_scpad_rc(scpad=SP1, file=out_scpad_file1)
 
     if debug: print(f"\n[INFO] Wrote updated memory to '{out_file}'.")
+
+    mem_stats = mem.snapshot_stats() if hasattr(mem, "snapshot_stats") else {}
+
+    def finalize(scope_stats: dict):
+        scope_stats["mnemonic_counts"] = dict(scope_stats["mnemonic_counts"])
+        loaded = float(scope_stats["gmem_read_bytes"])
+        total = float(scope_stats["gmem_read_bytes"] + scope_stats["gmem_write_bytes"])
+        scope_stats["bytes_loaded"] = scope_stats["gmem_read_bytes"]
+        scope_stats["bytes_stored"] = scope_stats["gmem_write_bytes"]
+        scope_stats["bytes_total"] = scope_stats["bytes_loaded"] + scope_stats["bytes_stored"]
+        scope_stats["arithmetic_intensity_loaded"] = (scope_stats["ops_modeled"] / loaded) if loaded > 0 else 0.0
+        scope_stats["arithmetic_intensity_total"] = (scope_stats["ops_modeled"] / total) if total > 0 else 0.0
+        return scope_stats
+
+    report = {
+        "whole_run": finalize(total_stats),
+        "conv_region": finalize(conv_stats),
+        "memory_backend": mem_stats,
+    }
+    return report
