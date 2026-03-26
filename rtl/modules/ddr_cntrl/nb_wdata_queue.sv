@@ -1,8 +1,8 @@
 `timescale 1ps / 1ps
-`include "ddr_controller_if.vh"
-`include "dram_pkg.vh"
+`include "ddr_controller_if.sv"
+`include "dram_pkg.svh"
 
-module #(Q_ID = 0) nb_wdata_queue (
+module nb_wdata_queue  #(Q_ID = 0) (
     input logic CLK, nRST,
     ddr_controller_if.wdata_queue wdq
 );
@@ -16,6 +16,7 @@ module #(Q_ID = 0) nb_wdata_queue (
     logic wvalid; 
   } DATA_Q_Slot_t;
 
+  DATA_Q_Slot_t data_in;
   parameter DEPTH = 8; 
   parameter PTR_W = $clog2(DEPTH); 
   //register file (flip flops that store the data/metadata)
@@ -32,6 +33,11 @@ module #(Q_ID = 0) nb_wdata_queue (
   typedef enum logic [1:0] {EMPTY, ACTIVE, FULL} fifo_state_t;
   fifo_state_t next_fifo_state;
   fifo_state_t fifo_state;
+
+  logic wen; //write enable for wdata queue to fifo.
+  logic clear; //clears beat counter for bursts.
+  logic cnt_en; //enable signal for beat counter.
+  logic rollover; //rollover of beat counter.
   
   //reg file logic
 	
@@ -39,7 +45,7 @@ module #(Q_ID = 0) nb_wdata_queue (
     
     if(!nRST) begin
       for(int i = 0; i < DEPTH; i++)
-        regs[i] = DATA_Q_Slot_t'({ 32'b0, 8'b1111_1111, 1'b0})
+        regs[i] = DATA_Q_Slot_t'({ 32'b0, 8'b1111_1111, 1'b0});
     end else if(wen)
       regs[dram_ptr] <= data_in;
     else
@@ -80,22 +86,22 @@ module #(Q_ID = 0) nb_wdata_queue (
   
   //push data logic
   
-  DATA_Q_Slot_t data_in;  
+    
   //assign data_in = () ? {wdq.wdata, wdq.wstrb, wdq.wvalid} : regs[write_ptr];  
   always_comb begin : DATA_NEXT
 
     if(wdq.valid && (wdq.wid == Q_ID) && !full) begin
         data_in = DATA_Q_Slot_t'({wdq.wdata, wdq.wstrb, wdq.wvalid} );
     end else if(wen)
-        data_in = DATA_Q_Slot_t'({ (regs[dram_ptr]).wdata, 8'b1111_1111, (regs[dram_ptr]).wvalid });
+        data_in = DATA_Q_Slot_t'({ regs[dram_ptr].wdata, 8'b1111_1111, regs[dram_ptr].wvalid });
 
   end
   
   //pop data logic
   
-  assign wdq.ddr_wdata_data[Q_ID] = (regs[dram_ptr]).wdata; 
-  assign wdq.ddr_wdata_en[Q_ID] = (regs[dram_ptr]).valid;
-  assign wdq.ddr_wdata_mask[Q_ID] = (regs[dram_ptr]).wstrb;
+  assign wdq.ddr_wdata_data[Q_ID] = regs[dram_ptr].wdata; 
+  assign wdq.ddr_wdata_en[Q_ID] = regs[dram_ptr].wvalid;
+  assign wdq.ddr_wdata_mask[Q_ID] = regs[dram_ptr].wstrb;
   
   //fsm for everything full or empty
   
@@ -181,19 +187,16 @@ module #(Q_ID = 0) nb_wdata_queue (
 
   assign wdq.ready[Q_ID] = !full;
 
-  logic wen; //write enable for wdata queue to fifo.
-  logic clear; //clears beat counter for bursts.
-  logic cnt_en; //enable signal for beat counter.
-  logic rollover; //rollover of beat counter.
-
-  flex_counter #(SIZE = 'd4) BEAT_CNT (CLK, nRST, clear, cnt_en, 'd7, rollover);
+  
+  flex_counter #(.SIZE(4'd4)) BEAT_CNT (CLK, nRST, clear, cnt_en, 'd7, rollover);
 
   logic clear_cwl; //clears cwl timer.
   logic cnt_en_cwl; //enables cwl timer.
   logic rollover_cwl; //rollover of cwl timer. 
-  flex_counter #(SIZE = 'd10) T_CWL_TIM (CLK, nRST, clear_cwl, cnt_en_cwl, tCWL - 'b1, rollover_cwl);
+  flex_counter #(.SIZE(5'd10)) T_CWL_TIM (CLK, nRST, clear_cwl, cnt_en_cwl, tCWL - 'b1, rollover_cwl);
 
-  typedef enum [1:0] {IDLE, CWL_WAIT, WRITING, RESP} cnt_ctrl_state_t;
+  typedef enum logic [1:0] {IDLE, CWL_WAIT, WRITING, RESP} cnt_ctrl_state_t;
+  
   cnt_ctrl_state_t cnt_ctrl; 
   cnt_ctrl_state_t cnt_ctrl_next;
   always_comb begin : NEXT_CNT_CTRL 
@@ -222,8 +225,16 @@ module #(Q_ID = 0) nb_wdata_queue (
     wdq.bwvalid[Q_ID] = 'b0;
     wdq.ddr_we[Q_ID] = 'b0;
     case(cnt_ctrl)
-        CWL_WAIT: cnt_en_cwl = 'b1; clear_cwl = 'b0;
-        WRITING: wen = 'b1; clear = 'b0; cnt_en = 'b1; wdq.ddr_we[Q_ID] = 'b1;
+	CWL_WAIT: begin 
+		cnt_en_cwl = 'b1; 
+		clear_cwl = 'b0;
+	end
+	WRITING: begin
+	       	wen = 'b1; 
+		clear = 'b0; 
+		cnt_en = 'b1; 
+		wdq.ddr_we[Q_ID] = 'b1;
+	end
         RESP : wdq.bwvalid[Q_ID] = 'b1;
     endcase
 
