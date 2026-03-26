@@ -9,14 +9,20 @@ from pathlib import Path
 import argparse
 import numpy as np
 
-from kernels.utils.dataloader import load_tile_data
-from .src.misc.opcode_table import OPCODES, name_to_opcode
+load_tile_data = None
+try:
+    from .src.misc.opcode_table import OPCODES, name_to_opcode
+except Exception:
+    from src.misc.opcode_table import OPCODES, name_to_opcode
 
 try:
     from .instruction_latency import latency as DEFAULT_LATENCY_MAP
 
 except Exception:
-    DEFAULT_LATENCY_MAP: Dict[str, int] = {}
+    try:
+        from instruction_latency import latency as DEFAULT_LATENCY_MAP
+    except Exception:
+        DEFAULT_LATENCY_MAP: Dict[str, int] = {}
 
 INVERT_OPCODES = name_to_opcode()
 VIRTUAL_PACKET_SIZE = 1 

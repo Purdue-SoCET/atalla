@@ -1,11 +1,19 @@
 import argparse
 
-from .src.functional_sim import run
-from .src.misc.memory import Memory
-from .src.components.scalar_register_file import ScalarRegisterFile
-from .src.components.vector_register_file import VectorRegisterFile
-from .src.components.execute import ExecuteUnit
-from .src.components.scpad import Scratchpad
+try:
+    from .src.functional_sim import run
+    from .src.misc.memory import Memory
+    from .src.components.scalar_register_file import ScalarRegisterFile
+    from .src.components.vector_register_file import VectorRegisterFile
+    from .src.components.execute import ExecuteUnit
+    from .src.components.scpad import Scratchpad
+except Exception:
+    from src.functional_sim import run
+    from src.misc.memory import Memory
+    from src.components.scalar_register_file import ScalarRegisterFile
+    from src.components.vector_register_file import VectorRegisterFile
+    from src.components.execute import ExecuteUnit
+    from src.components.scpad import Scratchpad
 
 if __name__ == "__main__":
 
