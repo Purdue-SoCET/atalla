@@ -61,10 +61,10 @@ puts "=============================================================="
 vsim -coverage -voptargs="+acc" work.$TB_TOP -onfinish stop;
 
 if {[file exists "./waves/nb_barb_tb.do"]} {
-    puts "Applying wave configurations from ./waves/nb_barb_tb.do"
-    do ./waves/nb_barb_tb.do
+    puts "Applying wave configurations from ./waves/nb_wdata.do"
+    do ./waves/nb_wdata.do
 } else {
-    puts "WARNING: No .do file found at ./waves/nb_barb_tb.do"
+    puts "WARNING: No .do file found at ./waves/nb_wdata.do"
     quit -f
 }
 
