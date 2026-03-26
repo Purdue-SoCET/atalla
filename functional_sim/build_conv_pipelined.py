@@ -39,6 +39,7 @@ weight_loop:
 
         addi.s  $27, $0, 0
         addi.s  $26, $0, {M}
+        # Prologue: seed first A/C vectors.
         add.s   $13, $3, $27
         add.s   $24, $7, $27
         vreg.ld $4, $13, {K_flat - 1}, {M}, 0, 1, 0
@@ -46,12 +47,14 @@ weight_loop:
         addi.s  $28, $0, 1
 
 pipeline_loop:
+        # Stage C: compute + store using ($4,$5).
         add.s   $24, $7, $27
         gemm.vv $6, $4, $5, 0, 0
         vreg.st $6, $24, {k_out_m1}, {M}, 1, 1, 0
         addi.s  $27, $27, 1
         bge.s   $27, $26, pipeline_done
 
+        # Stage P: prefetch next vectors into ($14,$15).
         add.s   $21, $3, $28
         add.s   $22, $7, $28
         bge.s   $28, $26, skip_fetch_2
@@ -60,12 +63,14 @@ pipeline_loop:
 skip_fetch_2:
         addi.s  $28, $28, 1
 
+        # Stage C: compute + store using ($14,$15).
         add.s   $24, $7, $27
         gemm.vv $6, $14, $15, 0, 0
         vreg.st $6, $24, {k_out_m1}, {M}, 1, 1, 0
         addi.s  $27, $27, 1
         bge.s   $27, $26, pipeline_done
 
+        # Stage P: prefetch next vectors back into ($4,$5).
         add.s   $13, $3, $28
         add.s   $24, $7, $28
         bge.s   $28, $26, skip_fetch_1
@@ -76,6 +81,7 @@ skip_fetch_1:
         blt.s   $27, $26, pipeline_loop
 
 pipeline_done:
+        # Drain: last computed rows already in SP1, write SP1 tile to gmem.
         scpad.st $7, $6, {K_out - 1}, {M - 1}, 1
         halt.s
     """
