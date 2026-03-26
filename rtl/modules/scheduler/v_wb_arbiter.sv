@@ -28,7 +28,7 @@ module v_wb_arbiter #(
 	vif.vector_wb_out.vdata = '0;
 
 	vif.vector_wb_out.vector_if_wb_ready = '1; // First, all writeback readys are 1.
-    //clear bank when veggie ready to accept new data
+    //clear bank when veggie ready to accept new data yep
     banks = '0;
 
     //WB0
