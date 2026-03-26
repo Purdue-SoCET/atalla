@@ -17,7 +17,7 @@ module nb_wdata_queue_prop(
         
     endgroup
 */
-    wdq_cg wdqcg;
+    //wdq_cg wdqcg;
 
     property AXI_wdata_handshake(int i); //ensures proper handshake.
         @(posedge CLK) disable iff (!nRST)
