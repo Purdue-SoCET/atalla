@@ -8,6 +8,7 @@ module nb_barb_tb;
 
     logic CLK = 0, nRST;
     parameter PERIOD = 10;
+    integer test_num = 0;
 
     // clock
     always #(PERIOD/2) CLK++;
@@ -45,6 +46,39 @@ module nb_barb_tb;
         end
     endtask
 
+    task drive_bank_rw(
+        input int bank_id,
+        input fsm_t cmd
+    );
+        begin
+            ddrif.be_cmd[bank_id] = cmd;
+        end
+    endtask
+
+    task check_read(
+        input int                        test_num,
+        input logic                      exp_push_id, 
+        input logic [$clog2(ID_NUM)-1:0] exp_rid
+    );
+        integer error;
+        begin
+            error = 0;
+            $display("Current test #: %0d", test_num);
+            if (ddrif.be_push_id != exp_push_id) begin
+                $display("Incorrect read push id");
+                error++;
+            end 
+            if (ddrif.be_rid != exp_rid) begin
+                $display("Incorrect read id");
+                error++;
+            end 
+
+            if (error == 0) $display("All cases passed");
+            else $display("Cases failed");
+            test_num++;
+        end
+    endtask
+
     initial begin  
         // 1. Initialization
         nRST = 1;
@@ -53,6 +87,7 @@ module nb_barb_tb;
         ddrif.be_r           = '0;
         ddrif.be_c           = '0;
         ddrif.be_id          = '0;
+        ddrif.be_len         = '0;
 
         reset_dut();
 
@@ -61,14 +96,26 @@ module nb_barb_tb;
         drive_bank_request(0, ACT, 15'h1111, 10'h001, 4'h0);
         drive_bank_request(1, ACT, 15'h2222, 10'h002, 4'h1);
         drive_bank_request(2, ACT, 15'h3333, 10'h003, 4'h2);
+        drive_bank_request(3, ACT, 15'h4444, 10'h004, 4'h3);        
+        drive_bank_request(4, ACT, 15'h5555, 10'h005, 4'h4);
+        drive_bank_request(5, ACT, 15'h6666, 10'h006, 4'h5);
 
-        // Wait for Bank 0 to be serviced (be_arb points to the winning bank)
+        // Wait for Bank 0 to be serviced, read request
+        $display("\n--- Starting Transfer ---");
         wait(ddrif.be_arb[0] == 1);
         @(negedge CLK);
+        drive_bank_rw(0, FSM_READ);
+        @(negedge CLK);
+        check_read(test_num, 1'b1, 4'h0);
         ddrif.be_queue_ready[0] = 0; // Clear bank 0 request
 
+        // Wait for Bank 1 to be serviced
+        wait(ddrif.be_arb[1] == 1);
+        @(negedge CLK);
+        ddrif.be_queue_ready[1] = 0; // Clear bank 1 request
+
         // --- PHASE 2: OOO Jump Logic ---
-        // While roller is moving toward Bank 1, Bank 12 becomes ready (Out of Order)
+        // While roller is moving toward Bank 2, Bank 12 becomes ready (Out of Order)
         $display("\n--- Triggering OOO Jump to Bank 12 ---");
         drive_bank_request(12, FSM_READ, 15'hAAAA, 10'h0AA, 4'hF);
 
@@ -80,12 +127,19 @@ module nb_barb_tb;
         ddrif.be_queue_ready[12] = 0; // Clear bank 12
 
         // --- PHASE 3: The Return ---
-        // The roller should now return to the next sequential value (Bank 1)
-        wait(ddrif.be_arb[1] == 1);
-        $display("T=%0t | SUCCESS: Arbiter returned to sequential Bank 1", $time);
+        // The roller should now return to the next sequential value (Bank 2)
+        wait(ddrif.be_arb[2] == 1);
+        $display("T=%0t | SUCCESS: Arbiter returned to sequential Bank 2", $time);
         
         @(negedge CLK);
-        ddrif.be_queue_ready[1] = 0;
+        ddrif.be_queue_ready[2] = 0;
+
+
+        // --- PHASE 4 : Roll Through all --- 
+
+
+
+
         @(negedge CLK);
         $display("\n--- All DRAM behavior tests passed ---");
         $finish;
