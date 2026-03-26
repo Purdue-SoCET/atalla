@@ -64,6 +64,10 @@ package axi_bus_pkg;
     localparam int W_DEPTH        = NUM_U_WRITES*8;
     localparam int W_PTR_WIDTH   = $clog2(W_DEPTH); 
 
+    // Write Response Router Skid Buffer Width
+    localparam int WRR_DEPTH      = 2;
+    localparam int WRR_PTR_WIDTH  = $clog2(WRR_DEPTH);
+
     //////////////////////////////////////////////////////////////////////
     ////////////////////////////////// Enums /////////////////////////////
     //////////////////////////////////////////////////////////////////////
@@ -168,7 +172,7 @@ package axi_bus_pkg;
 
     // B Channel From Subordinate
     typedef struct packed {
-        logic [BID-1:0]     id;
+        logic [MID_BID-1:0] id;
         bresp_t             resp;
     } sub_b_channel_t;
 

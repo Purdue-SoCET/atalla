@@ -80,7 +80,7 @@ always_ff@(posedge CLK, negedge nRST) begin
         aw_wr_ptr <= '0;
         aw_rd_ptr <= '0;
         for (int i = 0; i < AW_DEPTH; i++) begin 
-            aw_fifo[i] <= 1'b0;
+            aw_fifo[i] <= 1'b0; // this could be a bug ?? only valid should be cleared 
         end 
     end 
     else begin 
