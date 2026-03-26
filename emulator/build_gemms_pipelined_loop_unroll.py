@@ -22,6 +22,116 @@ def bf16_round(x: float) -> int:
     u_bf16 = (u_round & 0xFFFF0000) >> 16
     return u_bf16 & 0xFFFF
 
+def generate_unrolled_asm(ROWS, COLS, NUM_TILES, TILE_ADDR_LOCATION,
+                           WEIGHT_GMEM_ADDR, INPUT_GMEM_ADDR, OUTPUT_GMEM_ADDR,
+                           WEIGHT_SCPAD_ADDR, INPUT_SCPAD_ADDR, OUTPUT_SCPAD_ADDR,
+                           SID0, SID1):
+    TILE_BYTES = ROWS * COLS * 2
+ 
+    lines = []
+
+    lines += [
+        f"    lui.s   $20, 0",
+        f"    addi.s  $20, $0, {TILE_ADDR_LOCATION}",
+        f"",
+        f"    lw.s    $2, 0($20)   # Weight GMEM",
+        f"    lw.s    $3, 4($20)   # Weight SCPAD",
+        f"    lw.s    $21, 8($20)  # Input GMEM",
+        f"    lw.s    $22, 12($20) # Input SCPAD",
+        f"    lw.s    $24, 16($20) # Output GMEM",
+        f"    lw.s    $23, 20($20) # Output SCPAD",
+        f"",
+        f"    scpad.ld $3, $2, {COLS}, {ROWS}, {SID0}",
+        f"",
+        f"    lui.s   $6, 0",
+        f"    addi.s  $6, $6, 0xf",
+        f"    mv.stm  1, $6",
+        f"",
+    ]
+    
+    #weights
+    for row in range(ROWS):
+        lines += [
+            f"    addi.s  $27, $0, {row}",
+            f"    vreg.ld $10, $3, {COLS}, {ROWS}, {SID0}, 1, $27",
+            f"    lw.vi   $10, $10, 0, 0xf",
+        ]
+    lines.append(f"")
+ 
+    #inputs
+    lines += [
+        f"    scpad.ld $22, $21, {COLS}, {ROWS}, {SID0}",
+        f"    scpad.ld $23, $24, {COLS}, {ROWS}, {SID1}",
+        f"",
+    ]
+    for tile in range(NUM_TILES):
+ 
+        lines += [
+            f"    addi.s  $27, $0, 0",
+            f"    vreg.ld $4, $22, {COLS}, {ROWS}, {SID0}, 1, $27",
+            f"    vreg.ld $5, $23, {COLS}, {ROWS}, {SID1}, 1, $27",
+
+        ]
+ 
+        row = 0
+        while row < ROWS:
+            next_row = row + 1
+ 
+            # grp1 :n
+            lines.append(f"    gemm.vv $6, $4, $5, 0, 0")
+ 
+            if next_row < ROWS:
+                lines += [
+                    f"    addi.s  $28, $0, {next_row}",
+                    f"    vreg.ld $14, $22, {COLS}, {ROWS}, {SID0}, 1, $28",
+                    f"    vreg.ld $15, $23, {COLS}, {ROWS}, {SID1}, 1, $28",
+                ]
+
+            lines += [
+                f"    addi.s  $27, $0, {row}",
+                f"    vreg.st $6, $23, {COLS}, {ROWS}, {SID1}, 1, $27",
+            ]
+ 
+            if next_row >= ROWS:
+                row += 1
+                continue
+ 
+            #grp2 :n+1
+            lines.append(f"    gemm.vv $6, $14, $15, 0, 0")
+ 
+            next2_row = next_row + 1
+            if next2_row < ROWS:
+                lines += [
+                    f"    addi.s  $28, $0, {next2_row}",
+                    f"    vreg.ld $4, $22, {COLS}, {ROWS}, {SID0}, 1, $28",
+                    f"    vreg.ld $5, $23, {COLS}, {ROWS}, {SID1}, 1, $28",
+                ]
+ 
+            lines += [
+                f"    addi.s  $27, $0, {next_row}",
+                f"    vreg.st $6, $23, {COLS}, {ROWS}, {SID1}, 1, $27",
+            ]
+ 
+            row += 2 
+ 
+        if tile < NUM_TILES - 1:
+            lines += [
+                f"    addi.s  $21, $21, {TILE_BYTES}",
+                f"    scpad.ld $22, $21, {COLS}, {ROWS}, {SID0}",
+            ]
+ 
+
+    lines += [
+        f"    scpad.st $23, $24, {COLS}, {ROWS}, {SID1}",
+        f"    halt.s",
+    ]
+ 
+    return "\n".join(lines)
+
+
+
+
+
 
 def main():
     ap = argparse.ArgumentParser()
@@ -49,110 +159,17 @@ def main():
 
 
 
-#FIXME GEMM AS FUNCTION FOR KERNEL CALL   
-#FIXME TESTING FOR SAME INPUT DIFFERNT WEIGHTS NEEDED FOR ATTENTION
-
-    asm = f"""
-        addi.s  $1,  $0, {TILE_ADDR_LOCATION}
-        jal     $31, 48             #31 = ra, 48 = offset to gemm_func (must be multiple of 4)
-    
-        # from call 1
-        #to make call 2:
-        #   write to diff addr
-        #   addi.s  $1, $0, <>
-        #   jal $31, gemm_func
-    
-        halt.s
-    
-    
-
-    # GEMM_FUNC 
-    #jalr $0, $31, 0
-
-    gemm_func:
-
-        lw.s    $2,   0($1)     # Weight GMEM
-        lw.s    $3,   4($1)     # Weight SCPAD
-        lw.s    $21,  8($1)     # Input  GMEM
-        lw.s    $22, 12($1)     # Input  SCPAD
-        lw.s    $24, 16($1)     # Output GMEM
-        lw.s    $23, 20($1)     # Output SCPAD
-    
-
-        scpad.ld $3, $2, {COLS}, {ROWS}, {SID0}
-    
-        lui.s   $6,  0
-        addi.s  $6,  $6, 0xf
-        mv.stm  1,   $6
-    
-        addi.s  $27, $0, 0
-        addi.s  $28, $0, {ROWS}
-    
-    gf_weights_loop:
-        vreg.ld $10, $3, {COLS}, {ROWS}, {SID0}, 1, $27
-        lw.vi   $10, $10, 0, 0xf
-        addi.s  $27, $27, 1
-        blt.s   $27, $28, gf_weights_loop
-
-        scpad.ld $22, $21, {COLS}, {ROWS}, {SID0}
-        scpad.ld $23, $24, {COLS}, {ROWS}, {SID1}
-    
-        addi.s  $25, $0, 0
-        addi.s  $29, $0, {NUM_TILES}
-    
-    gf_tile_loop:
-        addi.s  $27, $0, 0
-        vreg.ld $4,  $22, {COLS}, {ROWS}, {SID0}, 1, $27
-        vreg.ld $5,  $23, {COLS}, {ROWS}, {SID1}, 1, $27
-    
-        addi.s  $28, $0, 1
-        addi.s  $26, $0, {ROWS}
-    
-    gf_pipeline_loop:
-        gemm.vv $6, $4, $5, 0, 0
-    
-        bge.s   $28, $26, gf_skip_fetch_2
-        vreg.ld $14, $22, {COLS}, {ROWS}, {SID0}, 1, $28
-        vreg.ld $15, $23, {COLS}, {ROWS}, {SID1}, 1, $28
-    
-    gf_skip_fetch_2:
-        vreg.st $6,  $23, {COLS}, {ROWS}, {SID1}, 1, $27
-    
-        addi.s  $27, $27, 1
-        addi.s  $28, $28, 1
-    
-        bge.s   $27, $26, gf_pipeline_done
-    
-        gemm.vv $6, $14, $15, 0, 0
-    
-        bge.s   $28, $26, gf_skip_fetch_1
-        vreg.ld $4,  $22, {COLS}, {ROWS}, {SID0}, 1, $28
-        vreg.ld $5,  $23, {COLS}, {ROWS}, {SID1}, 1, $28
-    
-    gf_skip_fetch_1:
-        vreg.st $6,  $23, {COLS}, {ROWS}, {SID1}, 1, $27
-    
-        addi.s  $27, $27, 1
-        addi.s  $28, $28, 1
-        blt.s   $27, $26, gf_pipeline_loop
-    
-    gf_pipeline_done:
-        addi.s  $25, $25, 1
-        bge.s   $25, $29, gf_tile_loop_done
-        addi.s  $21, $21, {TILE_BYTES}
-        scpad.ld $22, $21, {COLS}, {ROWS}, {SID0}
-        blt.s   $25, $29, gf_tile_loop
-    
-    gf_tile_loop_done:
-        scpad.st $23, $24, {COLS}, {ROWS}, {SID1}
-
-        jalr    $0, $31, 0
-
-
-
-        halt.s
-    """
-
+ asm = generate_unrolled_asm(
+        ROWS=ROWS, COLS=COLS, NUM_TILES=NUM_TILES,
+        TILE_ADDR_LOCATION=TILE_ADDR_LOCATION,
+        WEIGHT_GMEM_ADDR=WEIGHT_GMEM_ADDR,
+        INPUT_GMEM_ADDR=INPUT_GMEM_ADDR,
+        OUTPUT_GMEM_ADDR=OUTPUT_GMEM_ADDR,
+        WEIGHT_SCPAD_ADDR=WEIGHT_SCPAD_ADDR,
+        INPUT_SCPAD_ADDR=INPUT_SCPAD_ADDR,
+        OUTPUT_SCPAD_ADDR=OUTPUT_SCPAD_ADDR,
+        SID0=SID0, SID1=SID1,
+    )
     instrs = assemble_file(asm)
     instr_text = emit_test_format(instrs)
 
