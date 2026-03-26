@@ -9,8 +9,6 @@ module nb_wdata_queue_prop(
     ddr_controller_if.wdata_wrapper wdw
 );
     import dram_pkg::*;
-    import cpu_types_pkg::*;
-
 /*
     covergroup wdq_cg @(posedge CLK) // TODO: FIX COVERPOINTS 
         awdata : coverpoint {wstrb, wdq_slot, wready};
