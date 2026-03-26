@@ -6,7 +6,7 @@
 // how to gen test cases:
 //   ./gen_testfloat8 -n 1000000 > testfloat_cases_8.csv    (ftz and daz)
 //
-// // verilator -Irtl/include/systolic_array  --binary -j 0 -Wall -Wno-fatal --timing --top-module addn_8_fp32accum_fp16_tb_softfloat tb/unit/systolic_array/addn_8_fp32accum_fp16_tb_softfloat.sv rtl/modules/systolic_array/reducer.sv  rtl/modules/systolic_array/sysarr_n_input_fp_adder.sv --trace
+// // verilator -Irtl/include/systolic_array  --binary -j 0 -Wall -Wno-fatal --timing --top-module addn_8_fp32accum_fp16_tb_softfloat tb/unit/systolic_array/addn_8_fp32accum_fp16_tb_softfloat.sv rtl/modules/systolic_array/reducer.sv  rtl/modules/systolic_array/sysarr_8_input_fp_adder.sv --trace
 
 /* verilator lint_off UNUSEDSIGNAL */
 module addn_8_fp32accum_fp16_tb_softfloat;
@@ -40,7 +40,7 @@ module addn_8_fp32accum_fp16_tb_softfloat;
     real total_ulp_diff; 
 
     // DUT Instantiation
-    sysarr_n_input_fp_adder #(
+    sysarr_8_input_fp_adder #(
         .NUM_INPUTS(NUM_INPUTS),
         .EXPONENT_SIZE(EXPONENT_SIZE),
         .MANTISSA_SIZE(MANTISSA_SIZE),
@@ -163,7 +163,7 @@ initial begin
     $display("");
     $display("--- Berkeley SoftFloat Random Test Cases ---");
 
-    fd = $fopen("scripts/systolic_array/testfloat_cases_8_pure_fp32accum_fp16.csv", "r");
+    fd = $fopen("scripts/systolic_array/testfloat_cases_8.csv", "r");
     if (fd == 0) begin
         $display("error: could not open testfloat_cases_8_pure_fp32accum_fp16.csv");
         $display("make sure you generated an 8-input CSV!"); 
@@ -238,3 +238,4 @@ initial begin
 end
 
 endmodule
+

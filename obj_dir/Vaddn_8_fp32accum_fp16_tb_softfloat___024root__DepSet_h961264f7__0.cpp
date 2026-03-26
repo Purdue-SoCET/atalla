@@ -8,7 +8,7 @@
 
 extern const VlWide<10>/*319:0*/ Vaddn_8_fp32accum_fp16_tb_softfloat__ConstPool__CONST_hef8811a1_0;
 extern const VlWide<10>/*319:0*/ Vaddn_8_fp32accum_fp16_tb_softfloat__ConstPool__CONST_haabea970_0;
-extern const VlWide<16>/*511:0*/ Vaddn_8_fp32accum_fp16_tb_softfloat__ConstPool__CONST_h3854b38b_0;
+extern const VlWide<11>/*351:0*/ Vaddn_8_fp32accum_fp16_tb_softfloat__ConstPool__CONST_h2348213b_0;
 
 VL_INLINE_OPT VlCoroutine Vaddn_8_fp32accum_fp16_tb_softfloat___024root___eval_initial__TOP__Vtiming__0(Vaddn_8_fp32accum_fp16_tb_softfloat___024root* vlSelf) {
     VL_DEBUG_IF(VL_DBG_MSGF("+    Vaddn_8_fp32accum_fp16_tb_softfloat___024root___eval_initial__TOP__Vtiming__0\n"); );
@@ -666,7 +666,7 @@ VL_INLINE_OPT VlCoroutine Vaddn_8_fp32accum_fp16_tb_softfloat___024root___eval_i
     vlSelfRef.__Vm_traceActivity[2U] = 1U;
     VL_WRITEF_NX("\n--- Berkeley SoftFloat Random Test Cases ---\n",0);
     vlSelfRef.addn_8_fp32accum_fp16_tb_softfloat__DOT__fd 
-        = VL_FOPEN_NN(VL_CVT_PACK_STR_NW(16, Vaddn_8_fp32accum_fp16_tb_softfloat__ConstPool__CONST_h3854b38b_0)
+        = VL_FOPEN_NN(VL_CVT_PACK_STR_NW(11, Vaddn_8_fp32accum_fp16_tb_softfloat__ConstPool__CONST_h2348213b_0)
                       , std::string{"r"});
     ;
     if (VL_UNLIKELY(((0U == vlSelfRef.addn_8_fp32accum_fp16_tb_softfloat__DOT__fd)))) {
@@ -776,8 +776,8 @@ VL_INLINE_OPT VlCoroutine Vaddn_8_fp32accum_fp16_tb_softfloat___024root___eval_i
                 if (VL_UNLIKELY((VL_GTES_III(32, 0xaU, vlSelfRef.addn_8_fp32accum_fp16_tb_softfloat__DOT__fail_count)))) {
                     VL_WRITEF_NX("FAIL: Got_fp16=%x, Got_fp32=%x, Exp=%x\n",0,
                                  16,vlSelfRef.addn_8_fp32accum_fp16_tb_softfloat__DOT__tb_result,
-                                 32,vlSelfRef.addn_8_fp32accum_fp16_tb_softfloat__DOT__etchedfpNadder__DOT__pipe_regs
-                                 [3U],16,vlSelfRef.addn_8_fp32accum_fp16_tb_softfloat__DOT__expected);
+                                 32,vlSelfRef.addn_8_fp32accum_fp16_tb_softfloat__DOT__tb_raw_out,
+                                 16,(IData)(vlSelfRef.addn_8_fp32accum_fp16_tb_softfloat__DOT__expected));
                 } else if (VL_UNLIKELY(((0xbU == vlSelfRef.addn_8_fp32accum_fp16_tb_softfloat__DOT__fail_count)))) {
                     VL_WRITEF_NX("... (suppressing terminal output) ...\n",0);
                 }
