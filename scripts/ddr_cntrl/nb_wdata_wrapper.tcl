@@ -60,9 +60,9 @@ puts "=============================================================="
 # +acc enables visibility for waveform debugging
 vsim -coverage -voptargs="+acc" work.$TB_TOP -onfinish stop;
 
-if {[file exists "./waves/nb_wdata_queue.do"]} {
-    puts "Applying wave configurations from ./waves/nb_wdata_queue.do"
-    do ./waves/nb_wdata_queue.do
+if {[file exists "./waves/nb_wdata_queue_tb.do"]} {
+    puts "Applying wave configurations from ./waves/nb_wdata_queue_tb.do"
+    do ./waves/nb_wdata_queue_tb.do
 } else {
     puts "WARNING: No .do file found at ./waves/nb_wdata_queue_tb.do"
     quit -f
