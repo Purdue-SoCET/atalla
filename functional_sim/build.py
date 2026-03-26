@@ -508,23 +508,21 @@ def asm_to_instr_dict(
         return d
 
     if instr_type == "VM":
-        # vreg.ld vd, rs1, num_cols, num_rows, sid, rc, rc_id
+        # vreg.ld vd, rs1, num_cols, num_rows, sid, rc, rc_id_reg
         d["vd"] = parse_reg(ops[0])
         d["rs1"] = parse_reg(ops[1])
         d["num_cols"] = parse_int(ops[2])
         d["num_rows"] = parse_int(ops[3])
         d["sid"] = parse_int(ops[4])
         d["rc"] = parse_int(ops[5])
-        
-        # FIXME: rc_id might eventually come from a register rather than an immediate
-        # d["rc_id"] = parse_reg(ops[6])
+
         target_rc_id = ops[6].strip()
-        if target_rc_id.startswith("$"):
-            d["rc_id"] = parse_reg(target_rc_id)
-            d["rc_id_is_reg"] = True
-        else:
-            d["rc_id"] = parse_int(target_rc_id)
-            d["rc_id_is_reg"] = False
+        if not target_rc_id.startswith("$"):
+            raise ValueError(
+                f"{mnemonic} requires rc_id to be a register operand (e.g. $7), got {target_rc_id!r}"
+            )
+        d["rc_id"] = parse_reg(target_rc_id)
+        d["rc_id_is_reg"] = True
         return d
 
     if instr_type == "SDMA":

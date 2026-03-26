@@ -12,6 +12,112 @@ import numpy as np
 from .build import *
 from kernels.utils.dataloader import load_tile_data
 
+
+def unroll_layernorm(
+    n: int,
+    *,
+    tile_addr_location: int,
+    epsilon_location: int,
+    inv_layer_elems_location: int,
+    sid: int,
+    rsum_imm: int,
+    mask_reg: int = 1,
+    row_reg_base: int = 64,
+) -> str:
+    if n < 1:
+        raise ValueError("n must be >= 1")
+    if row_reg_base + n - 1 > 255:
+        raise ValueError("n is too large for row register allocation")
+
+    max_col_ind = n - 1
+    max_row_ind = n - 1
+    mask_val = (1 << n) - 1
+
+    mean_acc_reg = 20
+    mean_reg = 24
+    var_acc_reg = 38
+    denom_reg = 39
+
+    row_regs = [row_reg_base + i for i in range(n)]
+    tmp_rsum_reg = 11
+    tmp_sq0_reg = 12
+    tmp_sq1_reg = 13
+
+    lines: list[str] = []
+    append = lines.append
+
+    append(f"addi.s   $1, $0, {tile_addr_location}       # load tile/scpad address table location into $1")
+    append("lw.s     $2, 0($1)                           # load gmem tile base address into $2")
+    append("lw.s     $3, 4($1)                           # load scratchpad tile base address into $3")
+    append("")
+    append(f"scpad.ld $3, $2, {max_col_ind}, {max_row_ind}, {sid}       # load NxN tile from gmem to scratchpad")
+    append("")
+    append(f"addi.s   $5, $0, {epsilon_location}          # load epsilon address into $5")
+    append("lw.s     $4, 0($5)                           # load epsilon into $4")
+    append(f"addi.s   $14, $0, {inv_layer_elems_location} # load inv(N^2) location into $14")
+    append("lw.s     $14, 0($14)                         # load inv(N^2) as fp32 bit-pattern")
+    append("")
+    append(f"lui.s    $6, {mask_val >> 7}                          # load upper lane-enable mask bits into $6")
+    append(f"addi.s   $6, $6, {mask_val & 0x7f}                    # add lower lane-enable mask bits into $6")
+    append(f"mv.stm   {mask_reg}, $6                       # write mask into mask register {mask_reg}")
+    append("")
+
+    append("############## PHASE 1: MEAN (unrolled + pipelined) ##############")
+    append(f"sub.vv   ${mean_acc_reg}, ${mean_acc_reg}, ${mean_acc_reg}, {mask_reg}, 0   # zero mean accumulator")
+    append("addi.s   $7, $0, 0                            # i = 0")
+    append(f"vreg.ld  ${row_regs[0]}, $3, {max_col_ind}, {max_row_ind}, {sid}, 1, $7  # fetch row 0 into ${row_regs[0]}")
+
+    for i in range(1, n):
+        append(f"rsum.vi  ${tmp_rsum_reg}, ${row_regs[i - 1]}, {rsum_imm}, {mask_reg}         # reduction sum row {i - 1}")
+        append("addi.s   $7, $7, 1                            # i += 1")
+        append(f"vreg.ld  ${row_regs[i]}, $3, {max_col_ind}, {max_row_ind}, {sid}, 1, $7  # load row {i} (pipelined with rsum)")
+        append(f"add.vv   ${mean_acc_reg}, ${mean_acc_reg}, ${tmp_rsum_reg}, {mask_reg}, 0   # accumulate partial sum of row {i - 1}")
+
+    append(f"rsum.vi  ${tmp_rsum_reg}, ${row_regs[-1]}, {rsum_imm}, {mask_reg}         # reduce last row ({n - 1})")
+    append(f"add.vv   ${mean_acc_reg}, ${mean_acc_reg}, ${tmp_rsum_reg}, {mask_reg}, 0   # accumulate last partial sum")
+    append(f"mul.vs   ${mean_reg}, ${mean_acc_reg}, $14, {mask_reg}      # mean = total_sum * inv(N^2)")
+    append("")
+
+    append("############## PHASE 2: VARIANCE (unrolled + pipelined) ##############")
+    append(f"sub.vv   ${var_acc_reg}, ${var_acc_reg}, ${var_acc_reg}, {mask_reg}, 0   # zero variance accumulator")
+    for i, row_reg in enumerate(row_regs):
+        append(f"sub.vv   ${row_reg}, ${row_reg}, ${mean_reg}, {mask_reg}, 0   # diff row {i} = row {i} - mean")
+
+    active_sq_reg = tmp_sq0_reg
+    next_sq_reg = tmp_sq1_reg
+    append(f"mul.vv   ${active_sq_reg}, ${row_regs[0]}, ${row_regs[0]}, {mask_reg}, 0   # square diff row 0")
+    for i in range(1, n):
+        append(f"mul.vv   ${next_sq_reg}, ${row_regs[i]}, ${row_regs[i]}, {mask_reg}, 0   # square diff row {i} (pipelined)")
+        append(f"rsum.vi  ${active_sq_reg}, ${active_sq_reg}, {rsum_imm}, {mask_reg}         # reduce squared diff row {i - 1}")
+        append(f"add.vv   ${var_acc_reg}, ${var_acc_reg}, ${active_sq_reg}, {mask_reg}, 0   # accumulate variance contribution row {i - 1}")
+        active_sq_reg, next_sq_reg = next_sq_reg, active_sq_reg
+
+    append(f"rsum.vi  ${active_sq_reg}, ${active_sq_reg}, {rsum_imm}, {mask_reg}         # reduce last squared diff row ({n - 1})")
+    append(f"add.vv   ${var_acc_reg}, ${var_acc_reg}, ${active_sq_reg}, {mask_reg}, 0   # accumulate last variance contribution")
+    append(f"mul.vs   ${denom_reg}, ${var_acc_reg}, $14, {mask_reg}      # variance = sum * inv(N^2)")
+    append(f"add.vs   ${denom_reg}, ${denom_reg}, $4, {mask_reg}         # add epsilon for stability")
+    append(f"sqrti.vi ${denom_reg}, ${denom_reg}, 0, {mask_reg}          # denominator = sqrt(variance + epsilon)")
+    append("")
+
+    append(f"vmov.vts $15, ${denom_reg}, 0                             # extract denominator lane 0 to scalar")
+    append("rcp.bf   $15, $15, $0                            # reciprocal(denominator)")
+    append("")
+
+    append("############## PHASE 3: NORMALIZE + STORE (unrolled + pipelined) ##############")
+    append(f"mul.vs   ${row_regs[0]}, ${row_regs[0]}, $15, {mask_reg}              # normalize row 0 via reciprocal multiply")
+    append("addi.s   $9, $0, 0                              # store row index = 0")
+    for i in range(1, n):
+        append(f"mul.vs   ${row_regs[i]}, ${row_regs[i]}, $15, {mask_reg}              # normalize row {i} via reciprocal multiply")
+        append(f"vreg.st  ${row_regs[i - 1]}, $3, {max_col_ind}, {max_row_ind}, {sid}, 1, $9   # store normalized row {i - 1} (pipelined)")
+        append("addi.s   $9, $9, 1                              # advance store row index")
+    append(f"vreg.st  ${row_regs[-1]}, $3, {max_col_ind}, {max_row_ind}, {sid}, 1, $9   # store last normalized row ({n - 1})")
+    append("")
+    append(f"scpad.st $3, $2, {max_col_ind}, {max_row_ind}, {sid}            # store NxN tile back to gmem")
+    append("")
+    append("halt.s")
+
+    return "\n".join(f"        {line}" if line else "" for line in lines)
+
 def main():
     ap = argparse.ArgumentParser()
     ap.add_argument("-i", "--input", type=Path, default=None, help="Input assembly file")
@@ -31,122 +137,17 @@ def main():
     SCPAD_ADDR = 0
     EPSILON_LOCATION = 20
     INV_LAYER_ELEMS_LOCATION = 24
-    MAX_COL_IND = N - 1
-    MAX_ROW_IND = N - 1
     SID = 0
     LAYER_ELEMS = N * N
     RSUM_IMM = 64
-    MASK_VAL = (1 << N) - 1
-    
-    #
-    # ScalarConvention:
-    # 1     holds address of gmem base address
-    # 2     holds gmem base address
-    # 3     holds scratchpad base address
-    # 4     holds epsilon stability constant
-    # 5     holds epsilon address
-    # 6     holds lane-enable bit mask
-    # 7     holds loop counter (i)
-    # 8     holds N (loop bound)
-    # 9     holds previous row index (for pipelined store)
-    # Vector Convention:
-    # $10   current row data (reused across iterations)
-    # $11   rsum partial / temp
-    # $12   squared diff / temp
-    # $20   mean accumulator (row-sum total)
-    # $24   final mean (broadcast across lanes)
-    # $30   row diff (row - mean) / normalized result
-    # $38   variance accumulator
-    # $39   normalized denominator
-    
-    asm = f"""
-        
-        addi.s   $1, $0, {TILE_ADDR_LOCATION}       # load tile/scpad address table location into $1
-        lw.s     $2, 0($1)                           # load gmem tile base address into $2
-        lw.s     $3, 4($1)                           # load scratchpad tile base address into $3
-
-        scpad.ld $3, $2, {MAX_COL_IND}, {MAX_ROW_IND}, {SID}       # load NxN tile from gmem to scratchpad
-        
-        addi.s   $5, $0, {EPSILON_LOCATION}          # load epsilon address into $5
-        lw.s     $4, 0($5)                           # load epsilon into $4
-        addi.s   $14, $0, {INV_LAYER_ELEMS_LOCATION} # load inv(N^2) location into $14
-        lw.s     $14, 0($14)                         # load inv(N^2) as fp32 bit-pattern
-
-        lui.s    $6, {MASK_VAL >> 7}
-        addi.s   $6, $6, {MASK_VAL & 0x7f}
-        mv.stm   1, $6                               # write mask into mask register 1
-
-        addi.s   $8, $0, {N}                         # load loop bound N into $8
-
-        ############## PHASE 1: MEAN (pipelined) ##############
-        sub.vv   $20, $20, $20, 1, 0                 # zero mean accumulator
-        addi.s   $7, $0, 0                            # i = 0
-        vreg.ld  $10, $3, {MAX_COL_IND}, {MAX_ROW_IND}, {SID}, 1, $7  # fetch row 0, store in $10
-        addi.s   $7, $7, 1                            # i += 1
-        bge.s    $7, $8, MEAN_DONE                    # skip loop if N == 1
-    MEAN_LOOP:
-        rsum.vi  $11, $10, {RSUM_IMM}, 1              # reduction sum row i - 1
-        vreg.ld  $10, $3, {MAX_COL_IND}, {MAX_ROW_IND}, {SID}, 1, $7  # load row i (pipelined with rsum)
-        add.vv   $20, $20, $11, 1, 0                  # accumulate partial sum of row i - 1
-        addi.s   $7, $7, 1                             # i += 1
-        blt.s    $7, $8, MEAN_LOOP                     # loop while i < N
-
-    MEAN_DONE:
-        rsum.vi  $11, $10, {RSUM_IMM}, 1              # reduce last row
-        add.vv   $20, $20, $11, 1, 0                  # accumulate last partial sum
-        mul.vs   $24, $20, $14, 1                      # mean = total_sum * inv(N^2)
-
-        ############## PHASE 2: VARIANCE (pipelined) ##############
-        sub.vv   $38, $38, $38, 1, 0                  # zero variance accumulator
-        addi.s   $7, $0, 0                             # i = 0
-        vreg.ld  $10, $3, {MAX_COL_IND}, {MAX_ROW_IND}, {SID}, 1, $7  # prefetch row 0
-        sub.vv   $30, $10, $24, 1, 0                   # diff = row 0 - mean
-        addi.s   $7, $7, 1                              # i = 1
-        bge.s    $7, $8, VAR_DONE                       # skip loop if N == 1
-    VAR_LOOP:
-        mul.vv   $12, $30, $30, 1, 0                   # square previous diff
-        vreg.ld  $10, $3, {MAX_COL_IND}, {MAX_ROW_IND}, {SID}, 1, $7  # load row i (pipelined)
-        rsum.vi  $12, $12, {RSUM_IMM}, 1                # reduce squared diff
-        sub.vv   $30, $10, $24, 1, 0                    # diff = row i - mean (pipelined)
-        add.vv   $38, $38, $12, 1, 0                    # accumulate variance
-        addi.s   $7, $7, 1                               # i++
-        blt.s    $7, $8, VAR_LOOP                        # loop while i < N
-
-    VAR_DONE:
-        mul.vv   $12, $30, $30, 1, 0                   # square last diff
-        rsum.vi  $12, $12, {RSUM_IMM}, 1                # reduce last squared diff
-        add.vv   $38, $38, $12, 1, 0                    # accumulate last variance contribution
-        mul.vs   $39, $38, $14, 1                        # variance = sum * inv(N^2)
-        add.vs   $39, $39, $4, 1                         # add epsilon for stability
-        sqrti.vi $39, $39, 0, 1                          # denominator = sqrt(variance + epsilon)
-
-        vmov.vts $15, $39, 0                             # extract denominator lane 0 to scalar
-        rcp.bf   $15, $15, $0                            # reciprocal(denominator)
-
-        ############## PHASE 3: NORMALIZE + STORE (pipelined) ##############
-        addi.s   $7, $0, 0                              # i = 0
-        vreg.ld  $10, $3, {MAX_COL_IND}, {MAX_ROW_IND}, {SID}, 1, $7  # load row 0
-        sub.vv   $30, $10, $24, 1, 0                     # row 0 - mean
-        mul.vs   $30, $30, $15, 1                        # normalize row 0 via reciprocal multiply
-        addi.s   $7, $7, 1                                # i = 1
-        bge.s    $7, $8, NORM_DONE                        # skip loop if N == 1
-    NORM_LOOP:
-        vreg.ld  $10, $3, {MAX_COL_IND}, {MAX_ROW_IND}, {SID}, 1, $7   # load row i (pipelined)
-        subi.s   $9, $7, 1                                # prev = i - 1
-        vreg.st  $30, $3, {MAX_COL_IND}, {MAX_ROW_IND}, {SID}, 1, $9   # store prev normalized row (pipelined)
-        sub.vv   $30, $10, $24, 1, 0                      # row i - mean
-        mul.vs   $30, $30, $15, 1                         # normalize row i via reciprocal multiply
-        addi.s   $7, $7, 1                                 # i++
-        blt.s    $7, $8, NORM_LOOP                         # loop while i < N
-
-    NORM_DONE:
-        subi.s   $9, $7, 1                                # prev = N - 1
-        vreg.st  $30, $3, {MAX_COL_IND}, {MAX_ROW_IND}, {SID}, 1, $9   # store last normalized row
-
-        scpad.st $3, $2, {MAX_COL_IND}, {MAX_ROW_IND}, {SID}            # store NxN tile back to gmem
-
-        halt.s
-    """
+    asm = unroll_layernorm(
+        N,
+        tile_addr_location=TILE_ADDR_LOCATION,
+        epsilon_location=EPSILON_LOCATION,
+        inv_layer_elems_location=INV_LAYER_ELEMS_LOCATION,
+        sid=SID,
+        rsum_imm=RSUM_IMM,
+    )
 
     instrs = assemble_file(asm)         
 

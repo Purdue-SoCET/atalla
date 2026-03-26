@@ -548,7 +548,7 @@ mneq.mvs vmd, vs1, rs1, mask
 
 ## Vector Register Load/Store (VM-Type)
 
-vreg.ld vd, rs1, num_cols, num_rows, sid, rc, rc_id
+vreg.ld vd, rs1, num_cols, num_rows, sid, rc, rc_id_reg
 - Operation: Vector load from scratchpad tile.
 - `vd`: vector destination register.
 - `rs1`: scratchpad base pointer/address.
@@ -556,9 +556,9 @@ vreg.ld vd, rs1, num_cols, num_rows, sid, rc, rc_id
 - `num_rows`: tile row count.
 - `sid`: scratchpad ID/bank selector.
 - `rc`: row/column mode select.
-- `rc_id`: selected row/column index.
+- `rc_id_reg`: scalar register containing selected row/column index.
 
-vreg.st vs, rs1, num_cols, num_rows, sid, rc, rc_id
+vreg.st vs, rs1, num_cols, num_rows, sid, rc, rc_id_reg
 - Operation: Vector store to scratchpad tile.
 - `vs`: vector source register.
 - `rs1`: scratchpad base pointer/address.
@@ -566,7 +566,7 @@ vreg.st vs, rs1, num_cols, num_rows, sid, rc, rc_id
 - `num_rows`: tile row count.
 - `sid`: scratchpad ID/bank selector.
 - `rc`: row/column mode select.
-- `rc_id`: selected row/column index.
+- `rc_id_reg`: scalar register containing selected row/column index.
 
 ## Scratchpad DMA (SDMA)
 
