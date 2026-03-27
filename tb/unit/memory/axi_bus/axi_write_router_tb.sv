@@ -4,18 +4,22 @@
 
 import axi_bus_pkg::*;
 
+// typedef enum logic [1:0] {
+//     SP0    = 2'b00,
+//     SP1    = 2'b01,
+//     DCACHE = 2'b10
+// } master_t;
+
 // RESPONSE TRANSACTIONS
 class axi_write_rsp;
-    logic [MID_BID-1:0] mid_id;
+    rand mid_t               master;
     rand logic [BID-1:0]     id;
     bresp_t             resp = B_OKAY;
 
-    // constraint id_match {
-    //     mid_id[BID-1:0] == id;
-    // }
-    constraint valid_master {
-        mid_id[MID_BID-1:BID] inside {2'b00, 2'b01, 2'b10};
-    }
+    logic [MID_BID-1:0] full_id;
+    function void post_randomize(); // automatically called after randomize to preform concatenation
+        full_id = {master, id};
+    endfunction
 endclass
 
 // Generator
@@ -29,21 +33,44 @@ class axi_generator_rsp;
         end
         return rsp;
     endfunction
+
+    // directed generator per master
+    function axi_write_rsp generate_rsp_per_master(mid_t m);
+        axi_write_rsp rsp = new();
+        if (!rsp.randomize() with {master == m;}) begin 
+            $fatal("Randomization failed");
+        end 
+        return rsp;
+    endfunction
 endclass
 
 // Driver 
-class axi_driver;
+class axi_rsp_driver;
     virtual axi_bus_if.write_response_tb vif;
     function new(virtual axi_bus_if.write_response_tb vif);
         this.vif = vif;
     endfunction
-    task drive_rsp_sp0(axi_write_rsp rsp);
-        vif.
+    task drive_rsp(axi_write_rsp rsp);
+        vif.b_i_valid <= 1'b1;
+        vif.b_i.id <= rsp.full_id;
+        vif.b_i.resp <= rsp.resp;
     endtask
+    task stop_rsp();
+        vif.b_i_valid <= 1'b0;
+    endtask
+    task drive_input_zero();
+        vif.b_i_valid <= 1'b0;
+        vif.b_i.id <= '0;
+        vif.b_i.resp <= B_OKAY;
+        vif.b_sp0_o_ready <= 1'b1;
+        vif.b_sp1_o_ready <= 1'b1;
+        vif.b_d_o_ready   <= 1'b1;
+    endtask
+
 endclass
 
 
-module axi_write_response_tb ();
+module axi_write_router_tb ();
     parameter CLK_PERIOD = 10;
     logic CLK = 0, nRST;
     string test_case = "";
@@ -55,7 +82,7 @@ module axi_write_response_tb ();
     axi_bus_if busif(.CLK(CLK), .nRST(nRST));
 
     // DUT 
-    axi_write_response DUT (.CLK(CLK), 
+    axi_write_router DUT (.CLK(CLK), 
                             .nRST(nRST),
                             .b_i_if(busif),
                             .sp0_b_o_if(busif),
@@ -76,5 +103,58 @@ module axi_write_response_tb ();
     end
     endtask
 
+    axi_write_rsp rsp;
+    axi_generator_rsp gen;
+    axi_rsp_driver drv;
+
+    task route_sp0_rsp;
+        reset_dut();
+        test_case = "TEST CASE 1: SP0 RESPONSE";
+        drv.drive_input_zero();
+        rsp = gen.generate_rsp_per_master(SP0);
+        @(posedge CLK);
+        drv.drive_rsp(rsp);
+        do @(posedge CLK); while (!(busif.b_i_valid && busif.b_i_ready));
+        busif.b_i_valid <= 0;
+        $display("TB: drove txn");
+        @(posedge CLK);
+        if (busif.b_sp0_o.id == rsp.id[BID-1:0] && busif.b_sp0_o.resp == rsp.resp) begin 
+            $display("Pass");
+        end 
+        else begin 
+            $display("Fail");
+        end 
+        @(posedge CLK*2);
+    endtask
+
+    task route_sp1_rsp;
+        reset_dut();
+        test_case = "TEST CASE 2: SP1 RESPONSE";
+        drv.drive_input_zero();
+        rsp = gen.generate_rsp_per_master(SP1);
+        @(posedge CLK);
+        drv.drive_rsp(rsp);
+        do @(posedge CLK); while (!(busif.b_i_valid && busif.b_i_ready));
+        busif.b_i_valid <= 0;
+        $display("TB: drove txn");
+        @(posedge CLK);
+        if (busif.b_sp1_o.id == rsp.id[BID-1:0] && busif.b_sp1_o.resp == rsp.resp) begin 
+            $display("Pass");
+        end 
+        else begin 
+            $display("Fail");
+        end 
+        @(posedge CLK*2);
+    endtask
+
+    initial begin 
+        $display("TB: start");
+        gen = new();
+        drv = new(busif);
+
+        route_sp0_rsp();
+        route_sp1_rsp();
+        $finish;
+    end 
 
 endmodule

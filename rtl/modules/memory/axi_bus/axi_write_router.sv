@@ -62,6 +62,9 @@ module axi_write_router (
             sp0_wr_ptr <= '0;
             sp1_wr_ptr <= '0;
             d_wr_ptr <= '0;
+            sp0_rd_ptr <= '0;
+            sp1_rd_ptr <= '0;
+            d_rd_ptr <= '0;
         end 
         else begin
             if(skid_push) begin 
@@ -87,17 +90,6 @@ module axi_write_router (
                     d_wr_ptr <= d_wr_ptr + 1'b1;
                 end
             end 
-        end 
-    end
-
-
-    always_ff @(posedge CLK, negedge nRST) begin 
-        if(!nRST) begin 
-            sp0_rd_ptr <= '0;
-            sp1_rd_ptr <= '0;
-            d_rd_ptr <= '0;
-        end
-        else begin 
             if (!sp0_skid_empty && sp0_b_o_if.b_sp0_o_ready) begin
                 sp0_skid_buffer[sp0_rd_ptr].valid <= 1'b0;
                 sp0_rd_ptr <= sp0_rd_ptr + 1'b1;
@@ -113,6 +105,29 @@ module axi_write_router (
         end 
     end
 
+
+    // always_ff @(posedge CLK, negedge nRST) begin 
+    //     if(!nRST) begin 
+    //         sp0_rd_ptr <= '0;
+    //         sp1_rd_ptr <= '0;
+    //         d_rd_ptr <= '0;
+    //     end
+    //     else begin 
+    //         if (!sp0_skid_empty && sp0_b_o_if.b_sp0_o_ready) begin
+    //             sp0_skid_buffer[sp0_rd_ptr].valid <= 1'b0;
+    //             sp0_rd_ptr <= sp0_rd_ptr + 1'b1;
+    //         end 
+    //         else if (!sp1_skid_empty && sp1_b_o_if.b_sp1_o_ready) begin 
+    //             sp1_skid_buffer[sp1_rd_ptr].valid <= 1'b0;
+    //             sp1_rd_ptr <= sp1_rd_ptr + 1'b1;
+    //         end 
+    //         else if (!sp1_skid_empty && d_b_o_if.b_d_o_ready) begin 
+    //             d_skid_buffer[d_rd_ptr].valid <= 1'b0;
+    //             d_rd_ptr <= d_rd_ptr + 1'b1;
+    //         end 
+    //     end 
+    // end
+
     // b channel to sp0 
     assign sp0_b_o_if.b_sp0_o_valid = sp0_skid_buffer[sp0_rd_ptr].valid;
     assign sp0_b_o_if.b_sp0_o.id    = sp0_skid_buffer[sp0_rd_ptr].id;
@@ -121,7 +136,7 @@ module axi_write_router (
     // b channel to sp1
     assign sp1_b_o_if.b_sp1_o_valid = sp1_skid_buffer[sp1_rd_ptr].valid;
     assign sp1_b_o_if.b_sp1_o.id    = sp1_skid_buffer[sp1_rd_ptr].id;
-    assign sp0_b_o_if.b_sp1_o.resp  = sp1_skid_buffer[sp1_rd_ptr].resp;
+    assign sp1_b_o_if.b_sp1_o.resp  = sp1_skid_buffer[sp1_rd_ptr].resp;
     
     // b channel to d$ 
     assign d_b_o_if.b_d_o_valid   = d_skid_buffer[d_rd_ptr].valid;
