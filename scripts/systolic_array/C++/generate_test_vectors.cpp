@@ -171,7 +171,24 @@ uint32_t sim_adder_tree32(const std::vector<uint32_t>& in, uint32_t psum, bool i
     }
     else if(ADDER_INPUT_NUM == 4)
     {
-        //
+        while (cur.size() > 1) {
+            size_t n = cur.size();
+            next.resize((n + 3) / 4);
+
+            for (size_t j = 0; j + 3 < n; j += 4) {
+                next[j / 4] = sim_4_input_add32(cur[j], cur[j + 1], cur[j + 2], cur[j + 3], is_fp16);
+            }
+            size_t tail = n % 4;
+            if (tail > 0) {
+                uint32_t sum = cur[n - tail];
+                for (size_t k = n - tail + 1; k < n; ++k) {
+                    sum = sim_2_input_add32(sum, cur[k], is_fp16);
+                }
+                next[n / 4] = sum;
+            }
+
+            cur.swap(next);
+        }
     }
     else
     {
@@ -258,7 +275,8 @@ std::vector<std::vector<uint16_t>> sim_MEISSA32(
                 weight_col[i] = weight[i][col];
             }
 
-            output[row][col] = fp32_to_bf16_bits(sim_MEISSA32_col(input[row], weight_col, psum[row][col], is_fp16));
+            uint32_t acc = sim_MEISSA32_col(input[row], weight_col, psum[row][col], is_fp16);
+            output[row][col] = fp32_to_bf16_bits(acc);
         }
     }
 

@@ -10,10 +10,10 @@ constexpr int ROW = 32;
 constexpr int COL = 32;
 constexpr int TOTAL_TEST_NUM = 100;
 constexpr int PROBABILITY_OF_NEW_WEIGHT = 250; // 25% chance out of 1000
-constexpr int ADDER_INPUT_NUM = 2;
+constexpr int ADDER_INPUT_NUM = 4;
 constexpr unsigned int RANDOM_SEED = 42;
 bool IS_FP16 = false;
-std::string VERSION = "TPU32";
+std::string VERSION = "MEISSA32";
 
 extern std::string PATH_TO_INPUT;
 extern std::string PATH_TO_EXPECTED_RESULT;
