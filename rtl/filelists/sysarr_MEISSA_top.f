@@ -18,9 +18,13 @@
 
 // Intermediate modules
 ./rtl/modules/common/general/wallacetree_11b_2c.sv
+./rtl/modules/common/general/wallacetree_11b.sv
 ./rtl/modules/systolic_array/arithmetic/mul_fp16_1c.sv
 ./rtl/modules/systolic_array/arithmetic/add_fp16_1c.sv
 ./rtl/modules/systolic_array/arithmetic/add_fp16_4_input.sv
+./rtl/modules/systolic_array/arithmetic/sysarr_4_input_fp_adder.sv
+./rtl/modules/systolic_array/arithmetic/add_fp16_4_input_no_if.sv
+./rtl/modules/systolic_array/arithmetic/sysarr_4_input_fp_adder_no_if.sv
 ./rtl/modules/common/memory/sram_bank.sv
 ./rtl/modules/systolic_array/arithmetic/mul_bf.sv
 ./rtl/modules/systolic_array/arithmetic/reducer.sv
@@ -29,6 +33,7 @@
 // High-level modules
 ./rtl/modules/systolic_array/mul_grid.sv
 ./rtl/modules/systolic_array/pipelined_adder_tree.sv
+./rtl/modules/systolic_array/mixed_pipelined_adder_tree.sv
 ./rtl/modules/systolic_array/skew_buffer.sv
 // ./rtl/modules/systolic_array/MEISSA_control_unit.sv
 // TPU
