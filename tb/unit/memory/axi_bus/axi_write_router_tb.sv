@@ -19,11 +19,11 @@ class axi_write_rsp;
 endclass
 
 // Generator
-class axi_generator;
+class axi_generator_rsp;
     // fucntion <return_type> <fucntion_name>()
     function axi_write_rsp generate_rsp();
         axi_write_rsp rsp; // creates handle
-        rsp = new() // constructs object
+        rsp = new(); // constructs object
         if (!rsp.randomize()) begin
             $fatal("Randomization failed");
         end
@@ -32,14 +32,14 @@ class axi_generator;
 endclass
 
 // Driver 
-class axi_driver;
-    virtual axi
+//class axi_driver;
+    //virtual axi
 
 
 module axi_write_response_tb ();
     parameter CLK_PERIOD = 10;
     logic CLK = 0, nRST;
-    string test_case + "";
+    string test_case = "";
 
     // clock
     always #(CLK_PERIOD/2) CLK++;

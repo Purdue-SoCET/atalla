@@ -45,9 +45,9 @@ endclass
 
 // DRIVER 
 class axi_driver;
-    virtual axi_bus_if.tb vif; // giving class a virtual interface (handle to interface instance)
-    
-    function new(virtual axi_bus_if.tb vif); 
+    //virtual axi_bus_if.tb vif; // giving class a virtual interface (handle to interface instance)
+    virtual axi_bus_if.write_manager_tb vif;
+    function new(virtual axi_bus_if.write_manager_tb vif); 
         this.vif = vif; // constructor of driver class
     endfunction
     task drive_write_ar(axi_write_txn txn);
@@ -90,8 +90,9 @@ endclass
 
 // Monitor
 class axi_monitor;
-    virtual axi_bus_if.tb vif;
-    function new(virtual axi_bus_if.tb vif);
+    //virtual axi_bus_if.tb vif;
+    virtual axi_bus_if.write_manager_tb vif;
+    function new(virtual axi_bus_if.write_manager_tb vif);
         this.vif = vif;
     endfunction
 

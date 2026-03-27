@@ -1,2 +1,0 @@
-var g_data = {"data":[{"n":"work.axi_bus_if","id":4,"zf":1,"tc":1.68,"t":1.68},{"n":"work.axi_write_arbiter","id":5,"zf":1,"tc":100.00,"s":100.00,"b":100.00,"t":100.00},{"n":"work.axi_write_arbiter_tb","id":3,"zf":1,"tc":75.00,"s":100.00,"t":50.00},{"n":"work.test","id":6,"zf":1,"tc":100.00,"s":100.00,"b":100.00,"t":100.00}]};
-processDuData(g_data);
