@@ -80,7 +80,7 @@ always_ff@(posedge CLK, negedge nRST) begin
         aw_wr_ptr <= '0;
         aw_rd_ptr <= '0;
         for (int i = 0; i < AW_DEPTH; i++) begin 
-            aw_fifo[i] <= 1'b0; // this could be a bug ?? only valid should be cleared 
+            aw_fifo[i].valid <= 1'b0; // this could be a bug ?? only valid should be cleared  (update fixed but needs tested)
         end 
     end 
     else begin 
@@ -108,7 +108,7 @@ always_ff@(posedge CLK, negedge nRST) begin
         w_wr_ptr <= '0;
         w_rd_ptr <= '0;
         for (int i = 0; i < W_DEPTH; i++) begin
-            w_fifo[i] <= 1'b0;
+            w_fifo[i].valid <= 1'b0;
         end
     end 
     else begin 

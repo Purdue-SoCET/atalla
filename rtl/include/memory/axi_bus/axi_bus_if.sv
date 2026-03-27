@@ -412,5 +412,7 @@ interface axi_bus_if(input logic CLK, input logic nRST);
         input head_wvalid, head_w_o 
     );
 
+    
+
 endinterface
 `endif // AXI_BUS_IF_SV
