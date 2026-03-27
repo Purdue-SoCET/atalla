@@ -31,8 +31,10 @@ class lfc_hit_under_miss_seq extends uvm_sequence#(lfc_cpu_transaction);
 	req.randomize();
 	req.dp_in_halt = 1'b0;
 	//req.down_time = 2;
+	req.wait_for_ram = 1;
 	req.mem_in_rw_mode = 1'b0;
 	address = req.mem_in_addr;
+	`uvm_info(get_type_name(), "Expecting miss", UVM_MEDIUM)
 	if(req.mem_in_rw_mode == 1'b1) begin
 		`uvm_info(get_type_name(), "ITER1: Sending Write transaction...", UVM_MEDIUM)
 		`uvm_info(get_type_name(), $sformatf("WRITE complete: addr=0x%0h data0x%0h",
@@ -58,6 +60,7 @@ class lfc_hit_under_miss_seq extends uvm_sequence#(lfc_cpu_transaction);
 	});
 	req.dp_in_halt = 1'b0;
 	//req.down_time = 2
+	`uvm_info(get_type_name(), "Expecting miss", UVM_MEDIUM)
 	if(req.mem_in_rw_mode == 1'b1) begin
 		`uvm_info(get_type_name(), "ITER2: Sending Write transaction...", UVM_MEDIUM)
 		`uvm_info(get_type_name(), $sformatf("WRITE complete: addr=0x%0h data0x%0h",
@@ -78,6 +81,7 @@ class lfc_hit_under_miss_seq extends uvm_sequence#(lfc_cpu_transaction);
 	});	
 	req.dp_in_halt = 1'b0;
 	//req.down_time = 2;
+	`uvm_info(get_type_name(), "Expecting hit", UVM_MEDIUM)
 	if(req.mem_in_rw_mode == 1'b1) begin
 		`uvm_info(get_type_name(), "ITER3: Sending Write transaction...", UVM_MEDIUM)
 		`uvm_info(get_type_name(), $sformatf("WRITE complete: addr=0x%0h data0x%0h",

@@ -28,6 +28,7 @@ class lfc_cpu_transaction #(parameter NUM_BANKS = 4, parameter UUID_SIZE = 4) ex
 
   // timing control (for driver)
   int down_time = 40; // cycles waited between transactions, 40 (800ns) is default
+  bit wait_for_ram = 0;
 
   constraint addr_constraint {mem_in_addr[1:0] == 2'b00;}
 
@@ -46,6 +47,7 @@ class lfc_cpu_transaction #(parameter NUM_BANKS = 4, parameter UUID_SIZE = 4) ex
     `uvm_field_int(uuid_block, UVM_DEFAULT)
     `uvm_field_int(dp_out_flushed, UVM_DEFAULT)
     `uvm_field_int(down_time, UVM_DEFAULT)
+    `uvm_field_int(wait_for_ram, UVM_DEFAULT)
   `uvm_object_utils_end
 
   function new(string name = "lfc_cpu_transaction");

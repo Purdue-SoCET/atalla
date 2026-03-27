@@ -49,6 +49,7 @@ class lfc_cpu_active_driver extends uvm_driver#(lfc_cpu_transaction);
             vif.mem_in = 1'b0;
 	    @(posedge vif.clk);
 	    wait(!vif.stall)
+	    if(req_item.wait_for_ram) wait(vif.ram_mem_REN == '0 && vif.ram_mem_WEN == '0);
 	    seq_item_port.item_done();
 	    repeat(down_time) @(posedge vif.clk);
         end
