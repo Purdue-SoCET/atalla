@@ -412,7 +412,28 @@ interface axi_bus_if(input logic CLK, input logic nRST);
         input head_wvalid, head_w_o 
     );
 
-    
+    // WRITE RESPONSE ROUTER TB
+    modport write_response_tb (
+        // To Subordinate
+        input b_i_ready,
+        // From Subordinate
+        output b_i_valid, b_i
+
+        // To Master SP0
+        input b_sp0_o_valid, b_sp0_o,
+        // From Master SP0
+        output b_sp0_o_ready
+
+        // To Master SP1
+        input b_sp1_o_valid, b_sp1_o,
+        // From Master SP1
+        output b_sp1_o_ready
+
+        // To Master 
+        input b_d_o_valid, b_d_o,
+        // From Master
+        output b_d_o_ready
+    );
 
 endinterface
 `endif // AXI_BUS_IF_SV

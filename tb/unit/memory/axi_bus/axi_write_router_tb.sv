@@ -6,13 +6,13 @@ import axi_bus_pkg::*;
 
 // RESPONSE TRANSACTIONS
 class axi_write_rsp;
-    rand logic [MID_BID-1:0] mid_id;
+    logic [MID_BID-1:0] mid_id;
     rand logic [BID-1:0]     id;
     bresp_t             resp = B_OKAY;
 
-    constraint id_match {
-        mid_id[BID-1:0] == id;
-    }
+    // constraint id_match {
+    //     mid_id[BID-1:0] == id;
+    // }
     constraint valid_master {
         mid_id[MID_BID-1:BID] inside {2'b00, 2'b01, 2'b10};
     }
@@ -32,8 +32,15 @@ class axi_generator_rsp;
 endclass
 
 // Driver 
-//class axi_driver;
-    //virtual axi
+class axi_driver;
+    virtual axi_bus_if.write_response_tb vif;
+    function new(virtual axi_bus_if.write_response_tb vif);
+        this.vif = vif;
+    endfunction
+    task drive_rsp_sp0(axi_write_rsp rsp);
+        vif.
+    endtask
+endclass
 
 
 module axi_write_response_tb ();
