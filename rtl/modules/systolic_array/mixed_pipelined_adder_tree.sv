@@ -22,7 +22,7 @@ module mixed_pipelined_adder_tree #(
 
     // localparam int TREE_DEPTH = compute_tree_levels(N);
 
-    localparam int TREE_DEPTH = ($clog2(N) + 1) / 2;
+    localparam int TREE_DEPTH = ($clog2(N) + 1) >> 1;
 
     // Inter-stage wires
     // stage_data[l][k]  – data at tree level l, element k
