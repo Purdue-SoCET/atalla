@@ -77,7 +77,7 @@ package axi_bus_pkg;
         SP0              = 2'b00,
         SP1              = 2'b01,
         DCACHE           = 2'b10,
-        ICAHCE           = 2'b11
+        ICACHE           = 2'b11
     } mid_t;
 
     // RRESP options

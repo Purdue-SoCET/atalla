@@ -124,7 +124,8 @@ module axi_write_router_tb ();
         else begin 
             $display("Fail");
         end 
-        @(posedge CLK*2);
+        @(posedge CLK);
+        @(posedge CLK);
     endtask
 
     task route_sp1_rsp;
@@ -144,7 +145,196 @@ module axi_write_router_tb ();
         else begin 
             $display("Fail");
         end 
-        @(posedge CLK*2);
+        @(posedge CLK);
+        @(posedge CLK);
+    endtask
+
+    task route_d_rsp;
+        reset_dut();
+        test_case = "TEST CASE 3: D$ RESPONSE";
+        drv.drive_input_zero();
+        rsp = gen.generate_rsp_per_master(DCACHE);
+        @(posedge CLK);
+        drv.drive_rsp(rsp);
+        do @(posedge CLK); while (!(busif.b_i_valid && busif.b_i_ready));
+        busif.b_i_valid <= 0;
+        $display("TB: drove txn");
+        @(posedge CLK);
+        if (busif.b_d_o.id == rsp.id[BID-1:0] && busif.b_d_o.resp == rsp.resp) begin 
+            $display("Pass");
+        end 
+        else begin 
+            $display("Fail");
+        end 
+        @(posedge CLK);
+        @(posedge CLK);
+    endtask
+
+    task route_sp0_rsp_noready;
+        axi_write_rsp rsp1, rsp2;
+        reset_dut();
+        test_case = "TEST CASE 4: SP0 RESPONSE READY LOW";
+        drv.drive_input_zero();
+        busif.b_sp0_o_ready <= 1'b0;
+        // first response should be accepted into skid
+        rsp1 = gen.generate_rsp_per_master(SP0);
+        @(posedge CLK);
+        drv.drive_rsp(rsp1);
+        do @(posedge CLK); while (!(busif.b_i_valid && busif.b_i_ready));
+        busif.b_i_valid <= 1'b0;
+        $display("TB: drove 1st rsp");
+
+        // second response should be blocked because skid cannot drain
+        rsp2 = gen.generate_rsp_per_master(SP0);
+        @(posedge CLK);
+        drv.drive_rsp(rsp2);
+
+        repeat (2) @(posedge CLK);
+
+        if (busif.b_i_ready == 1'b0)
+            $display("Pass: second rsp blocked");
+        else
+            $display("Fail: second rsp was not blocked");
+        busif.b_i_valid <= 1'b0;
+        // also check first response is still waiting at output
+        if (busif.b_sp0_o_valid &&
+            busif.b_sp0_o.id   == rsp1.id &&
+            busif.b_sp0_o.resp == rsp1.resp)
+            $display("Pass: first rsp held at SP0 output");
+        else
+            $display("Fail: first rsp not held correctly");
+        @(posedge CLK);
+        @(posedge CLK);
+        busif.b_sp0_o_ready <= 1'b1;
+        drv.drive_rsp(rsp2);
+        do @(posedge CLK); while (!(busif.b_i_valid && busif.b_i_ready));
+        @(posedge CLK);
+        @(posedge CLK);
+    endtask
+
+    task route_sp1_rsp_noready;
+        axi_write_rsp rsp1, rsp2;
+        reset_dut();
+        test_case = "TEST CASE 5: SP1 RESPONSE READY LOW";
+        drv.drive_input_zero();
+        busif.b_sp1_o_ready <= 1'b0;
+        // first response should be accepted into skid
+        rsp1 = gen.generate_rsp_per_master(SP1);
+        @(posedge CLK);
+        drv.drive_rsp(rsp1);
+        do @(posedge CLK); while (!(busif.b_i_valid && busif.b_i_ready));
+        busif.b_i_valid <= 1'b0;
+        $display("TB: drove 1st rsp");
+
+        // second response should be blocked because skid cannot drain
+        rsp2 = gen.generate_rsp_per_master(SP1);
+        @(posedge CLK);
+        drv.drive_rsp(rsp2);
+
+        repeat (2) @(posedge CLK);
+
+        if (busif.b_i_ready == 1'b0)
+            $display("Pass: second rsp blocked");
+        else
+            $display("Fail: second rsp was not blocked");
+        busif.b_i_valid <= 1'b0;
+        // also check first response is still waiting at output
+        if (busif.b_sp1_o_valid &&
+            busif.b_sp1_o.id   == rsp1.id &&
+            busif.b_sp1_o.resp == rsp1.resp)
+            $display("Pass: first rsp held at SP0 output");
+        else
+            $display("Fail: first rsp not held correctly");
+        @(posedge CLK);
+        @(posedge CLK);
+        busif.b_sp1_o_ready <= 1'b1;
+        drv.drive_rsp(rsp2);
+        do @(posedge CLK); while (!(busif.b_i_valid && busif.b_i_ready));
+        @(posedge CLK);
+        @(posedge CLK);
+    endtask
+
+    task route_d_rsp_noready;
+        axi_write_rsp rsp1, rsp2;
+        reset_dut();
+        test_case = "TEST CASE 6: D$ RESPONSE READY LOW";
+        drv.drive_input_zero();
+        busif.b_d_o_ready <= 1'b0;
+        // first response should be accepted into skid
+        rsp1 = gen.generate_rsp_per_master(DCACHE);
+        @(posedge CLK);
+        drv.drive_rsp(rsp1);
+        do @(posedge CLK); while (!(busif.b_i_valid && busif.b_i_ready));
+        busif.b_i_valid <= 1'b0;
+        $display("TB: drove 1st rsp");
+
+        // second response should be blocked because skid cannot drain
+        rsp2 = gen.generate_rsp_per_master(DCACHE);
+        @(posedge CLK);
+        drv.drive_rsp(rsp2);
+
+        repeat (2) @(posedge CLK);
+
+        if (busif.b_i_ready == 1'b0)
+            $display("Pass: second rsp blocked");
+        else
+            $display("Fail: second rsp was not blocked");
+        busif.b_i_valid <= 1'b0;
+        // also check first response is still waiting at output
+        if (busif.b_d_o_valid &&
+            busif.b_d_o.id   == rsp1.id &&
+            busif.b_d_o.resp == rsp1.resp)
+            $display("Pass: first rsp held at SP0 output");
+        else
+            $display("Fail: first rsp not held correctly");
+        @(posedge CLK);
+        @(posedge CLK);
+        busif.b_d_o_ready <= 1'b1;
+        drv.drive_rsp(rsp2);
+        do @(posedge CLK); while (!(busif.b_i_valid && busif.b_i_ready));
+        @(posedge CLK);
+        @(posedge CLK);
+    endtask
+
+    task error_id;
+        reset_dut();
+        test_case = "TEST CASE 7: error id";
+        drv.drive_input_zero();
+        rsp = gen.generate_rsp_per_master(ICACHE);
+        @(posedge CLK);
+        drv.drive_rsp(rsp);
+        // do @(posedge CLK); while (!(busif.b_i_valid && busif.b_i_ready));
+        // busif.b_i_valid <= 0;
+        // $display("TB: drove txn");
+        // @(posedge CLK);
+        // if (busif.b_d_o.id == rsp.id[BID-1:0] && busif.b_d_o.resp == rsp.resp) begin 
+        //     $display("Pass");
+        // end 
+        // else begin 
+        //     $display("Fail");
+        // end 
+        @(posedge CLK);
+        @(posedge CLK);
+    endtask
+
+    task route_dual_sp0_rsp;
+        axi_write_rsp rsp1, rsp2;
+        reset_dut();
+        test_case = "TEST CASE 8: SP0 RESPONSE BACK2BACK";
+        drv.drive_input_zero();
+        // first response should be accepted into skid
+        rsp1 = gen.generate_rsp_per_master(SP0);
+        rsp2 = gen.generate_rsp_per_master(SP0);
+        @(posedge CLK);
+        drv.drive_rsp(rsp1);
+        @(posedge CLK);
+        drv.drive_rsp(rsp2);
+        @(posedge CLK);
+        @(posedge CLK);
+        @(posedge CLK);
+        @(posedge CLK);
+        @(posedge CLK);
+        @(posedge CLK);
     endtask
 
     initial begin 
@@ -154,6 +344,12 @@ module axi_write_router_tb ();
 
         route_sp0_rsp();
         route_sp1_rsp();
+        route_d_rsp();
+        route_sp0_rsp_noready();
+        route_sp1_rsp_noready();
+        route_d_rsp_noready();
+        error_id();
+        route_dual_sp0_rsp();
         $finish;
     end 
 

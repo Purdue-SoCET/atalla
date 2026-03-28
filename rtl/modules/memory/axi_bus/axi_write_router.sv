@@ -51,6 +51,9 @@ module axi_write_router (
         else if ((b_i_if.b_i.id[MID_BID-1:BID] == DCACHE) && !(d_skid_full)) begin 
             b_i_if.b_i_ready = 1;
         end
+        // else begin 
+        //     b_i_if.b_i_ready = 0;
+        // end
     end 
 
     // valid ready handshake to and from subordinate
@@ -65,6 +68,11 @@ module axi_write_router (
             sp0_rd_ptr <= '0;
             sp1_rd_ptr <= '0;
             d_rd_ptr <= '0;
+            for (int i = 0; i < 2; i++) begin
+                sp0_skid_buffer[i] <= '0;
+                sp1_skid_buffer[i] <= '0;
+                d_skid_buffer[i]   <= '0;
+            end
         end 
         else begin
             if(skid_push) begin 
@@ -90,15 +98,15 @@ module axi_write_router (
                     d_wr_ptr <= d_wr_ptr + 1'b1;
                 end
             end 
-            if (!sp0_skid_empty && sp0_b_o_if.b_sp0_o_ready) begin
+            if (sp0_b_o_if.b_sp0_o_ready && sp0_skid_buffer[sp0_rd_ptr].valid) begin
                 sp0_skid_buffer[sp0_rd_ptr].valid <= 1'b0;
                 sp0_rd_ptr <= sp0_rd_ptr + 1'b1;
             end 
-            else if (!sp1_skid_empty && sp1_b_o_if.b_sp1_o_ready) begin 
+            if (sp1_b_o_if.b_sp1_o_ready && sp1_skid_buffer[sp1_rd_ptr].valid) begin 
                 sp1_skid_buffer[sp1_rd_ptr].valid <= 1'b0;
                 sp1_rd_ptr <= sp1_rd_ptr + 1'b1;
             end 
-            else if (!sp1_skid_empty && d_b_o_if.b_d_o_ready) begin 
+            if (d_b_o_if.b_d_o_ready && d_skid_buffer[d_rd_ptr].valid) begin 
                 d_skid_buffer[d_rd_ptr].valid <= 1'b0;
                 d_rd_ptr <= d_rd_ptr + 1'b1;
             end 
@@ -129,7 +137,7 @@ module axi_write_router (
     // end
 
     // b channel to sp0 
-    assign sp0_b_o_if.b_sp0_o_valid = sp0_skid_buffer[sp0_rd_ptr].valid;
+    assign sp0_b_o_if.b_sp0_o_valid = sp0_skid_buffer[sp0_rd_ptr].valid ? sp0_skid_buffer[sp0_rd_ptr].valid : '0;
     assign sp0_b_o_if.b_sp0_o.id    = sp0_skid_buffer[sp0_rd_ptr].id;
     assign sp0_b_o_if.b_sp0_o.resp  = sp0_skid_buffer[sp0_rd_ptr].resp;
 
