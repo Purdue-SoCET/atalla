@@ -77,6 +77,14 @@ def run(mem: Memory, sregs: ScalarRegisterFile, mregs: ScalarRegisterFile, vregs
     tileID0Dict = {}
     tileID1Dict = {}
 
+    cycle_count = 0
+    instr_count = 0
+    packet_count = 0
+    branch_count = 0
+    mem_ops = 0
+    gemm_count = 0
+    sdma_count = 0
+
     halt = False
     while (not(halt)):
         dec_packet = decode_packet(packet=mem.read_instr(pc), packet_length=packet_length, debug=debug)
@@ -85,15 +93,21 @@ def run(mem: Memory, sregs: ScalarRegisterFile, mregs: ScalarRegisterFile, vregs
             print(f"PC: 0x{pc:08X}")
             print(f"Decoded packet: {dec_packet}")
 
+        cycle_count += 1
+        packet_count += 1
         br = False
 
         for inst in dec_packet:
             m = inst['mnemonic']
             if(m == "nop.s" or m == "barrier.s"):
                 continue
-            elif (m == "halt.s"):
+
+            instr_count += 1
+
+            if(m == "halt.s"):
                 halt = True
             elif (m == "jal" or m == "jalr" or inst['type'] == "BR"):
+                branch_count += 1
                 br = True
                 if(m == "jal"):
                     brtarg = pc + (inst['imm'])
@@ -194,6 +208,8 @@ def run(mem: Memory, sregs: ScalarRegisterFile, mregs: ScalarRegisterFile, vregs
             #scpad load/store here
 
             elif (m == "scpad.ld"):
+                sdma_count += 1
+                mem_ops += 1
                 if inst['sid'] == 0:
                     if(inst['rs1/rd1'] in tileID0Dict.keys()):
                         localID = tileID0Dict[inst['rs1/rd1']]
@@ -212,6 +228,8 @@ def run(mem: Memory, sregs: ScalarRegisterFile, mregs: ScalarRegisterFile, vregs
                     sdma_load(gmem=mem, scpad=SP1, gmem_base=sregs.read(inst['rs2']), scpad_base_row=int(sregs.read(inst['rs1/rd1'])), tile_id=localID, NR=inst['num_rows'], NC=inst['num_cols'], perf_metrics=EU.perf_metrics)
 
             elif (m == "scpad.st"):
+                sdma_count += 1
+                mem_ops += 1
                 if inst['sid'] == 0:
                     if(inst['rs1/rd1'] in tileID0Dict.keys()):
                         localID = tileID0Dict[inst['rs1/rd1']]
@@ -394,6 +412,7 @@ def run(mem: Memory, sregs: ScalarRegisterFile, mregs: ScalarRegisterFile, vregs
             elif m.endswith(".vv"):
                 # ------------ GEMM ------------------------------
                 if (m == "gemm.vv"):
+                    gemm_count += 1
                     vregs.write(inst['vd'], vregs.read(inst['vs1']) @ gemm_weights + vregs.read(inst['vs2']))
                 else:
                     src1 = vregs.read(inst['vs1'])
@@ -505,6 +524,14 @@ def run(mem: Memory, sregs: ScalarRegisterFile, mregs: ScalarRegisterFile, vregs
         parent = os.path.dirname(os.fspath(path))
         if parent:
             os.makedirs(parent, exist_ok=True)
+
+    EU.perf_metrics.set_metric("cycles", cycle_count)
+    EU.perf_metrics.set_metric("packets", packet_count)
+    EU.perf_metrics.set_metric("instructions", instr_count)
+    EU.perf_metrics.set_metric("branches", branch_count)
+    EU.perf_metrics.set_metric("mem_ops", mem_ops)
+    EU.perf_metrics.set_metric("gemm_ops", gemm_count)
+    EU.perf_metrics.set_metric("sdma_ops", sdma_count)
 
     _ensure_parent(out_sreg_file)
     _ensure_parent(out_vreg_file)
