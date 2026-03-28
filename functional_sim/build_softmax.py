@@ -9,7 +9,7 @@ from pathlib import Path
 import argparse
 import numpy as np
 
-from .build import *
+from build import *
 INVERT_OPCODES = name_to_opcode()
 VIRTUAL_PACKET_SIZE = 4 
 REAL_PACKET_SIZE = 4
@@ -979,7 +979,7 @@ if __name__ == "__main__":
     instrs = assemble_file(asm)       
 
     instructions = convert_instructions(instrs)
-    ready = build_dependency_graph(convert_instructions(instrs), latency)
+    ready = build_dependency_graph(convert_instructions(instrs), DEFAULT_LATENCY_MAP)
 
     packets = greedy_pack(instructions, ready)
 

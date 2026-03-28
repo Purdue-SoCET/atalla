@@ -471,12 +471,22 @@ def asm_to_instr_dict(
 
     if instr_type == "MI":
         # jal rd, imm25  OR jal imm25 (rd defaults 0)
+        # li.s rd, imm25  OR lui.s rd, imm25
         if len(ops) == 1:
             d["rd"] = 0
-            d["imm25"] = parse_int(ops[0])
+            imm_str = ops[0].strip()
         else:
             d["rd"] = parse_reg(ops[0])
-            d["imm25"] = parse_int(ops[1])
+            imm_str = ops[1].strip()
+
+        if IMM_RE.match(imm_str):
+            d["imm25"] = parse_int(imm_str)
+        elif labels is not None and imm_str in labels:
+            if pc is None:
+                raise ValueError("Internal error: missing PC for label-based MI")
+            d["imm25"] = labels[imm_str] - pc
+        else:
+            raise ValueError(f"Bad MI immediate or unknown label: {imm_str!r}")
         return d
 
     if instr_type == "VI":
@@ -940,7 +950,7 @@ def _decode_instruction_for_graph(hex_word: str) -> tuple[str, list[str], list[s
             srcs = [r(rs1_rd1), r(rs2)]
         else:
             dsts = [r(rs1_rd1)]
-            srcs = [r(rs2)]
+            srcs = [r(rs1_rd1), r(rs2)]
         mem_key = (r(rs2), "scpad")
 
     elif instr_type == "MTS":

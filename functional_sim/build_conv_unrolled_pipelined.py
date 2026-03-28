@@ -47,15 +47,15 @@ weight_loop:
         vreg.ld $5, $24, {k_out_m1}, {M}, 1, 1, 0
         addi.s  $28, $0, 1
 
-main_loop_u2:
-        # Slot 0 (row m): compute/store with A0,C0.
+main_loop_u4:
+        # Slot 0: compute/store with A0,C0.
         add.s   $24, $7, $27
         gemm.vv $6, $4, $5, 0, 0
         vreg.st $6, $24, {k_out_m1}, {M}, 1, 1, 0
         addi.s  $27, $27, 1
         bge.s   $27, $26, done
 
-        # Prefetch row m+1 into A1,C1.
+        # Prefetch next into A1,C1.
         add.s   $21, $3, $28
         add.s   $22, $7, $28
         bge.s   $28, $26, skip_fetch_u1
@@ -64,14 +64,46 @@ main_loop_u2:
 skip_fetch_u1:
         addi.s  $28, $28, 1
 
-        # Slot 1 (row m+1): compute/store with A1,C1.
+        # Slot 1: compute/store with A1,C1.
         add.s   $24, $7, $27
         gemm.vv $6, $14, $15, 0, 0
         vreg.st $6, $24, {k_out_m1}, {M}, 1, 1, 0
         addi.s  $27, $27, 1
         bge.s   $27, $26, done
 
-        # Prefetch row m+2 back into A0,C0.
+        # Prefetch next into A2,C2.
+        add.s   $21, $3, $28
+        add.s   $22, $7, $28
+        bge.s   $28, $26, skip_fetch_u2
+        vreg.ld $16, $21, {K_flat - 1}, {M}, 0, 1, 0
+        vreg.ld $17, $22, {k_out_m1}, {M}, 1, 1, 0
+skip_fetch_u2:
+        addi.s  $28, $28, 1
+
+        # Slot 2: compute/store with A2,C2.
+        add.s   $24, $7, $27
+        gemm.vv $6, $16, $17, 0, 0
+        vreg.st $6, $24, {k_out_m1}, {M}, 1, 1, 0
+        addi.s  $27, $27, 1
+        bge.s   $27, $26, done
+
+        # Prefetch next into A3,C3.
+        add.s   $21, $3, $28
+        add.s   $22, $7, $28
+        bge.s   $28, $26, skip_fetch_u3
+        vreg.ld $18, $21, {K_flat - 1}, {M}, 0, 1, 0
+        vreg.ld $19, $22, {k_out_m1}, {M}, 1, 1, 0
+skip_fetch_u3:
+        addi.s  $28, $28, 1
+
+        # Slot 3: compute/store with A3,C3.
+        add.s   $24, $7, $27
+        gemm.vv $6, $18, $19, 0, 0
+        vreg.st $6, $24, {k_out_m1}, {M}, 1, 1, 0
+        addi.s  $27, $27, 1
+        bge.s   $27, $26, done
+
+        # Prefetch next back into A0,C0.
         add.s   $13, $3, $28
         add.s   $24, $7, $28
         bge.s   $28, $26, skip_fetch_u0
@@ -79,7 +111,7 @@ skip_fetch_u1:
         vreg.ld $5, $24, {k_out_m1}, {M}, 1, 1, 0
 skip_fetch_u0:
         addi.s  $28, $28, 1
-        blt.s   $27, $26, main_loop_u2
+        blt.s   $27, $26, main_loop_u4
 
 done:
         # Drain final SP1 tile.

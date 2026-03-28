@@ -73,6 +73,7 @@ MNEMONIC_VECTOR = {
     "add.vv": "add",
     "sub.vv": "sub",
     "mul.vv": "mul",
+    "div.vv": "div",
     "and.vv": "bw_and",
     "or.vv":  "bw_or",
     "xor.vv": "bw_xor",
@@ -96,6 +97,7 @@ MNEMONIC_VECTOR = {
     "sub.vs": "sub_scalar",
     "rsub.vs": "scalar_sub",
     "mul.vs": "mul_scalar",
+    "div.vs": "div_scalar",
     
     "mgt.mvv":  "cmp_gt",
     "mlt.mvv":  "cmp_lt",

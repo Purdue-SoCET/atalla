@@ -9,8 +9,7 @@ from pathlib import Path
 import argparse
 import numpy as np
 
-from .build import *
-from kernels.utils.dataloader import load_tile_data
+from build import *
 
 def main():
     ap = argparse.ArgumentParser()

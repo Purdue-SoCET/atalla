@@ -145,6 +145,9 @@ class VectorLanes:
     def mul(self, a: np.ndarray, b: np.ndarray) -> np.ndarray:
         return self._elementwise_op(a, b, lambda x, y: x * y, self.multipliers)
 
+    def div(self, a: np.ndarray, b: np.ndarray) -> np.ndarray:
+        return self._elementwise_op(a, b, lambda x, y: np.where(y != 0, x / y, 0.0), self.multipliers)
+
     def exp(self, a: np.ndarray) -> np.ndarray:
         a = self._ensure_vec(a)
         L = a.size
@@ -185,6 +188,10 @@ class VectorLanes:
     def mul_scalar(self, a: np.ndarray, s: float) -> np.ndarray:
         return self._elementwise_op(a, np.array([s], dtype=np.float32),
                                     lambda x, y: x * y, self.multipliers)
+
+    def div_scalar(self, a: np.ndarray, s: float) -> np.ndarray:
+        return self._elementwise_op(a, np.array([s], dtype=np.float32),
+                                    lambda x, y: np.where(y != 0, x / y, 0.0), self.multipliers)
 
     # --------------------------------------------------------
     # Vector << scalar   and   Vector >> scalar (logical shifts)
@@ -465,6 +472,7 @@ class VectorLanes:
             if new_op == "add":           return self.add(vA, vB)
             if new_op == "sub":           return self.sub(vA, vB)
             if new_op == "mul":           return self.mul(vA, vB)
+            if new_op == "div":           return self.div(vA, vB)
             if new_op == "and":        return self.bitwise_and(vA, vB)
             if new_op == "or":         return self.bitwise_or(vA, vB)
             if new_op == "xor":        return self.bitwise_xor(vA, vB)
@@ -503,6 +511,7 @@ class VectorLanes:
             if new_op == "add":    return self.add_scalar(vA, sA)
             if new_op == "sub":    return self.sub_scalar(vA, sA)
             if new_op == "mul":    return self.mul(vA, sA)
+            if new_op == "div":    return self.div_scalar(vA, sA)
             if new_op == "mgt":        return self.cmp_gt_vs(vA, sA)
             if new_op == "mlt":        return self.cmp_lt_vs(vA, sA)
             if new_op == "meq":        return self.cmp_eq_vs(vA, sA)

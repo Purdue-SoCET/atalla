@@ -231,6 +231,11 @@ def run(mem: Memory, sregs: ScalarRegisterFile, mregs: ScalarRegisterFile, vregs
             elif (m == "lui.s"): 
                 if debug: print(inst['imm'])
                 sregs.write(inst['rd'], (inst['imm']) << 7)
+            elif (m == "li.s"):
+                imm = inst['imm']
+                if imm >= (1 << 24):
+                    imm -= (1 << 25)
+                sregs.write(inst['rd'], imm & 0xFFFFFFFF)
             elif (m == "mv.mts"):
                 sregs.write(inst['rd'], mregs.read(inst['vms']))
             elif (m == "mv.stm"):
