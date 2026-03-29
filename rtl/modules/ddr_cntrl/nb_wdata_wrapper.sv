@@ -39,13 +39,12 @@ module nb_wdata_queue_wrapper (
 
     logic [$clog2(ID_NUM)-1:0] j;
     always_comb  begin : PRIORITY_COMB
+        wdw.wrap_bw_arb = pri;
         for(j = 0; j < ID_NUM; j++) begin
             if(wdq.bwvalid[pri + j]) begin
                 wdw.wrap_bw_arb = pri + j; 
                 break;
-            end else begin
-                wdw.wrap_bw_arb = pri; 
-            end
+            end 
         end 
     end
 
