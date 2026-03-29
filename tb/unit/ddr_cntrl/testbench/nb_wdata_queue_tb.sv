@@ -153,7 +153,9 @@ program test(
                 @(posedge CLK);
             end
             wdq.bwready = 1'b1;
-            @(posedge CLK);
+            whlie(!wdw.wrap_bwvalid) begin
+                @(posedge CLK);
+            end
             wdq.bwready = 1'b0;
         end
     endtask 

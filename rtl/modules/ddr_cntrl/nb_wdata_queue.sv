@@ -91,7 +91,7 @@ module nb_wdata_queue  #(Q_ID = 0) (
   always_comb begin : DATA_NEXT
 
     if(wdq.wvalid && (wdq.wdq_slot.wid == Q_ID) && !full) begin
-        data_in = DATA_Q_Slot_t'({wdq.wdq_slot.wdata, wdq.wstrb, wdq.wvalid} );
+        data_in = DATA_Q_Slot_t'({wdq.wdq_slot.wdata, wdq.wdq_slot.wstrb, wdq.wvalid} );
     end else if(wen)
         data_in = DATA_Q_Slot_t'({ regs[dram_ptr].wdata, 8'b1111_1111, regs[dram_ptr].wvalid });
 
