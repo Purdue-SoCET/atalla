@@ -17,7 +17,7 @@ module nb_wdata_queue_wrapper (
     assign wdw.wrap_wready = wdq.wready[wdq.wdq_slot.wid];
     assign wdw.wrap_bwvalid = wdq.bwvalid[wdw.wrap_bw_arb];
     assign wdw.wrap_bwresp = wdq.bwresp[wdw.wrap_bw_arb];
-    assign wdw.wrap_bwid = wdq.bwid[wdw.wrap_arb];
+    assign wdw.wrap_bwid = wdq.bwid[wdw.wrap_bw_arb];
     assign wdw.wrap_ddr_wdata_data = wdq.ddr_wdata_data[selected_queue];
     assign wdw.wrap_ddr_wdata_en = wdq.ddr_wdata_en[selected_queue];
     assign wdw.wrap_ddr_wdata_mask = wdq.ddr_wdata_mask[selected_queue];
