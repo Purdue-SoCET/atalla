@@ -12,11 +12,11 @@ module nb_wdata_queue_tb;
     
     ddr_controller_if ddrif0();
     // ddr_controller_if ddrif1;
-    nb_wdata_queue_wrapper DUT(CLK, nRST, ddrif0.wdata_queue, ddrif0.wdata_wrapper);
+    nb_wdata_queue_wrapper DUT(CLK, nRST, ddrif0.wdata_wrapper, ddrif0.wdata_queue);
 
-    test PROG(CLK, nRST, ddrif0, ddrif0);
+    test PROG(CLK, nRST, ddrif0.wdata_queue, ddrif0.wdata_wrapper);
 
-    bind nb_wdata_queue nb_wdata_queue_prop wdata_queue_monitor(CLK, nRST, ddrif0.wdata_queue, ddrif0.wdata_queue);
+    bind nb_wdata_queue nb_wdata_queue_prop wdata_queue_monitor(CLK, nRST, ddrif0.wdata_queue, ddrif0.wdata_wrapper);
 
 endmodule
 
