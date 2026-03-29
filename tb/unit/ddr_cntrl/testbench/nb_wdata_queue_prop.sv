@@ -1,6 +1,6 @@
 `include "dram_pkg.vh"
-`include "cpu_types_pkg.vh"
-`include "ddr_controller_if.vh"
+`include "cpu_types_pkg.svh"
+`include "ddr_controller_if.sv"
 
 module nb_wdata_queue_prop(
     input logic CLK,

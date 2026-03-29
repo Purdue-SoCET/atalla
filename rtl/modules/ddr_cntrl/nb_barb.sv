@@ -117,13 +117,13 @@ module nb_barb(
     end
 
     //logic for pushing metadata to the read id queue for storing in-flight read IDs.
-    assign barb.be_push_id = selected_bank_ready && (barb.be_cmd[selected_bank] == READ);
+    assign barb.be_push_id = selected_bank_ready && (fsm_t'(barb.be_cmd[selected_bank]) == FSM_READ);
     assign barb.be_rid = barb.be_id;
     assign barb.be_rlen = barb.be_len;
 
     //logic for commanding write data queues to burst data to DRAM.
     assign barb.be_wid = barb.be_id;
-    assign barb.be_write = selected_bank_ready && (barb.be_cmd[selected_bank] == WRITE);
+    assign barb.be_write = selected_bank_ready && (fsm_t'(barb.be_cmd[selected_bank]) == FSM_WRITE);
 
 
 endmodule 

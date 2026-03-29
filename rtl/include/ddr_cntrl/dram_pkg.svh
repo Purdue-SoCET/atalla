@@ -71,6 +71,8 @@ package dram_pkg;
         x16 = 2'b10
     } configs_t;
 
+
+
     typedef enum logic [4:0] {
         POWER_UP,
         PRE_RESET,
@@ -126,6 +128,31 @@ package dram_pkg;
         ZQ_CMD        = 5'b01110,
         DESEL_CMD     = 5'b11000
     } cmd_t;
+
+
+// BQ -> FSM struct
+typedef struct packed {
+    logic [ROW_BITS-1:0]       row;
+    logic [COLUMN_BITS-1:0]    column;
+    logic                      write;
+    logic [$clog2(ID_NUM)-1:0] id_addr;
+} bq_slot_t;
+
+// AXI -> LQ/STQ (LQ/STQ have the same struct, but diff signal names)
+typedef struct packed {
+    logic [3:0]                  len;
+    logic [$clog2(ID_NUM) - 1:0] id;
+    logic [31:0]                 addr;
+} lstq_slot_t;
+
+// AXI->WDQ
+typedef struct packed {
+    logic [7:0] wstrb; // -> WQ
+    logic [63:0] wdata; // -> WQ
+    logic [$clog2(ID_NUM)-1:0] wid; // WQ
+    logic [2:0] wlen;
+} wdq_slot_t; 
+
 
 endpackage
 
