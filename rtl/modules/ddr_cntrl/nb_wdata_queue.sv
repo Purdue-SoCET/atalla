@@ -188,12 +188,12 @@ module nb_wdata_queue  #(Q_ID = 0) (
   assign wdq.wready[Q_ID] = !full;
 
   
-  flex_counter #(.SIZE(4'd4)) BEAT_CNT (CLK, nRST, clear, cnt_en, 'd7, rollover);
+  flex_counter #(.SIZE(4'd4)) BEAT_CNT (CLK, nRST, clear, cnt_en, 4'd7, rollover);
 
   logic clear_cwl; //clears cwl timer.
   logic cnt_en_cwl; //enables cwl timer.
   logic rollover_cwl; //rollover of cwl timer. 
-  flex_counter #(.SIZE(5'd10)) T_CWL_TIM (CLK, nRST, clear_cwl, cnt_en_cwl, tCWL - 'b1, rollover_cwl);
+  flex_counter #(.SIZE(5'd10)) T_CWL_TIM (CLK, nRST, clear_cwl, cnt_en_cwl, (tCWL - 'b1)[9:0], rollover_cwl);
 
   typedef enum logic [1:0] {IDLE, CWL_WAIT, WRITING, RESP} cnt_ctrl_state_t;
   
