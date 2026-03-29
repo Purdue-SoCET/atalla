@@ -156,6 +156,7 @@ program test(
             while(!wdw.wrap_bwvalid) begin
                 @(posedge CLK);
             end
+            @(posedge CLK);
             wdq.bwready = 1'b0;
         end
     endtask 
@@ -173,6 +174,7 @@ program test(
                 end
                 n++;
             end
+            #(PERIOD/5);
             for(int i = 0; i < 8; i++) begin
 
                 output_vector[i][case_num].data_out = wdw.wrap_ddr_wdata_data;
@@ -215,8 +217,15 @@ program test(
 
     initial begin 
         nRST = 1;
+        wdq.wdq_slot = 'b0;
+        wdq.bwredy = 'b0;
+        wdq.wvalid = 'b0;
+        wdq.wlast = 'b0;
+        wdq.be_wid = 'b0;
+        wdq.be_write = 'b0;
+        @(posedge CLK);
         reset_dut();
-        @(negedge CLK);
+        @(posedge CLK);
 
         sequencer();
 
