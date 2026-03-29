@@ -129,6 +129,7 @@ program test(
                 @(posedge CLK);
             end 
             wdq.wvalid = 1'b0;
+            @(posedge CLK);
         end
 
     endtask
@@ -232,12 +233,14 @@ program test(
         for(int i = 0; i < NUM_REQS; i++) begin
 
             driver_axi_write(i);
-            repeat(500) @(posedge CLK);
+            // repeat(500) @(posedge CLK);
             driver_barb(i);
             @(posedge CLK);
             @(posedge CLK);
             monitor(i);
+            @(posedge CLK);
             driver_bresp(i);
+            @(posedge CLK);
             
 
         end
