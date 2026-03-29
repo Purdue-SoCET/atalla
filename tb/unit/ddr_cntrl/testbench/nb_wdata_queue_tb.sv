@@ -12,11 +12,11 @@ module nb_wdata_queue_tb;
     
     ddr_controller_if ddrif0();
     // ddr_controller_if ddrif1;
-    nb_wdata_queue_wrapper DUT(CLK, nRST, ddrif0, ddrif0);
+    nb_wdata_queue_wrapper DUT(CLK, nRST, ddrif0.wdata_queue, ddrif0.wdata_wrapper);
 
     test PROG(CLK, nRST, ddrif0, ddrif0);
 
-    bind nb_wdata_queue nb_wdata_queue_prop barb_monitor(CLK, nRST, ddrif0);
+    bind nb_wdata_queue nb_wdata_queue_prop wdata_queue_monitor(CLK, nRST, ddrif0.wdata_queue, ddrif0.wdata_queue);
 
 endmodule
 
@@ -119,8 +119,8 @@ program test(
             @(posedge CLK);
             for(int i = 0; i < 8 ; i++) begin
                 wdq.wvalid = 1'b1;
-                wdq.wdata = input_vector[i][case_num].input_slot.wdata;
-                wdq.wstrb = input_vector[i][case_num].input_slot.wstrb; 
+                wdq.wdq_slot.wdata = input_vector[i][case_num].input_slot.wdata;
+                wdq.wdq_slot.wstrb = input_vector[i][case_num].input_slot.wstrb; 
 
                 wdq.wlast = (i == input_vector[0][case_num].input_slot.wlen);
                 if(i == input_vector[0][case_num].input_slot.wlen) begin
@@ -233,7 +233,7 @@ program test(
 
         scoreboard();
 
-        $display ("Coverage = %0.2f %%", wdqcg.get_inst_coverage());
+        //$display ("Coverage = %0.2f %%", wdqcg.get_inst_coverage());
 
 
         $finish;
