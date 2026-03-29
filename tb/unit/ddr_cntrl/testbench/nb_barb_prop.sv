@@ -17,6 +17,11 @@ module nb_barb_prop(
 
     nb_cg nbcg; */
 
+    int debug_counter = 0;
+    always @(posedge CLK) begin
+        debug_counter <= debug_counter + 1;
+    end
+
     function automatic integer encode (input logic [15:0] in);
         for (int i = 0; i < 16; i++) begin
             if (in[i]) return i;
