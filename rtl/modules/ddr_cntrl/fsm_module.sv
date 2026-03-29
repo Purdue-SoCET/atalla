@@ -57,7 +57,7 @@ module fsm_mod (
 
     always_ff @(posedge CLK, negedge nRST) begin
         if (~nRST) begin
-            state       <= IDLE;
+            state       <= FSM_IDLE;
             tim         <= '0;
             rstate      <= '0;
             ref_pending <= 1'b0;
@@ -86,7 +86,7 @@ module fsm_mod (
         end
 
         case (state)
-            IDLE: begin
+            FSM_IDLE: begin
                 if (ref_pending) begin
                     // External refresh requested
                     if (row_valid) begin
@@ -99,7 +99,7 @@ module fsm_mod (
                 end else if (fsm.fsm_bqready) begin
                     if (row_hit) begin
                         // Row already open and matches — skip ACT
-                        state_n = fsm.fsm_rw ? WRITE : READ;
+                        state_n = fsm.fsm_rw ? FSM_WRITE : FSM_READ;
                     end else if (row_valid) begin
                         // Wrong row open — close it first
                         state_n = PRE;
@@ -124,11 +124,11 @@ module fsm_mod (
                     tim_n = tim - 16'd1;
                 end else begin
                     // tRCD elapsed — proceed to the queued command
-                    state_n = fsm.fsm_rw ? WRITE : READ;
+                    state_n = fsm.fsm_rw ? FSM_WRITE : FSM_READ;
                 end
             end
 
-            READ: begin
+            FSM_READ: begin
                 fsm.fsm_ready = 1'b1;
                 if (fsm.fsm_arb) begin
                     state_n = READing;
@@ -141,11 +141,11 @@ module fsm_mod (
                     tim_n = tim - 16'd1;
                 end else begin
                     fsm.fsm_pop = 1'b1;
-                    state_n     = IDLE;
+                    state_n     = FSM_IDLE;
                 end
             end
 
-            WRITE: begin
+            FSM_WRITE: begin
                 fsm.fsm_ready = 1'b1;
                 if (fsm.fsm_arb) begin
                     state_n = WRITEing;
@@ -158,7 +158,7 @@ module fsm_mod (
                     tim_n = tim - 16'd1;
                 end else begin
                     fsm.fsm_pop = 1'b1;
-                    state_n     = IDLE;
+                    state_n     = FSM_IDLE;
                 end
             end
 
@@ -182,7 +182,7 @@ module fsm_mod (
                         // Precharged for row miss — activate new row
                         state_n = ACT;
                     end else begin
-                        state_n = IDLE;
+                        state_n = FSM_IDLE;
                     end
                 end
             end
@@ -200,12 +200,12 @@ module fsm_mod (
                 if (tim > 16'd0) begin
                     tim_n = tim - 16'd1;
                 end else begin
-                    state_n = IDLE;
+                    state_n = FSM_IDLE;
                 end
             end
 
             default: begin
-                state_n = IDLE;
+                state_n = FSM_IDLE;
             end
         endcase
     end

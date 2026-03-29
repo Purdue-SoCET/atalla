@@ -41,9 +41,10 @@ puts "SRC_FILES  : $SRC_FILES"
 puts "Num sources: [llength $SRC_FILES]"
 
 # --- Library Setup ---
-if {![file exists work]} {
-    vlib work
+if {[file exists work]} {
+    file delete -force work
 }
+vlib work
 vmap work work
 
 # --- Compilation ---

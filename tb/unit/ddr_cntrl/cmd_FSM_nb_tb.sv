@@ -355,6 +355,8 @@ module command_FSM_nb_tb();
 
         test_request_muxing();
         repeat(5) @(posedge CLK);
+
+        $finish;
     end
 
 endmodule
