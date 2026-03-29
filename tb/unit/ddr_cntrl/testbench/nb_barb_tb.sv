@@ -63,7 +63,8 @@ module nb_barb_tb;
         integer error;
         begin
             error = 0;
-            $display("Current test #: %0d", test_num);
+            $display("Current test #: %0d @ time %0t", test_num, $time);
+            test_num++;
             if (ddrif.be_push_id != exp_push_id) begin
                 $display("Incorrect read push id");
                 error++;
@@ -75,7 +76,6 @@ module nb_barb_tb;
 
             if (error == 0) $display("All cases passed");
             else $display("Cases failed");
-            test_num++;
         end
     endtask
 
@@ -83,6 +83,8 @@ module nb_barb_tb;
         // 1. Initialization
         nRST = 1;
         ddrif.be_queue_ready = '0;
+        ddrif.be_b           = '0;
+        ddrif.be_bg          = '0; 
         ddrif.be_cmd         =  PWR_UP;
         ddrif.be_r           = '0;
         ddrif.be_c           = '0;
@@ -112,15 +114,19 @@ module nb_barb_tb;
         // Wait for Bank 1 to be serviced
         wait(ddrif.be_arb[1] == 1);
         @(negedge CLK);
+        drive_bank_rw(1, FSM_READ);
+        @(negedge CLK);
+        check_read(test_num, 1'b1, 4'h1);
         ddrif.be_queue_ready[1] = 0; // Clear bank 1 request
 
         // --- PHASE 2: OOO Jump Logic ---
         // While roller is moving toward Bank 2, Bank 12 becomes ready (Out of Order)
         $display("\n--- Triggering OOO Jump to Bank 12 ---");
         drive_bank_request(12, FSM_READ, 15'hAAAA, 10'h0AA, 4'hF);
-
         // Verify the arbiter jumps to Bank 12
         wait(ddrif.be_arb[12] == 1);
+        @(negedge CLK);
+        check_read(test_num, 1'b1, 4'h1);
         $display("T=%0t | SUCCESS: Arbiter jumped to Bank 12", $time);
         
         @(negedge CLK);
