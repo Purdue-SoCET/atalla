@@ -23,7 +23,7 @@ module nb_wdata_queue_wrapper (
     assign wdw.wrap_ddr_wdata_mask = wdq.ddr_wdata_mask[selected_queue];
     assign wdw.wrap_ddr_we = wdq.ddr_we[selected_queue]; 
     
-    assign wdq.wrap_bw_arb = wdw.wrap_bw_arb;
+    //assign wdq.wrap_bw_arb = wdw.wrap_bw_arb;
     
     genvar i;
     generate 

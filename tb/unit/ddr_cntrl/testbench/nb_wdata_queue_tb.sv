@@ -153,7 +153,7 @@ program test(
                 @(posedge CLK);
             end
             wdq.bwready = 1'b1;
-            whlie(!wdw.wrap_bwvalid) begin
+            while(!wdw.wrap_bwvalid) begin
                 @(posedge CLK);
             end
             wdq.bwready = 1'b0;
@@ -178,7 +178,7 @@ program test(
                 output_vector[i][case_num].data_out = wdw.wrap_ddr_wdata_data;
                 output_vector[i][case_num].mask_out = wdw.wrap_ddr_wdata_mask;
                 if(!wdw.wrap_ddr_wdata_en) begin
-                    $display("case number %d failed. ddr_wdata_en not high when it should be.");
+                    $display("case number %d failed. ddr_wdata_en not high when it should be.", case_num);
                 end
 
             end
