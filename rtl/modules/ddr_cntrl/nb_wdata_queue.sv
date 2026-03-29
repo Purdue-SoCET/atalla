@@ -69,12 +69,12 @@ module nb_wdata_queue  #(Q_ID = 0) (
   //assign write_ptr_next = (wdq.wvalid && !full) ? write_ptr + 'b1 : write_ptr;
   always_comb begin : WRITE_PTR_NEXT
 
-    if(wdq.valid && (wdq.wid == Q_ID) && !full && !wdq.wlast) begin
+    if(wdq.wvalid && (wdq.wdq_slot.wid == Q_ID) && !full && !wdq.wlast) begin
 
         write_ptr_next = write_ptr + 32'b1;
 
-    end else if(wdq.valid && (wdq.wid == Q_ID) && !full && wdq.wlast) begin
-        write_ptr_next = write_ptr + ('d8 - wdq.wlen);
+    end else if(wdq.wvalid && (wdq.wdq_slot.wid == Q_ID) && !full && wdq.wlast) begin
+        write_ptr_next = write_ptr + ('d8 - wdq.wdq_slot.wlen);
     end else begin
         write_ptr_next = write_ptr;
     end
@@ -90,8 +90,8 @@ module nb_wdata_queue  #(Q_ID = 0) (
   //assign data_in = () ? {wdq.wdata, wdq.wstrb, wdq.wvalid} : regs[write_ptr];  
   always_comb begin : DATA_NEXT
 
-    if(wdq.valid && (wdq.wid == Q_ID) && !full) begin
-        data_in = DATA_Q_Slot_t'({wdq.wdata, wdq.wstrb, wdq.wvalid} );
+    if(wdq.wvalid && (wdq.wdq_slot.wid == Q_ID) && !full) begin
+        data_in = DATA_Q_Slot_t'({wdq.wdq_slot.wdata, wdq.wstrb, wdq.wvalid} );
     end else if(wen)
         data_in = DATA_Q_Slot_t'({ regs[dram_ptr].wdata, 8'b1111_1111, regs[dram_ptr].wvalid });
 
@@ -125,7 +125,7 @@ module nb_wdata_queue  #(Q_ID = 0) (
     case(fifo_state)
       
       EMPTY: begin
-        if(wdq.valid)
+        if(wdq.wvalid)
           next_fifo_state = ACTIVE;
         else if(wen)
           next_fifo_state = EMPTY;
@@ -134,9 +134,9 @@ module nb_wdata_queue  #(Q_ID = 0) (
       end
       
       ACTIVE: begin
-        if(wdq.valid && wen)
+        if(wdq.wvalid && wen)
           next_fifo_state = ACTIVE;
-        else if(wdq.valid && (inc_w_ptr  == dram_ptr))
+        else if(wdq.wvalid && (inc_w_ptr  == dram_ptr))
           next_fifo_state = FULL;
         else if(wen && (inc_r_ptr == write_ptr))
           next_fifo_state = EMPTY;
@@ -147,7 +147,7 @@ module nb_wdata_queue  #(Q_ID = 0) (
       FULL: begin
         if(wen)
           next_fifo_state = ACTIVE;
-        else if(wdq.valid)
+        else if(wdq.wvalid)
           next_fifo_state = FULL;
         else
           next_fifo_state = FULL;
@@ -185,7 +185,7 @@ module nb_wdata_queue  #(Q_ID = 0) (
 //   assign full_o = full;
 //   assign empty_o = empty;
 
-  assign wdq.ready[Q_ID] = !full;
+  assign wdq.wready[Q_ID] = !full;
 
   
   flex_counter #(.SIZE(4'd4)) BEAT_CNT (CLK, nRST, clear, cnt_en, 'd7, rollover);
