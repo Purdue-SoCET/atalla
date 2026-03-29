@@ -14,7 +14,7 @@ module nb_wdata_queue_wrapper (
     logic [$clog2(ID_NUM)-1:0] selected_queue; //for outputting data to dram. Backend arbiter should be in charge of making sure that no two output bursts intefere. 
     logic [$clog2(ID_NUM)-1:0] pri; //priority storing for bresp channel arbitration.
 
-    assign wdw.wrap_ready = wdq.wready[wdq.wdq_slot.wid];
+    assign wdw.wrap_wready = wdq.wready[wdq.wdq_slot.wid];
     assign wdw.wrap_bwvalid = wdq.bwvalid[wdw.wrap_bw_arb];
     assign wdw.wrap_bwresp = wdq.bwresp[wdw.wrap_bw_arb];
     assign wdw.wrap_bwid = wdq.bwid[wdw.wrap_arb];
@@ -23,7 +23,7 @@ module nb_wdata_queue_wrapper (
     assign wdw.wrap_ddr_wdata_mask = wdq.ddr_wdata_mask[selected_queue];
     assign wdw.wrap_ddr_we = wdq.ddr_we[selected_queue]; 
     
-    assign wdq.wrap_bw_arb = wdw.wrap_ready;
+    assign wdq.wrap_bw_arb = wdw.wrap_bw_arb;
     
     genvar i;
     generate 
