@@ -36,7 +36,7 @@ program test(
     endtask
 /*
     typedef struct packed {
-        ddrif_slot_t input;
+        wdq_slot_t input;
         logic [7:0] input_wstrb;
         logic [63:0] wdata_expected;
         logic [7:0] mask_expected;
@@ -56,7 +56,7 @@ program test(
     ///     1. In the case of strobing.
     ///     2. In the case of variable length bursts. 
     typedef struct packed {
-        ddrif_slot_t input_slot;
+        wdq_slot_t input_slot;
         integer delay; //delay when retiring request from ddrif. (Delay between driver task call and bwready set high.)
     } awrite_slot_t; //Driver from AXI Write channel.
 
@@ -113,13 +113,13 @@ program test(
         input case_num; 
         begin
             @(posedge CLK);
-            ddrif.ddrif_slot.wid = input_vector[0][case_num].input_slot.wid;
-            ddrif.ddrif_slot.wlen = input_vector[0][case_num].input_slot.wlen;
+            ddrif.wdq_slot.wid = input_vector[0][case_num].input_slot.wid;
+            ddrif.wdq_slot.wlen = input_vector[0][case_num].input_slot.wlen;
             @(posedge CLK);
             for(int i = 0; i < 8 ; i++) begin
                 ddrif.wvalid = 1'b1;
-                ddrif.ddrif_slot.wdata = input_vector[i][case_num].input_slot.wdata;
-                ddrif.ddrif_slot.wstrb = input_vector[i][case_num].input_slot.wstrb; 
+                ddrif.wdq_slot.wdata = input_vector[i][case_num].input_slot.wdata;
+                ddrif.wdq_slot.wstrb = input_vector[i][case_num].input_slot.wstrb; 
 
                 ddrif.wlast = (i == input_vector[0][case_num].input_slot.wlen);
                 if(i == input_vector[0][case_num].input_slot.wlen) begin
@@ -225,10 +225,10 @@ program test(
 
     initial begin 
         nRST = 1;
-        ddrif.ddrif_slot.wdata = 'b0;
-        ddrif.ddrif_slot.wstrb = 'b0;
-        ddrif.ddrif_slot.wid = 'b0;
-        ddrif.ddrif_slot.wlen = 'b0;
+        ddrif.wdq_slot.wdata = 'b0;
+        ddrif.wdq_slot.wstrb = 'b0;
+        ddrif.wdq_slot.wid = 'b0;
+        ddrif.wdq_slot.wlen = 'b0;
         ddrif.bwredy = 'b0;
         ddrif.wvalid = 'b0;
         ddrif.wlast = 'b0;
