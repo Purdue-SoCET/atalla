@@ -57,12 +57,11 @@ puts "=============================================================="
 
 # --- Elaboration & Simulation ---
 # +acc enables visibility for waveform debugging
-vsim -c -voptargs="+acc" work.$TB_TOP
+# Launch in GUI mode (no -c flag) so the wave window stays open
+vsim -voptargs="+acc" work.$TB_TOP
 
 run -all
 
 puts "=============================================================="
-puts "Simulation finished."
+puts "Simulation finished. Close the GUI manually when done."
 puts "=============================================================="
-
-quit -f
