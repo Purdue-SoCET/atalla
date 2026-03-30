@@ -161,6 +161,7 @@ program test(
                     $display("driver_bresp timed out on test %d", case_num);
                     break;
                 end
+                n++;
             end
             @(posedge CLK);
             wdq.bwready = 1'b0;
