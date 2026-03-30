@@ -1,4 +1,4 @@
-`timescale 1ns/1ps
+`include "dram_pkg.svh"
 `include "ddr_controller_if.sv"
 
 module nb_wdata_queue_wrapper (
@@ -8,7 +8,6 @@ module nb_wdata_queue_wrapper (
 );
 
 
-    `include "dram_pkg.svh"
     import dram_pkg::*;
 
     logic [$clog2(ID_NUM)-1:0] selected_queue; //for outputting data to dram. Backend arbiter should be in charge of making sure that no two output bursts intefere. 

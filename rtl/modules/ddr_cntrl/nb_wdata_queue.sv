@@ -1,4 +1,4 @@
-`timescale 1ps / 1ps
+
 `include "ddr_controller_if.sv"
 `include "dram_pkg.svh"
 

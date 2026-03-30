@@ -1,11 +1,12 @@
+`timescale 1ns/1ps
 `include "dram_pkg.svh"
 `include "ddr_controller_if.sv"
 
 
 module nb_wdata_queue_tb; 
     import dram_pkg::*;
-    logic CLK, nRST;
-    parameter PERIOD = 5ns;
+    logic CLK = 0, nRST;
+    parameter PERIOD = 5;
 
     // clock
     always #(PERIOD/2) CLK++;
@@ -154,7 +155,7 @@ module nb_wdata_queue_tb;
                     break;
                 end
                 n++;
-                #(1ns);
+                //#(1);
             end
             @(posedge CLK);
             ddrif0.bwready = 1'b0;
@@ -173,7 +174,7 @@ module nb_wdata_queue_tb;
                     break;
                 end
                 n++;
-                #(1ns);
+                //#(1);
             end
             #(PERIOD/5);
             for(int i = 0; i < 8; i++) begin
@@ -217,17 +218,19 @@ module nb_wdata_queue_tb;
 
 
     initial begin 
-        nRST = 1;
+        nRST = 0;
         ddrif0.wdq_slot.wdata = 'b0;
         ddrif0.wdq_slot.wstrb = 'b0;
         ddrif0.wdq_slot.wid = 'b0;
         ddrif0.wdq_slot.wlen = 'b0;
-        ddrif0.bwredy = 'b0;
+        ddrif0.bwready = 'b0;
         ddrif0.wvalid = 'b0;
         ddrif0.wlast = 'b0;
         ddrif0.be_wid = 'b0;
         ddrif0.be_write = 'b0;
         @(posedge CLK);
+	nRST = 1;
+	@(posedge CLK);
         reset_dut();
         @(posedge CLK);
 
