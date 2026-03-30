@@ -162,6 +162,7 @@ program test(
                     break;
                 end
                 n++;
+                #(1ns);
             end
             @(posedge CLK);
             wdq.bwready = 1'b0;
@@ -180,6 +181,7 @@ program test(
                     break;
                 end
                 n++;
+                #(1ns);
             end
             #(PERIOD/5);
             for(int i = 0; i < 8; i++) begin
