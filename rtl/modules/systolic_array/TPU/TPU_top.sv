@@ -97,7 +97,7 @@ genvar k;
                 always_ff @ (posedge clk, negedge nRST) begin : in_pipe_register
                     if (!nRST) begin
                         /* verilator lint_off WIDTHCONCAT */
-                        in_pipe <= '0;
+                        in_pipe[i][j] <= '0;
                         /* verilator lint_on WIDTHCONCAT */
                     end else begin
                         if(j == 0) begin
