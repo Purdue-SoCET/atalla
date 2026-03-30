@@ -1,6 +1,6 @@
 # --- Configuration ---
 set TB_FILE ./tb/unit/ddr_cntrl/testbench/nb_wdata_queue_tb.sv
-set TB_TOP  nb_wdata_queue_tb
+set TB_TOP test
 
 if {![info exists TB_FILE]} {
     puts "ERROR: TB_FILE not set. Use:  vsim -c -do \"set TB_FILE <path>; set TB_TOP <top>; do test.tcl\""
