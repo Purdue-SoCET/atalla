@@ -50,7 +50,7 @@ module nb_wdata_queue_tb;
     ///     2. In the case of variable length bursts. 
     typedef struct packed {
         wdq_slot_t input_slot;
-        integer delay; //delay when retiring request from ddrif. (Delay between driver task call and bwready set high.)
+        integer delay; //delay when retiring request from ddrif0. (Delay between driver task call and bwready set high.)
     } awrite_slot_t; //Driver from AXI Write channel.
 
 
@@ -106,21 +106,21 @@ module nb_wdata_queue_tb;
         input case_num; 
         begin
             @(posedge CLK);
-            ddrif.wdq_slot.wid = input_vector[0][case_num].input_slot.wid;
-            ddrif.wdq_slot.wlen = input_vector[0][case_num].input_slot.wlen;
+            ddrif0.wdq_slot.wid = input_vector[0][case_num].input_slot.wid;
+            ddrif0.wdq_slot.wlen = input_vector[0][case_num].input_slot.wlen;
             @(posedge CLK);
             for(int i = 0; i < 8 ; i++) begin
-                ddrif.wvalid = 1'b1;
-                ddrif.wdq_slot.wdata = input_vector[i][case_num].input_slot.wdata;
-                ddrif.wdq_slot.wstrb = input_vector[i][case_num].input_slot.wstrb; 
+                ddrif0.wvalid = 1'b1;
+                ddrif0.wdq_slot.wdata = input_vector[i][case_num].input_slot.wdata;
+                ddrif0.wdq_slot.wstrb = input_vector[i][case_num].input_slot.wstrb; 
 
-                ddrif.wlast = (i == input_vector[0][case_num].input_slot.wlen);
+                ddrif0.wlast = (i == input_vector[0][case_num].input_slot.wlen);
                 if(i == input_vector[0][case_num].input_slot.wlen) begin
                     break; 
                 end
                 @(posedge CLK);
             end 
-            ddrif.wvalid = 1'b0;
+            ddrif0.wvalid = 1'b0;
             @(posedge CLK);
         end
 
@@ -130,11 +130,11 @@ module nb_wdata_queue_tb;
         input case_num;
         begin 
             @(posedge CLK);
-            ddrif.be_wid = input_vector[0][case_num].input_slot.wid;
-            ddrif.be_write = 1'b1;
+            ddrif0.be_wid = input_vector[0][case_num].input_slot.wid;
+            ddrif0.be_write = 1'b1;
             @(posedge CLK);
-            ddrif.be_wid = 1'b0;
-            ddrif.be_write = 1'b0;
+            ddrif0.be_wid = 1'b0;
+            ddrif0.be_write = 1'b0;
         end
     endtask
    int n ;
@@ -145,9 +145,9 @@ module nb_wdata_queue_tb;
             for(int i = 0; i < input_vector[0][case_num].delay; i++) begin
                 @(posedge CLK);
             end
-            ddrif.bwready = 1'b1;
+            ddrif0.bwready = 1'b1;
             n = 0;
-            while(!ddrif.wrap_bwvalid) begin
+            while(!ddrif0.wrap_bwvalid) begin
                 @(posedge CLK);
                 if(n > 1000) begin
                     $display("driver_bresp timed out on test %d", case_num);
@@ -157,7 +157,7 @@ module nb_wdata_queue_tb;
                 #(1ns);
             end
             @(posedge CLK);
-            ddrif.bwready = 1'b0;
+            ddrif0.bwready = 1'b0;
         end
     endtask 
 
@@ -166,7 +166,7 @@ module nb_wdata_queue_tb;
         input case_num;
         begin
             n = 0;
-            while(!ddrif.wrap_ddr_we) begin
+            while(!ddrif0.wrap_ddr_we) begin
                 @(posedge CLK);
                 if (n > 1000) begin
                     $display("monitor timed out on test %d", case_num);
@@ -178,9 +178,9 @@ module nb_wdata_queue_tb;
             #(PERIOD/5);
             for(int i = 0; i < 8; i++) begin
 
-                output_vector[i][case_num].data_out = ddrif.wrap_ddr_wdata_data;
-                output_vector[i][case_num].mask_out = ddrif.wrap_ddr_wdata_mask;
-                if(!ddrif.wrap_ddr_wdata_en) begin
+                output_vector[i][case_num].data_out = ddrif0.wrap_ddr_wdata_data;
+                output_vector[i][case_num].mask_out = ddrif0.wrap_ddr_wdata_mask;
+                if(!ddrif0.wrap_ddr_wdata_en) begin
                     $display("case number %d failed. ddr_wdata_en not high when it should be.", case_num);
                 end
 
@@ -218,15 +218,15 @@ module nb_wdata_queue_tb;
 
     initial begin 
         nRST = 1;
-        ddrif.wdq_slot.wdata = 'b0;
-        ddrif.wdq_slot.wstrb = 'b0;
-        ddrif.wdq_slot.wid = 'b0;
-        ddrif.wdq_slot.wlen = 'b0;
-        ddrif.bwredy = 'b0;
-        ddrif.wvalid = 'b0;
-        ddrif.wlast = 'b0;
-        ddrif.be_wid = 'b0;
-        ddrif.be_write = 'b0;
+        ddrif0.wdq_slot.wdata = 'b0;
+        ddrif0.wdq_slot.wstrb = 'b0;
+        ddrif0.wdq_slot.wid = 'b0;
+        ddrif0.wdq_slot.wlen = 'b0;
+        ddrif0.bwredy = 'b0;
+        ddrif0.wvalid = 'b0;
+        ddrif0.wlast = 'b0;
+        ddrif0.be_wid = 'b0;
+        ddrif0.be_write = 'b0;
         @(posedge CLK);
         reset_dut();
         @(posedge CLK);
