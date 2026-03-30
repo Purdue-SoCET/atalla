@@ -223,7 +223,10 @@ program test(
 
     initial begin 
         nRST = 1;
-        wdq.wdq_slot = 'b0;
+        wdq.wdq_slot.wdata = 'b0;
+        wdq.wdq_slot.wstrb = 'b0;
+        wdq.wdq_slot.wid = 'b0;
+        wdq.wdq_slot.wlen = 'b0;
         wdq.bwredy = 'b0;
         wdq.wvalid = 'b0;
         wdq.wlast = 'b0;
@@ -238,7 +241,7 @@ program test(
         for(int i = 0; i < NUM_REQS; i++) begin
 
             driver_axi_write(i);
-            // repeat(500) @(posedge CLK);
+            repeat(500) @(posedge CLK);
             driver_barb(i);
             @(posedge CLK);
             @(posedge CLK);
