@@ -181,7 +181,7 @@ module nb_wdata_queue  #(Q_ID = 0) (
       end
     endcase
   end
-  
+
 //   assign full_o = full;
 //   assign empty_o = empty;
 
@@ -213,6 +213,17 @@ module nb_wdata_queue  #(Q_ID = 0) (
 
   end
 
+  always_ff @(posedge CLK, negedge nRST) begin
+
+    if(!nRST) begin
+      cnt_ctrl <= IDLE;
+    end else begin
+      cnt_ctrl <= cnt_ctrl_next;
+    end
+
+  end
+  
+
   always_comb begin : CNT_CTRL
 
     wen = 'b0;
@@ -239,6 +250,8 @@ module nb_wdata_queue  #(Q_ID = 0) (
     endcase
 
   end
+
+  
   
 
 endmodule
