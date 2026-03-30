@@ -145,7 +145,7 @@ program test(
             wdq.be_write = 1'b0;
         end
     endtask
-
+   int n ;
     task driver_bresp; //acts as bresp channel. drives ready signal to accept responses.
         input case_num;
         begin 
@@ -154,15 +154,20 @@ program test(
                 @(posedge CLK);
             end
             wdq.bwready = 1'b1;
+            n = 0;
             while(!wdw.wrap_bwvalid) begin
                 @(posedge CLK);
+                if(n > 1000) begin
+                    $display("driver_bresp timed out on test %d", case_num);
+                    break;
+                end
             end
             @(posedge CLK);
             wdq.bwready = 1'b0;
         end
     endtask 
 
-    int n ;
+ 
     task monitor; //collects outputs and places them into test vector. 
         input case_num;
         begin
