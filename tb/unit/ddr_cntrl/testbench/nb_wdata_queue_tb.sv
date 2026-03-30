@@ -23,8 +23,7 @@ endmodule
 program test(
     input logic CLK, 
     output logic nRST, 
-    ddr_controller_if.wdata_queue wdq,
-    ddr_controller_if.wdata_wrapper wdw
+    ddr_controller_if ddrif
 );
     import dram_pkg::*;
     localparam NUM_REQS = 1000;
@@ -37,12 +36,12 @@ program test(
     endtask
 /*
     typedef struct packed {
-        wdq_slot_t input;
+        ddrif_slot_t input;
         logic [7:0] input_wstrb;
         logic [63:0] wdata_expected;
         logic [7:0] mask_expected;
         integer delay; //delay between setting data and then valid. 
-    } wdq_case_in_t;
+    } ddrif_case_in_t;
 
     typedef struct packed {
         
@@ -57,8 +56,8 @@ program test(
     ///     1. In the case of strobing.
     ///     2. In the case of variable length bursts. 
     typedef struct packed {
-        wdq_slot_t input_slot;
-        integer delay; //delay when retiring request from wdq. (Delay between driver task call and bwready set high.)
+        ddrif_slot_t input_slot;
+        integer delay; //delay when retiring request from ddrif. (Delay between driver task call and bwready set high.)
     } awrite_slot_t; //Driver from AXI Write channel.
 
 
@@ -114,21 +113,21 @@ program test(
         input case_num; 
         begin
             @(posedge CLK);
-            wdq.wdq_slot.wid = input_vector[0][case_num].input_slot.wid;
-            wdq.wdq_slot.wlen = input_vector[0][case_num].input_slot.wlen;
+            ddrif.ddrif_slot.wid = input_vector[0][case_num].input_slot.wid;
+            ddrif.ddrif_slot.wlen = input_vector[0][case_num].input_slot.wlen;
             @(posedge CLK);
             for(int i = 0; i < 8 ; i++) begin
-                wdq.wvalid = 1'b1;
-                wdq.wdq_slot.wdata = input_vector[i][case_num].input_slot.wdata;
-                wdq.wdq_slot.wstrb = input_vector[i][case_num].input_slot.wstrb; 
+                ddrif.wvalid = 1'b1;
+                ddrif.ddrif_slot.wdata = input_vector[i][case_num].input_slot.wdata;
+                ddrif.ddrif_slot.wstrb = input_vector[i][case_num].input_slot.wstrb; 
 
-                wdq.wlast = (i == input_vector[0][case_num].input_slot.wlen);
+                ddrif.wlast = (i == input_vector[0][case_num].input_slot.wlen);
                 if(i == input_vector[0][case_num].input_slot.wlen) begin
                     break; 
                 end
                 @(posedge CLK);
             end 
-            wdq.wvalid = 1'b0;
+            ddrif.wvalid = 1'b0;
             @(posedge CLK);
         end
 
@@ -138,11 +137,11 @@ program test(
         input case_num;
         begin 
             @(posedge CLK);
-            wdq.be_wid = input_vector[0][case_num].input_slot.wid;
-            wdq.be_write = 1'b1;
+            ddrif.be_wid = input_vector[0][case_num].input_slot.wid;
+            ddrif.be_write = 1'b1;
             @(posedge CLK);
-            wdq.be_wid = 1'b0;
-            wdq.be_write = 1'b0;
+            ddrif.be_wid = 1'b0;
+            ddrif.be_write = 1'b0;
         end
     endtask
    int n ;
@@ -153,9 +152,9 @@ program test(
             for(int i = 0; i < input_vector[0][case_num].delay; i++) begin
                 @(posedge CLK);
             end
-            wdq.bwready = 1'b1;
+            ddrif.bwready = 1'b1;
             n = 0;
-            while(!wdw.wrap_bwvalid) begin
+            while(!ddrif.wrap_bwvalid) begin
                 @(posedge CLK);
                 if(n > 1000) begin
                     $display("driver_bresp timed out on test %d", case_num);
@@ -165,7 +164,7 @@ program test(
                 #(1ns);
             end
             @(posedge CLK);
-            wdq.bwready = 1'b0;
+            ddrif.bwready = 1'b0;
         end
     endtask 
 
@@ -174,7 +173,7 @@ program test(
         input case_num;
         begin
             n = 0;
-            while(!wdw.wrap_ddr_we) begin
+            while(!ddrif.wrap_ddr_we) begin
                 @(posedge CLK);
                 if (n > 1000) begin
                     $display("monitor timed out on test %d", case_num);
@@ -186,9 +185,9 @@ program test(
             #(PERIOD/5);
             for(int i = 0; i < 8; i++) begin
 
-                output_vector[i][case_num].data_out = wdw.wrap_ddr_wdata_data;
-                output_vector[i][case_num].mask_out = wdw.wrap_ddr_wdata_mask;
-                if(!wdw.wrap_ddr_wdata_en) begin
+                output_vector[i][case_num].data_out = ddrif.wrap_ddr_wdata_data;
+                output_vector[i][case_num].mask_out = ddrif.wrap_ddr_wdata_mask;
+                if(!ddrif.wrap_ddr_wdata_en) begin
                     $display("case number %d failed. ddr_wdata_en not high when it should be.", case_num);
                 end
 
@@ -226,15 +225,15 @@ program test(
 
     initial begin 
         nRST = 1;
-        wdq.wdq_slot.wdata = 'b0;
-        wdq.wdq_slot.wstrb = 'b0;
-        wdq.wdq_slot.wid = 'b0;
-        wdq.wdq_slot.wlen = 'b0;
-        wdq.bwredy = 'b0;
-        wdq.wvalid = 'b0;
-        wdq.wlast = 'b0;
-        wdq.be_wid = 'b0;
-        wdq.be_write = 'b0;
+        ddrif.ddrif_slot.wdata = 'b0;
+        ddrif.ddrif_slot.wstrb = 'b0;
+        ddrif.ddrif_slot.wid = 'b0;
+        ddrif.ddrif_slot.wlen = 'b0;
+        ddrif.bwredy = 'b0;
+        ddrif.wvalid = 'b0;
+        ddrif.wlast = 'b0;
+        ddrif.be_wid = 'b0;
+        ddrif.be_write = 'b0;
         @(posedge CLK);
         reset_dut();
         @(posedge CLK);
@@ -258,7 +257,7 @@ program test(
 
         scoreboard();
 
-        //$display ("Coverage = %0.2f %%", wdqcg.get_inst_coverage());
+        //$display ("Coverage = %0.2f %%", ddrifcg.get_inst_coverage());
 
 
         $finish;
