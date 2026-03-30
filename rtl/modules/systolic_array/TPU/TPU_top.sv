@@ -114,7 +114,7 @@ genvar k;
 
                 always_ff @ (posedge clk, negedge nRST) begin :weight_en_pipe_register
                     if(!nRST) begin
-                        weight_en_pipe <= '0;
+                        weight_en_pipe[i][j] <= '0;
                     end
                     else begin
                         if(j == 0) begin
