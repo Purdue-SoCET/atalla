@@ -12,6 +12,7 @@ import uvm_pkg::*;
 `include "lfc_predictor.sv"
 `include "lfc_cpu_transaction.sv"
 `include "lfc_ram_transaction.sv"
+`include "lfc_uuid_transaction.sv"
 
 class lfc_environment #(parameter NUM_BANKS = 4) extends uvm_env;
   `uvm_component_utils(lfc_environment)
@@ -74,9 +75,18 @@ class lfc_environment #(parameter NUM_BANKS = 4) extends uvm_env;
     cpu_active_agent.mon.lfc_ap.connect(pred.cpu_imp);
     ram_active_agent.mon.lfc_ap.connect(pred.ram_imp);
 
+    // UUID cross-time linkage check (block_status completion events)
+    cpu_passive_agent.mon.block_status_ap.connect(sb.actual_uuid_cmp_export);
+
+    /*ARCHITECTURAL BOUNDARY EXCEPTION: active monitor -> scoreboard
+    Normally active components connect only to the predictor. This connection is an intentional exception: the active monitor captures (bank, uuid) at miss time 
+    (after posedge, outputs settled) and sends it directly to the scoreboard for UUID cross-time linkage verification. No other active->scoreboard connections exist. */
+    cpu_active_agent.mon.uuid_miss_ap.connect(sb.actual_miss_export);
+
   endfunction
 
 endclass
 
 `endif
+
 

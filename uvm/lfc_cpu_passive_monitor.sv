@@ -14,10 +14,12 @@ class lfc_cpu_passive_monitor extends uvm_monitor;
   lfc_cpu_transaction prev_tx;
 
   uvm_analysis_port#(lfc_cpu_transaction) result_ap;
+  uvm_analysis_port#(lfc_cpu_transaction) block_status_ap; // block_status completion events only
 
   function new(string name, uvm_component parent = null);
     super.new(name, parent);
-    result_ap = new("result", this);
+    result_ap        = new("result",        this);
+    block_status_ap  = new("block_status",  this);
   endfunction
 
   virtual function void build_phase(uvm_phase phase);
@@ -40,6 +42,7 @@ class lfc_cpu_passive_monitor extends uvm_monitor;
     @(posedge vif.clk);
     tx = lfc_cpu_transaction #()::type_id::create("tx");
 
+    tx.mem_in_addr      = vif.mem_in_addr;
     tx.mem_out_uuid     = vif.mem_out_uuid;
     tx.stall            = vif.stall;
     tx.hit              = vif.hit;
@@ -70,6 +73,7 @@ class lfc_cpu_passive_monitor extends uvm_monitor;
 		`uvm_info("CPU_PASSIVE_MON", $sformatf("Sent read tx: uuid=%0h stall=%0b hit=%0b flushed=%0b",
 		    tx.mem_out_uuid, tx.stall, tx.hit, tx.dp_out_flushed), UVM_LOW)
 		result_ap.write(tx);
+		block_status_ap.write(tx);
 	      end
     	    end
     	end
@@ -84,3 +88,4 @@ endtask
 endclass
 
 `endif // LFC_CPU_ACTIVE_MONITOR_SVH
+

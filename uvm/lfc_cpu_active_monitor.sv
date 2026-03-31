@@ -5,6 +5,7 @@
 import uvm_pkg::*;
 `include "uvm_macros.svh"
 `include "lfc_if.sv"
+`include "lfc_uuid_transaction.sv" // ARCHITECTURAL BOUNDARY EXCEPTION: active monitor -> scoreboard.
 
 // --- Replace these with your real types if needed ---
 typedef virtual lfc_if lfc_cpu_vif_t;   // TODO: interface
@@ -20,10 +21,12 @@ class lfc_cpu_active_monitor extends uvm_monitor;
   lfc_cpu_vif_t vif;
 
   uvm_analysis_port#(lfc_cpu_transaction) lfc_ap;
+  uvm_analysis_port#(lfc_uuid_transaction) uuid_miss_ap; // ARCHITECTURAL BOUNDARY EXCEPTION: active monitor -> scoreboard. Only used for UUID cross-time linkage check; carries (bank, uuid) at miss time.
 
   function new(string name, uvm_component parent = null);
     super.new(name, parent);
     lfc_ap = new("lfc_ap", this);
+    uuid_miss_ap = new("uuid_miss_ap", this);
   endfunction
 
   virtual function void build_phase(uvm_phase phase);
@@ -51,6 +54,15 @@ class lfc_cpu_active_monitor extends uvm_monitor;
 	      tx.dp_in_halt = vif.dp_in_halt;
 	      @(negedge vif.clk);
 	      lfc_ap.write(tx);
+	      // ARCHITECTURAL BOUNDARY EXCEPTION: emit (bank, uuid) to scoreboard for UUID link check
+	      if (vif.hit == 0) begin
+	        lfc_uuid_transaction uuid_tx;
+	        uuid_tx = lfc_uuid_transaction::type_id::create("uuid_tx");
+	        uuid_tx.bank = (tx.mem_in_addr >> 4) & 3; // addr[5:4]
+	        uuid_tx.uuid = vif.mem_out_uuid;
+	        `uvm_info("CPU_ACTIVE_MON", $sformatf("UUID MISS captured: bank=%0d uuid=%0h addr=%h", uuid_tx.bank, uuid_tx.uuid, tx.mem_in_addr), UVM_LOW)
+	        uuid_miss_ap.write(uuid_tx);
+	      end
       //end
     end
   endtask
@@ -58,3 +70,4 @@ class lfc_cpu_active_monitor extends uvm_monitor;
 endclass
 
 `endif // LFC_CPU_ACTIVE_MONITOR_SVH
+

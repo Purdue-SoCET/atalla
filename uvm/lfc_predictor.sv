@@ -82,7 +82,7 @@ class lfc_predictor extends uvm_component;
     update_stall(out_tx);
     `uvm_info("PRED", $sformatf("write_cpu: addr=%h rw=%0b -> hit=%0b valid[%0d]=%0b", cpu_t.mem_in_addr, cpu_t.mem_in_rw_mode, out_tx.hit, get_index(cpu_t.mem_in_addr), valid[get_index(cpu_t.mem_in_addr)]), UVM_LOW)
 
-    // Only emit on hit, misses are emitted in handle_fill_completion when block fills
+    // Only emit on hit, misses have no predictable pairing with passive monitor events
     if (out_tx.hit) begin
       pred_cpu_ap.write(out_tx);
     end
@@ -164,6 +164,18 @@ class lfc_predictor extends uvm_component;
           exp_req.ram_mem_complete[bank] = 0;
           pred_ram_req_ap[bank].write(exp_req);
         end
+        if (cpu_t.mem_in_rw_mode) begin
+          int skip_w = cpu_t.mem_in_addr[3:2];
+          if (skip_w > 0 && skip_w < BLOCK_SIZE - 1) begin
+            int post_skip_w = skip_w + 1;
+            exp_req = lfc_ram_transaction#(NUM_BANKS)::type_id::create("exp_req_stall_post_skip");
+            exp_req.ram_mem_REN[bank]      = 1;
+            exp_req.ram_mem_WEN[bank]      = 0;
+            exp_req.ram_mem_addr[bank]     = block_base_addr + (post_skip_w * 4);
+            exp_req.ram_mem_complete[bank] = 0;
+            pred_ram_req_ap[bank].write(exp_req);
+          end
+        end
       end
       return;
     end
@@ -190,8 +202,8 @@ class lfc_predictor extends uvm_component;
       fill_skip_word[new_uuid] = -1;
     end
 
-    // Emit one expected REN for the first word fetched from RAM.
-    // The passive monitor fires only on the rising edge of REN (first word), so emitting one expected per miss keeps the FIFOs in sync.
+    // Emit expected RENs for words fetched from RAM. The passive monitor fires on every rising edge of REN.
+    // For a write-miss, the DUT drops REN for the skipped (written) word and reasserts it afterward, producing a second rising edge. Emit one expected REQ per REN rising edge.
     begin
       int first_w = -1;
       for (int w = 0; w < BLOCK_SIZE; w++) begin
@@ -206,6 +218,21 @@ class lfc_predictor extends uvm_component;
         exp_req.ram_mem_addr[bank]     = block_base_addr + (first_w * 4);
         exp_req.ram_mem_complete[bank] = 0;
         pred_ram_req_ap[bank].write(exp_req);
+      end
+
+      // For write-misses where the skipped word is in the middle (not first, not last),
+      // the DUT drops REN for the skip then reasserts it (a second rising edge fires).
+      if (cpu_t.mem_in_rw_mode) begin
+        int skip_w = cpu_t.mem_in_addr[3:2];
+        if (skip_w > 0 && skip_w < BLOCK_SIZE - 1) begin
+          int post_skip_w = skip_w + 1;
+          exp_req = lfc_ram_transaction#(NUM_BANKS)::type_id::create("exp_req_post_skip");
+          exp_req.ram_mem_REN[bank]      = 1;
+          exp_req.ram_mem_WEN[bank]      = 0;
+          exp_req.ram_mem_addr[bank]     = block_base_addr + (post_skip_w * 4);
+          exp_req.ram_mem_complete[bank] = 0;
+          pred_ram_req_ap[bank].write(exp_req);
+        end
       end
     end
 
@@ -274,5 +301,6 @@ class lfc_predictor extends uvm_component;
 endclass
 
 `endif
+
 
 
