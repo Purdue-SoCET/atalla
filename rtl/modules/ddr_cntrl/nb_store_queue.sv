@@ -1,13 +1,6 @@
 
-`include "ddr_controller_if.vh"
-`include "dram_pkg.vh"
-
-// Store Queue Slot Structure
-typedef struct packed {
-    logic [31:0] addr;
-    logic [$clog2(ID_NUM) - 1:0] id;
-    logic [3:0] len;
-} stq_slot_t;
+`include "ddr_controller_if.sv"
+`include "dram_pkg.svh"
 
 module store_queue (
     input logic CLK, nRST,
@@ -17,9 +10,9 @@ module store_queue (
 
     logic awready_n;
     logic request_n;
-    logic [$clog(STQ_DEPTH):0] taken, taken_n;
-    logic [$clog(STQ_DEPTH) - 1:0] head_ptr, head_ptr_n, tail_ptr, tail_ptr_n;
-    stq_slot_t [STQ_DEPTH - 1:0] stq_req, stq_reg_n;
+    logic [$clog2(STQ_DEPTH):0] taken, taken_n;
+    logic [$clog2(STQ_DEPTH) - 1:0] head_ptr, head_ptr_n, tail_ptr, tail_ptr_n;
+    lstq_slot_t [STQ_DEPTH - 1:0] stq_reg, stq_reg_n;
 
     always_ff @(posedge CLK, negedge nRST) begin
         if (~nRST) begin
@@ -48,7 +41,7 @@ module store_queue (
         stq_reg_n = stq_reg;
         head_ptr_n = head_ptr;
         tail_ptr_n = tail_ptr;
-        taken = taken_n;
+        taken_n = taken;
         request_n = stq.request_s;
 
         // Set ready signal when valid signal goes high (Write Path)
@@ -70,10 +63,8 @@ module store_queue (
         end
 
         // Read Path
-        if(stq_request_s && stq_grant_s) begin // Add these signals to interface
-            stq.address_s = stq_reg[head_ptr].addr;
-            stq.id_s = stq_reg[head_ptr].id;
-            stq_len_s = stq_reg[head_ptr].len;
+        if(stq.request_s && stq.grant_s) begin
+            stq.stq_slot = stq_reg[head_ptr];
 
             taken_n = taken - 1; // Pop off the queue (reads destroy)
             if (head_ptr + 1 == STQ_DEPTH) begin
