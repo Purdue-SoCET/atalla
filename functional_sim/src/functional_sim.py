@@ -418,7 +418,9 @@ def run(mem: Memory, sregs: ScalarRegisterFile, mregs: ScalarRegisterFile, vregs
                 # ------------ GEMM ------------------------------
                 if (m == "gemm.vv"):
                     gemm_count += 1
-                    vregs.write(inst['vd'], vregs.read(inst['vs1']) @ gemm_weights + vregs.read(inst['vs2']))
+                    v_in = vregs.read(inst['vs1'])
+                    v_acc = vregs.read(inst['vs2'])
+                    vregs.write(inst['vd'], gemm_weights @ v_in + v_acc)
                 else:
                     src1 = vregs.read(inst['vs1'])
                     src2 = vregs.read(inst['vs2'])
