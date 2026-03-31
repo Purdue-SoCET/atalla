@@ -67,11 +67,11 @@ logic [BANK_GROUP_BITS-1:0]  bq_bg; // -> BQ
 logic [BANK_BITS-1:0]        bq_b;  // -> BQ
 
 // COMMAND FSM -> BACKEND ARBITER
-logic [BANK_GROUP_BITS-1:0][$clog2(BANK_NUM)-1:0] be_bg; 
-logic [BANK_BITS-1:0][$clog2(BANK_NUM)-1:0]       be_b; // 2*16
-logic [ROW_BITS-1:0][BANK_NUM-1:0]                be_r; // 15*16
-logic [COLUMN_BITS-1:0][BANK_NUM-1:0]             be_c; // 10*16
-logic [$clog2(ID_NUM)-1:0][$clog2(BANK_NUM)-1:0]  be_id; // 4*16
+logic [BANK_GROUP_BITS-1:0]  be_bg;
+logic [BANK_BITS-1:0]        be_b;
+logic [ROW_BITS-1:0]         be_r;
+logic [COLUMN_BITS-1:0]      be_c;
+logic [$clog2(ID_NUM)-1:0]   be_id;
 logic [BANK_NUM-1:0]                      be_arb;
 logic [BANK_NUM-1:0]                      be_queue_ready;
 logic [2:0]                                       be_len;

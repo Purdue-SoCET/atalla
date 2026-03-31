@@ -114,7 +114,7 @@ module fsm_mod (
                 fsm.fsm_ready = 1'b1;
                 if (fsm.fsm_arb) begin
                     state_n  = ACTing;
-                    tim_n    = 16'(tRAS);           // TODO: tRCD timing
+                    tim_n    = 16'(tRCD);
                     rstate_n = {1'b1, fsm.fsm_r};
                 end
             end

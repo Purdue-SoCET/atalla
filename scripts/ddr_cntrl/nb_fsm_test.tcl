@@ -49,7 +49,8 @@ vmap work work
 
 # --- Compilation ---
 # -mfcu (Multi-File Compilation Unit) is good here to resolve cross-file dependencies
-vlog -sv -mfcu {*}$INC_FLAGS {*}$SRC_FILES
+# +cover=sbceft enables statement, branch, condition, expression, fsm, and toggle coverage
+vlog -sv -mfcu +cover=sbceft {*}$INC_FLAGS {*}$SRC_FILES
 
 puts "=============================================================="
 puts "Compilation complete. Launching simulation for $TB_TOP"
@@ -57,10 +58,18 @@ puts "=============================================================="
 
 # --- Elaboration & Simulation ---
 # +acc enables visibility for waveform debugging
-# Launch in GUI mode (no -c flag) so the wave window stays open
-vsim -voptargs="+acc" work.$TB_TOP
+# -coverage enables coverage data collection at runtime
+vsim -voptargs="+acc" -coverage work.$TB_TOP
+
+# Load waveform configuration
+do ./waves/cmd_fsm_nb.do
 
 run -all
+
+# --- Coverage Report ---
+file mkdir ./reports/ddr_cntrl
+coverage save -onexit ./reports/ddr_cntrl/fsm_coverage.ucdb
+coverage report -detail -output ./reports/ddr_cntrl/fsm_coverage.txt
 
 puts "=============================================================="
 puts "Simulation finished. Close the GUI manually when done."

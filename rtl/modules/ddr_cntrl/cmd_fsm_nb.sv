@@ -19,6 +19,16 @@ module cmd_fsm (
     logic [BANK_NUM-1:0] bank_pop;
     logic [3:0]          bank_cmd [BANK_NUM-1:0];
 
+    // Detect if any be_arb targets a bank in REF state
+    logic any_ref_arb;
+    always_comb begin
+        any_ref_arb = 1'b0;
+        for (int j = 0; j < BANK_NUM; j++) begin
+            if (fsm.be_arb[j] && bank_cmd[j] == REF)
+                any_ref_arb = 1'b1;
+        end
+    end
+
     genvar i;
     generate
         for (i = 0; i < BANK_NUM; i++) begin : gen_bank
@@ -34,8 +44,8 @@ module cmd_fsm (
             // Refresh: fan out external refresh to every bank
             assign bank_if.fsm_ref     = fsm.fsm_ref;
 
-            // Arbiter ack: decode be_arb to the matching bank
-            assign bank_if.fsm_arb     = (fsm.be_arb == i[$clog2(BANK_NUM)-1:0]);
+            // Arbiter ack: per-bank arb OR broadcast when any REF bank is acked
+            assign bank_if.fsm_arb     = fsm.be_arb[i] | (any_ref_arb && bank_cmd[i] == REF);
 
             // --- Instantiate per-bank FSM ---
             fsm_mod u_fsm_mod (
@@ -45,9 +55,9 @@ module cmd_fsm (
             );
 
             // --- Collect per-bank outputs ---
-            assign bank_pop[i]   = bank_if.fsm_pop;
-            assign bank_ready[i] = bank_if.fsm_ready;
-            assign bank_cmd[i]   = bank_if.fsm_cmd;
+            assign bank_pop[i]          = bank_if.fsm_pop;
+            assign bank_ready[i]        = bank_if.fsm_ready;
+            assign bank_cmd[i]          = bank_if.fsm_cmd;
         end
     endgenerate
 
@@ -55,14 +65,28 @@ module cmd_fsm (
 
     assign fsm.bq_pop = bank_pop;
 
+    // One-hot be_arb to binary index for output mux
+    logic [$clog2(BANK_NUM)-1:0] arb_sel;
     always_comb begin
-        fsm.be_bg   = fsm.bq_bg[fsm.be_arb];
-        fsm.be_b    = fsm.bq_b[fsm.be_arb];
-        fsm.be_r    = fsm.bq_slot[fsm.be_arb].row;
-        fsm.be_c    = fsm.bq_slot[fsm.be_arb].column;
-        fsm.be_id   = fsm.bq_slot[fsm.be_arb].id_addr;
-        fsm.be_cmd  = bank_cmd[fsm.be_arb];
+        arb_sel = '0;
+        for (int j = 0; j < BANK_NUM; j++) begin
+            if (fsm.be_arb[j]) arb_sel = j[$clog2(BANK_NUM)-1:0];
+        end
+    end
+
+    always_comb begin
+        fsm.be_bg   = arb_sel[3:2];
+        fsm.be_b    = arb_sel[1:0];
+        fsm.be_r    = fsm.bq_slot[arb_sel].row;
+        fsm.be_c    = fsm.bq_slot[arb_sel].column;
+        fsm.be_id   = fsm.bq_slot[arb_sel].id_addr;
         fsm.be_rlen = '0;
+
+        // be_cmd must carry ALL banks' commands so the arbiter can
+        // inspect each bank's state independently for scheduling.
+        for (int j = 0; j < BANK_NUM; j++) begin
+            fsm.be_cmd[j] = fsm_t'(bank_cmd[j]);
+        end
     end
 
 endmodule
