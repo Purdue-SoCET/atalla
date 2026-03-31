@@ -69,6 +69,11 @@ def run(mem: Memory, sregs: ScalarRegisterFile, mregs: ScalarRegisterFile, vregs
         
     pc_increment = packet_length * 6
 
+    _orig_mregs_read = mregs.read
+    def _mregs_read(idx):
+        return 0xFFFFFFFF if idx == 0 else _orig_mregs_read(idx)
+    mregs.read = _mregs_read
+
     gemm_weights = np.zeros((32, 32))
     num_weights = 0
 
