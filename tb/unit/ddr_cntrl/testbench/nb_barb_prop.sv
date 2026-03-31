@@ -8,14 +8,25 @@ module nb_barb_prop(
 );
     import dram_pkg::*;
 
-    /* covergroup nb_cg @(posedge CLK) // TODO: FIX COVERPOINTS 
-        fsm_be : coverpoint {be_r, be_c, be_b, be_bg, be_cmd, be_id, be_rlen, be_queue_ready};
-        be_fsm : coverpoint {be_arb};
-        be_wdq : coverpoint {be_wid, be_write};
-        be_riq : coverpoint {be_rid, be_push_id, be_rlen}; 
+    covergroup cg_barb @(posedge CLK);
+    // 1. Coverpoint for the Command Type
+    cp_cmd: coverpoint barb.be_cmd {
+        bins read    = {FSM_READ};
+        bins write   = {FSM_WRITE};
+        bins refresh = {REF};
+        bins idle    = {IDLE};
+    }
+
+    // 2. Coverpoint for the Bank Index being serviced
+    cp_bank: coverpoint barb.be_arb {
+        bins banks[] = {[0:BANK_NUM-1]}; // Creates a bin for every bank
+    }
+
+    // 3. CROSS COVERAGE: Did we see every command type on every bank?
+    cross_cmd_bank: cross cp_cmd, cp_bank;
     endgroup
 
-    nb_cg nbcg; */
+    cg_barb cgb = new();
 
     int debug_counter = 0;
     always @(posedge CLK) begin
