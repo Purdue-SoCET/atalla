@@ -83,6 +83,8 @@ def run(mem: Memory, sregs: ScalarRegisterFile, mregs: ScalarRegisterFile, vregs
     tileID0Dict = {}
     tileID1Dict = {}
 
+    _vec_spill_mem = {}
+
     cycle_count = 0
     instr_count = 0
     packet_count = 0
@@ -172,44 +174,36 @@ def run(mem: Memory, sregs: ScalarRegisterFile, mregs: ScalarRegisterFile, vregs
                 mem.write_data(sregs.read(inst['rs1']) + inst['imm'], temp)
             #vector load/store here
             elif m == "vreg.ld":
-                if inst['sid'] == 1:
-                    target_sp = SP1 
-                else:
-                    target_sp = SP0
-                
                 addr = sregs.read(inst['rs1'])
                 rc_id_val = sregs.read(inst['rc_id']) if inst.get('rc_id_is_reg', 0) else inst['rc_id']
-                
-                scpad_to_vreg(
-                    scpad=target_sp,
-                    vregs=vregs,
-                    scpad_addr=addr,
-                    vd=inst['vd'],
-                    rc=inst['rc'],
-                    rc_id=rc_id_val,
-                    num_rows=inst['num_rows'],
-                    num_cols=inst['num_cols']
-                )
+                is_spill = addr < 0 or addr >= SP0.B * SP0.S
+                if is_spill:
+                    vec_data = _vec_spill_mem.get(addr, [0] * 32)
+                    vregs.write(inst['vd'], vec_data)
+                else:
+                    target_sp = SP1 if inst['sid'] == 1 else SP0
+                    scpad_to_vreg(
+                        scpad=target_sp, vregs=vregs,
+                        scpad_addr=addr, vd=inst['vd'],
+                        rc=inst['rc'], rc_id=rc_id_val,
+                        num_rows=inst['num_rows'],
+                        num_cols=inst['num_cols']
+                    )
 
             elif m == "vreg.st":
-                if inst['sid'] == 1:
-                    target_sp = SP1 
-                else:
-                    target_sp = SP0
-                
                 addr = sregs.read(inst['rs1'])
                 rc_id_val = sregs.read(inst['rc_id']) if inst.get('rc_id_is_reg', 0) else inst['rc_id']
-                
-                vreg_to_scpad(
-                    scpad=target_sp,
-                    vregs=vregs,
-                    scpad_addr=addr,
-                    vs=inst['vd'],
-                    rc=inst['rc'],
-                    rc_id=rc_id_val,
-                    num_rows=inst['num_rows'],
-                    num_cols=inst['num_cols']
-                )
+                if addr < 0 or addr >= SP0.B * SP0.S:
+                    _vec_spill_mem[addr] = vregs.read(inst['vd'])
+                else:
+                    target_sp = SP1 if inst['sid'] == 1 else SP0
+                    vreg_to_scpad(
+                        scpad=target_sp, vregs=vregs,
+                        scpad_addr=addr, vs=inst['vd'],
+                        rc=inst['rc'], rc_id=rc_id_val,
+                        num_rows=inst['num_rows'],
+                        num_cols=inst['num_cols']
+                    )
 
             #scpad load/store here
 
