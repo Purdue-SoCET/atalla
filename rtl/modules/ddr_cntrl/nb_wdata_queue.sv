@@ -2,15 +2,17 @@
 `include "ddr_controller_if.sv"
 `include "dram_pkg.svh"
 
-module nb_wdata_queue  #(Q_ID = 0) (
+import dram_pkg::*;
+
+module nb_wdata_queue  #(Q_ID = 0, ID_NUM = 8) (
     input logic CLK, nRST,
     wdq_slot_t wdq_slot, logic bwready, logic wvalid, logic wlast, logic [$clog2(ID_NUM)-1:0] be_wid, logic be_write, 
-    logic [$clog2(ID)-1:0] bw_arb , output logic wready, bwvalid, logic [1:0] bwresp, logic [$clog2(ID_NUM)-1:0] bwid, 
+    logic [$clog2(ID_NUM)-1:0] bw_arb , output logic wready, bwvalid, logic [1:0] bwresp, logic [$clog2(ID_NUM)-1:0] bwid, 
     logic [63:0] ddr_wdata_data, logic ddr_wdata_en, logic [7:0] ddr_wdata_mask, logic ddr_we
   );  
 
-    import dram_pkg::*; 
-
+    
+  
 
 
   typedef struct packed {
@@ -210,7 +212,7 @@ module nb_wdata_queue  #(Q_ID = 0) (
         IDLE: if( (be_wid == Q_ID) && be_write) cnt_ctrl_next = CWL_WAIT; else cnt_ctrl_next = IDLE;
         CWL_WAIT: if( rollover_cwl ) cnt_ctrl_next = WRITING; else cnt_ctrl_next = CWL_WAIT;
         WRITING: if( rollover ) cnt_ctrl_next = RESP; else cnt_ctrl_next = WRITING;
-        RESP: if(bwready && (wrap_bw_arb == Q_ID)) cnt_ctrl_next = IDLE;   else cnt_ctrl_next = RESP;
+        RESP: if(bwready && (bw_arb == Q_ID)) cnt_ctrl_next = IDLE;   else cnt_ctrl_next = RESP;
 
     endcase
 

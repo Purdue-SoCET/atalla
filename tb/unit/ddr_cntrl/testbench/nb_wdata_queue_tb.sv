@@ -148,7 +148,7 @@ module nb_wdata_queue_tb;
             end
             ddrif0.bwready = 1'b1;
             n = 0;
-            while(!ddrif0.wrap_bwvalid) begin
+            while(!ddrif0.bwvalid) begin
                 @(posedge CLK);
                 if(n > 1000) begin
                     $display("driver_bresp timed out on test %d", case_num);
@@ -167,7 +167,7 @@ module nb_wdata_queue_tb;
         input case_num;
         begin
             n = 0;
-            while(!ddrif0.wrap_ddr_we) begin
+            while(!ddrif0.ddr_we) begin
                 @(posedge CLK);
                 if (n > 1000) begin
                     $display("monitor timed out on test %d", case_num);
@@ -179,9 +179,9 @@ module nb_wdata_queue_tb;
             #(PERIOD/5);
             for(int i = 0; i < 8; i++) begin
 
-                output_vector[case_num][i].data_out = ddrif0.wrap_ddr_wdata_data;
-                output_vector[case_num][i].mask_out = ddrif0.wrap_ddr_wdata_mask;
-                if(!ddrif0.wrap_ddr_wdata_en) begin
+                output_vector[case_num][i].data_out = ddrif0.ddr_wdata_data;
+                output_vector[case_num][i].mask_out = ddrif0.ddr_wdata_mask;
+                if(!ddrif0.ddr_wdata_en) begin
                     $display("case number %d failed. ddr_wdata_en not high when it should be.", case_num);
                 end
 

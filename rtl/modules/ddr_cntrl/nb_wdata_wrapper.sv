@@ -44,17 +44,22 @@ module nb_wdata_queue_wrapper (
         end
 
     endgenerate
+    assign bw_arb = 'b0;
+    /*
 
+    logic [$clog2(ID_NUM)-1:0] idx;
     logic [$clog2(ID_NUM)-1:0] j;
     always_comb  begin : PRIORITY_COMB
         bw_arb = pri;
         for(j = 0; j < ID_NUM; j++) begin
-            if(bwvalid[pri + j]) begin
-                bw_arb = pri + j; 
+	    idx = j + pri;
+            if(bwvalid[idx]) begin
+                bw_arb = idx; 
                 break;
             end 
         end 
     end
+*/
 
     always_ff @(posedge CLK, negedge nRST) begin : PRIORITY
         if(!nRST)
@@ -67,7 +72,7 @@ module nb_wdata_queue_wrapper (
 
         if(!nRST) 
             selected_queue <= 'b0;
-        else if(wdq.be_write)
+        else if(wdw.be_write)
             selected_queue <= wdw.be_wid;
 
     end

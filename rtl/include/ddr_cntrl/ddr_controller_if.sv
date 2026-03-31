@@ -18,13 +18,9 @@ import dram_pkg::*;
 // AXI <-> WDQ
 wdq_slot_t wdq_slot;
 // CNTRL
-logic [7:0]                wstrb; // -> WQ
-logic [2:0]                wlen; // -> WQ
-logic                      wvalid; // -> WQ
-logic [ID_NUM-1:0]                     wready; // -> WRAPPER 
-logic [ID_NUM-1:0]                     bwvalid; // -> WRAPPER
-logic [1:0][ID_NUM-1:0]                bwresp; // -> WRAPPER
-logic [$clog2(ID_NUM)-1:0][ID_NUM-1:0] bwid; // -> WRAPPER
+//logic [7:0]                wstrb; // -> WQ
+//logic [2:0]                wlen; // -> WQ
+logic                      wvalid; // -> WQ 
 logic                      bwready; // -> WQ
 logic                      wlast; // -> WQ
 
@@ -72,7 +68,7 @@ logic [BANK_BITS-1:0][$clog2(BANK_NUM)-1:0]       be_b; // 2*16
 logic [ROW_BITS-1:0][BANK_NUM-1:0]                be_r; // 15*16
 logic [COLUMN_BITS-1:0][BANK_NUM-1:0]             be_c; // 10*16
 logic [$clog2(ID_NUM)-1:0][$clog2(BANK_NUM)-1:0]  be_id; // 4*16
-logic [BANK_NUM-1:0]                      be_arb;
+logic [BANK_NUM-1:0]                      cg;
 logic [BANK_NUM-1:0]                      be_queue_ready;
 logic [2:0]                                       be_len;
 fsm_t [BANK_NUM-1:0]                              be_cmd; 
@@ -187,10 +183,9 @@ modport read_id_queue (
 modport wdata_wrapper (
 
     // AXI_WRITE_CHANNEL -> WRAPPER
-    input wdq_slot, bwready, wvalid, wlast,
-    bw_arb, 
+    input wdq_slot, bwready, wvalid, wlast, 
     // BAACKEND_ARBITER -> WRAPPER
-    be_wid, bw_write,
+    be_wid, be_write,
 
     
     // WRAPPER -> AXI_WRITE AND RESPONSE CHANNEL
@@ -203,7 +198,7 @@ modport command_fsm (
     //BQ -> FSM
     input bq_ready, bq_bg, bq_b, bq_slot,
     //BE -> FSM
-    be_arb,
+    cg,
     //FSM -> BE 
     output be_r, be_c, be_b, be_bg, be_cmd, be_id, be_rlen, be_queue_ready
 );
@@ -212,7 +207,7 @@ modport backend_arb (
     //FSM -> BE
     input be_r, be_c, be_b, be_bg, be_cmd, be_id, be_queue_ready, be_len,
     //BE -> FSM
-    output be_arb, 
+    output cg, 
     //BE -> WDATA_QUEUE
     be_wid, be_write, 
     //BE -> R_ID_QUEUE
@@ -226,7 +221,7 @@ modport barb_prop (
     //FSM -> BE
     input be_r, be_c, be_b, be_bg, be_cmd, be_id, be_queue_ready,
     //BE -> FSM
-    be_arb, 
+    cg, 
     //BE -> WDATA_QUEUE
     be_wid, be_write, 
     //BE -> R_ID_QUEUE
@@ -235,7 +230,7 @@ modport barb_prop (
 
 modport wdq_prop (
     //AXI -> WDATA_QUEUE
-    input wstrb, wdq_slot, bwready,
+    input  wdq_slot, bwready,
     //BE -> WDATA_QUEUE
     be_wid, be_write, 
     //WDATA_QUEUE -> WRAPPER
