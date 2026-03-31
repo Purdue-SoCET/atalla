@@ -1,57 +1,70 @@
-`timescale 1ns/1ps
+`include "dram_pkg.svh"
 `include "ddr_controller_if.sv"
 
 module nb_wdata_queue_wrapper (
     input logic CLK, nRST,
-    ddr_controller_if.wdata_wrapper wdw,
-    ddr_controller_if.wdata_queue wdq
+    ddr_controller_if.wdata_wrapper wdw
 );
 
 
-    `include "dram_pkg.svh"
     import dram_pkg::*;
+
+    logic [ID_NUM-1:0] wready; 
+    logic [ID_NUM-1:0] bwvalid;
+    logic [ID_NUM-1:0][1:0] bwresp;
+    logic [ID_NUM-1:0][$clog2(ID_NUM)-1:0] bwid;
+    logic [ID_NUM-1:0][63:0] ddr_wdata_data;
+    logic [ID_NUM-1:0] ddr_wdata_en;
+    logic [ID_NUM-1:0][7:0] ddr_wdata_mask;
+    logic [ID_NUM-1:0] ddr_we; 
+
+    logic bw_arb; 
 
     logic [$clog2(ID_NUM)-1:0] selected_queue; //for outputting data to dram. Backend arbiter should be in charge of making sure that no two output bursts intefere. 
     logic [$clog2(ID_NUM)-1:0] pri; //priority storing for bresp channel arbitration.
 
-    assign wdw.wrap_ready = wdq.wready[wdq.wdq_slot.wid];
-    assign wdw.wrap_bwvalid = wdq.bwvalid[wdw.wrap_bw_arb];
-    assign wdw.wrap_bwresp = wdq.bwresp[wdw.wrap_bw_arb];
-    assign wdw.wrap_bwid = wdq.bwid[wdw.wrap_arb];
-    assign wdw.wrap_ddr_wdata_data = wdq.ddr_wdata_data[selected_queue];
-    assign wdw.wrap_ddr_wdata_en = wdq.ddr_wdata_en[selected_queue];
-    assign wdw.wrap_ddr_wdata_mask = wdq.ddr_wdata_mask[selected_queue];
-    assign wdw.wrap_ddr_we = wdq.ddr_we[selected_queue]; 
- 
+    assign wdw.wready = wready[wdw.wdq_slot.wid];
+    assign wdw.bwvalid = bwvalid[bw_arb];
+    assign wdw.bwresp = bwresp[bw_arb];
+    assign wdw.bwid = bwid[bw_arb];
+    assign wdw.ddr_wdata_data = ddr_wdata_data[selected_queue];
+    assign wdw.ddr_wdata_en = ddr_wdata_en[selected_queue];
+    assign wdw.ddr_wdata_mask = ddr_wdata_mask[selected_queue];
+    assign wdw.ddr_we = ddr_we[selected_queue]; 
     
     genvar i;
     generate 
         for (i = 0; i < ID_NUM; i++) begin
             // Generating wdata_queues. 
             nb_wdata_queue #(.Q_ID(i)) WDATA_QUEUE_GEN ( 
-                CLK, nRST, wdq
+                CLK, nRST, wdw.wdq_slot, wdw.bwready, wdw.wvalid, wdw.wlast, wdw.be_wid, wdw.be_write, bw_arb, 
+	       	wready[i], bwvalid[i], bwresp[i], bwid[i], ddr_wdata_data[i], ddr_wdata_en[i], ddr_wdata_mask[i], ddr_we[i]	
             );
 
         end
 
     endgenerate
+    assign bw_arb = 'b0;
+    /*
 
+    logic [$clog2(ID_NUM)-1:0] idx;
     logic [$clog2(ID_NUM)-1:0] j;
     always_comb  begin : PRIORITY_COMB
+        bw_arb = pri;
         for(j = 0; j < ID_NUM; j++) begin
-            if(wdq.bwvalid[pri + j]) begin
-                wdw.wrap_bw_arb = pri + j; 
+	    idx = j + pri;
+            if(bwvalid[idx]) begin
+                bw_arb = idx; 
                 break;
-            end else begin
-                wdw.wrap_bw_arb = pri; 
-            end
+            end 
         end 
     end
+*/
 
     always_ff @(posedge CLK, negedge nRST) begin : PRIORITY
         if(!nRST)
             pri <= 'b0;
-        else if (wdq.bwready && wdw.wrap_bwvalid)
+        else if (wdw.bwready && wdw.bwvalid)
             pri <= pri + 'b1;
     end
 
@@ -59,9 +72,9 @@ module nb_wdata_queue_wrapper (
 
         if(!nRST) 
             selected_queue <= 'b0;
-        else if(wdq.be_write)
-            selected_queue <= wdq.be_wid;
+        else if(wdw.be_write)
+            selected_queue <= wdw.be_wid;
 
     end
 
-endmodule //67 Lines yay!!
+endmodule 

@@ -1,6 +1,6 @@
 # --- Configuration ---
 set TB_FILE ./tb/unit/ddr_cntrl/testbench/nb_wdata_queue_tb.sv
-set TB_TOP  nb_wdata_queue_tb
+set TB_TOP nb_wdata_queue_tb
 
 if {![info exists TB_FILE]} {
     puts "ERROR: TB_FILE not set. Use:  vsim -c -do \"set TB_FILE <path>; set TB_TOP <top>; do test.tcl\""
@@ -31,11 +31,11 @@ set DESIGN_SRCS {
 
 # --- Verification / Bind Sources ---
 # If you decide to use the bind file or a aseparate property module, add it here
-# set VERIF_SRCS [list \
-    # ./ddr_cntrl/nb_barb_prop.sv \ 
-# ] $VERIF_SRCS
+set VERIF_SRCS [list \
+     ./tb/unit/ddr_cntrl/testbench/nb_wdata_queue_prop.sv \
+] 
 
-set SRC_FILES [concat $DESIGN_SRCS [list $TB_FILE]]
+set SRC_FILES [concat $DESIGN_SRCS $VERIF_SRCS [list $TB_FILE]]
 
 puts "INC_FLAGS  : $INC_FLAGS"
 puts "SRC_FILES  : $SRC_FILES"
@@ -49,7 +49,8 @@ vmap work work
 
 # --- Compilation ---
 # -mfcu (Multi-File Compilation Unit) is good here to resolve cross-file dependencies
-vlog -sv -mfcu {*}$INC_FLAGS {*}$SRC_FILES
+vlog -sv -compile_uselibs -cover bst -sv -pedanticerrors -hazards -lint -mfcu {*}$INC_FLAGS {*}$SRC_FILES
+
 
 puts "=============================================================="
 puts "Compilation complete. Launching simulation for $TB_TOP"
@@ -57,12 +58,23 @@ puts "=============================================================="
 
 # --- Elaboration & Simulation ---
 # +acc enables visibility for waveform debugging
-vsim -c -voptargs="+acc" work.$TB_TOP
+vsim -coverage -voptargs="+acc" work.$TB_TOP -onfinish stop;
+
+if {[file exists "./waves/nb_wdata_queue_tb.do"]} {
+    puts "Applying wave configurations from ./waves/nb_wdata_queue_tb.do"
+    do ./waves/nb_wdata_queue_tb.do
+} else {
+    puts "WARNING: No .do file found at ./waves/nb_wdata_queue_tb.do"
+    quit -f
+}
+
+puts "=============================================================="
+puts "Starting Simulation."
+puts "=============================================================="
+
 
 run -all
 
 puts "=============================================================="
 puts "Simulation finished."
 puts "=============================================================="
-
-quit -f

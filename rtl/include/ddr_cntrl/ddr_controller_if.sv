@@ -18,13 +18,9 @@ import dram_pkg::*;
 // AXI <-> WDQ
 wdq_slot_t wdq_slot;
 // CNTRL
-logic [7:0]                wstrb; // -> WQ
-logic [2:0]                wlen; // -> WQ
-logic                      wvalid; // -> WQ
-logic [ID_NUM-1:0]                     wready; // -> WRAPPER 
-logic [ID_NUM-1:0]                     bwvalid; // -> WRAPPER
-logic [1:0][ID_NUM-1:0]                bwresp; // -> WRAPPER
-logic [$clog2(ID_NUM)-1:0][ID_NUM-1:0] bwid; // -> WRAPPER
+//logic [7:0]                wstrb; // -> WQ
+//logic [2:0]                wlen; // -> WQ
+logic                      wvalid; // -> WQ 
 logic                      bwready; // -> WQ
 logic                      wlast; // -> WQ
 
@@ -90,23 +86,17 @@ logic                      rq_rready;
 logic [$clog2(ID_NUM)-1:0] rq_rid, rq_rvalid;
 logic [2:0]                rq_rlen; 
 
-// WDATA_QUEUE -> DRAM (THROUGH WRAPPER)
-logic [63:0][ID_NUM-1:0] ddr_wdata_data;
-logic    [ID_NUM-1:0]  ddr_wdata_en;
-logic [7:0][ID_NUM-1:0]  ddr_wdata_mask;
-logic [ID_NUM-1:0]       ddr_we;
-
 // WDATA_QUEUE_WRAPPER -> AXI 
-logic wrap_wready;
-logic wrap_bwvalid;
-logic [1:0] wrap_bwresp;
-logic [$clog2(ID_NUM)-1:0] wrap_bwid;
+logic wready;
+logic bwvalid;
+logic [1:0] bwresp;
+logic [$clog2(ID_NUM)-1:0] bwid;
 
 // WDATA_QUEUE_WRAPPER -> DRAM
-logic [63:0] wrap_ddr_wdata_data;
-logic  wrap_ddr_wdata_en;
-logic [7:0] wrap_ddr_wdata_mask;
-logic wrap_ddr_we;
+logic [63:0] ddr_wdata_data;
+logic  ddr_wdata_en;
+logic [7:0] ddr_wdata_mask;
+logic ddr_we;
 
 // WDATA_QUEUE_WRAPPER -> WDATA_QUEUE
 logic [$clog2(ID_NUM)-1:0] wrap_bw_arb;
@@ -121,9 +111,9 @@ modport axi_sub (
     // STQ -> AXI
     awready, 
     // WDATA_QUEUE -> AXI
-    wrap_wready, wrap_bwvalid, wrap_bwresp, wrap_bwid,
+    wready, bwvalid, bwresp, bwid,
     // AXI -> WDATA_QUEUE
-    output wstrb, wdq_slot, bwready,
+    output  wdq_slot, bwready,
     // AXI -> LQ
     arvalid, lq_slot, 
     // AXI -> STQ
@@ -189,41 +179,26 @@ modport read_id_queue (
     output rq_rid, rq_rvalid, rq_rlen
 );
 
-modport wdata_queue (
-    //AXI -> WDATA_QUEUE
-    input  wdq_slot, bwready, wvalid, wlast,
-    //BE -> WDATA_QUEUE
-    be_wid, be_write, 
-    //WDATA_WRAPPER -> WDATA_QUEUE 
-    wrap_bw_arb, 
-    //WDATA_QUEUE -> AXI
-    output wready, bwvalid, bwresp, bwid, 
-    //WDATA_QUEUE -> DRAM
-    ddr_wdata_data, ddr_wdata_en, ddr_wdata_mask, ddr_we
-    
-);
 
 modport wdata_wrapper (
 
-    // WDQ -> WRAPPER -> AXI
-    input wready, bwvalid, bwresp, bwid,
-    // WDQ -> WRAPPER -> DRAM
-    ddr_wdata_data, ddr_wdata_en, ddr_wdata_mask, ddr_we,
-    
-    // WRAPPER -> AXI
-    output wrap_wready, wrap_bwvalid, wrap_bwresp, wrap_bwid,
-    // WRAPPER -> DRAM
-    wrap_ddr_wdata_data, wrap_ddr_wdata_en, wrap_ddr_wdata_mask, wrap_ddr_we,
-    //WRAPPER -> WDATA_QUEUE
-    wrap_bw_arb
+    // AXI_WRITE_CHANNEL -> WRAPPER
+    input wdq_slot, bwready, wvalid, wlast, 
+    // BAACKEND_ARBITER -> WRAPPER
+    be_wid, be_write,
 
+    
+    // WRAPPER -> AXI_WRITE AND RESPONSE CHANNEL
+    output wready, bwvalid, bwresp, bwid,
+    // WRAPPER -> DRAM
+    ddr_wdata_data, ddr_wdata_en, ddr_wdata_mask, ddr_we
 );
 
 modport command_fsm (
     //BQ -> FSM
     input bq_ready, bq_bg, bq_b, bq_slot,
     //BE -> FSM
-    be_arb,
+    cg,
     //FSM -> BE 
     output be_r, be_c, be_b, be_bg, be_cmd, be_id, be_rlen, be_queue_ready
 );
@@ -255,7 +230,7 @@ modport barb_prop (
 
 modport wdq_prop (
     //AXI -> WDATA_QUEUE
-    input wstrb, wdq_slot, bwready,
+    input  wdq_slot, bwready,
     //BE -> WDATA_QUEUE
     be_wid, be_write, 
     //WDATA_QUEUE -> WRAPPER
