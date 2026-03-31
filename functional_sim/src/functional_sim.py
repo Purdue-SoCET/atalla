@@ -76,6 +76,7 @@ def run(mem: Memory, sregs: ScalarRegisterFile, mregs: ScalarRegisterFile, vregs
 
     gemm_weights = np.zeros((32, 32))
     num_weights = 0
+    _gemm_ran = False
 
     tile_id0 = 0
     tile_id1 = 1
@@ -418,6 +419,7 @@ def run(mem: Memory, sregs: ScalarRegisterFile, mregs: ScalarRegisterFile, vregs
                 # ------------ GEMM ------------------------------
                 if (m == "gemm.vv"):
                     gemm_count += 1
+                    _gemm_ran = True
                     v_in = vregs.read(inst['vs1'])
                     v_acc = vregs.read(inst['vs2'])
                     vregs.write(inst['vd'], gemm_weights @ v_in + v_acc)
@@ -447,16 +449,12 @@ def run(mem: Memory, sregs: ScalarRegisterFile, mregs: ScalarRegisterFile, vregs
             # ---------------- VI (WEIGHTS ONLY) ----------------
             elif (m == "lw.vi"):
                 src1 = vregs.read(inst['vs1'])
-    
-                if num_weights < 32:
-                    # Initial fill: Place at the next available slot from left to right
-                    gemm_weights[:, num_weights] = src1
-                    num_weights += 1
-                else:
-                    # Matrix is full: Shift everything to the right and insert at the left (index 0)
-                    # gemm_weights[:, 1:] moves columns 0-30 to positions 1-31
-                    gemm_weights[:, 1:] = gemm_weights[:, :-1]
-                    gemm_weights[:, 0] = src1
+                if _gemm_ran:
+                    gemm_weights[:] = 0
+                    num_weights = 0
+                    _gemm_ran = False
+                gemm_weights[:, num_weights % 32] = src1
+                num_weights += 1
             elif (m == "vmov.vts"):
                 src1 = vregs.read(inst['vs1'])
                 temp = fp32_to_hex(src1[inst['imm8']])
