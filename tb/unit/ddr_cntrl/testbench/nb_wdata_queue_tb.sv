@@ -13,10 +13,10 @@ module nb_wdata_queue_tb;
     
     ddr_controller_if ddrif0();
     // ddr_controller_if ddrif1;
-    nb_wdata_queue_wrapper DUT(CLK, nRST, ddrif0.wdata_wrapper, ddrif0.wdata_queue);
+    nb_wdata_queue_wrapper DUT(CLK, nRST, ddrif0.wdata_wrapper);
 
 
-    bind nb_wdata_queue nb_wdata_queue_prop wdata_queue_monitor(CLK, nRST, ddrif0.wdata_queue, ddrif0.wdata_wrapper);
+    // bind nb_wdata_queue nb_wdata_queue_prop wdata_queue_monitor(CLK, nRST,  ddrif0.wdata_wrapper);
 
 
     import dram_pkg::*;
@@ -67,9 +67,9 @@ module nb_wdata_queue_tb;
         logic wdata_en_correct; 
     } correct_output_t;
 
-    awrite_slot_t [7:0][NUM_REQS-1:0] input_vector; 
-    correct_output_t [7:0][NUM_REQS-1:0] correct_vector;
-    monitor_block_t [7:0][NUM_REQS-1:0] output_vector;
+    awrite_slot_t [NUM_REQS-1:0][7:0] input_vector; 
+    correct_output_t [NUM_REQS-1:0][7:0] correct_vector;
+    monitor_block_t [NUM_REQS-1:0][7:0] output_vector;
 
     logic [$clog2(ID_NUM)-1:0] random_id;
     logic [2:0] random_wlen;
@@ -83,17 +83,17 @@ module nb_wdata_queue_tb;
                 random_delay = $urandom_range(0,16);
 
                 for (int j = 0; j < 8; j++) begin
-                    input_vector[j][i].input_slot.wstrb = $urandom_range(0, 256);
-                    input_vector[j][i].input_slot.wdata = {$urandom(), $urandom()};
-		    correct_vector[j][i].data_out_correct = input_vector[j][i].input_slot.wdata;
-                    correct_vector[j][i].wdata_en_correct = 1'b1;
-                    input_vector[j][i].input_slot.wid = random_id;
-                    input_vector[j][i].input_slot.wlen = random_wlen;
-                    input_vector[j][i].delay = random_delay;
+                    input_vector[i][j].input_slot.wstrb = $urandom_range(0, 256);
+                    input_vector[i][j].input_slot.wdata = {$urandom(), $urandom()};
+		    correct_vector[i][j].data_out_correct = input_vector[i][j].input_slot.wdata;
+                    correct_vector[i][j].wdata_en_correct = 1'b1;
+                    input_vector[i][j].input_slot.wid = random_id;
+                    input_vector[i][j].input_slot.wlen = random_wlen;
+                    input_vector[i][j].delay = random_delay;
                     if(j > random_wlen) begin
-                        correct_vector[j][i].mask_out_correct = 8'b1111_1111;
+                        correct_vector[i][j].mask_out_correct = 8'b1111_1111;
                     end else begin
-                        correct_vector[j][i].mask_out_correct = input_vector[j][i].input_slot.wstrb;
+                        correct_vector[i][j].mask_out_correct = input_vector[i][j].input_slot.wstrb;
                     end
                     
                 end
@@ -107,16 +107,16 @@ module nb_wdata_queue_tb;
         input case_num; 
         begin
             @(posedge CLK);
-            ddrif0.wdq_slot.wid = input_vector[0][case_num].input_slot.wid;
-            ddrif0.wdq_slot.wlen = input_vector[0][case_num].input_slot.wlen;
+            ddrif0.wdq_slot.wid = input_vector[case_num][0].input_slot.wid;
+            ddrif0.wdq_slot.wlen = input_vector[case_num][0].input_slot.wlen;
             @(posedge CLK);
             for(int i = 0; i < 8 ; i++) begin
                 ddrif0.wvalid = 1'b1;
-                ddrif0.wdq_slot.wdata = input_vector[i][case_num].input_slot.wdata;
-                ddrif0.wdq_slot.wstrb = input_vector[i][case_num].input_slot.wstrb; 
+                ddrif0.wdq_slot.wdata = input_vector[case_num][i].input_slot.wdata;
+                ddrif0.wdq_slot.wstrb = input_vector[case_num][i].input_slot.wstrb; 
 
-                ddrif0.wlast = (i == input_vector[0][case_num].input_slot.wlen);
-                if(i == input_vector[0][case_num].input_slot.wlen) begin
+                ddrif0.wlast = (i == input_vector[case_num][i].input_slot.wlen);
+                if(i == input_vector[case_num][i].input_slot.wlen) begin
                     break; 
                 end
                 @(posedge CLK);
@@ -131,7 +131,7 @@ module nb_wdata_queue_tb;
         input case_num;
         begin 
             @(posedge CLK);
-            ddrif0.be_wid = input_vector[0][case_num].input_slot.wid;
+            ddrif0.be_wid = input_vector[case_num][0].input_slot.wid;
             ddrif0.be_write = 1'b1;
             @(posedge CLK);
             ddrif0.be_wid = 1'b0;
@@ -143,7 +143,7 @@ module nb_wdata_queue_tb;
         input case_num;
         begin 
             @(posedge CLK);
-            for(int i = 0; i < input_vector[0][case_num].delay; i++) begin
+            for(int i = 0; i < input_vector[case_num][0].delay; i++) begin
                 @(posedge CLK);
             end
             ddrif0.bwready = 1'b1;
@@ -179,8 +179,8 @@ module nb_wdata_queue_tb;
             #(PERIOD/5);
             for(int i = 0; i < 8; i++) begin
 
-                output_vector[i][case_num].data_out = ddrif0.wrap_ddr_wdata_data;
-                output_vector[i][case_num].mask_out = ddrif0.wrap_ddr_wdata_mask;
+                output_vector[case_num][i].data_out = ddrif0.wrap_ddr_wdata_data;
+                output_vector[case_num][i].mask_out = ddrif0.wrap_ddr_wdata_mask;
                 if(!ddrif0.wrap_ddr_wdata_en) begin
                     $display("case number %d failed. ddr_wdata_en not high when it should be.", case_num);
                 end
@@ -196,14 +196,14 @@ module nb_wdata_queue_tb;
             for(int i = 0; i < NUM_REQS; i++) begin
                 for(int j = 0; j < 8; j++) begin
                     num_tests = num_tests + 2;
-                    if(output_vector[j][i].data_out == correct_vector[j][i].data_out_correct) begin
+                    if(output_vector[i][j].data_out == correct_vector[i][j].data_out_correct) begin
                         $display("Test %d data passed.", i);
                         num_passed++;
                     end else begin
                         $display("Test %d data failed", i);
                     end
 
-                    if(output_vector[j][i].mask_out == correct_vector[j][i].mask_out_correct) begin
+                    if(output_vector[i][j].mask_out == correct_vector[i][j].mask_out_correct) begin
                         $display("Test %d mask passed.", i); 
                         num_passed++;
                     end else begin
