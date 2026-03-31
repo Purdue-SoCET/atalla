@@ -75,3 +75,9 @@ puts "Starting Simulation..."
 puts "=============================================================="
 
 run -all
+
+# Save all coverage (Code + Functional) to a Unified Coverage Data Base
+coverage save nbarb_sim.ucdb
+
+# View the functional coverage summary in the transcript
+vcover report -cvg -details nbarb_sim.ucdb
