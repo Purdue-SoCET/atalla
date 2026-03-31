@@ -68,7 +68,7 @@ logic [BANK_BITS-1:0][$clog2(BANK_NUM)-1:0]       be_b; // 2*16
 logic [ROW_BITS-1:0][BANK_NUM-1:0]                be_r; // 15*16
 logic [COLUMN_BITS-1:0][BANK_NUM-1:0]             be_c; // 10*16
 logic [$clog2(ID_NUM)-1:0][$clog2(BANK_NUM)-1:0]  be_id; // 4*16
-logic [BANK_NUM-1:0]                      cg;
+logic [BANK_NUM-1:0]                      be_arb;
 logic [BANK_NUM-1:0]                      be_queue_ready;
 logic [2:0]                                       be_len;
 fsm_t [BANK_NUM-1:0]                              be_cmd; 
@@ -221,7 +221,7 @@ modport barb_prop (
     //FSM -> BE
     input be_r, be_c, be_b, be_bg, be_cmd, be_id, be_queue_ready,
     //BE -> FSM
-    cg, 
+    be_arb, 
     //BE -> WDATA_QUEUE
     be_wid, be_write, 
     //BE -> R_ID_QUEUE
