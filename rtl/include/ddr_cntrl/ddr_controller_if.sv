@@ -207,7 +207,7 @@ modport backend_arb (
     //FSM -> BE
     input be_r, be_c, be_b, be_bg, be_cmd, be_id, be_queue_ready, be_len,
     //BE -> FSM
-    output cg, 
+    output be_arb, 
     //BE -> WDATA_QUEUE
     be_wid, be_write, 
     //BE -> R_ID_QUEUE
