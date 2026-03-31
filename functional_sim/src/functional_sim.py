@@ -216,6 +216,12 @@ def run(mem: Memory, sregs: ScalarRegisterFile, mregs: ScalarRegisterFile, vregs
             elif (m == "scpad.ld"):
                 sdma_count += 1
                 mem_ops += 1
+                if inst.get('sdma_ctl_from_reg'):
+                    ctl = sregs.read(inst['rs3'])
+                    inst = dict(inst)
+                    inst['sid'] = (ctl >> 30) & 0x3
+                    inst['num_rows'] = (ctl >> 25) & 0x1F
+                    inst['num_cols'] = (ctl >> 20) & 0x1F
                 if inst['sid'] == 0:
                     if(inst['rs1/rd1'] in tileID0Dict.keys()):
                         localID = tileID0Dict[inst['rs1/rd1']]
@@ -236,6 +242,12 @@ def run(mem: Memory, sregs: ScalarRegisterFile, mregs: ScalarRegisterFile, vregs
             elif (m == "scpad.st"):
                 sdma_count += 1
                 mem_ops += 1
+                if inst.get('sdma_ctl_from_reg'):
+                    ctl = sregs.read(inst['rs3'])
+                    inst = dict(inst)
+                    inst['sid'] = (ctl >> 30) & 0x3
+                    inst['num_rows'] = (ctl >> 25) & 0x1F
+                    inst['num_cols'] = (ctl >> 20) & 0x1F
                 if inst['sid'] == 0:
                     if(inst['rs1/rd1'] in tileID0Dict.keys()):
                         localID = tileID0Dict[inst['rs1/rd1']]

@@ -173,15 +173,27 @@ def decode_instruction(instr):
             "rc_id_is_reg": get_bits(instr, 40, 40)
         })
 
-    elif instr_type == "SDMA": 
-        decoded.update({
-            "rs1/rd1": get_bits(instr, 14, 7),
-            "rs2": get_bits(instr, 22, 15),
-            "num_cols": get_bits(instr, 27, 23),
-            "num_rows": get_bits(instr, 32, 28),
-            "sid": get_bits(instr, 33, 33)
-
-        })
+    elif instr_type == "SDMA":
+        sdma_from_reg = get_bits(instr, 34, 34)
+        if sdma_from_reg:
+            decoded.update({
+                "rs1/rd1": get_bits(instr, 14, 7),
+                "rs2": get_bits(instr, 22, 15),
+                "rs3": get_bits(instr, 30, 23),
+                "sdma_ctl_from_reg": 1,
+                "num_cols": 0,
+                "num_rows": 0,
+                "sid": 0,
+            })
+        else:
+            decoded.update({
+                "rs1/rd1": get_bits(instr, 14, 7),
+                "rs2": get_bits(instr, 22, 15),
+                "num_cols": get_bits(instr, 27, 23),
+                "num_rows": get_bits(instr, 32, 28),
+                "sid": get_bits(instr, 33, 33),
+                "sdma_ctl_from_reg": 0,
+            })
 
     elif instr_type == "MTS": 
         decoded.update({
