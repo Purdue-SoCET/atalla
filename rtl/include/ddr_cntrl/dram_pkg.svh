@@ -1,5 +1,5 @@
-`ifndef DRAM_PKG_SV
-`define DRAM_PKG_SV
+`ifndef DRAM_PKG_SVH
+`define DRAM_PKG_SVH
 
 package dram_pkg;
 
@@ -41,8 +41,8 @@ package dram_pkg;
     parameter tRAS = 45; //tns 1.5ns -> 25 cycles
     parameter tRC = tRAS + tRP;
     parameter tRL = tAL + tCL;        // Read Latency
-    parameter tCCD_L;
-    parameter tCCD_S; 
+    parameter tCCD_L = 0; // TODO: ADD REAL
+    parameter tCCD_S = 0; // TODO: ADD REAL
     //Tri debug
 
     parameter tWR = 12;//tWR should be 10 but work for 12 //tCK 1.5ns -> 10, tCK 1.25ns 12 cycles, tCK 0.833ns 18 cycles
@@ -58,6 +58,9 @@ package dram_pkg;
     parameter tZQinitc      = 1024;
     parameter tMOD          = 25;
 
+    // BARB
+    parameter tFAW          = 1; // TODO: ADD REAL
+
     // word_t
     typedef logic [WORD_W-1:0] word_t;
 
@@ -67,6 +70,8 @@ package dram_pkg;
         x8  = 2'b01,
         x16 = 2'b10
     } configs_t;
+
+
 
     typedef enum logic [4:0] {
         POWER_UP,
@@ -95,6 +100,22 @@ package dram_pkg;
         REFRESHING
     } dram_state_t; 
 
+    //CMD FSM States
+    typedef enum logic [3:0] {
+        PWR_UP,
+        FSM_IDLE,
+        ACT,
+        ACTing,
+        FSM_READ,
+        READing,
+        FSM_WRITE,
+        WRITEing,
+        PRE,
+        PREing,
+        REF,
+        REFing
+    } fsm_t;
+
     // {cs, act, ras, cas, we}
     typedef enum logic [4:0] {
         POWER_UP_PRG  = 5'b01111,
@@ -108,6 +129,31 @@ package dram_pkg;
         DESEL_CMD     = 5'b11000
     } cmd_t;
 
+
+// BQ -> FSM struct
+typedef struct packed {
+    logic [ROW_BITS-1:0]       row;
+    logic [COLUMN_BITS-1:0]    column;
+    logic                      write;
+    logic [$clog2(ID_NUM)-1:0] id_addr;
+} bq_slot_t;
+
+// AXI -> LQ/STQ (LQ/STQ have the same struct, but diff signal names)
+typedef struct packed {
+    logic [3:0]                  len;
+    logic [$clog2(ID_NUM) - 1:0] id;
+    logic [31:0]                 addr;
+} lstq_slot_t;
+
+// AXI->WDQ
+typedef struct packed {
+    logic [7:0] wstrb; // -> WQ
+    logic [63:0] wdata; // -> WQ
+    logic [$clog2(ID_NUM)-1:0] wid; // WQ
+    logic [2:0] wlen;
+} wdq_slot_t; 
+
+
 endpackage
 
-`endif // DRAM_PKG_SV
+`endif // DRAM_PKG_SVH
