@@ -115,3 +115,33 @@ void dpi_sysarr_clear_psums()
     if (!g_sa) return;
     g_sa->clear_psums();
 }
+
+void dpi_sysarr_set_weight_elem(int elem, unsigned short val)
+{
+    if (!g_sa || elem < 0 || elem >= 32) return;
+    g_sa->sys_input_if.weight_vec[elem] = val;
+}
+
+void dpi_sysarr_set_activation_elem(int elem, unsigned short val)
+{
+    if (!g_sa || elem < 0 || elem >= 32) return;
+    g_sa->sys_input_if.activation_vec[elem] = val;
+}
+
+void dpi_sysarr_set_weight_valid(svBit valid)
+{
+    if (!g_sa) return;
+    g_sa->sys_input_if.weight_valid = valid;
+}
+
+void dpi_sysarr_set_activation_valid(svBit valid)
+{
+    if (!g_sa) return;
+    g_sa->sys_input_if.activation_valid = valid;
+}
+
+uint16_t dpi_sysarr_get_output_elem(int elem)
+{
+    if (!g_sa || elem < 0 || elem >= 32) return 0;
+    return g_sa->sys_output_if.output_vec[elem];
+}

@@ -115,7 +115,8 @@ void schedular::decode(packet pkt)
         bool div = (instr.opcode == 53 || instr.opcode == 65 || instr.opcode == 83);
         bool exp = instr.opcode == 66;
         bool sqrt = instr.opcode == 67;
-        sc_reduction_signals.reduction_mode = (instr.opcode == 71 || instr.opcode == 72 || instr.opcode == 73);
+        if (instr.opcode == 71 || instr.opcode == 72 || instr.opcode == 73)
+            sc_reduction_signals.reduction_mode = 1;
 
         if (add)
         {
@@ -226,15 +227,24 @@ void schedular::decode(packet pkt)
         sc_sp_signals[0].rc = instr.rc;
         sc_sp_signals[0].rcid = instr.rc_id;
         sc_sp_signals[0].valid_in = 1;
-
+        sc_sp_signals[0].wen = 0;
     }
     else if (instr.opcode == 78) //veggie store
     {
+        sc_sp_signals[0].vd = instr.vd;
+        sc_sp_signals[0].rs1 = instr.rs1;
+        sc_sp_signals[0].num_cols = instr.num_cols;
+        sc_sp_signals[0].num_rows = instr.num_rows;
+        sc_sp_signals[0].sid = instr.sid;
+        sc_sp_signals[0].rc = instr.rc;
+        sc_sp_signals[0].rcid = instr.rc_id;
         sc_sp_signals[0].valid_in = 1;
+        sc_sp_signals[0].wen = 1;
     }
     else if (instr.opcode == 47)
     {
         sc_sp_signals[0].valid_in = 0;
+        sc_sp_signals[0].wen = 0;
         sc_sys_signals.valid_in = 0;
         sc_sys_signals.ren[0] = 0;
         sc_sys_signals.ren[1] = 0;
@@ -246,6 +256,7 @@ void schedular::decode(packet pkt)
     if (instr.opcode == 47)
     {
         sc_sp_signals[1].valid_in = 0;
+        sc_sp_signals[1].wen = 0;
     }
     else if (instr.opcode == 77)
     {
@@ -257,10 +268,19 @@ void schedular::decode(packet pkt)
         sc_sp_signals[1].rc = instr.rc;
         sc_sp_signals[1].rcid = instr.rc_id;
         sc_sp_signals[1].valid_in = 1;
+        sc_sp_signals[1].wen = 0;
     }
     else if (instr.opcode == 78)
     {
+        sc_sp_signals[1].vd = instr.vd;
+        sc_sp_signals[1].rs1 = instr.rs1;
+        sc_sp_signals[1].num_cols = instr.num_cols;
+        sc_sp_signals[1].num_rows = instr.num_rows;
+        sc_sp_signals[1].sid = instr.sid;
+        sc_sp_signals[1].rc = instr.rc;
+        sc_sp_signals[1].rcid = instr.rc_id;
         sc_sp_signals[1].valid_in = 1;
+        sc_sp_signals[1].wen = 1;
     }
 
 }
@@ -300,7 +320,7 @@ void schedular::tick()
 
 void schedular::dump_program_queue()
 {
-    std::queue<packet> temp_queue = inst_queue; // copy so we don't destroy the original
+    std::queue<packet> temp_queue = inst_queue;
 
     int pkt_num = 0;
     while (!temp_queue.empty()) {
@@ -400,6 +420,7 @@ void schedular::reset()
         sc_sp_signals[i].rc = 0;
         sc_sp_signals[i].rcid = 0;
         sc_sp_signals[i].valid_in = 0;
+        sc_sp_signals[i].wen = 0;
     }
 
     // SC -> VEG

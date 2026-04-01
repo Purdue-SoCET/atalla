@@ -49,6 +49,8 @@ void dpi_get_lane_v2_broadcast(int idx, svOpenArrayHandle arr);
 svBit dpi_get_reduction_mode();
 uint8_t dpi_get_reduction_imm();
 
+uint8_t dpi_get_sp_wen(int idx);
+uint16_t dpi_get_lane_v2_broadcast_elem(int idx, int elem);
 
 svBit dpi_get_sys_valid_in();
 uint8_t dpi_get_sys_vd();

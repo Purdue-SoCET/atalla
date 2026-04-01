@@ -37,6 +37,12 @@ void dpi_scratchpad_tick(svBit rst_n);
 
 svBit dpi_scratchpad_get_valid(int port);
 
+void dpi_scratchpad_write_elem(int port, int elem, unsigned short val);
+uint16_t dpi_scratchpad_read_elem(int port, int elem);
+
+void dpi_scratchpad_preload_row(int sp_id, uint8_t addr, uint8_t row_id, uint8_t num_cols);
+void dpi_scratchpad_preload_row_val(int sp_id, uint8_t addr, uint8_t row_id, uint8_t num_cols, unsigned short val);
+
 void dpi_scratchpad_get_rdata(int port, svOpenArrayHandle arr);
 
 #ifdef __cplusplus
