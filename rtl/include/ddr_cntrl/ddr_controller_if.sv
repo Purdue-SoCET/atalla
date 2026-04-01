@@ -35,6 +35,9 @@ logic                      wlast; // -> WQ
 lstq_slot_t  lq_slot; // -> LQ
 // CNTRL
 logic       arvalid; // -> LQ
+logic [31:0]                araddr;  // -> LQ
+logic [$clog2(ID_NUM)-1:0]  arid;    // -> LQ
+logic [2:0]                 arlen;   // -> LQ
 logic       arready; // -> AXI
 logic       rvalid;  // -> AXI 
 logic [1:0] rresp;   // -> AXI 
@@ -44,19 +47,27 @@ logic       rready;  // -> LQ
 lstq_slot_t stq_slot; // -> STQ
 // CNTRL
 logic awvalid; // -> STQ
+logic [31:0]                awaddr;  // -> STQ
+logic [$clog2(ID_NUM)-1:0]  awid;    // -> STQ
+logic [2:0]                 awlen;   // -> STQ
 logic awready; // -> AXI
 
 // STQ/LQ <-> FRONTEND ARBITER
 logic request_l, request_s; // -> ARB
-logic address_l, address_s; // -> ARB
 logic grant_l,   grant_s;   // -> STQ
 
 // FRONTEND ARBITER <-> BQ
 bq_slot_t                  fe_bq_slot; // -> BQ
 bq_slot_t [BANK_NUM-1:0]   bq_slot; // -> FSM
-// CONTROL SIGNALS
+// DATA SIGNALS
 logic [BANK_GROUP_BITS-1:0]  fe_bg; // -> BQ
 logic [BANK_BITS-1:0]        fe_b;  // -> BQ
+logic [ROW_BITS-1:0]         fe_r;  // -> BQ
+logic [COLUMN_BITS-1:0]      fe_c;  // -> BQ
+logic                        fe_write; // -> BQ
+logic [$clog2(ID_NUM)-1:0]   fe_id; // -> BQ
+logic [3:0]                  fe_len; // -> BQ
+// CONTROL SIGNALS
 logic                        fe_write_bq; // -> BQ
 logic [BANK_NUM-1:0]         fe_full; // -> FE & FSM
 
@@ -142,32 +153,32 @@ modport axi_sub (
 
 modport stq ( 
     // AXI -> STQ
-    input awvalid, stq_slot,
+    input awvalid, awaddr, awid, awlen,
     // ARB -> STQ
     grant_s, 
     // STQ -> AXI
     output awready,
     // STQ -> ARB
-    address_s, request_s  
+    stq_slot, request_s  
 );
 
 modport lq (
     //AXI -> LQ
-    input arvalid, lq_slot, 
+    input arvalid, araddr, arid, arlen, 
     //ARB -> LQ
     grant_l, 
     //LQ -> AXI
     output arready, 
-    //STQ -> ARB
-    address_l, request_l
+    //LQ -> ARB
+    lq_slot, request_l
 
 );
 
 modport arb (
     //STQ -> ARB
-    input request_s, address_s,
+    input request_s, stq_slot,
     //LQ -> ARB
-    request_l, address_l,
+    request_l, lq_slot,
     //BQ -> ARB
     fe_full, 
     //ARB -> LQ
@@ -175,7 +186,7 @@ modport arb (
     //ARB -> STQ
     grant_s, 
     //ARB -> BQ
-    fe_bg, fe_b, fe_bq_slot, fe_write_bq
+    fe_bg, fe_b, fe_r, fe_c, fe_write, fe_id, fe_len, fe_write_bq
 );
 
 modport bq (
@@ -283,6 +294,24 @@ modport wdq_prop (
     wready, bwvalid, bwresp, bwid, 
     //WDATA_QUEUE -> WRAPPER
     ddr_wdata_data, ddr_wdata_en, ddr_wdata_mask, ddr_we  
+);
+
+modport frontend_tb (
+    // TB drives AXI write channel -> STQ
+    output awvalid, awaddr, awid, awlen,
+    // TB drives AXI read channel -> LQ
+    arvalid, araddr, arid, arlen,
+    // TB emulates BQ backpressure
+    fe_full,
+    // TB monitors STQ -> AXI
+    input awready,
+    // TB monitors LQ -> AXI
+    arready,
+    // TB monitors internal queue -> arb
+    request_l, request_s, lq_slot, stq_slot,
+    grant_l, grant_s,
+    // TB monitors ARB -> BQ
+    fe_bg, fe_b, fe_r, fe_c, fe_write, fe_id, fe_len, fe_write_bq
 );
 
 endinterface

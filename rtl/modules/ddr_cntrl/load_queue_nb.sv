@@ -9,14 +9,8 @@
 //     address_l, request_l, len_l, id_l
 
 //Front End Load Queue
-`include "ddr_controller_if.vh"
-`include "dram_pkg.vh"
-
-typedef struct packed {
-    logic [3:0] len;
-    logic [$clog2(ID_NUM) - 1:0] id;
-    logic [31:0] addr;
-} lq_slot_t;
+`include "ddr_controller_if.sv"
+`include "dram_pkg.svh"
 
 module load_queue (
     input logic CLK, nRST, 
@@ -26,9 +20,9 @@ module load_queue (
     import dram_pkg::*;
     // arsize & arburst unused here //
 
-    lq_slot_t [LQ_DEPTH - 1:0] lq_reg, lq_reg_n;
-    logic [$clog(LQ_DEPTH) - 1:0] head_ptr, head_ptr_n, tail_ptr, tail_ptr_n;
-    logic [$clog(LQ_DEPTH):0] occ, occ_n;
+    lstq_slot_t [LQ_DEPTH - 1:0] lq_reg, lq_reg_n;
+    logic [$clog2(LQ_DEPTH) - 1:0] head_ptr, head_ptr_n, tail_ptr, tail_ptr_n;
+    logic [$clog2(LQ_DEPTH):0] occ, occ_n;
     logic arready_n;
     logic request_n;
 
@@ -54,6 +48,7 @@ module load_queue (
 
     always_comb begin
         arready_n = 0;
+        lq.lq_slot = '0;
         lq_reg_n = lq_reg;
         head_ptr_n = head_ptr;
         tail_ptr_n = tail_ptr;
@@ -61,7 +56,7 @@ module load_queue (
         request_n = lq.request_l;
 
         //write logic
-        if(lq.arvalid && (occ != LQ_DEPTH)) begin 
+        if(lq.arvalid && !lq.arready && (occ != LQ_DEPTH)) begin 
             arready_n = 1;
         end  
 
@@ -79,9 +74,7 @@ module load_queue (
 
         //read logic
         if(lq.grant_l && lq.request_l) begin
-            lq.address_l = lq_reg[head_ptr].addr;
-            lq.id_l = lq_reg[head_ptr].id;
-            lq.len_l = lq_reg[head_ptr].len;
+            lq.lq_slot = lq_reg[head_ptr];
             occ_n = occ - 1;
             if(head_ptr + 1 == LQ_DEPTH) begin
                 head_ptr_n = '0;

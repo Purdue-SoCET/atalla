@@ -14,16 +14,9 @@
 // );
 
 // Front End Arbiter //
-`include "ddr_controller_if.vh"
+`include "ddr_controller_if.sv"
 `include "address_mapper_if.vh"
-`include "dram_pkg.vh"
-
-typedef struct packed {
-    logic [3:0] len;
-    logic [$clog2(ID_NUM) - 1:0] id;
-    logic [31:0] addr;
-    logic valid;
-} buf_slot_t;
+`include "dram_pkg.svh"
 
 module frontend_arb (
     input logic CLK, nRST, 
@@ -32,6 +25,14 @@ module frontend_arb (
 
     // types import //
     import dram_pkg::*;
+
+    typedef struct packed {
+        logic [3:0] len;
+        logic [$clog2(ID_NUM) - 1:0] id;
+        logic [31:0] addr;
+        logic valid;
+    } buf_slot_t;
+
     address_mapper_if amif();
 
     buf_slot_t buff_l, buff_ln, buff_s, buff_sn;
@@ -41,21 +42,15 @@ module frontend_arb (
     logic [1:0] rqst_select;
     assign rqst_select = {arb.request_l, arb.request_s};
 
-    logic [1:0][31:0] addr_sel;
-    assign addr_sel = {arb.address_l, arb.address_s};
-
-    logic [1:0][3:0] len_sel;
-    assign len_sel = {arb.len_l, arb.len_s};
-
-    logic [1:0][$clog2(ID_NUM) - 1:0] id_sel;
-    assign id_sel = {arb.id_l, arb.id_s};
+    lstq_slot_t [1:0] slot_sel;
+    assign slot_sel = {arb.lq_slot, arb.stq_slot};
 
     // mapper instance //
     // modport addr_mapper (
     //     input  address, configs,
     //     output rank, BG, bank, row, col, offset, ignore
     // );
-    address_mapper AM (amif);
+    addr_mapper AM (amif);
 
     always_ff @ (posedge CLK, negedge nRST) begin
         if(~nRST) begin
@@ -76,6 +71,18 @@ module frontend_arb (
         buff_sn = buff_s;
         pri_n = pri;
         pri_bq_n = pri_bq;
+
+        // Default outputs
+        arb.grant_l = 0;
+        arb.grant_s = 0;
+        arb.fe_write_bq = 0;
+        arb.fe_bg = '0;
+        arb.fe_b = '0;
+        arb.fe_r = '0;
+        arb.fe_c = '0;
+        arb.fe_write = 0;
+        arb.fe_id = '0;
+        arb.fe_len = '0;
 
         amif.address = (pri_bq) ? buff_s.addr : buff_l.addr;
         amif.configs = x8;
@@ -98,7 +105,7 @@ module frontend_arb (
             arb.fe_c = amif.col;
             arb.fe_write = 1;
             arb.fe_len = buff_s.len;
-            arb.fe_if = buff_s.id;
+            arb.fe_id = buff_s.id;
 
             buff_sn.valid = 0;
             arb.fe_write_bq = 1;
@@ -111,9 +118,9 @@ module frontend_arb (
             arb.fe_c = amif.col;
             arb.fe_write = 0;
             arb.fe_len = buff_l.len;
-            arb.fe_if = buff_l.id;
+            arb.fe_id = buff_l.id;
 
-            buff_sn.valid = 0;
+            buff_ln.valid = 0;
             arb.fe_write_bq = 1;
         end
 
@@ -121,17 +128,17 @@ module frontend_arb (
         if(~pri && rqst_select[~pri] && ~buff_l.valid) begin
             arb.grant_l = 1;
             buff_ln.valid = 1;
-            buff_ln.addr = addr_sel[0];
-            buff_ln.id = id_sel[0];
-            buff_ln.len = len_sel[0];
+            buff_ln.addr = slot_sel[1].addr;
+            buff_ln.id = slot_sel[1].id;
+            buff_ln.len = slot_sel[1].len;
         end
 
-        if(pri && rqst_select[pri] && ~buff_s.valid) begin
+        if(pri && rqst_select[~pri] && ~buff_s.valid) begin
             arb.grant_s = 1;
             buff_sn.valid = 1;
-            buff_sn.addr = addr_sel[0];
-            buff_sn.id = id_sel[0];
-            buff_sn.len = len_sel[0];
+            buff_sn.addr = slot_sel[0].addr;
+            buff_sn.id = slot_sel[0].id;
+            buff_sn.len = slot_sel[0].len;
         end
     end
 endmodule
