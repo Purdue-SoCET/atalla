@@ -1061,6 +1061,30 @@ def greedy_pack(
             if ready_time[i] > current_cycle:
                 continue
 
+            # Dynamic ordering guard: if an earlier unscheduled instruction
+            # touches overlapping registers, do not let this instruction leapfrog
+            # it. Static ready_time alone is not sufficient when earlier ops are
+            # deferred by same-packet hazards.
+            blocked_by_earlier = False
+            src_set = set(srcs)
+            dst_set = set(dsts)
+            for j in range(i):
+                if scheduled[j]:
+                    continue
+                _, j_dsts, j_srcs, _ = instructions[j]
+                j_dst_set = set(j_dsts)
+                j_src_set = set(j_srcs)
+
+                if j_dst_set & (src_set | dst_set):
+                    blocked_by_earlier = True
+                    break
+                if dst_set & j_src_set:
+                    blocked_by_earlier = True
+                    break
+
+            if blocked_by_earlier:
+                continue
+
             if _is_control_op(op):
                 if any(not scheduled[j] for j in range(i)):
                     break

@@ -91,8 +91,8 @@ BASE_LATENCY = {
 MNEMONIC_LATENCY = {
     "vreg.ld": 3,
     "vreg.st": 1,
-    "scpad.ld": 3,
-    "scpad.st": 1,
+    "scpad.ld": 520, # 512 for DDR, 8 for AXI
+    "scpad.st": 520, # 512 for DDR, 8 for AXI
     "lw.vi": 3,
 }
 
