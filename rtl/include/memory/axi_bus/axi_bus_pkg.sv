@@ -47,10 +47,10 @@ package axi_bus_pkg;
     localparam int MID_BID        = MID + BID;
 
     // READ Arbiter Width
-    localparam int ARGRANT        = 1 + ARID; // 1 valid bit and then bits representing which master
+    localparam int ARGRANT        = 1 + MID; // 1 valid bit and then bits representing which master
 
     // WRITE Arbiter Width
-    localparam int AWGRANT        = 1 + AWID; // 1 valid bit and then bits representing which master
+    localparam int AWGRANT        = 1 + MID; // 1 valid bit and then bits representing which master
 
     // AR Manager FIFO Width
     localparam int AR_DEPTH       = NUM_U_READS;
