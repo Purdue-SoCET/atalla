@@ -132,7 +132,7 @@ module mac_grid #(
                 if (m == 0) begin : top_row
                     assign mac_ifs[m*N + n].in_accumulate = partial_in[DW_ACC*n +: DW_ACC];
                 end else begin : accum_row
-                    assign mac_ifs[m*N + n].in_accumulate = MAC_outputs[m-1][n];
+                    assign mac_ifs[m*N + n].in_accumulate = nxt_MAC_outputs[m-1][n];
                 end
 
                 // Hold on ready: capture new result when value_ready fires, hold otherwise.

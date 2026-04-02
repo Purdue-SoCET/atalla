@@ -17,7 +17,7 @@ module sysarr_control_unit #(
     output logic ready_in
 );
 
-    localparam int SKEW = ADD_2_INPUT_LATENCY;
+    localparam int SKEW = 1;
     localparam int SR_LEN = (N - 1) * SKEW;
 
     // Credits: how many more input vectors we can accept
