@@ -20,6 +20,7 @@ package atalla_isa_pkg;
   parameter SCALAR_REG_W  = REG_W;
   parameter VECTOR_REG_W  = 8;
   parameter MASK_REG_W    = 4;
+  parameter VECTOR_LEN   = 32;
 
   parameter IMM_W_I       = 12;
   parameter IMM_W_MI      = 25;
@@ -48,6 +49,8 @@ package atalla_isa_pkg;
   typedef logic [INST_W-1:0] instr_t;
   typedef logic [15:0]       half_word_t;
   typedef logic [PC_WIDTH-1:0] address_t;
+  typedef half_word_t [VECTOR_LEN-1:0] vector_t; // 32x16b vector
+  typedef logic [VECTOR_LEN-1:0] mask_t; // 32 bit mask
 
   // ============================================================
   // 4. OPCODES (FULL SUPERSET – SCALAR + VECTOR + SDMA)
@@ -63,7 +66,7 @@ package atalla_isa_pkg;
 
     // ---- BF16 Scalar ----
     ADD_BF=7'd14, SUB_BF=7'd15, MUL_BF=7'd16,
-    DIV_BF=7'd17, SLT_BF=7'd18, SLTU_BF=7'd19,
+    RCP_BF=7'd17, SLT_BF=7'd18, SLTU_BF=7'd19,
     STBF_S=7'd20, BFTS_S=7'd21,
 
     // ---- Scalar Immediate ----
@@ -82,7 +85,7 @@ package atalla_isa_pkg;
     LUI_S=7'd46,
     NOP_S=7'd47,
     HALT_S=7'd48,
-    BARRIER_S=7'd49,
+    // BARRIER_S=7'd49,
 
     // ---- Vector VV ----
     ADD_VV=7'd50, SUB_VV=7'd51, MUL_VV=7'd52,
@@ -208,6 +211,7 @@ package atalla_isa_pkg;
     logic valid_in;
     logic imm_src;
     logic halfword;
+    logic branch_flag;
     word_t imm;
     word_t incr7;
     opcode_t op;
@@ -223,29 +227,43 @@ package atalla_isa_pkg;
 
   typedef struct packed {
     opcode_t op;
-    logic valid;
-    half_word_t imm16;
+    logic valid_in;
+    logic [7:0] imm;
+    logic [1:0] op2_src; // 0=vs2, 1=immediate, 2=scalar
 
-    logic [MASK_REG_W-1:0] mask;
+    //actual reg nums 
+    logic [MASK_REG_W-1:0] vms, vmd; 
     logic [VECTOR_REG_W-1:0] vs1, vs2, vd;
-    logic [SCALAR_REG_W-1:0] rs1;
+    logic [SCALAR_REG_W-1:0] rs1, rs2, rd;
 
-    logic [4:0] rc_id;
-    logic rc, sid;
-    logic [4:0] num_rows, num_cols;
+    //TODO actual data (vmd, vd, rd)
+    vector_t vs1_data, vs2_data;
+    word_t rs1_data, rs2_data;
+    mask_t vms_data; //mask
 
-    logic use_mask, use_vs1, use_vs2, use_rs1;
+    logic [1:0] sid;
+    logic [4:0] num_cols;
+
+    logic use_vms, use_vs1, use_vs2, use_rs1, use_rs2;
+    logic mask_reg_write, vector_reg_write, scalar_reg_write;
+
+    logic rm; //reduction mode flag
+
   } decoded_vector_instr_t;
 
 
   typedef struct packed {
-    logic valid;
-    logic sid;
+    logic valid_in;
     logic store;
-    logic [NUM_ROWS-1:0] num_rows;
-    logic [NUM_COLS-1:0] num_cols;
     logic [SCALAR_REG_W-1:0] rs1_rd;
     logic [SCALAR_REG_W-1:0] rs2;
+    logic [SCALAR_REG_W-1:0] rs3;
+    logic use_rs1, use_rs2, use_rs3;
+    word_t rs1_rd_data;
+    word_t rs2_data;
+    word_t rs3_data;
+
+     
   } decoded_SDMA_instr_t;
 
 endpackage
