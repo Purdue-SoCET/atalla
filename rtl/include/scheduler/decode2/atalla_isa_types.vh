@@ -140,7 +140,8 @@ package atalla_isa_pkg;
     ld_valid=4'd11,
     st_valid=4'd12,
     sMult_valid=4'd13, 
-    halt_valid=4'd14
+    halt_valid=4'd14,
+    sqrt_valid=4'd15
   } scalar_fu_enable_t;
 
   // ============================================================

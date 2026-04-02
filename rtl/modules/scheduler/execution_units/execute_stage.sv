@@ -152,8 +152,10 @@ module execute_stage
     //D$ signals
     assign unit5_if.data_load = ex_if.data_load;
     assign unit5_if.hit = ex_if.hit;
+    assign unit5_if.block_status = ex_if.block_status;
     assign ex_if.WEN = unit5_if.WEN;
     assign ex_if.REN = unit5_if.REN;
+    assign ex_if.mem_in_valid = unit5_if.mem_in_valid;
     assign ex_if.data_store = unit5_if.data_store;
     assign ex_if.data_addr = unit5_if.data_addr;
 

@@ -83,6 +83,7 @@ always_comb begin
     case (cur_state)
         start: begin
             if(portmap.valid_in) begin
+                portmap.ready_in = 1'b0;
                 n_state = latch;
                 if(latency-1 == 0) begin
                     n_state = done;
