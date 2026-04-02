@@ -7,12 +7,12 @@ interface ld_st_unit_if;
 
 
     //to dcache
-    logic WEN, REN;
+    logic WEN, REN, mem_in_valid;
     logic [31:0] data_store, data_addr;
 
     //from dcache
     logic [31:0] data_load;
-    logic hit;
+    logic hit, block_status;
 
     //from decode 2
     logic [31:0] addr, data_in;
@@ -32,13 +32,13 @@ interface ld_st_unit_if;
     logic valid_out;
 
     modport ld_st (
-        input rdIn, halfWord, valid_in, scalar_type_enable, data_load, hit, ready_out, addr, data_in,
-        output WEN, REN, data_store, data_addr, ready_in, data_out, rdOut, valid_out
+        input rdIn, halfWord, valid_in, scalar_type_enable, data_load, hit, block_status, ready_out, addr, data_in,
+        output WEN, REN, mem_in_valid, data_store, data_addr, ready_in, data_out, rdOut, valid_out
     );
 
     modport tb (
-        input WEN, REN, data_store, data_addr, ready_in, data_out, rdOut, valid_out,
-        output rdIn, halfWord, valid_in, scalar_type_enable, data_load, hit, ready_out, addr, data_in
+        input WEN, REN, mem_in_valid, data_store, data_addr, ready_in, data_out, rdOut, valid_out,
+        output rdIn, halfWord, valid_in, scalar_type_enable, data_load, hit, block_status, ready_out, addr, data_in
     );
 
 endinterface

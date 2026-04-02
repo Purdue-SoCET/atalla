@@ -8,28 +8,38 @@ module ld_st_unit #()
 );
     import atalla_isa_pkg::*;
 
-    typedef enum {start, latch} state;
+    typedef enum {start, latch, done} state;
     state n_state, cur_state;
 
     logic [31:0] cur_addr, cur_store, latched_addr, latched_store, nlatched_addr, nlatched_store;
     logic cur_WEN, cur_REN, latched_REN, latched_WEN, nlatched_REN, nlatched_WEN;
     logic cur_halfword, latched_halfword, nlatched_halfword;
-    logic [7:0] nlatchedRD, latchedRD;
+    logic [7:0] nlatchedRD, latchedRD, curRD;
 
     assign ld_st_if.data_addr = cur_addr;
     assign ld_st_if.data_store = cur_store;
     assign ld_st_if.WEN = cur_WEN;
     assign ld_st_if.REN = cur_REN;
-    assign ld_st_if.rdOut = latchedRD;
+    assign ld_st_if.rdOut = curRD;
 
-
-    assign ld_st_if.data_out = cur_halfword ? {16'b0, ld_st_if.data_load[15:0]} : ld_st_if.data_load;
+    always_comb begin
+        if(cur_halfword) begin
+            if(cur_addr % 4 == 2) begin
+                ld_st_if.data_out = {16'b0, ld_st_if.data_load[31:16]};
+            end else begin
+                ld_st_if.data_out = {16'b0, ld_st_if.data_load[15:0]};
+            end
+        end else begin
+            ld_st_if.data_out = ld_st_if.data_load;
+        end
+    end
 
 
     always_comb begin
         n_state = cur_state;
         ld_st_if.ready_in = 1'b1;
         ld_st_if.valid_out = 1'b0;
+        ld_st_if.mem_in_valid = 1'b0;
 
         nlatched_addr = latched_addr;
         cur_addr = ld_st_if.addr;
@@ -42,14 +52,30 @@ module ld_st_unit #()
         nlatched_halfword = latched_halfword;
         cur_halfword = ld_st_if.halfWord;
         nlatchedRD = latchedRD;
+        curRD = ld_st_if.rdIn;
 
         case (cur_state)
             start: begin
-                if(ld_st_if.valid_in) begin
-                    n_state = latch;
-                end
+
                 ld_st_if.ready_in = 1'b1;
                 ld_st_if.valid_out = 1'b0;
+
+                if(ld_st_if.valid_in && ld_st_if.REN && ld_st_if.hit) begin
+                    ld_st_if.valid_out = 1'b1;
+                    if(~ld_st_if.ready_out) begin
+                        ld_st_if.valid_out = 1'b0;
+                        ld_st_if.ready_in = 1'b0;
+                        n_state = done;
+                    end
+                end
+
+                if(~ld_st_if.hit && ld_st_if.valid_in) begin
+                    n_state = latch;
+                    ld_st_if.ready_in = 1'b0;
+                    ld_st_if.valid_out = 1'b0;
+                end
+
+                ld_st_if.mem_in_valid = ld_st_if.valid_in;
 
                 nlatched_addr = ld_st_if.addr;
                 nlatched_store = ld_st_if.data_in;
@@ -60,19 +86,40 @@ module ld_st_unit #()
 
             end
             latch: begin
-                if((ld_st_if.hit && latched_WEN) || (ld_st_if.hit && latched_REN && ld_st_if.ready_out)) begin
-                    n_state = start;
-                end
-                if(latched_REN && ld_st_if.hit) begin
-                    ld_st_if.valid_out = 1'b1;
-                end
+
+                ld_st_if.mem_in_valid = 1'b0;
                 ld_st_if.ready_in = 1'b0;
+                ld_st_if.valid_out = 1'b0;
+
+                if(ld_st_if.block_status == 1'b1) begin
+                    n_state = done;
+                end
 
                 cur_addr = latched_addr;
                 cur_store = latched_store;
                 cur_WEN = latched_WEN;
                 cur_REN = latched_REN;
                 cur_halfword = latched_halfword;
+                curRD = latchedRD;
+            end
+            done: begin
+                ld_st_if.mem_in_valid = 1'b0;
+                cur_addr = latched_addr;
+                cur_store = latched_store;
+                cur_WEN = latched_WEN;
+                cur_REN = latched_REN;
+                cur_halfword = latched_halfword;
+                curRD = latchedRD;
+                ld_st_if.ready_in = 1'b0;
+                ld_st_if.valid_out = 1'b0;
+                if(ld_st_if.ready_out) begin
+                    ld_st_if.mem_in_valid = 1'b1;
+                    ld_st_if.ready_in = 1'b1;
+                    if(ld_st_if.REN) begin
+                        ld_st_if.valid_out = 1'b1;
+                    end
+                    n_state = start;
+                end
             end
         endcase
     end

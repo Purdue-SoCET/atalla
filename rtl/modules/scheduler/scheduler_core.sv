@@ -18,9 +18,15 @@ module scheduler_core #(
 )
 (
     input logic CLK, nRST,
-    //dcache
-    input logic hit,
+
+    //to dcache
+    output logic WEN, REN, mem_in_valid,
+    output logic [31:0] data_store, data_addr,
+
+    //from dcache
     input logic [31:0] data_load,
+    input logic hit, block_status,
+
     //dec2 in
     // input instr_t [3:0] scalar_instrs,
     // input logic predict_taken_in,
@@ -178,9 +184,17 @@ module scheduler_core #(
     assign n_EX_WB_latch.rd = scalar_wb_if.scalar_wb_out.rd;
     assign n_EX_WB_latch.WEN = scalar_wb_if.scalar_wb_out.WEN;
 
-    //temporary in/outs
+    //dcache in/outs
+    //from dcache
     assign scalar_ex_if.hit = hit;
     assign scalar_ex_if.data_load = data_load;
+    assign scalar_ex_if.block_status = block_status;
+    //to dcache
+    assign WEN = scalar_ex_if.WEN;
+    assign REN = scalar_ex_if.REN;
+    assign mem_in_valid = scalar_ex_if.mem_in_valid;
+    assign data_store = scalar_ex_if.data_store;
+    assign data_addr = scalar_ex_if.data_addr;
     // assign decode_2_if.scalar_instrs = scalar_instrs;
     // assign decode_2_if.predict_taken_in = predict_taken_in;
     // assign decode_2_if.pc_pred_addr_in = pc_pred_addr_in;
