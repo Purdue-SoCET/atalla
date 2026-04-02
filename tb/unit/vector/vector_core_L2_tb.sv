@@ -38,8 +38,14 @@ module vector_core_L2_tb;
     // -----------------------------------------------------------------------
     //parameter string PROGRAM_PATH = "./tb/formal/vector/testcases/vector-vector/add_vv";
     //parameter string PROGRAM_PATH = "./tb/formal/vector/testcases/load-store/store_load_l2";
-    parameter string PROGRAM_PATH = "./tb/formal/vector/testcases/gemmm/gemm_vv";
-    parameter int    DRAIN_CYCLES = 300;
+    //parameter string PROGRAM_PATH = "./tb/formal/vector/testcases/gemmm/gemm_vv";
+    //parameter string PROGRAM_PATH = "./tb/formal/vector/testcases/load-store/store_load_l2";
+
+    // bp test for sys array works, there is a timeout from scheduler stalls and the NO OPs dont go thru so my cond in the all_issued doesnt work,
+    // my termination cond didnt trigger causing the timeout, sys array works properly, need to fix the tb condition, but backpressure is now done for both spad and sys array
+    parameter string PROGRAM_PATH = "./tb/formal/vector/testcases/gemmm/gemm_bp_test";
+    // make drain 500 for sysarray bp test, 300 for gemm, 150 for reg.
+    parameter int    DRAIN_CYCLES = 500;
     parameter int    TIMEOUT      = 10000;
 
     // -----------------------------------------------------------------------
@@ -396,19 +402,31 @@ module vector_core_L2_tb;
         */
 
         // Preload v0 with BEEF for store-load test
-        /*for (int i = 0; i < 32; i++)
+        /*
+        for (int i = 0; i < 32; i++)
             dpi_veggie_write_vector_elem(8'd0, i, 16'hBEEF);
         dpi_veggie_write_mask(8'd0, 32'hFFFFFFFF);
         $display("[TB] Preloaded VRF and mask register");
         */
 
         // Preload VRF for gemm: weights in v0-v31, activations in v32-v64
+        
         for (int v = 0; v < 32; v++)
             for (int e = 0; e < 32; e++)
                 dpi_veggie_write_vector_elem(v[7:0], e, 16'h3F80);  // 1.0
         for (int v = 32; v <= 64; v++)
             for (int e = 0; e < 32; e++)
                 dpi_veggie_write_vector_elem(v[7:0], e, 16'h3F80);  // 1.0
+
+        // Backpressure test: inject DRAM stall on port 1 from cycle 10-20
+        /*
+        fork
+            begin
+                repeat (10) @(posedge CLK);  // wait 10 cycles
+                inject_dram_backpressure(1, 10);  // stall port 1 for 10 cycles
+            end
+        join_none
+        */
 
         // ---- Main loop ----
         forever begin
@@ -455,6 +473,12 @@ module vector_core_L2_tb;
             drive_gsau_issue();
             drive_vlsu_issue();
 
+            // SA backpressure monitoring
+            if (!gsauif.sa_ready_in)
+                $display("[TB-SA-BP] Cyc %0d: sa_ready_in LOW (credit exhaustion!)", cycle_count);
+            if (!gsauif.sb_ready_out)
+                $display("[TB-SA-BP] Cyc %0d: sb_ready_out LOW (GSAU stalling scheduler!)", cycle_count);
+
             
 
             // Debug: monitor sif vec_req
@@ -496,6 +520,11 @@ module vector_core_L2_tb;
                     @(posedge CLK);
                     cycle_count++;
                     handle_writeback();
+                    // SA backpressure monitoring
+                    if (!gsauif.sa_ready_in)
+                        $display("[TB-SA-BP] Cyc %0d: sa_ready_in LOW (credit exhaustion!)", cycle_count);
+                    if (!gsauif.sb_ready_out)
+                        $display("[TB-SA-BP] Cyc %0d: sb_ready_out LOW (GSAU stalling scheduler!)", cycle_count);
                     // Debug scratchpad signals
                     for (int p = 0; p < NUM_SCPADS; p++) begin
                         if (sif.vec_res[p].valid)
