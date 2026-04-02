@@ -435,9 +435,16 @@ interface axi_bus_if(input logic CLK, input logic nRST);
 
         // From Skid Buffer
         output skid_ready_w,
+        output w_fire,
 
         // To Read Mux/AR Manager 
-        input aw_grant
+        input aw_grant,
+
+        // To W Manager
+        input w_sp0_pop, w_sp1_pop, w_d_pop,
+
+        // To AW Manager
+        input aw_sp0_pop, aw_sp1_pop, aw_d_pop
     );
 
     // WRITE MANAGER TB

@@ -62,6 +62,7 @@ program test (
         arbw_if.sp1_len_w = '0;
         arbw_if.d_len_w = '0;
         arbw_if.skid_ready_w = 1;
+        arbw_if.w_fire = 1;
     end 
     endtask
     
@@ -113,9 +114,11 @@ program test (
         arbw_if.sp0_req_w = 1;
         arbw_if.sp0_len_w = 4'h7;
         #(CLK_PERIOD*3);
-        arbw_if.skid_ready_w = 0;
+        //arbw_if.skid_ready_w = 0;
+        arbw_if.w_fire = 0;
         #(CLK_PERIOD*3);
-        arbw_if.skid_ready_w = 1;
+        //arbw_if.skid_ready_w = 1;
+        arbw_if.w_fire = 1;
         #(CLK_PERIOD*5);
         arbw_if.sp0_req_w = 0;
         #(CLK_PERIOD);
@@ -126,9 +129,11 @@ program test (
         arbw_if.sp1_req_w = 1;
         arbw_if.sp1_len_w = 4'h7;
         #(CLK_PERIOD);
-        arbw_if.skid_ready_w = 0;
+        //arbw_if.skid_ready_w = 0;
+        arbw_if.w_fire = 0;
         #(CLK_PERIOD*3);
-        arbw_if.skid_ready_w = 1;
+        //arbw_if.skid_ready_w = 1;
+        arbw_if.w_fire = 1;
         #(CLK_PERIOD*8);
         arbw_if.sp1_req_w = 0;
         #(CLK_PERIOD);
@@ -139,9 +144,11 @@ program test (
         arbw_if.d_req_w = 1;
         arbw_if.d_len_w = 4'h7;
         #(CLK_PERIOD*7);
-        arbw_if.skid_ready_w = 0;
+        //arbw_if.skid_ready_w = 0;
+        arbw_if.w_fire = 0;
         #(CLK_PERIOD*3);
-        arbw_if.skid_ready_w = 1;
+        //arbw_if.skid_ready_w = 1;
+        arbw_if.w_fire = 1;
         #(CLK_PERIOD);
         arbw_if.d_req_w = 0;
         #(CLK_PERIOD);
