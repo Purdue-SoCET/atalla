@@ -27,6 +27,7 @@ set DESIGN_SRCS {
     ./rtl/modules/ddr_cntrl/flex_counter.sv
     ./rtl/modules/ddr_cntrl/nb_wdata_queue.sv
     ./rtl/modules/ddr_cntrl/nb_wdata_wrapper.sv
+    ./rtl/modules/ddr_cntrl/priority_enc.sv
 }
 
 # --- Verification / Bind Sources ---

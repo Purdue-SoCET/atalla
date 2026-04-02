@@ -79,13 +79,13 @@ module nb_wdata_queue_tb;
         begin 
             for(int i = 0; i < NUM_REQS; i++) begin
                 random_id = $urandom_range(0, ID_NUM);
-                random_wlen = $urandom_range(0, 8);
-                random_delay = $urandom_range(0,16);
+                random_wlen = $urandom_range(0, 7);
+                random_delay = $urandom_range(0,5);
 
                 for (int j = 0; j < 8; j++) begin
                     input_vector[i][j].input_slot.wstrb = $urandom_range(0, 256);
                     input_vector[i][j].input_slot.wdata = {$urandom(), $urandom()};
-		    correct_vector[i][j].data_out_correct = input_vector[i][j].input_slot.wdata;
+		    correct_vector[i][j].data_out_correct = j > random_wlen ? 'b0 : input_vector[i][j].input_slot.wdata;
                     correct_vector[i][j].wdata_en_correct = 1'b1;
                     input_vector[i][j].input_slot.wid = random_id;
                     input_vector[i][j].input_slot.wlen = random_wlen;
@@ -104,7 +104,7 @@ module nb_wdata_queue_tb;
 
     task driver_axi_write; //acts as axi write channel to drive writing inputs. 
 
-        input case_num; 
+        input int case_num; 
         begin
             @(posedge CLK);
             ddrif0.wdq_slot.wid = input_vector[case_num][0].input_slot.wid;
@@ -120,15 +120,17 @@ module nb_wdata_queue_tb;
                     break; 
                 end
                 @(posedge CLK);
-            end 
+            end
+	    @(posedge CLK); 
             ddrif0.wvalid = 1'b0;
+	    ddrif0.wlast = 1'b0;
             @(posedge CLK);
         end
 
     endtask
 
     task driver_barb; //acts as barb to command writes.
-        input case_num;
+        input int case_num;
         begin 
             @(posedge CLK);
             ddrif0.be_wid = input_vector[case_num][0].input_slot.wid;
@@ -140,7 +142,7 @@ module nb_wdata_queue_tb;
     endtask
    int n ;
     task driver_bresp; //acts as bresp channel. drives ready signal to accept responses.
-        input case_num;
+        input int case_num;
         begin 
             @(posedge CLK);
             for(int i = 0; i < input_vector[case_num][0].delay; i++) begin
@@ -164,7 +166,7 @@ module nb_wdata_queue_tb;
 
  
     task monitor; //collects outputs and places them into test vector. 
-        input case_num;
+        input int case_num;
         begin
             n = 0;
             while(!ddrif0.ddr_we) begin
@@ -176,14 +178,16 @@ module nb_wdata_queue_tb;
                 n++;
                 //#(1);
             end
-            #(PERIOD/5);
+            
             for(int i = 0; i < 8; i++) begin
+
 
                 output_vector[case_num][i].data_out = ddrif0.ddr_wdata_data;
                 output_vector[case_num][i].mask_out = ddrif0.ddr_wdata_mask;
                 if(!ddrif0.ddr_wdata_en) begin
                     $display("case number %d failed. ddr_wdata_en not high when it should be.", case_num);
                 end
+		@(posedge CLK);
 
             end
         end
@@ -200,14 +204,14 @@ module nb_wdata_queue_tb;
                         $display("Test %d data passed.", i);
                         num_passed++;
                     end else begin
-                        $display("Test %d data failed", i);
+                        $display("Test  number %d beat %d data failed.", i, j);
                     end
 
                     if(output_vector[i][j].mask_out == correct_vector[i][j].mask_out_correct) begin
                         $display("Test %d mask passed.", i); 
                         num_passed++;
                     end else begin
-                        $display("Test %d mask failed.", i);
+                        $display("Test  number %d beat %d mask failed.", i, j);
                     end
                 end
             end
@@ -215,7 +219,7 @@ module nb_wdata_queue_tb;
         end
 
     endtask 
-
+    integer test_case;
 
     initial begin 
         nRST = 0;
@@ -235,14 +239,11 @@ module nb_wdata_queue_tb;
         @(posedge CLK);
 
         sequencer();
-
-        for(int i = 0; i < NUM_REQS; i++) begin
-
+	test_case = 0;
+        for(integer i = 0; i < NUM_REQS; i++) begin
+	    test_case = i;
             driver_axi_write(i);
-            repeat(500) @(posedge CLK);
             driver_barb(i);
-            @(posedge CLK);
-            @(posedge CLK);
             monitor(i);
             @(posedge CLK);
             driver_bresp(i);

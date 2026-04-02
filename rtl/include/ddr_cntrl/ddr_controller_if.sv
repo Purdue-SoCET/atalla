@@ -79,7 +79,8 @@ logic [$clog2(ID_NUM)-1:0] be_rid;
 logic [2:0]                be_rlen;
 
 // BACKEND ARBITER -> WDATA_QUEUE
-logic [$clog2(ID_NUM)-1:0] be_wid, be_write; 
+logic [$clog2(ID_NUM)-1:0] be_wid;
+logic be_write; 
 
 // AXI -> READ_ID_QUEUE
 logic                      rq_rready;
@@ -198,7 +199,7 @@ modport command_fsm (
     //BQ -> FSM
     input bq_ready, bq_bg, bq_b, bq_slot,
     //BE -> FSM
-    cg,
+    be_arb,
     //FSM -> BE 
     output be_r, be_c, be_b, be_bg, be_cmd, be_id, be_rlen, be_queue_ready
 );

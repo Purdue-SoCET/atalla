@@ -99,13 +99,15 @@ module nb_wdata_queue  #(Q_ID = 0, ID_NUM = 8) (
         data_in = DATA_Q_Slot_t'({wdq_slot.wdata, wdq_slot.wstrb, wvalid} );
     end else if(wen)
         data_in = DATA_Q_Slot_t'({ regs[dram_ptr].wdata, 8'b1111_1111, regs[dram_ptr].wvalid });
+    else 
+	data_in = regs[write_ptr];
 
   end
   
   //pop data logic
   
   assign ddr_wdata_data = regs[dram_ptr].wdata; 
-  assign ddr_wdata_en = regs[dram_ptr].wvalid;
+//  assign ddr_wdata_en = regs[dram_ptr].wvalid;
   assign ddr_wdata_mask = regs[dram_ptr].wstrb;
   
   //fsm for everything full or empty
@@ -122,8 +124,8 @@ module nb_wdata_queue  #(Q_ID = 0, ID_NUM = 8) (
   logic [PTR_W-1:0] inc_w_ptr;
   logic [PTR_W-1:0] inc_r_ptr;
 
-  assign inc_w_ptr = write_ptr + 32'b1;
-  assign inc_r_ptr = dram_ptr + 32'b1;
+  assign inc_w_ptr = write_ptr + 'b1;
+  assign inc_r_ptr = dram_ptr + 'b1;
   
   always_comb begin : FSM_NEXT_STATE
     
@@ -141,7 +143,7 @@ module nb_wdata_queue  #(Q_ID = 0, ID_NUM = 8) (
       ACTIVE: begin
         if(wvalid && wen)
           next_fifo_state = ACTIVE;
-        else if(wvalid && (inc_w_ptr  == dram_ptr))
+        else if(wvalid && wlast && (wdq_slot.wid == Q_ID))
           next_fifo_state = FULL;
         else if(wen && (inc_r_ptr == write_ptr))
           next_fifo_state = EMPTY;
@@ -209,10 +211,30 @@ module nb_wdata_queue  #(Q_ID = 0, ID_NUM = 8) (
     cnt_ctrl_next = cnt_ctrl;
     case(cnt_ctrl)
 
-        IDLE: if( (be_wid == Q_ID) && be_write) cnt_ctrl_next = CWL_WAIT; else cnt_ctrl_next = IDLE;
-        CWL_WAIT: if( rollover_cwl ) cnt_ctrl_next = WRITING; else cnt_ctrl_next = CWL_WAIT;
-        WRITING: if( rollover ) cnt_ctrl_next = RESP; else cnt_ctrl_next = WRITING;
-        RESP: if(bwready && (bw_arb == Q_ID)) cnt_ctrl_next = IDLE;   else cnt_ctrl_next = RESP;
+	IDLE: begin
+		if( (be_wid == Q_ID) && be_write) 
+			cnt_ctrl_next = CWL_WAIT; 
+		else 
+			cnt_ctrl_next = IDLE;
+	      end
+	CWL_WAIT: begin 
+		if( rollover_cwl )  
+			cnt_ctrl_next = WRITING; 
+		else 
+			cnt_ctrl_next = CWL_WAIT;
+		end	
+	WRITING: begin
+		 if( rollover ) 
+			cnt_ctrl_next = RESP; 
+		 else 
+			cnt_ctrl_next = WRITING;
+		 end
+	RESP: begin 
+		if(bwready && (bw_arb == Q_ID)) 
+			cnt_ctrl_next = IDLE;   
+		else 
+			cnt_ctrl_next = RESP;
+	      end
 
     endcase
 
@@ -240,6 +262,7 @@ module nb_wdata_queue  #(Q_ID = 0, ID_NUM = 8) (
     bwresp = 2'b0; 
     bwvalid = 'b0;
     ddr_we = 'b0;
+    ddr_wdata_en = 'b0;
     case(cnt_ctrl)
 	CWL_WAIT: begin 
 		cnt_en_cwl = 'b1; 
@@ -250,6 +273,7 @@ module nb_wdata_queue  #(Q_ID = 0, ID_NUM = 8) (
 		clear = 'b0; 
 		cnt_en = 'b1; 
 		ddr_we = 'b1;
+		ddr_wdata_en = 'b1;
 	end
         RESP : bwvalid = 'b1;
     endcase
