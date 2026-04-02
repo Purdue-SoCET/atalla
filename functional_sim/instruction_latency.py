@@ -1,7 +1,4 @@
-try:
-    from .src.misc.opcode_table import OPCODES
-except ImportError:
-    from src.misc.opcode_table import OPCODES
+from .src.misc.opcode_table import OPCODES
 
 # Base latency defaults used by the graph dependency scheduler.
 # Keys are base op names (before ".suffix"), plus a few explicit full mnemonic
@@ -37,7 +34,6 @@ BASE_LATENCY = {
     # Scalar long latency
     "mul": 3,
     "muli": 3,
-    "div": 8,
     "divi": 8,
     "mod": 8,
     "modi": 8,
@@ -95,8 +91,8 @@ BASE_LATENCY = {
 MNEMONIC_LATENCY = {
     "vreg.ld": 3,
     "vreg.st": 1,
-    "scpad.ld": 3,
-    "scpad.st": 1,
+    "scpad.ld": 520, # 512 for DDR, 8 for AXI
+    "scpad.st": 520, # 512 for DDR, 8 for AXI
     "lw.vi": 3,
 }
 

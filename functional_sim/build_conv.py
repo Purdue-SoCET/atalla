@@ -4,7 +4,13 @@ from pathlib import Path
 import argparse
 import numpy as np
 
-from build import assemble_file, emit_test_format, DRAMWriter, render_testfile
+try:
+    from .build import assemble_file, emit_test_format, DRAMWriter, render_testfile
+except Exception:
+    try:
+        from functional_sim.build import assemble_file, emit_test_format, DRAMWriter, render_testfile
+    except Exception:
+        from build import assemble_file, emit_test_format, DRAMWriter, render_testfile
 
 
 def make_conv_sa_asm(M: int, K_flat: int, K_out: int, cfg_base: int) -> str:
@@ -140,3 +146,4 @@ def main():
 
 if __name__ == "__main__":
     main()
+

@@ -9,20 +9,18 @@ from pathlib import Path
 import argparse
 import numpy as np
 
-load_tile_data = None
 try:
+    from .kernels.utils.dataloader import load_tile_data
     from .src.misc.opcode_table import OPCODES, name_to_opcode
 except Exception:
+    from kernels.utils.dataloader import load_tile_data
     from src.misc.opcode_table import OPCODES, name_to_opcode
 
 try:
     from .instruction_latency import latency as DEFAULT_LATENCY_MAP
 
 except Exception:
-    try:
-        from instruction_latency import latency as DEFAULT_LATENCY_MAP
-    except Exception:
-        DEFAULT_LATENCY_MAP: Dict[str, int] = {}
+    DEFAULT_LATENCY_MAP: Dict[str, int] = {}
 
 INVERT_OPCODES = name_to_opcode()
 VIRTUAL_PACKET_SIZE = 1 
@@ -199,18 +197,22 @@ def encode_instruction(instr_dict):
         instruction |= (rc_id_is_reg & 0x1) << 40
         
     elif instr_type == "SDMA":
-        # SDMA: rs1/rd1 7-14, rs2 15-22, num_cols 23-27, num_rows 28-32, sid 33
+        # SDMA legacy-immediate form or rs3-packed control form.
         rs1_rd1 = instr_dict.get('rs1', instr_dict.get('rd1', 0))
         rs2 = instr_dict.get('rs2', 0)
-        num_cols = instr_dict.get('num_cols', 0)
-        num_rows = instr_dict.get('num_rows', 0)
-        sid = instr_dict.get('sid', 0)
-        
         instruction |= (rs1_rd1 & 0xFF) << 7
         instruction |= (rs2 & 0xFF) << 15
-        instruction |= (num_cols & 0x1F) << 23
-        instruction |= (num_rows & 0x1F) << 28
-        instruction |= (sid & 0x1) << 33
+        if instr_dict.get("sdma_ctl_from_reg"):
+            rs3 = instr_dict.get('rs3', 0)
+            instruction |= (rs3 & 0xFF) << 23
+            instruction |= 1 << 34
+        else:
+            num_cols = instr_dict.get('num_cols', 0)
+            num_rows = instr_dict.get('num_rows', 0)
+            sid = instr_dict.get('sid', 0)
+            instruction |= (num_cols & 0x1F) << 23
+            instruction |= (num_rows & 0x1F) << 28
+            instruction |= (sid & 0x1) << 33
         
     elif instr_type == "MTS":
         # MTS: rd 7-14, vms 15-22
@@ -471,22 +473,12 @@ def asm_to_instr_dict(
 
     if instr_type == "MI":
         # jal rd, imm25  OR jal imm25 (rd defaults 0)
-        # li.s rd, imm25  OR lui.s rd, imm25
         if len(ops) == 1:
             d["rd"] = 0
-            imm_str = ops[0].strip()
+            d["imm25"] = parse_int(ops[0])
         else:
             d["rd"] = parse_reg(ops[0])
-            imm_str = ops[1].strip()
-
-        if IMM_RE.match(imm_str):
-            d["imm25"] = parse_int(imm_str)
-        elif labels is not None and imm_str in labels:
-            if pc is None:
-                raise ValueError("Internal error: missing PC for label-based MI")
-            d["imm25"] = labels[imm_str] - pc
-        else:
-            raise ValueError(f"Bad MI immediate or unknown label: {imm_str!r}")
+            d["imm25"] = parse_int(ops[1])
         return d
 
     if instr_type == "VI":
@@ -524,16 +516,14 @@ def asm_to_instr_dict(
         return d
 
     if instr_type == "VM":
-        # vreg.ld vd, rs1, num_cols, num_rows, sid, rc, rc_id
+        # vreg.ld vd, rs1, num_cols, num_rows, sid, rc, rc_id_reg
         d["vd"] = parse_reg(ops[0])
         d["rs1"] = parse_reg(ops[1])
         d["num_cols"] = parse_int(ops[2])
         d["num_rows"] = parse_int(ops[3])
         d["sid"] = parse_int(ops[4])
         d["rc"] = parse_int(ops[5])
-        
-        # FIXME: rc_id might eventually come from a register rather than an immediate
-        # d["rc_id"] = parse_reg(ops[6])
+
         target_rc_id = ops[6].strip()
         if target_rc_id.startswith("$"):
             d["rc_id"] = parse_reg(target_rc_id)
@@ -544,12 +534,15 @@ def asm_to_instr_dict(
         return d
 
     if instr_type == "SDMA":
-        # scpad.ld rs1, rs2, num_cols, num_rows, sid
         d["rs1"] = parse_reg(ops[0])
         d["rs2"] = parse_reg(ops[1])
-        d["num_cols"] = parse_int(ops[2])
-        d["num_rows"] = parse_int(ops[3])
-        d["sid"] = parse_int(ops[4])
+        if len(ops) == 3 and ops[2].strip().startswith("$"):
+            d["rs3"] = parse_reg(ops[2])
+            d["sdma_ctl_from_reg"] = True
+        else:
+            d["num_cols"] = parse_int(ops[2])
+            d["num_rows"] = parse_int(ops[3])
+            d["sid"] = parse_int(ops[4])
         return d
 
     if instr_type == "MTS":
@@ -950,7 +943,7 @@ def _decode_instruction_for_graph(hex_word: str) -> tuple[str, list[str], list[s
             srcs = [r(rs1_rd1), r(rs2)]
         else:
             dsts = [r(rs1_rd1)]
-            srcs = [r(rs1_rd1), r(rs2)]
+            srcs = [r(rs2)]
         mem_key = (r(rs2), "scpad")
 
     elif instr_type == "MTS":
@@ -1077,6 +1070,30 @@ def greedy_pack(
             if scheduled[i]:
                 continue
             if ready_time[i] > current_cycle:
+                continue
+
+            # Dynamic ordering guard: if an earlier unscheduled instruction
+            # touches overlapping registers, do not let this instruction leapfrog
+            # it. Static ready_time alone is not sufficient when earlier ops are
+            # deferred by same-packet hazards.
+            blocked_by_earlier = False
+            src_set = set(srcs)
+            dst_set = set(dsts)
+            for j in range(i):
+                if scheduled[j]:
+                    continue
+                _, j_dsts, j_srcs, _ = instructions[j]
+                j_dst_set = set(j_dsts)
+                j_src_set = set(j_srcs)
+
+                if j_dst_set & (src_set | dst_set):
+                    blocked_by_earlier = True
+                    break
+                if dst_set & j_src_set:
+                    blocked_by_earlier = True
+                    break
+
+            if blocked_by_earlier:
                 continue
 
             if _is_control_op(op):

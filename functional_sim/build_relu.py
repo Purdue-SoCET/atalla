@@ -5,7 +5,10 @@ import sys, re
 from pathlib import Path
 import argparse
 import numpy as np
-from src.misc.opcode_table import OPCODES, name_to_opcode
+try:
+    from .src.misc.opcode_table import OPCODES, name_to_opcode
+except Exception:
+    from src.misc.opcode_table import OPCODES, name_to_opcode
 
 INVERT_OPCODES = name_to_opcode()
 VIRTUAL_PACKET_SIZE = 1 

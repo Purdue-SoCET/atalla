@@ -1,288 +1,271 @@
 from __future__ import annotations
 
-import struct, os, math
-from pathlib import Path
 import argparse
+import os
+from pathlib import Path
+
 import numpy as np
 
-from build import *
+try:
+    from .build import *
+except Exception:
+    try:
+        from functional_sim.build import *
+    except Exception:
+        from build import *
 
 
-def bf16_to_f32(bits: int) -> float:
-    return struct.unpack("<f", struct.pack("<I", (bits & 0xFFFF) << 16))[0]
+def load_tile_data(data_path: Path, n: int) -> list[float]:
+    tile = np.loadtxt(data_path, delimiter=",")
+    if tile.ndim == 1:
+        tile = tile.reshape(1, -1)
+    if tile.shape != (n, n):
+        raise ValueError(f"Tile shape mismatch: expected ({n}, {n}), got {tile.shape}.")
+    return tile.flatten(order="C").tolist()
 
 
-def f32_to_bf16(x: float) -> int:
-    u = struct.unpack("<I", struct.pack("<f", float(x)))[0]
-    lsb = (u >> 16) & 1
-    u_round = (u + 0x7FFF + lsb) & 0xFFFFFFFF
-    return (u_round >> 16) & 0xFFFF
+def main() -> None:
+    ap = argparse.ArgumentParser()
+    ap.add_argument("-i", "--input", type=Path, default=None)
+    ap.add_argument("-o", "--output", type=Path, default=Path("./tests/attention.in"))
+    ap.add_argument("--no-graph", action="store_true")
+    ap.add_argument("--data", type=Path, default=None)
+    ap.add_argument("--n", type=int, default=4)
+    args = ap.parse_args()
 
+    N = args.n
+    if N != 4:
+        raise ValueError("Current central attention builder is fixed for n=4.")
 
-def bf16_matmul(A, B):
-    M, K = A.shape
-    _, N = B.shape
-    C = np.zeros((M, N), dtype=np.float32)
-    for i in range(M):
-        for j in range(N):
-            acc = 0.0
-            for k in range(K):
-                a = bf16_to_f32(f32_to_bf16(A[i, k]))
-                b = bf16_to_f32(f32_to_bf16(B[k, j]))
-                acc += a * b
-            C[i, j] = acc
-    return C
+    ADDR_TABLE_BASE = 0x0000_0040
+    EPSILON_LOCATION = 0x0000_0020
+    TILE_ADDR_INPUT = 0x0000_1000
+    TILE_ADDR_Q = 0x0000_2000
+    TILE_ADDR_K = 0x0000_3000
+    TILE_ADDR_V = 0x0000_4000
+    TILE_ADDR_OUTPUT = 0x0000_5000
+    TILE_ADDR_W = 0x0000_6000
+    TILE_ADDR_B = 0x0000_7000
+    TILE_ADDR_ATTN = 0x0000_8000
 
+    SCPAD_ADDR = 1
+    COLS = N - 1
+    ROWS = N - 1
+    SID0 = 0
+    LAYER_ELEMS = N * N
+    RSUM_IMM = 64
 
-def bf16_softmax(X):
-    rows, cols = X.shape
-    out = np.zeros_like(X)
-    for r in range(rows):
-        row = np.array([bf16_to_f32(f32_to_bf16(X[r, c])) for c in range(cols)])
-        mx = np.max(row)
-        e = np.exp(row - mx)
-        s = np.sum(e)
-        out[r] = e / s
-    return out
+    input_values = [float(v) for v in range(4, 4 + N * N)]
+    X_ref = np.array(input_values, dtype=np.float32).reshape(N, N)
+    Q = np.array([[1, 1, 1, 1], [1, 2, 1, 1], [1, 1, 3, 1], [1, 1, 1, 4]], dtype=np.float32)
+    K = np.array([[1, 0, 0, 0], [0, 2, 0, 0], [0, 0, 3, 0], [0, 0, 0, 4]], dtype=np.float32)
+    V = np.array([[10, 0, 0, 0], [0, 20, 0, 0], [0, 0, 30, 0], [0, 0, 0, 40]], dtype=np.float32)
 
+    scores = (Q @ K.T) / np.sqrt(N)
+    s_exp = np.exp(scores - scores.max(axis=1, keepdims=True))
+    attn_ref = s_exp / s_exp.sum(axis=1, keepdims=True) @ V
+    residual = attn_ref + X_ref
+    relu_out = np.maximum(0, residual)
+    W = np.array(
+        [[0.1, 0.5, 0.3, 0.8], [0.6, 0.2, 0.7, 0.1], [0.4, 0.9, 0.2, 0.5], [0.8, 0.3, 0.6, 0.2]],
+        dtype=np.float32,
+    )
+    linear_out = relu_out @ W
+    shifted = linear_out - linear_out.max(axis=1, keepdims=True)
+    exp_out = np.exp(shifted)
+    _softmax_ref = exp_out / exp_out.sum(axis=1, keepdims=True)
 
-def make_attention_asm(S: int, d: int) -> str:
-    s_m1 = S - 1
-    d_m1 = d - 1
-    mask_val = (1 << S) - 1
+    asm = f"""
+        lui.s    $1, 0
+        addi.s   $1, $0, {ADDR_TABLE_BASE}
+        lw.s     $2, 0($1)
+        lw.s     $3, 4($1)
+        addi.s   $5, $0, {EPSILON_LOCATION}
+        lw.s     $4, 0($5)
+        lui.s    $16, 0x00000
+        addi.s   $16, $6, 0xf
+        mv.stm   1, $16
 
-    return f"""
-        # ============ ATTENTION: softmax(Q*K^T / sqrt(d)) * V ============
-        # S={S}, d={d}
-        # Register map:
-        #   $1  = address table base (60)
-        #   $2  = Q_GMEM_ADDR
-        #   $3  = Q_SCPAD (0, SID0)
-        #   $4  = KT_GMEM_ADDR
-        #   $5  = KT_SCPAD (fixed offset in SID0)
-        #   $6  = V_GMEM_ADDR
-        #   $7  = V_SCPAD (fixed offset in SID0)
-        #   $8  = OUT_GMEM_ADDR
-        #   $9  = OUT_SCPAD (0, SID1)
-        #   $14 = SCALE_ADDR / scale value
-        #   $15 = scratch scalar
-        #   $16 = SCORES_SCPAD (SID1)
-        #   $20 = mask value for mv.stm
-        #   $25 = row loop counter
-        #   $26 = row loop limit (S)
-        #   $27 = weight load loop counter
-        #   $28 = weight load loop limit
-        #   $10 = vreg for weight load / softmax scratch
-        #   $11 = vreg for rmax result
-        #   $12 = vreg for exp result
-        #   $13 = vreg for rsum result
-        #   $30 = vreg for Q row / attn row
-        #   $31 = vreg for accumulator (zeros for first gemm)
-        #   $32 = vreg for scores row
+        scpad.ld $3, $2, {COLS}, {ROWS}, {SID0}
+        vreg.ld  $10, $3, {COLS}, {ROWS}, {SID0}, 1, 0
+        vreg.ld  $11, $3, {COLS}, {ROWS}, {SID0}, 1, 1
+        vreg.ld  $12, $3, {COLS}, {ROWS}, {SID0}, 1, 2
+        vreg.ld  $13, $3, {COLS}, {ROWS}, {SID0}, 1, 3
 
-        # load address table
-        addi.s  $1, $0, 60
+        rsum.vi  $20, $10, {RSUM_IMM}, 1
+        rsum.vi  $21, $11, {RSUM_IMM}, 1
+        rsum.vi  $22, $12, {RSUM_IMM}, 1
+        rsum.vi  $23, $13, {RSUM_IMM}, 1
+        add.vv   $21, $20, $21, 1, 0
+        add.vv   $22, $22, $23, 1, 0
+        add.vv   $24, $21, $22, 1, 0
+        divi.vi  $24, $24, {LAYER_ELEMS}, 1
 
-        lw.s    $2, 0($1)           # Q_GMEM
-        lw.s    $3, 4($1)           # Q_SCPAD = 0
-        lw.s    $4, 8($1)           # KT_GMEM
-        lw.s    $5, 12($1)          # KT_SCPAD
-        lw.s    $6, 16($1)          # V_GMEM
-        lw.s    $7, 20($1)          # V_SCPAD
-        lw.s    $8, 24($1)          # OUT_GMEM
-        lw.s    $9, 28($1)          # OUT_SCPAD = 0
-        lw.s    $16, 32($1)         # SCORES_SCPAD
-        lw.s    $14, 36($1)         # SCALE value (f32 bits -> scalar)
+        sub.vv   $30, $10, $24, 1, 0
+        sub.vv   $31, $11, $24, 1, 0
+        sub.vv   $32, $12, $24, 1, 0
+        sub.vv   $33, $13, $24, 1, 0
+        mul.vv   $34, $30, $30, 1, 0
+        mul.vv   $35, $31, $31, 1, 0
+        mul.vv   $36, $32, $32, 1, 0
+        mul.vv   $37, $33, $33, 1, 0
+        rsum.vi  $34, $34, {RSUM_IMM}, 1
+        rsum.vi  $35, $35, {RSUM_IMM}, 1
+        rsum.vi  $36, $36, {RSUM_IMM}, 1
+        rsum.vi  $37, $37, {RSUM_IMM}, 1
+        add.vv   $35, $34, $35, 1, 0
+        add.vv   $37, $36, $37, 1, 0
+        add.vv   $38, $35, $37, 1, 0
+        divi.vi  $39, $38, {LAYER_ELEMS}, 1
+        add.vs   $39, $39, $4, 1
+        sqrti.vi $39, $39, 0, 1
+        div.vv   $30, $30, $39, 1, 0
+        div.vv   $31, $31, $39, 1, 0
+        div.vv   $32, $32, $39, 1, 0
+        div.vv   $33, $33, $39, 1, 0
+        vreg.st  $30, $3, {COLS}, {ROWS}, {SID0}, 1, 0
+        vreg.st  $31, $3, {COLS}, {ROWS}, {SID0}, 1, 1
+        vreg.st  $32, $3, {COLS}, {ROWS}, {SID0}, 1, 2
+        vreg.st  $33, $3, {COLS}, {ROWS}, {SID0}, 1, 3
 
-        # load Q tile (SxD) into SP0 at Q_SCPAD
-        scpad.ld $3, $2, {d_m1}, {s_m1}, 0
+        lw.s     $15, 32($1)
+        scpad.ld $3, $15, {COLS}, {ROWS}, {SID0}
+        vreg.ld  $40, $3, {COLS}, {ROWS}, {SID0}, 1, 0
+        vreg.ld  $41, $3, {COLS}, {ROWS}, {SID0}, 1, 1
+        vreg.ld  $42, $3, {COLS}, {ROWS}, {SID0}, 1, 2
+        vreg.ld  $43, $3, {COLS}, {ROWS}, {SID0}, 1, 3
+        add.vv   $50, $40, $10, 1, 0
+        add.vv   $51, $41, $11, 1, 0
+        add.vv   $52, $42, $12, 1, 0
+        add.vv   $53, $43, $13, 1, 0
 
-        # load K^T tile (DxS) into SP0 at KT_SCPAD
-        scpad.ld $5, $4, {s_m1}, {d_m1}, 0
+        addi.vi  $0, $0, 0.0, 1
+        mgt.mvv  2, $50, $0, 1
+        addi.vi  $60, $0, 0.0, 1
+        add.vv   $60, $50, $0, 2, 0
+        mgt.mvv  2, $51, $0, 1
+        addi.vi  $61, $0, 0.0, 1
+        add.vv   $61, $51, $0, 2, 0
+        mgt.mvv  2, $52, $0, 1
+        addi.vi  $62, $0, 0.0, 1
+        add.vv   $62, $52, $0, 2, 0
+        mgt.mvv  2, $53, $0, 1
+        addi.vi  $63, $0, 0.0, 1
+        add.vv   $63, $53, $0, 2, 0
 
-        # set up mask1: enable lanes 0..S-1
-        addi.s  $20, $0, {mask_val}
-        mv.stm  1, $20
+        lw.s     $8, 24($1)
+        scpad.ld $3, $8, {COLS}, {ROWS}, {SID0}
+        vreg.ld  $70, $3, {COLS}, {ROWS}, {SID0}, 1, 0
+        vreg.ld  $71, $3, {COLS}, {ROWS}, {SID0}, 1, 1
+        vreg.ld  $72, $3, {COLS}, {ROWS}, {SID0}, 1, 2
+        vreg.ld  $73, $3, {COLS}, {ROWS}, {SID0}, 1, 3
+        lw.vi    $70, $70, 0, 0xf
+        lw.vi    $71, $71, 1, 0xf
+        lw.vi    $72, $72, 2, 0xf
+        lw.vi    $73, $73, 3, 0xf
 
-        # ========== STEP 1: scores = Q * K^T (SxD * DxS -> SxS) ==========
-        # Load K^T rows into systolic array
-        addi.s  $27, $0, 0
-        addi.s  $28, $0, {d}
+        lw.s     $9, 28($1)
+        scpad.ld $3, $9, {COLS}, {ROWS}, {SID0}
+        vreg.ld  $74, $3, {COLS}, {ROWS}, {SID0}, 1, 0
+        vreg.ld  $75, $3, {COLS}, {ROWS}, {SID0}, 1, 1
+        vreg.ld  $76, $3, {COLS}, {ROWS}, {SID0}, 1, 2
+        vreg.ld  $77, $3, {COLS}, {ROWS}, {SID0}, 1, 3
 
-kt_load_loop:
-        bge.s   $27, $28, kt_load_done
-        vreg.ld $10, $5, {s_m1}, {d_m1}, 0, 1, $27
-        lw.vi   $10, $10, 0, 0xf
-        addi.s  $27, $27, 1
-        blt.s   $27, $28, kt_load_loop
+        gemm.vv  $60, $60, $74, 0, 0
+        gemm.vv  $61, $61, $75, 0, 0
+        gemm.vv  $62, $62, $76, 0, 0
+        gemm.vv  $63, $63, $77, 0, 0
 
-kt_load_done:
-        # Compute scores: for each Q row, gemm.vv -> scores row in SP1
-        addi.s  $25, $0, 0
-        addi.s  $26, $0, {S}
+        rmax.vi  $90, $60, 0, 1
+        vmov.vts $14, $90, 0
+        sub.vs   $60, $60, $14, 1
+        expi.vi  $90, $60, 0, 1
+        rsum.vi  $91, $90, {RSUM_IMM}, 1
+        vmov.vts $14, $91, 0
+        div.vs   $60, $90, $14, 1
 
-        # zero accumulator vector
-        sub.vv  $31, $31, $31, 1, 0
+        rmax.vi  $92, $61, 0, 1
+        vmov.vts $14, $92, 0
+        sub.vs   $61, $61, $14, 1
+        expi.vi  $92, $61, 0, 1
+        rsum.vi  $93, $92, {RSUM_IMM}, 1
+        vmov.vts $14, $93, 0
+        div.vs   $61, $92, $14, 1
 
-scores_row_loop:
-        vreg.ld $30, $3, {d_m1}, {s_m1}, 0, 1, $25
-        gemm.vv $32, $30, $31, 0, 0
-        vreg.st $32, $16, {s_m1}, {s_m1}, 1, 1, $25
+        rmax.vi  $94, $62, 0, 1
+        vmov.vts $14, $94, 0
+        sub.vs   $62, $62, $14, 1
+        expi.vi  $94, $62, 0, 1
+        rsum.vi  $95, $94, {RSUM_IMM}, 1
+        vmov.vts $14, $95, 0
+        div.vs   $62, $94, $14, 1
 
-        addi.s  $25, $25, 1
-        blt.s   $25, $26, scores_row_loop
+        rmax.vi  $96, $63, 0, 1
+        vmov.vts $14, $96, 0
+        sub.vs   $63, $63, $14, 1
+        expi.vi  $96, $63, 0, 1
+        rsum.vi  $97, $96, {RSUM_IMM}, 1
+        vmov.vts $14, $97, 0
+        div.vs   $63, $96, $14, 1
 
-        # ========== STEP 2: scale scores by 1/sqrt(d) ==========
-        addi.s  $25, $0, 0
-
-scale_row_loop:
-        vreg.ld $32, $16, {s_m1}, {s_m1}, 1, 1, $25
-        mul.vs  $32, $32, $14, 1
-        vreg.st $32, $16, {s_m1}, {s_m1}, 1, 1, $25
-
-        addi.s  $25, $25, 1
-        blt.s   $25, $26, scale_row_loop
-
-        # ========== STEP 3: row-wise softmax on scores ==========
-        addi.s  $25, $0, 0
-
-softmax_row_loop:
-        vreg.ld $10, $16, {s_m1}, {s_m1}, 1, 1, $25
-
-        rmax.vi  $11, $10, 0, 1
-        vmov.vts $15, $11, 0
-        sub.vs   $10, $10, $15, 1
-        expi.vi  $12, $10, 0, 1
-        rsum.vi  $13, $12, 64, 1
-        vmov.vts $15, $13, 0
-        div.vs   $10, $12, $15, 1
-
-        vreg.st $10, $16, {s_m1}, {s_m1}, 1, 1, $25
-
-        addi.s  $25, $25, 1
-        blt.s   $25, $26, softmax_row_loop
-
-        # ========== STEP 4: output = attn * V (SxS * SxD -> SxD) ==========
-        # Load V tile (SxD) into SP0 at V_SCPAD
-        scpad.ld $7, $6, {d_m1}, {s_m1}, 0
-
-        # Load V rows into systolic array
-        addi.s  $27, $0, 0
-        addi.s  $28, $0, {S}
-
-v_load_loop:
-        bge.s   $27, $28, v_load_done
-        vreg.ld $10, $7, {d_m1}, {s_m1}, 0, 1, $27
-        lw.vi   $10, $10, 0, 0xf
-        addi.s  $27, $27, 1
-        blt.s   $27, $28, v_load_loop
-
-v_load_done:
-        # Compute output: for each attn row, gemm.vv -> output row
-        addi.s  $25, $0, 0
-        sub.vv  $31, $31, $31, 1, 0
-
-output_row_loop:
-        vreg.ld $30, $16, {s_m1}, {s_m1}, 1, 1, $25
-        gemm.vv $32, $30, $31, 0, 0
-        vreg.st $32, $9, {d_m1}, {s_m1}, 1, 1, $25
-
-        addi.s  $25, $25, 1
-        blt.s   $25, $26, output_row_loop
-
-        # Store output from SP1 to DRAM
-        scpad.st $9, $8, {d_m1}, {s_m1}, 1
-
+        vreg.st  $60, $3, {COLS}, {ROWS}, {SID0}, 1, 0
+        vreg.st  $61, $3, {COLS}, {ROWS}, {SID0}, 1, 1
+        vreg.st  $62, $3, {COLS}, {ROWS}, {SID0}, 1, 2
+        vreg.st  $63, $3, {COLS}, {ROWS}, {SID0}, 1, 3
+        lw.s     $17, 20($1)
+        scpad.st $3, $17, {COLS}, {ROWS}, {SID0}
         halt.s
     """
 
-
-def main():
-    ap = argparse.ArgumentParser()
-    ap.add_argument("-o", "--output", type=Path, default=Path("tests/attention.in"))
-    ap.add_argument("--S", type=int, default=4, help="Sequence length (<=32)")
-    ap.add_argument("--d", type=int, default=4, help="Head dimension (<=32)")
-    args = ap.parse_args()
-
-    S = args.S
-    d = args.d
-    assert S <= 32 and d <= 32, "S and d must be <= 32"
-
-    ADDR_TABLE = 60
-    Q_GMEM     = 0x1000
-    Q_SCPAD    = 0
-    KT_GMEM    = 0x2000
-    KT_SCPAD   = 512
-    V_GMEM     = 0x3000
-    V_SCPAD    = 1024
-    OUT_GMEM   = 0x4000
-    OUT_SCPAD  = 0
-    SCORES_SCPAD = 0
-    SCALE_ADDR = 0x0100
-
-    inv_sqrt_d = 1.0 / math.sqrt(d)
-
-    np.random.seed(42)
-    Q  = np.random.randn(S, d).astype(np.float32) * 0.5
-    K  = np.random.randn(S, d).astype(np.float32) * 0.5
-    V  = np.random.randn(S, d).astype(np.float32) * 0.5
-    KT = K.T
-
-    asm = make_attention_asm(S, d)
     instrs = assemble_file(asm)
-    instr_text = emit_test_format(instrs)
+    if args.no_graph:
+        instr_text = emit_test_format(instrs)
+    else:
+        dependency_instrs = convert_instructions(instrs)
+        ready = build_dependency_graph(dependency_instrs, DEFAULT_LATENCY_MAP)
+        packets = greedy_pack(dependency_instrs, ready, max_width=GRAPH_PACKET_WIDTH)
+        scheduled = materialize_scheduled_instructions(instrs, packets, packet_width=GRAPH_PACKET_WIDTH)
+        instr_text = emit_test_format(scheduled, virtual_packet_size=GRAPH_PACKET_WIDTH)
 
     img = DRAMWriter()
+    img.u32(ADDR_TABLE_BASE + 0, TILE_ADDR_INPUT)
+    img.u32(ADDR_TABLE_BASE + 4, SCPAD_ADDR)
+    img.u32(ADDR_TABLE_BASE + 8, TILE_ADDR_Q)
+    img.u32(ADDR_TABLE_BASE + 12, TILE_ADDR_K)
+    img.u32(ADDR_TABLE_BASE + 16, TILE_ADDR_V)
+    img.u32(ADDR_TABLE_BASE + 20, TILE_ADDR_OUTPUT)
+    img.u32(ADDR_TABLE_BASE + 24, TILE_ADDR_W)
+    img.u32(ADDR_TABLE_BASE + 28, TILE_ADDR_B)
+    img.u32(ADDR_TABLE_BASE + 32, TILE_ADDR_ATTN)
+    img.f32(EPSILON_LOCATION, 1e-5)
 
-    img.u32(ADDR_TABLE + 0,  Q_GMEM)
-    img.u32(ADDR_TABLE + 4,  Q_SCPAD)
-    img.u32(ADDR_TABLE + 8,  KT_GMEM)
-    img.u32(ADDR_TABLE + 12, KT_SCPAD)
-    img.u32(ADDR_TABLE + 16, V_GMEM)
-    img.u32(ADDR_TABLE + 20, V_SCPAD)
-    img.u32(ADDR_TABLE + 24, OUT_GMEM)
-    img.u32(ADDR_TABLE + 28, OUT_SCPAD)
-    img.u32(ADDR_TABLE + 32, SCORES_SCPAD)
-
-    scale_bits = struct.unpack("<I", struct.pack("<f", inv_sqrt_d))[0]
-    img.u32(ADDR_TABLE + 36, scale_bits)
-
-    for r in range(S):
-        for c in range(d):
-            img.bf16(Q_GMEM + (r * d + c) * 2, float(Q[r, c]))
-
-    for r in range(d):
-        for c in range(S):
-            img.bf16(KT_GMEM + (r * S + c) * 2, float(KT[r, c]))
-
-    for r in range(S):
-        for c in range(d):
-            img.bf16(V_GMEM + (r * d + c) * 2, float(V[r, c]))
-
-    for i in range(S * d):
-        img.bf16(OUT_GMEM + i * 2, 0.0)
-
-    scores = bf16_matmul(Q, KT) * inv_sqrt_d
-    attn_weights = bf16_softmax(scores)
-    expected = bf16_matmul(attn_weights, V)
-
-    print(f"Attention: S={S}, d={d}, scale=1/sqrt({d})={inv_sqrt_d:.4f}")
-    print(f"\nQ =\n{Q}")
-    print(f"\nK^T =\n{KT}")
-    print(f"\nV =\n{V}")
-    print(f"\nScores (Q*K^T*scale) =\n{scores}")
-    print(f"\nAttn weights (softmax) =\n{attn_weights}")
-    print(f"\nExpected output =\n{expected}")
-
-    data_text = img.render_data_mem(include_zeros=True)
-    final = render_testfile(instr_text, data_text)
-
-    if args.output is not None:
-        os.makedirs(args.output.parent, exist_ok=True)
-        args.output.write_text(final)
-        print(f"\nWrote {args.output}")
+    if args.data is not None:
+        input_values = load_tile_data(args.data, N)
     else:
-        print(final)
+        input_values = [float(v) for v in range(4, 4 + N * N)]
+    for i, val in enumerate(input_values):
+        img.bf16(TILE_ADDR_INPUT + i * 2, val)
+    for i, val in enumerate(Q.flatten()):
+        img.bf16(TILE_ADDR_Q + i * 2, float(val))
+    for i, val in enumerate(K.flatten()):
+        img.bf16(TILE_ADDR_K + i * 2, float(val))
+    for i, val in enumerate(V.flatten()):
+        img.bf16(TILE_ADDR_V + i * 2, float(val))
+    for i in range(N):
+        for j in range(N):
+            img.bf16(TILE_ADDR_ATTN + (i * N + j) * 2, float(attn_ref[i, j]))
+    WT = W.T
+    for r in range(N):
+        for c in range(N):
+            img.bf16(TILE_ADDR_W + (r * N + c) * 2, float(WT[r, c]))
+    for i in range(N * N):
+        img.bf16(TILE_ADDR_B + i * 2, 0.0)
+        img.bf16(TILE_ADDR_OUTPUT + i * 2, 0.0)
+
+    final = render_testfile(instr_text, img.render_data_mem(include_zeros=False))
+    os.makedirs(args.output.parent, exist_ok=True)
+    args.output.write_text(final)
+    print(f"[INFO] Written to {args.output}")
 
 
 if __name__ == "__main__":

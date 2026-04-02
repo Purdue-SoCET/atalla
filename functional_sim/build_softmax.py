@@ -9,7 +9,10 @@ from pathlib import Path
 import argparse
 import numpy as np
 
-from build import *
+try:
+    from .build import *
+except Exception:
+    from build import *
 INVERT_OPCODES = name_to_opcode()
 VIRTUAL_PACKET_SIZE = 4 
 REAL_PACKET_SIZE = 4
@@ -902,13 +905,15 @@ if __name__ == "__main__":
     ap.add_argument("-o", "--output", type=Path, default=None, help="Output test file")
     args = ap.parse_args()
 
-    demo_asm = """
+    NUM_COLS = 3
+    NUM_ROWS = 3
+    demo_asm = f"""
         lui.s   $1, 0
         addi.s  $1, $0, 60
 
         lw.s    $2, 0($1)          # $2 = TILE_ADDR
         lw.s    $3, 4($1)          # $3 = SCPAD_ADDR
-        scpad.ld $3, $2, 4, 4, 0
+        scpad.ld $3, $2, {NUM_COLS}, {NUM_ROWS}, 0
 
         # mask1 = 0x0000000F  (enable lanes 0..3 only)
         addi.s  $4, $0, 15
@@ -919,7 +924,7 @@ if __name__ == "__main__":
         mv.stm  2, $5
 
         # ---------------- row 0 (rc_id MUST be 0..3) ----------------
-        vreg.ld  $10, $3, 4, 4, 0, 1, 0
+        vreg.ld  $10, $3, {NUM_COLS}, {NUM_ROWS}, 0, 1, 0
         sub.vv   $10, $10, $10, 2, 0      # clear lanes 4..31
 
         rmax.vi  $11, $10, 0, 1
@@ -929,10 +934,10 @@ if __name__ == "__main__":
         rsum.vi  $13, $12, 64, 1          # 64 = broadcast reduction result
         vmov.vts $6, $13, 0               # use $6 (NOT $2)
         div.vs   $10, $12, $6, 1
-        vreg.st  $10, $3, 4, 4, 0, 1, 0
+        vreg.st  $10, $3, {NUM_COLS}, {NUM_ROWS}, 0, 1, 0
 
         # ---------------- row 1 ----------------
-        vreg.ld  $10, $3, 4, 4, 0, 1, 1
+        vreg.ld  $10, $3, {NUM_COLS}, {NUM_ROWS}, 0, 1, 1
         sub.vv   $10, $10, $10, 2, 0
 
         rmax.vi  $11, $10, 0, 1
@@ -942,10 +947,10 @@ if __name__ == "__main__":
         rsum.vi  $13, $12, 64, 1
         vmov.vts $6, $13, 0
         div.vs   $10, $12, $6, 1
-        vreg.st  $10, $3, 4, 4, 0, 1, 1
+        vreg.st  $10, $3, {NUM_COLS}, {NUM_ROWS}, 0, 1, 1
 
         # ---------------- row 2 ----------------
-        vreg.ld  $10, $3, 4, 4, 0, 1, 2
+        vreg.ld  $10, $3, {NUM_COLS}, {NUM_ROWS}, 0, 1, 2
         sub.vv   $10, $10, $10, 2, 0
 
         rmax.vi  $11, $10, 0, 1
@@ -955,10 +960,10 @@ if __name__ == "__main__":
         rsum.vi  $13, $12, 64, 1
         vmov.vts $6, $13, 0
         div.vs   $10, $12, $6, 1
-        vreg.st  $10, $3, 4, 4, 0, 1, 2
+        vreg.st  $10, $3, {NUM_COLS}, {NUM_ROWS}, 0, 1, 2
 
         # ---------------- row 3 ----------------
-        vreg.ld  $10, $3, 4, 4, 0, 1, 3
+        vreg.ld  $10, $3, {NUM_COLS}, {NUM_ROWS}, 0, 1, 3
         sub.vv   $10, $10, $10, 2, 0
 
         rmax.vi  $11, $10, 0, 1
@@ -968,9 +973,9 @@ if __name__ == "__main__":
         rsum.vi  $13, $12, 64, 1
         vmov.vts $6, $13, 0
         div.vs   $10, $12, $6, 1
-        vreg.st  $10, $3, 4, 4, 0, 1, 3
+        vreg.st  $10, $3, {NUM_COLS}, {NUM_ROWS}, 0, 1, 3
 
-        scpad.st $3, $2, 4, 4, 0          # store back to TILE_ADDR using $2
+        scpad.st $3, $2, {NUM_COLS}, {NUM_ROWS}, 0          # store back to TILE_ADDR using $2
         halt.s
 
     """

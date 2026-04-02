@@ -9,8 +9,12 @@ from pathlib import Path
 import argparse
 import numpy as np
 
-from .build import * 
-from kernels.utils.dataloader import load_tile_data
+try:
+    from .build import *
+    from .kernels.utils.dataloader import load_tile_data
+except Exception:
+    from build import *
+    from kernels.utils.dataloader import load_tile_data
 
 
 
@@ -32,10 +36,11 @@ def main():
     SCPAD_ADDR = 1
     EPSILON_LOCATION = 20
     INV_LAYER_ELEMS_LOCATION = 24
-    COLS = 4
-    ROWS = 4
+    N = args.n
+    COLS = N - 1
+    ROWS = N - 1
     SID = 0
-    LAYER_ELEMS = 16
+    LAYER_ELEMS = N * N
     RSUM_MASK = 64
     
     

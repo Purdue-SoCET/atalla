@@ -9,7 +9,10 @@ from pathlib import Path
 import argparse
 import numpy as np
 
-from .build import *
+try:
+    from .build import *
+except Exception:
+    from build import *
 
 
 def main():
@@ -31,8 +34,8 @@ def main():
     SCPAD_ADDR = 1
     EPSILON_LOCATION = 20
     INV_LAYER_ELEMS_LOCATION = 24
-    COLS = N
-    ROWS = N
+    COLS = N - 1
+    ROWS = N - 1
     SID = 0
     LAYER_ELEMS = N * N
     RSUM_IMM = 64

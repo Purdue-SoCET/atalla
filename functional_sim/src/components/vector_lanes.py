@@ -146,7 +146,7 @@ class VectorLanes:
         return self._elementwise_op(a, b, lambda x, y: x * y, self.multipliers)
 
     def div(self, a: np.ndarray, b: np.ndarray) -> np.ndarray:
-        return self._elementwise_op(a, b, lambda x, y: np.where(y != 0, x / y, 0.0), self.multipliers)
+        return self._elementwise_op(a, b, lambda x, y: np.where(y == 0.0, 0.0, x / y), self.multipliers)
 
     def exp(self, a: np.ndarray) -> np.ndarray:
         a = self._ensure_vec(a)
@@ -190,8 +190,12 @@ class VectorLanes:
                                     lambda x, y: x * y, self.multipliers)
 
     def div_scalar(self, a: np.ndarray, s: float) -> np.ndarray:
-        return self._elementwise_op(a, np.array([s], dtype=np.float32),
-                                    lambda x, y: np.where(y != 0, x / y, 0.0), self.multipliers)
+        denom = float(s)
+        if denom == 0.0:
+            a = self._ensure_vec(a)
+            return np.zeros_like(a, dtype=np.float32)
+        return self._elementwise_op(a, np.array([denom], dtype=np.float32),
+                                    lambda x, y: x / y, self.multipliers)
 
     # --------------------------------------------------------
     # Vector << scalar   and   Vector >> scalar (logical shifts)
@@ -488,6 +492,7 @@ class VectorLanes:
             if new_op == "subi":    return self.sub_scalar(vA, sA)
             #if new_op == "scalar_sub":    return self.scalar_sub(sA, vA)
             if new_op == "muli":    return self.mul_scalar(vA, sA)
+            if new_op == "divi":    return self.div_scalar(vA, sA)
             #if new_op == "scalar_div":    return self.scalar_div(sA, vA)
             if new_op == "expi":           return self.exp(vA)
             if new_op == "sqrti":          return self.sqrt(vA)

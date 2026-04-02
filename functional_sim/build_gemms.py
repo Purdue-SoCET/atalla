@@ -9,8 +9,12 @@ from pathlib import Path
 import argparse
 import numpy as np
 
-from src.misc.opcode_table import OPCODES, name_to_opcode
-from build import *
+try:
+    from .src.misc.opcode_table import OPCODES, name_to_opcode
+    from .build import *
+except Exception:
+    from src.misc.opcode_table import OPCODES, name_to_opcode
+    from build import *
 
 
 def bf16_round(x: float) -> int:
@@ -31,6 +35,8 @@ def main():
     # Change values here for parametrization:
     COLS      = 20
     ROWS      = 20
+    COLS_MAX  = COLS - 1
+    ROWS_MAX  = ROWS - 1
     NUM_TILES = 3
 
 
@@ -83,7 +89,7 @@ def main():
         lw.s    $23, 20($20)        # $23 = OUTPUT_SCPAD_ADDR (= 0)
 
         #  load W^T tile into scpad0
-        scpad.ld $3, $6, {COLS}, {ROWS}, {SID0}
+        scpad.ld $3, $6, {COLS_MAX}, {ROWS_MAX}, {SID0}
 
         #  enable systolic rows (0xF enables all 4 rows)
         lui.s   $6, 0
@@ -96,14 +102,14 @@ def main():
 
 weight_load_loop:
         bge.s   $27, $28, weight_load_done  # if counter >= {ROWS}, done
-        vreg.ld $10, $3, {COLS}, {ROWS}, {SID0}, 1, $27
+        vreg.ld $10, $3, {COLS_MAX}, {ROWS_MAX}, {SID0}, 1, $27
         lw.vi   $10, $10, 0, 0xf
         addi.s  $27, $27, 1
         blt.s   $27, $28, weight_load_loop  # jump back if counter < limit
 
 weight_load_done:
         # load initial C (zeros) into scpad1
-        scpad.ld $23, $24, {COLS}, {ROWS}, {SID1}
+        scpad.ld $23, $24, {COLS_MAX}, {ROWS_MAX}, {SID1}
 
         # tile loop
         # For each input tile:
@@ -115,16 +121,16 @@ weight_load_done:
         addi.s  $26, $0, {NUM_TILES}
 
 tile_loop:
-        scpad.ld $21, $2, {COLS}, {ROWS}, {SID0}
+        scpad.ld $21, $2, {COLS_MAX}, {ROWS_MAX}, {SID0}
 
         addi.s  $27, $0, 0
         addi.s  $28, $0, {ROWS}
 
 row_loop:
-        vreg.ld $4, $21, {COLS}, {ROWS}, {SID0}, 1, $27
-        vreg.ld $5, $23, {COLS}, {ROWS}, {SID1}, 1, $27
+        vreg.ld $4, $21, {COLS_MAX}, {ROWS_MAX}, {SID0}, 1, $27
+        vreg.ld $5, $23, {COLS_MAX}, {ROWS_MAX}, {SID1}, 1, $27
         gemm.vv $6, $4, $5, 0, 0
-        vreg.st $6, $23, {COLS}, {ROWS}, {SID1}, 1, $27
+        vreg.st $6, $23, {COLS_MAX}, {ROWS_MAX}, {SID1}, 1, $27
 
         addi.s  $27, $27, 1
         blt.s   $27, $28, row_loop
@@ -134,7 +140,7 @@ row_loop:
         blt.s   $25, $26, tile_loop
 
         #store final C: scpad1 -> gmem
-        scpad.st $23, $24, {COLS}, {ROWS}, {SID1}
+        scpad.st $23, $24, {COLS_MAX}, {ROWS_MAX}, {SID1}
 
         halt.s
     """

@@ -69,53 +69,35 @@ def run(mem: Memory, sregs: ScalarRegisterFile, mregs: ScalarRegisterFile, vregs
         
     pc_increment = packet_length * 6
 
-    _orig_mregs_read = mregs.read
-    def _mregs_read(idx):
-        return 0xFFFFFFFF if idx == 0 else _orig_mregs_read(idx)
-    mregs.read = _mregs_read
-
     gemm_weights = np.zeros((32, 32))
     num_weights = 0
-    _gemm_ran = False
 
     tile_id0 = 0
     tile_id1 = 1
     tileID0Dict = {}
     tileID1Dict = {}
 
-    _vec_spill_mem = {}
-
-    cycle_count = 0
-    instr_count = 0
-    packet_count = 0
-    branch_count = 0
-    mem_ops = 0
-    gemm_count = 0
-    sdma_count = 0
-
     halt = False
+    EU.perf_metrics.set_metric("packets_executed", 0)
+    EU.perf_metrics.set_metric("instructions_executed", 0)
     while (not(halt)):
+        EU.perf_metrics.increment("packets_executed", 1)
         dec_packet = decode_packet(packet=mem.read_instr(pc), packet_length=packet_length, debug=debug)
 
         if debug: 
             print(f"PC: 0x{pc:08X}")
             print(f"Decoded packet: {dec_packet}")
 
-        cycle_count += 1
-        packet_count += 1
         br = False
 
         for inst in dec_packet:
             m = inst['mnemonic']
             if(m == "nop.s" or m == "barrier.s"):
                 continue
-
-            instr_count += 1
-
-            if(m == "halt.s"):
+            EU.perf_metrics.increment("instructions_executed", 1)
+            if (m == "halt.s"):
                 halt = True
             elif (m == "jal" or m == "jalr" or inst['type'] == "BR"):
-                branch_count += 1
                 br = True
                 if(m == "jal"):
                     brtarg = pc + (inst['imm'])
@@ -174,42 +156,48 @@ def run(mem: Memory, sregs: ScalarRegisterFile, mregs: ScalarRegisterFile, vregs
                 mem.write_data(sregs.read(inst['rs1']) + inst['imm'], temp)
             #vector load/store here
             elif m == "vreg.ld":
+                if inst['sid'] == 1:
+                    target_sp = SP1 
+                else:
+                    target_sp = SP0
+                
                 addr = sregs.read(inst['rs1'])
                 rc_id_val = sregs.read(inst['rc_id']) if inst.get('rc_id_is_reg', 0) else inst['rc_id']
-                is_spill = addr < 0 or addr >= SP0.B * SP0.S
-                if is_spill:
-                    vec_data = _vec_spill_mem.get(addr, [0] * 32)
-                    vregs.write(inst['vd'], vec_data)
-                else:
-                    target_sp = SP1 if inst['sid'] == 1 else SP0
-                    scpad_to_vreg(
-                        scpad=target_sp, vregs=vregs,
-                        scpad_addr=addr, vd=inst['vd'],
-                        rc=inst['rc'], rc_id=rc_id_val,
-                        num_rows=inst['num_rows'],
-                        num_cols=inst['num_cols']
-                    )
+                
+                scpad_to_vreg(
+                    scpad=target_sp,
+                    vregs=vregs,
+                    scpad_addr=addr,
+                    vd=inst['vd'],
+                    rc=inst['rc'],
+                    rc_id=rc_id_val,
+                    num_rows=inst['num_rows'],
+                    num_cols=inst['num_cols']
+                )
 
             elif m == "vreg.st":
+                if inst['sid'] == 1:
+                    target_sp = SP1 
+                else:
+                    target_sp = SP0
+                
                 addr = sregs.read(inst['rs1'])
                 rc_id_val = sregs.read(inst['rc_id']) if inst.get('rc_id_is_reg', 0) else inst['rc_id']
-                if addr < 0 or addr >= SP0.B * SP0.S:
-                    _vec_spill_mem[addr] = vregs.read(inst['vd'])
-                else:
-                    target_sp = SP1 if inst['sid'] == 1 else SP0
-                    vreg_to_scpad(
-                        scpad=target_sp, vregs=vregs,
-                        scpad_addr=addr, vs=inst['vd'],
-                        rc=inst['rc'], rc_id=rc_id_val,
-                        num_rows=inst['num_rows'],
-                        num_cols=inst['num_cols']
-                    )
+                
+                vreg_to_scpad(
+                    scpad=target_sp,
+                    vregs=vregs,
+                    scpad_addr=addr,
+                    vs=inst['vd'],
+                    rc=inst['rc'],
+                    rc_id=rc_id_val,
+                    num_rows=inst['num_rows'],
+                    num_cols=inst['num_cols']
+                )
 
             #scpad load/store here
 
             elif (m == "scpad.ld"):
-                sdma_count += 1
-                mem_ops += 1
                 if inst.get('sdma_ctl_from_reg'):
                     ctl = sregs.read(inst['rs3'])
                     inst = dict(inst)
@@ -234,8 +222,6 @@ def run(mem: Memory, sregs: ScalarRegisterFile, mregs: ScalarRegisterFile, vregs
                     sdma_load(gmem=mem, scpad=SP1, gmem_base=sregs.read(inst['rs2']), scpad_base_row=int(sregs.read(inst['rs1/rd1'])), tile_id=localID, NR=inst['num_rows'], NC=inst['num_cols'], perf_metrics=EU.perf_metrics)
 
             elif (m == "scpad.st"):
-                sdma_count += 1
-                mem_ops += 1
                 if inst.get('sdma_ctl_from_reg'):
                     ctl = sregs.read(inst['rs3'])
                     inst = dict(inst)
@@ -312,12 +298,22 @@ def run(mem: Memory, sregs: ScalarRegisterFile, mregs: ScalarRegisterFile, vregs
                 if(m == "mul.bf"):
                     WBdata = fp32_to_hex(WBdata)
                 sregs.write(inst['rd'], int(WBdata))
-            elif m == "divi.s":
-                src1 = sregs.read(inst['rs1'])
-                src2 = inst['imm']
+            elif m in ("div.s", "divi.s"):
+                if m == "div.s":
+                    src1 = sregs.read(inst['rs1'])
+                    src2 = sregs.read(inst['rs2'])
+                else:
+                    src1 = sregs.read(inst['rs1'])
+                    src2 = inst['imm']
                 WBdata = EU.execute(m, sA=src1, sB=src2)
                 sregs.write(inst['rd'], int(WBdata))
             elif m == "rcp.bf":
+                src1 = sregs.read(inst['rs1'])
+                src1 = hex_to_fp32(src1)
+                WBdata = EU.execute(m, sA=src1)
+                WBdata = fp32_to_hex(WBdata)
+                sregs.write(inst['rd'], int(WBdata))
+            elif m == "sqrt.bf":
                 src1 = sregs.read(inst['rs1'])
                 src1 = hex_to_fp32(src1)
                 WBdata = EU.execute(m, sA=src1)
@@ -424,11 +420,7 @@ def run(mem: Memory, sregs: ScalarRegisterFile, mregs: ScalarRegisterFile, vregs
             elif m.endswith(".vv"):
                 # ------------ GEMM ------------------------------
                 if (m == "gemm.vv"):
-                    gemm_count += 1
-                    _gemm_ran = True
-                    v_in = vregs.read(inst['vs1'])
-                    v_acc = vregs.read(inst['vs2'])
-                    vregs.write(inst['vd'], gemm_weights @ v_in + v_acc)
+                    vregs.write(inst['vd'], vregs.read(inst['vs1']) @ gemm_weights + vregs.read(inst['vs2']))
                 else:
                     src1 = vregs.read(inst['vs1'])
                     src2 = vregs.read(inst['vs2'])
@@ -455,12 +447,16 @@ def run(mem: Memory, sregs: ScalarRegisterFile, mregs: ScalarRegisterFile, vregs
             # ---------------- VI (WEIGHTS ONLY) ----------------
             elif (m == "lw.vi"):
                 src1 = vregs.read(inst['vs1'])
-                if _gemm_ran:
-                    gemm_weights[:] = 0
-                    num_weights = 0
-                    _gemm_ran = False
-                gemm_weights[:, num_weights % 32] = src1
-                num_weights += 1
+    
+                if num_weights < 32:
+                    # Initial fill: Place at the next available slot from left to right
+                    gemm_weights[:, num_weights] = src1
+                    num_weights += 1
+                else:
+                    # Matrix is full: Shift everything to the right and insert at the left (index 0)
+                    # gemm_weights[:, 1:] moves columns 0-30 to positions 1-31
+                    gemm_weights[:, 1:] = gemm_weights[:, :-1]
+                    gemm_weights[:, 0] = src1
             elif (m == "vmov.vts"):
                 src1 = vregs.read(inst['vs1'])
                 temp = fp32_to_hex(src1[inst['imm8']])
@@ -535,14 +531,6 @@ def run(mem: Memory, sregs: ScalarRegisterFile, mregs: ScalarRegisterFile, vregs
         parent = os.path.dirname(os.fspath(path))
         if parent:
             os.makedirs(parent, exist_ok=True)
-
-    EU.perf_metrics.set_metric("cycles", cycle_count)
-    EU.perf_metrics.set_metric("packets", packet_count)
-    EU.perf_metrics.set_metric("instructions", instr_count)
-    EU.perf_metrics.set_metric("branches", branch_count)
-    EU.perf_metrics.set_metric("mem_ops", mem_ops)
-    EU.perf_metrics.set_metric("gemm_ops", gemm_count)
-    EU.perf_metrics.set_metric("sdma_ops", sdma_count)
 
     _ensure_parent(out_sreg_file)
     _ensure_parent(out_vreg_file)
