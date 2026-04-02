@@ -8,7 +8,7 @@ package atalla_isa_pkg;
   // ============================================================
 
   parameter WORD_W        = 32;
-  parameter INST_W        = 48;
+  parameter INST_W        = 40;
   parameter PACKET_SIZE   = 4;
   parameter PACKET_W      = INST_W * PACKET_SIZE; // 192 bits
   parameter PACKET_BYTE_W = PACKET_W / 8;
