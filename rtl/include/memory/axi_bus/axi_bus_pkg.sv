@@ -68,6 +68,12 @@ package axi_bus_pkg;
     localparam int WRR_DEPTH      = 2;
     localparam int WRR_PTR_WIDTH  = $clog2(WRR_DEPTH);
 
+    // Write Driver Skid Buffer Width
+    localparam int WDRV_DEPTH_AW     = 2;
+    localparam int WDRV_PTR_WIDTH_AW = $clog2(WDRV_DEPTH_AW);
+    localparam int WDRV_DEPTH_W     = 3;
+    localparam int WDRV_PTR_WIDTH_W = $clog2(WDRV_DEPTH_W);
+
     //////////////////////////////////////////////////////////////////////
     ////////////////////////////////// Enums /////////////////////////////
     //////////////////////////////////////////////////////////////////////
