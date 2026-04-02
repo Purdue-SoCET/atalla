@@ -28,8 +28,10 @@ module nb_wdata_queue_wrapper (
     logic [$clog2(ID_NUM)-1:0] selected_queue; //for outputting data to dram. Backend arbiter should be in charge of making sure that no two output bursts intefere. 
     
 
-    bind nb_wdata_queue_wrapper nb_wdata_queue_prop WDATA_QUEUE_MONITOR (CLK, nRST, bwvalid, bw_arb, wdw.bwready, wdw.be_write, 
+    bind nb_wdata_queue_wrapper nb_wdata_queue_prop WDATA_QUEUE_MONITOR (CLK, nRST, bwvalid, pri, wdw.bwready, wdw.be_write, 
     wdw.be_wid, ddr_we);
+
+
     assign wdw.wready = wready[wdw.wdq_slot.wid];
     assign wdw.bwvalid = bwvalid[pri];
     assign wdw.bwresp = bwresp[pri];

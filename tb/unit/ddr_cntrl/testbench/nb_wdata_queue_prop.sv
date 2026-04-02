@@ -40,7 +40,7 @@ module nb_wdata_queue_prop(
 
     property AXI_wdata_wait(int i); //ensures proper handshake.
         @(posedge CLK) disable iff (!nRST || lock)
-        (bwvalid[i] && !(bwready && (bw_arb == i))) |=>  (bwvalid[i]); 
+        (bwvalid[i] && !(bwready && (bw_arb == i))) |=>   (bwvalid[i]); 
     endproperty
 
     property AXI_wdata_handshake_cycle(int i); //ensures proper handshake.

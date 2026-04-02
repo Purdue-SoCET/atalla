@@ -50,7 +50,7 @@ module nb_wdata_queue  #(Q_ID = 0, ID_NUM = 8) (
     
     if(!nRST) begin
       for(int i = 0; i < DEPTH; i++)
-        regs[i] = DATA_Q_Slot_t'({ 32'b0, 8'b1111_1111, 1'b0});
+        regs[i] <= DATA_Q_Slot_t'({ 32'b0, 8'b1111_1111, 1'b0});
     end else if(wen)
       regs[dram_ptr] <= data_in;
     else

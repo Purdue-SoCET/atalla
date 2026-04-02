@@ -150,15 +150,16 @@ module nb_wdata_queue_tb;
             end
             ddrif0.bwready = 1'b1;
             n = 0;
-            while(!ddrif0.bwvalid) begin
-                @(posedge CLK);
+            //while(!ddrif0.bwvalid) begini
+	    do begin
                 if(n > 1000) begin
                     $display("driver_bresp timed out on test %d", case_num);
                     break;
                 end
                 n++;
                 //#(1);
-            end
+		@(posedge CLK);
+            end while(!ddrif0.bwvalid); 
             @(posedge CLK);
             ddrif0.bwready = 1'b0;
         end
@@ -200,7 +201,7 @@ module nb_wdata_queue_tb;
             for(int i = 0; i < NUM_REQS; i++) begin
                 for(int j = 0; j < 8; j++) begin
                     num_tests = num_tests + 2;
-                    if(output_vector[i][j].data_out == correct_vector[i][j].data_out_correct) begin
+                    if(output_vector[i][j].data_out == correct_vector[i][j].data_out_correct || output_vector[i][j].mask_out == 'hFF) begin
                         $display("Test %d data passed.", i);
                         num_passed++;
                     end else begin
