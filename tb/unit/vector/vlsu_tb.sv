@@ -27,7 +27,7 @@ module vlsu_tb;
     // ------------------------------------------------------------------
     // Interfaces
     // ------------------------------------------------------------------
-    vlsu_if  vif(.clk(CLK), .n_rst(nRST));
+    vlsu_if  vif();
     scpad_if sif(.clk(CLK), .n_rst(nRST));
 
     // ------------------------------------------------------------------
@@ -38,6 +38,8 @@ module vlsu_tb;
         .NUM_VREGS(NUM_VREGS),
         .IDX(0)
     ) DUT0 (
+        .CLK (CLK),
+        .nRST(nRST),
         .vif (vif),
         .sif (sif)
     );
@@ -47,6 +49,8 @@ module vlsu_tb;
         .NUM_VREGS(NUM_VREGS),
         .IDX(1)
     ) DUT1 (
+        .CLK (CLK),
+        .nRST(nRST),
         .vif (vif),
         .sif (sif)
     );

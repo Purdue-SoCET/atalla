@@ -122,11 +122,13 @@ module vector_datapath (
 
     
     //VLSU
-    vlsu_if vlsuif (.clk(CLK), .n_rst(nRST));
+    vlsu_if vlsuif();
     genvar vlsu_i;
     generate 
         for (vlsu_i = 0; vlsu_i < NUM_SCPADS; vlsu_i++) begin : gen_vlsu_connections
             vlsu #(.IDX(vlsu_i)) vlsu_inst (
+                .CLK(CLK),
+                .nRST(nRST),
                 .vif(vlsuif),
                 .sif(sif)
             );

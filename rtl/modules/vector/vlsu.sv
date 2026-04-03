@@ -3,8 +3,10 @@ module vlsu #(
     parameter int NUM_VREGS  = 256,
     parameter logic [scpad_pkg::SCPAD_ID_WIDTH-1:0] IDX = '0
 ) (
-    vlsu_if.vlsu           vif,
-    scpad_if.vec_frontend  sif
+    input  logic               CLK,
+    input  logic               nRST,
+    vlsu_if.vlsu               vif,
+    scpad_if.vec_frontend      sif
 );
 
     import vector_pkg::*;
@@ -21,8 +23,8 @@ module vlsu #(
         .FIFODEPTH(FIFO_DEPTH),
         .DATAWIDTH(VDST_WIDTH)
     ) load_queue (
-        .nRST  (vif.n_rst),
-        .CLK   (vif.clk),
+        .nRST  (nRST),
+        .CLK   (CLK),
         .wr_en (lq_wr_en),
         .shift (lq_shift),
         .din   (lq_din),
@@ -34,8 +36,8 @@ module vlsu #(
     logic                   skid_valid_r, skid_valid_next;
     logic [RDATA_WIDTH-1:0] skid_data_r,  skid_data_next;
 
-    always_ff @(posedge vif.clk or negedge vif.n_rst) begin
-        if (!vif.n_rst) begin
+    always_ff @(posedge CLK or negedge nRST) begin
+        if (!nRST) begin
             skid_valid_r     <= 1'b0;
             skid_data_r      <= '0;
         end else begin

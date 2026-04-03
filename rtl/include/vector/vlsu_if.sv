@@ -1,7 +1,7 @@
 `ifndef VLSU_IF_SV
 `define VLSU_IF_SV
 
-interface vlsu_if (input logic clk, input logic n_rst);
+interface vlsu_if;
     `include "scpad_params.svh"
 
     import scpad_pkg::*;
@@ -58,7 +58,6 @@ interface vlsu_if (input logic clk, input logic n_rst);
 
     // Used by the VLSU module
     modport vlsu (
-        input  clk, n_rst,
         input  sched_req,
         output sched_res,
         input  vrf_store,
@@ -82,7 +81,6 @@ interface vlsu_if (input logic clk, input logic n_rst);
 
     // Used by the testbench (full access)
     modport vlsu_tb (
-        input  clk,
         output sched_req,
         input  sched_res,
         output vrf_store,
