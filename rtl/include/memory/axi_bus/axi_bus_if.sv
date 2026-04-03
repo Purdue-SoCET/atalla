@@ -373,7 +373,7 @@ interface axi_bus_if(input logic CLK, input logic nRST);
         output aw_grant,
 
         // To W Manager
-        output w_sp0_pop, w_sp1_pop, w_d_pop,
+        //output w_sp0_pop, w_sp1_pop, w_d_pop,
 
         // To AW Manager
         output aw_sp0_pop, aw_sp1_pop, aw_d_pop
@@ -415,6 +415,9 @@ interface axi_bus_if(input logic CLK, input logic nRST);
         // From D$ Manager 
         input head_d_awvalid, head_d_aw_o, head_d_wvalid, head_d_w_o,
 
+        // To W Manager
+        output w_sp0_pop, w_sp1_pop, w_d_pop,
+
         // To Subordinate
         output aw_o_valid, aw_o,
         output w_o_valid, w_o,
@@ -441,7 +444,7 @@ interface axi_bus_if(input logic CLK, input logic nRST);
         input aw_grant,
 
         // To W Manager
-        input w_sp0_pop, w_sp1_pop, w_d_pop,
+        //input w_sp0_pop, w_sp1_pop, w_d_pop,
 
         // To AW Manager
         input aw_sp0_pop, aw_sp1_pop, aw_d_pop
@@ -505,6 +508,9 @@ interface axi_bus_if(input logic CLK, input logic nRST);
 
         // From D$ Manager 
         output head_d_awvalid, head_d_aw_o, head_d_wvalid, head_d_w_o,
+
+        // To Managers
+        output w_sp0_pop, w_sp1_pop, w_d_pop,
 
         // To Subordinate
         input aw_o_valid, aw_o,

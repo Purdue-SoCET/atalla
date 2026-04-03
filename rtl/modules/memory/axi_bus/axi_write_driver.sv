@@ -136,6 +136,18 @@ module axi_write_driver(
         end 
     end 
 
+    assign wdrv_if.w_sp0_pop = (wdrv_if.aw_grant[MID] && 
+                               (wdrv_if.aw_grant[MID-1:0] == SP0) && 
+                               !w_skid_full && wdrv_if.head_sp0_awvalid);
+    
+    assign wdrv_if.w_sp1_pop = (wdrv_if.aw_grant[MID] && 
+                               (wdrv_if.aw_grant[MID-1:0] == SP1) && 
+                               !w_skid_full && wdrv_if.head_sp1_awvalid);
+
+    assign wdrv_if.w_d_pop   = (wdrv_if.aw_grant[MID] && 
+                               (wdrv_if.aw_grant[MID-1:0] == DCACHE) && 
+                               !w_skid_full && wdrv_if.head_d_awvalid);
+
     assign wdrv_if.aw_o_valid  = aw_skid_buffer[aw_rd_ptr].valid;
     assign wdrv_if.aw_o.addr   = aw_skid_buffer[aw_rd_ptr].addr;
     assign wdrv_if.aw_o.mid_id = aw_skid_buffer[aw_rd_ptr].mid_id;
