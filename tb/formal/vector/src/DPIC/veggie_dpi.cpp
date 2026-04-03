@@ -288,3 +288,18 @@ svBit dpi_veggie_get_ready()
     if (!g_veg) return 1;
     return g_veg->vrf_ready;
 }
+
+void dpi_veggie_write_vector_elem(uint8_t vr_idx, int elem_idx, unsigned short val)
+{
+    if (!g_veg || elem_idx < 0 || elem_idx >= 32) return;
+    auto vec = g_veg->read_vector(vr_idx);
+    vec[elem_idx] = val;
+    g_veg->write_vector(vec, vr_idx);
+}
+
+uint16_t dpi_veggie_read_vector_elem(uint8_t vr_idx, int elem_idx)
+{
+    if (!g_veg || elem_idx < 0 || elem_idx >= 32) return 0;
+    auto vec = g_veg->read_vector(vr_idx);
+    return vec[elem_idx];
+}

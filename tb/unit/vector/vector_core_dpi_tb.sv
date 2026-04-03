@@ -1,6 +1,6 @@
 // ============================================================================
 // vector_core_dpi_tb.sv
-// L1 Integration Testbench — DPI-C driven
+// L1 Integration Testbench - DPI-C driven
 //
 //  C++ models using DPI-C:
 //   Scheduler -> instruction decode -> drive vif, gsauif
@@ -13,6 +13,22 @@
 //
 // Owner: Vedant Sharma
 // ============================================================================
+
+/*
+
+Quick note for future Vedant, and for future readers in general. DO NOT BE A DUMBASS AND THINK THAT YOU ARE THE GOAT
+DPI DOES NOT BEND TO YOUR WILL, QUESTA HATES YOU, SYSTEMVERILOG WANTS U DEAD. 
+
+In other words, the unpacked arrays dont go through the version of questa we are using, and I'm too scared to try packed arrays
+as it'll be wasting an hour (this a generous estimate), of my precious time.
+
+IE for future vedant, cause I know yo dumbahh not gonna remember this, we are doing ELEMENT BY ELEMENT DPI CALLS, you are not tuff
+stop thinking you are, you simple-minded plebian of a homosapien.
+
+hello my name is Vedant and that was my TED Talk...
+
+*/
+
 `timescale 1ns/1ps
 
 `include "vector_pkg.vh"
@@ -25,8 +41,24 @@ module vector_core_dpi_tb;
     import scpad_pkg::*;
     import inst_parser_dpi_pkg::*;
 
-    parameter string PROGRAM_PATH = "./testcases/add_vv";
+
+    // yk ideally i should have a bunch of if_defs for whichever test case u want, but im hella lazy, do ts shit and give me a break breeeuhhhh
+    //parameter string PROGRAM_PATH = "./tb/formal/vector/testcases/vector-vector/add_vv";
+    //parameter string PROGRAM_PATH = "./tb/formal/vector/testcases/vector-vector/sub_vv";
+    //parameter string PROGRAM_PATH = "./tb/formal/vector/testcases/vector-vector/mul_vv";
+    //parameter string PROGRAM_PATH = "./tb/formal/vector/testcases/load-store/vreg_ld";
+    //parameter string PROGRAM_PATH = "./tb/formal/vector/testcases/load-store/vreg_st";
+    //parameter string PROGRAM_PATH = "./tb/formal/vector/testcases/vector-immediate/reduction/rsum_vi";
+    parameter string PROGRAM_PATH = "./tb/formal/vector/testcases/vector-immediate/reduction/rmin_vi";
+    //parameter string PROGRAM_PATH = "./tb/formal/vector/testcases/vector-immediate/reduction/rmax_vi";
+    //parameter string PROGRAM_PATH = "./tb/formal/vector/testcases/gemmm/gemm_vv";
+
+    // for any singular instruct other than gemm_vv use the regular 40 cycles
     parameter int DRAIN_CYCLES = 40;
+
+    // for testing gemm_vv use 150 drain cycles
+    //parameter int DRAIN_CYCLES = 150;
+
     parameter int TIMEOUT = 10000;
 
     logic CLK;
@@ -150,7 +182,8 @@ module vector_core_dpi_tb;
         gsauif.sa_valid_in = 1'b0;
         gsauif.sa_array_output = '0;
 
-        dpi_scheduler_tick(1'b0);
+        // testing to see if sched is being dumb
+        //dpi_scheduler_tick(1'b0);
         dpi_sysarr_tick(1'b0);
         dpi_scratchpad_tick(1'b0);
         dpi_veggie_tick(1'b0);
@@ -164,19 +197,17 @@ module vector_core_dpi_tb;
     task automatic drive_lanes();
         for (int p = 0; p < 2; p++) begin
             if (dpi_get_lane_valid_in(p)) begin
-                // Read V1 from veggie
-                dpi_veggie_set_lane_vs(p*2, dpi_get_veggie_vs1(p));
-                dpi_veggie_set_lane_ren(p, dpi_get_veggie_ren(p));
-                dpi_veggie_tick(nRST);
-                dpi_veggie_get_lane_rdata(p, tmp_vec);
+                // Read V1 from veggie element-by-element
+                for (int e = 0; e < 32; e++)
+                    tmp_vec[e] = dpi_veggie_read_vector_elem(dpi_get_veggie_vs1(p), e);
 
                 // V2: broadcast scalar or VRF read
                 if (dpi_get_lane_broadcast_v2(p)) begin
-                    dpi_get_lane_v2_broadcast(p, tmp_vec2);
+                    for (int e = 0; e < 32; e++)
+                        tmp_vec2[e] = dpi_get_lane_v2_broadcast_elem(p, e);
                 end else begin
-                    dpi_veggie_set_lane_vs(p*2 + 1, dpi_get_veggie_vs2(p));
-                    dpi_veggie_tick(nRST);
-                    dpi_veggie_get_lane_rdata(p, tmp_vec2);
+                    for (int e = 0; e < 32; e++)
+                        tmp_vec2[e] = dpi_veggie_read_vector_elem(dpi_get_veggie_vs2(p), e);
                 end
 
                 vif.lanes_in.lane_issue_ports[p].v1 = pack_vreg(tmp_vec);
@@ -188,14 +219,15 @@ module vector_core_dpi_tb;
                 vif.lanes_in.lane_issue_ports[p].input_valid = 1'b1;
 
                 // Mask
-                if (dpi_get_mask_vmrf_mren(p)) begin
-                    dpi_veggie_set_mask_vs(p, dpi_get_mask_vmrf_vs(p));
-                    dpi_veggie_set_mask_ren(p, 1'b1);
-                    dpi_veggie_tick(nRST);
+                /*if (dpi_get_mask_vmrf_mren(p)) begin
                     vif.lanes_in.lane_issue_ports[p].mask = dpi_veggie_get_mask_rdata(p);
                 end else begin
-                    vif.lanes_in.lane_issue_ports[p].mask = '1;
+                    vif.lanes_in.lane_issue_ports[p].mask = 32'hFFFFFFFF;
                 end
+                */
+
+                // Mask — force all enabled for now
+                vif.lanes_in.lane_issue_ports[p].mask = 32'hFFFFFFFF;
 
             end else begin
                 clear_lane_port(p);
@@ -203,17 +235,13 @@ module vector_core_dpi_tb;
         end
     endtask
 
+
     task automatic drive_gsau_issue();
         if (dpi_get_sys_valid_in()) begin
-            // Read vs1/vs2 from veggie
-            dpi_veggie_set_sys_vs(0, dpi_get_sys_vs1());
-            dpi_veggie_set_sys_vs(1, dpi_get_sys_vs2());
-            dpi_veggie_set_sys_ren(0, dpi_get_sys_ren(0));
-            dpi_veggie_set_sys_ren(1, dpi_get_sys_ren(1));
-            dpi_veggie_tick(nRST);
-
-            dpi_veggie_get_sys_rdata(0, tmp_vec);
-            dpi_veggie_get_sys_rdata(1, tmp_vec2);
+            for (int e = 0; e < 32; e++)
+                tmp_vec[e] = dpi_veggie_read_vector_elem(dpi_get_sys_vs1(), e);
+            for (int e = 0; e < 32; e++)
+                tmp_vec2[e] = dpi_veggie_read_vector_elem(dpi_get_sys_vs2(), e);
 
             vif.gsau_in.veg_vdata1 = pack_vreg(tmp_vec);
             vif.gsau_in.veg_vdata2 = pack_vreg(tmp_vec2);
@@ -226,26 +254,36 @@ module vector_core_dpi_tb;
     endtask
 
     task automatic respond_gsau();
-        // Push DUT's SA outputs into sysarr model
+        // Push DUT's SA outputs into sysarr model element-by-element
         if (gsauif.sa_weight_en) begin
             unpack_vreg(gsauif.sa_array_in, tmp_vec);
-            dpi_sysarr_set_weight(tmp_vec, 1'b1);
+            for (int e = 0; e < 32; e++)
+                dpi_sysarr_set_weight_elem(e, tmp_vec[e]);
+            dpi_sysarr_set_weight_valid(1'b1);
         end else begin
-            dpi_sysarr_set_weight(tmp_vec, 1'b0);
+            dpi_sysarr_set_weight_valid(1'b0);
         end
 
         if (gsauif.sa_input_en) begin
             unpack_vreg(gsauif.sa_array_in, tmp_vec);
-            dpi_sysarr_set_activation(tmp_vec, 1'b1);
+            for (int e = 0; e < 32; e++)
+                dpi_sysarr_set_activation_elem(e, tmp_vec[e]);
+            dpi_sysarr_set_activation_valid(1'b1);
         end else begin
-            dpi_sysarr_set_activation(tmp_vec, 1'b0);
+            dpi_sysarr_set_activation_valid(1'b0);
         end
 
         // Tick sysarr
         dpi_sysarr_tick(nRST);
 
+        $display("[TB-SA-DBG] Cyc %0d: w_en=%0b i_en=%0b sa_valid=%0b sa_ready=%0b",
+            cycle_count, gsauif.sa_weight_en, gsauif.sa_input_en,
+            dpi_sysarr_get_valid(), dpi_sysarr_get_ready());
+
+        // Drive results back
         if (dpi_sysarr_get_valid()) begin
-            dpi_sysarr_get_output(tmp_vec);
+            for (int e = 0; e < 32; e++)
+                tmp_vec[e] = dpi_sysarr_get_output_elem(e);
             drive_gsau_from_sys(
                 .data(pack_vreg(tmp_vec)),
                 .valid(1'b1),
@@ -261,14 +299,11 @@ module vector_core_dpi_tb;
     task automatic drive_vlsu_issue();
         for (int p = 0; p < 2; p++) begin
             if (dpi_get_sp_valid_in(p)) begin
-                // Read VRF data for stores
-                dpi_veggie_set_sp_vs(p, dpi_get_veggie_vs1(p));
-                dpi_veggie_set_sp_ren(p, 1'b1);
-                dpi_veggie_tick(nRST);
-                dpi_veggie_get_sp_rdata(p, tmp_vec);
+                for (int e = 0; e < 32; e++)
+                    tmp_vec[e] = dpi_veggie_read_vector_elem(dpi_get_veggie_vs1(p), e);
 
                 vif.vlsu_in.sched_req[p].valid = 1'b1;
-                vif.vlsu_in.sched_req[p].write = (dpi_get_sp_rc(p) != 0) ? 1'b1 : 1'b0; // TODO: verify store encoding
+                vif.vlsu_in.sched_req[p].write = (dpi_get_sp_wen(p) == 1) ? 1'b1 : 1'b0;
                 vif.vlsu_in.sched_req[p].spad_addr = dpi_get_sp_sid(p);
                 vif.vlsu_in.sched_req[p].vdst = dpi_get_sp_vd(p);
                 vif.vlsu_in.sched_req[p].num_rows = dpi_get_sp_num_rows(p);
@@ -293,7 +328,6 @@ module vector_core_dpi_tb;
 
     task automatic respond_vlsu();
         for (int p = 0; p < NUM_SCPADS; p++) begin
-            // Push DUT's scratchpad requests into model
             dpi_scratchpad_set_request(
                 p,
                 sif.vec_req[p].valid,
@@ -308,16 +342,30 @@ module vector_core_dpi_tb;
 
             if (sif.vec_req[p].write && sif.vec_req[p].valid) begin
                 unpack_vreg(sif.vec_req[p].wdata, tmp_vec);
-                dpi_scratchpad_set_wdata(p, tmp_vec);
+                for (int e = 0; e < 32; e++)
+                    dpi_scratchpad_write_elem(p, e, tmp_vec[e]);
             end
+
+            for (int p = 0; p < NUM_SCPADS; p++) begin
+            if (sif.vec_req[p].valid)
+                $display("[TB-SPREQ] Cyc %0d: port=%0d write=%0b addr=%h row=%0d col=%0d nrows=%0d ncols=%0d rc=%0b",
+                    cycle_count, p, sif.vec_req[p].write, sif.vec_req[p].spad_addr,
+                    sif.vec_req[p].row_id, sif.vec_req[p].col_id,
+                    sif.vec_req[p].num_rows, sif.vec_req[p].num_cols, sif.vec_req[p].row_or_col);
+        end
         end
 
-        // Tick scratchpad
         dpi_scratchpad_tick(nRST);
+        // Debug scratchpad response
+        for (int p = 0; p < NUM_SCPADS; p++) begin
+            if (dpi_scratchpad_get_valid(p))
+                $display("[TB-SP] Cyc %0d: SP[%0d] response valid, rdata[0]=%h", cycle_count, p, dpi_scratchpad_read_elem(p, 0));
+        end
 
         for (int p = 0; p < NUM_SCPADS; p++) begin
             if (dpi_scratchpad_get_valid(p)) begin
-                dpi_scratchpad_get_rdata(p, tmp_vec);
+                for (int e = 0; e < 32; e++)
+                    tmp_vec[e] = dpi_scratchpad_read_elem(p, e);
                 drive_vlsu_from_sp(p, .valid(1'b1), .data(pack_vreg(tmp_vec)));
             end else begin
                 drive_vlsu_from_sp(p);
@@ -326,42 +374,50 @@ module vector_core_dpi_tb;
     endtask
 
     task automatic handle_writeback();
-        // Lane result collectors → veggie write
+        // Lane result collectors → veggie write element-by-element
         for (int fu = 0; fu < LANE_FU_COUNT; fu++) begin
             if (vif.lanes_out.result_collectors[fu].wb_valid) begin
                 unpack_vreg(vif.lanes_out.result_collectors[fu].vector_output, tmp_vec);
-                dpi_veggie_set_lane_vd(fu, vif.lanes_out.result_collectors[fu].vd_output);
-                dpi_veggie_set_lane_wen(fu, 1'b1);
-                dpi_veggie_set_lane_wdata(fu, tmp_vec);
-            end else begin
-                dpi_veggie_set_lane_wen(fu, 1'b0);
+                for (int e = 0; e < 32; e++)
+                    dpi_veggie_write_vector_elem(
+                        vif.lanes_out.result_collectors[fu].vd_output, e, tmp_vec[e]);
             end
         end
 
-        // GSAU writeback → veggie write
+        // GSAU writeback → veggie write element-by-element
         if (gsauif.wb_valid_out) begin
             unpack_vreg(gsauif.wb_psum, tmp_vec);
-            dpi_veggie_set_sys_vd(0, gsauif.wb_wbdst);
-            dpi_veggie_set_sys_wen(0, 1'b1);
-            dpi_veggie_set_sys_wdata(0, tmp_vec);
-        end else begin
-            dpi_veggie_set_sys_wen(0, 1'b0);
+            for (int e = 0; e < 32; e++)
+                dpi_veggie_write_vector_elem(gsauif.wb_wbdst, e, tmp_vec[e]);
         end
 
-        // VLSU load writeback → veggie write
+        // VLSU load writeback → veggie write element-by-element
         for (int p = 0; p < NUM_SCPADS; p++) begin
             if (vif.vlsu_out.wb[p].valid) begin
                 unpack_vreg(vif.vlsu_out.wb[p].load_data, tmp_vec);
-                dpi_veggie_set_sp_vd(p, vif.vlsu_out.wb[p].vdst);
-                dpi_veggie_set_sp_wen(p, 1'b1);
-                dpi_veggie_set_sp_wdata(p, tmp_vec);
-            end else begin
-                dpi_veggie_set_sp_wen(p, 1'b0);
+                for (int e = 0; e < 32; e++)
+                    dpi_veggie_write_vector_elem(
+                        vif.vlsu_out.wb[p].vdst, e, tmp_vec[e]);
             end
         end
 
-        // Tick veggie so writes settle
-        dpi_veggie_tick(nRST);
+        // Debug VLSU writeback
+        for (int p = 0; p < NUM_SCPADS; p++) begin
+            if (vif.vlsu_out.wb[p].valid)
+                $display("[TB-WB] Cyc %0d: VLSU wb[%0d] valid, vdst=%0d", cycle_count, p, vif.vlsu_out.wb[p].vdst);
+        end
+
+        // Reduction writeback → veggie write element-by-element
+        if (vif.lanes_out.reduction.wb_valid) begin
+            unpack_vreg(vif.lanes_out.reduction.vector_output, tmp_vec);
+            for (int e = 0; e < 32; e++)
+                dpi_veggie_write_vector_elem(
+                    vif.lanes_out.reduction.vd_output, e, tmp_vec[e]);
+            $display("[TB-RED] Reduction WB: vd=%0d data[0]=%h", 
+                vif.lanes_out.reduction.vd_output, tmp_vec[0]);
+        end
+
+        // No veggie tick needed — direct VRF writes take effect immediately
     endtask
 
     task automatic sample_and_push_ready();
@@ -404,22 +460,117 @@ module vector_core_dpi_tb;
         apply_reset();
         $display("[TB] Reset released at cycle %0d", cycle_count);
 
+        // Preloading VRF with test data
+        // Preload VRF with test data attempt 2
+        // Preload VRF element by element attempt 3 lmfao (avoids open array handle issues)
+        // my dumbahh fucked up the register numbers for the test case bruhhhhhhhhhh
+
+        // Preload VRF — simple 1.0 + 1.0 = 2.0
+        // bf16 1.0 = 0x3F80
+        /*for (int i = 0; i < 32; i++) begin
+            dpi_veggie_write_vector_elem(8'd2, i, 16'h3F80);  // vs1 = 1.0
+            dpi_veggie_write_vector_elem(8'd3, i, 16'h3F80);  // vs2 = 1.0
+        end
+        $display("[TB] Preloaded v1 and v2 with test vectors");
+        */
+
+        /*
+        // Preload VRF — 3.0 - 1.0 = 2.0
+        // bf16 3.0 = 0x4040, bf16 1.0 = 0x3F80
+        for (int i = 0; i < 32; i++) begin
+            dpi_veggie_write_vector_elem(8'd5, i, 16'h4040);  // vs1 = 3.0
+            dpi_veggie_write_vector_elem(8'd6, i, 16'h3F80);  // vs2 = 1.0
+        end
+        */
+
+        // Preload VRF — 2.0 * 3.0 = 6.0
+        // bf16 2.0 = 0x4000, bf16 3.0 = 0x4040
+        /*
+        for (int i = 0; i < 32; i++) begin
+            dpi_veggie_write_vector_elem(8'd8, i, 16'h4000);  // vs1 = 2.0
+            dpi_veggie_write_vector_elem(8'd9, i, 16'h4040);  // vs2 = 3.0
+        end
+        */
+
+        // Preload mask register 0 with all enabled
+        dpi_veggie_write_mask(8'd0, 32'hFFFFFFFF);
+        $display("[TB] Preloaded mask register 0");
+
+        // Preload scratchpad at addr=1 (matching DUT request)
+        for (int r = 0; r < 32; r++) begin
+            dpi_scratchpad_preload_row_val(0, 8'd1, r[7:0], 8'd32, 16'h3F80);
+            dpi_scratchpad_preload_row_val(1, 8'd1, r[7:0], 8'd32, 16'h3F80);
+        end
+        $display("[TB] Preloaded scratchpad addr=1 with 1.0");
+
+        // Preload v0 for store test
+        /*
+        for (int i = 0; i < 32; i++) begin
+            dpi_veggie_write_vector_elem(8'd0, i, 16'hBEEF);
+        end
+        */
+
+        // Preload v0 with 1.0 for reduction sum (32 * 1.0 = 32.0)
+        /*
+        for (int i = 0; i < 32; i++) begin
+            dpi_veggie_write_vector_elem(8'd0, i, 16'h3F80);
+        end
+        */
+
+        // Preload VRF for gemm: weights in v0-v31, activations in v32-v64
+        /*
+        for (int v = 0; v < 32; v++) begin
+            for (int e = 0; e < 32; e++) begin
+                dpi_veggie_write_vector_elem(v[7:0], e, 16'h3F80);      // weights = 1.0
+            end
+        end
+        for (int v = 32; v <= 64; v++) begin
+            for (int e = 0; e < 32; e++) begin
+                dpi_veggie_write_vector_elem(v[7:0], e, 16'h3F80);      // activations = 1.0
+            end
+        end
+        $display("[TB] Preloaded VRF for gemm test");
+        */
+
+        // Preload v0: element 0 = 1.0 (0x3F80), rest = 5.0 (0x40A0)
+        /*
+        dpi_veggie_write_vector_elem(8'd0, 0, 16'h3F80);  // 1.0 = min
+        for (int i = 1; i < 32; i++) begin
+            dpi_veggie_write_vector_elem(8'd0, i, 16'h40A0);  // 5.0
+        end
+        */
+
+        // Preload v0: element 0 = 10.0 (0x4120), rest = 1.0 (0x3F80)
+        dpi_veggie_write_vector_elem(8'd0, 0, 16'h4120);  // 10.0 = max
+        for (int i = 1; i < 32; i++) begin
+            dpi_veggie_write_vector_elem(8'd0, i, 16'h3F80);  // 1.0
+        end
+
         // ---- Main loop ----
         forever begin
             @(posedge CLK);
             cycle_count++;
 
-            // 1) Handle writeback from previous cycle (DUT → veggie)
+            // 1) Handle writeback from previous cycle (DUT -> veggie)
             handle_writeback();
 
             // 2) Clear ports from previous cycle
             clear_all_ports();
 
-            // 3) Sample DUT ready → push to scheduler
+            // 3) Sample DUT ready -> push to scheduler
             sample_and_push_ready();
 
             // 4) Tick scheduler
             dpi_scheduler_tick(nRST);
+
+            $display("[TB-RM] Cyc %0d: reduction_mode=%0b", cycle_count, dpi_get_reduction_mode());
+
+            // Debug: print lane valid + all_issued
+            $display("[TB-DBG] Cyc %0d: lane0_valid=%0b lane1_valid=%0b all_issued=%0b",
+                cycle_count,
+                dpi_get_lane_valid_in(0),
+                dpi_get_lane_valid_in(1),
+                dpi_get_all_issued());
 
             // 5) Drive DUT from scheduler + veggie
             drive_lanes();
@@ -462,6 +613,10 @@ module vector_core_dpi_tb;
                     respond_gsau();
                     respond_vlsu();
                 end
+                // Verify load result in VRF
+                $display("[TB] Verifying VRF v0 after load:");
+                for (int e = 0; e < 4; e++)
+                    $display("[TB]   v0[%0d] = %h", e, dpi_veggie_read_vector_elem(8'd0, e));
                 break;
             end
 
@@ -470,6 +625,23 @@ module vector_core_dpi_tb;
                 break;
             end
         end
+
+        $display("[TB] Verify v1 (reduction dest):");
+        for (int e = 0; e < 4; e++)
+            $display("[TB]   v1[%0d] = %h", e, dpi_veggie_read_vector_elem(8'd1, e));
+
+        $display("[TB] Verify v2 (rmin dest):");
+        for (int e = 0; e < 4; e++)
+            $display("[TB]   v2[%0d] = %h", e, dpi_veggie_read_vector_elem(8'd2, e));
+
+        $display("[TB] Verify v3 (rmax dest):");
+        for (int e = 0; e < 4; e++)
+            $display("[TB]   v3[%0d] = %h", e, dpi_veggie_read_vector_elem(8'd3, e));
+
+        // Verify gemm results
+        $display("[TB] Verify gemm output (v65):");
+        for (int e = 0; e < 4; e++)
+            $display("[TB]   v65[%0d] = %h", e, dpi_veggie_read_vector_elem(8'd65, e));
 
         // Cleanup
         dpi_scheduler_destroy();

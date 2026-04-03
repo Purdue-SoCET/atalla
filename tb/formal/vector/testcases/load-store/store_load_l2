@@ -1,0 +1,16 @@
+nop.s|nop.s|nop.s|nop.s
+nop.s|nop.s|vreg.st,0,0,1,1,1,0,0|nop.s
+nop.s|nop.s|nop.s|nop.s
+nop.s|nop.s|nop.s|nop.s
+nop.s|nop.s|nop.s|nop.s
+nop.s|nop.s|nop.s|nop.s
+nop.s|nop.s|nop.s|nop.s
+nop.s|nop.s|nop.s|nop.s
+nop.s|nop.s|nop.s|nop.s
+nop.s|nop.s|nop.s|nop.s
+nop.s|nop.s|nop.s|nop.s
+nop.s|nop.s|nop.s|nop.s
+nop.s|nop.s|nop.s|nop.s
+nop.s|nop.s|nop.s|nop.s
+nop.s|nop.s|nop.s|nop.s
+nop.s|nop.s|vreg.ld,1,0,1,1,1,0,0|nop.s

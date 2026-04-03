@@ -110,3 +110,33 @@ void dpi_scratchpad_get_rdata(int port, svOpenArrayHandle arr)
     if (!g_sp || port < 0 || port > 1) return;
     cpp_to_sv_arr(g_sp->sp_output_if[port].rdata, arr);
 }
+
+// Element-wise access, cuz my dumbahh didnt actually get the struct thing to work, ik its possible though i saw it online in the forums
+void dpi_scratchpad_write_elem(int port, int elem, unsigned short val)
+{
+    if (!g_sp || port < 0 || port > 1 || elem < 0 || elem >= 32) return;
+    g_sp->sp_input_if[port].wdata[elem] = val;
+}
+
+uint16_t dpi_scratchpad_read_elem(int port, int elem)
+{
+    if (!g_sp || port < 0 || port > 1 || elem < 0 || elem >= 32) return 0;
+    return g_sp->sp_output_if[port].rdata[elem];
+}
+
+void dpi_scratchpad_preload_row(int sp_id, uint8_t addr, uint8_t row_id, uint8_t num_cols)
+{
+    if (!g_sp) return;
+    std::array<uint16_t, 32> data = {};
+    // Fill with a pattern: bf16 1.0 (0x3F80) for all elements
+    for (int i = 0; i < 32; i++) data[i] = 0x3F80;
+    g_sp->load_row(sp_id, addr, row_id, num_cols, data);
+}
+
+void dpi_scratchpad_preload_row_val(int sp_id, uint8_t addr, uint8_t row_id, uint8_t num_cols, unsigned short val)
+{
+    if (!g_sp) return;
+    std::array<uint16_t, 32> data = {};
+    for (int i = 0; i < 32; i++) data[i] = val;
+    g_sp->load_row(sp_id, addr, row_id, num_cols, data);
+}

@@ -31,6 +31,26 @@ package inst_parser_dpi_pkg;
     // Completion
     import "DPI-C" function bit dpi_get_all_issued();
 
+    // new adds:
+    import "DPI-C" function void dpi_veggie_write_vector_elem(
+        input byte unsigned vr_idx, input int elem_idx, input shortint unsigned val);
+    import "DPI-C" function shortint unsigned dpi_veggie_read_vector_elem(
+        input byte unsigned vr_idx, input int elem_idx);
+    import "DPI-C" function void dpi_scratchpad_write_elem(
+        input int port, input int elem, input shortint unsigned val);
+    import "DPI-C" function shortint unsigned dpi_scratchpad_read_elem(
+        input int port, input int elem);
+    import "DPI-C" function void dpi_scratchpad_preload_row_val(
+        input int sp_id, input byte unsigned addr, input byte unsigned row_id,
+        input byte unsigned num_cols, input shortint unsigned val);
+    import "DPI-C" function byte unsigned dpi_get_sp_wen(input int idx);
+    import "DPI-C" function shortint unsigned dpi_get_lane_v2_broadcast_elem(input int idx, input int elem);
+    import "DPI-C" function void dpi_sysarr_set_weight_elem(input int elem, input shortint unsigned val);
+    import "DPI-C" function void dpi_sysarr_set_activation_elem(input int elem, input shortint unsigned val);
+    import "DPI-C" function void dpi_sysarr_set_weight_valid(input bit valid);
+    import "DPI-C" function void dpi_sysarr_set_activation_valid(input bit valid);
+    import "DPI-C" function shortint unsigned dpi_sysarr_get_output_elem(input int elem);
+
     // Lane signals (idx = 0 or 1)
     import "DPI-C" function bit           dpi_get_lane_valid_in    (input int idx);
     import "DPI-C" function byte unsigned  dpi_get_lane_vd          (input int idx);

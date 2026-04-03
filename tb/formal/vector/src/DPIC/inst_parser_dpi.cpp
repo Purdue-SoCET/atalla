@@ -65,8 +65,17 @@ void dpi_scheduler_destroy()
     }
 }
 
+uint8_t dpi_get_sp_wen(int idx)
+{
+    if (!g_sc || idx < 0 || idx > 1) return 0;
+    return g_sc->sc_sp_signals[idx].wen;
+}
 
-
+uint16_t dpi_get_lane_v2_broadcast_elem(int idx, int elem)
+{
+    if (!g_sc || idx < 0 || idx > 1 || elem < 0 || elem >= 32) return 0;
+    return g_sc->sc_lane_signals[idx].lane_v2_broadcast[elem];
+}
 
 // Per cycle interface
 void dpi_set_ready_signals(

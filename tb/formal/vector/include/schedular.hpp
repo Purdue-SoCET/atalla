@@ -70,6 +70,7 @@ public:
         uint8_t rc;
         uint8_t rcid;
         uint8_t valid_in;
+        uint8_t wen;
     };
     
     struct veggie_signals_t

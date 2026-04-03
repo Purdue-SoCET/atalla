@@ -31,6 +31,12 @@ void dpi_sysarr_get_output(svOpenArrayHandle arr);
 
 void dpi_sysarr_clear_psums();
 
+void dpi_sysarr_set_weight_elem(int elem, unsigned short val);
+void dpi_sysarr_set_activation_elem(int elem, unsigned short val);
+void dpi_sysarr_set_weight_valid(svBit valid);
+void dpi_sysarr_set_activation_valid(svBit valid);
+uint16_t dpi_sysarr_get_output_elem(int elem);
+
 #ifdef __cplusplus
 }
 #endif

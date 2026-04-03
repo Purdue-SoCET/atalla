@@ -66,6 +66,9 @@ void dpi_veggie_read_vector(uint8_t idx, svOpenArrayHandle arr);
 void dpi_veggie_write_mask(uint8_t idx, uint32_t data);
 uint32_t dpi_veggie_read_mask(uint8_t idx);
 
+void dpi_veggie_write_vector_elem(uint8_t vr_idx, int elem_idx, unsigned short val);
+uint16_t dpi_veggie_read_vector_elem(uint8_t vr_idx, int elem_idx);
+
 svBit dpi_veggie_get_ready();
 
 #ifdef __cplusplus
