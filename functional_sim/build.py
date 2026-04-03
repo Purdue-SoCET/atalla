@@ -241,8 +241,83 @@ def encode_instruction(instr_dict):
 REG_RE = re.compile(r"^\$(?:x)?(\d+)$", re.IGNORECASE)
 IMM_RE = re.compile(r"^[+-]?(?:0x[0-9a-fA-F]+|0b[01]+|\d+)$")
 FLOAT_RE = re.compile(r"^[+-]?(?:\d+\.\d*|\.\d+|\d+)(?:[eE][+-]?\d+)?$")
-MEM_RE = re.compile(r"^([+-]?(?:0x[0-9a-fA-F]+|0b[01]+|\d+))\(\s*\$(?:x)?(\d+)\s*\)$", re.IGNORECASE)
+MEM_RE = re.compile(
+    r"^([+-]?(?:0x[0-9a-fA-F]+|0b[01]+|\d+))\(\s*\$?(?:x)?(\d+)\s*\)$",
+    re.IGNORECASE,
+)
 LABEL_RE = re.compile(r"^[A-Za-z_]\w*:$")
+
+# ppci / AtallaC emit underscores (addi_s) and RISC-style regs (x8); normalize before asm_to_instr_dict.
+PPCI_REG_RE = re.compile(r"^\$?[xv](\d+)$", re.IGNORECASE)
+PPCI_MEM_RE = re.compile(
+    r"^([+-]?(?:0x[0-9a-fA-F]+|0b[01]+|\d+))\(\s*\$?[xv](\d+)\s*\)$",
+    re.IGNORECASE,
+)
+PPCI_MASK_RE = re.compile(r"^\$?m(\d+)$", re.IGNORECASE)
+
+PPCI_MNEMONIC_ALIASES = {
+    "beq": "beq.s",
+    "bne": "bne.s",
+    "blt": "blt.s",
+    "bge": "bge.s",
+    "bgt": "bgt.s",
+    "ble": "ble.s",
+    "lw": "lw.s",
+    "sw": "sw.s",
+    "lhw": "lhw.s",
+    "shw": "shw.s",
+    "li": "li.s",
+    "lui": "lui.s",
+    "addi": "addi.s",
+    "subi": "subi.s",
+    "muli": "muli.s",
+    "divi": "divi.s",
+    "modi": "modi.s",
+    "ori": "ori.s",
+    "andi": "andi.s",
+    "xori": "xori.s",
+    "slli": "slli.s",
+    "srli": "srli.s",
+    "srai": "srai.s",
+    "slti": "slti.s",
+    "sltui": "sltui.s",
+    "nop": "nop.s",
+    "halt": "halt.s",
+    "sqrt_bf": "sqrt.bf",
+    "rcp_bf": "rcp.bf",
+    "stbf_s": "stbf.s",
+    "bfts_s": "bfts.s",
+    "add_bf": "add.bf",
+    "sub_bf": "sub.bf",
+    "mul_bf": "mul.bf",
+    "slt_bf": "slt.bf",
+}
+
+
+def normalize_ppci_mnemonic(mnemonic: str) -> str:
+    m = mnemonic.strip().lower().replace("_", ".")
+    return PPCI_MNEMONIC_ALIASES.get(m, m)
+
+
+def normalize_ppci_operand(op: str) -> str:
+    s = op.strip()
+    mem_m = PPCI_MEM_RE.match(s.replace(" ", ""))
+    if mem_m:
+        return f"{mem_m.group(1)}(${int(mem_m.group(2))})"
+    reg_m = PPCI_REG_RE.match(s)
+    if reg_m:
+        return f"${int(reg_m.group(1))}"
+    mask_m = PPCI_MASK_RE.match(s)
+    if mask_m:
+        return str(int(mask_m.group(1)))
+    return s
+
+
+def _jal_imm25_bounds(imm: int) -> None:
+    lo = -(1 << 24)
+    hi = (1 << 24) - 1
+    if imm < lo or imm > hi:
+        raise ValueError(f"jal offset {imm} out of signed 25-bit range [{lo}, {hi}]")
 
 # ---- Label Branch Support Start ----
 def parse_int(s: str) -> int:
@@ -446,13 +521,34 @@ def asm_to_instr_dict(
         return d
 
     if instr_type == "MI":
-        # jal rd, imm25 OR jal imm25 (rd defaults 0)
-        if mnemonic == "jal" and len(ops) == 1:
-            d["rd"] = 0
-            d["imm25"] = parse_int(ops[0])
-        else:
-            d["rd"] = parse_reg(ops[0])
-            d["imm25"] = parse_int(ops[1])
+        if mnemonic == "jal":
+            if len(ops) == 1:
+                d["rd"] = 0
+                target = ops[0].strip()
+            elif len(ops) == 2:
+                d["rd"] = parse_reg(ops[0])
+                target = ops[1].strip()
+            else:
+                raise ValueError(f"jal expects 1 or 2 operands, got {len(ops)}")
+
+            if labels is not None and target in labels:
+                if pc is None:
+                    raise ValueError("Internal error: missing PC for label-based jal")
+                imm = labels[target] - pc
+            elif IMM_RE.match(target):
+                imm = parse_int(target)
+            else:
+                raise ValueError(f"Unknown jal target: {target!r}")
+
+            _jal_imm25_bounds(imm)
+            d["imm25"] = imm
+            return d
+
+        # li.s / lui.s (and any other MI using rd + imm25)
+        if len(ops) != 2:
+            raise ValueError(f"{mnemonic} expects 2 operands (rd, imm), got {len(ops)}")
+        d["rd"] = parse_reg(ops[0])
+        d["imm25"] = parse_int(ops[1])
         return d
 
     if instr_type == "VI":
@@ -572,6 +668,9 @@ def assemble_file(in_data: str) -> list[tuple[str, str]]:
         mnemonic, ops = split_mnemonic_operands(code)
         if not mnemonic:
             continue
+
+        mnemonic = normalize_ppci_mnemonic(mnemonic)
+        ops = [normalize_ppci_operand(o) for o in ops]
 
         instr_dict = asm_to_instr_dict(mnemonic, ops, labels=labels, pc=pc)
         hex40 = encode_instruction(instr_dict).upper()

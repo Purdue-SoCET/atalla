@@ -240,9 +240,11 @@ def run(mem: Memory, sregs: ScalarRegisterFile, mregs: ScalarRegisterFile, vregs
                         tileID1Dict[inst['rs1/rd1']] = tile_id1
                         localID = tileID1Dict[inst['rs1/rd1']]
                     sdma_store(gmem=mem, scpad=SP1, scpad_base_row=int(sregs.read(inst['rs1/rd1'])), gmem_base=sregs.read(inst['rs2']), tile_id=tile_id1, NR=num_rows, NC=num_cols)
-            elif (m == "lui.s"): 
+            elif (m == "lui.s"):
                 if debug: print(inst['imm'])
                 sregs.write(inst['rd'], (inst['imm']) << 7)
+            elif m == "li.s":
+                sregs.write(inst["rd"], int(inst["imm"]))
             elif (m == "mv.mts"):
                 sregs.write(inst['rd'], mregs.read(inst['vms']))
             elif (m == "mv.stm"):
