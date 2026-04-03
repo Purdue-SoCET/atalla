@@ -5,7 +5,7 @@
 
 import axi_bus_pkg::*;
 
-module axi_write_manager(
+module axi_write_driver(
     input logic CLK,
     input logic nRST,
     axi_bus_if.write_driver wdrv_if

@@ -488,5 +488,32 @@ interface axi_bus_if(input logic CLK, input logic nRST);
         output b_d_o_ready
     );
 
+    // WRITE DRIVER 
+    modport write_driver_tb (
+        // From write arbiter 
+        output aw_grant,
+
+        // To write arbiter
+        input skid_ready_w, 
+        input w_fire,
+
+        // From SP0 Manager 
+        output head_sp0_awvalid, head_sp0_aw_o, head_sp0_wvalid, head_sp0_w_o,
+
+        // From SP1 Manager 
+        output head_sp1_awvalid, head_sp1_aw_o, head_sp1_wvalid, head_sp1_w_o,
+
+        // From D$ Manager 
+        output head_d_awvalid, head_d_aw_o, head_d_wvalid, head_d_w_o,
+
+        // To Subordinate
+        input aw_o_valid, aw_o,
+        input w_o_valid, w_o,
+
+        // From Subordinate
+        output aw_o_ready,
+        output w_o_ready
+    );
+
 endinterface
 `endif // AXI_BUS_IF_SV
