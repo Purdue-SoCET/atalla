@@ -72,11 +72,12 @@ package scpad_pkg;
         logic [DRAM_ADDR_WIDTH-1:0] dram_addr;
         logic [MAX_DIM_WIDTH-1:0] num_rows;
         logic [MAX_DIM_WIDTH-1:0] num_cols;
+        logic [FULL_MATRIX_DIM_WIDTH-1:0] full_num_cols; 
         logic [SCPAD_ID_WIDTH-1:0] scpad_id;
     } sched_req_t;
 
     typedef struct packed {
-        logic valid;
+        logic dummy;
     } sched_res_t;
 
     typedef struct packed {

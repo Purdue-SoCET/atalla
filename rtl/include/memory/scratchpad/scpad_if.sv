@@ -29,6 +29,7 @@ interface scpad_if (input logic clk, input logic n_rst);
     // Scheduler <=> Backend 
     sched_req_t sched_req [NUM_SCPADS];
     sched_res_t sched_res [NUM_SCPADS];
+    logic sched_stall [NUM_SCPADS]; // backend stalls scheduler while processing
 
     // Backend <=> Body  
     logic be_stall [NUM_SCPADS]; 
@@ -78,7 +79,8 @@ interface scpad_if (input logic clk, input logic n_rst);
 
     modport sched_backend (
         output sched_req,
-        input sched_res
+        input sched_res,
+        input sched_stall
     );
 
     // ----------------------------------------------------------------------
@@ -88,7 +90,7 @@ interface scpad_if (input logic clk, input logic n_rst);
     // Scheduler <=> Backend
     modport backend_sched (
         input  clk, n_rst, sched_req,
-        output sched_res
+        output sched_res, sched_stall
     );
 
     // Backend <=> Body
@@ -200,6 +202,7 @@ interface scpad_if (input logic clk, input logic n_rst);
         // Scheduler <=> Backend
         output sched_req,
         input sched_res,
+        input sched_stall,
 
         // Backend <=> DRAM
         output be_dram_req,
@@ -230,7 +233,7 @@ interface scpad_if (input logic clk, input logic n_rst);
     // Backend TB
     modport backend_tb (
         input clk, 
-        input sched_res, be_req,
+        input sched_res, sched_stall, be_req,
         input be_dram_stall, be_dram_req,
 
         output be_stall, dram_be_stall, n_rst,
@@ -305,6 +308,7 @@ interface scpad_if (input logic clk, input logic n_rst);
         // Scheduler interface  
         output sched_req,
         input sched_res,
+        input sched_stall,
         // DRAM interface
         input be_dram_req, be_dram_stall,
         output dram_be_stall, dram_be_res,

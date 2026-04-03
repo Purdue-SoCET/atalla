@@ -213,16 +213,17 @@ module scratchpad_tb;
         sif.sched_req[0].dram_addr = 32'd0;
         sif.sched_req[0].num_rows = 5'(num_rows);
         sif.sched_req[0].num_cols = 5'(num_cols);
+        sif.sched_req[0].full_num_cols = 20'(num_cols);
         sif.sched_req[0].scpad_id = '0;
         
         sif.dram_be_stall[0] = 1'b0;
         sif.dram_be_res[0] = '0;
         
-        @(posedge clk);
         
         // Main response loop
-        while (!sif.sched_res[0].valid && timeout < 500) begin
-            @(posedge clk);
+        do begin
+            @(posedge clk); #1;
+            sif.sched_req[0].valid = 1'b0;
             
             // Respond to DRAM requests (immediate - same delta cycle)
             if (sif.be_dram_req[0].valid) begin
@@ -250,7 +251,7 @@ module scratchpad_tb;
             end
             
             timeout++;
-        end
+        end while (sif.sched_stall[0] && timeout < 500);
         
         // Cleanup
         sif.dram_be_res[0] = '0;
@@ -301,6 +302,7 @@ module scratchpad_tb;
         sif.sched_req[0].dram_addr = 32'd0;
         sif.sched_req[0].num_rows = 5'(num_rows);
         sif.sched_req[0].num_cols = 5'(num_cols);
+        sif.sched_req[0].full_num_cols = 20'(num_cols);
         sif.sched_req[0].scpad_id = '0;
         
         sif.dram_be_stall[0] = 1'b0;
@@ -314,11 +316,11 @@ module scratchpad_tb;
             end
         end
         
-        @(posedge clk);
         
         // Main loop
-        while (!sif.sched_res[0].valid && timeout < 500) begin
-            @(posedge clk);
+        do begin
+            @(posedge clk); #1;
+            sif.sched_req[0].valid = 1'b0;
             
             // Debug stall signals only when stalls occur (disabled for now)
             // if (num_rows >= 3 && timeout < 30) begin
@@ -356,7 +358,7 @@ module scratchpad_tb;
             end
             
             timeout++;
-        end
+        end while (sif.sched_stall[0] && timeout < 500);
         
         // Cleanup
         sif.sched_req[0].valid = 1'b0;
@@ -399,15 +401,16 @@ module scratchpad_tb;
         sif.sched_req[0].dram_addr = 32'd0;
         sif.sched_req[0].num_rows = 5'(num_rows);
         sif.sched_req[0].num_cols = 5'(num_cols);
+        sif.sched_req[0].full_num_cols = 20'(num_cols);
         sif.sched_req[0].scpad_id = '0;
         
         sif.dram_be_stall[0] = 1'b0;
         sif.dram_be_res[0] = '0;
         
-        @(posedge clk);
         
-        while (!sif.sched_res[0].valid && timeout < 500) begin
-            @(posedge clk);
+        do begin
+            @(posedge clk); #1;
+            sif.sched_req[0].valid = 1'b0;
             
             if (sif.be_dram_req[0].valid) begin
                 req_id = sif.be_dram_req[0].id;
@@ -430,7 +433,7 @@ module scratchpad_tb;
             end
             
             timeout++;
-        end
+        end while (sif.sched_stall[0] && timeout < 500);
         
         sif.dram_be_res[0] = '0;
         sif.sched_req[0].valid = 1'b0;
@@ -496,14 +499,15 @@ module scratchpad_tb;
         sif.sched_req[0].dram_addr = 32'h1000;
         sif.sched_req[0].num_rows = 5'(num_rows);
         sif.sched_req[0].num_cols = 5'(num_cols);
+        sif.sched_req[0].full_num_cols = 20'(num_cols);
         sif.sched_req[0].scpad_id = '0;
         
         sif.dram_be_stall[0] = 1'b0;
         
-        @(posedge clk);
         
-        while (!sif.sched_res[0].valid && timeout < 500) begin
-            @(posedge clk);
+        do begin
+            @(posedge clk); #1;
+            sif.sched_req[0].valid = 1'b0;
             
             // Count DRAM writes (data verification is complex due to packing)
             if (sif.be_dram_req[0].valid && sif.be_dram_req[0].write) begin
@@ -511,7 +515,7 @@ module scratchpad_tb;
             end
             
             timeout++;
-        end
+        end while (sif.sched_stall[0] && timeout < 500);
         
         sif.sched_req[0].valid = 1'b0;
         repeat(5) @(posedge clk);
@@ -662,6 +666,7 @@ module scratchpad_tb;
         sif.sched_req[0].dram_addr = 32'd0;
         sif.sched_req[0].num_rows = 5'd3;
         sif.sched_req[0].num_cols = 5'd7;
+        sif.sched_req[0].full_num_cols = 20'd7;
         sif.sched_req[0].scpad_id = '0;
         
         // Simultaneously try to send FE request
@@ -674,10 +679,11 @@ module scratchpad_tb;
         for (int i = 0; i < NUM_COLS; i++) sif.vec_req[0].wdata[i] = 16'hBEEF;
         
         @(posedge clk);
+        sif.sched_req[0].valid = 1'b0;
         
         // Monitor for a while
         while (!dma_done && timeout < 300) begin
-            @(posedge clk);
+            @(posedge clk); #1;
             
             // Respond to DRAM requests
             if (sif.be_dram_req[0].valid) begin
@@ -694,7 +700,7 @@ module scratchpad_tb;
                 fe_stall_count++;
             end
             
-            if (sif.sched_res[0].valid) dma_done = 1;
+            if (!sif.sched_stall[0]) dma_done = 1;
             timeout++;
         end
         
@@ -920,14 +926,15 @@ module scratchpad_tb;
         sif.sched_req[0].dram_addr = 32'd0;
         sif.sched_req[0].num_rows = 5'(num_rows);
         sif.sched_req[0].num_cols = 5'(num_cols);
+        sif.sched_req[0].full_num_cols = 20'(num_cols);
         sif.sched_req[0].scpad_id = '0;
         sif.dram_be_stall[0] = 1'b0;
         sif.dram_be_res[0] = '0;
 
-        @(posedge clk);
 
-        while (!sif.sched_res[0].valid && timeout < 800) begin
-            @(posedge clk);
+        do begin
+            @(posedge clk); #1;
+            sif.sched_req[0].valid = 1'b0;
 
             // Collect requests into queue
             if (sif.be_dram_req[0].valid) begin
@@ -967,7 +974,7 @@ module scratchpad_tb;
             end
 
             timeout++;
-        end
+        end while (sif.sched_stall[0] && timeout < 800);
 
         // Flush remaining
         while (pending_ids.size() > 0) begin
@@ -1030,14 +1037,15 @@ module scratchpad_tb;
         sif.sched_req[0].dram_addr = 32'd0;
         sif.sched_req[0].num_rows = 5'(num_rows);
         sif.sched_req[0].num_cols = 5'(num_cols);
+        sif.sched_req[0].full_num_cols = 20'(num_cols);
         sif.sched_req[0].scpad_id = '0;
         sif.dram_be_stall[0] = 1'b0;
         sif.dram_be_res[0] = '0;
 
-        @(posedge clk);
 
-        while (!sif.sched_res[0].valid && timeout < 800) begin
-            @(posedge clk);
+        do begin
+            @(posedge clk); #1;
+            sif.sched_req[0].valid = 1'b0;
 
             // Inject stall every 3 cycles for 2 cycles
             // dram_be_stall = "don't send me new requests" — does NOT block responses
@@ -1067,7 +1075,7 @@ module scratchpad_tb;
             end
 
             timeout++;
-        end
+        end while (sif.sched_stall[0] && timeout < 800);
 
         sif.dram_be_stall[0] = 1'b0;
         sif.dram_be_res[0] = '0;
@@ -1128,13 +1136,14 @@ module scratchpad_tb;
         sif.sched_req[0].dram_addr = 32'h2000;
         sif.sched_req[0].num_rows = 5'(num_rows);
         sif.sched_req[0].num_cols = 5'(num_cols);
+        sif.sched_req[0].full_num_cols = 20'(num_cols);
         sif.sched_req[0].scpad_id = '0;
         sif.dram_be_stall[0] = 1'b0;
 
-        @(posedge clk);
 
-        while (!sif.sched_res[0].valid && timeout < 500) begin
-            @(posedge clk);
+        do begin
+            @(posedge clk); #1;
+            sif.sched_req[0].valid = 1'b0;
 
             // Check DRAM write data content — use DRAM address to decode position
             if (sif.be_dram_req[0].valid && sif.be_dram_req[0].write) begin
@@ -1170,7 +1179,7 @@ module scratchpad_tb;
             end
 
             timeout++;
-        end
+        end while (sif.sched_stall[0] && timeout < 500);
 
         sif.sched_req[0].valid = 1'b0;
         repeat(5) @(posedge clk);
@@ -1204,6 +1213,7 @@ module scratchpad_tb;
         sif.sched_req[0].dram_addr = 32'd0;
         sif.sched_req[0].num_rows = 5'(num_rows);
         sif.sched_req[0].num_cols = 5'(num_cols);
+        sif.sched_req[0].full_num_cols = 20'(num_cols);
         sif.sched_req[0].scpad_id = '0;
         sif.dram_be_stall[0] = 1'b0;
         sif.dram_be_res[0] = '0;
@@ -1365,13 +1375,13 @@ module scratchpad_tb;
                 sif.sched_req[0].dram_addr = 32'd0;
                 sif.sched_req[0].num_rows = 5'(dma_rows);
                 sif.sched_req[0].num_cols = 5'(num_cols);
+                sif.sched_req[0].full_num_cols = 20'(num_cols);
                 sif.sched_req[0].scpad_id = '0;
                 sif.dram_be_stall[0] = 1'b0;
 
-                @(posedge clk);
-
-                while (!sif.sched_res[0].valid && dma_timeout < 500) begin
-                    @(posedge clk);
+                do begin
+                    @(posedge clk); #1;
+                    sif.sched_req[0].valid = 1'b0;
                     if (sif.be_dram_req[0].valid) begin
                         automatic logic [7:0] rid = sif.be_dram_req[0].id;
                         automatic int r = rid[7:3];
@@ -1389,7 +1399,7 @@ module scratchpad_tb;
                         sif.dram_be_res[0].valid = 1'b0;
                     end
                     dma_timeout++;
-                end
+                end while (sif.sched_stall[0] && dma_timeout < 500);
                 sif.sched_req[0].valid = 1'b0;
                 sif.dram_be_res[0] = '0;
                 dma_done = 1;
@@ -1792,6 +1802,125 @@ module scratchpad_tb;
         test_random_sweep();
     endtask
     
+    //==========================================================================
+    // Phase 13: Full Matrix Stride Tests (full_num_cols != num_cols)
+    //==========================================================================
+
+    // Verifies DRAM address computation uses full_num_cols (full matrix width)
+    // as the row stride, not num_cols (tile width). This catches the bug where
+    // loading a small tile from a large matrix would read wrong rows.
+    task automatic test_dma_load_stride(
+        input int num_rows,
+        input int num_cols,
+        input int full_cols,      // full matrix column count (0-based)
+        input int dram_base
+    );
+        automatic int chunks_per_row = (num_cols + 1 + 3) / 4;
+        automatic int response_count = 0;
+        automatic int addr_errors = 0;
+        automatic int timeout = 0;
+        automatic logic [7:0] req_id;
+        automatic int row, sub;
+        automatic logic [31:0] expected_addr;
+        automatic logic [31:0] actual_addr;
+
+        current_test_type = "STRIDE_LOAD";
+        current_num_rows = num_rows;
+        current_num_cols = num_cols;
+
+        // Start DMA LOAD with full_num_cols != num_cols
+        sif.sched_req[0].valid = 1'b1;
+        sif.sched_req[0].write = 1'b0;
+        sif.sched_req[0].spad_addr = 20'd0;
+        sif.sched_req[0].dram_addr = 32'(dram_base);
+        sif.sched_req[0].num_rows = 5'(num_rows);
+        sif.sched_req[0].num_cols = 5'(num_cols);
+        sif.sched_req[0].full_num_cols = 20'(full_cols);
+        sif.sched_req[0].scpad_id = '0;
+
+        sif.dram_be_stall[0] = 1'b0;
+        sif.dram_be_res[0] = '0;
+
+
+        do begin
+            @(posedge clk); #1;
+            sif.sched_req[0].valid = 1'b0;
+
+            if (sif.be_dram_req[0].valid) begin
+                req_id = sif.be_dram_req[0].id;
+                row = req_id[7:3];
+                sub = req_id[2:0];
+
+                // Verify DRAM address uses full matrix stride
+                actual_addr = sif.be_dram_req[0].dram_addr;
+                expected_addr = dram_base + row * (full_cols + 1) + sub * 4;
+
+                if (actual_addr !== expected_addr) begin
+                    $display("[STRIDE] Row %0d Sub %0d: addr=0x%08h expected=0x%08h (stride=%0d)",
+                             row, sub, actual_addr, expected_addr, full_cols + 1);
+                    addr_errors++;
+                end
+
+                // Respond with dummy data
+                sif.dram_be_res[0].valid = 1'b1;
+                sif.dram_be_res[0].id = req_id;
+                sif.dram_be_res[0].rdata = {16'(row*4+4), 16'(row*4+3), 16'(row*4+2), 16'(row*4+1)};
+                response_count++;
+            end else begin
+                sif.dram_be_res[0].valid = 1'b0;
+            end
+
+            timeout++;
+        end while (sif.sched_stall[0] && timeout < 500);
+
+        sif.dram_be_res[0] = '0;
+        sif.sched_req[0].valid = 1'b0;
+        repeat (5) @(posedge clk);
+
+        if (addr_errors == 0)
+            report_success($sformatf("Tile %0dx%0d in %0d-col matrix, stride=%0d, %0d DRAM reqs verified",
+                           num_rows+1, num_cols+1, full_cols+1, full_cols+1, response_count));
+        else
+            report_error($sformatf("%0d address errors (tile %0dx%0d in %0d-col matrix)",
+                         addr_errors, num_rows+1, num_cols+1, full_cols+1));
+    endtask
+
+    task automatic run_stride_tests();
+        $display("\n======== FULL MATRIX STRIDE TESTS ========\n");
+
+        // 4x8 tile from a 64-column matrix
+        do_reset();
+        test_dma_load_stride(3, 7, 63, 32'h0000);
+
+        // 4x8 tile from a 128-column matrix at offset
+        do_reset();
+        test_dma_load_stride(3, 7, 127, 32'h1000);
+
+        // 8x16 tile from a 256-column matrix
+        do_reset();
+        test_dma_load_stride(7, 15, 255, 32'h0000);
+
+        // 1x4 tile from a 512-column matrix (single row, stride irrelevant but should still work)
+        do_reset();
+        test_dma_load_stride(0, 3, 511, 32'h2000);
+
+        // 4x4 tile from a 1024-column matrix at non-zero base
+        do_reset();
+        test_dma_load_stride(3, 3, 1023, 32'h4000);
+
+        // 8x32 tile from a 256-column matrix (tile cols == 32 but matrix is wider)
+        do_reset();
+        test_dma_load_stride(7, 31, 255, 32'h0000);
+
+        // 32x32 tile from a 32-column matrix (full_num_cols == num_cols, sanity check)
+        do_reset();
+        test_dma_load_stride(31, 31, 31, 32'h0000);
+
+        // 2x8 tile from a large 4096-column matrix
+        do_reset();
+        test_dma_load_stride(1, 7, 4095, 32'h0000);
+    endtask
+
     task automatic print_summary();
         $display("\n");
         $display("============ TEST SUMMARY ============");
@@ -1842,6 +1971,9 @@ module scratchpad_tb;
 
         // Phase 12: Concurrent R+W (dual FIFO verification)
         run_concurrent_rw_tests();
+
+        // Phase 13: Full matrix stride (full_num_cols != num_cols)
+        run_stride_tests();
         
         print_summary();
         

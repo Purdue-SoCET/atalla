@@ -12,3 +12,4 @@ parameter int unsigned NUM_SCPADS   = 4;
 parameter int unsigned DRAM_ID_WIDTH  = 8;
 parameter int unsigned MAX_REQ  = 8;
 parameter int LATCH_INT = 0; // 1, to ignore latches in the hot path. 
+parameter int FULL_MATRIX_DIM_WIDTH = 20; // width of the full matrix column count field from SDMA ISA encoding
