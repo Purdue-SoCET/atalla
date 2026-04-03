@@ -72,16 +72,27 @@ program test (
     end 
     endtask
 
-    task set_sp0;
+    task set_sp0_aw;
         wdrv_if.head_sp0_awvalid = 1;
         wdrv_if.head_sp0_aw_o.addr = 32'hDEADBEEF;
         wdrv_if.head_sp0_aw_o.mid_id = 4'b0010;
         wdrv_if.head_sp0_aw_o.size = 3'b011;
         wdrv_if.head_sp0_aw_o.len = 4'h7;
         wdrv_if.head_sp0_aw_o.burst = 2'b01;
+        wdrv_if.head_sp0_w_o.data = 64'hAAAABBBBCCCCDDDD;
+        wdrv_if.head_sp0_w_o.mid_id = 4'b0010;
+        wdrv_if.head_sp0_w_o.mid_id = 4'b0010;
     endtask
 
-    task set_sp1;
+    task set_sp0_w;
+        wdrv_if.head_sp0_wvalid = 1;
+        wdrv_if.head_sp0_w_o.data = 64'hAAAABBBBCCCCDDDD;
+        wdrv_if.head_sp0_w_o.mid_id = 4'b0010;
+        wdrv_if.head_sp0_w_o.last = 0;
+        wdrv_if.head_sp0_w_o.strb = '0;
+    endtask
+        
+    task set_sp1_aw;
         wdrv_if.head_sp1_awvalid = 1;
         wdrv_if.head_sp1_aw_o.addr = 32'hBEEFBEEF;
         wdrv_if.head_sp1_aw_o.mid_id = 4'b0101;
@@ -90,13 +101,29 @@ program test (
         wdrv_if.head_sp1_aw_o.burst = 2'b01;
     endtask
 
-    task set_dcache;
+    task set_sp1_w;
+        wdrv_if.head_sp1_wvalid = 1;
+        wdrv_if.head_sp1_w_o.data = 64'hDDDDCCCCBBBBAAAA;
+        wdrv_if.head_sp1_w_o.mid_id = 4'b0101;
+        wdrv_if.head_sp1_w_o.last = 0;
+        wdrv_if.head_sp1_w_o.strb = '0;
+    endtask
+
+    task set_dcache_aw;
         wdrv_if.head_d_awvalid = 1;
         wdrv_if.head_d_aw_o.addr = 32'hBEEFDEAD;
         wdrv_if.head_d_aw_o.mid_id = 4'b1011;
         wdrv_if.head_d_aw_o.size = 3'b011;
         wdrv_if.head_d_aw_o.len = 4'h7;
         wdrv_if.head_d_aw_o.burst = 2'b01;
+    endtask
+
+    task set_dcache_w;
+        wdrv_if.head_d_wvalid = 1;
+        wdrv_if.head_d_w_o.data = 64'hFFFFFFFFFFFFFFFF;
+        wdrv_if.head_d_w_o.mid_id = 4'b1011;
+        wdrv_if.head_d_w_o.last = 0;
+        wdrv_if.head_d_w_o.strb = '0;
     endtask
 
 
@@ -116,12 +143,15 @@ program test (
         reset_inputs();
         reset_dut();
         #(CLK_PERIOD*2);
-        set_sp0();
-        set_sp1();
-        set_dcache();
+        set_sp0_aw();
+        set_sp0_w();
+        set_sp1_aw();
+        set_sp1_w();
+        set_dcache_aw();
+        set_dcache_w();
         #(CLK_PERIOD);
         wdrv_if.aw_grant = 3'b100;
-        #(CLK_PERIOD*2);
+        #(CLK_PERIOD*3);
         wdrv_if.aw_o_ready = 1;
         wdrv_if.w_o_ready = 1;
         #(CLK_PERIOD*2);
@@ -133,6 +163,7 @@ program test (
     initial begin
         reset_init_state();
         send_sp0();
+
         $finish;
     end
 
