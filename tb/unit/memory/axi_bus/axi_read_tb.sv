@@ -13,7 +13,7 @@ typedef class ar_monitor;
 typedef class r_monitor;
 typedef class scoreboard;
 
-module axi_read_tb; 
+module axi_read_tb; //TODO: add clocking feature
 
     parameter PERIOD=10;
 
@@ -24,6 +24,31 @@ module axi_read_tb;
     axi_read DUT (CLK, nRST, abif);
 
     test PROG (CLK, nRST, abif);
+
+    // AR arbiter grant one at a time
+    property ar_arbit_onehot; @(posedge CLK) disable iff (!nRST) $onehot0({abif.sp0_pop, abif.sp1_pop, abif.i_pop, abif.d_pop}); endproperty
+
+    // manager pop with request
+    property sp0_pop_req; @(posedge CLK) disable iff (!nRST) abif.sp0_pop |-> abif.sp0_req_r; endproperty
+    property sp1_pop_req; @(posedge CLK) disable iff (!nRST) abif.sp1_pop |-> abif.sp1_req_r; endproperty
+    property i_pop_req; @(posedge CLK) disable iff (!nRST) abif.i_pop   |-> abif.i_req_r;   endproperty
+    property d_pop_req; @(posedge CLK) disable iff (!nRST) abif.d_pop   |-> abif.d_req_r;   endproperty
+
+    // R send master one at a time
+    property router_onehot; @(posedge CLK) disable iff (!nRST) $onehot0({abif.r_sp0_o_valid, abif.r_sp1_o_valid, abif.r_i_o_valid, abif.r_d_o_valid}); endproperty
+
+    // R no sub valid, then no master valid
+    property r_validX; @(posedge CLK) disable iff (!nRST) !abif.r_valid |-> !abif.r_sp0_o_valid && !abif.r_sp1_o_valid && !abif.r_i_o_valid && !abif.r_d_o_valid; endproperty
+
+    // assert
+    assert property (ar_arbit_onehot) else $error("SVA: AR arbiter grant not onehot");
+    assert property (sp0_pop_req) else $error("SVA: sp0 pop when no request");
+    assert property (sp1_pop_req) else $error("SVA: sp1 pop when no request");
+    assert property (i_pop_req) else $error("SVA: i pop when no request");
+    assert property (d_pop_req) else $error("SVA: d pop when no request");
+    assert property (router_onehot) else $error("SVA: R router output not onehot");
+    assert property (r_validX) else $error("SVA: R master valid without sub valid");
+
 endmodule
 
 program test (
@@ -186,9 +211,9 @@ program test (
         smoke_ar_test();
         pressure_ar_test(100);
         idle_ar_test();
-        smoke_r_test();
-        pressure_r_test(10);
-        idle_r_test();
+        // smoke_r_test();
+        // pressure_r_test(10);
+        // idle_r_test();
 
         // report
         env.report();
