@@ -510,7 +510,7 @@ interface axi_bus_if(input logic CLK, input logic nRST);
         output head_d_awvalid, head_d_aw_o, head_d_wvalid, head_d_w_o,
 
         // To Managers
-        output w_sp0_pop, w_sp1_pop, w_d_pop,
+        input w_sp0_pop, w_sp1_pop, w_d_pop,
 
         // To Subordinate
         input aw_o_valid, aw_o,

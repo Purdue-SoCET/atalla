@@ -25,7 +25,7 @@ module axi_write_arbiter_tb ();
     );
 
     // test program
-    test PROG (
+    arb_test PROG (
         .CLK     (CLK),
         .nRST    (nRST),
         .arbw_if (busif)  
@@ -33,7 +33,7 @@ module axi_write_arbiter_tb ();
 
 endmodule
 
-program test (
+program arb_test (
     input  logic CLK,
     output logic nRST,
     axi_bus_if.write_arbiter_tb arbw_if

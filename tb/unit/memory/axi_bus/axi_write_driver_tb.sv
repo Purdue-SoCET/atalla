@@ -40,6 +40,8 @@ program test (
 
     parameter CLK_PERIOD = 10;
     string test_case;
+    int sp0_w_idx, sp1_w_idx, d_w_idx;
+    int sp0_w_left, sp1_w_left, d_w_left;
 
     task reset_dut;
     begin
@@ -69,6 +71,13 @@ program test (
         wdrv_if.head_d_w_o = '0;
         wdrv_if.aw_o_ready = '0;
         wdrv_if.w_o_ready = '0;
+
+        sp0_w_idx  = 0;
+        sp1_w_idx  = 0;
+        d_w_idx    = 0;
+        sp0_w_left = 0;
+        sp1_w_left = 0;
+        d_w_left   = 0;
     end 
     endtask
 
@@ -79,14 +88,13 @@ program test (
         wdrv_if.head_sp0_aw_o.size = 3'b011;
         wdrv_if.head_sp0_aw_o.len = 4'h7;
         wdrv_if.head_sp0_aw_o.burst = 2'b01;
-        wdrv_if.head_sp0_w_o.data = 64'hAAAABBBBCCCCDDDD;
-        wdrv_if.head_sp0_w_o.mid_id = 4'b0010;
-        wdrv_if.head_sp0_w_o.mid_id = 4'b0010;
     endtask
 
     task set_sp0_w;
+        sp0_w_idx  = 0;
+        sp0_w_left = 8;
         wdrv_if.head_sp0_wvalid = 1;
-        wdrv_if.head_sp0_w_o.data = 64'hAAAABBBBCCCCDDDD;
+        wdrv_if.head_sp0_w_o.data = 64'hAAAABBBBCCCCDDD0;
         wdrv_if.head_sp0_w_o.mid_id = 4'b0010;
         wdrv_if.head_sp0_w_o.last = 0;
         wdrv_if.head_sp0_w_o.strb = '0;
@@ -102,8 +110,10 @@ program test (
     endtask
 
     task set_sp1_w;
+        sp1_w_idx  = 0;
+        sp1_w_left = 8;
         wdrv_if.head_sp1_wvalid = 1;
-        wdrv_if.head_sp1_w_o.data = 64'hDDDDCCCCBBBBAAAA;
+        wdrv_if.head_sp1_w_o.data = 64'hDDDDCCCCBBBBAAA0;
         wdrv_if.head_sp1_w_o.mid_id = 4'b0101;
         wdrv_if.head_sp1_w_o.last = 0;
         wdrv_if.head_sp1_w_o.strb = '0;
@@ -119,12 +129,83 @@ program test (
     endtask
 
     task set_dcache_w;
+        d_w_idx  = 0;
+        d_w_left = 8;
         wdrv_if.head_d_wvalid = 1;
-        wdrv_if.head_d_w_o.data = 64'hFFFFFFFFFFFFFFFF;
+        wdrv_if.head_d_w_o.data = 64'hFFFFFFFFFFFFFFF0;
         wdrv_if.head_d_w_o.mid_id = 4'b1011;
         wdrv_if.head_d_w_o.last = 0;
         wdrv_if.head_d_w_o.strb = '0;
     endtask
+
+    initial begin
+        forever begin
+            @(posedge CLK or negedge nRST);
+            if (!nRST) begin
+                sp0_w_idx  = 0;
+                sp1_w_idx  = 0;
+                d_w_idx    = 0;
+                sp0_w_left = 0;
+                sp1_w_left = 0;
+                d_w_left   = 0;
+            end
+            else begin
+                // ---------------- SP0 ----------------
+                if (wdrv_if.w_sp0_pop && (sp0_w_left > 0)) begin
+                    sp0_w_idx  = sp0_w_idx + 1;
+                    sp0_w_left = sp0_w_left - 1;
+
+                    if (sp0_w_left == 1) begin
+                        wdrv_if.head_sp0_wvalid = 0;
+                        wdrv_if.head_sp0_w_o    = '0;
+                    end
+                    else begin
+                        wdrv_if.head_sp0_wvalid     = 1;
+                        wdrv_if.head_sp0_w_o.data   = 64'hAAAABBBBCCCCDDD0 + (sp0_w_idx);
+                        wdrv_if.head_sp0_w_o.mid_id = 4'b0010;
+                        wdrv_if.head_sp0_w_o.last   = (sp0_w_idx == 7);
+                        wdrv_if.head_sp0_w_o.strb   = '0;
+                    end
+                end
+
+                // ---------------- SP1 ----------------
+                if (wdrv_if.w_sp1_pop && (sp1_w_left > 0)) begin
+                    sp1_w_idx  = sp1_w_idx + 1;
+                    sp1_w_left = sp1_w_left - 1;
+
+                    if (sp1_w_left == 1) begin
+                        wdrv_if.head_sp1_wvalid = 0;
+                        wdrv_if.head_sp1_w_o    = '0;
+                    end
+                    else begin
+                        wdrv_if.head_sp1_wvalid     = 1;
+                        wdrv_if.head_sp1_w_o.data   = 64'hDDDDCCCCBBBBAAA0 + (sp1_w_idx);
+                        wdrv_if.head_sp1_w_o.mid_id = 4'b0101;
+                        wdrv_if.head_sp1_w_o.last   = (sp1_w_idx == 7);
+                        wdrv_if.head_sp1_w_o.strb   = '0;
+                    end
+                end
+
+                // ---------------- D$ ----------------
+                if (wdrv_if.w_d_pop && (d_w_left > 0)) begin
+                    d_w_idx  = d_w_idx + 1;
+                    d_w_left = d_w_left - 1;
+
+                    if (d_w_left == 1) begin
+                        wdrv_if.head_d_wvalid = 0;
+                        wdrv_if.head_d_w_o    = '0;
+                    end
+                    else begin
+                        wdrv_if.head_d_wvalid     = 1;
+                        wdrv_if.head_d_w_o.data   = 64'hFFFFFFFFFFFFFFF0 + (d_w_idx);
+                        wdrv_if.head_d_w_o.mid_id = 4'b1011;
+                        wdrv_if.head_d_w_o.last   = (d_w_idx == 7);
+                        wdrv_if.head_d_w_o.strb   = '0;
+                    end
+                end
+            end
+        end
+    end
 
 
     // TEST CASE 1: RESET INIT STATE
@@ -154,7 +235,7 @@ program test (
         #(CLK_PERIOD*3);
         wdrv_if.aw_o_ready = 1;
         wdrv_if.w_o_ready = 1;
-        #(CLK_PERIOD*2);
+        #(CLK_PERIOD*12);
         reset_inputs();
         #(CLK_PERIOD);
     end
