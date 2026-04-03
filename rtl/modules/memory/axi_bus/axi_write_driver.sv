@@ -61,7 +61,12 @@ module axi_write_driver(
                         w_skid_buffer[w_wr_ptr].data     <= wdrv_if.head_sp0_w_o.data;
                         w_skid_buffer[w_wr_ptr].last     <= wdrv_if.head_sp0_w_o.last;
                         w_skid_buffer[w_wr_ptr].strb     <= wdrv_if.head_sp0_w_o.strb;
-                        w_wr_ptr <= w_wr_ptr + 1'b1;
+                        if (w_wr_ptr == WDRV_DEPTH_W-1) begin  
+                            w_wr_ptr <= '0; // to fix bug where ptr counts up to 3 instead of doing 0->1->2->0
+                        end 
+                        else begin 
+                            w_wr_ptr <= w_wr_ptr + 1'b1;
+                        end
                     end 
                 end
                 else if (wdrv_if.aw_grant[MID-1:0] == SP1) begin
@@ -80,7 +85,12 @@ module axi_write_driver(
                         w_skid_buffer[w_wr_ptr].data     <= wdrv_if.head_sp1_w_o.data;
                         w_skid_buffer[w_wr_ptr].last     <= wdrv_if.head_sp1_w_o.last;
                         w_skid_buffer[w_wr_ptr].strb     <= wdrv_if.head_sp1_w_o.strb;
-                        w_wr_ptr <= w_wr_ptr + 1'b1;
+                        if (w_wr_ptr == WDRV_DEPTH_W-1) begin  
+                            w_wr_ptr <= '0; // to fix bug where ptr counts up to 3 instead of doing 0->1->2->0
+                        end 
+                        else begin 
+                            w_wr_ptr <= w_wr_ptr + 1'b1;
+                        end
                     end 
                 end
                 else if (wdrv_if.aw_grant[MID-1:0] == DCACHE) begin
@@ -99,13 +109,24 @@ module axi_write_driver(
                         w_skid_buffer[w_wr_ptr].data     <= wdrv_if.head_d_w_o.data;
                         w_skid_buffer[w_wr_ptr].last     <= wdrv_if.head_d_w_o.last;
                         w_skid_buffer[w_wr_ptr].strb     <= wdrv_if.head_d_w_o.strb;
-                        w_wr_ptr <= w_wr_ptr + 1'b1;
+                        if (w_wr_ptr == WDRV_DEPTH_W-1) begin  
+                            w_wr_ptr <= '0; // to fix bug where ptr counts up to 3 instead of doing 0->1->2->0
+                        end 
+                        else begin 
+                            w_wr_ptr <= w_wr_ptr + 1'b1;
+                        end
                     end
                 end
             end
             if (wdrv_if.w_fire && !w_skid_empty) begin
                 w_skid_buffer[w_rd_ptr].valid <= 1'b0;
-                w_rd_ptr <= w_rd_ptr + 1'b1;
+                //w_rd_ptr <= w_rd_ptr + 1'b1;
+                if (w_rd_ptr == WDRV_DEPTH_W-1) begin  
+                    w_rd_ptr <= '0; // to fix bug where ptr counts up to 3 instead of doing 0->1->2->0
+                end 
+                else begin 
+                    w_rd_ptr <= w_rd_ptr + 1'b1;
+                end
             end
             if (aw_fire && !aw_skid_empty) begin 
                 aw_skid_buffer[aw_rd_ptr].valid <= 1'b0;
