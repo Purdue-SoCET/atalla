@@ -27,19 +27,16 @@ module axi_read_tb; //TODO: add clocking feature
 
     // AR arbiter grant one at a time
     property ar_arbit_onehot; @(posedge CLK) disable iff (!nRST) $onehot0({abif.sp0_pop, abif.sp1_pop, abif.i_pop, abif.d_pop}); endproperty
-
     // manager pop with request
     property sp0_pop_req; @(posedge CLK) disable iff (!nRST) abif.sp0_pop |-> abif.sp0_req_r; endproperty
     property sp1_pop_req; @(posedge CLK) disable iff (!nRST) abif.sp1_pop |-> abif.sp1_req_r; endproperty
     property i_pop_req; @(posedge CLK) disable iff (!nRST) abif.i_pop   |-> abif.i_req_r;   endproperty
     property d_pop_req; @(posedge CLK) disable iff (!nRST) abif.d_pop   |-> abif.d_req_r;   endproperty
-
     // R send master one at a time
     property router_onehot; @(posedge CLK) disable iff (!nRST) $onehot0({abif.r_sp0_o_valid, abif.r_sp1_o_valid, abif.r_i_o_valid, abif.r_d_o_valid}); endproperty
-
     // R no sub valid, then no master valid
     property r_validX; @(posedge CLK) disable iff (!nRST) !abif.r_valid |-> !abif.r_sp0_o_valid && !abif.r_sp1_o_valid && !abif.r_i_o_valid && !abif.r_d_o_valid; endproperty
-
+    
     // assert
     assert property (ar_arbit_onehot) else $error("SVA: AR arbiter grant not onehot");
     assert property (sp0_pop_req) else $error("SVA: sp0 pop when no request");
@@ -48,7 +45,6 @@ module axi_read_tb; //TODO: add clocking feature
     assert property (d_pop_req) else $error("SVA: d pop when no request");
     assert property (router_onehot) else $error("SVA: R router output not onehot");
     assert property (r_validX) else $error("SVA: R master valid without sub valid");
-
 endmodule
 
 program test (
@@ -237,33 +233,49 @@ class environment;
 
     mailbox #(sub_ar_channel_t) mbx_mon_ar;
     mailbox #(master_r_channel_t) mbx_mon_r;
+    mailbox #(sub_aw_channel_t) mbx_mon_aw;
+    mailbox #(sub_w_channel_t) mbx_mon_w;
+
     mailbox #(ar_txn) mbx_drv_ar[4];
     mailbox #(r_txn) mbx_drv_r;
+    mailbox #(aw_txn) mbx_drv_aw[3];
+    mailbox #(w_txn) mbx_drv_w[3];
 
     ar_driver ar_drv[4];
     r_driver r_drv;
+    aw_driver aw_drv[3];
+    w_driver w_drv[3];
+
     ar_monitor ar_mon;
     r_monitor r_mon;
+    aw_monitor aw_mon;
+    w_monitor w_mon;
+
     scoreboard scb;
 
     function new(
         virtual axi_bus_if vif
     );
         this.vif = vif;
-        mbx_drv_ar[0] = new();
-        mbx_drv_ar[1] = new();
-        mbx_drv_ar[2] = new();
-        mbx_drv_ar[3] = new();
+
+        // mailbox setup
+        foreach (mbx_drv_ar[i]) mbx_drv_ar[i] = new();
+        foreach (mbx_drv_aw[i]) mbx_drv_aw[i] = new();
+        foreach (mbx_drv_w[i]) mbx_drv_w[i] = new();
         mbx_drv_r = new();
         mbx_mon_ar = new();
         mbx_mon_r = new();
+        mbx_mon_aw = new();
+        mbx_mon_w = new();
 
         // monitor setup
-        ar_mon = new(vif, this.mbx_mon_ar);
-        r_mon = new(vif, this.mbx_mon_r);
+        ar_mon = new(vif, mbx_mon_ar);
+        r_mon = new(vif, mbx_mon_r);
+        aw_mon = new(vif, mbx_mon_aw);
+        w_mon = new(vif, mbx_mon_w);
 
         // scoreboard setup
-        scb = new(this.mbx_mon_ar, this.mbx_mon_r);
+        scb = new(mbx_mon_ar, mbx_mon_r, mbx_mon_aw, mbx_mon_w);
 
         // driver setup
         ar_drv[0] = new(0, scb, vif, mbx_drv_ar[0]);
@@ -272,25 +284,31 @@ class environment;
         ar_drv[3] = new(3, scb, vif, mbx_drv_ar[3]);
         r_drv = new(vif, mbx_drv_r, scb);
 
+        aw_drv[0] = new(0, scb, vif, mbx_drv_aw[0]);
+        aw_drv[1] = new(1, scb, vif, mbx_drv_aw[1]);
+        aw_drv[2] = new(2, scb, vif, mbx_drv_aw[2]);
+
+        w_drv[0] = new(0, scb, vif, mbx_drv_w[0]);
+        w_drv[1] = new(1, scb, vif, mbx_drv_w[1]);
+        w_drv[2] = new(2, scb, vif, mbx_drv_w[2]);
+
     endfunction
 
-    task send_ar_req(ar_txn t);
-        mbx_drv_ar[t.mid].put(t);
-    endtask
-
-    task send_r_req(r_txn t);
-        mbx_drv_r.put(t);
-    endtask
+    task send_ar_req(ar_txn t); mbx_drv_ar[t.mid].put(t); endtask
+    task send_r_req(r_txn t); mbx_drv_r.put(t); endtask
+    task send_aw_req(aw_txn t); mbx_drv_aw[t.mid].put(t); endtask
+    task send_w_req(w_txn t); mbx_drv_w[t.mid].put(t); endtask
 
     task start();
         fork
-            ar_drv[0].run();
-            ar_drv[1].run();
-            ar_drv[2].run();
-            ar_drv[3].run();
+            ar_drv[0].run(); ar_drv[1].run(); ar_drv[2].run(); ar_drv[3].run();
             r_drv.run();
+            aw_drv[0].run(); aw_drv[1].run(); aw_drv[2].run();
+            w_drv[0].run(); w_drv[1].run(); w_drv[2].run();
             ar_mon.run();
             r_mon.run();
+            aw_mon.run();
+            w_mon.run();
             scb.run();
         join_none
     endtask
@@ -304,11 +322,11 @@ endclass
 
 class ar_txn;
     rand logic [1:0] mid;
-    rand logic [ARADDR-1:0]   addr;
-    rand logic [ARID-1:0]     id;
-    rand logic [ARSIZE-1:0]   size;
-    rand logic [ARLEN-1:0]    len;
-    rand logic [ARBURST-1:0]  burst;
+    rand logic [ARADDR-1:0] addr;
+    rand logic [ARID-1:0] id;
+    rand logic [ARSIZE-1:0] size;
+    rand logic [ARLEN-1:0] len;
+    rand logic [ARBURST-1:0] burst;
 
     logic [1:0] force_mid;
     constraint c_force_mid {mid == force_mid;}
@@ -334,6 +352,40 @@ class r_txn;
     function new();
         c_force_mid.constraint_mode(0);
     endfunction
+endclass
+
+class aw_txn;
+    rand logic [1:0] mid;
+    rand logic [AWADDR-1:0] addr;
+    rand logic [AWID-1:0] id;     // Local (2-bit) ID: index within master
+    rand logic [AWSIZE-1:0] size; // beat size
+    rand logic [AWLEN-1:0] len;   // burst length
+    rand logic [AWBURST-1:0] burst; // burst mode (WRAP, INCR)
+
+    logic [1:0] force_mid;
+
+    constraint c_mid_valid {mid inside {0, 1, 2};}  // SP0=0, SP1=1, D$=2 (no I$ on write path)
+    constraint c_force_mid {mid == force_mid;}
+    constraint c_len       {len != 3'b111;}
+    constraint c_burst     {burst != 2'b11;}
+
+    function new();
+        c_force_mid.constraint_mode(0);
+        c_len.constraint_mode(0);
+        c_burst.constraint_mode(0);
+    endfunction
+endclass
+
+class w_txn;
+    rand logic [1:0] mid;         // master: SP0=0, SP1=1, D$=2
+    rand logic [WID-1:0] id;      // local write ID
+    rand logic [AWLEN-1:0] len;   // burst length (driver sends len+1 beats)
+    // Captured per beat by driver before push_w_exp:
+    logic [WDATA-1:0] data;
+    logic last;
+    logic [WSTRB-1:0] strb;
+
+    constraint c_mid_valid {mid inside {0, 1, 2};}
 endclass
 
 class ar_driver; // get transaction, drive it, push expected to scoreboard
@@ -444,9 +496,151 @@ class r_driver;
         case (mid)
             0: vif.r_sp0_o_ready = val;
             1: vif.r_sp1_o_ready = val;
-            2: vif.r_i_o_ready   = val;
-            3: vif.r_d_o_ready   = val;
+            2: vif.r_i_o_ready = val;
+            3: vif.r_d_o_ready = val;
         endcase
+    endtask
+endclass
+
+// ============================================================
+// AW Driver
+// One instance per master (SP0=0, SP1=1, D$=2). No I$ write path.
+// Each master drives AW independently — multiple AW transactions
+// from different masters may be outstanding simultaneously.
+// After a successful AW handshake the transaction is posted to
+// mbx_w_pending so the paired w_driver can send the W beats.
+// ============================================================
+class aw_driver;
+    logic [1:0] mid;
+    scoreboard scb;
+    virtual axi_bus_if vif;
+    mailbox #(aw_txn) mbx_drv_aw;
+
+    function new(
+        logic [1:0] mid,
+        scoreboard scb,
+        virtual axi_bus_if vif,
+        mailbox #(aw_txn) mbx_drv_aw
+    );
+        this.mid = mid;
+        this.scb = scb;
+        this.vif = vif;
+        this.mbx_drv_aw = mbx_drv_aw;
+    endfunction
+
+    task run();
+        aw_txn t;
+        forever begin
+            mbx_drv_aw.get(t);
+            scb.push_aw_exp(t, t.mid);
+            drive(t);
+            $display("[%0t] send aw request: mid=%0d addr=%h id=%h len=%0d",
+                     $time, t.mid, t.addr, t.id, t.len);
+        end
+    endtask
+
+    task drive(aw_txn t);
+        // Set up AW signals after a negedge (same pattern as ar_driver)
+        @(negedge axi_write_tb.CLK);
+        case (t.mid)
+            0: begin vif.aw_sp0_i_valid=1; vif.aw_sp0_i.addr=t.addr; vif.aw_sp0_i.id=t.id;
+                     vif.aw_sp0_i.size=t.size; vif.aw_sp0_i.len=t.len; vif.aw_sp0_i.burst=t.burst; end
+            1: begin vif.aw_sp1_i_valid=1; vif.aw_sp1_i.addr=t.addr; vif.aw_sp1_i.id=t.id;
+                     vif.aw_sp1_i.size=t.size; vif.aw_sp1_i.len=t.len; vif.aw_sp1_i.burst=t.burst; end
+            2: begin vif.aw_d_i_valid=1; vif.aw_d_i.addr=t.addr; vif.aw_d_i.id=t.id;
+                     vif.aw_d_i.size=t.size; vif.aw_d_i.len=t.len; vif.aw_d_i.burst=t.burst; end
+        endcase
+
+        // Poll ready; deassert valid once handshake completes
+        @(negedge axi_write_tb.CLK);
+        case (t.mid)
+            0: begin while (!vif.aw_sp0_i_ready) @(negedge axi_write_tb.CLK);
+                    vif.aw_sp0_i_valid=0; vif.aw_sp0_i='0; end
+            1: begin while (!vif.aw_sp1_i_ready) @(negedge axi_write_tb.CLK);
+                    vif.aw_sp1_i_valid=0; vif.aw_sp1_i='0; end
+            2: begin while (!vif.aw_d_i_ready) @(negedge axi_write_tb.CLK);
+                    vif.aw_d_i_valid=0; vif.aw_d_i='0; end
+        endcase
+    endtask
+endclass
+
+// ============================================================
+// W Driver
+// One instance per master (SP0=0, SP1=1, D$=2). No I$ write path.
+// Multiple AW transactions may be outstanding across masters, but
+// W beats must NOT interleave: only one master may occupy the W bus
+// at a time. A shared semaphore (w_bus_lock, initialized to 1) is
+// passed to every w_driver instance to enforce mutual exclusion.
+// The order in which masters win the semaphore is non-deterministic,
+// so W order need not match AW issue order.
+// ============================================================
+class w_driver;
+    logic [1:0] mid;
+    scoreboard scb;
+    virtual axi_bus_if vif;
+    mailbox #(w_txn) mbx_drv_w;
+
+    function new(
+        logic [1:0] mid,
+        scoreboard scb,
+        virtual axi_bus_if vif,
+        mailbox #(w_txn) mbx_drv_w
+    );
+        this.mid = mid;
+        this.scb = scb;
+        this.vif = vif;
+        this.mbx_drv_w = mbx_drv_w;
+    endfunction
+
+    task run();
+        w_txn t;
+        forever begin
+            mbx_drv_w.get(t);
+            drive(t);
+        end
+    endtask
+
+    // Drive len+1 beats sequentially, each with its own handshake.
+    // Pushes expected value to scoreboard before driving each beat.
+    task drive(w_txn t);
+        for (int i = 0; i <= t.len; i++) begin
+            logic [WDATA-1:0] rand_data;
+            logic [WSTRB-1:0] rand_strb;
+
+            rand_data = {$urandom, $urandom};
+            rand_strb = $urandom;
+
+            // Capture beat expected values then push before driving
+            t.data = rand_data;
+            t.strb = rand_strb;
+            t.last = (i == t.len);
+            scb.push_w_exp(t);
+
+            @(negedge axi_write_tb.CLK);
+            case (t.mid)
+                0: begin vif.w_sp0_i_valid=1; vif.w_sp0_i.data=rand_data; vif.w_sp0_i.id=t.id;
+                         vif.w_sp0_i.strb=rand_strb; vif.w_sp0_i.last=t.last; end
+                1: begin vif.w_sp1_i_valid=1; vif.w_sp1_i.data=rand_data; vif.w_sp1_i.id=t.id;
+                         vif.w_sp1_i.strb=rand_strb; vif.w_sp1_i.last=t.last; end
+                2: begin vif.w_d_i_valid=1; vif.w_d_i.data=rand_data; vif.w_d_i.id=t.id;
+                         vif.w_d_i.strb=rand_strb; vif.w_d_i.last=t.last; end
+            endcase
+
+            @(negedge axi_write_tb.CLK);
+            case (t.mid)
+                0: while (!vif.w_sp0_i_ready) @(negedge axi_write_tb.CLK);
+                1: while (!vif.w_sp1_i_ready) @(negedge axi_write_tb.CLK);
+                2: while (!vif.w_d_i_ready) @(negedge axi_write_tb.CLK);
+            endcase
+        end
+
+        case (t.mid)
+            0: begin vif.w_sp0_i_valid=0; vif.w_sp0_i='0; end
+            1: begin vif.w_sp1_i_valid=0; vif.w_sp1_i='0; end
+            2: begin vif.w_d_i_valid=0; vif.w_d_i='0; end
+        endcase
+
+        $display("[%0t] W beats done: mid=%0d id=%h len=%0d", $time, t.mid, t.id, t.len);
     endtask
 endclass
 
@@ -500,22 +694,70 @@ class r_monitor;
 
 endclass
 
+class aw_monitor;
+    virtual axi_bus_if vif;
+    mailbox #(sub_aw_channel_t) mbx_mon_aw;
+
+    function new(
+        virtual axi_bus_if vif,
+        mailbox #(sub_aw_channel_t) mbx_mon_aw
+    );
+        this.vif = vif;
+        this.mbx_mon_aw = mbx_mon_aw;
+    endfunction
+
+    task run();
+        forever begin
+            @(posedge axi_write_tb.CLK); #3;
+            if (vif.aw_o_valid & vif.aw_o_ready) mbx_mon_aw.put(vif.aw_o);
+        end
+    endtask
+endclass
+
+class w_monitor;
+    virtual axi_bus_if vif;
+    mailbox #(sub_w_channel_t) mbx_mon_w;
+
+    function new(
+        virtual axi_bus_if vif,
+        mailbox #(sub_w_channel_t) mbx_mon_w
+    );
+        this.vif = vif;
+        this.mbx_mon_w = mbx_mon_w;
+    endfunction
+
+    task run();
+        forever begin
+            @(posedge axi_write_tb.CLK); #3;
+            if (vif.w_o_valid & vif.w_o_ready) mbx_mon_w.put(vif.w_o);
+        end
+    endtask
+endclass
+
 class scoreboard;
     mailbox #(sub_ar_channel_t) mbx_mon_ar;
     mailbox #(master_r_channel_t) mbx_mon_r;
+    mailbox #(sub_aw_channel_t) mbx_mon_aw;
+    mailbox #(sub_w_channel_t) mbx_mon_w;
 
     ar_txn exp_ar_q[4][$];
     r_txn exp_r_q[$];
+    aw_txn exp_aw_q[3][$]; // SP0=0, SP1=1, D$=2
+    w_txn exp_w_q[$];      // flat per-beat queue (W order may differ from AW order)
 
     int fail_cnt=0;
     int pass_cnt=0;
 
     function new(
         mailbox #(sub_ar_channel_t) mbx_mon_ar,
-        mailbox #(master_r_channel_t) mbx_mon_r
+        mailbox #(master_r_channel_t) mbx_mon_r,
+        mailbox #(sub_aw_channel_t) mbx_mon_aw,
+        mailbox #(sub_w_channel_t) mbx_mon_w
     );
         this.mbx_mon_ar = mbx_mon_ar;
         this.mbx_mon_r = mbx_mon_r;
+        this.mbx_mon_aw = mbx_mon_aw;
+        this.mbx_mon_w = mbx_mon_w;
     endfunction
 
     task check_ar();
@@ -548,9 +790,50 @@ class scoreboard;
 
             exp = exp_r_q.pop_front();
             if (mon.data != exp.data) begin err=1; $error("r data, [exp:obs] [%h,%h]", exp.data, mon.data); end
-            if (mon.id != exp.id)   begin err=1; $error("r id, [exp:obs] [%h,%h]", exp.id,   mon.id);   end
+            if (mon.id != exp.id) begin err=1; $error("r id, [exp:obs] [%h,%h]", exp.id, mon.id); end
             if (mon.last != exp.last) begin err=1; $error("r last, [exp:obs] [%h,%h]", exp.last, mon.last); end
             if (mon.resp != exp.resp) begin err=1; $error("r resp, [exp:obs] [%h,%h]", exp.resp, mon.resp); end
+            if (err == 1) fail_cnt++; else pass_cnt++;
+        end
+    endtask
+
+    task check_aw();
+        aw_txn exp;
+        sub_aw_channel_t mon;
+        // mid is in the upper MID bits of mid_id: mid_id[MID_AWID-1:AWID]
+        logic [1:0] mid;
+
+        forever begin
+            int err=0;
+            mbx_mon_aw.get(mon);
+            mid = mon.mid_id[MID_AWID-1:AWID];
+            if (exp_aw_q[mid].size() == 0) begin fail_cnt++; continue; end
+
+            exp = exp_aw_q[mid].pop_front();
+            if (mon.addr != exp.addr) begin err=1; $error("aw addr, [exp:obs] [%h,%h]", exp.addr, mon.addr); end
+            if (mon.mid_id[AWID-1:0] != exp.id) begin err=1; $error("aw id, [exp:obs] [%h,%h]", exp.id, mon.mid_id[AWID-1:0]); end
+            if (mon.size != exp.size) begin err=1; $error("aw size, [exp:obs] [%h,%h]", exp.size, mon.size); end
+            if (mon.len != exp.len) begin err=1; $error("aw len, [exp:obs] [%h,%h]", exp.len, mon.len); end
+            if (mon.burst != exp.burst) begin err=1; $error("aw burst, [exp:obs] [%h,%h]", exp.burst, mon.burst); end
+            if (err == 1) fail_cnt++; else pass_cnt++;
+        end
+    endtask
+
+    task check_w();
+        w_txn exp;
+        sub_w_channel_t mon;
+
+        forever begin
+            int err=0;
+            mbx_mon_w.get(mon);
+            if (exp_w_q.size() == 0) begin fail_cnt++; continue; end
+
+            exp = exp_w_q.pop_front();
+            // mid_id format: {mid[1:0], id[WID-1:0]}
+            if (mon.mid_id != {exp.mid, exp.id}) begin err=1; $error("w mid_id, [exp:obs] [%h,%h]", {exp.mid, exp.id}, mon.mid_id); end
+            if (mon.data != exp.data)             begin err=1; $error("w data, [exp:obs] [%h,%h]", exp.data, mon.data); end
+            if (mon.strb != exp.strb)             begin err=1; $error("w strb, [exp:obs] [%h,%h]", exp.strb, mon.strb); end
+            if (mon.last != exp.last)             begin err=1; $error("w last, [exp:obs] [%h,%h]", exp.last, mon.last); end
             if (err == 1) fail_cnt++; else pass_cnt++;
         end
     endtask
@@ -568,16 +851,36 @@ class scoreboard;
         this.exp_r_q.push_back(exp);
     endtask
 
+    task push_aw_exp(
+        aw_txn exp,
+        logic [1:0] mid
+    );
+        this.exp_aw_q[mid].push_back(exp);
+    endtask
+
+    task push_w_exp(
+        w_txn exp
+    );
+        this.exp_w_q.push_back(exp);
+    endtask
+
     task report();
         $display("===== REPORT =====");
-        $display("PASS: %0d, FAIL: %0d, REMAIN AR TXN: %0d, REMAIN R TXN: %0d", pass_cnt, fail_cnt, exp_ar_q[0].size()
-        +exp_ar_q[1].size()+exp_ar_q[2].size()+exp_ar_q[3].size(), exp_r_q.size());
+        $display("PASS: %0d, FAIL: %0d", pass_cnt, fail_cnt);
+        $display("REMAIN AR: %0d, REMAIN R: %0d",
+            exp_ar_q[0].size()+exp_ar_q[1].size()+exp_ar_q[2].size()+exp_ar_q[3].size(),
+            exp_r_q.size());
+        $display("REMAIN AW: %0d, REMAIN W beats: %0d",
+            exp_aw_q[0].size()+exp_aw_q[1].size()+exp_aw_q[2].size(),
+            exp_w_q.size());
     endtask
 
     task run();
         fork
             check_ar();
             check_r();
+            check_aw();
+            check_w();
         join_none
     endtask
 endclass
