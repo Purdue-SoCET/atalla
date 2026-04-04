@@ -128,10 +128,11 @@ import atalla_isa_pkg::*;
 
         case (cur_state)
             start: begin
+                portmap.ready_in = 1'b1;
                 if(portmap.valid_in && !portmap.ready_out) begin
+                    portmap.ready_in = 1'b0;
                     n_state = latch;
                 end
-                portmap.ready_in = 1'b1;
                 portmap.valid_out = portmap.valid_in;
 
                 rs1_value_nlatch = portmap.rs1_value;

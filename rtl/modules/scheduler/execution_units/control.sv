@@ -1,4 +1,6 @@
 `include "control_if.sv"
+`include "atalla_isa_types.vh"
+import atalla_isa_pkg::*;
 
 module control (
     input  logic       CLK,
@@ -32,7 +34,7 @@ module control (
 
     // Convenience
     logic [31:0] pc_plus4;
-    assign pc_plus4 = ctrl_if.pc + 32'd24;
+    assign pc_plus4 = ctrl_if.pc + PACKET_BYTE_W;
 
     // -----------------------------
     // Branch condition evaluation

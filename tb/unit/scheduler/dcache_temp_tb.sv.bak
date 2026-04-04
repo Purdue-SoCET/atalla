@@ -1,0 +1,160 @@
+`timescale 1ns / 10ps
+`include "lockup_free_cache.sv"
+
+
+module dcache_temp_tb;
+
+    parameter PERIOD = 2;
+    logic CLK = 0, nRST;
+    always #(PERIOD/2) CLK++;
+    string casename;
+
+    logic mem_in;
+    logic [31:0] mem_in_addr;
+    logic mem_in_rw_mode;
+    logic [31:0] mem_in_store_value;
+    logic dp_in_halt;
+    logic [3:0] mem_out_uuid;
+    logic stall;
+    logic hit;
+    logic [31:0] hit_load;
+    logic [NUM_BANKS-1:0] block_status;
+    logic [NUM_BANKS-1:0][UUID_SIZE-1:0] uuid_block;
+    logic dp_out_flushed;
+    logic [NUM_BANKS-1:0] ram_mem_REN;
+    logic [NUM_BANKS-1:0] ram_mem_WEN;
+    logic [NUM_BANKS-1:0][31:0] ram_mem_addr;
+    logic [NUM_BANKS-1:0][31:0] ram_mem_store;
+    logic [NUM_BANKS-1:0][31:0] ram_mem_data;
+    logic [NUM_BANKS-1:0] ram_mem_complete;
+    
+
+    lockup_free_cache DUT (
+        .CLK(CLK), .nRST(nRST),
+        .mem_in(mem_in),
+        .mem_in_addr(mem_in_addr),
+        .mem_in_rw_mode(mem_in_rw_mode), // 0 = read, 1 = write
+        .mem_in_store_value(mem_in_store_value),
+        .dp_in_halt(dp_in_halt), 
+        .mem_out_uuid(mem_out_uuid),
+        .stall(stall),
+        .hit(hit),
+        .hit_load(hit_load),
+        .block_status(block_status),
+        .uuid_block(uuid_block),
+        .dp_out_flushed(dp_out_flushed),
+
+        // RAM Signals
+        .ram_mem_REN(ram_mem_REN),
+        .ram_mem_WEN(ram_mem_WEN),
+        .ram_mem_addr(ram_mem_addr),
+        .ram_mem_store(ram_mem_store),
+        .ram_mem_data(ram_mem_data),
+        .ram_mem_complete(ram_mem_complete)
+    );
+
+    initial begin
+        nRST = 1'b0;
+        mem_in = 1'b0;
+        mem_in_addr = 32'b0;
+        mem_in_rw_mode = 1'b0;
+        mem_in_store_value = 32'b0;
+        dp_in_halt = 1'b0;
+
+        ram_mem_data = '0;
+        ram_mem_complete = '0;
+
+        @(posedge CLK);
+        @(posedge CLK);
+        @(posedge CLK);
+
+        nRST = 1'b1;
+
+        @(posedge CLK);
+        @(posedge CLK);
+        @(posedge CLK);
+        mem_in = 1'b1;
+        mem_in_addr = 32'h0000000C;
+
+        @(posedge CLK);
+        // mem_in = 1'b0;
+        // mem_in_addr = 32'h00000000;
+        @(posedge CLK);
+        @(posedge CLK);
+        @(posedge CLK);
+        @(posedge CLK);
+        @(posedge CLK);
+        @(posedge CLK);
+        @(posedge CLK);
+        @(posedge CLK);
+
+        ram_mem_data[0] = 32'hBEEFBEEF;
+        ram_mem_complete[0] = 1'b1;
+
+        @(posedge CLK);
+        ram_mem_data[0] = 32'hAAAAAAAA;
+        @(posedge CLK);
+        ram_mem_data[0] = 32'hBBBBBBBB;
+        @(posedge CLK);
+        ram_mem_data[0] = 32'hCCCCCCCC;
+        @(posedge CLK);
+        ram_mem_complete[0] = 1'b0;
+        @(posedge CLK);
+        mem_in = 0'b1;
+        @(posedge CLK);
+        @(posedge CLK);
+        @(posedge CLK);
+        @(posedge CLK);
+        @(posedge CLK);
+        @(posedge CLK);
+        @(posedge CLK);
+        @(posedge CLK);
+        @(posedge CLK);
+        @(posedge CLK);
+        @(posedge CLK);
+        @(posedge CLK);
+        @(posedge CLK);
+        @(posedge CLK);
+        @(posedge CLK);
+        @(posedge CLK);
+        @(posedge CLK);
+        mem_in_addr = 32'h00000008;
+        @(posedge CLK);
+        @(posedge CLK);
+        @(posedge CLK);
+        @(posedge CLK);
+        @(posedge CLK);
+        @(posedge CLK);
+        @(posedge CLK);
+        @(posedge CLK);
+        @(posedge CLK);
+        @(posedge CLK);
+        @(posedge CLK);
+        @(posedge CLK);
+        @(posedge CLK);
+        @(posedge CLK);
+        @(posedge CLK);
+        @(posedge CLK);
+        @(posedge CLK);
+        @(posedge CLK);
+        @(posedge CLK);
+        @(posedge CLK);
+        @(posedge CLK);
+        @(posedge CLK);
+        @(posedge CLK);
+        @(posedge CLK);
+        @(posedge CLK);
+        @(posedge CLK);
+        @(posedge CLK);
+        @(posedge CLK);
+        @(posedge CLK);
+        @(posedge CLK);
+
+
+
+        $display("DONE");
+        $finish;
+    end
+
+
+endmodule

@@ -6,8 +6,6 @@
 `include "atalla_isa_types.vh"
 `include "if_dec1_if.vh"
 
-
-
 import execution_unit_types_pkg::*;
 import scalar_wb_pkg::*;
 import scheduler_pkg::*;
@@ -18,9 +16,15 @@ module scheduler_core #(
 )
 (
     input logic CLK, nRST,
-    //dcache
-    input logic hit,
+
+    //to dcache
+    output logic WEN, REN, mem_in_valid,
+    output logic [31:0] data_store, data_addr,
+
+    //from dcache
     input logic [31:0] data_load,
+    input logic hit, block_status,
+
     //dec2 in
     // input instr_t [3:0] scalar_instrs,
     // input logic predict_taken_in,
@@ -28,10 +32,9 @@ module scheduler_core #(
     // output logic ready
 
     //fetch in
-    input logic ihit,
-    input instruction_packet_t imemload, 
+    input logic iwait,
+    input instruction_packet_t iload, 
     output logic ready
-
 
 );
 
@@ -48,8 +51,10 @@ module scheduler_core #(
     decode_2_if decode_2_if ();
     datapath_cache_if datapath_cache_if ();
     dec1_dec2_if decode_1_if();
+    caches_if caches_if();
 
     //instantiations
+    icache ICACHE(.CLK(CLK), .nRST(nRST), .dcif(datapath_cache_if), .cif(caches_if));
     s_wb_arbiter S_WB_ARBITER(.CLK(CLK), .nRST(nRST), .vif(scalar_wb_if));
     execute_stage S_EXECUTE(.clk(CLK), .nRST(nRST), .ex_if(scalar_ex_if));
     decode_2 S_V_DECODE_2(.CLK(CLK), .nRST(nRST), .d2if(decode_2_if));
@@ -178,16 +183,27 @@ module scheduler_core #(
     assign n_EX_WB_latch.rd = scalar_wb_if.scalar_wb_out.rd;
     assign n_EX_WB_latch.WEN = scalar_wb_if.scalar_wb_out.WEN;
 
-    //temporary in/outs
+    //dcache in/outs
+    //from dcache
     assign scalar_ex_if.hit = hit;
     assign scalar_ex_if.data_load = data_load;
+    assign scalar_ex_if.block_status = block_status;
+    //to dcache
+    assign WEN = scalar_ex_if.WEN;
+    assign REN = scalar_ex_if.REN;
+    assign mem_in_valid = scalar_ex_if.mem_in_valid;
+    assign data_store = scalar_ex_if.data_store;
+    assign data_addr = scalar_ex_if.data_addr;
     // assign decode_2_if.scalar_instrs = scalar_instrs;
     // assign decode_2_if.predict_taken_in = predict_taken_in;
     // assign decode_2_if.pc_pred_addr_in = pc_pred_addr_in;
     // assign decode_2_if.pc_in = pc_in;
     assign ready = decode_2_if.ready;
-    assign datapath_cache_if.ihit = ihit;
-    assign datapath_cache_if.imemload = imemload;
+
+    // assign datapath_cache_if.ihit = ihit;
+    // assign datapath_cache_if.imemload = imemload;
+    assign caches_if.iload = iload;
+    assign caches_if.iwait = iwait;
 
     always_ff @( posedge CLK, negedge nRST ) begin : EX_WB_LATCH
         if(!nRST) begin

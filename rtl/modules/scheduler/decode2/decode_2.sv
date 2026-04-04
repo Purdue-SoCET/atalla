@@ -128,6 +128,11 @@ logic [NUM_VECTOR_INSTRS-1:0][MASK_REG_BITS-1:0] vector_m_wsels;
 logic [NUM_SDMA_INSTRS-1:0] SDMA_scalar_WEN;
 logic [NUM_SDMA_INSTRS-1:0][SCALAR_REG_BITS-1:0] SDMA_scalar_rs1s;
 
+// Per-unit need signals for struct hazard checking: does any instr in this packet need this unit?
+    logic need_scalar_ex1, need_scalar_ex2, need_scalar_ex3, need_scalar_ex4, need_scalar_ex5;
+    logic need_vector_alu, need_vector_mul, need_vector_exp, need_vector_reduction, need_vector_vlsu, need_vector_gsau;
+    logic need_sdma_ex;
+
 always_comb begin
     for (int i = 0; i < NUM_SCALAR_INSTRS; i++) begin
         scalar_fu_enables[i] = scif.decoded_scalar_instrs[i].fu_enable;
@@ -156,10 +161,7 @@ always_comb begin
 
     //FOLLOWING BLOCK IS SETTING UP FOR CHECKING STRUCTURAL HAZARDS
 
-    // Per-unit need signals for struct hazard checking: does any instr in this packet need this unit?
-    logic need_scalar_ex1, need_scalar_ex2, need_scalar_ex3, need_scalar_ex4, need_scalar_ex5;
-    logic need_vector_alu, need_vector_mul, need_vector_exp, need_vector_reduction, need_vector_vlsu, need_vector_gsau;
-    logic need_sdma_ex;
+    
 
     // Determine which execution units are needed by this packet
     need_scalar_ex1 = 1'b0;

@@ -8,7 +8,7 @@ package atalla_isa_pkg;
   // ============================================================
 
   parameter WORD_W        = 32;
-  parameter INST_W        = 48;
+  parameter INST_W        = 40;
   parameter PACKET_SIZE   = 4;
   parameter PACKET_W      = INST_W * PACKET_SIZE; // 192 bits
   parameter PACKET_BYTE_W = PACKET_W / 8;
@@ -59,68 +59,101 @@ package atalla_isa_pkg;
   typedef enum logic [OP_W-1:0] {
 
     // ---- Scalar R-Type ----
-    ADD_S=7'd1,  SUB_S=7'd2,  MUL_S=7'd3,  DIV_S=7'd4,  MOD_S=7'd5,
-    OR_S=7'd6,   AND_S=7'd7,  XOR_S=7'd8,
-    SLL_S=7'd9,  SRL_S=7'd10, SRA_S=7'd11,
-    SLT_S=7'd12, SLTU_S=7'd13,
+    ADD_S    = 7'd1,
+    SUB_S    = 7'd2,
+    MUL_S    = 7'd3,
+    DIV_S    = 7'd4,
+    MOD_S    = 7'd5,
+    OR_S     = 7'd6,
+    AND_S    = 7'd7,
+    XOR_S    = 7'd8,
+    SLL_S    = 7'd9,
+    SRL_S    = 7'd10,
+    SRA_S    = 7'd11,
+    SLT_S    = 7'd12,
+    SLTU_S   = 7'd13,
 
     // ---- BF16 Scalar ----
-    ADD_BF=7'd14, SUB_BF=7'd15, MUL_BF=7'd16,
-    RCP_BF=7'd17, SLT_BF=7'd18, SLTU_BF=7'd19,
-    STBF_S=7'd20, BFTS_S=7'd21,
+    BFTS_S   = 7'd14,
+    ADD_BF   = 7'd15,
+    SUB_BF   = 7'd16,
+    MUL_BF   = 7'd17,
+    RCP_BF   = 7'd18,
+    SLT_BF   = 7'd19,
+    SQRT_BF  = 7'd20,
+    STBF_S   = 7'd21,
 
     // ---- Scalar Immediate ----
-    ADDI_S=7'd22, SUBI_S=7'd23, MULI_S=7'd24,
-    DIVI_S=7'd25, MODI_S=7'd26,
-    ORI_S=7'd27,  ANDI_S=7'd28, XORI_S=7'd29,
-    SLLI_S=7'd30, SRLI_S=7'd31, SRAI_S=7'd32,
-    SLTI_S=7'd33, SLTUI_S=7'd34,
+    ADDI_S   = 7'd22,
+    SUBI_S   = 7'd23,
+    MULI_S   = 7'd24,
+    DIVI_S   = 7'd25,
+    MODI_S   = 7'd26,
+    ORI_S    = 7'd27,
+    ANDI_S   = 7'd28,
+    XORI_S   = 7'd29,
+    SLLI_S   = 7'd30,
+    SRLI_S   = 7'd31,
+    SRAI_S   = 7'd32,
+    SLTI_S   = 7'd33,
+    SLTUI_S  = 7'd34,
 
     // ---- Branch / Jump ----
-    BEQ_S=7'd35, BNE_S=7'd36, BLT_S=7'd37,
-    BGE_S=7'd38, BGT_S=7'd39, BLE_S=7'd40,
-    LW_S=7'd41,  SW_S=7'd42,
-    JAL=7'd43,   JALR=7'd44,
-    LI_S=7'd45,
-    LUI_S=7'd46,
-    NOP_S=7'd47,
-    HALT_S=7'd48,
-    // BARRIER_S=7'd49,
+    BEQ_S    = 7'd35,
+    BNE_S    = 7'd36,
+    BLT_S    = 7'd37,
+    BGE_S    = 7'd38,
+    BGT_S    = 7'd39,
+    BLE_S    = 7'd40,
+    LW_S     = 7'd41,
+    SW_S     = 7'd42,
+    LHW_S    = 7'd43,
+    SHW_S    = 7'd44,
+    JAL      = 7'd45,
+    JALR     = 7'd46,
+    LI_S     = 7'd47,
+    LUI_S    = 7'd48,
+    NOP_S    = 7'd49,
+    HALT_S   = 7'd50,
 
     // ---- Vector VV ----
-    ADD_VV=7'd50, SUB_VV=7'd51, MUL_VV=7'd52,
-    DIV_VV=7'd53, AND_VV=7'd54, OR_VV=7'd55,
-    XOR_VV=7'd56, GEMM_VV=7'd57,
-
-    // ---- Vector Mask VV ----
-    MGT_MVV=7'd58, MLT_MVV=7'd59,
-    MEQ_MVV=7'd60, MNEQ_MVV=7'd61,
+    ADD_VV   = 7'd51,
+    SUB_VV   = 7'd52,
+    MUL_VV   = 7'd53,
+    GEMM_VV  = 7'd54,
 
     // ---- Vector Immediate ----
-    ADDI_VI=7'd62, SUBI_VI=7'd63,
-    MULI_VI=7'd64, DIVI_VI=7'd65,
-    EXPI_VI=7'd66, SQRTI_VI=7'd67,
-    NOT_VI=7'd68, SHIFT_VI=7'd69,
-    LW_VI=7'd70,
-    RSUM_VI=7'd71, RMIN_VI=7'd72, RMAX_VI=7'd73,
+    EXPI_VI  = 7'd55,
+    LW_VI    = 7'd56,
+    RSUM_VI  = 7'd57,
+    RMIN_VI  = 7'd58,
+    RMAX_VI  = 7'd59,
+
+    // ---- Vector Mask VV ----
+    MGT_MVV  = 7'd60,
+    MLT_MVV  = 7'd61,
+    MEQ_MVV  = 7'd62,
+    MNEQ_MVV = 7'd63,
+
+    // ---- Vector Mask VS ----
+    MGT_MVS  = 7'd64,
+    MLT_MVS  = 7'd65,
+    MEQ_MVS  = 7'd66,
+    MNEQ_MVS = 7'd67,
+
+    // ---- Vector Memory / Move ----
+    VREG_LD  = 7'd68,
+    VREG_ST  = 7'd69,
+    SCPAD_LD = 7'd70,
+    SCPAD_ST = 7'd71,
+    VMOV_VTS = 7'd72,
+    MV_MTS   = 7'd73,
+    MV_STM   = 7'd74,
 
     // ---- Vector Scalar ----
-    SHIFT_VS=7'd74,
-    MV_MTS=7'd75, MV_STM=7'd76,
-    VREG_LD=7'd77, VREG_ST=7'd78,
-    VMOV_VTS=7'd79,
-    ADD_VS=7'd80, SUB_VS=7'd81,
-    MUL_VS=7'd82, DIV_VS=7'd83,
-    MGT_MVS=7'd84, MLT_MVS=7'd85,
-    MEQ_MVS=7'd86, MNEQ_MVS=7'd87,
-
-    // ---- Scratchpad DMA ----
-    SCPAD_LD=7'd88,
-    SCPAD_ST=7'd89,
-
-    // ---- Halfword ----
-    LHW_S=7'd90,
-    SHW_S=7'd91
+    ADD_VS   = 7'd75,
+    SUB_VS   = 7'd76,
+    MUL_VS   = 7'd77
 
   } opcode_t;
 
@@ -143,7 +176,8 @@ package atalla_isa_pkg;
     ld_valid=4'd11,
     st_valid=4'd12,
     sMult_valid=4'd13, 
-    halt_valid=4'd14
+    halt_valid=4'd14,
+    sqrt_valid=4'd15
   } scalar_fu_enable_t;
 
 
@@ -157,11 +191,11 @@ package atalla_isa_pkg;
     ALU_MGT = 4'b0110, // Mask greater than (v1 > v2)
     ALU_MLT = 4'b0111, // Mask less than (v1 < v2)
     ALU_MEQ = 4'b1000, // Mask equal (v1 == v2)
-    ALU_MNEQ = 4'b1001 // Mask not equal (v1 != v2)
+    ALU_MNEQ = 4'b1001, // Mask not equal (v1 != v2)
     MUL = 4'b1010, // BF16 multiplication
     EXP = 4'b1011, // Exponential
     VLSU = 4'b1100, // Vector load/store unit
-    GSAU = 4'b1101 // GEMM unit 
+    GSAU = 4'b1101, // GEMM unit 
     REDU = 4'b1110 // Reduction unit (this is technically not a separate FU but we need this signal to check structural hazards for reduction ops)
   } vector_fu_enable_t; //check rm flag for reduction ops
 
