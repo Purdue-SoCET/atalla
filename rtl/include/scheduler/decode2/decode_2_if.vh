@@ -30,6 +30,8 @@ interface decode_2_if #(
     decoded_SDMA_instr_t   [NUM_SDMA_INSTRUCTIONS-1:0] decoded_SDMA_instrs;
 
     logic ready_DEC2_ex1, ready_DEC2_ex2, ready_DEC2_ex3, ready_DEC2_ex4, ready_DEC2_ex5;
+    logic alu_ready, mul_ready, exp_ready, reduction_ready, vlsu_ready, gsau_ready, sdma_ready;
+
     logic ready; // RAW hazards and structural hazards cleared 
 
     word_t pc_in, pc_out, pc_pred_addr_in, pc_pred_addr_out;
@@ -58,7 +60,8 @@ interface decode_2_if #(
         input  scalar_instrs, vector_instrs, SDMA_instrs,
         input  pc_in, pc_pred_addr_in, predict_taken_in,
         input  ready_DEC2_ex1, ready_DEC2_ex2, ready_DEC2_ex3, ready_DEC2_ex4, ready_DEC2_ex5,
-        input  scalar_WB_WEN, scalar_WB_wsel, scalar_WB_wdata,
+        input alu_ready, mul_ready, exp_ready, reduction_ready, vlsu_ready, gsau_ready, sdma_ready,
+        input scalar_WB_WEN, scalar_WB_wsel, scalar_WB_wdata,
         input vector_WB_wsel, vector_WB_WEN, vector_WB_wdata,
         input mask_WB_wsel, mask_WB_WEN, mask_WB_wdata,
         input scalar_SDMA_WB_WEN, scalar_SDMA_WB_wsel,

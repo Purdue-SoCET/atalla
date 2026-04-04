@@ -23,9 +23,57 @@ module vector_control_unit
                 // ----------------------------------------------------------------
                 // Vector VV (reg-reg)
                 // ----------------------------------------------------------------
-                ADD_VV, SUB_VV, MUL_VV,
+                ADD_VV: begin
+                    cuif.decoded_vector_instrs[i].valid_in = 1'b1;
+                    cuif.decoded_vector_instrs[i].fu_enable = ALU_ADD;
+                    cuif.decoded_vector_instrs[i].vms = cuif.vector_instrs[i][34:31]; 
+                    cuif.decoded_vector_instrs[i].vs1 = cuif.vector_instrs[i][22:15]; 
+                    cuif.decoded_vector_instrs[i].vs2 = cuif.vector_instrs[i][30:23];
+                    cuif.decoded_vector_instrs[i].vd = cuif.vector_instrs[i][14:7];
+                    cuif.decoded_vector_instrs[i].use_vms = 1'b1;
+                    cuif.decoded_vector_instrs[i].use_vs1 = 1'b1;
+                    cuif.decoded_vector_instrs[i].use_vs2 = 1'b1;
+                    cuif.decoded_vector_instrs[i].scalar_reg_write = 1'b0;
+                    cuif.decoded_vector_instrs[i].vector_reg_write = 1'b1;
+                    cuif.decoded_vector_instrs[i].mask_reg_write = 1'b0;
+
+                end
+
+                SUB_VV: begin
+                    cuif.decoded_vector_instrs[i].valid_in = 1'b1;
+                    cuif.decoded_vector_instrs[i].fu_enable = ALU_SUB;
+                    cuif.decoded_vector_instrs[i].vms = cuif.vector_instrs[i][34:31]; 
+                    cuif.decoded_vector_instrs[i].vs1 = cuif.vector_instrs[i][22:15]; 
+                    cuif.decoded_vector_instrs[i].vs2 = cuif.vector_instrs[i][30:23];
+                    cuif.decoded_vector_instrs[i].vd = cuif.vector_instrs[i][14:7];
+                    cuif.decoded_vector_instrs[i].use_vms = 1'b1;
+                    cuif.decoded_vector_instrs[i].use_vs1 = 1'b1;
+                    cuif.decoded_vector_instrs[i].use_vs2 = 1'b1;
+                    cuif.decoded_vector_instrs[i].scalar_reg_write = 1'b0;
+                    cuif.decoded_vector_instrs[i].vector_reg_write = 1'b1;
+                    cuif.decoded_vector_instrs[i].mask_reg_write = 1'b0;
+
+                end
+
+                MUL_VV: begin
+                    cuif.decoded_vector_instrs[i].valid_in = 1'b1;
+                    cuif.decoded_vector_instrs[i].fu_enable = MUL;
+                    cuif.decoded_vector_instrs[i].vms = cuif.vector_instrs[i][34:31]; 
+                    cuif.decoded_vector_instrs[i].vs1 = cuif.vector_instrs[i][22:15]; 
+                    cuif.decoded_vector_instrs[i].vs2 = cuif.vector_instrs[i][30:23];
+                    cuif.decoded_vector_instrs[i].vd = cuif.vector_instrs[i][14:7];
+                    cuif.decoded_vector_instrs[i].use_vms = 1'b1;
+                    cuif.decoded_vector_instrs[i].use_vs1 = 1'b1;
+                    cuif.decoded_vector_instrs[i].use_vs2 = 1'b1;
+                    cuif.decoded_vector_instrs[i].scalar_reg_write = 1'b0;
+                    cuif.decoded_vector_instrs[i].vector_reg_write = 1'b1;
+                    cuif.decoded_vector_instrs[i].mask_reg_write = 1'b0;
+
+                end
+
                 GEMM_VV: begin
                     cuif.decoded_vector_instrs[i].valid_in = 1'b1;
+                    cuif.decoded_vector_instrs[i].fu_enable = GSAU;
                     cuif.decoded_vector_instrs[i].vms = cuif.vector_instrs[i][34:31]; 
                     cuif.decoded_vector_instrs[i].vs1 = cuif.vector_instrs[i][22:15]; 
                     cuif.decoded_vector_instrs[i].vs2 = cuif.vector_instrs[i][30:23];
@@ -42,9 +90,54 @@ module vector_control_unit
                 // ----------------------------------------------------------------
                 // Vector Mask VV
                 // ----------------------------------------------------------------
-                MGT_MVV, MLT_MVV,
-                MEQ_MVV, MNEQ_MVV: begin
+                MGT_MVV: begin
                     cuif.decoded_vector_instrs[i].valid_in = 1'b1;
+                    cuif.decoded_vector_instrs[i].fu_enable = ALU_MGT;
+                    cuif.decoded_vector_instrs[i].vms = cuif.vector_instrs[i][30:27];
+                    cuif.decoded_vector_instrs[i].vmd = cuif.vector_instrs[i][10:7];
+                    cuif.decoded_vector_instrs[i].vs1 = cuif.vector_instrs[i][18:11];
+                    cuif.decoded_vector_instrs[i].vs2 = cuif.vector_instrs[i][26:19];
+                    cuif.decoded_vector_instrs[i].use_vms = 1'b1;
+                    cuif.decoded_vector_instrs[i].use_vs1 = 1'b1;
+                    cuif.decoded_vector_instrs[i].use_vs2 = 1'b1;
+                    cuif.decoded_vector_instrs[i].scalar_reg_write = 1'b0;
+                    cuif.decoded_vector_instrs[i].vector_reg_write = 1'b0;
+                    cuif.decoded_vector_instrs[i].mask_reg_write = 1'b1;
+                end
+
+                MLT_MVV: begin
+                    cuif.decoded_vector_instrs[i].valid_in = 1'b1;
+                    cuif.decoded_vector_instrs[i].fu_enable = ALU_MLT;
+                    cuif.decoded_vector_instrs[i].vms = cuif.vector_instrs[i][30:27];
+                    cuif.decoded_vector_instrs[i].vmd = cuif.vector_instrs[i][10:7];
+                    cuif.decoded_vector_instrs[i].vs1 = cuif.vector_instrs[i][18:11];
+                    cuif.decoded_vector_instrs[i].vs2 = cuif.vector_instrs[i][26:19];
+                    cuif.decoded_vector_instrs[i].use_vms = 1'b1;
+                    cuif.decoded_vector_instrs[i].use_vs1 = 1'b1;
+                    cuif.decoded_vector_instrs[i].use_vs2 = 1'b1;
+                    cuif.decoded_vector_instrs[i].scalar_reg_write = 1'b0;
+                    cuif.decoded_vector_instrs[i].vector_reg_write = 1'b0;
+                    cuif.decoded_vector_instrs[i].mask_reg_write = 1'b1;
+                end
+
+                MEQ_MVV: begin
+                    cuif.decoded_vector_instrs[i].valid_in = 1'b1;
+                    cuif.decoded_vector_instrs[i].fu_enable = ALU_MEQ;
+                    cuif.decoded_vector_instrs[i].vms = cuif.vector_instrs[i][30:27];
+                    cuif.decoded_vector_instrs[i].vmd = cuif.vector_instrs[i][10:7];
+                    cuif.decoded_vector_instrs[i].vs1 = cuif.vector_instrs[i][18:11];
+                    cuif.decoded_vector_instrs[i].vs2 = cuif.vector_instrs[i][26:19];
+                    cuif.decoded_vector_instrs[i].use_vms = 1'b1;
+                    cuif.decoded_vector_instrs[i].use_vs1 = 1'b1;
+                    cuif.decoded_vector_instrs[i].use_vs2 = 1'b1;
+                    cuif.decoded_vector_instrs[i].scalar_reg_write = 1'b0;
+                    cuif.decoded_vector_instrs[i].vector_reg_write = 1'b0;
+                    cuif.decoded_vector_instrs[i].mask_reg_write = 1'b1;
+                end
+
+                MNEQ_MVV: begin
+                    cuif.decoded_vector_instrs[i].valid_in = 1'b1;
+                    cuif.decoded_vector_instrs[i].fu_enable = ALU_MNEQ;
                     cuif.decoded_vector_instrs[i].vms = cuif.vector_instrs[i][30:27];
                     cuif.decoded_vector_instrs[i].vmd = cuif.vector_instrs[i][10:7];
                     cuif.decoded_vector_instrs[i].vs1 = cuif.vector_instrs[i][18:11];
@@ -60,8 +153,24 @@ module vector_control_unit
                 // ----------------------------------------------------------------
                 // Vector Immediate 
                 // ----------------------------------------------------------------
-                EXPI_VI, LW_VI: begin
+                EXPI_VI: begin
                     cuif.decoded_vector_instrs[i].valid_in = 1'b1;
+                    cuif.decoded_vector_instrs[i].fu_enable = EXP;
+                    cuif.decoded_vector_instrs[i].imm = cuif.vector_instrs[i][30:23];
+                    cuif.decoded_vector_instrs[i].op2_src = 2'd1;
+                    cuif.decoded_vector_instrs[i].vms = cuif.vector_instrs[i][34:31]; 
+                    cuif.decoded_vector_instrs[i].vs1 = cuif.vector_instrs[i][22:15]; 
+                    cuif.decoded_vector_instrs[i].vd = cuif.vector_instrs[i][14:7];
+                    cuif.decoded_vector_instrs[i].use_vms = 1'b1;
+                    cuif.decoded_vector_instrs[i].use_vs1 = 1'b1;
+                    cuif.decoded_vector_instrs[i].scalar_reg_write = 1'b0;
+                    cuif.decoded_vector_instrs[i].vector_reg_write = 1'b1;
+                    cuif.decoded_vector_instrs[i].mask_reg_write = 1'b0;
+                end
+
+                LW_VI: begin //load weights for GEMM
+                    cuif.decoded_vector_instrs[i].valid_in = 1'b1;
+                    cuif.decoded_vector_instrs[i].fu_enable = GSAU;
                     cuif.decoded_vector_instrs[i].imm = cuif.vector_instrs[i][30:23];
                     cuif.decoded_vector_instrs[i].op2_src = 2'd1;
                     cuif.decoded_vector_instrs[i].vms = cuif.vector_instrs[i][34:31]; 
@@ -80,6 +189,7 @@ module vector_control_unit
                 // ----------------------------------------------------------------
                 RSUM_VI, RMIN_VI, RMAX_VI: begin
                     cuif.decoded_vector_instrs[i].valid_in = 1'b1;
+                    cuif.decoded_vector_instrs[i].fu_enable = REDU;
                     cuif.decoded_vector_instrs[i].imm = cuif.vector_instrs[i][30:23];
                     cuif.decoded_vector_instrs[i].op2_src = 2'd1;
                     cuif.decoded_vector_instrs[i].vms = cuif.vector_instrs[i][34:31]; 
@@ -97,9 +207,43 @@ module vector_control_unit
                 // ----------------------------------------------------------------
                 // Vector Scalar 
                 // ----------------------------------------------------------------
-                ADD_VS, SUB_VS,
+                ADD_VS: begin
+                    cuif.decoded_vector_instrs[i].valid_in = 1'b1;
+                    cuif.decoded_vector_instrs[i].fu_enable = ALU_ADD;
+                    cuif.decoded_vector_instrs[i].op2_src = 2'd2;
+                    cuif.decoded_vector_instrs[i].vms = cuif.vector_instrs[i][34:31]; 
+                    cuif.decoded_vector_instrs[i].vs1 = cuif.vector_instrs[i][22:15]; 
+                    cuif.decoded_vector_instrs[i].vd = cuif.vector_instrs[i][14:7];
+                    cuif.decoded_vector_instrs[i].rs1 = cuif.vector_instrs[i][30:23];
+                    cuif.decoded_vector_instrs[i].use_vms = 1'b1;
+                    cuif.decoded_vector_instrs[i].use_vs1 = 1'b1;
+                    cuif.decoded_vector_instrs[i].use_rs1 = 1'b1;
+                    cuif.decoded_vector_instrs[i].scalar_reg_write = 1'b0;
+                    cuif.decoded_vector_instrs[i].vector_reg_write = 1'b1;
+                    cuif.decoded_vector_instrs[i].mask_reg_write = 1'b0;
+
+                end
+
+                SUB_VS: begin
+                    cuif.decoded_vector_instrs[i].valid_in = 1'b1;
+                    cuif.decoded_vector_instrs[i].fu_enable = ALU_SUB;
+                    cuif.decoded_vector_instrs[i].op2_src = 2'd2;
+                    cuif.decoded_vector_instrs[i].vms = cuif.vector_instrs[i][34:31]; 
+                    cuif.decoded_vector_instrs[i].vs1 = cuif.vector_instrs[i][22:15]; 
+                    cuif.decoded_vector_instrs[i].vd = cuif.vector_instrs[i][14:7];
+                    cuif.decoded_vector_instrs[i].rs1 = cuif.vector_instrs[i][30:23];
+                    cuif.decoded_vector_instrs[i].use_vms = 1'b1;
+                    cuif.decoded_vector_instrs[i].use_vs1 = 1'b1;
+                    cuif.decoded_vector_instrs[i].use_rs1 = 1'b1;
+                    cuif.decoded_vector_instrs[i].scalar_reg_write = 1'b0;
+                    cuif.decoded_vector_instrs[i].vector_reg_write = 1'b1;
+                    cuif.decoded_vector_instrs[i].mask_reg_write = 1'b0;
+
+                end
+
                 MUL_VS: begin
                     cuif.decoded_vector_instrs[i].valid_in = 1'b1;
+                    cuif.decoded_vector_instrs[i].fu_enable = MUL;
                     cuif.decoded_vector_instrs[i].op2_src = 2'd2;
                     cuif.decoded_vector_instrs[i].vms = cuif.vector_instrs[i][34:31]; 
                     cuif.decoded_vector_instrs[i].vs1 = cuif.vector_instrs[i][22:15]; 
@@ -117,9 +261,56 @@ module vector_control_unit
                 // ----------------------------------------------------------------
                 // MVS
                 // ----------------------------------------------------------------
-                MGT_MVS, MLT_MVS,
-                MEQ_MVS, MNEQ_MVS: begin
+                MGT_MVS: begin
                     cuif.decoded_vector_instrs[i].valid_in = 1'b1;
+                    cuif.decoded_vector_instrs[i].fu_enable = ALU_MGT;
+                    cuif.decoded_vector_instrs[i].vms = cuif.vector_instrs[i][30:27];
+                    cuif.decoded_vector_instrs[i].vmd = cuif.vector_instrs[i][10:7];
+                    cuif.decoded_vector_instrs[i].vs1 = cuif.vector_instrs[i][18:11];
+                    cuif.decoded_vector_instrs[i].rs1 = cuif.vector_instrs[i][26:19];
+                    cuif.decoded_vector_instrs[i].use_vms = 1'b1;
+                    cuif.decoded_vector_instrs[i].use_vs1 = 1'b1;
+                    cuif.decoded_vector_instrs[i].use_rs1 = 1'b1;
+                    cuif.decoded_vector_instrs[i].scalar_reg_write = 1'b0;
+                    cuif.decoded_vector_instrs[i].vector_reg_write = 1'b0;
+                    cuif.decoded_vector_instrs[i].mask_reg_write = 1'b1;
+
+                end
+
+                MLT_MVS:  begin
+                    cuif.decoded_vector_instrs[i].valid_in = 1'b1;
+                    cuif.decoded_vector_instrs[i].fu_enable = ALU_MLT;
+                    cuif.decoded_vector_instrs[i].vms = cuif.vector_instrs[i][30:27];
+                    cuif.decoded_vector_instrs[i].vmd = cuif.vector_instrs[i][10:7];
+                    cuif.decoded_vector_instrs[i].vs1 = cuif.vector_instrs[i][18:11];
+                    cuif.decoded_vector_instrs[i].rs1 = cuif.vector_instrs[i][26:19];
+                    cuif.decoded_vector_instrs[i].use_vms = 1'b1;
+                    cuif.decoded_vector_instrs[i].use_vs1 = 1'b1;
+                    cuif.decoded_vector_instrs[i].use_rs1 = 1'b1;
+                    cuif.decoded_vector_instrs[i].scalar_reg_write = 1'b0;
+                    cuif.decoded_vector_instrs[i].vector_reg_write = 1'b0;
+                    cuif.decoded_vector_instrs[i].mask_reg_write = 1'b1;
+
+                end
+                MEQ_MVS:  begin
+                    cuif.decoded_vector_instrs[i].valid_in = 1'b1;
+                    cuif.decoded_vector_instrs[i].fu_enable = ALU_MEQ;
+                    cuif.decoded_vector_instrs[i].vms = cuif.vector_instrs[i][30:27];
+                    cuif.decoded_vector_instrs[i].vmd = cuif.vector_instrs[i][10:7];
+                    cuif.decoded_vector_instrs[i].vs1 = cuif.vector_instrs[i][18:11];
+                    cuif.decoded_vector_instrs[i].rs1 = cuif.vector_instrs[i][26:19];
+                    cuif.decoded_vector_instrs[i].use_vms = 1'b1;
+                    cuif.decoded_vector_instrs[i].use_vs1 = 1'b1;
+                    cuif.decoded_vector_instrs[i].use_rs1 = 1'b1;
+                    cuif.decoded_vector_instrs[i].scalar_reg_write = 1'b0;
+                    cuif.decoded_vector_instrs[i].vector_reg_write = 1'b0;
+                    cuif.decoded_vector_instrs[i].mask_reg_write = 1'b1;
+
+                end
+
+                MNEQ_MVS:  begin
+                    cuif.decoded_vector_instrs[i].valid_in = 1'b1;
+                    cuif.decoded_vector_instrs[i].fu_enable = ALU_MNEQ;
                     cuif.decoded_vector_instrs[i].vms = cuif.vector_instrs[i][30:27];
                     cuif.decoded_vector_instrs[i].vmd = cuif.vector_instrs[i][10:7];
                     cuif.decoded_vector_instrs[i].vs1 = cuif.vector_instrs[i][18:11];
@@ -183,6 +374,7 @@ module vector_control_unit
                 // ----------------------------------------------------------------
                 VREG_LD: begin
                     cuif.decoded_vector_instrs[i].valid_in = 1'b1;
+                    cuif.decoded_vector_instrs[i].fu_enable = VLSU;
                     cuif.decoded_vector_instrs[i].vd = cuif.vector_instrs[i][14:7];
                     cuif.decoded_vector_instrs[i].rs1 = cuif.vector_instrs[i][22:15];
                     cuif.decoded_vector_instrs[i].rs2 = cuif.vector_instrs[i][30:23];
@@ -197,6 +389,7 @@ module vector_control_unit
 
                 VREG_ST: begin
                     cuif.decoded_vector_instrs[i].valid_in = 1'b1;
+                    cuif.decoded_vector_instrs[i].fu_enable = VLSU;
                     cuif.decoded_vector_instrs[i].vs1 = cuif.vector_instrs[i][14:7];
                     cuif.decoded_vector_instrs[i].rs1 = cuif.vector_instrs[i][22:15];
                     cuif.decoded_vector_instrs[i].rs2 = cuif.vector_instrs[i][30:23];

@@ -146,6 +146,25 @@ package atalla_isa_pkg;
     halt_valid=4'd14
   } scalar_fu_enable_t;
 
+
+  typedef enum logic [3:0] {
+    ALU_ADD = 4'b0000, // BF16 addition
+    ALU_SUB = 4'b0001, // BF16 subtraction
+    ALU_AND = 4'b0010, // Bitwise AND
+    ALU_OR = 4'b0011, // Bitwise OR
+    ALU_XOR = 4'b0100, // Bitwise XOR
+    ALU_NOT = 4'b0101, // Bitwise NOT (v1 only)
+    ALU_MGT = 4'b0110, // Mask greater than (v1 > v2)
+    ALU_MLT = 4'b0111, // Mask less than (v1 < v2)
+    ALU_MEQ = 4'b1000, // Mask equal (v1 == v2)
+    ALU_MNEQ = 4'b1001 // Mask not equal (v1 != v2)
+    MUL = 4'b1010, // BF16 multiplication
+    EXP = 4'b1011, // Exponential
+    VLSU = 4'b1100, // Vector load/store unit
+    GSAU = 4'b1101 // GEMM unit 
+    REDU = 4'b1110 // Reduction unit (this is technically not a separate FU but we need this signal to check structural hazards for reduction ops)
+  } vector_fu_enable_t; //check rm flag for reduction ops
+
   // ============================================================
   // 6. INSTRUCTION FORMATS (R / I / BR / MI)
   // ============================================================
@@ -226,6 +245,7 @@ package atalla_isa_pkg;
 
 
   typedef struct packed {
+    vector_fu_enable_t fu_enable;
     opcode_t op;
     logic valid_in;
     logic [7:0] imm;
