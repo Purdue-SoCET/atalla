@@ -21,8 +21,23 @@ module reg_file #(
     reg_file_if.reg_file rif
 );
 
-    reg_file_if rif_reggie ();
-    reg_file_if rif_opbuffer ();
+    reg_file_if #(
+        .BANK_COUNT  (BANK_COUNT),
+        .BANK_REGS   (BANK_REGS),
+        .DREAD_PORTS (DREAD_PORTS),
+        .DWRITE_PORTS(DWRITE_PORTS),
+        .NUM_ELEMENTS(NUM_ELEMENTS),
+        .DATA_WIDTH  (DATA_WIDTH)
+    ) rif_reggie ();
+
+    reg_file_if #(
+        .BANK_COUNT  (BANK_COUNT),
+        .BANK_REGS   (BANK_REGS),
+        .DREAD_PORTS (DREAD_PORTS),
+        .DWRITE_PORTS(DWRITE_PORTS),
+        .NUM_ELEMENTS(NUM_ELEMENTS),
+        .DATA_WIDTH  (DATA_WIDTH)
+    ) rif_opbuffer ();
 
     assign rif_reggie.REN = rif.REN;
     assign rif_reggie.vs = rif.vs;

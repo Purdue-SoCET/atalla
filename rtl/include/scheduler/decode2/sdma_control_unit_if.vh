@@ -3,7 +3,7 @@
 `include "atalla_isa_types.vh"
 
 interface sdma_control_unit_if #(
-    parameter NUM_INSTRUCTIONS = 2
+    parameter NUM_INSTRUCTIONS = 4
 );
     import atalla_isa_pkg::*;
     

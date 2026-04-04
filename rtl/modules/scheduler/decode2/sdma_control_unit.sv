@@ -5,7 +5,7 @@
 module sdma_control_unit
     import atalla_isa_pkg::*;
 #(
-    parameter NUM_INSTRUCTIONS = 2
+    parameter NUM_INSTRUCTIONS = 4
 ) (
     input logic clk, 
     sdma_control_unit_if.cu cuif
