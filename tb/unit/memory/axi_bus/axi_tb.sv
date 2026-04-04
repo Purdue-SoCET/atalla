@@ -98,6 +98,7 @@ program test (
         end
     endtask
 
+
     task automatic gen_r_txn(
         ref r_txn q[$],
         input int times,
@@ -199,6 +200,99 @@ program test (
         @(negedge CLK);
     endtask
 
+    task automatic gen_aw_txn(
+        ref aw_txn q[$],
+        input int times,
+        input int force_mid = -1
+    );
+        for (int i=0; i<times; i++) begin
+            aw_txn t = new();
+            if (force_mid >= 0) begin t.force_mid = force_mid; t.c_force_mid.constraint_mode(1); end
+            t.randomize();
+            q.push_back(t);
+        end
+    endtask
+
+    task automatic gen_w_txn(
+        ref w_txn q[$],
+        input int times,
+        input int force_mid = -1
+    );
+        for (int i=0; i<times; i++) begin
+            w_txn t = new();
+            t.randomize() with { if (force_mid >= 0) mid == force_mid; };
+            q.push_back(t);
+        end
+    endtask
+
+    task automatic random_aw_ready(int cycles);
+        for (int i=0; i<cycles; i++) begin
+            @(posedge CLK); #1;
+            if ($urandom_range(0,1)) abif.aw_o_ready = $urandom_range(0,1);
+        end
+        abif.aw_o_ready = 1;
+        repeat (20) @(negedge CLK);
+        abif.aw_o_ready = 0;
+    endtask
+
+    task automatic random_w_ready(int cycles);
+        for (int i=0; i<cycles; i++) begin
+            @(posedge CLK); #1;
+            if ($urandom_range(0,1)) abif.w_o_ready = $urandom_range(0,1);
+        end
+        abif.w_o_ready = 1;
+        repeat (20) @(negedge CLK);
+        abif.w_o_ready = 0;
+    endtask
+
+    task automatic smoke_aw_test();
+        aw_txn q[$];
+        gen_aw_txn(q, 3); // one per write master: SP0, SP1, D$
+        foreach (q[i]) env.send_aw_req(q[i]);
+        random_aw_ready(100);
+    endtask
+
+    task automatic pressure_aw_test(int num_test);
+        aw_txn q[$];
+        for (int i=0; i<num_test; i++) begin
+            int m;
+            m = $urandom_range(0, 2); // SP0=0, SP1=1, D$=2
+            gen_aw_txn(q, 1, m);
+        end
+        foreach (q[i]) env.send_aw_req(q[i]);
+        random_aw_ready(num_test*4);
+    endtask
+
+    task automatic idle_aw_test();
+        random_aw_ready(50);
+    endtask
+
+    task automatic smoke_w_test();
+        w_txn q[$];
+        gen_w_txn(q, 1);
+        foreach (q[i]) env.send_w_req(q[i]);
+        repeat (20) @(negedge CLK);
+    endtask
+
+    task automatic pressure_w_test(int num_test);
+        w_txn q[$];
+        for (int i=0; i<num_test; i++) begin
+            int m;
+            m = $urandom_range(0, 2);
+            gen_w_txn(q, 1, m);
+        end
+        foreach (q[i]) env.send_w_req(q[i]);
+        repeat (num_test*20+10) @(negedge CLK);
+    endtask
+
+    task automatic idle_w_test();
+        @(posedge CLK); #1;
+        abif.w_o_ready = 1;
+        repeat (20) @(negedge CLK);
+        abif.w_o_ready = 0;
+        @(negedge CLK);
+    endtask
+
     initial begin
         env = new(abif); env.start();
         reset_dut();
@@ -211,6 +305,14 @@ program test (
         smoke_r_test();
         pressure_r_test(10);
         idle_r_test();
+
+        smoke_aw_test();
+        pressure_aw_test(100);
+        idle_aw_test();
+
+        smoke_w_test();
+        pressure_w_test(10);
+        idle_w_test();
 
         // report
         env.report();
