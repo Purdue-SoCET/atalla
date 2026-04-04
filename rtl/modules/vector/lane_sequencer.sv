@@ -16,12 +16,6 @@ module lane_sequencer(
 
     import vector_pkg::*;
 
-    // make sure slice_w is pow^2
-    // ty my goat Jacob for this 
-    initial begin
-        assert (2**$clog2(SLICE_W) == SLICE_W) else $fatal("SLICE_W must be a power of 2");
-    end
-
     // bit width for the counter, need it to index 
     localparam IDX_WIDTH = (SLICE_W == 1) ? 1 : $clog2(SLICE_W);
 

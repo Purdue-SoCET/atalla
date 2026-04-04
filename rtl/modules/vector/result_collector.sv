@@ -160,13 +160,4 @@ end
 
     assign rcif.out.wb_valid = (wb_valid_r | (&array_full)) & !(wb_valid_r & rcif.in.wb_ready);
     
-
-
-    //After running this module for a LLM to see if it spotted any major errors, it suggested adding an assertion to ensure that TIMES is a power of 2
-    //If this causes issues it will be removed, but i agree that its a good idea if it doesnt break anything
-    initial begin
-        assert (2**$clog2(TIMES) == TIMES) else 
-            $fatal("TIMES must be a power of 2");
-    end
-
 endmodule

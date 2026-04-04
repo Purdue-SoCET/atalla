@@ -45,11 +45,13 @@ module lane #(
         .fuif(fu_interfaces[3])
     );
     */
+    /*
     sqrt_FU sqrt (
         .CLK(CLK),
         .nRST(nRST),
         .fuif(fu_interfaces[4])
     );
+    */
 
 
     //connect the two input ports to every single FU
