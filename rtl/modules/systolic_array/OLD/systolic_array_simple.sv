@@ -55,6 +55,8 @@ module systolic_array_simple(
 
     logic psum_buf_has_space, psum_buffer_empty;       // Not sure what to do with these
 
+    logic MAC_shifts_0;
+
     sysarr_input_buffer bokchoy(.clk(clk), .nRST(nRST), .in(gsau_if.sa_array_in_partials), .out(psum_glob), .write_en(gsau_if.sa_partial_en), .read_en(MAC_shifts_0 & ~sysarr_stall), .has_space(psum_buf_has_space), .empty(psum_buffer_empty));
     always_ff @(posedge clk, negedge nRST) begin
         if(nRST == 1'b0) begin
@@ -74,7 +76,6 @@ module systolic_array_simple(
     // But MAC units need to shift data in first, and "Start" one clock cycle later.
     // And the first column needs to start immediately, not one clock cycle later.
     // NOTE: The column ordering is REVERSED!! No idea why, but the leftmost column of MAC units has column index 0.
-    logic MAC_shifts_0;
     assign MAC_shifts_0 = !(buffer_empty);
     logic [N-2:0] MAC_shifts_remaining;                       // I run a whole column of MAC units in sync. Technically you don't need to, but I am too sleepy to optimize that.
     // assign MAC_shifts[N-1] = !(buffer_empty);              // Whenever there is data in the buffer, MACs must go on.
