@@ -69,6 +69,8 @@ module scheduler_core #(
         end
         else if(decode_2_if.ready) begin
             n_D1_D2_latch.scalar_instrs = decode_1_if.scalar_inst_in;
+            n_D1_D2_latch.vector_instrs = decode_1_if.vector_inst_in;
+            n_D1_D2_latch.SDMA_instrs = decode_1_if.scpad_inst_in;
             n_D1_D2_latch.pc = decode_1_if.pc_in;
             n_D1_D2_latch.predict_taken = decode_1_if.predict_taken_in;
             n_D1_D2_latch.pc_pred_addr = decode_1_if.pc_pred_addr_in;
@@ -79,6 +81,8 @@ module scheduler_core #(
 
     //DEC2 inputs form D1_D2 latch
     assign decode_2_if.scalar_instrs = D1_D2_latch.scalar_instrs;
+    assign decode_2_if.vector_instrs = D1_D2_latch.vector_instrs;
+    assign decode_2_if.SDMA_instrs = D1_D2_latch.SDMA_instrs;
     assign decode_2_if.pc_in = D1_D2_latch.pc;
     assign decode_2_if.pc_pred_addr_in = D1_D2_latch.pc_pred_addr;
     assign decode_2_if.predict_taken_in = D1_D2_latch.predict_taken;

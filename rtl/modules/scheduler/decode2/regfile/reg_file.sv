@@ -10,6 +10,7 @@ module reg_file #(
     parameter DWRITE_PORTS = 4,
     parameter NUM_ELEMENTS = 1,
     parameter DATA_WIDTH   = 32,
+    parameter ZERO_REG_VAL = 0,
 
     parameter BANK_IDX  = $clog2(BANK_COUNT),
     parameter ADDR_IDX  = $clog2(BANK_REGS),
@@ -27,7 +28,8 @@ module reg_file #(
         .DREAD_PORTS (DREAD_PORTS),
         .DWRITE_PORTS(DWRITE_PORTS),
         .NUM_ELEMENTS(NUM_ELEMENTS),
-        .DATA_WIDTH  (DATA_WIDTH)
+        .DATA_WIDTH  (DATA_WIDTH),
+        .ZERO_REG_VAL(ZERO_REG_VAL)
     ) rif_reggie ();
 
     reg_file_if #(
@@ -36,7 +38,8 @@ module reg_file #(
         .DREAD_PORTS (DREAD_PORTS),
         .DWRITE_PORTS(DWRITE_PORTS),
         .NUM_ELEMENTS(NUM_ELEMENTS),
-        .DATA_WIDTH  (DATA_WIDTH)
+        .DATA_WIDTH  (DATA_WIDTH), 
+        .ZERO_REG_VAL(ZERO_REG_VAL)
     ) rif_opbuffer ();
 
     assign rif_reggie.REN = rif.REN;
@@ -65,7 +68,8 @@ module reg_file #(
         .DREAD_PORTS (DREAD_PORTS),
         .DWRITE_PORTS(DWRITE_PORTS),
         .NUM_ELEMENTS(NUM_ELEMENTS),
-        .DATA_WIDTH  (DATA_WIDTH)
+        .DATA_WIDTH  (DATA_WIDTH),
+        .ZERO_REG_VAL(ZERO_REG_VAL)
     ) u_reggie (
         .CLK (CLK),
         .nRST(nRST),

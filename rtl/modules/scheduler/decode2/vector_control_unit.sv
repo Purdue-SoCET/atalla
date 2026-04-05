@@ -93,10 +93,10 @@ module vector_control_unit
                 MGT_MVV: begin
                     cuif.decoded_vector_instrs[i].valid_in = 1'b1;
                     cuif.decoded_vector_instrs[i].fu_enable = ALU_MGT;
-                    cuif.decoded_vector_instrs[i].vms = cuif.vector_instrs[i][30:27];
+                    cuif.decoded_vector_instrs[i].vms = cuif.vector_instrs[i][34:31];
                     cuif.decoded_vector_instrs[i].vmd = cuif.vector_instrs[i][10:7];
-                    cuif.decoded_vector_instrs[i].vs1 = cuif.vector_instrs[i][18:11];
-                    cuif.decoded_vector_instrs[i].vs2 = cuif.vector_instrs[i][26:19];
+                    cuif.decoded_vector_instrs[i].vs1 = cuif.vector_instrs[i][22:15];
+                    cuif.decoded_vector_instrs[i].vs2 = cuif.vector_instrs[i][30:23];
                     cuif.decoded_vector_instrs[i].use_vms = 1'b1;
                     cuif.decoded_vector_instrs[i].use_vs1 = 1'b1;
                     cuif.decoded_vector_instrs[i].use_vs2 = 1'b1;
@@ -108,10 +108,10 @@ module vector_control_unit
                 MLT_MVV: begin
                     cuif.decoded_vector_instrs[i].valid_in = 1'b1;
                     cuif.decoded_vector_instrs[i].fu_enable = ALU_MLT;
-                    cuif.decoded_vector_instrs[i].vms = cuif.vector_instrs[i][30:27];
+                    cuif.decoded_vector_instrs[i].vms = cuif.vector_instrs[i][34:31];
                     cuif.decoded_vector_instrs[i].vmd = cuif.vector_instrs[i][10:7];
-                    cuif.decoded_vector_instrs[i].vs1 = cuif.vector_instrs[i][18:11];
-                    cuif.decoded_vector_instrs[i].vs2 = cuif.vector_instrs[i][26:19];
+                    cuif.decoded_vector_instrs[i].vs1 = cuif.vector_instrs[i][22:15];
+                    cuif.decoded_vector_instrs[i].vs2 = cuif.vector_instrs[i][30:23];
                     cuif.decoded_vector_instrs[i].use_vms = 1'b1;
                     cuif.decoded_vector_instrs[i].use_vs1 = 1'b1;
                     cuif.decoded_vector_instrs[i].use_vs2 = 1'b1;
@@ -123,10 +123,10 @@ module vector_control_unit
                 MEQ_MVV: begin
                     cuif.decoded_vector_instrs[i].valid_in = 1'b1;
                     cuif.decoded_vector_instrs[i].fu_enable = ALU_MEQ;
-                    cuif.decoded_vector_instrs[i].vms = cuif.vector_instrs[i][30:27];
+                    cuif.decoded_vector_instrs[i].vms = cuif.vector_instrs[i][34:31];
                     cuif.decoded_vector_instrs[i].vmd = cuif.vector_instrs[i][10:7];
-                    cuif.decoded_vector_instrs[i].vs1 = cuif.vector_instrs[i][18:11];
-                    cuif.decoded_vector_instrs[i].vs2 = cuif.vector_instrs[i][26:19];
+                    cuif.decoded_vector_instrs[i].vs1 = cuif.vector_instrs[i][22:15];
+                    cuif.decoded_vector_instrs[i].vs2 = cuif.vector_instrs[i][30:23];
                     cuif.decoded_vector_instrs[i].use_vms = 1'b1;
                     cuif.decoded_vector_instrs[i].use_vs1 = 1'b1;
                     cuif.decoded_vector_instrs[i].use_vs2 = 1'b1;
@@ -138,10 +138,10 @@ module vector_control_unit
                 MNEQ_MVV: begin
                     cuif.decoded_vector_instrs[i].valid_in = 1'b1;
                     cuif.decoded_vector_instrs[i].fu_enable = ALU_MNEQ;
-                    cuif.decoded_vector_instrs[i].vms = cuif.vector_instrs[i][30:27];
+                    cuif.decoded_vector_instrs[i].vms = cuif.vector_instrs[i][34:31];
                     cuif.decoded_vector_instrs[i].vmd = cuif.vector_instrs[i][10:7];
-                    cuif.decoded_vector_instrs[i].vs1 = cuif.vector_instrs[i][18:11];
-                    cuif.decoded_vector_instrs[i].vs2 = cuif.vector_instrs[i][26:19];
+                    cuif.decoded_vector_instrs[i].vs1 = cuif.vector_instrs[i][22:15];
+                    cuif.decoded_vector_instrs[i].vs2 = cuif.vector_instrs[i][30:23];
                     cuif.decoded_vector_instrs[i].use_vms = 1'b1;
                     cuif.decoded_vector_instrs[i].use_vs1 = 1'b1;
                     cuif.decoded_vector_instrs[i].use_vs2 = 1'b1;
@@ -264,10 +264,10 @@ module vector_control_unit
                 MGT_MVS: begin
                     cuif.decoded_vector_instrs[i].valid_in = 1'b1;
                     cuif.decoded_vector_instrs[i].fu_enable = ALU_MGT;
-                    cuif.decoded_vector_instrs[i].vms = cuif.vector_instrs[i][30:27];
+                    cuif.decoded_vector_instrs[i].vms = cuif.vector_instrs[i][34:31];
                     cuif.decoded_vector_instrs[i].vmd = cuif.vector_instrs[i][10:7];
-                    cuif.decoded_vector_instrs[i].vs1 = cuif.vector_instrs[i][18:11];
-                    cuif.decoded_vector_instrs[i].rs1 = cuif.vector_instrs[i][26:19];
+                    cuif.decoded_vector_instrs[i].vs1 = cuif.vector_instrs[i][22:15];
+                    cuif.decoded_vector_instrs[i].rs1 = cuif.vector_instrs[i][30:23];
                     cuif.decoded_vector_instrs[i].use_vms = 1'b1;
                     cuif.decoded_vector_instrs[i].use_vs1 = 1'b1;
                     cuif.decoded_vector_instrs[i].use_rs1 = 1'b1;
@@ -280,10 +280,10 @@ module vector_control_unit
                 MLT_MVS:  begin
                     cuif.decoded_vector_instrs[i].valid_in = 1'b1;
                     cuif.decoded_vector_instrs[i].fu_enable = ALU_MLT;
-                    cuif.decoded_vector_instrs[i].vms = cuif.vector_instrs[i][30:27];
+                    cuif.decoded_vector_instrs[i].vms = cuif.vector_instrs[i][34:31];
                     cuif.decoded_vector_instrs[i].vmd = cuif.vector_instrs[i][10:7];
-                    cuif.decoded_vector_instrs[i].vs1 = cuif.vector_instrs[i][18:11];
-                    cuif.decoded_vector_instrs[i].rs1 = cuif.vector_instrs[i][26:19];
+                    cuif.decoded_vector_instrs[i].vs1 = cuif.vector_instrs[i][22:15];
+                    cuif.decoded_vector_instrs[i].rs1 = cuif.vector_instrs[i][30:23];
                     cuif.decoded_vector_instrs[i].use_vms = 1'b1;
                     cuif.decoded_vector_instrs[i].use_vs1 = 1'b1;
                     cuif.decoded_vector_instrs[i].use_rs1 = 1'b1;
@@ -295,10 +295,10 @@ module vector_control_unit
                 MEQ_MVS:  begin
                     cuif.decoded_vector_instrs[i].valid_in = 1'b1;
                     cuif.decoded_vector_instrs[i].fu_enable = ALU_MEQ;
-                    cuif.decoded_vector_instrs[i].vms = cuif.vector_instrs[i][30:27];
+                    cuif.decoded_vector_instrs[i].vms = cuif.vector_instrs[i][34:31];
                     cuif.decoded_vector_instrs[i].vmd = cuif.vector_instrs[i][10:7];
-                    cuif.decoded_vector_instrs[i].vs1 = cuif.vector_instrs[i][18:11];
-                    cuif.decoded_vector_instrs[i].rs1 = cuif.vector_instrs[i][26:19];
+                    cuif.decoded_vector_instrs[i].vs1 = cuif.vector_instrs[i][22:15];
+                    cuif.decoded_vector_instrs[i].rs1 = cuif.vector_instrs[i][30:23];
                     cuif.decoded_vector_instrs[i].use_vms = 1'b1;
                     cuif.decoded_vector_instrs[i].use_vs1 = 1'b1;
                     cuif.decoded_vector_instrs[i].use_rs1 = 1'b1;
@@ -311,10 +311,10 @@ module vector_control_unit
                 MNEQ_MVS:  begin
                     cuif.decoded_vector_instrs[i].valid_in = 1'b1;
                     cuif.decoded_vector_instrs[i].fu_enable = ALU_MNEQ;
-                    cuif.decoded_vector_instrs[i].vms = cuif.vector_instrs[i][30:27];
+                    cuif.decoded_vector_instrs[i].vms = cuif.vector_instrs[i][34:31];
                     cuif.decoded_vector_instrs[i].vmd = cuif.vector_instrs[i][10:7];
-                    cuif.decoded_vector_instrs[i].vs1 = cuif.vector_instrs[i][18:11];
-                    cuif.decoded_vector_instrs[i].rs1 = cuif.vector_instrs[i][26:19];
+                    cuif.decoded_vector_instrs[i].vs1 = cuif.vector_instrs[i][22:15];
+                    cuif.decoded_vector_instrs[i].rs1 = cuif.vector_instrs[i][30:23];
                     cuif.decoded_vector_instrs[i].use_vms = 1'b1;
                     cuif.decoded_vector_instrs[i].use_vs1 = 1'b1;
                     cuif.decoded_vector_instrs[i].use_rs1 = 1'b1;

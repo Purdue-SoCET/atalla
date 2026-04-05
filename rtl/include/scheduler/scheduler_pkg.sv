@@ -10,7 +10,9 @@ package scheduler_pkg;
     parameter RIDX_W = 8;
     parameter SWRITE_PORTS = 4;
     parameter INSTR_W = 48;
-    parameter NUM_INSTRUCTIONS = 4;
+    parameter NUM_SCALAR_INSTRUCTIONS = 4;
+    parameter NUM_VECTOR_INSTRUCTIONS = 4;
+    parameter NUM_SDMA_INSTRUCTIONS = 4;
 
     typedef logic [RIDX_W-1:0] rsel_t;
     typedef logic [RDATA_W-1:0] rdat_t;
@@ -30,6 +32,8 @@ package scheduler_pkg;
 
     typedef struct packed {
         instr_t [NUM_INSTRUCTIONS-1:0] scalar_instrs;
+        instr_t [NUM_INSTRUCTIONS-1:0] vector_instrs;
+        instr_t [NUM_INSTRUCTIONS-1:0] SDMA_instrs;
         word_t pc, pc_pred_addr;
         logic predict_taken;      
         

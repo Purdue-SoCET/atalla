@@ -32,7 +32,7 @@ sdma_control_unit_if sdmacif();
 
 reg_file_if srfif();
 reg_file_if #(.DATA_WIDTH(16), .NUM_ELEMENTS(32)) vrfif ();
-reg_file_if #(.BANK_COUNT(2), .BANK_REGS(16), .DREAD_PORTS(2), .DWRITE_PORTS(2)) mrfif ();
+reg_file_if #(.BANK_COUNT(2), .BANK_REGS(8), .DREAD_PORTS(2), .DWRITE_PORTS(2), .ZERO_REG_VAL(1)) mrfif ();
 
 
 dependency_checker_if dcif();
@@ -44,7 +44,7 @@ sdma_control_unit sdmacu1(CLK, sdmacif);
 
 reg_file srf1(CLK, nRST, srfif);
 reg_file #(.DATA_WIDTH(16), .NUM_ELEMENTS(32)) vrf1(CLK, nRST, vrfif);
-reg_file #(.BANK_COUNT(2), .BANK_REGS(16), .DREAD_PORTS(2), .DWRITE_PORTS(2)) mrf1(CLK, nRST, mrfif);
+reg_file #(.BANK_COUNT(2), .BANK_REGS(8), .DREAD_PORTS(2), .DWRITE_PORTS(2), .ZERO_REG_VAL(1)) mrf1(CLK, nRST, mrfif);
 
 dependency_checker dc1 (CLK, nRST, dcif);
 source_reg_allocator scalarsra1 (sraif);

@@ -15,7 +15,7 @@ module decode_2_tb;
 
     // Build a NOP instruction
     function automatic instr_t make_nop();
-        return instr_t'(NOP_R);
+        return 40'h0; //this isn't a nop but just easier to look at imo
     endfunction
 
     task drive_nop_packet();
@@ -39,13 +39,13 @@ module decode_2_tb;
         d2if.sdma_ready      = val;
     endtask
 
-    task wb_scalar(input logic i, input logic [7:0] reg_addr, input logic [31:0] data);
+    task wb_scalar(input logic [1:0] i, input logic [7:0] reg_addr, input logic [31:0] data);
         d2if.scalar_WB_WEN[i]   = 1'b1;
         d2if.scalar_WB_wsel[i]  = reg_addr;
         d2if.scalar_WB_wdata[i] = data;
     endtask
 
-    task wb_vector(input logic i, input logic [7:0] reg_addr, input vector_t data);
+    task wb_vector(input logic [1:0] i, input logic [7:0] reg_addr, input vector_t data);
         d2if.vector_WB_WEN[i]   = 1'b1;
         d2if.vector_WB_wsel[i]  = reg_addr;
         d2if.vector_WB_wdata[i] = data;
@@ -88,13 +88,36 @@ module decode_2_tb;
         casename = "rst";
         do_reset();
 
-        wb_scalar(1'b0, 8'h0, 32'hDEADBEEF); // Write to scalar reg 0
-        wb_scalar(1'b1, 8'h1, 32'hBABEBEEF); // Write to scalar reg 1
-        wb_vector(1'b0, 8'h0, '{default: 16'hDEAD}); // Write to vector reg 0
-        wb_vector(1'b1, 8'h1, '{default: 16'hBEEF}); // Write to vector reg 1
-        wb_mask(1'b0, 4'h0, 32'hFFFF0000); // Write to mask reg 0
-        @(posedge CLK);
-        @(posedge CLK);
+        // wb_scalar(2'b0, 8'h0, 32'hDEADBEEF); // Write to scalar reg 0 (shouldn't work)
+        wb_scalar(2'b0, 8'h3, 32'hFFFFFFFF); // Write to scalar reg 3 
+        wb_scalar(2'b1, 8'h1, 32'hBABEBEEF); // Write to scalar reg 1
+        wb_scalar(2'd2, 8'h2, 32'hDEADBEEF); // Write to scalar reg 2 
+        wb_scalar(2'd3, 8'h4, 32'hF0F0F0F0); // Write to scalar reg 4
+
+        // wb_vector(2'b0, 8'd0, '{default: 16'hDEAD}); // Write to vector reg 0 (shouldn't work)
+        wb_vector(2'b0, 8'd1, '{default: 16'hDEAD}); // Write to vector reg 1
+        wb_vector(2'b1, 8'd4, '{default: 16'hBEEF}); // Write to vector reg 4
+        wb_vector(2'd2, 8'd8, '{default: 16'hDADE}); // Write to vector reg 8
+        wb_vector(2'd3, 8'd12, '{default: 16'hBAEF}); // Write to vector reg 12
+
+        // wb_mask(2'b0, 4'h0, 32'hFFFF0000); // Write to mask reg 0 (shouldn't work)
+        wb_mask(1'b0, 4'h2, 32'hFFFF0000); // Write to mask reg 2
+        wb_mask(1'b1, 4'h1, 32'h0000FFFF); // Write to mask reg 1
+        
+        repeat(3) @(posedge CLK); //vector write bank conflicts resolving
+        @(negedge CLK);
+        clear_wb();
+        drive_nop_packet();
+
+        @(negedge CLK);
+
+        d2if.vector_instrs[0] = 40'h1201008245; //VM VREG_ST(sid = 1, num_cols = 4, rs2 = 2(data = hDEADBEEF), rs1 = 1 (data = hBABEBEEF), vd = 4 (actually the vs, data = hBEEF), opcode = 69)
+        d2if.vector_instrs[1] = 40'h00840601BD; //VMV MLT (vms=1 (data = h0000FFFF), vs2=8 (data = hDADE), vs1=12 (data = hBAEF), vmd=3, opcode =61)
+        d2if.vector_instrs[2] = 40'h010180824D; //VS MUL_VS (vms = 2 (data = hFFFF0000), rs1 = 3 (data = hFFFFFFFF), vs1=1 (data = hDEAD), vd=4, opcode=77)
+        d2if.scalar_instrs[3] = 40'h007F82039A; //I MODI imm12=0xFF, rs1=4 (data = hF0F0F0F0), rd=7, opcode=26
+
+        @(posedge CLK iff d2if.ready);
+        drive_nop_packet();
 
 
         
