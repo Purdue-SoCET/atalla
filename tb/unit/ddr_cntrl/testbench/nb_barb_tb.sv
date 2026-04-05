@@ -241,7 +241,12 @@ module nb_barb_tb;
                     FSM_WRITE: check_write(i,
                                            exp_vec[i].exp_write,
                                            exp_vec[i].exp_wid);
-                    REF: check_ref(i);
+                    REF: begin 
+                        check_ref(i);
+                        #(170); // DRAM TRFC rounded down  
+                        set_idle();
+                        repeat(5) @(negedge CLK);
+                    end
                 endcase
                 ddrif.be_queue_ready[bank_id] = 0;
             end
@@ -263,53 +268,6 @@ module nb_barb_tb;
         reset_dut();
 
         sequencer();
-        
-        /* // --- PHASE 1: Sequential Barrel Rolling ---
-        $display("\n--- Starting Sequential Test ---");
-        drive_bank_request(0, ACT, 15'h1111, 10'h001, 4'h0);
-        drive_bank_request(1, ACT, 15'h2222, 10'h002, 4'h1);
-        drive_bank_request(2, ACT, 15'h3333, 10'h003, 4'h2);
-        drive_bank_request(3, ACT, 15'h4444, 10'h004, 4'h3);        
-        drive_bank_request(4, ACT, 15'h5555, 10'h005, 4'h4);
-        drive_bank_request(5, ACT, 15'h6666, 10'h006, 4'h5);
-
-        // Wait for Bank 0 to be serviced, read request
-        $display("\n--- Starting Transfer ---");
-        @(negedge CLK);
-        drive_bank_rw(0, FSM_READ);
-        @(negedge CLK);
-        check_read(test_num, 1'b1, 4'h0, 3'b000);
-        ddrif.be_queue_ready[0] = 0; // Clear bank 0 request
-
-        // Wait for Bank 1 to be serviced
-        wait(ddrif.be_arb[1] == 1);
-        @(negedge CLK);
-        drive_bank_rw(1, FSM_READ);
-        @(negedge CLK);
-        check_read(test_num, 1'b1, 4'h1, 3'b000);
-        ddrif.be_queue_ready[1] = 0; // Clear bank 1 request
-
-        // --- PHASE 2: OOO Jump Logic ---
-        // While roller is moving toward Bank 2, Bank 12 becomes ready (Out of Order)
-        $display("\n--- Triggering OOO Jump to Bank 12 ---");
-        drive_bank_request(12, FSM_READ, 15'hAAAA, 10'h0AA, 4'hF);
-        // Verify the arbiter jumps to Bank 12
-        wait(ddrif.be_arb[12] == 1);
-        @(negedge CLK);
-        check_read(test_num, 1'b1, 4'h1, 3'b000);
-        $display("T=%0t | SUCCESS: Arbiter jumped to Bank 12", $time);
-        
-        @(negedge CLK);
-        ddrif.be_queue_ready[12] = 0; // Clear bank 12
-
-        // --- PHASE 3: The Return ---
-        // The roller should now return to the next sequential value (Bank 2)
-        wait(ddrif.be_arb[2] == 1);
-        $display("T=%0t | SUCCESS: Arbiter returned to sequential Bank 2", $time);
-        
-        @(negedge CLK);
-        ddrif.be_queue_ready[2] = 0; */
-
 
         // --- PHASE 1 : Roll Through all --- 
         $display("\n--- Running vector-driven sequencer tests ---");
