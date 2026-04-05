@@ -39,7 +39,7 @@ module systolic_array_simple(
     logic [(DW*N)-1:0] input_column;
     logic buffer_empty;
     logic read_from_buffer;
-    sysarr_input_buffer silo(.clk(clk), .nRST(nRST), .in(gsau_if.sa_array_in), .out(input_column), .write_en(gsau_if.sa_input_en), .read_en(read_from_buffer), .has_space(gsau_if.sa_fifo_has_space), .empty(buffer_empty));
+    sysarr_input_buffer silo(.clk(clk), .nRST(nRST), .in(gsau_if.sa_array_in), .out(input_column), .write_en(gsau_if.sa_input_en), .read_en(read_from_buffer), .has_space(gsau_if.sa_ready_in), .empty(buffer_empty));
 
     // If we are loading weights, special data path - data should NOT go into input buffer, instead it should go straight to the MAC units to put in weights register.
     logic weight_enables [N-1:0] [N-1:0];                       // goes to mac_if.weight_en
@@ -272,12 +272,12 @@ module systolic_array_simple(
         if(first_column_MAC_readies[0]) begin
             next_out_buffer = {out_buffer[N-2:0], {1'b1,to_output_buffer}};
         end
-        if(gsau_if.sa_output_ready & ~first_column_MAC_readies[0]) begin //out_buffer[N-1][N*DW]) begin
+        if(gsau_if.sa_ready_out & ~first_column_MAC_readies[0]) begin //out_buffer[N-1][N*DW]) begin
             next_out_buffer[N-1][N*DW] = 1'b0;
         end
     end
 
-    assign gsau_if.sa_out_valid = out_buffer[N-1][N*DW];
+    assign gsau_if.sa_valid_in = out_buffer[N-1][N*DW];
 
     genvar d;
     generate
@@ -297,7 +297,7 @@ module systolic_array_simple(
             sysarr_stall <= 0;
         end
         else begin
-            sysarr_stall <= (sysarr_stall | next_out_buffer[N-1][N*DW]) & ~gsau_if.sa_output_ready;
+            sysarr_stall <= (sysarr_stall | next_out_buffer[N-1][N*DW]) & ~gsau_if.sa_ready_out;
         end
     end
 
