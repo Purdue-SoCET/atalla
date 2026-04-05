@@ -187,12 +187,49 @@ module axi_write_manager_tb ();
     axi_bus_if busif(.CLK(CLK), .nRST(nRST));
 
     // DUT
+    // axi_write_manager #(
+    //     .MASTER_ID(2'b00)
+    // ) DUT (
+    //     .CLK     (CLK),
+    //     .nRST    (nRST),
+    //     .wrmgr_if (busif)
+    // );
     axi_write_manager #(
-        .MASTER_ID(2'b00)
+    .MASTER_ID(2'b00)
     ) DUT (
-        .CLK     (CLK),
-        .nRST    (nRST),
-        .wrmgr_if (busif)
+        .CLK        (CLK),
+        .nRST       (nRST),
+
+        .awvalid    (busif.awvalid),
+        .awid       (busif.aw_gen_i.id),
+        .awaddr     (busif.aw_gen_i.addr),
+        .awlen      (busif.aw_gen_i.len),
+        .awsize     (busif.aw_gen_i.size),
+        .awburst    (busif.aw_gen_i.burst),
+        .awready    (busif.awready),
+
+        .wvalid     (busif.wvalid),
+        .wid        (busif.w_gen_i.id),
+        .wdata      (busif.w_gen_i.data),
+        .wstrb      (busif.w_gen_i.strb),
+        .wlast      (busif.w_gen_i.last),
+        .wready     (busif.wready),
+
+        .aw_pop     (busif.aw_pop),
+        .w_pop      (busif.w_pop),
+
+        .head_awvalid(busif.head_awvalid),
+        .head_addr  (busif.head_aw_o.addr),
+        .head_awid  (busif.head_aw_o.mid_id),
+        .head_len   (busif.head_aw_o.len),
+        .head_size  (busif.head_aw_o.size),
+        .head_burst (busif.head_aw_o.burst),
+
+        .head_wvalid(busif.head_wvalid),
+        .head_wid   (busif.head_w_o.mid_id),
+        .head_data  (busif.head_w_o.data),
+        .head_strb  (busif.head_w_o.strb),
+        .head_last  (busif.head_w_o.last)
     );
 
     task reset_dut;

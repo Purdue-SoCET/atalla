@@ -10,40 +10,40 @@ module axi_write_manager #(
 )(
     input logic                 CLK,
     input logic                 nRST,
-    axi_bus_if.write_manager    wrmgr_if
+    //axi_bus_if.write_manager    wrmgr_if
     // From Master AW channel
-    // input logic                 awvalid,
-    // input logic [AWID-1:0]      awid,
-    // input logic [AWADDR-1:0]    awaddr,
-    // input logic [AWLEN-1:0]     awlen, 
-    // input logic [AWSIZE-1:0]    awsize,
-    // input logic [AWBURST-1:0]   awburst,
-    // // To Master AW channel
-    // output logic                awready,
-    // // From Master W channel
-    // input logic                 wvalid,
-    // input logic [WID-1:0]       wid,
-    // input logic [WDATA-1:0]     wdata,
-    // input logic [WSTRB-1:0]     wstrb,
-    // input logic                 wlast,
-    // // To Master W channel
-    // output logic                wready,
-    // // From Write controller
-    // input logic                 aw_pop,
-    // input logic                 w_pop,
-    // // To AW Mux
-    // output logic                head_awvalid,
-    // output logic [AWADDR-1:0]   head_addr,
-    // output logic [MID_AWID-1:0] head_awid,
-    // output logic [AWLEN-1:0]    head_len,
-    // output logic [AWSIZE-1:0]   head_size,
-    // output logic [AWBURST-1:0]  head_burst,
-    // // To W Mux
-    // output logic                head_wvalid,
-    // output logic [MID_WID-1:0]  head_wid,
-    // output logic [WDATA-1:0]    head_data,
-    // output logic [WSTRB-1:0]    head_strb,
-    // output logic                head_last
+    input logic                 awvalid,
+    input logic [AWID-1:0]      awid,
+    input logic [AWADDR-1:0]    awaddr,
+    input logic [AWLEN-1:0]     awlen, 
+    input logic [AWSIZE-1:0]    awsize,
+    input logic [AWBURST-1:0]   awburst,
+    // To Master AW channel
+    output logic                awready,
+    // From Master W channel
+    input logic                 wvalid,
+    input logic [WID-1:0]       wid,
+    input logic [WDATA-1:0]     wdata,
+    input logic [WSTRB-1:0]     wstrb,
+    input logic                 wlast,
+    // To Master W channel
+    output logic                wready,
+    // From Write controller
+    input logic                 aw_pop,
+    input logic                 w_pop,
+    // To AW Mux
+    output logic                head_awvalid,
+    output logic [AWADDR-1:0]   head_addr,
+    output logic [MID_AWID-1:0] head_awid,
+    output logic [AWLEN-1:0]    head_len,
+    output logic [AWSIZE-1:0]   head_size,
+    output logic [AWBURST-1:0]  head_burst,
+    // To W Mux
+    output logic                head_wvalid,
+    output logic [MID_WID-1:0]  head_wid,
+    output logic [WDATA-1:0]    head_data,
+    output logic [WSTRB-1:0]    head_strb,
+    output logic                head_last
 );
 
 // initializing both fifo structrues 
@@ -67,12 +67,12 @@ assign w_full = (w_wr_ptr + 1'b1 == w_rd_ptr);
 assign w_empty = (w_wr_ptr == w_rd_ptr);
 
 // logic to enable ready signal for handshake
-assign wrmgr_if.awready = (!aw_full);
-assign wrmgr_if.wready = (!w_full);
+assign awready = (!aw_full);
+assign wready = (!w_full);
 
 // valid ready handshake
-assign aw_push = (wrmgr_if.awvalid && wrmgr_if.awready);
-assign w_push  = (wrmgr_if.wvalid && wrmgr_if.wready);
+assign aw_push = (awvalid && awready);
+assign w_push  = (wvalid && wready);
 
 // aw write 
 always_ff@(posedge CLK, negedge nRST) begin 
@@ -85,17 +85,17 @@ always_ff@(posedge CLK, negedge nRST) begin
     end 
     else begin 
         if(aw_push) begin
-            assert(wrmgr_if.awvalid == wrmgr_if.awready)
+            assert(awvalid == awready)
                 else $error("valid or ready not high");
-            aw_fifo[aw_wr_ptr].valid  <= wrmgr_if.awvalid;
-            aw_fifo[aw_wr_ptr].addr   <= wrmgr_if.aw_gen_i.addr;
-            aw_fifo[aw_wr_ptr].mid_id <= {MASTER_ID, wrmgr_if.aw_gen_i.id};
-            aw_fifo[aw_wr_ptr].size   <= wrmgr_if.aw_gen_i.size;
-            aw_fifo[aw_wr_ptr].len    <= wrmgr_if.aw_gen_i.len;
-            aw_fifo[aw_wr_ptr].burst  <= wrmgr_if.aw_gen_i.burst;
+            aw_fifo[aw_wr_ptr].valid  <= awvalid;
+            aw_fifo[aw_wr_ptr].addr   <= awaddr;
+            aw_fifo[aw_wr_ptr].mid_id <= {MASTER_ID, awid};
+            aw_fifo[aw_wr_ptr].size   <= awsize;
+            aw_fifo[aw_wr_ptr].len    <= awlen;
+            aw_fifo[aw_wr_ptr].burst  <= awburst;
             aw_wr_ptr <= aw_wr_ptr + 1'b1;
         end 
-        if (!aw_empty && wrmgr_if.aw_pop) begin 
+        if (!aw_empty && aw_pop) begin 
             aw_fifo[aw_rd_ptr].valid <= 1'b0;
             aw_rd_ptr <= aw_rd_ptr + 1;
         end 
@@ -113,16 +113,16 @@ always_ff@(posedge CLK, negedge nRST) begin
     end 
     else begin 
         if(w_push) begin
-            assert(wrmgr_if.wvalid == wrmgr_if.wready)
+            assert(wvalid == wready)
                 else $error("w ready or valid not high");
-            w_fifo[w_wr_ptr].valid  <= wrmgr_if.wvalid;
-            w_fifo[w_wr_ptr].mid_id <= {MASTER_ID, wrmgr_if.w_gen_i.id};
-            w_fifo[w_wr_ptr].data   <= wrmgr_if.w_gen_i.data;
-            w_fifo[w_wr_ptr].last   <= wrmgr_if.w_gen_i.last;
-            w_fifo[w_wr_ptr].strb   <= wrmgr_if.w_gen_i.strb;
+            w_fifo[w_wr_ptr].valid  <= wvalid;
+            w_fifo[w_wr_ptr].mid_id <= {MASTER_ID, wid};
+            w_fifo[w_wr_ptr].data   <= wdata;
+            w_fifo[w_wr_ptr].last   <= wlast;
+            w_fifo[w_wr_ptr].strb   <= wstrb;
             w_wr_ptr <= w_wr_ptr + 1'b1;
         end 
-        if (!w_empty && wrmgr_if.w_pop) begin 
+        if (!w_empty && w_pop) begin 
             w_fifo[w_rd_ptr].valid <= 1'b0;
             w_rd_ptr <= w_rd_ptr + 1;
         end 
@@ -130,23 +130,23 @@ always_ff@(posedge CLK, negedge nRST) begin
 end
 
 // aw outputs 
-assign wrmgr_if.head_awvalid     = aw_fifo[aw_rd_ptr].valid;
-assign wrmgr_if.head_aw_o.addr   = aw_fifo[aw_rd_ptr].addr;
-assign wrmgr_if.head_aw_o.mid_id = aw_fifo[aw_rd_ptr].mid_id;
-assign wrmgr_if.head_aw_o.size   = aw_fifo[aw_rd_ptr].size;
-assign wrmgr_if.head_aw_o.len    = aw_fifo[aw_rd_ptr].len;
-assign wrmgr_if.head_aw_o.burst  = aw_fifo[aw_rd_ptr].burst;
+assign head_awvalid = aw_fifo[aw_rd_ptr].valid;
+assign head_addr    = aw_fifo[aw_rd_ptr].addr;
+assign head_awid    = aw_fifo[aw_rd_ptr].mid_id;
+assign head_size    = aw_fifo[aw_rd_ptr].size;
+assign head_len     = aw_fifo[aw_rd_ptr].len;
+assign head_burst   = aw_fifo[aw_rd_ptr].burst;
 
 // w outputs 
-assign wrmgr_if.head_wvalid     = w_fifo[w_rd_ptr].valid;
-assign wrmgr_if.head_w_o.mid_id = w_fifo[w_rd_ptr].mid_id;
-assign wrmgr_if.head_w_o.data   = w_fifo[w_rd_ptr].data;
-assign wrmgr_if.head_w_o.strb   = w_fifo[w_rd_ptr].strb;
-assign wrmgr_if.head_w_o.last   = w_fifo[w_rd_ptr].last;
+assign head_wvalid = w_fifo[w_rd_ptr].valid;
+assign head_wid    = w_fifo[w_rd_ptr].mid_id;
+assign head_data   = w_fifo[w_rd_ptr].data;
+assign head_strb   = w_fifo[w_rd_ptr].strb;
+assign head_last   = w_fifo[w_rd_ptr].last;
 
 property aw_wrt_pointer;
     @(posedge CLK)
-    wrmgr_if.awvalid && wrmgr_if.awready |=> (aw_wr_ptr == ($past(aw_wr_ptr) + 1'b1));
+    awvalid && awready |=> (aw_wr_ptr == ($past(aw_wr_ptr) + 1'b1));
 endproperty
 
 assert property (aw_wrt_pointer)
@@ -154,7 +154,7 @@ assert property (aw_wrt_pointer)
 
 property w_wrt_pointer;
     @(posedge CLK)
-    wrmgr_if.wvalid && wrmgr_if.wready |=> (w_wr_ptr == ($past(w_wr_ptr) + 1'b1));
+    wvalid && wready |=> (w_wr_ptr == ($past(w_wr_ptr) + 1'b1));
 endproperty
 
 assert property (w_wrt_pointer)
