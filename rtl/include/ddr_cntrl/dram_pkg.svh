@@ -41,8 +41,8 @@ package dram_pkg;
     parameter tRAS = 45; //tns 1.5ns -> 25 cycles
     parameter tRC = tRAS + tRP;
     parameter tRL = tAL + tCL;        // Read Latency
-    parameter tCCD_L = 0; // TODO: ADD REAL
-    parameter tCCD_S = 0; // TODO: ADD REAL
+    parameter tCCD_L = 2; // TODO: ADD REAL
+    parameter tCCD_S = 1; // TODO: ADD REAL
     //Tri debug
 
     parameter tWR = 12;//tWR should be 10 but work for 12 //tCK 1.5ns -> 10, tCK 1.25ns 12 cycles, tCK 0.833ns 18 cycles

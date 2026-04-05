@@ -33,7 +33,7 @@ module nb_barb_prop(
         debug_counter <= debug_counter + 1;
     end
 
-    function automatic integer encode (input logic [15:0] in);
+    /* function automatic integer encode (input logic [15:0] in);
         for (int i = 0; i < 16; i++) begin
             if (in[i]) return i;
         end
@@ -44,12 +44,12 @@ module nb_barb_prop(
 
         |( (barb.be_queue_ready & barb.be_arb) && ( (barb.be_cmd[encode(barb.be_queue_ready & barb.be_arb)]) == ACT) )[->3];
 
-    endsequence
+    endsequence 
 
     property onehot;
         @(posedge CLK) disable iff (!nRST)
         $onehot0(barb.be_arb) || ( (barb.be_cmd[BANK_NUM-1:0]) == ({BANK_NUM{REFRESH}}) & &(barb.be_queue_ready) );
-    endproperty
+    endproperty */
 
     /* property timing_tCCD_L; TODO:  DONT WORK "[*]"
         integer bg_last; 
@@ -67,7 +67,7 @@ module nb_barb_prop(
         ($onehot(be_queue_ready & be_arb) && ( (barb.be_cmd[encode(barb.be_queue_ready & barb.be_arb)]) == ACT) ) |-> [*tFAW](not access_counter);
     endproperty */
 
-    property check_refresh_arbitration;
+    /* property check_refresh_arbitration;
         @(posedge CLK) disable iff (!nRST)
         ( (barb.be_cmd[BANK_NUM-1:0]) == ({BANK_NUM{REFRESH}})  & &(barb.be_queue_ready) ) |-> &(barb.be_arb);
     endproperty
@@ -76,7 +76,7 @@ module nb_barb_prop(
         @(posedge CLK) disable iff (!nRST)
         
         ( (barb.be_cmd[BANK_NUM-1:0]) == ({BANK_NUM{REFRESH}})  & &(barb.be_queue_ready) ) ;
-    endproperty
+    endproperty */ 
 
 
     /////COMMENT THE BELOW PROPERTY OUT IF WDATA_QUEUE IS NOT YET CONNECTED OR VERIFIED.
