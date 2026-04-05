@@ -247,15 +247,76 @@ program test (
         #(CLK_PERIOD);
         wdrv_if.aw_grant = 3'b100;
         #(CLK_PERIOD*3);
+        wdrv_if.w_o_ready = 0;
+        #(CLK_PERIOD*3)
+        wdrv_if.w_o_ready = 1;
         #(CLK_PERIOD*12);
         reset_inputs();
         #(CLK_PERIOD);
     end
     endtask
 
+    // TEST CASE 3: SEND SP1 REQUEST
+    task send_sp1;
+    begin 
+        test_case = "TEST CASE 3: SEND SP1 REQUEST";
+        reset_inputs();
+        reset_dut();
+        #(CLK_PERIOD*2);
+        wdrv_if.aw_o_ready = 1;
+        wdrv_if.w_o_ready = 1;
+        set_sp0_aw();
+        set_sp0_w();
+        set_sp1_aw();
+        set_sp1_w();
+        set_dcache_aw();
+        set_dcache_w();
+        #(CLK_PERIOD);
+        wdrv_if.aw_grant = 3'b101;
+        #(CLK_PERIOD*3);
+        wdrv_if.w_o_ready = 0;
+        #(CLK_PERIOD*3)
+        wdrv_if.w_o_ready = 1;
+        #(CLK_PERIOD*12);
+        reset_inputs();
+        #(CLK_PERIOD);
+    end
+    endtask
+
+    // TEST CASE 4: SEND D$ REQUEST
+    task send_dcache;
+    begin 
+        test_case = "TEST CASE 4: SEND D$ REQUEST";
+        reset_inputs();
+        reset_dut();
+        #(CLK_PERIOD*2);
+        wdrv_if.aw_o_ready = 1;
+        wdrv_if.w_o_ready = 1;
+        set_sp0_aw();
+        set_sp0_w();
+        set_sp1_aw();
+        set_sp1_w();
+        set_dcache_aw();
+        set_dcache_w();
+        #(CLK_PERIOD);
+        wdrv_if.aw_grant = 3'b110;
+        #(CLK_PERIOD*3);
+        wdrv_if.w_o_ready = 0;
+        #(CLK_PERIOD*3)
+        wdrv_if.w_o_ready = 1;
+        #(CLK_PERIOD*12);
+        reset_inputs();
+        #(CLK_PERIOD);
+    end
+    endtask
+
+
+
     initial begin
         reset_init_state();
         send_sp0();
+        send_sp1();
+        send_dcache();
 
         $finish;
     end
