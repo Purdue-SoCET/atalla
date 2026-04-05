@@ -73,8 +73,8 @@ module sysarr_input_buffer(input logic clk, nRST, input logic [N*DW-1:0] in, out
             next_valid_cols = valid_cols - 1;
         end
 
-        assign has_space = (valid_cols < N);
-        assign empty = (valid_cols == 0);
+        has_space = (valid_cols < N);
+        empty = (valid_cols == 0);
 
         if(read_en) begin
             if(read_pointer >= $clog2(N)'(N-1)) begin
