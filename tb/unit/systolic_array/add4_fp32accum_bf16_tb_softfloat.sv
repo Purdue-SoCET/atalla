@@ -5,8 +5,9 @@
 
 /*
 
-First run: verilator -Irtl/include/systolic_array  --binary -j 0 -Wall -Wno-fatal --timing --top-module add4_fp32accum_bf16_tb_softfloat  \ 
-    tb/unit/systolic_array/add4_fp32accum_bf16_tb_softfloat.sv rtl/modules/systolic_array/reducer.sv  rtl/modules/systolic_array/sysarr_4_input_fp_adder.sv --trace
+First run: 
+
+verilator -Irtl/include/systolic_array --binary -j 0 -Wall -Wno-fatal --timing --top-module add4_fp32accum_bf16_tb_softfloat tb/unit/systolic_array/add4_fp32accum_bf16_tb_softfloat.sv rtl/modules/systolic_array/reducer.sv rtl/modules/systolic_array/sysarr_4_input_fp_adder.sv --trace
 
 Then: ./obj_dir/Vadd4_fp32accum_bf16_tb_softfloat
 
@@ -47,6 +48,7 @@ module add4_fp32accum_bf16_tb_softfloat;
     int pass_count, fail_count; 
     longint total_ulp_diff;
     int ulp_big_count;
+    int largest_ulp; 
 
     assign add_if.a = tb_a;
     assign add_if.b = tb_b;
@@ -107,7 +109,7 @@ module add4_fp32accum_bf16_tb_softfloat;
 
         total_ulp_diff += ulp;
         if (ulp > 1) ulp_big_count++;
-        
+        if (ulp > largest_ulp) largest_ulp = ulp;
         if (!match) begin
             if (fail_count < 10) begin
                 $display("FAIL: %s | A=%h B=%h C=%h D=%h Got=%h Exp=%h AdderGot=%h | ULP=%0d",
@@ -139,7 +141,7 @@ initial begin
     fail_count = 0;
     total_ulp_diff = 0;
     ulp_big_count = 0;
-
+    largest_ulp = 0;
     tb_nrst = 1'b0;
     tb_a = 16'h0;
     tb_b = 16'h0;
@@ -229,10 +231,11 @@ initial begin
 
     // --- Final summary ---
     $display("\n====================");
-    $display("TOTAL CASES: %0d", total_count + 9); // 3 hardcoded
+    $display("TOTAL CASES: %0d", total_count + 12); // 3 hardcoded
     $display("PASS: %0d", pass_count);
     $display("FAIL: %0d", fail_count);
     $display("Average ULP error: %0f", (fail_count + pass_count) ? total_ulp_diff*1.0/(fail_count + pass_count) : 0.0);
+    $display("Largest ULP error: %0d", largest_ulp);
     $display("Number of cases with ULP > 1: %0d", ulp_big_count);
     $display("====================\n");
 

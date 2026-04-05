@@ -10,11 +10,10 @@
 //   ./gen_testfloat4 --no-daz > testfloat_cases_4.csv      (disable daz)
 //   ./gen_testfloat4 --no-ftz > testfloat_cases_4.csv      (disable ftz)
 // u can only use those commands if u clone soft float (shoot myles a dm if u want to compile new) 
-// to run -> verilator --binary -j 0 -Wall -Wno-fatal --timing --top-module add4_fp16_tb_softfloat add4_fp16_tb_softfloat.sv sysarr_4_input_fp_adder.sv sysarr_4in_adder.sv sysarr_4_inp_fp_adder_2nd_pipeline_stage.sv add_fp_4input_stage3.sv --trace; ./obj_dir/Vadd4_fp_tb_softfloat
-// to view waves -> gtkwave waves/add4_fp16_waves.vcd --save=waves/add4_fp16_debug.gtkw
 // also creates file called test_failures.csv w all failed cases (input, exp, got)
 
-// verilator -Irtl/include/systolic_array  --binary -j 0 -Wall -Wno-fatal --timing --top-module add4_fp32accum_fp16_tb_softfloat tb/unit/systolic_array/add4_fp32accum_fp16_tb_softfloat.sv rtl/modules/systolic_array/reducer.sv  rtl/modules/systolic_array/sysarr_4_input_fp_adder.sv --trace
+// To run: verilator -Irtl/include/systolic_array  --binary -j 0 -Wall -Wno-fatal --timing --top-module add4_fp32accum_fp16_tb_softfloat tb/unit/systolic_array/add4_fp32accum_fp16_tb_softfloat.sv rtl/modules/systolic_array/reducer.sv  rtl/modules/systolic_array/sysarr_4_input_fp_adder.sv --trace
+// ./obj_dir/Vadd4_fp32accum_fp16_tb_softfloat
 
 `include "systolic_array_4_input_adder_if.vh"
 
@@ -27,7 +26,7 @@ module add4_fp32accum_fp16_tb_softfloat;
     localparam EXPONENT_SIZE     = 8;
     localparam IN_MANTISSA_SIZE = 10; // Output Mantissa Width (New Parameter)
     localparam IN_EXPONENT_SIZE = 5;
-    localparam PRECISION_BITS = 1;
+    localparam PRECISION_BITS = 0;
 
     logic tb_clk;
     logic tb_nrst;
@@ -54,6 +53,7 @@ module add4_fp32accum_fp16_tb_softfloat;
 
     int pass_count, fail_count, off_by_one, off_by_two, off_by_five_plus, ulp_diff, ulp_big_count; 
     real total_ulp_diff; 
+    int largest_ulp;
     // shortreal diff, total_diff; 
 
     // con testbench signals to interface
@@ -178,6 +178,8 @@ initial begin
     tb_b = 16'h0;
     tb_c = 16'h0;
     tb_d = 16'h0;
+    largest_ulp = 0;
+    total_ulp_diff = 0;
 
     #(PERIOD);
     tb_nrst = 1;
@@ -329,14 +331,16 @@ initial begin
 
             // diff = get_float_difference(tb_result, expected);
             ulp_diff = get_ulp_distance(tb_result, expected);
+
             total_ulp_diff += ulp_diff;
+            if (ulp_diff > largest_ulp) largest_ulp = ulp_diff;
             // total_diff += diff; 
-            if (ulp_diff >= 10 && ulp_big_count < 10) begin
-                $display("FAIL: A=%h B=%h C=%h D=%h | Got_fp16=%h, Got_fp32=%h, Exp=%h", 
-                         a, b, c, d, tb_result, add_if.out, expected);
-                $display("ULP difference: %0d", ulp_diff);
-                ulp_big_count++; 
-            end
+                // if (ulp_diff >= 10 && ulp_big_count < 10) begin
+                //     $display("FAIL: A=%h B=%h C=%h D=%h | Got_fp16=%h, Got_fp32=%h, Exp=%h", 
+                //              a, b, c, d, tb_result, add_if.out, expected);
+                //     $display("ULP difference: %0d", ulp_diff);
+                //     ulp_big_count++; 
+                // end
         end else begin
             pass_count++;
         end
@@ -356,6 +360,7 @@ initial begin
     $display("FAILED: %0d", fail_count);
     // $display("Average error (Got - Exp): %e", total_diff / fail_count);
     $display("Average ULP difference: %f", total_ulp_diff / fail_count);
+    $display("Largest ULP error: %0d", largest_ulp);
     // $display("ULP 1 Difference: %0d", off_by_one);
     // $display("ULP 2-10 Difference %0d", off_by_two);
     // $display("ULP >10 Difference: %0d", off_by_five_plus);
