@@ -133,12 +133,12 @@ def sdma_load(
         "base_row": scpad_base_row
     }
 
-    for i in range(0, NR+1):
+    for i in range(0, NR):
         row_vals = []
 
         # Read from GMEM
         for j in range(0, NC+1):
-            g_addr = gmem_base + (i * (NC+1) + j) * 2
+            g_addr = gmem_base + (i * (NC) + j) * 2
             raw_val = gmem.read_data(g_addr)
             if perf_metrics is not None:
                 # GMEM BF16 payload is 2 bytes per element.
@@ -180,7 +180,7 @@ def sdma_store(
             GMEM[(gmem_ptr * i) + j] = SCPAD[ swizzle((scpad_ptr * i) + j) ]
     """
 
-    for i in range(0, NR+1):
+    for i in range(0, NR):
         slot = (scpad_base_row + i) % scpad.S
         for j in range(0, NC+1):
             bank = j
@@ -190,7 +190,7 @@ def sdma_store(
             bits = struct.unpack('<I', struct.pack('<f', val))[0]
             bits = bits >> 16
             #x_shifted = struct.unpack('<f', struct.pack('<I', bits & 0xFFFFFFFF))[0]
-            g_addr = gmem_base + (i * (NC+1) + j) * 2
+            g_addr = gmem_base + (i * (NC) + j) * 2
             gmem.write_data(g_addr, bits)
 
 

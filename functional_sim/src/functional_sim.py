@@ -195,6 +195,8 @@ def run(mem: Memory, sregs: ScalarRegisterFile, mregs: ScalarRegisterFile, vregs
 
             elif (m == "scpad.ld"):
                 if inst['sid'] == 0:
+                    if int(sregs.read(inst['rs1/rd1'])) == 0:
+                        num_weights = 0
                     if(inst['rs1/rd1'] in tileID0Dict.keys()):
                         localID = tileID0Dict[inst['rs1/rd1']]
                     else:
@@ -219,7 +221,7 @@ def run(mem: Memory, sregs: ScalarRegisterFile, mregs: ScalarRegisterFile, vregs
                         tile_id0 += 1
                         tileID0Dict[inst['rs1/rd1']] = tile_id0
                         localID = tileID0Dict[inst['rs1/rd1']]
-                    sdma_store(gmem=mem, scpad=SP0, scpad_base_row=int(sregs.read(inst['rs1/rd1'])), gmem_base=sregs.read(inst['rs2']), tile_id=tile_id0, NR=inst['num_rows'], NC=inst['num_cols'])
+                    sdma_store(gmem=mem, scpad=SP0, scpad_base_row=int(sregs.read(inst['rs1/rd1'])), gmem_base=sregs.read(inst['rs2']), tile_id=localID, NR=inst['num_rows'], NC=inst['num_cols'])
                 elif inst['sid'] == 1:
                     if(inst['rs1/rd1'] in tileID1Dict.keys()):
                         localID = tileID1Dict[inst['rs1/rd1']]
@@ -227,7 +229,7 @@ def run(mem: Memory, sregs: ScalarRegisterFile, mregs: ScalarRegisterFile, vregs
                         tile_id1 += 1
                         tileID1Dict[inst['rs1/rd1']] = tile_id1
                         localID = tileID1Dict[inst['rs1/rd1']]
-                    sdma_store(gmem=mem, scpad=SP1, scpad_base_row=int(sregs.read(inst['rs1/rd1'])), gmem_base=sregs.read(inst['rs2']), tile_id=tile_id1, NR=inst['num_rows'], NC=inst['num_cols'])
+                    sdma_store(gmem=mem, scpad=SP1, scpad_base_row=int(sregs.read(inst['rs1/rd1'])), gmem_base=sregs.read(inst['rs2']), tile_id=localID, NR=inst['num_rows'], NC=inst['num_cols'])
             elif (m == "lui.s"): 
                 if debug: print(inst['imm'])
                 sregs.write(inst['rd'], (inst['imm']) << 7)

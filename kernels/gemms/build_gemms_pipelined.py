@@ -9,8 +9,8 @@ from pathlib import Path
 import argparse
 import numpy as np
 
-from src.misc.opcode_table import OPCODES, name_to_opcode
-from build import * 
+from functional_sim.src.misc.opcode_table import OPCODES, name_to_opcode
+from functional_sim.build import *
 
 
 def bf16_round(x: float) -> int:
@@ -25,7 +25,7 @@ def bf16_round(x: float) -> int:
 
 def main():
     ap = argparse.ArgumentParser()
-    ap.add_argument("-o", "--output", type=Path, default=Path('gemms.in'), help="Output test file")
+    ap.add_argument("-o", "--output", type=Path, default=Path('tests/gemms_pipelined.in'), help="Output test file")
     args = ap.parse_args()
 
     # Change values here for parametrization:

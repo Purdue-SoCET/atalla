@@ -9,8 +9,8 @@ from pathlib import Path
 import argparse
 import numpy as np
 
-from src.misc.opcode_table import OPCODES, name_to_opcode
-from build_emulator_mary import *
+from functional_sim.src.misc.opcode_table import OPCODES, name_to_opcode
+from functional_sim.build import *
 
 
 def bf16_round(x: float) -> int:
