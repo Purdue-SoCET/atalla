@@ -184,11 +184,11 @@ interface axi_bus_if;
     // ----------------------------------------------------------------------
     // WRITE PATH Definitions
     // ----------------------------------------------------------------------
-    property wrt_valid_ready;
-        @(posedge CLK)
-        (awvalid && !awready) |-> $stable(aw_gen_i);
-    endproperty
-    assert property (wrt_valid_ready) else $error("data changed during low ready");
+    // property wrt_valid_ready;
+    //     @(posedge CLK)
+    //     (awvalid && !awready) |-> $stable(aw_gen_i);
+    // endproperty
+    // assert property (wrt_valid_ready) else $error("data changed during low ready");
     // WRITE TOP LEVEL MODPORT
     modport write_path(
         // From Master

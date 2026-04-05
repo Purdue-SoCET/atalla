@@ -369,22 +369,22 @@ class ar_driver; // get transaction, drive it, push expected to scoreboard
     task drive(ar_txn t);
         @(negedge axi_read_tb.CLK);
         case (t.mid)
-            0: begin vif.ar_sp0_valid=1; vif.ar_sp0_i.addr=t.addr; vif.ar_sp0_i.id=t.id;
+            MID_SP0: begin vif.ar_sp0_valid=1; vif.ar_sp0_i.addr=t.addr; vif.ar_sp0_i.id=t.id;
                      vif.ar_sp0_i.size=t.size; vif.ar_sp0_i.len=t.len; vif.ar_sp0_i.burst=t.burst; end
-            1: begin vif.ar_sp1_valid=1; vif.ar_sp1_i.addr=t.addr; vif.ar_sp1_i.id=t.id;
+            MID_SP1: begin vif.ar_sp1_valid=1; vif.ar_sp1_i.addr=t.addr; vif.ar_sp1_i.id=t.id;
                      vif.ar_sp1_i.size=t.size; vif.ar_sp1_i.len=t.len; vif.ar_sp1_i.burst=t.burst; end
-            2: begin vif.ar_i_valid=1; vif.ar_i_i.addr=t.addr; vif.ar_i_i.id=t.id;
+            MID_I: begin vif.ar_i_valid=1; vif.ar_i_i.addr=t.addr; vif.ar_i_i.id=t.id;
                      vif.ar_i_i.size=t.size; vif.ar_i_i.len=t.len; vif.ar_i_i.burst=t.burst; end
-            3: begin vif.ar_d_valid=1; vif.ar_d_i.addr=t.addr; vif.ar_d_i.id=t.id;
+            MID_D: begin vif.ar_d_valid=1; vif.ar_d_i.addr=t.addr; vif.ar_d_i.id=t.id;
                      vif.ar_d_i.size=t.size; vif.ar_d_i.len=t.len; vif.ar_d_i.burst=t.burst; end
         endcase
         @(negedge axi_read_tb.CLK);
 
         case (t.mid)
-            0: begin while (!vif.ar_sp0_ready) @(negedge axi_read_tb.CLK); vif.ar_sp0_valid=0; vif.ar_sp0_i='0; end
-            1: begin while (!vif.ar_sp1_ready) @(negedge axi_read_tb.CLK); vif.ar_sp1_valid=0; vif.ar_sp1_i='0; end
-            2: begin while (!vif.ar_i_ready) @(negedge axi_read_tb.CLK); vif.ar_i_valid=0; vif.ar_i_i='0; end
-            3: begin while (!vif.ar_d_ready) @(negedge axi_read_tb.CLK); vif.ar_d_valid=0; vif.ar_d_i='0; end
+            MID_SP0: begin while (!vif.ar_sp0_ready) @(negedge axi_read_tb.CLK); vif.ar_sp0_valid=0; vif.ar_sp0_i='0; end
+            MID_SP1: begin while (!vif.ar_sp1_ready) @(negedge axi_read_tb.CLK); vif.ar_sp1_valid=0; vif.ar_sp1_i='0; end
+            MID_D: begin while (!vif.ar_d_ready) @(negedge axi_read_tb.CLK); vif.ar_d_valid=0; vif.ar_d_i='0; end
+            MID_I: begin while (!vif.ar_i_ready) @(negedge axi_read_tb.CLK); vif.ar_i_valid=0; vif.ar_i_i='0; end
         endcase
     endtask
 
@@ -442,10 +442,10 @@ class r_driver;
 
     task set_ready(logic [1:0] mid, logic val);
         case (mid)
-            0: vif.r_sp0_o_ready = val;
-            1: vif.r_sp1_o_ready = val;
-            2: vif.r_i_o_ready   = val;
-            3: vif.r_d_o_ready   = val;
+            MID_SP0: vif.r_sp0_o_ready = val;
+            MID_SP1: vif.r_sp1_o_ready = val;
+            MID_I: vif.r_i_o_ready = val;
+            MID_D: vif.r_d_o_ready = val;
         endcase
     endtask
 endclass
@@ -489,10 +489,10 @@ class r_monitor;
             @(posedge axi_read_tb.CLK); #3;
             if (vif.r_ready && vif.r_valid) begin
                 casez (vif.r_i.mid)
-                    0: begin mbx_mon_r.put(vif.r_sp0_o); end
-                    1: begin mbx_mon_r.put(vif.r_sp1_o); end
-                    2: begin mbx_mon_r.put(vif.r_i_o); end
-                    3: begin mbx_mon_r.put(vif.r_d_o); end
+                    MID_SP0: begin mbx_mon_r.put(vif.r_sp0_o); end
+                    MID_SP1: begin mbx_mon_r.put(vif.r_sp1_o); end
+                    MID_D:   begin mbx_mon_r.put(vif.r_d_o); end
+                    MID_I:   begin mbx_mon_r.put(vif.r_i_o); end
                 endcase
             end
         end

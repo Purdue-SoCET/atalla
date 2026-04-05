@@ -84,6 +84,11 @@ package axi_bus_pkg;
         DCACHE           = 2'b10,
         ICAHCE           = 2'b11
     } mid_t;
+    
+    parameter MID_SP0 = 0;
+    parameter MID_SP1 = 1;
+    parameter MID_D = 2;
+    parameter MID_I = 3;
 
     // RRESP options
     typedef enum logic [RRESP-1:0] {

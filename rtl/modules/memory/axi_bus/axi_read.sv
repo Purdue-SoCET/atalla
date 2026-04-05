@@ -7,10 +7,6 @@ import axi_bus_pkg::*;
     input logic CLK, nRST,
     axi_bus_if abif
 ); //TODO: one beat of transaction size is fixed? what does the request 'size' do?
-    localparam MID_SP0 = 0;
-    localparam MID_SP1 = 1;
-    localparam MID_I = 2;
-    localparam MID_D = 3;
 
     logic [ARGRANT-1:0] grant_sel;
     logic ar_valid;
@@ -114,10 +110,10 @@ import axi_bus_pkg::*;
 
     // ============== R BEGIN =============
     axi_read_router #(
-        .MID_SP0(0),
-        .MID_SP1(1),
-        .MID_I(2),
-        .MID_D(3)
+        .MID_SP0(MID_SP0),
+        .MID_SP1(MID_SP1),
+        .MID_I(MID_I),
+        .MID_D(MID_D)
     ) ROUTER (
         CLK, nRST, abif
     );
