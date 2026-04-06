@@ -1,10 +1,19 @@
-/*  Aryan Kadakia - kadakia0@purdue.edu */
+/*  
+    Aryan Kadakia - kadakia0@purdue.edu
+    Xinyu Liu - liuxinyujames@gmail.com
+*/
 
 `ifndef AXI_BUS_PKG_SV
 `define AXI_BUS_PKG_SV
 
 package axi_bus_pkg;
-    `include "axi_bus_params.svh"
+    // `include "axi_bus_params.svh"
+
+    parameter int unsigned NUM_MASTERS     = 4;
+    parameter int unsigned NUM_U_READS     = 4;      // Number of outstanding reads for one UNITS (I$, D$, SP0, SP1)
+    parameter int unsigned NUM_U_WRITES    = 4;      // Number of outstanding writes for one UNITS (D$, SP0, SP1)
+    parameter int unsigned ADDR_WIDTH      = 32;
+    parameter int unsigned DATA_BEAT_WIDTH = 64;     // Size of 1 beat in transaction
 
     //////////////////////////////////////////////////////////////////////
     ///////////////////////// Derived Parameters /////////////////////////
@@ -85,6 +94,11 @@ package axi_bus_pkg;
         DCACHE           = 2'b10,
         ICACHE           = 2'b11
     } mid_t;
+    
+    parameter MID_SP0 = 0;
+    parameter MID_SP1 = 1;
+    parameter MID_D = 2;
+    parameter MID_I = 3;
 
     // RRESP options
     typedef enum logic [RRESP-1:0] {
@@ -106,9 +120,9 @@ package axi_bus_pkg;
     typedef struct packed {
         logic [ARADDR-1:0]   addr;
         logic [ARID-1:0]     id;     // Local (2-bit) ID: index within master
-        logic [ARSIZE-1:0]   size;
-        logic [ARLEN-1:0]    len;
-        logic [ARBURST-1:0]  burst;
+        logic [ARSIZE-1:0]   size;   // beat size
+        logic [ARLEN-1:0]    len;    // burst length
+        logic [ARBURST-1:0]  burst;  // burst mode (WRAP, INCR)
     } master_ar_channel_t;
 
     // R Channel To Master 
@@ -144,8 +158,10 @@ package axi_bus_pkg;
 
     // AR Channel To Subordiante
     typedef struct packed {
+        logic valid;
         logic [ARADDR-1:0]   addr;
-        logic [MID_ARID-1:0] mid_id; // Global (4-bit) ID: {MASTER_ID, id}
+        logic [RID-1:0] id;
+        logic [MID-1:0] mid;
         logic [ARSIZE-1:0]   size;
         logic [ARLEN-1:0]    len;
         logic [ARBURST-1:0]  burst;
@@ -153,6 +169,7 @@ package axi_bus_pkg;
 
     // R Channel From Subordinate
     typedef struct packed {
+        logic [MID-1:0]     mid;
         logic [RDATA-1:0]   data;
         logic [RID-1:0]     id;
         logic               last;

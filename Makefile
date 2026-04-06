@@ -1,21 +1,17 @@
-.SILENT: lint test
-.ONESHELL: lint test
+SIMTIME = 100us             # Default simulation run time
 
-SHELL := /bin/bash
+SCRDIR = ./rtl/modules/memory/axi_bus/
 
-TOPDIR     := .
-INCDIRROOT := $(TOPDIR)/rtl/include
-SCRIPTROOT := $(TOPDIR)/scripts
-WAVEROOT := $(TOPDIR)/waves
-MODROOT    := $(TOPDIR)/rtl/modules
-TBROOT     := $(TOPDIR)/tb
-UVMTESTROOT  := $(TBROOT)/uvm
-UNITTESTROOT := $(TBROOT)/unit
-SCRATCH       := work
+EXTRA_dram_top = $(wildcard $(SCRDIR)/*.sv)
 
-INCFLAGS := $(shell find $(INCDIRROOT) -type d -print0 2>/dev/null | xargs -0 -I{} echo +incdir+{})
+INCLUDE = ./rtl/include/memory/axi_bus/
+TB = ./tb/unit/memory/axi_bus/
+MODULE = ./rtl/modules/memory/axi_bus/
+SCRIPT = ./scripts/memory/axi_bus/
+SCRATCH := work
 
-PKG_SRCS := $(shell find $(TOPDIR)/rtl -type f \( -name "*_pkg.sv" -o -name "pkg_*.sv" \) 2>/dev/null | sort)
+VSIM_FLAGS ?= -coverage -voptargs="+acc"
+VLOG_FLAGS ?= -sv -compile_uselibs -cover bst -sv -pedanticerrors -lint -mfcu
 
 RTL_SRCS := $(shell \
   find $(INCDIRROOT) $(MODROOT) -type f -name "*.sv" \
@@ -162,3 +158,13 @@ test:
 clean:
 	rm -rf $(SCRATCH) transcript vsim.wlf work modelsim.ini
 
+
+# copy aryan's makefile, VSIM_FLAGS to add coverage report
+
+# @if [ "$(GUI)" = "ON" ]; then \
+# 		echo "[$@] launching vsim GUI on work.$$TB_TOP"; \
+# 		$(VSIM) -coverage -voptargs="+acc" work.$$TB_TOP -do "view objects; do $(WAVEROOT)/$$TB_TOP.do; run -all;" -onfinish stop; \   ## do $$WAVEROOT/$$TB_TOP.do;
+# 	else \
+# 		echo "[$@] launching vsim on work.$$TB_TOP"; \
+# 		$(VSIM) $(VSIM_FLAGS) -coverage -c -voptargs="+acc"  work.$$TB_TOP -do "run -all"; \
+# 	fi 
