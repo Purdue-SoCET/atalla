@@ -604,14 +604,6 @@ class r_driver;
     endtask
 endclass
 
-// ============================================================
-// AW Driver
-// One instance per master (SP0=0, SP1=1, D$=2). No I$ write path.
-// Each master drives AW independently — multiple AW transactions
-// from different masters may be outstanding simultaneously.
-// After a successful AW handshake the transaction is posted to
-// mbx_w_pending so the paired w_driver can send the W beats.
-// ============================================================
 class aw_driver;
     logic [1:0] mid;
     scoreboard scb;
@@ -666,16 +658,6 @@ class aw_driver;
     endtask
 endclass
 
-// ============================================================
-// W Driver
-// One instance per master (SP0=0, SP1=1, D$=2). No I$ write path.
-// Multiple AW transactions may be outstanding across masters, but
-// W beats must NOT interleave: only one master may occupy the W bus
-// at a time. A shared semaphore (w_bus_lock, initialized to 1) is
-// passed to every w_driver instance to enforce mutual exclusion.
-// The order in which masters win the semaphore is non-deterministic,
-// so W order need not match AW issue order.
-// ============================================================
 class w_driver;
     logic [1:0] mid;
     scoreboard scb;
