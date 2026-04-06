@@ -372,14 +372,20 @@ module axi_write_top_tb ();
                 aw_obs_done = 1;
             end
             begin : MASTER_W_THREAD
-                do @(posedge CLK); while (!(busif.w_sp0_i_valid && busif.w_sp0_i_ready));
-                drv.clear_w(SP0);
-                for (beat_idx = 1; beat_idx < txn.wdata.size(); beat_idx++) begin
-                    @(posedge CLK);
-                    drv.drive_w(txn, beat_idx);
+                beat_idx = 0;
+                // beat 0 already driven before fork starts
+                while (beat_idx < txn.wdata.size()) begin
                     do @(posedge CLK); while (!(busif.w_sp0_i_valid && busif.w_sp0_i_ready));
-                    drv.clear_w(SP0);
+                    // current beat was accepted
+                    beat_idx++;
+                    // if more beats remain, drive next one immediately
+                    // and keep valid asserted continuously
+                    if (beat_idx < txn.wdata.size()) begin
+                        drv.drive_w(txn, beat_idx);
+                    end
                 end
+                // burst complete, now deassert W
+                drv.clear_w(SP0);
                 w_master_done = 1;
             end
             begin : SUB_W_THREAD
