@@ -333,25 +333,61 @@ class axi_monitor;
 endclass
 
 class axi_checker;
+    function bit check_aw(axi_write_txn exp, axi_aw_sample obs);
+        bit pass;
+        pass = 1;
+        if (obs.awid != exp.get_full_awid()) begin
+            $error("AWID mismatch: exp=%h obs=%h", exp.get_full_awid(), obs.awid);
+            pass = 0;
+        end
+        if (obs.awaddr != exp.awaddr) begin
+            $error("AWADDR mismatch: exp=%h obs=%h", exp.awaddr, obs.awaddr);
+            pass = 0;
+        end
+        if (obs.awlen != exp.awlen) begin
+            $error("AWLEN mismatch: exp=%h obs=%h", exp.awlen, obs.awlen);
+            pass = 0;
+        end
+        if (obs.awsize != exp.awsize) begin
+            $error("AWSIZE mismatch: exp=%h obs=%h", exp.awsize, obs.awsize);
+            pass = 0;
+        end
+        if (obs.awburst != exp.awburst) begin
+            $error("AWBURST mismatch: exp=%h obs=%h", exp.awburst, obs.awburst);
+            pass = 0;
+        end
+        return pass;
+    endfunction
 
-    task check_aw(axi_write_txn exp, axi_aw_sample obs);
-        if (obs.awid   != exp.get_full_awid()) $error("AWID mismatch");
-        if (obs.awaddr != exp.awaddr)          $error("AWADDR mismatch");
-        if (obs.awlen  != exp.awlen)           $error("AWLEN mismatch");
-        if (obs.awsize != exp.awsize)          $error("AWSIZE mismatch");
-        if (obs.awburst!= exp.awburst)         $error("AWBURST mismatch");
-    endtask
-
-    task check_w_beat(axi_write_txn exp, axi_w_sample obs, int beat_idx);
-        if (obs.wid   != exp.get_full_wid(beat_idx)) $error("WID mismatch");
-        if (obs.wdata != exp.wdata[beat_idx])        $error("WDATA mismatch");
-        if (obs.wstrb != exp.wstrb[beat_idx])        $error("WSTRB mismatch");
-        if (obs.wlast != exp.wlast[beat_idx])        $error("WLAST mismatch");
-    endtask
+    function bit check_w_beat(axi_write_txn exp, axi_w_sample obs, int beat_idx);
+        bit pass;
+        pass = 1;
+        if (obs.wid != exp.get_full_wid(beat_idx)) begin
+            $error("WID mismatch @ beat %0d: exp=%h obs=%h",
+                beat_idx, exp.get_full_wid(beat_idx), obs.wid);
+            pass = 0;
+        end
+        if (obs.wdata != exp.wdata[beat_idx]) begin
+            $error("WDATA mismatch @ beat %0d: exp=%h obs=%h",
+                beat_idx, exp.wdata[beat_idx], obs.wdata);
+            pass = 0;
+        end
+        if (obs.wstrb != exp.wstrb[beat_idx]) begin
+            $error("WSTRB mismatch @ beat %0d: exp=%h obs=%h",
+                beat_idx, exp.wstrb[beat_idx], obs.wstrb);
+            pass = 0;
+        end
+        if (obs.wlast != exp.wlast[beat_idx]) begin
+            $error("WLAST mismatch @ beat %0d: exp=%b obs=%b",
+                beat_idx, exp.wlast[beat_idx], obs.wlast);
+            pass = 0;
+        end
+        return pass;
+    endfunction
 
     function bit check_b(logic [BID-1:0] exp_bid,
-                     logic [BRESP-1:0] exp_bresp,
-                     axi_b_sample obs);
+                        logic [BRESP-1:0] exp_bresp,
+                        axi_b_sample obs);
         bit pass;
         pass = 1;
         if (obs.bid != exp_bid) begin
@@ -403,26 +439,45 @@ module axi_write_top_tb ();
     axi_w_sample    w_obs;
     axi_b_sample b_obs;
 
-   task single_write_test(mid_t m, string name);
-        int beat_idx;
-        int w_count;
-        int last_count;
-        bit aw_master_done;
-        bit aw_obs_done;
-        bit w_master_done;
-        bit w_obs_done;
-        bit test_pass;
+    bit test_pass;
+
+    int w_count;
+    int last_count;
+
+    bit aw_master_done;
+    bit aw_obs_done;
+    bit w_master_done;
+    bit w_obs_done;
+    bit b_in_done;
+    bit b_out_done;
+
+    logic [MID_BID-1:0] full_bid;
+    logic [BID-1:0]     exp_master_bid;
+    //logic [BRESP-1:0]   exp_bresp;
+    bresp_t exp_bresp;
+
+    task automatic init_testcase(string name);
         test_case = name;
         drv.clear_all();
         drv.set_subordinate_ready_high();
-        txn = gen.generate_txn_for_master(m);
+        drv.set_all_b_ready_low();
+        test_pass      = 1;
         w_count        = 0;
         last_count     = 0;
         aw_master_done = 0;
         aw_obs_done    = 0;
         w_master_done  = 0;
         w_obs_done     = 0;
-        test_pass      = 1;
+        b_in_done      = 0;
+        b_out_done     = 0;
+        full_bid       = '0;
+        exp_master_bid = '0;
+        exp_bresp      = B_OKAY;
+    endtask
+
+   task automatic do_write_phase(mid_t m);
+        int beat_idx;
+        txn = gen.generate_txn_for_master(m);
         @(posedge CLK);
         drv.drive_aw(txn);
         drv.drive_w(txn, 0);
@@ -439,7 +494,8 @@ module axi_write_top_tb ();
             begin : SUB_AW_THREAD
                 do @(posedge CLK); while (!(busif.aw_o_valid && busif.aw_o_ready));
                 aw_obs = mon.sample_sub_aw();
-                chk.check_aw(txn, aw_obs);
+                if (!chk.check_aw(txn, aw_obs))
+                    test_pass = 0;
                 aw_obs_done = 1;
             end
             begin : MASTER_W_THREAD
@@ -454,10 +510,10 @@ module axi_write_top_tb ();
 
                     beat_idx++;
 
-                    if (beat_idx < txn.wdata.size()) begin
+                    if (beat_idx < txn.wdata.size())
                         drv.drive_w(txn, beat_idx);
-                    end
                 end
+
                 drv.clear_w(m);
                 w_master_done = 1;
             end
@@ -465,7 +521,9 @@ module axi_write_top_tb ();
                 for (int obs_idx = 0; obs_idx < txn.wdata.size(); obs_idx++) begin
                     do @(posedge CLK); while (!(busif.w_o_valid && busif.w_o_ready));
                     w_obs = mon.sample_sub_w();
-                    chk.check_w_beat(txn, w_obs, obs_idx);
+                    if (!chk.check_w_beat(txn, w_obs, obs_idx))
+                        test_pass = 0;
+
                     w_count++;
 
                     if (w_obs.wlast)
@@ -500,34 +558,16 @@ module axi_write_top_tb ();
                 test_case, last_count);
             test_pass = 0;
         end
-        if (test_pass)
-            $display("%s PASSED", test_case);
-
         repeat (2) @(posedge CLK);
     endtask
 
-    task single_b_response_test(mid_t m, string name);
-        bit b_in_done;
-        bit b_out_done;
-        bit test_pass;
-        logic [MID_BID-1:0] full_bid;
-        logic [BID-1:0] exp_master_bid;
-        bresp_t exp_bresp;
-        test_case = name;
-        drv.clear_all();
-        drv.set_subordinate_ready_low();
-        drv.set_all_b_ready_low();
-        txn      = gen.generate_txn_for_master(m);
-        full_bid  = txn.get_full_bid();
+    task automatic do_b_phase(mid_t m, int resp_delay);
+        full_bid       = txn.get_full_bid();
         exp_master_bid = txn.awid;
-        exp_bresp = B_OKAY;
-        b_in_done  = 0;
-        b_out_done = 0;
-        test_pass  = 1;
-        // only target master ready
+        exp_bresp      = B_OKAY;
+        repeat (resp_delay) @(posedge CLK);
         drv.set_b_ready(m, 1'b1);
         @(posedge CLK);
-        //drv.drive_b(exp_bid, exp_bresp);
         drv.drive_b(full_bid, exp_bresp);
         fork
             begin : B_IN_THREAD
@@ -552,6 +592,7 @@ module axi_write_top_tb ();
                 endcase
                 if (!chk.check_b(exp_master_bid, exp_bresp, b_obs))
                     test_pass = 0;
+
                 b_out_done = 1;
             end
         join
@@ -563,9 +604,72 @@ module axi_write_top_tb ();
             $error("%s FAILED: B was never observed on target master output", test_case);
             test_pass = 0;
         end
+        repeat (2) @(posedge CLK);
+    endtask
+
+    task automatic finish_testcase();
         if (test_pass)
             $display("%s PASSED", test_case);
-        repeat (2) @(posedge CLK);
+    endtask
+
+    task single_sp0_write_test;
+        init_testcase("TEST CASE 1: SINGLE SP0 WRITE");
+        do_write_phase(SP0);
+        finish_testcase();
+    endtask
+
+    task single_sp1_write_test;
+        init_testcase("TEST CASE 2: SINGLE SP1 WRITE");
+        do_write_phase(SP1);
+        finish_testcase();
+    endtask
+
+    task single_dcache_write_test;
+        init_testcase("TEST CASE 3: SINGLE DCACHE WRITE");
+        do_write_phase(DCACHE);
+        finish_testcase();
+    endtask
+
+    task single_sp0_b_response_test;
+        init_testcase("TEST CASE 4: SINGLE SP0 B RESPONSE");
+        txn = gen.generate_txn_for_master(SP0);
+        do_b_phase(SP0, 0);
+        finish_testcase();
+    endtask
+
+    task single_sp1_b_response_test;
+        init_testcase("TEST CASE 5: SINGLE SP1 B RESPONSE");
+        txn = gen.generate_txn_for_master(SP1);
+        do_b_phase(SP1, 0);
+        finish_testcase();
+    endtask
+
+    task single_dcache_b_response_test;
+        init_testcase("TEST CASE 6: SINGLE DCACHE B RESPONSE");
+        txn = gen.generate_txn_for_master(DCACHE);
+        do_b_phase(DCACHE, 0);
+        finish_testcase();
+    endtask
+
+    task single_sp0_write_with_b_response_test;
+        init_testcase("TEST CASE 7: SP0 WRITE THEN B RESPONSE");
+        do_write_phase(SP0);
+        do_b_phase(SP0, 3);
+        finish_testcase();
+    endtask
+
+    task single_sp1_write_with_b_response_test;
+        init_testcase("TEST CASE 8: SP1 WRITE THEN B RESPONSE");
+        do_write_phase(SP1);
+        do_b_phase(SP1, 3);
+        finish_testcase();
+    endtask
+
+    task single_dcache_write_with_b_response_test;
+        init_testcase("TEST CASE 9: DCACHE WRITE THEN B RESPONSE");
+        do_write_phase(DCACHE);
+        do_b_phase(DCACHE, 3);
+        finish_testcase();
     endtask
 
     property aw_out_stable_when_stalled;
@@ -630,16 +734,18 @@ module axi_write_top_tb ();
         drv.clear_all();
         reset_dut();
 
-        single_write_test(SP0,    "TEST CASE 1: SINGLE SP0 WRITE");
-        single_write_test(SP1,    "TEST CASE 2: SINGLE SP1 WRITE");
-        single_write_test(DCACHE, "TEST CASE 3: SINGLE DCACHE WRITE");
-        single_b_response_test(SP0,    "TEST CASE 4: SINGLE SP0 B RESPONSE");
-        single_b_response_test(SP1,    "TEST CASE 5: SINGLE SP1 B RESPONSE");
-        single_b_response_test(DCACHE, "TEST CASE 6: SINGLE DCACHE B RESPONSE");
+        single_sp0_write_test();
+        single_sp1_write_test();
+        single_dcache_write_test();
+        single_sp0_b_response_test();
+        single_sp1_b_response_test();
+        single_dcache_b_response_test();
+        single_sp0_write_with_b_response_test();
+        single_sp1_write_with_b_response_test();
+        single_dcache_write_with_b_response_test();
 
         $display("TB DONE");
         $stop;
-
     end
 
 
