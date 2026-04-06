@@ -67,7 +67,7 @@ def run(mem: Memory, sregs: ScalarRegisterFile, mregs: ScalarRegisterFile, vregs
     out_perf_file: str = "../out/output_perf_metrics.txt",
         debug: bool = False):
         
-    pc_increment = packet_length * 6
+    pc_increment = packet_length * 5
 
     gemm_weights = np.zeros((32, 32))
     num_weights = 0
@@ -89,7 +89,7 @@ def run(mem: Memory, sregs: ScalarRegisterFile, mregs: ScalarRegisterFile, vregs
 
         for inst in dec_packet:
             m = inst['mnemonic']
-            if(m == "nop.s" or m == "barrier.s"):
+            if m == "nop.s":
                 continue
             elif (m == "halt.s"):
                 halt = True
@@ -152,85 +152,99 @@ def run(mem: Memory, sregs: ScalarRegisterFile, mregs: ScalarRegisterFile, vregs
                 mem.write_data(sregs.read(inst['rs1']) + inst['imm'], temp)
             #vector load/store here
             elif m == "vreg.ld":
-                if inst['sid'] == 1:
+                sid = inst['sid'] & 0x1
+                if sid == 1:
                     target_sp = SP1 
                 else:
                     target_sp = SP0
                 
                 addr = sregs.read(inst['rs1'])
-                rc_id_val = sregs.read(inst['rc_id']) if inst.get('rc_id_is_reg', 0) else inst['rc_id']
+                row_number = int(sregs.read(inst['rs2']))
                 
                 scpad_to_vreg(
                     scpad=target_sp,
                     vregs=vregs,
                     scpad_addr=addr,
                     vd=inst['vd'],
-                    rc=inst['rc'],
-                    rc_id=rc_id_val,
-                    num_rows=inst['num_rows'],
+                    rc=1,
+                    rc_id=row_number,
+                    num_rows=0,
                     num_cols=inst['num_cols']
                 )
 
             elif m == "vreg.st":
-                if inst['sid'] == 1:
+                sid = inst['sid'] & 0x1
+                if sid == 1:
                     target_sp = SP1 
                 else:
                     target_sp = SP0
                 
                 addr = sregs.read(inst['rs1'])
-                rc_id_val = sregs.read(inst['rc_id']) if inst.get('rc_id_is_reg', 0) else inst['rc_id']
+                row_number = int(sregs.read(inst['rs2']))
                 
                 vreg_to_scpad(
                     scpad=target_sp,
                     vregs=vregs,
                     scpad_addr=addr,
                     vs=inst['vd'],
-                    rc=inst['rc'],
-                    rc_id=rc_id_val,
-                    num_rows=inst['num_rows'],
+                    rc=1,
+                    rc_id=row_number,
+                    num_rows=0,
                     num_cols=inst['num_cols']
                 )
 
             #scpad load/store here
 
             elif (m == "scpad.ld"):
-                if inst['sid'] == 0:
+                metadata = int(sregs.read(inst['rs3'])) & 0xFFFFFFFF
+                sid = (metadata >> 30) & 0x3
+                num_rows = (metadata >> 25) & 0x1F
+                num_cols = (metadata >> 20) & 0x1F
+
+                if sid == 0:
                     if(inst['rs1/rd1'] in tileID0Dict.keys()):
                         localID = tileID0Dict[inst['rs1/rd1']]
                     else:
                         tile_id0 += 1
                         tileID0Dict[inst['rs1/rd1']] = tile_id0
                         localID = tileID0Dict[inst['rs1/rd1']]
-                    sdma_load(gmem=mem, scpad=SP0, gmem_base=sregs.read(inst['rs2']), scpad_base_row=int(sregs.read(inst['rs1/rd1'])), tile_id=localID, NR=inst['num_rows'], NC=inst['num_cols'], perf_metrics=EU.perf_metrics)
-                elif inst['sid'] == 1:
+                    sdma_load(gmem=mem, scpad=SP0, gmem_base=sregs.read(inst['rs2']), scpad_base_row=int(sregs.read(inst['rs1/rd1'])), tile_id=localID, NR=num_rows, NC=num_cols, perf_metrics=EU.perf_metrics)
+                elif sid == 1:
                     if(inst['rs1/rd1'] in tileID1Dict.keys()):
                         localID = tileID1Dict[inst['rs1/rd1']]
                     else:
                         tile_id1 += 1
                         tileID1Dict[inst['rs1/rd1']] = tile_id1
                         localID = tileID1Dict[inst['rs1/rd1']]
-                    sdma_load(gmem=mem, scpad=SP1, gmem_base=sregs.read(inst['rs2']), scpad_base_row=int(sregs.read(inst['rs1/rd1'])), tile_id=localID, NR=inst['num_rows'], NC=inst['num_cols'], perf_metrics=EU.perf_metrics)
+                    sdma_load(gmem=mem, scpad=SP1, gmem_base=sregs.read(inst['rs2']), scpad_base_row=int(sregs.read(inst['rs1/rd1'])), tile_id=localID, NR=num_rows, NC=num_cols, perf_metrics=EU.perf_metrics)
 
             elif (m == "scpad.st"):
-                if inst['sid'] == 0:
+                metadata = int(sregs.read(inst['rs3'])) & 0xFFFFFFFF
+                sid = (metadata >> 30) & 0x3
+                num_rows = (metadata >> 25) & 0x1F
+                num_cols = (metadata >> 20) & 0x1F
+
+                if sid == 0:
                     if(inst['rs1/rd1'] in tileID0Dict.keys()):
                         localID = tileID0Dict[inst['rs1/rd1']]
                     else:
                         tile_id0 += 1
                         tileID0Dict[inst['rs1/rd1']] = tile_id0
                         localID = tileID0Dict[inst['rs1/rd1']]
-                    sdma_store(gmem=mem, scpad=SP0, scpad_base_row=int(sregs.read(inst['rs1/rd1'])), gmem_base=sregs.read(inst['rs2']), tile_id=tile_id0, NR=inst['num_rows'], NC=inst['num_cols'])
-                elif inst['sid'] == 1:
+                    sdma_store(gmem=mem, scpad=SP0, scpad_base_row=int(sregs.read(inst['rs1/rd1'])), gmem_base=sregs.read(inst['rs2']), tile_id=tile_id0, NR=num_rows, NC=num_cols)
+                elif sid == 1:
                     if(inst['rs1/rd1'] in tileID1Dict.keys()):
                         localID = tileID1Dict[inst['rs1/rd1']]
                     else:
                         tile_id1 += 1
                         tileID1Dict[inst['rs1/rd1']] = tile_id1
                         localID = tileID1Dict[inst['rs1/rd1']]
-                    sdma_store(gmem=mem, scpad=SP1, scpad_base_row=int(sregs.read(inst['rs1/rd1'])), gmem_base=sregs.read(inst['rs2']), tile_id=tile_id1, NR=inst['num_rows'], NC=inst['num_cols'])
-            elif (m == "lui.s"): 
+                    sdma_store(gmem=mem, scpad=SP1, scpad_base_row=int(sregs.read(inst['rs1/rd1'])), gmem_base=sregs.read(inst['rs2']), tile_id=tile_id1, NR=num_rows, NC=num_cols)
+            elif (m == "lui.s"):
                 if debug: print(inst['imm'])
                 sregs.write(inst['rd'], (inst['imm']) << 7)
+            elif m == "li.s":
+                sregs.write(inst["rd"], int(inst["imm"]))
             elif (m == "mv.mts"):
                 sregs.write(inst['rd'], mregs.read(inst['vms']))
             elif (m == "mv.stm"):
@@ -277,9 +291,13 @@ def run(mem: Memory, sregs: ScalarRegisterFile, mregs: ScalarRegisterFile, vregs
                 if(m == "mul.bf"):
                     WBdata = fp32_to_hex(WBdata)
                 sregs.write(inst['rd'], int(WBdata))
-            elif m == "divi.s":
-                src1 = sregs.read(inst['rs1'])
-                src2 = inst['imm']
+            elif m in ("div.s", "divi.s"):
+                if m == "div.s":
+                    src1 = sregs.read(inst['rs1'])
+                    src2 = sregs.read(inst['rs2'])
+                else:
+                    src1 = sregs.read(inst['rs1'])
+                    src2 = inst['imm']
                 WBdata = EU.execute(m, sA=src1, sB=src2)
                 sregs.write(inst['rd'], int(WBdata))
             elif m == "rcp.bf":
@@ -363,18 +381,19 @@ def run(mem: Memory, sregs: ScalarRegisterFile, mregs: ScalarRegisterFile, vregs
                     src2 = inst['imm']
                 WBdata = EU.execute(m, sA=src1, sB=src2)
                 sregs.write(inst['rd'], int(WBdata))
-            elif m in ("sltu.s", "sltui.s", "sltu.bf"):
-                if(m == "sltu.s" or m == "sltu.bf"):
+            elif m in ("sltu.s", "sltui.s"):
+                if(m == "sltu.s"):
                     src1 = sregs.read(inst['rs1'])
                     src2 = sregs.read(inst['rs2'])
-                    if(m == "sltu.bf"):
-                        src1 = hex_to_fp32(src1)
-                        src2 = hex_to_fp32(src2)
                 else:
                     src1 = sregs.read(inst['rs1'])
                     src2 = inst['imm']
                 WBdata = EU.execute(m, sA=src1, sB=src2)
                 sregs.write(inst['rd'], int(WBdata))
+            elif m == "sqrt.bf":
+                src1 = hex_to_fp32(sregs.read(inst['rs1']))
+                WBdata = EU.execute(m, sA=src1)
+                sregs.write(inst['rd'], int(fp32_to_hex(WBdata)))
             elif m == "stbf.s":
                 src1 = sregs.read(inst['rs1'])
                 src1 = np.float32(src1)
@@ -435,16 +454,12 @@ def run(mem: Memory, sregs: ScalarRegisterFile, mregs: ScalarRegisterFile, vregs
                 src1 = vregs.read(inst['vs1'])
                 src2 = inst['imm']
                 nmask = mregs.read(inst['mask'])
-                if(m == 'shift.vi'):
-                    slr = (src2 >> 5) & 0b1
-                    imm = src2 & 0b1_1111
-                else:
-                    slr = 0
-                    temp = src2 << 16
-                    imm = struct.unpack('<f', struct.pack('<I', temp & 0xFFFFFFFF))[0]
+                slr = 0
+                temp = src2 << 16
+                imm = struct.unpack('<f', struct.pack('<I', temp & 0xFFFFFFFF))[0]
                 WBdata = EU.execute(m, vA=src1, sA=imm, slr=slr, mask=int(nmask))
                 old_vec = vregs.read(inst['vd'])
-                if(m != 'shift.vi' and m != 'rsum.vi' and m != 'rmin.vi' and m != 'rmax.vi'):
+                if(m != 'rsum.vi' and m != 'rmin.vi' and m != 'rmax.vi'):
                     new_vec = apply_mask(v1=old_vec, v2=WBdata, mask=mregs.read(inst['mask']))
                 elif (m == 'rsum.vi' or m == 'rmin.vi' or m == 'rmax.vi'):
                     new_vec = apply_imm_vector_op(imm=inst['imm'], vs=src1, r_in=WBdata)
@@ -454,20 +469,13 @@ def run(mem: Memory, sregs: ScalarRegisterFile, mregs: ScalarRegisterFile, vregs
             # ---------------- VS (Vector-Scalar) ----------------
             elif m.endswith(".vs"):
                 src1 = vregs.read(inst['vs1'])
-                if(m == 'shift.vs'):
-                    slr = (inst['rs1'] >> 5) & 0b1
-                    src2 = inst['rs1'] & 0b1_1111
-                else:
-                    slr = 0
-                    src2 = sregs.read(inst['rs1'])
-                    src2 = hex_to_fp32(int(src2))
+                slr = 0
+                src2 = sregs.read(inst['rs1'])
+                src2 = hex_to_fp32(int(src2))
                 WBdata = EU.execute(m, vA=src1, sA=src2, slr=slr)
                 mask = mregs.read(inst['mask'])
                 old_vec = vregs.read(inst['vd'])
-                if(m != 'shift.vs'):
-                    new_vec = apply_mask(v1=old_vec, v2=WBdata, mask=mask)
-                else:
-                    new_vec = WBdata
+                new_vec = apply_mask(v1=old_vec, v2=WBdata, mask=mask)
                 vregs.write(inst['vd'], new_vec)
             # ---------------- MVS (Vector-Scalar) ---------------
             elif m.endswith(".mvs"):

@@ -166,7 +166,7 @@ def main():
         print(f"[COMPARE] Element-wise |diff|:\n{diff}")
 
     # Simple pass/fail threshold (generous for bf16 quantization)
-    threshold = 0.5
+    threshold = 0.05
     if mae < threshold:
         print(f"[COMPARE] PASS (MAE {mae:.6f} < {threshold})")
         sys.exit(0)

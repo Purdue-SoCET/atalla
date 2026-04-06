@@ -258,6 +258,9 @@ class ScalarALU:
             raise ZeroDivisionError("BF16 reciprocal of zero")
         return 1.0 / a
 
+    def sqrtbf(self, a, b=None):
+        return np.sqrt(a)
+
     # -------------------------
     # BF16 comparisons
     # -------------------------
@@ -316,6 +319,8 @@ class ScalarALU:
             return self.mulbf(a, b)
         elif op == "rcpbf":
             return self.rcpbf(a, b)
+        elif op == "sqrtbf":
+            return self.sqrtbf(a, b)
         elif op == "sltbf":
             return self.sltbf(a, b)
         elif op == "sltubf":

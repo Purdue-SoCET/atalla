@@ -1,0 +1,19 @@
+,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,
+,Updated ISA Spec -- 40 bits per instruction.,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,Changes
+,,39,38,37,36,35,34,33,32,31,30,29,28,27,26,25,24,23,22,21,20,19,18,17,16,15,14,13,12,11,10,9,8,7,6,5,4,3,2,1,0,,
+,R,,,,,,,,,,rs2,,,,,,,,rs1,,,,,,,,rd,,,,,,,,opcode - 7 bits,,,,,,,,
+,BR,imm9,,,,,,,,,rs2,,,,,,,,rs1 & rd,,,,,,,,imm1,incr-imm7,,,,,,,opcode - 7 bits,,,,,,,,Here
+,I,,,,,,imm12,,,,,,,,,,,,rs1,,,,,,,,rd,,,,,,,,opcode - 7 bits,,,,,,,,
+,M,,,,,,imm12,,,,,,,,,,,,rs1,,,,,,,,rd,,,,,,,,opcode - 7 bits,,,,,,,,
+,MI,imm25,,,,,,,,,,,,,,,,,,,,,,,,,rd,,,,,,,,opcode - 7 bits,,,,,,,,
+,VV,,,,,,mask,,,,vs2,,,,,,,,vs1,,,,,,,,vd,,,,,,,,opcode - 7 bits,,,,,,,,
+,VS,,,,,,mask,,,,rs1,,,,,,,,vs1,,,,,,,,vd,,,,,,,,opcode - 7 bits,,,,,,,,
+,VI,,,,,,mask,,,,imm8,,,,,,,,vs1,,,,,,,,vd,,,,,,,,opcode - 7 bits,,,,,,,,Here
+,VTS,,,,,,,,,,imm8,,,,,,,,vs1,,,,,,,,rd,,,,,,,,opcode - 7 bits,,,,,,,,
+,VMV,,,,,,mask,,,,vs2,,,,,,,,vs1,,,,,,,,,,,,vmd,,,,opcode - 7 bits,,,,,,,Vector Mask - Vector,MVV change
+,VMS,,,,,,mask,,,,rs1,,,,,,,,vs1,,,,,,,,,,,,vmd,,,,opcode - 7 bits,,,,,,,Vector Mask - Scalar,MVS change
+,MTS,,,,,,,,,,,,,,,,,,,,,,vms,,,,rd,,,,,,,,opcode - 7 bits,,,,,,,,Here
+,STM,,,,,,,,,,,,,,,,,,rs1,,,,,,,,,,,,vmd,,,,opcode - 7 bits,,,,,,,,Here
+,VM,,,sid,,num_cols,,,,,rs2 - row_number reg,,,,,,,,rs1,,,,,,,,vd,,,,,,,,opcode - 7 bits,,,,,,,,Here
+,SDMA,,,,,,,,,,rs3 - metadata ,,,,,,,,rs2 - DRAM address,,,,,,,,rs1 and rd1 - scpad addr,,,,,,,,opcode - 7 bits,,,,,,,"rs3 to be packed --> {31:30 - Scratchpad ID, 29:25 - num rows, 24:20 - num cols, 19:0 - num cols in full matrix}",Here
+,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,No more S

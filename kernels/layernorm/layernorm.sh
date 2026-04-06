@@ -119,7 +119,6 @@ echo "  Output    : $IN_FILE"
 echo ""
 
 $PYTHON -m "functional_sim.build_${BUILD_NAME}" \
-    --no-graph \
     --data "$DATA" \
     --n "$N" \
     --output "$IN_FILE"

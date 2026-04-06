@@ -39,8 +39,8 @@ def main() -> None:
     if len(instrs) != 9:
         raise AssertionError(f"Expected 9 instructions, got {len(instrs)}")
 
-    _check_branch(instrs[4][0], mnemonic="bne.s", imm=-48, incr_imm=0)
-    _check_branch(instrs[5][0], mnemonic="beq.s", imm=48, incr_imm=5)
+    _check_branch(instrs[4][0], mnemonic="bne.s", imm=-40, incr_imm=0)
+    _check_branch(instrs[5][0], mnemonic="beq.s", imm=40, incr_imm=5)
 
     instr_lines = emit_test_format(instrs)
     data_lines = DRAMWriter().render_data_mem(include_zeros=False)
