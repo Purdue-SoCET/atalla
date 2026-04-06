@@ -20,7 +20,7 @@ module axi_read_tb; //TODO: add clocking feature
     logic CLK=0, nRST;
     always #(PERIOD/2) CLK++;
 
-    axi_bus_if abif ();
+    axi_bus_if abif (CLK, nRST);
     axi_read DUT (CLK, nRST, abif);
 
     test PROG (CLK, nRST, abif);
@@ -125,7 +125,7 @@ program test (
         end
 
         abif.ar_o_ready = 1;
-        repeat (20) @(negedge CLK)
+        repeat (20) @(negedge CLK);
         abif.ar_o_ready = 0;
     endtask
 

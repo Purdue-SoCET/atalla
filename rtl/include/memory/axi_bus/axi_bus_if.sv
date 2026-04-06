@@ -6,7 +6,7 @@
 `ifndef AXI_BUS_IF_SV
 `define AXI_BUS_IF_SV
 
-interface axi_bus_if;
+interface axi_bus_if(input logic CLK, input logic nRST);
     `include "axi_bus_params.svh"
 
     import axi_bus_pkg::*;
@@ -131,6 +131,56 @@ interface axi_bus_if;
 
     assert property (wrt_valid_ready)
         else $error("data changed during low ready");
+
+    modport axi(
+        // read side
+        // input from master
+        input ar_sp0_valid, ar_sp1_valid, ar_d_valid, ar_i_valid, 
+            ar_sp0_i, ar_sp1_i, ar_d_i, ar_i_i,
+            r_sp0_o_ready, r_sp1_o_ready, r_i_o_ready, r_d_o_ready,
+            
+        // input from controller
+        r_valid, r_i, // sub_r_channel_t 
+        ar_o_ready,
+
+        // write side
+        // From Master
+        input aw_sp0_i_valid, aw_sp0_i, w_sp0_i_valid, w_sp0_i,
+        input aw_sp1_i_valid, aw_sp1_i, w_sp1_i_valid, w_sp1_i,
+        input aw_d_i_valid, aw_d_i, w_d_i_valid, w_d_i,
+
+        // From Master
+        input b_sp0_o_ready,
+        input b_sp1_o_ready,
+        input b_d_o_ready,
+
+        // From Subordinate
+        input aw_o_ready,
+        input w_o_ready,
+
+        // From Subordinate
+        input b_i_valid, b_i,
+
+        // read side
+
+        // write side
+        // To Master 
+        output aw_sp0_i_ready, w_sp0_i_ready,
+        output aw_sp1_i_ready, w_sp1_i_ready,
+        output aw_d_i_ready, w_d_i_ready, 
+
+        // To Master 
+        output b_sp0_o_valid, b_sp0_o,
+        output b_sp1_o_valid, b_sp1_o,
+        output b_d_o_valid, b_d_o,
+
+        // To Subordinate
+        output aw_o_valid, aw_o,
+        output w_o_valid, w_o,
+
+        // To Subordinate
+        output b_i_ready
+    );
 
     // ----------------------------------------------------------------------
     // READ PATH Definitions

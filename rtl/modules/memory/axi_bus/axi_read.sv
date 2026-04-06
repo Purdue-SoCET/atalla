@@ -6,8 +6,7 @@ import axi_bus_pkg::*;
 (
     input logic CLK, nRST,
     axi_bus_if abif
-); //TODO: one beat of transaction size is fixed? what does the request 'size' do?
-
+); 
     logic [ARGRANT-1:0] grant_sel;
     logic ar_valid;
 
