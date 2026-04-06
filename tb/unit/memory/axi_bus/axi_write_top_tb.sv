@@ -439,6 +439,10 @@ module axi_write_top_tb ();
     axi_w_sample    w_obs;
     axi_b_sample b_obs;
 
+    axi_write_txn txn_sp0;
+    axi_write_txn txn_sp1;
+    axi_write_txn txn_d;
+
     bit test_pass;
 
     int w_count;
@@ -475,7 +479,7 @@ module axi_write_top_tb ();
         exp_bresp      = B_OKAY;
     endtask
 
-   task automatic do_write_phase(mid_t m);
+    task automatic do_write_phase(mid_t m);
         int beat_idx;
         txn = gen.generate_txn_for_master(m);
         @(posedge CLK);
@@ -607,6 +611,279 @@ module axi_write_top_tb ();
         repeat (2) @(posedge CLK);
     endtask
 
+    task automatic drive_one_write_request(
+        input mid_t m,
+        input axi_write_txn t,
+        output bit aw_master_done_o,
+        output bit w_master_done_o
+    );
+        int beat_idx;
+
+        aw_master_done_o = 0;
+        w_master_done_o  = 0;
+
+        drv.drive_aw(t);
+        drv.drive_w(t, 0);
+
+        fork
+            begin : MASTER_AW_THREAD
+                case (m)
+                    SP0:    do @(posedge CLK); while (!(busif.aw_sp0_i_valid && busif.aw_sp0_i_ready));
+                    SP1:    do @(posedge CLK); while (!(busif.aw_sp1_i_valid && busif.aw_sp1_i_ready));
+                    DCACHE: do @(posedge CLK); while (!(busif.aw_d_i_valid   && busif.aw_d_i_ready));
+                endcase
+                drv.clear_aw(m);
+                aw_master_done_o = 1;
+            end
+
+            begin : MASTER_W_THREAD
+                beat_idx = 0;
+
+                while (beat_idx < t.wdata.size()) begin
+                    case (m)
+                        SP0:    do @(posedge CLK); while (!(busif.w_sp0_i_valid && busif.w_sp0_i_ready));
+                        SP1:    do @(posedge CLK); while (!(busif.w_sp1_i_valid && busif.w_sp1_i_ready));
+                        DCACHE: do @(posedge CLK); while (!(busif.w_d_i_valid   && busif.w_d_i_ready));
+                    endcase
+
+                    beat_idx++;
+
+                    if (beat_idx < t.wdata.size())
+                        drv.drive_w(t, beat_idx);
+                end
+
+                drv.clear_w(m);
+                w_master_done_o = 1;
+            end
+        join
+    endtask
+
+    task automatic send_one_b_response(
+        input mid_t m,
+        input axi_write_txn t,
+        input bresp_t [BRESP-1:0] bresp_in,
+        output bit b_in_done_o,
+        output bit b_out_done_o
+    );
+        logic [MID_BID-1:0] full_bid_l;
+        logic [BID-1:0]     exp_master_bid_l;
+        b_in_done_o  = 0;
+        b_out_done_o = 0;
+        full_bid_l       = t.get_full_bid();
+        exp_master_bid_l = t.awid;
+
+        drv.set_b_ready(m, 1'b1);
+        @(posedge CLK);
+        drv.drive_b(full_bid_l, bresp_in);
+        fork
+            begin : B_IN_THREAD
+                do @(posedge CLK); while (!(busif.b_i_valid && busif.b_i_ready));
+                drv.clear_b();
+                b_in_done_o = 1;
+            end
+
+            begin : B_OUT_THREAD
+                case (m)
+                    SP0: begin
+                        do @(posedge CLK); while (!(busif.b_sp0_o_valid && busif.b_sp0_o_ready));
+                        b_obs = mon.sample_b_sp0();
+                    end
+                    SP1: begin
+                        do @(posedge CLK); while (!(busif.b_sp1_o_valid && busif.b_sp1_o_ready));
+                        b_obs = mon.sample_b_sp1();
+                    end
+                    DCACHE: begin
+                        do @(posedge CLK); while (!(busif.b_d_o_valid && busif.b_d_o_ready));
+                        b_obs = mon.sample_b_d();
+                    end
+                endcase
+
+                if (!chk.check_b(exp_master_bid_l, bresp_in, b_obs))
+                    test_pass = 0;
+
+                b_out_done_o = 1;
+            end
+        join
+    endtask
+
+    task directed_all_3_write_then_ooo_b_response_test;
+        int sp0_w_count, sp1_w_count, d_w_count;
+        int sp0_last_count, sp1_last_count, d_last_count;
+
+        bit sp0_aw_master_done, sp1_aw_master_done, d_aw_master_done;
+        bit sp0_w_master_done,  sp1_w_master_done,  d_w_master_done;
+
+        bit sp0_b_in_done, sp1_b_in_done, d_b_in_done;
+        bit sp0_b_out_done, sp1_b_out_done, d_b_out_done;
+
+        test_case = "TEST CASE 10: ALL 3 WRITES THEN OUT-OF-ORDER B RESPONSES";
+
+        drv.clear_all();
+        drv.set_subordinate_ready_high();
+        drv.set_all_b_ready_low();
+
+        test_pass = 1;
+
+        // Generate one txn per master
+        txn_sp0 = gen.generate_txn_for_master(SP0);
+        txn_sp1 = gen.generate_txn_for_master(SP1);
+        txn_d   = gen.generate_txn_for_master(DCACHE);
+
+        sp0_w_count    = 0;
+        sp1_w_count    = 0;
+        d_w_count      = 0;
+        sp0_last_count = 0;
+        sp1_last_count = 0;
+        d_last_count   = 0;
+
+        @(posedge CLK);
+
+        // Launch all 3 requests together
+        fork
+            drive_one_write_request(SP0,    txn_sp0, sp0_aw_master_done, sp0_w_master_done);
+            drive_one_write_request(SP1,    txn_sp1, sp1_aw_master_done, sp1_w_master_done);
+            drive_one_write_request(DCACHE, txn_d,   d_aw_master_done,   d_w_master_done);
+
+            // Observe outgoing AWs in request arbitration order
+            begin : SUB_AW_OBS_THREAD
+                do @(posedge CLK); while (!(busif.aw_o_valid && busif.aw_o_ready));
+                aw_obs = mon.sample_sub_aw();
+                if (!chk.check_aw(txn_sp0, aw_obs))
+                    test_pass = 0;
+
+                do @(posedge CLK); while (!(busif.aw_o_valid && busif.aw_o_ready));
+                aw_obs = mon.sample_sub_aw();
+                if (!chk.check_aw(txn_sp1, aw_obs))
+                    test_pass = 0;
+
+                do @(posedge CLK); while (!(busif.aw_o_valid && busif.aw_o_ready));
+                aw_obs = mon.sample_sub_aw();
+                if (!chk.check_aw(txn_d, aw_obs))
+                    test_pass = 0;
+            end
+
+            // Observe outgoing W bursts in request arbitration order
+            begin : SUB_W_OBS_THREAD
+                for (int i = 0; i < txn_sp0.wdata.size(); i++) begin
+                    do @(posedge CLK); while (!(busif.w_o_valid && busif.w_o_ready));
+                    w_obs = mon.sample_sub_w();
+                    if (!chk.check_w_beat(txn_sp0, w_obs, i))
+                        test_pass = 0;
+                    sp0_w_count++;
+                    if (w_obs.wlast) sp0_last_count++;
+                end
+
+                for (int i = 0; i < txn_sp1.wdata.size(); i++) begin
+                    do @(posedge CLK); while (!(busif.w_o_valid && busif.w_o_ready));
+                    w_obs = mon.sample_sub_w();
+                    if (!chk.check_w_beat(txn_sp1, w_obs, i))
+                        test_pass = 0;
+                    sp1_w_count++;
+                    if (w_obs.wlast) sp1_last_count++;
+                end
+
+                for (int i = 0; i < txn_d.wdata.size(); i++) begin
+                    do @(posedge CLK); while (!(busif.w_o_valid && busif.w_o_ready));
+                    w_obs = mon.sample_sub_w();
+                    if (!chk.check_w_beat(txn_d, w_obs, i))
+                        test_pass = 0;
+                    d_w_count++;
+                    if (w_obs.wlast) d_last_count++;
+                end
+            end
+        join
+
+        // ---------------------------
+        // Request-side summary checks
+        // ---------------------------
+        if (!sp0_aw_master_done) begin
+            $error("%s FAILED: SP0 AW was never accepted on master side", test_case);
+            test_pass = 0;
+        end
+        if (!sp1_aw_master_done) begin
+            $error("%s FAILED: SP1 AW was never accepted on master side", test_case);
+            test_pass = 0;
+        end
+        if (!d_aw_master_done) begin
+            $error("%s FAILED: DCACHE AW was never accepted on master side", test_case);
+            test_pass = 0;
+        end
+
+        if (!sp0_w_master_done) begin
+            $error("%s FAILED: SP0 W beats were not all accepted on master side", test_case);
+            test_pass = 0;
+        end
+        if (!sp1_w_master_done) begin
+            $error("%s FAILED: SP1 W beats were not all accepted on master side", test_case);
+            test_pass = 0;
+        end
+        if (!d_w_master_done) begin
+            $error("%s FAILED: DCACHE W beats were not all accepted on master side", test_case);
+            test_pass = 0;
+        end
+
+        if (sp0_w_count != (txn_sp0.awlen + 1)) begin
+            $error("%s FAILED: SP0 wrong W beat count exp=%0d obs=%0d",
+                test_case, txn_sp0.awlen + 1, sp0_w_count);
+            test_pass = 0;
+        end
+        if (sp1_w_count != (txn_sp1.awlen + 1)) begin
+            $error("%s FAILED: SP1 wrong W beat count exp=%0d obs=%0d",
+                test_case, txn_sp1.awlen + 1, sp1_w_count);
+            test_pass = 0;
+        end
+        if (d_w_count != (txn_d.awlen + 1)) begin
+            $error("%s FAILED: DCACHE wrong W beat count exp=%0d obs=%0d",
+                test_case, txn_d.awlen + 1, d_w_count);
+            test_pass = 0;
+        end
+
+        if (sp0_last_count != 1) begin
+            $error("%s FAILED: SP0 expected exactly one WLAST, observed %0d",
+                test_case, sp0_last_count);
+            test_pass = 0;
+        end
+        if (sp1_last_count != 1) begin
+            $error("%s FAILED: SP1 expected exactly one WLAST, observed %0d",
+                test_case, sp1_last_count);
+            test_pass = 0;
+        end
+        if (d_last_count != 1) begin
+            $error("%s FAILED: DCACHE expected exactly one WLAST, observed %0d",
+                test_case, d_last_count);
+            test_pass = 0;
+        end
+
+        // Wait some time before returning responses
+        repeat (4) @(posedge CLK);
+
+        // ----------------------------------------
+        // Return B responses intentionally OUT OF ORDER
+        // Example order: SP1 -> DCACHE -> SP0
+        // ----------------------------------------
+        send_one_b_response(SP1,    txn_sp1, B_OKAY, sp1_b_in_done, sp1_b_out_done);
+        send_one_b_response(DCACHE, txn_d,   B_OKAY, d_b_in_done,   d_b_out_done);
+        send_one_b_response(SP0,    txn_sp0, B_OKAY, sp0_b_in_done, sp0_b_out_done);
+
+        if (!sp0_b_in_done || !sp0_b_out_done) begin
+            $error("%s FAILED: SP0 B response did not complete correctly", test_case);
+            test_pass = 0;
+        end
+        if (!sp1_b_in_done || !sp1_b_out_done) begin
+            $error("%s FAILED: SP1 B response did not complete correctly", test_case);
+            test_pass = 0;
+        end
+        if (!d_b_in_done || !d_b_out_done) begin
+            $error("%s FAILED: DCACHE B response did not complete correctly", test_case);
+            test_pass = 0;
+        end
+
+        if (test_pass)
+            $display("%s PASSED", test_case);
+
+        repeat (2) @(posedge CLK);
+    endtask
+
     task automatic finish_testcase();
         if (test_pass)
             $display("%s PASSED", test_case);
@@ -671,6 +948,103 @@ module axi_write_top_tb ();
         do_b_phase(DCACHE, 3);
         finish_testcase();
     endtask
+
+    task single_sp0_write_with_subordinate_backpressure_test;
+        int beat_idx;
+        test_case = "TEST CASE 11: SINGLE SP0 WRITE WITH SUBORDINATE BACKPRESSURE";
+        init_testcase(test_case);
+        // Start with subordinate ready high so traffic can begin
+        drv.set_subordinate_ready(1'b1, 1'b1);
+        txn = gen.generate_txn_for_master(SP0);
+        @(posedge CLK);
+        drv.drive_aw(txn);
+        drv.drive_w(txn, 0);
+        fork
+            begin : MASTER_AW_THREAD
+                do @(posedge CLK); while (!(busif.aw_sp0_i_valid && busif.aw_sp0_i_ready));
+                drv.clear_aw(SP0);
+                aw_master_done = 1;
+            end
+            begin : SUB_AW_THREAD
+                do @(posedge CLK); while (!(busif.aw_o_valid && busif.aw_o_ready));
+                aw_obs = mon.sample_sub_aw();
+                if (!chk.check_aw(txn, aw_obs))
+                    test_pass = 0;
+                aw_obs_done = 1;
+            end
+            begin : MASTER_W_THREAD
+                beat_idx = 0;
+
+                while (beat_idx < txn.wdata.size()) begin
+                    do @(posedge CLK); while (!(busif.w_sp0_i_valid && busif.w_sp0_i_ready));
+
+                    beat_idx++;
+
+                    if (beat_idx < txn.wdata.size())
+                        drv.drive_w(txn, beat_idx);
+                end
+
+                drv.clear_w(SP0);
+                w_master_done = 1;
+            end
+            begin : SUB_W_THREAD
+                for (int obs_idx = 0; obs_idx < txn.wdata.size(); obs_idx++) begin
+                    do @(posedge CLK); while (!(busif.w_o_valid && busif.w_o_ready));
+                    w_obs = mon.sample_sub_w();
+
+                    if (!chk.check_w_beat(txn, w_obs, obs_idx))
+                        test_pass = 0;
+
+                    w_count++;
+
+                    if (w_obs.wlast)
+                        last_count++;
+                end
+
+                w_obs_done = 1;
+            end
+            begin : BACKPRESSURE_THREAD
+                // Wait until the first outgoing W handshake happens,
+                // then stall subordinate for a few cycles
+                do @(posedge CLK); while (!(busif.w_o_valid && busif.w_o_ready));
+
+                // Stall both AW and W outputs
+                drv.set_subordinate_ready(1'b0, 1'b0);
+
+                repeat (3) @(posedge CLK);
+
+                // Release stall
+                drv.set_subordinate_ready(1'b1, 1'b1);
+            end
+        join
+        if (!aw_master_done) begin
+            $error("%s FAILED: AW was never accepted on master side", test_case);
+            test_pass = 0;
+        end
+        if (!aw_obs_done) begin
+            $error("%s FAILED: AW was never observed on subordinate side", test_case);
+            test_pass = 0;
+        end
+        if (!w_master_done) begin
+            $error("%s FAILED: W beats were not all accepted on master side", test_case);
+            test_pass = 0;
+        end
+        if (!w_obs_done) begin
+            $error("%s FAILED: W beats were not all observed on subordinate side", test_case);
+            test_pass = 0;
+        end
+        if (w_count != (txn.awlen + 1)) begin
+            $error("%s FAILED: wrong number of W beats exp=%0d obs=%0d",
+                test_case, txn.awlen + 1, w_count);
+            test_pass = 0;
+        end
+        if (last_count != 1) begin
+            $error("%s FAILED: expected exactly one WLAST, observed %0d",
+                test_case, last_count);
+            test_pass = 0;
+        end
+        finish_testcase();
+endtask
 
     property aw_out_stable_when_stalled;
         @(posedge CLK) disable iff (!nRST)
@@ -743,6 +1117,8 @@ module axi_write_top_tb ();
         single_sp0_write_with_b_response_test();
         single_sp1_write_with_b_response_test();
         single_dcache_write_with_b_response_test();
+        directed_all_3_write_then_ooo_b_response_test();
+        single_sp0_write_with_subordinate_backpressure_test();
 
         $display("TB DONE");
         $stop;
