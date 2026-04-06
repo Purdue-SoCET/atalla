@@ -81,7 +81,7 @@ def run(mem: Memory, sregs: ScalarRegisterFile, mregs: ScalarRegisterFile, vregs
         
     pc_increment = packet_length * 5
 
-    gemm_weights = np.zeros((32, 32))
+    gemm_weights = np.zeros((32, 32), dtype=np.float32)
     num_weights = 0
 
     tile_id0 = 0
@@ -109,7 +109,10 @@ def run(mem: Memory, sregs: ScalarRegisterFile, mregs: ScalarRegisterFile, vregs
             m = inst['mnemonic']
             if m == "nop.s":
                 continue
-            elif (m == "halt.s"):
+
+            EU.perf_metrics.increment("assembly_instructions_executed")
+
+            if (m == "halt.s"):
                 halt = True
             elif (m == "jal" or m == "jalr" or inst['type'] == "BR"):
                 br = True
@@ -426,7 +429,10 @@ def run(mem: Memory, sregs: ScalarRegisterFile, mregs: ScalarRegisterFile, vregs
             elif m.endswith(".vv"):
                 # ------------ GEMM ------------------------------
                 if (m == "gemm.vv"):
-                    vregs.write(inst['vd'], vregs.read(inst['vs1']) @ gemm_weights + vregs.read(inst['vs2']))
+                    src1 = np.asarray(vregs.read(inst['vs1']), dtype=np.float32)
+                    src2 = np.asarray(vregs.read(inst['vs2']), dtype=np.float32)
+                    matmul_out = EU.execute(m, A=src1.reshape(1, -1), B=gemm_weights)
+                    vregs.write(inst['vd'], np.asarray(matmul_out, dtype=np.float32).reshape(-1) + src2)
                 else:
                     src1 = vregs.read(inst['vs1'])
                     src2 = vregs.read(inst['vs2'])

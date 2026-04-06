@@ -17,6 +17,7 @@ class PerfMetrics:
         self.metrics["flops_vector"] = 0
         self.metrics["flops_matmul"] = 0
         self.metrics["bytes_loaded"] = 0
+        self.metrics["assembly_instructions_executed"] = 0
         self.metrics["packet_slots_total"] = 0
         self.metrics["packet_slots_filled"] = 0
 

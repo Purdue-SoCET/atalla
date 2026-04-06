@@ -9,8 +9,8 @@ from pathlib import Path
 import argparse
 import numpy as np
 
-from src.misc.opcode_table import OPCODES, name_to_opcode
-from build import *
+from functional_sim.src.misc.opcode_table import OPCODES, name_to_opcode
+from functional_sim.build import *
 
 
 def bf16_round(x: float) -> int:
@@ -29,8 +29,8 @@ def main():
     args = ap.parse_args()
 
     # Change values here for parametrization:
-    COLS      = 20
-    ROWS      = 20
+    COLS      = 32
+    ROWS      = 32
     NUM_TILES = 3
 
 
@@ -67,6 +67,9 @@ def main():
         #   $26      = tile loop limit   (= {NUM_TILES})
         #   $27      = weight/row loop counter
         #   $28      = weight/row loop limit
+        #   $29      = SDMA metadata (SID0)
+        #   $30      = SDMA metadata (SID1)
+        #   $31      = temp metadata builder (num_cols field)
         #   $10-$13  = weight vregs (up to 4 rows)
         #   $4       = input vreg  (A row i)
         #   $5       = output vreg (C row i)
@@ -82,8 +85,19 @@ def main():
         lw.s    $24, 16($20)        # $24 = OUTPUT_GMEM_ADDR
         lw.s    $23, 20($20)        # $23 = OUTPUT_SCPAD_ADDR (= 0)
 
+        # Build SDMA metadata words:
+        # metadata[31:30] = sid, metadata[29:25] = num_rows, metadata[24:20] = num_cols
+        li.s    $29, {ROWS}
+        slli.s  $29, $29, 25
+        li.s    $31, {COLS}
+        slli.s  $31, $31, 20
+        or.s    $29, $29, $31
+        li.s    $30, 1
+        slli.s  $30, $30, 30
+        or.s    $30, $30, $29
+
         #  load W^T tile into scpad0
-        scpad.ld $3, $6, {COLS}, {ROWS}, {SID0}
+        scpad.ld $3, $6, $29
 
         #  enable systolic rows (0xF enables all 4 rows)
         lui.s   $6, 0
@@ -96,14 +110,14 @@ def main():
 
 weight_load_loop:
         bge.s   $27, $28, weight_load_done  # if counter >= {ROWS}, done
-        vreg.ld $10, $3, {COLS}, {ROWS}, {SID0}, 1, $27
+    vreg.ld $10, $3, $27, {COLS}, {SID0}
         lw.vi   $10, $10, 0, 0xf
         addi.s  $27, $27, 1
         blt.s   $27, $28, weight_load_loop  # jump back if counter < limit
 
 weight_load_done:
         # load initial C (zeros) into scpad1
-        scpad.ld $23, $24, {COLS}, {ROWS}, {SID1}
+    scpad.ld $23, $24, $30
 
         # tile loop
         # For each input tile:
@@ -115,16 +129,16 @@ weight_load_done:
         addi.s  $26, $0, {NUM_TILES}
 
 tile_loop:
-        scpad.ld $21, $2, {COLS}, {ROWS}, {SID0}
+    scpad.ld $21, $2, $29
 
         addi.s  $27, $0, 0
         addi.s  $28, $0, {ROWS}
 
 row_loop:
-        vreg.ld $4, $21, {COLS}, {ROWS}, {SID0}, 1, $27
-        vreg.ld $5, $23, {COLS}, {ROWS}, {SID1}, 1, $27
+    vreg.ld $4, $21, $27, {COLS}, {SID0}
+    vreg.ld $5, $23, $27, {COLS}, {SID1}
         gemm.vv $6, $4, $5, 0, 0
-        vreg.st $6, $23, {COLS}, {ROWS}, {SID1}, 1, $27
+    vreg.st $6, $23, $27, {COLS}, {SID1}
 
         addi.s  $27, $27, 1
         blt.s   $27, $28, row_loop
@@ -134,7 +148,7 @@ row_loop:
         blt.s   $25, $26, tile_loop
 
         #store final C: scpad1 -> gmem
-        scpad.st $23, $24, {COLS}, {ROWS}, {SID1}
+        scpad.st $23, $24, $30
 
         halt.s
     """
