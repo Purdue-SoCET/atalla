@@ -170,7 +170,7 @@ package axi_bus_pkg;
 
     // W Channel To Subordiante
     typedef struct packed {
-        logic [MID_ARID-1:0] mid_id; // Global (4-bit) ID: {MASTER_ID, id}
+        logic [MID_WID-1:0] mid_id; // Global (4-bit) ID: {MASTER_ID, id}
         logic [WDATA-1:0]    data;
         logic                last;
         logic [WSTRB-1:0]    strb;
@@ -215,7 +215,7 @@ package axi_bus_pkg;
     // AW_W MANAGER W FIFO payload
     typedef struct packed {
         logic                valid;
-        logic [MID_ARID-1:0] mid_id; // Global (4-bit) ID: {MASTER_ID, id}
+        logic [MID_WID-1:0] mid_id; // Global (4-bit) ID: {MASTER_ID, id}
         logic [WDATA-1:0]    data;
         logic                last;
         logic [WSTRB-1:0]    strb;

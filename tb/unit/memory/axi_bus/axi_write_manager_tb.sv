@@ -7,7 +7,7 @@
 import axi_bus_pkg::*;
 
 // TRANSACTIONS
-class axi_write_txn;
+class axi_write_txn_mgr;
     //logic                 awvalid;
     rand logic [AWID-1:0]      awid;
     rand logic [AWADDR-1:0]    awaddr;
@@ -31,10 +31,10 @@ class axi_write_txn;
 endclass
 
 // GENERATOR
-class axi_generator;
+class axi_generator_mgr;
     // function <return_type> <function_name>();
-    function axi_write_txn generate_txn();
-        axi_write_txn txn; // creates handle
+    function axi_write_txn_mgr generate_txn();
+        axi_write_txn_mgr txn; // creates handle
         txn = new(); // constructs object
         if (!txn.randomize()) begin  // randomizes input stimulus
             $fatal("Randomization failed");
@@ -44,13 +44,13 @@ class axi_generator;
 endclass
 
 // DRIVER 
-class axi_driver;
+class axi_driver_mgr;
     //virtual axi_bus_if.tb vif; // giving class a virtual interface (handle to interface instance)
     virtual axi_bus_if.write_manager_tb vif;
     function new(virtual axi_bus_if.write_manager_tb vif); 
         this.vif = vif; // constructor of driver class
     endfunction
-    task drive_write_ar(axi_write_txn txn);
+    task drive_write_ar(axi_write_txn_mgr txn);
         vif.awvalid <= 1;
         vif.aw_gen_i.addr  <= txn.awaddr;
         vif.aw_gen_i.id <= txn.awid;
@@ -58,7 +58,7 @@ class axi_driver;
         vif.aw_gen_i.size <= txn.awsize;
         vif.aw_gen_i.burst <= txn.awburst;
     endtask
-    task drive_write_w(axi_write_txn txn, bit last);
+    task drive_write_w(axi_write_txn_mgr txn, bit last);
         vif.wvalid <= 1;
         vif.w_gen_i.data <= txn.wdata;
         vif.w_gen_i.id   <= txn.wid;
@@ -89,15 +89,15 @@ class axi_driver;
 endclass
 
 // Monitor
-class axi_monitor;
+class axi_monitor_mgr;
     //virtual axi_bus_if.tb vif;
     virtual axi_bus_if.write_manager_tb vif;
     function new(virtual axi_bus_if.write_manager_tb vif);
         this.vif = vif;
     endfunction
 
-    function axi_write_txn sample();
-        axi_write_txn txn;
+    function axi_write_txn_mgr sample();
+        axi_write_txn_mgr txn;
         txn = new();
 
         txn.awid   = vif.aw_gen_i.id;
@@ -117,7 +117,7 @@ endclass
 
 // Scoreboard
 class axi_scoreboard;
-    task check(axi_write_txn exp, axi_write_txn obs);
+    task check(axi_write_txn_mgr exp, axi_write_txn_mgr obs);
         if (exp.awid   != obs.awid)   $error("AWID mismatch");
         if (exp.awaddr != obs.awaddr) $error("AWADDR mismatch");
         if (exp.awlen  != obs.awlen)  $error("AWLEN mismatch");
@@ -165,7 +165,7 @@ class axi_coverage_collector;
     endfunction
 
     // Sample method
-    function void sample(axi_write_txn txn);
+    function void sample(axi_write_txn_mgr txn);
         cov_awid  = txn.awid;
         cov_awlen = txn.awlen;
         cov_wlast = txn.wlast;
@@ -246,15 +246,15 @@ module axi_write_manager_tb ();
     end
     endtask
 
-    axi_write_txn txn;
-    axi_generator gen;
-    axi_driver drv;
-    axi_monitor mon;
+    axi_write_txn_mgr txn;
+    axi_generator_mgr gen;
+    axi_driver_mgr drv;
+    axi_monitor_mgr mon;
     axi_scoreboard scb;
     axi_coverage_collector cov;
 
-    axi_write_txn exp_txn;
-    axi_write_txn obs_txn;
+    axi_write_txn_mgr exp_txn;
+    axi_write_txn_mgr obs_txn;
 
     task single_write_test;
         test_case = "TEST CASE 1: SINGLE WRITE";

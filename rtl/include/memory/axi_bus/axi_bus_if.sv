@@ -278,6 +278,7 @@ interface axi_bus_if(input logic CLK, input logic nRST);
         // From Subordinate
         input b_i_valid, b_i  
     );
+
     // MASTER <=> SP0 AW_W MANAGER
     modport aw_w_sp0_manager (
         // From Master 
@@ -491,7 +492,7 @@ interface axi_bus_if(input logic CLK, input logic nRST);
         output b_d_o_ready
     );
 
-    // WRITE DRIVER 
+    // WRITE DRIVER TB
     modport write_driver_tb (
         // From write arbiter 
         output aw_grant,
@@ -520,6 +521,45 @@ interface axi_bus_if(input logic CLK, input logic nRST);
         output aw_o_ready,
         output w_o_ready
     );
+
+    // WRITE TOP LEVEL MODPORT TB
+    modport write_path_tb(
+        // From Master
+        output aw_sp0_i_valid, aw_sp0_i, w_sp0_i_valid, w_sp0_i,
+        output aw_sp1_i_valid, aw_sp1_i, w_sp1_i_valid, w_sp1_i,
+        output aw_d_i_valid, aw_d_i, w_d_i_valid, w_d_i,
+
+        // To Master 
+        input aw_sp0_i_ready, w_sp0_i_ready,
+        input aw_sp1_i_ready, w_sp1_i_ready,
+        input aw_d_i_ready, w_d_i_ready, 
+
+        // To Master 
+        input b_sp0_o_valid, b_sp0_o,
+        input b_sp1_o_valid, b_sp1_o,
+        input b_d_o_valid, b_d_o,
+        
+        // From Master
+        output b_sp0_o_ready,
+        output b_sp1_o_ready,
+        output b_d_o_ready,
+
+        // To Subordinate
+        input aw_o_valid, aw_o,
+        input w_o_valid, w_o,
+
+        // From Subordinate
+        output aw_o_ready,
+        output w_o_ready,
+
+        // To Subordinate
+        input b_i_ready,
+
+        // From Subordinate
+        output b_i_valid, b_i  
+    );
+
+
 
 endinterface
 `endif // AXI_BUS_IF_SV
