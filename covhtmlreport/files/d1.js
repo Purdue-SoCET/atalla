@@ -1,0 +1,2 @@
+var g_data = {"11":{"pr":"/axi_read_tb","ty":2,"dui":3,"dun":"work.axi_read_tb","direct":[{"n":["c_all4",2,467],"h":81},{"n":["c_hsk",2,468],"h":1980},{"n":["c_stall",2,469],"h":1491},{"n":["c_idle_ready",2,470],"h":3035},{"n":["c_r_last",2,471],"h":943},{"n":["c_r_slverr",2,472],"h":1551},{"n":["c_r_decerr",2,473],"h":1385},{"n":["c_r_exokay",2,474],"h":1776}]}};
+processDirectivesData(g_data);

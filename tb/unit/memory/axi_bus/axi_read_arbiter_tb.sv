@@ -6,38 +6,60 @@ module axi_read_arbiter_tb ();
 
     localparam CLK_PERIOD = 10ns;
 
-    logic clk, nrst;
+    logic CLK, nRST;
     logic ready, sp0_req, sp1_req, d_req, i_req;
     logic [ARGRANT-1:0] grant_sel;
 
-    string test_case = "";
-
-    axi_read_arbiter DUT (.CLK(clk), 
-                          .nRST(nrst), 
-                          .ready(ready), 
-                          .sp0_req(sp0_req), 
-                          .sp1_req(sp1_req), 
-                          .d_req(d_req), 
-                          .i_req(i_req),
-                          .grant_sel(grant_sel));
+    axi_read_arbiter DUT (
+        .CLK(CLK), 
+        .nRST(nRST), 
+        .ready(ready), 
+        .sp0_req(sp0_req), 
+        .sp1_req(sp1_req), 
+        .d_req(d_req), 
+        .i_req(i_req),
+        .grant_sel(grant_sel)
+    );
 
     // clockgen
     always begin
-        clk = 0;
+        CLK = 0;
         #(CLK_PERIOD / 2.0);
-        clk = 1;
+        CLK = 1;
         #(CLK_PERIOD / 2.0);
     end
 
+    test PROG (
+        .CLK(CLK),
+        .grant_sel(grant_sel),
+        .nRST(nRST),
+        .sp0_req(sp0_req),
+        .sp1_req(sp1_req),
+        .d_req(d_req),
+        .i_req(i_req),
+        .ready(ready)
+    );
+
+    
+endmodule
+
+program test (
+    input logic CLK,
+    input logic [ARGRANT-1:0] grant_sel,
+    output logic nRST, sp0_req, sp1_req, d_req, i_req, ready
+);
+    localparam CLK_PERIOD = 10ns;
+    string test_case = "";
+
     task reset_dut;
     begin
-        nrst = 0;
-        @(posedge clk);
-        @(posedge clk);
-        @(negedge clk);
-        nrst = 1;
-        @(posedge clk);
-        @(posedge clk);
+        nRST = 0;
+        @(posedge CLK);
+        @(posedge CLK);
+        @(negedge CLK);
+        nRST = 1;
+        @(posedge CLK);
+        @(posedge CLK);
     end
     endtask
 
@@ -214,4 +236,4 @@ module axi_read_arbiter_tb ();
         idle_no_ready();
         $finish;
     end
-endmodule
+endprogram
