@@ -81,19 +81,26 @@ module nb_barb(
             prev_group <= selected_bank[1:0];
         end
     end
-
+    
+    logic [BANK_NUM-1:0] be_arb_next; 
+    always_ff @(posedge CLK, negedge nRST) begin
+	if(!nRST)
+		barb.be_arb <= 'b0;
+	else 
+		barb.be_arb <= be_arb_next;	
+    end
     //Combinational block for selecting bank based on priority.
     logic [$clog2(BANK_NUM)-1:0] k;
     logic [$clog2(BANK_NUM)-1:0] idx;
     always_comb begin : ARB_BLOCK
-        barb.be_arb = 'b0;
+        be_arb_next = 'b0;
         if(rollover_S && !rollover_L) begin
 
             for(k = 'b0; k < BANK_NUM; k++) begin
                 idx = k + priority_idx;
                 if(barb.be_queue_ready[idx] && (prev_group != idx[1:0]) && (barb.be_cmd[idx] != REF) ) begin
                     if( (barb.be_cmd[idx] == ACT) &&  !four_access  || (barb.be_cmd[idx] != ACT) ) begin
-                        barb.be_arb[idx] = 1'b1;
+                        be_arb_next[idx] = 1'b1;
                         break;
                     end
                 end
@@ -104,7 +111,7 @@ module nb_barb(
             //Handling refreshes
             if( (barb.be_cmd == {BANK_NUM{REF}}) && (barb.be_queue_ready == {BANK_NUM{1'b1}}) ) begin 
 
-                barb.be_arb = {BANK_NUM{1'b1}};
+                be_arb_next = {BANK_NUM{1'b1}};
 
             end else begin //Now the default case for for selecting banks after rollover_L is reached.
 
@@ -112,7 +119,7 @@ module nb_barb(
                     idx = k + priority_idx;
                     if(barb.be_queue_ready[idx]) begin
                         if( (barb.be_cmd[idx] == ACT) && !four_access || (barb.be_cmd[idx] != ACT) ) begin
-                            barb.be_arb[idx] = 1'b1;
+                            be_arb_next[idx] = 1'b1;
                             break;
                         end
                     end
