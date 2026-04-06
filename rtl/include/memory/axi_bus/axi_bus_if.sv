@@ -30,6 +30,11 @@ interface axi_bus_if;
     master_b_channel_t  b_sp1_o;  // Scratchpad1 B channel
     master_b_channel_t  b_d_o;    // D$ B channel
 
+    // general aw channel struct (master side)
+    master_aw_channel_t aw_gen_i; // General AW Channel for Write Manager
+    // general w channel struct (master side)
+    master_w_channel_t w_gen_i; // General W Channel for Write Manager
+
     // subordinate side channel structs
     sub_ar_channel_t ar_o;     // Controller AR channel
     sub_r_channel_t  r_i;      // Controller R channel
@@ -37,13 +42,28 @@ interface axi_bus_if;
     sub_w_channel_t  w_o;      // Controller W channel
     sub_b_channel_t  b_i;      // Controller B channel
 
+    // general aw channel struct (subordinate side)
+    sub_aw_channel_t head_aw_o; // General AW Channel for Write Manager
+    // general w channel struct (subordinate side)
+    sub_w_channel_t head_w_o; // General W Channel for Write Manager
+
+    // general aw channel struct for each master (subordiante side)
+    sub_aw_channel_t head_sp0_aw_o, head_sp1_aw_o, head_d_aw_o;
+    logic head_sp0_awvalid, head_sp1_awvalid, head_d_awvalid;
+    // general w channel struct for each master (subordinate side)
+    sub_w_channel_t head_sp0_w_o, head_sp1_w_o, head_d_w_o;
+    logic head_sp0_wvalid, head_sp1_wvalid, head_d_wvalid;
+
     // read arbiter signals 
     logic sp0_req_r, sp1_req_r, d_req_r, i_req_r, skid_ready_r;
     logic [ARGRANT-1:0] ar_grant;
 
     // write arbiter signals
     logic sp0_req_w, sp1_req_w, d_req_w, skid_ready_w;
+    logic [AWLEN-1:0] sp0_len_w, sp1_len_w, d_len_w;
     logic [AWGRANT-1:0] aw_grant;
+    logic w_sp0_pop, w_sp1_pop, w_d_pop;
+    logic aw_sp0_pop, aw_sp1_pop, aw_d_pop; 
 
     // SP0 & AR MANAGER
     logic ar_sp0_valid, ar_sp0_ready, sp0_pop;
@@ -93,6 +113,24 @@ interface axi_bus_if;
 
     // D$ R Skid Buffer && D$ READY/VALID
     logic b_d_o_valid, b_d_o_ready;
+
+    // WRITE MANAGER SIGNALS
+    logic awvalid, awready; // GENERAL AW WRITE MANAGER READY/VALID
+    logic wvalid, wready;   // GENERAL W WRITE MANAGER READY/VALID
+    logic aw_pop, w_pop; 
+    logic head_awvalid, head_wvalid;
+
+    // WRITE DRIVER SIGNALS
+    logic aw_fire, w_fire;
+
+    // test assertions
+    property wrt_valid_ready;
+        @(posedge CLK)
+        (awvalid && !awready) |-> $stable(aw_gen_i);
+    endproperty
+
+    assert property (wrt_valid_ready)
+        else $error("data changed during low ready");
 
     // ----------------------------------------------------------------------
     // READ PATH Definitions
@@ -225,7 +263,7 @@ interface axi_bus_if;
         // From Subordinate
         input b_i_valid, b_i  
     );
-    
+
     // MASTER <=> SP0 AW_W MANAGER
     modport aw_w_sp0_manager (
         // From Master 
@@ -307,17 +345,206 @@ interface axi_bus_if;
         input b_d_o_ready
     );
 
-    // AW MANAGERS <=> WRITE ARBITER
+    // WRITE ARBITER
     modport write_arbiter (
         // From Manager
         input sp0_req_w, sp1_req_w, d_req_w,
+        input sp0_len_w, sp1_len_w, d_len_w,
 
         // From Skid Buffer
         input skid_ready_w,
+        input w_fire,
 
-        // To Read Mux/AR Manager 
-        output aw_grant
+        // To Write Mux
+        output aw_grant,
+
+        // To W Manager
+        //output w_sp0_pop, w_sp1_pop, w_d_pop,
+
+        // To AW Manager
+        output aw_sp0_pop, aw_sp1_pop, aw_d_pop
     );
 
+    // WRITE MANAGER
+    modport write_manager (
+        // From Master AW Channel
+        input awvalid, aw_gen_i,
+        // To Master AW Channel
+        output awready,
+        // From Master W Channel
+        input wvalid, w_gen_i,
+        // To Master W Channel
+        output wready, 
+        // From Write Controller
+        input aw_pop, w_pop,
+        // To AW MUX
+        output head_awvalid, head_aw_o,
+        // To W MUX
+        output head_wvalid, head_w_o
+    );
+
+    // WRITE DRIVER 
+    modport write_driver (
+        // From write arbiter 
+        input aw_grant,
+
+        // To write arbiter
+        output skid_ready_w, 
+        output w_fire,
+
+        // From SP0 Manager 
+        input head_sp0_awvalid, head_sp0_aw_o, head_sp0_wvalid, head_sp0_w_o,
+
+        // From SP1 Manager 
+        input head_sp1_awvalid, head_sp1_aw_o, head_sp1_wvalid, head_sp1_w_o,
+
+        // From D$ Manager 
+        input head_d_awvalid, head_d_aw_o, head_d_wvalid, head_d_w_o,
+
+        // To W Manager
+        output w_sp0_pop, w_sp1_pop, w_d_pop,
+
+        // To Subordinate
+        output aw_o_valid, aw_o,
+        output w_o_valid, w_o,
+
+        // From Subordinate
+        input aw_o_ready,
+        input w_o_ready
+    );
+
+    // ----------------------------------------------------------------------
+    // WRITE PATH TB Definitions
+    // ----------------------------------------------------------------------
+    // WRITE ARBITER TB
+    modport write_arbiter_tb (
+        // From Manager
+        output sp0_req_w, sp1_req_w, d_req_w,
+        output sp0_len_w, sp1_len_w, d_len_w,
+
+        // From Skid Buffer
+        output skid_ready_w,
+        output w_fire,
+
+        // To Read Mux/AR Manager 
+        input aw_grant,
+
+        // To W Manager
+        //input w_sp0_pop, w_sp1_pop, w_d_pop,
+
+        // To AW Manager
+        input aw_sp0_pop, aw_sp1_pop, aw_d_pop
+    );
+
+    // WRITE MANAGER TB
+    modport write_manager_tb (
+        // From Master AW Channel
+        output awvalid, aw_gen_i,
+        // To Master AW Channel
+        input awready,
+        // From Master W Channel
+        output wvalid, w_gen_i,
+        // To Master W Channel
+        input wready, 
+        // From Write Controller
+        output aw_pop, w_pop,
+        // To AW MUX
+        input head_awvalid, head_aw_o,
+        // To W MUX
+        input head_wvalid, head_w_o 
+    );
+
+    // WRITE RESPONSE ROUTER TB
+    modport write_response_tb (
+        // To Subordinate
+        input b_i_ready,
+        // From Subordinate
+        output b_i_valid, b_i,
+
+        // To Master SP0
+        input b_sp0_o_valid, b_sp0_o,
+        // From Master SP0
+        output b_sp0_o_ready,
+
+        // To Master SP1
+        input b_sp1_o_valid, b_sp1_o,
+        // From Master SP1
+        output b_sp1_o_ready,
+
+        // To Master 
+        input b_d_o_valid, b_d_o,
+        // From Master
+        output b_d_o_ready
+    );
+
+    // WRITE DRIVER TB
+    modport write_driver_tb (
+        // From write arbiter 
+        output aw_grant,
+
+        // To write arbiter
+        input skid_ready_w, 
+        input w_fire,
+
+        // From SP0 Manager 
+        output head_sp0_awvalid, head_sp0_aw_o, head_sp0_wvalid, head_sp0_w_o,
+
+        // From SP1 Manager 
+        output head_sp1_awvalid, head_sp1_aw_o, head_sp1_wvalid, head_sp1_w_o,
+
+        // From D$ Manager 
+        output head_d_awvalid, head_d_aw_o, head_d_wvalid, head_d_w_o,
+
+        // To Managers
+        input w_sp0_pop, w_sp1_pop, w_d_pop,
+
+        // To Subordinate
+        input aw_o_valid, aw_o,
+        input w_o_valid, w_o,
+
+        // From Subordinate
+        output aw_o_ready,
+        output w_o_ready
+    );
+
+    // WRITE TOP LEVEL MODPORT TB
+    modport write_path_tb(
+        // From Master
+        output aw_sp0_i_valid, aw_sp0_i, w_sp0_i_valid, w_sp0_i,
+        output aw_sp1_i_valid, aw_sp1_i, w_sp1_i_valid, w_sp1_i,
+        output aw_d_i_valid, aw_d_i, w_d_i_valid, w_d_i,
+
+        // To Master 
+        input aw_sp0_i_ready, w_sp0_i_ready,
+        input aw_sp1_i_ready, w_sp1_i_ready,
+        input aw_d_i_ready, w_d_i_ready, 
+
+        // To Master 
+        input b_sp0_o_valid, b_sp0_o,
+        input b_sp1_o_valid, b_sp1_o,
+        input b_d_o_valid, b_d_o,
+        
+        // From Master
+        output b_sp0_o_ready,
+        output b_sp1_o_ready,
+        output b_d_o_ready,
+
+        // To Subordinate
+        input aw_o_valid, aw_o,
+        input w_o_valid, w_o,
+
+        // From Subordinate
+        output aw_o_ready,
+        output w_o_ready,
+
+        // To Subordinate
+        input b_i_ready,
+
+        // From Subordinate
+        output b_i_valid, b_i  
+    );
+
+
+
 endinterface
-`endif // AXI_BUS_IF_VH
+`endif // AXI_BUS_IF_SV

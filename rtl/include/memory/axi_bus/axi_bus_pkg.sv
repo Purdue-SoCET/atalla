@@ -56,10 +56,10 @@ package axi_bus_pkg;
     localparam int MID_BID        = MID + BID;
 
     // READ Arbiter Width
-    localparam int ARGRANT        = 1 + ARID; // 1 valid bit and then bits representing which master
+    localparam int ARGRANT        = 1 + MID; // 1 valid bit and then bits representing which master
 
     // WRITE Arbiter Width
-    localparam int AWGRANT        = 1 + AWID; // 1 valid bit and then bits representing which master
+    localparam int AWGRANT        = 1 + MID; // 1 valid bit and then bits representing which master
 
     // AR Manager FIFO Width
     localparam int AR_DEPTH       = NUM_U_READS;
@@ -73,6 +73,16 @@ package axi_bus_pkg;
     localparam int W_DEPTH        = NUM_U_WRITES*8;
     localparam int W_PTR_WIDTH   = $clog2(W_DEPTH); 
 
+    // Write Response Router Skid Buffer Width
+    localparam int WRR_DEPTH      = 2;
+    localparam int WRR_PTR_WIDTH  = $clog2(WRR_DEPTH);
+
+    // Write Driver Skid Buffer Width
+    localparam int WDRV_DEPTH_AW     = 2;
+    localparam int WDRV_PTR_WIDTH_AW = $clog2(WDRV_DEPTH_AW);
+    localparam int WDRV_DEPTH_W     = 3;
+    localparam int WDRV_PTR_WIDTH_W = $clog2(WDRV_DEPTH_W);
+
     //////////////////////////////////////////////////////////////////////
     ////////////////////////////////// Enums /////////////////////////////
     //////////////////////////////////////////////////////////////////////
@@ -82,7 +92,7 @@ package axi_bus_pkg;
         SP0              = 2'b00,
         SP1              = 2'b01,
         DCACHE           = 2'b10,
-        ICAHCE           = 2'b11
+        ICACHE           = 2'b11
     } mid_t;
     
     parameter MID_SP0 = 0;
@@ -177,7 +187,7 @@ package axi_bus_pkg;
 
     // W Channel To Subordiante
     typedef struct packed {
-        logic [MID_ARID-1:0] mid_id; // Global (4-bit) ID: {MASTER_ID, id}
+        logic [MID_WID-1:0] mid_id; // Global (4-bit) ID: {MASTER_ID, id}
         logic [WDATA-1:0]    data;
         logic                last;
         logic [WSTRB-1:0]    strb;
@@ -185,7 +195,7 @@ package axi_bus_pkg;
 
     // B Channel From Subordinate
     typedef struct packed {
-        logic [BID-1:0]     id;
+        logic [MID_BID-1:0] id;
         bresp_t             resp;
     } sub_b_channel_t;
 
@@ -222,7 +232,7 @@ package axi_bus_pkg;
     // AW_W MANAGER W FIFO payload
     typedef struct packed {
         logic                valid;
-        logic [MID_ARID-1:0] mid_id; // Global (4-bit) ID: {MASTER_ID, id}
+        logic [MID_WID-1:0] mid_id; // Global (4-bit) ID: {MASTER_ID, id}
         logic [WDATA-1:0]    data;
         logic                last;
         logic [WSTRB-1:0]    strb;
@@ -234,6 +244,8 @@ package axi_bus_pkg;
         logic [BID-1:0]     id;
         bresp_t             resp;
     } b_payload_t;
+
+    // created basic 
 
 
 endpackage

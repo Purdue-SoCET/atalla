@@ -18,4 +18,5 @@ waves/
 *.jou
 *waves*/
 out/
+covhtmlreport/
 waves/
