@@ -120,6 +120,7 @@ module nb_barb_tb;
             ddrif.be_r[bank_id]           = row;
             ddrif.be_c[bank_id]           = col;
             ddrif.be_id[bank_id]          = id;
+            ddrif.be_len[bank_id]         = 'b1;
         end
     endtask
 
@@ -143,7 +144,6 @@ module nb_barb_tb;
                                    input_vec[case_num].row,
                                    input_vec[case_num].col,
                                    input_vec[case_num].id);
-                ddrif.be_len[bank_id] = 'b1;
             end
         end
     endtask
@@ -230,25 +230,20 @@ module nb_barb_tb;
                 $display("T=%0t | Bank %0d Ready: Cmd=%s, Row=%h", $time, bank_id, input_vec[i].cmd.name(), input_vec[i].row);
                 drive_bank_case(i);
                 wait(ddrif.be_arb[bank_id] == 1);
-                @(negedge CLK);
+                #(1);
                 ddrif.be_cmd[bank_id] = input_vec[i].cmd;
                 @(negedge CLK);
                 case (input_vec[i].cmd)
-                    FSM_READ: check_read(i,
-                                         exp_vec[i].exp_push_id,
-                                         exp_vec[i].exp_rid,
-                                         exp_vec[i].exp_rlen);
-                    FSM_WRITE: check_write(i,
-                                           exp_vec[i].exp_write,
-                                           exp_vec[i].exp_wid);
+                    FSM_READ: check_read(i, exp_vec[i].exp_push_id, exp_vec[i].exp_rid, exp_vec[i].exp_rlen);
+                    FSM_WRITE: check_write(i, exp_vec[i].exp_write, exp_vec[i].exp_wid);
                     REF: begin 
                         check_ref(i);
-                        #(170); // DRAM TRFC rounded down  
                         set_idle();
-                        repeat(5) @(negedge CLK);
+                        ddrif.be_queue_ready = 'b0;                       
                     end
                 endcase
                 ddrif.be_queue_ready[bank_id] = 0;
+                ddrif.be_cmd[bank_id] = FSM_IDLE;
             end
         end
     endtask
