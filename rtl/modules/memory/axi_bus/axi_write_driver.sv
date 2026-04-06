@@ -46,7 +46,7 @@ module axi_write_driver(
         else begin 
             if (wdrv_if.aw_grant[MID]) begin // checking if aw_grant valid bit is high
                 if (wdrv_if.aw_grant[MID-1:0] == SP0) begin
-                    if(!aw_skid_full) begin
+                    if(!aw_skid_full && !aw_sent && wdrv_if.head_sp0_awvalid) begin
                         aw_skid_buffer[aw_wr_ptr].valid  <= wdrv_if.head_sp0_awvalid;
                         aw_skid_buffer[aw_wr_ptr].addr   <= wdrv_if.head_sp0_aw_o.addr;
                         aw_skid_buffer[aw_wr_ptr].mid_id <= wdrv_if.head_sp0_aw_o.mid_id;
@@ -55,7 +55,7 @@ module axi_write_driver(
                         aw_skid_buffer[aw_wr_ptr].burst  <= wdrv_if.head_sp0_aw_o.burst;
                         aw_wr_ptr <= aw_wr_ptr + 1'b1;
                     end
-                    if(!w_skid_full) begin
+                    if(!w_skid_full && wdrv_if.head_sp0_wvalid) begin
                         w_skid_buffer[w_wr_ptr].valid    <= wdrv_if.head_sp0_wvalid;
                         w_skid_buffer[w_wr_ptr].mid_id   <= wdrv_if.head_sp0_w_o.mid_id;
                         w_skid_buffer[w_wr_ptr].data     <= wdrv_if.head_sp0_w_o.data;
@@ -70,7 +70,7 @@ module axi_write_driver(
                     end 
                 end
                 else if (wdrv_if.aw_grant[MID-1:0] == SP1) begin
-                    if (!aw_skid_full) begin
+                    if (!aw_skid_full && !aw_sent && wdrv_if.head_sp1_awvalid) begin
                         aw_skid_buffer[aw_wr_ptr].valid  <= wdrv_if.head_sp1_awvalid;
                         aw_skid_buffer[aw_wr_ptr].addr   <= wdrv_if.head_sp1_aw_o.addr;
                         aw_skid_buffer[aw_wr_ptr].mid_id <= wdrv_if.head_sp1_aw_o.mid_id;
@@ -79,7 +79,7 @@ module axi_write_driver(
                         aw_skid_buffer[aw_wr_ptr].burst  <= wdrv_if.head_sp1_aw_o.burst;
                         aw_wr_ptr <= aw_wr_ptr + 1'b1;
                     end
-                    if (!w_skid_full) begin
+                    if (!w_skid_full && wdrv_if.head_sp1_wvalid) begin
                         w_skid_buffer[w_wr_ptr].valid    <= wdrv_if.head_sp1_wvalid;
                         w_skid_buffer[w_wr_ptr].mid_id   <= wdrv_if.head_sp1_w_o.mid_id;
                         w_skid_buffer[w_wr_ptr].data     <= wdrv_if.head_sp1_w_o.data;
@@ -94,7 +94,7 @@ module axi_write_driver(
                     end 
                 end
                 else if (wdrv_if.aw_grant[MID-1:0] == DCACHE) begin
-                    if(!aw_skid_full) begin
+                    if(!aw_skid_full && !aw_sent && wdrv_if.head_d_awvalid) begin
                         aw_skid_buffer[aw_wr_ptr].valid  <= wdrv_if.head_d_awvalid;
                         aw_skid_buffer[aw_wr_ptr].addr   <= wdrv_if.head_d_aw_o.addr;
                         aw_skid_buffer[aw_wr_ptr].mid_id <= wdrv_if.head_d_aw_o.mid_id;
@@ -103,7 +103,7 @@ module axi_write_driver(
                         aw_skid_buffer[aw_wr_ptr].burst  <= wdrv_if.head_d_aw_o.burst;
                         aw_wr_ptr <= aw_wr_ptr + 1'b1;
                     end 
-                    if (!w_skid_full) begin
+                    if (!w_skid_full && wdrv_if.head_d_wvalid) begin
                         w_skid_buffer[w_wr_ptr].valid    <= wdrv_if.head_d_wvalid;
                         w_skid_buffer[w_wr_ptr].mid_id   <= wdrv_if.head_d_w_o.mid_id;
                         w_skid_buffer[w_wr_ptr].data     <= wdrv_if.head_d_w_o.data;
@@ -159,15 +159,15 @@ module axi_write_driver(
 
     assign wdrv_if.w_sp0_pop = (wdrv_if.aw_grant[MID] && 
                                (wdrv_if.aw_grant[MID-1:0] == SP0) && 
-                               !w_skid_full && wdrv_if.head_sp0_awvalid);
+                               !w_skid_full && wdrv_if.head_sp0_wvalid);
     
     assign wdrv_if.w_sp1_pop = (wdrv_if.aw_grant[MID] && 
                                (wdrv_if.aw_grant[MID-1:0] == SP1) && 
-                               !w_skid_full && wdrv_if.head_sp1_awvalid);
+                               !w_skid_full && wdrv_if.head_sp1_wvalid);
 
     assign wdrv_if.w_d_pop   = (wdrv_if.aw_grant[MID] && 
                                (wdrv_if.aw_grant[MID-1:0] == DCACHE) && 
-                               !w_skid_full && wdrv_if.head_d_awvalid);
+                               !w_skid_full && wdrv_if.head_d_wvalid);
 
     assign wdrv_if.aw_o_valid  = aw_skid_buffer[aw_rd_ptr].valid;
     assign wdrv_if.aw_o.addr   = aw_skid_buffer[aw_rd_ptr].addr;
