@@ -17,21 +17,29 @@ module nb_barb(
     logic rollover_L, rollover_S;
     logic en_L, en_S;
     flex_counter #(.SIZE(12)) TCCD_L_TIM ( //these timers are cleared on successful handshakes.
-        CLK, nRST, selected_bank_ready, en_L, tCCD_L[11:0], rollover_L
+        CLK, nRST, selected_bank_ready, en_L, tCCD_L[11:0], rollover_L 
     );
     flex_counter #(.SIZE(12)) TCCD_S_TIM (
-        CLK, nRST, selected_bank_ready, en_S , tCCD_S[11:0], rollover_S
+        CLK, nRST, selected_bank_ready, en_S , tCCD_S[11:0], rollover_S 
     );
-    //tCCD timers enable logic.
+
+    //tCCD timers enable logic. Also tracks previous command
+    fsm_t prev_cmd;
+    logic n_en_L, n_en_S;
     always_ff @(posedge CLK, negedge nRST) begin
         if(!nRST)  begin
-            en_L = 'b1;
-            en_S = 'b1;
+            en_L <= 'b1;
+            en_S <= 'b1;
         end else begin
-            en_L = selected_bank_ready ? 'b1 : (rollover_L ? 'b0 : en_L );
-            en_S = selected_bank_ready ? 'b1 : (rollover_S ? 'b0 : en_S );
+            en_L <= n_en_L;
+            en_S <= n_en_S;
         end
     end 
+
+    always_comb begin: N_EN
+        n_en_L = selected_bank_ready ? 'b1 : (rollover_L ? 'b0 : en_L);
+        n_en_S = selected_bank_ready ? 'b1 : (rollover_S ? 'b0 : en_S);
+    end
 
     //tFAW logic and SR instantiation. 
     logic [tFAW:0] sr_window;
@@ -64,6 +72,7 @@ module nb_barb(
     //  successive transactions that target the same bank group. This timimg parameter, tCCD_L, is slightly more 
     //  than the tCCD_S that dictates the time between two different successive transactions that target
     //  different bank groups. 
+    //  This also tracks the previous command for refresh purposes
     logic [BANK_NUM-1:0]  prev_group;
     always_ff @(posedge CLK, negedge nRST) begin
         if(!nRST) begin
@@ -118,11 +127,11 @@ module nb_barb(
 
     //logic for pushing metadata to the read id queue for storing in-flight read IDs.
     assign barb.be_push_id = selected_bank_ready && (fsm_t'(barb.be_cmd[selected_bank]) == FSM_READ);
-    assign barb.be_rid = barb.be_id;
-    assign barb.be_rlen = barb.be_len;
+    assign barb.be_rid = barb.be_id[selected_bank];
+    assign barb.be_rlen = barb.be_len[selected_bank];
 
     //logic for commanding write data queues to burst data to DRAM.
-    assign barb.be_wid = barb.be_id;
+    assign barb.be_wid = barb.be_id[selected_bank];
     assign barb.be_write = selected_bank_ready && (fsm_t'(barb.be_cmd[selected_bank]) == FSM_WRITE);
 
 

@@ -32,11 +32,12 @@ set DESIGN_SRCS {
 
 # --- Verification / Bind Sources ---
 # If you decide to use the bind file or a separate property module, add it here
-set VERIF_SRCS [list \
-    ./tb/unit/ddr_cntrl/testbench/nb_barb_prop.sv \
-] 
+# set VERIF_SRCS [list \
+#   ./tb/unit/ddr_cntrl/testbench/nb_barb_prop.sv \
+# ] 
 
-set SRC_FILES [concat $DESIGN_SRCS $VERIF_SRCS [list $TB_FILE]]
+# ADD $VERIF_SRCS 
+set SRC_FILES [concat $DESIGN_SRCS [list $TB_FILE]] 
 
 puts "INC_FLAGS  : $INC_FLAGS"
 puts "SRC_FILES  : $SRC_FILES"
@@ -75,3 +76,9 @@ puts "Starting Simulation..."
 puts "=============================================================="
 
 run -all
+
+# Save all coverage (Code + Functional) to a Unified Coverage Data Base
+coverage save nbarb_sim.ucdb
+
+# View the functional coverage summary in the transcript
+vcover report -cvg -details nbarb_sim.ucdb

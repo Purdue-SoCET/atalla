@@ -41,8 +41,8 @@ package dram_pkg;
     parameter tRAS = 45; //tns 1.5ns -> 25 cycles
     parameter tRC = tRAS + tRP;
     parameter tRL = tAL + tCL;        // Read Latency
-    parameter tCCD_L = 0; // TODO: ADD REAL
-    parameter tCCD_S = 0; // TODO: ADD REAL
+    parameter tCCD_L = 2; // 8 CLK, 800 MHz = 10ns -> 2CLK CYCLE FOR TESTING
+    parameter tCCD_S = 1; // 4 CLK, 800 MHz = 5ns -> 1CLK CYCLE FOR TESTING 
     //Tri debug
 
     parameter tWR = 12;//tWR should be 10 but work for 12 //tCK 1.5ns -> 10, tCK 1.25ns 12 cycles, tCK 0.833ns 18 cycles
@@ -59,7 +59,7 @@ package dram_pkg;
     parameter tMOD          = 25;
 
     // BARB
-    parameter tFAW          = 1; // TODO: ADD REAL
+    parameter tFAW          = 20; // DDR4-1600 20ns 16CLK(1kb page) 28CLK(2kb page)
 
     // word_t
     typedef logic [WORD_W-1:0] word_t;
