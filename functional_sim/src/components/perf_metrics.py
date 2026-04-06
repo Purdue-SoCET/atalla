@@ -17,6 +17,8 @@ class PerfMetrics:
         self.metrics["flops_vector"] = 0
         self.metrics["flops_matmul"] = 0
         self.metrics["bytes_loaded"] = 0
+        self.metrics["packet_slots_total"] = 0
+        self.metrics["packet_slots_filled"] = 0
 
     def update_derived_metrics(self) -> None:
         flops_total = float(self.metrics.get("flops_total", 0))
@@ -25,6 +27,13 @@ class PerfMetrics:
             self.metrics["arithmetic_intensity"] = flops_total / bytes_loaded
         else:
             self.metrics["arithmetic_intensity"] = 0.0
+
+        packet_slots_total = float(self.metrics.get("packet_slots_total", 0))
+        packet_slots_filled = float(self.metrics.get("packet_slots_filled", 0))
+        if packet_slots_total > 0.0:
+            self.metrics["packet_slot_utilization_pct"] = (packet_slots_filled / packet_slots_total) * 100.0
+        else:
+            self.metrics["packet_slot_utilization_pct"] = 0.0
 
     def increment(self, name: str, amount: int | float = 1) -> None:
         self.metrics[name] = self.metrics.get(name, 0) + amount

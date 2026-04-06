@@ -59,6 +59,18 @@ def apply_imm_vector_op(
     return vd
 
 
+def _count_packet_slots(mem: Memory, packet_length: int) -> tuple[int, int]:
+    total_slots = 0
+    filled_slots = 0
+
+    for addr in sorted(mem.instr_mem.keys()):
+        dec_packet = decode_packet(packet=mem.read_instr(addr), packet_length=packet_length, debug=False)
+        total_slots += len(dec_packet)
+        filled_slots += sum(1 for inst in dec_packet if inst.get("mnemonic") != "nop.s")
+
+    return total_slots, filled_slots
+
+
 def run(mem: Memory, sregs: ScalarRegisterFile, mregs: ScalarRegisterFile, vregs: VectorRegisterFile, SP0: Scratchpad, SP1: Scratchpad, 
         EU: ExecuteUnit, pc: int, packet_length: int,
         out_file: str = "../out/output_mem.txt", out_sreg_file: str = "../out/output_sregs.txt", 
@@ -76,6 +88,12 @@ def run(mem: Memory, sregs: ScalarRegisterFile, mregs: ScalarRegisterFile, vregs
     tile_id1 = 1
     tileID0Dict = {}
     tileID1Dict = {}
+
+    # Build-time packetization pads empty slots with nop.s; utilization is the
+    # percentage of non-nop slots across all packet slots in the kernel.
+    packet_slots_total, packet_slots_filled = _count_packet_slots(mem, packet_length)
+    EU.perf_metrics.set_metric("packet_slots_total", packet_slots_total)
+    EU.perf_metrics.set_metric("packet_slots_filled", packet_slots_filled)
 
     halt = False
     while (not(halt)):
