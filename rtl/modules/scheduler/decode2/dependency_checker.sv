@@ -9,7 +9,7 @@ module dependency_checker #(
     parameter VECTOR_READ_PORTS  = 4,
     parameter VECTOR_WRITE_PORTS = 4,
 
-    parameter NUM_MASK_REGS      = 32,
+    parameter NUM_MASK_REGS      = 16,
     parameter MASK_READ_PORTS    = 2,
     parameter MASK_WRITE_PORTS   = 2
 )(
@@ -47,7 +47,28 @@ module dependency_checker #(
                 mask_dependency_table[i] <= 1'b0;
         end
         else begin
+            
+            // Clear scalar bits on WB
+            for (w = 0; w < SCALAR_WRITE_PORTS; w++) begin
+                if (dc_if.scalar_WB_WEN[w])
+                    scalar_dependency_table[dc_if.scalar_WB_wsel[w]] <= 1'b0;
+                if (dc_if.scalar_SDMA_WB_WEN[w])
+                    scalar_dependency_table[dc_if.scalar_SDMA_WB_wsel[w]] <= 1'b0; //SDMA instr reserved scalar reg, clear it on WB
+            end
 
+            // Clear vector bits on WB 
+            for (w = 0; w < VECTOR_WRITE_PORTS; w++) begin
+                if (dc_if.vector_WB_WEN[w])
+                    vector_dependency_table[dc_if.vector_WB_wsel[w]] <= 1'b0;
+            end
+
+            // Clear mask bits on WB 
+            for (w = 0; w < MASK_WRITE_PORTS; w++) begin
+                if (dc_if.mask_WB_WEN[w])
+                    mask_dependency_table[dc_if.mask_WB_wsel[w]] <= 1'b0;
+            end
+
+            //Set has greater priority than clear 
             // Mark destination registers as busy only when source regs are already ready (prevents issue where a instr uses a packet as src and dest but it's not ready yet)
             if (dc_if.ready) begin
                 for (w = 0; w < SCALAR_WRITE_PORTS; w++) begin
@@ -68,26 +89,6 @@ module dependency_checker #(
                     if (dc_if.vector_m_WEN[w])
                         mask_dependency_table[dc_if.vector_m_wsels[w]] <= 1'b1;
                 end
-            end
-
-            // Clear scalar bits on WB
-            for (w = 0; w < SCALAR_WRITE_PORTS; w++) begin
-                if (dc_if.scalar_WB_WEN[w])
-                    scalar_dependency_table[dc_if.scalar_WB_wsel[w]] <= 1'b0;
-                if (dc_if.scalar_SDMA_WB_WEN[w])
-                    scalar_dependency_table[dc_if.scalar_SDMA_WB_wsel[w]] <= 1'b0; //SDMA instr reserved scalar reg, clear it on WB
-            end
-
-            // Clear vector bits on WB 
-            for (w = 0; w < VECTOR_WRITE_PORTS; w++) begin
-                if (dc_if.vector_WB_WEN[w])
-                    vector_dependency_table[dc_if.vector_WB_wsel[w]] <= 1'b0;
-            end
-
-            // Clear mask bits on WB 
-            for (w = 0; w < MASK_WRITE_PORTS; w++) begin
-                if (dc_if.mask_WB_WEN[w])
-                    mask_dependency_table[dc_if.mask_WB_wsel[w]] <= 1'b0;
             end
 
         end

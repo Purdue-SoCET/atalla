@@ -10,7 +10,7 @@ interface dependency_checker_if #(
     parameter NUM_VECTOR_REGS   = 256,
     parameter VECTOR_READ_PORTS = 4, 
     parameter VECTOR_WRITE_PORTS = 4,
-    parameter NUM_MASK_REGS     = 32, 
+    parameter NUM_MASK_REGS     = 16, 
     parameter MASK_READ_PORTS   = 2, 
     parameter MASK_WRITE_PORTS  = 2
 );

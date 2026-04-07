@@ -9,7 +9,7 @@ interface source_reg_allocator_if
 #(
     parameter NUM_SCALAR_INSTRUCTIONS = 4,
     parameter NUM_VECTOR_INSTRUCTIONS = 4,
-    parameter NUM_SDMA_INSTRUCTIONS = 2,
+    parameter NUM_SDMA_INSTRUCTIONS = 4,
     parameter SCALAR_READ_PORTS       = 4, 
     parameter VECTOR_READ_PORTS       = 4,
     parameter MASK_READ_PORTS         = 2
