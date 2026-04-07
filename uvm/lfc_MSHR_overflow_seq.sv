@@ -4,126 +4,82 @@
 import uvm_pkg::*;
 `include "uvm_macros.svh"
 `include "lfc_cpu_transaction.sv"
+`include "../src/include/cache_types_pkg.svh"
 
 class lfc_MSHR_overflow_seq extends uvm_sequence#(lfc_cpu_transaction);
+
   `uvm_object_utils(lfc_MSHR_overflow_seq)
+
+  localparam int NUM_TESTS = 25;
 
   function new(string name = "lfc_MSHR_overflow_seq");
     super.new(name);
   endfunction
 
-  logic [31:0] rand_addr_temp;
-
-  function logic [31:0] gen_rand_addr();
-    // default for debugging
-    rand_addr_temp = 32'h1000;
-
-    if (!std::randomize(rand_addr_temp) with {
-          rand_addr_temp inside {[32'h1000 : 32'h1FFF]};
-          rand_addr_temp % 4 == 0;
-        }) begin
-      `uvm_error(get_type_name(), "Address randomization failed");
-    end
-
-    return rand_addr_temp;
-  endfunction
-
-  task read_req(input logic [31:0] addr);
-    lfc_cpu_transaction req;
-    req = lfc_cpu_transaction #()::type_id::create("req");
-
-    start_item(req);
-      req.n_rst              = 1'b1; 
-      req.mem_in_addr        = addr;
-      req.mem_in_rw_mode     = 1'b0;
-      req.mem_in_store_value = 32'hCAFEBABE; // no matter for read
-      req.dp_in_halt         = 1'b0;
-      // req.mem_in             = 1'b1;
-    finish_item(req);
-
-    `uvm_info(get_type_name(),
-      $sformatf("READ request sent: addr=0x%0h", addr),
-      UVM_LOW)
-  endtask
-
-
   virtual task body();
     lfc_cpu_transaction req;
-    
-    logic [31:0] saved_addr;
-    logic [31:0] saved_data;
+    addr_t address;
 
-    `uvm_info(get_type_name(), "Starting basic lfc_MSHR_overflow_seq...", UVM_MEDIUM)
+    `uvm_info(get_type_name(), "lfc_miss_coalesce_seq", UVM_MEDIUM)
 
-    req = lfc_cpu_transaction #()::type_id::create("req");
+  for(int i = 0; i < NUM_TESTS; i++) begin
 
-    `uvm_info(get_type_name(), "Sending multiple read transaction...", UVM_MEDIUM)
+	// initial miss
+	req = lfc_cpu_transaction #()::type_id::create("req");
 
-    
-    // saved_addr = gen_rand_addr();
-    // read_req(saved_addr);
+	start_item(req);
+	req.randomize();
+	req.dp_in_halt = 1'b0;
+	req.down_time = 0;
+	req.wait_for_ram = 0;
+	address = req.mem_in_addr;
+	`uvm_info(get_type_name(), "Expecting miss", UVM_MEDIUM)
+	if(req.mem_in_rw_mode == 1'b1) begin
+		`uvm_info(get_type_name(), "ITER1: Sending Write transaction...", UVM_MEDIUM)
+		`uvm_info(get_type_name(), $sformatf("WRITE complete: addr=0x%0h data0x%0h",
+       	        req.mem_in_addr, req.mem_in_store_value), UVM_LOW)
+	end else begin
+		`uvm_info(get_type_name(), "ITER1: Sending Read transaction...", UVM_MEDIUM)
+		`uvm_info(get_type_name(), $sformatf("READ complete: addr=0x%0h",
+	       	        req.mem_in_addr), UVM_LOW)
+	end
+	finish_item(req);
 
-    for (int i = 0; i < 100; i++) begin
-      saved_addr = gen_rand_addr();
-      read_req(saved_addr);
-    end
+	// overflow buffer with subsequent misses to same bank
+	for(int j = 0; j < MSHR_BUFFER_LEN; j++) begin
+		req = lfc_cpu_transaction #()::type_id::create("req");
+		
+		start_item(req);
+		if(j < MSHR_BUFFER_LEN / 2) begin
+			assert(req.randomize() with {
+				mem_in_addr.index == address.index;
+				mem_in_addr.tag != address.tag;
+			});
+		end else begin
+			assert(req.randomize() with {
+				mem_in_addr.index == (address.index + 1);
+				mem_in_addr.tag != address.tag;
+			});
+		end
 
-    // start_item(req);
-    //   req.n_rst              = 1'b1; 
-    //   req.mem_in_addr        = saved_addr;
-    //   req.mem_in_rw_mode     = 1'b0;
-    //   req.mem_in_store_value = 32'hCAFEBABE; // no matter for read
-    //   req.dp_in_halt         = 1'b0;
-    //   // req.mem_in             = 1'b1;
-    // finish_item(req);
+		req.dp_in_halt = 1'b0;
+		req.down_time = 0;
+		req.wait_for_ram = 0;
 
-    // `uvm_info(get_type_name(),
-    //   $sformatf("READ request sent: addr=0x%0h", saved_addr),
-    //   UVM_LOW)
-    
-    // saved_addr = gen_rand_addr();
-    // start_item(req);
-    //   req.n_rst              = 1'b1; 
-    //   req.mem_in_addr        = saved_addr;
-    //   req.mem_in_rw_mode     = 1'b0;
-    //   req.mem_in_store_value = 32'hCAFEBABE; // no matter for read
-    //   req.dp_in_halt         = 1'b0;
-    //   // req.mem_in             = 1'b1;
-    // finish_item(req);
+		`uvm_info(get_type_name(), "Expecting miss", UVM_MEDIUM)
+		if(req.mem_in_rw_mode == 1'b1) begin
+			`uvm_info(get_type_name(), "ITER1: Sending Write transaction...", UVM_MEDIUM)
+			`uvm_info(get_type_name(), $sformatf("WRITE complete: addr=0x%0h data0x%0h",
+	       	        req.mem_in_addr, req.mem_in_store_value), UVM_LOW)
+		end else begin
+			`uvm_info(get_type_name(), "ITER1: Sending Read transaction...", UVM_MEDIUM)
+			`uvm_info(get_type_name(), $sformatf("READ complete: addr=0x%0h",
+		       	        req.mem_in_addr), UVM_LOW)
+		end
+		finish_item(req);
 
-    // `uvm_info(get_type_name(),
-    //   $sformatf("READ request sent: addr=0x%0h", saved_addr),
-    //   UVM_LOW)
-
-    // saved_addr = gen_rand_addr();
-    // start_item(req);
-    //   req.n_rst              = 1'b1; 
-    //   req.mem_in_addr        = saved_addr;
-    //   req.mem_in_rw_mode     = 1'b0;
-    //   req.mem_in_store_value = 32'hCAFEBABE; // no matter for read
-    //   req.dp_in_halt         = 1'b0;
-    //   // req.mem_in             = 1'b1;
-    // finish_item(req);
-
-    // `uvm_info(get_type_name(),
-    //   $sformatf("READ request sent: addr=0x%0h", saved_addr),
-    //   UVM_LOW)
-
-    // saved_addr = gen_rand_addr();
-    // start_item(req);
-    //   req.n_rst              = 1'b1; 
-    //   req.mem_in_addr        = saved_addr;
-    //   req.mem_in_rw_mode     = 1'b0;
-    //   req.mem_in_store_value = 32'hCAFEBABE; // no matter for read
-    //   req.dp_in_halt         = 1'b0;
-    //   // req.mem_in             = 1'b1;
-    // finish_item(req);
-
-    // `uvm_info(get_type_name(),
-    //   $sformatf("READ request sent: addr=0x%0h", saved_addr),
-    //   UVM_LOW)
-
-
+	end
+  end
   endtask
 endclass
 
