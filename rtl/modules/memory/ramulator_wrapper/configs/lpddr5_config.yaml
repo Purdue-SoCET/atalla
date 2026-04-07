@@ -1,0 +1,39 @@
+# NOTE: LPDDR5 is NOT compatible with the Generic controller.
+#
+# LPDDR5 uses a two-step activation (ACT-1 -> ACT-2) that introduces
+# a "Pre-Opened" bank state. The generic RowHit::Bank::RDWR lambda does
+# not handle this state and will crash (std::exit) during simulation.
+# A dedicated LPDDR5 controller would be required to support this standard.
+#
+# This config is kept for reference only. Do not use with test_dpi or
+# any simulation using the GenericDRAM memory system.
+
+Frontend:
+  impl: GEM5
+  clock_ratio: 1
+
+MemorySystem:
+  impl: GenericDRAM
+  clock_ratio: 1
+
+  DRAM:
+    impl: LPDDR5
+    org:
+      preset: LPDDR5_8Gb_x16
+      channel: 1
+      rank: 1
+    timing:
+      preset: LPDDR5_6400
+
+  Controller:
+    impl: Generic
+    Scheduler:
+      impl: FRFCFS
+    RefreshManager:
+      impl: AllBank
+    RowPolicy:
+      impl: OpenRowPolicy
+    plugins:
+
+  AddrMapper:
+    impl: RoBaRaCoCh

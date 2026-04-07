@@ -1,0 +1,65 @@
+# init_verify.hex — functional_mem preload for test_ramulator.sv verification
+#
+# Format: <addr_hex> <data_hex>  (64-bit each, no 0x prefix)
+# Comments: lines starting with # or // are ignored
+# Addresses: byte-addressed, 8-byte (64-bit) aligned
+#
+# Covers three regions used by test_ramulator.sv:
+#
+#   [WR_BASE]   0x00000000 – 0x000003C0
+#     Matches the write pattern from test [2]:
+#       data = 0xC0FFEE00_00000000 | i   (i = 0..15)
+#     With this preload, a read-only test can skip phase [2] and go
+#     straight to [3] (read-after-write) and get correct results.
+#
+#   [RD_BASE]   0x00100000 – 0x001001C0
+#     The "raw read" region (test [4]) expects addr-as-data for
+#     unwritten addresses.  Explicitly preloading them here verifies
+#     that preloaded values take precedence over the addr-as-data
+#     default — useful for checking load correctness.
+#
+#   [WSTRB_TEST] 0x00200000 – 0x00200038
+#     Eight beats with a known byte pattern so partial-strobe writes
+#     (test [10] style) can be verified against a known baseline.
+#
+# ---------------------------------------------------------------
+// === WR_BASE region (0x0000_0000) — matches test [2] write pattern ===
+00000000 C0FFEE0000000000
+00000040 C0FFEE0000000001
+00000080 C0FFEE0000000002
+000000C0 C0FFEE0000000003
+00000100 C0FFEE0000000004
+00000140 C0FFEE0000000005
+00000180 C0FFEE0000000006
+000001C0 C0FFEE0000000007
+00000200 C0FFEE0000000008
+00000240 C0FFEE0000000009
+00000280 C0FFEE000000000A
+000002C0 C0FFEE000000000B
+00000300 C0FFEE000000000C
+00000340 C0FFEE000000000D
+00000380 C0FFEE000000000E
+000003C0 C0FFEE000000000F
+
+// === RD_BASE region (0x0010_0000) — addr-as-data, explicitly preloaded ===
+// Verifies that ramulator_read_mem returns preloaded value, not the default.
+00100000 0000000000100000
+00100040 0000000000100040
+00100080 0000000000100080
+001000C0 00000000001000C0
+00100100 0000000000100100
+00100140 0000000000100140
+00100180 0000000000100180
+001001C0 00000000001001C0
+
+// === WSTRB baseline (0x0020_0000) — known byte pattern for partial-write tests ===
+// Each beat: bytes are 0xAA, 0xBB, 0xCC, 0xDD, 0xEE, 0xFF, 0x11, 0x22
+// (little-endian: beat[7:0]=0xAA, beat[15:8]=0xBB, ..., beat[63:56]=0x22)
+00200000 2211FFEEDDCCBBAA
+00200008 2211FFEEDDCCBBAA
+00200010 2211FFEEDDCCBBAA
+00200018 2211FFEEDDCCBBAA
+00200020 2211FFEEDDCCBBAA
+00200028 2211FFEEDDCCBBAA
+00200030 2211FFEEDDCCBBAA
+00200038 2211FFEEDDCCBBAA

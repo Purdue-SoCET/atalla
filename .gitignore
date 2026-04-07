@@ -13,6 +13,9 @@ vsim.*
 *ini
 *.deps/
 build/
+ext/
+*.so
+test_dpi
 waves/
 *.log
 *.jou

@@ -6,7 +6,7 @@
 `ifndef AXI_BUS_IF_SV
 `define AXI_BUS_IF_SV
 
-interface axi_bus_if;
+interface axi_bus_if(input logic CLK, input logic nRST);
     `include "axi_bus_params.svh"
 
     import axi_bus_pkg::*;
