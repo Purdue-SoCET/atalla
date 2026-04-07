@@ -66,7 +66,7 @@ module nb_barb(
     //Priority encoder for finding bank with priority.
     logic [$clog2(BANK_NUM)-1:0] priority_idx;
     logic idrc; //I don't really care about what this bit is, it should always be one. 
-    priority_enc #(.BANK_NUM(16)) ENCODER_PRI (priority_sr, priority_idx, idrc);
+    //priority_enc #(.BANK_NUM(16)) ENCODER_PRI (priority_sr, priority_idx, idrc);
 
     //  register storing bank group of the last command. This ensures the compliance of timing parameters of two 
     //  successive transactions that target the same bank group. This timimg parameter, tCCD_L, is slightly more 
@@ -83,24 +83,33 @@ module nb_barb(
     end
     
     logic [BANK_NUM-1:0] be_arb_next; 
+
+    /*
     always_ff @(posedge CLK, negedge nRST) begin
 	if(!nRST)
 		barb.be_arb <= 'b0;
 	else 
 		barb.be_arb <= be_arb_next;	
     end
-    //Combinational block for selecting bank based on priority.
-    logic [$clog2(BANK_NUM)-1:0] k;
-    logic [$clog2(BANK_NUM)-1:0] idx;
-    always_comb begin : ARB_BLOCK
-        be_arb_next = 'b0;
-        if(rollover_S && !rollover_L) begin
+    */
 
-            for(k = 'b0; k < BANK_NUM; k++) begin
-                idx = k + priority_idx;
-                if(barb.be_queue_ready[idx] && (prev_group != idx[1:0]) && (barb.be_cmd[idx] != REF) ) begin
-                    if( (barb.be_cmd[idx] == ACT) &&  !four_access  || (barb.be_cmd[idx] != ACT) ) begin
-                        be_arb_next[idx] = 1'b1;
+    //Combinational block for selecting bank based on priority.
+    logic [BANK_NUM * 2 - 1:0] k;
+    logic [$clog2(BANK_NUM):0] idx;
+    logic [BANK_NUM * 2 - 1:0] dvec_qr, dvec_cmd;
+    logic [BANK_NUM * 2 - 1:0] qr_mask;
+    logic [BANK_NUM * 2 - 1:0] cmd_mask;
+    assign dvec_qr = {barb.be_queue_ready, barb.be_queue_ready};
+    assign dvec_cmd = {barb.be_cmd, barb.be_cmd};
+    assign qr_mask = {(BANK_NUM * 2){1'b1}} << priority_idx; 
+    assign cmd_mask = {(BANK_NUM * 2){}};
+    always_comb begin : ARB_BLOCK
+        barb.be_arb = 'b0;
+        if(rollover_S && !rollover_L) begin
+            for(k = 'b0; k < 2* BANK_NUM; k++) begin
+                if(double_vector[k] && (prev_group != k[1:0]) && (barb.be_cmd[idx] != REF) ) begin
+                    if ( ((barb.be_cmd[idx] == ACT) &&  !four_access) || (barb.be_cmd[idx] != ACT) ) begin
+                        barb.be_arb[idx] = 1'b1;
                         break;
                     end
                 end
@@ -111,15 +120,15 @@ module nb_barb(
             //Handling refreshes
             if( (barb.be_cmd == {BANK_NUM{REF}}) && (barb.be_queue_ready == {BANK_NUM{1'b1}}) ) begin 
 
-                be_arb_next = {BANK_NUM{1'b1}};
+                barb.be_arb = {BANK_NUM{1'b1}};
 
             end else begin //Now the default case for for selecting banks after rollover_L is reached.
 
                 for(k = 'b0; k < BANK_NUM; k++) begin
                     idx = k + priority_idx;
                     if(barb.be_queue_ready[idx]) begin
-                        if( (barb.be_cmd[idx] == ACT) && !four_access || (barb.be_cmd[idx] != ACT) ) begin
-                            be_arb_next[idx] = 1'b1;
+                        if( ((barb.be_cmd[idx] == ACT) && !four_access) || (barb.be_cmd[idx] != ACT) ) begin
+                            barb.be_arb[idx] = 1'b1;
                             break;
                         end
                     end
