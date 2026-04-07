@@ -26,6 +26,8 @@ def bf16_round(x: float) -> int:
 def main():
     ap = argparse.ArgumentParser()
     ap.add_argument("-o", "--output", type=Path, default=Path('tests/gemms.in'), help="Output test file")
+    ap.add_argument("--no-graph", action="store_true", help="Disable dependency graph packet scheduling")
+
     args = ap.parse_args()
 
     # Change values here for parametrization:
@@ -140,6 +142,24 @@ row_loop:
     """
 
     instrs = assemble_file(asm)
+
+    if args.no_graph:
+        instr_text = emit_test_format(instrs)
+    else:
+        dependency_instrs = convert_instructions(instrs)
+        ready = build_dependency_graph(dependency_instrs, DEFAULT_LATENCY_MAP)
+        packets = greedy_pack(dependency_instrs, ready, max_width=GRAPH_PACKET_WIDTH)
+        scheduled = materialize_scheduled_instructions(
+            instrs,
+            packets,
+            packet_width=GRAPH_PACKET_WIDTH,
+        )
+        instr_text = emit_test_format(
+            scheduled,
+            virtual_packet_size=GRAPH_PACKET_WIDTH,
+        )
+
+
     instr_text = emit_test_format(instrs)
 
     img = DRAMWriter()

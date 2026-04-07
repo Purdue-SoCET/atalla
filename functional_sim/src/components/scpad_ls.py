@@ -43,7 +43,7 @@ def scpad_to_vreg(
         # --- COL MODE ---
         # Fixed Slot (scpad_addr), Iterate Banks
         slot = int(scpad_addr % scpad.S + rc_id)
-        for bank in range(0, length+1):
+        for bank in range(0, length):
             if bank >= scpad.B:
                 break
             val = scpad.banks[bank][slot]
@@ -53,7 +53,7 @@ def scpad_to_vreg(
         # --- ROW MODE ---
         # Fixed Bank (scpad_addr), Iterate Slots
         bank = scpad_addr % scpad.B + rc_id
-        for i in range(0,length+1):
+        for i in range(0,length):
             slot = i % scpad.S 
             val = scpad.banks[bank][slot]
             vector_data.append(val)
@@ -90,7 +90,7 @@ def vreg_to_scpad(
         # Fixed Slot (scpad_addr), Iterate Banks
         slot = int (scpad_addr % scpad.S + rc_id)
         for bank, val in enumerate(vector_data):
-            if bank >= num_cols + 1:
+            if bank >= num_cols:
                 break
             scpad.banks[bank][slot] = val
 
@@ -100,7 +100,7 @@ def vreg_to_scpad(
         bank = scpad_addr % scpad.B + rc_id
         for i, val in enumerate(vector_data):
             slot = i % scpad.S
-            if i >= num_rows + 1:
+            if i >= num_rows:
                 break
             scpad.banks[bank][slot] = val  
 
@@ -137,7 +137,7 @@ def sdma_load(
         row_vals = []
 
         # Read from GMEM
-        for j in range(0, NC+1):
+        for j in range(0, NC):
             g_addr = gmem_base + (i * (NC) + j) * 2
             raw_val = gmem.read_data(g_addr)
             if perf_metrics is not None:
@@ -182,7 +182,7 @@ def sdma_store(
 
     for i in range(0, NR):
         slot = (scpad_base_row + i) % scpad.S
-        for j in range(0, NC+1):
+        for j in range(0, NC):
             bank = j
             if bank >= scpad.B:
                 break

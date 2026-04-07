@@ -214,6 +214,7 @@ def run(mem: Memory, sregs: ScalarRegisterFile, mregs: ScalarRegisterFile, vregs
                     sdma_load(gmem=mem, scpad=SP1, gmem_base=sregs.read(inst['rs2']), scpad_base_row=int(sregs.read(inst['rs1/rd1'])), tile_id=localID, NR=inst['num_rows'], NC=inst['num_cols'], perf_metrics=EU.perf_metrics)
 
             elif (m == "scpad.st"):
+                # print(f"DEBUG scpad.st sid={inst['sid']} rs1={inst['rs1/rd1']} gmem=0x{int(sregs.read(inst['rs2'])):08X}", flush=True)
                 if inst['sid'] == 0:
                     if(inst['rs1/rd1'] in tileID0Dict.keys()):
                         localID = tileID0Dict[inst['rs1/rd1']]
@@ -391,6 +392,11 @@ def run(mem: Memory, sregs: ScalarRegisterFile, mregs: ScalarRegisterFile, vregs
             elif m.endswith(".vv"):
                 # ------------ GEMM ------------------------------
                 if (m == "gemm.vv"):
+                    # result = vregs.read(inst['vs1']) @ gemm_weights + vregs.read(inst['vs2'])
+                    # if not getattr(run, '_gemm_debug_done', False):
+                    #     print(f"DEBUG gemm.vv[0]: vs1={vregs.read(inst['vs1'])[:5]}, result[:5]={result[:5]}, num_weights={num_weights}", flush=True)
+                    #     run._gemm_debug_done = True
+                    # vregs.write(inst['vd'], result)
                     vregs.write(inst['vd'], vregs.read(inst['vs1']) @ gemm_weights + vregs.read(inst['vs2']))
                 else:
                     src1 = vregs.read(inst['vs1'])
