@@ -14,3 +14,6 @@
 	path = Flowkit
 	url = git@github.com:Purdue-SoCET/Flowkit.git
 	branch = atallax01
+[submodule "ramulator2"]
+	path = ramulator2
+	url = https://github.com/CMU-SAFARI/ramulator2.git
