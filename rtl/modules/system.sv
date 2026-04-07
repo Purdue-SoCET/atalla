@@ -1,65 +1,60 @@
-/*
-  Chase Johnson
-  cyjohnso@purdue.edu
+module system #()
+(
+    input logic CLK, nRST,
+    output logic [NUM_BANKS-1:0] ram_mem_REN,
+    output logic [NUM_BANKS-1:0] ram_mem_WEN,
+    output logic [NUM_BANKS-1:0][31:0] ram_mem_addr,
+    output logic [NUM_BANKS-1:0][31:0] ram_mem_store,
+    input logic [NUM_BANKS-1:0][31:0] ram_mem_data,
+    input logic [NUM_BANKS-1:0] ram_mem_complete
+);
 
-  Connects Data Path Together
-*/
+    logic mem_in;
+    logic [31:0] mem_in_addr;
+    logic mem_in_rw_mode;
+    logic [31:0] mem_in_store_value;
+    logic [3:0] mem_out_uuid;
+    logic stall;
+    logic hit;
+    logic [31:0] hit_load;
+    logic [NUM_BANKS-1:0] block_status;
+    logic block_status_reduced;
+    logic [NUM_BANKS-1:0][UUID_SIZE-1:0] uuid_block;
+    logic dp_out_flushed;
 
-// system interface
-`include "system_if.vh"
-//types
-`include "isa_types.vh"
-`include "ram_pkg.vh"
-`include "ram_if.vh"
 
-module system (input logic CLK, nrst, system_if.sys syif);
+    scheduler_core CORE(
+        .CLK(CLK), .nRST(nRST),
+        .WEN(mem_in_rw_mode), .REN(), .mem_in_valid(mem_in), .data_store(mem_in_store_value), .data_addr(mem_in_addr),
+        .data_load(hit_load), .hit(hit), .block_status(block_status_reduced),
+        .ihit(1'b0), .imemload('0), .ready()
+    );
 
-  import isa_pkg::*;
+    lockup_free_cache DCACHE (
+        .CLK(CLK), .nRST(nRST),
+        .mem_in(mem_in),
+        .mem_in_addr(mem_in_addr),
+        .mem_in_rw_mode(mem_in_rw_mode), // 0 = read, 1 = write
+        .mem_in_store_value(mem_in_store_value),
+        .dp_in_halt(1'b0), 
+        .mem_out_uuid(mem_out_uuid),
+        .stall(stall),
+        .hit(hit),
+        .hit_load(hit_load),
+        .block_status(block_status),
+        .uuid_block(uuid_block),
+        .dp_out_flushed(dp_out_flushed),
 
-  // stopped running
-  logic halt;
+        // RAM Signals
+        .ram_mem_REN(ram_mem_REN),
+        .ram_mem_WEN(ram_mem_WEN),
+        .ram_mem_addr(ram_mem_addr),
+        .ram_mem_store(ram_mem_store),
+        .ram_mem_data(ram_mem_data),
+        .ram_mem_complete(ram_mem_complete)
+    );
 
-  // clock division
-  parameter CLKDIV = 2;
-  logic CPUCLK;
-  logic [3:0] count;
-  //logic CPUnrst;
+    assign block_status_reduced = block_status[0] | block_status[1] | block_status[2] | block_status[3];
 
-  always_ff @(posedge CLK, negedge nrst)
-  begin
-    if (!nrst)
-    begin
-      count <= 0;
-      CPUCLK <= 0;
-    end
-    else if (count == CLKDIV-2)
-    begin
-      count <= 0;
-      CPUCLK <= ~CPUCLK;
-    end
-    else
-    begin
-      count <= count + 1;
-    end
-  end
-
-  // interfaces
-  ram_if                            prif ();
-
-  // scheduler core processor
-  scheduler_core                        CPU (CPUCLK, nrst, halt, prif);
-
-  // memory
-  ram                                   RAM (CLK, nrst, prif);
-
-  // interface connections
-  assign syif.halt = halt;
-  assign syif.load = prif.ramload;
-
-  // who has ram control
-  assign prif.ramWEN = (syif.tbCTRL) ? syif.WEN : prif.memWEN;
-  assign prif.ramREN = (syif.tbCTRL) ? syif.REN : prif.memREN;
-  assign prif.ramaddr = (syif.tbCTRL) ? syif.addr : prif.memaddr;
-  assign prif.ramstore = (syif.tbCTRL) ? syif.store : prif.memstore;
 
 endmodule
