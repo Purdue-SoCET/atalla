@@ -10,7 +10,8 @@
 //   ./gen_testfloat4 --no-daz > testfloat_cases_4.csv      (disable daz)
 //   ./gen_testfloat4 --no-ftz > testfloat_cases_4.csv      (disable ftz)
 // u can only use those commands if u clone soft float (shoot myles a dm if u want to compile new) 
-// to run -> verilator --binary -j 0 -Wall -Wno-fatal --timing --top-module add4_fp32_tb_softfloat add4_fp32_tb_softfloat.sv sysarr_4_input_fp_adder.sv sysarr_4in_adder.sv sysarr_4_inp_fp_adder_2nd_pipeline_stage.sv add_fp_4input_stage3.sv --trace; ./obj_dir/Vadd4_fp32_tb_softfloat
+// to run -> verilator -Irtl/include/systolic_array --binary -j 0 -Wall -Wno-fatal --timing --top-module add4_fp32_tb_softfloat tb/unit/systolic_array/add4_fp32_tb_softfloat.sv rtl/modules/systolic_array/sysarr_4_input_fp_adder.sv --trace
+
 // to view waves -> gtkwave waves/add4_fp32_waves.vcd --save=waves/add4_fp32_debug.gtkw
 // also creates file called test_failures.csv w all failed cases (input, exp, got)
 
@@ -22,7 +23,7 @@ module add4_fp32_tb_softfloat;
 
     localparam PERIOD = 2;
     localparam LATENCY = 4;  // 3 pipeline stages + 1 output register
-    localparam PRECISION_BITS = 3;
+    localparam PRECISION_BITS = 0;
     localparam EXPONENT_SIZE = 8;
     localparam MANTISSA_SIZE = 23; 
 
@@ -51,6 +52,7 @@ module add4_fp32_tb_softfloat;
 
     int pass_count, fail_count;
     real total_ulp_error;  
+    int largest_ulp; 
 
     // con testbench signals to interface
     assign add_if.a = tb_a;
@@ -300,6 +302,9 @@ initial begin
             $fwrite(fail_fd, "%h,%h,%h,%h,%h,%h\n", a, b, c, d, expected, tb_result);
             fail_count++;
             total_ulp_error += get_ulp_err(tb_result, expected);
+            if (get_ulp_err(tb_result, expected) > largest_ulp) begin
+                largest_ulp = get_ulp_err(tb_result, expected);
+            end
             // only print first 10 failures to terminal u can change if u want
             if (fail_count <= 10 || get_ulp_err(tb_result, expected) > 1000) begin
                 $display("FAIL: A=%h B=%h C=%h D=%h | Got=%h Exp=%h, ULP Diff: %0d", 
@@ -326,6 +331,7 @@ initial begin
     $display("PASSED: %0d", pass_count);
     $display("FAILED: %0d", fail_count);
     $display("AVERAGE ULP ERROR: %f", total_ulp_error / fail_count);
+    $display("LARGEST ULP ERROR: %0d", largest_ulp);
     // $display("OFF-BY-TWO: %0d", off_by_two);
     // $display("OFF-BY-TWO-PLUS: %0d", off_by_five_plus);
     $display("failure cases logged to: test_failures_pure.csv");
