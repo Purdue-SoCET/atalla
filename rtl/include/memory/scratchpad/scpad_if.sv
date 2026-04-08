@@ -29,7 +29,10 @@ interface scpad_if (input logic clk, input logic n_rst);
     // Scheduler <=> Backend 
     sched_req_t sched_req [NUM_SCPADS];
     sched_res_t sched_res [NUM_SCPADS];
-    logic sched_stall [NUM_SCPADS]; // backend stalls scheduler while processing
+    logic sched_stall [NUM_SCPADS];     // backend stalls scheduler while processing
+    logic sched_accepted [NUM_SCPADS];  // one-cycle pulse when backend accepts a new SDMA
+    logic sdma_done [NUM_SCPADS];       // one-cycle pulse on SDMA completion
+    sched_req_t sdma_done_req [NUM_SCPADS]; // latched req fields echoed back on completion
 
     // Backend <=> Body  
     logic be_stall [NUM_SCPADS]; 
@@ -80,7 +83,10 @@ interface scpad_if (input logic clk, input logic n_rst);
     modport sched_backend (
         output sched_req,
         input sched_res,
-        input sched_stall
+        input sched_stall,
+        input sched_accepted,
+        input sdma_done,
+        input sdma_done_req
     );
 
     // ----------------------------------------------------------------------
@@ -90,7 +96,7 @@ interface scpad_if (input logic clk, input logic n_rst);
     // Scheduler <=> Backend
     modport backend_sched (
         input  clk, n_rst, sched_req,
-        output sched_res, sched_stall
+        output sched_res, sched_stall, sched_accepted, sdma_done, sdma_done_req
     );
 
     // Backend <=> Body
@@ -203,6 +209,9 @@ interface scpad_if (input logic clk, input logic n_rst);
         output sched_req,
         input sched_res,
         input sched_stall,
+        input sched_accepted,
+        input sdma_done,
+        input sdma_done_req,
 
         // Backend <=> DRAM
         output be_dram_req,
@@ -233,7 +242,7 @@ interface scpad_if (input logic clk, input logic n_rst);
     // Backend TB
     modport backend_tb (
         input clk, 
-        input sched_res, sched_stall, be_req,
+        input sched_res, sched_stall, sched_accepted, sdma_done, sdma_done_req, be_req,
         input be_dram_stall, be_dram_req,
 
         output be_stall, dram_be_stall, n_rst,
@@ -309,6 +318,9 @@ interface scpad_if (input logic clk, input logic n_rst);
         output sched_req,
         input sched_res,
         input sched_stall,
+        input sched_accepted,
+        input sdma_done,
+        input sdma_done_req,
         // DRAM interface
         input be_dram_req, be_dram_stall,
         output dram_be_stall, dram_be_res,

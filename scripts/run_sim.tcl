@@ -175,6 +175,7 @@ if {[batch_mode]} {
     wave zoom full
 
     puts "Starting simulation (GUI)..."
+    onfinish stop
     run -all
     puts "Simulation finished. Inspect waves or re-run manually."
 }
