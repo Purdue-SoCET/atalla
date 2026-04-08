@@ -99,6 +99,15 @@ class axi_generator;
         return txn;
     endfunction
 
+    function axi_write_txn generate_txn_for_master_with_len(mid_t m, int unsigned len);
+        axi_write_txn txn;
+        txn = new();
+        if (!txn.randomize() with { master == m; awlen == len; }) begin
+            $fatal(1, "Randomization failed");
+        end
+        return txn;
+    endfunction
+
     function axi_write_txn generate_txn_with_len(int len);
         axi_write_txn txn;
         txn = new();
@@ -277,6 +286,15 @@ class axi_driver;
         vif.b_sp0_o_ready <= 1'b0;
         vif.b_sp1_o_ready <= 1'b0;
         vif.b_d_o_ready   <= 1'b0;
+    endtask
+
+    task set_master_ready_high();
+        vif.aw_sp0_i_ready <= 1;
+        vif.w_sp0_i_ready  <= 1;
+        vif.aw_sp1_i_ready <= 1;
+        vif.w_sp1_i_ready  <= 1;
+        vif.aw_d_i_ready   <= 1;
+        vif.w_d_i_ready    <= 1;
     endtask
 endclass
 
@@ -1044,7 +1062,58 @@ module axi_write_top_tb ();
             test_pass = 0;
         end
         finish_testcase();
-endtask
+    endtask
+
+    task single_sp0_back_to_back_writes_len0_test;
+        axi_write_txn txn0;
+        axi_write_txn txn1;
+
+        test_case = "TEST CASE 12: SP0 BACK-TO-BACK SINGLE BEAT WRITES";
+
+        init_testcase(test_case);
+        drv.set_subordinate_ready_high();
+
+        txn0 = gen.generate_txn_for_master(SP0);
+        txn1 = gen.generate_txn_for_master(SP0);
+
+        txn0.awlen = 0;
+        txn1.awlen = 0;
+
+        txn0.wlast[0] = 1;
+        txn1.wlast[0] = 1;
+
+        @(posedge CLK);
+        drv.drive_aw(txn0);
+        drv.drive_w(txn0, 0);
+
+        fork
+            begin
+                do @(posedge CLK); while (!(busif.aw_sp0_i_valid && busif.aw_sp0_i_ready));
+                drv.clear_aw(SP0);
+            end
+            begin
+                do @(posedge CLK); while (!(busif.w_sp0_i_valid && busif.w_sp0_i_ready));
+                drv.clear_w(SP0);
+            end
+        join
+        drv.drive_aw(txn1);
+        drv.drive_w(txn1, 0);
+
+        fork
+            begin
+                do @(posedge CLK); while (!(busif.aw_sp0_i_valid && busif.aw_sp0_i_ready));
+                drv.clear_aw(SP0);
+            end
+            begin
+                do @(posedge CLK); while (!(busif.w_sp0_i_valid && busif.w_sp0_i_ready));
+                drv.clear_w(SP0);
+            end
+        join
+
+        repeat (10) @(posedge CLK); // waveform visibility
+
+        finish_testcase();
+    endtask
 
     property aw_out_stable_when_stalled;
         @(posedge CLK) disable iff (!nRST)
@@ -1119,6 +1188,7 @@ endtask
         single_dcache_write_with_b_response_test();
         directed_all_3_write_then_ooo_b_response_test();
         single_sp0_write_with_subordinate_backpressure_test();
+        single_sp0_back_to_back_writes_len0_test();
 
         $display("TB DONE");
         $stop;
