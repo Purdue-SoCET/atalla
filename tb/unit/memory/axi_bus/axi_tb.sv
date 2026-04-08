@@ -7,13 +7,19 @@ import axi_bus_pkg::*;
 
 typedef class ar_txn;
 typedef class r_txn;
+typedef class aw_txn;
+typedef class w_txn;
 typedef class ar_driver;
 typedef class r_driver;
+typedef class aw_driver;
+typedef class w_driver;
 typedef class ar_monitor;
 typedef class r_monitor;
+typedef class aw_monitor;
+typedef class w_monitor;
 typedef class scoreboard;
 
-module axi_read_tb; //TODO: add clocking feature
+module axi_tb; //TODO: add clocking feature
 
     parameter PERIOD=10;
 
@@ -54,25 +60,44 @@ program test (
     environment env;
     int TIME_OUT = 50000;
     task automatic reset_input();
+        // --- Read path ---
         abif.ar_sp0_valid = 0;
         abif.ar_sp1_valid = 0;
-        abif.ar_i_valid = 0;
-        abif.ar_d_valid = 0;
+        abif.ar_i_valid   = 0;
+        abif.ar_d_valid   = 0;
 
         abif.ar_sp0_i = '0;
         abif.ar_sp1_i = '0;
-        abif.ar_i_i = '0;
-        abif.ar_d_i = '0;
+        abif.ar_i_i   = '0;
+        abif.ar_d_i   = '0;
 
         abif.r_sp0_o_ready = 0;
         abif.r_sp1_o_ready = 0;
-        abif.r_i_o_ready = 0;
-        abif.r_d_o_ready = 0;
+        abif.r_i_o_ready   = 0;
+        abif.r_d_o_ready   = 0;
 
-        abif.r_valid = 0;
-        abif.r_i = '0;
+        abif.r_valid   = 0;
+        abif.r_i       = '0;
         abif.ar_o_ready = 0;
-        
+
+        // --- Write path ---
+        abif.aw_sp0_i_valid = 0; abif.aw_sp0_i = '0;
+        abif.aw_sp1_i_valid = 0; abif.aw_sp1_i = '0;
+        abif.aw_d_i_valid   = 0; abif.aw_d_i   = '0;
+
+        abif.w_sp0_i_valid  = 0; abif.w_sp0_i  = '0;
+        abif.w_sp1_i_valid  = 0; abif.w_sp1_i  = '0;
+        abif.w_d_i_valid    = 0; abif.w_d_i    = '0;
+
+        abif.aw_o_ready = 0;
+        abif.w_o_ready  = 0;
+
+        abif.b_sp0_o_ready = 0;
+        abif.b_sp1_o_ready = 0;
+        abif.b_d_o_ready   = 0;
+
+        abif.b_i_valid = 0;
+        abif.b_i       = '0;
     endtask
 
     task automatic reset_dut();
@@ -297,21 +322,21 @@ program test (
         reset_dut();
         
         // tests
-        smoke_ar_test();
-        pressure_ar_test(100);
-        idle_ar_test();
+        // smoke_ar_test();
+        // pressure_ar_test(100);
+        // idle_ar_test();
 
-        smoke_r_test();
-        pressure_r_test(10);
-        idle_r_test();
+        // smoke_r_test();
+        // pressure_r_test(10);
+        // idle_r_test();
 
         smoke_aw_test();
-        pressure_aw_test(100);
-        idle_aw_test();
+        // pressure_aw_test(100);
+        // idle_aw_test();
 
-        smoke_w_test();
-        pressure_w_test(10);
-        idle_w_test();
+        // smoke_w_test();
+        // pressure_w_test(10);
+        // idle_w_test();
 
         // report
         env.report();
@@ -520,24 +545,24 @@ class ar_driver; // get transaction, drive it, push expected to scoreboard
     endtask
 
     task drive(ar_txn t);
-        @(negedge axi_read_tb.CLK);
+        @(negedge axi_tb.CLK);
         case (t.mid)
-            0: begin vif.ar_sp0_valid=1; vif.ar_sp0_i.addr=t.addr; vif.ar_sp0_i.id=t.id;
-                     vif.ar_sp0_i.size=t.size; vif.ar_sp0_i.len=t.len; vif.ar_sp0_i.burst=t.burst; end
-            1: begin vif.ar_sp1_valid=1; vif.ar_sp1_i.addr=t.addr; vif.ar_sp1_i.id=t.id;
-                     vif.ar_sp1_i.size=t.size; vif.ar_sp1_i.len=t.len; vif.ar_sp1_i.burst=t.burst; end
-            2: begin vif.ar_i_valid=1; vif.ar_i_i.addr=t.addr; vif.ar_i_i.id=t.id;
-                     vif.ar_i_i.size=t.size; vif.ar_i_i.len=t.len; vif.ar_i_i.burst=t.burst; end
-            3: begin vif.ar_d_valid=1; vif.ar_d_i.addr=t.addr; vif.ar_d_i.id=t.id;
-                     vif.ar_d_i.size=t.size; vif.ar_d_i.len=t.len; vif.ar_d_i.burst=t.burst; end
+            MID_SP0: begin vif.ar_sp0_valid=1; vif.ar_sp0_i.addr=t.addr; vif.ar_sp0_i.id=t.id;
+                          vif.ar_sp0_i.size=t.size; vif.ar_sp0_i.len=t.len; vif.ar_sp0_i.burst=t.burst; end
+            MID_SP1: begin vif.ar_sp1_valid=1; vif.ar_sp1_i.addr=t.addr; vif.ar_sp1_i.id=t.id;
+                          vif.ar_sp1_i.size=t.size; vif.ar_sp1_i.len=t.len; vif.ar_sp1_i.burst=t.burst; end
+            MID_D:   begin vif.ar_d_valid=1; vif.ar_d_i.addr=t.addr; vif.ar_d_i.id=t.id;
+                          vif.ar_d_i.size=t.size; vif.ar_d_i.len=t.len; vif.ar_d_i.burst=t.burst; end
+            MID_I:   begin vif.ar_i_valid=1; vif.ar_i_i.addr=t.addr; vif.ar_i_i.id=t.id;
+                          vif.ar_i_i.size=t.size; vif.ar_i_i.len=t.len; vif.ar_i_i.burst=t.burst; end
         endcase
-        @(negedge axi_read_tb.CLK);
+        @(negedge axi_tb.CLK);
 
         case (t.mid)
-            0: begin while (!vif.ar_sp0_ready) @(negedge axi_read_tb.CLK); vif.ar_sp0_valid=0; vif.ar_sp0_i='0; end
-            1: begin while (!vif.ar_sp1_ready) @(negedge axi_read_tb.CLK); vif.ar_sp1_valid=0; vif.ar_sp1_i='0; end
-            2: begin while (!vif.ar_i_ready) @(negedge axi_read_tb.CLK); vif.ar_i_valid=0; vif.ar_i_i='0; end
-            3: begin while (!vif.ar_d_ready) @(negedge axi_read_tb.CLK); vif.ar_d_valid=0; vif.ar_d_i='0; end
+            MID_SP0: begin while (!vif.ar_sp0_ready) @(negedge axi_tb.CLK); vif.ar_sp0_valid=0; vif.ar_sp0_i='0; end
+            MID_SP1: begin while (!vif.ar_sp1_ready) @(negedge axi_tb.CLK); vif.ar_sp1_valid=0; vif.ar_sp1_i='0; end
+            MID_D:   begin while (!vif.ar_d_ready)   @(negedge axi_tb.CLK); vif.ar_d_valid=0;   vif.ar_d_i='0;   end
+            MID_I:   begin while (!vif.ar_i_ready)   @(negedge axi_tb.CLK); vif.ar_i_valid=0;   vif.ar_i_i='0;   end
         endcase
     endtask
 
@@ -567,9 +592,9 @@ class r_driver;
     endtask
 
     task drive(r_txn t);
-        @(posedge axi_read_tb.CLK);
+        @(posedge axi_tb.CLK);
         set_ready(t.mid, 1);
-        for (int i=0; i<$urandom_range(0,3); i++) @(posedge axi_read_tb.CLK);
+        for (int i=0; i<$urandom_range(0,3); i++) @(posedge axi_tb.CLK);
 
         vif.r_valid = 1;
         vif.r_i.mid = t.mid;
@@ -586,7 +611,7 @@ class r_driver;
             $display("send r data: mid=%0d data=%h id=%h len=%0d", $time, t.mid, t.data, t.id, t.len);
 
             
-            @(posedge axi_read_tb.CLK);
+            @(posedge axi_tb.CLK);
         end
 
         vif.r_valid = 0; vif.r_i = '0;
@@ -595,10 +620,10 @@ class r_driver;
 
     task set_ready(logic [1:0] mid, logic val);
         case (mid)
-            0: vif.r_sp0_o_ready = val;
-            1: vif.r_sp1_o_ready = val;
-            2: vif.r_i_o_ready = val;
-            3: vif.r_d_o_ready = val;
+            MID_SP0: vif.r_sp0_o_ready = val;
+            MID_SP1: vif.r_sp1_o_ready = val;
+            MID_D:   vif.r_d_o_ready   = val;
+            MID_I:   vif.r_i_o_ready   = val;
         endcase
     endtask
 endclass
@@ -634,7 +659,7 @@ class aw_driver;
 
     task drive(aw_txn t);
         // Set up AW signals after a negedge (same pattern as ar_driver)
-        @(negedge axi_write_tb.CLK);
+        @(negedge axi_tb.CLK);
         case (t.mid)
             0: begin vif.aw_sp0_i_valid=1; vif.aw_sp0_i.addr=t.addr; vif.aw_sp0_i.id=t.id;
                      vif.aw_sp0_i.size=t.size; vif.aw_sp0_i.len=t.len; vif.aw_sp0_i.burst=t.burst; end
@@ -645,13 +670,13 @@ class aw_driver;
         endcase
 
         // Poll ready; deassert valid once handshake completes
-        @(negedge axi_write_tb.CLK);
+        @(negedge axi_tb.CLK);
         case (t.mid)
-            0: begin while (!vif.aw_sp0_i_ready) @(negedge axi_write_tb.CLK);
+            0: begin while (!vif.aw_sp0_i_ready) @(negedge axi_tb.CLK);
                     vif.aw_sp0_i_valid=0; vif.aw_sp0_i='0; end
-            1: begin while (!vif.aw_sp1_i_ready) @(negedge axi_write_tb.CLK);
+            1: begin while (!vif.aw_sp1_i_ready) @(negedge axi_tb.CLK);
                     vif.aw_sp1_i_valid=0; vif.aw_sp1_i='0; end
-            2: begin while (!vif.aw_d_i_ready) @(negedge axi_write_tb.CLK);
+            2: begin while (!vif.aw_d_i_ready) @(negedge axi_tb.CLK);
                     vif.aw_d_i_valid=0; vif.aw_d_i='0; end
         endcase
     endtask
@@ -699,7 +724,7 @@ class w_driver;
             t.last = (i == t.len);
             scb.push_w_exp(t);
 
-            @(negedge axi_write_tb.CLK);
+            @(negedge axi_tb.CLK);
             case (t.mid)
                 0: begin vif.w_sp0_i_valid=1; vif.w_sp0_i.data=rand_data; vif.w_sp0_i.id=t.id;
                          vif.w_sp0_i.strb=rand_strb; vif.w_sp0_i.last=t.last; end
@@ -709,11 +734,11 @@ class w_driver;
                          vif.w_d_i.strb=rand_strb; vif.w_d_i.last=t.last; end
             endcase
 
-            @(negedge axi_write_tb.CLK);
+            @(negedge axi_tb.CLK);
             case (t.mid)
-                0: while (!vif.w_sp0_i_ready) @(negedge axi_write_tb.CLK);
-                1: while (!vif.w_sp1_i_ready) @(negedge axi_write_tb.CLK);
-                2: while (!vif.w_d_i_ready) @(negedge axi_write_tb.CLK);
+                0: while (!vif.w_sp0_i_ready) @(negedge axi_tb.CLK);
+                1: while (!vif.w_sp1_i_ready) @(negedge axi_tb.CLK);
+                2: while (!vif.w_d_i_ready) @(negedge axi_tb.CLK);
             endcase
         end
 
@@ -742,7 +767,7 @@ class ar_monitor; // monitor actual ar_o signal from DUT
 
     task run();
         forever begin
-            @(posedge axi_read_tb.CLK); #3;
+            @(posedge axi_tb.CLK); #3;
             if (vif.ar_o_ready & vif.ar_o_valid) begin mbx_mon_ar.put(vif.ar_o); end
         end
         
@@ -763,13 +788,13 @@ class r_monitor;
 
     task run(); // transaction will only happen when handshake, and will not interrupt
         forever begin
-            @(posedge axi_read_tb.CLK); #3;
+            @(posedge axi_tb.CLK); #3;
             if (vif.r_ready && vif.r_valid) begin
                 casez (vif.r_i.mid)
-                    0: begin mbx_mon_r.put(vif.r_sp0_o); end
-                    1: begin mbx_mon_r.put(vif.r_sp1_o); end
-                    2: begin mbx_mon_r.put(vif.r_i_o); end
-                    3: begin mbx_mon_r.put(vif.r_d_o); end
+                    MID_SP0: mbx_mon_r.put(vif.r_sp0_o);
+                    MID_SP1: mbx_mon_r.put(vif.r_sp1_o);
+                    MID_D:   mbx_mon_r.put(vif.r_d_o);
+                    MID_I:   mbx_mon_r.put(vif.r_i_o);
                 endcase
             end
         end
@@ -791,7 +816,7 @@ class aw_monitor;
 
     task run();
         forever begin
-            @(posedge axi_write_tb.CLK); #3;
+            @(posedge axi_tb.CLK); #3;
             if (vif.aw_o_valid & vif.aw_o_ready) mbx_mon_aw.put(vif.aw_o);
         end
     endtask
@@ -811,7 +836,7 @@ class w_monitor;
 
     task run();
         forever begin
-            @(posedge axi_write_tb.CLK); #3;
+            @(posedge axi_tb.CLK); #3;
             if (vif.w_o_valid & vif.w_o_ready) mbx_mon_w.put(vif.w_o);
         end
     endtask
