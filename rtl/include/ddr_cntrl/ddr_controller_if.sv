@@ -102,6 +102,12 @@ fsm_t                      fsm_cmd;     // Current command
 logic                      rf_enable;   // Initialization done, enable counting
 logic                      rf_done;     // Refresh command completed
 
+// INIT STATE
+logic                      init_start;      // Trigger to begin initialization
+logic                      init_done;       // Initialization complete
+dram_state_t               init_state;      // Current initialization state
+dram_state_t               next_init_state; // Next initialization state
+
 // BACKEND ARBITER -> READ_ID_QUEUE
 logic                      be_push_id; 
 logic [$clog2(ID_NUM)-1:0] be_rid;
@@ -282,6 +288,13 @@ modport refresh_cntrl (
     input rf_enable, rf_done,
     //REFRESH COUNTER -> FSM
     output fsm_ref
+);
+
+modport init_ctrl (
+    //EXTERNAL -> INIT STATE
+    input init_start,
+    //INIT STATE -> SYSTEM
+    output init_done, init_state, next_init_state
 );
 
 
