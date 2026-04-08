@@ -1,5 +1,6 @@
 `ifndef VLSU_IF_SV
 `define VLSU_IF_SV
+`include "vector_pkg.vh"
 
 interface vlsu_if;
     `include "scpad_params.svh"

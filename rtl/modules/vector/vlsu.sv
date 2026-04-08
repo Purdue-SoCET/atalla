@@ -17,7 +17,7 @@ module vlsu #(
 
     logic                   lq_wr_en, lq_shift;
     logic [VDST_WIDTH-1:0]  lq_din, lq_dout;
-    logic                   lq_empty, lq_full;
+    logic                   lq_empty, lq_full;  
 
     sync_fifo #(
         .FIFODEPTH(FIFO_DEPTH),

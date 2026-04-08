@@ -1,5 +1,5 @@
 `include "vreduction_if.vh"
-`include "functional_unit_if.vh"
+`include "reduction_FU_if.vh"
 `include "vector_pkg.vh"
 
 module reduction_FU (
