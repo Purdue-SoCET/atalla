@@ -226,11 +226,13 @@ program test (
     task automatic gen_aw_txn(
         ref aw_txn q[$],
         input int times,
-        input int force_mid = -1
+        input int force_mid = -1,
+        input int force_len = -1
     );
         for (int i=0; i<times; i++) begin
             aw_txn t = new();
             if (force_mid >= 0) begin t.force_mid = force_mid; t.c_force_mid.constraint_mode(1); end
+            if (force_len >= 0) begin t.force_len = force_len; t.c_force_len.constraint_mode(1); end            
             t.randomize();
             q.push_back(t);
         end
@@ -288,9 +290,9 @@ program test (
     // Send num_txn transactions back-to-back to a single master without any
     // gap between them. Ready stays asserted throughout so the DUT sees a
     // continuous stream of AW+W pairs from the same master.
-    task automatic consecutive_write_test(int master_id, int num_txn);
+    task automatic consecutive_write_test(int master_id, int len, int num_txn);
         aw_txn q[$];
-        gen_aw_txn(q, num_txn, master_id);
+        gen_aw_txn(q, num_txn, master_id, len);
         foreach (q[i]) env.send_write_req(q[i]);
         steady_write_ready(num_txn * 20 + 50);
     endtask
@@ -309,13 +311,11 @@ program test (
         // idle_r_test();
         
         // smoke_write_test();
-        // pressure_write_test(100);
+        pressure_write_test(15);
         // idle_write_test();
 
         // consecutive: 4 back-to-back writes to SP0, then SP1, then D$
-        consecutive_write_test(0, 4);
-        // consecutive_write_test(1, 4);
-        // consecutive_write_test(2, 4);
+        // consecutive_write_test(0, 0, 20);
 
         // report
         env.report();
@@ -459,15 +459,16 @@ class aw_txn;
     rand logic [AWBURST-1:0] burst; // burst mode (WRAP, INCR)
 
     logic [1:0] force_mid;
+    logic [3:0] force_len;
 
     constraint c_mid_valid {mid inside {0, 1, 2};}  // SP0=0, SP1=1, D$=2 (no I$ on write path)
     constraint c_force_mid {mid == force_mid;}
-    constraint c_len       {len != 3'b111;}
+    constraint c_force_len {len == force_len;}
     constraint c_burst     {burst != 2'b11;}
 
     function new();
         c_force_mid.constraint_mode(0);
-        c_len.constraint_mode(0);
+        c_force_len.constraint_mode(0);
         c_burst.constraint_mode(0);
     endfunction
 endclass
