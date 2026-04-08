@@ -20,7 +20,16 @@ def make_maxpool_asm(h_in: int, w_in: int, pool_size: int, stride: int) -> str:
     w_m1 = w_in - 1
     h_in_m1 = h_in - 1
     h_out_m1 = h_out - 1
-    mask_all = (1 << w_in) - 1
+    mask_all = (1 << w_in) - 1 if w_in < 32 else (1 << 32) - 1
+    if w_in >= 32:
+        mask_load = """
+        addi.s  $20, $0, -1
+        mv.stm  1, $20              # mask1 = all lanes (32-wide)"""
+    else:
+        mask_load = f"""
+        lui.s   $20, {mask_all >> 7}
+        addi.s  $20, $20, {mask_all & 0x7F}
+        mv.stm  1, $20              # mask1 = active width lanes"""
 
     return f"""
         addi.s  $1, $0, 60
@@ -30,12 +39,10 @@ def make_maxpool_asm(h_in: int, w_in: int, pool_size: int, stride: int) -> str:
         lw.s    $5, 12($1)          # OUT_SCPAD row
 
         scpad.ld $3, $2, {w_m1}, {h_in_m1}, 0
+{mask_load}
 
-        lui.s   $20, {mask_all >> 7}
-        addi.s  $20, $20, {mask_all & 0x7F}
-        mv.stm  1, $20              # mask1 = active width lanes
-
-        addi.vi $60, $0, 0.0, 1
+        li.s    $6, 0
+        mul.vs  $60, $10, $6, 1     # zero vector (no addi.vi)
         addi.s  $25, $0, 0          # out_row
         addi.s  $26, $0, {h_out}    # out_row limit
         addi.s  $29, $0, 0          # in_row_base
@@ -63,8 +70,8 @@ out_done:
 def main() -> None:
     ap = argparse.ArgumentParser()
     ap.add_argument("-o", "--output", type=Path, default=Path("tests/maxpool.in"))
-    ap.add_argument("--H", type=int, default=8)
-    ap.add_argument("--W", type=int, default=8)
+    ap.add_argument("--H", type=int, default=32)
+    ap.add_argument("--W", type=int, default=32)
     ap.add_argument("--pool", type=int, default=2)
     ap.add_argument("--stride", type=int, default=2)
     ap.add_argument("--seed", type=int, default=7)

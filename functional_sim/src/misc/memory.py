@@ -59,7 +59,7 @@ class Memory:
 
                 # Store to correct memory
                 if mode == "INSTR":
-                    if data.bit_length() > 192:
+                    if data.bit_length() > 160:
                         raise ValueError(f"Instruction too large at line {line_num}")
                     self.instr_mem[addr] = data
                 else:

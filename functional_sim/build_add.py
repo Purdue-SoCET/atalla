@@ -47,8 +47,8 @@ row_done:
 def main() -> None:
     ap = argparse.ArgumentParser()
     ap.add_argument("-o", "--output", type=Path, default=Path("tests/add.in"))
-    ap.add_argument("--rows", type=int, default=4)
-    ap.add_argument("--width", type=int, default=8)
+    ap.add_argument("--rows", type=int, default=32)
+    ap.add_argument("--width", type=int, default=32)
     ap.add_argument("--seed", type=int, default=42)
     args = ap.parse_args()
 

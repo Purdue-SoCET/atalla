@@ -9,10 +9,7 @@ from pathlib import Path
 import argparse
 import numpy as np
 
-try:
-    from .build import *
-except Exception:
-    from build import *
+from build import *
 
 
 def main():
@@ -34,8 +31,8 @@ def main():
     SCPAD_ADDR = 1
     EPSILON_LOCATION = 20
     INV_LAYER_ELEMS_LOCATION = 24
-    COLS = N - 1
-    ROWS = N - 1
+    COLS = N
+    ROWS = N
     SID = 0
     LAYER_ELEMS = N * N
     RSUM_IMM = 64
@@ -110,9 +107,8 @@ def main():
         mul.vs   $39, $38, $14, 1                   # variance sum * inv(N^2) -> final variance in $39
 
         add.vs   $39, $39, $4, 1                    # denominator seed = variance + epsilon
-        sqrti.vi $39, $39, 0, 1                     # denominator = sqrt(denominator seed) -> normalized denominator in $39
-
         vmov.vts $15, $39, 0                        # extract denominator lane 0 to scalar
+        sqrt.bf  $15, $15, $0                       # scalar sqrt only (vector sqrti.vi removed)
         rcp.bf   $15, $15, $0                       # reciprocal(denominator)
 
         mul.vs   $30, $30, $15, 1                   # normalized row 0 * reciprocal(denominator)

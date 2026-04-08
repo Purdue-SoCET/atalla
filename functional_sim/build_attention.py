@@ -2,6 +2,7 @@ from __future__ import annotations
 
 import argparse
 import os
+import struct
 from pathlib import Path
 
 import numpy as np
@@ -14,6 +15,11 @@ except Exception:
     except Exception:
         from build import *
 
+try:
+    from .build_layernorm_param import unroll_layernorm
+except Exception:
+    from build_layernorm_param import unroll_layernorm
+
 
 def load_tile_data(data_path: Path, n: int) -> list[float]:
     tile = np.loadtxt(data_path, delimiter=",")
@@ -24,18 +30,108 @@ def load_tile_data(data_path: Path, n: int) -> list[float]:
     return tile.flatten(order="C").tolist()
 
 
+def _emit_fused_attention_post_ln(
+    n: int,
+    *,
+    addr_table_base: int,
+    rsum_imm: int,
+    sid: int = 0,
+) -> str:
+    """
+    After unroll_layernorm (same address table: word0=gmem input, word1=scpad addr).
+
+    Fused block (Python reference must match):
+      t = layernorm(X)
+      u = relu(attn_ref + t)
+      y = softmax_rowwise(u @ W)   # W from table+24, second tile from table+28 (legacy names)
+
+    attn_ref is softmax(Q K^T / sqrt(n)) V computed in Python and stored in gmem — not in ASM.
+    """
+    if n < 1 or n > 32:
+        raise ValueError("n must be in [1, 32] (lane / SDMA 5-bit limits).")
+
+    mc = n - 1
+    x0 = 64
+    attn_b = x0 + n
+    sum_b = x0 + 2 * n
+    relu_b = x0 + 3 * n
+    b_b = x0 + 4 * n
+    if relu_b + n - 1 > 255 or b_b + n - 1 > 255:
+        raise ValueError("vector register indices overflow")
+
+    lines: list[str] = []
+
+    def ln(s: str) -> None:
+        lines.append(f"        {s}")
+
+    ln("# --- fused attention tail (post layernorm) ---")
+    ln(f"addi.s   $1, $0, {addr_table_base}")
+    ln("lw.s     $2, 0($1)                    # gmem input (LN output)")
+    ln("lw.s     $3, 4($1)                    # scpad base")
+    ln(f"scpad.ld $3, $2, {mc}, {mc}, {sid}    # refresh LN(x) in scpad")
+    for i in range(n):
+        ln(f"vreg.ld  ${x0 + i}, $3, {mc}, {mc}, {sid}, 1, {i}    # LN row {i}")
+
+    ln("lw.s     $15, 32($1)                  # attn gmem")
+    ln(f"scpad.ld $3, $15, {mc}, {mc}, {sid}")
+    for i in range(n):
+        ln(f"vreg.ld  ${attn_b + i}, $3, {mc}, {mc}, {sid}, 1, {i}    # attn row {i}")
+
+    ln("li.s     $19, 0")
+    ln(f"mul.vs   $11, ${x0}, $19, 1          # zero vector for ReLU")
+    for i in range(n):
+        ln(f"add.vv   ${sum_b + i}, ${attn_b + i}, ${x0 + i}, 1, 0")
+        ln(f"mgt.mvv  2, ${sum_b + i}, $11, 1")
+        ln(f"mul.vs   ${relu_b + i}, $11, $19, 1")
+        ln(f"add.vv   ${relu_b + i}, ${sum_b + i}, $11, 2, 0")
+
+    ln("lw.s     $8, 24($1)                   # W gmem")
+    ln(f"scpad.ld $3, $8, {mc}, {mc}, {sid}")
+    for i in reversed(range(n)):
+        ln(f"vreg.ld  $11, $3, {mc}, {mc}, {sid}, 1, {i}")
+        ln("lw.vi    $11, $11, 0, 0xf")
+
+    ln("lw.s     $9, 28($1)                   # second tile (B) gmem")
+    ln(f"scpad.ld $3, $9, {mc}, {mc}, {sid}")
+    for i in range(n):
+        ln(f"vreg.ld  ${b_b + i}, $3, {mc}, {mc}, {sid}, 1, {i}")
+
+    for i in range(n):
+        ln(f"gemm.vv  ${relu_b + i}, ${relu_b + i}, ${b_b + i}, 0, 0")
+
+    for i in range(n):
+        r = relu_b + i
+        ln(f"rmax.vi  $90, ${r}, 0, 1")
+        ln("vmov.vts $14, $90, 0")
+        ln(f"sub.vs   ${r}, ${r}, $14, 1")
+        ln(f"expi.vi  $90, ${r}, 0, 1")
+        ln(f"rsum.vi  $91, $90, {rsum_imm}, 1")
+        ln("vmov.vts $14, $91, 0")
+        ln("rcp.bf   $14, $14, $0")
+        ln(f"mul.vs   ${r}, $90, $14, 1")
+
+    ln("lw.s     $17, 20($1)                  # output gmem")
+    for i in range(n):
+        ln(f"vreg.st  ${relu_b + i}, $3, {mc}, {mc}, {sid}, 1, {i}")
+    ln(f"scpad.st $3, $17, {mc}, {mc}, {sid}")
+    ln("halt.s")
+
+    return "\n".join(lines)
+
+
 def main() -> None:
     ap = argparse.ArgumentParser()
     ap.add_argument("-i", "--input", type=Path, default=None)
     ap.add_argument("-o", "--output", type=Path, default=Path("./tests/attention.in"))
     ap.add_argument("--no-graph", action="store_true")
     ap.add_argument("--data", type=Path, default=None)
-    ap.add_argument("--n", type=int, default=4)
+    ap.add_argument("--n", type=int, default=32, help="N×N fused demo (default 32; max 32)")
+    ap.add_argument("--seed", type=int, default=0)
     args = ap.parse_args()
 
-    N = args.n
-    if N != 4:
-        raise ValueError("Current central attention builder is fixed for n=4.")
+    n = args.n
+    if n < 1 or n > 32:
+        raise ValueError("n must be in [1, 32].")
 
     ADDR_TABLE_BASE = 0x0000_0040
     EPSILON_LOCATION = 0x0000_0020
@@ -48,174 +144,48 @@ def main() -> None:
     TILE_ADDR_B = 0x0000_7000
     TILE_ADDR_ATTN = 0x0000_8000
 
-    SCPAD_ADDR = 1
-    COLS = N - 1
-    ROWS = N - 1
+    # Base row must satisfy (base % S + (n-1)) < S with S=32, so base=0 for n=32.
+    SCPAD_ADDR = 0
+    COLS = n - 1
+    ROWS = n - 1
     SID0 = 0
-    LAYER_ELEMS = N * N
     RSUM_IMM = 64
 
-    input_values = [float(v) for v in range(4, 4 + N * N)]
-    X_ref = np.array(input_values, dtype=np.float32).reshape(N, N)
-    Q = np.array([[1, 1, 1, 1], [1, 2, 1, 1], [1, 1, 3, 1], [1, 1, 1, 4]], dtype=np.float32)
-    K = np.array([[1, 0, 0, 0], [0, 2, 0, 0], [0, 0, 3, 0], [0, 0, 0, 4]], dtype=np.float32)
-    V = np.array([[10, 0, 0, 0], [0, 20, 0, 0], [0, 0, 30, 0], [0, 0, 0, 40]], dtype=np.float32)
+    rng = np.random.default_rng(args.seed)
+    Q = rng.standard_normal((n, n)).astype(np.float32)
+    K = rng.standard_normal((n, n)).astype(np.float32)
+    V = rng.standard_normal((n, n)).astype(np.float32)
+    W = rng.standard_normal((n, n)).astype(np.float32)
 
-    scores = (Q @ K.T) / np.sqrt(N)
+    scale = 1.0 / np.sqrt(float(n))
+    scores = (Q @ K.T) * scale
     s_exp = np.exp(scores - scores.max(axis=1, keepdims=True))
-    attn_ref = s_exp / s_exp.sum(axis=1, keepdims=True) @ V
-    residual = attn_ref + X_ref
-    relu_out = np.maximum(0, residual)
-    W = np.array(
-        [[0.1, 0.5, 0.3, 0.8], [0.6, 0.2, 0.7, 0.1], [0.4, 0.9, 0.2, 0.5], [0.8, 0.3, 0.6, 0.2]],
-        dtype=np.float32,
-    )
-    linear_out = relu_out @ W
+    attn_ref = (s_exp / s_exp.sum(axis=1, keepdims=True)) @ V
+
+    if args.data is not None:
+        input_values = load_tile_data(args.data, n)
+    else:
+        input_values = [float(v) for v in range(4, 4 + n * n)]
+    X_ref = np.array(input_values, dtype=np.float32).reshape(n, n)
+
+    # Reference for the final stored output (softmax after linear), for debugging prints only.
+    x_ln_ref = (X_ref - X_ref.mean()) / (X_ref.var() + 1e-5) ** 0.5
+    u_ref = np.maximum(0, attn_ref + x_ln_ref)
+    linear_out = u_ref @ W
     shifted = linear_out - linear_out.max(axis=1, keepdims=True)
     exp_out = np.exp(shifted)
-    _softmax_ref = exp_out / exp_out.sum(axis=1, keepdims=True)
+    y_ref = exp_out / exp_out.sum(axis=1, keepdims=True)
 
-    asm = f"""
-        lui.s    $1, 0
-        addi.s   $1, $0, {ADDR_TABLE_BASE}
-        lw.s     $2, 0($1)
-        lw.s     $3, 4($1)
-        addi.s   $5, $0, {EPSILON_LOCATION}
-        lw.s     $4, 0($5)
-        lui.s    $16, 0x00000
-        addi.s   $16, $6, 0xf
-        mv.stm   1, $16
-
-        scpad.ld $3, $2, {COLS}, {ROWS}, {SID0}
-        vreg.ld  $10, $3, {COLS}, {ROWS}, {SID0}, 1, 0
-        vreg.ld  $11, $3, {COLS}, {ROWS}, {SID0}, 1, 1
-        vreg.ld  $12, $3, {COLS}, {ROWS}, {SID0}, 1, 2
-        vreg.ld  $13, $3, {COLS}, {ROWS}, {SID0}, 1, 3
-
-        rsum.vi  $20, $10, {RSUM_IMM}, 1
-        rsum.vi  $21, $11, {RSUM_IMM}, 1
-        rsum.vi  $22, $12, {RSUM_IMM}, 1
-        rsum.vi  $23, $13, {RSUM_IMM}, 1
-        add.vv   $21, $20, $21, 1, 0
-        add.vv   $22, $22, $23, 1, 0
-        add.vv   $24, $21, $22, 1, 0
-        divi.vi  $24, $24, {LAYER_ELEMS}, 1
-
-        sub.vv   $30, $10, $24, 1, 0
-        sub.vv   $31, $11, $24, 1, 0
-        sub.vv   $32, $12, $24, 1, 0
-        sub.vv   $33, $13, $24, 1, 0
-        mul.vv   $34, $30, $30, 1, 0
-        mul.vv   $35, $31, $31, 1, 0
-        mul.vv   $36, $32, $32, 1, 0
-        mul.vv   $37, $33, $33, 1, 0
-        rsum.vi  $34, $34, {RSUM_IMM}, 1
-        rsum.vi  $35, $35, {RSUM_IMM}, 1
-        rsum.vi  $36, $36, {RSUM_IMM}, 1
-        rsum.vi  $37, $37, {RSUM_IMM}, 1
-        add.vv   $35, $34, $35, 1, 0
-        add.vv   $37, $36, $37, 1, 0
-        add.vv   $38, $35, $37, 1, 0
-        divi.vi  $39, $38, {LAYER_ELEMS}, 1
-        add.vs   $39, $39, $4, 1
-        sqrti.vi $39, $39, 0, 1
-        div.vv   $30, $30, $39, 1, 0
-        div.vv   $31, $31, $39, 1, 0
-        div.vv   $32, $32, $39, 1, 0
-        div.vv   $33, $33, $39, 1, 0
-        vreg.st  $30, $3, {COLS}, {ROWS}, {SID0}, 1, 0
-        vreg.st  $31, $3, {COLS}, {ROWS}, {SID0}, 1, 1
-        vreg.st  $32, $3, {COLS}, {ROWS}, {SID0}, 1, 2
-        vreg.st  $33, $3, {COLS}, {ROWS}, {SID0}, 1, 3
-
-        lw.s     $15, 32($1)
-        scpad.ld $3, $15, {COLS}, {ROWS}, {SID0}
-        vreg.ld  $40, $3, {COLS}, {ROWS}, {SID0}, 1, 0
-        vreg.ld  $41, $3, {COLS}, {ROWS}, {SID0}, 1, 1
-        vreg.ld  $42, $3, {COLS}, {ROWS}, {SID0}, 1, 2
-        vreg.ld  $43, $3, {COLS}, {ROWS}, {SID0}, 1, 3
-        add.vv   $50, $40, $10, 1, 0
-        add.vv   $51, $41, $11, 1, 0
-        add.vv   $52, $42, $12, 1, 0
-        add.vv   $53, $43, $13, 1, 0
-
-        addi.vi  $0, $0, 0.0, 1
-        mgt.mvv  2, $50, $0, 1
-        addi.vi  $60, $0, 0.0, 1
-        add.vv   $60, $50, $0, 2, 0
-        mgt.mvv  2, $51, $0, 1
-        addi.vi  $61, $0, 0.0, 1
-        add.vv   $61, $51, $0, 2, 0
-        mgt.mvv  2, $52, $0, 1
-        addi.vi  $62, $0, 0.0, 1
-        add.vv   $62, $52, $0, 2, 0
-        mgt.mvv  2, $53, $0, 1
-        addi.vi  $63, $0, 0.0, 1
-        add.vv   $63, $53, $0, 2, 0
-
-        lw.s     $8, 24($1)
-        scpad.ld $3, $8, {COLS}, {ROWS}, {SID0}
-        vreg.ld  $70, $3, {COLS}, {ROWS}, {SID0}, 1, 0
-        vreg.ld  $71, $3, {COLS}, {ROWS}, {SID0}, 1, 1
-        vreg.ld  $72, $3, {COLS}, {ROWS}, {SID0}, 1, 2
-        vreg.ld  $73, $3, {COLS}, {ROWS}, {SID0}, 1, 3
-        lw.vi    $70, $70, 0, 0xf
-        lw.vi    $71, $71, 1, 0xf
-        lw.vi    $72, $72, 2, 0xf
-        lw.vi    $73, $73, 3, 0xf
-
-        lw.s     $9, 28($1)
-        scpad.ld $3, $9, {COLS}, {ROWS}, {SID0}
-        vreg.ld  $74, $3, {COLS}, {ROWS}, {SID0}, 1, 0
-        vreg.ld  $75, $3, {COLS}, {ROWS}, {SID0}, 1, 1
-        vreg.ld  $76, $3, {COLS}, {ROWS}, {SID0}, 1, 2
-        vreg.ld  $77, $3, {COLS}, {ROWS}, {SID0}, 1, 3
-
-        gemm.vv  $60, $60, $74, 0, 0
-        gemm.vv  $61, $61, $75, 0, 0
-        gemm.vv  $62, $62, $76, 0, 0
-        gemm.vv  $63, $63, $77, 0, 0
-
-        rmax.vi  $90, $60, 0, 1
-        vmov.vts $14, $90, 0
-        sub.vs   $60, $60, $14, 1
-        expi.vi  $90, $60, 0, 1
-        rsum.vi  $91, $90, {RSUM_IMM}, 1
-        vmov.vts $14, $91, 0
-        div.vs   $60, $90, $14, 1
-
-        rmax.vi  $92, $61, 0, 1
-        vmov.vts $14, $92, 0
-        sub.vs   $61, $61, $14, 1
-        expi.vi  $92, $61, 0, 1
-        rsum.vi  $93, $92, {RSUM_IMM}, 1
-        vmov.vts $14, $93, 0
-        div.vs   $61, $92, $14, 1
-
-        rmax.vi  $94, $62, 0, 1
-        vmov.vts $14, $94, 0
-        sub.vs   $62, $62, $14, 1
-        expi.vi  $94, $62, 0, 1
-        rsum.vi  $95, $94, {RSUM_IMM}, 1
-        vmov.vts $14, $95, 0
-        div.vs   $62, $94, $14, 1
-
-        rmax.vi  $96, $63, 0, 1
-        vmov.vts $14, $96, 0
-        sub.vs   $63, $63, $14, 1
-        expi.vi  $96, $63, 0, 1
-        rsum.vi  $97, $96, {RSUM_IMM}, 1
-        vmov.vts $14, $97, 0
-        div.vs   $63, $96, $14, 1
-
-        vreg.st  $60, $3, {COLS}, {ROWS}, {SID0}, 1, 0
-        vreg.st  $61, $3, {COLS}, {ROWS}, {SID0}, 1, 1
-        vreg.st  $62, $3, {COLS}, {ROWS}, {SID0}, 1, 2
-        vreg.st  $63, $3, {COLS}, {ROWS}, {SID0}, 1, 3
-        lw.s     $17, 20($1)
-        scpad.st $3, $17, {COLS}, {ROWS}, {SID0}
-        halt.s
-    """
+    ln_asm = unroll_layernorm(
+        n,
+        tile_addr_location=ADDR_TABLE_BASE,
+        epsilon_location=EPSILON_LOCATION,
+        sid=SID0,
+        rsum_imm=RSUM_IMM,
+        halt=False,
+    )
+    tail_asm = _emit_fused_attention_post_ln(n, addr_table_base=ADDR_TABLE_BASE, rsum_imm=RSUM_IMM, sid=SID0)
+    asm = ln_asm + "\n" + tail_asm
 
     instrs = assemble_file(asm)
     if args.no_graph:
@@ -239,10 +209,6 @@ def main() -> None:
     img.u32(ADDR_TABLE_BASE + 32, TILE_ADDR_ATTN)
     img.f32(EPSILON_LOCATION, 1e-5)
 
-    if args.data is not None:
-        input_values = load_tile_data(args.data, N)
-    else:
-        input_values = [float(v) for v in range(4, 4 + N * N)]
     for i, val in enumerate(input_values):
         img.bf16(TILE_ADDR_INPUT + i * 2, val)
     for i, val in enumerate(Q.flatten()):
@@ -251,21 +217,25 @@ def main() -> None:
         img.bf16(TILE_ADDR_K + i * 2, float(val))
     for i, val in enumerate(V.flatten()):
         img.bf16(TILE_ADDR_V + i * 2, float(val))
-    for i in range(N):
-        for j in range(N):
-            img.bf16(TILE_ADDR_ATTN + (i * N + j) * 2, float(attn_ref[i, j]))
+    for i in range(n):
+        for j in range(n):
+            img.bf16(TILE_ADDR_ATTN + (i * n + j) * 2, float(attn_ref[i, j]))
     WT = W.T
-    for r in range(N):
-        for c in range(N):
-            img.bf16(TILE_ADDR_W + (r * N + c) * 2, float(WT[r, c]))
-    for i in range(N * N):
-        img.bf16(TILE_ADDR_B + i * 2, 0.0)
+    for r in range(n):
+        for c in range(n):
+            img.bf16(TILE_ADDR_W + (r * n + c) * 2, float(WT[r, c]))
+    # Second GEMM operand tile (legacy table name "B"); identity-style from random V-like tile for demo.
+    for r in range(n):
+        for c in range(n):
+            img.bf16(TILE_ADDR_B + (r * n + c) * 2, float(V[r, c]))
+    for i in range(n * n):
         img.bf16(TILE_ADDR_OUTPUT + i * 2, 0.0)
 
     final = render_testfile(instr_text, img.render_data_mem(include_zeros=False))
     os.makedirs(args.output.parent, exist_ok=True)
     args.output.write_text(final)
-    print(f"[INFO] Written to {args.output}")
+    print(f"[INFO] Written to {args.output} (n={n})")
+    print(f"[INFO] ref output[0,:4]={y_ref[0, :4]}")
 
 
 if __name__ == "__main__":

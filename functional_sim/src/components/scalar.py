@@ -259,8 +259,6 @@ class ScalarALU:
         return 1.0 / a
 
     def sqrtbf(self, a, b=None):
-        if np.any(a < 0.0):
-            raise ValueError("BF16 sqrt of negative value")
         return np.sqrt(a)
 
     # -------------------------

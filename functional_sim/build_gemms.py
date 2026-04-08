@@ -9,12 +9,8 @@ from pathlib import Path
 import argparse
 import numpy as np
 
-try:
-    from .src.misc.opcode_table import OPCODES, name_to_opcode
-    from .build import *
-except Exception:
-    from src.misc.opcode_table import OPCODES, name_to_opcode
-    from build import *
+from src.misc.opcode_table import OPCODES, name_to_opcode
+from build import *
 
 
 def bf16_round(x: float) -> int:
@@ -32,13 +28,10 @@ def main():
     ap.add_argument("-o", "--output", type=Path, default=Path('tests/gemms.in'), help="Output test file")
     args = ap.parse_args()
 
-    # Change values here for parametrization:
-    COLS      = 20
-    ROWS      = 20
-    COLS_MAX  = COLS - 1
-    ROWS_MAX  = ROWS - 1
+    # 32×32 BF16 tiles; SDMA/vreg tile size fields are 5-bit max index → 31.
+    N = 32
+    SDMA_IDX = N - 1
     NUM_TILES = 3
-
 
     TILE_ADDR_LOCATION = 60
 
@@ -56,7 +49,7 @@ def main():
     SID0      = 0
     SID1      = 1
 
-    TILE_BYTES = ROWS * COLS * 2   # bytes per input tile
+    TILE_BYTES = N * N * 2  # bytes per input tile
 
 
 
@@ -89,7 +82,7 @@ def main():
         lw.s    $23, 20($20)        # $23 = OUTPUT_SCPAD_ADDR (= 0)
 
         #  load W^T tile into scpad0
-        scpad.ld $3, $6, {COLS_MAX}, {ROWS_MAX}, {SID0}
+        scpad.ld $3, $6, {SDMA_IDX}, {SDMA_IDX}, {SID0}
 
         #  enable systolic rows (0xF enables all 4 rows)
         lui.s   $6, 0
@@ -98,18 +91,18 @@ def main():
 
         # load W^T rows into systolic array using loop with branches
         addi.s  $27, $0, 0        # weight row counter = 0
-        addi.s  $28, $0, {ROWS}   # weight row limit = {ROWS}
+        addi.s  $28, $0, {N}   # weight row limit = {N}
 
 weight_load_loop:
-        bge.s   $27, $28, weight_load_done  # if counter >= {ROWS}, done
-        vreg.ld $10, $3, {COLS_MAX}, {ROWS_MAX}, {SID0}, 1, $27
+        bge.s   $27, $28, weight_load_done  # if counter >= {N}, done
+        vreg.ld $10, $3, {SDMA_IDX}, {SDMA_IDX}, {SID0}, 1, $27
         lw.vi   $10, $10, 0, 0xf
         addi.s  $27, $27, 1
         blt.s   $27, $28, weight_load_loop  # jump back if counter < limit
 
 weight_load_done:
         # load initial C (zeros) into scpad1
-        scpad.ld $23, $24, {COLS_MAX}, {ROWS_MAX}, {SID1}
+        scpad.ld $23, $24, {SDMA_IDX}, {SDMA_IDX}, {SID1}
 
         # tile loop
         # For each input tile:
@@ -121,16 +114,16 @@ weight_load_done:
         addi.s  $26, $0, {NUM_TILES}
 
 tile_loop:
-        scpad.ld $21, $2, {COLS_MAX}, {ROWS_MAX}, {SID0}
+        scpad.ld $21, $2, {SDMA_IDX}, {SDMA_IDX}, {SID0}
 
         addi.s  $27, $0, 0
-        addi.s  $28, $0, {ROWS}
+        addi.s  $28, $0, {N}
 
 row_loop:
-        vreg.ld $4, $21, {COLS_MAX}, {ROWS_MAX}, {SID0}, 1, $27
-        vreg.ld $5, $23, {COLS_MAX}, {ROWS_MAX}, {SID1}, 1, $27
+        vreg.ld $4, $21, {SDMA_IDX}, {SDMA_IDX}, {SID0}, 1, $27
+        vreg.ld $5, $23, {SDMA_IDX}, {SDMA_IDX}, {SID1}, 1, $27
         gemm.vv $6, $4, $5, 0, 0
-        vreg.st $6, $23, {COLS_MAX}, {ROWS_MAX}, {SID1}, 1, $27
+        vreg.st $6, $23, {SDMA_IDX}, {SDMA_IDX}, {SID1}, 1, $27
 
         addi.s  $27, $27, 1
         blt.s   $27, $28, row_loop
@@ -140,7 +133,7 @@ row_loop:
         blt.s   $25, $26, tile_loop
 
         #store final C: scpad1 -> gmem
-        scpad.st $23, $24, {COLS_MAX}, {ROWS_MAX}, {SID1}
+        scpad.st $23, $24, {SDMA_IDX}, {SDMA_IDX}, {SID1}
 
         halt.s
     """
@@ -163,12 +156,11 @@ row_loop:
     # Stored row-major: scratchpad row r = W^T row r = W column r
     # W = np.array([[float(r) + float(c) / 100.0 for c in range(COLS)]
     #           for r in range(ROWS)])
-    W = np.array([[float(r + c) for c in range(COLS)]
-              for r in range(ROWS)])
+    W = np.array([[float(r + c) for c in range(N)] for r in range(N)])
     WT = W.T
-    for r in range(ROWS):
-        for c in range(COLS):
-            img.bf16(WEIGHT_GMEM_ADDR + (r * COLS + c) * 2, float(WT[r, c]))
+    for r in range(N):
+        for c in range(N):
+            img.bf16(WEIGHT_GMEM_ADDR + (r * N + c) * 2, float(WT[r, c]))
     # input tile - making this more distinct to test
     # tile 0: all 1.0,  tile 1: all 2.0,  tile 2: all 3.0
     # for t in range(NUM_TILES):
@@ -177,12 +169,12 @@ row_loop:
     #         img.bf16(base + i * 2, float(t + 1))
     for t in range(NUM_TILES):
         base = INPUT_GMEM_ADDR + t * TILE_BYTES
-        for r in range(ROWS):
-            for c in range(COLS):
-                img.bf16(base + (r * COLS + c) * 2, float((r + 1) * (t + 1)))
+        for r in range(N):
+            for c in range(N):
+                img.bf16(base + (r * N + c) * 2, float((r + 1) * (t + 1)))
 
     # output tile - 0 initialized
-    for i in range(ROWS * COLS):
+    for i in range(N * N):
         img.bf16(OUTPUT_GMEM_ADDR + i * 2, 0.0)
 
     # expected
@@ -190,8 +182,8 @@ row_loop:
     tile_sum = sum(t + 1 for t in range(NUM_TILES))
     base_row = col_sums * float(tile_sum)
     print("Expected C (Row-Major):")
-    C_expected = np.zeros((ROWS, COLS))
-    for r in range(ROWS):
+    C_expected = np.zeros((N, N))
+    for r in range(N):
         C_expected[r, :] = base_row * (r + 1)
 
     print(C_expected)
@@ -204,9 +196,9 @@ row_loop:
 
     print()
     print("\nExpected BF16 Hex (Column-Major / Bank-Interleaved):")
-    for c in range(COLS):
+    for c in range(N):
         bank_hex = []
-        for r in range(ROWS):
+        for r in range(N):
             f_val = float(C_expected[r, c])
             bits = bf16_round(f_val)
             bank_hex.append(f"0x{bits:04X}")

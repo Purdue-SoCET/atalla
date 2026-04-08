@@ -173,6 +173,7 @@ def sdma_store(
     NR: int,
     NC: int,
     swizzle: Callable[[int], int] = identity_swizzle,
+    perf_metrics=None,
 ):
     """
     for i in range(NR):
@@ -192,6 +193,8 @@ def sdma_store(
             #x_shifted = struct.unpack('<f', struct.pack('<I', bits & 0xFFFFFFFF))[0]
             g_addr = gmem_base + (i * (NC+1) + j) * 2
             gmem.write_data(g_addr, bits)
+            if perf_metrics is not None:
+                perf_metrics.increment("bytes_written", 2)
 
 
 def dump_scpad_rc(scpad: Scratchpad, file=None):

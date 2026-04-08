@@ -373,7 +373,7 @@ def read_bf16_matrix_from_dump(dump: dict[int, int], base_addr: int, rows: int, 
 def main() -> None:
     ap = argparse.ArgumentParser()
     ap.add_argument("-o", "--output", type=Path, default=Path("tests/flash_attention.in"))
-    ap.add_argument("--n", type=int, default=64)
+    ap.add_argument("--n", type=int, default=32)
     ap.add_argument("--d", type=int, default=32)
     ap.add_argument("--seed", type=int, default=0)
     ap.add_argument("--causal", action="store_true")

@@ -9,12 +9,8 @@ from pathlib import Path
 import argparse
 import numpy as np
 
-try:
-    from .build import *
-    from .kernels.utils.dataloader import load_tile_data
-except Exception:
-    from build import *
-    from kernels.utils.dataloader import load_tile_data
+from build import * 
+from kernels.utils.dataloader import load_tile_data
 
 
 
@@ -30,15 +26,15 @@ def main():
                     help="Tile dimension N for an N×N tile (default: 4)")
     args = ap.parse_args()
 
+    N = args.n
     TILE_ADDR_LOCATION = 60 # 0x3c
     SCPAD_ADDR_LOCATION = TILE_ADDR_LOCATION + 4
     TILE_ADDR = 0xcafa
     SCPAD_ADDR = 1
     EPSILON_LOCATION = 20
     INV_LAYER_ELEMS_LOCATION = 24
-    N = args.n
-    COLS = N - 1
-    ROWS = N - 1
+    COLS = N
+    ROWS = N
     SID = 0
     LAYER_ELEMS = N * N
     RSUM_MASK = 64
@@ -118,9 +114,8 @@ def main():
         ######### END Variance calculation #######
         mul.vs   $39, $38, $14, 1                   # variance sum * inv(N^2) -> final variance in $39
         add.vs   $39, $39, $4, 1                    # denominator seed + epsilon
-        sqrti.vi $39, $39, 0, 1                     # denominator = sqrt(denominator seed) -> normalized denominator in $39
-
         vmov.vts $15, $39, 0                        # extract denominator lane 0 to scalar
+        sqrt.bf  $15, $15, $0                       # scalar sqrt only (vector sqrti.vi removed)
         rcp.bf   $15, $15, $0                       # reciprocal(denominator)
 
         mul.vs   $30, $30, $15, 1                   # normalized row 0 * reciprocal(denominator)

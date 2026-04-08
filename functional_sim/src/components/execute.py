@@ -39,7 +39,6 @@ MNEMONIC_SCALAR = {
     "or.s":  "or",
     "and.s": "and",
     "xor.s": "xor",
-    "not.s": "not",
     "sll.s": "shl",
     "srl.s": "srl",
     "sra.s": "sra",
@@ -74,32 +73,16 @@ MNEMONIC_VECTOR = {
     "add.vv": "add",
     "sub.vv": "sub",
     "mul.vv": "mul",
-    "div.vv": "div",
-    "and.vv": "bw_and",
-    "or.vv":  "bw_or",
-    "xor.vv": "bw_xor",
 
-    "addi.vi": "add_scalar",
-    "subi.vi": "sub_scalar",
-    "muli.vi": "mul_scalar",
-    "divi.vi": "div_scalar",
     "expi.vi":  "exp",
-    "sqrti.vi": "sqrt",
-    "not.vi":  "bw_not",
-    "shift.vi": "shl_scalar",
-    "shift.vi": "shr_scalar",
 
     "rsum.vi":  "reduce_sum",
     "rmin.vi":  "reduce_min",
     "rmax.vi":  "reduce_max",
 
-    "shift.vs": "shl_scalar",
-    "shift.vs": "shr_scalar",
     "add.vs": "add_scalar",
     "sub.vs": "sub_scalar",
-    "rsub.vs": "scalar_sub",
     "mul.vs": "mul_scalar",
-    "div.vs": "div_scalar",
     
     "mgt.mvv":  "cmp_gt",
     "mlt.mvv":  "cmp_lt",
@@ -287,7 +270,6 @@ if __name__ == "__main__":
     print("rmin.vi         =", EU.execute("rmin.vi", vA=vA))
     print("rmax.vi         =", EU.execute("rmax.vi", vA=vA))
     print("expi.vi         =", EU.execute("expi.vi", vA=np.ones(32, dtype=np.float32)))
-    print("sqrti.vi        =", EU.execute("sqrti.vi", vA=np.arange(32, dtype=np.float32)))
 
 
     print("\n====================================================")

@@ -9,15 +9,11 @@ from pathlib import Path
 import argparse
 import numpy as np
 
-try:
-    from .kernels.utils.dataloader import load_tile_data
-    from .src.misc.opcode_table import OPCODES, name_to_opcode
-except Exception:
-    from kernels.utils.dataloader import load_tile_data
-    from src.misc.opcode_table import OPCODES, name_to_opcode
+from kernels.utils.dataloader import load_tile_data
+from src.misc.opcode_table import OPCODES, name_to_opcode
 
 try:
-    from .instruction_latency import latency as DEFAULT_LATENCY_MAP
+    from instruction_latency import latency as DEFAULT_LATENCY_MAP
 
 except Exception:
     DEFAULT_LATENCY_MAP: Dict[str, int] = {}
@@ -26,8 +22,8 @@ INVERT_OPCODES = name_to_opcode()
 VIRTUAL_PACKET_SIZE = 1 
 REAL_PACKET_SIZE = 4
 GRAPH_PACKET_WIDTH = REAL_PACKET_SIZE
-RAW_VI_IMM_MNEMONICS = {"shift.vi", "rsum.vi", "rmin.vi", "rmax.vi"}
-INSTR_BYTE_WIDTH = 6
+RAW_VI_IMM_MNEMONICS = {"rsum.vi", "rmin.vi", "rmax.vi"}
+INSTR_BYTE_WIDTH = 5
 INSTR_ADDR_STRIDE = REAL_PACKET_SIZE * INSTR_BYTE_WIDTH
 
 MEM_LOAD_MNEMONICS = {
@@ -45,7 +41,7 @@ MEM_STORE_MNEMONICS = {
 }
 CONTROL_MNEMONICS = (
     {name.lower() for name, instr_type in OPCODES.values() if instr_type == "BR"}
-    | {"jal", "jalr", "halt.s", "barrier.s", "ret"}
+    | {"jal", "jalr", "halt.s", "ret"}
 )
 
 IntLike = int
@@ -132,23 +128,17 @@ def encode_instruction(instr_dict):
         instruction |= (rd & 0xFF) << 7
         instruction |= (imm25 & 0x1FFFFFF) << 15
         
-    elif instr_type == "S":
-        # S-Type: special instructions, no operands
-        pass
-        
     elif instr_type == "VV":
-        # VV-Type: vd 7-14, vs1 15-22, vs2 23-30, mask 31-34, sac 35-39
+        # VV-Type: vd 7-14, vs1 15-22, vs2 23-30, mask 31-34
         vd = instr_dict.get('vd', 0)
         vs1 = instr_dict.get('vs1', 0)
         vs2 = instr_dict.get('vs2', 0)
         mask = instr_dict.get('mask', 0)
-        sac = instr_dict.get('sac', 0)
         
         instruction |= (vd & 0xFF) << 7
         instruction |= (vs1 & 0xFF) << 15
         instruction |= (vs2 & 0xFF) << 23
         instruction |= (mask & 0xF) << 31
-        instruction |= (sac & 0x1F) << 35
         
     elif instr_type == "VS":
         # VS-Type: vd 7-14, vs1 15-22, rs1 23-30, mask 31-34
@@ -163,71 +153,55 @@ def encode_instruction(instr_dict):
         instruction |= (mask & 0xF) << 31
         
     elif instr_type == "VI":
-        # VI-Type: vd 7-14, vs1 15-22, imm8 23-30, mask 31-34, imm5 35-39
+        # VI-Type: vd 7-14, vs1 15-22, imm8 23-30, mask 31-34
         vd = instr_dict.get('vd', 0)
         vs1 = instr_dict.get('vs1', 0)
-        imm8_1 = instr_dict.get('imm8_1', 0)
+        imm8 = instr_dict.get('imm8', instr_dict.get('imm', 0))
         mask = instr_dict.get('mask', 0)
-        imm8_2 = instr_dict.get('imm8_2', 0)
         
         instruction |= (vd & 0xFF) << 7
         instruction |= (vs1 & 0xFF) << 15
-        instruction |= (imm8_1 & 0xFF) << 23
+        instruction |= (imm8 & 0xFF) << 23
         instruction |= (mask & 0xF) << 31
-        instruction |= (imm8_2 & 0xFF) << 35
         
     elif instr_type == "VM":
-        # VM-Type: vd 7-14, rs1 15-22, num_cols 23-27, num_rows 28-32, sid 33, rc 34, rc_id 35-39, rc_id_is_reg 40
+        # VM-Type: sid 37-36, num_cols 35-31, rs2 30-23, rs1 22-15, vd 14-7
         vd = instr_dict.get('vd', 0)
         rs1 = instr_dict.get('rs1', 0)
+        rs2 = instr_dict.get('rs2', 0)
         num_cols = instr_dict.get('num_cols', 0)
-        num_rows = instr_dict.get('num_rows', 0)
         sid = instr_dict.get('sid', 0)
-        rc = instr_dict.get('rc', 0)
-        rc_id = instr_dict.get('rc_id', 0)
-        rc_id_is_reg = int(instr_dict.get('rc_id_is_reg', False))
         
         instruction |= (vd & 0xFF) << 7
         instruction |= (rs1 & 0xFF) << 15
-        instruction |= (num_cols & 0x1F) << 23
-        instruction |= (num_rows & 0x1F) << 28
-        instruction |= (sid & 0x1) << 33
-        instruction |= (rc & 0x1) << 34
-        instruction |= (rc_id & 0x1F) << 35
-        instruction |= (rc_id_is_reg & 0x1) << 40
+        instruction |= (rs2 & 0xFF) << 23
+        instruction |= (num_cols & 0x1F) << 31
+        instruction |= (sid & 0x3) << 36
         
     elif instr_type == "SDMA":
-        # SDMA legacy-immediate form or rs3-packed control form.
+        # SDMA: rs1/rd1 7-14, rs2 15-22, rs3 23-30
         rs1_rd1 = instr_dict.get('rs1', instr_dict.get('rd1', 0))
         rs2 = instr_dict.get('rs2', 0)
+        rs3 = instr_dict.get('rs3', 0)
+        
         instruction |= (rs1_rd1 & 0xFF) << 7
         instruction |= (rs2 & 0xFF) << 15
-        if instr_dict.get("sdma_ctl_from_reg"):
-            rs3 = instr_dict.get('rs3', 0)
-            instruction |= (rs3 & 0xFF) << 23
-            instruction |= 1 << 34
-        else:
-            num_cols = instr_dict.get('num_cols', 0)
-            num_rows = instr_dict.get('num_rows', 0)
-            sid = instr_dict.get('sid', 0)
-            instruction |= (num_cols & 0x1F) << 23
-            instruction |= (num_rows & 0x1F) << 28
-            instruction |= (sid & 0x1) << 33
+        instruction |= (rs3 & 0xFF) << 23
         
     elif instr_type == "MTS":
-        # MTS: rd 7-14, vms 15-22
+        # MTS: rd 7-14, vms 15-18
         rd = instr_dict.get('rd', 0)
         vms = instr_dict.get('vms', 0)
         
         instruction |= (rd & 0xFF) << 7
-        instruction |= (vms & 0xFF) << 15
+        instruction |= (vms & 0xF) << 15
         
     elif instr_type == "STM":
-        # STM: vmd 7-14, rs1 15-22
+        # STM: vmd 7-10, rs1 15-22
         vmd = instr_dict.get('vmd', 0)
         rs1 = instr_dict.get('rs1', 0)
         
-        instruction |= (vmd & 0xFF) << 7
+        instruction |= (vmd & 0xF) << 7
         instruction |= (rs1 & 0xFF) << 15
 
     elif instr_type == "VTS":
@@ -239,36 +213,111 @@ def encode_instruction(instr_dict):
         instruction |= (vs1 & 0xFF) << 15
         instruction |= (imm8 & 0xFF) << 23
 
-    elif instr_type == "MVV":
+    elif instr_type == "VMV":
         vmd = instr_dict.get('vmd', 0)
         vs1 = instr_dict.get('vs1', 0)
         vs2 = instr_dict.get('vs2', 0)
         mask = instr_dict.get('mask', 0)
         
         instruction |= (vmd & 0xF) << 7
-        instruction |= (vs1 & 0xFF) << 11
-        instruction |= (vs2 & 0xFF) << 19
-        instruction |= (mask & 0xF) << 27
+        instruction |= (vs1 & 0xFF) << 15
+        instruction |= (vs2 & 0xFF) << 23
+        instruction |= (mask & 0xF) << 31
 
-    elif instr_type == "MVS":
+    elif instr_type == "VMS":
         vmd = instr_dict.get('vmd', 0)
         vs1 = instr_dict.get('vs1', 0)
         rs1 = instr_dict.get('rs1', 0)
         mask = instr_dict.get('mask', 0)
         
         instruction |= (vmd & 0xF) << 7
-        instruction |= (vs1 & 0xFF) << 11
-        instruction |= (rs1 & 0xFF) << 19
-        instruction |= (mask & 0xF) << 27
+        instruction |= (vs1 & 0xFF) << 15
+        instruction |= (rs1 & 0xFF) << 23
+        instruction |= (mask & 0xF) << 31
     
-    return format(instruction & ((1 << 48) - 1), '012x')
+    return format(instruction & ((1 << 40) - 1), '010x')
     
 
 REG_RE = re.compile(r"^\$(?:x)?(\d+)$", re.IGNORECASE)
 IMM_RE = re.compile(r"^[+-]?(?:0x[0-9a-fA-F]+|0b[01]+|\d+)$")
 FLOAT_RE = re.compile(r"^[+-]?(?:\d+\.\d*|\.\d+|\d+)(?:[eE][+-]?\d+)?$")
-MEM_RE = re.compile(r"^([+-]?(?:0x[0-9a-fA-F]+|0b[01]+|\d+))\(\s*\$(?:x)?(\d+)\s*\)$", re.IGNORECASE)
+MEM_RE = re.compile(
+    r"^([+-]?(?:0x[0-9a-fA-F]+|0b[01]+|\d+))\(\s*\$?(?:x)?(\d+)\s*\)$",
+    re.IGNORECASE,
+)
 LABEL_RE = re.compile(r"^[A-Za-z_]\w*:$")
+
+# ppci / AtallaC emit underscores (addi_s) and RISC-style regs (x8); normalize before asm_to_instr_dict.
+PPCI_REG_RE = re.compile(r"^\$?[xv](\d+)$", re.IGNORECASE)
+PPCI_MEM_RE = re.compile(
+    r"^([+-]?(?:0x[0-9a-fA-F]+|0b[01]+|\d+))\(\s*\$?[xv](\d+)\s*\)$",
+    re.IGNORECASE,
+)
+PPCI_MASK_RE = re.compile(r"^\$?m(\d+)$", re.IGNORECASE)
+
+PPCI_MNEMONIC_ALIASES = {
+    "beq": "beq.s",
+    "bne": "bne.s",
+    "blt": "blt.s",
+    "bge": "bge.s",
+    "bgt": "bgt.s",
+    "ble": "ble.s",
+    "lw": "lw.s",
+    "sw": "sw.s",
+    "lhw": "lhw.s",
+    "shw": "shw.s",
+    "li": "li.s",
+    "lui": "lui.s",
+    "addi": "addi.s",
+    "subi": "subi.s",
+    "muli": "muli.s",
+    "divi": "divi.s",
+    "modi": "modi.s",
+    "ori": "ori.s",
+    "andi": "andi.s",
+    "xori": "xori.s",
+    "slli": "slli.s",
+    "srli": "srli.s",
+    "srai": "srai.s",
+    "slti": "slti.s",
+    "sltui": "sltui.s",
+    "nop": "nop.s",
+    "halt": "halt.s",
+    "sqrt_bf": "sqrt.bf",
+    "rcp_bf": "rcp.bf",
+    "stbf_s": "stbf.s",
+    "bfts_s": "bfts.s",
+    "add_bf": "add.bf",
+    "sub_bf": "sub.bf",
+    "mul_bf": "mul.bf",
+    "slt_bf": "slt.bf",
+}
+
+
+def normalize_ppci_mnemonic(mnemonic: str) -> str:
+    m = mnemonic.strip().lower().replace("_", ".")
+    return PPCI_MNEMONIC_ALIASES.get(m, m)
+
+
+def normalize_ppci_operand(op: str) -> str:
+    s = op.strip()
+    mem_m = PPCI_MEM_RE.match(s.replace(" ", ""))
+    if mem_m:
+        return f"{mem_m.group(1)}(${int(mem_m.group(2))})"
+    reg_m = PPCI_REG_RE.match(s)
+    if reg_m:
+        return f"${int(reg_m.group(1))}"
+    mask_m = PPCI_MASK_RE.match(s)
+    if mask_m:
+        return str(int(mask_m.group(1)))
+    return s
+
+
+def _jal_imm25_bounds(imm: int) -> None:
+    lo = -(1 << 24)
+    hi = (1 << 24) - 1
+    if imm < lo or imm > hi:
+        raise ValueError(f"jal offset {imm} out of signed 25-bit range [{lo}, {hi}]")
 
 # ---- Label Branch Support Start ----
 def parse_int(s: str) -> int:
@@ -308,10 +357,6 @@ def split_br_imm(off: int) -> tuple[int, int, int]:
     imm1 = (imm17 >> 7) & 0x1
     imm9 = (imm17 >> 8) & 0x1FF
     return incr_imm, imm1, imm9
-
-def split_imm16(off: int) -> tuple[int, int]:
-    imm16 = to_twos_complement(off, 16)
-    return imm16 & 0xFF, (imm16 >> 8) & 0xFF
 
 def split_br_target_imm(delta_bytes: int) -> tuple[int, int]:
     if delta_bytes % 4 != 0:
@@ -402,6 +447,10 @@ def asm_to_instr_dict(
     d = {"opcode": opcode, "type": instr_type}
 
     if instr_type == "R":
+        if mnemonic in {"nop.s", "halt.s"}:
+            if ops:
+                raise ValueError(f"{mnemonic} takes no operands")
+            return d
         d["rd"]  = parse_reg(ops[0])
         d["rs1"] = parse_reg(ops[1])
         d["rs2"] = parse_reg(ops[2])
@@ -472,39 +521,51 @@ def asm_to_instr_dict(
         return d
 
     if instr_type == "MI":
-        # jal rd, imm25  OR jal imm25 (rd defaults 0)
-        if len(ops) == 1:
-            d["rd"] = 0
-            d["imm25"] = parse_int(ops[0])
-        else:
-            d["rd"] = parse_reg(ops[0])
-            d["imm25"] = parse_int(ops[1])
+        if mnemonic == "jal":
+            if len(ops) == 1:
+                d["rd"] = 0
+                target = ops[0].strip()
+            elif len(ops) == 2:
+                d["rd"] = parse_reg(ops[0])
+                target = ops[1].strip()
+            else:
+                raise ValueError(f"jal expects 1 or 2 operands, got {len(ops)}")
+
+            if labels is not None and target in labels:
+                if pc is None:
+                    raise ValueError("Internal error: missing PC for label-based jal")
+                imm = labels[target] - pc
+            elif IMM_RE.match(target):
+                imm = parse_int(target)
+            else:
+                raise ValueError(f"Unknown jal target: {target!r}")
+
+            _jal_imm25_bounds(imm)
+            d["imm25"] = imm
+            return d
+
+        # li.s / lui.s (and any other MI using rd + imm25)
+        if len(ops) != 2:
+            raise ValueError(f"{mnemonic} expects 2 operands (rd, imm), got {len(ops)}")
+        d["rd"] = parse_reg(ops[0])
+        d["imm25"] = parse_int(ops[1])
         return d
 
     if instr_type == "VI":
-        # VI format supports two immediate encodings:
-        # 1) arithmetic/scalar-style .vi ops use BF16-encoded immediate payload
-        # 2) control-style .vi ops (shift/rsum/rmin/rmax) use raw immediate bits
+        # VI format: vd, vs1, imm8, mask
         d["vd"]  = parse_reg(ops[0])
         d["vs1"] = parse_reg(ops[1])
-        if mnemonic in RAW_VI_IMM_MNEMONICS:
-            imm16 = parse_int(ops[2]) & 0xFFFF
-        else:
-            imm16 = _bf16_bits(parse_number(ops[2]))
-        lo, hi = split_imm16(imm16)
-        d["imm8_1"] = lo
-        d["imm8_2"] = hi
+        d["imm8"] = parse_int(ops[2]) & 0xFF
         if len(ops) >= 4:
             d["mask"] = parse_int(ops[3])
         return d
 
     if instr_type == "VV":
-        # add.vv vd, vs1, vs2, mask, sac
+        # add.vv vd, vs1, vs2, mask
         d["vd"] = parse_reg(ops[0])
         d["vs1"] = parse_reg(ops[1])
         d["vs2"] = parse_reg(ops[2])
         d["mask"] = parse_int(ops[3])
-        d["sac"] = parse_int(ops[4])
         return d
 
     if instr_type == "VS":
@@ -516,33 +577,19 @@ def asm_to_instr_dict(
         return d
 
     if instr_type == "VM":
-        # vreg.ld vd, rs1, num_cols, num_rows, sid, rc, rc_id_reg
+        # vreg.ld vd, rs1, rs2, num_cols, sid
         d["vd"] = parse_reg(ops[0])
         d["rs1"] = parse_reg(ops[1])
-        d["num_cols"] = parse_int(ops[2])
-        d["num_rows"] = parse_int(ops[3])
+        d["rs2"] = parse_reg(ops[2])
+        d["num_cols"] = parse_int(ops[3])
         d["sid"] = parse_int(ops[4])
-        d["rc"] = parse_int(ops[5])
-
-        target_rc_id = ops[6].strip()
-        if target_rc_id.startswith("$"):
-            d["rc_id"] = parse_reg(target_rc_id)
-            d["rc_id_is_reg"] = True
-        else:
-            d["rc_id"] = parse_int(target_rc_id)
-            d["rc_id_is_reg"] = False
         return d
 
     if instr_type == "SDMA":
+        # scpad.ld rs1, rs2, rs3
         d["rs1"] = parse_reg(ops[0])
         d["rs2"] = parse_reg(ops[1])
-        if len(ops) == 3 and ops[2].strip().startswith("$"):
-            d["rs3"] = parse_reg(ops[2])
-            d["sdma_ctl_from_reg"] = True
-        else:
-            d["num_cols"] = parse_int(ops[2])
-            d["num_rows"] = parse_int(ops[3])
-            d["sid"] = parse_int(ops[4])
+        d["rs3"] = parse_reg(ops[2])
         return d
 
     if instr_type == "MTS":
@@ -557,7 +604,7 @@ def asm_to_instr_dict(
         d["rs1"] = parse_reg(ops[1])
         return d
 
-    if instr_type == "MVV":
+    if instr_type == "VMV":
         # mgt.mvv vmd, vs1, vs2, mask
         d["vmd"] = parse_int(ops[0])
         d["vs1"] = parse_reg(ops[1])
@@ -565,7 +612,7 @@ def asm_to_instr_dict(
         d["mask"] = parse_int(ops[3])
         return d
 
-    if instr_type == "MVS":
+    if instr_type == "VMS":
         # mgt.mvs vmd, vs1, rs1, mask
         d["vmd"] = parse_int(ops[0])
         d["vs1"] = parse_reg(ops[1])
@@ -580,15 +627,100 @@ def asm_to_instr_dict(
         d["imm8"] = parse_int(ops[2])
         return d
 
-    if instr_type == "S":
-        if ops:
-            raise ValueError(f"{mnemonic} takes no operands")
-        return d
-
     raise NotImplementedError(f"Type {instr_type} not implemented yet for {mnemonic}")
 
 
+SDMA_TEMP_REG = 254
+VREG_ROW_TEMP_REG = 253
+_IMM25_LO = -(1 << 24)
+_IMM25_HI = (1 << 24) - 1
+
+
+def expand_vreg_seven_operand_asm(in_data: str) -> str:
+    """
+    ``vreg.{ld,st} vd, rs1, cols, rows, sid, imm, row`` → 5-operand VM form
+    ``vd, rs1, rs2, num_cols, sid`` (row in rs2 or temp $253).
+    """
+    out_lines: list[str] = []
+    pat = re.compile(
+        r"^(vreg\.(?:ld|st))\s+(\$\w+)\s*,\s*(\$\w+)\s*,\s*(\d+)\s*,\s*(\d+)\s*,\s*(\d+)\s*,\s*(\d+)\s*,\s*(\$\w+|\d+)\s*$",
+        re.IGNORECASE,
+    )
+    for raw in in_data.splitlines():
+        code, cmt = strip_comment(raw)
+        leading_ws = raw[: len(raw) - len(raw.lstrip(" \t"))]
+        labels, rest = parse_leading_labels(code.strip())
+        if not rest.strip():
+            out_lines.append(raw)
+            continue
+        m = pat.match(rest.strip())
+        if not m:
+            out_lines.append(raw)
+            continue
+        op, vd, rs1, cols_s, _rows_s, sid_s, _imm6_s, row_s = m.groups()
+        cols, sid = int(cols_s), int(sid_s)
+        cmt_tail = f" # {cmt}" if cmt else ""
+        lbl = "".join(f"{lb}: " for lb in labels)
+        row_tok = row_s.strip()
+        if REG_RE.match(row_tok):
+            rs2 = row_tok
+            out_lines.append(
+                f"{leading_ws}{lbl}{op} {vd}, {rs1}, {rs2}, {cols}, {sid}{cmt_tail}"
+            )
+        else:
+            row_imm = parse_int(row_tok)
+            if not (0 <= row_imm <= 127):
+                raise ValueError(f"{op} row immediate {row_imm} out of addi.s 7-bit range")
+            out_lines.append(
+                f"{leading_ws}{lbl}addi.s   ${VREG_ROW_TEMP_REG}, $0, {row_imm}{cmt_tail}  # vreg row"
+            )
+            out_lines.append(
+                f"{leading_ws}{op} {vd}, {rs1}, ${VREG_ROW_TEMP_REG}, {cols}, {sid}"
+            )
+    return "\n".join(out_lines)
+
+
+def expand_scpad_five_operand_asm(in_data: str) -> str:
+    """
+    ``scpad.{ld,st} rs1, rs2, cols, rows, sid`` → ``lui.s $254, meta>>7`` + 3-operand SDMA.
+    """
+    out_lines: list[str] = []
+    pat = re.compile(
+        r"^(scpad\.(?:ld|st))\s+(\$\w+)\s*,\s*(\$\w+)\s*,\s*(\d+)\s*,\s*(\d+)\s*,\s*(\d+)\s*$",
+        re.IGNORECASE,
+    )
+    for raw in in_data.splitlines():
+        code, cmt = strip_comment(raw)
+        leading_ws = raw[: len(raw) - len(raw.lstrip(" \t"))]
+        labels, rest = parse_leading_labels(code.strip())
+        if not rest.strip():
+            out_lines.append(raw)
+            continue
+        m = pat.match(rest.strip())
+        if not m:
+            out_lines.append(raw)
+            continue
+        op, a, b, c_s, r_s, sid_s = m.groups()
+        cols, rows, sid = int(c_s), int(r_s), int(sid_s)
+        meta = ((sid & 0x3) << 30) | ((rows & 0x1F) << 25) | ((cols & 0x1F) << 20)
+        imm7 = meta >> 7
+        if imm7 < _IMM25_LO or imm7 > _IMM25_HI:
+            raise ValueError(
+                f"{op} {cols},{rows},{sid}: metadata imm>>7={imm7} out of 25-bit range; "
+                "use explicit rs3 register form."
+            )
+        cmt_tail = f" # {cmt}" if cmt else ""
+        lbl = "".join(f"{lb}: " for lb in labels)
+        out_lines.append(
+            f"{leading_ws}{lbl}lui.s    ${SDMA_TEMP_REG}, {imm7}{cmt_tail}  # scpad metadata"
+        )
+        out_lines.append(f"{leading_ws}{op} {a}, {b}, ${SDMA_TEMP_REG}")
+    return "\n".join(out_lines)
+
+
 def assemble_file(in_data: str) -> list[tuple[str, str]]:
+    in_data = expand_vreg_seven_operand_asm(in_data)
+    in_data = expand_scpad_five_operand_asm(in_data)
     out = []
     stop_markers = {"data mem", ".data"}
     labels: dict[str, int] = {}
@@ -627,11 +759,14 @@ def assemble_file(in_data: str) -> list[tuple[str, str]]:
         if not mnemonic:
             continue
 
+        mnemonic = normalize_ppci_mnemonic(mnemonic)
+        ops = [normalize_ppci_operand(o) for o in ops]
+
         instr_dict = asm_to_instr_dict(mnemonic, ops, labels=labels, pc=pc)
-        hex48 = encode_instruction(instr_dict).upper()
-        if len(hex48) != 12:
-            raise ValueError(f"encode_instruction returned {hex48!r} (expected 12 hex chars)")
-        out.append((hex48, cmt))
+        hex40 = encode_instruction(instr_dict).upper()
+        if len(hex40) != 10:
+            raise ValueError(f"encode_instruction returned {hex40!r} (expected 10 hex chars)")
+        out.append((hex40, cmt))
 
     return out
 # ---- Label Branch Support End ----
@@ -844,7 +979,7 @@ def _is_memory_op(op: str) -> bool:
 
 def _is_control_op(op: str) -> bool:
     op_norm = op.lower()
-    return op_norm in CONTROL_MNEMONICS or _base_op(op_norm) in {"j", "jal", "jalr", "ret", "halt", "barrier"}
+    return op_norm in CONTROL_MNEMONICS or _base_op(op_norm) in {"j", "jal", "jalr", "ret", "halt"}
 
 
 def _decode_instruction_for_graph(hex_word: str) -> tuple[str, list[str], list[str], object]:
@@ -925,35 +1060,34 @@ def _decode_instruction_for_graph(hex_word: str) -> tuple[str, list[str], list[s
     elif instr_type == "VM":
         vd = (raw >> 7) & 0xFF
         rs1 = (raw >> 15) & 0xFF
-        rc_id_is_reg = (raw >> 40) & 0x1
-        rc_id_reg = (raw >> 35) & 0x1F
+        rs2 = (raw >> 23) & 0xFF
+        sid = (raw >> 36) & 0x3
         if _is_memory_store(mnemonic):
-            srcs = [v(vd), r(rs1)]
+            srcs = [v(vd), r(rs1), r(rs2)]
         else:
             dsts = [v(vd)]
-            srcs = [r(rs1)]
-        if rc_id_is_reg:
-            srcs.append(r(rc_id_reg))
-        mem_key = (r(rs1), "vreg")
+            srcs = [r(rs1), r(rs2)]
+        mem_key = (r(rs1), r(rs2), sid, "vreg")
 
     elif instr_type == "SDMA":
         rs1_rd1 = (raw >> 7) & 0xFF
         rs2 = (raw >> 15) & 0xFF
+        rs3 = (raw >> 23) & 0xFF
         if _is_memory_store(mnemonic):
-            srcs = [r(rs1_rd1), r(rs2)]
+            srcs = [r(rs1_rd1), r(rs2), r(rs3)]
         else:
             dsts = [r(rs1_rd1)]
-            srcs = [r(rs2)]
+            srcs = [r(rs2), r(rs3)]
         mem_key = (r(rs2), "scpad")
 
     elif instr_type == "MTS":
         rd = (raw >> 7) & 0xFF
-        vms = (raw >> 15) & 0xFF
+        vms = (raw >> 15) & 0xF
         dsts = [r(rd)]
         srcs = [v(vms)]
 
     elif instr_type == "STM":
-        vmd = (raw >> 7) & 0xFF
+        vmd = (raw >> 7) & 0xF
         rs1 = (raw >> 15) & 0xFF
         dsts = [v(vmd)]
         srcs = [r(rs1)]
@@ -964,17 +1098,17 @@ def _decode_instruction_for_graph(hex_word: str) -> tuple[str, list[str], list[s
         dsts = [r(rd)]
         srcs = [v(vs1)]
 
-    elif instr_type == "MVV":
+    elif instr_type == "VMV":
         vmd = (raw >> 7) & 0xF
-        vs1 = (raw >> 11) & 0xFF
-        vs2 = (raw >> 19) & 0xFF
+        vs1 = (raw >> 15) & 0xFF
+        vs2 = (raw >> 23) & 0xFF
         dsts = [v(vmd)]
         srcs = [v(vs1), v(vs2)]
 
-    elif instr_type == "MVS":
+    elif instr_type == "VMS":
         vmd = (raw >> 7) & 0xF
-        vs1 = (raw >> 11) & 0xFF
-        rs1 = (raw >> 19) & 0xFF
+        vs1 = (raw >> 15) & 0xFF
+        rs1 = (raw >> 23) & 0xFF
         dsts = [v(vmd)]
         srcs = [v(vs1), r(rs1)]
 
@@ -1004,7 +1138,7 @@ def _op_latency(op: str, latency_map: Dict[str, int]) -> int:
         return 1
     if op_base in {"mul", "muli"}:
         return 3
-    if op_base in {"div", "divi", "mod", "modi", "expi", "sqrti", "gemm"}:
+    if op_base in {"div", "divi", "mod", "modi", "expi", "sqrt", "gemm"}:
         return 8
     return 1
 

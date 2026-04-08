@@ -395,7 +395,6 @@ expi.vi vd, vs1, imm, mask
 - `imm`: reserved/control immediate (not used in core exp math).
 - `mask`: lane-enable mask register index.
 
-sqrti.vi vd, vs1, imm, mask
 - Operation: Element-wise square root.
 - `vd`: vector destination.
 - `vs1`: vector source.
