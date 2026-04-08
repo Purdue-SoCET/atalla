@@ -28,6 +28,7 @@ module axi_write_driver(
     assign w_skid_empty  = (w_wr_ptr == w_rd_ptr);
 
     logic aw_fire, aw_sent; // checks if aw request has been set so count down of beats can continue
+    logic same_txn_sp0, same_txn_sp1, same_txn_d; // enforces aw + w in lockstep
 
     always_ff@(posedge CLK, negedge nRST) begin 
         if(!nRST) begin
@@ -55,7 +56,7 @@ module axi_write_driver(
                         aw_skid_buffer[aw_wr_ptr].burst  <= wdrv_if.head_sp0_aw_o.burst;
                         aw_wr_ptr <= aw_wr_ptr + 1'b1;
                     end
-                    if(!w_skid_full && wdrv_if.head_sp0_wvalid) begin
+                    if(!w_skid_full && wdrv_if.head_sp0_wvalid && same_txn_sp0) begin
                         w_skid_buffer[w_wr_ptr].valid    <= wdrv_if.head_sp0_wvalid;
                         w_skid_buffer[w_wr_ptr].mid_id   <= wdrv_if.head_sp0_w_o.mid_id;
                         w_skid_buffer[w_wr_ptr].data     <= wdrv_if.head_sp0_w_o.data;
@@ -79,7 +80,7 @@ module axi_write_driver(
                         aw_skid_buffer[aw_wr_ptr].burst  <= wdrv_if.head_sp1_aw_o.burst;
                         aw_wr_ptr <= aw_wr_ptr + 1'b1;
                     end
-                    if (!w_skid_full && wdrv_if.head_sp1_wvalid) begin
+                    if (!w_skid_full && wdrv_if.head_sp1_wvalid && same_txn_sp1) begin
                         w_skid_buffer[w_wr_ptr].valid    <= wdrv_if.head_sp1_wvalid;
                         w_skid_buffer[w_wr_ptr].mid_id   <= wdrv_if.head_sp1_w_o.mid_id;
                         w_skid_buffer[w_wr_ptr].data     <= wdrv_if.head_sp1_w_o.data;
@@ -103,7 +104,7 @@ module axi_write_driver(
                         aw_skid_buffer[aw_wr_ptr].burst  <= wdrv_if.head_d_aw_o.burst;
                         aw_wr_ptr <= aw_wr_ptr + 1'b1;
                     end 
-                    if (!w_skid_full && wdrv_if.head_d_wvalid) begin
+                    if (!w_skid_full && wdrv_if.head_d_wvalid && same_txn_d) begin
                         w_skid_buffer[w_wr_ptr].valid    <= wdrv_if.head_d_wvalid;
                         w_skid_buffer[w_wr_ptr].mid_id   <= wdrv_if.head_d_w_o.mid_id;
                         w_skid_buffer[w_wr_ptr].data     <= wdrv_if.head_d_w_o.data;
@@ -136,6 +137,10 @@ module axi_write_driver(
             end
         end 
     end
+
+    assign same_txn_sp0 = (!aw_sent && (wdrv_if.head_sp0_w_o.mid_id == wdrv_if.head_sp0_aw_o.mid_id)) || (aw_sent && (wdrv_if.head_sp0_w_o.mid_id == aw_skid_buffer[aw_rd_ptr].mid_id));
+    assign same_txn_sp1 = (!aw_sent && (wdrv_if.head_sp1_w_o.mid_id == wdrv_if.head_sp1_aw_o.mid_id)) || (aw_sent && (wdrv_if.head_sp1_w_o.mid_id == aw_skid_buffer[aw_rd_ptr].mid_id));
+    assign same_txn_d = (!aw_sent && (wdrv_if.head_d_w_o.mid_id == wdrv_if.head_d_aw_o.mid_id)) || (aw_sent && (wdrv_if.head_d_w_o.mid_id == aw_skid_buffer[aw_rd_ptr].mid_id));
     
     // logic to read valid/ready from aw skid buffer
     assign aw_fire = (aw_skid_buffer[aw_rd_ptr].valid && wdrv_if.aw_o_ready);
@@ -159,15 +164,15 @@ module axi_write_driver(
 
     assign wdrv_if.w_sp0_pop = (wdrv_if.aw_grant[MID] && 
                                (wdrv_if.aw_grant[MID-1:0] == SP0) && 
-                               !w_skid_full && wdrv_if.head_sp0_wvalid);
+                               !w_skid_full && wdrv_if.head_sp0_wvalid && same_txn_sp0);
     
     assign wdrv_if.w_sp1_pop = (wdrv_if.aw_grant[MID] && 
                                (wdrv_if.aw_grant[MID-1:0] == SP1) && 
-                               !w_skid_full && wdrv_if.head_sp1_wvalid);
+                               !w_skid_full && wdrv_if.head_sp1_wvalid && same_txn_sp1);
 
     assign wdrv_if.w_d_pop   = (wdrv_if.aw_grant[MID] && 
                                (wdrv_if.aw_grant[MID-1:0] == DCACHE) && 
-                               !w_skid_full && wdrv_if.head_d_wvalid);
+                               !w_skid_full && wdrv_if.head_d_wvalid && same_txn_d);
 
     assign wdrv_if.aw_o_valid  = aw_skid_buffer[aw_rd_ptr].valid;
     assign wdrv_if.aw_o.addr   = aw_skid_buffer[aw_rd_ptr].addr;
