@@ -98,6 +98,10 @@ logic                      fsm_pop;     // Pop front entry from bank queue
 logic                      fsm_ready;   // Command eligible for arbiter scheduling
 fsm_t                      fsm_cmd;     // Current command
 
+// REFRESH COUNTER <-> BACKEND ARBITER
+logic                      rf_enable;   // Initialization done, enable counting
+logic                      rf_done;     // Refresh command completed
+
 // BACKEND ARBITER -> READ_ID_QUEUE
 logic                      be_push_id; 
 logic [$clog2(ID_NUM)-1:0] be_rid;
@@ -268,7 +272,16 @@ modport backend_arb (
     //BE -> WDATA_QUEUE
     be_wid, be_write, 
     //BE -> R_ID_QUEUE
-    be_rid, be_push_id, be_rlen
+    be_rid, be_push_id, be_rlen,
+    //BE -> REFRESH COUNTER
+    rf_enable, rf_done
+);
+
+modport refresh_cntrl (
+    //BE -> REFRESH COUNTER
+    input rf_enable, rf_done,
+    //REFRESH COUNTER -> FSM
+    output fsm_ref
 );
 
 
