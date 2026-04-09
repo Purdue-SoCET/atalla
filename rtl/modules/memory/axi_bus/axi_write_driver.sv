@@ -22,9 +22,11 @@ module axi_write_driver(
     // logic to determine of aw/w full or empty
     logic aw_skid_full, aw_skid_empty;
     logic w_skid_full, w_skid_empty;
+    logic [WDRV_PTR_WIDTH_W-1:0] w_wr_ptr_next;
     assign aw_skid_full  = (aw_wr_ptr + 1'b1 == aw_rd_ptr);
     assign aw_skid_empty = (aw_wr_ptr == aw_rd_ptr);
-    assign w_skid_full   = (w_wr_ptr + 1'b1 == w_rd_ptr);
+    assign w_wr_ptr_next = (w_wr_ptr == WDRV_DEPTH_W-1) ? '0 : (w_wr_ptr + 1'b1); // to fix issue where w full not being detected 
+    assign w_skid_full   = (w_wr_ptr_next == w_rd_ptr);
     assign w_skid_empty  = (w_wr_ptr == w_rd_ptr);
 
     logic aw_fire, aw_sent; // checks if aw request has been set so count down of beats can continue
