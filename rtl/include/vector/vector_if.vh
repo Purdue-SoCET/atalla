@@ -47,10 +47,10 @@ interface vector_if;
     input vlsu_in,
     input lanes_in,
     input unit_ready_signals,
+    input wb_ready_signals,
     output gsau_out,
     output vlsu_out,
-    output lanes_out,
-    output wb_ready_signals
+    output lanes_out
   );
 
   modport schedular (
