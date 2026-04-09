@@ -1,0 +1,5 @@
+nop.s|nop.s|mv.stm,1|nop.s
+add.vv,1,2,3,1,0|nop.s|nop.s|nop.s
+sub.vv,3,4,5,1,0|nop.s|nop.s|nop.s
+mul.vv,5,6,7,1,0|nop.s|nop.s|nop.s
+div.vv,7,8,9,1,0|nop.s|nop.s|nop.s

@@ -4,6 +4,7 @@
 /*  Julio Hernandez - herna628@purdue.edu */
 /*  Akshath Raghav Ravikiran - araviki@purdue.edu */
 
+<<<<<<< HEAD
 module dram_request_queue (scpad_if.backend_dram_req_queue be_dr_req_q);
     import scpad_pkg::*;
 
@@ -14,6 +15,27 @@ module dram_request_queue (scpad_if.backend_dram_req_queue be_dr_req_q);
     logic [MAX_REQ_WIDTH-1:0] request_completed_counter, nxt_request_completed_counter;
     logic sram_res_valid;
     scpad_data_t sram_rdata;
+=======
+module dram_request_queue #(parameter int DEPTH = 32) (scpad_if.backend_dram_req_queue be_dr_req_q);
+    import scpad_pkg::*;
+
+    dram_req_q_t [DEPTH-1:0] dram_req_latch_block; 
+    dram_req_q_t nxt_dram_head_latch_set, nxt_dram_tail_latch_set;
+
+    logic [MAX_DIM_WIDTH:0] fifo_head, nxt_fifo_head, fifo_tail, nxt_fifo_tail;
+    logic [MAX_REQ_WIDTH-1:0] request_completed_counter, nxt_request_completed_counter;
+    logic sram_res_valid;
+    scpad_data_t sram_rdata;
+
+    logic [MAX_DIM_WIDTH-1:0] head_idx, tail_idx;
+    assign head_idx = fifo_head[MAX_DIM_WIDTH-1:0];
+    assign tail_idx = fifo_tail[MAX_DIM_WIDTH-1:0];
+
+    logic fifo_full, fifo_empty;
+    assign fifo_full = (head_idx == tail_idx) && (fifo_head[MAX_DIM_WIDTH] != fifo_tail[MAX_DIM_WIDTH]);
+
+    assign fifo_empty = (fifo_head == fifo_tail);
+>>>>>>> origin/Vector_S26_L1_TB
     
     always_ff @(posedge be_dr_req_q.clk, negedge be_dr_req_q.n_rst) begin
         if(!be_dr_req_q.n_rst) begin
@@ -24,8 +46,13 @@ module dram_request_queue (scpad_if.backend_dram_req_queue be_dr_req_q);
             sram_res_valid <= 1'b0;
             sram_rdata <= 0;
         end else begin
+<<<<<<< HEAD
             dram_req_latch_block[fifo_head] <= nxt_dram_head_latch_set;
             dram_req_latch_block[fifo_tail] <= nxt_dram_tail_latch_set;
+=======
+            dram_req_latch_block[head_idx] <= nxt_dram_head_latch_set;
+            dram_req_latch_block[tail_idx] <= nxt_dram_tail_latch_set;
+>>>>>>> origin/Vector_S26_L1_TB
             fifo_head <= nxt_fifo_head;
             fifo_tail <= nxt_fifo_tail;
             request_completed_counter <= nxt_request_completed_counter;
@@ -37,8 +64,13 @@ module dram_request_queue (scpad_if.backend_dram_req_queue be_dr_req_q);
     always_comb begin
         be_dr_req_q.be_dr_req_q_out.dram_req = 0;
 
+<<<<<<< HEAD
         nxt_dram_head_latch_set = dram_req_latch_block[fifo_head];
         nxt_dram_tail_latch_set = dram_req_latch_block[fifo_tail];
+=======
+        nxt_dram_head_latch_set = dram_req_latch_block[head_idx];
+        nxt_dram_tail_latch_set = dram_req_latch_block[tail_idx];
+>>>>>>> origin/Vector_S26_L1_TB
         nxt_fifo_head = fifo_head;
         nxt_fifo_tail = fifo_tail;
         nxt_request_completed_counter = request_completed_counter;
@@ -70,16 +102,26 @@ module dram_request_queue (scpad_if.backend_dram_req_queue be_dr_req_q);
             end
         end
 
+<<<<<<< HEAD
         if((be_dr_req_q.be_dr_req_q_in.dram_be_stall == 1'b0) && (fifo_head != fifo_tail)) begin
             be_dr_req_q.be_dr_req_q_out.dram_req.valid = dram_req_latch_block[fifo_head].valid;
             be_dr_req_q.be_dr_req_q_out.dram_req.write = dram_req_latch_block[fifo_head].write;
             be_dr_req_q.be_dr_req_q_out.dram_req.id = dram_req_latch_block[fifo_head].id;
             be_dr_req_q.be_dr_req_q_out.dram_req.dram_addr = dram_req_latch_block[fifo_head].dram_addr;
             be_dr_req_q.be_dr_req_q_out.dram_req.dram_vector_mask = dram_req_latch_block[fifo_head].dram_vector_mask;
+=======
+        if((be_dr_req_q.be_dr_req_q_in.dram_be_stall == 1'b0) && !fifo_empty) begin
+            be_dr_req_q.be_dr_req_q_out.dram_req.valid = dram_req_latch_block[head_idx].valid;
+            be_dr_req_q.be_dr_req_q_out.dram_req.write = dram_req_latch_block[head_idx].write;
+            be_dr_req_q.be_dr_req_q_out.dram_req.id = dram_req_latch_block[head_idx].id;
+            be_dr_req_q.be_dr_req_q_out.dram_req.dram_addr = dram_req_latch_block[head_idx].dram_addr;
+            be_dr_req_q.be_dr_req_q_out.dram_req.dram_vector_mask = dram_req_latch_block[head_idx].dram_vector_mask;
+>>>>>>> origin/Vector_S26_L1_TB
             be_dr_req_q.be_dr_req_q_out.dram_req.wdata = 0;
 
             nxt_dram_head_latch_set = 0;
             nxt_fifo_head = fifo_head + 1;
+<<<<<<< HEAD
             if(dram_req_latch_block[fifo_head].write == 1'b1) begin
                 be_dr_req_q.be_dr_req_q_out.dram_req.valid = 1'b1;
                 be_dr_req_q.be_dr_req_q_out.dram_req.write = 1'b1;
@@ -90,6 +132,18 @@ module dram_request_queue (scpad_if.backend_dram_req_queue be_dr_req_q);
 
 
                 nxt_dram_head_latch_set = dram_req_latch_block[fifo_head];
+=======
+            if(dram_req_latch_block[head_idx].write == 1'b1) begin
+                be_dr_req_q.be_dr_req_q_out.dram_req.valid = 1'b1;
+                be_dr_req_q.be_dr_req_q_out.dram_req.write = 1'b1;
+                be_dr_req_q.be_dr_req_q_out.dram_req.id = 0;
+                be_dr_req_q.be_dr_req_q_out.dram_req.dram_addr = dram_req_latch_block[head_idx].dram_addr;
+                be_dr_req_q.be_dr_req_q_out.dram_req.dram_vector_mask = dram_req_latch_block[head_idx].dram_vector_mask;
+                be_dr_req_q.be_dr_req_q_out.dram_req.wdata = dram_req_latch_block[head_idx].wdata[({DRAM_VECTOR_MASK_LANES_SHIFT'(0), request_completed_counter[MAX_REQ_WIDTH-1:0]} << DRAM_VECTOR_MASK_LANES_SHIFT) +: DRAM_VECTOR_MASK_LANES];
+
+
+                nxt_dram_head_latch_set = dram_req_latch_block[head_idx];
+>>>>>>> origin/Vector_S26_L1_TB
                 nxt_fifo_head = fifo_head;
                 nxt_request_completed_counter = request_completed_counter + 1;
 
@@ -109,8 +163,13 @@ module dram_request_queue (scpad_if.backend_dram_req_queue be_dr_req_q);
             end
         end
 
+<<<<<<< HEAD
         if(fifo_tail + 1 == fifo_head) begin 
             nxt_dram_tail_latch_set = dram_req_latch_block[fifo_tail];
+=======
+        if(fifo_full) begin 
+            nxt_dram_tail_latch_set = dram_req_latch_block[tail_idx];
+>>>>>>> origin/Vector_S26_L1_TB
             nxt_fifo_tail = fifo_tail;
             if(be_dr_req_q.be_dr_req_q_in.sched_write == 1'b0) begin
                 nxt_request_completed_counter = request_completed_counter;

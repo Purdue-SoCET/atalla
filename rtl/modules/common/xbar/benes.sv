@@ -1,95 +1,108 @@
-// /*  Haejune Kwon - kwon196@purdue.edu */
-// /*  Akshath Raghav Ravikiran - araviki@purdue.edu */
+/*  Haejune Kwon - kwon196@purdue.edu */
+/*  Akshath Raghav Ravikiran - araviki@purdue.edu */
 
 `include "xbar_params.svh"
 `include "xbar_if.sv"
+`include "compare_switch.sv"
 
+<<<<<<< HEAD
 import xbar_pkg::*;
 
+=======
+>>>>>>> e53200486a0fe0a805899aa72cebe6752d263d3c
 module benes #(
-    parameter int SIZE = `BENES_SIZE,
-    parameter int DWIDTH = `BENES_DWIDTH,
+    parameter int SIZE = 32,
+    parameter int DWIDTH = 16, 
+    parameter logic [7:0] REGISTER_MASK = 8'b11111111,
 
-    parameter int TAGWIDTH = $clog2(SIZE),
-    parameter int STAGES = (2 * TAGWIDTH) - 1, 
-    parameter int HALF = (SIZE >> 1),
-    parameter int BITWIDTH = STAGES * HALF,
-
-    parameter logic [STAGES-2:0] REGISTER_MASK = `BENES_REGISTER_MASK
+    localparam int TAGWIDTH = $clog2(SIZE),
+    localparam int STAGES = (2 * TAGWIDTH) - 1, 
+    localparam int BITWIDTH = STAGES * (SIZE >> 1)
 ) (
     xbar_if.xbar xif,
-    input logic [BITWIDTH-1:0] control_bit
+<<<<<<< HEAD
+    input logic [BITWIDTH-1:0] control_bit 
+=======
+    input logic [BITWIDTH] control_bit 
+>>>>>>> e53200486a0fe0a805899aa72cebe6752d263d3c
 );
-    logic [DWIDTH-1:0] out_latch [STAGES-1:0][SIZE-1:0];
-    logic [DWIDTH-1:0] in_latch [STAGES-1:0][SIZE-1:0];
-    logic [DWIDTH-1:0] reg_latch [STAGES-1-1:0][SIZE-1:0];
 
+	logic [DWIDTH-1:0] reg_latch [STAGES-1][SIZE]; 
+    logic [DWIDTH-1:0] out_latch [STAGES][SIZE];
+    logic [DWIDTH-1:0] in_latch [STAGES][SIZE];
+    
     always_ff @(posedge xif.clk, negedge xif.n_rst) begin
         if (!xif.n_rst) begin
-            for (int s = 0; s < STAGES-1; s++) begin
+            for (int s = 0; s < STAGES; s++) begin
                 for (int i = 0; i < SIZE; i++) begin
                     reg_latch[s][i] <= '0;
                 end
             end
-        end else begin
+        end
+        else begin
             for (int s = 0; s < STAGES-1; s++) begin
-                if (REGISTER_MASK[s] && xif.en) begin
-                    for (int i = 0; i < SIZE; i++) begin
-                        reg_latch[s][i] <= out_latch[s][i];
-                    end
-                end
+            	if (REGISTER_MASK[s]) begin 
+	                for (int i = 0; i < SIZE; i++) begin
+	                    reg_latch[s][i] <= out_latch[s][i];
+	                end
+	            end 
             end
         end
     end
 
     generate
-        genvar gi, gs;
-        for (gs = 1; gs < STAGES; gs++) begin //  generate in_latch
-            for (gi = 0; gi < SIZE; gi++) begin 
-                assign in_latch[gs][gi] = REGISTER_MASK[gs-1] ? reg_latch[gs-1][gi] : out_latch[gs-1][gi];
+    	genvar i, s;
+
+        for (s = 1; s < STAGES; s++) begin 
+            for (i = 0; i < SIZE; i++) begin 
+                assign in_latch[s][i] = REGISTER_MASK[s-1] ? reg_latch[s-1][i] : out_latch[s-1][i];
             end
         end
     endgenerate
 
     generate
         genvar stage, j, group;
-        for (stage = 0; stage < STAGES; stage++) begin
-            if (stage == 0) begin 
-                for (j = 0; j < SIZE; j += 2) begin 
-                    localparam int ctrl = (0 * HALF) + (j/2); // base 0
-                    crossover_switch #(.SIZE(DWIDTH)) u_sw (
-                        .din({xif.in[j].din, xif.in[j+1].din}),
-                        .cntrl(control_bit[ctrl]),
-                        .dout({out_latch[0][j], out_latch[0][j+1]})
+
+        for(stage = 0; stage < STAGES; stage++) begin
+            // stage 1
+            if (stage == 0) begin
+                for(j = 0; j < SIZE; j += 2) begin : stage_first
+                    localparam int ctrl = j / 2;
+                    crossover_switch #(.SIZE(DWIDTH)) u_less_comp (
+                        .din({xif.in[j], xif.in[j + 1]}),
+                        .cntrl(control_bit[ctrl]), 
+                        .dout({out_latch[0][j], out_latch[0][j + 1]})
                     );
                 end
             end
 
-            else if (stage == (STAGES-1)) begin 
-                localparam int CTRL_BASE = (STAGES-1) * HALF;
-                for (j = 0; j < SIZE; j += 2) begin 
-                    localparam int ctrl = CTRL_BASE + (j/2);
-                    crossover_switch #(.SIZE(DWIDTH)) u_sw (
-                        .din({in_latch[stage][j], in_latch[stage][j+1]}),
-                        .cntrl(control_bit[ctrl]),
-                        .dout({out_latch[stage][j], out_latch[stage][j+1]})
+            // stage last
+            else if (stage == (STAGES - 1) ) begin
+                for(j = 0; j < SIZE; j += 2) begin : stage_last
+                    localparam int ctrl = 128 + j / 2;
+                    crossover_switch #(.SIZE(DWIDTH)) u_less_comp (
+                        .din({in_latch[stage][j], in_latch[stage][j + 1]}),
+                        .cntrl(control_bit[ctrl]), 
+                        .dout({out_latch[stage][j], out_latch[stage][j + 1]})
                     );
                 end
             end
 
-            else begin 
-                localparam int d = (stage < TAGWIDTH) ? (1 << stage) : (1 << ((STAGES-1) - stage));
-                for (group = 0; group < (HALF / d); group++) begin
-                    localparam int base_idx = group * (d << 1);            
-                    localparam int ctrl_adj = (stage * HALF) - (d * group); 
+            else begin
+                // localparam int d = stage <= (STAGES-1)/2 ? stage : (STAGES-1) - stage;
+                localparam int d = (stage < TAGWIDTH) ? (1 << stage) : (1 << (STAGES - 1 - stage));
 
-                    for (j = 0; j < d; j++) begin : PAIR
-                        localparam int idx  = base_idx + j;
-                        localparam int ctrl = ctrl_adj + idx;
+                for (group = 0; group < (SIZE/2) / d; group++) begin : stage_middle
+                    localparam int base_idx = group * (d << 1);      // starting index for this group
+                    localparam int ctrl_adj = ((SIZE/2) * stage) - (d * group); // offset adjustment per group
 
-                        crossover_switch #(.SIZE(DWIDTH)) u_sw (
+                    for (j = 0; j < d; j++) begin : pair
+                        localparam int idx  = base_idx + j;      // wire index
+                        localparam int ctrl = idx + ctrl_adj;    // control bit index
+
+                        crossover_switch #(.SIZE(DWIDTH)) u_less_comp (
                             .din({in_latch[stage][idx], in_latch[stage][idx + d]}),
-                            .cntrl(control_bit[ctrl]),
+                            .cntrl(control_bit[ctrl]), 
                             .dout({out_latch[stage][idx], out_latch[stage][idx + d]})
                         );
                     end
@@ -103,5 +116,5 @@ module benes #(
             xif.out[i] = out_latch[STAGES-1][i];
         end
     end
-
+    
 endmodule

@@ -26,3 +26,4 @@ build/
 work/
 coverage/
 files.f
+*.vcd

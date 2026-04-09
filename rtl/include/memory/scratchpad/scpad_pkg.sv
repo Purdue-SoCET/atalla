@@ -7,8 +7,6 @@
 package scpad_pkg;
 
     `include "scpad_params.svh"
-    `include "xbar_params.svh"
-    `include "xbar_pkg.sv"
 
     //////////////////////////////////////////////////////////////////////
     ///////////////////////// Derived Parameters /////////////////////////
@@ -16,8 +14,6 @@ package scpad_pkg;
 
     localparam int MAX_DIM_WIDTH  = $clog2(NUM_COLS); // bit length
     localparam int MAX_REQ_WIDTH  = $clog2(MAX_REQ); // bit length
-    localparam int XBAR_LATENCY = (XBAR_TYPE == "BENES") ? BENES_LATENCY : 
-                                (XBAR_TYPE == "BATCHER") ? BATCHER_LATENCY :  NAIVE_LATENCY;
     localparam int ELEM_BYTES  = ELEM_BITS/8;     
     localparam int ROW_BYTES = (NUM_COLS * ELEM_BITS)/8;   
     localparam int SRAM_HEIGHT = (SCPAD_SIZE_BYTES / ROW_BYTES);  // num slots in each bank 
@@ -30,7 +26,6 @@ package scpad_pkg;
 
     localparam int ROW_IDX_WIDTH  = $clog2(SRAM_HEIGHT);
     localparam int COL_IDX_WIDTH = $clog2(NUM_COLS);
-    localparam int ROM_ID_WIDTH = (2*COL_IDX_WIDTH - 1);
 
     localparam int ROW_SHIFT = $clog2(ROW_BYTES);    
     localparam int ELEM_SHIFT = $clog2(ELEM_BYTES);        
@@ -66,8 +61,6 @@ package scpad_pkg;
 
     typedef logic [NUM_COLS-1:0] mask_t;    
     typedef logic [NUM_COLS-1:0][ELEM_BITS-1:0] scpad_data_t;      
-    typedef logic [NUM_COLS-1:0][COL_IDX_WIDTH-1:0] shift_mask_t; 
-    typedef logic [NUM_COLS-1:0][ROW_IDX_WIDTH-1:0] slot_mask_t; 
 
     typedef enum logic { SRC_FE = 1'b0, SRC_BE = 1'b1 } src_t;
 
@@ -79,11 +72,12 @@ package scpad_pkg;
         logic [DRAM_ADDR_WIDTH-1:0] dram_addr;
         logic [MAX_DIM_WIDTH-1:0] num_rows;
         logic [MAX_DIM_WIDTH-1:0] num_cols;
+        logic [FULL_MATRIX_DIM_WIDTH-1:0] full_num_cols; 
         logic [SCPAD_ID_WIDTH-1:0] scpad_id;
     } sched_req_t;
 
     typedef struct packed {
-        logic valid;
+        logic dummy;
     } sched_res_t;
 
     typedef struct packed {
@@ -118,12 +112,10 @@ package scpad_pkg;
         logic [MAX_DRAM_BUS_BITS-1:0] rdata;
     } dram_res_t;
 
-    // Crossbar descriptors
+    // Crossbar descriptor (slimmed — no swizzle)
     typedef struct packed {
-        slot_mask_t slot_mask;
-        shift_mask_t shift_mask;
-        mask_t valid_mask;
-        logic [ROM_ID_WIDTH-1:0] rom_id;
+        logic [ROW_IDX_WIDTH-1:0] slot;  // scalar row address (all banks same row)
+        mask_t valid_mask;                // which banks participate
     } xbar_desc_t;
 
     typedef struct packed {
@@ -141,8 +133,6 @@ package scpad_pkg;
         logic [MAX_DIM_WIDTH-1:0] num_rows;
         logic [MAX_DIM_WIDTH-1:0] num_cols;
         logic [MAX_DIM_WIDTH-1:0] row_id;
-        logic [MAX_DIM_WIDTH-1:0] col_id;
-        logic row_or_col;
         xbar_desc_t xbar;
         scpad_data_t wdata;
     } req_t;
@@ -168,21 +158,6 @@ package scpad_pkg;
         src_t src;
         scpad_data_t rdata;
     } sel_res_t;
-
-    // Swizzle Input
-    typedef struct packed {
-        logic row_or_col; 
-        logic [SCPAD_ADDR_WIDTH-1:0] spad_addr; // technically base_row; always starting of row=0,col=0
-        logic [MAX_DIM_WIDTH-1:0] num_rows;
-        logic [MAX_DIM_WIDTH-1:0] num_cols;
-        logic [MAX_DIM_WIDTH-1:0] row_id;
-        logic [MAX_DIM_WIDTH-1:0] col_id;
-    } swizz_req_t;
-
-    // Swizzle Output
-    typedef struct packed {
-        xbar_desc_t xbar_desc;
-    } swizz_res_t;
 
     // Backend DRAM Request Queue Input
     typedef struct packed {
@@ -223,6 +198,7 @@ package scpad_pkg;
     typedef struct packed {
         sram_write_req_t sram_write_req;
         logic sram_write_req_latched;
+        logic latch_full;  // Latch has valid data but can't drain due to
     } be_sram_write_latch_out_t;
 
 endpackage
