@@ -713,6 +713,11 @@ def expand_vreg_seven_operand_asm(in_data: str) -> str:
 def expand_scpad_five_operand_asm(in_data: str) -> str:
     """
     ``scpad.{ld,st} rs1, rs2, cols, rows, sid`` → ``lui.s $254, meta>>7`` + 3-operand SDMA.
+
+    ``cols``/``rows`` are the 5-bit **N−1** tile indices (same as SDMA ``num_cols``/``num_rows``).
+    The low 20 bits of metadata must hold ``full_cols - 1`` so ``sdma_{load,store}`` use
+    row stride ``full_cols`` in GMEM (see ``emit_sdma_metadata_asm``). Without this, the low
+    bits are zero, ``row_stride_elems`` becomes 1, and BF16 rows alias in DRAM.
     """
     out_lines: list[str] = []
     pat = re.compile(
@@ -732,8 +737,15 @@ def expand_scpad_five_operand_asm(in_data: str) -> str:
             continue
         op, a, b, c_s, r_s, sid_s = m.groups()
         cols, rows, sid = int(c_s), int(r_s), int(sid_s)
-        meta = ((sid & 0x3) << 30) | ((rows & 0x1F) << 25) | ((cols & 0x1F) << 20)
+        full_cols_m1 = cols & 0xFFFFF  # full_cols == cols + 1 BF16 lanes across a row
+        meta = (
+            ((sid & 0x3) << 30)
+            | ((rows & 0x1F) << 25)
+            | ((cols & 0x1F) << 20)
+            | full_cols_m1
+        )
         imm7 = meta >> 7
+        lo7 = meta & 0x7F
         if imm7 < _IMM25_LO or imm7 > _IMM25_HI:
             raise ValueError(
                 f"{op} {cols},{rows},{sid}: metadata imm>>7={imm7} out of 25-bit range; "
@@ -744,6 +756,10 @@ def expand_scpad_five_operand_asm(in_data: str) -> str:
         out_lines.append(
             f"{leading_ws}{lbl}lui.s    ${SDMA_TEMP_REG}, {imm7}{cmt_tail}  # scpad metadata"
         )
+        if lo7:
+            out_lines.append(
+                f"{leading_ws}addi.s   ${SDMA_TEMP_REG}, ${SDMA_TEMP_REG}, {lo7}  # scpad metadata low"
+            )
         out_lines.append(f"{leading_ws}{op} {a}, {b}, ${SDMA_TEMP_REG}")
     return "\n".join(out_lines)
 

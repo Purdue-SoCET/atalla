@@ -139,7 +139,7 @@ def main():
             virtual_packet_size=GRAPH_PACKET_WIDTH,
         )
 
-        img = DRAMWriter() 
+    img = DRAMWriter()
     img.u32(TILE_ADDR_LOCATION, TILE_ADDR)
     img.u32(SCPAD_ADDR_LOCATION, SCPAD_ADDR)
 
@@ -149,11 +149,11 @@ def main():
     else:
         tile_values = [float(v) for v in range(N * N)]
 
-        for i, val in enumerate(tile_values):
+    for i, val in enumerate(tile_values):
         addr = base_addr + (i * 2)
-            img.bf16(addr, float(val))
-        
-        data_text = img.render_data_mem(include_zeros=False)
+        img.bf16(addr, float(val))
+
+    data_text = img.render_data_mem(include_zeros=False)
     final = render_testfile(instr_text, data_text)
 
     if args.output is not None:

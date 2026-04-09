@@ -193,6 +193,7 @@ KERNEL_SPECS: list[tuple[str, str, list[str]]] = [
     ("softmax online", "build_softmax_online.py", []),
     ("relu", "build_relu.py", []),
     ("sigmoid", "build_sigmoid.py", []),
+    ("gemm", "build_gemm.py", []),
     ("gemms", "build_gemms.py", []),
     ("gemms function", "build_gemms_function.py", []),
     ("gemms pipelined", "build_gemms_pipelined.py", []),

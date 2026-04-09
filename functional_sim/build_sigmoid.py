@@ -1,5 +1,8 @@
 #!/usr/bin/env python3
-"""Sigmoid kernel test generator (shared assembler + encodings from build.py)."""
+"""exp(-x) demo on BF16 (matches validate_build_generators.check_sigmoid).
+
+Scratchpad tile 4×8; mul.vs + expi.vi. Scalar -1.0 uses ``lui.s`` (``li.s`` imm is 25-bit).
+"""
 from __future__ import annotations
 
 import argparse
@@ -10,8 +13,10 @@ import numpy as np
 
 from build import DRAMWriter, assemble_file, emit_test_format, render_testfile
 
-_MC = 31
-_N = 32
+ROWS = 4
+WIDTH = 8
+W_M1 = WIDTH - 1
+H_M1 = ROWS - 1
 
 
 def main() -> None:
@@ -19,51 +24,51 @@ def main() -> None:
     ap.add_argument("-o", "--output", type=Path, default=None, help="Output test file")
     args = ap.parse_args()
 
-    # Vector div was removed from ISA; this generator needs a rewrite using
-    # currently supported ops before it can emit valid assembly.
-    raise NotImplementedError(
-        "build_sigmoid.py still depends on removed div.vv; rewrite required."
+    row_ops = "\n".join(
+        f"""        vreg.ld $4, $9, {W_M1}, {H_M1}, 0, 1, {r}
+        mul.vs  $4, $4, $11, 1
+        expi.vi $4, $4, 0, 1
+        vreg.st $4, $9, {W_M1}, {H_M1}, 0, 1, {r}"""
+        for r in range(ROWS)
     )
 
-    # Keep the assembly skeleton for future rewrite (currently unreachable due
-    # NotImplementedError above). Vector division has been removed from ISA.
-    row_ops = ""
-
-    asm_pipeline = f"""
-        addi.s  $1, $0, 4
-        addi.s  $7, $0, 8
+    asm = f"""
         lw.s    $3, 0($0)
         lw.s    $8, 4($0)
-        addi.s  $9, $0, 0
 
-        scpad.ld $9, $3, {_MC}, {_MC}, 0
+        addi.s  $9, $0, 0
+        scpad.ld $9, $3, {W_M1}, {H_M1}, 0
 
         addi.s  $255, $0, -1
         mv.stm  1, $255
-
-        li.s    $5, 0x3f800000
-        li.s    $11, 0xbf800000
-        add.vs  $2, $10, $5, 1
+        lui.s   $11, {0xBF800000 >> 7}
 
 {row_ops}
 
-        scpad.st $9, $8, {_MC}, {_MC}, 0
+        scpad.st $9, $8, {W_M1}, {H_M1}, 0
         halt.s
     """
 
-    instrs = assemble_file(asm_pipeline)
+    instrs = assemble_file(asm)
     instr_text = emit_test_format(instrs)
 
-    img = DRAMWriter()
-    rng = np.random.default_rng(1)
-    tensor = rng.standard_normal((_N, _N)).astype(np.float32)
+    tensor = np.array(
+        [
+            [-4.0, -2.0, -1.0, -0.5, 0.5, 1.0, 2.0, 4.0],
+            [-3.0, -1.5, -0.25, 0.25, 0.75, 1.5, 3.0, 6.0],
+            [-5.0, -2.5, -1.25, 0.0, 1.25, 2.5, 5.0, 7.0],
+            [-6.0, -3.0, -1.75, 0.1, 1.75, 3.0, 6.0, 8.0],
+        ],
+        dtype=np.float32,
+    )
 
     INPUT_BASE = 0x00001000
-    OUTPUT_BASE = 0x00002000
-    addr = INPUT_BASE
-    for x in tensor.flatten(order="C"):
-        img.bf16(addr, float(x))
-        addr += 2
+    OUTPUT_BASE = 0x00001040
+
+    img = DRAMWriter()
+    for r in range(ROWS):
+        for c in range(WIDTH):
+            img.bf16(INPUT_BASE + 2 * (r * WIDTH + c), float(tensor[r, c]))
 
     img.u32(0x0, INPUT_BASE)
     img.u32(0x4, OUTPUT_BASE)

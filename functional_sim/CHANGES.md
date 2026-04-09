@@ -15,4 +15,4 @@ Backward compatibility notes:
 ## Important operational note
 
 - `python -m functional_sim.<builder_module>`
-- `python functional_sim/validate_kernels.py`
+- `python functional_sim/validate_build_generators.py`
