@@ -139,8 +139,7 @@ module nb_barb_tb;
                 ddrif.be_id          = '{default: '0};
                 ddrif.be_len         = '{default: '0};
             end else begin
-                initial_cmd = ACT;
-                drive_bank_request(bank_id, initial_cmd,
+                drive_bank_request(bank_id, input_vec[case_num].cmd,
                                    input_vec[case_num].row,
                                    input_vec[case_num].col,
                                    input_vec[case_num].id);
@@ -222,6 +221,16 @@ module nb_barb_tb;
         end
     endtask
 
+    task wait_pos(
+        input int bank_num,
+        input fsm_t cmd
+    );
+        begin
+            if (cmd == REF) while(ddrif.be_arb != {BANK_NUM{1'b1}}) @(posedge CLK);
+            else while (ddrif.be_arb[bank_num] == 1'b0) @(posedge CLK);
+        end
+    endtask
+
     task run_vector_tests;
         int bank_id;
         begin
@@ -229,10 +238,7 @@ module nb_barb_tb;
                 bank_id = {input_vec[i].b, input_vec[i].bg};
                 $display("T=%0t | Bank %0d Ready: Cmd=%s, Row=%h", $time, bank_id, input_vec[i].cmd.name(), input_vec[i].row);
                 drive_bank_case(i);
-                wait(ddrif.be_arb[bank_id] == 1);
-                #(1);
-                ddrif.be_cmd[bank_id] = input_vec[i].cmd;
-                @(negedge CLK);
+                wait_pos(bank_id, input_vec[i].cmd); 
                 case (input_vec[i].cmd)
                     FSM_READ: check_read(i, exp_vec[i].exp_push_id, exp_vec[i].exp_rid, exp_vec[i].exp_rlen);
                     FSM_WRITE: check_write(i, exp_vec[i].exp_write, exp_vec[i].exp_wid);
@@ -242,7 +248,7 @@ module nb_barb_tb;
                         ddrif.be_queue_ready = 'b0;                       
                     end
                 endcase
-                ddrif.be_queue_ready[bank_id] = 0;
+                ddrif.be_queue_ready[bank_id] = 'b0;
                 ddrif.be_cmd[bank_id] = FSM_IDLE;
             end
         end

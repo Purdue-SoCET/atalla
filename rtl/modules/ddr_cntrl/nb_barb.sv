@@ -66,7 +66,7 @@ module nb_barb(
     //Priority encoder for finding bank with priority.
     logic [$clog2(BANK_NUM)-1:0] priority_idx;
     logic idrc; //I don't really care about what this bit is, it should always be one. 
-    priority_enc #(.BANK_NUM(16)) ENCODER_PRI (priority_sr, priority_idx, idrc);
+    //priority_enc #(.BANK_NUM(16)) ENCODER_PRI (priority_sr, priority_idx, idrc);
 
     //  register storing bank group of the last command. This ensures the compliance of timing parameters of two 
     //  successive transactions that target the same bank group. This timimg parameter, tCCD_L, is slightly more 
