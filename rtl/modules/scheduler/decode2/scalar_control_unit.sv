@@ -120,14 +120,13 @@ module scalar_control_unit
                     cuif.decoded_scalar_instrs[i].reg_write  = 1'b1;
                 end
 
-                DIV_BF: begin
+                RCP_BF: begin
                     cuif.decoded_scalar_instrs[i].fu_enable  = bf_div_valid;
                     cuif.decoded_scalar_instrs[i].valid_in   = 1'b1;
                     cuif.decoded_scalar_instrs[i].imm_src    = 1'b0;
                     cuif.decoded_scalar_instrs[i].halfword   = 1'b1;
                     cuif.decoded_scalar_instrs[i].imm        = '0;
                     cuif.decoded_scalar_instrs[i].use_rs1    = 1'b1;
-                    cuif.decoded_scalar_instrs[i].use_rs2    = 1'b1;
                     cuif.decoded_scalar_instrs[i].reg_write  = 1'b1;
                 end
 
@@ -139,6 +138,16 @@ module scalar_control_unit
                     cuif.decoded_scalar_instrs[i].imm        = '0;
                     cuif.decoded_scalar_instrs[i].use_rs1    = 1'b1;
                     cuif.decoded_scalar_instrs[i].use_rs2    = 1'b1;
+                    cuif.decoded_scalar_instrs[i].reg_write  = 1'b1;
+                end
+
+                SQRT_BF: begin
+                    cuif.decoded_scalar_instrs[i].fu_enable  = sqrt_valid;
+                    cuif.decoded_scalar_instrs[i].valid_in   = 1'b1;
+                    cuif.decoded_scalar_instrs[i].imm_src    = 1'b0;
+                    cuif.decoded_scalar_instrs[i].halfword   = 1'b1;
+                    cuif.decoded_scalar_instrs[i].imm        = '0;
+                    cuif.decoded_scalar_instrs[i].use_rs1    = 1'b1;
                     cuif.decoded_scalar_instrs[i].reg_write  = 1'b1;
                 end
 
@@ -231,7 +240,8 @@ module scalar_control_unit
                     cuif.decoded_scalar_instrs[i].incr7      = {{25{cuif.scalar_instrs[i][13]}}, cuif.scalar_instrs[i][13:7]};
                     cuif.decoded_scalar_instrs[i].use_rs1    = 1'b1;
                     cuif.decoded_scalar_instrs[i].use_rs2    = 1'b1;
-                    cuif.decoded_scalar_instrs[i].reg_write  = 1'b0;
+                    cuif.decoded_scalar_instrs[i].reg_write  = 1'b1;
+                    cuif.decoded_scalar_instrs[i].rdIn       = cuif.scalar_instrs[i][22:15];
                 end
 
                 // ----------------------------------------------------------------
@@ -281,6 +291,7 @@ module scalar_control_unit
                     cuif.decoded_scalar_instrs[i].imm        = {{20{cuif.scalar_instrs[i][34]}}, cuif.scalar_instrs[i][34:23]};
                     cuif.decoded_scalar_instrs[i].use_rs1    = 1'b1; // base
                     cuif.decoded_scalar_instrs[i].use_rs2    = 1'b1; // data
+                    cuif.decoded_scalar_instrs[i].rs2   = cuif.scalar_instrs[i][14:7];                    
                     cuif.decoded_scalar_instrs[i].reg_write  = 1'b0;
                 end
 
@@ -303,6 +314,7 @@ module scalar_control_unit
                     cuif.decoded_scalar_instrs[i].imm        = {{20{cuif.scalar_instrs[i][34]}}, cuif.scalar_instrs[i][34:23]};
                     cuif.decoded_scalar_instrs[i].use_rs1    = 1'b1; // base
                     cuif.decoded_scalar_instrs[i].use_rs2    = 1'b1; // data
+                    cuif.decoded_scalar_instrs[i].rs2   = cuif.scalar_instrs[i][14:7];                    
                     cuif.decoded_scalar_instrs[i].reg_write  = 1'b0;
                 end
 
@@ -314,7 +326,7 @@ module scalar_control_unit
                     cuif.decoded_scalar_instrs[i].valid_in   = 1'b1;
                     cuif.decoded_scalar_instrs[i].imm_src    = 1'b1;
                     cuif.decoded_scalar_instrs[i].halfword   = 1'b0;
-                    cuif.decoded_scalar_instrs[i].imm        = {{7{cuif.scalar_instrs[i][39]}}, cuif.scalar_instrs[i][39:15]};
+                    cuif.decoded_scalar_instrs[i].imm        = {{7{1'b0}}, cuif.scalar_instrs[i][39:15]};
                     cuif.decoded_scalar_instrs[i].use_rs1    = 1'b0;
                     cuif.decoded_scalar_instrs[i].use_rs2    = 1'b0;
                     cuif.decoded_scalar_instrs[i].reg_write  = 1'b1;

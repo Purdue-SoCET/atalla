@@ -18,6 +18,7 @@ module reggie #(
     parameter DWRITE_PORTS = 4,
     parameter NUM_ELEMENTS = 1,
     parameter DATA_WIDTH   = 32,
+    parameter ZERO_REG_VAL = 0,
 
     parameter BANK_IDX  = $clog2(BANK_COUNT),
     parameter ADDR_IDX  = $clog2(BANK_REGS),
@@ -183,9 +184,11 @@ module reggie #(
                 wwin_idx = 0;
                 `priority_encode(wwin, wwin_idx)
 
-                bank_wen  [b] = rif.WEN[wwin_idx];
-                bank_waddr[b] = rif.vd[wwin_idx][BANK_IDX +: ADDR_IDX];
-                bank_wdata[b] = rif.vdata[wwin_idx];
+                if (rif.vd[wwin_idx] != '0) begin
+                    bank_wen  [b] = rif.WEN[wwin_idx];
+                    bank_waddr[b] = rif.vd[wwin_idx][BANK_IDX +: ADDR_IDX];
+                    bank_wdata[b] = rif.vdata[wwin_idx];
+                end
 
                 bank_wpend_nxt[b] &= ~wwin;
             end
@@ -217,7 +220,8 @@ module reggie #(
                 .NUM_ELEMENTS(NUM_ELEMENTS),
                 .DATA_WIDTH  (DATA_WIDTH),
                 .NUM_ROWS    (BANK_REGS),
-                .ADDR_WIDTH  (ADDR_IDX)
+                .ADDR_WIDTH  (ADDR_IDX),
+                .ZERO_REG_VAL(ZERO_REG_VAL)
             ) u_bank (
                 .clk  (CLK),
                 .nRST (nRST), 
@@ -249,6 +253,15 @@ module reggie #(
                 end
             end
         end
+
+        // Override register 0 reads with fixed value
+        for (int p = 0; p < DREAD_PORTS; p++) begin
+            if (REN[p] && (rif.vs[p] == '0)) begin
+                rif.reggie_vreg  [p] = ZERO_REG_VAL ? '1 : '0;
+                rif.reggie_dvalid[p] = 1'b1;
+            end
+        end
+
     end
 
 endmodule

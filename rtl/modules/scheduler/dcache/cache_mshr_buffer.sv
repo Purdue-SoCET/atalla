@@ -1,7 +1,4 @@
-/*  Vinay Jagan - vjagan@purdue.edu */
-/*  Akshath Raghav Ravikiran - araviki@purdue.edu */
-
-import caches_pkg::*;
+`include "cache_types_pkg.svh";
 
 module cache_mshr_buffer (
     input logic CLK, nRST,
@@ -15,7 +12,7 @@ module cache_mshr_buffer (
     output logic buffer_empty
 );
     mshr_reg [MSHR_BUFFER_LEN-1:0] buffer, next_buffer;
-    logic [MSHR_BUFFER_LEN-2:0] secondary_misses;
+    logic [MSHR_BUFFER_LEN-1:0] secondary_misses;
     mshr_reg mshr_new_miss;
     logic [UUID_SIZE-1:0] uuid, next_uuid;
 
@@ -61,39 +58,46 @@ module cache_mshr_buffer (
         next_rptr = rptr;
         stall = 0;
 
+        if (lptr == rptr && buffer[rptr].valid && !bank_free) begin
+            stall = 1;
+        end
+
         if (bank_free && buffer[rptr].valid) begin
             next_rptr = rptr - 1;
         end
-        if (miss && secondary_misses == 0) begin
-            if (lptr != rptr || (bank_free && buffer[rptr].valid) || !buffer[rptr].valid) begin
-                next_lptr = lptr - 1;
-            end else begin
-                stall = 1;
-            end
+        
+        if (miss && secondary_misses == 0 && !stall) begin
+            next_lptr = lptr - 1;
         end
     end
 
     always_comb begin
         secondary_misses = 0;
         next_buffer = buffer;
-        mshr_out = buffer[rptr];
 
         if (miss) begin
-            for (int i = 0; i < MSHR_BUFFER_LEN - 1; i++) begin
-                if (i != rptr && buffer[i].block_addr == mshr_new_miss.block_addr && buffer[i].valid) begin
+            for (int i = 0; i < MSHR_BUFFER_LEN; i++) begin
+                if (buffer[i].block_addr == mshr_new_miss.block_addr && buffer[i].valid) begin
                     secondary_misses[i] = 1;
                     next_buffer[i].write_status = buffer[i].write_status | mshr_new_miss.write_status;
                     next_buffer[i].write_block[mem_instr.addr.block_offset] =  (mem_instr.rw_mode) ? mem_instr.store_value : buffer[i].write_block[mem_instr.addr.block_offset];
                     next_buffer[i].uuid = uuid;
                 end
             end
-            if (secondary_misses == 0) begin
+            if (secondary_misses == 0 && !stall) begin
                 next_buffer[lptr] = mshr_new_miss;
             end
         end
 
         if (bank_free && buffer[rptr].valid) begin
-            next_buffer[rptr].valid = 0;
+            if (!(miss && secondary_misses == 0 && !stall && lptr == rptr)) begin
+                next_buffer[rptr].valid = 0;
+            end
+        end
+
+        mshr_out = next_buffer[rptr];
+        if (buffer[rptr].valid) begin
+            mshr_out.valid = 1'b1;
         end
     end
 

@@ -23,7 +23,7 @@ module scheduler_core #(
 
     //from dcache
     input logic [31:0] data_load,
-    input logic hit, block_status,
+    input logic hit, block_status, stall, miss,
 
     //dec2 in
     // input instr_t [3:0] scalar_instrs,
@@ -32,9 +32,17 @@ module scheduler_core #(
     // output logic ready
 
     //fetch in
-    input logic iwait,
-    input instruction_packet_t iload, 
-    output logic ready
+    input logic ihit,
+    input instruction_packet_t imemload,
+    input logic imemready,
+    output logic imemREN,
+    output word_t imemaddr,
+
+    //ready (idk if we need this)
+    output logic ready,
+
+    //halt
+    output logic halt
 
 );
 
@@ -51,14 +59,18 @@ module scheduler_core #(
     decode_2_if decode_2_if ();
     datapath_cache_if datapath_cache_if ();
     dec1_dec2_if decode_1_if();
-    caches_if caches_if();
+    // caches_if caches_if();
 
     //instantiations
-    icache ICACHE(.CLK(CLK), .nRST(nRST), .dcif(datapath_cache_if), .cif(caches_if));
+    //icache ICACHE(.CLK(CLK), .nRST(nRST), .dcif(datapath_cache_if), .cif(caches_if));
     s_wb_arbiter S_WB_ARBITER(.CLK(CLK), .nRST(nRST), .vif(scalar_wb_if));
     execute_stage S_EXECUTE(.clk(CLK), .nRST(nRST), .ex_if(scalar_ex_if));
     decode_2 S_V_DECODE_2(.CLK(CLK), .nRST(nRST), .d2if(decode_2_if));
-    fetch_decode1 S_FETCH_DECODE_1 (.clk(CLK), .rst_n(nRST), .flush(scalar_ex_if.redirect_valid), .ready(decode_2_if.ready), .pc_branch(scalar_ex_if.redirect_target), .halt(scalar_ex_if.halt_out), .btb_update_en(scalar_ex_if.redirect_valid), .btb_pc_update(scalar_ex_if.pc_out), .btb_true_target(scalar_ex_if.redirect_target), .dc_if(datapath_cache_if), .dec12_if(decode_1_if));
+    fetch_decode1 S_FETCH_DECODE_1 (.clk(CLK), .rst_n(nRST), .flush(scalar_ex_if.redirect_valid), 
+                                    .ready(decode_2_if.ready), .pc_branch(scalar_ex_if.redirect_target), .halt(scalar_ex_if.halt_out),
+                                    .btb_update_en(scalar_ex_if.redirect_valid), .btb_pc_update(scalar_ex_if.pc_out),
+                                    .btb_true_target(scalar_ex_if.redirect_target), .dc_if(datapath_cache_if),
+                                    .dec12_if(decode_1_if));
 
 
 
@@ -188,6 +200,8 @@ module scheduler_core #(
     assign scalar_ex_if.hit = hit;
     assign scalar_ex_if.data_load = data_load;
     assign scalar_ex_if.block_status = block_status;
+    assign scalar_ex_if.stall = stall;
+    assign scalar_ex_if.miss = miss;
     //to dcache
     assign WEN = scalar_ex_if.WEN;
     assign REN = scalar_ex_if.REN;
@@ -200,10 +214,15 @@ module scheduler_core #(
     // assign decode_2_if.pc_in = pc_in;
     assign ready = decode_2_if.ready;
 
-    // assign datapath_cache_if.ihit = ihit;
-    // assign datapath_cache_if.imemload = imemload;
-    assign caches_if.iload = iload;
-    assign caches_if.iwait = iwait;
+    assign datapath_cache_if.ihit = ihit;
+    assign datapath_cache_if.imemload = imemload;
+    assign datapath_cache_if.imemready = imemready;
+    assign imemaddr = datapath_cache_if.imemaddr;
+    assign imemREN = datapath_cache_if.imemREN;
+    // assign caches_if.iload = iload;
+    // assign caches_if.iwait = iwait;
+
+    assign halt = scalar_ex_if.halt_out;
 
     always_ff @( posedge CLK, negedge nRST ) begin : EX_WB_LATCH
         if(!nRST) begin

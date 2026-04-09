@@ -1,77 +1,82 @@
-// reg_file_if.sv
-
-`ifndef REG_FILE_IF_VH
-`define REG_FILE_IF_VH
+// reg_file_if.sv =========================================================
+// Parametric interface for the banked register file system
+// ========================================================================
+`ifndef REG_FILE_IF_SV
+`define REG_FILE_IF_SV
 
 interface reg_file_if #(
-    parameter NUM_REGS    = 256,
-    parameter NUM_BANKS   = 4,
-    parameter READ_PORTS  = 4,
-    parameter WRITE_PORTS = 4,
-    parameter DATA_WIDTH  = 32,
-    parameter NUM_ELEMENTS = 1
-)(
-    input logic CLK, nRST
+    parameter BANK_COUNT   = 4,
+    parameter BANK_REGS    = 64,
+    parameter DREAD_PORTS  = 4,
+    parameter DWRITE_PORTS = 4,
+    parameter NUM_ELEMENTS = 1,
+    parameter DATA_WIDTH   = 32,
+    parameter ZERO_REG_VAL = 0, // 0 = reg0 reads all-0s, 1 = reg0 reads all-1s
+
+    // Derived — do not override
+    parameter BANK_IDX  = $clog2(BANK_COUNT),
+    parameter ADDR_IDX  = $clog2(BANK_REGS),
+    parameter VREG_W    = DATA_WIDTH * NUM_ELEMENTS,
+    parameter VSEL_W    = BANK_IDX + ADDR_IDX,
+    parameter LOG_BANKS = BANK_COUNT / 2
 );
 
-    localparam REG_BITS  = $clog2(NUM_REGS);
-    localparam BANK_IDX  = $clog2(NUM_BANKS);
-    localparam DATA_BITS = DATA_WIDTH * NUM_ELEMENTS;
+    // -----------------------------------------------------------------------
+    // Driven by upstream consumer (scheduler / scoreboard)
+    // -----------------------------------------------------------------------
+    logic [DREAD_PORTS-1:0][VSEL_W-1:0]   vs;
+    logic [DREAD_PORTS-1:0]                REN;
 
-    // Reggie inputs
-    logic [READ_PORTS-1:0]                    REN;
-    logic [READ_PORTS-1:0][REG_BITS-1:0]      rsel;
+    logic [DWRITE_PORTS-1:0][VSEL_W-1:0]  vd;
+    logic [DWRITE_PORTS-1:0][VREG_W-1:0]  vdata;
+    logic [DWRITE_PORTS-1:0]               WEN;
 
-    logic [WRITE_PORTS-1:0]                   WEN;
-    logic [WRITE_PORTS-1:0][REG_BITS-1:0]     wsel;
-    logic [WRITE_PORTS-1:0][DATA_BITS-1:0]    wdata;
-
-    // Reggie outputs
-    logic [READ_PORTS-1:0][DATA_BITS-1:0]     rdata;
-    logic [READ_PORTS-1:0]                    dvalid;
-    logic                                     rf_ready;
-    logic                                     dec2_ready;
+    logic accomplished;
+    logic dependencies_ready;
+    logic dec2_ready;
     logic done_state;
 
-    // Op buffer signals
-    logic                                     accomplished;
-    logic                                     iready;
+    // -----------------------------------------------------------------------
+    // Driven by reggie → consumed by op_buffer
+    // -----------------------------------------------------------------------
+    logic [DREAD_PORTS-1:0][VREG_W-1:0]   reggie_vreg;
+    logic [DREAD_PORTS-1:0]                reggie_dvalid;
+    logic                                  reggie_ready;
 
-    // Op buffer outputs
-    localparam NUM_PAIRS = READ_PORTS / 2;
-    logic [NUM_PAIRS-1:0]                     ivalid;
-    logic [READ_PORTS-1:0][DATA_BITS-1:0]     opbuff_rdata;
+    // -----------------------------------------------------------------------
+    // Driven by op_buffer → consumed by execution units
+    // -----------------------------------------------------------------------
+    logic [DREAD_PORTS-1:0][VREG_W-1:0]   opbuff_vreg;
+    logic [LOG_BANKS-1:0]                  opbuff_ivalid;
 
+    // -----------------------------------------------------------------------
+    // Surfaced to top level
+    // -----------------------------------------------------------------------
+    logic vrf_ready;
+
+    // -----------------------------------------------------------------------
+    // Modports
+    // -----------------------------------------------------------------------
     modport reggie (
-        input  CLK, nRST,
-        input  REN, rsel,
-        input  WEN, wsel, wdata, dec2_ready,
-        output rdata, dvalid, rf_ready, done_state
+        input  vs, REN,
+        input  vd, vdata, WEN,
+        input dependencies_ready, dec2_ready,
+        output reggie_vreg, reggie_dvalid, reggie_ready, done_state
     );
 
     modport op_buffer (
-        input  CLK, nRST,
-        input  rdata, dvalid, rf_ready, done_state,
         input  accomplished,
-        output ivalid, opbuff_rdata
+        input  reggie_vreg, reggie_dvalid, reggie_ready, done_state,
+        output opbuff_vreg, opbuff_ivalid
     );
 
     modport reg_file (
-        input  CLK, nRST,
-        input  REN, rsel,
-        input  WEN, wsel, wdata, dec2_ready,
-        input  accomplished,
-        output ivalid, opbuff_rdata,
-        output rf_ready
-    );
-
-    modport tb (
-        input  CLK, nRST,
-        output REN, rsel,
-        output WEN, wsel, wdata, dec2_ready,
-        output accomplished,
-        input  ivalid, opbuff_rdata,
-        input  rf_ready
+        input  vs, REN,
+        input  vd, vdata, WEN,
+        input  accomplished, dec2_ready,
+        input  dependencies_ready, // from dependency checker
+        output opbuff_vreg, opbuff_ivalid,
+        output vrf_ready
     );
 
 endinterface

@@ -6,7 +6,8 @@ module bank #(
     parameter NUM_ELEMENTS = 1,
     parameter DATA_WIDTH   = 32,
     parameter NUM_ROWS     = 128,
-    parameter ADDR_WIDTH   = $clog2(NUM_ROWS)
+    parameter ADDR_WIDTH   = $clog2(NUM_ROWS), 
+    parameter ZERO_REG_VAL = 0
 )(
     input  logic clk,
     input logic nRST,
@@ -29,7 +30,7 @@ module bank #(
             // Clear the whole bank
             for (int r = 0; r < NUM_ROWS; r++) begin
                 for (int i = 0; i < NUM_ELEMENTS; i++) begin
-                    mem[r][i] <= '0;  // DATA_WIDTH-wide zero
+                    mem[r][i] <= (r == 0) ? (ZERO_REG_VAL ? '1 : '0) : '0;
                 end
             end
         end

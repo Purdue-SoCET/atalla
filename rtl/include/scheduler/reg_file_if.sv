@@ -11,6 +11,7 @@ interface reg_file_if #(
     parameter DWRITE_PORTS = 4,
     parameter NUM_ELEMENTS = 1,
     parameter DATA_WIDTH   = 32,
+    parameter ZERO_REG_VAL = 0, // 0 = reg0 reads all-0s, 1 = reg0 reads all-1s
 
     // Derived — do not override
     parameter BANK_IDX  = $clog2(BANK_COUNT),

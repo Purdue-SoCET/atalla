@@ -77,5 +77,13 @@ module fetch (
 
   assign ifdec1_if.inst_packet_in   = (dc_if.ihit && !halt) ? dc_if.imemload : NOP_PACKET;
   
-  assign dc_if.imemREN = 1'b1;
+
+  always_comb begin
+    if(ready && dc_if.imemready) begin
+      dc_if.imemREN = 1'b1;
+    end else begin
+      dc_if.imemREN = 1'b0;
+    end
+
+  end
 endmodule

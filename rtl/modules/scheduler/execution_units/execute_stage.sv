@@ -136,7 +136,7 @@ module execute_stage
 
     //UNIT_5 CONNECTIONS
     //inputs
-    assign unit5_if.data_in = post_xbar_ex5.rs1_value;
+    assign unit5_if.data_in = post_xbar_ex5.rs2_value;
     assign unit5_if.addr = post_xbar_ex5.imm;
     assign unit5_if.rdIn = post_xbar_ex5.rdIn;
     assign unit5_if.valid_in = ex5_valid;
@@ -153,6 +153,8 @@ module execute_stage
     assign unit5_if.data_load = ex_if.data_load;
     assign unit5_if.hit = ex_if.hit;
     assign unit5_if.block_status = ex_if.block_status;
+    assign unit5_if.stall = ex_if.stall;
+    assign unit5_if.miss = ex_if.miss;
     assign ex_if.WEN = unit5_if.WEN;
     assign ex_if.REN = unit5_if.REN;
     assign ex_if.mem_in_valid = unit5_if.mem_in_valid;
