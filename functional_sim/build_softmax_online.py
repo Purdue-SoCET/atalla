@@ -109,14 +109,14 @@ def unroll_online_softmax(
             _emit_load_mask(lines, lane_mask_scalar_reg, current_lane_mask_reg, lane_mask_val, f"mask for lane {lane}")
             _emit_load_mask(lines, pair_mask_scalar_reg, pair_mask_reg, pair_mask_val, f"mask for lanes 0 and {lane}")
 
-            # new_max = max(m_old, x_k)
+            # new_max = max(m_old, x_k); max.bf
             append(f"sub.vv   ${pair_vec_reg}, ${pair_vec_reg}, ${pair_vec_reg}, {mask_reg_full}, 0   # clear pair vector")
             append(f"add.vs   ${pair_vec_reg}, ${pair_vec_reg}, ${running_max_reg}, {lane0_mask_reg}   # place running max in lane 0")
             append(f"add.vv   ${pair_vec_reg}, ${pair_vec_reg}, ${row_reg}, {current_lane_mask_reg}, 0   # place x[{lane}] in lane {lane}")
             append(f"rmax.vi  ${max_reduce_reg}, ${pair_vec_reg}, 0, {pair_mask_reg}         # new max = max(m_old, x[{lane}])")
             append(f"vmov.vts ${new_max_reg}, ${max_reduce_reg}, 0              # extract new max")
 
-            # alpha = exp(m_old - m_new)
+            # alpha = exp(m_old - m_new); exp.bf
             append(f"sub.vv   ${exp_tmp_reg}, ${exp_tmp_reg}, ${exp_tmp_reg}, {mask_reg_full}, 0   # clear exp temp")
             append(f"add.vs   ${exp_tmp_reg}, ${exp_tmp_reg}, ${running_max_reg}, {lane0_mask_reg}   # temp[0] = m_old")
             append(f"sub.vs   ${exp_tmp_reg}, ${exp_tmp_reg}, ${new_max_reg}, {lane0_mask_reg}   # temp[0] = m_old - m_new")
