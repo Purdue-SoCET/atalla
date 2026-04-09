@@ -33,61 +33,137 @@ def unroll_softmax(
     max_row_ind = n - 1
     mask_val = (1 << n) - 1
 
+    # Main row registers
     row_regs = [row_reg_base + i for i in range(n)]
 
-    max_vec_reg = 11
-    sum_vec_reg = 12
-    scalar_max_reg = 15
-    scalar_inv_sum_reg = 16
+    # 4-entry rotating temp rings for reduction outputs.
+    # This matches rmax.vi / rsum.vi latency = 4.
+    max_vec_ring = [11, 12, 13, 14]
+    sum_vec_ring = [15, 16, 17, 18]
+
+    temp_vec_reg_set = set(max_vec_ring + sum_vec_ring)
+    if any(r in temp_vec_reg_set for r in row_regs):
+        raise ValueError("row_reg_base overlaps temp vector registers 11..18")
+
+    # Per-row scalar temps to remove fake row-to-row deps in compute
+    scalar_max_base = 192
+    scalar_inv_sum_base = 224
+    if scalar_inv_sum_base + n - 1 > 255:
+        raise ValueError("n is too large for chosen scalar temp register layout")
+
+    scalar_max_regs = [scalar_max_base + i for i in range(n)]
+    scalar_inv_sum_regs = [scalar_inv_sum_base + i for i in range(n)]
+
+    # Keep setup regs close to the original kernel style
+    addr_tbl_reg = 1
+    gmem_base_reg = 2
+    scpad_base_reg = 3
+    lane_mask_scalar_reg = 6
+
+    # Original mutable row counters for vector load/store addressing
+    load_row_reg = 7
+    store_row_reg = 9
 
     lines: list[str] = []
     append = lines.append
 
-    append(f"addi.s   $1, $0, {tile_addr_location}       # load tile/scpad address table location into $1")
-    append("lw.s     $2, 0($1)                           # load gmem tile base address into $2")
-    append("lw.s     $3, 4($1)                           # load scratchpad tile base address into $3")
+    append(f"addi.s   ${addr_tbl_reg}, $0, {tile_addr_location}       # load tile/scpad address table location into ${addr_tbl_reg}")
+    append(f"lw.s     ${gmem_base_reg}, 0(${addr_tbl_reg})                           # load gmem tile base address into ${gmem_base_reg}")
+    append(f"lw.s     ${scpad_base_reg}, 4(${addr_tbl_reg})                           # load scratchpad tile base address into ${scpad_base_reg}")
     append("")
-    append(f"scpad.ld $3, $2, {max_col_ind}, {max_row_ind}, {sid}       # load NxN tile from gmem to scratchpad")
-    append("")
-    append(f"lui.s    $6, {mask_val >> 7}                          # load upper lane-enable mask bits into $6")
-    append(f"addi.s   $6, $6, {mask_val & 0x7f}                    # add lower lane-enable mask bits into $6")
-    append(f"mv.stm   {mask_reg}, $6                       # write mask into mask register {mask_reg}")
+    append(f"scpad.ld ${scpad_base_reg}, ${gmem_base_reg}, {max_col_ind}, {max_row_ind}, {sid}       # load NxN tile from gmem to scratchpad")
     append("")
 
-    append("############## PHASE 1: LOAD ROWS (unrolled) ##############")
-    append("addi.s   $7, $0, 0                            # row load index = 0")
-    append(f"vreg.ld  ${row_regs[0]}, $3, {max_col_ind}, {max_row_ind}, {sid}, 1, $7  # load row 0 into ${row_regs[0]}")
+    if n == 32:
+        append(f"addi.s   ${lane_mask_scalar_reg}, $0, -1                           # all 32 lanes enabled")
+    else:
+        append(f"lui.s    ${lane_mask_scalar_reg}, {mask_val >> 7}                          # load upper lane-enable mask bits")
+        append(f"addi.s   ${lane_mask_scalar_reg}, ${lane_mask_scalar_reg}, {mask_val & 0x7f}                    # add lower lane-enable mask bits")
+    append(f"mv.stm   {mask_reg}, ${lane_mask_scalar_reg}                       # write mask into mask register {mask_reg}")
+    append("")
+
+    append("############## PHASE 1: LOAD ROWS (keep original addressing style) ##############")
+    append(f"addi.s   ${load_row_reg}, $0, 0                            # row load index = 0")
+    append(f"vreg.ld  ${row_regs[0]}, ${scpad_base_reg}, {max_col_ind}, {max_row_ind}, {sid}, 1, ${load_row_reg}  # load row 0")
     for i in range(1, n):
-        append("addi.s   $7, $7, 1                            # advance load row index")
-        append(f"vreg.ld  ${row_regs[i]}, $3, {max_col_ind}, {max_row_ind}, {sid}, 1, $7  # load row {i} into ${row_regs[i]}")
+        append(f"addi.s   ${load_row_reg}, ${load_row_reg}, 1                            # advance load row index")
+        append(f"vreg.ld  ${row_regs[i]}, ${scpad_base_reg}, {max_col_ind}, {max_row_ind}, {sid}, 1, ${load_row_reg}  # load row {i}")
     append("")
 
-    append("############## PHASE 2: SOFTMAX + STORE (unrolled + pipelined) ##############")
-    append(f"rmax.vi  ${max_vec_reg}, ${row_regs[0]}, 0, {mask_reg}         # row 0 max reduction")
-    append(f"vmov.vts ${scalar_max_reg}, ${max_vec_reg}, 0                  # extract row 0 max")
-    append(f"sub.vs   ${row_regs[0]}, ${row_regs[0]}, ${scalar_max_reg}, {mask_reg}   # row 0 -= max")
-    append(f"expi.vi  ${row_regs[0]}, ${row_regs[0]}, 0, {mask_reg}         # exp(row 0 - max)")
-    append(f"rsum.vi  ${sum_vec_reg}, ${row_regs[0]}, {rsum_imm}, {mask_reg}         # row 0 exp sum")
-    append(f"vmov.vts ${scalar_inv_sum_reg}, ${sum_vec_reg}, 0              # extract row 0 sum")
-    append(f"rcp.bf   ${scalar_inv_sum_reg}, ${scalar_inv_sum_reg}, $0      # reciprocal(sum(row 0))")
-    append(f"mul.vs   ${row_regs[0]}, ${row_regs[0]}, ${scalar_inv_sum_reg}, {mask_reg}   # normalize row 0")
-    append("addi.s   $9, $0, 0                            # store row index = 0")
+    append("############## PHASE 2: MAX + SHIFT + EXP (pipelined like layernorm idea) ##############")
+    # Staggered sweep across rows:
+    #   vmov max(row i-4), sub(row i-5), exp(row i-6), rmax(row i)
+    #
+    # Older consumers come before the new producer so the 4-entry temp ring
+    # is not overwritten before its value is extracted.
+    for t in range(n + 6):
+        if 0 <= t - 4 < n:
+            row = t - 4
+            slot = row % 4
+            append(
+                f"vmov.vts ${scalar_max_regs[row]}, ${max_vec_ring[slot]}, 0                  # extract row {row} max"
+            )
+        if 0 <= t - 5 < n:
+            row = t - 5
+            append(
+                f"sub.vs   ${row_regs[row]}, ${row_regs[row]}, ${scalar_max_regs[row]}, {mask_reg}   # row {row} -= max"
+            )
+        if 0 <= t - 6 < n:
+            row = t - 6
+            append(
+                f"expi.vi  ${row_regs[row]}, ${row_regs[row]}, 0, {mask_reg}         # exp(row {row} - max)"
+            )
+        if t < n:
+            row = t
+            slot = row % 4
+            append(
+                f"rmax.vi  ${max_vec_ring[slot]}, ${row_regs[row]}, 0, {mask_reg}         # row {row} max reduction"
+            )
+    append("")
+
+    append("############## PHASE 3: SUM + EXTRACT + RCP (pipelined) ##############")
+    # Staggered sweep:
+    #   vmov sum(row i-4), rcp(row i-5), rsum(row i)
+    #
+    # rsum=4 and vmov=1, so issuing rcp at i-5 lines up with the known latencies.
+    for t in range(n + 5):
+        if 0 <= t - 4 < n:
+            row = t - 4
+            slot = row % 4
+            append(
+                f"vmov.vts ${scalar_inv_sum_regs[row]}, ${sum_vec_ring[slot]}, 0              # extract row {row} sum"
+            )
+        if 0 <= t - 5 < n:
+            row = t - 5
+            append(
+                f"rcp.bf   ${scalar_inv_sum_regs[row]}, ${scalar_inv_sum_regs[row]}, $0      # reciprocal(sum(row {row}))"
+            )
+        if t < n:
+            row = t
+            slot = row % 4
+            append(
+                f"rsum.vi  ${sum_vec_ring[slot]}, ${row_regs[row]}, {rsum_imm}, {mask_reg}         # row {row} exp sum"
+            )
+    append("")
+
+    append("############## PHASE 4: NORMALIZE + STORE (keep original addressing style) ##############")
+    append(f"addi.s   ${store_row_reg}, $0, 0                            # store row index = 0")
+    append(f"mul.vs   ${row_regs[0]}, ${row_regs[0]}, ${scalar_inv_sum_regs[0]}, {mask_reg}   # normalize row 0")
 
     for i in range(1, n):
-        append(f"rmax.vi  ${max_vec_reg}, ${row_regs[i]}, 0, {mask_reg}         # row {i} max reduction")
-        append(f"vmov.vts ${scalar_max_reg}, ${max_vec_reg}, 0                  # extract row {i} max")
-        append(f"sub.vs   ${row_regs[i]}, ${row_regs[i]}, ${scalar_max_reg}, {mask_reg}   # row {i} -= max")
-        append(f"expi.vi  ${row_regs[i]}, ${row_regs[i]}, 0, {mask_reg}         # exp(row {i} - max)")
-        append(f"rsum.vi  ${sum_vec_reg}, ${row_regs[i]}, {rsum_imm}, {mask_reg}         # row {i} exp sum")
-        append(f"vmov.vts ${scalar_inv_sum_reg}, ${sum_vec_reg}, 0              # extract row {i} sum")
-        append(f"rcp.bf   ${scalar_inv_sum_reg}, ${scalar_inv_sum_reg}, $0      # reciprocal(sum(row {i}))")
-        append(f"mul.vs   ${row_regs[i]}, ${row_regs[i]}, ${scalar_inv_sum_reg}, {mask_reg}   # normalize row {i}")
-        append(f"vreg.st  ${row_regs[i - 1]}, $3, {max_col_ind}, {max_row_ind}, {sid}, 1, $9   # store normalized row {i - 1}")
-        append("addi.s   $9, $9, 1                            # advance store row index")
+        append(
+            f"mul.vs   ${row_regs[i]}, ${row_regs[i]}, ${scalar_inv_sum_regs[i]}, {mask_reg}   # normalize row {i}"
+        )
+        append(
+            f"vreg.st  ${row_regs[i - 1]}, ${scpad_base_reg}, {max_col_ind}, {max_row_ind}, {sid}, 1, ${store_row_reg}   # store normalized row {i - 1}"
+        )
+        append(f"addi.s   ${store_row_reg}, ${store_row_reg}, 1                            # advance store row index")
 
-    append(f"vreg.st  ${row_regs[-1]}, $3, {max_col_ind}, {max_row_ind}, {sid}, 1, $9   # store last normalized row ({n - 1})")
+    append(
+        f"vreg.st  ${row_regs[-1]}, ${scpad_base_reg}, {max_col_ind}, {max_row_ind}, {sid}, 1, ${store_row_reg}   # store last normalized row ({n - 1})"
+    )
     append("")
-    append(f"scpad.st $3, $2, {max_col_ind}, {max_row_ind}, {sid}            # store NxN tile back to gmem")
+    append(f"scpad.st ${scpad_base_reg}, ${gmem_base_reg}, {max_col_ind}, {max_row_ind}, {sid}            # store NxN tile back to gmem")
     append("")
     append("halt.s")
 
