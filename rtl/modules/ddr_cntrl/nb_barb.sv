@@ -87,7 +87,7 @@ module nb_barb(
 	if(!nRST)
 		barb.be_arb <= 'b0;
 	else 
-		barb.be_arb <= be_arb_next;	
+		barb.be_arb <= (be_arb_next[2 * BANK_NUM - 1:BANK_NUM] | be_arb_next[BANK_NUM-1:0]);	
     end
     //Combinational block for selecting bank based on priority.
     logic [$clog2(BANK_NUM):0] k;
