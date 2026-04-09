@@ -28,21 +28,21 @@ module v_wb_arbiter #(
 	vif.vector_wb_out.vd    = '0;
 	vif.vector_wb_out.vdata = '0;
 
-    vif.vector_wb_out.vd_mask = '0;
-    vif.vector_wb_out.vdata_mask = '0;
-    vif.vector_wb_out.WEN_mask = '0;
+    vif.vector_wb_out.mask_WB_wsel = '0;
+    vif.vector_wb_out.mask_WB_WEN = '0;
+    vif.vector_wb_out.mask_WB_wdata = '0;
 
 	vif.vector_wb_out.vector_if_wb_ready = '1; // First, all writeback readys are 1.
     //clear bank when veggie ready to accept new data
     banks = '0;
 
-    //Mask stuff: let's test it
-    if (vif.vector_wb_in.mvvOrMvs) begin
-        vif.vector_wb_out.vd_mask = vif.vector_wb_in.vector_if_lanes_out.result_collectors[0].vd_output;
-        vif.vector_wb_out.WEN_mask = 1;
 
-        foreach (vif.vector_wb_in.vector_if_lanes_out.result_collectors[0][i]) begin
-            vif.vector_wb_out.vdata_mask[i] = vif.vector_wb_in.vector_if_lanes_out.result_collectors[0][i][0];
+    //Mask stuff: writing only using port 0 for now
+    if (vif.vector_wb_in.mvvOrMvs) begin
+        vif.vector_wb_out.mask_WB_wsel[0] = vif.vector_wb_in.vector_if_lanes_out.result_collectors[0].vd_output; //Will this work??
+        vif.vector_wb_out.mask_WB_WEN[0] = 1;
+        foreach (vif.vector_wb_in.vector_if_lanes_out.result_collectors[0][i]) begin //From ALU
+            vif.vector_wb_out.mask_WB_wdata[0][i] = vif.vector_wb_in.vector_if_lanes_out.result_collectors[0][i][0];
         end
     end
 

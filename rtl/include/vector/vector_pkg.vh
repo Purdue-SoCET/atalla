@@ -46,6 +46,11 @@ package vector_pkg;
     localparam DTYPE_W  = 2;
     localparam INSTR_W  = 32;
 
+    // Mask parameters (handle differently later)
+    localparam MASK_REG_BITS = 4;
+    localparam MASK_WRITE_PORTS = 2;
+    localparam MASK_DATA_LENGTH = 32;
+
     typedef logic [OPCODE_W-1:0] opcode_t;
     typedef logic [VIDX_W-1:0]   vsel_t;
     typedef logic [RIDX_W-1:0]   reg_t;
@@ -416,30 +421,12 @@ package vector_pkg;
         vreg_t [WRITE_PORTS-1:0] vdata;
         logic  [WRITE_PORTS-1:0] WEN;
 
-        vsel_t vd_mask; //For masks
-        logic [VLMAX-1:0] vdata_mask; //For masks
-        logic  WEN_mask; //For masks
-
+        logic [MASK_WRITE_PORTS-1:0][MASK_REG_BITS-1:0]     mask_WB_wsel;
+        logic [MASK_WRITE_PORTS-1:0]                        mask_WB_WEN;
+        logic [MASK_WRITE_PORTS-1:0][MASK_DATA_LENGTH-1:0]  mask_WB_wdata;
+        
         vector_if_wb_ready_t vector_if_wb_ready;
     } vector_wb_out_t;
-
-    typedef struct packed {
-        vector_if_gsau_out_t vector_if_gsau_out;
-        vector_if_reduction_out_t vector_if_reduction_out;
-        vector_if_lanes_out_t vector_if_lanes_out;
-        vector_if_vlsu_out_t vector_if_vlsu_out;
-
-        logic ready; //should come from Veggie
-    } vector_wb_in_t;
-
-    typedef struct packed {
-        vsel_t [WRITE_PORTS-1:0] vd;
-        vreg_t [WRITE_PORTS-1:0] vdata;
-        logic  [WRITE_PORTS-1:0] WEN;
-
-        vector_if_wb_ready_t vector_if_wb_ready;
-    } vector_wb_out_t;
-
 
 endpackage
 
