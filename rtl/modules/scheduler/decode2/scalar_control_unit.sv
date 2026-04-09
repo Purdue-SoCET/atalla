@@ -291,6 +291,7 @@ module scalar_control_unit
                     cuif.decoded_scalar_instrs[i].imm        = {{20{cuif.scalar_instrs[i][34]}}, cuif.scalar_instrs[i][34:23]};
                     cuif.decoded_scalar_instrs[i].use_rs1    = 1'b1; // base
                     cuif.decoded_scalar_instrs[i].use_rs2    = 1'b1; // data
+                    cuif.decoded_scalar_instrs[i].rs2   = cuif.scalar_instrs[i][14:7];                    
                     cuif.decoded_scalar_instrs[i].reg_write  = 1'b0;
                 end
 
@@ -313,6 +314,7 @@ module scalar_control_unit
                     cuif.decoded_scalar_instrs[i].imm        = {{20{cuif.scalar_instrs[i][34]}}, cuif.scalar_instrs[i][34:23]};
                     cuif.decoded_scalar_instrs[i].use_rs1    = 1'b1; // base
                     cuif.decoded_scalar_instrs[i].use_rs2    = 1'b1; // data
+                    cuif.decoded_scalar_instrs[i].rs2   = cuif.scalar_instrs[i][14:7];                    
                     cuif.decoded_scalar_instrs[i].reg_write  = 1'b0;
                 end
 

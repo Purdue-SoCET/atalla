@@ -137,7 +137,6 @@ module decode_2_tb;
         clear_wb();
         drive_nop_packet();
 
-        //TODO ensure teh dependency checker is working correctly re above
 
         repeat (5) @(posedge CLK);
 
