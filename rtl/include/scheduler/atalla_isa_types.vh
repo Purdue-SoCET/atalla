@@ -30,7 +30,7 @@ package atalla_isa_pkg;
 
   parameter SCALAR_SLOTS = 4;
   parameter VECTOR_SLOTS = 4;
-  parameter SCRATCH_SLOTS = 2;
+  parameter SCRATCH_SLOTS = 4;
 
   // ============================================================
   // 2. BRANCH PREDICTION (BTB)

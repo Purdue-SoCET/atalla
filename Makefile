@@ -131,9 +131,7 @@ test:
 	OTHERS=$$(printf '%s\n' $$ALLSRCS | grep -Ev '_pkg\.sv$$' || true); \
 	ORDERED_SRCS="$$PKGS $$OTHERS"; \
 
-	BASE_INCS="+incdir+$(INCDIRROOT) +incdir+$(MODROOT) +incdir+$(UNITTESTROOT)"; \
-	INCDIRS_INC=$$(find "$(INCDIRROOT)$(folder)" -type d -print 2>/dev/null | sed 's/^/+incdir+/'); \
-	INCDIRS_MOD=$$(find "$(MODROOT)$(folder)"   -type d -print 2>/dev/null | sed 's/^/+incdir+/'); \
+	BASE_INCS="$(shell find $(INCDIRROOT) -type d | sed 's/^/+incdir+/') +incdir+$(MODROOT) +incdir+$(UNITTESTROOT)"	INCDIRS_MOD=$$(find "$(MODROOT)$(folder)"   -type d -print 2>/dev/null | sed 's/^/+incdir+/'); \
 	INCDIRS_TB=$$(find "$(UNITTESTROOT)$(folder)"     -type d -print 2>/dev/null | sed 's/^/+incdir+/'); \
 
 	EXTRA_INCS=""; \

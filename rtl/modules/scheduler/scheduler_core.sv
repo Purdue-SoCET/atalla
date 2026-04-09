@@ -12,29 +12,13 @@ import scheduler_pkg::*;
 import atalla_isa_pkg::*;
 
 module scheduler_core #(
-    parameter NUM_SCALAR_INSTRS = 4
+    parameter NUM_SCALAR_INSTRS = 4, 
+    parameter NUM_VECTOR_INSTRS = 4,
+    parameter NUM_SDMA_INSTRS = 4
 )
 (
     input logic CLK, nRST,
-
-    //to dcache
-    output logic WEN, REN, mem_in_valid,
-    output logic [31:0] data_store, data_addr,
-
-    //from dcache
-    input logic [31:0] data_load,
-    input logic hit, block_status,
-
-    //dec2 in
-    // input instr_t [3:0] scalar_instrs,
-    // input logic predict_taken_in,
-    // input word_t pc_in, pc_pred_addr_in,
-    // output logic ready
-
-    //fetch in
-    input logic iwait,
-    input instruction_packet_t iload, 
-    output logic ready
+    scheduler_core_if.sc scif
 
 );
 
@@ -42,6 +26,7 @@ module scheduler_core #(
     execution_unit_types_pkg::in_DEC2_EX_t  [NUM_SCALAR_INSTRS-1:0] n_DEC2_EX_latch, DEC2_EX_latch;
     scheduler_pkg::DEC2_WB_LATCH_PC n_DEC2_EX_PC_latch, DEC2_EX_PC_latch;
     scheduler_pkg::DEC1_DEC2_LATCH n_D1_D2_latch, D1_D2_latch;
+    scheduler_pkg::DEC2_EX_VEC_SDMA_LATCH n_D2_EX_vec_sdma_latch, D2_EX_vec_sdma_latch;
 
     logic n_DEC2_EX_halt_latch, DEC2_EX_halt_latch;
 
@@ -93,7 +78,10 @@ module scheduler_core #(
         //continuous assignment for DEC2/EX
         //EX inputs from DEC2
         n_DEC2_EX_halt_latch = 1'b0;
+        n_D2_EX_vec_sdma_latch = '0;
         if(decode_2_if.ready && !scalar_ex_if.redirect_valid && !scalar_ex_if.halt_out) begin
+            n_D2_EX_vec_sdma_latch.decoded_vector_instrs = decode_2_if.decoded_vector_instrs;
+            n_D2_EX_vec_sdma_latch.decoded_SDMA_instrs = decode_2_if.decoded_SDMA_instrs;
             for(int i = 0; i < NUM_SCALAR_INSTRS; i++) begin
                 n_DEC2_EX_latch[i].scalar_type_enable = decode_2_if.decoded_scalar_instrs[i].fu_enable;
                 n_DEC2_EX_latch[i].valid_in           = decode_2_if.decoded_scalar_instrs[i].valid_in;
@@ -113,6 +101,7 @@ module scheduler_core #(
 
             n_DEC2_EX_halt_latch = decode_2_if.decoded_scalar_instrs[0].halt || decode_2_if.decoded_scalar_instrs[1].halt || decode_2_if.decoded_scalar_instrs[2].halt || decode_2_if.decoded_scalar_instrs[3].halt;
         end else begin
+            n_D2_EX_vec_sdma_latch = '0;
             for(int i = 0; i < NUM_SCALAR_INSTRS; i++) begin
               n_DEC2_EX_latch[i] = '0;
               n_DEC2_EX_latch[i].op = 7'b0101111;
@@ -123,6 +112,8 @@ module scheduler_core #(
         scalar_ex_if.DEC2_inputs = DEC2_EX_latch;
 
         scalar_ex_if.halt = DEC2_EX_halt_latch;
+        scif.decoded_vector_instrs = D2_EX_vec_sdma_latch.decoded_vector_instrs;
+        scif.decoded_SDMA_instrs = D2_EX_vec_sdma_latch.decoded_SDMA_instrs;
         
         scalar_ex_if.pc = DEC2_EX_PC_latch.pc;
         scalar_ex_if.pc_pred_addr_out = DEC2_EX_PC_latch.pc_pred_addr_out;
@@ -189,36 +180,33 @@ module scheduler_core #(
 
     //dcache in/outs
     //from dcache
-    assign scalar_ex_if.hit = hit;
-    assign scalar_ex_if.data_load = data_load;
-    assign scalar_ex_if.block_status = block_status;
+    assign scalar_ex_if.hit = scif.hit;
+    assign scalar_ex_if.data_load = scif.data_load;
+    assign scalar_ex_if.block_status = scif.block_status;
     //to dcache
-    assign WEN = scalar_ex_if.WEN;
-    assign REN = scalar_ex_if.REN;
-    assign mem_in_valid = scalar_ex_if.mem_in_valid;
-    assign data_store = scalar_ex_if.data_store;
-    assign data_addr = scalar_ex_if.data_addr;
-    // assign decode_2_if.scalar_instrs = scalar_instrs;
-    // assign decode_2_if.predict_taken_in = predict_taken_in;
-    // assign decode_2_if.pc_pred_addr_in = pc_pred_addr_in;
-    // assign decode_2_if.pc_in = pc_in;
+    assign scif.WEN = scalar_ex_if.WEN;
+    assign scif.REN = scalar_ex_if.REN;
+    assign scif.mem_in_valid = scalar_ex_if.mem_in_valid;
+    assign scif.data_store = scalar_ex_if.data_store;
+    assign scif.data_addr = scalar_ex_if.data_addr;
     assign ready = decode_2_if.ready;
 
-    // assign datapath_cache_if.ihit = ihit;
-    // assign datapath_cache_if.imemload = imemload;
-    assign caches_if.iload = iload;
-    assign caches_if.iwait = iwait;
+    //icache stuff
+    assign caches_if.iload = scif.iload;
+    assign caches_if.iwait = scif.iwait;
 
     always_ff @( posedge CLK, negedge nRST ) begin : EX_WB_LATCH
         if(!nRST) begin
             EX_WB_latch <= '0;
             DEC2_EX_latch <= '0;
+            D2_EX_vec_sdma_latch <= '0;
             DEC2_EX_PC_latch <= '0;
             DEC2_EX_halt_latch <= '0;
             D1_D2_latch <= '0;
         end else begin
             EX_WB_latch <= n_EX_WB_latch;
             DEC2_EX_latch <= n_DEC2_EX_latch;
+            D2_EX_vec_sdma_latch <= n_D2_EX_vec_sdma_latch;
             DEC2_EX_PC_latch <= n_DEC2_EX_PC_latch;
             DEC2_EX_halt_latch <= n_DEC2_EX_halt_latch;
             D1_D2_latch <= n_D1_D2_latch;

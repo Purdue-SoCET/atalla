@@ -127,6 +127,8 @@ logic [NUM_VECTOR_INSTRS-1:0][VECTOR_REG_BITS-1:0] vector_v_wsels;
 logic [NUM_VECTOR_INSTRS-1:0][MASK_REG_BITS-1:0] vector_m_wsels;
 logic [NUM_SDMA_INSTRS-1:0] SDMA_scalar_WEN;
 logic [NUM_SDMA_INSTRS-1:0][SCALAR_REG_BITS-1:0] SDMA_scalar_rs1s;
+logic [NUM_SDMA_INSTRS-1:0][1:0] SDMA_scalar_sids;
+
 
 // Per-unit need signals for struct hazard checking: does any instr in this packet need this unit?
     logic need_scalar_ex1, need_scalar_ex2, need_scalar_ex3, need_scalar_ex4, need_scalar_ex5;
@@ -157,6 +159,7 @@ always_comb begin
         // SDMA reg writes
         SDMA_scalar_WEN[i] = sdmacif.decoded_sdma_instrs[i].use_rs1;
         SDMA_scalar_rs1s[i] = sdmacif.decoded_sdma_instrs[i].rs1_rd; //rs1=rd for SDMA
+        SDMA_scalar_sids[i] = sdmacif.decoded_sdma_instrs[i].rs3_data[31:30];
     end
 
     //FOLLOWING BLOCK IS SETTING UP FOR CHECKING STRUCTURAL HAZARDS
@@ -235,7 +238,22 @@ assign vector_FU_ready = (~need_vector_alu | d2if.alu_ready) &
                          (~need_vector_reduction | d2if.reduction_ready) &
                          (~need_vector_vlsu | d2if.vlsu_ready) &
                          (~need_vector_gsau | d2if.gsau_ready);
-assign sdma_FU_ready = (~need_sdma_ex | d2if.sdma_ready);
+
+always_comb begin
+    sdma_FU_ready = 1'b1; // assume ready unless proven otherwise
+
+    for (int i = 0; i < NUM_SDMA_INSTRS; i++) begin
+        if (sdmacif.decoded_sdma_instrs[i].valid_in) begin
+            logic [1:0] sid;
+            sid = SDMA_scalar_sids[i];
+
+            // If this instruction needs SDMA and that lane is not ready then stall
+            if (SDMA_scalar_WEN[i] && !d2if.sdma_ready[sid]) begin
+                sdma_FU_ready = 1'b0;
+            end
+        end
+    end
+end
 
 //dependencies ready, structural hazards cleared, and reg files ready = packet is ready to issue
 assign d2if.ready = dcif.dependencies_ready & (scalar_FU_ready & vector_FU_ready & sdma_FU_ready) & (srfif.vrf_ready & vrfif.vrf_ready & mrfif.vrf_ready); 

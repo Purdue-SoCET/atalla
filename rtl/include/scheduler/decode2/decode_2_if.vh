@@ -30,7 +30,8 @@ interface decode_2_if #(
     decoded_SDMA_instr_t   [NUM_SDMA_INSTRUCTIONS-1:0] decoded_SDMA_instrs;
 
     logic ready_DEC2_ex1, ready_DEC2_ex2, ready_DEC2_ex3, ready_DEC2_ex4, ready_DEC2_ex5;
-    logic alu_ready, mul_ready, exp_ready, reduction_ready, vlsu_ready, gsau_ready, sdma_ready;
+    logic alu_ready, mul_ready, exp_ready, reduction_ready, vlsu_ready, gsau_ready;
+    logic [NUM_SDMA_INSTRUCTIONS-1:0] sdma_ready; //one signal per scpad
 
     logic ready; // RAW hazards and structural hazards cleared 
 

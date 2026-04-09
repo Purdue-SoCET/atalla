@@ -31,13 +31,19 @@ package scheduler_pkg;
     } DEC2_WB_LATCH_PC;
 
     typedef struct packed {
-        instr_t [NUM_INSTRUCTIONS-1:0] scalar_instrs;
-        instr_t [NUM_INSTRUCTIONS-1:0] vector_instrs;
-        instr_t [NUM_INSTRUCTIONS-1:0] SDMA_instrs;
+        instr_t [NUM_SCALAR_INSTRUCTIONS-1:0] scalar_instrs;
+        instr_t [NUM_VECTOR_INSTRUCTIONS-1:0] vector_instrs;
+        instr_t [NUM_SDMA_INSTRUCTIONS-1:0] SDMA_instrs;
         word_t pc, pc_pred_addr;
         logic predict_taken;      
         
     } DEC1_DEC2_LATCH;
+
+    typedef struct packed {
+        decoded_vector_instr_t [NUM_VECTOR_INSTRUCTIONS-1:0] decoded_vector_instrs;
+        decoded_SDMA_instr_t [NUM_SDMA_INSTRUCTIONS-1:0] decoded_SDMA_instrs;
+
+    } DEC2_EX_VEC_SDMA_LATCH;
 
 endpackage
 
