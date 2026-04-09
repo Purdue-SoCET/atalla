@@ -90,6 +90,37 @@ class Memory:
         addr = int(addr)
         self.data_mem[addr] = data
 
+    def read_bf16_le(self, byte_addr: int) -> int:
+        """BF16 uint16 at byte_addr using little-endian 32-bit word packing (DRAMWriter .data layout).
+
+        Words are stored at addresses aligned to 4 bytes; BF16 halves live at +0/+2.
+        Falls back to a legacy per-address entry (sdma_store used to write halfwords only).
+        """
+        ba = int(byte_addr) & 0xFFFFFFFF
+        wa = ba & ~3
+        w = self.data_mem.get(wa)
+        if w is not None:
+            iw = int(w) & 0xFFFFFFFF
+            if ba & 2:
+                return (iw >> 16) & 0xFFFF
+            return iw & 0xFFFF
+        lone = self.data_mem.get(ba)
+        if lone is not None:
+            return int(lone) & 0xFFFF
+        return 0
+
+    def write_bf16_le(self, byte_addr: int, h: int) -> None:
+        """Merge BF16 halfword into the 32-bit little-endian word covering byte_addr."""
+        ba = int(byte_addr) & 0xFFFFFFFF
+        wa = ba & ~3
+        h = int(h) & 0xFFFF
+        w = int(self.data_mem.get(wa, 0)) & 0xFFFFFFFF
+        if ba & 2:
+            w = (w & 0xFFFF) | (h << 16)
+        else:
+            w = (w & 0xFFFF0000) | h
+        self.data_mem[wa] = w & 0xFFFFFFFF
+
     # ------------------------------------------------------------
     # Dump to file
     # ------------------------------------------------------------

@@ -27,20 +27,26 @@ class PerfMetrics:
         flops_total = float(self.metrics.get("flops_total", 0))
         bytes_loaded = float(self.metrics.get("bytes_loaded", 0))
         bytes_written = float(self.metrics.get("bytes_written", 0))
+        bytes_mem = bytes_loaded + bytes_written
         if bytes_loaded > 0.0:
-            self.metrics["arithmetic_intensity"] = flops_total / bytes_loaded
+            self.metrics["arithmetic_intensity_loads"] = flops_total / bytes_loaded
+        else:
+            self.metrics["arithmetic_intensity_loads"] = 0.0
+        if bytes_mem > 0.0:
+            self.metrics["arithmetic_intensity"] = flops_total / bytes_mem
         else:
             self.metrics["arithmetic_intensity"] = 0.0
-        mem_bytes = bytes_loaded + bytes_written
-        if mem_bytes > 0.0:
-            self.metrics["arithmetic_intensity_load_store"] = flops_total / mem_bytes
+        if bytes_mem > 0.0:
+            self.metrics["arithmetic_intensity_load_store"] = flops_total / bytes_mem
         else:
             self.metrics["arithmetic_intensity_load_store"] = 0.0
 
         packet_slots_total = float(self.metrics.get("packet_slots_total", 0))
         packet_slots_filled = float(self.metrics.get("packet_slots_filled", 0))
         if packet_slots_total > 0.0:
-            self.metrics["packet_slot_utilization_pct"] = (packet_slots_filled / packet_slots_total) * 100.0
+            self.metrics["packet_slot_utilization_pct"] = (
+                packet_slots_filled / packet_slots_total
+            ) * 100.0
         else:
             self.metrics["packet_slot_utilization_pct"] = 0.0
 
@@ -55,7 +61,6 @@ class PerfMetrics:
         else:
             self.metrics["runtime_packet_slot_util_pct"] = 0.0
 
-        # Alias for external spreadsheets / older scripts
         self.metrics["assembly_instructions_executed"] = int(
             self.metrics.get("instructions_executed", 0)
         )

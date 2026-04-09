@@ -126,6 +126,30 @@ def systolic_mm(A: np.ndarray, B: np.ndarray, size: int = 32, bf16_rounding: boo
     sa = SystolicArray(size=size, bf16_rounding=bf16_rounding)
     return sa.matmul(A, B)
 
+
+def systolic_gemm_vv_dram_reference(
+    A: np.ndarray, B: np.ndarray, size: int = 32, bf16_rounding: bool = True
+) -> np.ndarray:
+    """
+    Reference C matching functional_sim gemm.vv + lw.vi: row k of DRAM B (K×N) is stored as column k
+    of the 32×32 internal weight buffer, then each activations row uses SystolicArray.matmul(1×32, 32×32).
+    """
+    A = np.asarray(A, dtype=np.float32)
+    B = np.asarray(B, dtype=np.float32)
+    M, K = A.shape
+    Kb, N = B.shape
+    assert K == Kb, (A.shape, B.shape)
+    G = np.zeros((32, 32), dtype=np.float32)
+    for k in range(min(K, 32)):
+        G[: min(N, 32), k] = B[k, : min(N, 32)]
+    C = np.zeros((M, N), dtype=np.float32)
+    for r in range(M):
+        a = np.zeros(32, dtype=np.float32)
+        a[:K] = A[r, :K]
+        C[r, :N] = systolic_mm(a.reshape(1, -1), G, size=size, bf16_rounding=bf16_rounding)[0, :N]
+    return C
+
+
 # -------------------------
 # Quick smoke-test
 # -------------------------

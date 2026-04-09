@@ -482,6 +482,7 @@ class VectorLanes:
             if new_op == "muli":    return self.mul_scalar(vA, sA)
             #if new_op == "scalar_div":    return self.scalar_div(sA, vA)
             if new_op == "expi":           return self.exp(vA)
+            if new_op == "sqrti":          return self.sqrt(vA)
             if new_op == "not":        return self.bitwise_not(vA)
             if new_op == "shift":    
                 if(slr):
