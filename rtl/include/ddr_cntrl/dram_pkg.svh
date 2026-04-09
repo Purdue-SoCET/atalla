@@ -9,7 +9,7 @@ package dram_pkg;
     parameter BANK_NUM = 16;
     parameter STQ_DEPTH = 8;
     parameter LQ_DEPTH = 8;
-    
+    parameter BG_MASK = BANK_NUM == 16 ? 16'h8888 : 8'h22;
 
     // WORD SIZE
     parameter WORD_W            = 64;
