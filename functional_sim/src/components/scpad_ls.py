@@ -11,6 +11,13 @@ from .perf_metrics import PerfMetrics
 def identity_swizzle(addr: int) -> int:
     return addr
 
+
+def _lane_count_from_num_cols(num_cols: int, max_lanes: int) -> int:
+    num_cols = int(num_cols)
+    if num_cols < 0:
+        raise ValueError(f"num_cols must be >= 0, got {num_cols}")
+    return min(num_cols + 1, max_lanes)
+
 # ============================================================
 # Vector Load: Scratchpad -> Vector Register
 # ============================================================
@@ -18,47 +25,22 @@ def scpad_to_vreg(
     *,
     scpad: Scratchpad,
     vregs: VectorRegisterFile,
-    scpad_addr: int,   # If rc=0: Slot Index. If rc=1: Bank Index.
-    vd: int,           # Destination Vector Register Index
-    rc: int = 0,       # 0 = Row Mode (across banks), 1 = Column Mode (down slots)
-    rc_id: int = 0,
-    num_rows: int = 31,
-    num_cols: int = 31
+    scpad_base_addr: int,
+    row_offset: int,
+    vd: int,
+    num_cols: int,
 ):
     """
-    Loads a vector from Scratchpad into a Vector Register.
-    
-    rc=0 (Row): VREG[i] = SCPAD.banks[i][scpad_addr]
-    rc=1 (Col): VREG[i] = SCPAD.banks[scpad_addr][i]
+    VM load semantics:
+    - rs1 provides the scratchpad base address (slot base)
+    - rs2 provides row offset from rs1
+    - num_cols is 0-indexed max column, so transfer width = num_cols + 1 lanes
+    - lane i maps to bank i at the selected slot
     """
-    vector_data = []
+    slot = int(scpad_base_addr + row_offset) % scpad.S
+    lane_count = _lane_count_from_num_cols(num_cols=num_cols, max_lanes=scpad.B)
+    vector_data = [scpad.banks[bank][slot] for bank in range(lane_count)]
 
-    # Default lengths if not provided
-    if rc == 0:
-        length = num_rows  # Row mode -> width is number of banks
-    else:
-        length = num_cols  # Col mode -> width is number of slots
-
-    if rc == 1:
-        # --- COL MODE ---
-        # Fixed Slot (scpad_addr), Iterate Banks
-        slot = int(scpad_addr % scpad.S + rc_id)
-        for bank in range(0, length+1):
-            if bank >= scpad.B:
-                break
-            val = scpad.banks[bank][slot]
-            vector_data.append(val)
-
-    elif rc == 0:
-        # --- ROW MODE ---
-        # Fixed Bank (scpad_addr), Iterate Slots
-        bank = scpad_addr % scpad.B + rc_id
-        for i in range(0,length+1):
-            slot = i % scpad.S 
-            val = scpad.banks[bank][slot]
-            vector_data.append(val)
-
-    # Write result to Vector Register
     vregs.write(vd, vector_data)
 
 
@@ -69,40 +51,25 @@ def vreg_to_scpad(
     *,
     scpad: Scratchpad,
     vregs: VectorRegisterFile,
-    scpad_addr: int,   # If rc=0: Slot Index. If rc=1: Bank Index.
-    vs: int,           # Source Vector Register Index
-    rc: int = 0,       # 0 = Row Mode, 1 = Column Mode
-    rc_id: int = 0,
-    num_rows: int = 31,
-    num_cols: int = 31
+    scpad_base_addr: int,
+    row_offset: int,
+    vs: int,
+    num_cols: int,
 ):
     """
-    Stores a Vector Register into the Scratchpad.
-
-    rc=0 (Row): SCPAD.banks[i][scpad_addr] = VREG[i]
-    rc=1 (Col): SCPAD.banks[scpad_addr][i] = VREG[i]
+    VM store semantics:
+    - rs1 provides the scratchpad base address (slot base)
+    - rs2 provides row offset from rs1
+    - num_cols is 0-indexed max column, so transfer width = num_cols + 1 lanes
+    - lane i maps to bank i at the selected slot
     """
-    # Read vector data
     vector_data = vregs.read(vs)
-    
-    if rc == 1:
-        # --- COL MODE ---
-        # Fixed Slot (scpad_addr), Iterate Banks
-        slot = int (scpad_addr % scpad.S + rc_id)
-        for bank, val in enumerate(vector_data):
-            if bank >= num_cols + 1:
-                break
-            scpad.banks[bank][slot] = val
+    slot = int(scpad_base_addr + row_offset) % scpad.S
+    lane_count = _lane_count_from_num_cols(num_cols=num_cols, max_lanes=scpad.B)
+    lane_count = min(lane_count, len(vector_data))
 
-    elif rc == 0:
-        # --- ROW MODE ---
-        # Fixed Bank (scpad_addr), Iterate Slots
-        bank = scpad_addr % scpad.B + rc_id
-        for i, val in enumerate(vector_data):
-            slot = i % scpad.S
-            if i >= num_rows + 1:
-                break
-            scpad.banks[bank][slot] = val  
+    for bank in range(lane_count):
+        scpad.banks[bank][slot] = vector_data[bank]
 
 
 # ============================================================

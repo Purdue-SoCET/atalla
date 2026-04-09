@@ -548,25 +548,21 @@ mneq.mvs vmd, vs1, rs1, mask
 
 ## Vector Register Load/Store (VM-Type)
 
-vreg.ld vd, rs1, num_cols, num_rows, sid, rc, rc_id_reg
-- Operation: Vector load from scratchpad tile.
+vreg.ld vd, rs1, rs2, num_cols, sid
+- Operation: Vector load from scratchpad into `vd`.
 - `vd`: vector destination register.
-- `rs1`: scratchpad base pointer/address.
-- `num_cols`: tile column count.
-- `num_rows`: tile row count.
-- `sid`: scratchpad ID/bank selector.
-- `rc`: row/column mode select.
-- `rc_id_reg`: scalar register containing selected row/column index.
+- `rs1`: scratchpad base address.
+- `rs2`: row offset from `rs1` base address.
+- `num_cols`: 0-indexed max column to load (`num_cols + 1` lanes are transferred).
+- `sid`: scratchpad ID selector.
 
-vreg.st vs, rs1, num_cols, num_rows, sid, rc, rc_id_reg
-- Operation: Vector store to scratchpad tile.
+vreg.st vs, rs1, rs2, num_cols, sid
+- Operation: Vector store from `vs` into scratchpad.
 - `vs`: vector source register.
-- `rs1`: scratchpad base pointer/address.
-- `num_cols`: tile column count.
-- `num_rows`: tile row count.
-- `sid`: scratchpad ID/bank selector.
-- `rc`: row/column mode select.
-- `rc_id_reg`: scalar register containing selected row/column index.
+- `rs1`: scratchpad base address.
+- `rs2`: row offset from `rs1` base address.
+- `num_cols`: 0-indexed max column to store (`num_cols + 1` lanes are transferred).
+- `sid`: scratchpad ID selector.
 
 ## Scratchpad DMA (SDMA)
 

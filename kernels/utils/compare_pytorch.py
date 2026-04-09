@@ -32,11 +32,32 @@ import torch.nn.functional as F
 SUPPORTED_KERNELS = {"layernorm", "relu", "sigmoid", "softmax"}
 
 
+def cosine_similarity(a: np.ndarray, b: np.ndarray) -> float:
+    """Compute cosine similarity between two tensors (flattened)."""
+    a_flat = np.asarray(a, dtype=np.float64).ravel()
+    b_flat = np.asarray(b, dtype=np.float64).ravel()
+
+    denom = float(np.linalg.norm(a_flat) * np.linalg.norm(b_flat))
+    if denom == 0.0:
+        # If both are all-zeros, treat as perfectly aligned.
+        return 1.0 if np.allclose(a_flat, b_flat) else 0.0
+
+    return float(np.dot(a_flat, b_flat) / denom)
+
+
+def percent_relative_error(reference: np.ndarray, observed: np.ndarray, eps: float = 1e-8) -> np.ndarray:
+    """Element-wise percent relative error: |obs-ref|/max(|ref|, eps) * 100."""
+    ref = np.asarray(reference, dtype=np.float64)
+    obs = np.asarray(observed, dtype=np.float64)
+    denom = np.maximum(np.abs(ref), float(eps))
+    return (np.abs(obs - ref) / denom) * 100.0
+
+
 def pytorch_kernel(name: str, tile: torch.Tensor, *, epsilon: float = 0.0) -> torch.Tensor:
     """Run the named PyTorch operation on *tile* and return the result tensor."""
     if name == "layernorm":
         normalized_shape = list(tile.shape)
-        layer = nn.LayerNorm(normalized_shape, elementwise_affine=False, eps=epsilon)
+        layer = nn.LayerNorm(normalized_shape, elementwise_affine=False, eps=epsilon, dtype=torch.bfloat16)
         # LayerNorm expects float — cast up, compute, cast back
         out = layer(tile.float()).to(tile.dtype)
         return out
@@ -133,8 +154,10 @@ def main():
     # Configuration
     ap.add_argument("--epsilon", type=float, default=0.0,
                     help="Epsilon for layernorm (default: 0.0, matching emulator default)")
+    ap.add_argument("--relative_error_eps", type=float, default=1e-8,
+                    help="Epsilon floor used in percent relative error denominator (default: 1e-8)")
     ap.add_argument("--scpad_base_row", type=int, default=0,
-                    help="Scratchpad base row where tile starts (default: 1)")
+                    help="Scratchpad base row where tile starts (default: 0)")
     ap.add_argument("--verbose", action="store_true", help="Print per-element difference matrix")
 
     args = ap.parse_args()
@@ -155,15 +178,23 @@ def main():
     diff = np.abs(pytorch_out_np - emulator_out_np)
     mae = float(np.mean(diff))
     max_err = float(np.max(diff))
+    cos_sim = cosine_similarity(pytorch_out_np, emulator_out_np)
+    rel_err_pct = percent_relative_error(pytorch_out_np, emulator_out_np, eps=args.relative_error_eps)
+    mean_rel_err_pct = float(np.mean(rel_err_pct))
+    max_rel_err_pct = float(np.max(rel_err_pct))
 
     print(f"[COMPARE] Kernel: {args.kernel} | Tile: {args.n}x{args.n}")
     print(f"[COMPARE] PyTorch output:\n{pytorch_out_np}")
     print(f"[COMPARE] Emulator output:\n{emulator_out_np}")
     print(f"[COMPARE] Mean Absolute Error:  {mae:.6f}")
     print(f"[COMPARE] Max Absolute Error:   {max_err:.6f}")
+    print(f"[COMPARE] Cosine Similarity:    {cos_sim:.8f}")
+    print(f"[COMPARE] Mean Rel Error (%):   {mean_rel_err_pct:.6f}")
+    print(f"[COMPARE] Max Rel Error (%):    {max_rel_err_pct:.6f}")
 
     if args.verbose:
         print(f"[COMPARE] Element-wise |diff|:\n{diff}")
+        print(f"[COMPARE] Element-wise Rel Error (%):\n{rel_err_pct}")
 
     # Simple pass/fail threshold (generous for bf16 quantization)
     threshold = 0.05

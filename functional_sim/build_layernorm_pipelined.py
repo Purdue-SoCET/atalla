@@ -70,16 +70,21 @@ def main():
         lui.s    $6, 0x00000                    # load upper 25 bit mask of all 1's into $6
         addi.s   $6, $6, 0xf                        # add lower bit mask of all 1's into $6
         mv.stm   1, $6                              # load '1 into mask 1
+
+        addi.s   $40, $0, 0                         # row offset register 0
+        addi.s   $41, $0, 1                         # row offset register 1
+        addi.s   $42, $0, 2                         # row offset register 2
+        addi.s   $43, $0, 3                         # row offset register 3
         ############## Begin vector load/mean calculation 
-        vreg.ld  $10, $3, {COLS}, {ROWS}, {SID}, 1, 0    # load row 0 into $10
+        vreg.ld  $10, $3, $40, {COLS}, {SID}             # load row 0 into $10
         
-        vreg.ld  $11, $3, {COLS}, {ROWS}, {SID}, 1, 1    # load row 1 into $11
+        vreg.ld  $11, $3, $41, {COLS}, {SID}             # load row 1 into $11
         rsum.vi  $20, $10, {RSUM_MASK}, 1                # reduce row 0 -> write result at lane index 6
 
-        vreg.ld  $12, $3, {COLS}, {ROWS}, {SID}, 1, 2    # load row 2 into $12
+        vreg.ld  $12, $3, $42, {COLS}, {SID}             # load row 2 into $12
         rsum.vi  $21, $11, {RSUM_MASK}, 1                # reduce row 1 -> write result at lane index 6
         
-        vreg.ld  $13, $3, {COLS}, {ROWS}, {SID}, 1, 3    # load row 3 into $13
+        vreg.ld  $13, $3, $43, {COLS}, {SID}             # load row 3 into $13
         rsum.vi  $22, $12, {RSUM_MASK}, 1                # reduce row 2 -> write result at lane index 6
         add.vv   $21, $20, $21, 1, 0                     # partial sum 0 + partial sum 1
         
@@ -121,15 +126,15 @@ def main():
         mul.vs   $30, $30, $15, 1                   # normalized row 0 * reciprocal(denominator)
         
         mul.vs   $31, $31, $15, 1                   # normalized row 1 * reciprocal(denominator)
-        vreg.st  $30, $3, {COLS}, {ROWS}, {SID}, 1, 0  # store normalized row 0 to scratchpad
+        vreg.st  $30, $3, $40, {COLS}, {SID}           # store normalized row 0 to scratchpad
         
         mul.vs   $32, $32, $15, 1                   # normalized row 2 * reciprocal(denominator)
-        vreg.st  $31, $3, {COLS}, {ROWS}, {SID}, 1, 1  # store normalized row 1 to scratchpad
+        vreg.st  $31, $3, $41, {COLS}, {SID}           # store normalized row 1 to scratchpad
         
         mul.vs   $33, $33, $15, 1                   # normalized row 3 * reciprocal(denominator)
-        vreg.st  $32, $3, {COLS}, {ROWS}, {SID}, 1, 2  # store normalized row 2 to scratchpad
+        vreg.st  $32, $3, $42, {COLS}, {SID}           # store normalized row 2 to scratchpad
 
-        vreg.st  $33, $3, {COLS}, {ROWS}, {SID}, 1, 3  # store normalized row 3 to scratchpad
+        vreg.st  $33, $3, $43, {COLS}, {SID}           # store normalized row 3 to scratchpad
         
         scpad.st $3, $2, {COLS}, {ROWS}, {SID}      # store normalized 4x4 tile back to gmem
 
