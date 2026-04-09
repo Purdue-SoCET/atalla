@@ -404,6 +404,24 @@ package vector_pkg;
         vector_if_reduction_out_t reduction;
     } vector_if_lanes_out_t;
 
+    typedef struct packed {
+        vector_if_gsau_out_t vector_if_gsau_out;
+        vector_if_reduction_out_t vector_if_reduction_out;
+        vector_if_lanes_out_t vector_if_lanes_out;
+        vector_if_vlsu_out_t vector_if_vlsu_out;
+
+        logic ready; //should come from Veggie
+    } vector_wb_in_t;
+
+    typedef struct packed {
+        vsel_t [WRITE_PORTS-1:0] vd;
+        vreg_t [WRITE_PORTS-1:0] vdata;
+        logic  [WRITE_PORTS-1:0] WEN;
+
+        vector_if_wb_ready_t vector_if_wb_ready;
+    } vector_wb_out_t;
+
+
 endpackage
 
 `endif
