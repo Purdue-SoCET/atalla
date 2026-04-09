@@ -71,6 +71,4 @@ module vector_execute_wb_top (
         vif.wb_ready_signals =
             v_wb_arbiter.vector_wb_out.vector_if_wb_ready;
     end
-
-
 endmodule

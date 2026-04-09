@@ -2,9 +2,10 @@
 // Author: Jaideep Dadi
 // Email: djaideep@purdue.edu
 // TODO 
-// -  Scpad parameters used by vector_pkg is weird & doesn't compile, so did a temporary fix
-//    Need to talk to vectorcore about these parameters
-// - Integration
+// - We have only 3 Functional units, not five. So now I have to remove 2 functional units (lane outs)
+// - Add mask related stuff.
+//      - I can take lane outs sure, but which functional unit does it come out of? Is it FU0, 1 2...? Reduction?
+//      - Where is meggie stuff?
 // - Add two more vector inputs from the load/store units
 // ============================================================================
 `include "v_wb_arbiter_if.vh"
@@ -27,9 +28,23 @@ module v_wb_arbiter #(
 	vif.vector_wb_out.vd    = '0;
 	vif.vector_wb_out.vdata = '0;
 
+    vif.vector_wb_out.vd_mask = '0;
+    vif.vector_wb_out.vdata_mask = '0;
+    vif.vector_wb_out.WEN_mask = '0;
+
 	vif.vector_wb_out.vector_if_wb_ready = '1; // First, all writeback readys are 1.
     //clear bank when veggie ready to accept new data
     banks = '0;
+
+    //Mask stuff: let's test it
+    if (vif.vector_wb_in.mvvOrMvs) begin
+        vif.vector_wb_out.vd_mask = vif.vector_wb_in.vector_if_lanes_out.result_collectors[0].vd_output;
+        vif.vector_wb_out.WEN_mask = 1;
+
+        foreach (vif.vector_wb_in.vector_if_lanes_out.result_collectors[0][i]) begin
+            vif.vector_wb_out.vdata_mask[i] = vif.vector_wb_in.vector_if_lanes_out.result_collectors[0][i][0];
+        end
+    end
 
     //WB0
     if (vif.vector_wb_in.vector_if_vlsu_out.wb[0].valid) begin
