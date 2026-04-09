@@ -50,6 +50,7 @@ class lfc_miss_coalesce_seq extends uvm_sequence#(lfc_cpu_transaction);
 	start_item(req);
 	assert(req.randomize() with {
 		mem_in_addr.index == address.index;
+		mem_in_addr.tag == address.tag;
 	});	
 	req.dp_in_halt = 1'b0;
 	//req.down_time = 2;
