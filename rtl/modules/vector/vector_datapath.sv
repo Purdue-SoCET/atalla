@@ -33,7 +33,7 @@ module vector_datapath (
 
     //slicer
     slicer slicer_inst (
-        .vif(vif),
+        .vif(vif.lanes),
         .lif(lane_interfaces)
     );
 
@@ -62,6 +62,7 @@ module vector_datapath (
                     // Per-lane, per-FU signals
                     if (i == 0) begin
                         rc_interfaces[i].in.input_valid[j] = lane_interfaces[j].out.units[i].wb_valid & !(lane_interfaces[j].out.units[i].rm);
+                        
                     end 
                     else begin
                         rc_interfaces[i].in.input_valid[j] = lane_interfaces[j].out.units[i].wb_valid;
@@ -74,6 +75,9 @@ module vector_datapath (
 
             always_comb begin : rc_scalar_connection
                 rc_interfaces[i].in.vd_input  = lane_interfaces[0].out.units[i].vd;
+                rc_interfaces[0].in.mop_in = lane_interfaces[0].out.units[0].mop_out;
+                rc_interfaces[1].in.mop_in = 'b0;
+                rc_interfaces[2].in.mop_in = 'b0;
             end
         end : gen_rc_fu
     endgenerate

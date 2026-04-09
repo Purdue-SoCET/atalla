@@ -120,6 +120,7 @@ module mul_FU (
 
     assign fuif.out.result = mif.out.result;
     assign fuif.out.rm = 0;
+    assign fuif.out.mop_out = 0;
     assign fuif.out.wb_valid = mif.out.valid_out;
 
 endmodule
