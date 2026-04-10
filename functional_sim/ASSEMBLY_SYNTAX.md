@@ -20,6 +20,12 @@ mul.s rd, rs1, rs2
 - `rs1`: multiplicand.
 - `rs2`: multiplier.
 
+div.s rd, rs1, rs2
+- Operation: Divide (`rd = rs1 / rs2`).
+- `rd`: quotient output.
+- `rs1`: dividend.
+- `rs2`: divisor.
+
 mod.s rd, rs1, rs2
 - Operation: Modulo (`rd = rs1 % rs2`).
 - `rd`: remainder output.
@@ -104,11 +110,11 @@ slt.bf rd, rs1, rs2
 - `rs1`: BF16 input A.
 - `rs2`: BF16 input B.
 
-sltu.bf rd, rs1, rs2
-- Operation: BF16 set-less-than unsigned.
-- `rd`: BF16 compare flag/result.
-- `rs1`: BF16 unsigned input A.
-- `rs2`: BF16 unsigned input B.
+sqrt.bf rd, rs1, rs2
+- Operation: BF16 square root (`rd = sqrt(rs1)`).
+- `rd`: BF16 square-root output.
+- `rs1`: BF16 input value.
+- `rs2`: unused.
 
 stbf.s rd, rs1, rs2
 - Operation: Convert scalar to BF16.
@@ -202,7 +208,7 @@ sltui.s rd, rs1, imm
 - `rs1`: unsigned compare input.
 - `imm`: unsigned immediate threshold.
 
-jalr rd, rs1, imm
+jalr.s rd, rs1, imm
 - Operation: Jump-and-link register.
 - `rd`: link register (`PC + 4`).
 - `rs1`: jump base address.
@@ -303,10 +309,6 @@ halt.s
 - Operation: Halt program execution.
 - No operands.
 
-barrier.s
-- Operation: Force prior packets/instructions to complete before continuing.
-- No operands.
-
 ## Vector-Vector (VV-Type)
 
 add.vv vd, vs1, vs2, mask, sac
@@ -333,30 +335,6 @@ mul.vv vd, vs1, vs2, mask, sac
 - `mask`: lane-enable mask register index.
 - `sac`: vector control field.
 
-and.vv vd, vs1, vs2, mask, sac
-- Operation: Element-wise bitwise AND.
-- `vd`: vector destination.
-- `vs1`: vector input A.
-- `vs2`: vector input B.
-- `mask`: lane-enable mask register index.
-- `sac`: vector control field.
-
-or.vv vd, vs1, vs2, mask, sac
-- Operation: Element-wise bitwise OR.
-- `vd`: vector destination.
-- `vs1`: vector input A.
-- `vs2`: vector input B.
-- `mask`: lane-enable mask register index.
-- `sac`: vector control field.
-
-xor.vv vd, vs1, vs2, mask, sac
-- Operation: Element-wise bitwise XOR.
-- `vd`: vector destination.
-- `vs1`: vector input A.
-- `vs2`: vector input B.
-- `mask`: lane-enable mask register index.
-- `sac`: vector control field.
-
 gemm.vv vd, vs1, vs2, mask, sac
 - Operation: GEMM/systolic-array accumulate (`vd = vs1 * weights + vs2`).
 - `vd`: vector destination/output.
@@ -367,53 +345,11 @@ gemm.vv vd, vs1, vs2, mask, sac
 
 ## Vector-Immediate (VI-Type)
 
-addi.vi vd, vs1, imm, mask
-- Operation: Element-wise add immediate.
-- `vd`: vector destination.
-- `vs1`: vector source.
-- `imm`: per-lane addend.
-- `mask`: lane-enable mask register index.
-
-subi.vi vd, vs1, imm, mask
-- Operation: Element-wise subtract immediate.
-- `vd`: vector destination.
-- `vs1`: vector source.
-- `imm`: per-lane subtrahend.
-- `mask`: lane-enable mask register index.
-
-muli.vi vd, vs1, imm, mask
-- Operation: Element-wise multiply immediate.
-- `vd`: vector destination.
-- `vs1`: vector source.
-- `imm`: per-lane multiplier.
-- `mask`: lane-enable mask register index.
-
 expi.vi vd, vs1, imm, mask
 - Operation: Element-wise exponentiation (`exp(vs1[i])`).
 - `vd`: vector destination.
 - `vs1`: vector source.
 - `imm`: reserved/control immediate (not used in core exp math).
-- `mask`: lane-enable mask register index.
-
-sqrti.vi vd, vs1, imm, mask
-- Operation: Element-wise square root.
-- `vd`: vector destination.
-- `vs1`: vector source.
-- `imm`: reserved/control immediate.
-- `mask`: lane-enable mask register index.
-
-not.vi vd, vs1, imm, mask
-- Operation: Element-wise bitwise NOT.
-- `vd`: vector destination.
-- `vs1`: vector source.
-- `imm`: reserved/control immediate.
-- `mask`: lane-enable mask register index.
-
-shift.vi vd, vs1, imm, mask
-- Operation: Vector lane shift by immediate control.
-- `vd`: vector destination.
-- `vs1`: vector source.
-- `imm`: shift control (`imm[23]` direction, `imm[22:0]` amount encoding per ISA docs).
 - `mask`: lane-enable mask register index.
 
 lw.vi vd, vs1, imm, mask
@@ -465,13 +401,6 @@ mul.vs vd, vs1, rs1, mask
 - `vd`: vector destination.
 - `vs1`: vector input.
 - `rs1`: scalar multiplier.
-- `mask`: lane-enable mask register index.
-
-shift.vs vd, vs1, shamt, mask
-- Operation: Vector lane shift by scalar control register bits.
-- `vd`: vector destination.
-- `vs1`: vector source.
-- `shamt`: shift control from `rs1` encoding.
 - `mask`: lane-enable mask register index.
 
 ## Mask/Move
