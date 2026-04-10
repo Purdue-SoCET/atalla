@@ -183,7 +183,7 @@ module axi_write_driver(
     assign wdrv_if.aw_o.len    = aw_skid_buffer[aw_rd_ptr].len;
     assign wdrv_if.aw_o.burst  = aw_skid_buffer[aw_rd_ptr].burst;
 
-    assign wdrv_if.w_o_valid   = w_skid_buffer[w_rd_ptr].valid;
+    assign wdrv_if.w_o_valid   = w_skid_buffer[w_rd_ptr].valid && (aw_fire || aw_sent); // ensures the w beats doesnt run off without the aw req
     assign wdrv_if.w_o.mid_id  = w_skid_buffer[w_rd_ptr].mid_id;
     assign wdrv_if.w_o.data    = w_skid_buffer[w_rd_ptr].data;
     assign wdrv_if.w_o.last    = w_skid_buffer[w_rd_ptr].last;
