@@ -43,13 +43,13 @@ module vector_core_dpi_tb;
 
 
     // yk ideally i should have a bunch of if_defs for whichever test case u want, but im hella lazy, do ts shit and give me a break breeeuhhhh
-    //parameter string PROGRAM_PATH = "./tb/formal/vector/testcases/vector-vector/add_vv";
+    parameter string PROGRAM_PATH = "./tb/formal/vector/testcases/vector-vector/add_vv";
     //parameter string PROGRAM_PATH = "./tb/formal/vector/testcases/vector-vector/sub_vv";
     //parameter string PROGRAM_PATH = "./tb/formal/vector/testcases/vector-vector/mul_vv";
     //parameter string PROGRAM_PATH = "./tb/formal/vector/testcases/load-store/vreg_ld";
     //parameter string PROGRAM_PATH = "./tb/formal/vector/testcases/load-store/vreg_st";
     //parameter string PROGRAM_PATH = "./tb/formal/vector/testcases/vector-immediate/reduction/rsum_vi";
-    parameter string PROGRAM_PATH = "./tb/formal/vector/testcases/vector-immediate/reduction/rmin_vi";
+    //parameter string PROGRAM_PATH = "./tb/formal/vector/testcases/vector-immediate/reduction/rmin_vi";
     //parameter string PROGRAM_PATH = "./tb/formal/vector/testcases/vector-immediate/reduction/rmax_vi";
     //parameter string PROGRAM_PATH = "./tb/formal/vector/testcases/gemmm/gemm_vv";
 
