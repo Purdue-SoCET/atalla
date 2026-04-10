@@ -1,3 +1,6 @@
+// make test   tb_file=transpose_unit_tb.sv   folder=/vector   packages=/common/xbar/xbar_pkg.sv   modules=/vector/transpose_unit.sv,/common/xbar/clos.sv,/common/memory/sram_bank.sv,/common/xbar/param_switch.sv GUI=ON
+
+
 `timescale 1ns/1ps
 
 module transpose_unit_tb;
@@ -11,7 +14,7 @@ module transpose_unit_tb;
 
     // 2. Instantiate the Unit Under Test (UUT)
     // Connect the 'unit' modport of our interface to the module
-    vector_transpose_unit uut (
+    transpose_unit uut (
         .tif(tif.unit)
     );
 

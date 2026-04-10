@@ -1,11 +1,11 @@
-`include "transpose_unit_if.sv"
+`include "transpose_unit_if.vh"
 
 module transpose_unit (
     transpose_unit_if.unit tif // Using the 'unit' modport
 );
 
     // 1. Clos Network Interface (Internal)
-    xbar_if #(.CLOS_SIZE(tif.VEC_LEN), .CLOS_DWIDTH(tif.DATA_W)) xif(tif.clk, tif.n_rst);
+    xbar_if #(.SIZE(tif.VEC_LEN), .DWIDTH(tif.DATA_W)) xif(tif.clk, tif.n_rst);
     assign xif.en = tif.en;
 
     // 2. Internal Logic (FSM & Counters)
@@ -75,6 +75,6 @@ module transpose_unit (
 
     clos #(.CLOS_SIZE(tif.VEC_LEN)) clos_inst (.xif(xif));
 
-    assign tif.vec_out = xif.out;
+    assign tif.vec_out = {>>{xif.out}};
 
 endmodule
