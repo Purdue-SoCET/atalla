@@ -64,7 +64,7 @@ module axi_write_arbiter (
                     arbw_if.aw_sp0_pop = 1;
                     if      (arbw_if.sp1_req_w)     begin next_state = SP1_GRANTED; next_grant_sel = {1'b1, SP1};    next_counter = arbw_if.sp1_len_w; end
                     else if (arbw_if.d_req_w)       begin next_state = D_GRANTED;   next_grant_sel = {1'b1, DCACHE}; next_counter = arbw_if.d_len_w;   end 
-                    else if (arbw_if.sp0_req_w)     begin next_state = SP0_GRANTED; next_grant_sel = {1'b1, SP0};    next_counter = arbw_if.sp0_len_w; end 
+                    // else if (arbw_if.sp0_req_w)     begin next_state = SP0_GRANTED; next_grant_sel = {1'b1, SP0};    next_counter = arbw_if.sp0_len_w; end 
                     else                            begin next_state = IDLE;        next_grant_sel = '0;             next_counter = '0;                end
                 end
             end 
@@ -75,7 +75,7 @@ module axi_write_arbiter (
                     arbw_if.aw_sp1_pop = 1;
                     if      (arbw_if.d_req_w)       begin next_state = D_GRANTED;   next_grant_sel = {1'b1, DCACHE}; next_counter = arbw_if.d_len_w;   end 
                     else if (arbw_if.sp0_req_w)     begin next_state = SP0_GRANTED; next_grant_sel = {1'b1, SP0};    next_counter = arbw_if.sp0_len_w; end 
-                    else if (arbw_if.sp1_req_w)     begin next_state = SP1_GRANTED; next_grant_sel = {1'b1, SP1};    next_counter = arbw_if.sp1_len_w; end 
+                    // else if (arbw_if.sp1_req_w)     begin next_state = SP1_GRANTED; next_grant_sel = {1'b1, SP1};    next_counter = arbw_if.sp1_len_w; end 
                     else                            begin next_state = IDLE;        next_grant_sel = '0;             next_counter = '0;                end
                 end
             end
@@ -86,7 +86,7 @@ module axi_write_arbiter (
                     arbw_if.aw_d_pop = 1;
                     if      (arbw_if.sp0_req_w)     begin next_state = SP0_GRANTED; next_grant_sel = {1'b1, SP0};    next_counter = arbw_if.sp0_len_w; end
                     else if (arbw_if.sp1_req_w)     begin next_state = SP1_GRANTED; next_grant_sel = {1'b1, SP1};    next_counter = arbw_if.sp1_len_w; end
-                    else if (arbw_if.d_req_w)       begin next_state = D_GRANTED;   next_grant_sel = {1'b1, DCACHE}; next_counter = arbw_if.d_len_w;   end
+                    // else if (arbw_if.d_req_w)       begin next_state = D_GRANTED;   next_grant_sel = {1'b1, DCACHE}; next_counter = arbw_if.d_len_w;   end
                     else                            begin next_state = IDLE;        next_grant_sel = '0;             next_counter = '0;                end
                 end
             end 
