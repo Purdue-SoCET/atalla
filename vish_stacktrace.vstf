@@ -1,0 +1,3 @@
+# transcript error: error writing "stdout": I/O error
+    while executing
+"puts -nonewline stdout $s"

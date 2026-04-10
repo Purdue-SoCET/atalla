@@ -29,8 +29,11 @@ void ramulator_tick(ramulator_handle_t handle);
 
 // Check for a completed read. Returns the request address, or -1 if nothing
 // has finished yet. If data_out is non-NULL it gets the value last written
-// to that address.
-long long ramulator_check_response(ramulator_handle_t handle, uint64_t* data_out);
+// to that address. If source_id_out is non-NULL it gets the source_id that
+// was passed to ramulator_send_request, allowing the caller to route the
+// response without scanning address ranges.
+long long ramulator_check_response(ramulator_handle_t handle, uint64_t* data_out,
+                                   int* source_id_out);
 
 // Peek at what's currently stored for an address without issuing a timing
 // request. Returns 0 for addresses that were never written. No clock cost,

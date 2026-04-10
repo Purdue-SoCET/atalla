@@ -22,6 +22,7 @@ enum class MemMode {
 struct CompletedReq {
     Addr_t   addr;
     uint64_t data;
+    int      source_id;
 };
 
 struct RamulatorWrapper {
@@ -106,7 +107,8 @@ int ramulator_send_request(ramulator_handle_t handle,
 
         Addr_t original_addr = static_cast<Addr_t>(addr);
 
-        auto callback = [wrapper, req_type, original_addr](Request& req) {
+        int captured_source_id = source_id;
+        auto callback = [wrapper, req_type, original_addr, captured_source_id](Request& req) {
             if (req_type != 0) return;
 
             uint64_t val = 0;
@@ -117,7 +119,7 @@ int ramulator_send_request(ramulator_handle_t handle,
                 val = normalize_data(wrapper, static_cast<uint64_t>(original_addr));
             }
 
-            wrapper->completed_requests.push({original_addr, val});
+            wrapper->completed_requests.push({original_addr, val, captured_source_id});
         };
 
         bool accepted = wrapper->frontend->receive_external_requests(
@@ -148,7 +150,8 @@ void ramulator_tick(ramulator_handle_t handle) {
     }
 }
 
-long long ramulator_check_response(ramulator_handle_t handle, uint64_t* data_out) {
+long long ramulator_check_response(ramulator_handle_t handle, uint64_t* data_out,
+                                   int* source_id_out) {
     auto* wrapper = static_cast<RamulatorWrapper*>(handle);
     if (!wrapper || wrapper->completed_requests.empty()) {
         return -1;
@@ -157,9 +160,8 @@ long long ramulator_check_response(ramulator_handle_t handle, uint64_t* data_out
     CompletedReq cr = wrapper->completed_requests.front();
     wrapper->completed_requests.pop();
 
-    if (data_out) {
-        *data_out = normalize_data(wrapper, cr.data);
-    }
+    if (data_out)      *data_out      = normalize_data(wrapper, cr.data);
+    if (source_id_out) *source_id_out = cr.source_id;
 
     return static_cast<long long>(cr.addr);
 }

@@ -1,10 +1,10 @@
 Frontend:
   impl: GEM5
-  clock_ratio: 1
+  clock_ratio: 2    # tick every 2 ramulator_tick calls → 800 MHz = SV core clock
 
 MemorySystem:
   impl: GenericDRAM
-  clock_ratio: 2
+  clock_ratio: 1    # tick every ramulator_tick call → 1600 MHz = DDR4-3200 memory clock
 
   DRAM:
     impl: DDR4
@@ -23,7 +23,7 @@ MemorySystem:
       impl: AllBank
     RowPolicy:
       impl: OpenRowPolicy
-      cap: 4
+      cap: 16
     plugins:
 
   AddrMapper:
