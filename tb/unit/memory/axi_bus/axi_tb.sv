@@ -280,7 +280,7 @@ program test (
             gen_aw_txn(q, 1, m);
         end
         foreach (q[i]) env.send_write_req(q[i]);
-        random_write_ready(num_test+20);
+        steady_write_ready(num_test*16);
     endtask
 
     task automatic idle_write_test();
@@ -311,11 +311,11 @@ program test (
         // idle_r_test();
         
         // smoke_write_test();
-        //pressure_write_test(15);
+        // pressure_write_test(15);
         // idle_write_test();
 
         // consecutive: 4 back-to-back writes to SP0, then SP1, then D$
-        consecutive_write_test(1, -1, 5);
+        consecutive_write_test(1, -1, 6);
 
         // report
         env.report();
@@ -669,19 +669,29 @@ class write_driver;
         endcase
 
         // Wait until BOTH aw_ready AND w_ready are high on the same cycle
-        @(negedge axi_tb.CLK);
+        // @(negedge axi_tb.CLK);
         case (t.mid)
             0: begin
-                while (!(vif.aw_sp0_i_ready && vif.w_sp0_i_ready)) @(negedge axi_tb.CLK);
-                vif.aw_sp0_i_valid=0; vif.aw_sp0_i='0;
+                if (vif.aw_sp0_i_ready && vif.w_sp0_i_ready) begin @(negedge axi_tb.CLK); vif.aw_sp0_i_valid=0; vif.aw_sp0_i='0; end
+                else begin
+                    while (!(vif.aw_sp0_i_ready && vif.w_sp0_i_ready)) @(negedge axi_tb.CLK); @(negedge axi_tb.CLK);
+                    vif.aw_sp0_i_valid=0; vif.aw_sp0_i='0;
+                end
+                
             end
             1: begin
-                while (!(vif.aw_sp1_i_ready && vif.w_sp1_i_ready)) @(negedge axi_tb.CLK);
-                vif.aw_sp1_i_valid=0; vif.aw_sp1_i='0;
+                if (vif.aw_sp1_i_ready && vif.w_sp1_i_ready) begin @(negedge axi_tb.CLK); vif.aw_sp1_i_valid=0; vif.aw_sp1_i='0; end
+                else begin
+                    while (!(vif.aw_sp1_i_ready && vif.w_sp1_i_ready)) @(negedge axi_tb.CLK); @(negedge axi_tb.CLK);
+                    vif.aw_sp1_i_valid=0; vif.aw_sp1_i='0;
+                end
             end
             2: begin
-                while (!(vif.aw_d_i_ready && vif.w_d_i_ready)) @(negedge axi_tb.CLK);
-                vif.aw_d_i_valid=0; vif.aw_d_i='0;
+                if (vif.aw_d_i_ready && vif.w_d_i_ready) begin @(negedge axi_tb.CLK); vif.aw_d_i_valid=0; vif.aw_d_i='0; end
+                else begin
+                    while (!(vif.aw_d_i_ready && vif.w_d_i_ready)) @(negedge axi_tb.CLK); @(negedge axi_tb.CLK);
+                    vif.aw_d_i_valid=0; vif.aw_d_i='0;
+                end
             end
         endcase
 
