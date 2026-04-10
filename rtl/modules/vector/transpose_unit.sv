@@ -1,11 +1,12 @@
 `include "transpose_unit_if.vh"
 
 module transpose_unit (
+    input logic CLK, nRST,
     transpose_unit_if.unit tif // Using the 'unit' modport
 );
 
     // 1. Clos Network Interface (Internal)
-    xbar_if #(.SIZE(tif.VEC_LEN), .DWIDTH(tif.DATA_W)) xif(tif.clk, tif.n_rst);
+    xbar_if #(.SIZE(tif.VEC_LEN), .DWIDTH(tif.DATA_W)) xif(CLK, nRST);
     assign xif.en = tif.en;
 
     // 2. Internal Logic (FSM & Counters)
@@ -14,8 +15,8 @@ module transpose_unit (
     logic [4:0] count; 
 
     // --- Control FSM ---
-    always_ff @(posedge tif.clk or negedge tif.n_rst) begin
-        if (!tif.n_rst) begin
+    always_ff @(posedge CLK or negedge nRST) begin
+        if (!nRST) begin
             state <= IDLE;
             count <= '0;
         end else if (tif.en) begin
@@ -52,8 +53,8 @@ module transpose_unit (
                 .WIDTH(tif.DATA_W), 
                 .HEIGHT(32)
             ) bank_inst (
-                .clk(tif.clk), 
-                .n_rst(tif.n_rst),
+                .clk(CLK), 
+                .n_rst(nRST),
                 .ren(state == POPPING),
                 .raddr(bank_addr),
                 .rdata(rdata),

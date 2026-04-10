@@ -6,8 +6,6 @@ interface transpose_unit_if #(
     parameter int DATA_W  = 16
 );
     // Control Signals
-    logic clk;
-    logic n_rst;
     logic en;
 
     // Command Handshake
@@ -26,14 +24,14 @@ interface transpose_unit_if #(
 
     // --- Modports ---
 
-    // The Transpose Unit side (The Slave/Module)
+    // The Transpose Unit side (The Module)
     modport unit (
-        input  clk, n_rst, en,
+        input  en,
         input  push_req, pop_req, vec_in,
         output busy, vec_out, vec_out_valid, full, empty
     );
 
-    // The Controller side (The Master/Core)
+    // The Controller side (The Core)
     modport controller (
         input  busy, vec_out, vec_out_valid, full, empty,
         output push_req, pop_req, vec_in, en
@@ -41,7 +39,7 @@ interface transpose_unit_if #(
 
     // Monitor (For Testbenches)
     modport monitor (
-        input clk, n_rst, en, push_req, pop_req, busy, 
+        input en, push_req, pop_req, busy, 
               vec_out_valid, full, empty, vec_in, vec_out
     );
 

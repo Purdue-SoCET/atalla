@@ -1,6 +1,5 @@
 // make test   tb_file=transpose_unit_tb.sv   folder=/vector   packages=/common/xbar/xbar_pkg.sv   modules=/vector/transpose_unit.sv,/common/xbar/clos.sv,/common/memory/sram_bank.sv,/common/xbar/param_switch.sv GUI=ON
 
-
 `timescale 1ns/1ps
 
 module transpose_unit_tb;
@@ -9,35 +8,34 @@ module transpose_unit_tb;
     localparam int VEC_LEN = 32;
     localparam int DATA_W  = 16;
 
+    parameter PERIOD = 10;
+
+    logic CLK, nRST;
+
     // 1. Instantiate the Interface
     transpose_unit_if #(.VEC_LEN(VEC_LEN), .DATA_W(DATA_W)) tif();
 
-    // 2. Instantiate the Unit Under Test (UUT)
-    // Connect the 'unit' modport of our interface to the module
-    transpose_unit uut (
+    transpose_unit DUT (
         .tif(tif.unit)
     );
 
     // 3. Clock Generation
-    initial begin
-        tif.clk = 0;
-        forever #5 tif.clk = ~tif.clk;
-    end
+    always #(PERIOD/2) CLK = ~CLK;
 
     // 4. Test Logic
     initial begin
         // Initialize Signals
-        tif.n_rst    = 0;
+        nRST    = 0;
         tif.en       = 0;
         tif.push_req = 0;
         tif.pop_req  = 0;
         tif.vec_in   = '0;
 
         // Reset Sequence
-        repeat (5) @(posedge tif.clk);
-        tif.n_rst = 1;
+        repeat (5) @(posedge CLK);
+        nRST = 1;
         tif.en    = 1;
-        @(posedge tif.clk);
+        @(posedge CLK);
 
         // --- STEP 1: PUSH 32 VECTORS (ROW-MAJOR) ---
         $display("[%0t] Starting PUSH phase...", $time);
@@ -49,7 +47,7 @@ module transpose_unit_tb;
                 tif.vec_in[col] = (row * 100) + col;
             end
             
-            @(posedge tif.clk);
+            @(posedge CLK);
             tif.push_req = 0; // Pulse the request
             
             // If the SRAM or logic has internal busy states, wait here
@@ -58,12 +56,12 @@ module transpose_unit_tb;
 
         // Wait for any internal processing to finish
         wait(tif.busy == 0);
-        repeat (5) @(posedge tif.clk);
+        repeat (5) @(posedge CLK);
 
         // --- STEP 2: POP 32 VECTORS (TRANSPOSED) ---
         $display("[%0t] Starting POP phase...", $time);
         tif.pop_req = 1;
-        @(posedge tif.clk);
+        @(posedge CLK);
         tif.pop_req = 0;
 
         // Collect and verify outputs
@@ -83,7 +81,7 @@ module transpose_unit_tb;
                 end
             end
             
-            @(posedge tif.clk);
+            @(posedge CLK);
             // After one vector is read, wait for the next valid or end of sequence
         end
 
