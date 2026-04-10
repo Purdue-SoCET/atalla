@@ -18,24 +18,24 @@ module nb_wdata_queue_wrapper (
     logic [ID_NUM-1:0] ddr_wdata_en;
     logic [ID_NUM-1:0][7:0] ddr_wdata_mask;
     logic [ID_NUM-1:0] ddr_we; 
-    logic [ID_NUM-1:0] selected_queue_decoded;
+    logic [2*ID_NUM-1:0] selected_queue_decoded;
     logic [$clog2(ID_NUM)-1:0]  bw_arb; 
     logic [$clog2(ID_NUM)-1:0] pri; //priority storing for bresp channel arbitration.
     logic idrc;
-    //priority_enc #(.BANK_NUM(ID_NUM)) ENCODER  (selected_queue_decoded, bw_arb, idrc);
+    priority_enc #(.BANK_NUM(ID_NUM)) ENCODER  ( (selected_queue_decoded[2*ID_NUM-1:ID_NUM] | selected_queue_decoded[ID_NUM-1:0]), bw_arb , idrc);
 
 
     logic [$clog2(ID_NUM)-1:0] selected_queue; //for outputting data to dram. Backend arbiter should be in charge of making sure that no two output bursts intefere. 
     
 
-    bind nb_wdata_queue_wrapper nb_wdata_queue_prop WDATA_QUEUE_MONITOR (CLK, nRST, bwvalid, pri, wdw.bwready, wdw.be_write, 
+    bind nb_wdata_queue_wrapper nb_wdata_queue_prop WDATA_QUEUE_MONITOR (CLK, nRST, bwvalid, bw_arb, wdw.bwready, wdw.be_write, 
     wdw.be_wid, ddr_we);
 
 
     assign wdw.wready = wready[wdw.wdq_slot.wid];
-    assign wdw.bwvalid = bwvalid[pri];
-    assign wdw.bwresp = bwresp[pri];
-    assign wdw.bwid = bwid[pri];
+    assign wdw.bwvalid = bwvalid[bw_arb];
+    assign wdw.bwresp = bwresp[bw_arb];
+    assign wdw.bwid = bwid[bw_arb];
     assign wdw.ddr_wdata_data = ddr_wdata_data[selected_queue];
     assign wdw.ddr_wdata_en = ddr_wdata_en[selected_queue];
     assign wdw.ddr_wdata_mask = ddr_wdata_mask[selected_queue];
@@ -46,14 +46,23 @@ module nb_wdata_queue_wrapper (
         for (i = 0; i < ID_NUM; i++) begin
             // Generating wdata_queues. 
             nb_wdata_queue #(.Q_ID(i)) WDATA_QUEUE_GEN ( 
-                CLK, nRST, wdw.wdq_slot, wdw.bwready, wdw.wvalid, wdw.wlast, wdw.be_wid, wdw.be_write, pri, 
+                CLK, nRST, wdw.wdq_slot, wdw.bwready, wdw.wvalid, wdw.wlast, wdw.be_wid, wdw.be_write, bw_arb, 
 	       	wready[i], bwvalid[i], bwresp[i], bwid[i], ddr_wdata_data[i], ddr_wdata_en[i], ddr_wdata_mask[i], ddr_we[i]	
             );
 
         end
 
     endgenerate
-    assign bw_arb = 'b0;
+   
+
+    logic [2 * ID_NUM - 1:0] double_bwvalid;
+    logic [2 * ID_NUM - 1:0] double_mask;
+    assign double_mask = {(2 * ID_NUM){1'b1}} << pri;
+    assign double_bwvalid = {bwvalid , bwvalid };
+    logic [2 * ID_NUM - 1:0] double_array_masked;
+    assign double_array_masked = double_mask & double_bwvalid; 
+    assign selected_queue_decoded = double_array_masked & ~(double_array_masked - 'b1);
+
     
 /*
     logic [$clog2(ID_NUM)-1:0] idx;
@@ -69,6 +78,7 @@ module nb_wdata_queue_wrapper (
         end 
     end
 */
+       
 
     always_ff @(posedge CLK, negedge nRST) begin : PRIORITY
         if(!nRST)

@@ -50,7 +50,7 @@ module nb_wdata_queue_prop(
 
     property wdata_tCWL(int i); //ensures CWL parameter upheld
         @(posedge CLK) disable iff (!nRST || lock)
-        (be_write && (be_wid == i) ) |-> (!ddr_we[i])[*(tCWL+1)] ##1 (ddr_we[i])[*8] ##1  !(ddr_we[i]);
+        (be_write && (be_wid == i) ) |-> (!ddr_we[i])[*(tCWL + 'b1)];
     endproperty
 
     property AXI_wdata_response(int i); //ensures response is ready from wdata queue after data sent.
