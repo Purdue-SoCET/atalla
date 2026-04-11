@@ -155,7 +155,9 @@ module nb_wdata_queue_tb;
                 if(n > 1000) begin
                     $display("driver_bresp timed out on test %d", case_num);
                     break;
-                end
+	    end else if(ddrif0.bwvalid) begin
+		break; 
+	    end
                 n++;
                 //#(1);
 		@(posedge CLK);
