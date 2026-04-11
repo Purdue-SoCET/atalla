@@ -98,7 +98,7 @@ module nb_barb(
     logic [BANK_NUM*2-1:0] be_cmd_double_act;
     logic [BANK_NUM*2-1:0] bg_mask;  
     assign mask = {(BANK_NUM*2){1'b1}} << priority_idx;
-    assign bg_mask = ({BG_MASK, BG_MASK} << prev_group) | { {(2*BANK_NUM - $clog2(BANK_NUM)-2){1'b0}}  , prev_group};
+    assign bg_mask = ({BG_MASK, BG_MASK} << prev_group) | { {(2*BANK_NUM - ($clog2(BANK_NUM)-2)){1'b0}}  , prev_group};
     assign be_queue_ready_double = {barb.be_queue_ready, barb.be_queue_ready} & mask; 
     assign be_cmd_double_ref = {enum_compare(barb.be_cmd, {(BANK_NUM){fsm_t'(REF)}}), enum_compare(barb.be_cmd, {(BANK_NUM){fsm_t'(REF)}} ) } & mask; 
     assign be_cmd_double_act = {enum_compare(barb.be_cmd, {(BANK_NUM){fsm_t'(ACT)}}), enum_compare(barb.be_cmd, {(BANK_NUM){fsm_t'(ACT)}} ) } & mask;
@@ -106,7 +106,12 @@ module nb_barb(
 	be_arb_next = 'b0;
         if(rollover_S && !rollover_L) begin
 
-	    be_arb_next = ( (be_queue_ready_double & (~be_cmd_double_ref) & ( four_access ? ~(be_cmd_double_act) : {(2*BANK_NUM){1'b1}}) & (bg_mask) ) &  ~(be_queue_ready_double & (~be_cmd_double_ref) & (four_access ? ~(be_cmd_double_act) : {(BANK_NUM*2){1'b1}} ) & (bg_mask) - 'b1 )); 
+	    be_arb_next = ( (be_queue_ready_double & 
+                        (~be_cmd_double_ref) & 
+                        ( four_access ? ~(be_cmd_double_act) : {(2*BANK_NUM){1'b1}}) & 
+                        (bg_mask)) &  
+                        ~((be_queue_ready_double & (~be_cmd_double_ref) & (four_access ? ~(be_cmd_double_act) : {(BANK_NUM*2){1'b1}} ) & (bg_mask)) - 'b1 )
+                        ); 
 /*
             for(k = 'b0; k < (BANK_NUM << 1) ; k++) begin
                 if(be_queue_ready_double[k] && ( (prev_group != k[1:0]) && (prev_group != k[BANK_NUM + 'b1:BANK_NUM]) ) && (!be_cmd_double_ref[k])  ) begin
@@ -127,7 +132,8 @@ module nb_barb(
 
             end else begin //Now the default case for for selecting banks after rollover_L is reached.
 
-		be_arb_next = (be_queue_ready_double & ~be_cmd_double_ref & (four_access ? ~(be_cmd_double_act) : {(2*BANK_NUM){1'b1}})) & ~(be_queue_ready_double & ~be_cmd_double_ref & (four_access ? ~(be_cmd_double_act) : {(2*BANK_NUM){1'b1}} ) - 'b1 );
+		be_arb_next = (be_queue_ready_double & ~be_cmd_double_ref & (four_access ? ~(be_cmd_double_act) : {(2*BANK_NUM){1'b1}})) & 
+                      ~((be_queue_ready_double & ~be_cmd_double_ref & (four_access ? ~(be_cmd_double_act) : {(2*BANK_NUM){1'b1}})) - 'b1);
 		/*
                 for(x = 'b0; x < BANK_NUM; x++) begin
                     if(be_queue_ready_double[x]) begin
