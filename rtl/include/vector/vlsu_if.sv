@@ -7,30 +7,6 @@ interface vlsu_if;
     import scpad_pkg::*;
     import vector_pkg::*;
 
-    // ------------------------------------------------------------------
-    // Scheduler => VLSU (one per scratchpad channel)
-    //
-    // ISA VM instruction format (single-row transfer per instruction):
-    //   sid | num_cols | rs2 (row_number reg) | rs1 (base reg) | vd
-    //
-    // The scheduler / decode stage is responsible for reading the scalar
-    // register file BEFORE driving sched_req. By the time a request
-    // reaches the VLSU, all register values must already be resolved.
-    //
-    // Field mapping (ISA -> struct):
-    //   spad_addr <- rs1 scalar reg value (base address into scratchpad)
-    //   row_id    <- rs2 scalar reg value (row offset within the tile)
-    //   num_cols  <- instruction immediate (tile width - 1, 0..31)
-    //   vdst      <- vd field (vector register destination)
-    //   write     <- 0 for load, 1 for store
-    //
-    // Address convention:
-    //   The scratchpad frontend computes the target SRAM row as
-    //   (spad_addr + row_id). rs2 should be incremented by 1 per row
-    //   in loops, NOT by ROW_BYTES. This is NOT a clean byte-addressed
-    //   interface -- the SDMA/backend path uses different semantics for
-    //   the same spad_addr field. Known cleanup item, pending ISA owner.
-    // ------------------------------------------------------------------
     typedef struct packed {
         logic                        valid;
         logic                        write;
