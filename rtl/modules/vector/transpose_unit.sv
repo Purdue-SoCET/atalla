@@ -89,7 +89,7 @@ module transpose_unit (
     integer i;
     generate
         for (b = 0; b < tif.VEC_LEN; b++) begin : gen_banks
-            logic [4:0] bank_addr;
+            logic [4:0] bank_raddr;
             logic [tif.DATA_W-1:0] rdata, wdata;
             logic rdone;
 
