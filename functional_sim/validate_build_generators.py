@@ -657,6 +657,7 @@ SMOKE_SKIP_SCRIPTS: frozenset[str] = frozenset()
 # Smaller/faster CLI args for smoke (defaults in some generators are large).
 SMOKE_EXTRA: Dict[str, List[str]] = {
     "build_attention.py": ["--n", "8", "--no-graph"],
+    "build_attention_fused_layernorm.py": ["--n", "8", "--no-graph"],
     # Generator requires d=32 and n a multiple of 32.
     "build_flash_attention.py": ["--n", "32", "--d", "32"],
     "build_softmax.py": ["--n", "4"],

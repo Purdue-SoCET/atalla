@@ -33,9 +33,11 @@ Semantics (read before interpreting Arithmetic Intensity):
   AI (load+store) = FLOPs_total / (Bytes Loaded + Bytes Written).
 
   Packing policy (for comparable packet/slot metrics across kernels):
-    All collected kernels use asm-linear packing (--no-graph) except
-    "layernorm (graph)", which uses dependency-graph packing. Pair with
-    "layernorm (sequential)" for an A/B on the same math.
+    Most builders use asm-linear packing via ``--no-graph`` where supported
+    (e.g. softmax, attention, layernorm sequential). ``layernorm (graph)`` uses
+    graph packing for A/B vs sequential. Conv ``build_conv*.py`` take ``--graph``
+    for dependency-graph packetization; without it, linear packing is used — compare
+    ``conv linear`` to ``conv graph *`` rows.
 
 Usage (from repo root functional_sim):
   PYTHONPATH=/path/to/atalla:/path/to/atalla/functional_sim \\
@@ -184,8 +186,8 @@ def perf_to_row(kernel: str, perf: dict[str, float]) -> dict[str, Any]:
 
 # (label, build_script, extra_cli_args)
 # Tile sizes default to 32×32 where ISA uses max index 31 in SDMA metadata.
-# Use --no-graph on every builder that supports it so packet/slot metrics match asm-linear
-# packing, except layernorm (graph) (explicit graph-packed A/B vs layernorm sequential).
+# Use --no-graph on builders that support it for asm-linear packing, except
+# layernorm (graph) and conv graph * (explicit --graph).
 KERNEL_SPECS: list[tuple[str, str, list[str]]] = [
     ("layernorm (graph)", "build_layernorm_param.py", []),
     ("layernorm (sequential)", "build_layernorm_param.py", ["--no-graph"]),
@@ -200,9 +202,10 @@ KERNEL_SPECS: list[tuple[str, str, list[str]]] = [
     ("gemms pipelined loop unroll", "build_gemms_pipelined_loop_unroll.py", []),
     ("add", "build_add.py", []),
     ("maxpool", "build_maxpool.py", []),
-    ("conv sa", "build_conv.py", []),
-    ("conv pipelined", "build_conv_pipelined.py", []),
-    ("conv unrolled pipelined", "build_conv_unrolled_pipelined.py", []),
+    ("conv linear", "build_conv.py", []),
+    ("conv graph seq", "build_conv.py", ["--graph"]),
+    ("conv graph pipe", "build_conv_pipelined.py", ["--graph"]),
+    ("conv graph pipe unroll", "build_conv_unrolled_pipelined.py", ["--graph"]),
     ("flash attention", "build_flash_attention.py", []),
     ("attention", "build_attention.py", ["--no-graph"]),
 ]

@@ -5,18 +5,53 @@ import argparse
 import numpy as np
 
 try:
-    from .build import assemble_file, emit_test_format, DRAMWriter, render_testfile
+    from .build import (
+        assemble_file,
+        emit_test_format,
+        emit_test_format_graph,
+        DRAMWriter,
+        render_testfile,
+        emit_sdma_metadata_asm,
+    )
 except Exception:
     try:
-        from functional_sim.build import assemble_file, emit_test_format, DRAMWriter, render_testfile
+        from functional_sim.build import (
+            assemble_file,
+            emit_test_format,
+            emit_test_format_graph,
+            DRAMWriter,
+            render_testfile,
+            emit_sdma_metadata_asm,
+        )
     except Exception:
-        from build import assemble_file, emit_test_format, DRAMWriter, render_testfile
+        from build import (
+            assemble_file,
+            emit_test_format,
+            emit_test_format_graph,
+            DRAMWriter,
+            render_testfile,
+            emit_sdma_metadata_asm,
+        )
 
 
 def make_conv_sa_asm(M: int, K_flat: int, K_out: int, cfg_base: int) -> str:
     k_out_m1 = K_out - 1
+    sdma_w = "\n".join(
+        "        " + ln.strip()
+        for ln in emit_sdma_metadata_asm(40, 41, 0, M, K_flat, K_flat).split("\n")
+        if ln.strip()
+    )
+    sdma_weights = "\n".join(
+        "        " + ln.strip()
+        for ln in emit_sdma_metadata_asm(40, 41, 1, K_flat, K_out, K_out).split("\n")
+        if ln.strip()
+    )
+    sdma_c = "\n".join(
+        "        " + ln.strip()
+        for ln in emit_sdma_metadata_asm(40, 41, 1, M, K_out, K_out).split("\n")
+        if ln.strip()
+    )
     asm = f"""
-        lui.s   $20, 0
         addi.s  $20, $0, {cfg_base}
         lw.s    $2, 0($20)
         lw.s    $3, 4($20)
@@ -25,8 +60,10 @@ def make_conv_sa_asm(M: int, K_flat: int, K_out: int, cfg_base: int) -> str:
         lw.s    $6, 16($20)
         lw.s    $7, 20($20)
 
-        scpad.ld $3, $2, {K_flat - 1}, {M - 1}, 0
-        scpad.ld $5, $4, {K_out - 1}, {K_flat - 1}, 1
+{sdma_w}
+        scpad.ld $3, $2, $40
+{sdma_weights}
+        scpad.ld $5, $4, $40
 
         lui.s   $8, 0xFFFFF
         addi.s  $8, $8, -1
@@ -35,29 +72,27 @@ def make_conv_sa_asm(M: int, K_flat: int, K_out: int, cfg_base: int) -> str:
         addi.s  $27, $0, 0
         addi.s  $28, $0, {K_out}
 weight_loop:
-        add.s   $15, $0, $27
-        vreg.ld $10, $15, 0, {K_flat - 1}, 1, 0, 0
-        lw.vi   $10, $10, 0, 0
+        vreg.ld $10, $5, $27, {K_flat - 1}, 1
+        lw.vi   $10, $10, 0, 1
         addi.s  $27, $27, 1
         blt.s   $27, $28, weight_loop
 
-        # W is in SA now; SP1 rows can be reused for C.
-        scpad.ld $7, $6, {K_out - 1}, {M - 1}, 1
+{sdma_c}
+        scpad.ld $7, $6, $40
 
         addi.s  $25, $0, 0
         addi.s  $26, $0, {M}
 m_loop:
-        beq.s   $25, $26, end_m
-        add.s   $13, $3, $25
-        vreg.ld $4, $13, {K_flat - 1}, {M}, 0, 1, 0
-        add.s   $14, $7, $25
-        vreg.ld $5, $14, {k_out_m1}, {M}, 1, 1, 0
-        gemm.vv $6, $4, $5, 0, 0
-        vreg.st $6, $14, {k_out_m1}, {M}, 1, 1, 0
+        bge.s   $25, $26, end_m
+        vreg.ld $4, $3, $25, {K_flat - 1}, 0
+        vreg.ld $5, $7, $25, {k_out_m1}, 1
+        gemm.vv $6, $4, $5, 1
+        vreg.st $6, $7, $25, {k_out_m1}, 1
         addi.s  $25, $25, 1
         blt.s   $25, $26, m_loop
 end_m:
-        scpad.st $7, $6, {K_out - 1}, {M - 1}, 1
+{sdma_c}
+        scpad.st $7, $6, $40
         halt.s
     """
     return asm
@@ -75,6 +110,11 @@ def main():
     ap.add_argument("--S", type=int, default=3)
     ap.add_argument("--stride", type=int, default=1)
     ap.add_argument("--pad", type=int, default=0)
+    ap.add_argument(
+        "--graph",
+        action="store_true",
+        help="Use dependency-graph packet scheduling (packetized); default is linear (one op per row).",
+    )
     args = ap.parse_args()
 
     N, H, W, C = args.N, args.H, args.W, args.C
@@ -95,18 +135,20 @@ def main():
     A_GMEM_ADDR = 0x00001000
     W_GMEM_ADDR = 0x00002000
     C_GMEM_ADDR = 0x00003000
+    A_SCPAD_ADDR = 1024
+    W_SCPAD_ADDR = 0
+    C_SCPAD_ADDR = 2048
 
     asm = make_conv_sa_asm(M=M, K_flat=K_flat, K_out=K, cfg_base=CFG_BASE)
-    instrs = assemble_file(asm)
-    instr_text = emit_test_format(instrs)
+    instr_text = emit_test_format_graph(asm) if args.graph else emit_test_format(assemble_file(asm))
 
     img = DRAMWriter()
     img.u32(CFG_BASE + 0, A_GMEM_ADDR)
-    img.u32(CFG_BASE + 4, 0)
+    img.u32(CFG_BASE + 4, A_SCPAD_ADDR)
     img.u32(CFG_BASE + 8, W_GMEM_ADDR)
-    img.u32(CFG_BASE + 12, 0)
+    img.u32(CFG_BASE + 12, W_SCPAD_ADDR)
     img.u32(CFG_BASE + 16, C_GMEM_ADDR)
-    img.u32(CFG_BASE + 20, 0)
+    img.u32(CFG_BASE + 20, C_SCPAD_ADDR)
 
     ifmap_vals = np.arange(N * H * W * C, dtype=np.float32).reshape(N, H, W, C)
     weight_vals = (np.arange(R * S * C * K, dtype=np.float32) + 100.0).reshape(R, S, C, K)

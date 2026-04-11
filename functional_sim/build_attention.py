@@ -1,241 +1,221 @@
+#!/usr/bin/env python3
+"""Standalone softmax(Q @ K^T) @ V on n×n BF16 tiles (row-wise, SDMA metadata style).
+
+K is loaded once into SP1; each query row streams Q and V through SP0. Matches
+``atalla-functional-sim/build_attention.py`` for metrics / cross-repo parity.
+
+For the layernorm + post-attn **demo** (Python-computed attn_ref in GMEM), use
+``build_attention_fused_layernorm.py``.
+"""
 from __future__ import annotations
 
 import argparse
 import os
-import struct
 from pathlib import Path
 
 import numpy as np
 
 try:
-    from .build import *
+    from .build import (
+        assemble_file,
+        emit_test_format,
+        DRAMWriter,
+        render_testfile,
+        emit_sdma_metadata_asm,
+        convert_instructions,
+        build_dependency_graph,
+        greedy_pack,
+        materialize_scheduled_instructions,
+        DEFAULT_LATENCY_MAP,
+        GRAPH_PACKET_WIDTH,
+    )
 except Exception:
     try:
-        from functional_sim.build import *
+        from functional_sim.build import (
+            assemble_file,
+            emit_test_format,
+            DRAMWriter,
+            render_testfile,
+            emit_sdma_metadata_asm,
+            convert_instructions,
+            build_dependency_graph,
+            greedy_pack,
+            materialize_scheduled_instructions,
+            DEFAULT_LATENCY_MAP,
+            GRAPH_PACKET_WIDTH,
+        )
     except Exception:
-        from build import *
-
-try:
-    from .build_layernorm_param import unroll_layernorm
-except Exception:
-    from build_layernorm_param import unroll_layernorm
-
-
-def load_tile_data(data_path: Path, n: int) -> list[float]:
-    tile = np.loadtxt(data_path, delimiter=",")
-    if tile.ndim == 1:
-        tile = tile.reshape(1, -1)
-    if tile.shape != (n, n):
-        raise ValueError(f"Tile shape mismatch: expected ({n}, {n}), got {tile.shape}.")
-    return tile.flatten(order="C").tolist()
+        from build import (
+            assemble_file,
+            emit_test_format,
+            DRAMWriter,
+            render_testfile,
+            emit_sdma_metadata_asm,
+            convert_instructions,
+            build_dependency_graph,
+            greedy_pack,
+            materialize_scheduled_instructions,
+            DEFAULT_LATENCY_MAP,
+            GRAPH_PACKET_WIDTH,
+        )
 
 
-def _emit_fused_attention_post_ln(
-    n: int,
-    *,
-    addr_table_base: int,
-    rsum_imm: int,
-    sid: int = 0,
-) -> str:
-    """
-    After unroll_layernorm (same address table: word0=gmem input, word1=scpad addr).
-
-    Fused block (Python reference must match):
-      t = layernorm(X)
-      u = relu(attn_ref + t)
-      y = softmax_rowwise(u @ W)   # W from table+24, second tile from table+28 (legacy names)
-
-    attn_ref is softmax(Q K^T / sqrt(n)) V computed in Python and stored in gmem — not in ASM.
-    """
-    if n < 1 or n > 32:
-        raise ValueError("n must be in [1, 32] (lane / SDMA 5-bit limits).")
-
+def make_attention_asm(n: int, cfg_base: int) -> str:
     mc = n - 1
-    x0 = 64
-    attn_b = x0 + n
-    sum_b = x0 + 2 * n
-    relu_b = x0 + 3 * n
-    b_b = x0 + 4 * n
-    if relu_b + n - 1 > 255 or b_b + n - 1 > 255:
-        raise ValueError("vector register indices overflow")
+    row_bytes = n * 2
+    sdma_q_row = "\n".join(
+        "        " + ln.strip()
+        for ln in emit_sdma_metadata_asm(40, 41, 0, 1, n, n).split("\n")
+        if ln.strip()
+    )
+    sdma_k_tile = "\n".join(
+        "        " + ln.strip()
+        for ln in emit_sdma_metadata_asm(42, 43, 1, n, n, n).split("\n")
+        if ln.strip()
+    )
+    sdma_v_tile = "\n".join(
+        "        " + ln.strip()
+        for ln in emit_sdma_metadata_asm(44, 45, 0, n, n, n).split("\n")
+        if ln.strip()
+    )
+    sdma_o_row = "\n".join(
+        "        " + ln.strip()
+        for ln in emit_sdma_metadata_asm(46, 47, 0, 1, n, n).split("\n")
+        if ln.strip()
+    )
+    return f"""
+        addi.s  $1, $0, {cfg_base}
+        lw.s    $2, 0($1)      # Q
+        lw.s    $3, 4($1)      # K
+        lw.s    $4, 8($1)      # V
+        lw.s    $5, 12($1)     # O
+        lw.s    $6, 16($1)     # SP0 base
+        lw.s    $7, 20($1)     # SP1 base (K)
 
-    lines: list[str] = []
+        li.s    $8, -1
+        mv.stm  1, $8
+        addi.s  $25, $0, 0
+        addi.s  $26, $0, {n}
+        add.s   $21, $0, $2
+        add.s   $22, $0, $5
 
-    def ln(s: str) -> None:
-        lines.append(f"        {s}")
+{sdma_k_tile}
+        scpad.ld $7, $3, $42
 
-    ln("# --- fused attention tail (post layernorm) ---")
-    ln(f"addi.s   $1, $0, {addr_table_base}")
-    ln("lw.s     $2, 0($1)                    # gmem input (LN output)")
-    ln("lw.s     $3, 4($1)                    # scpad base")
-    ln(f"scpad.ld $3, $2, {mc}, {mc}, {sid}    # refresh LN(x) in scpad")
-    for i in range(n):
-        ln(f"vreg.ld  ${x0 + i}, $3, {mc}, {mc}, {sid}, 1, {i}    # LN row {i}")
+row_loop:
+        addi.s  $27, $0, 0
+        addi.s  $28, $0, {n}
+kload:
+        vreg.ld $10, $7, $27, {mc}, 1
+        lw.vi   $10, $10, 0, 1
+        addi.s  $27, $27, 1
+        blt.s   $27, $28, kload
 
-    ln("lw.s     $15, 32($1)                  # attn gmem")
-    ln(f"scpad.ld $3, $15, {mc}, {mc}, {sid}")
-    for i in range(n):
-        ln(f"vreg.ld  ${attn_b + i}, $3, {mc}, {mc}, {sid}, 1, {i}    # attn row {i}")
+{sdma_q_row}
+        scpad.ld $6, $21, $40
+        addi.s  $27, $0, 0
+        vreg.ld $11, $6, $27, {mc}, 0
+        sub.vv   $12, $12, $12, 1
+        gemm.vv $12, $11, $12, 1
 
-    ln("li.s     $19, 0")
-    ln(f"mul.vs   $11, ${x0}, $19, 1          # zero vector for ReLU")
-    for i in range(n):
-        ln(f"add.vv   ${sum_b + i}, ${attn_b + i}, ${x0 + i}, 1, 0")
-        ln(f"mgt.mvv  2, ${sum_b + i}, $11, 1")
-        ln(f"mul.vs   ${relu_b + i}, $11, $19, 1")
-        ln(f"add.vv   ${relu_b + i}, ${sum_b + i}, $11, 2, 0")
+        rmax.vi $13, $12, 64, 1
+        vmov.vts $14, $13, 0
+        sub.vs  $12, $12, $14, 1
+        expi.vi $12, $12, 0, 1
+        rsum.vi $15, $12, 64, 1
+        vmov.vts $16, $15, 0
+        rcp.bf  $16, $16, $0
+        mul.vs  $12, $12, $16, 1
 
-    ln("lw.s     $8, 24($1)                   # W gmem")
-    ln(f"scpad.ld $3, $8, {mc}, {mc}, {sid}")
-    for i in reversed(range(n)):
-        ln(f"vreg.ld  $11, $3, {mc}, {mc}, {sid}, 1, {i}")
-        ln("lw.vi    $11, $11, 0, 0xf")
+{sdma_v_tile}
+        scpad.ld $6, $4, $44
+        addi.s  $27, $0, 0
+        addi.s  $28, $0, {n}
+vload:
+        vreg.ld $10, $6, $27, {mc}, 0
+        lw.vi   $10, $10, 0, 1
+        addi.s  $27, $27, 1
+        blt.s   $27, $28, vload
 
-    ln("lw.s     $9, 28($1)                   # second tile (B) gmem")
-    ln(f"scpad.ld $3, $9, {mc}, {mc}, {sid}")
-    for i in range(n):
-        ln(f"vreg.ld  ${b_b + i}, $3, {mc}, {mc}, {sid}, 1, {i}")
+        sub.vv   $17, $17, $17, 1
+        gemm.vv $17, $12, $17, 1
 
-    for i in range(n):
-        ln(f"gemm.vv  ${relu_b + i}, ${relu_b + i}, ${b_b + i}, 0, 0")
+        addi.s  $27, $0, 0
+        vreg.st $17, $6, $27, {mc}, 0
+{sdma_o_row}
+        scpad.st $6, $22, $46
 
-    for i in range(n):
-        r = relu_b + i
-        ln(f"rmax.vi  $90, ${r}, 0, 1")
-        ln("vmov.vts $14, $90, 0")
-        ln(f"sub.vs   ${r}, ${r}, $14, 1")
-        ln(f"expi.vi  $90, ${r}, 0, 1")
-        ln(f"rsum.vi  $91, $90, {rsum_imm}, 1")
-        ln("vmov.vts $14, $91, 0")
-        ln("rcp.bf   $14, $14, $0")
-        ln(f"mul.vs   ${r}, $90, $14, 1")
-
-    ln("lw.s     $17, 20($1)                  # output gmem")
-    for i in range(n):
-        ln(f"vreg.st  ${relu_b + i}, $3, {mc}, {mc}, {sid}, 1, {i}")
-    ln(f"scpad.st $3, $17, {mc}, {mc}, {sid}")
-    ln("halt.s")
-
-    return "\n".join(lines)
+        addi.s  $21, $21, {row_bytes}
+        addi.s  $22, $22, {row_bytes}
+        addi.s  $25, $25, 1
+        blt.s   $25, $26, row_loop
+        halt.s
+    """
 
 
 def main() -> None:
     ap = argparse.ArgumentParser()
-    ap.add_argument("-i", "--input", type=Path, default=None)
-    ap.add_argument("-o", "--output", type=Path, default=Path("./tests/attention.in"))
-    ap.add_argument("--no-graph", action="store_true")
-    ap.add_argument("--data", type=Path, default=None)
-    ap.add_argument("--n", type=int, default=32, help="N×N fused demo (default 32; max 32)")
+    ap.add_argument("-o", "--output", type=Path, default=Path("tests/attention.in"))
+    ap.add_argument("--n", type=int, default=32)
     ap.add_argument("--seed", type=int, default=0)
+    ap.add_argument(
+        "--no-graph",
+        action="store_true",
+        help="Linear asm packing (default; matches collect_kernel_metrics).",
+    )
+    ap.add_argument(
+        "--graph",
+        action="store_true",
+        help="Dependency-graph VLIW packing (mutually exclusive with --no-graph).",
+    )
     args = ap.parse_args()
-
+    if args.graph and args.no_graph:
+        ap.error("Use only one of --graph / --no-graph")
     n = args.n
     if n < 1 or n > 32:
-        raise ValueError("n must be in [1, 32].")
+        raise ValueError("build_attention supports 1 <= n <= 32.")
 
-    ADDR_TABLE_BASE = 0x0000_0040
-    EPSILON_LOCATION = 0x0000_0020
-    TILE_ADDR_INPUT = 0x0000_1000
-    TILE_ADDR_Q = 0x0000_2000
-    TILE_ADDR_K = 0x0000_3000
-    TILE_ADDR_V = 0x0000_4000
-    TILE_ADDR_OUTPUT = 0x0000_5000
-    TILE_ADDR_W = 0x0000_6000
-    TILE_ADDR_B = 0x0000_7000
-    TILE_ADDR_ATTN = 0x0000_8000
+    CFG_BASE = 0x40
+    Q_ADDR, K_ADDR, V_ADDR, O_ADDR = 0x1000, 0x3000, 0x5000, 0x7000
+    Q_SPAD, M_SPAD = 0, 1024
 
-    # Base row must satisfy (base % S + (n-1)) < S with S=32, so base=0 for n=32.
-    SCPAD_ADDR = 0
-    COLS = n - 1
-    ROWS = n - 1
-    SID0 = 0
-    RSUM_IMM = 64
+    asm = make_attention_asm(n, CFG_BASE)
+    instrs = assemble_file(asm)
+    use_graph = args.graph and not args.no_graph
+    if use_graph:
+        dependency_instrs = convert_instructions(instrs)
+        ready = build_dependency_graph(dependency_instrs, DEFAULT_LATENCY_MAP)
+        packets = greedy_pack(dependency_instrs, ready, max_width=GRAPH_PACKET_WIDTH)
+        scheduled = materialize_scheduled_instructions(
+            instrs, packets, packet_width=GRAPH_PACKET_WIDTH
+        )
+        instr_text = emit_test_format(scheduled, virtual_packet_size=GRAPH_PACKET_WIDTH)
+    else:
+        instr_text = emit_test_format(instrs)
 
     rng = np.random.default_rng(args.seed)
     Q = rng.standard_normal((n, n)).astype(np.float32)
     K = rng.standard_normal((n, n)).astype(np.float32)
     V = rng.standard_normal((n, n)).astype(np.float32)
-    W = rng.standard_normal((n, n)).astype(np.float32)
-
-    scale = 1.0 / np.sqrt(float(n))
-    scores = (Q @ K.T) * scale
-    s_exp = np.exp(scores - scores.max(axis=1, keepdims=True))
-    attn_ref = (s_exp / s_exp.sum(axis=1, keepdims=True)) @ V
-
-    if args.data is not None:
-        input_values = load_tile_data(args.data, n)
-    else:
-        input_values = [float(v) for v in range(4, 4 + n * n)]
-    X_ref = np.array(input_values, dtype=np.float32).reshape(n, n)
-
-    # Reference for the final stored output (softmax after linear), for debugging prints only.
-    x_ln_ref = (X_ref - X_ref.mean()) / (X_ref.var() + 1e-5) ** 0.5
-    u_ref = np.maximum(0, attn_ref + x_ln_ref)
-    linear_out = u_ref @ W
-    shifted = linear_out - linear_out.max(axis=1, keepdims=True)
-    exp_out = np.exp(shifted)
-    y_ref = exp_out / exp_out.sum(axis=1, keepdims=True)
-
-    ln_asm = unroll_layernorm(
-        n,
-        tile_addr_location=ADDR_TABLE_BASE,
-        epsilon_location=EPSILON_LOCATION,
-        sid=SID0,
-        rsum_imm=RSUM_IMM,
-        halt=False,
-    )
-    tail_asm = _emit_fused_attention_post_ln(n, addr_table_base=ADDR_TABLE_BASE, rsum_imm=RSUM_IMM, sid=SID0)
-    asm = ln_asm + "\n" + tail_asm
-
-    instrs = assemble_file(asm)
-    if args.no_graph:
-        instr_text = emit_test_format(instrs)
-    else:
-        dependency_instrs = convert_instructions(instrs)
-        ready = build_dependency_graph(dependency_instrs, DEFAULT_LATENCY_MAP)
-        packets = greedy_pack(dependency_instrs, ready, max_width=GRAPH_PACKET_WIDTH)
-        scheduled = materialize_scheduled_instructions(instrs, packets, packet_width=GRAPH_PACKET_WIDTH)
-        instr_text = emit_test_format(scheduled, virtual_packet_size=GRAPH_PACKET_WIDTH)
 
     img = DRAMWriter()
-    img.u32(ADDR_TABLE_BASE + 0, TILE_ADDR_INPUT)
-    img.u32(ADDR_TABLE_BASE + 4, SCPAD_ADDR)
-    img.u32(ADDR_TABLE_BASE + 8, TILE_ADDR_Q)
-    img.u32(ADDR_TABLE_BASE + 12, TILE_ADDR_K)
-    img.u32(ADDR_TABLE_BASE + 16, TILE_ADDR_V)
-    img.u32(ADDR_TABLE_BASE + 20, TILE_ADDR_OUTPUT)
-    img.u32(ADDR_TABLE_BASE + 24, TILE_ADDR_W)
-    img.u32(ADDR_TABLE_BASE + 28, TILE_ADDR_B)
-    img.u32(ADDR_TABLE_BASE + 32, TILE_ADDR_ATTN)
-    img.f32(EPSILON_LOCATION, 1e-5)
-
-    for i, val in enumerate(input_values):
-        img.bf16(TILE_ADDR_INPUT + i * 2, val)
-    for i, val in enumerate(Q.flatten()):
-        img.bf16(TILE_ADDR_Q + i * 2, float(val))
-    for i, val in enumerate(K.flatten()):
-        img.bf16(TILE_ADDR_K + i * 2, float(val))
-    for i, val in enumerate(V.flatten()):
-        img.bf16(TILE_ADDR_V + i * 2, float(val))
-    for i in range(n):
-        for j in range(n):
-            img.bf16(TILE_ADDR_ATTN + (i * n + j) * 2, float(attn_ref[i, j]))
-    WT = W.T
-    for r in range(n):
-        for c in range(n):
-            img.bf16(TILE_ADDR_W + (r * n + c) * 2, float(WT[r, c]))
-    # Second GEMM operand tile (legacy table name "B"); identity-style from random V-like tile for demo.
-    for r in range(n):
-        for c in range(n):
-            img.bf16(TILE_ADDR_B + (r * n + c) * 2, float(V[r, c]))
+    img.u32(CFG_BASE + 0, Q_ADDR)
+    img.u32(CFG_BASE + 4, K_ADDR)
+    img.u32(CFG_BASE + 8, V_ADDR)
+    img.u32(CFG_BASE + 12, O_ADDR)
+    img.u32(CFG_BASE + 16, Q_SPAD)
+    img.u32(CFG_BASE + 20, M_SPAD)
+    for i, v in enumerate(Q.reshape(-1)):
+        img.bf16(Q_ADDR + i * 2, float(v))
+    for i, v in enumerate(K.T.reshape(-1)):
+        img.bf16(K_ADDR + i * 2, float(v))
+    for i, v in enumerate(V.reshape(-1)):
+        img.bf16(V_ADDR + i * 2, float(v))
     for i in range(n * n):
-        img.bf16(TILE_ADDR_OUTPUT + i * 2, 0.0)
+        img.bf16(O_ADDR + i * 2, 0.0)
 
-    final = render_testfile(instr_text, img.render_data_mem(include_zeros=False))
     os.makedirs(args.output.parent, exist_ok=True)
-    args.output.write_text(final)
-    print(f"[INFO] Written to {args.output} (n={n})")
-    print(f"[INFO] ref output[0,:4]={y_ref[0, :4]}")
+    args.output.write_text(render_testfile(instr_text, img.render_data_mem(include_zeros=True)))
 
 
 if __name__ == "__main__":
