@@ -96,7 +96,7 @@ fsm_t                      fsm_cmd;     // Current command
 
 // REFRESH COUNTER <-> BACKEND ARBITER
 logic                      rf_enable;   // Initialization done, enable counting
-logic                      rf_done;     // Refresh command completed
+logic [BANK_NUM-1:0]       rf_done;     // Refresh command completed
 
 // INIT STATE
 logic                      init_start;      // Trigger to begin initialization
@@ -112,6 +112,9 @@ logic [2:0]                be_rlen;
 // BACKEND ARBITER -> WDATA_QUEUE
 logic [$clog2(ID_NUM)-1:0] be_wid;
 logic be_write; 
+
+// BACKEND ARBITER -> REF TIMER
+logic init_done;
 
 // AXI -> READ_ID_QUEUE
 logic                      rq_rready;
@@ -256,12 +259,12 @@ modport backend_arb (
     //BE -> R_ID_QUEUE
     be_rid, be_push_id, be_rlen,
     //BE -> REFRESH COUNTER
-    rf_enable, rf_done
+    rf_enable, rf_done, init_done
 );
 
 modport refresh_cntrl (
     //BE -> REFRESH COUNTER
-    input rf_enable, rf_done,
+    input rf_enable, ref_done,
     //REFRESH COUNTER -> FSM
     output fsm_ref
 );

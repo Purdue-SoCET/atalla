@@ -67,8 +67,36 @@ package dram_pkg;
         x16 = 2'b10
     } configs_t;
 
+    // typedef enum logic [4:0] {
+    //     POWER_UP,
+    //     PRE_RESET,
+    //     RESET,
+    //     NOP,
+    //     LOAD_MODE_DLL,
+    //     LOAD_BG0_REG3,
+    //     LOAD_BG1_REG6,
+    //     LOAD_BG1_REG5,
+    //     LOAD_BG1_REG4,
+    //     LOAD_BG0_REG2,
+    //     LOAD_BG0_REG1,
+    //     LOAD_BG0_REG0,
+    //     ZQ_CL,
+    //     IDLE,
+    //     ACTIVATE,
+    //     ACTIVATING,
+    //     WRITE,
+    //     WRITING,
+    //     PRECHARGE,
+    //     PRECHARGING,
+    //     READ,
+    //     READING,
+    //     REFRESH,
+    //     REFRESHING
+    // } dram_state_t; 
+
+    //CMD FSM States
     typedef enum logic [4:0] {
-        POWER_UP,
+        PWR_UP,
         PRE_RESET,
         RESET,
         NOP,
@@ -81,22 +109,6 @@ package dram_pkg;
         LOAD_BG0_REG1,
         LOAD_BG0_REG0,
         ZQ_CL,
-        IDLE,
-        ACTIVATE,
-        ACTIVATING,
-        WRITE,
-        WRITING,
-        PRECHARGE,
-        PRECHARGING,
-        READ,
-        READING,
-        REFRESH,
-        REFRESHING
-    } dram_state_t; 
-
-    //CMD FSM States
-    typedef enum logic [3:0] {
-        PWR_UP,
         IDLE,
         ACT,
         ACTing,
