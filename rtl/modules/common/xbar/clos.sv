@@ -1,7 +1,7 @@
 /*  Haejune Kwon - kwon196@purdue.edu */
 /*  Akshath Raghav Ravikiran - araviki@purdue.edu */
 
-`include "xbar_if.vh"
+`include "xbar_if.sv"
 
 import xbar_pkg::*;
 
@@ -82,7 +82,7 @@ module clos #(
             ) out_switch (
                 .in_data(output_module[i]),
                 .sel_in(lsb[i]),
-                .out_data(xif.out[i * IM_OM_SIZE : (i + 1) * IM_OM_SIZE - 1])
+                .out_data(xif.out[(i + 1) * IM_OM_SIZE - 1: i * IM_OM_SIZE])
             );
             param_switch #(.N_IN(IM_OM_SIZE), .N_OUT(IM_OM_SIZE), .DATA_W(TAGWIDTH)
             ) out_perm_switch (
@@ -118,3 +118,4 @@ module clos #(
         end
     end
 endmodule
+

@@ -5,43 +5,29 @@ interface transpose_unit_if #(
     parameter int VEC_LEN = 32, 
     parameter int DATA_W  = 16
 );
-    // Control Signals
-    logic en;
 
-    // Command Handshake
-    logic push_req;      // Request to PUSH one row/vector into scratchpad
-    logic pop_req;       // Request to POP all transposed columns
-    logic busy;          // Unit is currently busy with an operation
-    
-    // Status Signals
-    logic vec_out_valid; // High when valid transposed data is on the bus
-    logic full;          // Scratchpad is full (32 rows stored)
-    logic empty;         // Scratchpad is empty
-
-    // Data Busses (Vector Wide)
+  typedef struct packed {
+    logic valid_in, ready_in, push_req, pop_req;
     logic [VEC_LEN-1:0][DATA_W-1:0] vec_in;
+  } vtransp_in_t;
+
+  typedef struct packed {
+    logic valid_out, ready_out;
     logic [VEC_LEN-1:0][DATA_W-1:0] vec_out;
+  } vtransp_out_t;
 
-    // --- Modports ---
+  vtransp_in_t in;
+  vtransp_out_t out;
 
-    // The Transpose Unit side (The Module)
-    modport unit (
-        input  en,
-        input  push_req, pop_req, vec_in,
-        output busy, vec_out, vec_out_valid, full, empty
-    );
+  modport transpose (
+    input  in,
+    output out
+  );
 
-    // The Controller side (The Core)
-    modport controller (
-        input  busy, vec_out, vec_out_valid, full, empty,
-        output push_req, pop_req, vec_in, en
-    );
-
-    // Monitor (For Testbenches)
-    modport monitor (
-        input en, push_req, pop_req, busy, 
-              vec_out_valid, full, empty, vec_in, vec_out
-    );
+  modport tb (
+    input out, 
+    output in
+  );
 
 endinterface
 
