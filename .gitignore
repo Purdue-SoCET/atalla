@@ -6,7 +6,7 @@ vsim.*
 .deps/
 .mti_uselibs/
 .deps/
-
+wlft*
 !.gitignore
 !.gitmodules
 
@@ -19,5 +19,5 @@ waves/
 *waves*/
 out/
 waves/
-
+*.ucdb
 covhtmlreport/
