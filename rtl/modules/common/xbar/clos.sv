@@ -1,7 +1,7 @@
 /*  Haejune Kwon - kwon196@purdue.edu */
 /*  Akshath Raghav Ravikiran - araviki@purdue.edu */
 
-`include "xbar_if.sv"
+`include "xbar_if.vh"
 
 import xbar_pkg::*;
 

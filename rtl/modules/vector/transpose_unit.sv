@@ -40,24 +40,24 @@ module transpose_unit (
         n_count = count;
         unique case(state)
             IDLE: begin 
-                if(tif.valid_in && tif.push_req) begin 
+                if(tif.in.valid_in && tif.in.push_req) begin 
                     n_state = PUSHING;
                     n_count = 0; 
                 end
             end
             PUSHING: begin
-                if(count == 31 && tif.push_req) begin
+                if(count == 31 && tif.in.push_req) begin
                     n_state = POPPING;
                     n_count = 0;
-                end else if(tif.valid_in && tif.push_req) begin
+                end else if(tif.in.valid_in && tif.in.push_req) begin
                     n_count = count + 1;
                 end
             end
             POPPING: begin
-                if(count == 31 && tif.pop_req) begin 
+                if(count == 31 && tif.in.pop_req) begin 
                     n_state = IDLE;
                     n_count = 0;
-                end else if(tif.ready_out && tif.pop_req) begin
+                end else if(tif.out.ready_out && tif.in.pop_req) begin
                     n_count = count + 1;
                 end
             end
@@ -65,12 +65,12 @@ module transpose_unit (
     end
 
     // --- Shared Clos Network Logic ---
-    assign xif.en = (state == PUSHING && tif.valid_in) || (state == POPPING && tif.pop_req);
+    assign xif.en = (state == PUSHING && tif.in.valid_in) || (state == POPPING && tif.in.pop_req);
 
     always_comb begin : clos_input_mux
         for (int i = 0; i < tif.VEC_LEN; i++) begin
             if (state == PUSHING) begin
-                xif.in[i].din = tif.vec_in[i];
+                xif.in[i].din = tif.in.vec_in[i];
                 xif.in[i].shift = (i + count) % tif.VEC_LEN;
             end else begin
                 xif.in[i].din = sram_rdata[i];
@@ -115,13 +115,13 @@ module transpose_unit (
     endgenerate
 
     // --- Output Assignments ---
-    assign tif.valid_out = (state == POPPING) && sram_rdone[0];
-    assign tif.ready_in = (state == IDLE || state == PUSHING);
+    assign tif.out.valid_out = (state == POPPING) && sram_rdone[0];
+    assign tif.in.ready_in = (state == IDLE || state == PUSHING);
     
     // The final output is the output of the Clos network during POPPING
     always_comb begin
         for(int i = 0; i < 32; i++) begin
-            tif.vec_out[i] = (state == POPPING) ? xif.out[i] : '0;
+            tif.out.vec_out[i] = (state == POPPING) ? xif.out[i] : '0;
         end
     end
 

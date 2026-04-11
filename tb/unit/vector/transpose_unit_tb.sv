@@ -31,10 +31,10 @@ module transpose_unit_tb;
     initial begin
         // --- Initialization ---
         nRST         = 0;
-        tif.valid_in = 0;
-        tif.push_req = 0;
-        tif.pop_req  = 0;
-        tif.vec_in   = '0;
+        tif.in.valid_in = 0;
+        tif.in.push_req = 0;
+        tif.in.pop_req  = 0;
+        tif.in.vec_in   = '0;
 
         // --- Reset Sequence ---
         repeat (5) @(posedge CLK);
@@ -45,20 +45,20 @@ module transpose_unit_tb;
         $display("[%0t] Starting PUSH phase...", $time);
         
         for (int row = 0; row < 32; row++) begin
-            tif.push_req = 1;
-            tif.valid_in = 1;
+            tif.in.push_req = 1;
+            tif.in.valid_in = 1;
             for (int col = 0; col < 32; col++) begin
                 // Data Pattern: (Row * 100) + Column
-                tif.vec_in[col] = (row * 100) + col;
+                tif.in.vec_in[col] = (row * 100) + col;
             end
             
             @(posedge CLK);
             // If the design is not ready to accept more (busy), wait
-            // while (tif.ready_in == 0) @(posedge CLK); 
+            // while (tif.in.ready_in == 0) @(posedge CLK); 
         end
         
-        tif.push_req = 0;
-        tif.valid_in = 0;
+        tif.in.push_req = 0;
+        tif.in.valid_in = 0;
 
         // Buffer time between Push and Pop
         repeat (10) @(posedge CLK);
@@ -67,12 +67,12 @@ module transpose_unit_tb;
         $display("[%0t] Starting POP phase...", $time);
         
         // We set pop_req high to begin the popping sequence
-        tif.pop_req = 1;
+        tif.in.pop_req = 1;
 
         for (int col_idx = 0; col_idx < 32; col_idx++) begin
             // Wait for the valid signal for the current vector
             // This loop ensures we don't skip data if there's latency
-            while (!tif.valid_out) @(posedge CLK);
+            while (!tif.out.valid_out) @(posedge CLK);
             
             $display("[%0t] Verifying Transposed Vector %0d...", $time, col_idx);
             
@@ -80,16 +80,16 @@ module transpose_unit_tb;
             // Element 'i' of popped vector 'col_idx' should be (i * 100) + col_idx
             for (int i = 0; i < 32; i++) begin
                 automatic int expected = (i * 100) + col_idx;
-                if (tif.vec_out[i] !== expected) begin
+                if (tif.out.vec_out[i] !== expected) begin
                     $error("Mismatch at Vector %0d, Index %0d! Expected %0d, Got %h", 
-                            col_idx, i, expected, tif.vec_out[i]);
+                            col_idx, i, expected, tif.out.vec_out[i]);
                 end
             end
             
             @(posedge CLK);
         end
 
-        tif.pop_req = 0;
+        tif.in.pop_req = 0;
         
         repeat (5) @(posedge CLK);
         $display("[%0t] Testbench Completed.", $time);
