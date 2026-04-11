@@ -237,7 +237,9 @@ module nb_barb_tb;
             for (int i = 0; i < TEST_CNT; i++) begin
                 bank_id = {input_vec[i].b, input_vec[i].bg};
                 $display("T=%0t | Bank %0d Ready: Cmd=%s, Row=%h", $time, bank_id, input_vec[i].cmd.name(), input_vec[i].row);
-                drive_bank_case(i);
+                @(posedge CLK);
+		drive_bank_case(i);
+		@(posedge CLK);
                 wait_pos(bank_id, input_vec[i].cmd); 
                 case (input_vec[i].cmd)
                     FSM_READ: check_read(i, exp_vec[i].exp_push_id, exp_vec[i].exp_rid, exp_vec[i].exp_rlen);
@@ -250,6 +252,7 @@ module nb_barb_tb;
                 endcase
                 ddrif.be_queue_ready[bank_id] = 'b0;
                 ddrif.be_cmd[bank_id] = FSM_IDLE;
+		@(posedge CLK);
             end
         end
     endtask
