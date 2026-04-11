@@ -7,16 +7,21 @@ module transpose_unit_tb;
     // Parameters
     localparam int VEC_LEN = 32;
     localparam int DATA_W  = 16;
+    localparam PERIOD = 10;
 
-    parameter PERIOD = 10;
-
-    logic CLK, nRST;
+    // Signals
+    logic CLK = 0; // Initialize CLK to 0 to allow toggling
+    logic nRST;
 
     // 1. Instantiate the Interface
+    // Ensure your interface definition accepts (CLK, nRST)
     transpose_unit_if #(.VEC_LEN(VEC_LEN), .DATA_W(DATA_W)) tif();
 
+    // 2. Instantiate the DUT
     transpose_unit DUT (
-        .tif(tif.unit)
+        .CLK(CLK),
+        .nRST(nRST),
+        .tif(tif.transpose) // Matching the modport name
     );
 
     // 3. Clock Generation
@@ -24,74 +29,85 @@ module transpose_unit_tb;
 
     // 4. Test Logic
     initial begin
-        // Initialize Signals
-        nRST    = 0;
-        tif.en       = 0;
+        // --- Initialization ---
+        nRST         = 0;
+        tif.valid_in = 0;
         tif.push_req = 0;
         tif.pop_req  = 0;
         tif.vec_in   = '0;
 
-        // Reset Sequence
+        // --- Reset Sequence ---
         repeat (5) @(posedge CLK);
         nRST = 1;
-        tif.en    = 1;
-        @(posedge CLK);
+        repeat (2) @(posedge CLK);
 
         // --- STEP 1: PUSH 32 VECTORS (ROW-MAJOR) ---
         $display("[%0t] Starting PUSH phase...", $time);
         
         for (int row = 0; row < 32; row++) begin
             tif.push_req = 1;
+            tif.valid_in = 1;
             for (int col = 0; col < 32; col++) begin
                 // Data Pattern: (Row * 100) + Column
                 tif.vec_in[col] = (row * 100) + col;
             end
             
             @(posedge CLK);
-            tif.push_req = 0; // Pulse the request
-            
-            // If the SRAM or logic has internal busy states, wait here
-            // For this design, we push one vector per clock cycle
+            // If the design is not ready to accept more (busy), wait
+            // while (tif.ready_in == 0) @(posedge CLK); 
         end
+        
+        tif.push_req = 0;
+        tif.valid_in = 0;
 
-        // Wait for any internal processing to finish
-        wait(tif.busy == 0);
-        repeat (5) @(posedge CLK);
+        // Buffer time between Push and Pop
+        repeat (10) @(posedge CLK);
 
         // --- STEP 2: POP 32 VECTORS (TRANSPOSED) ---
         $display("[%0t] Starting POP phase...", $time);
+        
+        // We set pop_req high to begin the popping sequence
         tif.pop_req = 1;
-        @(posedge CLK);
-        tif.pop_req = 0;
 
-        // Collect and verify outputs
         for (int col_idx = 0; col_idx < 32; col_idx++) begin
-            // Wait for the valid signal (accounts for SRAM Read Latency)
-            wait(tif.vec_out_valid == 1);
+            // Wait for the valid signal for the current vector
+            // This loop ensures we don't skip data if there's latency
+            while (!tif.valid_out) @(posedge CLK);
             
-            $display("[%0t] Popped Transposed Vector %0d: %p", $time, col_idx, tif.vec_out);
+            $display("[%0t] Verifying Transposed Vector %0d...", $time, col_idx);
             
             // Verification Logic:
-            // The i-th element of the k-th popped vector should be (i * 100) + k
+            // Element 'i' of popped vector 'col_idx' should be (i * 100) + col_idx
             for (int i = 0; i < 32; i++) begin
                 automatic int expected = (i * 100) + col_idx;
                 if (tif.vec_out[i] !== expected) begin
-                    $error("Mismatch at Vector %0d, Index %0d! Expected %0d, Got %0d", 
+                    $error("Mismatch at Vector %0d, Index %0d! Expected %0d, Got %h", 
                             col_idx, i, expected, tif.vec_out[i]);
                 end
             end
             
             @(posedge CLK);
-            // After one vector is read, wait for the next valid or end of sequence
         end
 
-        $display("[%0t] Testbench Completed Successfully.", $time);
+        tif.pop_req = 0;
+        
+        repeat (5) @(posedge CLK);
+        $display("[%0t] Testbench Completed.", $time);
         $finish;
     end
 
-    // Optional: Monitor for debugging
+    // --- Watchdog Timer ---
+    // Safety net: If the FSM gets stuck, this kills the sim after 2000 cycles
     initial begin
-        $monitor("[%0t] State Busy: %b, Valid Out: %b", $time, tif.busy, tif.vec_out_valid);
+        repeat (2000) @(posedge CLK);
+        $display("TIMEOUT: Simulation ended by watchdog.");
+        $finish;
+    end
+
+    // --- Waveform Dumping (for GTKWave/Vivado/Questasim) ---
+    initial begin
+        $dumpfile("transpose_unit.vcd");
+        $dumpvars(0, transpose_unit_tb);
     end
 
 endmodule
