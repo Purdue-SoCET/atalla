@@ -39,6 +39,12 @@ package scpad_pkg;
     /////////////////////////// Helper Functions /////////////////////////
     //////////////////////////////////////////////////////////////////////
 
+    function automatic logic [ROW_IDX_WIDTH-1:0] addr_to_row(
+        input logic [SCPAD_ADDR_WIDTH-1:0] byte_addr
+    );
+        return byte_addr[SCPAD_ADDR_WIDTH-1:ROW_SHIFT];
+    endfunction
+
     function automatic void addr_to_row_col(
         input  logic [SCPAD_ADDR_WIDTH-1:0]      byte_addr,
         output logic [ROW_IDX_WIDTH-1:0]   row_idx,
@@ -64,7 +70,6 @@ package scpad_pkg;
 
     typedef enum logic { SRC_FE = 1'b0, SRC_BE = 1'b1 } src_t;
 
-    // Scheduler FU <=> Backend
     typedef struct packed {
         logic valid; 
         logic write;
@@ -72,12 +77,12 @@ package scpad_pkg;
         logic [DRAM_ADDR_WIDTH-1:0] dram_addr;
         logic [MAX_DIM_WIDTH-1:0] num_rows;
         logic [MAX_DIM_WIDTH-1:0] num_cols;
-        logic [FULL_MATRIX_DIM_WIDTH-1:0] full_num_cols; 
+        logic [FULL_MATRIX_DIM_WIDTH-1:0] full_num_cols;
         logic [SCPAD_ID_WIDTH-1:0] scpad_id;
     } sched_req_t;
 
     typedef struct packed {
-        logic dummy;
+        logic valid;
     } sched_res_t;
 
     typedef struct packed {
@@ -151,6 +156,13 @@ package scpad_pkg;
         xbar_desc_t  xbar;
         scpad_data_t wdata;
     } sel_req_t;
+
+    typedef struct packed {
+        logic valid;
+        logic write; 
+        src_t  src;
+        xbar_desc_t  xbar;
+    } sel_req_rd_t;
 
     typedef struct packed {
         logic valid; 

@@ -5,15 +5,13 @@ module scpad_cntrl #(parameter logic [scpad_pkg::SCPAD_ID_WIDTH-1:0] IDX = '0) (
 
     import scpad_pkg::*;
 
-    // ─── FIFO parameters ───
-    localparam FIFO_DEPTH = (MAX_SRAM_DELAY < 4) ? 8 : (MAX_SRAM_DELAY + 8);
+    localparam FIFO_DEPTH = NUM_COLS;
     localparam SRAM_READ_LATENCY  = 2;
     localparam SRAM_WRITE_LATENCY = 2;
 
-    // ─── Read FIFO + inflight tracking ───
     logic rd_fifo_empty, rd_fifo_full;
     logic rd_en;
-    sel_req_t rd_fifo_out;
+    sel_req_rd_t rd_fifo_in, rd_fifo_out;
 
     logic [SRAM_READ_LATENCY:0] rd_inflight_pipe;
     logic sram_rd_busy;
@@ -21,10 +19,15 @@ module scpad_cntrl #(parameter logic [scpad_pkg::SCPAD_ID_WIDTH-1:0] IDX = '0) (
     wire incoming_valid = srif.xbar_cntrl_req[IDX].valid;
     wire incoming_write = srif.xbar_cntrl_req[IDX].write;
 
-    fifo #(.DEPTH(FIFO_DEPTH), .DWIDTH($bits(sel_req_t))) rd_fifo (
+    assign rd_fifo_in.valid = srif.xbar_cntrl_req[IDX].valid;
+    assign rd_fifo_in.write = srif.xbar_cntrl_req[IDX].write;
+    assign rd_fifo_in.src   = srif.xbar_cntrl_req[IDX].src;
+    assign rd_fifo_in.xbar  = srif.xbar_cntrl_req[IDX].xbar;
+
+    fifo #(.DEPTH(FIFO_DEPTH), .DWIDTH($bits(sel_req_rd_t))) rd_fifo (
         .clk(srif.clk), .rstn(srif.n_rst),
         .wr_en(incoming_valid && !incoming_write && !rd_fifo_full),
-        .din(srif.xbar_cntrl_req[IDX]),
+        .din(rd_fifo_in),
         .rd_en(rd_en),
         .dout(rd_fifo_out),
         .full(rd_fifo_full),
@@ -44,7 +47,6 @@ module scpad_cntrl #(parameter logic [scpad_pkg::SCPAD_ID_WIDTH-1:0] IDX = '0) (
     assign sram_rd_busy = |rd_inflight_pipe[SRAM_READ_LATENCY-1:0];
     assign rd_en = !sram_rd_busy && !rd_fifo_empty;
 
-    // ─── Write FIFO + inflight tracking ───
     logic wr_fifo_empty, wr_fifo_full;
     logic wr_en;
     sel_req_t wr_fifo_out;
@@ -75,10 +77,6 @@ module scpad_cntrl #(parameter logic [scpad_pkg::SCPAD_ID_WIDTH-1:0] IDX = '0) (
     assign sram_wr_busy = |wr_inflight_pipe[SRAM_WRITE_LATENCY-1:0];
     assign wr_en = !sram_wr_busy && !wr_fifo_empty;
 
-    // ─── Outputs: separate read and write request paths ───
-    // Read requests → cntrl_spad_req (drives sram_bank ren/raddr)
-    // Write requests → cntrl_spad_wr_req (drives sram_bank wen/waddr/wdata)
-    // Both can fire simultaneously — sram_bank has independent R+W ports.
     assign srif.cntrl_spad_req[IDX].valid = rd_en && rd_fifo_out.valid;
     assign srif.cntrl_spad_req[IDX].write = 1'b0;  // read path only
     assign srif.cntrl_spad_req[IDX].src   = rd_fifo_out.src;
@@ -91,10 +89,6 @@ module scpad_cntrl #(parameter logic [scpad_pkg::SCPAD_ID_WIDTH-1:0] IDX = '0) (
     assign srif.cntrl_spad_wr_req[IDX].xbar  = wr_fifo_out.xbar;
     assign srif.cntrl_spad_wr_req[IDX].wdata = wr_fifo_out.wdata;
 
-    // ─── Backpressure ───
-    // Stall head when either FIFO is full. Conservative but correct:
-    // head doesn't know if the next grant will be a read or write, so
-    // we must stall if either path can't accept.
     assign srif.w_stall[IDX] = rd_fifo_full || wr_fifo_full;
 
     `ifndef SYNTHESIS

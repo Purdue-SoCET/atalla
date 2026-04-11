@@ -59,7 +59,7 @@ module backend #(parameter logic [scpad_pkg::SCPAD_ID_WIDTH-1:0] IDX = '0) (
 
     xbar_desc_t be_identity_xbar;
     always_comb begin
-        be_identity_xbar.slot = effective_req.spad_addr + be_id;
+        be_identity_xbar.slot = addr_to_row(effective_req.spad_addr) + be_id;
         for (int i = 0; i < NUM_COLS; i++)
             be_identity_xbar.valid_mask[i] = (i <= effective_req.num_cols);
     end
@@ -79,7 +79,7 @@ module backend #(parameter logic [scpad_pkg::SCPAD_ID_WIDTH-1:0] IDX = '0) (
     sram_write_latch be_sr_wr_latch(.sr_wr_l(be_internal));
     assign be_internal.sr_wr_l_in.dram_id = bdrif.dram_be_res[IDX].id;
     assign be_internal.sr_wr_l_in.dram_res_valid = bdrif.dram_be_res[IDX].valid;
-    assign be_internal.sr_wr_l_in.spad_addr = effective_req.spad_addr + {be_id, 5'b00000};
+    assign be_internal.sr_wr_l_in.spad_addr = effective_req.spad_addr + (be_id << ROW_SHIFT);
     assign be_internal.sr_wr_l_in.xbar = be_identity_xbar;
     assign be_internal.sr_wr_l_in.dram_rddata = bdrif.dram_be_res[IDX].rdata;
     assign be_internal.sr_wr_l_in.num_request = num_request;
@@ -180,7 +180,7 @@ module backend #(parameter logic [scpad_pkg::SCPAD_ID_WIDTH-1:0] IDX = '0) (
                 if(bbif.be_stall[IDX] == 1'b0) begin
                     bbif.be_req[IDX].valid = 1'b1 && !initial_request_done;
                     bbif.be_req[IDX].write = 1'b0;
-                    bbif.be_req[IDX].spad_addr = effective_req.spad_addr + {uuid, 5'b00000};
+                    bbif.be_req[IDX].spad_addr = effective_req.spad_addr + (uuid << ROW_SHIFT);
                     bbif.be_req[IDX].num_rows = effective_req.num_rows;
                     bbif.be_req[IDX].num_cols = effective_req.num_cols;
                     bbif.be_req[IDX].row_id = uuid;
