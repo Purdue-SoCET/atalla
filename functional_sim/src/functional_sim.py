@@ -67,14 +67,35 @@ def apply_imm_vector_op(
     return vd
 
 
-def _count_packet_slots(mem: Memory, packet_length: int) -> tuple[int, int]:
-    total_slots = 0
-    filled_slots = 0
+def _collect_static_packet_metrics(mem: Memory, packet_length: int) -> dict[str, int]:
+    packets_static_total = 0
+    packets_static_non_nop = 0
+    packet_slots_total = 0
+    packet_slots_filled = 0
+    packet_slots_total_non_nop_packets = 0
+
     for addr in sorted(mem.instr_mem.keys()):
-        dec_packet = decode_packet(packet=mem.read_instr(addr), packet_length=packet_length, debug=False)
-        total_slots += len(dec_packet)
-        filled_slots += sum(1 for inst in dec_packet if inst.get("mnemonic") != "nop.s")
-    return total_slots, filled_slots
+        dec_packet = decode_packet(
+            packet=mem.read_instr(addr), packet_length=packet_length, debug=False
+        )
+        packet_len = len(dec_packet)
+        filled_slots = sum(1 for inst in dec_packet if inst.get("mnemonic") != "nop.s")
+
+        packets_static_total += 1
+        packet_slots_total += packet_len
+        packet_slots_filled += filled_slots
+
+        if filled_slots > 0:
+            packets_static_non_nop += 1
+            packet_slots_total_non_nop_packets += packet_len
+
+    return {
+        "packets_static_total": packets_static_total,
+        "packets_static_non_nop": packets_static_non_nop,
+        "packet_slots_total": packet_slots_total,
+        "packet_slots_filled": packet_slots_filled,
+        "packet_slots_total_non_nop_packets": packet_slots_total_non_nop_packets,
+    }
 
 
 def run(mem: Memory, sregs: ScalarRegisterFile, mregs: ScalarRegisterFile, vregs: VectorRegisterFile, SP0: Scratchpad, SP1: Scratchpad, 
@@ -95,23 +116,30 @@ def run(mem: Memory, sregs: ScalarRegisterFile, mregs: ScalarRegisterFile, vregs
     tileID0Dict = {}
     tileID1Dict = {}
 
-    packet_slots_total, packet_slots_filled = _count_packet_slots(mem, packet_length)
-    EU.perf_metrics.set_metric("packet_slots_total", packet_slots_total)
-    EU.perf_metrics.set_metric("packet_slots_filled", packet_slots_filled)
+    static_packet_metrics = _collect_static_packet_metrics(mem, packet_length)
+    for metric_name, metric_value in static_packet_metrics.items():
+        EU.perf_metrics.set_metric(metric_name, metric_value)
 
     halt = False
     while (not(halt)):
         dec_packet = decode_packet(packet=mem.read_instr(pc), packet_length=packet_length, debug=debug)
 
-        if debug: 
+        packet_len = len(dec_packet)
+        filled_slots_in_packet = sum(
+            1 for inst in dec_packet if inst.get("mnemonic") != "nop.s"
+        )
+        EU.perf_metrics.increment("packets_executed")
+        EU.perf_metrics.increment("packet_slots_executed", packet_len)
+        EU.perf_metrics.increment("packet_slots_executed_filled", filled_slots_in_packet)
+        if filled_slots_in_packet > 0:
+            EU.perf_metrics.increment("packets_executed_non_nop")
+            EU.perf_metrics.increment(
+                "packet_slots_executed_non_nop_packets", packet_len
+            )
+
+        if debug:
             print(f"PC: 0x{pc:08X}")
             print(f"Decoded packet: {dec_packet}")
-
-        EU.perf_metrics.increment("packets_executed", 1)
-        EU.perf_metrics.increment(
-            "instructions_executed",
-            sum(1 for i in dec_packet if i.get("mnemonic") != "nop.s"),
-        )
 
         br = False
 
@@ -119,6 +147,9 @@ def run(mem: Memory, sregs: ScalarRegisterFile, mregs: ScalarRegisterFile, vregs
             m = inst['mnemonic']
             if m == "nop.s":
                 continue
+
+            EU.perf_metrics.increment("assembly_instructions_executed")
+
             if (m == "halt.s"):
                 halt = True
             elif (m == "jal" or m == "jalr" or inst['type'] == "BR"):
@@ -180,79 +211,79 @@ def run(mem: Memory, sregs: ScalarRegisterFile, mregs: ScalarRegisterFile, vregs
                 mem.write_data(sregs.read(inst['rs1']) + inst['imm'], temp)
             #vector load/store here
             elif m == "vreg.ld":
-                sid = inst['sid'] & 0x1
-                if sid == 1:
-                    target_sp = SP1 
-                else:
+                sid = int(inst["sid"]) & 0x3
+                if sid == 0:
                     target_sp = SP0
-                
-                addr = sregs.read(inst['rs1'])
-                row_number = int(sregs.read(inst['rs2']))
-                
+                elif sid == 1:
+                    target_sp = SP1
+                else:
+                    raise ValueError(f"Unsupported scratchpad sid for vreg.ld: {sid}")
+
+                addr = int(sregs.read(inst["rs1"]))
+                row_number = int(sregs.read(inst["rs2"]))
+
                 if is_gmem_vector_spill(addr, sregs.read(33)):
                     dram_vec_ld_to_vreg(
                         gmem=mem,
                         vregs=vregs,
                         base_byte=addr,
-                        vd=inst['vd'],
-                        num_cols=inst['num_cols'],
+                        vd=inst["vd"],
+                        num_cols=inst["num_cols"],
                     )
                 elif is_gmem_bf16_vector_linear(addr, sregs.read(33)):
                     dram_bf16_vec_ld_to_vreg(
                         gmem=mem,
                         vregs=vregs,
                         base_byte=addr,
-                        vd=inst['vd'],
-                        num_cols=inst['num_cols'],
+                        vd=inst["vd"],
+                        num_cols=inst["num_cols"],
                     )
                 else:
                     scpad_to_vreg(
                         scpad=target_sp,
                         vregs=vregs,
-                        scpad_addr=addr,
-                        vd=inst['vd'],
-                        rc=1,
-                        rc_id=row_number,
-                        num_rows=0,
-                        num_cols=inst['num_cols']
+                        scpad_base_addr=addr,
+                        row_offset=row_number,
+                        vd=inst["vd"],
+                        num_cols=inst["num_cols"],
                     )
 
             elif m == "vreg.st":
-                sid = inst['sid'] & 0x1
-                if sid == 1:
-                    target_sp = SP1 
-                else:
+                sid = int(inst["sid"]) & 0x3
+                if sid == 0:
                     target_sp = SP0
-                
-                addr = sregs.read(inst['rs1'])
-                row_number = int(sregs.read(inst['rs2']))
-                
+                elif sid == 1:
+                    target_sp = SP1
+                else:
+                    raise ValueError(f"Unsupported scratchpad sid for vreg.st: {sid}")
+
+                addr = int(sregs.read(inst["rs1"]))
+                row_number = int(sregs.read(inst["rs2"]))
+
                 if is_gmem_vector_spill(addr, sregs.read(33)):
                     dram_vec_st_from_vreg(
                         gmem=mem,
                         vregs=vregs,
                         base_byte=addr,
-                        vs=inst['vd'],
-                        num_cols=inst['num_cols'],
+                        vs=inst["vd"],
+                        num_cols=inst["num_cols"],
                     )
                 elif is_gmem_bf16_vector_linear(addr, sregs.read(33)):
                     dram_bf16_vec_st_from_vreg(
                         gmem=mem,
                         vregs=vregs,
                         base_byte=addr,
-                        vs=inst['vd'],
-                        num_cols=inst['num_cols'],
+                        vs=inst["vd"],
+                        num_cols=inst["num_cols"],
                     )
                 else:
                     vreg_to_scpad(
                         scpad=target_sp,
                         vregs=vregs,
-                        scpad_addr=addr,
-                        vs=inst['vd'],
-                        rc=1,
-                        rc_id=row_number,
-                        num_rows=0,
-                        num_cols=inst['num_cols']
+                        scpad_base_addr=addr,
+                        row_offset=row_number,
+                        vs=inst["vd"],
+                        num_cols=inst["num_cols"],
                     )
 
             #scpad load/store here

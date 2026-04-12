@@ -26,8 +26,12 @@ Semantics (read before interpreting Arithmetic Intensity):
   packet (one instr-mem word = one packet of width packet_length). Loops re-fetch
   the same addresses, so this scales with dynamic control flow (often >> static rows).
 
-  Ops executed (dynamic) — sum over all those fetches of non-nop ops in each packet;
-  this is the closest thing to "dynamic instruction count" in the CSV.
+  Ops executed (dynamic) — ``assembly_instructions_executed`` after run (one per
+  non-nop.s op retired); ``instructions_executed`` is the same value in perf dumps.
+
+  Packet metrics — static slot counts also populate ``packets_static_*`` and
+  ``packet_slot_utilization_non_nop_packets_pct`` / ``packet_slot_utilization_executed_*``
+  (see perf dump); the CSV below uses the compact static/dynamic columns only.
 
   Arithmetic Intensity = FLOPs_total / Bytes Loaded (DMA read bytes only).
   AI (load+store) = FLOPs_total / (Bytes Loaded + Bytes Written).

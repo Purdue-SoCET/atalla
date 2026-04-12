@@ -171,7 +171,11 @@ def encode_instruction(instr_dict):
         rs2 = instr_dict.get('rs2', 0)
         num_cols = instr_dict.get('num_cols', 0)
         sid = instr_dict.get('sid', 0)
-        
+        if not (0 <= num_cols <= 0x1F):
+            raise ValueError(f"num_cols out of range for VM (0..31): {num_cols}")
+        if not (0 <= sid <= 0x3):
+            raise ValueError(f"sid out of range for VM (0..3): {sid}")
+
         instruction |= (vd & 0xFF) << 7
         instruction |= (rs1 & 0xFF) << 15
         instruction |= (rs2 & 0xFF) << 23
@@ -608,11 +612,19 @@ def asm_to_instr_dict(
 
     if instr_type == "VM":
         # vreg.ld vd, rs1, rs2, num_cols, sid
+        if len(ops) != 5:
+            raise ValueError(
+                f"{mnemonic} expects 5 operands (vd, rs1, rs2, num_cols, sid), got {len(ops)}"
+            )
         d["vd"] = parse_reg(ops[0])
         d["rs1"] = parse_reg(ops[1])
         d["rs2"] = parse_reg(ops[2])
         d["num_cols"] = parse_int(ops[3])
         d["sid"] = parse_int(ops[4])
+        if not (0 <= d["num_cols"] <= 0x1F):
+            raise ValueError(f"num_cols out of range (0..31): {d['num_cols']}")
+        if not (0 <= d["sid"] <= 0x3):
+            raise ValueError(f"sid out of range (0..3): {d['sid']}")
         return d
 
     if instr_type == "SDMA":
