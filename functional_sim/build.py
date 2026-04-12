@@ -181,7 +181,7 @@ def encode_instruction(instr_dict):
         instruction |= (rs2 & 0xFF) << 23
         instruction |= (num_cols & 0x1F) << 31
         instruction |= (sid & 0x3) << 36
-        
+
     elif instr_type == "SDMA":
         # SDMA: rs1/rd1 7-14, rs2 15-22, rs3 23-30
         rs1_rd1 = instr_dict.get('rs1', instr_dict.get('rd1', 0))

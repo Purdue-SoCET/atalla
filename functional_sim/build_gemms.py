@@ -9,7 +9,6 @@ from pathlib import Path
 import argparse
 import numpy as np
 
-from src.misc.opcode_table import OPCODES, name_to_opcode
 from build import *
 
 

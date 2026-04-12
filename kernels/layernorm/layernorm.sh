@@ -71,7 +71,7 @@ while [[ $# -gt 0 ]]; do
         -h|--help)
             echo "Usage: bash $0 [--n N] [--debug]"
             echo ""
-            echo "  --n N          Tile dimension N×N (default: 4)"
+            echo "  --n N          Tile dimension N×N (default: 32)"
             echo "  --debug        Enable verbose emulator output"
             exit 0 ;;
         *)
@@ -119,7 +119,6 @@ echo "  Output    : $IN_FILE"
 echo ""
 
 $PYTHON -m "functional_sim.build_${BUILD_NAME}" \
-    --no-graph \
     --data "$DATA" \
     --n "$N" \
     --output "$IN_FILE"
@@ -139,7 +138,7 @@ $PYTHON -m functional_sim.run \
     --output_mreg_file  "$OUT_MREGS" \
     --output_scpad_file0 "$OUT_SCPAD0" \
     --output_scpad_file1 "$OUT_SCPAD1" \
-    --output_perf_file  "$OUT_PERF"
+    --output_perf_file  "$OUT_PERF" \
     $DEBUG_FLAG
 
 echo "[EMULATE] Done.  Outputs in $OUTPUT_DIR"
