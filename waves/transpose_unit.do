@@ -10,16 +10,17 @@ add wave -noupdate /transpose_unit_tb/DUT/ren
 add wave -noupdate /transpose_unit_tb/DUT/wen
 add wave -noupdate -divider Inputs
 add wave -noupdate /transpose_unit_tb/tif/in.valid_in
-add wave -noupdate /transpose_unit_tb/tif/in.ready_in
 add wave -noupdate /transpose_unit_tb/tif/in.push_req
 add wave -noupdate /transpose_unit_tb/tif/in.pop_req
-add wave -noupdate /transpose_unit_tb/tif/in.vec_in
+add wave -noupdate -radix unsigned /transpose_unit_tb/tif/in.vec_in
 add wave -noupdate -divider Outputs
 add wave -noupdate /transpose_unit_tb/tif/out.valid_out
-add wave -noupdate /transpose_unit_tb/tif/out.ready_out
-add wave -noupdate /transpose_unit_tb/tif/out.vec_out
+add wave -noupdate -radix unsigned /transpose_unit_tb/tif/out.vec_out
+add wave -noupdate -divider Xif
+add wave -noupdate -radix unsigned /transpose_unit_tb/DUT/xif/in
+add wave -noupdate -radix unsigned /transpose_unit_tb/DUT/xif/out
 TreeUpdate [SetDefaultTree]
-WaveRestoreCursors {{Cursor 1} {1448418 ps} 0}
+WaveRestoreCursors {{Cursor 1} {2155340 ps} 0}
 quietly wave cursor active 1
 configure wave -namecolwidth 150
 configure wave -valuecolwidth 100
