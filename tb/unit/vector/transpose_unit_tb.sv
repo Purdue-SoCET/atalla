@@ -20,26 +20,26 @@ module transpose_unit_tb;
         .tif(tif.transpose)
     );
 
-    // Scoreboard: Static declaration at module level
+    // Scoreboard
     logic [DATA_W-1:0] expected_matrix [VEC_LEN-1:0][VEC_LEN-1:0];
 
     // Clock Generation
     always #(PERIOD/2) CLK = ~CLK;
 
     // --- Test Task ---
-    // This allows you to choose the size (number of rows) for each test run
     task automatic run_transpose_test(input int num_rows);
         $display("\n[%0t] --- STARTING TEST: %0d x %0d ---", $time, num_rows, VEC_LEN);
         
         // 1. Clear Scoreboard
         for(int i = 0; i < VEC_LEN; i++) begin
-            for(int j = 0; j < VEC_LEN; j++) expected_matrix[i][j] = '0;
+            for(int j = 0; j < VEC_LEN; j++) begin
+                expected_matrix[i][j] = '0;
+            end
         end
 
         // 2. PUSH PHASE
         for (int r = 0; r < num_rows; r++) begin
-            // Wait for DUT to be ready
-            while (!tif.tb.out.ready_in) @(posedge CLK);
+            wait (tif.tb.out.ready_in)
             
             tif.tb.in.push_req = 1;
             tif.tb.in.valid_in = 1;
@@ -51,12 +51,9 @@ module transpose_unit_tb;
                 expected_matrix[r][c] = val;
             end
             
-            @(posedge CLK);
+            wait (!tif.tb.out.ready_in);
             tif.tb.in.push_req = 0;
             tif.tb.in.valid_in = 0;
-            
-            // Allow FSM to cycle back to IDLE
-            repeat(2) @(posedge CLK); 
         end
 
         $display("[%0t] PUSH complete. Waiting for internal pipeline...", $time);
@@ -102,6 +99,11 @@ module transpose_unit_tb;
         run_transpose_test(2);  // Your original test case
         run_transpose_test(8);  // Mid-size test
         run_transpose_test(32); // Full matrix test
+
+        for (int i = 1; i <= 32; i++) begin
+            run_transpose_test(i); // loop through everything
+        end
+
 
         $display("[%0t] All configured tests complete.", $time);
         $finish;
