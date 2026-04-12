@@ -604,13 +604,14 @@ def check_flash_attention(work: Path) -> Tuple[str, float, float, float]:
     )
 
 
-# Monorepo subset: omit checks for scripts not in this tree yet (``build_gemm_tiled.py``,
-# ``build_conv_tiled.py``, ``build_alexnet_layer.py``).
+# Omit ``build_alexnet_layer.py`` until that script exists in this tree.
 CHECKS: Dict[str, Callable[[Path], Tuple[str, float, float, float]]] = {
     "maxpool": check_maxpool,
     "add": check_add,
     "relu": check_relu,
     "gemm": check_gemm,
+    "gemm_tiled": check_gemm_tiled,
+    "conv_tiled": check_conv_tiled,
     "sigmoid": check_sigmoid,
     "layernorm": check_layernorm,
     "layernorm_param": check_layernorm_param,

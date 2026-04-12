@@ -395,12 +395,6 @@ expi.vi vd, vs1, imm, mask
 - `imm`: reserved/control immediate (not used in core exp math).
 - `mask`: lane-enable mask register index.
 
-- Operation: Element-wise square root.
-- `vd`: vector destination.
-- `vs1`: vector source.
-- `imm`: reserved/control immediate.
-- `mask`: lane-enable mask register index.
-
 not.vi vd, vs1, imm, mask
 - Operation: Element-wise bitwise NOT.
 - `vd`: vector destination.
@@ -547,43 +541,34 @@ mneq.mvs vmd, vs1, rs1, mask
 
 ## Vector Register Load/Store (VM-Type)
 
-vreg.ld vd, rs1, num_cols, num_rows, sid, rc, rc_id_reg
-- Operation: Vector load from scratchpad tile.
-- `vd`: vector destination register.
-- `rs1`: scratchpad base pointer/address.
-- `num_cols`: tile column count.
-- `num_rows`: tile row count.
-- `sid`: scratchpad ID/bank selector.
-- `rc`: row/column mode select.
-- `rc_id_reg`: scalar register containing selected row/column index.
+**ISA encoding (40-bit VM, see bit-spec):** `sid` in bits 36–37, `num_cols` in 31–35, `rs2` row offset, `rs1` base, `vd`/`vs`.
 
-vreg.st vs, rs1, num_cols, num_rows, sid, rc, rc_id_reg
-- Operation: Vector store to scratchpad tile.
-- `vs`: vector source register.
-- `rs1`: scratchpad base pointer/address.
-- `num_cols`: tile column count.
-- `num_rows`: tile row count.
-- `sid`: scratchpad ID/bank selector.
-- `rc`: row/column mode select.
-- `rc_id_reg`: scalar register containing selected row/column index.
+vreg.ld vd, rs1, rs2, num_cols, sid
+- Operation: Vector load from scratchpad into `vd` (or GMEM paths when the emulator routes `rs1` to linear spill/BF16 DRAM — see functional sim sources).
+- `vd`: vector destination.
+- `rs1`: scratchpad base address (slot/bank semantics per emulator).
+- `rs2`: scalar register holding **row offset** from that base.
+- `num_cols`: **0..31** — max column index; **`num_cols + 1`** lanes are transferred.
+- `sid`: **0** = SP0, **1** = SP1 (other values reserved / rejected by strict assembler).
+
+vreg.st vs, rs1, rs2, num_cols, sid
+- Operation: Vector store from `vs` to scratchpad (or GMEM when routed).
+- `vs`: vector source.
+- `rs1`, `rs2`, `num_cols`, `sid`: same as `vreg.ld`.
+
+**Legacy 7-operand textual form** (`vreg.* …, cols, rows, sid, imm, row`) is accepted only as **input to `assemble_file` / `build_compiler.compile_asm`**, which lowers it to the 5-operand VM form via `expand_vreg_seven_operand_asm` in `build.py`.
 
 ## Scratchpad DMA (SDMA)
 
+**Encoded form:** `scpad.ld rs1, rs2, rs3` / `scpad.st rs1, rs2, rs3` with `rs3` holding packed metadata (scratchpad ID, tile shape, full-row stride in low 20 bits — see bit-spec row SDMA).
+
+**Convenience 5-operand form** in assembly sources:
 scpad.ld rs1, rs2, num_cols, num_rows, sid
 - Operation: DMA load from global memory into scratchpad tile.
-- `rs1`: scratchpad base address/pointer.
-- `rs2`: global-memory base address/pointer.
-- `num_cols`: tile column count.
-- `num_rows`: tile row count.
-- `sid`: scratchpad ID/bank selector.
+- Expanded by `expand_scpad_five_operand_asm` into `lui`/`addi` metadata setup + 3-operand `scpad.ld`.
 
 scpad.st rs1, rs2, num_cols, num_rows, sid
-- Operation: DMA store from scratchpad tile into global memory.
-- `rs1`: scratchpad base address/pointer.
-- `rs2`: global-memory base address/pointer.
-- `num_cols`: tile column count.
-- `num_rows`: tile row count.
-- `sid`: scratchpad ID/bank selector.
+- Operation: DMA store from scratchpad tile into global memory (same expansion as `scpad.ld`).
 
 ## Vector-To-Scalar Move (VTS)
 

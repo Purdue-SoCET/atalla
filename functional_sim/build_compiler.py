@@ -782,6 +782,18 @@ def expand_large_li(
 
 
 def compile_asm(in_data: str) -> tuple[str, list[int], list[list[int]]]:
+    """Schedule and encode compiler-oriented assembly into a packetized ``.in`` text image.
+
+    Pre-parse expansions (ISA is **encoded** 5-operand VM / 3-operand SDMA; other mnemonics
+    use the current ISA from ``opcode_table``):
+
+    - **VM:** legacy **7-operand** `vreg.{ld,st}` text → **5-operand** form
+      (`expand_vreg_seven_operand_asm` in ``build.py``). New asm should emit 5 operands.
+    - **SDMA:** **5-operand** `scpad.{ld,st}` shorthand → metadata in ``rs3`` + 3-operand form.
+
+    Then: parse → optional main bootstrap → ``expand_large_li`` → ``schedule_program``
+    (latency + structural hazards: ≤1 vector mem op per packet, etc.) → encode.
+    """
     in_data = base.expand_vreg_seven_operand_asm(in_data)
     in_data = base.expand_scpad_five_operand_asm(in_data)
     instructions, labels = parse_program(in_data)

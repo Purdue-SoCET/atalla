@@ -200,6 +200,8 @@ KERNEL_SPECS: list[tuple[str, str, list[str]]] = [
     ("relu", "build_relu.py", []),
     ("sigmoid", "build_sigmoid.py", []),
     ("gemm", "build_gemm.py", []),
+    ("gemm tiled", "build_gemm_tiled.py", []),
+    ("conv tiled", "build_conv_tiled.py", []),
     ("gemms", "build_gemms.py", []),
     ("gemms function", "build_gemms_function.py", []),
     ("gemms pipelined", "build_gemms_pipelined.py", []),

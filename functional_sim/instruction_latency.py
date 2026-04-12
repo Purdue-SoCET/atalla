@@ -72,7 +72,6 @@ BASE_LATENCY = {
     "mul": 3,
     "div": 8,
     "expi": 8,
-    "sqrti": 8,
     "rsum": 4,
     "rmin": 4,
     "rmax": 4,
