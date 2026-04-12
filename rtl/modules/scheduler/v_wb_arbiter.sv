@@ -21,6 +21,7 @@ module v_wb_arbiter #(
 
     logic [3:0] banks; // valid for each port
     logic [1:0] bankSelected;
+    vreg_t local_vreg;
 
     always_comb begin
 	//vif.vector_wb_out.vector_if_wb_ready = '0;
@@ -41,8 +42,12 @@ module v_wb_arbiter #(
     if (vif.vector_wb_in.mvvOrMvs) begin
         vif.vector_wb_out.mask_WB_wsel[0] = vif.vector_wb_in.vector_if_lanes_out.result_collectors[0].vd_output; //Will this work??
         vif.vector_wb_out.mask_WB_WEN[0] = 1;
-        foreach (vif.vector_wb_in.vector_if_lanes_out.result_collectors[0][i]) begin //From ALU
-            vif.vector_wb_out.mask_WB_wdata[0][i] = vif.vector_wb_in.vector_if_lanes_out.result_collectors[0][i][0];
+        vif.vector_wb_out.mask_WB_wdata = '0;
+
+        local_vreg = vif.vector_wb_in.vector_if_lanes_out.result_collectors[0].vector_output;
+
+        for (int i = 0; i < 32; i++) begin
+            vif.vector_wb_out.mask_WB_wdata[0][i] = local_vreg[i][0];
         end
     end
 
@@ -97,7 +102,7 @@ module v_wb_arbiter #(
             vif.vector_wb_out.vector_if_wb_ready.reduction_wb_ready = 0; // Bank conflict with higher-priority port, stall this request. Indicate which input is causing the stall
         end
     end
-    if (vif.vector_wb_in.vector_if_lanes_out.result_collectors[0].wb_valid) begin
+    if ((vif.vector_wb_in.vector_if_lanes_out.result_collectors[0].wb_valid) & (!vif.vector_wb_in.mvvOrMvs)) begin //Only if mask is not masking
         bankSelected = vif.vector_wb_in.vector_if_lanes_out.result_collectors[0].vd_output[7:6];
         if (!(banks[bankSelected])) begin
             banks[bankSelected] = 1'b1; // Mark bank as used
