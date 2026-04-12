@@ -57,7 +57,6 @@ module transpose_unit_tb;
         end
 
         $display("[%0t] PUSH complete. Waiting for internal pipeline...", $time);
-        repeat (5) @(posedge CLK);
 
         // 3. POP PHASE
         for (int col_idx = 0; col_idx < VEC_LEN; col_idx++) begin
