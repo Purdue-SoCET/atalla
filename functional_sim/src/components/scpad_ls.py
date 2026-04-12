@@ -192,9 +192,8 @@ def sdma_load(
     swizzle: Callable[[int], int] = identity_swizzle,
 ):
     """
-    for i in range(NR):
-        for j in range(NC):
-            SCPAD[(scpad_ptr * i) + j] = GMEM[ swizzle((gmem_ptr * i) + j) ]
+    NR and NC from SDMA metadata are encoded as (N−1): loops use i in 0..NR and j in 0..NC
+    (inclusive), i.e. (NR+1)×(NC+1) BF16 elements per tile, with GMEM row stride (NC+1) words.
     """
 
     # Register tile metadata in scratchpad
@@ -250,9 +249,7 @@ def sdma_store(
     swizzle: Callable[[int], int] = identity_swizzle,
 ):
     """
-    for i in range(NR):
-        for j in range(NC):
-            GMEM[(gmem_ptr * i) + j] = SCPAD[ swizzle((scpad_ptr * i) + j) ]
+    Same NR/NC (N−1) convention and (NC+1) row stride as sdma_load.
     """
 
     stride = (NC + 1) if row_stride_elems is None else int(row_stride_elems)

@@ -1,5 +1,9 @@
 from __future__ import annotations
 
+# Run from repo: `cd atalla && PYTHONPATH=. python -m functional_sim.build_*` or
+# `cd atalla/functional_sim && PYTHONPATH=.. python -m functional_sim.build_*`.
+# Imports use package paths (`functional_sim.*`); running bare `python build.py` without PYTHONPATH will fail.
+
 from dataclasses import dataclass, field
 from typing import Dict, List, Union
 import struct
@@ -183,7 +187,11 @@ def encode_instruction(instr_dict):
         instruction |= (sid & 0x3) << 36
 
     elif instr_type == "SDMA":
-        # SDMA: rs1/rd1 7-14, rs2 15-22, rs3 23-30
+        # SDMA: rs1/rd1 7-14, rs2 15-22, rs3 23-30 (rs3 = scalar reg holding metadata word).
+        # Assembly sugar `scpad.{ld,st} rs1, rs2, num_cols, num_rows, sid` (when supported) packs
+        # the same fields as rs3: it assumes GMEM row stride matches (num_cols+1) BF16 words per
+        # sdma_load row (see scpad_ls). If tile stride in DRAM differs, do not use sugar—materialize
+        # rs3 explicitly (e.g. layernorm_param-style) so metadata matches hardware.
         rs1_rd1 = instr_dict.get('rs1', instr_dict.get('rd1', 0))
         rs2 = instr_dict.get('rs2', 0)
         rs3 = instr_dict.get('rs3', 0)
@@ -628,7 +636,11 @@ def asm_to_instr_dict(
         return d
 
     if instr_type == "SDMA":
-        # scpad.ld rs1, rs2, rs3
+        # Canonical: scpad.ld rs1, rs2, rs3  /  scpad.st rs1, rs2, rs3
+        # (rs3 = register whose *value* is the SDMA metadata word at execute time).
+        # Five-operand sugar scpad.* rs1, rs2, num_cols, num_rows, sid may be expanded by the
+        # assembler on branches that implement it; it encodes NR/NC as (N−1) in metadata[29:20].
+        # Invalid when GMEM row pitch ≠ (num_cols+1) BF16 elements—use explicit rs3 instead.
         d["rs1"] = parse_reg(ops[0])
         d["rs2"] = parse_reg(ops[1])
         d["rs3"] = parse_reg(ops[2])

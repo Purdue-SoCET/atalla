@@ -64,7 +64,6 @@ class VectorLanes:
         adders: Optional[int] = None,
         multipliers: Optional[int] = None,
         exps: Optional[int] = None,
-        sqrts: Optional[int] = None,
         reducers: Optional[int] = None,
         bf16_rounding: bool = True,
         debug: bool = False,
@@ -74,7 +73,6 @@ class VectorLanes:
         self.adders = int(adders) if adders is not None else self.VL
         self.multipliers = int(multipliers) if multipliers is not None else self.VL
         self.exps = int(exps) if exps is not None else self.VL
-        self.sqrts = int(sqrts) if sqrts is not None else self.VL
         self.reducers = int(reducers) if reducers is not None else self.VL
         self.bf16_rounding = bool(bf16_rounding)
         self.debug = bool(debug)
@@ -85,7 +83,6 @@ class VectorLanes:
             ("adders", self.adders),
             ("multipliers", self.multipliers),
             ("exps", self.exps),
-            ("sqrts", self.sqrts),
             ("reducers", self.reducers),
         ]:
             if val <= 0:
@@ -156,18 +153,6 @@ class VectorLanes:
             out[s:e] = self._q(r)
         return out
 
-    def sqrt(self, a: np.ndarray) -> np.ndarray:
-        a = self._ensure_vec(a)
-        L = a.size
-        self._count_flops(L)
-        out = np.empty_like(a, dtype=np.float32)
-        for s, e in iterate_chunks(L, self.sqrts):
-            a_chunk = self._q(a[s:e])
-            a_clip = np.where(a_chunk < 0.0, 0.0, a_chunk)
-            r = np.sqrt(a_clip.astype(np.float32))
-            out[s:e] = self._q(r)
-        return out
-    
     def add_scalar(self, a: np.ndarray, s: float) -> np.ndarray:
         return self._elementwise_op(a, np.array([s], dtype=np.float32),
                                     lambda x, y: x + y, self.adders)
@@ -561,8 +546,7 @@ if __name__ == "__main__":
     print("reduce_min =", V.execute("reduce_min", vA=vA))
     print("reduce_max =", V.execute("reduce_max", vA=vA))
 
-    print("\n===== EXP & SQRT =====")
+    print("\n===== EXP =====")
     print("exp        =", V.execute("exp", vA=vA))
-    print("sqrt       =", V.execute("sqrt", vA=vA))
 
     print("\n===== ALL TESTS COMPLETED =====")

@@ -7,6 +7,12 @@ class PerfMetrics:
 
     Metrics are stored in a dictionary so new counters can be added without
     changing dump formatting logic.
+
+    Glossary (naming churn):
+      assembly_instructions_executed — logical scalar ops committed (one per executed
+          assembly slot in the model; not the same as dynamic issue count if you fuse packets).
+      packets_* / packet_slots_* — VLIW packet shape and fill stats from static decode or
+          dynamic execution; compare names to see whether the counter is compile-time vs runtime.
     """
 
     def __init__(self):

@@ -209,7 +209,9 @@ def run(mem: Memory, sregs: ScalarRegisterFile, mregs: ScalarRegisterFile, vregs
                 temp = sregs.read(inst['rd'])
                 temp = temp >> 16
                 mem.write_data(sregs.read(inst['rs1']) + inst['imm'], temp)
-            #vector load/store here
+            # vreg.{ld,st}: this tree uses scratchpad row indexing only. GMEM / spill / linear-BF16
+            # routing (x33, 0x1000, 768, temps $253–$254) is documented in GMEM_VREG_ROUTING.md
+            # and implemented on branches that extend these cases.
             elif m == "vreg.ld":
                 sid = int(inst["sid"]) & 0x3
                 if sid == 0:
@@ -289,6 +291,9 @@ def run(mem: Memory, sregs: ScalarRegisterFile, mregs: ScalarRegisterFile, vregs
             #scpad load/store here
 
             elif (m == "scpad.ld"):
+                # rs3 value: bits [31:30]=sid, [29:25]=num_rows, [24:20]=num_cols (5-bit fields).
+                # Convention matches VM num_cols: NR and NC are (tile_rows−1) and (tile_cols−1);
+                # sdma_* loops use range(0, NR+1) and stride (NC+1) in scpad_ls (see comments there).
                 metadata = int(sregs.read(inst['rs3'])) & 0xFFFFFFFF
                 sid = (metadata >> 30) & 0x3
                 num_rows = (metadata >> 25) & 0x1F
@@ -327,6 +332,7 @@ def run(mem: Memory, sregs: ScalarRegisterFile, mregs: ScalarRegisterFile, vregs
                     )
 
             elif (m == "scpad.st"):
+                # Same rs3 metadata layout and (N−1) NR/NC convention as scpad.ld.
                 metadata = int(sregs.read(inst['rs3'])) & 0xFFFFFFFF
                 sid = (metadata >> 30) & 0x3
                 num_rows = (metadata >> 25) & 0x1F
