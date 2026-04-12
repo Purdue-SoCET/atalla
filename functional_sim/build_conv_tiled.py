@@ -195,6 +195,11 @@ def main():
     ap.add_argument("--S", type=int, default=3)
     ap.add_argument("--stride", type=int, default=1)
     ap.add_argument("--pad", type=int, default=0)
+    ap.add_argument(
+        "--dag-pack",
+        action="store_true",
+        help="Latency-aware VLIW pack + branch patch for this asm.",
+    )
     args = ap.parse_args()
 
     Ni, H, W, C = args.N, args.H, args.W, args.C
@@ -223,8 +228,11 @@ def main():
     W_flat = weights.reshape(K_flat, K_out)
 
     asm = make_tiled_conv_asm(M, K_flat, K_out)
-    instrs = assemble_file(asm)
-    instr_text = emit_test_format(instrs)
+    instr_text = (
+        emit_test_format_latency_program_order(asm)
+        if args.dag_pack
+        else emit_test_format(assemble_file(asm))
+    )
 
     img = DRAMWriter()
     img.u32(ADDR_TABLE + 0, A_GMEM)

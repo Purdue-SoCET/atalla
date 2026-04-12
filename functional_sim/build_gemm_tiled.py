@@ -1,11 +1,6 @@
 from __future__ import annotations
-"""Tiled GEMM assembly generator.
 
-Instruction bytes are emitted via ``assemble_file`` + ``emit_test_format`` (one real op + NOPs per VLIW row).
-Kernel tests use ``gemm_tiled_*.c`` → ``build_compiler.py`` instead (different packing and bootstrap).
-For bit-identical .in files to the C path, feed the same assembly through ``build_compiler.compile_asm`` when
-branch ranges and program size allow it.
-"""
+# Tiled GEMM asm via assemble_file+emit_test_format; C tests use gemm_tiled_*.c + build_compiler.py; compile_asm matches C .in when branch ranges/size allow.
 
 import os, struct, math
 from pathlib import Path

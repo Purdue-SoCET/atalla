@@ -1,12 +1,5 @@
 #!/usr/bin/env python3
-"""Standalone softmax(Q @ K^T) @ V on n×n BF16 tiles (row-wise, SDMA metadata style).
-
-K is loaded once into SP1; each query row streams Q and V through SP0. Matches
-``atalla-functional-sim/build_attention.py`` for metrics / cross-repo parity.
-
-For the layernorm + post-attn **demo** (Python-computed attn_ref in GMEM), use
-``build_attention_fused_layernorm.py``.
-"""
+# n×n BF16 QKV-style attention (SDMA tile layout); default emit_test_format, optional --latency (DAG greedy_pack); fused LN + precomputed attn_ref demo → build_attention_fused_layernorm.py.
 from __future__ import annotations
 
 import argparse
@@ -159,18 +152,16 @@ def main() -> None:
     ap.add_argument("--n", type=int, default=32)
     ap.add_argument("--seed", type=int, default=0)
     ap.add_argument(
-        "--no-graph",
+        "--latency",
         action="store_true",
-        help="Linear asm packing (default; matches collect_kernel_metrics).",
+        help="Experimental: DAG + greedy_pack with latency rows in static .in.",
     )
-    ap.add_argument(
-        "--graph",
-        action="store_true",
-        help="Dependency-graph VLIW packing (mutually exclusive with --no-graph).",
-    )
+    ap.add_argument("--graph", action="store_true", help=argparse.SUPPRESS)
+    ap.add_argument("--no-graph", action="store_true", help=argparse.SUPPRESS)
     args = ap.parse_args()
-    if args.graph and args.no_graph:
-        ap.error("Use only one of --graph / --no-graph")
+    use_latency_pack = bool(args.latency or args.graph)
+    if use_latency_pack and args.no_graph:
+        ap.error("Do not combine --no-graph with --latency")
     n = args.n
     if n < 1 or n > 32:
         raise ValueError("build_attention supports 1 <= n <= 32.")
@@ -181,8 +172,7 @@ def main() -> None:
 
     asm = make_attention_asm(n, CFG_BASE)
     instrs = assemble_file(asm)
-    use_graph = args.graph and not args.no_graph
-    if use_graph:
+    if use_latency_pack:
         dependency_instrs = convert_instructions(instrs)
         ready = build_dependency_graph(dependency_instrs, DEFAULT_LATENCY_MAP)
         packets = greedy_pack(dependency_instrs, ready, max_width=GRAPH_PACKET_WIDTH)

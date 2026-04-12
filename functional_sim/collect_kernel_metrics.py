@@ -36,12 +36,24 @@ Semantics (read before interpreting Arithmetic Intensity):
   Arithmetic Intensity = FLOPs_total / Bytes Loaded (DMA read bytes only).
   AI (load+store) = FLOPs_total / (Bytes Loaded + Bytes Written).
 
-  Packing policy (for comparable packet/slot metrics across kernels):
-    Most builders use asm-linear packing via ``--no-graph`` where supported
-    (e.g. softmax, attention, layernorm sequential). ``layernorm (graph)`` uses
-    graph packing for A/B vs sequential. Conv ``build_conv*.py`` take ``--graph``
-    for dependency-graph packetization; without it, linear packing is used — compare
-    ``conv linear`` to ``conv graph *`` rows.
+  Packing policy (default functional-sim / TA demos):
+    **Structural / linear** emission is the default: ``assemble_file`` +
+    ``emit_test_format`` (one assembled stmt per virtual row). Static slot metrics
+    describe **legal packing density**, not cycles with SDMA or other long
+    latencies materialized as NOP rows.
+
+    User-facing modes (frozen; see functional_sim/README.md):
+    - **Default:** linear / structural emission (correctness + static slot metrics).
+    - **``--dag-pack``** (conv*): program-order wide packing + branch patch + BR10 preflight
+      (no latency stall rows unless also ``--latency``).
+    - **``--latency``** (branch-light kernels, or with ``--dag-pack`` on conv): experimental
+      DAG ``ready`` times materialized as empty packet rows — can break BR10 on loops.
+
+    Hidden deprecated CLI aliases still accepted: ``--graph`` (same as ``--latency``),
+    ``--no-graph`` (redundant with default; errors if combined with ``--latency``).
+
+    Research direction: basic-block–local DAG packing without stretching loop
+    back-edges; model long latency in the simulator timeline, not static instr-mem.
 
 Usage (from repo root functional_sim):
   PYTHONPATH=/path/to/atalla:/path/to/atalla/functional_sim \\
@@ -190,12 +202,10 @@ def perf_to_row(kernel: str, perf: dict[str, float]) -> dict[str, Any]:
 
 # (label, build_script, extra_cli_args)
 # Tile sizes default to 32×32 where ISA uses max index 31 in SDMA metadata.
-# Use --no-graph on builders that support it for asm-linear packing, except
-# layernorm (graph) and conv graph * (explicit --graph).
 KERNEL_SPECS: list[tuple[str, str, list[str]]] = [
-    ("layernorm (graph)", "build_layernorm_param.py", []),
-    ("layernorm (sequential)", "build_layernorm_param.py", ["--no-graph"]),
-    ("softmax", "build_softmax.py", ["--no-graph"]),
+    ("layernorm (latency)", "build_layernorm_param.py", ["--latency"]),
+    ("layernorm (sequential)", "build_layernorm_param.py", []),
+    ("softmax", "build_softmax.py", []),
     ("softmax online", "build_softmax_online.py", []),
     ("relu", "build_relu.py", []),
     ("sigmoid", "build_sigmoid.py", []),
@@ -208,12 +218,14 @@ KERNEL_SPECS: list[tuple[str, str, list[str]]] = [
     ("gemms pipelined loop unroll", "build_gemms_pipelined_loop_unroll.py", []),
     ("add", "build_add.py", []),
     ("maxpool", "build_maxpool.py", []),
-    ("conv linear", "build_conv.py", []),
-    ("conv graph seq", "build_conv.py", ["--graph"]),
-    ("conv graph pipe", "build_conv_pipelined.py", ["--graph"]),
-    ("conv graph pipe unroll", "build_conv_unrolled_pipelined.py", ["--graph"]),
+    ("conv sa", "build_conv.py", []),
+    ("conv sa dag-pack", "build_conv.py", ["--dag-pack"]),
+    ("conv pipelined", "build_conv_pipelined.py", []),
+    ("conv pipelined dag-pack", "build_conv_pipelined.py", ["--dag-pack"]),
+    ("conv pipelined unroll", "build_conv_unrolled_pipelined.py", []),
+    ("conv pipelined unroll dag-pack", "build_conv_unrolled_pipelined.py", ["--dag-pack"]),
     ("flash attention", "build_flash_attention.py", []),
-    ("attention", "build_attention.py", ["--no-graph"]),
+    ("attention", "build_attention.py", []),
 ]
 
 

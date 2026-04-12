@@ -827,15 +827,14 @@ def assemble_file(in_data: str) -> list[tuple[str, str]]:
         out.append((hex40, cmt))
 
     return out
-# ---- Label Branch Support End ----
 
 
 def collect_branch_metadata(
     in_data: str,
 ) -> tuple[dict[str, int], list[object | None]]:
     """
-    Match assemble_file's parse: label -> stmt index of the labeled instruction;
-    per-stmt optional ("br"|"jal", target_label) for patching after graph schedule.
+    Match ``assemble_file`` parsing: label -> stmt index of the labeled instruction;
+    per-stmt optional (\"br\"|\"jal\", target_label) for PC patching after packing.
     """
     in_data = expand_vreg_seven_operand_asm(in_data)
     in_data = expand_scpad_five_operand_asm(in_data)
@@ -867,7 +866,7 @@ def collect_branch_metadata(
         pc += INSTR_ADDR_STRIDE
 
     branch_targets: list[object | None] = []
-    for pc_val, code, cmt in parsed_lines:
+    for _pc_val, code, _cmt in parsed_lines:
         mnemonic, ops = split_mnemonic_operands(code)
         if not mnemonic:
             branch_targets.append(None)
@@ -979,6 +978,172 @@ def _patch_scheduled_branches(
             out.append((h, c))
 
     return out
+
+
+def _orig_stmt_pc_map_from_tracked(
+    scheduled: list[tuple[str, str, int | None]],
+    *,
+    packet_width: int = GRAPH_PACKET_WIDTH,
+) -> dict[int, int]:
+    orig_to_pkt_pc: dict[int, int] = {}
+    for pos, (_h, _c, oix) in enumerate(scheduled):
+        if oix is None:
+            continue
+        base = (pos // packet_width) * INSTR_ADDR_STRIDE
+        if oix not in orig_to_pkt_pc:
+            orig_to_pkt_pc[oix] = base
+    return orig_to_pkt_pc
+
+
+def validate_br10_branch_layout(
+    scheduled: list[tuple[str, str, int | None]],
+    label_to_stmt: dict[str, int],
+    branch_targets: list[object | None],
+    *,
+    packet_width: int = GRAPH_PACKET_WIDTH,
+) -> None:
+    """
+    Preflight PC-relative branch / jal offsets before ``split_br_target_imm`` /
+    ``_jal_imm25_bounds`` fail with opaque errors. BR uses signed 10-bit **word**
+    offset (4-byte steps); see ``split_br_target_imm``.
+    """
+    orig_to_pkt_pc = _orig_stmt_pc_map_from_tracked(
+        scheduled, packet_width=packet_width
+    )
+    for i, meta in enumerate(branch_targets):
+        if meta is None:
+            continue
+        kind, lab = meta  # type: ignore[misc]
+        if lab not in label_to_stmt:
+            continue
+        tgt_stmt = label_to_stmt[lab]
+        src_pc = orig_to_pkt_pc.get(i)
+        tgt_pc = orig_to_pkt_pc.get(tgt_stmt)
+        if src_pc is None or tgt_pc is None:
+            continue
+        delta = tgt_pc - src_pc
+        if kind == "br":
+            try:
+                split_br_target_imm(delta)
+            except ValueError as e:
+                raise ValueError(
+                    f"BR10 layout: branch at stmt index {i} -> {lab!r}: {e}"
+                ) from e
+        elif kind == "jal":
+            try:
+                _jal_imm25_bounds(delta)
+            except ValueError as e:
+                raise ValueError(
+                    f"JAL layout: jal at stmt index {i} -> {lab!r}: {e}"
+                ) from e
+
+
+def infer_basic_block_ranges(
+    n: int,
+    label_to_stmt: dict[str, int],
+    dep: list[tuple[str, list[str], list[str], object]],
+) -> list[tuple[int, int]]:
+    """
+    Source-order partition: block starts at 0, at each label target, and after
+    each control instruction (fall-through). Experimental BB-local packing only.
+    """
+    starts: set[int] = {0}
+    starts.update(label_to_stmt.values())
+    for i in range(n):
+        op, _, _, _ = dep[i]
+        if _is_control_op(op) and i + 1 < n:
+            starts.add(i + 1)
+    ordered = sorted(x for x in starts if 0 <= x < n)
+    blocks: list[tuple[int, int]] = []
+    for si, sj in zip(ordered, ordered[1:] + [n]):
+        if si < sj:
+            blocks.append((si, sj))
+    return blocks
+
+
+def greedy_pack_bb_program_order(
+    instructions: list[tuple[str, list[str], list[str], object]],
+    ready_time: list[int],
+    blocks: list[tuple[int, int]],
+    max_width: int = GRAPH_PACKET_WIDTH,
+) -> list[list[int]]:
+    """
+    Like ``greedy_pack_program_order`` but only extends packets within the
+    current basic block (source-order ranges). Cross-block reordering is
+    disallowed; ``ready_time`` is still global from ``build_dependency_graph``.
+    """
+    n = len(instructions)
+    scheduled = [False] * n
+    packets: list[list[int]] = []
+    current_cycle = 0
+
+    for a, b in blocks:
+        while True:
+            i = None
+            for k in range(a, b):
+                if not scheduled[k]:
+                    i = k
+                    break
+            if i is None:
+                break
+            if ready_time[i] > current_cycle:
+                packets.append([])
+                current_cycle += 1
+                continue
+
+            op0, _, _, _ = instructions[i]
+            if _is_control_op(op0):
+                packets.append([i])
+                scheduled[i] = True
+                current_cycle += 1
+                continue
+
+            packet: list[int] = []
+            packet_reads: set[str] = set()
+            packet_writes: set[str] = set()
+            mem_in_packet = False
+            j = i
+            while j < b and len(packet) < max_width:
+                if scheduled[j]:
+                    break
+                if ready_time[j] > current_cycle:
+                    break
+                op, dsts, srcs, _ = instructions[j]
+                if _is_control_op(op):
+                    break
+                is_mem = _is_memory_op(op)
+                if mem_in_packet and is_mem:
+                    break
+                hazard = False
+                for s in srcs:
+                    if s in packet_writes:
+                        hazard = True
+                        break
+                for d in dsts:
+                    if d in packet_writes or d in packet_reads:
+                        hazard = True
+                        break
+                if hazard:
+                    break
+                packet.append(j)
+                scheduled[j] = True
+                for s in srcs:
+                    packet_reads.add(s)
+                for d in dsts:
+                    packet_writes.add(d)
+                if is_mem:
+                    mem_in_packet = True
+                j += 1
+
+            if packet:
+                packets.append(packet)
+            current_cycle += 1
+
+    if not all(scheduled):
+        missing = [i for i in range(n) if not scheduled[i]]
+        raise RuntimeError(f"greedy_pack_bb_program_order: unscheduled {missing[:20]}")
+
+    return packets
 
 
 def emit_test_format(
@@ -1493,8 +1658,9 @@ def greedy_pack_program_order(
     max_width: int = GRAPH_PACKET_WIDTH,
 ) -> list[list[int]]:
     """
-    Pack only contiguous program-order suffixes starting at the next unscheduled PC.
-    Never schedule a later instruction before an earlier one (required for valid branches).
+    Pack contiguous program-order suffixes from the next unscheduled index.
+    Preserves sequential semantics for PC-relative branches (safe for loop asm).
+    Inserts empty packets when ``ready_time`` has not been reached (latency / LSU).
     """
     n = len(instructions)
     scheduled = [False] * n
@@ -1586,10 +1752,28 @@ def materialize_scheduled_instructions(
     return scheduled
 
 
-def emit_test_format_graph(asm: str) -> str:
+def emit_test_format_latency_program_order(
+    asm: str,
+    *,
+    latency_stalls: bool = False,
+    bb_local_pack: bool = False,
+) -> str:
     """
-    Dependency-graph packet scheduling + wide virtual packets.
-    Re-encodes branch/jal immediates for the packed instr-mem layout (PC stride per row).
+    Conv / branched-kernel path: ``assemble_file`` → ``convert_instructions`` →
+    ``build_dependency_graph`` (optional) → program-order packer →
+    ``validate_br10_branch_layout`` → patch branch immediates → ``emit_test_format``.
+
+    **latency_stalls:** When True, ``ready`` uses ``build_dependency_graph`` and
+    empty packet rows may be inserted (static PC span grows; BR10 may fail — see
+    ``validate_br10_branch_layout`` / ``tests/unit/conv_branch_pc_analysis.py``).
+    Default **False:** all-zero ``ready`` = structural packing only.
+
+    **bb_local_pack:** Experimental — pack only within source-order basic blocks
+    (``infer_basic_block_ranges``); no cross-block packet fill.
+
+    BR10 is **not** “fixed” in hardware; we **preflight** layout and raise a
+    clear error before patch. Default prod path avoids stall inflation.
+    Latency-in-sim (scoreboard) is **not** implemented here — research follow-on.
     """
     instrs = assemble_file(asm)
     label_to_stmt, branch_targets = collect_branch_metadata(asm)
@@ -1597,20 +1781,32 @@ def emit_test_format_graph(asm: str) -> str:
         raise RuntimeError(
             f"branch metadata length {len(branch_targets)} != instrs {len(instrs)}"
         )
-    dependency_instrs = convert_instructions(instrs)
-    # Static packetization only: do not insert latency bubbles into instr-mem (would
-    # explode image size and break branch offsets vs assemble-time assumptions).
-    ready = [0] * len(dependency_instrs)
-    packets = greedy_pack_program_order(
-        dependency_instrs, ready, max_width=GRAPH_PACKET_WIDTH
+    dep = convert_instructions(instrs)
+    ready = (
+        build_dependency_graph(dep, DEFAULT_LATENCY_MAP)
+        if latency_stalls
+        else [0] * len(dep)
     )
-    scheduled_tracked = materialize_scheduled_instructions_tracked(
+    if bb_local_pack:
+        blocks = infer_basic_block_ranges(len(dep), label_to_stmt, dep)
+        packets = greedy_pack_bb_program_order(
+            dep, ready, blocks, max_width=GRAPH_PACKET_WIDTH
+        )
+    else:
+        packets = greedy_pack_program_order(dep, ready, max_width=GRAPH_PACKET_WIDTH)
+    tracked = materialize_scheduled_instructions_tracked(
         instrs,
         packets,
         packet_width=GRAPH_PACKET_WIDTH,
     )
+    validate_br10_branch_layout(
+        tracked,
+        label_to_stmt,
+        branch_targets,
+        packet_width=GRAPH_PACKET_WIDTH,
+    )
     patched = _patch_scheduled_branches(
-        scheduled_tracked,
+        tracked,
         label_to_stmt,
         branch_targets,
         packet_width=GRAPH_PACKET_WIDTH,
@@ -1621,12 +1817,32 @@ def emit_test_format_graph(asm: str) -> str:
     )
 
 
+def emit_test_format_global_dag_pack(asm: str) -> str:
+    """
+    **Branch-free or compiler-validated code only.** Same as softmax ``--latency``
+    path: ``greedy_pack`` may reorder across the static insn list; do not use on
+    arbitrary labeled asm.
+    """
+    instrs = assemble_file(asm)
+    dep = convert_instructions(instrs)
+    ready = build_dependency_graph(dep, DEFAULT_LATENCY_MAP)
+    packets = greedy_pack(dep, ready, max_width=GRAPH_PACKET_WIDTH)
+    scheduled = materialize_scheduled_instructions(
+        instrs,
+        packets,
+        packet_width=GRAPH_PACKET_WIDTH,
+    )
+    return emit_test_format(
+        scheduled,
+        virtual_packet_size=GRAPH_PACKET_WIDTH,
+    )
+
+
 if __name__ == "__main__":
     
     ap = argparse.ArgumentParser()
     ap.add_argument("-i", "--input", type=Path, default=None, help="Input assembly file")
     ap.add_argument("-o", "--output", type=Path, default=None, help="Output test file")
-    ap.add_argument("--no-graph", action="store_true", help="Disable dependency graph packet scheduling")
     args = ap.parse_args()
 
     demo_asm = """
@@ -1639,10 +1855,7 @@ if __name__ == "__main__":
     """
 
     asm = args.input.read_text() if args.input is not None else demo_asm
-    if args.no_graph:
-        instr_text = emit_test_format(assemble_file(asm))
-    else:
-        instr_text = emit_test_format_graph(asm)
+    instr_text = emit_test_format(assemble_file(asm))
 
     if args.input is None:
         img = DRAMWriter() 

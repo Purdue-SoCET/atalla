@@ -9,6 +9,8 @@ Plot-only transforms (CSV unchanged):
   - Conv/GEMM variant packets + static slots are one combined figure (saved to both prior filenames).
   - Arithmetic intensity (arithmetic_intensity.png + compare twin axes): FLOPs / (bytes loaded + bytes written).
     CSV column used: "AI (load+store)". Narrow FLOPs/loads-only remains in CSV as "Arithmetic Intensity".
+  - scheduling_metrics.png: full CSV row order; ``Packet Slot Util. %`` and
+    ``Static packet rows`` / ``Ops executed (dynamic)`` (static image rows per dynamic op retired).
 """
 from __future__ import annotations
 
@@ -134,7 +136,7 @@ def _kernel_display_xtick(k: str) -> str:
     m = {
         "conv": "conv",
         "conv pipelined": "conv\npipelined",
-        "conv unrolled pipelined": "conv\nunrolled\npipelined",
+        "conv pipelined unroll": "conv\npipelined\nunroll",
         "gemms": "gemms\nbaseline",
         "gemms pipelined": "gemms\npipelined",
         "gemms pipelined loop unroll": "gemms\npipelined\nloop unroll",
@@ -144,7 +146,7 @@ def _kernel_display_xtick(k: str) -> str:
 
 DISPLAY_RENAME = {
     "conv sa": "conv",
-    "layernorm (graph)": "layernorm graph",
+    "layernorm (latency)": "layernorm latency",
     "layernorm (sequential)": "layernorm sequential",
 }
 
@@ -427,7 +429,7 @@ def fig_ops_per_packet(rows: list[dict], out: Path) -> None:
     ax.set_xlim(0, xmax)
     ax.axvline(1.0, color=ORANGE, linestyle="--", linewidth=1.1, label="1.0", zorder=1)
     ax.set_title("Packet efficiency", fontsize=11, color=INK, pad=8)
-    fig.text(0.5, 0.02, "Low values → NOP-heavy packets (e.g. graph scheduling).", ha="center", fontsize=7.5, color="#64748b")
+    fig.text(0.5, 0.02, "Low values → NOP-heavy packets (e.g. --latency static stalls).", ha="center", fontsize=7.5, color="#64748b")
     _legend(ax, loc="lower right")
     fig.subplots_adjust(left=0.28, bottom=0.12)
     fig.savefig(out, dpi=180, facecolor="white")
@@ -459,12 +461,12 @@ def fig_arithmetic_intensity(rows: list[dict], out: Path) -> None:
     plt.close(fig)
 
 
-def fig_layernorm_graph_vs_sequential(raw_rows: list[dict], out: Path) -> None:
+def fig_layernorm_latency_vs_sequential(raw_rows: list[dict], out: Path) -> None:
     """Uses original CSV kernel names (before plot relabel)."""
     by = {r.get("Kernel", "").strip(): r for r in raw_rows}
-    g_key, s_key = "layernorm (graph)", "layernorm (sequential)"
+    g_key, s_key = "layernorm (latency)", "layernorm (sequential)"
     if g_key not in by or s_key not in by:
-        print("[plot] skip layernorm_graph_vs_sequential.png: missing graph or sequential row")
+        print("[plot] skip layernorm_latency_vs_sequential.png: missing latency or sequential row")
         return
     g, s = by[g_key], by[s_key]
     fig, axes = plt.subplots(1, 3, figsize=(10.8, 4.35))
@@ -488,7 +490,7 @@ def fig_layernorm_graph_vs_sequential(raw_rows: list[dict], out: Path) -> None:
             "%",
         ),
     ]
-    cats = ["layernorm graph", "layernorm sequential"]
+    cats = ["layernorm latency", "layernorm sequential"]
     cols = [BLUE, ORANGE]
     for ax, (title, vg, vs, yu) in zip(axes, metrics):
         _style_axis(ax, grid_axis="y")
@@ -503,11 +505,11 @@ def fig_layernorm_graph_vs_sequential(raw_rows: list[dict], out: Path) -> None:
             ax.set_ylabel("%")
         else:
             ax.set_ylabel("Count")
-    fig.suptitle("Layernorm graph vs layernorm sequential", fontsize=12, color=INK, y=1.0)
+    fig.suptitle("Layernorm --latency vs layernorm sequential", fontsize=12, color=INK, y=1.0)
     fig.text(
         0.5,
         0.01,
-        "Same layernorm math; FLOPs and DMA bytes should match. Graph: dependency-graph packetization. Sequential: asm order.",
+        "Same layernorm math; FLOPs and DMA bytes should match. Latency: DAG greedy_pack with static stall rows. Sequential: asm order.",
         ha="center",
         fontsize=7.5,
         color="#64748b",
@@ -534,6 +536,81 @@ def fig_static_packet_rows_vs_executed(rows: list[dict], out: Path) -> None:
     ax.set_title("Instruction image width vs dynamic fetches", fontsize=11, color=INK, pad=8)
     _legend(ax, loc="upper left")
     fig.subplots_adjust(bottom=0.14)
+    fig.savefig(out, dpi=180, facecolor="white")
+    plt.close(fig)
+
+
+def fig_scheduling_metrics(rows: list[dict[str, str]], out: Path) -> None:
+    """Unfiltered CSV rows: static slot utilization and static packet rows per dynamic op retired.
+
+    Top: ``Packet Slot Util. %`` from the CSV (static image). Bottom: ``Static packet rows`` /
+    ``Ops executed (dynamic)`` — not ``Packets executed``; the denominator is dynamic ops retired
+    (``assembly_instructions_executed`` / ``instructions_executed`` in the perf dump), same as
+    ``collect_kernel_metrics.perf_to_row``.
+    """
+    names: list[str] = []
+    util: list[float] = []
+    overhead: list[str] = []
+    ratio: list[float] = []
+
+    for r in rows:
+        k = r.get("Kernel", "").strip()
+        try:
+            spr = float(r["Static packet rows"])
+            ops = float(r["Ops executed (dynamic)"])
+            u = float(r["Packet Slot Util. %"])
+        except (KeyError, ValueError):
+            continue
+        names.append(k)
+        util.append(u)
+        ro = spr / ops if ops else 0.0
+        ratio.append(ro)
+        if "layernorm (latency)" in k:
+            overhead.append("DAG+pack+latency bubbles")
+        elif "dag-pack" in k:
+            overhead.append("conv dag-pack (structural PO)")
+        elif k == "layernorm (sequential)" or (u >= 24.99 and u <= 25.01 and ro >= 0.99):
+            overhead.append("linear / default ~25%")
+        else:
+            overhead.append("other")
+
+    if not names:
+        print("[plot] skip scheduling_metrics: no valid rows")
+        return
+
+    colors = {
+        "DAG+pack+latency bubbles": "#c026d3",
+        "conv dag-pack (structural PO)": "#059669",
+        "linear / default ~25%": "#64748b",
+        "other": "#ea580c",
+    }
+    c_list = [colors.get(o, "#64748b") for o in overhead]
+
+    fig, (ax0, ax1) = plt.subplots(2, 1, figsize=(11, 7), sharex=True)
+    _style_axis(ax0, grid_axis="y")
+    _style_axis(ax1, grid_axis="y")
+    x = range(len(names))
+    ax0.bar(x, util, color=c_list, edgecolor="white", linewidth=0.5)
+    ax0.axhline(25.0, color="#94a3b8", linestyle="--", linewidth=1, label="25% (1 op / 4-slot row)")
+    ax0.set_ylabel("Packet slot util. % (static)")
+    ax0.set_title("Static scheduling metrics by kernel (from kernel_metrics.csv)")
+    ax0.legend(loc="upper right", fontsize=8)
+    umax = max(util) if util else 0.0
+    ax0.set_ylim(0, max(umax * 1.15, 1e-6))
+
+    ax1.bar(x, ratio, color=c_list, edgecolor="white", linewidth=0.5)
+    ax1.axhline(1.0, color="#94a3b8", linestyle="--", linewidth=1, label="1.0 (one static row per dynamic op)")
+    ax1.set_ylabel("Static packet rows / dynamic ops")
+    ax1.set_xlabel("Kernel")
+    ax1.legend(loc="upper right", fontsize=8)
+
+    ax1.set_xticks(list(x))
+    ax1.set_xticklabels(names, rotation=55, ha="right", fontsize=7)
+
+    handles = [Patch(facecolor=colors[k], label=k) for k in colors]
+    fig.legend(handles=handles, loc="lower center", ncol=2, fontsize=8, frameon=False)
+    plt.subplots_adjust(bottom=0.28, top=0.92)
+    out.parent.mkdir(parents=True, exist_ok=True)
     fig.savefig(out, dpi=180, facecolor="white")
     plt.close(fig)
 
@@ -679,7 +756,8 @@ def main() -> None:
     args.out_dir.mkdir(parents=True, exist_ok=True)
     o = args.out_dir
 
-    fig_layernorm_graph_vs_sequential(raw, o / "layernorm_graph_vs_sequential.png")
+    fig_layernorm_latency_vs_sequential(raw, o / "layernorm_latency_vs_sequential.png")
+    fig_scheduling_metrics(raw, o / "scheduling_metrics.png")
 
     rows = prepare_plot_rows(raw)
 
@@ -697,7 +775,7 @@ def main() -> None:
 
     fig_variant_compare(
         rows,
-        ["conv", "conv pipelined", "conv unrolled pipelined"],
+        ["conv", "conv pipelined", "conv pipelined unroll"],
         title="Conv variant kernels (static vs runtime)",
         foot_caption=(
             "AI = FLOPs / (bytes loaded + bytes written). Same im2col: M=32, K_flat=27, K=4. "
@@ -727,7 +805,7 @@ def main() -> None:
     )
     _variant_fig_combined(
         rows,
-        ["conv", "conv pipelined", "conv unrolled pipelined"],
+        ["conv", "conv pipelined", "conv pipelined unroll"],
         "Conv variants (packets and static)",
         "im2col M=32, K_flat=27, K=4. First bar = conv; % vs first bar.",
         [o / "conv_variants_packets_indexed.png", o / "conv_variants_static_slots.png"],

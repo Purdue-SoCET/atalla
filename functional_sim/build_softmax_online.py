@@ -153,7 +153,6 @@ def main():
     ap = argparse.ArgumentParser()
     ap.add_argument("-i", "--input", type=Path, default=None, help="Input assembly file")
     ap.add_argument("-o", "--output", type=Path, default="./softmax_online.in", help="Output test file")
-    ap.add_argument("--no-graph", action="store_true", help="Disable dependency graph packet scheduling")
     ap.add_argument("--data", type=Path, default=None,
                     help="Path to input tile CSV data file (N×N). If omitted, uses hardcoded defaults.")
     ap.add_argument("--n", type=int, default=32,

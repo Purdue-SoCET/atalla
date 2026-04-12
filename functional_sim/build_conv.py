@@ -8,7 +8,7 @@ try:
     from .build import (
         assemble_file,
         emit_test_format,
-        emit_test_format_graph,
+        emit_test_format_latency_program_order,
         DRAMWriter,
         render_testfile,
         emit_sdma_metadata_asm,
@@ -18,7 +18,7 @@ except Exception:
         from functional_sim.build import (
             assemble_file,
             emit_test_format,
-            emit_test_format_graph,
+            emit_test_format_latency_program_order,
             DRAMWriter,
             render_testfile,
             emit_sdma_metadata_asm,
@@ -27,7 +27,7 @@ except Exception:
         from build import (
             assemble_file,
             emit_test_format,
-            emit_test_format_graph,
+            emit_test_format_latency_program_order,
             DRAMWriter,
             render_testfile,
             emit_sdma_metadata_asm,
@@ -111,11 +111,31 @@ def main():
     ap.add_argument("--stride", type=int, default=1)
     ap.add_argument("--pad", type=int, default=0)
     ap.add_argument(
-        "--graph",
+        "--dag-pack",
         action="store_true",
-        help="Use dependency-graph packet scheduling (packetized); default is linear (one op per row).",
+        help=(
+            "Wide VLIW pack: program-order greedy pack + BR patch + BR10 preflight. "
+            "Default emission without this flag is linear (one stmt per row)."
+        ),
+    )
+    ap.add_argument(
+        "--latency",
+        action="store_true",
+        help=(
+            "With --dag-pack: use real ready times from build_dependency_graph "
+            "(inserts empty packet rows for latency — often breaks BR10 on loops)."
+        ),
+    )
+    ap.add_argument(
+        "--bb-local",
+        action="store_true",
+        help="With --dag-pack: experimental basic-block–local program-order packing.",
     )
     args = ap.parse_args()
+    if args.latency and not args.dag_pack:
+        ap.error("--latency requires --dag-pack")
+    if args.bb_local and not args.dag_pack:
+        ap.error("--bb-local requires --dag-pack")
 
     N, H, W, C = args.N, args.H, args.W, args.C
     K, R, S = args.K, args.R, args.S
@@ -140,7 +160,15 @@ def main():
     C_SCPAD_ADDR = 2048
 
     asm = make_conv_sa_asm(M=M, K_flat=K_flat, K_out=K, cfg_base=CFG_BASE)
-    instr_text = emit_test_format_graph(asm) if args.graph else emit_test_format(assemble_file(asm))
+    instr_text = (
+        emit_test_format_latency_program_order(
+            asm,
+            latency_stalls=args.latency,
+            bb_local_pack=args.bb_local,
+        )
+        if args.dag_pack
+        else emit_test_format(assemble_file(asm))
+    )
 
     img = DRAMWriter()
     img.u32(CFG_BASE + 0, A_GMEM_ADDR)

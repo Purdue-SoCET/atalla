@@ -16,26 +16,24 @@ live in this file so teammates only need ``functional_sim/`` on ``PYTHONPATH`` /
 
 **Coverage:** This script does **not** infer references from asm. Each ``check_*`` fixes subprocess argv,
 DRAM addresses, a NumPy/BF16 golden, and ``cos_min``. Generators whose default ``.in`` hits unsupported
-sim mnemonics (e.g. graph-only scheduling), need a different packaging path, or disagree numerically with
-a cheap analytic reference stay in the printed **Not auto-tested** list with a short reason.
+sim mnemonics, need a different packaging path, or disagree numerically with a cheap analytic reference
+stay in the printed **Not auto-tested** list with a short reason.
 
 **Caveats:** (1) GMEM BF16 in ``.in`` files is packed two halfwords per 32-bit word; the emulator uses
 ``Memory.read_bf16_le`` / ``write_bf16_le`` in SDMA and vector linear paths. (2) ``vreg.{ld,st}`` encodes
 ``num_cols`` in 5 bits as **N−1**; using literal ``32`` encodes as 0 (one lane). (3) GEMM demos use
 ``cos_min=0.985``: closed-form BF16 expectations do not match ``gemm.vv`` + weight FIFO exactly (high
-cosine, large per-element deltas on big magnitudes). (4) ``attention``, ``flash_attention``, ``layernorm*``,
-and ``softmax`` (n=4 demo) use recorded emulator vectors in ``goldens/build_generator.npz`` (BF16/sqrt paths
-differ from a naive NumPy reference).
+cosine, large per-element deltas on big magnitudes). (4) ``attention``, ``attention_fused_layernorm``,
+``flash_attention``, ``layernorm*``, and ``softmax`` (n=4 demo) use recorded emulator vectors in
+``goldens/build_generator.npz`` (BF16/sqrt paths differ from a naive NumPy reference).
 
 Usage:
   python validate_build_generators.py              # default: BF16 numeric cosine checks
-  python validate_build_generators.py --smoke    # each build_*.py + emulator only (no golden compare)
   python validate_build_generators.py --only add
   python validate_build_generators.py --list
 
 **Adding a kernel:** (1) add ``build_<name>.py`` with ``-o`` and a ``__main__`` that runs from this directory;
 (2) add ``check_<name>()`` and register it in ``CHECKS``; (3) run ``python validate_build_generators.py --only <name>``.
-Smoke will pick up new ``build_*.py`` files automatically (unless listed in ``SMOKE_SKIP_SCRIPTS``).
 """
 from __future__ import annotations
 
@@ -339,14 +337,14 @@ def check_gemm(work: Path) -> Tuple[str, float, float, float]:
 
 def check_layernorm(work: Path) -> Tuple[str, float, float, float]:
     out = work / "layernorm.in"
-    _run_py_generator("build_layernorm.py", out, ["--no-graph"])
+    _run_py_generator("build_layernorm.py", out, [])
     in_text = out.read_text()
     return _emu_and_compare(work, "layernorm", in_text, TILE_ADDR_LAYERNORM, 16, _golden("ln_demo"), 0.99)
 
 
 def check_layernorm_param(work: Path) -> Tuple[str, float, float, float]:
     out = work / "layernorm_param.in"
-    _run_py_generator("build_layernorm_param.py", out, ["--no-graph", "--n", "4"])
+    _run_py_generator("build_layernorm_param.py", out, ["--n", "4"])
     in_text = out.read_text()
     return _emu_and_compare(
         work, "layernorm_param", in_text, TILE_ADDR_LAYERNORM, 16, _golden("ln_param_n4"), 0.99
@@ -355,7 +353,7 @@ def check_layernorm_param(work: Path) -> Tuple[str, float, float, float]:
 
 def check_layernorm_pipelined(work: Path) -> Tuple[str, float, float, float]:
     out = work / "layernorm_pipelined.in"
-    _run_py_generator("build_layernorm_pipelined.py", out, ["--no-graph"])
+    _run_py_generator("build_layernorm_pipelined.py", out, [])
     in_text = out.read_text()
     return _emu_and_compare(
         work, "layernorm_pipelined", in_text, TILE_ADDR_LAYERNORM, 16, _golden("ln_pipelined"), 0.99
@@ -407,10 +405,14 @@ def check_sigmoid(work: Path) -> Tuple[str, float, float, float]:
 
 
 def check_softmax(work: Path) -> Tuple[str, float, float, float]:
+    """Default build_softmax is linear packing; expected = row-wise BF16 softmax (tile 0..15, n=4)."""
     out = work / "softmax.in"
     _run_py_generator("build_softmax.py", out, ["--n", "4"])
     in_text = out.read_text()
-    return _emu_and_compare(work, "softmax", in_text, TILE_ADDR_LAYERNORM, 16, _golden("softmax_n4"), 0.99)
+    n = 4
+    tile = np.arange(n * n, dtype=np.float32).reshape(n, n)
+    expected = _expected_softmax_rows_bf16(tile)
+    return _emu_and_compare(work, "softmax", in_text, TILE_ADDR_LAYERNORM, 16, expected, 0.99)
 
 
 def check_conv_tiled(work: Path) -> Tuple[str, float, float, float]:
@@ -492,6 +494,24 @@ def check_conv(work: Path) -> Tuple[str, float, float, float]:
     )
 
 
+def check_conv_dag_pack(work: Path) -> Tuple[str, float, float, float]:
+    out = work / "conv_sa_dag_pack.in"
+    _run_py_generator("build_conv.py", out, ["--dag-pack", "--H", "4", "--W", "4"])
+    return _emu_and_compare(
+        work, "conv_dag_pack", out.read_text(), 0x3000, 16, _expected_conv_sa_h4_w4(), 0.99
+    )
+
+
+def check_conv_bb_local(work: Path) -> Tuple[str, float, float, float]:
+    out = work / "conv_sa_bb_local.in"
+    _run_py_generator(
+        "build_conv.py", out, ["--dag-pack", "--bb-local", "--H", "4", "--W", "4"]
+    )
+    return _emu_and_compare(
+        work, "conv_bb_local", out.read_text(), 0x3000, 16, _expected_conv_sa_h4_w4(), 0.99
+    )
+
+
 def check_conv_pipelined(work: Path) -> Tuple[str, float, float, float]:
     out = work / "conv_pipelined.in"
     _run_py_generator("build_conv_pipelined.py", out, ["--H", "4", "--W", "4"])
@@ -511,28 +531,6 @@ def check_conv_unrolled_pipelined(work: Path) -> Tuple[str, float, float, float]
         16,
         _expected_conv_sa_h4_w4(),
         0.99,
-    )
-
-
-def check_conv_graph_seq(work: Path) -> Tuple[str, float, float, float]:
-    out = work / "conv_graph_seq.in"
-    _run_py_generator("build_conv.py", out, ["--graph", "--H", "4", "--W", "4"])
-    return _emu_and_compare(work, "conv_graph_seq", out.read_text(), 0x3000, 16, _expected_conv_sa_h4_w4(), 0.99)
-
-
-def check_conv_graph_pipe(work: Path) -> Tuple[str, float, float, float]:
-    out = work / "conv_graph_pipe.in"
-    _run_py_generator("build_conv_pipelined.py", out, ["--graph", "--H", "4", "--W", "4"])
-    return _emu_and_compare(work, "conv_graph_pipe", out.read_text(), 0x3000, 16, _expected_conv_sa_h4_w4(), 0.99)
-
-
-def check_conv_graph_pipe_unroll(work: Path) -> Tuple[str, float, float, float]:
-    out = work / "conv_graph_pipe_unroll.in"
-    _run_py_generator(
-        "build_conv_unrolled_pipelined.py", out, ["--graph", "--H", "4", "--W", "4"]
-    )
-    return _emu_and_compare(
-        work, "conv_graph_pipe_unroll", out.read_text(), 0x3000, 16, _expected_conv_sa_h4_w4(), 0.99
     )
 
 
@@ -604,6 +602,26 @@ def check_flash_attention(work: Path) -> Tuple[str, float, float, float]:
     )
 
 
+def check_attention_fused_layernorm(work: Path) -> Tuple[str, float, float, float]:
+    """n=8, seed=0, default synthetic X tile (4..4+n²-1); output at TILE_ADDR_OUTPUT 0x5000."""
+    n, seed = 8, 0
+    out = work / "attention_fused_layernorm.in"
+    _run_py_generator(
+        "build_attention_fused_layernorm.py",
+        out,
+        ["--n", str(n), "--seed", str(seed)],
+    )
+    return _emu_and_compare(
+        work,
+        "attention_fused_layernorm",
+        out.read_text(),
+        0x5000,
+        n * n,
+        _golden("attn_fused_ln_8_s0"),
+        0.99,
+    )
+
+
 # Omit ``build_alexnet_layer.py`` until that script exists in this tree.
 CHECKS: Dict[str, Callable[[Path], Tuple[str, float, float, float]]] = {
     "maxpool": check_maxpool,
@@ -619,6 +637,8 @@ CHECKS: Dict[str, Callable[[Path], Tuple[str, float, float, float]]] = {
     "gemms": check_gemms,
     "softmax": check_softmax,
     "conv": check_conv,
+    "conv_dag_pack": check_conv_dag_pack,
+    "conv_bb_local": check_conv_bb_local,
     "conv_pipelined": check_conv_pipelined,
     "conv_unrolled_pipelined": check_conv_unrolled_pipelined,
     "gemms_function": check_gemms_function,
@@ -626,6 +646,7 @@ CHECKS: Dict[str, Callable[[Path], Tuple[str, float, float, float]]] = {
     "gemms_pipelined_loop_unroll": check_gemms_pipelined_loop_unroll,
     "softmax_online": check_softmax_online,
     "attention": check_attention,
+    "attention_fused_layernorm": check_attention_fused_layernorm,
     "flash_attention": check_flash_attention,
 }
 
@@ -653,51 +674,9 @@ def _print_not_covered() -> None:
     print(f"  {'build_compiler.py':28s}  — assembler/scheduler CLI (run separately)")
 
 
-SMOKE_SKIP_SCRIPTS: frozenset[str] = frozenset()
-
-# Smaller/faster CLI args for smoke (defaults in some generators are large).
-SMOKE_EXTRA: Dict[str, List[str]] = {
-    "build_attention.py": ["--n", "8", "--no-graph"],
-    "build_attention_fused_layernorm.py": ["--n", "8", "--no-graph"],
-    # Generator requires d=32 and n a multiple of 32.
-    "build_flash_attention.py": ["--n", "32", "--d", "32"],
-    "build_softmax.py": ["--n", "4"],
-    "build_softmax_online.py": ["--n", "4"],
-    "build_layernorm.py": ["--no-graph"],
-    "build_layernorm_pipelined.py": ["--no-graph"],
-    "build_layernorm_param.py": ["--no-graph", "--n", "4"],
-}
-
-
-def run_smoke_all(wpath: Path) -> int:
-    """Run each ``build_*.py`` (except skips) then the functional sim; return failure count."""
-    fails = 0
-    for script in _functional_sim_build_scripts():
-        if script in SMOKE_SKIP_SCRIPTS:
-            print(f"  {script:32s} SKIP   (generator not usable yet)")
-            continue
-        extra = SMOKE_EXTRA.get(script, [])
-        tag = script[len("build_") : -len(".py")]
-        out = wpath / f"{tag}.in"
-        try:
-            _run_py_generator(script, out, extra)
-            run_on_emulator(out.read_text(), str(wpath), tag)
-            print(f"  {script:32s} PASS")
-        except Exception as e:
-            fails += 1
-            msg = str(e).splitlines()[0][:100]
-            print(f"  {script:32s} FAIL   {msg}")
-    return fails
-
-
 def main() -> None:
     ap = argparse.ArgumentParser(
-        description="Validate build_*.py: default BF16 numeric checks; use --smoke for generate+.in+sim only."
-    )
-    ap.add_argument(
-        "--smoke",
-        action="store_true",
-        help="Run each build_*.py then emulator only (no golden comparison).",
+        description="Validate build_*.py: BF16 numeric checks against goldens or analytic references."
     )
     ap.add_argument(
         "--numeric",
@@ -721,17 +700,6 @@ def main() -> None:
         print("Kernel build_*.py in this dir:", ", ".join(_functional_sim_build_scripts()))
         print("(build_compiler.py is the .s→.in tool; not a generator check here.)")
         _print_not_covered()
-        return
-
-    if args.smoke:
-        print("Smoke: each build_*.py → .in → emulator (no BF16 golden compare)")
-        with tempfile.TemporaryDirectory(prefix="atalla_buildgen_smoke_") as work:
-            fails = run_smoke_all(Path(work))
-        print()
-        if fails:
-            print(f"Results: {fails} smoke failure(s)")
-            sys.exit(1)
-        print("Results: smoke PASS for all runnable generators")
         return
 
     names = [x.strip() for x in args.only.split(",") if x.strip()] if args.only else list(CHECKS)

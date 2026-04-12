@@ -1,11 +1,5 @@
 #!/usr/bin/env python3
-"""Fused demo: layernorm(X) + ReLU(attn_ref + LN) + row-softmax(u @ W).
-
-``attn_ref`` is **precomputed** in Python (softmax(Q K^T / sqrt(n)) @ V) and stored in
-GMEM — the ASM does **not** execute the QKV matmuls. For the standalone QKV kernel used
-by ``collect_kernel_metrics`` / ``validate_build_generators`` ``attention``, see
-``build_attention.py``.
-"""
+# Fused demo: layernorm + ReLU(attn_ref+LN) + row-softmax; attn_ref is Python-precomputed in GMEM (no QKV matmul in ASM); real QKV kernel → build_attention.py.
 from __future__ import annotations
 
 import argparse
@@ -121,11 +115,20 @@ def main() -> None:
     ap = argparse.ArgumentParser()
     ap.add_argument("-i", "--input", type=Path, default=None)
     ap.add_argument("-o", "--output", type=Path, default=Path("./tests/attention_fused_layernorm.in"))
-    ap.add_argument("--no-graph", action="store_true")
+    ap.add_argument(
+        "--latency",
+        action="store_true",
+        help="Experimental: DAG + greedy_pack with latency rows in static .in.",
+    )
+    ap.add_argument("--graph", action="store_true", help=argparse.SUPPRESS)
+    ap.add_argument("--no-graph", action="store_true", help=argparse.SUPPRESS)
     ap.add_argument("--data", type=Path, default=None)
     ap.add_argument("--n", type=int, default=32, help="N×N fused demo (default 32; max 32)")
     ap.add_argument("--seed", type=int, default=0)
     args = ap.parse_args()
+    use_latency_pack = bool(args.latency or args.graph)
+    if use_latency_pack and args.no_graph:
+        ap.error("Do not combine --no-graph with --latency")
 
     n = args.n
     if n < 1 or n > 32:
@@ -182,14 +185,14 @@ def main() -> None:
     asm = ln_asm + "\n" + tail_asm
 
     instrs = assemble_file(asm)
-    if args.no_graph:
-        instr_text = emit_test_format(instrs)
-    else:
+    if use_latency_pack:
         dependency_instrs = convert_instructions(instrs)
         ready = build_dependency_graph(dependency_instrs, DEFAULT_LATENCY_MAP)
         packets = greedy_pack(dependency_instrs, ready, max_width=GRAPH_PACKET_WIDTH)
         scheduled = materialize_scheduled_instructions(instrs, packets, packet_width=GRAPH_PACKET_WIDTH)
         instr_text = emit_test_format(scheduled, virtual_packet_size=GRAPH_PACKET_WIDTH)
+    else:
+        instr_text = emit_test_format(instrs)
 
     img = DRAMWriter()
     img.u32(ADDR_TABLE_BASE + 0, TILE_ADDR_INPUT)
