@@ -138,6 +138,8 @@ module transpose_unit (
     // --- SRAM Bank Instantiation ---
     generate
         for (genvar b = 0; b < tif.VEC_LEN; b++) begin : gen_banks
+            localparam int corrected_idx = (b & ~3) | (3 - (b & 3));
+
             logic [4:0] bank_raddr;
             assign bank_raddr = (b + (tif.VEC_LEN - count)) % tif.VEC_LEN;
 
@@ -153,7 +155,7 @@ module transpose_unit (
                 .rdone(sram_rdone[b]),
                 .wen(wen),
                 .waddr(count),
-                .wdata(xif.out[b]),
+                .wdata(xif.out[corrected_idx]),
                 .wdone(sram_wdone[b]),
                 .busy()
             );
@@ -165,10 +167,13 @@ module transpose_unit (
     assign tif.out.ready_in = (state == IDLE);
     
     // The final output is the output of the Clos network during POPPING
+    int idx;
     always_comb begin
-        for(int i = 0; i < tif.VEC_LEN; i++) begin
-            tif.out.vec_out[i] = (state == DONE) ? xif.out[i] : '0;
-        end
+    for(int i = 0; i < tif.VEC_LEN; i++) begin
+        // Use the same mapping logic here
+        idx = (i & ~3) | (3 - (i & 3)); 
+        tif.out.vec_out[i] = (state == DONE) ? xif.out[idx] : '0;
     end
+end
 
 endmodule
