@@ -10,6 +10,7 @@ import uvm_pkg::*;
 `include "lfc_ram_passive_agent.sv"
 `include "lfc_if.sv"
 `include "lfc_predictor.sv"
+`include "lfc_coverage.sv"
 `include "lfc_cpu_transaction.sv"
 `include "lfc_ram_transaction.sv"
 `include "lfc_uuid_transaction.sv"
@@ -41,6 +42,7 @@ class lfc_environment #(parameter NUM_BANKS = 4) extends uvm_env;
   lfc_ram_active_agent ram_active_agent;
   lfc_ram_passive_agent ram_passive_agent;
   lfc_predictor pred;
+  lfc_coverage cov;
   lfc_scoreboard sb;
 
   function new(string name = "env", uvm_component parent = null);
@@ -56,6 +58,7 @@ class lfc_environment #(parameter NUM_BANKS = 4) extends uvm_env;
     ram_passive_agent = lfc_ram_passive_agent#(NUM_BANKS)::type_id::create("ram_passive_agent", this);
     
     pred = lfc_predictor::type_id::create("lfc_predictor", this);
+    cov = lfc_coverage::type_id::create("lfc_coverage", this);
     sb = lfc_scoreboard::type_id::create("lfc_scoreboard", this);
   endfunction
 
@@ -73,6 +76,7 @@ class lfc_environment #(parameter NUM_BANKS = 4) extends uvm_env;
     pred.pred_ram_cmp_ap.connect(sb.expected_ram_cmp_export);
 
     cpu_active_agent.mon.lfc_ap.connect(pred.cpu_imp);
+    cpu_active_agent.mon.lfc_ap.connect(cov.cpu_imp);
     ram_active_agent.mon.lfc_ap.connect(pred.ram_imp);
 
     // UUID cross-time linkage check (block_status completion events)

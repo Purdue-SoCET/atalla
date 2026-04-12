@@ -69,17 +69,17 @@ class test extends uvm_test;
         // uvm_root::set_timeout(2000ns, 1);
         phase.raise_objection(this, "Starting sequence in main phase");
         $display("%t Starting sequence run_phase", $time);
-	//load_miss.start(env.cpu_active_agent.sqr);
-        //basic_seq.start(env.cpu_active_agent.sqr);
-        //load_hit.start(env.cpu_active_agent.sqr);
-        //miss_coal.start(env.cpu_active_agent.sqr);
+	load_miss.start(env.cpu_active_agent.sqr);
+        basic_seq.start(env.cpu_active_agent.sqr);
+        load_hit.start(env.cpu_active_agent.sqr);
+        miss_coal.start(env.cpu_active_agent.sqr);
         mshr_overflow_seq.start(env.cpu_active_agent.sqr);
-        //multiple_miss_seq.start(env.cpu_active_agent.sqr);
-        //store_hit_seq.start(env.cpu_active_agent.sqr);
-	//hit_under_miss_seq.start(env.cpu_active_agent.sqr);
-	#5000ns;
+        multiple_miss_seq.start(env.cpu_active_agent.sqr);
+        store_hit_seq.start(env.cpu_active_agent.sqr);
+	hit_under_miss_seq.start(env.cpu_active_agent.sqr);
         // wr_seq.start(env.cpu_active_agent.sqr);
-	//flush_seq.start(env.cpu_active_agent.sqr);
+	flush_seq.start(env.cpu_active_agent.sqr);
+	#5000
 	//TODO: implement drain time
         phase.drop_objection(this, "Finished in main phase");
     endtask
