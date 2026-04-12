@@ -9,11 +9,12 @@ module transpose_unit (
     xbar_if #(.SIZE(tif.VEC_LEN), .DWIDTH(tif.DATA_W)) xif(.clk(CLK), .n_rst(nRST));
 
     typedef enum logic [2:0] {
-        IDLE, 
+        IDLE,
+        WAIT_CLOS_WRITE,
         BUSY_WRITE,
         POPPING,
         WAIT_SRAM,
-        WAIT_CLOS,
+        WAIT_CLOS_READ,
         DONE
     } state_t;
     state_t state, n_state;
@@ -49,9 +50,19 @@ module transpose_unit (
         case(state)
             IDLE: begin 
                 if(tif.in.valid_in && tif.in.push_req) begin
-                    n_state = BUSY_WRITE;
+                    n_lat_count = 0;
+                    n_state = WAIT_CLOS_WRITE;
                 end else if (tif.in.pop_req) begin
+                    n_count = 0;
                     n_state = POPPING;
+                end
+            end
+            WAIT_CLOS_WRITE: begin
+                // Wait 2 cycles for data to reach the end of the Clos network
+                if (lat_count == 2'd2) begin
+                    n_state = BUSY_WRITE;
+                end else begin
+                    n_lat_count = lat_count + 1;
                 end
             end
 
@@ -76,11 +87,11 @@ module transpose_unit (
                 // Wait for SRAM to finish its variable read latency
                 if (sram_rdone[0]) begin
                     n_lat_count = 0;
-                    n_state = WAIT_CLOS;
+                    n_state = WAIT_CLOS_READ;
                 end
             end
 
-            WAIT_CLOS: begin
+            WAIT_CLOS_READ: begin
                 // Once SRAM is done, we need 2 cycles to flush the Clos pipe
                 if (lat_count == 2'd2) begin 
                     n_state = DONE;
@@ -92,12 +103,12 @@ module transpose_unit (
             DONE: begin
                 // Hold valid_out until consumer is ready
                 if (tif.in.ready_out) begin
-                    if (count == 31) begin
+                    if (count == (tif.VEC_LEN - 1)) begin
                         n_count = 0;
                         n_state = IDLE;
                     end else begin
                         n_count = count + 1;
-                        n_state = IDLE; // Return to IDLE for next request
+                        n_state = POPPING; // Return to IDLE for next request
                     end
                 end
             end
@@ -109,7 +120,7 @@ module transpose_unit (
 
     always_comb begin : clos_input_mux
         for (int i = 0; i < tif.VEC_LEN; i++) begin
-            if (state == BUSY_WRITE) begin
+            if (state == BUSY_WRITE || state == WAIT_CLOS_WRITE) begin
                 xif.in[i].din = tif.in.vec_in[i];
                 xif.in[i].shift = (i + count) % tif.VEC_LEN;
             end else begin
@@ -121,7 +132,7 @@ module transpose_unit (
 
     clos #(.CLOS_SIZE(tif.VEC_LEN), .CLOS_DWIDTH(tif.DATA_W)) clos_inst (.xif(xif));
 
-    assign wen = (state == IDLE && tif.in.valid_in && tif.in.push_req);
+    assign wen = (state == WAIT_CLOS_WRITE && lat_count == 2'd2);
     assign ren = state == POPPING;
 
     // --- SRAM Bank Instantiation ---
