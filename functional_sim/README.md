@@ -25,10 +25,10 @@ From `functional_sim/`:
 
 ```bash
 PYTHONPATH="$(pwd)/..:$(pwd)" python3 collect_kernel_metrics.py
-python3 scripts/plot_kernel_scheduling_metrics.py
+python3 plot_kernel_metrics.py
 ```
 
-Writes `out/kernel_metrics.csv` and `out/scheduling_metrics.png`. Layernorm’s DAG-stall variant is labeled **`layernorm (latency)`** in the CSV.
+Writes `out/kernel_metrics.csv`, figures under `out/plots/` (including **`scheduling_metrics.png`** — static slot util % and static rows per dynamic op). Layernorm’s DAG-stall variant is labeled **`layernorm (latency)`** in the CSV.
 
 ## Not implemented here
 
