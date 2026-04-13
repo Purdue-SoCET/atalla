@@ -16,6 +16,14 @@ VL_ATTR_COLD void Vadd4_fp32_tb_softfloat___024root___eval_triggers__stl(Vadd4_f
     auto& vlSelfRef = std::ref(*vlSelf).get();
     // Body
     vlSelfRef.__VstlTriggered.setBit(0U, (IData)(vlSelfRef.__VstlFirstIteration));
+    vlSelfRef.__VstlTriggered.setBit(1U, (vlSelfRef.add4_fp32_tb_softfloat__DOT__etchedfp4adder__DOT__norm_val 
+                                          != vlSelfRef.__Vtrigprevexpr___TOP__add4_fp32_tb_softfloat__DOT__etchedfp4adder__DOT__norm_val__0));
+    vlSelfRef.__Vtrigprevexpr___TOP__add4_fp32_tb_softfloat__DOT__etchedfp4adder__DOT__norm_val__0 
+        = vlSelfRef.add4_fp32_tb_softfloat__DOT__etchedfp4adder__DOT__norm_val;
+    if (VL_UNLIKELY(((1U & (~ (IData)(vlSelfRef.__VstlDidInit)))))) {
+        vlSelfRef.__VstlDidInit = 1U;
+        vlSelfRef.__VstlTriggered.setBit(1U, 1U);
+    }
 #ifdef VL_DEBUG
     if (VL_UNLIKELY(vlSymsp->_vm_contextp__->debug())) {
         Vadd4_fp32_tb_softfloat___024root___dump_triggers__stl(vlSelf);

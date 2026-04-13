@@ -1,0 +1,1591 @@
+// Verilated -*- C++ -*-
+// DESCRIPTION: Verilator output: Design implementation internals
+// See Vadd32_fp32accum_bf16_tb_softfloat.h for the primary calling header
+
+#include "Vadd32_fp32accum_bf16_tb_softfloat__pch.h"
+#include "Vadd32_fp32accum_bf16_tb_softfloat___024root.h"
+
+VL_ATTR_COLD void Vadd32_fp32accum_bf16_tb_softfloat___024root___eval_static(Vadd32_fp32accum_bf16_tb_softfloat___024root* vlSelf) {
+    VL_DEBUG_IF(VL_DBG_MSGF("+    Vadd32_fp32accum_bf16_tb_softfloat___024root___eval_static\n"); );
+    Vadd32_fp32accum_bf16_tb_softfloat__Syms* const __restrict vlSymsp VL_ATTR_UNUSED = vlSelf->vlSymsp;
+    auto& vlSelfRef = std::ref(*vlSelf).get();
+    // Body
+    vlSelfRef.__Vtrigprevexpr___TOP__add32_fp32accum_bf16_tb_softfloat__DOT__adder_s3__DOT__norm_val__0 
+        = vlSelfRef.add32_fp32accum_bf16_tb_softfloat__DOT__adder_s3__DOT__norm_val;
+    vlSelfRef.__Vtrigprevexpr___TOP__add32_fp32accum_bf16_tb_softfloat__DOT__gen_s1__BRA__0__KET____DOT__adder_s1__DOT__norm_val__0 
+        = vlSelfRef.add32_fp32accum_bf16_tb_softfloat__DOT__gen_s1__BRA__0__KET____DOT__adder_s1__DOT__norm_val;
+    vlSelfRef.__Vtrigprevexpr___TOP__add32_fp32accum_bf16_tb_softfloat__DOT__gen_s1__BRA__1__KET____DOT__adder_s1__DOT__norm_val__0 
+        = vlSelfRef.add32_fp32accum_bf16_tb_softfloat__DOT__gen_s1__BRA__1__KET____DOT__adder_s1__DOT__norm_val;
+    vlSelfRef.__Vtrigprevexpr___TOP__add32_fp32accum_bf16_tb_softfloat__DOT__gen_s1__BRA__2__KET____DOT__adder_s1__DOT__norm_val__0 
+        = vlSelfRef.add32_fp32accum_bf16_tb_softfloat__DOT__gen_s1__BRA__2__KET____DOT__adder_s1__DOT__norm_val;
+    vlSelfRef.__Vtrigprevexpr___TOP__add32_fp32accum_bf16_tb_softfloat__DOT__gen_s1__BRA__3__KET____DOT__adder_s1__DOT__norm_val__0 
+        = vlSelfRef.add32_fp32accum_bf16_tb_softfloat__DOT__gen_s1__BRA__3__KET____DOT__adder_s1__DOT__norm_val;
+    vlSelfRef.__Vtrigprevexpr___TOP__add32_fp32accum_bf16_tb_softfloat__DOT__gen_s1__BRA__4__KET____DOT__adder_s1__DOT__norm_val__0 
+        = vlSelfRef.add32_fp32accum_bf16_tb_softfloat__DOT__gen_s1__BRA__4__KET____DOT__adder_s1__DOT__norm_val;
+    vlSelfRef.__Vtrigprevexpr___TOP__add32_fp32accum_bf16_tb_softfloat__DOT__gen_s1__BRA__5__KET____DOT__adder_s1__DOT__norm_val__0 
+        = vlSelfRef.add32_fp32accum_bf16_tb_softfloat__DOT__gen_s1__BRA__5__KET____DOT__adder_s1__DOT__norm_val;
+    vlSelfRef.__Vtrigprevexpr___TOP__add32_fp32accum_bf16_tb_softfloat__DOT__gen_s1__BRA__6__KET____DOT__adder_s1__DOT__norm_val__0 
+        = vlSelfRef.add32_fp32accum_bf16_tb_softfloat__DOT__gen_s1__BRA__6__KET____DOT__adder_s1__DOT__norm_val;
+    vlSelfRef.__Vtrigprevexpr___TOP__add32_fp32accum_bf16_tb_softfloat__DOT__gen_s1__BRA__7__KET____DOT__adder_s1__DOT__norm_val__0 
+        = vlSelfRef.add32_fp32accum_bf16_tb_softfloat__DOT__gen_s1__BRA__7__KET____DOT__adder_s1__DOT__norm_val;
+    vlSelfRef.__Vtrigprevexpr___TOP__add32_fp32accum_bf16_tb_softfloat__DOT__gen_s2__BRA__0__KET____DOT__adder_s2__DOT__norm_val__0 
+        = vlSelfRef.add32_fp32accum_bf16_tb_softfloat__DOT__gen_s2__BRA__0__KET____DOT__adder_s2__DOT__norm_val;
+    vlSelfRef.__Vtrigprevexpr___TOP__add32_fp32accum_bf16_tb_softfloat__DOT__gen_s2__BRA__1__KET____DOT__adder_s2__DOT__norm_val__0 
+        = vlSelfRef.add32_fp32accum_bf16_tb_softfloat__DOT__gen_s2__BRA__1__KET____DOT__adder_s2__DOT__norm_val;
+    vlSelfRef.__Vtrigprevexpr___TOP__add32_fp32accum_bf16_tb_softfloat__DOT__adder_s3__DOT__norm_val__1 
+        = vlSelfRef.add32_fp32accum_bf16_tb_softfloat__DOT__adder_s3__DOT__norm_val;
+    vlSelfRef.__Vtrigprevexpr___TOP__add32_fp32accum_bf16_tb_softfloat__DOT__gen_s1__BRA__0__KET____DOT__adder_s1__DOT__norm_val__1 
+        = vlSelfRef.add32_fp32accum_bf16_tb_softfloat__DOT__gen_s1__BRA__0__KET____DOT__adder_s1__DOT__norm_val;
+    vlSelfRef.__Vtrigprevexpr___TOP__add32_fp32accum_bf16_tb_softfloat__DOT__gen_s1__BRA__1__KET____DOT__adder_s1__DOT__norm_val__1 
+        = vlSelfRef.add32_fp32accum_bf16_tb_softfloat__DOT__gen_s1__BRA__1__KET____DOT__adder_s1__DOT__norm_val;
+    vlSelfRef.__Vtrigprevexpr___TOP__add32_fp32accum_bf16_tb_softfloat__DOT__gen_s1__BRA__2__KET____DOT__adder_s1__DOT__norm_val__1 
+        = vlSelfRef.add32_fp32accum_bf16_tb_softfloat__DOT__gen_s1__BRA__2__KET____DOT__adder_s1__DOT__norm_val;
+    vlSelfRef.__Vtrigprevexpr___TOP__add32_fp32accum_bf16_tb_softfloat__DOT__gen_s1__BRA__3__KET____DOT__adder_s1__DOT__norm_val__1 
+        = vlSelfRef.add32_fp32accum_bf16_tb_softfloat__DOT__gen_s1__BRA__3__KET____DOT__adder_s1__DOT__norm_val;
+    vlSelfRef.__Vtrigprevexpr___TOP__add32_fp32accum_bf16_tb_softfloat__DOT__gen_s1__BRA__4__KET____DOT__adder_s1__DOT__norm_val__1 
+        = vlSelfRef.add32_fp32accum_bf16_tb_softfloat__DOT__gen_s1__BRA__4__KET____DOT__adder_s1__DOT__norm_val;
+    vlSelfRef.__Vtrigprevexpr___TOP__add32_fp32accum_bf16_tb_softfloat__DOT__gen_s1__BRA__5__KET____DOT__adder_s1__DOT__norm_val__1 
+        = vlSelfRef.add32_fp32accum_bf16_tb_softfloat__DOT__gen_s1__BRA__5__KET____DOT__adder_s1__DOT__norm_val;
+    vlSelfRef.__Vtrigprevexpr___TOP__add32_fp32accum_bf16_tb_softfloat__DOT__gen_s1__BRA__6__KET____DOT__adder_s1__DOT__norm_val__1 
+        = vlSelfRef.add32_fp32accum_bf16_tb_softfloat__DOT__gen_s1__BRA__6__KET____DOT__adder_s1__DOT__norm_val;
+    vlSelfRef.__Vtrigprevexpr___TOP__add32_fp32accum_bf16_tb_softfloat__DOT__gen_s1__BRA__7__KET____DOT__adder_s1__DOT__norm_val__1 
+        = vlSelfRef.add32_fp32accum_bf16_tb_softfloat__DOT__gen_s1__BRA__7__KET____DOT__adder_s1__DOT__norm_val;
+    vlSelfRef.__Vtrigprevexpr___TOP__add32_fp32accum_bf16_tb_softfloat__DOT__gen_s2__BRA__0__KET____DOT__adder_s2__DOT__norm_val__1 
+        = vlSelfRef.add32_fp32accum_bf16_tb_softfloat__DOT__gen_s2__BRA__0__KET____DOT__adder_s2__DOT__norm_val;
+    vlSelfRef.__Vtrigprevexpr___TOP__add32_fp32accum_bf16_tb_softfloat__DOT__gen_s2__BRA__1__KET____DOT__adder_s2__DOT__norm_val__1 
+        = vlSelfRef.add32_fp32accum_bf16_tb_softfloat__DOT__gen_s2__BRA__1__KET____DOT__adder_s2__DOT__norm_val;
+    vlSelfRef.__Vtrigprevexpr___TOP__add32_fp32accum_bf16_tb_softfloat__DOT__tb_clk__0 
+        = vlSelfRef.add32_fp32accum_bf16_tb_softfloat__DOT__tb_clk;
+    vlSelfRef.__Vtrigprevexpr___TOP__add32_fp32accum_bf16_tb_softfloat__DOT__tb_nrst__0 
+        = vlSelfRef.add32_fp32accum_bf16_tb_softfloat__DOT__tb_nrst;
+}
+
+VL_ATTR_COLD void Vadd32_fp32accum_bf16_tb_softfloat___024root___eval_final(Vadd32_fp32accum_bf16_tb_softfloat___024root* vlSelf) {
+    VL_DEBUG_IF(VL_DBG_MSGF("+    Vadd32_fp32accum_bf16_tb_softfloat___024root___eval_final\n"); );
+    Vadd32_fp32accum_bf16_tb_softfloat__Syms* const __restrict vlSymsp VL_ATTR_UNUSED = vlSelf->vlSymsp;
+    auto& vlSelfRef = std::ref(*vlSelf).get();
+}
+
+#ifdef VL_DEBUG
+VL_ATTR_COLD void Vadd32_fp32accum_bf16_tb_softfloat___024root___dump_triggers__stl(Vadd32_fp32accum_bf16_tb_softfloat___024root* vlSelf);
+#endif  // VL_DEBUG
+VL_ATTR_COLD bool Vadd32_fp32accum_bf16_tb_softfloat___024root___eval_phase__stl(Vadd32_fp32accum_bf16_tb_softfloat___024root* vlSelf);
+
+VL_ATTR_COLD void Vadd32_fp32accum_bf16_tb_softfloat___024root___eval_settle(Vadd32_fp32accum_bf16_tb_softfloat___024root* vlSelf) {
+    VL_DEBUG_IF(VL_DBG_MSGF("+    Vadd32_fp32accum_bf16_tb_softfloat___024root___eval_settle\n"); );
+    Vadd32_fp32accum_bf16_tb_softfloat__Syms* const __restrict vlSymsp VL_ATTR_UNUSED = vlSelf->vlSymsp;
+    auto& vlSelfRef = std::ref(*vlSelf).get();
+    // Init
+    IData/*31:0*/ __VstlIterCount;
+    CData/*0:0*/ __VstlContinue;
+    // Body
+    __VstlIterCount = 0U;
+    vlSelfRef.__VstlFirstIteration = 1U;
+    __VstlContinue = 1U;
+    while (__VstlContinue) {
+        if (VL_UNLIKELY(((0x64U < __VstlIterCount)))) {
+#ifdef VL_DEBUG
+            Vadd32_fp32accum_bf16_tb_softfloat___024root___dump_triggers__stl(vlSelf);
+#endif
+            VL_FATAL_MT("tb/unit/systolic_array/add32_fp32accum_bf16_tb_softfloat.sv", 16, "", "Settle region did not converge.");
+        }
+        __VstlIterCount = ((IData)(1U) + __VstlIterCount);
+        __VstlContinue = 0U;
+        if (Vadd32_fp32accum_bf16_tb_softfloat___024root___eval_phase__stl(vlSelf)) {
+            __VstlContinue = 1U;
+        }
+        vlSelfRef.__VstlFirstIteration = 0U;
+    }
+}
+
+#ifdef VL_DEBUG
+VL_ATTR_COLD void Vadd32_fp32accum_bf16_tb_softfloat___024root___dump_triggers__stl(Vadd32_fp32accum_bf16_tb_softfloat___024root* vlSelf) {
+    VL_DEBUG_IF(VL_DBG_MSGF("+    Vadd32_fp32accum_bf16_tb_softfloat___024root___dump_triggers__stl\n"); );
+    Vadd32_fp32accum_bf16_tb_softfloat__Syms* const __restrict vlSymsp VL_ATTR_UNUSED = vlSelf->vlSymsp;
+    auto& vlSelfRef = std::ref(*vlSelf).get();
+    // Body
+    if ((1U & (~ vlSelfRef.__VstlTriggered.any()))) {
+        VL_DBG_MSGF("         No triggers active\n");
+    }
+    if ((1ULL & vlSelfRef.__VstlTriggered.word(0U))) {
+        VL_DBG_MSGF("         'stl' region trigger index 0 is active: Internal 'stl' trigger - first iteration\n");
+    }
+    if ((2ULL & vlSelfRef.__VstlTriggered.word(0U))) {
+        VL_DBG_MSGF("         'stl' region trigger index 1 is active: @([hybrid] add32_fp32accum_bf16_tb_softfloat.adder_s3.norm_val)\n");
+    }
+    if ((4ULL & vlSelfRef.__VstlTriggered.word(0U))) {
+        VL_DBG_MSGF("         'stl' region trigger index 2 is active: @([hybrid] add32_fp32accum_bf16_tb_softfloat.gen_s1[0].adder_s1.norm_val)\n");
+    }
+    if ((8ULL & vlSelfRef.__VstlTriggered.word(0U))) {
+        VL_DBG_MSGF("         'stl' region trigger index 3 is active: @([hybrid] add32_fp32accum_bf16_tb_softfloat.gen_s1[1].adder_s1.norm_val)\n");
+    }
+    if ((0x10ULL & vlSelfRef.__VstlTriggered.word(0U))) {
+        VL_DBG_MSGF("         'stl' region trigger index 4 is active: @([hybrid] add32_fp32accum_bf16_tb_softfloat.gen_s1[2].adder_s1.norm_val)\n");
+    }
+    if ((0x20ULL & vlSelfRef.__VstlTriggered.word(0U))) {
+        VL_DBG_MSGF("         'stl' region trigger index 5 is active: @([hybrid] add32_fp32accum_bf16_tb_softfloat.gen_s1[3].adder_s1.norm_val)\n");
+    }
+    if ((0x40ULL & vlSelfRef.__VstlTriggered.word(0U))) {
+        VL_DBG_MSGF("         'stl' region trigger index 6 is active: @([hybrid] add32_fp32accum_bf16_tb_softfloat.gen_s1[4].adder_s1.norm_val)\n");
+    }
+    if ((0x80ULL & vlSelfRef.__VstlTriggered.word(0U))) {
+        VL_DBG_MSGF("         'stl' region trigger index 7 is active: @([hybrid] add32_fp32accum_bf16_tb_softfloat.gen_s1[5].adder_s1.norm_val)\n");
+    }
+    if ((0x100ULL & vlSelfRef.__VstlTriggered.word(0U))) {
+        VL_DBG_MSGF("         'stl' region trigger index 8 is active: @([hybrid] add32_fp32accum_bf16_tb_softfloat.gen_s1[6].adder_s1.norm_val)\n");
+    }
+    if ((0x200ULL & vlSelfRef.__VstlTriggered.word(0U))) {
+        VL_DBG_MSGF("         'stl' region trigger index 9 is active: @([hybrid] add32_fp32accum_bf16_tb_softfloat.gen_s1[7].adder_s1.norm_val)\n");
+    }
+    if ((0x400ULL & vlSelfRef.__VstlTriggered.word(0U))) {
+        VL_DBG_MSGF("         'stl' region trigger index 10 is active: @([hybrid] add32_fp32accum_bf16_tb_softfloat.gen_s2[0].adder_s2.norm_val)\n");
+    }
+    if ((0x800ULL & vlSelfRef.__VstlTriggered.word(0U))) {
+        VL_DBG_MSGF("         'stl' region trigger index 11 is active: @([hybrid] add32_fp32accum_bf16_tb_softfloat.gen_s2[1].adder_s2.norm_val)\n");
+    }
+}
+#endif  // VL_DEBUG
+
+VL_ATTR_COLD void Vadd32_fp32accum_bf16_tb_softfloat___024root___stl_sequent__TOP__0(Vadd32_fp32accum_bf16_tb_softfloat___024root* vlSelf);
+VL_ATTR_COLD void Vadd32_fp32accum_bf16_tb_softfloat___024root____Vm_traceActivitySetAll(Vadd32_fp32accum_bf16_tb_softfloat___024root* vlSelf);
+void Vadd32_fp32accum_bf16_tb_softfloat___024root___act_sequent__TOP__0(Vadd32_fp32accum_bf16_tb_softfloat___024root* vlSelf);
+void Vadd32_fp32accum_bf16_tb_softfloat___024root___act_sequent__TOP__1(Vadd32_fp32accum_bf16_tb_softfloat___024root* vlSelf);
+void Vadd32_fp32accum_bf16_tb_softfloat___024root___act_sequent__TOP__2(Vadd32_fp32accum_bf16_tb_softfloat___024root* vlSelf);
+void Vadd32_fp32accum_bf16_tb_softfloat___024root___act_sequent__TOP__3(Vadd32_fp32accum_bf16_tb_softfloat___024root* vlSelf);
+void Vadd32_fp32accum_bf16_tb_softfloat___024root___act_sequent__TOP__4(Vadd32_fp32accum_bf16_tb_softfloat___024root* vlSelf);
+void Vadd32_fp32accum_bf16_tb_softfloat___024root___act_sequent__TOP__5(Vadd32_fp32accum_bf16_tb_softfloat___024root* vlSelf);
+void Vadd32_fp32accum_bf16_tb_softfloat___024root___act_sequent__TOP__6(Vadd32_fp32accum_bf16_tb_softfloat___024root* vlSelf);
+void Vadd32_fp32accum_bf16_tb_softfloat___024root___act_sequent__TOP__7(Vadd32_fp32accum_bf16_tb_softfloat___024root* vlSelf);
+void Vadd32_fp32accum_bf16_tb_softfloat___024root___act_sequent__TOP__8(Vadd32_fp32accum_bf16_tb_softfloat___024root* vlSelf);
+void Vadd32_fp32accum_bf16_tb_softfloat___024root___act_sequent__TOP__9(Vadd32_fp32accum_bf16_tb_softfloat___024root* vlSelf);
+void Vadd32_fp32accum_bf16_tb_softfloat___024root___act_sequent__TOP__10(Vadd32_fp32accum_bf16_tb_softfloat___024root* vlSelf);
+
+VL_ATTR_COLD void Vadd32_fp32accum_bf16_tb_softfloat___024root___eval_stl(Vadd32_fp32accum_bf16_tb_softfloat___024root* vlSelf) {
+    VL_DEBUG_IF(VL_DBG_MSGF("+    Vadd32_fp32accum_bf16_tb_softfloat___024root___eval_stl\n"); );
+    Vadd32_fp32accum_bf16_tb_softfloat__Syms* const __restrict vlSymsp VL_ATTR_UNUSED = vlSelf->vlSymsp;
+    auto& vlSelfRef = std::ref(*vlSelf).get();
+    // Body
+    if ((1ULL & vlSelfRef.__VstlTriggered.word(0U))) {
+        Vadd32_fp32accum_bf16_tb_softfloat___024root___stl_sequent__TOP__0(vlSelf);
+        Vadd32_fp32accum_bf16_tb_softfloat___024root____Vm_traceActivitySetAll(vlSelf);
+    }
+    if ((3ULL & vlSelfRef.__VstlTriggered.word(0U))) {
+        Vadd32_fp32accum_bf16_tb_softfloat___024root___act_sequent__TOP__0(vlSelf);
+        Vadd32_fp32accum_bf16_tb_softfloat___024root____Vm_traceActivitySetAll(vlSelf);
+    }
+    if ((5ULL & vlSelfRef.__VstlTriggered.word(0U))) {
+        Vadd32_fp32accum_bf16_tb_softfloat___024root___act_sequent__TOP__1(vlSelf);
+        Vadd32_fp32accum_bf16_tb_softfloat___024root____Vm_traceActivitySetAll(vlSelf);
+    }
+    if ((9ULL & vlSelfRef.__VstlTriggered.word(0U))) {
+        Vadd32_fp32accum_bf16_tb_softfloat___024root___act_sequent__TOP__2(vlSelf);
+        Vadd32_fp32accum_bf16_tb_softfloat___024root____Vm_traceActivitySetAll(vlSelf);
+    }
+    if ((0x11ULL & vlSelfRef.__VstlTriggered.word(0U))) {
+        Vadd32_fp32accum_bf16_tb_softfloat___024root___act_sequent__TOP__3(vlSelf);
+        Vadd32_fp32accum_bf16_tb_softfloat___024root____Vm_traceActivitySetAll(vlSelf);
+    }
+    if ((0x21ULL & vlSelfRef.__VstlTriggered.word(0U))) {
+        Vadd32_fp32accum_bf16_tb_softfloat___024root___act_sequent__TOP__4(vlSelf);
+        Vadd32_fp32accum_bf16_tb_softfloat___024root____Vm_traceActivitySetAll(vlSelf);
+    }
+    if ((0x41ULL & vlSelfRef.__VstlTriggered.word(0U))) {
+        Vadd32_fp32accum_bf16_tb_softfloat___024root___act_sequent__TOP__5(vlSelf);
+        Vadd32_fp32accum_bf16_tb_softfloat___024root____Vm_traceActivitySetAll(vlSelf);
+    }
+    if ((0x81ULL & vlSelfRef.__VstlTriggered.word(0U))) {
+        Vadd32_fp32accum_bf16_tb_softfloat___024root___act_sequent__TOP__6(vlSelf);
+        Vadd32_fp32accum_bf16_tb_softfloat___024root____Vm_traceActivitySetAll(vlSelf);
+    }
+    if ((0x101ULL & vlSelfRef.__VstlTriggered.word(0U))) {
+        Vadd32_fp32accum_bf16_tb_softfloat___024root___act_sequent__TOP__7(vlSelf);
+        Vadd32_fp32accum_bf16_tb_softfloat___024root____Vm_traceActivitySetAll(vlSelf);
+    }
+    if ((0x201ULL & vlSelfRef.__VstlTriggered.word(0U))) {
+        Vadd32_fp32accum_bf16_tb_softfloat___024root___act_sequent__TOP__8(vlSelf);
+        Vadd32_fp32accum_bf16_tb_softfloat___024root____Vm_traceActivitySetAll(vlSelf);
+    }
+    if ((0x401ULL & vlSelfRef.__VstlTriggered.word(0U))) {
+        Vadd32_fp32accum_bf16_tb_softfloat___024root___act_sequent__TOP__9(vlSelf);
+        Vadd32_fp32accum_bf16_tb_softfloat___024root____Vm_traceActivitySetAll(vlSelf);
+    }
+    if ((0x801ULL & vlSelfRef.__VstlTriggered.word(0U))) {
+        Vadd32_fp32accum_bf16_tb_softfloat___024root___act_sequent__TOP__10(vlSelf);
+        Vadd32_fp32accum_bf16_tb_softfloat___024root____Vm_traceActivitySetAll(vlSelf);
+    }
+}
+
+VL_ATTR_COLD void Vadd32_fp32accum_bf16_tb_softfloat___024root___eval_triggers__stl(Vadd32_fp32accum_bf16_tb_softfloat___024root* vlSelf);
+
+VL_ATTR_COLD bool Vadd32_fp32accum_bf16_tb_softfloat___024root___eval_phase__stl(Vadd32_fp32accum_bf16_tb_softfloat___024root* vlSelf) {
+    VL_DEBUG_IF(VL_DBG_MSGF("+    Vadd32_fp32accum_bf16_tb_softfloat___024root___eval_phase__stl\n"); );
+    Vadd32_fp32accum_bf16_tb_softfloat__Syms* const __restrict vlSymsp VL_ATTR_UNUSED = vlSelf->vlSymsp;
+    auto& vlSelfRef = std::ref(*vlSelf).get();
+    // Init
+    CData/*0:0*/ __VstlExecute;
+    // Body
+    Vadd32_fp32accum_bf16_tb_softfloat___024root___eval_triggers__stl(vlSelf);
+    __VstlExecute = vlSelfRef.__VstlTriggered.any();
+    if (__VstlExecute) {
+        Vadd32_fp32accum_bf16_tb_softfloat___024root___eval_stl(vlSelf);
+    }
+    return (__VstlExecute);
+}
+
+#ifdef VL_DEBUG
+VL_ATTR_COLD void Vadd32_fp32accum_bf16_tb_softfloat___024root___dump_triggers__act(Vadd32_fp32accum_bf16_tb_softfloat___024root* vlSelf) {
+    VL_DEBUG_IF(VL_DBG_MSGF("+    Vadd32_fp32accum_bf16_tb_softfloat___024root___dump_triggers__act\n"); );
+    Vadd32_fp32accum_bf16_tb_softfloat__Syms* const __restrict vlSymsp VL_ATTR_UNUSED = vlSelf->vlSymsp;
+    auto& vlSelfRef = std::ref(*vlSelf).get();
+    // Body
+    if ((1U & (~ vlSelfRef.__VactTriggered.any()))) {
+        VL_DBG_MSGF("         No triggers active\n");
+    }
+    if ((1ULL & vlSelfRef.__VactTriggered.word(0U))) {
+        VL_DBG_MSGF("         'act' region trigger index 0 is active: @([hybrid] add32_fp32accum_bf16_tb_softfloat.adder_s3.norm_val)\n");
+    }
+    if ((2ULL & vlSelfRef.__VactTriggered.word(0U))) {
+        VL_DBG_MSGF("         'act' region trigger index 1 is active: @([hybrid] add32_fp32accum_bf16_tb_softfloat.gen_s1[0].adder_s1.norm_val)\n");
+    }
+    if ((4ULL & vlSelfRef.__VactTriggered.word(0U))) {
+        VL_DBG_MSGF("         'act' region trigger index 2 is active: @([hybrid] add32_fp32accum_bf16_tb_softfloat.gen_s1[1].adder_s1.norm_val)\n");
+    }
+    if ((8ULL & vlSelfRef.__VactTriggered.word(0U))) {
+        VL_DBG_MSGF("         'act' region trigger index 3 is active: @([hybrid] add32_fp32accum_bf16_tb_softfloat.gen_s1[2].adder_s1.norm_val)\n");
+    }
+    if ((0x10ULL & vlSelfRef.__VactTriggered.word(0U))) {
+        VL_DBG_MSGF("         'act' region trigger index 4 is active: @([hybrid] add32_fp32accum_bf16_tb_softfloat.gen_s1[3].adder_s1.norm_val)\n");
+    }
+    if ((0x20ULL & vlSelfRef.__VactTriggered.word(0U))) {
+        VL_DBG_MSGF("         'act' region trigger index 5 is active: @([hybrid] add32_fp32accum_bf16_tb_softfloat.gen_s1[4].adder_s1.norm_val)\n");
+    }
+    if ((0x40ULL & vlSelfRef.__VactTriggered.word(0U))) {
+        VL_DBG_MSGF("         'act' region trigger index 6 is active: @([hybrid] add32_fp32accum_bf16_tb_softfloat.gen_s1[5].adder_s1.norm_val)\n");
+    }
+    if ((0x80ULL & vlSelfRef.__VactTriggered.word(0U))) {
+        VL_DBG_MSGF("         'act' region trigger index 7 is active: @([hybrid] add32_fp32accum_bf16_tb_softfloat.gen_s1[6].adder_s1.norm_val)\n");
+    }
+    if ((0x100ULL & vlSelfRef.__VactTriggered.word(0U))) {
+        VL_DBG_MSGF("         'act' region trigger index 8 is active: @([hybrid] add32_fp32accum_bf16_tb_softfloat.gen_s1[7].adder_s1.norm_val)\n");
+    }
+    if ((0x200ULL & vlSelfRef.__VactTriggered.word(0U))) {
+        VL_DBG_MSGF("         'act' region trigger index 9 is active: @([hybrid] add32_fp32accum_bf16_tb_softfloat.gen_s2[0].adder_s2.norm_val)\n");
+    }
+    if ((0x400ULL & vlSelfRef.__VactTriggered.word(0U))) {
+        VL_DBG_MSGF("         'act' region trigger index 10 is active: @([hybrid] add32_fp32accum_bf16_tb_softfloat.gen_s2[1].adder_s2.norm_val)\n");
+    }
+    if ((0x800ULL & vlSelfRef.__VactTriggered.word(0U))) {
+        VL_DBG_MSGF("         'act' region trigger index 11 is active: @(posedge add32_fp32accum_bf16_tb_softfloat.tb_clk)\n");
+    }
+    if ((0x1000ULL & vlSelfRef.__VactTriggered.word(0U))) {
+        VL_DBG_MSGF("         'act' region trigger index 12 is active: @(negedge add32_fp32accum_bf16_tb_softfloat.tb_nrst)\n");
+    }
+    if ((0x2000ULL & vlSelfRef.__VactTriggered.word(0U))) {
+        VL_DBG_MSGF("         'act' region trigger index 13 is active: @([true] __VdlySched.awaitingCurrentTime())\n");
+    }
+    if ((0x4000ULL & vlSelfRef.__VactTriggered.word(0U))) {
+        VL_DBG_MSGF("         'act' region trigger index 14 is active: @(negedge add32_fp32accum_bf16_tb_softfloat.tb_clk)\n");
+    }
+}
+#endif  // VL_DEBUG
+
+#ifdef VL_DEBUG
+VL_ATTR_COLD void Vadd32_fp32accum_bf16_tb_softfloat___024root___dump_triggers__nba(Vadd32_fp32accum_bf16_tb_softfloat___024root* vlSelf) {
+    VL_DEBUG_IF(VL_DBG_MSGF("+    Vadd32_fp32accum_bf16_tb_softfloat___024root___dump_triggers__nba\n"); );
+    Vadd32_fp32accum_bf16_tb_softfloat__Syms* const __restrict vlSymsp VL_ATTR_UNUSED = vlSelf->vlSymsp;
+    auto& vlSelfRef = std::ref(*vlSelf).get();
+    // Body
+    if ((1U & (~ vlSelfRef.__VnbaTriggered.any()))) {
+        VL_DBG_MSGF("         No triggers active\n");
+    }
+    if ((1ULL & vlSelfRef.__VnbaTriggered.word(0U))) {
+        VL_DBG_MSGF("         'nba' region trigger index 0 is active: @([hybrid] add32_fp32accum_bf16_tb_softfloat.adder_s3.norm_val)\n");
+    }
+    if ((2ULL & vlSelfRef.__VnbaTriggered.word(0U))) {
+        VL_DBG_MSGF("         'nba' region trigger index 1 is active: @([hybrid] add32_fp32accum_bf16_tb_softfloat.gen_s1[0].adder_s1.norm_val)\n");
+    }
+    if ((4ULL & vlSelfRef.__VnbaTriggered.word(0U))) {
+        VL_DBG_MSGF("         'nba' region trigger index 2 is active: @([hybrid] add32_fp32accum_bf16_tb_softfloat.gen_s1[1].adder_s1.norm_val)\n");
+    }
+    if ((8ULL & vlSelfRef.__VnbaTriggered.word(0U))) {
+        VL_DBG_MSGF("         'nba' region trigger index 3 is active: @([hybrid] add32_fp32accum_bf16_tb_softfloat.gen_s1[2].adder_s1.norm_val)\n");
+    }
+    if ((0x10ULL & vlSelfRef.__VnbaTriggered.word(0U))) {
+        VL_DBG_MSGF("         'nba' region trigger index 4 is active: @([hybrid] add32_fp32accum_bf16_tb_softfloat.gen_s1[3].adder_s1.norm_val)\n");
+    }
+    if ((0x20ULL & vlSelfRef.__VnbaTriggered.word(0U))) {
+        VL_DBG_MSGF("         'nba' region trigger index 5 is active: @([hybrid] add32_fp32accum_bf16_tb_softfloat.gen_s1[4].adder_s1.norm_val)\n");
+    }
+    if ((0x40ULL & vlSelfRef.__VnbaTriggered.word(0U))) {
+        VL_DBG_MSGF("         'nba' region trigger index 6 is active: @([hybrid] add32_fp32accum_bf16_tb_softfloat.gen_s1[5].adder_s1.norm_val)\n");
+    }
+    if ((0x80ULL & vlSelfRef.__VnbaTriggered.word(0U))) {
+        VL_DBG_MSGF("         'nba' region trigger index 7 is active: @([hybrid] add32_fp32accum_bf16_tb_softfloat.gen_s1[6].adder_s1.norm_val)\n");
+    }
+    if ((0x100ULL & vlSelfRef.__VnbaTriggered.word(0U))) {
+        VL_DBG_MSGF("         'nba' region trigger index 8 is active: @([hybrid] add32_fp32accum_bf16_tb_softfloat.gen_s1[7].adder_s1.norm_val)\n");
+    }
+    if ((0x200ULL & vlSelfRef.__VnbaTriggered.word(0U))) {
+        VL_DBG_MSGF("         'nba' region trigger index 9 is active: @([hybrid] add32_fp32accum_bf16_tb_softfloat.gen_s2[0].adder_s2.norm_val)\n");
+    }
+    if ((0x400ULL & vlSelfRef.__VnbaTriggered.word(0U))) {
+        VL_DBG_MSGF("         'nba' region trigger index 10 is active: @([hybrid] add32_fp32accum_bf16_tb_softfloat.gen_s2[1].adder_s2.norm_val)\n");
+    }
+    if ((0x800ULL & vlSelfRef.__VnbaTriggered.word(0U))) {
+        VL_DBG_MSGF("         'nba' region trigger index 11 is active: @(posedge add32_fp32accum_bf16_tb_softfloat.tb_clk)\n");
+    }
+    if ((0x1000ULL & vlSelfRef.__VnbaTriggered.word(0U))) {
+        VL_DBG_MSGF("         'nba' region trigger index 12 is active: @(negedge add32_fp32accum_bf16_tb_softfloat.tb_nrst)\n");
+    }
+    if ((0x2000ULL & vlSelfRef.__VnbaTriggered.word(0U))) {
+        VL_DBG_MSGF("         'nba' region trigger index 13 is active: @([true] __VdlySched.awaitingCurrentTime())\n");
+    }
+    if ((0x4000ULL & vlSelfRef.__VnbaTriggered.word(0U))) {
+        VL_DBG_MSGF("         'nba' region trigger index 14 is active: @(negedge add32_fp32accum_bf16_tb_softfloat.tb_clk)\n");
+    }
+}
+#endif  // VL_DEBUG
+
+VL_ATTR_COLD void Vadd32_fp32accum_bf16_tb_softfloat___024root____Vm_traceActivitySetAll(Vadd32_fp32accum_bf16_tb_softfloat___024root* vlSelf) {
+    VL_DEBUG_IF(VL_DBG_MSGF("+    Vadd32_fp32accum_bf16_tb_softfloat___024root____Vm_traceActivitySetAll\n"); );
+    Vadd32_fp32accum_bf16_tb_softfloat__Syms* const __restrict vlSymsp VL_ATTR_UNUSED = vlSelf->vlSymsp;
+    auto& vlSelfRef = std::ref(*vlSelf).get();
+    // Body
+    vlSelfRef.__Vm_traceActivity[0U] = 1U;
+    vlSelfRef.__Vm_traceActivity[1U] = 1U;
+    vlSelfRef.__Vm_traceActivity[2U] = 1U;
+    vlSelfRef.__Vm_traceActivity[3U] = 1U;
+    vlSelfRef.__Vm_traceActivity[4U] = 1U;
+    vlSelfRef.__Vm_traceActivity[5U] = 1U;
+    vlSelfRef.__Vm_traceActivity[6U] = 1U;
+    vlSelfRef.__Vm_traceActivity[7U] = 1U;
+    vlSelfRef.__Vm_traceActivity[8U] = 1U;
+    vlSelfRef.__Vm_traceActivity[9U] = 1U;
+    vlSelfRef.__Vm_traceActivity[0xaU] = 1U;
+    vlSelfRef.__Vm_traceActivity[0xbU] = 1U;
+    vlSelfRef.__Vm_traceActivity[0xcU] = 1U;
+    vlSelfRef.__Vm_traceActivity[0xdU] = 1U;
+    vlSelfRef.__Vm_traceActivity[0xeU] = 1U;
+    vlSelfRef.__Vm_traceActivity[0xfU] = 1U;
+    vlSelfRef.__Vm_traceActivity[0x10U] = 1U;
+    vlSelfRef.__Vm_traceActivity[0x11U] = 1U;
+    vlSelfRef.__Vm_traceActivity[0x12U] = 1U;
+    vlSelfRef.__Vm_traceActivity[0x13U] = 1U;
+    vlSelfRef.__Vm_traceActivity[0x14U] = 1U;
+    vlSelfRef.__Vm_traceActivity[0x15U] = 1U;
+    vlSelfRef.__Vm_traceActivity[0x16U] = 1U;
+    vlSelfRef.__Vm_traceActivity[0x17U] = 1U;
+    vlSelfRef.__Vm_traceActivity[0x18U] = 1U;
+    vlSelfRef.__Vm_traceActivity[0x19U] = 1U;
+    vlSelfRef.__Vm_traceActivity[0x1aU] = 1U;
+    vlSelfRef.__Vm_traceActivity[0x1bU] = 1U;
+}
+
+VL_ATTR_COLD void Vadd32_fp32accum_bf16_tb_softfloat___024root___ctor_var_reset(Vadd32_fp32accum_bf16_tb_softfloat___024root* vlSelf) {
+    VL_DEBUG_IF(VL_DBG_MSGF("+    Vadd32_fp32accum_bf16_tb_softfloat___024root___ctor_var_reset\n"); );
+    Vadd32_fp32accum_bf16_tb_softfloat__Syms* const __restrict vlSymsp VL_ATTR_UNUSED = vlSelf->vlSymsp;
+    auto& vlSelfRef = std::ref(*vlSelf).get();
+    // Body
+    vlSelf->add32_fp32accum_bf16_tb_softfloat__DOT__tb_clk = VL_RAND_RESET_I(1);
+    vlSelf->add32_fp32accum_bf16_tb_softfloat__DOT__tb_nrst = VL_RAND_RESET_I(1);
+    for (int __Vi0 = 0; __Vi0 < 32; ++__Vi0) {
+        vlSelf->add32_fp32accum_bf16_tb_softfloat__DOT__inputs[__Vi0] = VL_RAND_RESET_I(16);
+    }
+    vlSelf->add32_fp32accum_bf16_tb_softfloat__DOT__tb_result = VL_RAND_RESET_I(16);
+    vlSelf->add32_fp32accum_bf16_tb_softfloat__DOT__exp = VL_RAND_RESET_I(16);
+    vlSelf->add32_fp32accum_bf16_tb_softfloat__DOT__pass_count = 0;
+    vlSelf->add32_fp32accum_bf16_tb_softfloat__DOT__fail_count = 0;
+    vlSelf->add32_fp32accum_bf16_tb_softfloat__DOT__total_ulp_diff = 0;
+    vlSelf->add32_fp32accum_bf16_tb_softfloat__DOT__ulp_big_count = 0;
+    vlSelf->add32_fp32accum_bf16_tb_softfloat__DOT__largest_ulp = 0;
+    vlSelf->add32_fp32accum_bf16_tb_softfloat__DOT__fail_fd = 0;
+    vlSelf->add32_fp32accum_bf16_tb_softfloat__DOT__fd = 0;
+    vlSelf->add32_fp32accum_bf16_tb_softfloat__DOT__total_count = VL_RAND_RESET_I(32);
+    vlSelf->add32_fp32accum_bf16_tb_softfloat__DOT__unnamedblk2__DOT__i = 0;
+    vlSelf->add32_fp32accum_bf16_tb_softfloat__DOT__unnamedblk3__DOT__k = 0;
+    for (int __Vi0 = 0; __Vi0 < 32; ++__Vi0) {
+        vlSelf->add32_fp32accum_bf16_tb_softfloat__DOT__unnamedblk4__DOT__csv_in[__Vi0] = VL_RAND_RESET_I(16);
+    }
+    vlSelf->add32_fp32accum_bf16_tb_softfloat__DOT__unnamedblk4__DOT__csv_exp = VL_RAND_RESET_I(16);
+    vlSelf->add32_fp32accum_bf16_tb_softfloat__DOT__unnamedblk4__DOT__ret = 0;
+    vlSelf->add32_fp32accum_bf16_tb_softfloat__DOT__unnamedblk4__DOT__unnamedblk5__DOT__k = 0;
+    vlSelf->add32_fp32accum_bf16_tb_softfloat__DOT__adder_s3__DOT__a_daz = VL_RAND_RESET_I(32);
+    vlSelf->add32_fp32accum_bf16_tb_softfloat__DOT__adder_s3__DOT__b_daz = VL_RAND_RESET_I(32);
+    vlSelf->add32_fp32accum_bf16_tb_softfloat__DOT__adder_s3__DOT__c_daz = VL_RAND_RESET_I(32);
+    vlSelf->add32_fp32accum_bf16_tb_softfloat__DOT__adder_s3__DOT__d_daz = VL_RAND_RESET_I(32);
+    vlSelf->add32_fp32accum_bf16_tb_softfloat__DOT__adder_s3__DOT__exp_a = VL_RAND_RESET_I(8);
+    vlSelf->add32_fp32accum_bf16_tb_softfloat__DOT__adder_s3__DOT__exp_b = VL_RAND_RESET_I(8);
+    vlSelf->add32_fp32accum_bf16_tb_softfloat__DOT__adder_s3__DOT__exp_c = VL_RAND_RESET_I(8);
+    vlSelf->add32_fp32accum_bf16_tb_softfloat__DOT__adder_s3__DOT__exp_d = VL_RAND_RESET_I(8);
+    vlSelf->add32_fp32accum_bf16_tb_softfloat__DOT__adder_s3__DOT__frac_a = VL_RAND_RESET_I(23);
+    vlSelf->add32_fp32accum_bf16_tb_softfloat__DOT__adder_s3__DOT__frac_b = VL_RAND_RESET_I(23);
+    vlSelf->add32_fp32accum_bf16_tb_softfloat__DOT__adder_s3__DOT__frac_c = VL_RAND_RESET_I(23);
+    vlSelf->add32_fp32accum_bf16_tb_softfloat__DOT__adder_s3__DOT__frac_d = VL_RAND_RESET_I(23);
+    vlSelf->add32_fp32accum_bf16_tb_softfloat__DOT__adder_s3__DOT__sign_a = VL_RAND_RESET_I(1);
+    vlSelf->add32_fp32accum_bf16_tb_softfloat__DOT__adder_s3__DOT__sign_b = VL_RAND_RESET_I(1);
+    vlSelf->add32_fp32accum_bf16_tb_softfloat__DOT__adder_s3__DOT__sign_c = VL_RAND_RESET_I(1);
+    vlSelf->add32_fp32accum_bf16_tb_softfloat__DOT__adder_s3__DOT__sign_d = VL_RAND_RESET_I(1);
+    vlSelf->add32_fp32accum_bf16_tb_softfloat__DOT__adder_s3__DOT__exp_p = VL_RAND_RESET_I(8);
+    vlSelf->add32_fp32accum_bf16_tb_softfloat__DOT__adder_s3__DOT__exp_m = VL_RAND_RESET_I(8);
+    vlSelf->add32_fp32accum_bf16_tb_softfloat__DOT__adder_s3__DOT__exp_r = VL_RAND_RESET_I(8);
+    vlSelf->add32_fp32accum_bf16_tb_softfloat__DOT__adder_s3__DOT__exp_n = VL_RAND_RESET_I(8);
+    vlSelf->add32_fp32accum_bf16_tb_softfloat__DOT__adder_s3__DOT__exp_x = VL_RAND_RESET_I(8);
+    vlSelf->add32_fp32accum_bf16_tb_softfloat__DOT__adder_s3__DOT__exp_y = VL_RAND_RESET_I(8);
+    vlSelf->add32_fp32accum_bf16_tb_softfloat__DOT__adder_s3__DOT__exp_mx = VL_RAND_RESET_I(8);
+    vlSelf->add32_fp32accum_bf16_tb_softfloat__DOT__adder_s3__DOT__exp_nx = VL_RAND_RESET_I(8);
+    vlSelf->add32_fp32accum_bf16_tb_softfloat__DOT__adder_s3__DOT__frac_p = VL_RAND_RESET_I(23);
+    vlSelf->add32_fp32accum_bf16_tb_softfloat__DOT__adder_s3__DOT__frac_m = VL_RAND_RESET_I(23);
+    vlSelf->add32_fp32accum_bf16_tb_softfloat__DOT__adder_s3__DOT__frac_r = VL_RAND_RESET_I(23);
+    vlSelf->add32_fp32accum_bf16_tb_softfloat__DOT__adder_s3__DOT__frac_n = VL_RAND_RESET_I(23);
+    vlSelf->add32_fp32accum_bf16_tb_softfloat__DOT__adder_s3__DOT__frac_x = VL_RAND_RESET_I(23);
+    vlSelf->add32_fp32accum_bf16_tb_softfloat__DOT__adder_s3__DOT__frac_y = VL_RAND_RESET_I(23);
+    vlSelf->add32_fp32accum_bf16_tb_softfloat__DOT__adder_s3__DOT__frac_mx = VL_RAND_RESET_I(23);
+    vlSelf->add32_fp32accum_bf16_tb_softfloat__DOT__adder_s3__DOT__frac_nx = VL_RAND_RESET_I(23);
+    vlSelf->add32_fp32accum_bf16_tb_softfloat__DOT__adder_s3__DOT__sign_p = VL_RAND_RESET_I(1);
+    vlSelf->add32_fp32accum_bf16_tb_softfloat__DOT__adder_s3__DOT__sign_m = VL_RAND_RESET_I(1);
+    vlSelf->add32_fp32accum_bf16_tb_softfloat__DOT__adder_s3__DOT__sign_r = VL_RAND_RESET_I(1);
+    vlSelf->add32_fp32accum_bf16_tb_softfloat__DOT__adder_s3__DOT__sign_n = VL_RAND_RESET_I(1);
+    vlSelf->add32_fp32accum_bf16_tb_softfloat__DOT__adder_s3__DOT__sign_x = VL_RAND_RESET_I(1);
+    vlSelf->add32_fp32accum_bf16_tb_softfloat__DOT__adder_s3__DOT__sign_y = VL_RAND_RESET_I(1);
+    vlSelf->add32_fp32accum_bf16_tb_softfloat__DOT__adder_s3__DOT__sign_mx = VL_RAND_RESET_I(1);
+    vlSelf->add32_fp32accum_bf16_tb_softfloat__DOT__adder_s3__DOT__sign_nx = VL_RAND_RESET_I(1);
+    vlSelf->add32_fp32accum_bf16_tb_softfloat__DOT__adder_s3__DOT__exp_x_eff = VL_RAND_RESET_I(8);
+    vlSelf->add32_fp32accum_bf16_tb_softfloat__DOT__adder_s3__DOT__exp_y_eff = VL_RAND_RESET_I(8);
+    vlSelf->add32_fp32accum_bf16_tb_softfloat__DOT__adder_s3__DOT__exp_mx_eff = VL_RAND_RESET_I(8);
+    vlSelf->add32_fp32accum_bf16_tb_softfloat__DOT__adder_s3__DOT__exp_nx_eff = VL_RAND_RESET_I(8);
+    vlSelf->add32_fp32accum_bf16_tb_softfloat__DOT__adder_s3__DOT__y_shift = VL_RAND_RESET_I(9);
+    vlSelf->add32_fp32accum_bf16_tb_softfloat__DOT__adder_s3__DOT__m_shift = VL_RAND_RESET_I(9);
+    vlSelf->add32_fp32accum_bf16_tb_softfloat__DOT__adder_s3__DOT__n_shift = VL_RAND_RESET_I(9);
+    vlSelf->add32_fp32accum_bf16_tb_softfloat__DOT__adder_s3__DOT__x_mant = VL_RAND_RESET_I(27);
+    vlSelf->add32_fp32accum_bf16_tb_softfloat__DOT__adder_s3__DOT__y_shifted = VL_RAND_RESET_I(27);
+    vlSelf->add32_fp32accum_bf16_tb_softfloat__DOT__adder_s3__DOT__m_shifted = VL_RAND_RESET_I(27);
+    vlSelf->add32_fp32accum_bf16_tb_softfloat__DOT__adder_s3__DOT__n_shifted = VL_RAND_RESET_I(27);
+    vlSelf->add32_fp32accum_bf16_tb_softfloat__DOT__adder_s3__DOT__y_mant_base = VL_RAND_RESET_I(27);
+    vlSelf->add32_fp32accum_bf16_tb_softfloat__DOT__adder_s3__DOT__m_mant_base = VL_RAND_RESET_I(27);
+    vlSelf->add32_fp32accum_bf16_tb_softfloat__DOT__adder_s3__DOT__n_mant_base = VL_RAND_RESET_I(27);
+    vlSelf->add32_fp32accum_bf16_tb_softfloat__DOT__adder_s3__DOT__sticky_y = VL_RAND_RESET_I(1);
+    vlSelf->add32_fp32accum_bf16_tb_softfloat__DOT__adder_s3__DOT__sticky_m = VL_RAND_RESET_I(1);
+    vlSelf->add32_fp32accum_bf16_tb_softfloat__DOT__adder_s3__DOT__sticky_n = VL_RAND_RESET_I(1);
+    vlSelf->add32_fp32accum_bf16_tb_softfloat__DOT__adder_s3__DOT__y_op = VL_RAND_RESET_I(1);
+    vlSelf->add32_fp32accum_bf16_tb_softfloat__DOT__adder_s3__DOT__m_op = VL_RAND_RESET_I(1);
+    vlSelf->add32_fp32accum_bf16_tb_softfloat__DOT__adder_s3__DOT__n_op = VL_RAND_RESET_I(1);
+    vlSelf->add32_fp32accum_bf16_tb_softfloat__DOT__adder_s3__DOT__is_nan_any = VL_RAND_RESET_I(1);
+    vlSelf->add32_fp32accum_bf16_tb_softfloat__DOT__adder_s3__DOT__special_case = VL_RAND_RESET_I(1);
+    vlSelf->add32_fp32accum_bf16_tb_softfloat__DOT__adder_s3__DOT__any_pos_inf = VL_RAND_RESET_I(1);
+    vlSelf->add32_fp32accum_bf16_tb_softfloat__DOT__adder_s3__DOT__any_neg_inf = VL_RAND_RESET_I(1);
+    vlSelf->add32_fp32accum_bf16_tb_softfloat__DOT__adder_s3__DOT__special_result = VL_RAND_RESET_I(32);
+    vlSelf->add32_fp32accum_bf16_tb_softfloat__DOT__adder_s3__DOT__st1_a_e = VL_RAND_RESET_I(8);
+    vlSelf->add32_fp32accum_bf16_tb_softfloat__DOT__adder_s3__DOT__st1_a_s = VL_RAND_RESET_I(1);
+    vlSelf->add32_fp32accum_bf16_tb_softfloat__DOT__adder_s3__DOT__st1_align_sticky = VL_RAND_RESET_I(1);
+    vlSelf->add32_fp32accum_bf16_tb_softfloat__DOT__adder_s3__DOT__st1_special_case = VL_RAND_RESET_I(1);
+    vlSelf->add32_fp32accum_bf16_tb_softfloat__DOT__adder_s3__DOT__st1_special_result = VL_RAND_RESET_I(32);
+    vlSelf->add32_fp32accum_bf16_tb_softfloat__DOT__adder_s3__DOT__st1_sum_vec = VL_RAND_RESET_I(30);
+    vlSelf->add32_fp32accum_bf16_tb_softfloat__DOT__adder_s3__DOT__st1_carry_vec = VL_RAND_RESET_I(30);
+    vlSelf->add32_fp32accum_bf16_tb_softfloat__DOT__adder_s3__DOT__st1_hot_ones = VL_RAND_RESET_I(2);
+    vlSelf->add32_fp32accum_bf16_tb_softfloat__DOT__adder_s3__DOT__raw_sum = VL_RAND_RESET_I(30);
+    vlSelf->add32_fp32accum_bf16_tb_softfloat__DOT__adder_s3__DOT__mag_sum = VL_RAND_RESET_I(30);
+    vlSelf->add32_fp32accum_bf16_tb_softfloat__DOT__adder_s3__DOT__res_sign = VL_RAND_RESET_I(1);
+    vlSelf->add32_fp32accum_bf16_tb_softfloat__DOT__adder_s3__DOT__st2_exp_base = VL_RAND_RESET_I(8);
+    vlSelf->add32_fp32accum_bf16_tb_softfloat__DOT__adder_s3__DOT__st2_sum_mag = VL_RAND_RESET_I(30);
+    vlSelf->add32_fp32accum_bf16_tb_softfloat__DOT__adder_s3__DOT__st2_spec_res = VL_RAND_RESET_I(32);
+    vlSelf->add32_fp32accum_bf16_tb_softfloat__DOT__adder_s3__DOT__st2_res_sign = VL_RAND_RESET_I(1);
+    vlSelf->add32_fp32accum_bf16_tb_softfloat__DOT__adder_s3__DOT__st2_sticky = VL_RAND_RESET_I(1);
+    vlSelf->add32_fp32accum_bf16_tb_softfloat__DOT__adder_s3__DOT__st2_special = VL_RAND_RESET_I(1);
+    vlSelf->add32_fp32accum_bf16_tb_softfloat__DOT__adder_s3__DOT__lzd_scan = VL_RAND_RESET_I(30);
+    vlSelf->add32_fp32accum_bf16_tb_softfloat__DOT__adder_s3__DOT__lead_zeros = VL_RAND_RESET_I(5);
+    vlSelf->add32_fp32accum_bf16_tb_softfloat__DOT__adder_s3__DOT__norm_val = VL_RAND_RESET_I(30);
+    vlSelf->add32_fp32accum_bf16_tb_softfloat__DOT__adder_s3__DOT__raw_mant = VL_RAND_RESET_I(23);
+    vlSelf->add32_fp32accum_bf16_tb_softfloat__DOT__adder_s3__DOT__final_mant = VL_RAND_RESET_I(23);
+    vlSelf->add32_fp32accum_bf16_tb_softfloat__DOT__adder_s3__DOT__rounded_mant_int = VL_RAND_RESET_I(24);
+    vlSelf->add32_fp32accum_bf16_tb_softfloat__DOT__adder_s3__DOT__final_exp_calc = VL_RAND_RESET_I(11);
+    vlSelf->add32_fp32accum_bf16_tb_softfloat__DOT__adder_s3__DOT__guard_bit = VL_RAND_RESET_I(1);
+    vlSelf->add32_fp32accum_bf16_tb_softfloat__DOT__adder_s3__DOT__round_bit = VL_RAND_RESET_I(1);
+    vlSelf->add32_fp32accum_bf16_tb_softfloat__DOT__adder_s3__DOT__sticky_bit = VL_RAND_RESET_I(1);
+    vlSelf->add32_fp32accum_bf16_tb_softfloat__DOT__adder_s3__DOT__round_up = VL_RAND_RESET_I(1);
+    vlSelf->add32_fp32accum_bf16_tb_softfloat__DOT__adder_s3__DOT__l_bit = VL_RAND_RESET_I(1);
+    vlSelf->add32_fp32accum_bf16_tb_softfloat__DOT__adder_s3__DOT__result_out = VL_RAND_RESET_I(32);
+    vlSelf->add32_fp32accum_bf16_tb_softfloat__DOT__adder_s3__DOT__op_x = VL_RAND_RESET_I(30);
+    vlSelf->add32_fp32accum_bf16_tb_softfloat__DOT__adder_s3__DOT__op_y = VL_RAND_RESET_I(30);
+    vlSelf->add32_fp32accum_bf16_tb_softfloat__DOT__adder_s3__DOT__op_m = VL_RAND_RESET_I(30);
+    vlSelf->add32_fp32accum_bf16_tb_softfloat__DOT__adder_s3__DOT__op_n = VL_RAND_RESET_I(30);
+    vlSelf->add32_fp32accum_bf16_tb_softfloat__DOT__adder_s3__DOT__csa_s1 = VL_RAND_RESET_I(30);
+    vlSelf->add32_fp32accum_bf16_tb_softfloat__DOT__adder_s3__DOT__csa_c1 = VL_RAND_RESET_I(30);
+    vlSelf->add32_fp32accum_bf16_tb_softfloat__DOT__adder_s3__DOT__csa_s2 = VL_RAND_RESET_I(30);
+    vlSelf->add32_fp32accum_bf16_tb_softfloat__DOT__adder_s3__DOT__csa_c2 = VL_RAND_RESET_I(30);
+    vlSelf->add32_fp32accum_bf16_tb_softfloat__DOT__adder_s3__DOT__stage3_logic__DOT__unnamedblk1__DOT__i = 0;
+    vlSelf->add32_fp32accum_bf16_tb_softfloat__DOT__final_reduce__DOT__new_exp = VL_RAND_RESET_I(10);
+    vlSelf->add32_fp32accum_bf16_tb_softfloat__DOT__final_reduce__DOT__rounded = VL_RAND_RESET_I(8);
+    vlSelf->add32_fp32accum_bf16_tb_softfloat__DOT__final_reduce__DOT__guard = VL_RAND_RESET_I(1);
+    vlSelf->add32_fp32accum_bf16_tb_softfloat__DOT__final_reduce__DOT__rnd = VL_RAND_RESET_I(1);
+    vlSelf->add32_fp32accum_bf16_tb_softfloat__DOT__final_reduce__DOT__sticky = VL_RAND_RESET_I(1);
+    vlSelf->add32_fp32accum_bf16_tb_softfloat__DOT__final_reduce__DOT__round_up = VL_RAND_RESET_I(1);
+    vlSelf->add32_fp32accum_bf16_tb_softfloat__DOT__gen_s1__BRA__0__KET____DOT__adder_s1__DOT__a_daz = VL_RAND_RESET_I(16);
+    vlSelf->add32_fp32accum_bf16_tb_softfloat__DOT__gen_s1__BRA__0__KET____DOT__adder_s1__DOT__b_daz = VL_RAND_RESET_I(16);
+    vlSelf->add32_fp32accum_bf16_tb_softfloat__DOT__gen_s1__BRA__0__KET____DOT__adder_s1__DOT__c_daz = VL_RAND_RESET_I(16);
+    vlSelf->add32_fp32accum_bf16_tb_softfloat__DOT__gen_s1__BRA__0__KET____DOT__adder_s1__DOT__d_daz = VL_RAND_RESET_I(16);
+    vlSelf->add32_fp32accum_bf16_tb_softfloat__DOT__gen_s1__BRA__0__KET____DOT__adder_s1__DOT__exp_a = VL_RAND_RESET_I(8);
+    vlSelf->add32_fp32accum_bf16_tb_softfloat__DOT__gen_s1__BRA__0__KET____DOT__adder_s1__DOT__exp_b = VL_RAND_RESET_I(8);
+    vlSelf->add32_fp32accum_bf16_tb_softfloat__DOT__gen_s1__BRA__0__KET____DOT__adder_s1__DOT__exp_c = VL_RAND_RESET_I(8);
+    vlSelf->add32_fp32accum_bf16_tb_softfloat__DOT__gen_s1__BRA__0__KET____DOT__adder_s1__DOT__exp_d = VL_RAND_RESET_I(8);
+    vlSelf->add32_fp32accum_bf16_tb_softfloat__DOT__gen_s1__BRA__0__KET____DOT__adder_s1__DOT__frac_a = VL_RAND_RESET_I(7);
+    vlSelf->add32_fp32accum_bf16_tb_softfloat__DOT__gen_s1__BRA__0__KET____DOT__adder_s1__DOT__frac_b = VL_RAND_RESET_I(7);
+    vlSelf->add32_fp32accum_bf16_tb_softfloat__DOT__gen_s1__BRA__0__KET____DOT__adder_s1__DOT__frac_c = VL_RAND_RESET_I(7);
+    vlSelf->add32_fp32accum_bf16_tb_softfloat__DOT__gen_s1__BRA__0__KET____DOT__adder_s1__DOT__frac_d = VL_RAND_RESET_I(7);
+    vlSelf->add32_fp32accum_bf16_tb_softfloat__DOT__gen_s1__BRA__0__KET____DOT__adder_s1__DOT__sign_a = VL_RAND_RESET_I(1);
+    vlSelf->add32_fp32accum_bf16_tb_softfloat__DOT__gen_s1__BRA__0__KET____DOT__adder_s1__DOT__sign_b = VL_RAND_RESET_I(1);
+    vlSelf->add32_fp32accum_bf16_tb_softfloat__DOT__gen_s1__BRA__0__KET____DOT__adder_s1__DOT__sign_c = VL_RAND_RESET_I(1);
+    vlSelf->add32_fp32accum_bf16_tb_softfloat__DOT__gen_s1__BRA__0__KET____DOT__adder_s1__DOT__sign_d = VL_RAND_RESET_I(1);
+    vlSelf->add32_fp32accum_bf16_tb_softfloat__DOT__gen_s1__BRA__0__KET____DOT__adder_s1__DOT__exp_p = VL_RAND_RESET_I(8);
+    vlSelf->add32_fp32accum_bf16_tb_softfloat__DOT__gen_s1__BRA__0__KET____DOT__adder_s1__DOT__exp_m = VL_RAND_RESET_I(8);
+    vlSelf->add32_fp32accum_bf16_tb_softfloat__DOT__gen_s1__BRA__0__KET____DOT__adder_s1__DOT__exp_r = VL_RAND_RESET_I(8);
+    vlSelf->add32_fp32accum_bf16_tb_softfloat__DOT__gen_s1__BRA__0__KET____DOT__adder_s1__DOT__exp_n = VL_RAND_RESET_I(8);
+    vlSelf->add32_fp32accum_bf16_tb_softfloat__DOT__gen_s1__BRA__0__KET____DOT__adder_s1__DOT__exp_x = VL_RAND_RESET_I(8);
+    vlSelf->add32_fp32accum_bf16_tb_softfloat__DOT__gen_s1__BRA__0__KET____DOT__adder_s1__DOT__exp_y = VL_RAND_RESET_I(8);
+    vlSelf->add32_fp32accum_bf16_tb_softfloat__DOT__gen_s1__BRA__0__KET____DOT__adder_s1__DOT__exp_mx = VL_RAND_RESET_I(8);
+    vlSelf->add32_fp32accum_bf16_tb_softfloat__DOT__gen_s1__BRA__0__KET____DOT__adder_s1__DOT__exp_nx = VL_RAND_RESET_I(8);
+    vlSelf->add32_fp32accum_bf16_tb_softfloat__DOT__gen_s1__BRA__0__KET____DOT__adder_s1__DOT__frac_p = VL_RAND_RESET_I(7);
+    vlSelf->add32_fp32accum_bf16_tb_softfloat__DOT__gen_s1__BRA__0__KET____DOT__adder_s1__DOT__frac_m = VL_RAND_RESET_I(7);
+    vlSelf->add32_fp32accum_bf16_tb_softfloat__DOT__gen_s1__BRA__0__KET____DOT__adder_s1__DOT__frac_r = VL_RAND_RESET_I(7);
+    vlSelf->add32_fp32accum_bf16_tb_softfloat__DOT__gen_s1__BRA__0__KET____DOT__adder_s1__DOT__frac_n = VL_RAND_RESET_I(7);
+    vlSelf->add32_fp32accum_bf16_tb_softfloat__DOT__gen_s1__BRA__0__KET____DOT__adder_s1__DOT__frac_x = VL_RAND_RESET_I(7);
+    vlSelf->add32_fp32accum_bf16_tb_softfloat__DOT__gen_s1__BRA__0__KET____DOT__adder_s1__DOT__frac_y = VL_RAND_RESET_I(7);
+    vlSelf->add32_fp32accum_bf16_tb_softfloat__DOT__gen_s1__BRA__0__KET____DOT__adder_s1__DOT__frac_mx = VL_RAND_RESET_I(7);
+    vlSelf->add32_fp32accum_bf16_tb_softfloat__DOT__gen_s1__BRA__0__KET____DOT__adder_s1__DOT__frac_nx = VL_RAND_RESET_I(7);
+    vlSelf->add32_fp32accum_bf16_tb_softfloat__DOT__gen_s1__BRA__0__KET____DOT__adder_s1__DOT__sign_p = VL_RAND_RESET_I(1);
+    vlSelf->add32_fp32accum_bf16_tb_softfloat__DOT__gen_s1__BRA__0__KET____DOT__adder_s1__DOT__sign_m = VL_RAND_RESET_I(1);
+    vlSelf->add32_fp32accum_bf16_tb_softfloat__DOT__gen_s1__BRA__0__KET____DOT__adder_s1__DOT__sign_r = VL_RAND_RESET_I(1);
+    vlSelf->add32_fp32accum_bf16_tb_softfloat__DOT__gen_s1__BRA__0__KET____DOT__adder_s1__DOT__sign_n = VL_RAND_RESET_I(1);
+    vlSelf->add32_fp32accum_bf16_tb_softfloat__DOT__gen_s1__BRA__0__KET____DOT__adder_s1__DOT__sign_x = VL_RAND_RESET_I(1);
+    vlSelf->add32_fp32accum_bf16_tb_softfloat__DOT__gen_s1__BRA__0__KET____DOT__adder_s1__DOT__sign_y = VL_RAND_RESET_I(1);
+    vlSelf->add32_fp32accum_bf16_tb_softfloat__DOT__gen_s1__BRA__0__KET____DOT__adder_s1__DOT__sign_mx = VL_RAND_RESET_I(1);
+    vlSelf->add32_fp32accum_bf16_tb_softfloat__DOT__gen_s1__BRA__0__KET____DOT__adder_s1__DOT__sign_nx = VL_RAND_RESET_I(1);
+    vlSelf->add32_fp32accum_bf16_tb_softfloat__DOT__gen_s1__BRA__0__KET____DOT__adder_s1__DOT__exp_x_eff = VL_RAND_RESET_I(8);
+    vlSelf->add32_fp32accum_bf16_tb_softfloat__DOT__gen_s1__BRA__0__KET____DOT__adder_s1__DOT__exp_y_eff = VL_RAND_RESET_I(8);
+    vlSelf->add32_fp32accum_bf16_tb_softfloat__DOT__gen_s1__BRA__0__KET____DOT__adder_s1__DOT__exp_mx_eff = VL_RAND_RESET_I(8);
+    vlSelf->add32_fp32accum_bf16_tb_softfloat__DOT__gen_s1__BRA__0__KET____DOT__adder_s1__DOT__exp_nx_eff = VL_RAND_RESET_I(8);
+    vlSelf->add32_fp32accum_bf16_tb_softfloat__DOT__gen_s1__BRA__0__KET____DOT__adder_s1__DOT__y_shift = VL_RAND_RESET_I(9);
+    vlSelf->add32_fp32accum_bf16_tb_softfloat__DOT__gen_s1__BRA__0__KET____DOT__adder_s1__DOT__m_shift = VL_RAND_RESET_I(9);
+    vlSelf->add32_fp32accum_bf16_tb_softfloat__DOT__gen_s1__BRA__0__KET____DOT__adder_s1__DOT__n_shift = VL_RAND_RESET_I(9);
+    vlSelf->add32_fp32accum_bf16_tb_softfloat__DOT__gen_s1__BRA__0__KET____DOT__adder_s1__DOT__x_mant = VL_RAND_RESET_I(27);
+    vlSelf->add32_fp32accum_bf16_tb_softfloat__DOT__gen_s1__BRA__0__KET____DOT__adder_s1__DOT__y_shifted = VL_RAND_RESET_I(27);
+    vlSelf->add32_fp32accum_bf16_tb_softfloat__DOT__gen_s1__BRA__0__KET____DOT__adder_s1__DOT__m_shifted = VL_RAND_RESET_I(27);
+    vlSelf->add32_fp32accum_bf16_tb_softfloat__DOT__gen_s1__BRA__0__KET____DOT__adder_s1__DOT__n_shifted = VL_RAND_RESET_I(27);
+    vlSelf->add32_fp32accum_bf16_tb_softfloat__DOT__gen_s1__BRA__0__KET____DOT__adder_s1__DOT__y_mant_base = VL_RAND_RESET_I(27);
+    vlSelf->add32_fp32accum_bf16_tb_softfloat__DOT__gen_s1__BRA__0__KET____DOT__adder_s1__DOT__m_mant_base = VL_RAND_RESET_I(27);
+    vlSelf->add32_fp32accum_bf16_tb_softfloat__DOT__gen_s1__BRA__0__KET____DOT__adder_s1__DOT__n_mant_base = VL_RAND_RESET_I(27);
+    vlSelf->add32_fp32accum_bf16_tb_softfloat__DOT__gen_s1__BRA__0__KET____DOT__adder_s1__DOT__sticky_y = VL_RAND_RESET_I(1);
+    vlSelf->add32_fp32accum_bf16_tb_softfloat__DOT__gen_s1__BRA__0__KET____DOT__adder_s1__DOT__sticky_m = VL_RAND_RESET_I(1);
+    vlSelf->add32_fp32accum_bf16_tb_softfloat__DOT__gen_s1__BRA__0__KET____DOT__adder_s1__DOT__sticky_n = VL_RAND_RESET_I(1);
+    vlSelf->add32_fp32accum_bf16_tb_softfloat__DOT__gen_s1__BRA__0__KET____DOT__adder_s1__DOT__y_op = VL_RAND_RESET_I(1);
+    vlSelf->add32_fp32accum_bf16_tb_softfloat__DOT__gen_s1__BRA__0__KET____DOT__adder_s1__DOT__m_op = VL_RAND_RESET_I(1);
+    vlSelf->add32_fp32accum_bf16_tb_softfloat__DOT__gen_s1__BRA__0__KET____DOT__adder_s1__DOT__n_op = VL_RAND_RESET_I(1);
+    vlSelf->add32_fp32accum_bf16_tb_softfloat__DOT__gen_s1__BRA__0__KET____DOT__adder_s1__DOT__is_nan_any = VL_RAND_RESET_I(1);
+    vlSelf->add32_fp32accum_bf16_tb_softfloat__DOT__gen_s1__BRA__0__KET____DOT__adder_s1__DOT__special_case = VL_RAND_RESET_I(1);
+    vlSelf->add32_fp32accum_bf16_tb_softfloat__DOT__gen_s1__BRA__0__KET____DOT__adder_s1__DOT__any_pos_inf = VL_RAND_RESET_I(1);
+    vlSelf->add32_fp32accum_bf16_tb_softfloat__DOT__gen_s1__BRA__0__KET____DOT__adder_s1__DOT__any_neg_inf = VL_RAND_RESET_I(1);
+    vlSelf->add32_fp32accum_bf16_tb_softfloat__DOT__gen_s1__BRA__0__KET____DOT__adder_s1__DOT__special_result = VL_RAND_RESET_I(32);
+    vlSelf->add32_fp32accum_bf16_tb_softfloat__DOT__gen_s1__BRA__0__KET____DOT__adder_s1__DOT__st1_a_e = VL_RAND_RESET_I(8);
+    vlSelf->add32_fp32accum_bf16_tb_softfloat__DOT__gen_s1__BRA__0__KET____DOT__adder_s1__DOT__st1_a_s = VL_RAND_RESET_I(1);
+    vlSelf->add32_fp32accum_bf16_tb_softfloat__DOT__gen_s1__BRA__0__KET____DOT__adder_s1__DOT__st1_align_sticky = VL_RAND_RESET_I(1);
+    vlSelf->add32_fp32accum_bf16_tb_softfloat__DOT__gen_s1__BRA__0__KET____DOT__adder_s1__DOT__st1_special_case = VL_RAND_RESET_I(1);
+    vlSelf->add32_fp32accum_bf16_tb_softfloat__DOT__gen_s1__BRA__0__KET____DOT__adder_s1__DOT__st1_special_result = VL_RAND_RESET_I(32);
+    vlSelf->add32_fp32accum_bf16_tb_softfloat__DOT__gen_s1__BRA__0__KET____DOT__adder_s1__DOT__st1_sum_vec = VL_RAND_RESET_I(30);
+    vlSelf->add32_fp32accum_bf16_tb_softfloat__DOT__gen_s1__BRA__0__KET____DOT__adder_s1__DOT__st1_carry_vec = VL_RAND_RESET_I(30);
+    vlSelf->add32_fp32accum_bf16_tb_softfloat__DOT__gen_s1__BRA__0__KET____DOT__adder_s1__DOT__st1_hot_ones = VL_RAND_RESET_I(2);
+    vlSelf->add32_fp32accum_bf16_tb_softfloat__DOT__gen_s1__BRA__0__KET____DOT__adder_s1__DOT__raw_sum = VL_RAND_RESET_I(30);
+    vlSelf->add32_fp32accum_bf16_tb_softfloat__DOT__gen_s1__BRA__0__KET____DOT__adder_s1__DOT__mag_sum = VL_RAND_RESET_I(30);
+    vlSelf->add32_fp32accum_bf16_tb_softfloat__DOT__gen_s1__BRA__0__KET____DOT__adder_s1__DOT__res_sign = VL_RAND_RESET_I(1);
+    vlSelf->add32_fp32accum_bf16_tb_softfloat__DOT__gen_s1__BRA__0__KET____DOT__adder_s1__DOT__st2_exp_base = VL_RAND_RESET_I(8);
+    vlSelf->add32_fp32accum_bf16_tb_softfloat__DOT__gen_s1__BRA__0__KET____DOT__adder_s1__DOT__st2_sum_mag = VL_RAND_RESET_I(30);
+    vlSelf->add32_fp32accum_bf16_tb_softfloat__DOT__gen_s1__BRA__0__KET____DOT__adder_s1__DOT__st2_spec_res = VL_RAND_RESET_I(32);
+    vlSelf->add32_fp32accum_bf16_tb_softfloat__DOT__gen_s1__BRA__0__KET____DOT__adder_s1__DOT__st2_res_sign = VL_RAND_RESET_I(1);
+    vlSelf->add32_fp32accum_bf16_tb_softfloat__DOT__gen_s1__BRA__0__KET____DOT__adder_s1__DOT__st2_sticky = VL_RAND_RESET_I(1);
+    vlSelf->add32_fp32accum_bf16_tb_softfloat__DOT__gen_s1__BRA__0__KET____DOT__adder_s1__DOT__st2_special = VL_RAND_RESET_I(1);
+    vlSelf->add32_fp32accum_bf16_tb_softfloat__DOT__gen_s1__BRA__0__KET____DOT__adder_s1__DOT__lzd_scan = VL_RAND_RESET_I(30);
+    vlSelf->add32_fp32accum_bf16_tb_softfloat__DOT__gen_s1__BRA__0__KET____DOT__adder_s1__DOT__lead_zeros = VL_RAND_RESET_I(5);
+    vlSelf->add32_fp32accum_bf16_tb_softfloat__DOT__gen_s1__BRA__0__KET____DOT__adder_s1__DOT__norm_val = VL_RAND_RESET_I(30);
+    vlSelf->add32_fp32accum_bf16_tb_softfloat__DOT__gen_s1__BRA__0__KET____DOT__adder_s1__DOT__raw_mant = VL_RAND_RESET_I(23);
+    vlSelf->add32_fp32accum_bf16_tb_softfloat__DOT__gen_s1__BRA__0__KET____DOT__adder_s1__DOT__final_mant = VL_RAND_RESET_I(23);
+    vlSelf->add32_fp32accum_bf16_tb_softfloat__DOT__gen_s1__BRA__0__KET____DOT__adder_s1__DOT__rounded_mant_int = VL_RAND_RESET_I(24);
+    vlSelf->add32_fp32accum_bf16_tb_softfloat__DOT__gen_s1__BRA__0__KET____DOT__adder_s1__DOT__final_exp_calc = VL_RAND_RESET_I(11);
+    vlSelf->add32_fp32accum_bf16_tb_softfloat__DOT__gen_s1__BRA__0__KET____DOT__adder_s1__DOT__guard_bit = VL_RAND_RESET_I(1);
+    vlSelf->add32_fp32accum_bf16_tb_softfloat__DOT__gen_s1__BRA__0__KET____DOT__adder_s1__DOT__round_bit = VL_RAND_RESET_I(1);
+    vlSelf->add32_fp32accum_bf16_tb_softfloat__DOT__gen_s1__BRA__0__KET____DOT__adder_s1__DOT__sticky_bit = VL_RAND_RESET_I(1);
+    vlSelf->add32_fp32accum_bf16_tb_softfloat__DOT__gen_s1__BRA__0__KET____DOT__adder_s1__DOT__round_up = VL_RAND_RESET_I(1);
+    vlSelf->add32_fp32accum_bf16_tb_softfloat__DOT__gen_s1__BRA__0__KET____DOT__adder_s1__DOT__l_bit = VL_RAND_RESET_I(1);
+    vlSelf->add32_fp32accum_bf16_tb_softfloat__DOT__gen_s1__BRA__0__KET____DOT__adder_s1__DOT__result_out = VL_RAND_RESET_I(32);
+    vlSelf->add32_fp32accum_bf16_tb_softfloat__DOT__gen_s1__BRA__0__KET____DOT__adder_s1__DOT__op_x = VL_RAND_RESET_I(30);
+    vlSelf->add32_fp32accum_bf16_tb_softfloat__DOT__gen_s1__BRA__0__KET____DOT__adder_s1__DOT__op_y = VL_RAND_RESET_I(30);
+    vlSelf->add32_fp32accum_bf16_tb_softfloat__DOT__gen_s1__BRA__0__KET____DOT__adder_s1__DOT__op_m = VL_RAND_RESET_I(30);
+    vlSelf->add32_fp32accum_bf16_tb_softfloat__DOT__gen_s1__BRA__0__KET____DOT__adder_s1__DOT__op_n = VL_RAND_RESET_I(30);
+    vlSelf->add32_fp32accum_bf16_tb_softfloat__DOT__gen_s1__BRA__0__KET____DOT__adder_s1__DOT__csa_s1 = VL_RAND_RESET_I(30);
+    vlSelf->add32_fp32accum_bf16_tb_softfloat__DOT__gen_s1__BRA__0__KET____DOT__adder_s1__DOT__csa_c1 = VL_RAND_RESET_I(30);
+    vlSelf->add32_fp32accum_bf16_tb_softfloat__DOT__gen_s1__BRA__0__KET____DOT__adder_s1__DOT__csa_s2 = VL_RAND_RESET_I(30);
+    vlSelf->add32_fp32accum_bf16_tb_softfloat__DOT__gen_s1__BRA__0__KET____DOT__adder_s1__DOT__csa_c2 = VL_RAND_RESET_I(30);
+    vlSelf->add32_fp32accum_bf16_tb_softfloat__DOT__gen_s1__BRA__0__KET____DOT__adder_s1__DOT__stage3_logic__DOT__unnamedblk1__DOT__i = 0;
+    vlSelf->add32_fp32accum_bf16_tb_softfloat__DOT__gen_s1__BRA__1__KET____DOT__adder_s1__DOT__a_daz = VL_RAND_RESET_I(16);
+    vlSelf->add32_fp32accum_bf16_tb_softfloat__DOT__gen_s1__BRA__1__KET____DOT__adder_s1__DOT__b_daz = VL_RAND_RESET_I(16);
+    vlSelf->add32_fp32accum_bf16_tb_softfloat__DOT__gen_s1__BRA__1__KET____DOT__adder_s1__DOT__c_daz = VL_RAND_RESET_I(16);
+    vlSelf->add32_fp32accum_bf16_tb_softfloat__DOT__gen_s1__BRA__1__KET____DOT__adder_s1__DOT__d_daz = VL_RAND_RESET_I(16);
+    vlSelf->add32_fp32accum_bf16_tb_softfloat__DOT__gen_s1__BRA__1__KET____DOT__adder_s1__DOT__exp_a = VL_RAND_RESET_I(8);
+    vlSelf->add32_fp32accum_bf16_tb_softfloat__DOT__gen_s1__BRA__1__KET____DOT__adder_s1__DOT__exp_b = VL_RAND_RESET_I(8);
+    vlSelf->add32_fp32accum_bf16_tb_softfloat__DOT__gen_s1__BRA__1__KET____DOT__adder_s1__DOT__exp_c = VL_RAND_RESET_I(8);
+    vlSelf->add32_fp32accum_bf16_tb_softfloat__DOT__gen_s1__BRA__1__KET____DOT__adder_s1__DOT__exp_d = VL_RAND_RESET_I(8);
+    vlSelf->add32_fp32accum_bf16_tb_softfloat__DOT__gen_s1__BRA__1__KET____DOT__adder_s1__DOT__frac_a = VL_RAND_RESET_I(7);
+    vlSelf->add32_fp32accum_bf16_tb_softfloat__DOT__gen_s1__BRA__1__KET____DOT__adder_s1__DOT__frac_b = VL_RAND_RESET_I(7);
+    vlSelf->add32_fp32accum_bf16_tb_softfloat__DOT__gen_s1__BRA__1__KET____DOT__adder_s1__DOT__frac_c = VL_RAND_RESET_I(7);
+    vlSelf->add32_fp32accum_bf16_tb_softfloat__DOT__gen_s1__BRA__1__KET____DOT__adder_s1__DOT__frac_d = VL_RAND_RESET_I(7);
+    vlSelf->add32_fp32accum_bf16_tb_softfloat__DOT__gen_s1__BRA__1__KET____DOT__adder_s1__DOT__sign_a = VL_RAND_RESET_I(1);
+    vlSelf->add32_fp32accum_bf16_tb_softfloat__DOT__gen_s1__BRA__1__KET____DOT__adder_s1__DOT__sign_b = VL_RAND_RESET_I(1);
+    vlSelf->add32_fp32accum_bf16_tb_softfloat__DOT__gen_s1__BRA__1__KET____DOT__adder_s1__DOT__sign_c = VL_RAND_RESET_I(1);
+    vlSelf->add32_fp32accum_bf16_tb_softfloat__DOT__gen_s1__BRA__1__KET____DOT__adder_s1__DOT__sign_d = VL_RAND_RESET_I(1);
+    vlSelf->add32_fp32accum_bf16_tb_softfloat__DOT__gen_s1__BRA__1__KET____DOT__adder_s1__DOT__exp_p = VL_RAND_RESET_I(8);
+    vlSelf->add32_fp32accum_bf16_tb_softfloat__DOT__gen_s1__BRA__1__KET____DOT__adder_s1__DOT__exp_m = VL_RAND_RESET_I(8);
+    vlSelf->add32_fp32accum_bf16_tb_softfloat__DOT__gen_s1__BRA__1__KET____DOT__adder_s1__DOT__exp_r = VL_RAND_RESET_I(8);
+    vlSelf->add32_fp32accum_bf16_tb_softfloat__DOT__gen_s1__BRA__1__KET____DOT__adder_s1__DOT__exp_n = VL_RAND_RESET_I(8);
+    vlSelf->add32_fp32accum_bf16_tb_softfloat__DOT__gen_s1__BRA__1__KET____DOT__adder_s1__DOT__exp_x = VL_RAND_RESET_I(8);
+    vlSelf->add32_fp32accum_bf16_tb_softfloat__DOT__gen_s1__BRA__1__KET____DOT__adder_s1__DOT__exp_y = VL_RAND_RESET_I(8);
+    vlSelf->add32_fp32accum_bf16_tb_softfloat__DOT__gen_s1__BRA__1__KET____DOT__adder_s1__DOT__exp_mx = VL_RAND_RESET_I(8);
+    vlSelf->add32_fp32accum_bf16_tb_softfloat__DOT__gen_s1__BRA__1__KET____DOT__adder_s1__DOT__exp_nx = VL_RAND_RESET_I(8);
+    vlSelf->add32_fp32accum_bf16_tb_softfloat__DOT__gen_s1__BRA__1__KET____DOT__adder_s1__DOT__frac_p = VL_RAND_RESET_I(7);
+    vlSelf->add32_fp32accum_bf16_tb_softfloat__DOT__gen_s1__BRA__1__KET____DOT__adder_s1__DOT__frac_m = VL_RAND_RESET_I(7);
+    vlSelf->add32_fp32accum_bf16_tb_softfloat__DOT__gen_s1__BRA__1__KET____DOT__adder_s1__DOT__frac_r = VL_RAND_RESET_I(7);
+    vlSelf->add32_fp32accum_bf16_tb_softfloat__DOT__gen_s1__BRA__1__KET____DOT__adder_s1__DOT__frac_n = VL_RAND_RESET_I(7);
+    vlSelf->add32_fp32accum_bf16_tb_softfloat__DOT__gen_s1__BRA__1__KET____DOT__adder_s1__DOT__frac_x = VL_RAND_RESET_I(7);
+    vlSelf->add32_fp32accum_bf16_tb_softfloat__DOT__gen_s1__BRA__1__KET____DOT__adder_s1__DOT__frac_y = VL_RAND_RESET_I(7);
+    vlSelf->add32_fp32accum_bf16_tb_softfloat__DOT__gen_s1__BRA__1__KET____DOT__adder_s1__DOT__frac_mx = VL_RAND_RESET_I(7);
+    vlSelf->add32_fp32accum_bf16_tb_softfloat__DOT__gen_s1__BRA__1__KET____DOT__adder_s1__DOT__frac_nx = VL_RAND_RESET_I(7);
+    vlSelf->add32_fp32accum_bf16_tb_softfloat__DOT__gen_s1__BRA__1__KET____DOT__adder_s1__DOT__sign_p = VL_RAND_RESET_I(1);
+    vlSelf->add32_fp32accum_bf16_tb_softfloat__DOT__gen_s1__BRA__1__KET____DOT__adder_s1__DOT__sign_m = VL_RAND_RESET_I(1);
+    vlSelf->add32_fp32accum_bf16_tb_softfloat__DOT__gen_s1__BRA__1__KET____DOT__adder_s1__DOT__sign_r = VL_RAND_RESET_I(1);
+    vlSelf->add32_fp32accum_bf16_tb_softfloat__DOT__gen_s1__BRA__1__KET____DOT__adder_s1__DOT__sign_n = VL_RAND_RESET_I(1);
+    vlSelf->add32_fp32accum_bf16_tb_softfloat__DOT__gen_s1__BRA__1__KET____DOT__adder_s1__DOT__sign_x = VL_RAND_RESET_I(1);
+    vlSelf->add32_fp32accum_bf16_tb_softfloat__DOT__gen_s1__BRA__1__KET____DOT__adder_s1__DOT__sign_y = VL_RAND_RESET_I(1);
+    vlSelf->add32_fp32accum_bf16_tb_softfloat__DOT__gen_s1__BRA__1__KET____DOT__adder_s1__DOT__sign_mx = VL_RAND_RESET_I(1);
+    vlSelf->add32_fp32accum_bf16_tb_softfloat__DOT__gen_s1__BRA__1__KET____DOT__adder_s1__DOT__sign_nx = VL_RAND_RESET_I(1);
+    vlSelf->add32_fp32accum_bf16_tb_softfloat__DOT__gen_s1__BRA__1__KET____DOT__adder_s1__DOT__exp_x_eff = VL_RAND_RESET_I(8);
+    vlSelf->add32_fp32accum_bf16_tb_softfloat__DOT__gen_s1__BRA__1__KET____DOT__adder_s1__DOT__exp_y_eff = VL_RAND_RESET_I(8);
+    vlSelf->add32_fp32accum_bf16_tb_softfloat__DOT__gen_s1__BRA__1__KET____DOT__adder_s1__DOT__exp_mx_eff = VL_RAND_RESET_I(8);
+    vlSelf->add32_fp32accum_bf16_tb_softfloat__DOT__gen_s1__BRA__1__KET____DOT__adder_s1__DOT__exp_nx_eff = VL_RAND_RESET_I(8);
+    vlSelf->add32_fp32accum_bf16_tb_softfloat__DOT__gen_s1__BRA__1__KET____DOT__adder_s1__DOT__y_shift = VL_RAND_RESET_I(9);
+    vlSelf->add32_fp32accum_bf16_tb_softfloat__DOT__gen_s1__BRA__1__KET____DOT__adder_s1__DOT__m_shift = VL_RAND_RESET_I(9);
+    vlSelf->add32_fp32accum_bf16_tb_softfloat__DOT__gen_s1__BRA__1__KET____DOT__adder_s1__DOT__n_shift = VL_RAND_RESET_I(9);
+    vlSelf->add32_fp32accum_bf16_tb_softfloat__DOT__gen_s1__BRA__1__KET____DOT__adder_s1__DOT__x_mant = VL_RAND_RESET_I(27);
+    vlSelf->add32_fp32accum_bf16_tb_softfloat__DOT__gen_s1__BRA__1__KET____DOT__adder_s1__DOT__y_shifted = VL_RAND_RESET_I(27);
+    vlSelf->add32_fp32accum_bf16_tb_softfloat__DOT__gen_s1__BRA__1__KET____DOT__adder_s1__DOT__m_shifted = VL_RAND_RESET_I(27);
+    vlSelf->add32_fp32accum_bf16_tb_softfloat__DOT__gen_s1__BRA__1__KET____DOT__adder_s1__DOT__n_shifted = VL_RAND_RESET_I(27);
+    vlSelf->add32_fp32accum_bf16_tb_softfloat__DOT__gen_s1__BRA__1__KET____DOT__adder_s1__DOT__y_mant_base = VL_RAND_RESET_I(27);
+    vlSelf->add32_fp32accum_bf16_tb_softfloat__DOT__gen_s1__BRA__1__KET____DOT__adder_s1__DOT__m_mant_base = VL_RAND_RESET_I(27);
+    vlSelf->add32_fp32accum_bf16_tb_softfloat__DOT__gen_s1__BRA__1__KET____DOT__adder_s1__DOT__n_mant_base = VL_RAND_RESET_I(27);
+    vlSelf->add32_fp32accum_bf16_tb_softfloat__DOT__gen_s1__BRA__1__KET____DOT__adder_s1__DOT__sticky_y = VL_RAND_RESET_I(1);
+    vlSelf->add32_fp32accum_bf16_tb_softfloat__DOT__gen_s1__BRA__1__KET____DOT__adder_s1__DOT__sticky_m = VL_RAND_RESET_I(1);
+    vlSelf->add32_fp32accum_bf16_tb_softfloat__DOT__gen_s1__BRA__1__KET____DOT__adder_s1__DOT__sticky_n = VL_RAND_RESET_I(1);
+    vlSelf->add32_fp32accum_bf16_tb_softfloat__DOT__gen_s1__BRA__1__KET____DOT__adder_s1__DOT__y_op = VL_RAND_RESET_I(1);
+    vlSelf->add32_fp32accum_bf16_tb_softfloat__DOT__gen_s1__BRA__1__KET____DOT__adder_s1__DOT__m_op = VL_RAND_RESET_I(1);
+    vlSelf->add32_fp32accum_bf16_tb_softfloat__DOT__gen_s1__BRA__1__KET____DOT__adder_s1__DOT__n_op = VL_RAND_RESET_I(1);
+    vlSelf->add32_fp32accum_bf16_tb_softfloat__DOT__gen_s1__BRA__1__KET____DOT__adder_s1__DOT__is_nan_any = VL_RAND_RESET_I(1);
+    vlSelf->add32_fp32accum_bf16_tb_softfloat__DOT__gen_s1__BRA__1__KET____DOT__adder_s1__DOT__special_case = VL_RAND_RESET_I(1);
+    vlSelf->add32_fp32accum_bf16_tb_softfloat__DOT__gen_s1__BRA__1__KET____DOT__adder_s1__DOT__any_pos_inf = VL_RAND_RESET_I(1);
+    vlSelf->add32_fp32accum_bf16_tb_softfloat__DOT__gen_s1__BRA__1__KET____DOT__adder_s1__DOT__any_neg_inf = VL_RAND_RESET_I(1);
+    vlSelf->add32_fp32accum_bf16_tb_softfloat__DOT__gen_s1__BRA__1__KET____DOT__adder_s1__DOT__special_result = VL_RAND_RESET_I(32);
+    vlSelf->add32_fp32accum_bf16_tb_softfloat__DOT__gen_s1__BRA__1__KET____DOT__adder_s1__DOT__st1_a_e = VL_RAND_RESET_I(8);
+    vlSelf->add32_fp32accum_bf16_tb_softfloat__DOT__gen_s1__BRA__1__KET____DOT__adder_s1__DOT__st1_a_s = VL_RAND_RESET_I(1);
+    vlSelf->add32_fp32accum_bf16_tb_softfloat__DOT__gen_s1__BRA__1__KET____DOT__adder_s1__DOT__st1_align_sticky = VL_RAND_RESET_I(1);
+    vlSelf->add32_fp32accum_bf16_tb_softfloat__DOT__gen_s1__BRA__1__KET____DOT__adder_s1__DOT__st1_special_case = VL_RAND_RESET_I(1);
+    vlSelf->add32_fp32accum_bf16_tb_softfloat__DOT__gen_s1__BRA__1__KET____DOT__adder_s1__DOT__st1_special_result = VL_RAND_RESET_I(32);
+    vlSelf->add32_fp32accum_bf16_tb_softfloat__DOT__gen_s1__BRA__1__KET____DOT__adder_s1__DOT__st1_sum_vec = VL_RAND_RESET_I(30);
+    vlSelf->add32_fp32accum_bf16_tb_softfloat__DOT__gen_s1__BRA__1__KET____DOT__adder_s1__DOT__st1_carry_vec = VL_RAND_RESET_I(30);
+    vlSelf->add32_fp32accum_bf16_tb_softfloat__DOT__gen_s1__BRA__1__KET____DOT__adder_s1__DOT__st1_hot_ones = VL_RAND_RESET_I(2);
+    vlSelf->add32_fp32accum_bf16_tb_softfloat__DOT__gen_s1__BRA__1__KET____DOT__adder_s1__DOT__raw_sum = VL_RAND_RESET_I(30);
+    vlSelf->add32_fp32accum_bf16_tb_softfloat__DOT__gen_s1__BRA__1__KET____DOT__adder_s1__DOT__mag_sum = VL_RAND_RESET_I(30);
+    vlSelf->add32_fp32accum_bf16_tb_softfloat__DOT__gen_s1__BRA__1__KET____DOT__adder_s1__DOT__res_sign = VL_RAND_RESET_I(1);
+    vlSelf->add32_fp32accum_bf16_tb_softfloat__DOT__gen_s1__BRA__1__KET____DOT__adder_s1__DOT__st2_exp_base = VL_RAND_RESET_I(8);
+    vlSelf->add32_fp32accum_bf16_tb_softfloat__DOT__gen_s1__BRA__1__KET____DOT__adder_s1__DOT__st2_sum_mag = VL_RAND_RESET_I(30);
+    vlSelf->add32_fp32accum_bf16_tb_softfloat__DOT__gen_s1__BRA__1__KET____DOT__adder_s1__DOT__st2_spec_res = VL_RAND_RESET_I(32);
+    vlSelf->add32_fp32accum_bf16_tb_softfloat__DOT__gen_s1__BRA__1__KET____DOT__adder_s1__DOT__st2_res_sign = VL_RAND_RESET_I(1);
+    vlSelf->add32_fp32accum_bf16_tb_softfloat__DOT__gen_s1__BRA__1__KET____DOT__adder_s1__DOT__st2_sticky = VL_RAND_RESET_I(1);
+    vlSelf->add32_fp32accum_bf16_tb_softfloat__DOT__gen_s1__BRA__1__KET____DOT__adder_s1__DOT__st2_special = VL_RAND_RESET_I(1);
+    vlSelf->add32_fp32accum_bf16_tb_softfloat__DOT__gen_s1__BRA__1__KET____DOT__adder_s1__DOT__lzd_scan = VL_RAND_RESET_I(30);
+    vlSelf->add32_fp32accum_bf16_tb_softfloat__DOT__gen_s1__BRA__1__KET____DOT__adder_s1__DOT__lead_zeros = VL_RAND_RESET_I(5);
+    vlSelf->add32_fp32accum_bf16_tb_softfloat__DOT__gen_s1__BRA__1__KET____DOT__adder_s1__DOT__norm_val = VL_RAND_RESET_I(30);
+    vlSelf->add32_fp32accum_bf16_tb_softfloat__DOT__gen_s1__BRA__1__KET____DOT__adder_s1__DOT__raw_mant = VL_RAND_RESET_I(23);
+    vlSelf->add32_fp32accum_bf16_tb_softfloat__DOT__gen_s1__BRA__1__KET____DOT__adder_s1__DOT__final_mant = VL_RAND_RESET_I(23);
+    vlSelf->add32_fp32accum_bf16_tb_softfloat__DOT__gen_s1__BRA__1__KET____DOT__adder_s1__DOT__rounded_mant_int = VL_RAND_RESET_I(24);
+    vlSelf->add32_fp32accum_bf16_tb_softfloat__DOT__gen_s1__BRA__1__KET____DOT__adder_s1__DOT__final_exp_calc = VL_RAND_RESET_I(11);
+    vlSelf->add32_fp32accum_bf16_tb_softfloat__DOT__gen_s1__BRA__1__KET____DOT__adder_s1__DOT__guard_bit = VL_RAND_RESET_I(1);
+    vlSelf->add32_fp32accum_bf16_tb_softfloat__DOT__gen_s1__BRA__1__KET____DOT__adder_s1__DOT__round_bit = VL_RAND_RESET_I(1);
+    vlSelf->add32_fp32accum_bf16_tb_softfloat__DOT__gen_s1__BRA__1__KET____DOT__adder_s1__DOT__sticky_bit = VL_RAND_RESET_I(1);
+    vlSelf->add32_fp32accum_bf16_tb_softfloat__DOT__gen_s1__BRA__1__KET____DOT__adder_s1__DOT__round_up = VL_RAND_RESET_I(1);
+    vlSelf->add32_fp32accum_bf16_tb_softfloat__DOT__gen_s1__BRA__1__KET____DOT__adder_s1__DOT__l_bit = VL_RAND_RESET_I(1);
+    vlSelf->add32_fp32accum_bf16_tb_softfloat__DOT__gen_s1__BRA__1__KET____DOT__adder_s1__DOT__result_out = VL_RAND_RESET_I(32);
+    vlSelf->add32_fp32accum_bf16_tb_softfloat__DOT__gen_s1__BRA__1__KET____DOT__adder_s1__DOT__op_x = VL_RAND_RESET_I(30);
+    vlSelf->add32_fp32accum_bf16_tb_softfloat__DOT__gen_s1__BRA__1__KET____DOT__adder_s1__DOT__op_y = VL_RAND_RESET_I(30);
+    vlSelf->add32_fp32accum_bf16_tb_softfloat__DOT__gen_s1__BRA__1__KET____DOT__adder_s1__DOT__op_m = VL_RAND_RESET_I(30);
+    vlSelf->add32_fp32accum_bf16_tb_softfloat__DOT__gen_s1__BRA__1__KET____DOT__adder_s1__DOT__op_n = VL_RAND_RESET_I(30);
+    vlSelf->add32_fp32accum_bf16_tb_softfloat__DOT__gen_s1__BRA__1__KET____DOT__adder_s1__DOT__csa_s1 = VL_RAND_RESET_I(30);
+    vlSelf->add32_fp32accum_bf16_tb_softfloat__DOT__gen_s1__BRA__1__KET____DOT__adder_s1__DOT__csa_c1 = VL_RAND_RESET_I(30);
+    vlSelf->add32_fp32accum_bf16_tb_softfloat__DOT__gen_s1__BRA__1__KET____DOT__adder_s1__DOT__csa_s2 = VL_RAND_RESET_I(30);
+    vlSelf->add32_fp32accum_bf16_tb_softfloat__DOT__gen_s1__BRA__1__KET____DOT__adder_s1__DOT__csa_c2 = VL_RAND_RESET_I(30);
+    vlSelf->add32_fp32accum_bf16_tb_softfloat__DOT__gen_s1__BRA__1__KET____DOT__adder_s1__DOT__stage3_logic__DOT__unnamedblk1__DOT__i = 0;
+    vlSelf->add32_fp32accum_bf16_tb_softfloat__DOT__gen_s1__BRA__2__KET____DOT__adder_s1__DOT__a_daz = VL_RAND_RESET_I(16);
+    vlSelf->add32_fp32accum_bf16_tb_softfloat__DOT__gen_s1__BRA__2__KET____DOT__adder_s1__DOT__b_daz = VL_RAND_RESET_I(16);
+    vlSelf->add32_fp32accum_bf16_tb_softfloat__DOT__gen_s1__BRA__2__KET____DOT__adder_s1__DOT__c_daz = VL_RAND_RESET_I(16);
+    vlSelf->add32_fp32accum_bf16_tb_softfloat__DOT__gen_s1__BRA__2__KET____DOT__adder_s1__DOT__d_daz = VL_RAND_RESET_I(16);
+    vlSelf->add32_fp32accum_bf16_tb_softfloat__DOT__gen_s1__BRA__2__KET____DOT__adder_s1__DOT__exp_a = VL_RAND_RESET_I(8);
+    vlSelf->add32_fp32accum_bf16_tb_softfloat__DOT__gen_s1__BRA__2__KET____DOT__adder_s1__DOT__exp_b = VL_RAND_RESET_I(8);
+    vlSelf->add32_fp32accum_bf16_tb_softfloat__DOT__gen_s1__BRA__2__KET____DOT__adder_s1__DOT__exp_c = VL_RAND_RESET_I(8);
+    vlSelf->add32_fp32accum_bf16_tb_softfloat__DOT__gen_s1__BRA__2__KET____DOT__adder_s1__DOT__exp_d = VL_RAND_RESET_I(8);
+    vlSelf->add32_fp32accum_bf16_tb_softfloat__DOT__gen_s1__BRA__2__KET____DOT__adder_s1__DOT__frac_a = VL_RAND_RESET_I(7);
+    vlSelf->add32_fp32accum_bf16_tb_softfloat__DOT__gen_s1__BRA__2__KET____DOT__adder_s1__DOT__frac_b = VL_RAND_RESET_I(7);
+    vlSelf->add32_fp32accum_bf16_tb_softfloat__DOT__gen_s1__BRA__2__KET____DOT__adder_s1__DOT__frac_c = VL_RAND_RESET_I(7);
+    vlSelf->add32_fp32accum_bf16_tb_softfloat__DOT__gen_s1__BRA__2__KET____DOT__adder_s1__DOT__frac_d = VL_RAND_RESET_I(7);
+    vlSelf->add32_fp32accum_bf16_tb_softfloat__DOT__gen_s1__BRA__2__KET____DOT__adder_s1__DOT__sign_a = VL_RAND_RESET_I(1);
+    vlSelf->add32_fp32accum_bf16_tb_softfloat__DOT__gen_s1__BRA__2__KET____DOT__adder_s1__DOT__sign_b = VL_RAND_RESET_I(1);
+    vlSelf->add32_fp32accum_bf16_tb_softfloat__DOT__gen_s1__BRA__2__KET____DOT__adder_s1__DOT__sign_c = VL_RAND_RESET_I(1);
+    vlSelf->add32_fp32accum_bf16_tb_softfloat__DOT__gen_s1__BRA__2__KET____DOT__adder_s1__DOT__sign_d = VL_RAND_RESET_I(1);
+    vlSelf->add32_fp32accum_bf16_tb_softfloat__DOT__gen_s1__BRA__2__KET____DOT__adder_s1__DOT__exp_p = VL_RAND_RESET_I(8);
+    vlSelf->add32_fp32accum_bf16_tb_softfloat__DOT__gen_s1__BRA__2__KET____DOT__adder_s1__DOT__exp_m = VL_RAND_RESET_I(8);
+    vlSelf->add32_fp32accum_bf16_tb_softfloat__DOT__gen_s1__BRA__2__KET____DOT__adder_s1__DOT__exp_r = VL_RAND_RESET_I(8);
+    vlSelf->add32_fp32accum_bf16_tb_softfloat__DOT__gen_s1__BRA__2__KET____DOT__adder_s1__DOT__exp_n = VL_RAND_RESET_I(8);
+    vlSelf->add32_fp32accum_bf16_tb_softfloat__DOT__gen_s1__BRA__2__KET____DOT__adder_s1__DOT__exp_x = VL_RAND_RESET_I(8);
+    vlSelf->add32_fp32accum_bf16_tb_softfloat__DOT__gen_s1__BRA__2__KET____DOT__adder_s1__DOT__exp_y = VL_RAND_RESET_I(8);
+    vlSelf->add32_fp32accum_bf16_tb_softfloat__DOT__gen_s1__BRA__2__KET____DOT__adder_s1__DOT__exp_mx = VL_RAND_RESET_I(8);
+    vlSelf->add32_fp32accum_bf16_tb_softfloat__DOT__gen_s1__BRA__2__KET____DOT__adder_s1__DOT__exp_nx = VL_RAND_RESET_I(8);
+    vlSelf->add32_fp32accum_bf16_tb_softfloat__DOT__gen_s1__BRA__2__KET____DOT__adder_s1__DOT__frac_p = VL_RAND_RESET_I(7);
+    vlSelf->add32_fp32accum_bf16_tb_softfloat__DOT__gen_s1__BRA__2__KET____DOT__adder_s1__DOT__frac_m = VL_RAND_RESET_I(7);
+    vlSelf->add32_fp32accum_bf16_tb_softfloat__DOT__gen_s1__BRA__2__KET____DOT__adder_s1__DOT__frac_r = VL_RAND_RESET_I(7);
+    vlSelf->add32_fp32accum_bf16_tb_softfloat__DOT__gen_s1__BRA__2__KET____DOT__adder_s1__DOT__frac_n = VL_RAND_RESET_I(7);
+    vlSelf->add32_fp32accum_bf16_tb_softfloat__DOT__gen_s1__BRA__2__KET____DOT__adder_s1__DOT__frac_x = VL_RAND_RESET_I(7);
+    vlSelf->add32_fp32accum_bf16_tb_softfloat__DOT__gen_s1__BRA__2__KET____DOT__adder_s1__DOT__frac_y = VL_RAND_RESET_I(7);
+    vlSelf->add32_fp32accum_bf16_tb_softfloat__DOT__gen_s1__BRA__2__KET____DOT__adder_s1__DOT__frac_mx = VL_RAND_RESET_I(7);
+    vlSelf->add32_fp32accum_bf16_tb_softfloat__DOT__gen_s1__BRA__2__KET____DOT__adder_s1__DOT__frac_nx = VL_RAND_RESET_I(7);
+    vlSelf->add32_fp32accum_bf16_tb_softfloat__DOT__gen_s1__BRA__2__KET____DOT__adder_s1__DOT__sign_p = VL_RAND_RESET_I(1);
+    vlSelf->add32_fp32accum_bf16_tb_softfloat__DOT__gen_s1__BRA__2__KET____DOT__adder_s1__DOT__sign_m = VL_RAND_RESET_I(1);
+    vlSelf->add32_fp32accum_bf16_tb_softfloat__DOT__gen_s1__BRA__2__KET____DOT__adder_s1__DOT__sign_r = VL_RAND_RESET_I(1);
+    vlSelf->add32_fp32accum_bf16_tb_softfloat__DOT__gen_s1__BRA__2__KET____DOT__adder_s1__DOT__sign_n = VL_RAND_RESET_I(1);
+    vlSelf->add32_fp32accum_bf16_tb_softfloat__DOT__gen_s1__BRA__2__KET____DOT__adder_s1__DOT__sign_x = VL_RAND_RESET_I(1);
+    vlSelf->add32_fp32accum_bf16_tb_softfloat__DOT__gen_s1__BRA__2__KET____DOT__adder_s1__DOT__sign_y = VL_RAND_RESET_I(1);
+    vlSelf->add32_fp32accum_bf16_tb_softfloat__DOT__gen_s1__BRA__2__KET____DOT__adder_s1__DOT__sign_mx = VL_RAND_RESET_I(1);
+    vlSelf->add32_fp32accum_bf16_tb_softfloat__DOT__gen_s1__BRA__2__KET____DOT__adder_s1__DOT__sign_nx = VL_RAND_RESET_I(1);
+    vlSelf->add32_fp32accum_bf16_tb_softfloat__DOT__gen_s1__BRA__2__KET____DOT__adder_s1__DOT__exp_x_eff = VL_RAND_RESET_I(8);
+    vlSelf->add32_fp32accum_bf16_tb_softfloat__DOT__gen_s1__BRA__2__KET____DOT__adder_s1__DOT__exp_y_eff = VL_RAND_RESET_I(8);
+    vlSelf->add32_fp32accum_bf16_tb_softfloat__DOT__gen_s1__BRA__2__KET____DOT__adder_s1__DOT__exp_mx_eff = VL_RAND_RESET_I(8);
+    vlSelf->add32_fp32accum_bf16_tb_softfloat__DOT__gen_s1__BRA__2__KET____DOT__adder_s1__DOT__exp_nx_eff = VL_RAND_RESET_I(8);
+    vlSelf->add32_fp32accum_bf16_tb_softfloat__DOT__gen_s1__BRA__2__KET____DOT__adder_s1__DOT__y_shift = VL_RAND_RESET_I(9);
+    vlSelf->add32_fp32accum_bf16_tb_softfloat__DOT__gen_s1__BRA__2__KET____DOT__adder_s1__DOT__m_shift = VL_RAND_RESET_I(9);
+    vlSelf->add32_fp32accum_bf16_tb_softfloat__DOT__gen_s1__BRA__2__KET____DOT__adder_s1__DOT__n_shift = VL_RAND_RESET_I(9);
+    vlSelf->add32_fp32accum_bf16_tb_softfloat__DOT__gen_s1__BRA__2__KET____DOT__adder_s1__DOT__x_mant = VL_RAND_RESET_I(27);
+    vlSelf->add32_fp32accum_bf16_tb_softfloat__DOT__gen_s1__BRA__2__KET____DOT__adder_s1__DOT__y_shifted = VL_RAND_RESET_I(27);
+    vlSelf->add32_fp32accum_bf16_tb_softfloat__DOT__gen_s1__BRA__2__KET____DOT__adder_s1__DOT__m_shifted = VL_RAND_RESET_I(27);
+    vlSelf->add32_fp32accum_bf16_tb_softfloat__DOT__gen_s1__BRA__2__KET____DOT__adder_s1__DOT__n_shifted = VL_RAND_RESET_I(27);
+    vlSelf->add32_fp32accum_bf16_tb_softfloat__DOT__gen_s1__BRA__2__KET____DOT__adder_s1__DOT__y_mant_base = VL_RAND_RESET_I(27);
+    vlSelf->add32_fp32accum_bf16_tb_softfloat__DOT__gen_s1__BRA__2__KET____DOT__adder_s1__DOT__m_mant_base = VL_RAND_RESET_I(27);
+    vlSelf->add32_fp32accum_bf16_tb_softfloat__DOT__gen_s1__BRA__2__KET____DOT__adder_s1__DOT__n_mant_base = VL_RAND_RESET_I(27);
+    vlSelf->add32_fp32accum_bf16_tb_softfloat__DOT__gen_s1__BRA__2__KET____DOT__adder_s1__DOT__sticky_y = VL_RAND_RESET_I(1);
+    vlSelf->add32_fp32accum_bf16_tb_softfloat__DOT__gen_s1__BRA__2__KET____DOT__adder_s1__DOT__sticky_m = VL_RAND_RESET_I(1);
+    vlSelf->add32_fp32accum_bf16_tb_softfloat__DOT__gen_s1__BRA__2__KET____DOT__adder_s1__DOT__sticky_n = VL_RAND_RESET_I(1);
+    vlSelf->add32_fp32accum_bf16_tb_softfloat__DOT__gen_s1__BRA__2__KET____DOT__adder_s1__DOT__y_op = VL_RAND_RESET_I(1);
+    vlSelf->add32_fp32accum_bf16_tb_softfloat__DOT__gen_s1__BRA__2__KET____DOT__adder_s1__DOT__m_op = VL_RAND_RESET_I(1);
+    vlSelf->add32_fp32accum_bf16_tb_softfloat__DOT__gen_s1__BRA__2__KET____DOT__adder_s1__DOT__n_op = VL_RAND_RESET_I(1);
+    vlSelf->add32_fp32accum_bf16_tb_softfloat__DOT__gen_s1__BRA__2__KET____DOT__adder_s1__DOT__is_nan_any = VL_RAND_RESET_I(1);
+    vlSelf->add32_fp32accum_bf16_tb_softfloat__DOT__gen_s1__BRA__2__KET____DOT__adder_s1__DOT__special_case = VL_RAND_RESET_I(1);
+    vlSelf->add32_fp32accum_bf16_tb_softfloat__DOT__gen_s1__BRA__2__KET____DOT__adder_s1__DOT__any_pos_inf = VL_RAND_RESET_I(1);
+    vlSelf->add32_fp32accum_bf16_tb_softfloat__DOT__gen_s1__BRA__2__KET____DOT__adder_s1__DOT__any_neg_inf = VL_RAND_RESET_I(1);
+    vlSelf->add32_fp32accum_bf16_tb_softfloat__DOT__gen_s1__BRA__2__KET____DOT__adder_s1__DOT__special_result = VL_RAND_RESET_I(32);
+    vlSelf->add32_fp32accum_bf16_tb_softfloat__DOT__gen_s1__BRA__2__KET____DOT__adder_s1__DOT__st1_a_e = VL_RAND_RESET_I(8);
+    vlSelf->add32_fp32accum_bf16_tb_softfloat__DOT__gen_s1__BRA__2__KET____DOT__adder_s1__DOT__st1_a_s = VL_RAND_RESET_I(1);
+    vlSelf->add32_fp32accum_bf16_tb_softfloat__DOT__gen_s1__BRA__2__KET____DOT__adder_s1__DOT__st1_align_sticky = VL_RAND_RESET_I(1);
+    vlSelf->add32_fp32accum_bf16_tb_softfloat__DOT__gen_s1__BRA__2__KET____DOT__adder_s1__DOT__st1_special_case = VL_RAND_RESET_I(1);
+    vlSelf->add32_fp32accum_bf16_tb_softfloat__DOT__gen_s1__BRA__2__KET____DOT__adder_s1__DOT__st1_special_result = VL_RAND_RESET_I(32);
+    vlSelf->add32_fp32accum_bf16_tb_softfloat__DOT__gen_s1__BRA__2__KET____DOT__adder_s1__DOT__st1_sum_vec = VL_RAND_RESET_I(30);
+    vlSelf->add32_fp32accum_bf16_tb_softfloat__DOT__gen_s1__BRA__2__KET____DOT__adder_s1__DOT__st1_carry_vec = VL_RAND_RESET_I(30);
+    vlSelf->add32_fp32accum_bf16_tb_softfloat__DOT__gen_s1__BRA__2__KET____DOT__adder_s1__DOT__st1_hot_ones = VL_RAND_RESET_I(2);
+    vlSelf->add32_fp32accum_bf16_tb_softfloat__DOT__gen_s1__BRA__2__KET____DOT__adder_s1__DOT__raw_sum = VL_RAND_RESET_I(30);
+    vlSelf->add32_fp32accum_bf16_tb_softfloat__DOT__gen_s1__BRA__2__KET____DOT__adder_s1__DOT__mag_sum = VL_RAND_RESET_I(30);
+    vlSelf->add32_fp32accum_bf16_tb_softfloat__DOT__gen_s1__BRA__2__KET____DOT__adder_s1__DOT__res_sign = VL_RAND_RESET_I(1);
+    vlSelf->add32_fp32accum_bf16_tb_softfloat__DOT__gen_s1__BRA__2__KET____DOT__adder_s1__DOT__st2_exp_base = VL_RAND_RESET_I(8);
+    vlSelf->add32_fp32accum_bf16_tb_softfloat__DOT__gen_s1__BRA__2__KET____DOT__adder_s1__DOT__st2_sum_mag = VL_RAND_RESET_I(30);
+    vlSelf->add32_fp32accum_bf16_tb_softfloat__DOT__gen_s1__BRA__2__KET____DOT__adder_s1__DOT__st2_spec_res = VL_RAND_RESET_I(32);
+    vlSelf->add32_fp32accum_bf16_tb_softfloat__DOT__gen_s1__BRA__2__KET____DOT__adder_s1__DOT__st2_res_sign = VL_RAND_RESET_I(1);
+    vlSelf->add32_fp32accum_bf16_tb_softfloat__DOT__gen_s1__BRA__2__KET____DOT__adder_s1__DOT__st2_sticky = VL_RAND_RESET_I(1);
+    vlSelf->add32_fp32accum_bf16_tb_softfloat__DOT__gen_s1__BRA__2__KET____DOT__adder_s1__DOT__st2_special = VL_RAND_RESET_I(1);
+    vlSelf->add32_fp32accum_bf16_tb_softfloat__DOT__gen_s1__BRA__2__KET____DOT__adder_s1__DOT__lzd_scan = VL_RAND_RESET_I(30);
+    vlSelf->add32_fp32accum_bf16_tb_softfloat__DOT__gen_s1__BRA__2__KET____DOT__adder_s1__DOT__lead_zeros = VL_RAND_RESET_I(5);
+    vlSelf->add32_fp32accum_bf16_tb_softfloat__DOT__gen_s1__BRA__2__KET____DOT__adder_s1__DOT__norm_val = VL_RAND_RESET_I(30);
+    vlSelf->add32_fp32accum_bf16_tb_softfloat__DOT__gen_s1__BRA__2__KET____DOT__adder_s1__DOT__raw_mant = VL_RAND_RESET_I(23);
+    vlSelf->add32_fp32accum_bf16_tb_softfloat__DOT__gen_s1__BRA__2__KET____DOT__adder_s1__DOT__final_mant = VL_RAND_RESET_I(23);
+    vlSelf->add32_fp32accum_bf16_tb_softfloat__DOT__gen_s1__BRA__2__KET____DOT__adder_s1__DOT__rounded_mant_int = VL_RAND_RESET_I(24);
+    vlSelf->add32_fp32accum_bf16_tb_softfloat__DOT__gen_s1__BRA__2__KET____DOT__adder_s1__DOT__final_exp_calc = VL_RAND_RESET_I(11);
+    vlSelf->add32_fp32accum_bf16_tb_softfloat__DOT__gen_s1__BRA__2__KET____DOT__adder_s1__DOT__guard_bit = VL_RAND_RESET_I(1);
+    vlSelf->add32_fp32accum_bf16_tb_softfloat__DOT__gen_s1__BRA__2__KET____DOT__adder_s1__DOT__round_bit = VL_RAND_RESET_I(1);
+    vlSelf->add32_fp32accum_bf16_tb_softfloat__DOT__gen_s1__BRA__2__KET____DOT__adder_s1__DOT__sticky_bit = VL_RAND_RESET_I(1);
+    vlSelf->add32_fp32accum_bf16_tb_softfloat__DOT__gen_s1__BRA__2__KET____DOT__adder_s1__DOT__round_up = VL_RAND_RESET_I(1);
+    vlSelf->add32_fp32accum_bf16_tb_softfloat__DOT__gen_s1__BRA__2__KET____DOT__adder_s1__DOT__l_bit = VL_RAND_RESET_I(1);
+    vlSelf->add32_fp32accum_bf16_tb_softfloat__DOT__gen_s1__BRA__2__KET____DOT__adder_s1__DOT__result_out = VL_RAND_RESET_I(32);
+    vlSelf->add32_fp32accum_bf16_tb_softfloat__DOT__gen_s1__BRA__2__KET____DOT__adder_s1__DOT__op_x = VL_RAND_RESET_I(30);
+    vlSelf->add32_fp32accum_bf16_tb_softfloat__DOT__gen_s1__BRA__2__KET____DOT__adder_s1__DOT__op_y = VL_RAND_RESET_I(30);
+    vlSelf->add32_fp32accum_bf16_tb_softfloat__DOT__gen_s1__BRA__2__KET____DOT__adder_s1__DOT__op_m = VL_RAND_RESET_I(30);
+    vlSelf->add32_fp32accum_bf16_tb_softfloat__DOT__gen_s1__BRA__2__KET____DOT__adder_s1__DOT__op_n = VL_RAND_RESET_I(30);
+    vlSelf->add32_fp32accum_bf16_tb_softfloat__DOT__gen_s1__BRA__2__KET____DOT__adder_s1__DOT__csa_s1 = VL_RAND_RESET_I(30);
+    vlSelf->add32_fp32accum_bf16_tb_softfloat__DOT__gen_s1__BRA__2__KET____DOT__adder_s1__DOT__csa_c1 = VL_RAND_RESET_I(30);
+    vlSelf->add32_fp32accum_bf16_tb_softfloat__DOT__gen_s1__BRA__2__KET____DOT__adder_s1__DOT__csa_s2 = VL_RAND_RESET_I(30);
+    vlSelf->add32_fp32accum_bf16_tb_softfloat__DOT__gen_s1__BRA__2__KET____DOT__adder_s1__DOT__csa_c2 = VL_RAND_RESET_I(30);
+    vlSelf->add32_fp32accum_bf16_tb_softfloat__DOT__gen_s1__BRA__2__KET____DOT__adder_s1__DOT__stage3_logic__DOT__unnamedblk1__DOT__i = 0;
+    vlSelf->add32_fp32accum_bf16_tb_softfloat__DOT__gen_s1__BRA__3__KET____DOT__adder_s1__DOT__a_daz = VL_RAND_RESET_I(16);
+    vlSelf->add32_fp32accum_bf16_tb_softfloat__DOT__gen_s1__BRA__3__KET____DOT__adder_s1__DOT__b_daz = VL_RAND_RESET_I(16);
+    vlSelf->add32_fp32accum_bf16_tb_softfloat__DOT__gen_s1__BRA__3__KET____DOT__adder_s1__DOT__c_daz = VL_RAND_RESET_I(16);
+    vlSelf->add32_fp32accum_bf16_tb_softfloat__DOT__gen_s1__BRA__3__KET____DOT__adder_s1__DOT__d_daz = VL_RAND_RESET_I(16);
+    vlSelf->add32_fp32accum_bf16_tb_softfloat__DOT__gen_s1__BRA__3__KET____DOT__adder_s1__DOT__exp_a = VL_RAND_RESET_I(8);
+    vlSelf->add32_fp32accum_bf16_tb_softfloat__DOT__gen_s1__BRA__3__KET____DOT__adder_s1__DOT__exp_b = VL_RAND_RESET_I(8);
+    vlSelf->add32_fp32accum_bf16_tb_softfloat__DOT__gen_s1__BRA__3__KET____DOT__adder_s1__DOT__exp_c = VL_RAND_RESET_I(8);
+    vlSelf->add32_fp32accum_bf16_tb_softfloat__DOT__gen_s1__BRA__3__KET____DOT__adder_s1__DOT__exp_d = VL_RAND_RESET_I(8);
+    vlSelf->add32_fp32accum_bf16_tb_softfloat__DOT__gen_s1__BRA__3__KET____DOT__adder_s1__DOT__frac_a = VL_RAND_RESET_I(7);
+    vlSelf->add32_fp32accum_bf16_tb_softfloat__DOT__gen_s1__BRA__3__KET____DOT__adder_s1__DOT__frac_b = VL_RAND_RESET_I(7);
+    vlSelf->add32_fp32accum_bf16_tb_softfloat__DOT__gen_s1__BRA__3__KET____DOT__adder_s1__DOT__frac_c = VL_RAND_RESET_I(7);
+    vlSelf->add32_fp32accum_bf16_tb_softfloat__DOT__gen_s1__BRA__3__KET____DOT__adder_s1__DOT__frac_d = VL_RAND_RESET_I(7);
+    vlSelf->add32_fp32accum_bf16_tb_softfloat__DOT__gen_s1__BRA__3__KET____DOT__adder_s1__DOT__sign_a = VL_RAND_RESET_I(1);
+    vlSelf->add32_fp32accum_bf16_tb_softfloat__DOT__gen_s1__BRA__3__KET____DOT__adder_s1__DOT__sign_b = VL_RAND_RESET_I(1);
+    vlSelf->add32_fp32accum_bf16_tb_softfloat__DOT__gen_s1__BRA__3__KET____DOT__adder_s1__DOT__sign_c = VL_RAND_RESET_I(1);
+    vlSelf->add32_fp32accum_bf16_tb_softfloat__DOT__gen_s1__BRA__3__KET____DOT__adder_s1__DOT__sign_d = VL_RAND_RESET_I(1);
+    vlSelf->add32_fp32accum_bf16_tb_softfloat__DOT__gen_s1__BRA__3__KET____DOT__adder_s1__DOT__exp_p = VL_RAND_RESET_I(8);
+    vlSelf->add32_fp32accum_bf16_tb_softfloat__DOT__gen_s1__BRA__3__KET____DOT__adder_s1__DOT__exp_m = VL_RAND_RESET_I(8);
+    vlSelf->add32_fp32accum_bf16_tb_softfloat__DOT__gen_s1__BRA__3__KET____DOT__adder_s1__DOT__exp_r = VL_RAND_RESET_I(8);
+    vlSelf->add32_fp32accum_bf16_tb_softfloat__DOT__gen_s1__BRA__3__KET____DOT__adder_s1__DOT__exp_n = VL_RAND_RESET_I(8);
+    vlSelf->add32_fp32accum_bf16_tb_softfloat__DOT__gen_s1__BRA__3__KET____DOT__adder_s1__DOT__exp_x = VL_RAND_RESET_I(8);
+    vlSelf->add32_fp32accum_bf16_tb_softfloat__DOT__gen_s1__BRA__3__KET____DOT__adder_s1__DOT__exp_y = VL_RAND_RESET_I(8);
+    vlSelf->add32_fp32accum_bf16_tb_softfloat__DOT__gen_s1__BRA__3__KET____DOT__adder_s1__DOT__exp_mx = VL_RAND_RESET_I(8);
+    vlSelf->add32_fp32accum_bf16_tb_softfloat__DOT__gen_s1__BRA__3__KET____DOT__adder_s1__DOT__exp_nx = VL_RAND_RESET_I(8);
+    vlSelf->add32_fp32accum_bf16_tb_softfloat__DOT__gen_s1__BRA__3__KET____DOT__adder_s1__DOT__frac_p = VL_RAND_RESET_I(7);
+    vlSelf->add32_fp32accum_bf16_tb_softfloat__DOT__gen_s1__BRA__3__KET____DOT__adder_s1__DOT__frac_m = VL_RAND_RESET_I(7);
+    vlSelf->add32_fp32accum_bf16_tb_softfloat__DOT__gen_s1__BRA__3__KET____DOT__adder_s1__DOT__frac_r = VL_RAND_RESET_I(7);
+    vlSelf->add32_fp32accum_bf16_tb_softfloat__DOT__gen_s1__BRA__3__KET____DOT__adder_s1__DOT__frac_n = VL_RAND_RESET_I(7);
+    vlSelf->add32_fp32accum_bf16_tb_softfloat__DOT__gen_s1__BRA__3__KET____DOT__adder_s1__DOT__frac_x = VL_RAND_RESET_I(7);
+    vlSelf->add32_fp32accum_bf16_tb_softfloat__DOT__gen_s1__BRA__3__KET____DOT__adder_s1__DOT__frac_y = VL_RAND_RESET_I(7);
+    vlSelf->add32_fp32accum_bf16_tb_softfloat__DOT__gen_s1__BRA__3__KET____DOT__adder_s1__DOT__frac_mx = VL_RAND_RESET_I(7);
+    vlSelf->add32_fp32accum_bf16_tb_softfloat__DOT__gen_s1__BRA__3__KET____DOT__adder_s1__DOT__frac_nx = VL_RAND_RESET_I(7);
+    vlSelf->add32_fp32accum_bf16_tb_softfloat__DOT__gen_s1__BRA__3__KET____DOT__adder_s1__DOT__sign_p = VL_RAND_RESET_I(1);
+    vlSelf->add32_fp32accum_bf16_tb_softfloat__DOT__gen_s1__BRA__3__KET____DOT__adder_s1__DOT__sign_m = VL_RAND_RESET_I(1);
+    vlSelf->add32_fp32accum_bf16_tb_softfloat__DOT__gen_s1__BRA__3__KET____DOT__adder_s1__DOT__sign_r = VL_RAND_RESET_I(1);
+    vlSelf->add32_fp32accum_bf16_tb_softfloat__DOT__gen_s1__BRA__3__KET____DOT__adder_s1__DOT__sign_n = VL_RAND_RESET_I(1);
+    vlSelf->add32_fp32accum_bf16_tb_softfloat__DOT__gen_s1__BRA__3__KET____DOT__adder_s1__DOT__sign_x = VL_RAND_RESET_I(1);
+    vlSelf->add32_fp32accum_bf16_tb_softfloat__DOT__gen_s1__BRA__3__KET____DOT__adder_s1__DOT__sign_y = VL_RAND_RESET_I(1);
+    vlSelf->add32_fp32accum_bf16_tb_softfloat__DOT__gen_s1__BRA__3__KET____DOT__adder_s1__DOT__sign_mx = VL_RAND_RESET_I(1);
+    vlSelf->add32_fp32accum_bf16_tb_softfloat__DOT__gen_s1__BRA__3__KET____DOT__adder_s1__DOT__sign_nx = VL_RAND_RESET_I(1);
+    vlSelf->add32_fp32accum_bf16_tb_softfloat__DOT__gen_s1__BRA__3__KET____DOT__adder_s1__DOT__exp_x_eff = VL_RAND_RESET_I(8);
+    vlSelf->add32_fp32accum_bf16_tb_softfloat__DOT__gen_s1__BRA__3__KET____DOT__adder_s1__DOT__exp_y_eff = VL_RAND_RESET_I(8);
+    vlSelf->add32_fp32accum_bf16_tb_softfloat__DOT__gen_s1__BRA__3__KET____DOT__adder_s1__DOT__exp_mx_eff = VL_RAND_RESET_I(8);
+    vlSelf->add32_fp32accum_bf16_tb_softfloat__DOT__gen_s1__BRA__3__KET____DOT__adder_s1__DOT__exp_nx_eff = VL_RAND_RESET_I(8);
+    vlSelf->add32_fp32accum_bf16_tb_softfloat__DOT__gen_s1__BRA__3__KET____DOT__adder_s1__DOT__y_shift = VL_RAND_RESET_I(9);
+    vlSelf->add32_fp32accum_bf16_tb_softfloat__DOT__gen_s1__BRA__3__KET____DOT__adder_s1__DOT__m_shift = VL_RAND_RESET_I(9);
+    vlSelf->add32_fp32accum_bf16_tb_softfloat__DOT__gen_s1__BRA__3__KET____DOT__adder_s1__DOT__n_shift = VL_RAND_RESET_I(9);
+    vlSelf->add32_fp32accum_bf16_tb_softfloat__DOT__gen_s1__BRA__3__KET____DOT__adder_s1__DOT__x_mant = VL_RAND_RESET_I(27);
+    vlSelf->add32_fp32accum_bf16_tb_softfloat__DOT__gen_s1__BRA__3__KET____DOT__adder_s1__DOT__y_shifted = VL_RAND_RESET_I(27);
+    vlSelf->add32_fp32accum_bf16_tb_softfloat__DOT__gen_s1__BRA__3__KET____DOT__adder_s1__DOT__m_shifted = VL_RAND_RESET_I(27);
+    vlSelf->add32_fp32accum_bf16_tb_softfloat__DOT__gen_s1__BRA__3__KET____DOT__adder_s1__DOT__n_shifted = VL_RAND_RESET_I(27);
+    vlSelf->add32_fp32accum_bf16_tb_softfloat__DOT__gen_s1__BRA__3__KET____DOT__adder_s1__DOT__y_mant_base = VL_RAND_RESET_I(27);
+    vlSelf->add32_fp32accum_bf16_tb_softfloat__DOT__gen_s1__BRA__3__KET____DOT__adder_s1__DOT__m_mant_base = VL_RAND_RESET_I(27);
+    vlSelf->add32_fp32accum_bf16_tb_softfloat__DOT__gen_s1__BRA__3__KET____DOT__adder_s1__DOT__n_mant_base = VL_RAND_RESET_I(27);
+    vlSelf->add32_fp32accum_bf16_tb_softfloat__DOT__gen_s1__BRA__3__KET____DOT__adder_s1__DOT__sticky_y = VL_RAND_RESET_I(1);
+    vlSelf->add32_fp32accum_bf16_tb_softfloat__DOT__gen_s1__BRA__3__KET____DOT__adder_s1__DOT__sticky_m = VL_RAND_RESET_I(1);
+    vlSelf->add32_fp32accum_bf16_tb_softfloat__DOT__gen_s1__BRA__3__KET____DOT__adder_s1__DOT__sticky_n = VL_RAND_RESET_I(1);
+    vlSelf->add32_fp32accum_bf16_tb_softfloat__DOT__gen_s1__BRA__3__KET____DOT__adder_s1__DOT__y_op = VL_RAND_RESET_I(1);
+    vlSelf->add32_fp32accum_bf16_tb_softfloat__DOT__gen_s1__BRA__3__KET____DOT__adder_s1__DOT__m_op = VL_RAND_RESET_I(1);
+    vlSelf->add32_fp32accum_bf16_tb_softfloat__DOT__gen_s1__BRA__3__KET____DOT__adder_s1__DOT__n_op = VL_RAND_RESET_I(1);
+    vlSelf->add32_fp32accum_bf16_tb_softfloat__DOT__gen_s1__BRA__3__KET____DOT__adder_s1__DOT__is_nan_any = VL_RAND_RESET_I(1);
+    vlSelf->add32_fp32accum_bf16_tb_softfloat__DOT__gen_s1__BRA__3__KET____DOT__adder_s1__DOT__special_case = VL_RAND_RESET_I(1);
+    vlSelf->add32_fp32accum_bf16_tb_softfloat__DOT__gen_s1__BRA__3__KET____DOT__adder_s1__DOT__any_pos_inf = VL_RAND_RESET_I(1);
+    vlSelf->add32_fp32accum_bf16_tb_softfloat__DOT__gen_s1__BRA__3__KET____DOT__adder_s1__DOT__any_neg_inf = VL_RAND_RESET_I(1);
+    vlSelf->add32_fp32accum_bf16_tb_softfloat__DOT__gen_s1__BRA__3__KET____DOT__adder_s1__DOT__special_result = VL_RAND_RESET_I(32);
+    vlSelf->add32_fp32accum_bf16_tb_softfloat__DOT__gen_s1__BRA__3__KET____DOT__adder_s1__DOT__st1_a_e = VL_RAND_RESET_I(8);
+    vlSelf->add32_fp32accum_bf16_tb_softfloat__DOT__gen_s1__BRA__3__KET____DOT__adder_s1__DOT__st1_a_s = VL_RAND_RESET_I(1);
+    vlSelf->add32_fp32accum_bf16_tb_softfloat__DOT__gen_s1__BRA__3__KET____DOT__adder_s1__DOT__st1_align_sticky = VL_RAND_RESET_I(1);
+    vlSelf->add32_fp32accum_bf16_tb_softfloat__DOT__gen_s1__BRA__3__KET____DOT__adder_s1__DOT__st1_special_case = VL_RAND_RESET_I(1);
+    vlSelf->add32_fp32accum_bf16_tb_softfloat__DOT__gen_s1__BRA__3__KET____DOT__adder_s1__DOT__st1_special_result = VL_RAND_RESET_I(32);
+    vlSelf->add32_fp32accum_bf16_tb_softfloat__DOT__gen_s1__BRA__3__KET____DOT__adder_s1__DOT__st1_sum_vec = VL_RAND_RESET_I(30);
+    vlSelf->add32_fp32accum_bf16_tb_softfloat__DOT__gen_s1__BRA__3__KET____DOT__adder_s1__DOT__st1_carry_vec = VL_RAND_RESET_I(30);
+    vlSelf->add32_fp32accum_bf16_tb_softfloat__DOT__gen_s1__BRA__3__KET____DOT__adder_s1__DOT__st1_hot_ones = VL_RAND_RESET_I(2);
+    vlSelf->add32_fp32accum_bf16_tb_softfloat__DOT__gen_s1__BRA__3__KET____DOT__adder_s1__DOT__raw_sum = VL_RAND_RESET_I(30);
+    vlSelf->add32_fp32accum_bf16_tb_softfloat__DOT__gen_s1__BRA__3__KET____DOT__adder_s1__DOT__mag_sum = VL_RAND_RESET_I(30);
+    vlSelf->add32_fp32accum_bf16_tb_softfloat__DOT__gen_s1__BRA__3__KET____DOT__adder_s1__DOT__res_sign = VL_RAND_RESET_I(1);
+    vlSelf->add32_fp32accum_bf16_tb_softfloat__DOT__gen_s1__BRA__3__KET____DOT__adder_s1__DOT__st2_exp_base = VL_RAND_RESET_I(8);
+    vlSelf->add32_fp32accum_bf16_tb_softfloat__DOT__gen_s1__BRA__3__KET____DOT__adder_s1__DOT__st2_sum_mag = VL_RAND_RESET_I(30);
+    vlSelf->add32_fp32accum_bf16_tb_softfloat__DOT__gen_s1__BRA__3__KET____DOT__adder_s1__DOT__st2_spec_res = VL_RAND_RESET_I(32);
+    vlSelf->add32_fp32accum_bf16_tb_softfloat__DOT__gen_s1__BRA__3__KET____DOT__adder_s1__DOT__st2_res_sign = VL_RAND_RESET_I(1);
+    vlSelf->add32_fp32accum_bf16_tb_softfloat__DOT__gen_s1__BRA__3__KET____DOT__adder_s1__DOT__st2_sticky = VL_RAND_RESET_I(1);
+    vlSelf->add32_fp32accum_bf16_tb_softfloat__DOT__gen_s1__BRA__3__KET____DOT__adder_s1__DOT__st2_special = VL_RAND_RESET_I(1);
+    vlSelf->add32_fp32accum_bf16_tb_softfloat__DOT__gen_s1__BRA__3__KET____DOT__adder_s1__DOT__lzd_scan = VL_RAND_RESET_I(30);
+    vlSelf->add32_fp32accum_bf16_tb_softfloat__DOT__gen_s1__BRA__3__KET____DOT__adder_s1__DOT__lead_zeros = VL_RAND_RESET_I(5);
+    vlSelf->add32_fp32accum_bf16_tb_softfloat__DOT__gen_s1__BRA__3__KET____DOT__adder_s1__DOT__norm_val = VL_RAND_RESET_I(30);
+    vlSelf->add32_fp32accum_bf16_tb_softfloat__DOT__gen_s1__BRA__3__KET____DOT__adder_s1__DOT__raw_mant = VL_RAND_RESET_I(23);
+    vlSelf->add32_fp32accum_bf16_tb_softfloat__DOT__gen_s1__BRA__3__KET____DOT__adder_s1__DOT__final_mant = VL_RAND_RESET_I(23);
+    vlSelf->add32_fp32accum_bf16_tb_softfloat__DOT__gen_s1__BRA__3__KET____DOT__adder_s1__DOT__rounded_mant_int = VL_RAND_RESET_I(24);
+    vlSelf->add32_fp32accum_bf16_tb_softfloat__DOT__gen_s1__BRA__3__KET____DOT__adder_s1__DOT__final_exp_calc = VL_RAND_RESET_I(11);
+    vlSelf->add32_fp32accum_bf16_tb_softfloat__DOT__gen_s1__BRA__3__KET____DOT__adder_s1__DOT__guard_bit = VL_RAND_RESET_I(1);
+    vlSelf->add32_fp32accum_bf16_tb_softfloat__DOT__gen_s1__BRA__3__KET____DOT__adder_s1__DOT__round_bit = VL_RAND_RESET_I(1);
+    vlSelf->add32_fp32accum_bf16_tb_softfloat__DOT__gen_s1__BRA__3__KET____DOT__adder_s1__DOT__sticky_bit = VL_RAND_RESET_I(1);
+    vlSelf->add32_fp32accum_bf16_tb_softfloat__DOT__gen_s1__BRA__3__KET____DOT__adder_s1__DOT__round_up = VL_RAND_RESET_I(1);
+    vlSelf->add32_fp32accum_bf16_tb_softfloat__DOT__gen_s1__BRA__3__KET____DOT__adder_s1__DOT__l_bit = VL_RAND_RESET_I(1);
+    vlSelf->add32_fp32accum_bf16_tb_softfloat__DOT__gen_s1__BRA__3__KET____DOT__adder_s1__DOT__result_out = VL_RAND_RESET_I(32);
+    vlSelf->add32_fp32accum_bf16_tb_softfloat__DOT__gen_s1__BRA__3__KET____DOT__adder_s1__DOT__op_x = VL_RAND_RESET_I(30);
+    vlSelf->add32_fp32accum_bf16_tb_softfloat__DOT__gen_s1__BRA__3__KET____DOT__adder_s1__DOT__op_y = VL_RAND_RESET_I(30);
+    vlSelf->add32_fp32accum_bf16_tb_softfloat__DOT__gen_s1__BRA__3__KET____DOT__adder_s1__DOT__op_m = VL_RAND_RESET_I(30);
+    vlSelf->add32_fp32accum_bf16_tb_softfloat__DOT__gen_s1__BRA__3__KET____DOT__adder_s1__DOT__op_n = VL_RAND_RESET_I(30);
+    vlSelf->add32_fp32accum_bf16_tb_softfloat__DOT__gen_s1__BRA__3__KET____DOT__adder_s1__DOT__csa_s1 = VL_RAND_RESET_I(30);
+    vlSelf->add32_fp32accum_bf16_tb_softfloat__DOT__gen_s1__BRA__3__KET____DOT__adder_s1__DOT__csa_c1 = VL_RAND_RESET_I(30);
+    vlSelf->add32_fp32accum_bf16_tb_softfloat__DOT__gen_s1__BRA__3__KET____DOT__adder_s1__DOT__csa_s2 = VL_RAND_RESET_I(30);
+    vlSelf->add32_fp32accum_bf16_tb_softfloat__DOT__gen_s1__BRA__3__KET____DOT__adder_s1__DOT__csa_c2 = VL_RAND_RESET_I(30);
+    vlSelf->add32_fp32accum_bf16_tb_softfloat__DOT__gen_s1__BRA__3__KET____DOT__adder_s1__DOT__stage3_logic__DOT__unnamedblk1__DOT__i = 0;
+    vlSelf->add32_fp32accum_bf16_tb_softfloat__DOT__gen_s1__BRA__4__KET____DOT__adder_s1__DOT__a_daz = VL_RAND_RESET_I(16);
+    vlSelf->add32_fp32accum_bf16_tb_softfloat__DOT__gen_s1__BRA__4__KET____DOT__adder_s1__DOT__b_daz = VL_RAND_RESET_I(16);
+    vlSelf->add32_fp32accum_bf16_tb_softfloat__DOT__gen_s1__BRA__4__KET____DOT__adder_s1__DOT__c_daz = VL_RAND_RESET_I(16);
+    vlSelf->add32_fp32accum_bf16_tb_softfloat__DOT__gen_s1__BRA__4__KET____DOT__adder_s1__DOT__d_daz = VL_RAND_RESET_I(16);
+    vlSelf->add32_fp32accum_bf16_tb_softfloat__DOT__gen_s1__BRA__4__KET____DOT__adder_s1__DOT__exp_a = VL_RAND_RESET_I(8);
+    vlSelf->add32_fp32accum_bf16_tb_softfloat__DOT__gen_s1__BRA__4__KET____DOT__adder_s1__DOT__exp_b = VL_RAND_RESET_I(8);
+    vlSelf->add32_fp32accum_bf16_tb_softfloat__DOT__gen_s1__BRA__4__KET____DOT__adder_s1__DOT__exp_c = VL_RAND_RESET_I(8);
+    vlSelf->add32_fp32accum_bf16_tb_softfloat__DOT__gen_s1__BRA__4__KET____DOT__adder_s1__DOT__exp_d = VL_RAND_RESET_I(8);
+    vlSelf->add32_fp32accum_bf16_tb_softfloat__DOT__gen_s1__BRA__4__KET____DOT__adder_s1__DOT__frac_a = VL_RAND_RESET_I(7);
+    vlSelf->add32_fp32accum_bf16_tb_softfloat__DOT__gen_s1__BRA__4__KET____DOT__adder_s1__DOT__frac_b = VL_RAND_RESET_I(7);
+    vlSelf->add32_fp32accum_bf16_tb_softfloat__DOT__gen_s1__BRA__4__KET____DOT__adder_s1__DOT__frac_c = VL_RAND_RESET_I(7);
+    vlSelf->add32_fp32accum_bf16_tb_softfloat__DOT__gen_s1__BRA__4__KET____DOT__adder_s1__DOT__frac_d = VL_RAND_RESET_I(7);
+    vlSelf->add32_fp32accum_bf16_tb_softfloat__DOT__gen_s1__BRA__4__KET____DOT__adder_s1__DOT__sign_a = VL_RAND_RESET_I(1);
+    vlSelf->add32_fp32accum_bf16_tb_softfloat__DOT__gen_s1__BRA__4__KET____DOT__adder_s1__DOT__sign_b = VL_RAND_RESET_I(1);
+    vlSelf->add32_fp32accum_bf16_tb_softfloat__DOT__gen_s1__BRA__4__KET____DOT__adder_s1__DOT__sign_c = VL_RAND_RESET_I(1);
+    vlSelf->add32_fp32accum_bf16_tb_softfloat__DOT__gen_s1__BRA__4__KET____DOT__adder_s1__DOT__sign_d = VL_RAND_RESET_I(1);
+    vlSelf->add32_fp32accum_bf16_tb_softfloat__DOT__gen_s1__BRA__4__KET____DOT__adder_s1__DOT__exp_p = VL_RAND_RESET_I(8);
+    vlSelf->add32_fp32accum_bf16_tb_softfloat__DOT__gen_s1__BRA__4__KET____DOT__adder_s1__DOT__exp_m = VL_RAND_RESET_I(8);
+    vlSelf->add32_fp32accum_bf16_tb_softfloat__DOT__gen_s1__BRA__4__KET____DOT__adder_s1__DOT__exp_r = VL_RAND_RESET_I(8);
+    vlSelf->add32_fp32accum_bf16_tb_softfloat__DOT__gen_s1__BRA__4__KET____DOT__adder_s1__DOT__exp_n = VL_RAND_RESET_I(8);
+    vlSelf->add32_fp32accum_bf16_tb_softfloat__DOT__gen_s1__BRA__4__KET____DOT__adder_s1__DOT__exp_x = VL_RAND_RESET_I(8);
+    vlSelf->add32_fp32accum_bf16_tb_softfloat__DOT__gen_s1__BRA__4__KET____DOT__adder_s1__DOT__exp_y = VL_RAND_RESET_I(8);
+    vlSelf->add32_fp32accum_bf16_tb_softfloat__DOT__gen_s1__BRA__4__KET____DOT__adder_s1__DOT__exp_mx = VL_RAND_RESET_I(8);
+    vlSelf->add32_fp32accum_bf16_tb_softfloat__DOT__gen_s1__BRA__4__KET____DOT__adder_s1__DOT__exp_nx = VL_RAND_RESET_I(8);
+    vlSelf->add32_fp32accum_bf16_tb_softfloat__DOT__gen_s1__BRA__4__KET____DOT__adder_s1__DOT__frac_p = VL_RAND_RESET_I(7);
+    vlSelf->add32_fp32accum_bf16_tb_softfloat__DOT__gen_s1__BRA__4__KET____DOT__adder_s1__DOT__frac_m = VL_RAND_RESET_I(7);
+    vlSelf->add32_fp32accum_bf16_tb_softfloat__DOT__gen_s1__BRA__4__KET____DOT__adder_s1__DOT__frac_r = VL_RAND_RESET_I(7);
+    vlSelf->add32_fp32accum_bf16_tb_softfloat__DOT__gen_s1__BRA__4__KET____DOT__adder_s1__DOT__frac_n = VL_RAND_RESET_I(7);
+    vlSelf->add32_fp32accum_bf16_tb_softfloat__DOT__gen_s1__BRA__4__KET____DOT__adder_s1__DOT__frac_x = VL_RAND_RESET_I(7);
+    vlSelf->add32_fp32accum_bf16_tb_softfloat__DOT__gen_s1__BRA__4__KET____DOT__adder_s1__DOT__frac_y = VL_RAND_RESET_I(7);
+    vlSelf->add32_fp32accum_bf16_tb_softfloat__DOT__gen_s1__BRA__4__KET____DOT__adder_s1__DOT__frac_mx = VL_RAND_RESET_I(7);
+    vlSelf->add32_fp32accum_bf16_tb_softfloat__DOT__gen_s1__BRA__4__KET____DOT__adder_s1__DOT__frac_nx = VL_RAND_RESET_I(7);
+    vlSelf->add32_fp32accum_bf16_tb_softfloat__DOT__gen_s1__BRA__4__KET____DOT__adder_s1__DOT__sign_p = VL_RAND_RESET_I(1);
+    vlSelf->add32_fp32accum_bf16_tb_softfloat__DOT__gen_s1__BRA__4__KET____DOT__adder_s1__DOT__sign_m = VL_RAND_RESET_I(1);
+    vlSelf->add32_fp32accum_bf16_tb_softfloat__DOT__gen_s1__BRA__4__KET____DOT__adder_s1__DOT__sign_r = VL_RAND_RESET_I(1);
+    vlSelf->add32_fp32accum_bf16_tb_softfloat__DOT__gen_s1__BRA__4__KET____DOT__adder_s1__DOT__sign_n = VL_RAND_RESET_I(1);
+    vlSelf->add32_fp32accum_bf16_tb_softfloat__DOT__gen_s1__BRA__4__KET____DOT__adder_s1__DOT__sign_x = VL_RAND_RESET_I(1);
+    vlSelf->add32_fp32accum_bf16_tb_softfloat__DOT__gen_s1__BRA__4__KET____DOT__adder_s1__DOT__sign_y = VL_RAND_RESET_I(1);
+    vlSelf->add32_fp32accum_bf16_tb_softfloat__DOT__gen_s1__BRA__4__KET____DOT__adder_s1__DOT__sign_mx = VL_RAND_RESET_I(1);
+    vlSelf->add32_fp32accum_bf16_tb_softfloat__DOT__gen_s1__BRA__4__KET____DOT__adder_s1__DOT__sign_nx = VL_RAND_RESET_I(1);
+    vlSelf->add32_fp32accum_bf16_tb_softfloat__DOT__gen_s1__BRA__4__KET____DOT__adder_s1__DOT__exp_x_eff = VL_RAND_RESET_I(8);
+    vlSelf->add32_fp32accum_bf16_tb_softfloat__DOT__gen_s1__BRA__4__KET____DOT__adder_s1__DOT__exp_y_eff = VL_RAND_RESET_I(8);
+    vlSelf->add32_fp32accum_bf16_tb_softfloat__DOT__gen_s1__BRA__4__KET____DOT__adder_s1__DOT__exp_mx_eff = VL_RAND_RESET_I(8);
+    vlSelf->add32_fp32accum_bf16_tb_softfloat__DOT__gen_s1__BRA__4__KET____DOT__adder_s1__DOT__exp_nx_eff = VL_RAND_RESET_I(8);
+    vlSelf->add32_fp32accum_bf16_tb_softfloat__DOT__gen_s1__BRA__4__KET____DOT__adder_s1__DOT__y_shift = VL_RAND_RESET_I(9);
+    vlSelf->add32_fp32accum_bf16_tb_softfloat__DOT__gen_s1__BRA__4__KET____DOT__adder_s1__DOT__m_shift = VL_RAND_RESET_I(9);
+    vlSelf->add32_fp32accum_bf16_tb_softfloat__DOT__gen_s1__BRA__4__KET____DOT__adder_s1__DOT__n_shift = VL_RAND_RESET_I(9);
+    vlSelf->add32_fp32accum_bf16_tb_softfloat__DOT__gen_s1__BRA__4__KET____DOT__adder_s1__DOT__x_mant = VL_RAND_RESET_I(27);
+    vlSelf->add32_fp32accum_bf16_tb_softfloat__DOT__gen_s1__BRA__4__KET____DOT__adder_s1__DOT__y_shifted = VL_RAND_RESET_I(27);
+    vlSelf->add32_fp32accum_bf16_tb_softfloat__DOT__gen_s1__BRA__4__KET____DOT__adder_s1__DOT__m_shifted = VL_RAND_RESET_I(27);
+    vlSelf->add32_fp32accum_bf16_tb_softfloat__DOT__gen_s1__BRA__4__KET____DOT__adder_s1__DOT__n_shifted = VL_RAND_RESET_I(27);
+    vlSelf->add32_fp32accum_bf16_tb_softfloat__DOT__gen_s1__BRA__4__KET____DOT__adder_s1__DOT__y_mant_base = VL_RAND_RESET_I(27);
+    vlSelf->add32_fp32accum_bf16_tb_softfloat__DOT__gen_s1__BRA__4__KET____DOT__adder_s1__DOT__m_mant_base = VL_RAND_RESET_I(27);
+    vlSelf->add32_fp32accum_bf16_tb_softfloat__DOT__gen_s1__BRA__4__KET____DOT__adder_s1__DOT__n_mant_base = VL_RAND_RESET_I(27);
+    vlSelf->add32_fp32accum_bf16_tb_softfloat__DOT__gen_s1__BRA__4__KET____DOT__adder_s1__DOT__sticky_y = VL_RAND_RESET_I(1);
+    vlSelf->add32_fp32accum_bf16_tb_softfloat__DOT__gen_s1__BRA__4__KET____DOT__adder_s1__DOT__sticky_m = VL_RAND_RESET_I(1);
+    vlSelf->add32_fp32accum_bf16_tb_softfloat__DOT__gen_s1__BRA__4__KET____DOT__adder_s1__DOT__sticky_n = VL_RAND_RESET_I(1);
+    vlSelf->add32_fp32accum_bf16_tb_softfloat__DOT__gen_s1__BRA__4__KET____DOT__adder_s1__DOT__y_op = VL_RAND_RESET_I(1);
+    vlSelf->add32_fp32accum_bf16_tb_softfloat__DOT__gen_s1__BRA__4__KET____DOT__adder_s1__DOT__m_op = VL_RAND_RESET_I(1);
+    vlSelf->add32_fp32accum_bf16_tb_softfloat__DOT__gen_s1__BRA__4__KET____DOT__adder_s1__DOT__n_op = VL_RAND_RESET_I(1);
+    vlSelf->add32_fp32accum_bf16_tb_softfloat__DOT__gen_s1__BRA__4__KET____DOT__adder_s1__DOT__is_nan_any = VL_RAND_RESET_I(1);
+    vlSelf->add32_fp32accum_bf16_tb_softfloat__DOT__gen_s1__BRA__4__KET____DOT__adder_s1__DOT__special_case = VL_RAND_RESET_I(1);
+    vlSelf->add32_fp32accum_bf16_tb_softfloat__DOT__gen_s1__BRA__4__KET____DOT__adder_s1__DOT__any_pos_inf = VL_RAND_RESET_I(1);
+    vlSelf->add32_fp32accum_bf16_tb_softfloat__DOT__gen_s1__BRA__4__KET____DOT__adder_s1__DOT__any_neg_inf = VL_RAND_RESET_I(1);
+    vlSelf->add32_fp32accum_bf16_tb_softfloat__DOT__gen_s1__BRA__4__KET____DOT__adder_s1__DOT__special_result = VL_RAND_RESET_I(32);
+    vlSelf->add32_fp32accum_bf16_tb_softfloat__DOT__gen_s1__BRA__4__KET____DOT__adder_s1__DOT__st1_a_e = VL_RAND_RESET_I(8);
+    vlSelf->add32_fp32accum_bf16_tb_softfloat__DOT__gen_s1__BRA__4__KET____DOT__adder_s1__DOT__st1_a_s = VL_RAND_RESET_I(1);
+    vlSelf->add32_fp32accum_bf16_tb_softfloat__DOT__gen_s1__BRA__4__KET____DOT__adder_s1__DOT__st1_align_sticky = VL_RAND_RESET_I(1);
+    vlSelf->add32_fp32accum_bf16_tb_softfloat__DOT__gen_s1__BRA__4__KET____DOT__adder_s1__DOT__st1_special_case = VL_RAND_RESET_I(1);
+    vlSelf->add32_fp32accum_bf16_tb_softfloat__DOT__gen_s1__BRA__4__KET____DOT__adder_s1__DOT__st1_special_result = VL_RAND_RESET_I(32);
+    vlSelf->add32_fp32accum_bf16_tb_softfloat__DOT__gen_s1__BRA__4__KET____DOT__adder_s1__DOT__st1_sum_vec = VL_RAND_RESET_I(30);
+    vlSelf->add32_fp32accum_bf16_tb_softfloat__DOT__gen_s1__BRA__4__KET____DOT__adder_s1__DOT__st1_carry_vec = VL_RAND_RESET_I(30);
+    vlSelf->add32_fp32accum_bf16_tb_softfloat__DOT__gen_s1__BRA__4__KET____DOT__adder_s1__DOT__st1_hot_ones = VL_RAND_RESET_I(2);
+    vlSelf->add32_fp32accum_bf16_tb_softfloat__DOT__gen_s1__BRA__4__KET____DOT__adder_s1__DOT__raw_sum = VL_RAND_RESET_I(30);
+    vlSelf->add32_fp32accum_bf16_tb_softfloat__DOT__gen_s1__BRA__4__KET____DOT__adder_s1__DOT__mag_sum = VL_RAND_RESET_I(30);
+    vlSelf->add32_fp32accum_bf16_tb_softfloat__DOT__gen_s1__BRA__4__KET____DOT__adder_s1__DOT__res_sign = VL_RAND_RESET_I(1);
+    vlSelf->add32_fp32accum_bf16_tb_softfloat__DOT__gen_s1__BRA__4__KET____DOT__adder_s1__DOT__st2_exp_base = VL_RAND_RESET_I(8);
+    vlSelf->add32_fp32accum_bf16_tb_softfloat__DOT__gen_s1__BRA__4__KET____DOT__adder_s1__DOT__st2_sum_mag = VL_RAND_RESET_I(30);
+    vlSelf->add32_fp32accum_bf16_tb_softfloat__DOT__gen_s1__BRA__4__KET____DOT__adder_s1__DOT__st2_spec_res = VL_RAND_RESET_I(32);
+    vlSelf->add32_fp32accum_bf16_tb_softfloat__DOT__gen_s1__BRA__4__KET____DOT__adder_s1__DOT__st2_res_sign = VL_RAND_RESET_I(1);
+    vlSelf->add32_fp32accum_bf16_tb_softfloat__DOT__gen_s1__BRA__4__KET____DOT__adder_s1__DOT__st2_sticky = VL_RAND_RESET_I(1);
+    vlSelf->add32_fp32accum_bf16_tb_softfloat__DOT__gen_s1__BRA__4__KET____DOT__adder_s1__DOT__st2_special = VL_RAND_RESET_I(1);
+    vlSelf->add32_fp32accum_bf16_tb_softfloat__DOT__gen_s1__BRA__4__KET____DOT__adder_s1__DOT__lzd_scan = VL_RAND_RESET_I(30);
+    vlSelf->add32_fp32accum_bf16_tb_softfloat__DOT__gen_s1__BRA__4__KET____DOT__adder_s1__DOT__lead_zeros = VL_RAND_RESET_I(5);
+    vlSelf->add32_fp32accum_bf16_tb_softfloat__DOT__gen_s1__BRA__4__KET____DOT__adder_s1__DOT__norm_val = VL_RAND_RESET_I(30);
+    vlSelf->add32_fp32accum_bf16_tb_softfloat__DOT__gen_s1__BRA__4__KET____DOT__adder_s1__DOT__raw_mant = VL_RAND_RESET_I(23);
+    vlSelf->add32_fp32accum_bf16_tb_softfloat__DOT__gen_s1__BRA__4__KET____DOT__adder_s1__DOT__final_mant = VL_RAND_RESET_I(23);
+    vlSelf->add32_fp32accum_bf16_tb_softfloat__DOT__gen_s1__BRA__4__KET____DOT__adder_s1__DOT__rounded_mant_int = VL_RAND_RESET_I(24);
+    vlSelf->add32_fp32accum_bf16_tb_softfloat__DOT__gen_s1__BRA__4__KET____DOT__adder_s1__DOT__final_exp_calc = VL_RAND_RESET_I(11);
+    vlSelf->add32_fp32accum_bf16_tb_softfloat__DOT__gen_s1__BRA__4__KET____DOT__adder_s1__DOT__guard_bit = VL_RAND_RESET_I(1);
+    vlSelf->add32_fp32accum_bf16_tb_softfloat__DOT__gen_s1__BRA__4__KET____DOT__adder_s1__DOT__round_bit = VL_RAND_RESET_I(1);
+    vlSelf->add32_fp32accum_bf16_tb_softfloat__DOT__gen_s1__BRA__4__KET____DOT__adder_s1__DOT__sticky_bit = VL_RAND_RESET_I(1);
+    vlSelf->add32_fp32accum_bf16_tb_softfloat__DOT__gen_s1__BRA__4__KET____DOT__adder_s1__DOT__round_up = VL_RAND_RESET_I(1);
+    vlSelf->add32_fp32accum_bf16_tb_softfloat__DOT__gen_s1__BRA__4__KET____DOT__adder_s1__DOT__l_bit = VL_RAND_RESET_I(1);
+    vlSelf->add32_fp32accum_bf16_tb_softfloat__DOT__gen_s1__BRA__4__KET____DOT__adder_s1__DOT__result_out = VL_RAND_RESET_I(32);
+    vlSelf->add32_fp32accum_bf16_tb_softfloat__DOT__gen_s1__BRA__4__KET____DOT__adder_s1__DOT__op_x = VL_RAND_RESET_I(30);
+    vlSelf->add32_fp32accum_bf16_tb_softfloat__DOT__gen_s1__BRA__4__KET____DOT__adder_s1__DOT__op_y = VL_RAND_RESET_I(30);
+    vlSelf->add32_fp32accum_bf16_tb_softfloat__DOT__gen_s1__BRA__4__KET____DOT__adder_s1__DOT__op_m = VL_RAND_RESET_I(30);
+    vlSelf->add32_fp32accum_bf16_tb_softfloat__DOT__gen_s1__BRA__4__KET____DOT__adder_s1__DOT__op_n = VL_RAND_RESET_I(30);
+    vlSelf->add32_fp32accum_bf16_tb_softfloat__DOT__gen_s1__BRA__4__KET____DOT__adder_s1__DOT__csa_s1 = VL_RAND_RESET_I(30);
+    vlSelf->add32_fp32accum_bf16_tb_softfloat__DOT__gen_s1__BRA__4__KET____DOT__adder_s1__DOT__csa_c1 = VL_RAND_RESET_I(30);
+    vlSelf->add32_fp32accum_bf16_tb_softfloat__DOT__gen_s1__BRA__4__KET____DOT__adder_s1__DOT__csa_s2 = VL_RAND_RESET_I(30);
+    vlSelf->add32_fp32accum_bf16_tb_softfloat__DOT__gen_s1__BRA__4__KET____DOT__adder_s1__DOT__csa_c2 = VL_RAND_RESET_I(30);
+    vlSelf->add32_fp32accum_bf16_tb_softfloat__DOT__gen_s1__BRA__4__KET____DOT__adder_s1__DOT__stage3_logic__DOT__unnamedblk1__DOT__i = 0;
+    vlSelf->add32_fp32accum_bf16_tb_softfloat__DOT__gen_s1__BRA__5__KET____DOT__adder_s1__DOT__a_daz = VL_RAND_RESET_I(16);
+    vlSelf->add32_fp32accum_bf16_tb_softfloat__DOT__gen_s1__BRA__5__KET____DOT__adder_s1__DOT__b_daz = VL_RAND_RESET_I(16);
+    vlSelf->add32_fp32accum_bf16_tb_softfloat__DOT__gen_s1__BRA__5__KET____DOT__adder_s1__DOT__c_daz = VL_RAND_RESET_I(16);
+    vlSelf->add32_fp32accum_bf16_tb_softfloat__DOT__gen_s1__BRA__5__KET____DOT__adder_s1__DOT__d_daz = VL_RAND_RESET_I(16);
+    vlSelf->add32_fp32accum_bf16_tb_softfloat__DOT__gen_s1__BRA__5__KET____DOT__adder_s1__DOT__exp_a = VL_RAND_RESET_I(8);
+    vlSelf->add32_fp32accum_bf16_tb_softfloat__DOT__gen_s1__BRA__5__KET____DOT__adder_s1__DOT__exp_b = VL_RAND_RESET_I(8);
+    vlSelf->add32_fp32accum_bf16_tb_softfloat__DOT__gen_s1__BRA__5__KET____DOT__adder_s1__DOT__exp_c = VL_RAND_RESET_I(8);
+    vlSelf->add32_fp32accum_bf16_tb_softfloat__DOT__gen_s1__BRA__5__KET____DOT__adder_s1__DOT__exp_d = VL_RAND_RESET_I(8);
+    vlSelf->add32_fp32accum_bf16_tb_softfloat__DOT__gen_s1__BRA__5__KET____DOT__adder_s1__DOT__frac_a = VL_RAND_RESET_I(7);
+    vlSelf->add32_fp32accum_bf16_tb_softfloat__DOT__gen_s1__BRA__5__KET____DOT__adder_s1__DOT__frac_b = VL_RAND_RESET_I(7);
+    vlSelf->add32_fp32accum_bf16_tb_softfloat__DOT__gen_s1__BRA__5__KET____DOT__adder_s1__DOT__frac_c = VL_RAND_RESET_I(7);
+    vlSelf->add32_fp32accum_bf16_tb_softfloat__DOT__gen_s1__BRA__5__KET____DOT__adder_s1__DOT__frac_d = VL_RAND_RESET_I(7);
+    vlSelf->add32_fp32accum_bf16_tb_softfloat__DOT__gen_s1__BRA__5__KET____DOT__adder_s1__DOT__sign_a = VL_RAND_RESET_I(1);
+    vlSelf->add32_fp32accum_bf16_tb_softfloat__DOT__gen_s1__BRA__5__KET____DOT__adder_s1__DOT__sign_b = VL_RAND_RESET_I(1);
+    vlSelf->add32_fp32accum_bf16_tb_softfloat__DOT__gen_s1__BRA__5__KET____DOT__adder_s1__DOT__sign_c = VL_RAND_RESET_I(1);
+    vlSelf->add32_fp32accum_bf16_tb_softfloat__DOT__gen_s1__BRA__5__KET____DOT__adder_s1__DOT__sign_d = VL_RAND_RESET_I(1);
+    vlSelf->add32_fp32accum_bf16_tb_softfloat__DOT__gen_s1__BRA__5__KET____DOT__adder_s1__DOT__exp_p = VL_RAND_RESET_I(8);
+    vlSelf->add32_fp32accum_bf16_tb_softfloat__DOT__gen_s1__BRA__5__KET____DOT__adder_s1__DOT__exp_m = VL_RAND_RESET_I(8);
+    vlSelf->add32_fp32accum_bf16_tb_softfloat__DOT__gen_s1__BRA__5__KET____DOT__adder_s1__DOT__exp_r = VL_RAND_RESET_I(8);
+    vlSelf->add32_fp32accum_bf16_tb_softfloat__DOT__gen_s1__BRA__5__KET____DOT__adder_s1__DOT__exp_n = VL_RAND_RESET_I(8);
+    vlSelf->add32_fp32accum_bf16_tb_softfloat__DOT__gen_s1__BRA__5__KET____DOT__adder_s1__DOT__exp_x = VL_RAND_RESET_I(8);
+    vlSelf->add32_fp32accum_bf16_tb_softfloat__DOT__gen_s1__BRA__5__KET____DOT__adder_s1__DOT__exp_y = VL_RAND_RESET_I(8);
+    vlSelf->add32_fp32accum_bf16_tb_softfloat__DOT__gen_s1__BRA__5__KET____DOT__adder_s1__DOT__exp_mx = VL_RAND_RESET_I(8);
+    vlSelf->add32_fp32accum_bf16_tb_softfloat__DOT__gen_s1__BRA__5__KET____DOT__adder_s1__DOT__exp_nx = VL_RAND_RESET_I(8);
+    vlSelf->add32_fp32accum_bf16_tb_softfloat__DOT__gen_s1__BRA__5__KET____DOT__adder_s1__DOT__frac_p = VL_RAND_RESET_I(7);
+    vlSelf->add32_fp32accum_bf16_tb_softfloat__DOT__gen_s1__BRA__5__KET____DOT__adder_s1__DOT__frac_m = VL_RAND_RESET_I(7);
+    vlSelf->add32_fp32accum_bf16_tb_softfloat__DOT__gen_s1__BRA__5__KET____DOT__adder_s1__DOT__frac_r = VL_RAND_RESET_I(7);
+    vlSelf->add32_fp32accum_bf16_tb_softfloat__DOT__gen_s1__BRA__5__KET____DOT__adder_s1__DOT__frac_n = VL_RAND_RESET_I(7);
+    vlSelf->add32_fp32accum_bf16_tb_softfloat__DOT__gen_s1__BRA__5__KET____DOT__adder_s1__DOT__frac_x = VL_RAND_RESET_I(7);
+    vlSelf->add32_fp32accum_bf16_tb_softfloat__DOT__gen_s1__BRA__5__KET____DOT__adder_s1__DOT__frac_y = VL_RAND_RESET_I(7);
+    vlSelf->add32_fp32accum_bf16_tb_softfloat__DOT__gen_s1__BRA__5__KET____DOT__adder_s1__DOT__frac_mx = VL_RAND_RESET_I(7);
+    vlSelf->add32_fp32accum_bf16_tb_softfloat__DOT__gen_s1__BRA__5__KET____DOT__adder_s1__DOT__frac_nx = VL_RAND_RESET_I(7);
+    vlSelf->add32_fp32accum_bf16_tb_softfloat__DOT__gen_s1__BRA__5__KET____DOT__adder_s1__DOT__sign_p = VL_RAND_RESET_I(1);
+    vlSelf->add32_fp32accum_bf16_tb_softfloat__DOT__gen_s1__BRA__5__KET____DOT__adder_s1__DOT__sign_m = VL_RAND_RESET_I(1);
+    vlSelf->add32_fp32accum_bf16_tb_softfloat__DOT__gen_s1__BRA__5__KET____DOT__adder_s1__DOT__sign_r = VL_RAND_RESET_I(1);
+    vlSelf->add32_fp32accum_bf16_tb_softfloat__DOT__gen_s1__BRA__5__KET____DOT__adder_s1__DOT__sign_n = VL_RAND_RESET_I(1);
+    vlSelf->add32_fp32accum_bf16_tb_softfloat__DOT__gen_s1__BRA__5__KET____DOT__adder_s1__DOT__sign_x = VL_RAND_RESET_I(1);
+    vlSelf->add32_fp32accum_bf16_tb_softfloat__DOT__gen_s1__BRA__5__KET____DOT__adder_s1__DOT__sign_y = VL_RAND_RESET_I(1);
+    vlSelf->add32_fp32accum_bf16_tb_softfloat__DOT__gen_s1__BRA__5__KET____DOT__adder_s1__DOT__sign_mx = VL_RAND_RESET_I(1);
+    vlSelf->add32_fp32accum_bf16_tb_softfloat__DOT__gen_s1__BRA__5__KET____DOT__adder_s1__DOT__sign_nx = VL_RAND_RESET_I(1);
+    vlSelf->add32_fp32accum_bf16_tb_softfloat__DOT__gen_s1__BRA__5__KET____DOT__adder_s1__DOT__exp_x_eff = VL_RAND_RESET_I(8);
+    vlSelf->add32_fp32accum_bf16_tb_softfloat__DOT__gen_s1__BRA__5__KET____DOT__adder_s1__DOT__exp_y_eff = VL_RAND_RESET_I(8);
+    vlSelf->add32_fp32accum_bf16_tb_softfloat__DOT__gen_s1__BRA__5__KET____DOT__adder_s1__DOT__exp_mx_eff = VL_RAND_RESET_I(8);
+    vlSelf->add32_fp32accum_bf16_tb_softfloat__DOT__gen_s1__BRA__5__KET____DOT__adder_s1__DOT__exp_nx_eff = VL_RAND_RESET_I(8);
+    vlSelf->add32_fp32accum_bf16_tb_softfloat__DOT__gen_s1__BRA__5__KET____DOT__adder_s1__DOT__y_shift = VL_RAND_RESET_I(9);
+    vlSelf->add32_fp32accum_bf16_tb_softfloat__DOT__gen_s1__BRA__5__KET____DOT__adder_s1__DOT__m_shift = VL_RAND_RESET_I(9);
+    vlSelf->add32_fp32accum_bf16_tb_softfloat__DOT__gen_s1__BRA__5__KET____DOT__adder_s1__DOT__n_shift = VL_RAND_RESET_I(9);
+    vlSelf->add32_fp32accum_bf16_tb_softfloat__DOT__gen_s1__BRA__5__KET____DOT__adder_s1__DOT__x_mant = VL_RAND_RESET_I(27);
+    vlSelf->add32_fp32accum_bf16_tb_softfloat__DOT__gen_s1__BRA__5__KET____DOT__adder_s1__DOT__y_shifted = VL_RAND_RESET_I(27);
+    vlSelf->add32_fp32accum_bf16_tb_softfloat__DOT__gen_s1__BRA__5__KET____DOT__adder_s1__DOT__m_shifted = VL_RAND_RESET_I(27);
+    vlSelf->add32_fp32accum_bf16_tb_softfloat__DOT__gen_s1__BRA__5__KET____DOT__adder_s1__DOT__n_shifted = VL_RAND_RESET_I(27);
+    vlSelf->add32_fp32accum_bf16_tb_softfloat__DOT__gen_s1__BRA__5__KET____DOT__adder_s1__DOT__y_mant_base = VL_RAND_RESET_I(27);
+    vlSelf->add32_fp32accum_bf16_tb_softfloat__DOT__gen_s1__BRA__5__KET____DOT__adder_s1__DOT__m_mant_base = VL_RAND_RESET_I(27);
+    vlSelf->add32_fp32accum_bf16_tb_softfloat__DOT__gen_s1__BRA__5__KET____DOT__adder_s1__DOT__n_mant_base = VL_RAND_RESET_I(27);
+    vlSelf->add32_fp32accum_bf16_tb_softfloat__DOT__gen_s1__BRA__5__KET____DOT__adder_s1__DOT__sticky_y = VL_RAND_RESET_I(1);
+    vlSelf->add32_fp32accum_bf16_tb_softfloat__DOT__gen_s1__BRA__5__KET____DOT__adder_s1__DOT__sticky_m = VL_RAND_RESET_I(1);
+    vlSelf->add32_fp32accum_bf16_tb_softfloat__DOT__gen_s1__BRA__5__KET____DOT__adder_s1__DOT__sticky_n = VL_RAND_RESET_I(1);
+    vlSelf->add32_fp32accum_bf16_tb_softfloat__DOT__gen_s1__BRA__5__KET____DOT__adder_s1__DOT__y_op = VL_RAND_RESET_I(1);
+    vlSelf->add32_fp32accum_bf16_tb_softfloat__DOT__gen_s1__BRA__5__KET____DOT__adder_s1__DOT__m_op = VL_RAND_RESET_I(1);
+    vlSelf->add32_fp32accum_bf16_tb_softfloat__DOT__gen_s1__BRA__5__KET____DOT__adder_s1__DOT__n_op = VL_RAND_RESET_I(1);
+    vlSelf->add32_fp32accum_bf16_tb_softfloat__DOT__gen_s1__BRA__5__KET____DOT__adder_s1__DOT__is_nan_any = VL_RAND_RESET_I(1);
+    vlSelf->add32_fp32accum_bf16_tb_softfloat__DOT__gen_s1__BRA__5__KET____DOT__adder_s1__DOT__special_case = VL_RAND_RESET_I(1);
+    vlSelf->add32_fp32accum_bf16_tb_softfloat__DOT__gen_s1__BRA__5__KET____DOT__adder_s1__DOT__any_pos_inf = VL_RAND_RESET_I(1);
+    vlSelf->add32_fp32accum_bf16_tb_softfloat__DOT__gen_s1__BRA__5__KET____DOT__adder_s1__DOT__any_neg_inf = VL_RAND_RESET_I(1);
+    vlSelf->add32_fp32accum_bf16_tb_softfloat__DOT__gen_s1__BRA__5__KET____DOT__adder_s1__DOT__special_result = VL_RAND_RESET_I(32);
+    vlSelf->add32_fp32accum_bf16_tb_softfloat__DOT__gen_s1__BRA__5__KET____DOT__adder_s1__DOT__st1_a_e = VL_RAND_RESET_I(8);
+    vlSelf->add32_fp32accum_bf16_tb_softfloat__DOT__gen_s1__BRA__5__KET____DOT__adder_s1__DOT__st1_a_s = VL_RAND_RESET_I(1);
+    vlSelf->add32_fp32accum_bf16_tb_softfloat__DOT__gen_s1__BRA__5__KET____DOT__adder_s1__DOT__st1_align_sticky = VL_RAND_RESET_I(1);
+    vlSelf->add32_fp32accum_bf16_tb_softfloat__DOT__gen_s1__BRA__5__KET____DOT__adder_s1__DOT__st1_special_case = VL_RAND_RESET_I(1);
+    vlSelf->add32_fp32accum_bf16_tb_softfloat__DOT__gen_s1__BRA__5__KET____DOT__adder_s1__DOT__st1_special_result = VL_RAND_RESET_I(32);
+    vlSelf->add32_fp32accum_bf16_tb_softfloat__DOT__gen_s1__BRA__5__KET____DOT__adder_s1__DOT__st1_sum_vec = VL_RAND_RESET_I(30);
+    vlSelf->add32_fp32accum_bf16_tb_softfloat__DOT__gen_s1__BRA__5__KET____DOT__adder_s1__DOT__st1_carry_vec = VL_RAND_RESET_I(30);
+    vlSelf->add32_fp32accum_bf16_tb_softfloat__DOT__gen_s1__BRA__5__KET____DOT__adder_s1__DOT__st1_hot_ones = VL_RAND_RESET_I(2);
+    vlSelf->add32_fp32accum_bf16_tb_softfloat__DOT__gen_s1__BRA__5__KET____DOT__adder_s1__DOT__raw_sum = VL_RAND_RESET_I(30);
+    vlSelf->add32_fp32accum_bf16_tb_softfloat__DOT__gen_s1__BRA__5__KET____DOT__adder_s1__DOT__mag_sum = VL_RAND_RESET_I(30);
+    vlSelf->add32_fp32accum_bf16_tb_softfloat__DOT__gen_s1__BRA__5__KET____DOT__adder_s1__DOT__res_sign = VL_RAND_RESET_I(1);
+    vlSelf->add32_fp32accum_bf16_tb_softfloat__DOT__gen_s1__BRA__5__KET____DOT__adder_s1__DOT__st2_exp_base = VL_RAND_RESET_I(8);
+    vlSelf->add32_fp32accum_bf16_tb_softfloat__DOT__gen_s1__BRA__5__KET____DOT__adder_s1__DOT__st2_sum_mag = VL_RAND_RESET_I(30);
+    vlSelf->add32_fp32accum_bf16_tb_softfloat__DOT__gen_s1__BRA__5__KET____DOT__adder_s1__DOT__st2_spec_res = VL_RAND_RESET_I(32);
+    vlSelf->add32_fp32accum_bf16_tb_softfloat__DOT__gen_s1__BRA__5__KET____DOT__adder_s1__DOT__st2_res_sign = VL_RAND_RESET_I(1);
+    vlSelf->add32_fp32accum_bf16_tb_softfloat__DOT__gen_s1__BRA__5__KET____DOT__adder_s1__DOT__st2_sticky = VL_RAND_RESET_I(1);
+    vlSelf->add32_fp32accum_bf16_tb_softfloat__DOT__gen_s1__BRA__5__KET____DOT__adder_s1__DOT__st2_special = VL_RAND_RESET_I(1);
+    vlSelf->add32_fp32accum_bf16_tb_softfloat__DOT__gen_s1__BRA__5__KET____DOT__adder_s1__DOT__lzd_scan = VL_RAND_RESET_I(30);
+    vlSelf->add32_fp32accum_bf16_tb_softfloat__DOT__gen_s1__BRA__5__KET____DOT__adder_s1__DOT__lead_zeros = VL_RAND_RESET_I(5);
+    vlSelf->add32_fp32accum_bf16_tb_softfloat__DOT__gen_s1__BRA__5__KET____DOT__adder_s1__DOT__norm_val = VL_RAND_RESET_I(30);
+    vlSelf->add32_fp32accum_bf16_tb_softfloat__DOT__gen_s1__BRA__5__KET____DOT__adder_s1__DOT__raw_mant = VL_RAND_RESET_I(23);
+    vlSelf->add32_fp32accum_bf16_tb_softfloat__DOT__gen_s1__BRA__5__KET____DOT__adder_s1__DOT__final_mant = VL_RAND_RESET_I(23);
+    vlSelf->add32_fp32accum_bf16_tb_softfloat__DOT__gen_s1__BRA__5__KET____DOT__adder_s1__DOT__rounded_mant_int = VL_RAND_RESET_I(24);
+    vlSelf->add32_fp32accum_bf16_tb_softfloat__DOT__gen_s1__BRA__5__KET____DOT__adder_s1__DOT__final_exp_calc = VL_RAND_RESET_I(11);
+    vlSelf->add32_fp32accum_bf16_tb_softfloat__DOT__gen_s1__BRA__5__KET____DOT__adder_s1__DOT__guard_bit = VL_RAND_RESET_I(1);
+    vlSelf->add32_fp32accum_bf16_tb_softfloat__DOT__gen_s1__BRA__5__KET____DOT__adder_s1__DOT__round_bit = VL_RAND_RESET_I(1);
+    vlSelf->add32_fp32accum_bf16_tb_softfloat__DOT__gen_s1__BRA__5__KET____DOT__adder_s1__DOT__sticky_bit = VL_RAND_RESET_I(1);
+    vlSelf->add32_fp32accum_bf16_tb_softfloat__DOT__gen_s1__BRA__5__KET____DOT__adder_s1__DOT__round_up = VL_RAND_RESET_I(1);
+    vlSelf->add32_fp32accum_bf16_tb_softfloat__DOT__gen_s1__BRA__5__KET____DOT__adder_s1__DOT__l_bit = VL_RAND_RESET_I(1);
+    vlSelf->add32_fp32accum_bf16_tb_softfloat__DOT__gen_s1__BRA__5__KET____DOT__adder_s1__DOT__result_out = VL_RAND_RESET_I(32);
+    vlSelf->add32_fp32accum_bf16_tb_softfloat__DOT__gen_s1__BRA__5__KET____DOT__adder_s1__DOT__op_x = VL_RAND_RESET_I(30);
+    vlSelf->add32_fp32accum_bf16_tb_softfloat__DOT__gen_s1__BRA__5__KET____DOT__adder_s1__DOT__op_y = VL_RAND_RESET_I(30);
+    vlSelf->add32_fp32accum_bf16_tb_softfloat__DOT__gen_s1__BRA__5__KET____DOT__adder_s1__DOT__op_m = VL_RAND_RESET_I(30);
+    vlSelf->add32_fp32accum_bf16_tb_softfloat__DOT__gen_s1__BRA__5__KET____DOT__adder_s1__DOT__op_n = VL_RAND_RESET_I(30);
+    vlSelf->add32_fp32accum_bf16_tb_softfloat__DOT__gen_s1__BRA__5__KET____DOT__adder_s1__DOT__csa_s1 = VL_RAND_RESET_I(30);
+    vlSelf->add32_fp32accum_bf16_tb_softfloat__DOT__gen_s1__BRA__5__KET____DOT__adder_s1__DOT__csa_c1 = VL_RAND_RESET_I(30);
+    vlSelf->add32_fp32accum_bf16_tb_softfloat__DOT__gen_s1__BRA__5__KET____DOT__adder_s1__DOT__csa_s2 = VL_RAND_RESET_I(30);
+    vlSelf->add32_fp32accum_bf16_tb_softfloat__DOT__gen_s1__BRA__5__KET____DOT__adder_s1__DOT__csa_c2 = VL_RAND_RESET_I(30);
+    vlSelf->add32_fp32accum_bf16_tb_softfloat__DOT__gen_s1__BRA__5__KET____DOT__adder_s1__DOT__stage3_logic__DOT__unnamedblk1__DOT__i = 0;
+    vlSelf->add32_fp32accum_bf16_tb_softfloat__DOT__gen_s1__BRA__6__KET____DOT__adder_s1__DOT__a_daz = VL_RAND_RESET_I(16);
+    vlSelf->add32_fp32accum_bf16_tb_softfloat__DOT__gen_s1__BRA__6__KET____DOT__adder_s1__DOT__b_daz = VL_RAND_RESET_I(16);
+    vlSelf->add32_fp32accum_bf16_tb_softfloat__DOT__gen_s1__BRA__6__KET____DOT__adder_s1__DOT__c_daz = VL_RAND_RESET_I(16);
+    vlSelf->add32_fp32accum_bf16_tb_softfloat__DOT__gen_s1__BRA__6__KET____DOT__adder_s1__DOT__d_daz = VL_RAND_RESET_I(16);
+    vlSelf->add32_fp32accum_bf16_tb_softfloat__DOT__gen_s1__BRA__6__KET____DOT__adder_s1__DOT__exp_a = VL_RAND_RESET_I(8);
+    vlSelf->add32_fp32accum_bf16_tb_softfloat__DOT__gen_s1__BRA__6__KET____DOT__adder_s1__DOT__exp_b = VL_RAND_RESET_I(8);
+    vlSelf->add32_fp32accum_bf16_tb_softfloat__DOT__gen_s1__BRA__6__KET____DOT__adder_s1__DOT__exp_c = VL_RAND_RESET_I(8);
+    vlSelf->add32_fp32accum_bf16_tb_softfloat__DOT__gen_s1__BRA__6__KET____DOT__adder_s1__DOT__exp_d = VL_RAND_RESET_I(8);
+    vlSelf->add32_fp32accum_bf16_tb_softfloat__DOT__gen_s1__BRA__6__KET____DOT__adder_s1__DOT__frac_a = VL_RAND_RESET_I(7);
+    vlSelf->add32_fp32accum_bf16_tb_softfloat__DOT__gen_s1__BRA__6__KET____DOT__adder_s1__DOT__frac_b = VL_RAND_RESET_I(7);
+    vlSelf->add32_fp32accum_bf16_tb_softfloat__DOT__gen_s1__BRA__6__KET____DOT__adder_s1__DOT__frac_c = VL_RAND_RESET_I(7);
+    vlSelf->add32_fp32accum_bf16_tb_softfloat__DOT__gen_s1__BRA__6__KET____DOT__adder_s1__DOT__frac_d = VL_RAND_RESET_I(7);
+    vlSelf->add32_fp32accum_bf16_tb_softfloat__DOT__gen_s1__BRA__6__KET____DOT__adder_s1__DOT__sign_a = VL_RAND_RESET_I(1);
+    vlSelf->add32_fp32accum_bf16_tb_softfloat__DOT__gen_s1__BRA__6__KET____DOT__adder_s1__DOT__sign_b = VL_RAND_RESET_I(1);
+    vlSelf->add32_fp32accum_bf16_tb_softfloat__DOT__gen_s1__BRA__6__KET____DOT__adder_s1__DOT__sign_c = VL_RAND_RESET_I(1);
+    vlSelf->add32_fp32accum_bf16_tb_softfloat__DOT__gen_s1__BRA__6__KET____DOT__adder_s1__DOT__sign_d = VL_RAND_RESET_I(1);
+    vlSelf->add32_fp32accum_bf16_tb_softfloat__DOT__gen_s1__BRA__6__KET____DOT__adder_s1__DOT__exp_p = VL_RAND_RESET_I(8);
+    vlSelf->add32_fp32accum_bf16_tb_softfloat__DOT__gen_s1__BRA__6__KET____DOT__adder_s1__DOT__exp_m = VL_RAND_RESET_I(8);
+    vlSelf->add32_fp32accum_bf16_tb_softfloat__DOT__gen_s1__BRA__6__KET____DOT__adder_s1__DOT__exp_r = VL_RAND_RESET_I(8);
+    vlSelf->add32_fp32accum_bf16_tb_softfloat__DOT__gen_s1__BRA__6__KET____DOT__adder_s1__DOT__exp_n = VL_RAND_RESET_I(8);
+    vlSelf->add32_fp32accum_bf16_tb_softfloat__DOT__gen_s1__BRA__6__KET____DOT__adder_s1__DOT__exp_x = VL_RAND_RESET_I(8);
+    vlSelf->add32_fp32accum_bf16_tb_softfloat__DOT__gen_s1__BRA__6__KET____DOT__adder_s1__DOT__exp_y = VL_RAND_RESET_I(8);
+    vlSelf->add32_fp32accum_bf16_tb_softfloat__DOT__gen_s1__BRA__6__KET____DOT__adder_s1__DOT__exp_mx = VL_RAND_RESET_I(8);
+    vlSelf->add32_fp32accum_bf16_tb_softfloat__DOT__gen_s1__BRA__6__KET____DOT__adder_s1__DOT__exp_nx = VL_RAND_RESET_I(8);
+    vlSelf->add32_fp32accum_bf16_tb_softfloat__DOT__gen_s1__BRA__6__KET____DOT__adder_s1__DOT__frac_p = VL_RAND_RESET_I(7);
+    vlSelf->add32_fp32accum_bf16_tb_softfloat__DOT__gen_s1__BRA__6__KET____DOT__adder_s1__DOT__frac_m = VL_RAND_RESET_I(7);
+    vlSelf->add32_fp32accum_bf16_tb_softfloat__DOT__gen_s1__BRA__6__KET____DOT__adder_s1__DOT__frac_r = VL_RAND_RESET_I(7);
+    vlSelf->add32_fp32accum_bf16_tb_softfloat__DOT__gen_s1__BRA__6__KET____DOT__adder_s1__DOT__frac_n = VL_RAND_RESET_I(7);
+    vlSelf->add32_fp32accum_bf16_tb_softfloat__DOT__gen_s1__BRA__6__KET____DOT__adder_s1__DOT__frac_x = VL_RAND_RESET_I(7);
+    vlSelf->add32_fp32accum_bf16_tb_softfloat__DOT__gen_s1__BRA__6__KET____DOT__adder_s1__DOT__frac_y = VL_RAND_RESET_I(7);
+    vlSelf->add32_fp32accum_bf16_tb_softfloat__DOT__gen_s1__BRA__6__KET____DOT__adder_s1__DOT__frac_mx = VL_RAND_RESET_I(7);
+    vlSelf->add32_fp32accum_bf16_tb_softfloat__DOT__gen_s1__BRA__6__KET____DOT__adder_s1__DOT__frac_nx = VL_RAND_RESET_I(7);
+    vlSelf->add32_fp32accum_bf16_tb_softfloat__DOT__gen_s1__BRA__6__KET____DOT__adder_s1__DOT__sign_p = VL_RAND_RESET_I(1);
+    vlSelf->add32_fp32accum_bf16_tb_softfloat__DOT__gen_s1__BRA__6__KET____DOT__adder_s1__DOT__sign_m = VL_RAND_RESET_I(1);
+    vlSelf->add32_fp32accum_bf16_tb_softfloat__DOT__gen_s1__BRA__6__KET____DOT__adder_s1__DOT__sign_r = VL_RAND_RESET_I(1);
+    vlSelf->add32_fp32accum_bf16_tb_softfloat__DOT__gen_s1__BRA__6__KET____DOT__adder_s1__DOT__sign_n = VL_RAND_RESET_I(1);
+    vlSelf->add32_fp32accum_bf16_tb_softfloat__DOT__gen_s1__BRA__6__KET____DOT__adder_s1__DOT__sign_x = VL_RAND_RESET_I(1);
+    vlSelf->add32_fp32accum_bf16_tb_softfloat__DOT__gen_s1__BRA__6__KET____DOT__adder_s1__DOT__sign_y = VL_RAND_RESET_I(1);
+    vlSelf->add32_fp32accum_bf16_tb_softfloat__DOT__gen_s1__BRA__6__KET____DOT__adder_s1__DOT__sign_mx = VL_RAND_RESET_I(1);
+    vlSelf->add32_fp32accum_bf16_tb_softfloat__DOT__gen_s1__BRA__6__KET____DOT__adder_s1__DOT__sign_nx = VL_RAND_RESET_I(1);
+    vlSelf->add32_fp32accum_bf16_tb_softfloat__DOT__gen_s1__BRA__6__KET____DOT__adder_s1__DOT__exp_x_eff = VL_RAND_RESET_I(8);
+    vlSelf->add32_fp32accum_bf16_tb_softfloat__DOT__gen_s1__BRA__6__KET____DOT__adder_s1__DOT__exp_y_eff = VL_RAND_RESET_I(8);
+    vlSelf->add32_fp32accum_bf16_tb_softfloat__DOT__gen_s1__BRA__6__KET____DOT__adder_s1__DOT__exp_mx_eff = VL_RAND_RESET_I(8);
+    vlSelf->add32_fp32accum_bf16_tb_softfloat__DOT__gen_s1__BRA__6__KET____DOT__adder_s1__DOT__exp_nx_eff = VL_RAND_RESET_I(8);
+    vlSelf->add32_fp32accum_bf16_tb_softfloat__DOT__gen_s1__BRA__6__KET____DOT__adder_s1__DOT__y_shift = VL_RAND_RESET_I(9);
+    vlSelf->add32_fp32accum_bf16_tb_softfloat__DOT__gen_s1__BRA__6__KET____DOT__adder_s1__DOT__m_shift = VL_RAND_RESET_I(9);
+    vlSelf->add32_fp32accum_bf16_tb_softfloat__DOT__gen_s1__BRA__6__KET____DOT__adder_s1__DOT__n_shift = VL_RAND_RESET_I(9);
+    vlSelf->add32_fp32accum_bf16_tb_softfloat__DOT__gen_s1__BRA__6__KET____DOT__adder_s1__DOT__x_mant = VL_RAND_RESET_I(27);
+    vlSelf->add32_fp32accum_bf16_tb_softfloat__DOT__gen_s1__BRA__6__KET____DOT__adder_s1__DOT__y_shifted = VL_RAND_RESET_I(27);
+    vlSelf->add32_fp32accum_bf16_tb_softfloat__DOT__gen_s1__BRA__6__KET____DOT__adder_s1__DOT__m_shifted = VL_RAND_RESET_I(27);
+    vlSelf->add32_fp32accum_bf16_tb_softfloat__DOT__gen_s1__BRA__6__KET____DOT__adder_s1__DOT__n_shifted = VL_RAND_RESET_I(27);
+    vlSelf->add32_fp32accum_bf16_tb_softfloat__DOT__gen_s1__BRA__6__KET____DOT__adder_s1__DOT__y_mant_base = VL_RAND_RESET_I(27);
+    vlSelf->add32_fp32accum_bf16_tb_softfloat__DOT__gen_s1__BRA__6__KET____DOT__adder_s1__DOT__m_mant_base = VL_RAND_RESET_I(27);
+    vlSelf->add32_fp32accum_bf16_tb_softfloat__DOT__gen_s1__BRA__6__KET____DOT__adder_s1__DOT__n_mant_base = VL_RAND_RESET_I(27);
+    vlSelf->add32_fp32accum_bf16_tb_softfloat__DOT__gen_s1__BRA__6__KET____DOT__adder_s1__DOT__sticky_y = VL_RAND_RESET_I(1);
+    vlSelf->add32_fp32accum_bf16_tb_softfloat__DOT__gen_s1__BRA__6__KET____DOT__adder_s1__DOT__sticky_m = VL_RAND_RESET_I(1);
+    vlSelf->add32_fp32accum_bf16_tb_softfloat__DOT__gen_s1__BRA__6__KET____DOT__adder_s1__DOT__sticky_n = VL_RAND_RESET_I(1);
+    vlSelf->add32_fp32accum_bf16_tb_softfloat__DOT__gen_s1__BRA__6__KET____DOT__adder_s1__DOT__y_op = VL_RAND_RESET_I(1);
+    vlSelf->add32_fp32accum_bf16_tb_softfloat__DOT__gen_s1__BRA__6__KET____DOT__adder_s1__DOT__m_op = VL_RAND_RESET_I(1);
+    vlSelf->add32_fp32accum_bf16_tb_softfloat__DOT__gen_s1__BRA__6__KET____DOT__adder_s1__DOT__n_op = VL_RAND_RESET_I(1);
+    vlSelf->add32_fp32accum_bf16_tb_softfloat__DOT__gen_s1__BRA__6__KET____DOT__adder_s1__DOT__is_nan_any = VL_RAND_RESET_I(1);
+    vlSelf->add32_fp32accum_bf16_tb_softfloat__DOT__gen_s1__BRA__6__KET____DOT__adder_s1__DOT__special_case = VL_RAND_RESET_I(1);
+    vlSelf->add32_fp32accum_bf16_tb_softfloat__DOT__gen_s1__BRA__6__KET____DOT__adder_s1__DOT__any_pos_inf = VL_RAND_RESET_I(1);
+    vlSelf->add32_fp32accum_bf16_tb_softfloat__DOT__gen_s1__BRA__6__KET____DOT__adder_s1__DOT__any_neg_inf = VL_RAND_RESET_I(1);
+    vlSelf->add32_fp32accum_bf16_tb_softfloat__DOT__gen_s1__BRA__6__KET____DOT__adder_s1__DOT__special_result = VL_RAND_RESET_I(32);
+    vlSelf->add32_fp32accum_bf16_tb_softfloat__DOT__gen_s1__BRA__6__KET____DOT__adder_s1__DOT__st1_a_e = VL_RAND_RESET_I(8);
+    vlSelf->add32_fp32accum_bf16_tb_softfloat__DOT__gen_s1__BRA__6__KET____DOT__adder_s1__DOT__st1_a_s = VL_RAND_RESET_I(1);
+    vlSelf->add32_fp32accum_bf16_tb_softfloat__DOT__gen_s1__BRA__6__KET____DOT__adder_s1__DOT__st1_align_sticky = VL_RAND_RESET_I(1);
+    vlSelf->add32_fp32accum_bf16_tb_softfloat__DOT__gen_s1__BRA__6__KET____DOT__adder_s1__DOT__st1_special_case = VL_RAND_RESET_I(1);
+    vlSelf->add32_fp32accum_bf16_tb_softfloat__DOT__gen_s1__BRA__6__KET____DOT__adder_s1__DOT__st1_special_result = VL_RAND_RESET_I(32);
+    vlSelf->add32_fp32accum_bf16_tb_softfloat__DOT__gen_s1__BRA__6__KET____DOT__adder_s1__DOT__st1_sum_vec = VL_RAND_RESET_I(30);
+    vlSelf->add32_fp32accum_bf16_tb_softfloat__DOT__gen_s1__BRA__6__KET____DOT__adder_s1__DOT__st1_carry_vec = VL_RAND_RESET_I(30);
+    vlSelf->add32_fp32accum_bf16_tb_softfloat__DOT__gen_s1__BRA__6__KET____DOT__adder_s1__DOT__st1_hot_ones = VL_RAND_RESET_I(2);
+    vlSelf->add32_fp32accum_bf16_tb_softfloat__DOT__gen_s1__BRA__6__KET____DOT__adder_s1__DOT__raw_sum = VL_RAND_RESET_I(30);
+    vlSelf->add32_fp32accum_bf16_tb_softfloat__DOT__gen_s1__BRA__6__KET____DOT__adder_s1__DOT__mag_sum = VL_RAND_RESET_I(30);
+    vlSelf->add32_fp32accum_bf16_tb_softfloat__DOT__gen_s1__BRA__6__KET____DOT__adder_s1__DOT__res_sign = VL_RAND_RESET_I(1);
+    vlSelf->add32_fp32accum_bf16_tb_softfloat__DOT__gen_s1__BRA__6__KET____DOT__adder_s1__DOT__st2_exp_base = VL_RAND_RESET_I(8);
+    vlSelf->add32_fp32accum_bf16_tb_softfloat__DOT__gen_s1__BRA__6__KET____DOT__adder_s1__DOT__st2_sum_mag = VL_RAND_RESET_I(30);
+    vlSelf->add32_fp32accum_bf16_tb_softfloat__DOT__gen_s1__BRA__6__KET____DOT__adder_s1__DOT__st2_spec_res = VL_RAND_RESET_I(32);
+    vlSelf->add32_fp32accum_bf16_tb_softfloat__DOT__gen_s1__BRA__6__KET____DOT__adder_s1__DOT__st2_res_sign = VL_RAND_RESET_I(1);
+    vlSelf->add32_fp32accum_bf16_tb_softfloat__DOT__gen_s1__BRA__6__KET____DOT__adder_s1__DOT__st2_sticky = VL_RAND_RESET_I(1);
+    vlSelf->add32_fp32accum_bf16_tb_softfloat__DOT__gen_s1__BRA__6__KET____DOT__adder_s1__DOT__st2_special = VL_RAND_RESET_I(1);
+    vlSelf->add32_fp32accum_bf16_tb_softfloat__DOT__gen_s1__BRA__6__KET____DOT__adder_s1__DOT__lzd_scan = VL_RAND_RESET_I(30);
+    vlSelf->add32_fp32accum_bf16_tb_softfloat__DOT__gen_s1__BRA__6__KET____DOT__adder_s1__DOT__lead_zeros = VL_RAND_RESET_I(5);
+    vlSelf->add32_fp32accum_bf16_tb_softfloat__DOT__gen_s1__BRA__6__KET____DOT__adder_s1__DOT__norm_val = VL_RAND_RESET_I(30);
+    vlSelf->add32_fp32accum_bf16_tb_softfloat__DOT__gen_s1__BRA__6__KET____DOT__adder_s1__DOT__raw_mant = VL_RAND_RESET_I(23);
+    vlSelf->add32_fp32accum_bf16_tb_softfloat__DOT__gen_s1__BRA__6__KET____DOT__adder_s1__DOT__final_mant = VL_RAND_RESET_I(23);
+    vlSelf->add32_fp32accum_bf16_tb_softfloat__DOT__gen_s1__BRA__6__KET____DOT__adder_s1__DOT__rounded_mant_int = VL_RAND_RESET_I(24);
+    vlSelf->add32_fp32accum_bf16_tb_softfloat__DOT__gen_s1__BRA__6__KET____DOT__adder_s1__DOT__final_exp_calc = VL_RAND_RESET_I(11);
+    vlSelf->add32_fp32accum_bf16_tb_softfloat__DOT__gen_s1__BRA__6__KET____DOT__adder_s1__DOT__guard_bit = VL_RAND_RESET_I(1);
+    vlSelf->add32_fp32accum_bf16_tb_softfloat__DOT__gen_s1__BRA__6__KET____DOT__adder_s1__DOT__round_bit = VL_RAND_RESET_I(1);
+    vlSelf->add32_fp32accum_bf16_tb_softfloat__DOT__gen_s1__BRA__6__KET____DOT__adder_s1__DOT__sticky_bit = VL_RAND_RESET_I(1);
+    vlSelf->add32_fp32accum_bf16_tb_softfloat__DOT__gen_s1__BRA__6__KET____DOT__adder_s1__DOT__round_up = VL_RAND_RESET_I(1);
+    vlSelf->add32_fp32accum_bf16_tb_softfloat__DOT__gen_s1__BRA__6__KET____DOT__adder_s1__DOT__l_bit = VL_RAND_RESET_I(1);
+    vlSelf->add32_fp32accum_bf16_tb_softfloat__DOT__gen_s1__BRA__6__KET____DOT__adder_s1__DOT__result_out = VL_RAND_RESET_I(32);
+    vlSelf->add32_fp32accum_bf16_tb_softfloat__DOT__gen_s1__BRA__6__KET____DOT__adder_s1__DOT__op_x = VL_RAND_RESET_I(30);
+    vlSelf->add32_fp32accum_bf16_tb_softfloat__DOT__gen_s1__BRA__6__KET____DOT__adder_s1__DOT__op_y = VL_RAND_RESET_I(30);
+    vlSelf->add32_fp32accum_bf16_tb_softfloat__DOT__gen_s1__BRA__6__KET____DOT__adder_s1__DOT__op_m = VL_RAND_RESET_I(30);
+    vlSelf->add32_fp32accum_bf16_tb_softfloat__DOT__gen_s1__BRA__6__KET____DOT__adder_s1__DOT__op_n = VL_RAND_RESET_I(30);
+    vlSelf->add32_fp32accum_bf16_tb_softfloat__DOT__gen_s1__BRA__6__KET____DOT__adder_s1__DOT__csa_s1 = VL_RAND_RESET_I(30);
+    vlSelf->add32_fp32accum_bf16_tb_softfloat__DOT__gen_s1__BRA__6__KET____DOT__adder_s1__DOT__csa_c1 = VL_RAND_RESET_I(30);
+    vlSelf->add32_fp32accum_bf16_tb_softfloat__DOT__gen_s1__BRA__6__KET____DOT__adder_s1__DOT__csa_s2 = VL_RAND_RESET_I(30);
+    vlSelf->add32_fp32accum_bf16_tb_softfloat__DOT__gen_s1__BRA__6__KET____DOT__adder_s1__DOT__csa_c2 = VL_RAND_RESET_I(30);
+    vlSelf->add32_fp32accum_bf16_tb_softfloat__DOT__gen_s1__BRA__6__KET____DOT__adder_s1__DOT__stage3_logic__DOT__unnamedblk1__DOT__i = 0;
+    vlSelf->add32_fp32accum_bf16_tb_softfloat__DOT__gen_s1__BRA__7__KET____DOT__adder_s1__DOT__a_daz = VL_RAND_RESET_I(16);
+    vlSelf->add32_fp32accum_bf16_tb_softfloat__DOT__gen_s1__BRA__7__KET____DOT__adder_s1__DOT__b_daz = VL_RAND_RESET_I(16);
+    vlSelf->add32_fp32accum_bf16_tb_softfloat__DOT__gen_s1__BRA__7__KET____DOT__adder_s1__DOT__c_daz = VL_RAND_RESET_I(16);
+    vlSelf->add32_fp32accum_bf16_tb_softfloat__DOT__gen_s1__BRA__7__KET____DOT__adder_s1__DOT__d_daz = VL_RAND_RESET_I(16);
+    vlSelf->add32_fp32accum_bf16_tb_softfloat__DOT__gen_s1__BRA__7__KET____DOT__adder_s1__DOT__exp_a = VL_RAND_RESET_I(8);
+    vlSelf->add32_fp32accum_bf16_tb_softfloat__DOT__gen_s1__BRA__7__KET____DOT__adder_s1__DOT__exp_b = VL_RAND_RESET_I(8);
+    vlSelf->add32_fp32accum_bf16_tb_softfloat__DOT__gen_s1__BRA__7__KET____DOT__adder_s1__DOT__exp_c = VL_RAND_RESET_I(8);
+    vlSelf->add32_fp32accum_bf16_tb_softfloat__DOT__gen_s1__BRA__7__KET____DOT__adder_s1__DOT__exp_d = VL_RAND_RESET_I(8);
+    vlSelf->add32_fp32accum_bf16_tb_softfloat__DOT__gen_s1__BRA__7__KET____DOT__adder_s1__DOT__frac_a = VL_RAND_RESET_I(7);
+    vlSelf->add32_fp32accum_bf16_tb_softfloat__DOT__gen_s1__BRA__7__KET____DOT__adder_s1__DOT__frac_b = VL_RAND_RESET_I(7);
+    vlSelf->add32_fp32accum_bf16_tb_softfloat__DOT__gen_s1__BRA__7__KET____DOT__adder_s1__DOT__frac_c = VL_RAND_RESET_I(7);
+    vlSelf->add32_fp32accum_bf16_tb_softfloat__DOT__gen_s1__BRA__7__KET____DOT__adder_s1__DOT__frac_d = VL_RAND_RESET_I(7);
+    vlSelf->add32_fp32accum_bf16_tb_softfloat__DOT__gen_s1__BRA__7__KET____DOT__adder_s1__DOT__sign_a = VL_RAND_RESET_I(1);
+    vlSelf->add32_fp32accum_bf16_tb_softfloat__DOT__gen_s1__BRA__7__KET____DOT__adder_s1__DOT__sign_b = VL_RAND_RESET_I(1);
+    vlSelf->add32_fp32accum_bf16_tb_softfloat__DOT__gen_s1__BRA__7__KET____DOT__adder_s1__DOT__sign_c = VL_RAND_RESET_I(1);
+    vlSelf->add32_fp32accum_bf16_tb_softfloat__DOT__gen_s1__BRA__7__KET____DOT__adder_s1__DOT__sign_d = VL_RAND_RESET_I(1);
+    vlSelf->add32_fp32accum_bf16_tb_softfloat__DOT__gen_s1__BRA__7__KET____DOT__adder_s1__DOT__exp_p = VL_RAND_RESET_I(8);
+    vlSelf->add32_fp32accum_bf16_tb_softfloat__DOT__gen_s1__BRA__7__KET____DOT__adder_s1__DOT__exp_m = VL_RAND_RESET_I(8);
+    vlSelf->add32_fp32accum_bf16_tb_softfloat__DOT__gen_s1__BRA__7__KET____DOT__adder_s1__DOT__exp_r = VL_RAND_RESET_I(8);
+    vlSelf->add32_fp32accum_bf16_tb_softfloat__DOT__gen_s1__BRA__7__KET____DOT__adder_s1__DOT__exp_n = VL_RAND_RESET_I(8);
+    vlSelf->add32_fp32accum_bf16_tb_softfloat__DOT__gen_s1__BRA__7__KET____DOT__adder_s1__DOT__exp_x = VL_RAND_RESET_I(8);
+    vlSelf->add32_fp32accum_bf16_tb_softfloat__DOT__gen_s1__BRA__7__KET____DOT__adder_s1__DOT__exp_y = VL_RAND_RESET_I(8);
+    vlSelf->add32_fp32accum_bf16_tb_softfloat__DOT__gen_s1__BRA__7__KET____DOT__adder_s1__DOT__exp_mx = VL_RAND_RESET_I(8);
+    vlSelf->add32_fp32accum_bf16_tb_softfloat__DOT__gen_s1__BRA__7__KET____DOT__adder_s1__DOT__exp_nx = VL_RAND_RESET_I(8);
+    vlSelf->add32_fp32accum_bf16_tb_softfloat__DOT__gen_s1__BRA__7__KET____DOT__adder_s1__DOT__frac_p = VL_RAND_RESET_I(7);
+    vlSelf->add32_fp32accum_bf16_tb_softfloat__DOT__gen_s1__BRA__7__KET____DOT__adder_s1__DOT__frac_m = VL_RAND_RESET_I(7);
+    vlSelf->add32_fp32accum_bf16_tb_softfloat__DOT__gen_s1__BRA__7__KET____DOT__adder_s1__DOT__frac_r = VL_RAND_RESET_I(7);
+    vlSelf->add32_fp32accum_bf16_tb_softfloat__DOT__gen_s1__BRA__7__KET____DOT__adder_s1__DOT__frac_n = VL_RAND_RESET_I(7);
+    vlSelf->add32_fp32accum_bf16_tb_softfloat__DOT__gen_s1__BRA__7__KET____DOT__adder_s1__DOT__frac_x = VL_RAND_RESET_I(7);
+    vlSelf->add32_fp32accum_bf16_tb_softfloat__DOT__gen_s1__BRA__7__KET____DOT__adder_s1__DOT__frac_y = VL_RAND_RESET_I(7);
+    vlSelf->add32_fp32accum_bf16_tb_softfloat__DOT__gen_s1__BRA__7__KET____DOT__adder_s1__DOT__frac_mx = VL_RAND_RESET_I(7);
+    vlSelf->add32_fp32accum_bf16_tb_softfloat__DOT__gen_s1__BRA__7__KET____DOT__adder_s1__DOT__frac_nx = VL_RAND_RESET_I(7);
+    vlSelf->add32_fp32accum_bf16_tb_softfloat__DOT__gen_s1__BRA__7__KET____DOT__adder_s1__DOT__sign_p = VL_RAND_RESET_I(1);
+    vlSelf->add32_fp32accum_bf16_tb_softfloat__DOT__gen_s1__BRA__7__KET____DOT__adder_s1__DOT__sign_m = VL_RAND_RESET_I(1);
+    vlSelf->add32_fp32accum_bf16_tb_softfloat__DOT__gen_s1__BRA__7__KET____DOT__adder_s1__DOT__sign_r = VL_RAND_RESET_I(1);
+    vlSelf->add32_fp32accum_bf16_tb_softfloat__DOT__gen_s1__BRA__7__KET____DOT__adder_s1__DOT__sign_n = VL_RAND_RESET_I(1);
+    vlSelf->add32_fp32accum_bf16_tb_softfloat__DOT__gen_s1__BRA__7__KET____DOT__adder_s1__DOT__sign_x = VL_RAND_RESET_I(1);
+    vlSelf->add32_fp32accum_bf16_tb_softfloat__DOT__gen_s1__BRA__7__KET____DOT__adder_s1__DOT__sign_y = VL_RAND_RESET_I(1);
+    vlSelf->add32_fp32accum_bf16_tb_softfloat__DOT__gen_s1__BRA__7__KET____DOT__adder_s1__DOT__sign_mx = VL_RAND_RESET_I(1);
+    vlSelf->add32_fp32accum_bf16_tb_softfloat__DOT__gen_s1__BRA__7__KET____DOT__adder_s1__DOT__sign_nx = VL_RAND_RESET_I(1);
+    vlSelf->add32_fp32accum_bf16_tb_softfloat__DOT__gen_s1__BRA__7__KET____DOT__adder_s1__DOT__exp_x_eff = VL_RAND_RESET_I(8);
+    vlSelf->add32_fp32accum_bf16_tb_softfloat__DOT__gen_s1__BRA__7__KET____DOT__adder_s1__DOT__exp_y_eff = VL_RAND_RESET_I(8);
+    vlSelf->add32_fp32accum_bf16_tb_softfloat__DOT__gen_s1__BRA__7__KET____DOT__adder_s1__DOT__exp_mx_eff = VL_RAND_RESET_I(8);
+    vlSelf->add32_fp32accum_bf16_tb_softfloat__DOT__gen_s1__BRA__7__KET____DOT__adder_s1__DOT__exp_nx_eff = VL_RAND_RESET_I(8);
+    vlSelf->add32_fp32accum_bf16_tb_softfloat__DOT__gen_s1__BRA__7__KET____DOT__adder_s1__DOT__y_shift = VL_RAND_RESET_I(9);
+    vlSelf->add32_fp32accum_bf16_tb_softfloat__DOT__gen_s1__BRA__7__KET____DOT__adder_s1__DOT__m_shift = VL_RAND_RESET_I(9);
+    vlSelf->add32_fp32accum_bf16_tb_softfloat__DOT__gen_s1__BRA__7__KET____DOT__adder_s1__DOT__n_shift = VL_RAND_RESET_I(9);
+    vlSelf->add32_fp32accum_bf16_tb_softfloat__DOT__gen_s1__BRA__7__KET____DOT__adder_s1__DOT__x_mant = VL_RAND_RESET_I(27);
+    vlSelf->add32_fp32accum_bf16_tb_softfloat__DOT__gen_s1__BRA__7__KET____DOT__adder_s1__DOT__y_shifted = VL_RAND_RESET_I(27);
+    vlSelf->add32_fp32accum_bf16_tb_softfloat__DOT__gen_s1__BRA__7__KET____DOT__adder_s1__DOT__m_shifted = VL_RAND_RESET_I(27);
+    vlSelf->add32_fp32accum_bf16_tb_softfloat__DOT__gen_s1__BRA__7__KET____DOT__adder_s1__DOT__n_shifted = VL_RAND_RESET_I(27);
+    vlSelf->add32_fp32accum_bf16_tb_softfloat__DOT__gen_s1__BRA__7__KET____DOT__adder_s1__DOT__y_mant_base = VL_RAND_RESET_I(27);
+    vlSelf->add32_fp32accum_bf16_tb_softfloat__DOT__gen_s1__BRA__7__KET____DOT__adder_s1__DOT__m_mant_base = VL_RAND_RESET_I(27);
+    vlSelf->add32_fp32accum_bf16_tb_softfloat__DOT__gen_s1__BRA__7__KET____DOT__adder_s1__DOT__n_mant_base = VL_RAND_RESET_I(27);
+    vlSelf->add32_fp32accum_bf16_tb_softfloat__DOT__gen_s1__BRA__7__KET____DOT__adder_s1__DOT__sticky_y = VL_RAND_RESET_I(1);
+    vlSelf->add32_fp32accum_bf16_tb_softfloat__DOT__gen_s1__BRA__7__KET____DOT__adder_s1__DOT__sticky_m = VL_RAND_RESET_I(1);
+    vlSelf->add32_fp32accum_bf16_tb_softfloat__DOT__gen_s1__BRA__7__KET____DOT__adder_s1__DOT__sticky_n = VL_RAND_RESET_I(1);
+    vlSelf->add32_fp32accum_bf16_tb_softfloat__DOT__gen_s1__BRA__7__KET____DOT__adder_s1__DOT__y_op = VL_RAND_RESET_I(1);
+    vlSelf->add32_fp32accum_bf16_tb_softfloat__DOT__gen_s1__BRA__7__KET____DOT__adder_s1__DOT__m_op = VL_RAND_RESET_I(1);
+    vlSelf->add32_fp32accum_bf16_tb_softfloat__DOT__gen_s1__BRA__7__KET____DOT__adder_s1__DOT__n_op = VL_RAND_RESET_I(1);
+    vlSelf->add32_fp32accum_bf16_tb_softfloat__DOT__gen_s1__BRA__7__KET____DOT__adder_s1__DOT__is_nan_any = VL_RAND_RESET_I(1);
+    vlSelf->add32_fp32accum_bf16_tb_softfloat__DOT__gen_s1__BRA__7__KET____DOT__adder_s1__DOT__special_case = VL_RAND_RESET_I(1);
+    vlSelf->add32_fp32accum_bf16_tb_softfloat__DOT__gen_s1__BRA__7__KET____DOT__adder_s1__DOT__any_pos_inf = VL_RAND_RESET_I(1);
+    vlSelf->add32_fp32accum_bf16_tb_softfloat__DOT__gen_s1__BRA__7__KET____DOT__adder_s1__DOT__any_neg_inf = VL_RAND_RESET_I(1);
+    vlSelf->add32_fp32accum_bf16_tb_softfloat__DOT__gen_s1__BRA__7__KET____DOT__adder_s1__DOT__special_result = VL_RAND_RESET_I(32);
+    vlSelf->add32_fp32accum_bf16_tb_softfloat__DOT__gen_s1__BRA__7__KET____DOT__adder_s1__DOT__st1_a_e = VL_RAND_RESET_I(8);
+    vlSelf->add32_fp32accum_bf16_tb_softfloat__DOT__gen_s1__BRA__7__KET____DOT__adder_s1__DOT__st1_a_s = VL_RAND_RESET_I(1);
+    vlSelf->add32_fp32accum_bf16_tb_softfloat__DOT__gen_s1__BRA__7__KET____DOT__adder_s1__DOT__st1_align_sticky = VL_RAND_RESET_I(1);
+    vlSelf->add32_fp32accum_bf16_tb_softfloat__DOT__gen_s1__BRA__7__KET____DOT__adder_s1__DOT__st1_special_case = VL_RAND_RESET_I(1);
+    vlSelf->add32_fp32accum_bf16_tb_softfloat__DOT__gen_s1__BRA__7__KET____DOT__adder_s1__DOT__st1_special_result = VL_RAND_RESET_I(32);
+    vlSelf->add32_fp32accum_bf16_tb_softfloat__DOT__gen_s1__BRA__7__KET____DOT__adder_s1__DOT__st1_sum_vec = VL_RAND_RESET_I(30);
+    vlSelf->add32_fp32accum_bf16_tb_softfloat__DOT__gen_s1__BRA__7__KET____DOT__adder_s1__DOT__st1_carry_vec = VL_RAND_RESET_I(30);
+    vlSelf->add32_fp32accum_bf16_tb_softfloat__DOT__gen_s1__BRA__7__KET____DOT__adder_s1__DOT__st1_hot_ones = VL_RAND_RESET_I(2);
+    vlSelf->add32_fp32accum_bf16_tb_softfloat__DOT__gen_s1__BRA__7__KET____DOT__adder_s1__DOT__raw_sum = VL_RAND_RESET_I(30);
+    vlSelf->add32_fp32accum_bf16_tb_softfloat__DOT__gen_s1__BRA__7__KET____DOT__adder_s1__DOT__mag_sum = VL_RAND_RESET_I(30);
+    vlSelf->add32_fp32accum_bf16_tb_softfloat__DOT__gen_s1__BRA__7__KET____DOT__adder_s1__DOT__res_sign = VL_RAND_RESET_I(1);
+    vlSelf->add32_fp32accum_bf16_tb_softfloat__DOT__gen_s1__BRA__7__KET____DOT__adder_s1__DOT__st2_exp_base = VL_RAND_RESET_I(8);
+    vlSelf->add32_fp32accum_bf16_tb_softfloat__DOT__gen_s1__BRA__7__KET____DOT__adder_s1__DOT__st2_sum_mag = VL_RAND_RESET_I(30);
+    vlSelf->add32_fp32accum_bf16_tb_softfloat__DOT__gen_s1__BRA__7__KET____DOT__adder_s1__DOT__st2_spec_res = VL_RAND_RESET_I(32);
+    vlSelf->add32_fp32accum_bf16_tb_softfloat__DOT__gen_s1__BRA__7__KET____DOT__adder_s1__DOT__st2_res_sign = VL_RAND_RESET_I(1);
+    vlSelf->add32_fp32accum_bf16_tb_softfloat__DOT__gen_s1__BRA__7__KET____DOT__adder_s1__DOT__st2_sticky = VL_RAND_RESET_I(1);
+    vlSelf->add32_fp32accum_bf16_tb_softfloat__DOT__gen_s1__BRA__7__KET____DOT__adder_s1__DOT__st2_special = VL_RAND_RESET_I(1);
+    vlSelf->add32_fp32accum_bf16_tb_softfloat__DOT__gen_s1__BRA__7__KET____DOT__adder_s1__DOT__lzd_scan = VL_RAND_RESET_I(30);
+    vlSelf->add32_fp32accum_bf16_tb_softfloat__DOT__gen_s1__BRA__7__KET____DOT__adder_s1__DOT__lead_zeros = VL_RAND_RESET_I(5);
+    vlSelf->add32_fp32accum_bf16_tb_softfloat__DOT__gen_s1__BRA__7__KET____DOT__adder_s1__DOT__norm_val = VL_RAND_RESET_I(30);
+    vlSelf->add32_fp32accum_bf16_tb_softfloat__DOT__gen_s1__BRA__7__KET____DOT__adder_s1__DOT__raw_mant = VL_RAND_RESET_I(23);
+    vlSelf->add32_fp32accum_bf16_tb_softfloat__DOT__gen_s1__BRA__7__KET____DOT__adder_s1__DOT__final_mant = VL_RAND_RESET_I(23);
+    vlSelf->add32_fp32accum_bf16_tb_softfloat__DOT__gen_s1__BRA__7__KET____DOT__adder_s1__DOT__rounded_mant_int = VL_RAND_RESET_I(24);
+    vlSelf->add32_fp32accum_bf16_tb_softfloat__DOT__gen_s1__BRA__7__KET____DOT__adder_s1__DOT__final_exp_calc = VL_RAND_RESET_I(11);
+    vlSelf->add32_fp32accum_bf16_tb_softfloat__DOT__gen_s1__BRA__7__KET____DOT__adder_s1__DOT__guard_bit = VL_RAND_RESET_I(1);
+    vlSelf->add32_fp32accum_bf16_tb_softfloat__DOT__gen_s1__BRA__7__KET____DOT__adder_s1__DOT__round_bit = VL_RAND_RESET_I(1);
+    vlSelf->add32_fp32accum_bf16_tb_softfloat__DOT__gen_s1__BRA__7__KET____DOT__adder_s1__DOT__sticky_bit = VL_RAND_RESET_I(1);
+    vlSelf->add32_fp32accum_bf16_tb_softfloat__DOT__gen_s1__BRA__7__KET____DOT__adder_s1__DOT__round_up = VL_RAND_RESET_I(1);
+    vlSelf->add32_fp32accum_bf16_tb_softfloat__DOT__gen_s1__BRA__7__KET____DOT__adder_s1__DOT__l_bit = VL_RAND_RESET_I(1);
+    vlSelf->add32_fp32accum_bf16_tb_softfloat__DOT__gen_s1__BRA__7__KET____DOT__adder_s1__DOT__result_out = VL_RAND_RESET_I(32);
+    vlSelf->add32_fp32accum_bf16_tb_softfloat__DOT__gen_s1__BRA__7__KET____DOT__adder_s1__DOT__op_x = VL_RAND_RESET_I(30);
+    vlSelf->add32_fp32accum_bf16_tb_softfloat__DOT__gen_s1__BRA__7__KET____DOT__adder_s1__DOT__op_y = VL_RAND_RESET_I(30);
+    vlSelf->add32_fp32accum_bf16_tb_softfloat__DOT__gen_s1__BRA__7__KET____DOT__adder_s1__DOT__op_m = VL_RAND_RESET_I(30);
+    vlSelf->add32_fp32accum_bf16_tb_softfloat__DOT__gen_s1__BRA__7__KET____DOT__adder_s1__DOT__op_n = VL_RAND_RESET_I(30);
+    vlSelf->add32_fp32accum_bf16_tb_softfloat__DOT__gen_s1__BRA__7__KET____DOT__adder_s1__DOT__csa_s1 = VL_RAND_RESET_I(30);
+    vlSelf->add32_fp32accum_bf16_tb_softfloat__DOT__gen_s1__BRA__7__KET____DOT__adder_s1__DOT__csa_c1 = VL_RAND_RESET_I(30);
+    vlSelf->add32_fp32accum_bf16_tb_softfloat__DOT__gen_s1__BRA__7__KET____DOT__adder_s1__DOT__csa_s2 = VL_RAND_RESET_I(30);
+    vlSelf->add32_fp32accum_bf16_tb_softfloat__DOT__gen_s1__BRA__7__KET____DOT__adder_s1__DOT__csa_c2 = VL_RAND_RESET_I(30);
+    vlSelf->add32_fp32accum_bf16_tb_softfloat__DOT__gen_s1__BRA__7__KET____DOT__adder_s1__DOT__stage3_logic__DOT__unnamedblk1__DOT__i = 0;
+    vlSelf->add32_fp32accum_bf16_tb_softfloat__DOT__gen_s2__BRA__0__KET____DOT__adder_s2__DOT__a_daz = VL_RAND_RESET_I(32);
+    vlSelf->add32_fp32accum_bf16_tb_softfloat__DOT__gen_s2__BRA__0__KET____DOT__adder_s2__DOT__b_daz = VL_RAND_RESET_I(32);
+    vlSelf->add32_fp32accum_bf16_tb_softfloat__DOT__gen_s2__BRA__0__KET____DOT__adder_s2__DOT__c_daz = VL_RAND_RESET_I(32);
+    vlSelf->add32_fp32accum_bf16_tb_softfloat__DOT__gen_s2__BRA__0__KET____DOT__adder_s2__DOT__d_daz = VL_RAND_RESET_I(32);
+    vlSelf->add32_fp32accum_bf16_tb_softfloat__DOT__gen_s2__BRA__0__KET____DOT__adder_s2__DOT__exp_a = VL_RAND_RESET_I(8);
+    vlSelf->add32_fp32accum_bf16_tb_softfloat__DOT__gen_s2__BRA__0__KET____DOT__adder_s2__DOT__exp_b = VL_RAND_RESET_I(8);
+    vlSelf->add32_fp32accum_bf16_tb_softfloat__DOT__gen_s2__BRA__0__KET____DOT__adder_s2__DOT__exp_c = VL_RAND_RESET_I(8);
+    vlSelf->add32_fp32accum_bf16_tb_softfloat__DOT__gen_s2__BRA__0__KET____DOT__adder_s2__DOT__exp_d = VL_RAND_RESET_I(8);
+    vlSelf->add32_fp32accum_bf16_tb_softfloat__DOT__gen_s2__BRA__0__KET____DOT__adder_s2__DOT__frac_a = VL_RAND_RESET_I(23);
+    vlSelf->add32_fp32accum_bf16_tb_softfloat__DOT__gen_s2__BRA__0__KET____DOT__adder_s2__DOT__frac_b = VL_RAND_RESET_I(23);
+    vlSelf->add32_fp32accum_bf16_tb_softfloat__DOT__gen_s2__BRA__0__KET____DOT__adder_s2__DOT__frac_c = VL_RAND_RESET_I(23);
+    vlSelf->add32_fp32accum_bf16_tb_softfloat__DOT__gen_s2__BRA__0__KET____DOT__adder_s2__DOT__frac_d = VL_RAND_RESET_I(23);
+    vlSelf->add32_fp32accum_bf16_tb_softfloat__DOT__gen_s2__BRA__0__KET____DOT__adder_s2__DOT__sign_a = VL_RAND_RESET_I(1);
+    vlSelf->add32_fp32accum_bf16_tb_softfloat__DOT__gen_s2__BRA__0__KET____DOT__adder_s2__DOT__sign_b = VL_RAND_RESET_I(1);
+    vlSelf->add32_fp32accum_bf16_tb_softfloat__DOT__gen_s2__BRA__0__KET____DOT__adder_s2__DOT__sign_c = VL_RAND_RESET_I(1);
+    vlSelf->add32_fp32accum_bf16_tb_softfloat__DOT__gen_s2__BRA__0__KET____DOT__adder_s2__DOT__sign_d = VL_RAND_RESET_I(1);
+    vlSelf->add32_fp32accum_bf16_tb_softfloat__DOT__gen_s2__BRA__0__KET____DOT__adder_s2__DOT__exp_p = VL_RAND_RESET_I(8);
+    vlSelf->add32_fp32accum_bf16_tb_softfloat__DOT__gen_s2__BRA__0__KET____DOT__adder_s2__DOT__exp_m = VL_RAND_RESET_I(8);
+    vlSelf->add32_fp32accum_bf16_tb_softfloat__DOT__gen_s2__BRA__0__KET____DOT__adder_s2__DOT__exp_r = VL_RAND_RESET_I(8);
+    vlSelf->add32_fp32accum_bf16_tb_softfloat__DOT__gen_s2__BRA__0__KET____DOT__adder_s2__DOT__exp_n = VL_RAND_RESET_I(8);
+    vlSelf->add32_fp32accum_bf16_tb_softfloat__DOT__gen_s2__BRA__0__KET____DOT__adder_s2__DOT__exp_x = VL_RAND_RESET_I(8);
+    vlSelf->add32_fp32accum_bf16_tb_softfloat__DOT__gen_s2__BRA__0__KET____DOT__adder_s2__DOT__exp_y = VL_RAND_RESET_I(8);
+    vlSelf->add32_fp32accum_bf16_tb_softfloat__DOT__gen_s2__BRA__0__KET____DOT__adder_s2__DOT__exp_mx = VL_RAND_RESET_I(8);
+    vlSelf->add32_fp32accum_bf16_tb_softfloat__DOT__gen_s2__BRA__0__KET____DOT__adder_s2__DOT__exp_nx = VL_RAND_RESET_I(8);
+    vlSelf->add32_fp32accum_bf16_tb_softfloat__DOT__gen_s2__BRA__0__KET____DOT__adder_s2__DOT__frac_p = VL_RAND_RESET_I(23);
+    vlSelf->add32_fp32accum_bf16_tb_softfloat__DOT__gen_s2__BRA__0__KET____DOT__adder_s2__DOT__frac_m = VL_RAND_RESET_I(23);
+    vlSelf->add32_fp32accum_bf16_tb_softfloat__DOT__gen_s2__BRA__0__KET____DOT__adder_s2__DOT__frac_r = VL_RAND_RESET_I(23);
+    vlSelf->add32_fp32accum_bf16_tb_softfloat__DOT__gen_s2__BRA__0__KET____DOT__adder_s2__DOT__frac_n = VL_RAND_RESET_I(23);
+    vlSelf->add32_fp32accum_bf16_tb_softfloat__DOT__gen_s2__BRA__0__KET____DOT__adder_s2__DOT__frac_x = VL_RAND_RESET_I(23);
+    vlSelf->add32_fp32accum_bf16_tb_softfloat__DOT__gen_s2__BRA__0__KET____DOT__adder_s2__DOT__frac_y = VL_RAND_RESET_I(23);
+    vlSelf->add32_fp32accum_bf16_tb_softfloat__DOT__gen_s2__BRA__0__KET____DOT__adder_s2__DOT__frac_mx = VL_RAND_RESET_I(23);
+    vlSelf->add32_fp32accum_bf16_tb_softfloat__DOT__gen_s2__BRA__0__KET____DOT__adder_s2__DOT__frac_nx = VL_RAND_RESET_I(23);
+    vlSelf->add32_fp32accum_bf16_tb_softfloat__DOT__gen_s2__BRA__0__KET____DOT__adder_s2__DOT__sign_p = VL_RAND_RESET_I(1);
+    vlSelf->add32_fp32accum_bf16_tb_softfloat__DOT__gen_s2__BRA__0__KET____DOT__adder_s2__DOT__sign_m = VL_RAND_RESET_I(1);
+    vlSelf->add32_fp32accum_bf16_tb_softfloat__DOT__gen_s2__BRA__0__KET____DOT__adder_s2__DOT__sign_r = VL_RAND_RESET_I(1);
+    vlSelf->add32_fp32accum_bf16_tb_softfloat__DOT__gen_s2__BRA__0__KET____DOT__adder_s2__DOT__sign_n = VL_RAND_RESET_I(1);
+    vlSelf->add32_fp32accum_bf16_tb_softfloat__DOT__gen_s2__BRA__0__KET____DOT__adder_s2__DOT__sign_x = VL_RAND_RESET_I(1);
+    vlSelf->add32_fp32accum_bf16_tb_softfloat__DOT__gen_s2__BRA__0__KET____DOT__adder_s2__DOT__sign_y = VL_RAND_RESET_I(1);
+    vlSelf->add32_fp32accum_bf16_tb_softfloat__DOT__gen_s2__BRA__0__KET____DOT__adder_s2__DOT__sign_mx = VL_RAND_RESET_I(1);
+    vlSelf->add32_fp32accum_bf16_tb_softfloat__DOT__gen_s2__BRA__0__KET____DOT__adder_s2__DOT__sign_nx = VL_RAND_RESET_I(1);
+    vlSelf->add32_fp32accum_bf16_tb_softfloat__DOT__gen_s2__BRA__0__KET____DOT__adder_s2__DOT__exp_x_eff = VL_RAND_RESET_I(8);
+    vlSelf->add32_fp32accum_bf16_tb_softfloat__DOT__gen_s2__BRA__0__KET____DOT__adder_s2__DOT__exp_y_eff = VL_RAND_RESET_I(8);
+    vlSelf->add32_fp32accum_bf16_tb_softfloat__DOT__gen_s2__BRA__0__KET____DOT__adder_s2__DOT__exp_mx_eff = VL_RAND_RESET_I(8);
+    vlSelf->add32_fp32accum_bf16_tb_softfloat__DOT__gen_s2__BRA__0__KET____DOT__adder_s2__DOT__exp_nx_eff = VL_RAND_RESET_I(8);
+    vlSelf->add32_fp32accum_bf16_tb_softfloat__DOT__gen_s2__BRA__0__KET____DOT__adder_s2__DOT__y_shift = VL_RAND_RESET_I(9);
+    vlSelf->add32_fp32accum_bf16_tb_softfloat__DOT__gen_s2__BRA__0__KET____DOT__adder_s2__DOT__m_shift = VL_RAND_RESET_I(9);
+    vlSelf->add32_fp32accum_bf16_tb_softfloat__DOT__gen_s2__BRA__0__KET____DOT__adder_s2__DOT__n_shift = VL_RAND_RESET_I(9);
+    vlSelf->add32_fp32accum_bf16_tb_softfloat__DOT__gen_s2__BRA__0__KET____DOT__adder_s2__DOT__x_mant = VL_RAND_RESET_I(27);
+    vlSelf->add32_fp32accum_bf16_tb_softfloat__DOT__gen_s2__BRA__0__KET____DOT__adder_s2__DOT__y_shifted = VL_RAND_RESET_I(27);
+    vlSelf->add32_fp32accum_bf16_tb_softfloat__DOT__gen_s2__BRA__0__KET____DOT__adder_s2__DOT__m_shifted = VL_RAND_RESET_I(27);
+    vlSelf->add32_fp32accum_bf16_tb_softfloat__DOT__gen_s2__BRA__0__KET____DOT__adder_s2__DOT__n_shifted = VL_RAND_RESET_I(27);
+    vlSelf->add32_fp32accum_bf16_tb_softfloat__DOT__gen_s2__BRA__0__KET____DOT__adder_s2__DOT__y_mant_base = VL_RAND_RESET_I(27);
+    vlSelf->add32_fp32accum_bf16_tb_softfloat__DOT__gen_s2__BRA__0__KET____DOT__adder_s2__DOT__m_mant_base = VL_RAND_RESET_I(27);
+    vlSelf->add32_fp32accum_bf16_tb_softfloat__DOT__gen_s2__BRA__0__KET____DOT__adder_s2__DOT__n_mant_base = VL_RAND_RESET_I(27);
+    vlSelf->add32_fp32accum_bf16_tb_softfloat__DOT__gen_s2__BRA__0__KET____DOT__adder_s2__DOT__sticky_y = VL_RAND_RESET_I(1);
+    vlSelf->add32_fp32accum_bf16_tb_softfloat__DOT__gen_s2__BRA__0__KET____DOT__adder_s2__DOT__sticky_m = VL_RAND_RESET_I(1);
+    vlSelf->add32_fp32accum_bf16_tb_softfloat__DOT__gen_s2__BRA__0__KET____DOT__adder_s2__DOT__sticky_n = VL_RAND_RESET_I(1);
+    vlSelf->add32_fp32accum_bf16_tb_softfloat__DOT__gen_s2__BRA__0__KET____DOT__adder_s2__DOT__y_op = VL_RAND_RESET_I(1);
+    vlSelf->add32_fp32accum_bf16_tb_softfloat__DOT__gen_s2__BRA__0__KET____DOT__adder_s2__DOT__m_op = VL_RAND_RESET_I(1);
+    vlSelf->add32_fp32accum_bf16_tb_softfloat__DOT__gen_s2__BRA__0__KET____DOT__adder_s2__DOT__n_op = VL_RAND_RESET_I(1);
+    vlSelf->add32_fp32accum_bf16_tb_softfloat__DOT__gen_s2__BRA__0__KET____DOT__adder_s2__DOT__is_nan_any = VL_RAND_RESET_I(1);
+    vlSelf->add32_fp32accum_bf16_tb_softfloat__DOT__gen_s2__BRA__0__KET____DOT__adder_s2__DOT__special_case = VL_RAND_RESET_I(1);
+    vlSelf->add32_fp32accum_bf16_tb_softfloat__DOT__gen_s2__BRA__0__KET____DOT__adder_s2__DOT__any_pos_inf = VL_RAND_RESET_I(1);
+    vlSelf->add32_fp32accum_bf16_tb_softfloat__DOT__gen_s2__BRA__0__KET____DOT__adder_s2__DOT__any_neg_inf = VL_RAND_RESET_I(1);
+    vlSelf->add32_fp32accum_bf16_tb_softfloat__DOT__gen_s2__BRA__0__KET____DOT__adder_s2__DOT__special_result = VL_RAND_RESET_I(32);
+    vlSelf->add32_fp32accum_bf16_tb_softfloat__DOT__gen_s2__BRA__0__KET____DOT__adder_s2__DOT__st1_a_e = VL_RAND_RESET_I(8);
+    vlSelf->add32_fp32accum_bf16_tb_softfloat__DOT__gen_s2__BRA__0__KET____DOT__adder_s2__DOT__st1_a_s = VL_RAND_RESET_I(1);
+    vlSelf->add32_fp32accum_bf16_tb_softfloat__DOT__gen_s2__BRA__0__KET____DOT__adder_s2__DOT__st1_align_sticky = VL_RAND_RESET_I(1);
+    vlSelf->add32_fp32accum_bf16_tb_softfloat__DOT__gen_s2__BRA__0__KET____DOT__adder_s2__DOT__st1_special_case = VL_RAND_RESET_I(1);
+    vlSelf->add32_fp32accum_bf16_tb_softfloat__DOT__gen_s2__BRA__0__KET____DOT__adder_s2__DOT__st1_special_result = VL_RAND_RESET_I(32);
+    vlSelf->add32_fp32accum_bf16_tb_softfloat__DOT__gen_s2__BRA__0__KET____DOT__adder_s2__DOT__st1_sum_vec = VL_RAND_RESET_I(30);
+    vlSelf->add32_fp32accum_bf16_tb_softfloat__DOT__gen_s2__BRA__0__KET____DOT__adder_s2__DOT__st1_carry_vec = VL_RAND_RESET_I(30);
+    vlSelf->add32_fp32accum_bf16_tb_softfloat__DOT__gen_s2__BRA__0__KET____DOT__adder_s2__DOT__st1_hot_ones = VL_RAND_RESET_I(2);
+    vlSelf->add32_fp32accum_bf16_tb_softfloat__DOT__gen_s2__BRA__0__KET____DOT__adder_s2__DOT__raw_sum = VL_RAND_RESET_I(30);
+    vlSelf->add32_fp32accum_bf16_tb_softfloat__DOT__gen_s2__BRA__0__KET____DOT__adder_s2__DOT__mag_sum = VL_RAND_RESET_I(30);
+    vlSelf->add32_fp32accum_bf16_tb_softfloat__DOT__gen_s2__BRA__0__KET____DOT__adder_s2__DOT__res_sign = VL_RAND_RESET_I(1);
+    vlSelf->add32_fp32accum_bf16_tb_softfloat__DOT__gen_s2__BRA__0__KET____DOT__adder_s2__DOT__st2_exp_base = VL_RAND_RESET_I(8);
+    vlSelf->add32_fp32accum_bf16_tb_softfloat__DOT__gen_s2__BRA__0__KET____DOT__adder_s2__DOT__st2_sum_mag = VL_RAND_RESET_I(30);
+    vlSelf->add32_fp32accum_bf16_tb_softfloat__DOT__gen_s2__BRA__0__KET____DOT__adder_s2__DOT__st2_spec_res = VL_RAND_RESET_I(32);
+    vlSelf->add32_fp32accum_bf16_tb_softfloat__DOT__gen_s2__BRA__0__KET____DOT__adder_s2__DOT__st2_res_sign = VL_RAND_RESET_I(1);
+    vlSelf->add32_fp32accum_bf16_tb_softfloat__DOT__gen_s2__BRA__0__KET____DOT__adder_s2__DOT__st2_sticky = VL_RAND_RESET_I(1);
+    vlSelf->add32_fp32accum_bf16_tb_softfloat__DOT__gen_s2__BRA__0__KET____DOT__adder_s2__DOT__st2_special = VL_RAND_RESET_I(1);
+    vlSelf->add32_fp32accum_bf16_tb_softfloat__DOT__gen_s2__BRA__0__KET____DOT__adder_s2__DOT__lzd_scan = VL_RAND_RESET_I(30);
+    vlSelf->add32_fp32accum_bf16_tb_softfloat__DOT__gen_s2__BRA__0__KET____DOT__adder_s2__DOT__lead_zeros = VL_RAND_RESET_I(5);
+    vlSelf->add32_fp32accum_bf16_tb_softfloat__DOT__gen_s2__BRA__0__KET____DOT__adder_s2__DOT__norm_val = VL_RAND_RESET_I(30);
+    vlSelf->add32_fp32accum_bf16_tb_softfloat__DOT__gen_s2__BRA__0__KET____DOT__adder_s2__DOT__raw_mant = VL_RAND_RESET_I(23);
+    vlSelf->add32_fp32accum_bf16_tb_softfloat__DOT__gen_s2__BRA__0__KET____DOT__adder_s2__DOT__final_mant = VL_RAND_RESET_I(23);
+    vlSelf->add32_fp32accum_bf16_tb_softfloat__DOT__gen_s2__BRA__0__KET____DOT__adder_s2__DOT__rounded_mant_int = VL_RAND_RESET_I(24);
+    vlSelf->add32_fp32accum_bf16_tb_softfloat__DOT__gen_s2__BRA__0__KET____DOT__adder_s2__DOT__final_exp_calc = VL_RAND_RESET_I(11);
+    vlSelf->add32_fp32accum_bf16_tb_softfloat__DOT__gen_s2__BRA__0__KET____DOT__adder_s2__DOT__guard_bit = VL_RAND_RESET_I(1);
+    vlSelf->add32_fp32accum_bf16_tb_softfloat__DOT__gen_s2__BRA__0__KET____DOT__adder_s2__DOT__round_bit = VL_RAND_RESET_I(1);
+    vlSelf->add32_fp32accum_bf16_tb_softfloat__DOT__gen_s2__BRA__0__KET____DOT__adder_s2__DOT__sticky_bit = VL_RAND_RESET_I(1);
+    vlSelf->add32_fp32accum_bf16_tb_softfloat__DOT__gen_s2__BRA__0__KET____DOT__adder_s2__DOT__round_up = VL_RAND_RESET_I(1);
+    vlSelf->add32_fp32accum_bf16_tb_softfloat__DOT__gen_s2__BRA__0__KET____DOT__adder_s2__DOT__l_bit = VL_RAND_RESET_I(1);
+    vlSelf->add32_fp32accum_bf16_tb_softfloat__DOT__gen_s2__BRA__0__KET____DOT__adder_s2__DOT__result_out = VL_RAND_RESET_I(32);
+    vlSelf->add32_fp32accum_bf16_tb_softfloat__DOT__gen_s2__BRA__0__KET____DOT__adder_s2__DOT__op_x = VL_RAND_RESET_I(30);
+    vlSelf->add32_fp32accum_bf16_tb_softfloat__DOT__gen_s2__BRA__0__KET____DOT__adder_s2__DOT__op_y = VL_RAND_RESET_I(30);
+    vlSelf->add32_fp32accum_bf16_tb_softfloat__DOT__gen_s2__BRA__0__KET____DOT__adder_s2__DOT__op_m = VL_RAND_RESET_I(30);
+    vlSelf->add32_fp32accum_bf16_tb_softfloat__DOT__gen_s2__BRA__0__KET____DOT__adder_s2__DOT__op_n = VL_RAND_RESET_I(30);
+    vlSelf->add32_fp32accum_bf16_tb_softfloat__DOT__gen_s2__BRA__0__KET____DOT__adder_s2__DOT__csa_s1 = VL_RAND_RESET_I(30);
+    vlSelf->add32_fp32accum_bf16_tb_softfloat__DOT__gen_s2__BRA__0__KET____DOT__adder_s2__DOT__csa_c1 = VL_RAND_RESET_I(30);
+    vlSelf->add32_fp32accum_bf16_tb_softfloat__DOT__gen_s2__BRA__0__KET____DOT__adder_s2__DOT__csa_s2 = VL_RAND_RESET_I(30);
+    vlSelf->add32_fp32accum_bf16_tb_softfloat__DOT__gen_s2__BRA__0__KET____DOT__adder_s2__DOT__csa_c2 = VL_RAND_RESET_I(30);
+    vlSelf->add32_fp32accum_bf16_tb_softfloat__DOT__gen_s2__BRA__0__KET____DOT__adder_s2__DOT__stage3_logic__DOT__unnamedblk1__DOT__i = 0;
+    vlSelf->add32_fp32accum_bf16_tb_softfloat__DOT__gen_s2__BRA__1__KET____DOT__adder_s2__DOT__a_daz = VL_RAND_RESET_I(32);
+    vlSelf->add32_fp32accum_bf16_tb_softfloat__DOT__gen_s2__BRA__1__KET____DOT__adder_s2__DOT__b_daz = VL_RAND_RESET_I(32);
+    vlSelf->add32_fp32accum_bf16_tb_softfloat__DOT__gen_s2__BRA__1__KET____DOT__adder_s2__DOT__c_daz = VL_RAND_RESET_I(32);
+    vlSelf->add32_fp32accum_bf16_tb_softfloat__DOT__gen_s2__BRA__1__KET____DOT__adder_s2__DOT__d_daz = VL_RAND_RESET_I(32);
+    vlSelf->add32_fp32accum_bf16_tb_softfloat__DOT__gen_s2__BRA__1__KET____DOT__adder_s2__DOT__exp_a = VL_RAND_RESET_I(8);
+    vlSelf->add32_fp32accum_bf16_tb_softfloat__DOT__gen_s2__BRA__1__KET____DOT__adder_s2__DOT__exp_b = VL_RAND_RESET_I(8);
+    vlSelf->add32_fp32accum_bf16_tb_softfloat__DOT__gen_s2__BRA__1__KET____DOT__adder_s2__DOT__exp_c = VL_RAND_RESET_I(8);
+    vlSelf->add32_fp32accum_bf16_tb_softfloat__DOT__gen_s2__BRA__1__KET____DOT__adder_s2__DOT__exp_d = VL_RAND_RESET_I(8);
+    vlSelf->add32_fp32accum_bf16_tb_softfloat__DOT__gen_s2__BRA__1__KET____DOT__adder_s2__DOT__frac_a = VL_RAND_RESET_I(23);
+    vlSelf->add32_fp32accum_bf16_tb_softfloat__DOT__gen_s2__BRA__1__KET____DOT__adder_s2__DOT__frac_b = VL_RAND_RESET_I(23);
+    vlSelf->add32_fp32accum_bf16_tb_softfloat__DOT__gen_s2__BRA__1__KET____DOT__adder_s2__DOT__frac_c = VL_RAND_RESET_I(23);
+    vlSelf->add32_fp32accum_bf16_tb_softfloat__DOT__gen_s2__BRA__1__KET____DOT__adder_s2__DOT__frac_d = VL_RAND_RESET_I(23);
+    vlSelf->add32_fp32accum_bf16_tb_softfloat__DOT__gen_s2__BRA__1__KET____DOT__adder_s2__DOT__sign_a = VL_RAND_RESET_I(1);
+    vlSelf->add32_fp32accum_bf16_tb_softfloat__DOT__gen_s2__BRA__1__KET____DOT__adder_s2__DOT__sign_b = VL_RAND_RESET_I(1);
+    vlSelf->add32_fp32accum_bf16_tb_softfloat__DOT__gen_s2__BRA__1__KET____DOT__adder_s2__DOT__sign_c = VL_RAND_RESET_I(1);
+    vlSelf->add32_fp32accum_bf16_tb_softfloat__DOT__gen_s2__BRA__1__KET____DOT__adder_s2__DOT__sign_d = VL_RAND_RESET_I(1);
+    vlSelf->add32_fp32accum_bf16_tb_softfloat__DOT__gen_s2__BRA__1__KET____DOT__adder_s2__DOT__exp_p = VL_RAND_RESET_I(8);
+    vlSelf->add32_fp32accum_bf16_tb_softfloat__DOT__gen_s2__BRA__1__KET____DOT__adder_s2__DOT__exp_m = VL_RAND_RESET_I(8);
+    vlSelf->add32_fp32accum_bf16_tb_softfloat__DOT__gen_s2__BRA__1__KET____DOT__adder_s2__DOT__exp_r = VL_RAND_RESET_I(8);
+    vlSelf->add32_fp32accum_bf16_tb_softfloat__DOT__gen_s2__BRA__1__KET____DOT__adder_s2__DOT__exp_n = VL_RAND_RESET_I(8);
+    vlSelf->add32_fp32accum_bf16_tb_softfloat__DOT__gen_s2__BRA__1__KET____DOT__adder_s2__DOT__exp_x = VL_RAND_RESET_I(8);
+    vlSelf->add32_fp32accum_bf16_tb_softfloat__DOT__gen_s2__BRA__1__KET____DOT__adder_s2__DOT__exp_y = VL_RAND_RESET_I(8);
+    vlSelf->add32_fp32accum_bf16_tb_softfloat__DOT__gen_s2__BRA__1__KET____DOT__adder_s2__DOT__exp_mx = VL_RAND_RESET_I(8);
+    vlSelf->add32_fp32accum_bf16_tb_softfloat__DOT__gen_s2__BRA__1__KET____DOT__adder_s2__DOT__exp_nx = VL_RAND_RESET_I(8);
+    vlSelf->add32_fp32accum_bf16_tb_softfloat__DOT__gen_s2__BRA__1__KET____DOT__adder_s2__DOT__frac_p = VL_RAND_RESET_I(23);
+    vlSelf->add32_fp32accum_bf16_tb_softfloat__DOT__gen_s2__BRA__1__KET____DOT__adder_s2__DOT__frac_m = VL_RAND_RESET_I(23);
+    vlSelf->add32_fp32accum_bf16_tb_softfloat__DOT__gen_s2__BRA__1__KET____DOT__adder_s2__DOT__frac_r = VL_RAND_RESET_I(23);
+    vlSelf->add32_fp32accum_bf16_tb_softfloat__DOT__gen_s2__BRA__1__KET____DOT__adder_s2__DOT__frac_n = VL_RAND_RESET_I(23);
+    vlSelf->add32_fp32accum_bf16_tb_softfloat__DOT__gen_s2__BRA__1__KET____DOT__adder_s2__DOT__frac_x = VL_RAND_RESET_I(23);
+    vlSelf->add32_fp32accum_bf16_tb_softfloat__DOT__gen_s2__BRA__1__KET____DOT__adder_s2__DOT__frac_y = VL_RAND_RESET_I(23);
+    vlSelf->add32_fp32accum_bf16_tb_softfloat__DOT__gen_s2__BRA__1__KET____DOT__adder_s2__DOT__frac_mx = VL_RAND_RESET_I(23);
+    vlSelf->add32_fp32accum_bf16_tb_softfloat__DOT__gen_s2__BRA__1__KET____DOT__adder_s2__DOT__frac_nx = VL_RAND_RESET_I(23);
+    vlSelf->add32_fp32accum_bf16_tb_softfloat__DOT__gen_s2__BRA__1__KET____DOT__adder_s2__DOT__sign_p = VL_RAND_RESET_I(1);
+    vlSelf->add32_fp32accum_bf16_tb_softfloat__DOT__gen_s2__BRA__1__KET____DOT__adder_s2__DOT__sign_m = VL_RAND_RESET_I(1);
+    vlSelf->add32_fp32accum_bf16_tb_softfloat__DOT__gen_s2__BRA__1__KET____DOT__adder_s2__DOT__sign_r = VL_RAND_RESET_I(1);
+    vlSelf->add32_fp32accum_bf16_tb_softfloat__DOT__gen_s2__BRA__1__KET____DOT__adder_s2__DOT__sign_n = VL_RAND_RESET_I(1);
+    vlSelf->add32_fp32accum_bf16_tb_softfloat__DOT__gen_s2__BRA__1__KET____DOT__adder_s2__DOT__sign_x = VL_RAND_RESET_I(1);
+    vlSelf->add32_fp32accum_bf16_tb_softfloat__DOT__gen_s2__BRA__1__KET____DOT__adder_s2__DOT__sign_y = VL_RAND_RESET_I(1);
+    vlSelf->add32_fp32accum_bf16_tb_softfloat__DOT__gen_s2__BRA__1__KET____DOT__adder_s2__DOT__sign_mx = VL_RAND_RESET_I(1);
+    vlSelf->add32_fp32accum_bf16_tb_softfloat__DOT__gen_s2__BRA__1__KET____DOT__adder_s2__DOT__sign_nx = VL_RAND_RESET_I(1);
+    vlSelf->add32_fp32accum_bf16_tb_softfloat__DOT__gen_s2__BRA__1__KET____DOT__adder_s2__DOT__exp_x_eff = VL_RAND_RESET_I(8);
+    vlSelf->add32_fp32accum_bf16_tb_softfloat__DOT__gen_s2__BRA__1__KET____DOT__adder_s2__DOT__exp_y_eff = VL_RAND_RESET_I(8);
+    vlSelf->add32_fp32accum_bf16_tb_softfloat__DOT__gen_s2__BRA__1__KET____DOT__adder_s2__DOT__exp_mx_eff = VL_RAND_RESET_I(8);
+    vlSelf->add32_fp32accum_bf16_tb_softfloat__DOT__gen_s2__BRA__1__KET____DOT__adder_s2__DOT__exp_nx_eff = VL_RAND_RESET_I(8);
+    vlSelf->add32_fp32accum_bf16_tb_softfloat__DOT__gen_s2__BRA__1__KET____DOT__adder_s2__DOT__y_shift = VL_RAND_RESET_I(9);
+    vlSelf->add32_fp32accum_bf16_tb_softfloat__DOT__gen_s2__BRA__1__KET____DOT__adder_s2__DOT__m_shift = VL_RAND_RESET_I(9);
+    vlSelf->add32_fp32accum_bf16_tb_softfloat__DOT__gen_s2__BRA__1__KET____DOT__adder_s2__DOT__n_shift = VL_RAND_RESET_I(9);
+    vlSelf->add32_fp32accum_bf16_tb_softfloat__DOT__gen_s2__BRA__1__KET____DOT__adder_s2__DOT__x_mant = VL_RAND_RESET_I(27);
+    vlSelf->add32_fp32accum_bf16_tb_softfloat__DOT__gen_s2__BRA__1__KET____DOT__adder_s2__DOT__y_shifted = VL_RAND_RESET_I(27);
+    vlSelf->add32_fp32accum_bf16_tb_softfloat__DOT__gen_s2__BRA__1__KET____DOT__adder_s2__DOT__m_shifted = VL_RAND_RESET_I(27);
+    vlSelf->add32_fp32accum_bf16_tb_softfloat__DOT__gen_s2__BRA__1__KET____DOT__adder_s2__DOT__n_shifted = VL_RAND_RESET_I(27);
+    vlSelf->add32_fp32accum_bf16_tb_softfloat__DOT__gen_s2__BRA__1__KET____DOT__adder_s2__DOT__y_mant_base = VL_RAND_RESET_I(27);
+    vlSelf->add32_fp32accum_bf16_tb_softfloat__DOT__gen_s2__BRA__1__KET____DOT__adder_s2__DOT__m_mant_base = VL_RAND_RESET_I(27);
+    vlSelf->add32_fp32accum_bf16_tb_softfloat__DOT__gen_s2__BRA__1__KET____DOT__adder_s2__DOT__n_mant_base = VL_RAND_RESET_I(27);
+    vlSelf->add32_fp32accum_bf16_tb_softfloat__DOT__gen_s2__BRA__1__KET____DOT__adder_s2__DOT__sticky_y = VL_RAND_RESET_I(1);
+    vlSelf->add32_fp32accum_bf16_tb_softfloat__DOT__gen_s2__BRA__1__KET____DOT__adder_s2__DOT__sticky_m = VL_RAND_RESET_I(1);
+    vlSelf->add32_fp32accum_bf16_tb_softfloat__DOT__gen_s2__BRA__1__KET____DOT__adder_s2__DOT__sticky_n = VL_RAND_RESET_I(1);
+    vlSelf->add32_fp32accum_bf16_tb_softfloat__DOT__gen_s2__BRA__1__KET____DOT__adder_s2__DOT__y_op = VL_RAND_RESET_I(1);
+    vlSelf->add32_fp32accum_bf16_tb_softfloat__DOT__gen_s2__BRA__1__KET____DOT__adder_s2__DOT__m_op = VL_RAND_RESET_I(1);
+    vlSelf->add32_fp32accum_bf16_tb_softfloat__DOT__gen_s2__BRA__1__KET____DOT__adder_s2__DOT__n_op = VL_RAND_RESET_I(1);
+    vlSelf->add32_fp32accum_bf16_tb_softfloat__DOT__gen_s2__BRA__1__KET____DOT__adder_s2__DOT__is_nan_any = VL_RAND_RESET_I(1);
+    vlSelf->add32_fp32accum_bf16_tb_softfloat__DOT__gen_s2__BRA__1__KET____DOT__adder_s2__DOT__special_case = VL_RAND_RESET_I(1);
+    vlSelf->add32_fp32accum_bf16_tb_softfloat__DOT__gen_s2__BRA__1__KET____DOT__adder_s2__DOT__any_pos_inf = VL_RAND_RESET_I(1);
+    vlSelf->add32_fp32accum_bf16_tb_softfloat__DOT__gen_s2__BRA__1__KET____DOT__adder_s2__DOT__any_neg_inf = VL_RAND_RESET_I(1);
+    vlSelf->add32_fp32accum_bf16_tb_softfloat__DOT__gen_s2__BRA__1__KET____DOT__adder_s2__DOT__special_result = VL_RAND_RESET_I(32);
+    vlSelf->add32_fp32accum_bf16_tb_softfloat__DOT__gen_s2__BRA__1__KET____DOT__adder_s2__DOT__st1_a_e = VL_RAND_RESET_I(8);
+    vlSelf->add32_fp32accum_bf16_tb_softfloat__DOT__gen_s2__BRA__1__KET____DOT__adder_s2__DOT__st1_a_s = VL_RAND_RESET_I(1);
+    vlSelf->add32_fp32accum_bf16_tb_softfloat__DOT__gen_s2__BRA__1__KET____DOT__adder_s2__DOT__st1_align_sticky = VL_RAND_RESET_I(1);
+    vlSelf->add32_fp32accum_bf16_tb_softfloat__DOT__gen_s2__BRA__1__KET____DOT__adder_s2__DOT__st1_special_case = VL_RAND_RESET_I(1);
+    vlSelf->add32_fp32accum_bf16_tb_softfloat__DOT__gen_s2__BRA__1__KET____DOT__adder_s2__DOT__st1_special_result = VL_RAND_RESET_I(32);
+    vlSelf->add32_fp32accum_bf16_tb_softfloat__DOT__gen_s2__BRA__1__KET____DOT__adder_s2__DOT__st1_sum_vec = VL_RAND_RESET_I(30);
+    vlSelf->add32_fp32accum_bf16_tb_softfloat__DOT__gen_s2__BRA__1__KET____DOT__adder_s2__DOT__st1_carry_vec = VL_RAND_RESET_I(30);
+    vlSelf->add32_fp32accum_bf16_tb_softfloat__DOT__gen_s2__BRA__1__KET____DOT__adder_s2__DOT__st1_hot_ones = VL_RAND_RESET_I(2);
+    vlSelf->add32_fp32accum_bf16_tb_softfloat__DOT__gen_s2__BRA__1__KET____DOT__adder_s2__DOT__raw_sum = VL_RAND_RESET_I(30);
+    vlSelf->add32_fp32accum_bf16_tb_softfloat__DOT__gen_s2__BRA__1__KET____DOT__adder_s2__DOT__mag_sum = VL_RAND_RESET_I(30);
+    vlSelf->add32_fp32accum_bf16_tb_softfloat__DOT__gen_s2__BRA__1__KET____DOT__adder_s2__DOT__res_sign = VL_RAND_RESET_I(1);
+    vlSelf->add32_fp32accum_bf16_tb_softfloat__DOT__gen_s2__BRA__1__KET____DOT__adder_s2__DOT__st2_exp_base = VL_RAND_RESET_I(8);
+    vlSelf->add32_fp32accum_bf16_tb_softfloat__DOT__gen_s2__BRA__1__KET____DOT__adder_s2__DOT__st2_sum_mag = VL_RAND_RESET_I(30);
+    vlSelf->add32_fp32accum_bf16_tb_softfloat__DOT__gen_s2__BRA__1__KET____DOT__adder_s2__DOT__st2_spec_res = VL_RAND_RESET_I(32);
+    vlSelf->add32_fp32accum_bf16_tb_softfloat__DOT__gen_s2__BRA__1__KET____DOT__adder_s2__DOT__st2_res_sign = VL_RAND_RESET_I(1);
+    vlSelf->add32_fp32accum_bf16_tb_softfloat__DOT__gen_s2__BRA__1__KET____DOT__adder_s2__DOT__st2_sticky = VL_RAND_RESET_I(1);
+    vlSelf->add32_fp32accum_bf16_tb_softfloat__DOT__gen_s2__BRA__1__KET____DOT__adder_s2__DOT__st2_special = VL_RAND_RESET_I(1);
+    vlSelf->add32_fp32accum_bf16_tb_softfloat__DOT__gen_s2__BRA__1__KET____DOT__adder_s2__DOT__lzd_scan = VL_RAND_RESET_I(30);
+    vlSelf->add32_fp32accum_bf16_tb_softfloat__DOT__gen_s2__BRA__1__KET____DOT__adder_s2__DOT__lead_zeros = VL_RAND_RESET_I(5);
+    vlSelf->add32_fp32accum_bf16_tb_softfloat__DOT__gen_s2__BRA__1__KET____DOT__adder_s2__DOT__norm_val = VL_RAND_RESET_I(30);
+    vlSelf->add32_fp32accum_bf16_tb_softfloat__DOT__gen_s2__BRA__1__KET____DOT__adder_s2__DOT__raw_mant = VL_RAND_RESET_I(23);
+    vlSelf->add32_fp32accum_bf16_tb_softfloat__DOT__gen_s2__BRA__1__KET____DOT__adder_s2__DOT__final_mant = VL_RAND_RESET_I(23);
+    vlSelf->add32_fp32accum_bf16_tb_softfloat__DOT__gen_s2__BRA__1__KET____DOT__adder_s2__DOT__rounded_mant_int = VL_RAND_RESET_I(24);
+    vlSelf->add32_fp32accum_bf16_tb_softfloat__DOT__gen_s2__BRA__1__KET____DOT__adder_s2__DOT__final_exp_calc = VL_RAND_RESET_I(11);
+    vlSelf->add32_fp32accum_bf16_tb_softfloat__DOT__gen_s2__BRA__1__KET____DOT__adder_s2__DOT__guard_bit = VL_RAND_RESET_I(1);
+    vlSelf->add32_fp32accum_bf16_tb_softfloat__DOT__gen_s2__BRA__1__KET____DOT__adder_s2__DOT__round_bit = VL_RAND_RESET_I(1);
+    vlSelf->add32_fp32accum_bf16_tb_softfloat__DOT__gen_s2__BRA__1__KET____DOT__adder_s2__DOT__sticky_bit = VL_RAND_RESET_I(1);
+    vlSelf->add32_fp32accum_bf16_tb_softfloat__DOT__gen_s2__BRA__1__KET____DOT__adder_s2__DOT__round_up = VL_RAND_RESET_I(1);
+    vlSelf->add32_fp32accum_bf16_tb_softfloat__DOT__gen_s2__BRA__1__KET____DOT__adder_s2__DOT__l_bit = VL_RAND_RESET_I(1);
+    vlSelf->add32_fp32accum_bf16_tb_softfloat__DOT__gen_s2__BRA__1__KET____DOT__adder_s2__DOT__result_out = VL_RAND_RESET_I(32);
+    vlSelf->add32_fp32accum_bf16_tb_softfloat__DOT__gen_s2__BRA__1__KET____DOT__adder_s2__DOT__op_x = VL_RAND_RESET_I(30);
+    vlSelf->add32_fp32accum_bf16_tb_softfloat__DOT__gen_s2__BRA__1__KET____DOT__adder_s2__DOT__op_y = VL_RAND_RESET_I(30);
+    vlSelf->add32_fp32accum_bf16_tb_softfloat__DOT__gen_s2__BRA__1__KET____DOT__adder_s2__DOT__op_m = VL_RAND_RESET_I(30);
+    vlSelf->add32_fp32accum_bf16_tb_softfloat__DOT__gen_s2__BRA__1__KET____DOT__adder_s2__DOT__op_n = VL_RAND_RESET_I(30);
+    vlSelf->add32_fp32accum_bf16_tb_softfloat__DOT__gen_s2__BRA__1__KET____DOT__adder_s2__DOT__csa_s1 = VL_RAND_RESET_I(30);
+    vlSelf->add32_fp32accum_bf16_tb_softfloat__DOT__gen_s2__BRA__1__KET____DOT__adder_s2__DOT__csa_c1 = VL_RAND_RESET_I(30);
+    vlSelf->add32_fp32accum_bf16_tb_softfloat__DOT__gen_s2__BRA__1__KET____DOT__adder_s2__DOT__csa_s2 = VL_RAND_RESET_I(30);
+    vlSelf->add32_fp32accum_bf16_tb_softfloat__DOT__gen_s2__BRA__1__KET____DOT__adder_s2__DOT__csa_c2 = VL_RAND_RESET_I(30);
+    vlSelf->add32_fp32accum_bf16_tb_softfloat__DOT__gen_s2__BRA__1__KET____DOT__adder_s2__DOT__stage3_logic__DOT__unnamedblk1__DOT__i = 0;
+    vlSelf->__Vtrigprevexpr___TOP__add32_fp32accum_bf16_tb_softfloat__DOT__adder_s3__DOT__norm_val__0 = VL_RAND_RESET_I(30);
+    vlSelf->__Vtrigprevexpr___TOP__add32_fp32accum_bf16_tb_softfloat__DOT__gen_s1__BRA__0__KET____DOT__adder_s1__DOT__norm_val__0 = VL_RAND_RESET_I(30);
+    vlSelf->__Vtrigprevexpr___TOP__add32_fp32accum_bf16_tb_softfloat__DOT__gen_s1__BRA__1__KET____DOT__adder_s1__DOT__norm_val__0 = VL_RAND_RESET_I(30);
+    vlSelf->__Vtrigprevexpr___TOP__add32_fp32accum_bf16_tb_softfloat__DOT__gen_s1__BRA__2__KET____DOT__adder_s1__DOT__norm_val__0 = VL_RAND_RESET_I(30);
+    vlSelf->__Vtrigprevexpr___TOP__add32_fp32accum_bf16_tb_softfloat__DOT__gen_s1__BRA__3__KET____DOT__adder_s1__DOT__norm_val__0 = VL_RAND_RESET_I(30);
+    vlSelf->__Vtrigprevexpr___TOP__add32_fp32accum_bf16_tb_softfloat__DOT__gen_s1__BRA__4__KET____DOT__adder_s1__DOT__norm_val__0 = VL_RAND_RESET_I(30);
+    vlSelf->__Vtrigprevexpr___TOP__add32_fp32accum_bf16_tb_softfloat__DOT__gen_s1__BRA__5__KET____DOT__adder_s1__DOT__norm_val__0 = VL_RAND_RESET_I(30);
+    vlSelf->__Vtrigprevexpr___TOP__add32_fp32accum_bf16_tb_softfloat__DOT__gen_s1__BRA__6__KET____DOT__adder_s1__DOT__norm_val__0 = VL_RAND_RESET_I(30);
+    vlSelf->__Vtrigprevexpr___TOP__add32_fp32accum_bf16_tb_softfloat__DOT__gen_s1__BRA__7__KET____DOT__adder_s1__DOT__norm_val__0 = VL_RAND_RESET_I(30);
+    vlSelf->__Vtrigprevexpr___TOP__add32_fp32accum_bf16_tb_softfloat__DOT__gen_s2__BRA__0__KET____DOT__adder_s2__DOT__norm_val__0 = VL_RAND_RESET_I(30);
+    vlSelf->__Vtrigprevexpr___TOP__add32_fp32accum_bf16_tb_softfloat__DOT__gen_s2__BRA__1__KET____DOT__adder_s2__DOT__norm_val__0 = VL_RAND_RESET_I(30);
+    vlSelf->__VstlDidInit = 0;
+    vlSelf->__Vtrigprevexpr___TOP__add32_fp32accum_bf16_tb_softfloat__DOT__adder_s3__DOT__norm_val__1 = VL_RAND_RESET_I(30);
+    vlSelf->__Vtrigprevexpr___TOP__add32_fp32accum_bf16_tb_softfloat__DOT__gen_s1__BRA__0__KET____DOT__adder_s1__DOT__norm_val__1 = VL_RAND_RESET_I(30);
+    vlSelf->__Vtrigprevexpr___TOP__add32_fp32accum_bf16_tb_softfloat__DOT__gen_s1__BRA__1__KET____DOT__adder_s1__DOT__norm_val__1 = VL_RAND_RESET_I(30);
+    vlSelf->__Vtrigprevexpr___TOP__add32_fp32accum_bf16_tb_softfloat__DOT__gen_s1__BRA__2__KET____DOT__adder_s1__DOT__norm_val__1 = VL_RAND_RESET_I(30);
+    vlSelf->__Vtrigprevexpr___TOP__add32_fp32accum_bf16_tb_softfloat__DOT__gen_s1__BRA__3__KET____DOT__adder_s1__DOT__norm_val__1 = VL_RAND_RESET_I(30);
+    vlSelf->__Vtrigprevexpr___TOP__add32_fp32accum_bf16_tb_softfloat__DOT__gen_s1__BRA__4__KET____DOT__adder_s1__DOT__norm_val__1 = VL_RAND_RESET_I(30);
+    vlSelf->__Vtrigprevexpr___TOP__add32_fp32accum_bf16_tb_softfloat__DOT__gen_s1__BRA__5__KET____DOT__adder_s1__DOT__norm_val__1 = VL_RAND_RESET_I(30);
+    vlSelf->__Vtrigprevexpr___TOP__add32_fp32accum_bf16_tb_softfloat__DOT__gen_s1__BRA__6__KET____DOT__adder_s1__DOT__norm_val__1 = VL_RAND_RESET_I(30);
+    vlSelf->__Vtrigprevexpr___TOP__add32_fp32accum_bf16_tb_softfloat__DOT__gen_s1__BRA__7__KET____DOT__adder_s1__DOT__norm_val__1 = VL_RAND_RESET_I(30);
+    vlSelf->__Vtrigprevexpr___TOP__add32_fp32accum_bf16_tb_softfloat__DOT__gen_s2__BRA__0__KET____DOT__adder_s2__DOT__norm_val__1 = VL_RAND_RESET_I(30);
+    vlSelf->__Vtrigprevexpr___TOP__add32_fp32accum_bf16_tb_softfloat__DOT__gen_s2__BRA__1__KET____DOT__adder_s2__DOT__norm_val__1 = VL_RAND_RESET_I(30);
+    vlSelf->__Vtrigprevexpr___TOP__add32_fp32accum_bf16_tb_softfloat__DOT__tb_clk__0 = VL_RAND_RESET_I(1);
+    vlSelf->__Vtrigprevexpr___TOP__add32_fp32accum_bf16_tb_softfloat__DOT__tb_nrst__0 = VL_RAND_RESET_I(1);
+    vlSelf->__VactDidInit = 0;
+    for (int __Vi0 = 0; __Vi0 < 28; ++__Vi0) {
+        vlSelf->__Vm_traceActivity[__Vi0] = 0;
+    }
+}

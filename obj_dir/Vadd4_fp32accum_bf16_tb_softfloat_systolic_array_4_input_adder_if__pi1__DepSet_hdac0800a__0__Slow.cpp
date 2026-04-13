@@ -10,5 +10,5 @@ VL_ATTR_COLD void Vadd4_fp32accum_bf16_tb_softfloat_systolic_array_4_input_adder
     Vadd4_fp32accum_bf16_tb_softfloat__Syms* const __restrict vlSymsp VL_ATTR_UNUSED = vlSelf->vlSymsp;
     auto& vlSelfRef = std::ref(*vlSelf).get();
     // Body
-    vlSelf->out = VL_RAND_RESET_I(32);
+    vlSelf->out = VL_RAND_RESET_Q(35);
 }

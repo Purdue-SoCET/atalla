@@ -35,10 +35,11 @@ module add4_fp32accum_bf16_tb_softfloat;
     // Interface
     systolic_array_4_input_adder_if #(
         .EXPONENT_SIZE(8),
-        .MANTISSA_SIZE(23),
+        .MANTISSA_SIZE(26),
         .IN_MANTISSA_SIZE(7),
         .IN_EXPONENT_SIZE(8),
-        .PRECISION_BITS(0)
+        .PRECISION_BITS(0),
+        .GRS(0)
     ) add_if();
 
     logic [15:0] tb_a, tb_b, tb_c, tb_d;
@@ -58,10 +59,11 @@ module add4_fp32accum_bf16_tb_softfloat;
     // DUT: BF16 4-input adder
     sysarr_4_input_fp_adder #(
         .EXPONENT_SIZE(8),
-        .MANTISSA_SIZE(23),
+        .MANTISSA_SIZE(26),
         .IN_MANTISSA_SIZE(7),
         .IN_EXPONENT_SIZE(8),
-        .PRECISION_BITS(0)
+        .PRECISION_BITS(0),
+        .GRS(0)
     ) bf16adder (
         .clk(tb_clk),
         .nRST(tb_nrst),

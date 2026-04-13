@@ -5,7 +5,8 @@ module sysarr_4_input_fp_adder #(
     parameter EXPONENT_SIZE     = 8,
     parameter IN_MANTISSA_SIZE = 23, // Output Mantissa Width (New Parameter)
     parameter IN_EXPONENT_SIZE = 8,
-    parameter PRECISION_BITS    = 0 
+    parameter PRECISION_BITS    = 0,
+    parameter GRS = 0
 ) (
     input logic clk, 
     input logic nRST,
@@ -13,7 +14,7 @@ module sysarr_4_input_fp_adder #(
 );
     // Ensure internal width covers the larger of input or output mantissa to prevent precision loss before rounding
     localparam NEW_MANT_WIDTH = MANTISSA_SIZE + PRECISION_BITS + 1;
-    localparam SUM_WIDTH      = NEW_MANT_WIDTH + 2; 
+    localparam SUM_WIDTH      = NEW_MANT_WIDTH + 3; 
     localparam MAX_EXP        = (1 << EXPONENT_SIZE) - 1;
     localparam RES_WIDTH      = 1 + EXPONENT_SIZE + MANTISSA_SIZE; // Total width of result
     localparam BIAS_DIFF       = (1 << (EXPONENT_SIZE - 1)) - 1 - ((1 << (IN_EXPONENT_SIZE - 1)) - 1); // Bias difference for exponent adjustment
@@ -46,12 +47,12 @@ module sysarr_4_input_fp_adder #(
     logic [IN_EXPONENT_SIZE-1:0]  st1_a_e;
     logic st1_a_s, st1_align_sticky, st1_special_case;
     logic [RES_WIDTH-1:0] st1_special_result;
-    logic [SUM_WIDTH:0] st1_sum_vec;
-    logic [SUM_WIDTH:0] st1_carry_vec;
+    logic [SUM_WIDTH-1:0] st1_sum_vec;
+    logic [SUM_WIDTH-1:0] st1_carry_vec;
     logic [1:0]         st1_hot_ones; 
 
     // --- Stage 2 Signals ---
-    logic signed [SUM_WIDTH+1:0] raw_sum;
+    logic signed [SUM_WIDTH-1:0] raw_sum;
     logic [SUM_WIDTH-1:0] mag_sum;
     logic res_sign;
 
@@ -63,21 +64,21 @@ module sysarr_4_input_fp_adder #(
 
     // --- Stage 3 Signals ---
     logic [SUM_WIDTH-1:0]      lzd_scan;
-    logic [$clog2(SUM_WIDTH):0] lead_zeros; 
+    logic [$clog2(SUM_WIDTH)-1:0] lead_zeros; 
     logic [SUM_WIDTH-1:0]      norm_val;
     
     // Output specific signals
     logic [MANTISSA_SIZE-1:0] raw_mant, final_mant;
     logic [MANTISSA_SIZE:0]   rounded_mant_int;
     logic signed [EXPONENT_SIZE+2:0] final_exp_calc;
-    logic guard_bit, round_bit, sticky_bit, round_up;
+    logic guard_bit, round_bit, sticky_bit, round_up, l_bit; 
     logic [RES_WIDTH-1:0] result_out;
 
     // =================================================================================
     // STAGE 1: Sort, Align, and COMPRESS
     // =================================================================================
-    logic [SUM_WIDTH:0] op_x, op_y, op_m, op_n;
-    logic [SUM_WIDTH:0] csa_s1, csa_c1, csa_s2, csa_c2;
+    logic [SUM_WIDTH-1:0] op_x, op_y, op_m, op_n;
+    logic [SUM_WIDTH-1:0] csa_s1, csa_c1, csa_s2, csa_c2;
 
     always_comb begin : stage1_logic
 
@@ -136,16 +137,16 @@ module sysarr_4_input_fp_adder #(
         n_mant_base = { (|exp_nx), frac_nx, {MANTISSA_SIZE-IN_MANTISSA_SIZE{1'b0}} ,{PRECISION_BITS{1'b0}}};
 
         sticky_y  = |(y_mant_base & ~({NEW_MANT_WIDTH{1'b1}} << y_shift));
-        y_shifted = (y_shift >= NEW_MANT_WIDTH) ? 0 : (y_mant_base >> y_shift);
-        // y_shifted[0] = y_shifted[0] | sticky_y; // OR sticky bit into LSB of shifted mantissa
+        y_shifted = ((y_shift >= NEW_MANT_WIDTH) ? 0 : (y_mant_base >> y_shift));
+        y_shifted[0] = y_shifted[0] | sticky_y; // OR sticky bit into LSB of shifted mantissa
 
         sticky_m  = |(m_mant_base & ~({NEW_MANT_WIDTH{1'b1}} << m_shift));
-        m_shifted = (m_shift >= NEW_MANT_WIDTH) ? 0 : (m_mant_base >> m_shift);
-        // m_shifted[0] = m_shifted[0] | sticky_m; // OR sticky bit into LSB of shifted mantissa
+        m_shifted = ((m_shift >= NEW_MANT_WIDTH) ? 0 : (m_mant_base >> m_shift));
+        m_shifted[0] = m_shifted[0] | sticky_m; // OR sticky bit into LSB of shifted mantissa
 
         sticky_n  = |(n_mant_base & ~({NEW_MANT_WIDTH{1'b1}} << n_shift));
-        n_shifted = (n_shift >= NEW_MANT_WIDTH) ? 0 : (n_mant_base >> n_shift);
-        // n_shifted[0] = n_shifted[0] | sticky_n; // OR sticky bit into LSB of shifted mantissa
+        n_shifted = ((n_shift >= NEW_MANT_WIDTH) ? 0 : (n_mant_base >> n_shift));
+        n_shifted[0] = n_shifted[0] | sticky_n; // OR sticky bit into LSB of shifted mantissa
         
         y_op = sign_x ^ sign_y; m_op = sign_x ^ sign_mx; n_op = sign_x ^ sign_nx;
 
@@ -183,11 +184,11 @@ module sysarr_4_input_fp_adder #(
     always_comb begin : stage2_logic
         raw_sum = $signed({1'b0, st1_sum_vec}) + $signed( st1_carry_vec << 1) + $signed({{(SUM_WIDTH){1'b0}}, st1_hot_ones});
 
-        if (raw_sum[SUM_WIDTH]) begin
+        if (raw_sum[SUM_WIDTH-1]) begin
             mag_sum = SUM_WIDTH'((~raw_sum + 1'b1));
             res_sign = ~st1_a_s;
         end else begin
-            mag_sum = SUM_WIDTH'(raw_sum[SUM_WIDTH-1:0]);
+            mag_sum = SUM_WIDTH'(raw_sum[SUM_WIDTH-2:0]);
             res_sign = st1_a_s;
         end
     end
@@ -229,10 +230,10 @@ module sysarr_4_input_fp_adder #(
         
         // Handle overflow (e.g., 1.111 -> 10.000)
         // sticky_bit = (|norm_val[SUM_WIDTH-4-MANTISSA_SIZE : 0]) | st2_sticky;
-        final_mant = norm_val[SUM_WIDTH-2 -: MANTISSA_SIZE];
-        
+        final_mant = rounded_mant_int[MANTISSA_SIZE-1:0];
+        lead_zeros = lead_zeros - (rounded_mant_int[MANTISSA_SIZE] ? 1 : 0); // If we had a carry out, we effectively have one less leading zero
         // Exponent Adjustment
-        final_exp_calc = $signed({2'b00, st2_exp_base}) + 2 - $signed({2'b00, lead_zeros}) + BIAS_DIFF;
+        final_exp_calc = $signed({2'b00, st2_exp_base}) + 3 - $signed({2'b00, lead_zeros}) + BIAS_DIFF;
 
         // 4. Output Packing
         if (st2_sum_mag == 0 || final_exp_calc <= 0 || st2_exp_base == 0) result_out = {1'b0, {RES_WIDTH-1{1'b0}}};
@@ -241,6 +242,28 @@ module sysarr_4_input_fp_adder #(
 
         if (st2_special) result_out = st2_spec_res;
     end
+
+    generate
+        if (GRS == 1 && (MANTISSA_SIZE > (IN_MANTISSA_SIZE + 3)) || PRECISION_BITS >= 3) begin
+            // Generate GRS bits and modify rounding logic accordingly (not implemented in this snippet for brevity)
+            always_comb begin
+                guard_bit = norm_val[SUM_WIDTH-2-MANTISSA_SIZE];
+                round_bit = norm_val[SUM_WIDTH-3-MANTISSA_SIZE];
+                sticky_bit = (|norm_val[SUM_WIDTH-4-MANTISSA_SIZE : 0]) | st2_sticky;
+                l_bit = norm_val[SUM_WIDTH-1-MANTISSA_SIZE];
+
+                round_up = guard_bit & (round_bit | sticky_bit | l_bit); // Round to even on tie
+
+                rounded_mant_int = norm_val[SUM_WIDTH-2 -: MANTISSA_SIZE] + round_up;
+            end
+        end else begin
+            // Standard rounding logic without GRS bits (already integrated into the existing logic)
+            always_comb begin
+                guard_bit = 0; round_bit = 0; sticky_bit = st2_sticky; l_bit = 0; round_up = 0;
+                rounded_mant_int = {1'b0, norm_val[SUM_WIDTH-2 -: MANTISSA_SIZE]};  
+            end
+        end
+    endgenerate
 
     always_ff @(posedge clk or negedge nRST) begin
         if (!nRST) add.out <= 0;

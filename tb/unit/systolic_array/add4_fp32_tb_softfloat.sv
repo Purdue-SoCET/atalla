@@ -23,9 +23,10 @@ module add4_fp32_tb_softfloat;
 
     localparam PERIOD = 2;
     localparam LATENCY = 4;  // 3 pipeline stages + 1 output register
-    localparam PRECISION_BITS = 0;
+    localparam PRECISION_BITS = 3;
     localparam EXPONENT_SIZE = 8;
     localparam MANTISSA_SIZE = 23; 
+    localparam GRS = 1; 
 
     logic tb_clk;
     logic tb_nrst;
@@ -43,7 +44,8 @@ module add4_fp32_tb_softfloat;
         .EXPONENT_SIZE(EXPONENT_SIZE),
         .IN_MANTISSA_SIZE(MANTISSA_SIZE),
         .IN_EXPONENT_SIZE(EXPONENT_SIZE),
-        .PRECISION_BITS(PRECISION_BITS)
+        .PRECISION_BITS(PRECISION_BITS),
+        .GRS(GRS)
     ) add_if();
 
     logic [31:0] tb_a, tb_b, tb_c, tb_d;
@@ -53,6 +55,7 @@ module add4_fp32_tb_softfloat;
     int pass_count, fail_count;
     real total_ulp_error;  
     int largest_ulp; 
+    int total_count;
 
     // con testbench signals to interface
     assign add_if.a = tb_a;
@@ -67,7 +70,8 @@ module add4_fp32_tb_softfloat;
         .EXPONENT_SIZE(EXPONENT_SIZE),
         .IN_MANTISSA_SIZE(MANTISSA_SIZE),
         .IN_EXPONENT_SIZE(EXPONENT_SIZE),
-        .PRECISION_BITS(PRECISION_BITS)
+        .PRECISION_BITS(PRECISION_BITS),
+        .GRS(GRS)
     ) etchedfp4adder (
         .clk(tb_clk),
         .nRST(tb_nrst),
@@ -167,6 +171,7 @@ initial begin
     tb_b = 32'h0;
     tb_c = 32'h0;
     tb_d = 32'h0;
+    total_count = 0;
 
     #(PERIOD);
     tb_nrst = 1;
@@ -275,7 +280,6 @@ initial begin
     while (!$feof(fd)) begin
         int ret;
         logic is_zero_result;
-        int total_count;
         ret = $fscanf(fd, "%h,%h,%h,%h,%h\n", a, b, c, d, expected);
         if (ret != 5) continue;
 
@@ -330,7 +334,7 @@ initial begin
     $display("PRECISION BITS: %0d", PRECISION_BITS);
     $display("PASSED: %0d", pass_count);
     $display("FAILED: %0d", fail_count);
-    $display("AVERAGE ULP ERROR: %f", total_ulp_error / fail_count);
+    $display("AVERAGE ULP ERROR: %f", total_ulp_error / total_count);
     $display("LARGEST ULP ERROR: %0d", largest_ulp);
     // $display("OFF-BY-TWO: %0d", off_by_two);
     // $display("OFF-BY-TWO-PLUS: %0d", off_by_five_plus);
