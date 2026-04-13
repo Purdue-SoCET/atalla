@@ -9,7 +9,7 @@ from pathlib import Path
 import argparse
 import numpy as np
 
-from .build import *
+from build import *
 from kernels.utils.dataloader import load_tile_data
 
 
@@ -69,7 +69,7 @@ def unroll_softmax(
 
     append(f"addi.s   ${addr_tbl_reg}, $0, {tile_addr_location}       # load tile/scpad address table location into ${addr_tbl_reg}")
     append(f"lw.s     ${gmem_base_reg}, 0(${addr_tbl_reg})                           # load gmem tile base address into ${gmem_base_reg}")
-    append(f"lw.s     ${scpad_base_reg}, 4(${addr_tbl_reg})                           # load scratchpad tile base address into ${scpad_base_reg}")
+    append(f"lw.s     ${scpad_base_reg}, 4(${addr_tbl_reg})                           # load scratchpad base address into ${scpad_base_reg}")
     append("")
     append(f"scpad.ld ${scpad_base_reg}, ${gmem_base_reg}, {max_col_ind}, {max_row_ind}, {sid}       # load NxN tile from gmem to scratchpad")
     append("")
@@ -91,11 +91,6 @@ def unroll_softmax(
     append("")
 
     append("############## PHASE 2: MAX + SHIFT + EXP (pipelined like layernorm idea) ##############")
-    # Staggered sweep across rows:
-    #   vmov max(row i-4), sub(row i-5), exp(row i-6), rmax(row i)
-    #
-    # Older consumers come before the new producer so the 4-entry temp ring
-    # is not overwritten before its value is extracted.
     for t in range(n + 6):
         if 0 <= t - 4 < n:
             row = t - 4
@@ -122,10 +117,6 @@ def unroll_softmax(
     append("")
 
     append("############## PHASE 3: SUM + EXTRACT + RCP (pipelined) ##############")
-    # Staggered sweep:
-    #   vmov sum(row i-4), rcp(row i-5), rsum(row i)
-    #
-    # rsum=4 and vmov=1, so issuing rcp at i-5 lines up with the known latencies.
     for t in range(n + 5):
         if 0 <= t - 4 < n:
             row = t - 4
@@ -173,13 +164,28 @@ def unroll_softmax(
 def main():
     ap = argparse.ArgumentParser()
     ap.add_argument("-i", "--input", type=Path, default=None, help="Input assembly file")
-    ap.add_argument("-o", "--output", type=Path, default='./softmax.in', help="Output test file")
-    ap.add_argument("--no-graph", action="store_true", help="Disable dependency graph packet scheduling")
-    ap.add_argument("--data", type=Path, default=None,
-                    help="Path to input tile CSV data file (N×N). If omitted, uses hardcoded defaults.")
-    ap.add_argument("--n", type=int, default=4,
-                    help="Tile dimension N for an N×N tile (default: 4)")
+    ap.add_argument("-o", "--output", type=Path, default="./softmax.in", help="Output test file")
+    ap.add_argument(
+        "--latency",
+        action="store_true",
+        help=(
+            "Experimental: build_dependency_graph + greedy_pack (materializes latency wait "
+            "rows in static .in). Default is linear emit_test_format."
+        ),
+    )
+    ap.add_argument("--graph", action="store_true", help=argparse.SUPPRESS)
+    ap.add_argument("--no-graph", action="store_true", help=argparse.SUPPRESS)
+    ap.add_argument(
+        "--data",
+        type=Path,
+        default=None,
+        help="Path to input tile CSV data file (N×N). If omitted, uses hardcoded defaults.",
+    )
+    ap.add_argument("--n", type=int, default=32, help="Tile dimension N for an N×N tile (default: 32)")
     args = ap.parse_args()
+    use_latency_pack = bool(args.latency or args.graph)
+    if use_latency_pack and args.no_graph:
+        ap.error("Do not combine --no-graph with --latency")
 
     N = args.n
 
@@ -199,9 +205,7 @@ def main():
 
     instrs = assemble_file(asm)
 
-    if args.no_graph:
-        instr_text = emit_test_format(instrs)
-    else:
+    if use_latency_pack:
         dependency_instrs = convert_instructions(instrs)
         ready = build_dependency_graph(dependency_instrs, DEFAULT_LATENCY_MAP)
         packets = greedy_pack(dependency_instrs, ready, max_width=GRAPH_PACKET_WIDTH)
@@ -214,6 +218,8 @@ def main():
             scheduled,
             virtual_packet_size=GRAPH_PACKET_WIDTH,
         )
+    else:
+        instr_text = emit_test_format(instrs)
 
     img = DRAMWriter()
     img.u32(TILE_ADDR_LOCATION, TILE_ADDR)

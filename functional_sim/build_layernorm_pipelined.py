@@ -9,7 +9,7 @@ from pathlib import Path
 import argparse
 import numpy as np
 
-from .build import * 
+from build import * 
 from kernels.utils.dataloader import load_tile_data
 
 
@@ -19,23 +19,33 @@ def main():
     ap = argparse.ArgumentParser()
     ap.add_argument("-i", "--input", type=Path, default=None, help="Input assembly file")
     ap.add_argument("-o", "--output", type=Path, default='./layernorm.in', help="Output test file")
-    ap.add_argument("--no-graph", action="store_true", help="Disable dependency graph packet scheduling")
+    ap.add_argument(
+        "--latency",
+        action="store_true",
+        help="Experimental: DAG + greedy_pack with latency rows in static .in.",
+    )
+    ap.add_argument("--graph", action="store_true", help=argparse.SUPPRESS)
+    ap.add_argument("--no-graph", action="store_true", help=argparse.SUPPRESS)
     ap.add_argument("--data", type=Path, default=None,
                     help="Path to input tile CSV data file (N×N). If omitted, uses hardcoded defaults.")
     ap.add_argument("--n", type=int, default=4,
                     help="Tile dimension N for an N×N tile (default: 4)")
     args = ap.parse_args()
+    use_latency_pack = bool(args.latency or args.graph)
+    if use_latency_pack and args.no_graph:
+        ap.error("Do not combine --no-graph with --latency")
 
+    N = args.n
     TILE_ADDR_LOCATION = 60 # 0x3c
     SCPAD_ADDR_LOCATION = TILE_ADDR_LOCATION + 4
     TILE_ADDR = 0xcafa
     SCPAD_ADDR = 1
     EPSILON_LOCATION = 20
     INV_LAYER_ELEMS_LOCATION = 24
-    COLS = 4
-    ROWS = 4
+    COLS = N
+    ROWS = N
     SID = 0
-    LAYER_ELEMS = 16
+    LAYER_ELEMS = N * N
     RSUM_MASK = 64
     
     
@@ -118,9 +128,13 @@ def main():
         ######### END Variance calculation #######
         mul.vs   $39, $38, $14, 1                   # variance sum * inv(N^2) -> final variance in $39
         add.vs   $39, $39, $4, 1                    # denominator seed + epsilon
-        sqrti.vi $39, $39, 0, 1                     # denominator = sqrt(denominator seed) -> normalized denominator in $39
-
+<<<<<<< Updated upstream
         vmov.vts $15, $39, 0                        # extract denominator lane 0 to scalar
+        sqrt.bf  $15, $15, $0                       # scalar sqrt only (vector sqrti.vi removed)
+=======
+        vmov.vts $15, $39, 0                        # lane-0 scalar for sqrt.bf (matches ISA CSV)
+        sqrt.bf  $15, $15, $0                       # sqrt(variance + epsilon)
+>>>>>>> Stashed changes
         rcp.bf   $15, $15, $0                       # reciprocal(denominator)
 
         mul.vs   $30, $30, $15, 1                   # normalized row 0 * reciprocal(denominator)
@@ -143,9 +157,7 @@ def main():
 
     instrs = assemble_file(asm)         
 
-    if args.no_graph:
-        instr_text = emit_test_format(instrs)
-    else:
+    if use_latency_pack:
         dependency_instrs = convert_instructions(instrs)
         ready = build_dependency_graph(dependency_instrs, DEFAULT_LATENCY_MAP)
         packets = greedy_pack(dependency_instrs, ready, max_width=GRAPH_PACKET_WIDTH)
@@ -158,6 +170,8 @@ def main():
             scheduled,
             virtual_packet_size=GRAPH_PACKET_WIDTH,
         )
+    else:
+        instr_text = emit_test_format(instrs)
 
     
     img = DRAMWriter() 

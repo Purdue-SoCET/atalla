@@ -270,7 +270,7 @@ if __name__ == "__main__":
     print("rmin.vi         =", EU.execute("rmin.vi", vA=vA))
     print("rmax.vi         =", EU.execute("rmax.vi", vA=vA))
     print("expi.vi         =", EU.execute("expi.vi", vA=np.ones(32, dtype=np.float32)))
-    print("sqrti.vi        =", EU.execute("sqrti.vi", vA=np.arange(32, dtype=np.float32)))
+    print("sqrt.bf         =", EU.execute("sqrt.bf", sA=4.0))
 
 
     print("\n====================================================")

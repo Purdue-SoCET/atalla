@@ -4,7 +4,7 @@ from pathlib import Path
 import argparse
 import os
 
-from .build import *
+from build import *
 from kernels.utils.dataloader import load_tile_data
 
 
@@ -35,8 +35,8 @@ def unroll_online_softmax(
     """
     if n < 1:
         raise ValueError("n must be >= 1")
-    if n > 16:
-        raise ValueError("proof-of-concept online softmax is limited to n <= 16")
+    if n > 32:
+        raise ValueError("online softmax is limited to n <= 32 (5-bit SCPAD / mask fields)")
     if row_reg_base + n - 1 > 255:
         raise ValueError("n is too large for row register allocation")
 
@@ -109,14 +109,14 @@ def unroll_online_softmax(
             _emit_load_mask(lines, lane_mask_scalar_reg, current_lane_mask_reg, lane_mask_val, f"mask for lane {lane}")
             _emit_load_mask(lines, pair_mask_scalar_reg, pair_mask_reg, pair_mask_val, f"mask for lanes 0 and {lane}")
 
-            # new_max = max(m_old, x_k); max.bf
+            # new_max = max(m_old, x_k)
             append(f"sub.vv   ${pair_vec_reg}, ${pair_vec_reg}, ${pair_vec_reg}, {mask_reg_full}, 0   # clear pair vector")
             append(f"add.vs   ${pair_vec_reg}, ${pair_vec_reg}, ${running_max_reg}, {lane0_mask_reg}   # place running max in lane 0")
             append(f"add.vv   ${pair_vec_reg}, ${pair_vec_reg}, ${row_reg}, {current_lane_mask_reg}, 0   # place x[{lane}] in lane {lane}")
             append(f"rmax.vi  ${max_reduce_reg}, ${pair_vec_reg}, 0, {pair_mask_reg}         # new max = max(m_old, x[{lane}])")
             append(f"vmov.vts ${new_max_reg}, ${max_reduce_reg}, 0              # extract new max")
 
-            # alpha = exp(m_old - m_new); exp.bf
+            # alpha = exp(m_old - m_new)
             append(f"sub.vv   ${exp_tmp_reg}, ${exp_tmp_reg}, ${exp_tmp_reg}, {mask_reg_full}, 0   # clear exp temp")
             append(f"add.vs   ${exp_tmp_reg}, ${exp_tmp_reg}, ${running_max_reg}, {lane0_mask_reg}   # temp[0] = m_old")
             append(f"sub.vs   ${exp_tmp_reg}, ${exp_tmp_reg}, ${new_max_reg}, {lane0_mask_reg}   # temp[0] = m_old - m_new")
@@ -153,11 +153,10 @@ def main():
     ap = argparse.ArgumentParser()
     ap.add_argument("-i", "--input", type=Path, default=None, help="Input assembly file")
     ap.add_argument("-o", "--output", type=Path, default="./softmax_online.in", help="Output test file")
-    ap.add_argument("--no-graph", action="store_true", help="Disable dependency graph packet scheduling")
     ap.add_argument("--data", type=Path, default=None,
                     help="Path to input tile CSV data file (N×N). If omitted, uses hardcoded defaults.")
-    ap.add_argument("--n", type=int, default=4,
-                    help="Tile dimension N for an N×N tile (default: 4)")
+    ap.add_argument("--n", type=int, default=32,
+                    help="Tile dimension N for an N×N tile (default: 32)")
     args = ap.parse_args()
 
     N = args.n

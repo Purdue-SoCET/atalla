@@ -1,7 +1,10 @@
 from functools import lru_cache
 
 # --------------------------------------------
-# Opcode Table
+# Opcode Table — must match canonical CSVs (7-bit opcodes):
+#   ``Atalla Updated Instruction Set (1).csv`` (mnemonic ↔ OPCODE[6:0])
+#   ``ISA Atalla Bit-Spec (1).csv`` (per-type field layout)
+# Run: ``python3 -c "..."`` against the CSV in repo root when changing entries.
 # --------------------------------------------
 OPCODES = {
     # ---------------- R-Type ----------------
@@ -54,8 +57,8 @@ OPCODES = {
     # ---------------- M-Type ----------------
     0b0101001: ("lw.s",    "M"),
     0b0101010: ("sw.s",    "M"),
-    0b1011010: ("lhw.s",    "M"),
-    0b1011011: ("shw.s",    "M"),
+    0b0101011: ("lhw.s",    "M"),
+    0b0101100: ("shw.s",    "M"),
 
     # ---------------- MI-Type ----------------
     0b0101101: ("jal",     "MI"),

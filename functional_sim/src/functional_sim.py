@@ -33,6 +33,14 @@ def fp32_to_hex(f):
 def hex_to_fp32(x):
     return struct.unpack('<f', struct.pack('<I', x & 0xFFFFFFFF))[0]
 
+
+def scalar_reg_as_fp32_for_bf16_r_op(reg_bits: int) -> float:
+    """atalla_cc loads CONSTBF16 as raw uint16 in the low bits of a scalar; other ops use full fp32 bits."""
+    u = int(reg_bits) & 0xFFFFFFFF
+    if u <= 0xFFFF:
+        return struct.unpack('<f', struct.pack('<I', u << 16))[0]
+    return struct.unpack('<f', struct.pack('<I', u))[0]
+
 def apply_imm_vector_op(
     imm: int,
     vs: Sequence[np.float32],
@@ -67,7 +75,9 @@ def _collect_static_packet_metrics(mem: Memory, packet_length: int) -> dict[str,
     packet_slots_total_non_nop_packets = 0
 
     for addr in sorted(mem.instr_mem.keys()):
-        dec_packet = decode_packet(packet=mem.read_instr(addr), packet_length=packet_length, debug=False)
+        dec_packet = decode_packet(
+            packet=mem.read_instr(addr), packet_length=packet_length, debug=False
+        )
         packet_len = len(dec_packet)
         filled_slots = sum(1 for inst in dec_packet if inst.get("mnemonic") != "nop.s")
 
@@ -106,9 +116,6 @@ def run(mem: Memory, sregs: ScalarRegisterFile, mregs: ScalarRegisterFile, vregs
     tileID0Dict = {}
     tileID1Dict = {}
 
-    # Build-time packetization pads empty slots with nop.s.
-    # Store both raw slot utilization and a second view that excludes packets
-    # that are entirely nop.s (scheduler padding packets).
     static_packet_metrics = _collect_static_packet_metrics(mem, packet_length)
     for metric_name, metric_value in static_packet_metrics.items():
         EU.perf_metrics.set_metric(metric_name, metric_value)
@@ -118,15 +125,19 @@ def run(mem: Memory, sregs: ScalarRegisterFile, mregs: ScalarRegisterFile, vregs
         dec_packet = decode_packet(packet=mem.read_instr(pc), packet_length=packet_length, debug=debug)
 
         packet_len = len(dec_packet)
-        filled_slots_in_packet = sum(1 for inst in dec_packet if inst.get("mnemonic") != "nop.s")
+        filled_slots_in_packet = sum(
+            1 for inst in dec_packet if inst.get("mnemonic") != "nop.s"
+        )
         EU.perf_metrics.increment("packets_executed")
         EU.perf_metrics.increment("packet_slots_executed", packet_len)
         EU.perf_metrics.increment("packet_slots_executed_filled", filled_slots_in_packet)
         if filled_slots_in_packet > 0:
             EU.perf_metrics.increment("packets_executed_non_nop")
-            EU.perf_metrics.increment("packet_slots_executed_non_nop_packets", packet_len)
+            EU.perf_metrics.increment(
+                "packet_slots_executed_non_nop_packets", packet_len
+            )
 
-        if debug: 
+        if debug:
             print(f"PC: 0x{pc:08X}")
             print(f"Decoded packet: {dec_packet}")
 
@@ -198,9 +209,10 @@ def run(mem: Memory, sregs: ScalarRegisterFile, mregs: ScalarRegisterFile, vregs
                 temp = sregs.read(inst['rd'])
                 temp = temp >> 16
                 mem.write_data(sregs.read(inst['rs1']) + inst['imm'], temp)
-            #vector load/store here
+            # vreg.{ld,st}: scratchpad byte base + row offset; optional GMEM spill / linear BF16
+            # when rs1 matches predicates (see scpad_ls.is_gmem_* and GMEM_VREG_ROUTING.md).
             elif m == "vreg.ld":
-                sid = int(inst['sid']) & 0x3
+                sid = int(inst["sid"]) & 0x3
                 if sid == 0:
                     target_sp = SP0
                 elif sid == 1:
@@ -208,20 +220,37 @@ def run(mem: Memory, sregs: ScalarRegisterFile, mregs: ScalarRegisterFile, vregs
                 else:
                     raise ValueError(f"Unsupported scratchpad sid for vreg.ld: {sid}")
 
-                spad_addr = int(sregs.read(inst['rs1']))
-                row_id = int(sregs.read(inst['rs2']))
+                addr = int(sregs.read(inst["rs1"]))
+                row_number = int(sregs.read(inst["rs2"]))
 
-                scpad_to_vreg(
-                    scpad=target_sp,
-                    vregs=vregs,
-                    scpad_base_addr=spad_addr,
-                    row_offset=row_id,
-                    vd=inst['vd'],
-                    num_cols=inst['num_cols']
-                )
+                if is_gmem_vector_spill(addr, sregs.read(33)):
+                    dram_vec_ld_to_vreg(
+                        gmem=mem,
+                        vregs=vregs,
+                        base_byte=addr,
+                        vd=inst["vd"],
+                        num_cols=inst["num_cols"],
+                    )
+                elif is_gmem_bf16_vector_linear(addr, sregs.read(33)):
+                    dram_bf16_vec_ld_to_vreg(
+                        gmem=mem,
+                        vregs=vregs,
+                        base_byte=addr,
+                        vd=inst["vd"],
+                        num_cols=inst["num_cols"],
+                    )
+                else:
+                    scpad_to_vreg(
+                        scpad=target_sp,
+                        vregs=vregs,
+                        scpad_base_addr=addr,
+                        row_offset=row_number,
+                        vd=inst["vd"],
+                        num_cols=inst["num_cols"],
+                    )
 
             elif m == "vreg.st":
-                sid = int(inst['sid']) & 0x3
+                sid = int(inst["sid"]) & 0x3
                 if sid == 0:
                     target_sp = SP0
                 elif sid == 1:
@@ -229,31 +258,51 @@ def run(mem: Memory, sregs: ScalarRegisterFile, mregs: ScalarRegisterFile, vregs
                 else:
                     raise ValueError(f"Unsupported scratchpad sid for vreg.st: {sid}")
 
-                spad_addr = int(sregs.read(inst['rs1']))
-                row_id = int(sregs.read(inst['rs2']))
+                addr = int(sregs.read(inst["rs1"]))
+                row_number = int(sregs.read(inst["rs2"]))
 
-                vreg_to_scpad(
-                    scpad=target_sp,
-                    vregs=vregs,
-                    scpad_base_addr=spad_addr,
-                    row_offset=row_id,
-                    vs=inst['vd'],
-                    num_cols=inst['num_cols']
-                )
+                if is_gmem_vector_spill(addr, sregs.read(33)):
+                    dram_vec_st_from_vreg(
+                        gmem=mem,
+                        vregs=vregs,
+                        base_byte=addr,
+                        vs=inst["vd"],
+                        num_cols=inst["num_cols"],
+                    )
+                elif is_gmem_bf16_vector_linear(addr, sregs.read(33)):
+                    dram_bf16_vec_st_from_vreg(
+                        gmem=mem,
+                        vregs=vregs,
+                        base_byte=addr,
+                        vs=inst["vd"],
+                        num_cols=inst["num_cols"],
+                    )
+                else:
+                    vreg_to_scpad(
+                        scpad=target_sp,
+                        vregs=vregs,
+                        scpad_base_addr=addr,
+                        row_offset=row_number,
+                        vs=inst["vd"],
+                        num_cols=inst["num_cols"],
+                    )
 
             #scpad load/store here
 
             elif (m == "scpad.ld"):
+                # rs3 value: bits [31:30]=sid, [29:25]=num_rows, [24:20]=num_cols (5-bit fields).
+                # Convention matches VM num_cols: NR and NC are (tile_rows−1) and (tile_cols−1);
+                # sdma_* loops use range(0, NR+1) and stride (NC+1) in scpad_ls (see comments there).
                 metadata = int(sregs.read(inst['rs3'])) & 0xFFFFFFFF
                 sid = (metadata >> 30) & 0x3
                 num_rows = (metadata >> 25) & 0x1F
                 num_cols = (metadata >> 20) & 0x1F
                 full_num_cols = metadata & 0xFFFFF
-                spad_addr = int(sregs.read(inst['rs1/rd1']))
-                dram_addr = int(sregs.read(inst['rs2']))
+                spad_addr = int(sregs.read(inst["rs1/rd1"]))
+                dram_addr = int(sregs.read(inst["rs2"]))
 
                 if sid == 0:
-                    if(spad_addr in tileID0Dict.keys()):
+                    if spad_addr in tileID0Dict:
                         localID = tileID0Dict[spad_addr]
                     else:
                         tile_id0 += 1
@@ -271,7 +320,7 @@ def run(mem: Memory, sregs: ScalarRegisterFile, mregs: ScalarRegisterFile, vregs
                         perf_metrics=EU.perf_metrics,
                     )
                 elif sid == 1:
-                    if(spad_addr in tileID1Dict.keys()):
+                    if spad_addr in tileID1Dict:
                         localID = tileID1Dict[spad_addr]
                     else:
                         tile_id1 += 1
@@ -290,16 +339,17 @@ def run(mem: Memory, sregs: ScalarRegisterFile, mregs: ScalarRegisterFile, vregs
                     )
 
             elif (m == "scpad.st"):
+                # Same rs3 metadata layout and (N−1) NR/NC convention as scpad.ld.
                 metadata = int(sregs.read(inst['rs3'])) & 0xFFFFFFFF
                 sid = (metadata >> 30) & 0x3
                 num_rows = (metadata >> 25) & 0x1F
                 num_cols = (metadata >> 20) & 0x1F
                 full_num_cols = metadata & 0xFFFFF
-                spad_addr = int(sregs.read(inst['rs1/rd1']))
-                dram_addr = int(sregs.read(inst['rs2']))
+                spad_addr = int(sregs.read(inst["rs1/rd1"]))
+                dram_addr = int(sregs.read(inst["rs2"]))
 
                 if sid == 0:
-                    if(spad_addr in tileID0Dict.keys()):
+                    if spad_addr in tileID0Dict:
                         localID = tileID0Dict[spad_addr]
                     else:
                         tile_id0 += 1
@@ -317,7 +367,7 @@ def run(mem: Memory, sregs: ScalarRegisterFile, mregs: ScalarRegisterFile, vregs
                         perf_metrics=EU.perf_metrics,
                     )
                 elif sid == 1:
-                    if(spad_addr in tileID1Dict.keys()):
+                    if spad_addr in tileID1Dict:
                         localID = tileID1Dict[spad_addr]
                     else:
                         tile_id1 += 1
@@ -347,9 +397,9 @@ def run(mem: Memory, sregs: ScalarRegisterFile, mregs: ScalarRegisterFile, vregs
                 if(m == "add.s" or m == "add.bf"):
                     src1 = sregs.read(inst['rs1'])
                     src2 = sregs.read(inst['rs2'])
-                    if(m == "add.bf"):
-                        src1 = hex_to_fp32(src1)
-                        src2 = hex_to_fp32(src2)
+                    if m == "add.bf":
+                        src1 = scalar_reg_as_fp32_for_bf16_r_op(src1)
+                        src2 = scalar_reg_as_fp32_for_bf16_r_op(src2)
                 else:
                     src1 = sregs.read(inst['rs1'])
                     src2 = inst['imm']
@@ -361,9 +411,9 @@ def run(mem: Memory, sregs: ScalarRegisterFile, mregs: ScalarRegisterFile, vregs
                 if(m == "sub.s" or m == "sub.bf"):
                     src1 = sregs.read(inst['rs1'])
                     src2 = sregs.read(inst['rs2'])
-                    if(m == "sub.bf"):
-                        src1 = hex_to_fp32(src1)
-                        src2 = hex_to_fp32(src2)
+                    if m == "sub.bf":
+                        src1 = scalar_reg_as_fp32_for_bf16_r_op(src1)
+                        src2 = scalar_reg_as_fp32_for_bf16_r_op(src2)
                 else:
                     src1 = sregs.read(inst['rs1'])
                     src2 = inst['imm']
@@ -375,9 +425,9 @@ def run(mem: Memory, sregs: ScalarRegisterFile, mregs: ScalarRegisterFile, vregs
                 if(m == "mul.s" or m == "mul.bf"):
                     src1 = sregs.read(inst['rs1'])
                     src2 = sregs.read(inst['rs2'])
-                    if(m == "mul.bf"):
-                        src1 = hex_to_fp32(src1)
-                        src2 = hex_to_fp32(src2)
+                    if m == "mul.bf":
+                        src1 = scalar_reg_as_fp32_for_bf16_r_op(src1)
+                        src2 = scalar_reg_as_fp32_for_bf16_r_op(src2)
                 else:
                     src1 = sregs.read(inst['rs1'])
                     src2 = inst['imm']
@@ -502,10 +552,14 @@ def run(mem: Memory, sregs: ScalarRegisterFile, mregs: ScalarRegisterFile, vregs
             elif m.endswith(".vv"):
                 # ------------ GEMM ------------------------------
                 if (m == "gemm.vv"):
-                    src1 = np.asarray(vregs.read(inst['vs1']), dtype=np.float32)
-                    src2 = np.asarray(vregs.read(inst['vs2']), dtype=np.float32)
+                    # lw.vi fills columns of gemm_weights; SystolicArray.matmul(A, B) with B=gemm_weights (teammate model).
+                    src1 = np.asarray(vregs.read(inst["vs1"]), dtype=np.float32)
+                    src2 = np.asarray(vregs.read(inst["vs2"]), dtype=np.float32)
                     matmul_out = EU.execute(m, A=src1.reshape(1, -1), B=gemm_weights)
-                    vregs.write(inst['vd'], np.asarray(matmul_out, dtype=np.float32).reshape(-1) + src2)
+                    vregs.write(
+                        inst["vd"],
+                        np.asarray(matmul_out, dtype=np.float32).reshape(-1) + src2,
+                    )
                 else:
                     src1 = vregs.read(inst['vs1'])
                     src2 = vregs.read(inst['vs2'])
@@ -532,7 +586,6 @@ def run(mem: Memory, sregs: ScalarRegisterFile, mregs: ScalarRegisterFile, vregs
             # ---------------- VI (WEIGHTS ONLY) ----------------
             elif (m == "lw.vi"):
                 src1 = vregs.read(inst['vs1'])
-    
                 if num_weights < 32:
                     # Initial fill: Place at the next available slot from left to right
                     gemm_weights[:, num_weights] = src1

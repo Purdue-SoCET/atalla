@@ -1,0 +1,15 @@
+__pycache__/
+*.py[cod]
+*.egg-info/
+.pytest_cache/
+.mypy_cache/
+
+# Generated emulator / benchmark outputs
+out/
+tmp/
+*.perf
+*.junk.out
+
+# Large regenerated instruction images (use build_*.py / validate_build_generators)
+tests/central/*.in
+tests/compat/*.in

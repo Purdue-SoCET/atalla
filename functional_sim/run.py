@@ -1,11 +1,19 @@
 import argparse
 
-from .src.functional_sim import run
-from .src.misc.memory import Memory
-from .src.components.scalar_register_file import ScalarRegisterFile
-from .src.components.vector_register_file import VectorRegisterFile
-from .src.components.execute import ExecuteUnit
-from .src.components.scpad import Scratchpad
+try:
+    from .src.functional_sim import run
+    from .src.misc.memory import Memory
+    from .src.components.scalar_register_file import ScalarRegisterFile, mask_register_file
+    from .src.components.vector_register_file import VectorRegisterFile
+    from .src.components.execute import ExecuteUnit
+    from .src.components.scpad import Scratchpad
+except Exception:
+    from src.functional_sim import run
+    from src.misc.memory import Memory
+    from src.components.scalar_register_file import ScalarRegisterFile, mask_register_file
+    from src.components.vector_register_file import VectorRegisterFile
+    from src.components.execute import ExecuteUnit
+    from src.components.scpad import Scratchpad
 
 if __name__ == "__main__":
 
@@ -25,7 +33,7 @@ if __name__ == "__main__":
     mem = Memory(args.input_file)
 
     sregs = ScalarRegisterFile()
-    mregs = ScalarRegisterFile(num_regs=16) # Mask Registers (32-bit for 32-element vectors)
+    mregs = mask_register_file()  # m0 defaults to all lanes on (not scalar x0)
     vregs = VectorRegisterFile() 
     SP0 = Scratchpad(slots_per_bank=32)
     SP1 = Scratchpad(slots_per_bank=32)

@@ -1,5 +1,9 @@
 from __future__ import annotations
 
+# Run from repo: `cd atalla && PYTHONPATH=. python -m functional_sim.build_*` or
+# `cd atalla/functional_sim && PYTHONPATH=.. python -m functional_sim.build_*`.
+# Imports use package paths (`functional_sim.*`); running bare `python build.py` without PYTHONPATH will fail.
+
 from dataclasses import dataclass, field
 from typing import Dict, List, Union
 import struct
@@ -10,10 +14,10 @@ import argparse
 import numpy as np
 
 from kernels.utils.dataloader import load_tile_data
-from .src.misc.opcode_table import OPCODES, name_to_opcode
+from src.misc.opcode_table import OPCODES, name_to_opcode
 
 try:
-    from .instruction_latency import latency as DEFAULT_LATENCY_MAP
+    from instruction_latency import latency as DEFAULT_LATENCY_MAP
 
 except Exception:
     DEFAULT_LATENCY_MAP: Dict[str, int] = {}
@@ -171,20 +175,23 @@ def encode_instruction(instr_dict):
         rs2 = instr_dict.get('rs2', 0)
         num_cols = instr_dict.get('num_cols', 0)
         sid = instr_dict.get('sid', 0)
-
         if not (0 <= num_cols <= 0x1F):
             raise ValueError(f"num_cols out of range for VM (0..31): {num_cols}")
         if not (0 <= sid <= 0x3):
             raise ValueError(f"sid out of range for VM (0..3): {sid}")
-        
+
         instruction |= (vd & 0xFF) << 7
         instruction |= (rs1 & 0xFF) << 15
         instruction |= (rs2 & 0xFF) << 23
         instruction |= (num_cols & 0x1F) << 31
         instruction |= (sid & 0x3) << 36
-        
+
     elif instr_type == "SDMA":
-        # SDMA: rs1/rd1 7-14, rs2 15-22, rs3 23-30
+        # SDMA: rs1/rd1 7-14, rs2 15-22, rs3 23-30 (rs3 = scalar reg holding metadata word).
+        # Assembly sugar `scpad.{ld,st} rs1, rs2, num_cols, num_rows, sid` (when supported) packs
+        # the same fields as rs3: it assumes GMEM row stride matches (num_cols+1) BF16 words per
+        # sdma_load row (see scpad_ls). If tile stride in DRAM differs, do not use sugar—materialize
+        # rs3 explicitly (e.g. layernorm_param-style) so metadata matches hardware.
         rs1_rd1 = instr_dict.get('rs1', instr_dict.get('rd1', 0))
         rs2 = instr_dict.get('rs2', 0)
         rs3 = instr_dict.get('rs3', 0)
@@ -323,6 +330,36 @@ def _jal_imm25_bounds(imm: int) -> None:
     hi = (1 << 24) - 1
     if imm < lo or imm > hi:
         raise ValueError(f"jal offset {imm} out of signed 25-bit range [{lo}, {hi}]")
+
+
+def emit_sdma_metadata_asm(meta_reg: int, tmp_reg: int, sid: int, nrows: int, ncols: int, full_cols: int) -> str:
+    """Scalar sequence that packs SDMA rs3 metadata (functional_sim scpad.ld/st).
+
+    Low 20 bits store ``full_cols - 1`` (same packing as ``kernels.sdma_ctl_val`` / AtallaC ``li_s``),
+    so the emulator decodes row stride as ``(metadata & 0xFFFFF) + 1``.
+    """
+    mr = (nrows - 1) & 0x1F
+    mc = (ncols - 1) & 0x1F
+    fc = (full_cols - 1) & 0xFFFFF
+    ind = "        "
+    return "\n".join(
+        [
+            f"{ind}addi.s   ${meta_reg}, $0, 0",
+            f"{ind}addi.s   ${tmp_reg}, $0, {sid & 0x3}",
+            f"{ind}slli.s   ${tmp_reg}, ${tmp_reg}, 30",
+            f"{ind}or.s     ${meta_reg}, ${meta_reg}, ${tmp_reg}",
+            f"{ind}addi.s   ${tmp_reg}, $0, {mr}",
+            f"{ind}slli.s   ${tmp_reg}, ${tmp_reg}, 25",
+            f"{ind}or.s     ${meta_reg}, ${meta_reg}, ${tmp_reg}",
+            f"{ind}addi.s   ${tmp_reg}, $0, {mc}",
+            f"{ind}slli.s   ${tmp_reg}, ${tmp_reg}, 20",
+            f"{ind}or.s     ${meta_reg}, ${meta_reg}, ${tmp_reg}",
+            f"{ind}lui.s    ${tmp_reg}, {fc >> 7}",
+            f"{ind}addi.s   ${tmp_reg}, ${tmp_reg}, {fc & 0x7F}",
+            f"{ind}or.s     ${meta_reg}, ${meta_reg}, ${tmp_reg}",
+        ]
+    )
+
 
 # ---- Label Branch Support Start ----
 def parse_int(s: str) -> int:
@@ -599,7 +636,11 @@ def asm_to_instr_dict(
         return d
 
     if instr_type == "SDMA":
-        # scpad.ld rs1, rs2, rs3
+        # Canonical: scpad.ld rs1, rs2, rs3  /  scpad.st rs1, rs2, rs3
+        # (rs3 = register whose *value* is the SDMA metadata word at execute time).
+        # Five-operand sugar scpad.* rs1, rs2, num_cols, num_rows, sid may be expanded by the
+        # assembler on branches that implement it; it encodes NR/NC as (N−1) in metadata[29:20].
+        # Invalid when GMEM row pitch ≠ (num_cols+1) BF16 elements—use explicit rs3 instead.
         d["rs1"] = parse_reg(ops[0])
         d["rs2"] = parse_reg(ops[1])
         d["rs3"] = parse_reg(ops[2])
@@ -643,7 +684,113 @@ def asm_to_instr_dict(
     raise NotImplementedError(f"Type {instr_type} not implemented yet for {mnemonic}")
 
 
+SDMA_TEMP_REG = 254
+VREG_ROW_TEMP_REG = 253
+_IMM25_LO = -(1 << 24)
+_IMM25_HI = (1 << 24) - 1
+
+
+def expand_vreg_seven_operand_asm(in_data: str) -> str:
+    """
+    ``vreg.{ld,st} vd, rs1, cols, rows, sid, imm, row`` → 5-operand VM form
+    ``vd, rs1, rs2, num_cols, sid`` (row in rs2 or temp $253).
+    """
+    out_lines: list[str] = []
+    pat = re.compile(
+        r"^(vreg\.(?:ld|st))\s+(\$\w+)\s*,\s*(\$\w+)\s*,\s*(\d+)\s*,\s*(\d+)\s*,\s*(\d+)\s*,\s*(\d+)\s*,\s*(\$\w+|\d+)\s*$",
+        re.IGNORECASE,
+    )
+    for raw in in_data.splitlines():
+        code, cmt = strip_comment(raw)
+        leading_ws = raw[: len(raw) - len(raw.lstrip(" \t"))]
+        labels, rest = parse_leading_labels(code.strip())
+        if not rest.strip():
+            out_lines.append(raw)
+            continue
+        m = pat.match(rest.strip())
+        if not m:
+            out_lines.append(raw)
+            continue
+        op, vd, rs1, cols_s, _rows_s, sid_s, _imm6_s, row_s = m.groups()
+        cols, sid = int(cols_s), int(sid_s)
+        cmt_tail = f" # {cmt}" if cmt else ""
+        lbl = "".join(f"{lb}: " for lb in labels)
+        row_tok = row_s.strip()
+        if REG_RE.match(row_tok):
+            rs2 = row_tok
+            out_lines.append(
+                f"{leading_ws}{lbl}{op} {vd}, {rs1}, {rs2}, {cols}, {sid}{cmt_tail}"
+            )
+        else:
+            row_imm = parse_int(row_tok)
+            if not (0 <= row_imm <= 127):
+                raise ValueError(f"{op} row immediate {row_imm} out of addi.s 7-bit range")
+            out_lines.append(
+                f"{leading_ws}{lbl}addi.s   ${VREG_ROW_TEMP_REG}, $0, {row_imm}{cmt_tail}  # vreg row"
+            )
+            out_lines.append(
+                f"{leading_ws}{op} {vd}, {rs1}, ${VREG_ROW_TEMP_REG}, {cols}, {sid}"
+            )
+    return "\n".join(out_lines)
+
+
+def expand_scpad_five_operand_asm(in_data: str) -> str:
+    """
+    ``scpad.{ld,st} rs1, rs2, cols, rows, sid`` → ``lui.s $254, meta>>7`` + 3-operand SDMA.
+
+    ``cols``/``rows`` are the 5-bit **N−1** tile indices (same as SDMA ``num_cols``/``num_rows``).
+    The low 20 bits of metadata must hold ``full_cols - 1`` so ``sdma_{load,store}`` use
+    row stride ``full_cols`` in GMEM (see ``emit_sdma_metadata_asm``). Without this, the low
+    bits are zero, ``row_stride_elems`` becomes 1, and BF16 rows alias in DRAM.
+    """
+    out_lines: list[str] = []
+    pat = re.compile(
+        r"^(scpad\.(?:ld|st))\s+(\$\w+)\s*,\s*(\$\w+)\s*,\s*(\d+)\s*,\s*(\d+)\s*,\s*(\d+)\s*$",
+        re.IGNORECASE,
+    )
+    for raw in in_data.splitlines():
+        code, cmt = strip_comment(raw)
+        leading_ws = raw[: len(raw) - len(raw.lstrip(" \t"))]
+        labels, rest = parse_leading_labels(code.strip())
+        if not rest.strip():
+            out_lines.append(raw)
+            continue
+        m = pat.match(rest.strip())
+        if not m:
+            out_lines.append(raw)
+            continue
+        op, a, b, c_s, r_s, sid_s = m.groups()
+        cols, rows, sid = int(c_s), int(r_s), int(sid_s)
+        full_cols_m1 = cols & 0xFFFFF  # full_cols == cols + 1 BF16 lanes across a row
+        meta = (
+            ((sid & 0x3) << 30)
+            | ((rows & 0x1F) << 25)
+            | ((cols & 0x1F) << 20)
+            | full_cols_m1
+        )
+        imm7 = meta >> 7
+        lo7 = meta & 0x7F
+        if imm7 < _IMM25_LO or imm7 > _IMM25_HI:
+            raise ValueError(
+                f"{op} {cols},{rows},{sid}: metadata imm>>7={imm7} out of 25-bit range; "
+                "use explicit rs3 register form."
+            )
+        cmt_tail = f" # {cmt}" if cmt else ""
+        lbl = "".join(f"{lb}: " for lb in labels)
+        out_lines.append(
+            f"{leading_ws}{lbl}lui.s    ${SDMA_TEMP_REG}, {imm7}{cmt_tail}  # scpad metadata"
+        )
+        if lo7:
+            out_lines.append(
+                f"{leading_ws}addi.s   ${SDMA_TEMP_REG}, ${SDMA_TEMP_REG}, {lo7}  # scpad metadata low"
+            )
+        out_lines.append(f"{leading_ws}{op} {a}, {b}, ${SDMA_TEMP_REG}")
+    return "\n".join(out_lines)
+
+
 def assemble_file(in_data: str) -> list[tuple[str, str]]:
+    in_data = expand_vreg_seven_operand_asm(in_data)
+    in_data = expand_scpad_five_operand_asm(in_data)
     out = []
     stop_markers = {"data mem", ".data"}
     labels: dict[str, int] = {}
@@ -692,7 +839,324 @@ def assemble_file(in_data: str) -> list[tuple[str, str]]:
         out.append((hex40, cmt))
 
     return out
-# ---- Label Branch Support End ----
+
+
+def collect_branch_metadata(
+    in_data: str,
+) -> tuple[dict[str, int], list[object | None]]:
+    """
+    Match ``assemble_file`` parsing: label -> stmt index of the labeled instruction;
+    per-stmt optional (\"br\"|\"jal\", target_label) for PC patching after packing.
+    """
+    in_data = expand_vreg_seven_operand_asm(in_data)
+    in_data = expand_scpad_five_operand_asm(in_data)
+    stop_markers = {"data mem", ".data"}
+    labels: dict[str, int] = {}
+    label_to_stmt: dict[str, int] = {}
+    parsed_lines: list[tuple[int, str, str]] = []
+    pc = 0
+
+    for raw in in_data.splitlines():
+        code, cmt = strip_comment(raw)
+        code = code.strip()
+        if not code:
+            continue
+        line_labels, code = parse_leading_labels(code)
+        for label in line_labels:
+            if label in labels:
+                raise ValueError(f"Duplicate label: {label}")
+            labels[label] = pc
+            label_to_stmt[label] = len(parsed_lines)
+        if not code:
+            continue
+        lowered = code.lower()
+        if lowered in stop_markers:
+            break
+        if code.startswith("."):
+            continue
+        parsed_lines.append((pc, code, cmt))
+        pc += INSTR_ADDR_STRIDE
+
+    branch_targets: list[object | None] = []
+    for _pc_val, code, _cmt in parsed_lines:
+        mnemonic, ops = split_mnemonic_operands(code)
+        if not mnemonic:
+            branch_targets.append(None)
+            continue
+        mnemonic = normalize_ppci_mnemonic(mnemonic)
+        ops = [normalize_ppci_operand(o) for o in ops]
+        meta: object | None = None
+        _, instr_type = INVERT_OPCODES[mnemonic]
+        if instr_type == "BR" and len(ops) >= 3:
+            target = ops[2].strip()
+            if not IMM_RE.match(target):
+                meta = ("br", target)
+        elif mnemonic == "jal":
+            target = ops[1].strip() if len(ops) == 2 else ops[0].strip()
+            if not IMM_RE.match(target):
+                meta = ("jal", target)
+        branch_targets.append(meta)
+
+    return label_to_stmt, branch_targets
+
+
+def materialize_scheduled_instructions_tracked(
+    instrs: list[tuple[str, str]],
+    packets: list[list[int]],
+    *,
+    packet_width: int = GRAPH_PACKET_WIDTH,
+) -> list[tuple[str, str, int | None]]:
+    nop_hex = encode_instruction({"opcode": INVERT_OPCODES["nop.s"][0]}).upper()
+    scheduled: list[tuple[str, str, int | None]] = []
+
+    for packet in packets:
+        if not packet:
+            scheduled.extend([(nop_hex, "", None)] * packet_width)
+            continue
+        for idx in packet:
+            h, c = instrs[idx]
+            scheduled.append((h, c, idx))
+        scheduled.extend([(nop_hex, "", None)] * (packet_width - len(packet)))
+
+    return scheduled
+
+
+def _patch_scheduled_branches(
+    scheduled: list[tuple[str, str, int | None]],
+    label_to_stmt: dict[str, int],
+    branch_targets: list[object | None],
+    *,
+    packet_width: int = GRAPH_PACKET_WIDTH,
+) -> list[tuple[str, str]]:
+    from src.components.decode import decode_instruction
+
+    orig_to_pkt_pc: dict[int, int] = {}
+    for pos, (h, _c, oix) in enumerate(scheduled):
+        if oix is None:
+            continue
+        base = (pos // packet_width) * INSTR_ADDR_STRIDE
+        if oix not in orig_to_pkt_pc:
+            orig_to_pkt_pc[oix] = base
+
+    out: list[tuple[str, str]] = []
+    for pos, (h, c, oix) in enumerate(scheduled):
+        if oix is None:
+            out.append((h, c))
+            continue
+        if oix >= len(branch_targets):
+            out.append((h, c))
+            continue
+        meta = branch_targets[oix]
+        if meta is None:
+            out.append((h, c))
+            continue
+        kind, lab = meta  # type: ignore[misc]
+        if lab not in label_to_stmt:
+            raise ValueError(f"Unknown branch label {lab!r}")
+        tgt_stmt = label_to_stmt[lab]
+        tgt_pc = orig_to_pkt_pc[tgt_stmt]
+        cur_pc = (pos // packet_width) * INSTR_ADDR_STRIDE
+        delta = tgt_pc - cur_pc
+        raw = int(h, 16)
+        dec = decode_instruction(raw)
+        if kind == "br" and dec.get("type") == "BR":
+            imm1, imm9 = split_br_target_imm(delta)
+            incr_imm = int(dec.get("incr_imm", 0))
+            patched = encode_instruction(
+                {
+                    "opcode": dec["opcode"],
+                    "type": "BR",
+                    "incr_imm": incr_imm,
+                    "imm1": imm1,
+                    "imm9": imm9,
+                    "rs1": dec["rs1"],
+                    "rs2": dec["rs2"],
+                }
+            ).upper()
+            out.append((patched, c))
+        elif kind == "jal" and dec.get("mnemonic") == "jal":
+            _jal_imm25_bounds(delta)
+            imm25 = delta & ((1 << 25) - 1)
+            patched = encode_instruction(
+                {
+                    "opcode": dec["opcode"],
+                    "type": "MI",
+                    "rd": dec["rd"],
+                    "imm25": imm25,
+                }
+            ).upper()
+            out.append((patched, c))
+        else:
+            out.append((h, c))
+
+    return out
+
+
+def _orig_stmt_pc_map_from_tracked(
+    scheduled: list[tuple[str, str, int | None]],
+    *,
+    packet_width: int = GRAPH_PACKET_WIDTH,
+) -> dict[int, int]:
+    orig_to_pkt_pc: dict[int, int] = {}
+    for pos, (_h, _c, oix) in enumerate(scheduled):
+        if oix is None:
+            continue
+        base = (pos // packet_width) * INSTR_ADDR_STRIDE
+        if oix not in orig_to_pkt_pc:
+            orig_to_pkt_pc[oix] = base
+    return orig_to_pkt_pc
+
+
+def validate_br10_branch_layout(
+    scheduled: list[tuple[str, str, int | None]],
+    label_to_stmt: dict[str, int],
+    branch_targets: list[object | None],
+    *,
+    packet_width: int = GRAPH_PACKET_WIDTH,
+) -> None:
+    """
+    Preflight PC-relative branch / jal offsets before ``split_br_target_imm`` /
+    ``_jal_imm25_bounds`` fail with opaque errors. BR uses signed 10-bit **word**
+    offset (4-byte steps); see ``split_br_target_imm``.
+    """
+    orig_to_pkt_pc = _orig_stmt_pc_map_from_tracked(
+        scheduled, packet_width=packet_width
+    )
+    for i, meta in enumerate(branch_targets):
+        if meta is None:
+            continue
+        kind, lab = meta  # type: ignore[misc]
+        if lab not in label_to_stmt:
+            continue
+        tgt_stmt = label_to_stmt[lab]
+        src_pc = orig_to_pkt_pc.get(i)
+        tgt_pc = orig_to_pkt_pc.get(tgt_stmt)
+        if src_pc is None or tgt_pc is None:
+            continue
+        delta = tgt_pc - src_pc
+        if kind == "br":
+            try:
+                split_br_target_imm(delta)
+            except ValueError as e:
+                raise ValueError(
+                    f"BR10 layout: branch at stmt index {i} -> {lab!r}: {e}"
+                ) from e
+        elif kind == "jal":
+            try:
+                _jal_imm25_bounds(delta)
+            except ValueError as e:
+                raise ValueError(
+                    f"JAL layout: jal at stmt index {i} -> {lab!r}: {e}"
+                ) from e
+
+
+def infer_basic_block_ranges(
+    n: int,
+    label_to_stmt: dict[str, int],
+    dep: list[tuple[str, list[str], list[str], object]],
+) -> list[tuple[int, int]]:
+    """
+    Source-order partition: block starts at 0, at each label target, and after
+    each control instruction (fall-through). Experimental BB-local packing only.
+    """
+    starts: set[int] = {0}
+    starts.update(label_to_stmt.values())
+    for i in range(n):
+        op, _, _, _ = dep[i]
+        if _is_control_op(op) and i + 1 < n:
+            starts.add(i + 1)
+    ordered = sorted(x for x in starts if 0 <= x < n)
+    blocks: list[tuple[int, int]] = []
+    for si, sj in zip(ordered, ordered[1:] + [n]):
+        if si < sj:
+            blocks.append((si, sj))
+    return blocks
+
+
+def greedy_pack_bb_program_order(
+    instructions: list[tuple[str, list[str], list[str], object]],
+    ready_time: list[int],
+    blocks: list[tuple[int, int]],
+    max_width: int = GRAPH_PACKET_WIDTH,
+) -> list[list[int]]:
+    """
+    Like ``greedy_pack_program_order`` but only extends packets within the
+    current basic block (source-order ranges). Cross-block reordering is
+    disallowed; ``ready_time`` is still global from ``build_dependency_graph``.
+    """
+    n = len(instructions)
+    scheduled = [False] * n
+    packets: list[list[int]] = []
+    current_cycle = 0
+
+    for a, b in blocks:
+        while True:
+            i = None
+            for k in range(a, b):
+                if not scheduled[k]:
+                    i = k
+                    break
+            if i is None:
+                break
+            if ready_time[i] > current_cycle:
+                packets.append([])
+                current_cycle += 1
+                continue
+
+            op0, _, _, _ = instructions[i]
+            if _is_control_op(op0):
+                packets.append([i])
+                scheduled[i] = True
+                current_cycle += 1
+                continue
+
+            packet: list[int] = []
+            packet_reads: set[str] = set()
+            packet_writes: set[str] = set()
+            mem_in_packet = False
+            j = i
+            while j < b and len(packet) < max_width:
+                if scheduled[j]:
+                    break
+                if ready_time[j] > current_cycle:
+                    break
+                op, dsts, srcs, _ = instructions[j]
+                if _is_control_op(op):
+                    break
+                is_mem = _is_memory_op(op)
+                if mem_in_packet and is_mem:
+                    break
+                hazard = False
+                for s in srcs:
+                    if s in packet_writes:
+                        hazard = True
+                        break
+                for d in dsts:
+                    if d in packet_writes or d in packet_reads:
+                        hazard = True
+                        break
+                if hazard:
+                    break
+                packet.append(j)
+                scheduled[j] = True
+                for s in srcs:
+                    packet_reads.add(s)
+                for d in dsts:
+                    packet_writes.add(d)
+                if is_mem:
+                    mem_in_packet = True
+                j += 1
+
+            if packet:
+                packets.append(packet)
+            current_cycle += 1
+
+    if not all(scheduled):
+        missing = [i for i in range(n) if not scheduled[i]]
+        raise RuntimeError(f"greedy_pack_bb_program_order: unscheduled {missing[:20]}")
+
+    return packets
+
 
 def emit_test_format(
     instrs: list[tuple[str, str]],
@@ -1200,6 +1664,84 @@ def greedy_pack(
     return packets
 
 
+def greedy_pack_program_order(
+    instructions: list[tuple[str, list[str], list[str], object]],
+    ready_time: list[int],
+    max_width: int = GRAPH_PACKET_WIDTH,
+) -> list[list[int]]:
+    """
+    Pack contiguous program-order suffixes from the next unscheduled index.
+    Preserves sequential semantics for PC-relative branches (safe for loop asm).
+    Inserts empty packets when ``ready_time`` has not been reached (latency / LSU).
+    """
+    n = len(instructions)
+    scheduled = [False] * n
+    packets: list[list[int]] = []
+    current_cycle = 0
+    i = 0
+
+    while i < n:
+        while i < n and scheduled[i]:
+            i += 1
+        if i >= n:
+            break
+        if ready_time[i] > current_cycle:
+            packets.append([])
+            current_cycle += 1
+            continue
+
+        op0, _, _, _ = instructions[i]
+        if _is_control_op(op0):
+            packets.append([i])
+            scheduled[i] = True
+            i += 1
+            current_cycle += 1
+            continue
+
+        packet: list[int] = []
+        packet_reads: set[str] = set()
+        packet_writes: set[str] = set()
+        mem_in_packet = False
+        j = i
+        while j < n and len(packet) < max_width:
+            if scheduled[j]:
+                break
+            if ready_time[j] > current_cycle:
+                break
+            op, dsts, srcs, _ = instructions[j]
+            if _is_control_op(op):
+                break
+            is_mem = _is_memory_op(op)
+            if mem_in_packet and is_mem:
+                break
+            hazard = False
+            for s in srcs:
+                if s in packet_writes:
+                    hazard = True
+                    break
+            for d in dsts:
+                if d in packet_writes or d in packet_reads:
+                    hazard = True
+                    break
+            if hazard:
+                break
+            packet.append(j)
+            scheduled[j] = True
+            for s in srcs:
+                packet_reads.add(s)
+            for d in dsts:
+                packet_writes.add(d)
+            if is_mem:
+                mem_in_packet = True
+            j += 1
+
+        if packet:
+            packets.append(packet)
+        current_cycle += 1
+
+    return packets
+
+
 def materialize_scheduled_instructions(
     instrs: list[tuple[str, str]],
     packets: list[list[int]],
@@ -1221,12 +1763,98 @@ def materialize_scheduled_instructions(
 
     return scheduled
 
+
+def emit_test_format_latency_program_order(
+    asm: str,
+    *,
+    latency_stalls: bool = False,
+    bb_local_pack: bool = False,
+) -> str:
+    """
+    Conv / branched-kernel path: ``assemble_file`` → ``convert_instructions`` →
+    ``build_dependency_graph`` (optional) → program-order packer →
+    ``validate_br10_branch_layout`` → patch branch immediates → ``emit_test_format``.
+
+    **latency_stalls:** When True, ``ready`` uses ``build_dependency_graph`` and
+    empty packet rows may be inserted (static PC span grows; BR10 may fail — see
+    ``validate_br10_branch_layout`` / ``tests/unit/conv_branch_pc_analysis.py``).
+    Default **False:** all-zero ``ready`` = structural packing only.
+
+    **bb_local_pack:** Experimental — pack only within source-order basic blocks
+    (``infer_basic_block_ranges``); no cross-block packet fill.
+
+    BR10 is **not** “fixed” in hardware; we **preflight** layout and raise a
+    clear error before patch. Default prod path avoids stall inflation.
+    Latency-in-sim (scoreboard) is **not** implemented here — research follow-on.
+    """
+    instrs = assemble_file(asm)
+    label_to_stmt, branch_targets = collect_branch_metadata(asm)
+    if len(branch_targets) != len(instrs):
+        raise RuntimeError(
+            f"branch metadata length {len(branch_targets)} != instrs {len(instrs)}"
+        )
+    dep = convert_instructions(instrs)
+    ready = (
+        build_dependency_graph(dep, DEFAULT_LATENCY_MAP)
+        if latency_stalls
+        else [0] * len(dep)
+    )
+    if bb_local_pack:
+        blocks = infer_basic_block_ranges(len(dep), label_to_stmt, dep)
+        packets = greedy_pack_bb_program_order(
+            dep, ready, blocks, max_width=GRAPH_PACKET_WIDTH
+        )
+    else:
+        packets = greedy_pack_program_order(dep, ready, max_width=GRAPH_PACKET_WIDTH)
+    tracked = materialize_scheduled_instructions_tracked(
+        instrs,
+        packets,
+        packet_width=GRAPH_PACKET_WIDTH,
+    )
+    validate_br10_branch_layout(
+        tracked,
+        label_to_stmt,
+        branch_targets,
+        packet_width=GRAPH_PACKET_WIDTH,
+    )
+    patched = _patch_scheduled_branches(
+        tracked,
+        label_to_stmt,
+        branch_targets,
+        packet_width=GRAPH_PACKET_WIDTH,
+    )
+    return emit_test_format(
+        patched,
+        virtual_packet_size=GRAPH_PACKET_WIDTH,
+    )
+
+
+def emit_test_format_global_dag_pack(asm: str) -> str:
+    """
+    **Branch-free or compiler-validated code only.** Same as softmax ``--latency``
+    path: ``greedy_pack`` may reorder across the static insn list; do not use on
+    arbitrary labeled asm.
+    """
+    instrs = assemble_file(asm)
+    dep = convert_instructions(instrs)
+    ready = build_dependency_graph(dep, DEFAULT_LATENCY_MAP)
+    packets = greedy_pack(dep, ready, max_width=GRAPH_PACKET_WIDTH)
+    scheduled = materialize_scheduled_instructions(
+        instrs,
+        packets,
+        packet_width=GRAPH_PACKET_WIDTH,
+    )
+    return emit_test_format(
+        scheduled,
+        virtual_packet_size=GRAPH_PACKET_WIDTH,
+    )
+
+
 if __name__ == "__main__":
     
     ap = argparse.ArgumentParser()
     ap.add_argument("-i", "--input", type=Path, default=None, help="Input assembly file")
     ap.add_argument("-o", "--output", type=Path, default=None, help="Output test file")
-    ap.add_argument("--no-graph", action="store_true", help="Disable dependency graph packet scheduling")
     args = ap.parse_args()
 
     demo_asm = """
@@ -1239,22 +1867,7 @@ if __name__ == "__main__":
     """
 
     asm = args.input.read_text() if args.input is not None else demo_asm
-    instrs = assemble_file(asm)
-    if args.no_graph:
-        instr_text = emit_test_format(instrs)
-    else:
-        dependency_instrs = convert_instructions(instrs)
-        ready = build_dependency_graph(dependency_instrs, DEFAULT_LATENCY_MAP)
-        packets = greedy_pack(dependency_instrs, ready, max_width=GRAPH_PACKET_WIDTH)
-        scheduled = materialize_scheduled_instructions(
-            instrs,
-            packets,
-            packet_width=GRAPH_PACKET_WIDTH,
-        )
-        instr_text = emit_test_format(
-            scheduled,
-            virtual_packet_size=GRAPH_PACKET_WIDTH,
-        )
+    instr_text = emit_test_format(assemble_file(asm))
 
     if args.input is None:
         img = DRAMWriter() 
