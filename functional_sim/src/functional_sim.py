@@ -208,14 +208,14 @@ def run(mem: Memory, sregs: ScalarRegisterFile, mregs: ScalarRegisterFile, vregs
                 else:
                     raise ValueError(f"Unsupported scratchpad sid for vreg.ld: {sid}")
 
-                addr = int(sregs.read(inst['rs1']))
-                row_number = int(sregs.read(inst['rs2']))
+                spad_addr = int(sregs.read(inst['rs1']))
+                row_id = int(sregs.read(inst['rs2']))
 
                 scpad_to_vreg(
                     scpad=target_sp,
                     vregs=vregs,
-                    scpad_base_addr=addr,
-                    row_offset=row_number,
+                    scpad_base_addr=spad_addr,
+                    row_offset=row_id,
                     vd=inst['vd'],
                     num_cols=inst['num_cols']
                 )
@@ -229,14 +229,14 @@ def run(mem: Memory, sregs: ScalarRegisterFile, mregs: ScalarRegisterFile, vregs
                 else:
                     raise ValueError(f"Unsupported scratchpad sid for vreg.st: {sid}")
 
-                addr = int(sregs.read(inst['rs1']))
-                row_number = int(sregs.read(inst['rs2']))
+                spad_addr = int(sregs.read(inst['rs1']))
+                row_id = int(sregs.read(inst['rs2']))
 
                 vreg_to_scpad(
                     scpad=target_sp,
                     vregs=vregs,
-                    scpad_base_addr=addr,
-                    row_offset=row_number,
+                    scpad_base_addr=spad_addr,
+                    row_offset=row_id,
                     vs=inst['vd'],
                     num_cols=inst['num_cols']
                 )
@@ -248,46 +248,90 @@ def run(mem: Memory, sregs: ScalarRegisterFile, mregs: ScalarRegisterFile, vregs
                 sid = (metadata >> 30) & 0x3
                 num_rows = (metadata >> 25) & 0x1F
                 num_cols = (metadata >> 20) & 0x1F
+                full_num_cols = metadata & 0xFFFFF
+                spad_addr = int(sregs.read(inst['rs1/rd1']))
+                dram_addr = int(sregs.read(inst['rs2']))
 
                 if sid == 0:
-                    if(inst['rs1/rd1'] in tileID0Dict.keys()):
-                        localID = tileID0Dict[inst['rs1/rd1']]
+                    if(spad_addr in tileID0Dict.keys()):
+                        localID = tileID0Dict[spad_addr]
                     else:
                         tile_id0 += 1
-                        tileID0Dict[inst['rs1/rd1']] = tile_id0
-                        localID = tileID0Dict[inst['rs1/rd1']]
-                    sdma_load(gmem=mem, scpad=SP0, gmem_base=sregs.read(inst['rs2']), scpad_base_row=int(sregs.read(inst['rs1/rd1'])), tile_id=localID, NR=num_rows, NC=num_cols, perf_metrics=EU.perf_metrics)
+                        tileID0Dict[spad_addr] = tile_id0
+                        localID = tileID0Dict[spad_addr]
+                    sdma_load(
+                        gmem=mem,
+                        scpad=SP0,
+                        gmem_base=dram_addr,
+                        spad_addr=spad_addr,
+                        tile_id=localID,
+                        NR=num_rows,
+                        NC=num_cols,
+                        full_num_cols=full_num_cols,
+                        perf_metrics=EU.perf_metrics,
+                    )
                 elif sid == 1:
-                    if(inst['rs1/rd1'] in tileID1Dict.keys()):
-                        localID = tileID1Dict[inst['rs1/rd1']]
+                    if(spad_addr in tileID1Dict.keys()):
+                        localID = tileID1Dict[spad_addr]
                     else:
                         tile_id1 += 1
-                        tileID1Dict[inst['rs1/rd1']] = tile_id1
-                        localID = tileID1Dict[inst['rs1/rd1']]
-                    sdma_load(gmem=mem, scpad=SP1, gmem_base=sregs.read(inst['rs2']), scpad_base_row=int(sregs.read(inst['rs1/rd1'])), tile_id=localID, NR=num_rows, NC=num_cols, perf_metrics=EU.perf_metrics)
+                        tileID1Dict[spad_addr] = tile_id1
+                        localID = tileID1Dict[spad_addr]
+                    sdma_load(
+                        gmem=mem,
+                        scpad=SP1,
+                        gmem_base=dram_addr,
+                        spad_addr=spad_addr,
+                        tile_id=localID,
+                        NR=num_rows,
+                        NC=num_cols,
+                        full_num_cols=full_num_cols,
+                        perf_metrics=EU.perf_metrics,
+                    )
 
             elif (m == "scpad.st"):
                 metadata = int(sregs.read(inst['rs3'])) & 0xFFFFFFFF
                 sid = (metadata >> 30) & 0x3
                 num_rows = (metadata >> 25) & 0x1F
                 num_cols = (metadata >> 20) & 0x1F
+                full_num_cols = metadata & 0xFFFFF
+                spad_addr = int(sregs.read(inst['rs1/rd1']))
+                dram_addr = int(sregs.read(inst['rs2']))
 
                 if sid == 0:
-                    if(inst['rs1/rd1'] in tileID0Dict.keys()):
-                        localID = tileID0Dict[inst['rs1/rd1']]
+                    if(spad_addr in tileID0Dict.keys()):
+                        localID = tileID0Dict[spad_addr]
                     else:
                         tile_id0 += 1
-                        tileID0Dict[inst['rs1/rd1']] = tile_id0
-                        localID = tileID0Dict[inst['rs1/rd1']]
-                    sdma_store(gmem=mem, scpad=SP0, scpad_base_row=int(sregs.read(inst['rs1/rd1'])), gmem_base=sregs.read(inst['rs2']), tile_id=tile_id0, NR=num_rows, NC=num_cols)
+                        tileID0Dict[spad_addr] = tile_id0
+                        localID = tileID0Dict[spad_addr]
+                    sdma_store(
+                        gmem=mem,
+                        scpad=SP0,
+                        spad_addr=spad_addr,
+                        gmem_base=dram_addr,
+                        tile_id=localID,
+                        NR=num_rows,
+                        NC=num_cols,
+                        full_num_cols=full_num_cols,
+                    )
                 elif sid == 1:
-                    if(inst['rs1/rd1'] in tileID1Dict.keys()):
-                        localID = tileID1Dict[inst['rs1/rd1']]
+                    if(spad_addr in tileID1Dict.keys()):
+                        localID = tileID1Dict[spad_addr]
                     else:
                         tile_id1 += 1
-                        tileID1Dict[inst['rs1/rd1']] = tile_id1
-                        localID = tileID1Dict[inst['rs1/rd1']]
-                    sdma_store(gmem=mem, scpad=SP1, scpad_base_row=int(sregs.read(inst['rs1/rd1'])), gmem_base=sregs.read(inst['rs2']), tile_id=tile_id1, NR=num_rows, NC=num_cols)
+                        tileID1Dict[spad_addr] = tile_id1
+                        localID = tileID1Dict[spad_addr]
+                    sdma_store(
+                        gmem=mem,
+                        scpad=SP1,
+                        spad_addr=spad_addr,
+                        gmem_base=dram_addr,
+                        tile_id=localID,
+                        NR=num_rows,
+                        NC=num_cols,
+                        full_num_cols=full_num_cols,
+                    )
             elif (m == "lui.s"):
                 if debug: print(inst['imm'])
                 sregs.write(inst['rd'], (inst['imm']) << 7)

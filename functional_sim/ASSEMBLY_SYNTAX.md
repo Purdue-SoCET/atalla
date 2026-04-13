@@ -480,36 +480,38 @@ mneq.mvs vmd, vs1, rs1, mask
 vreg.ld vd, rs1, rs2, num_cols, sid
 - Operation: Vector load from scratchpad into `vd`.
 - `vd`: vector destination register.
-- `rs1`: scratchpad base address.
-- `rs2`: row offset from `rs1` base address.
+- `rs1`: scratchpad byte address of tile base (`spad_addr`).
+- `rs2`: plain row counter (`row_id`, 0..31).
+- Effective target row is `addr_to_row(rs1) + rs2`.
 - `num_cols`: 0-indexed max column to load (`num_cols + 1` lanes are transferred).
 - `sid`: scratchpad ID selector.
 
 vreg.st vs, rs1, rs2, num_cols, sid
 - Operation: Vector store from `vs` into scratchpad.
 - `vs`: vector source register.
-- `rs1`: scratchpad base address.
-- `rs2`: row offset from `rs1` base address.
+- `rs1`: scratchpad byte address of tile base (`spad_addr`).
+- `rs2`: plain row counter (`row_id`, 0..31).
+- Effective target row is `addr_to_row(rs1) + rs2`.
 - `num_cols`: 0-indexed max column to store (`num_cols + 1` lanes are transferred).
 - `sid`: scratchpad ID selector.
 
 ## Scratchpad DMA (SDMA)
 
-scpad.ld rs1, rs2, num_cols, num_rows, sid
+scpad.ld rs1, rs2, rs3
 - Operation: DMA load from global memory into scratchpad tile.
-- `rs1`: scratchpad base address/pointer.
-- `rs2`: global-memory base address/pointer.
-- `num_cols`: tile column count.
-- `num_rows`: tile row count.
-- `sid`: scratchpad ID/bank selector.
+- `rs1`: scratchpad byte address of tile base (`spad_addr`).
+- `rs2`: DRAM byte address (`dram_addr`).
+- `rs3`: packed metadata `{sid[31:30], num_rows[29:25], num_cols[24:20], full_num_cols[19:0]}`.
+- `num_rows` and `num_cols` are 0-indexed max indices (`31` encodes `32`).
+- `full_num_cols` is DRAM row stride (full matrix width in elements) used for subtile DMA.
 
-scpad.st rs1, rs2, num_cols, num_rows, sid
+scpad.st rs1, rs2, rs3
 - Operation: DMA store from scratchpad tile into global memory.
-- `rs1`: scratchpad base address/pointer.
-- `rs2`: global-memory base address/pointer.
-- `num_cols`: tile column count.
-- `num_rows`: tile row count.
-- `sid`: scratchpad ID/bank selector.
+- `rs1`: scratchpad byte address of tile base (`spad_addr`).
+- `rs2`: DRAM byte address (`dram_addr`).
+- `rs3`: packed metadata `{sid[31:30], num_rows[29:25], num_cols[24:20], full_num_cols[19:0]}`.
+- `num_rows` and `num_cols` are 0-indexed max indices (`31` encodes `32`).
+- `full_num_cols` is DRAM row stride (full matrix width in elements) used for subtile DMA.
 
 ## Vector-To-Scalar Move (VTS)
 
