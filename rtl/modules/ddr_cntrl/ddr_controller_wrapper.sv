@@ -125,8 +125,6 @@ module ddr_controller_wrapper (
     assign cif.memstore = cif.ddr_wdata_data;
 
 
-    input wr_en, rd_en, clear, memstore, COL_choice,
-
     // ================================================================
     // Module Instantiations
     // ================================================================
