@@ -311,11 +311,11 @@ program test (
         // idle_r_test();
         
         // smoke_write_test();
-        // pressure_write_test(15);
+        pressure_write_test(7);
         // idle_write_test();
 
         // consecutive: 4 back-to-back writes to SP0, then SP1, then D$
-        consecutive_write_test(1, -1, 6);
+        //consecutive_write_test(1, -1, 6);
 
         // report
         env.report();
