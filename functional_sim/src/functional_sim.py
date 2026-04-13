@@ -314,6 +314,7 @@ def run(mem: Memory, sregs: ScalarRegisterFile, mregs: ScalarRegisterFile, vregs
                         NR=num_rows,
                         NC=num_cols,
                         full_num_cols=full_num_cols,
+                        perf_metrics=EU.perf_metrics,
                     )
                 elif sid == 1:
                     if(spad_addr in tileID1Dict.keys()):
@@ -331,6 +332,7 @@ def run(mem: Memory, sregs: ScalarRegisterFile, mregs: ScalarRegisterFile, vregs
                         NR=num_rows,
                         NC=num_cols,
                         full_num_cols=full_num_cols,
+                        perf_metrics=EU.perf_metrics,
                     )
             elif (m == "lui.s"):
                 if debug: print(inst['imm'])

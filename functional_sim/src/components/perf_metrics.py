@@ -17,6 +17,8 @@ class PerfMetrics:
         self.metrics["flops_vector"] = 0
         self.metrics["flops_matmul"] = 0
         self.metrics["bytes_loaded"] = 0
+        self.metrics["bytes_stored"] = 0
+        self.metrics["bytes_moved"] = 0
         self.metrics["assembly_instructions_executed"] = 0
 
         # Static packet metrics from decoded instruction memory.
@@ -36,8 +38,12 @@ class PerfMetrics:
     def update_derived_metrics(self) -> None:
         flops_total = float(self.metrics.get("flops_total", 0))
         bytes_loaded = float(self.metrics.get("bytes_loaded", 0))
-        if bytes_loaded > 0.0:
-            self.metrics["arithmetic_intensity"] = flops_total / bytes_loaded
+        bytes_stored = float(self.metrics.get("bytes_stored", 0))
+        bytes_moved = bytes_loaded + bytes_stored
+        self.metrics["bytes_moved"] = bytes_moved
+
+        if bytes_moved > 0.0:
+            self.metrics["arithmetic_intensity"] = flops_total / bytes_moved
         else:
             self.metrics["arithmetic_intensity"] = 0.0
 

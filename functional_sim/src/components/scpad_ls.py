@@ -10,10 +10,6 @@ from .perf_metrics import PerfMetrics
 
 BF16_ELEM_BYTES = 2
 
-def identity_swizzle(addr: int) -> int:
-    return addr
-
-
 def _lane_count_from_num_cols(num_cols: int, max_lanes: int) -> int:
     num_cols = int(num_cols)
     if num_cols < 0:
@@ -116,8 +112,7 @@ def sdma_load(
     NR: int,
     NC: int,
     full_num_cols: Optional[int] = None,
-    perf_metrics: PerfMetrics = None,
-    swizzle: Callable[[int], int] = identity_swizzle,
+    perf_metrics: Optional[PerfMetrics] = None,
 ):
     """
     for i in range(NR):
@@ -143,7 +138,6 @@ def sdma_load(
         # Read from GMEM
         for j in range(tile_cols):
             g_addr = int(gmem_base) + (i * dram_stride_cols + j) * BF16_ELEM_BYTES
-            g_addr = swizzle(g_addr)
             raw_val = gmem.read_data(g_addr)
             if perf_metrics is not None:
                 # GMEM BF16 payload is 2 bytes per element.
@@ -178,7 +172,7 @@ def sdma_store(
     NR: int,
     NC: int,
     full_num_cols: Optional[int] = None,
-    swizzle: Callable[[int], int] = identity_swizzle,
+    perf_metrics: Optional[PerfMetrics] = None,
 ):
     """
     for i in range(NR):
@@ -202,8 +196,10 @@ def sdma_store(
             bits = bits >> 16
             #x_shifted = struct.unpack('<f', struct.pack('<I', bits & 0xFFFFFFFF))[0]
             g_addr = int(gmem_base) + (i * dram_stride_cols + j) * BF16_ELEM_BYTES
-            g_addr = swizzle(g_addr)
             gmem.write_data(g_addr, bits)
+            if perf_metrics is not None:
+                # Count SDMA store traffic only (BF16 payload is 2 bytes/element).
+                perf_metrics.increment("bytes_stored", BF16_ELEM_BYTES)
 
 
 def dump_scpad_rc(scpad: Scratchpad, file=None):
