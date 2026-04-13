@@ -254,6 +254,7 @@ package vector_pkg;
         logic rm;
         logic [VIDX_W-1:0] vd;
         logic input_ready;
+        logic mask;
         logic mop_out;
     } functional_unit_out_t;
 
