@@ -171,7 +171,6 @@ module nb_barb(
             end else begin //Now the default case for for selecting banks after rollover_L is reached.
 
 		be_arb_next = (be_queue_ready_double & ~be_cmd_double_ref & (four_access ? ~(be_cmd_double_act) : {(2*BANK_NUM){1'b1}})) & ~(be_queue_ready_double & ~be_cmd_double_ref & (four_access ? ~(be_cmd_double_act) : {(2*BANK_NUM){1'b1}} ) - 'b1 );
-		case(barb.be_cmd	
 	/*
                 for(x = 'b0; x < BANK_NUM; x++) begin
                     if(be_queue_ready_double[x]) begin
