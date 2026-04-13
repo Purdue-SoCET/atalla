@@ -84,6 +84,22 @@ BASE_LATENCY = {
 
 # Full mnemonic overrides when load/store directions differ on same base op.
 MNEMONIC_LATENCY = {
+    # Scheduler-core latencies from ISA -- Atalla - scheduler core lats + groupings.csv
+    "mul.s": 2,
+    "muli.s": 2,
+    "div.s": 66,
+    "divi.s": 66,
+    "mod.s": 66,
+    "modi.s": 66,
+    "mul.bf": 1,
+    "rcp.bf": 11,
+    "sqrt.bf": 11,
+    # CSV notes indicate 4-cycle cache-hit behavior for scalar memory ops.
+    "lw.s": 4,
+    "sw.s": 4,
+    "lhw.s": 4,
+    "shw.s": 4,
+
     "vreg.ld": 3,
     "vreg.st": 1,
     "scpad.ld": 520, # 512 for DDR, 8 for AXI
