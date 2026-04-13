@@ -294,7 +294,6 @@ package vector_pkg;
         logic                        write;
         logic [SCPAD_ADDR_WIDTH-1:0] spad_addr;
         logic [VIDX_W-1:0]          vdst;
-        logic [MAX_DIM_WIDTH-1:0]   num_rows;
         logic [MAX_DIM_WIDTH-1:0]   num_cols;
         logic [MAX_DIM_WIDTH-1:0]   row_id;
     } vlsu_sched_req_t;
