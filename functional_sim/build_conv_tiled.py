@@ -42,8 +42,13 @@ def make_tiled_conv_asm(M: int, K_flat: int, K_out: int) -> str:
         if km < 32
         else "        addi.s  $6, $0, -1"
     )
-    w_scpad_row0 = mr_m
+    w_scpad_byte0 = mr_m * (32 * 2)
     assert mr_m + mr_k <= TILE, "im2col A and W tiles must fit in SP0 (mr_m+mr_k<=32)"
+    _w_base_asm = (
+        f"addi.s  $71, $0, {w_scpad_byte0}"
+        if w_scpad_byte0 <= 2047
+        else f"li.s    $71, {w_scpad_byte0}"
+    )
 
     return f"""
         # Tiled Conv-as-GEMM: C[{M},{K_out}] = A[{M},{K_flat}] * W[{K_flat},{K_out}]
@@ -66,7 +71,7 @@ def make_tiled_conv_asm(M: int, K_flat: int, K_out: int) -> str:
         mv.stm  1, $20
 
         addi.s  $70, $0, 0          # A tile rows 0 .. mr_m-1
-        addi.s  $71, $0, {w_scpad_row0}   # W tile after A (avoid 512%32 alias bug)
+        {_w_base_asm}               # W SP0 byte base = mr_m * 64
         addi.s  $72, $0, 0          # C in SP1 at 0
 
 {blk_c}

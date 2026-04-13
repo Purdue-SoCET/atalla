@@ -253,10 +253,10 @@ def sdma_load(
         row_vals = []
         for j in range(tile_cols):
             g_addr = int(gmem_base) + (i * dram_stride_cols + j) * BF16_ELEM_BYTES
-            raw_val = gmem.read_data(g_addr)
+            h = gmem.read_bf16_le(g_addr)
             if perf_metrics is not None:
                 perf_metrics.increment("bytes_loaded", BF16_ELEM_BYTES)
-            raw_val = raw_val << 16
+            raw_val = int(h) << 16
             fp32_val = struct.unpack("<f", struct.pack("<I", raw_val & 0xFFFFFFFF))[0]
             row_vals.append(fp32_val)
 
@@ -299,9 +299,9 @@ def sdma_store(
                 break
             val = scpad.banks[bank][slot]
             bits = struct.unpack("<I", struct.pack("<f", _scpad_cell_to_f32(val)))[0]
-            bits = bits >> 16
+            bits = (bits >> 16) & 0xFFFF
             g_addr = int(gmem_base) + (i * dram_stride_cols + j) * BF16_ELEM_BYTES
-            gmem.write_data(g_addr, bits)
+            gmem.write_bf16_le(g_addr, bits)
             if perf_metrics is not None:
                 perf_metrics.increment("bytes_stored", BF16_ELEM_BYTES)
 

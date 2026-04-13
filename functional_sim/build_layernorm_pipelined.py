@@ -128,13 +128,8 @@ def main():
         ######### END Variance calculation #######
         mul.vs   $39, $38, $14, 1                   # variance sum * inv(N^2) -> final variance in $39
         add.vs   $39, $39, $4, 1                    # denominator seed + epsilon
-<<<<<<< Updated upstream
-        vmov.vts $15, $39, 0                        # extract denominator lane 0 to scalar
-        sqrt.bf  $15, $15, $0                       # scalar sqrt only (vector sqrti.vi removed)
-=======
-        vmov.vts $15, $39, 0                        # lane-0 scalar for sqrt.bf (matches ISA CSV)
+        vmov.vts $15, $39, 0                        # lane-0 scalar for sqrt.bf (scalar core)
         sqrt.bf  $15, $15, $0                       # sqrt(variance + epsilon)
->>>>>>> Stashed changes
         rcp.bf   $15, $15, $0                       # reciprocal(denominator)
 
         mul.vs   $30, $30, $15, 1                   # normalized row 0 * reciprocal(denominator)

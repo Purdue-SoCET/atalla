@@ -7,11 +7,7 @@
 00000090: 0200d0008240 00000000002F 00000000002F 00000000002F # muli.vi {'opcode': 0b1000000, 'mask': 1, 'imm8_2': 64, 'imm8_1': 160, 'vs1': 1, 'vd': 4}
 000000A8: 0200d00082c1 00000000002F 00000000002F 00000000002F # div.vi {'opcode': 0b1000001, 'mask': 1, 'imm8_2': 64, 'imm8_1': 160, 'vs1': 1, 'vd': 5}
 000000C0: 0200d0008342 00000000002F 00000000002F 00000000002F # expi.vi {'opcode': 0b1000010, 'mask': 1, 'imm8_2': 64, 'imm8_1': 160, 'vs1': 1, 'vd': 6}
-<<<<<<< Updated upstream
-000000D8: 0200d00083c3 00000000002F 00000000002F 00000000002F # legacy fixture slot (sqrti.vi removed from ISA CSV; opcode 0b1000011 not in opcode_table)
-=======
-000000D8: 0200d00083c3 00000000002F 00000000002F 00000000002F # mneq.mvs vmd=7 vs1=$1 rs1=160 mask=1 (opcode 0b1000011; legacy label was sqrti.vi — not in ISA CSV)
->>>>>>> Stashed changes
+000000D8: 0200d00083c3 00000000002F 00000000002F 00000000002F # mneq.mvs vmd=7 vs1=$1 rs1=160 mask=1 (opcode 0b1000011; legacy label was sqrti.vi)
 000000F0: 0200d0008444 00000000002F 00000000002F 00000000002F # noti.vi {'opcode': 0b1000100, 'mask': 1, 'imm8_2': 64, 'imm8_1': 160, 'vs1': 1, 'vd': 8}
 00000108: 0000a00084c7 00000000002F 00000000002F 00000000002F # rsum.vi {'opcode': 0b1000111, 'mask': 1, 'imm8_2': 0, 'imm8_1': 64, 'vs1': 1, 'vd': 9}
 00000120: 0000a0008548 00000000002F 00000000002F 00000000002F # rmin.vi {'opcode': 0b1001000, 'mask': 1, 'imm8_2': 0, 'imm8_1': 64, 'vs1': 1, 'vd': 10}

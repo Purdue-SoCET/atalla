@@ -297,7 +297,8 @@ def run(mem: Memory, sregs: ScalarRegisterFile, mregs: ScalarRegisterFile, vregs
                 sid = (metadata >> 30) & 0x3
                 num_rows = (metadata >> 25) & 0x1F
                 num_cols = (metadata >> 20) & 0x1F
-                full_num_cols = metadata & 0xFFFFF
+                raw_fc = metadata & 0xFFFFF
+                full_num_cols = None if raw_fc == 0 else (raw_fc + 1)
                 spad_addr = int(sregs.read(inst["rs1/rd1"]))
                 dram_addr = int(sregs.read(inst["rs2"]))
 
@@ -344,7 +345,8 @@ def run(mem: Memory, sregs: ScalarRegisterFile, mregs: ScalarRegisterFile, vregs
                 sid = (metadata >> 30) & 0x3
                 num_rows = (metadata >> 25) & 0x1F
                 num_cols = (metadata >> 20) & 0x1F
-                full_num_cols = metadata & 0xFFFFF
+                raw_fc = metadata & 0xFFFFF
+                full_num_cols = None if raw_fc == 0 else (raw_fc + 1)
                 spad_addr = int(sregs.read(inst["rs1/rd1"]))
                 dram_addr = int(sregs.read(inst["rs2"]))
 

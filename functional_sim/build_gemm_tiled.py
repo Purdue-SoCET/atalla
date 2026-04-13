@@ -45,9 +45,15 @@ def make_tiled_gemm_asm(M: int, N: int, K: int) -> str:
         if km < 32
         else "        addi.s  $6, $0, -1"
     )
-    # SP0 row index for B tile. Must not alias A: old code used 512 → 512%32==0 and B overwrote A.
-    b_scpad_row0 = mr_m
+    # SP0 byte base for B tile: vreg.ld/scpad use _addr_to_row(addr) = addr // (32*2); using row index
+    # as byte offset (e.g. 8) aliases A at 0. B must start at mr_m * 64 bytes.
+    b_scpad_byte0 = mr_m * (32 * 2)
     assert mr_m + mr_k <= TILE, "A and B tiles must fit in SP0 without slot wrap (need mr_m+mr_k<=32)"
+    _b_base_asm = (
+        f"addi.s  $71, $0, {b_scpad_byte0}"
+        if b_scpad_byte0 <= 2047
+        else f"li.s    $71, {b_scpad_byte0}"
+    )
 
     return f"""
         # Tiled GEMM: C[{M},{N}] += A[{M},{K}] * B[{K},{N}]
@@ -87,7 +93,7 @@ def make_tiled_gemm_asm(M: int, N: int, K: int) -> str:
         # $72 = C_scpad (0, SID1)
 
         addi.s  $70, $0, 0          # A in SP0 rows 0 .. mr_m-1
-        addi.s  $71, $0, {b_scpad_row0}   # B in SP0 rows starting after A (slot index mod S)
+        {_b_base_asm}               # B SP0 byte base = mr_m * 64 (one row = 32 BF16 lanes)
         addi.s  $72, $0, 0          # C in SP1 at 0
 
 {blk_c}

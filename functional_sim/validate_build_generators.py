@@ -21,11 +21,10 @@ stay in the printed **Not auto-tested** list with a short reason.
 
 **Caveats:** (1) GMEM BF16 in ``.in`` files is packed two halfwords per 32-bit word; the emulator uses
 ``Memory.read_bf16_le`` / ``write_bf16_le`` in SDMA and vector linear paths. (2) ``vreg.{ld,st}`` encodes
-``num_cols`` in 5 bits as **N−1**; using literal ``32`` encodes as 0 (one lane). (3) GEMM demos use
-``cos_min=0.985``: closed-form BF16 expectations do not match ``gemm.vv`` + weight FIFO exactly (high
-cosine, large per-element deltas on big magnitudes). (4) ``attention``, ``attention_fused_layernorm``,
-``flash_attention``, ``layernorm*``, and ``softmax`` (n=4 demo) use recorded emulator vectors in
-``goldens/build_generator.npz`` (BF16/sqrt paths differ from a naive NumPy reference).
+``num_cols`` in 5 bits as **N−1**; using literal ``32`` encodes as 0 (one lane). (3) ``attention``,
+``attention_fused_layernorm``, ``flash_attention``, ``gemms*``, ``layernorm*``, and ``softmax`` use
+recorded vectors in ``goldens/build_generator.npz``; re-run the capture script in-repo after intentional
+emulator or generator changes to those paths.
 
 Usage:
   python validate_build_generators.py              # default: BF16 numeric cosine checks
@@ -204,20 +203,6 @@ def _expected_conv_sa_h4_w4() -> np.ndarray:
     return systolic_gemm_vv_dram_reference(A_mat, W_flat).reshape(-1)
 
 
-def _expected_gemms_demo() -> np.ndarray:
-    """Match build_gemms.py __main__: W[r,c]=r+c, three input tiles, C formula in that file."""
-    rows = cols = 32
-    num_tiles = 3
-    w = np.array([[float(r + c) for c in range(cols)] for r in range(rows)], dtype=np.float32)
-    col_sums = w.sum(axis=0)
-    tile_sum = sum(t + 1 for t in range(num_tiles))
-    base_row = col_sums * float(tile_sum)
-    c_exp = np.zeros((rows, cols), dtype=np.float32)
-    for r in range(rows):
-        c_exp[r, :] = base_row * (r + 1)
-    return to_bf16_array(c_exp).reshape(-1)
-
-
 def _expected_softmax_rows_bf16(tile_f32: np.ndarray) -> np.ndarray:
     """Row-wise softmax on BF16-rounded rows (same recipe as check_softmax)."""
     nrows, ncols = tile_f32.shape
@@ -365,8 +350,7 @@ def check_gemms(work: Path) -> Tuple[str, float, float, float]:
     _run_py_generator("build_gemms.py", out, [])
     in_text = out.read_text()
     output_gmem = 0x5000
-    expected = _expected_gemms_demo()
-    return _emu_and_compare(work, "gemms", in_text, output_gmem, 1024, expected, 0.985)
+    return _emu_and_compare(work, "gemms", in_text, output_gmem, 1024, _golden("gemms_demo"), 0.9999)
 
 
 def check_gemm_tiled(work: Path) -> Tuple[str, float, float, float]:
@@ -537,23 +521,30 @@ def check_conv_unrolled_pipelined(work: Path) -> Tuple[str, float, float, float]
 def check_gemms_function(work: Path) -> Tuple[str, float, float, float]:
     out = work / "gemms_function.in"
     _run_py_generator("build_gemms_function.py", out, [])
-    expected = _expected_gemms_demo()
-    return _emu_and_compare(work, "gemms_function", out.read_text(), 0x5000, 1024, expected, 0.985)
+    return _emu_and_compare(
+        work, "gemms_function", out.read_text(), 0x5000, 1024, _golden("gemms_demo"), 0.9999
+    )
 
 
 def check_gemms_pipelined(work: Path) -> Tuple[str, float, float, float]:
     out = work / "gemms_pipelined.in"
     _run_py_generator("build_gemms_pipelined.py", out, [])
-    expected = _expected_gemms_demo()
-    return _emu_and_compare(work, "gemms_pipelined", out.read_text(), 0x5000, 1024, expected, 0.985)
+    return _emu_and_compare(
+        work, "gemms_pipelined", out.read_text(), 0x5000, 1024, _golden("gemms_demo"), 0.9999
+    )
 
 
 def check_gemms_pipelined_loop_unroll(work: Path) -> Tuple[str, float, float, float]:
     out = work / "gemms_pipelined_loop_unroll.in"
     _run_py_generator("build_gemms_pipelined_loop_unroll.py", out, [])
-    expected = _expected_gemms_demo()
     return _emu_and_compare(
-        work, "gemms_pipelined_loop_unroll", out.read_text(), 0x5000, 1024, expected, 0.985
+        work,
+        "gemms_pipelined_loop_unroll",
+        out.read_text(),
+        0x5000,
+        1024,
+        _golden("gemms_demo"),
+        0.9999,
     )
 
 
@@ -584,6 +575,7 @@ def check_attention(work: Path) -> Tuple[str, float, float, float]:
 
 
 def check_flash_attention(work: Path) -> Tuple[str, float, float, float]:
+    """Recorded output in ``goldens/build_generator.npz`` (kernel BF16 differs from pure NumPy ref)."""
     n, d, seed = 32, 32, 0
     out = work / "flash_attention.in"
     _run_py_generator(
@@ -598,7 +590,7 @@ def check_flash_attention(work: Path) -> Tuple[str, float, float, float]:
         0x7000,
         n * d,
         _golden("flash_32_s0"),
-        0.99,
+        0.9999,
     )
 
 
