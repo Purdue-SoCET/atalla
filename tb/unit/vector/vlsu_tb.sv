@@ -60,7 +60,9 @@ module vlsu_tb;
     // ------------------------------------------------------------------
     scratchpad DUT_SP (.sif(sif));
 
-    // Tie off DMA/scheduler ports — VLSU tests use vec path only
+    // Initialize DMA/scheduler ports at t=0. Most tests leave these idle;
+    // T32 (SDMA load -> VLSU read) drives sched_req[0] and dram_be_res[0]
+    // directly from the main test sequence.
     initial begin
         for (int ch = 0; ch < NUM_SCPADS; ch++) begin
             sif.sched_req[ch]  = '0;
@@ -189,7 +191,6 @@ module vlsu_tb;
         `SCHED_REQ.write     = 1'b0;
         `SCHED_REQ.spad_addr = addr;
         `SCHED_REQ.vdst      = vd;
-        `SCHED_REQ.num_rows  = 5'd0;
         `SCHED_REQ.num_cols  = num_cols;
         `SCHED_REQ.row_id    = row_id;
         cyc = 0;
@@ -218,7 +219,6 @@ module vlsu_tb;
         `SCHED_REQ.valid     = 1'b1;
         `SCHED_REQ.write     = 1'b1;
         `SCHED_REQ.spad_addr = addr;
-        `SCHED_REQ.num_rows  = 5'd0;
         `SCHED_REQ.num_cols  = num_cols;
         `SCHED_REQ.row_id    = row_id;
         `VRF_STORE.data      = data;
@@ -252,7 +252,6 @@ module vlsu_tb;
         `SCHED_REQ1.write     = 1'b0;
         `SCHED_REQ1.spad_addr = addr;
         `SCHED_REQ1.vdst      = vd;
-        `SCHED_REQ1.num_rows  = 5'd0;
         `SCHED_REQ1.num_cols  = num_cols;
         `SCHED_REQ1.row_id    = row_id;
         cyc = 0;
@@ -281,7 +280,6 @@ module vlsu_tb;
         `SCHED_REQ1.valid     = 1'b1;
         `SCHED_REQ1.write     = 1'b1;
         `SCHED_REQ1.spad_addr = addr;
-        `SCHED_REQ1.num_rows  = 5'd0;
         `SCHED_REQ1.num_cols  = num_cols;
         `SCHED_REQ1.row_id    = row_id;
         `VRF_STORE1.data      = data;
@@ -316,7 +314,6 @@ module vlsu_tb;
             `SCHED_REQ.write     = 1'b0;
             `SCHED_REQ.spad_addr = SCPAD_ADDR_WIDTH'(base_addr + i * addr_stride);
             `SCHED_REQ.vdst      = VIDX_W'(base_vd + i);
-            `SCHED_REQ.num_rows  = 5'd0;
             `SCHED_REQ.num_cols  = 5'd31;
             `SCHED_REQ.row_id    = 5'd0;
             cyc = 0;
@@ -516,7 +513,6 @@ module vlsu_tb;
             `SCHED_REQ.write     = 1'b0;
             `SCHED_REQ.spad_addr = 'hA0;
             `SCHED_REQ.vdst      = 8'd20;
-            `SCHED_REQ.num_rows  = 5'd0;
             `SCHED_REQ.num_cols  = 5'd31;
             `SCHED_REQ.row_id    = 5'd0;
             #1;
@@ -540,7 +536,6 @@ module vlsu_tb;
             `SCHED_REQ.valid     = 1'b1;
             `SCHED_REQ.write     = 1'b1;
             `SCHED_REQ.spad_addr = 'hB0;
-            `SCHED_REQ.num_rows  = 5'd0;
             `SCHED_REQ.num_cols  = 5'd31;
             `SCHED_REQ.row_id    = 5'd0;
             `VRF_STORE.data      = '1;
@@ -603,7 +598,6 @@ module vlsu_tb;
             `SCHED_REQ.valid     = 1'b1;
             `SCHED_REQ.write     = 1'b1;
             `SCHED_REQ.spad_addr = 'h300;
-            `SCHED_REQ.num_rows  = 5'd0;
             `SCHED_REQ.num_cols  = 5'd31;
             `SCHED_REQ.row_id    = 5'd0;
             `VRF_STORE.data      = s_data;
@@ -705,7 +699,6 @@ module vlsu_tb;
             `SCHED_REQ.write     = 1'b0;
             `SCHED_REQ.spad_addr = 'h600;
             `SCHED_REQ.vdst      = 8'd51;
-            `SCHED_REQ.num_rows  = 5'd0;
             `SCHED_REQ.num_cols  = 5'd31;
             `SCHED_REQ.row_id    = 5'd0;
             #1;
@@ -802,7 +795,6 @@ module vlsu_tb;
             `SCHED_REQ.write     = 1'b0;
             `SCHED_REQ.spad_addr = 'hFFF;
             `SCHED_REQ.vdst      = 8'hFF;
-            `SCHED_REQ.num_rows  = 5'd0;
             `SCHED_REQ.num_cols  = 5'd31;
             `SCHED_REQ.row_id    = 5'd0;
             @(posedge CLK);
@@ -1368,7 +1360,6 @@ module vlsu_tb;
             `SCHED_REQ.write     = 1'b0;
             `SCHED_REQ.spad_addr = 'hA10;
             `SCHED_REQ.vdst      = 8'd92;
-            `SCHED_REQ.num_rows  = 5'd0;
             `SCHED_REQ.num_cols  = 5'd31;
             `SCHED_REQ.row_id    = 5'd0;
             #1;
@@ -1647,14 +1638,14 @@ module vlsu_tb;
             for (int r = 0; r < 4; r++) begin
                 for (int e = 0; e < VLMAX; e++)
                     wr_data[r][e] = ELEM_BITS'((r + 1) * 'h1000 + e);
-                issue_store(SCPAD_ADDR_WIDTH'('h100 + r * 'h20), wr_data[r]);
+                issue_store(SCPAD_ADDR_WIDTH'('h100 + r * 'h40), wr_data[r]);
             end
             repeat (SP_LATENCY + 4) @(posedge CLK);
 
             // Issue 4 loads and collect with toggling wb_ready in parallel
             fork
                 // Issue thread
-                burst_issue_loads('h100, 'h20, VIDX_W'(130), 4);
+                burst_issue_loads('h100, 'h40, VIDX_W'(130), 4);
 
                 // Collect thread with toggling wb_ready (50% duty)
                 begin
@@ -1821,13 +1812,13 @@ module vlsu_tb;
             for (int a = 0; a < NUM_ADDRS; a++) begin
                 for (int e = 0; e < VLMAX; e++)
                     wr_data[a][e] = ELEM_BITS'(((a + 1) << 8) | e);
-                issue_store(SCPAD_ADDR_WIDTH'('h300 + a * 'h20), wr_data[a]);
+                issue_store(SCPAD_ADDR_WIDTH'('h300 + a * 'h40), wr_data[a]);
             end
             repeat (SP_LATENCY + 2) @(posedge CLK);
 
             // Load phase: read all back in order
             for (int a = 0; a < NUM_ADDRS; a++) begin
-                issue_load(SCPAD_ADDR_WIDTH'('h300 + a * 'h20), VIDX_W'(10 + a));
+                issue_load(SCPAD_ADDR_WIDTH'('h300 + a * 'h40), VIDX_W'(10 + a));
                 wait_writeback_data(VIDX_W'(10 + a), rd_data, timed_out, SP_LATENCY + 20);
                 if (!timed_out) begin
                     int elem_err;
@@ -1835,7 +1826,7 @@ module vlsu_tb;
                     t25_err += elem_err;
                     if (elem_err == 0)
                         $display("[%s] PASS - addr %0d (0x%03h) data correct",
-                                 test_name, a, 'h300 + a * 'h20);
+                                 test_name, a, 'h300 + a * 'h40);
                 end else t25_err++;
             end
 
@@ -1876,14 +1867,14 @@ module vlsu_tb;
             for (int s = 0; s < FIFO_DEPTH; s++) begin
                 for (int e = 0; e < VLMAX; e++)
                     wr_data[s][e] = ELEM_BITS'(((s + 1) << 10) | e);
-                issue_store(SCPAD_ADDR_WIDTH'('h400 + s * 'h20), wr_data[s]);
+                issue_store(SCPAD_ADDR_WIDTH'('h400 + s * 'h40), wr_data[s]);
             end
             repeat (SP_LATENCY + 2) @(posedge CLK);
 
             // Load all FIFO_DEPTH back with parallel issue + collect
             fork
                 // Issue thread
-                burst_issue_loads('h400, 'h20, VIDX_W'(50), FIFO_DEPTH);
+                burst_issue_loads('h400, 'h40, VIDX_W'(50), FIFO_DEPTH);
 
                 // Collect thread — verify data element-by-element
                 begin
@@ -1938,7 +1929,7 @@ module vlsu_tb;
                     int elem_err;
                     ncols = MAX_DIM_WIDTH'(num_cols_vals[nc]);
                     rid   = MAX_DIM_WIDTH'(row_id_vals[ri]);
-                    addr  = SCPAD_ADDR_WIDTH'('h500 + case_idx * 'h20);
+                    addr  = SCPAD_ADDR_WIDTH'('h500 + case_idx * 'h40);
 
                     // Build pattern: encodes case_idx and element position
                     for (int e = 0; e < VLMAX; e++)
@@ -2065,7 +2056,7 @@ module vlsu_tb;
             for (int s = 0; s < NUM_SLOTS; s++) begin
                 for (int e = 0; e < VLMAX; e++)
                     slot_data[s][e] = ELEM_BITS'(((s + 1) << 8) | (e ^ s));
-                issue_store(SCPAD_ADDR_WIDTH'('h700 + s * 'h20), slot_data[s]);
+                issue_store(SCPAD_ADDR_WIDTH'('h700 + s * 'h40), slot_data[s]);
             end
             repeat (SP_LATENCY + 2) @(posedge CLK);
 
@@ -2074,7 +2065,7 @@ module vlsu_tb;
             // overwrite slot 1, etc. Then re-read everything.
             for (int s = 0; s < NUM_SLOTS; s++) begin
                 // Read current data
-                issue_load(SCPAD_ADDR_WIDTH'('h700 + s * 'h20), VIDX_W'(30 + s));
+                issue_load(SCPAD_ADDR_WIDTH'('h700 + s * 'h40), VIDX_W'(30 + s));
                 wait_writeback_data(VIDX_W'(30 + s), rd_data, timed_out, SP_LATENCY + 20);
                 if (!timed_out) begin
                     t29_err += check_data($sformatf("read-pass1-slot%0d", s),
@@ -2084,13 +2075,13 @@ module vlsu_tb;
                 // Overwrite with new pattern
                 for (int e = 0; e < VLMAX; e++)
                     slot_data[s][e] = ELEM_BITS'(((s + 11) << 8) | (e ^ (s + 5)));
-                issue_store(SCPAD_ADDR_WIDTH'('h700 + s * 'h20), slot_data[s]);
+                issue_store(SCPAD_ADDR_WIDTH'('h700 + s * 'h40), slot_data[s]);
             end
             repeat (SP_LATENCY + 2) @(posedge CLK);
 
             // Phase 3: Re-read all slots to verify overwrites
             for (int s = 0; s < NUM_SLOTS; s++) begin
-                issue_load(SCPAD_ADDR_WIDTH'('h700 + s * 'h20), VIDX_W'(40 + s));
+                issue_load(SCPAD_ADDR_WIDTH'('h700 + s * 'h40), VIDX_W'(40 + s));
                 wait_writeback_data(VIDX_W'(40 + s), rd_data, timed_out, SP_LATENCY + 20);
                 if (!timed_out) begin
                     t29_err += check_data($sformatf("read-pass2-slot%0d", s),
@@ -2137,8 +2128,8 @@ module vlsu_tb;
             // Both channels store simultaneously
             for (int r = 0; r < NROWS; r++) begin
                 fork
-                    issue_store(SCPAD_ADDR_WIDTH'('h800 + r * 'h20), ch0_data[r]);
-                    issue_store_ch1(SCPAD_ADDR_WIDTH'('h800 + r * 'h20), ch1_data[r]);
+                    issue_store(SCPAD_ADDR_WIDTH'('h800 + r * 'h40), ch0_data[r]);
+                    issue_store_ch1(SCPAD_ADDR_WIDTH'('h800 + r * 'h40), ch1_data[r]);
                 join
             end
             repeat (SP_LATENCY + 2) @(posedge CLK);
@@ -2150,7 +2141,7 @@ module vlsu_tb;
                     begin
                         vreg_t rd0;
                         logic to0;
-                        issue_load(SCPAD_ADDR_WIDTH'('h800 + r * 'h20), VIDX_W'(60 + r));
+                        issue_load(SCPAD_ADDR_WIDTH'('h800 + r * 'h40), VIDX_W'(60 + r));
                         wait_writeback_data(VIDX_W'(60 + r), rd0, to0, SP_LATENCY + 20);
                         if (!to0)
                             t30_err += check_data($sformatf("CH0-row%0d", r), ch0_data[r], rd0);
@@ -2161,7 +2152,7 @@ module vlsu_tb;
                         vreg_t rd1;
                         logic to1;
                         int waited;
-                        issue_load_ch1(SCPAD_ADDR_WIDTH'('h800 + r * 'h20), VIDX_W'(70 + r));
+                        issue_load_ch1(SCPAD_ADDR_WIDTH'('h800 + r * 'h40), VIDX_W'(70 + r));
                         // Inline wait for CH1 writeback
                         waited = 0;
                         while (!`WB_OUT1.valid && waited < SP_LATENCY + 20) begin
@@ -2221,7 +2212,7 @@ module vlsu_tb;
             for (int s = 0; s < NLOADS; s++) begin
                 for (int e = 0; e < VLMAX; e++)
                     wr_data[s][e] = ELEM_BITS'(((s + 1) * 'h1111) ^ e);
-                issue_store(SCPAD_ADDR_WIDTH'('h900 + s * 'h20), wr_data[s]);
+                issue_store(SCPAD_ADDR_WIDTH'('h900 + s * 'h40), wr_data[s]);
             end
             repeat (SP_LATENCY + 2) @(posedge CLK);
 
@@ -2231,7 +2222,7 @@ module vlsu_tb;
 
             fork
                 // Issue thread
-                burst_issue_loads('h900, 'h20, VIDX_W'(140), NLOADS);
+                burst_issue_loads('h900, 'h40, VIDX_W'(140), NLOADS);
 
                 // Collect thread with random backpressure
                 begin
@@ -2275,6 +2266,114 @@ module vlsu_tb;
                 $display("[%s] PASS - all %0d loads verified under random backpressure", test_name, NLOADS);
             else
                 errors += t31_err;
+        end
+        drain_and_idle();
+        end
+
+        // ==============================================================
+        // T32 - SDMA load -> VLSU read cross-path integrity
+        //
+        //       Drives an SDMA load directly on sif.sched_req[0] to
+        //       populate the scratchpad with a known pattern from a
+        //       simulated DRAM, then uses the real VLSU to read those
+        //       rows back and verifies element-level data integrity.
+        //       This is the only test in the suite that covers
+        //       SDMA-write -> VLSU-read in the same run, validating
+        //       that the backend and frontend address conventions
+        //       actually agree on physical SRAM slot placement.
+        // ==============================================================
+        if (!abort_flag) begin
+        test_name = "T32_sdma_load_vlsu_read";
+        test_num  = 32;
+        total_tests++;
+        $display("\n--- Test %0d: %s ---", test_num, test_name);
+
+        begin
+            automatic int num_rows       = 31;  // 32 rows (0..31) — common case
+            automatic int num_cols       = 31;  // 32 cols
+            automatic int chunks_per_row = (num_cols + 1 + 3) / 4;
+            automatic int total_reqs     = chunks_per_row * (num_rows + 1);
+            automatic int response_count = 0;
+            automatic int dma_timeout    = 0;
+            automatic int t32_err        = 0;
+            vreg_t rd_data;
+            logic timed_out;
+
+            // --- Phase 1: SDMA load ---
+            // Direct-drive the scratchpad scheduler interface with a
+            // load request. DRAM responses are synthesized inline with
+            // a per-row / per-chunk pattern so we know exactly what
+            // each SRAM slot should contain.
+            sif.sched_req[0].valid         = 1'b1;
+            sif.sched_req[0].write         = 1'b0;
+            sif.sched_req[0].spad_addr     = 20'h200;  // row 8, nonzero base (tests row stride)
+            sif.sched_req[0].dram_addr     = 32'd0;
+            sif.sched_req[0].num_rows      = 5'(num_rows);
+            sif.sched_req[0].num_cols      = 5'(num_cols);
+            sif.sched_req[0].full_num_cols = 20'(num_cols);
+
+            do begin
+                @(posedge CLK);
+                // Respond to backend DRAM requests with a deterministic
+                // pattern. The backend's response id encodes
+                // {row[4:0], chunk[2:0]}, so we can reconstruct which
+                // row/chunk we're responding to and fill in the right
+                // data. Pattern: elem = (row<<8) | (col+1), packed
+                // 4 elements (64 bits) per chunk.
+                if (sif.be_dram_req[0].valid && !sif.be_dram_stall[0]) begin
+                    automatic logic [4:0] rr = sif.be_dram_req[0].id[7:3];
+                    automatic logic [2:0] cc = sif.be_dram_req[0].id[2:0];
+                    automatic logic [63:0] d;
+                    for (int k = 0; k < 4; k++) begin
+                        automatic int col = cc * 4 + k;
+                        d[k*16 +: 16] = 16'((int'(rr) << 8) | (col + 1));
+                    end
+                    sif.dram_be_res[0].valid = 1'b1;
+                    sif.dram_be_res[0].id    = sif.be_dram_req[0].id;
+                    sif.dram_be_res[0].rdata = d;
+                    response_count++;
+                end else begin
+                    sif.dram_be_res[0].valid = 1'b0;
+                end
+                dma_timeout++;
+            end while (sif.sched_stall[0] && dma_timeout < 2000);
+
+            sif.sched_req[0].valid = 1'b0;
+            sif.dram_be_res[0]     = '0;
+
+            if (response_count != total_reqs) begin
+                $error("[%s] DMA incomplete: %0d/%0d DRAM responses",
+                       test_name, response_count, total_reqs);
+                t32_err++;
+            end
+
+            repeat (SP_LATENCY + 5) @(posedge CLK);
+
+            // --- Phase 2: VLSU reads each row back, verify contents ---
+            for (int r = 0; r <= num_rows; r++) begin
+                issue_load(20'h200, VIDX_W'(200 + r), 5'(num_cols), 5'(r));
+                wait_writeback_data(VIDX_W'(200 + r), rd_data, timed_out,
+                                    SP_LATENCY + 20);
+                if (timed_out) begin
+                    t32_err++;
+                end else begin
+                    // Verify every column matches the DMA-loaded pattern.
+                    for (int c = 0; c <= num_cols; c++) begin
+                        automatic logic [15:0] exp = 16'((r << 8) | (c + 1));
+                        if (rd_data[c] !== exp) begin
+                            $error("[%s] row %0d col %0d: expected 0x%04h, got 0x%04h",
+                                   test_name, r, c, exp, rd_data[c]);
+                            t32_err++;
+                        end
+                    end
+                end
+            end
+
+            if (t32_err == 0)
+                $display("[%s] PASS - SDMA 32x32 load -> VLSU read verified (%0d rows x %0d cols)",
+                         test_name, num_rows + 1, num_cols + 1);
+            else
+                errors += t32_err;
         end
         drain_and_idle();
         end

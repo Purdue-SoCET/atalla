@@ -1976,13 +1976,21 @@ module scratchpad_tb;
     // Main - Using initial block (NOT program block!)
     //==========================================================================
     initial begin
-        $display("\n===== SCRATCHPAD SDMA 32x32 LARGEST-STRIDE LOAD + STORE DEMO =====\n");
-
-        do_reset();
-        test_dma_load_stride(31, 31, 4095, 32'h8000);
-
-        do_reset();
-        test_dma_store(31, 31);
+        $display("\n===== SCRATCHPAD FULL SYSTEM TEST SUITE =====\n");
+        
+        run_vec_tests();
+        run_dma_tests();
+        run_integration_tests();
+        run_address_tests();
+        run_stress_tests();
+        run_large_matrix_tests();
+        run_dual_spad_tests();
+        run_dram_robustness_tests();
+        run_dma_store_data_tests();
+        run_reset_tests();
+        run_random_sweep_tests();
+        run_concurrent_rw_tests();
+        run_stride_tests();
         
         print_summary();
         

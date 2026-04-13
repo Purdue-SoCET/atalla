@@ -102,7 +102,7 @@ module vlsu #(
             sif.vec_req[IDX].valid      = 1'b1;
             sif.vec_req[IDX].write      = 1'b0;
             sif.vec_req[IDX].spad_addr  = vif.sched_req[IDX].spad_addr;
-            sif.vec_req[IDX].num_rows   = vif.sched_req[IDX].num_rows;
+            sif.vec_req[IDX].num_rows   = '0;  // VM is single-row
             sif.vec_req[IDX].num_cols   = vif.sched_req[IDX].num_cols;
             sif.vec_req[IDX].row_id     = vif.sched_req[IDX].row_id;
         end
@@ -112,7 +112,7 @@ module vlsu #(
             sif.vec_req[IDX].valid      = 1'b1;
             sif.vec_req[IDX].write      = 1'b1;
             sif.vec_req[IDX].spad_addr  = vif.sched_req[IDX].spad_addr;
-            sif.vec_req[IDX].num_rows   = vif.sched_req[IDX].num_rows;
+            sif.vec_req[IDX].num_rows   = '0;  // VM is single-row
             sif.vec_req[IDX].num_cols   = vif.sched_req[IDX].num_cols;
             sif.vec_req[IDX].row_id     = vif.sched_req[IDX].row_id;
             sif.vec_req[IDX].wdata      = vif.vrf_store[IDX].data;

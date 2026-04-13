@@ -177,7 +177,7 @@ program test (
         automatic logic [SCPAD_ADDR_WIDTH-1:0] expected_spad_addr;
         automatic scpad_data_t actual_wdata;
         
-        expected_spad_addr = base_spad_addr + {expected_row[4:0], 5'b00000};
+        expected_spad_addr = base_spad_addr + (expected_row << ROW_SHIFT);
         actual_wdata = bif.be_req[0].wdata;
         
         if (bif.be_req[0].spad_addr !== expected_spad_addr) begin
@@ -385,7 +385,7 @@ program test (
             if (bif.be_req[0].valid && !bif.be_req[0].write) begin
                 automatic logic [SCPAD_ADDR_WIDTH-1:0] expected_spad_addr;
                 store_be_req_count++;
-                expected_spad_addr = base_spad_addr + {rows_requested[4:0], 5'b00000};
+                expected_spad_addr = base_spad_addr + (rows_requested << ROW_SHIFT);
                 
                 if (bif.be_req[0].spad_addr !== expected_spad_addr) begin
                     $display("  [BE_REQ RD ERROR] Row %0d: spad_addr - Got 0x%05h, Expected 0x%05h",
@@ -419,7 +419,7 @@ program test (
                 if (bif.be_req[0].valid && !bif.be_req[0].write && rows_requested <= num_rows) begin
                     automatic logic [SCPAD_ADDR_WIDTH-1:0] expected_spad_addr;
                     store_be_req_count++;
-                    expected_spad_addr = base_spad_addr + {rows_requested[4:0], 5'b00000};
+                    expected_spad_addr = base_spad_addr + (rows_requested << ROW_SHIFT);
                     
                     if (bif.be_req[0].spad_addr !== expected_spad_addr) begin
                         $display("  [BE_REQ RD ERROR] Row %0d: spad_addr - Got 0x%05h, Expected 0x%05h",
@@ -623,28 +623,28 @@ program test (
 
     // Test various base address combinations
     task automatic test_base_addresses();
-        // spad_addr must be 32-aligned (row boundary), dram_addr can be any 4-byte aligned
+        // spad_addr must be 64-aligned (row boundary, ROW_BYTES), dram_addr can be any 4-byte aligned
         $display("\n======== BASE ADDRESS TESTS ========\n");
         
         // LOAD with various addresses
         current_test_type = "LOAD";
         $display("--- LOAD with different base addresses ---");
-        scpad_load_with_addr(0, 0,   20'h00020, 32'h00001000);  // 1x1 @ spad row 1, dram 0x1000
-        scpad_load_with_addr(1, 3,   20'h00040, 32'h00002000);  // 2x4 @ spad row 2, dram 0x2000
-        scpad_load_with_addr(3, 7,   20'h00100, 32'h80000000);  // 4x8 @ spad row 8, dram high addr
-        scpad_load_with_addr(7, 15,  20'h00200, 32'hDEAD0000);  // 8x16 @ spad row 16
-        scpad_load_with_addr(15, 31, 20'h003E0, 32'hCAFE0000);  // 16x32 @ spad row 31
-        scpad_load_with_addr(31, 31, 20'h00400, 32'hFFFF0000);  // 32x32 @ spad row 32
+        scpad_load_with_addr(0, 0,   20'h00040, 32'h00001000);  // 1x1 @ spad row 1, dram 0x1000
+        scpad_load_with_addr(1, 3,   20'h00080, 32'h00002000);  // 2x4 @ spad row 2, dram 0x2000
+        scpad_load_with_addr(3, 7,   20'h00200, 32'h80000000);  // 4x8 @ spad row 8, dram high addr
+        scpad_load_with_addr(7, 15,  20'h00400, 32'hDEAD0000);  // 8x16 @ spad row 16
+        scpad_load_with_addr(15, 31, 20'h007C0, 32'hCAFE0000);  // 16x32 @ spad row 31
+        scpad_load_with_addr(31, 31, 20'h00800, 32'hFFFF0000);  // 32x32 @ spad row 32
         
         // STORE with various addresses  
         current_test_type = "STORE";
         $display("\n--- STORE with different base addresses ---");
-        scpad_store_with_addr(0, 0,   20'h00020, 32'h00001000);  // 1x1 @ spad row 1, dram 0x1000
-        scpad_store_with_addr(1, 3,   20'h00040, 32'h00002000);  // 2x4 @ spad row 2, dram 0x2000
-        scpad_store_with_addr(3, 7,   20'h00100, 32'h80000000);  // 4x8 @ spad row 8, dram high addr
-        scpad_store_with_addr(7, 15,  20'h00200, 32'hDEAD0000);  // 8x16 @ spad row 16
-        scpad_store_with_addr(15, 31, 20'h003E0, 32'hCAFE0000);  // 16x32 @ spad row 31
-        scpad_store_with_addr(31, 31, 20'h00400, 32'hFFFF0000);  // 32x32 @ spad row 32
+        scpad_store_with_addr(0, 0,   20'h00040, 32'h00001000);  // 1x1 @ spad row 1, dram 0x1000
+        scpad_store_with_addr(1, 3,   20'h00080, 32'h00002000);  // 2x4 @ spad row 2, dram 0x2000
+        scpad_store_with_addr(3, 7,   20'h00200, 32'h80000000);  // 4x8 @ spad row 8, dram high addr
+        scpad_store_with_addr(7, 15,  20'h00400, 32'hDEAD0000);  // 8x16 @ spad row 16
+        scpad_store_with_addr(15, 31, 20'h007C0, 32'hCAFE0000);  // 16x32 @ spad row 31
+        scpad_store_with_addr(31, 31, 20'h00800, 32'hFFFF0000);  // 32x32 @ spad row 32
         
         // Edge case: max addresses
         $display("\n--- Edge case addresses ---");

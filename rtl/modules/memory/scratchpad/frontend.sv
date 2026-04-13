@@ -76,7 +76,7 @@ module frontend #(parameter logic [scpad_pkg::SCPAD_ID_WIDTH-1:0] IDX = '0) (
 =======
     always_comb begin
         fsif.fe_req[IDX] = internal_req;
-        fsif.fe_req[IDX].xbar.slot = internal_req.spad_addr + internal_req.row_id;
+        fsif.fe_req[IDX].xbar.slot = addr_to_row(internal_req.spad_addr) + internal_req.row_id;
         for (int i = 0; i < NUM_COLS; i++) begin
             fsif.fe_req[IDX].xbar.valid_mask[i] = (i <= internal_req.num_cols);
         end
