@@ -136,6 +136,41 @@ logic ddr_we;
 // WDATA_QUEUE_WRAPPER -> WDATA_QUEUE
 logic [$clog2(ID_NUM)-1:0] wrap_bw_arb;
 
+
+// Signal generator signals pulled from Tri's branch:
+//REFRESH request
+    logic ref_re;
+
+    //Signals interface between control unit and signal generator
+    dram_state_t state, nstate; 
+    logic [RANK_BITS-1:0] RA0;
+    logic [BANK_GROUP_BITS-1:0] BG0;
+    logic [BANK_BITS-1:0] BA0;
+    logic [ROW_BITS-1:0] R0;
+    logic [COLUMN_BITS-1:0] C0;
+
+    //Interface between singal generator and DRAM
+    logic ACT_n;
+    logic RAS_n_A16;
+    logic CAS_n_A15;
+    logic WE_n_A14;
+    logic ALERT_n;
+    logic PARITY;
+    logic RESET_n;
+    logic TEN;
+    logic CS_n;
+    logic CKE;
+    logic ODT;
+    logic ZQ;
+    logic PWR;
+    logic VREF_CA;
+    logic VREF_DQ;
+
+    logic [RANK_BITS-1:0] C;
+    logic [BANK_GROUP_BITS-1:0] BG;
+    logic [BANK_BITS-1:0] BA;
+    logic [ADDR_BITS-1:0] ADDR;
+    logic ADDR_17;
 // // MODPORTS
 
 
@@ -318,6 +353,47 @@ modport frontend_tb (
     // TB monitors ARB -> BQ
     fe_bg, fe_b, fe_r, fe_c, fe_write, fe_id, fe_len, fe_write_bq
 );
+
+modport ddr_cntrl_top (
+    // ===== INPUTS (FROM AXI) =====
+    // AW Channel
+    input awvalid, awaddr, awid, awlen,
+    // AR Channel
+    arvalid, araddr, arid, arlen,
+    // W Channel
+    wdq_slot, wvalid, wlast,
+    // B Channel (AXI master ready for write response)
+    bwready,
+    // R Channel (AXI master ready for read data)
+    rready,
+    // System
+    init_start,
+
+    // ===== OUTPUTS (TO AXI) =====
+    // AW Response
+    output awready,
+    // AR Response
+    arready,
+    // W/B Response (Write Data Wrapper -> AXI)
+    wready, bwvalid, bwresp, bwid,
+    // R Data (Read ID Queue -> AXI)
+    rq_rvalid, rq_rid, rq_rlen,
+
+    // ===== OUTPUTS (TO DRAM) =====
+    // Write Data Path (WDQ Wrapper -> DRAM)
+    ddr_wdata_data, ddr_wdata_en, ddr_wdata_mask, ddr_we,
+    // Command Path (Backend Arbiter/FSM -> Signal Generator)
+    //be_arb, be_cmd, be_r, be_c, be_b, be_bg, be_id,
+    // Init Status
+    //init_done, init_state, next_init_state
+);
+
+modport signal_gen (
+        input ref_re,
+        input state, nstate, RA0, BG0, BA0, R0, C0,
+        output ACT_n, RAS_n_A16, CAS_n_A15, WE_n_A14, ALERT_n, PARITY, RESET_n, TEN, CS_n, CKE, ODT, C, BG, BA, ADDR, ADDR_17, PWR, VREF_CA, VREF_DQ, ZQ
+    );
+
 
 endinterface
 
