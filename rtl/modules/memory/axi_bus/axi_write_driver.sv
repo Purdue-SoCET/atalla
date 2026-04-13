@@ -32,14 +32,8 @@ module axi_write_driver(
     logic aw_fire, aw_sent; // checks if aw request has been set so count down of beats can continue
     logic same_txn_sp0, same_txn_sp1, same_txn_d; // enforces aw + w in lockstep
     logic aw_loaded; // checks if aw request has been loaded into the skid buffer
-    logic aw_load_this_cycle;
-    assign aw_load_this_cycle =
-        wdrv_if.aw_grant[MID] &&
-        (
-        ((wdrv_if.aw_grant[MID-1:0] == SP0)    && !aw_skid_full && !aw_loaded && wdrv_if.head_sp0_awvalid) ||
-        ((wdrv_if.aw_grant[MID-1:0] == SP1)    && !aw_skid_full && !aw_loaded && wdrv_if.head_sp1_awvalid) ||
-        ((wdrv_if.aw_grant[MID-1:0] == DCACHE) && !aw_skid_full && !aw_loaded && wdrv_if.head_d_awvalid)
-    );
+    logic final_w_fire;
+    assign final_w_fire = wdrv_if.w_fire && !aw_skid_empty && w_skid_buffer[w_rd_ptr].last;
 
     always_ff@(posedge CLK, negedge nRST) begin 
         if(!nRST) begin
@@ -59,7 +53,7 @@ module axi_write_driver(
         else begin 
             if (wdrv_if.aw_grant[MID]) begin // checking if aw_grant valid bit is high
                 if (wdrv_if.aw_grant[MID-1:0] == SP0) begin
-                    if(!aw_skid_full && !aw_sent && wdrv_if.head_sp0_awvalid && !aw_loaded) begin
+                    if(!aw_skid_full && !aw_sent && wdrv_if.head_sp0_awvalid && !final_w_fire) begin
                         aw_skid_buffer[aw_wr_ptr].valid  <= wdrv_if.head_sp0_awvalid;
                         aw_skid_buffer[aw_wr_ptr].addr   <= wdrv_if.head_sp0_aw_o.addr;
                         aw_skid_buffer[aw_wr_ptr].mid_id <= wdrv_if.head_sp0_aw_o.mid_id;
@@ -69,7 +63,7 @@ module axi_write_driver(
                         aw_wr_ptr <= aw_wr_ptr + 1'b1;
                         aw_loaded <= 1'b1;
                     end
-                    if(!w_skid_full && wdrv_if.head_sp0_wvalid && same_txn_sp0) begin
+                    if(!w_skid_full && wdrv_if.head_sp0_wvalid && same_txn_sp0 && !final_w_fire) begin
                         w_skid_buffer[w_wr_ptr].valid    <= wdrv_if.head_sp0_wvalid;
                         w_skid_buffer[w_wr_ptr].mid_id   <= wdrv_if.head_sp0_w_o.mid_id;
                         w_skid_buffer[w_wr_ptr].data     <= wdrv_if.head_sp0_w_o.data;
@@ -84,7 +78,7 @@ module axi_write_driver(
                     end 
                 end
                 else if (wdrv_if.aw_grant[MID-1:0] == SP1) begin
-                    if (!aw_skid_full && !aw_sent && wdrv_if.head_sp1_awvalid && !aw_loaded) begin
+                    if (!aw_skid_full && !aw_sent && wdrv_if.head_sp1_awvalid && !final_w_fire) begin
                         aw_skid_buffer[aw_wr_ptr].valid  <= wdrv_if.head_sp1_awvalid;
                         aw_skid_buffer[aw_wr_ptr].addr   <= wdrv_if.head_sp1_aw_o.addr;
                         aw_skid_buffer[aw_wr_ptr].mid_id <= wdrv_if.head_sp1_aw_o.mid_id;
@@ -94,7 +88,7 @@ module axi_write_driver(
                         aw_wr_ptr <= aw_wr_ptr + 1'b1;
                         aw_loaded <= 1'b1;
                     end
-                    if (!w_skid_full && wdrv_if.head_sp1_wvalid && same_txn_sp1) begin
+                    if (!w_skid_full && wdrv_if.head_sp1_wvalid && same_txn_sp1 && !final_w_fire) begin
                         w_skid_buffer[w_wr_ptr].valid    <= wdrv_if.head_sp1_wvalid;
                         w_skid_buffer[w_wr_ptr].mid_id   <= wdrv_if.head_sp1_w_o.mid_id;
                         w_skid_buffer[w_wr_ptr].data     <= wdrv_if.head_sp1_w_o.data;
@@ -109,7 +103,7 @@ module axi_write_driver(
                     end 
                 end
                 else if (wdrv_if.aw_grant[MID-1:0] == DCACHE) begin
-                    if(!aw_skid_full && !aw_sent && wdrv_if.head_d_awvalid && !aw_loaded) begin
+                    if(!aw_skid_full && !aw_sent && wdrv_if.head_d_awvalid && !final_w_fire) begin
                         aw_skid_buffer[aw_wr_ptr].valid  <= wdrv_if.head_d_awvalid;
                         aw_skid_buffer[aw_wr_ptr].addr   <= wdrv_if.head_d_aw_o.addr;
                         aw_skid_buffer[aw_wr_ptr].mid_id <= wdrv_if.head_d_aw_o.mid_id;
@@ -119,7 +113,7 @@ module axi_write_driver(
                         aw_wr_ptr <= aw_wr_ptr + 1'b1;
                         aw_loaded <= 1'b1;
                     end 
-                    if (!w_skid_full && wdrv_if.head_d_wvalid && same_txn_d) begin
+                    if (!w_skid_full && wdrv_if.head_d_wvalid && same_txn_d && !final_w_fire) begin
                         w_skid_buffer[w_wr_ptr].valid    <= wdrv_if.head_d_wvalid;
                         w_skid_buffer[w_wr_ptr].mid_id   <= wdrv_if.head_d_w_o.mid_id;
                         w_skid_buffer[w_wr_ptr].data     <= wdrv_if.head_d_w_o.data;
