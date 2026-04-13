@@ -494,15 +494,10 @@ mneq.mvs vmd, vs1, rs1, mask
 **ISA encoding (40-bit VM, see bit-spec):** `sid` in bits 36–37, `num_cols` in 31–35, `rs2` row offset, `rs1` base, `vd`/`vs`.
 
 vreg.ld vd, rs1, rs2, num_cols, sid
-- Operation: Vector load from scratchpad into `vd` (or GMEM paths when the emulator routes `rs1` to linear spill/BF16 DRAM — see functional sim sources).
-- `vd`: vector destination.
-- `rs1`: scratchpad base address (slot/bank semantics per emulator).
-- `rs2`: scalar register holding **row offset** from that base.
-- `num_cols`: **0..31** — max column index; **`num_cols + 1`** lanes are transferred.
-- `sid`: **0** = SP0, **1** = SP1 (other values reserved / rejected by strict assembler).
+- Operation: Vector load into `vd`. Default path is scratchpad: `rs1` is the scratchpad **byte address** of the tile base (`spad_addr`); `rs2` is the **row offset** (plain row counter, 0..31 in typical use); effective scratchpad row is **`addr_to_row(rs1) + rs2`**. **`num_cols + 1`** lanes are transferred (`num_cols` is 0-indexed max column, **0..31**). **`sid`**: **0** = SP0, **1** = SP1 (other values reserved / rejected by strict assembler). The emulator may also route `rs1` to **linear spill** or **packed BF16 in GMEM** when address predicates match (see `scpad_ls.py` / `GMEM_VREG_ROUTING.md`).
 
 vreg.st vs, rs1, rs2, num_cols, sid
-- Operation: Vector store from `vs` to scratchpad (or GMEM when routed).
+- Operation: Vector store from `vs`. Same addressing and optional GMEM/spill routing as `vreg.ld`.
 - `vs`: vector source.
 - `rs1`, `rs2`, `num_cols`, `sid`: same as `vreg.ld`.
 
@@ -510,15 +505,21 @@ vreg.st vs, rs1, rs2, num_cols, sid
 
 ## Scratchpad DMA (SDMA)
 
-**Encoded form:** `scpad.ld rs1, rs2, rs3` / `scpad.st rs1, rs2, rs3` with `rs3` holding packed metadata (scratchpad ID, tile shape, full-row stride in low 20 bits — see bit-spec row SDMA).
+**Encoded form (3-operand VM):** `scpad.ld rs1, rs2, rs3` / `scpad.st rs1, rs2, rs3`.
+
+- `rs1`: scratchpad byte address of tile base (`spad_addr`).
+- `rs2`: DRAM byte address (`dram_addr`).
+- `rs3`: packed metadata `{sid[31:30], num_rows[29:25], num_cols[24:20], full_num_cols[19:0]}`. `num_rows` and `num_cols` are 0-indexed tile max indices (`31` encodes width/height **32** in that dimension). `full_num_cols` is the full matrix width in elements and is used as **DRAM row stride** for subtile DMA.
 
 **Convenience 5-operand form** in assembly sources:
+
 scpad.ld rs1, rs2, num_cols, num_rows, sid
 - Operation: DMA load from global memory into scratchpad tile.
-- Expanded by `expand_scpad_five_operand_asm` into `lui`/`addi` metadata setup + 3-operand `scpad.ld`.
+- Expanded by `expand_scpad_five_operand_asm` in `build.py` into `lui`/`addi` metadata setup + 3-operand `scpad.ld`.
 
 scpad.st rs1, rs2, num_cols, num_rows, sid
-- Operation: DMA store from scratchpad tile into global memory (same expansion as `scpad.ld`).
+- Operation: DMA store from scratchpad tile into global memory.
+- Same expansion path as `scpad.ld`.
 
 ## Vector-To-Scalar Move (VTS)
 

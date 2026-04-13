@@ -13,6 +13,12 @@ class PerfMetrics:
           assembly slot in the model; not the same as dynamic issue count if you fuse packets).
       packets_* / packet_slots_* — VLIW packet shape and fill stats from static decode or
           dynamic execution; compare names to see whether the counter is compile-time vs runtime.
+      bytes_stored — SDMA (and similar) bytes written to GMEM; the model increments this.
+      bytes_written — kept equal to bytes_stored for older scripts that still read this key.
+      bytes_moved — bytes_loaded + bytes_stored (bandwidth for load+store roofline).
+      arithmetic_intensity — flops / bytes_moved (0 if bytes_moved == 0).
+      arithmetic_intensity_loads — flops / bytes_loaded only (0 if no loads).
+      arithmetic_intensity_load_store — same ratio as arithmetic_intensity (flops / bytes_moved).
     """
 
     def __init__(self):
@@ -22,7 +28,9 @@ class PerfMetrics:
         self.metrics["flops_vector"] = 0
         self.metrics["flops_matmul"] = 0
         self.metrics["bytes_loaded"] = 0
+        self.metrics["bytes_stored"] = 0
         self.metrics["bytes_written"] = 0
+        self.metrics["bytes_moved"] = 0
         self.metrics["assembly_instructions_executed"] = 0
         self.metrics["instructions_executed"] = 0
 
@@ -43,21 +51,22 @@ class PerfMetrics:
     def update_derived_metrics(self) -> None:
         flops_total = float(self.metrics.get("flops_total", 0))
         bytes_loaded = float(self.metrics.get("bytes_loaded", 0))
-        bytes_written = float(self.metrics.get("bytes_written", 0))
-        bytes_mem = bytes_loaded + bytes_written
+        bytes_stored = float(self.metrics.get("bytes_stored", 0))
+        self.metrics["bytes_written"] = bytes_stored
+        bytes_moved = bytes_loaded + bytes_stored
+        self.metrics["bytes_moved"] = bytes_moved
 
-        # Roofline-style: loads only (SDMA read bytes)
-        if bytes_loaded > 0.0:
-            ai_loads = flops_total / bytes_loaded
+        if bytes_moved > 0.0:
+            self.metrics["arithmetic_intensity"] = flops_total / bytes_moved
+            self.metrics["arithmetic_intensity_load_store"] = flops_total / bytes_moved
         else:
-            ai_loads = 0.0
-        self.metrics["arithmetic_intensity"] = ai_loads
-        self.metrics["arithmetic_intensity_loads"] = ai_loads
-
-        if bytes_mem > 0.0:
-            self.metrics["arithmetic_intensity_load_store"] = flops_total / bytes_mem
-        else:
+            self.metrics["arithmetic_intensity"] = 0.0
             self.metrics["arithmetic_intensity_load_store"] = 0.0
+
+        if bytes_loaded > 0.0:
+            self.metrics["arithmetic_intensity_loads"] = flops_total / bytes_loaded
+        else:
+            self.metrics["arithmetic_intensity_loads"] = 0.0
 
         packet_slots_total = float(self.metrics.get("packet_slots_total", 0))
         packet_slots_filled = float(self.metrics.get("packet_slots_filled", 0))
