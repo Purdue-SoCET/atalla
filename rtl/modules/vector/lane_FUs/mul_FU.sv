@@ -68,14 +68,14 @@ module mul_FU (
     assign lsif.in.ready_out = mif.out.ready_in;
 
     //mask
-    lane_unit_fifo #(
-        .DEPTH(4),   // Twice as big as i think i need
-        .DWIDTH(1)    // Single mask bit
+    sync_fifo #(
+        .FIFODEPTH(4),
+        .DATAWIDTH(1)
     ) mask_fifo (
-        .clk(CLK),
+        .CLK(CLK),
         .nRST(nRST),
         .wr_en(lsif.out.valid_out & mif.out.ready_in),
-        .rd_en(mif.out.valid_out & fuif.in.wb_ready),
+        .shift(mif.out.valid_out & fuif.in.wb_ready),
         .din(lsif.out.mask),
         .dout(fuif.out.mask)
     );
@@ -105,14 +105,14 @@ module mul_FU (
     logic is_last_element;
     assign is_last_element = (output_count_r == (SLICE_W - 1));
 
-    lane_unit_fifo #(
-        .DEPTH(4),
-        .DWIDTH(8)
+    sync_fifo #(
+        .FIFODEPTH(4),
+        .DATAWIDTH(8)
     ) vd_fifo (
-        .clk(CLK),
+        .CLK(CLK),
         .nRST(nRST),
         .wr_en(lsif.in.valid_in & lsif.out.ready_in),
-        .rd_en(mif.out.valid_out & fuif.in.wb_ready & is_last_element),  // Pop on last element only
+        .shift(mif.out.valid_out & fuif.in.wb_ready & is_last_element),
         .din(vd),
         .dout(fuif.out.vd)
     );

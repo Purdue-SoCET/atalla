@@ -150,40 +150,41 @@ module alu_FU (
     logic is_last_element;
     assign is_last_element = (output_count_r == (SLICE_W - 1));
 
-    lane_unit_fifo #(
-        .DEPTH(4),
-        .DWIDTH(8)
+
+    sync_fifo #(
+        .FIFODEPTH(4),
+        .DATAWIDTH(8)
     ) vd_fifo (
-        .clk(CLK),
+        .CLK(CLK),
         .nRST(nRST),
         .wr_en(lsif.in.valid_in & lsif.out.ready_in),
-        .rd_en(aluif.out.valid_out & fuif.in.wb_ready & is_last_element),  // Pop on last element only
+        .shift(aluif.out.valid_out & fuif.in.wb_ready & is_last_element),
         .din(vd),
         .dout(fuif.out.vd)
     );
-    lane_unit_fifo #(
-        .DEPTH(4),
-        .DWIDTH(1)
+
+    sync_fifo #(
+        .FIFODEPTH(4),
+        .DATAWIDTH(1)
     ) rm_fifo (
-        .clk(CLK),
+        .CLK(CLK),
         .nRST(nRST),
         .wr_en(lsif.in.valid_in & lsif.out.ready_in),
-        .rd_en(aluif.out.valid_out & fuif.in.wb_ready),  // Pop on first output of ALU
-        .din(rm),
-        .dout(fuif.out.rm)
+        .shift(aluif.out.valid_out & fuif.in.wb_ready),
+        .din(rm)
     );
-    lane_unit_fifo #(
-        .DEPTH(4),
-        .DWIDTH(3)
+    sync_fifo #(
+        .FIFODEPTH(4),
+        .DATAWIDTH(3)
     ) mop_fifo (
-        .clk(CLK),
+        .CLK(CLK),
         .nRST(nRST),
         .wr_en(lsif.in.valid_in & lsif.out.ready_in),
-        .rd_en(aluif.out.valid_out & fuif.in.wb_ready & is_last_element),  // Pop on last element like vd
+        .shift(aluif.out.valid_out & fuif.in.wb_ready & is_last_element),
         .din(mop),
         .dout(fuif.out.mop_out)
     );
-
+    
     assign fuif.out.result = aluif.out.result;
     assign fuif.out.wb_valid = aluif.out.valid_out;
 
