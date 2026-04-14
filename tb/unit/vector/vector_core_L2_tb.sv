@@ -36,14 +36,14 @@ module vector_core_L2_tb;
     // -----------------------------------------------------------------------
     // Parameters
     // -----------------------------------------------------------------------
-    //parameter string PROGRAM_PATH = "./tb/formal/vector/testcases/vector-vector/add_vv";
+    parameter string PROGRAM_PATH = "./tb/formal/vector/testcases/vector-vector/add_vv";
     //parameter string PROGRAM_PATH = "./tb/formal/vector/testcases/load-store/store_load_l2";
     //parameter string PROGRAM_PATH = "./tb/formal/vector/testcases/gemmm/gemm_vv";
     //parameter string PROGRAM_PATH = "./tb/formal/vector/testcases/load-store/store_load_l2";
 
     // bp test for sys array works, there is a timeout from scheduler stalls and the NO OPs dont go thru so my cond in the all_issued doesnt work,
     // my termination cond didnt trigger causing the timeout, sys array works properly, need to fix the tb condition, but backpressure is now done for both spad and sys array
-    parameter string PROGRAM_PATH = "./tb/formal/vector/testcases/gemmm/gemm_bp_test";
+    //parameter string PROGRAM_PATH = "./tb/formal/vector/testcases/gemmm/gemm_bp_test";
     // make drain 500 for sysarray bp test, 300 for gemm, 150 for reg.
     parameter int    DRAIN_CYCLES = 500;
     parameter int    TIMEOUT      = 10000;

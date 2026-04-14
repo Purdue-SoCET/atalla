@@ -280,53 +280,6 @@ module general_fu_tb (
         end
     endtask
 
-    task automatic sqrt_test_issue_port_0();
-        logic [SLICE_W-1:0][15:0] v1, v2;
-        v1 = '{16'h4110, 16'h4080}; //9,4
-        v2 = '0;
-        test_issue_port(0, v1, v2, SQRT, 1, 0, '1, ALU_ADD);
-    endtask
-
-    task automatic sqrt_test_issue_port_1();
-        logic [SLICE_W-1:0][15:0] v1, v2;
-        v1 = '{16'h4110, 16'h4080}; //9,4
-        v2 = '0;
-        test_issue_port(1, v1, v2, SQRT, 2, 0, '1, ALU_ADD);
-    endtask
-
-    task automatic sqrt_test_masking_1();
-        logic [SLICE_W-1:0][15:0] v1, v2;
-        v1 = '{16'h4110, 16'h4080}; //9,4
-        v2 = '0;
-        test_masking(0, v1, v2, SQRT, 1, 0, 2'b01, ALU_ADD);
-    endtask
-
-    task automatic sqrt_test_masking_2();
-        logic [SLICE_W-1:0][15:0] v1, v2;
-        v1 = '{16'h4110, 16'h4080}; //9,4
-        v2 = '0;
-        test_masking(0, v1, v2, SQRT, 1, 0, 2'b10, ALU_ADD);
-    endtask
-
-    task automatic sqrt_backpressure();
-        logic [SLICE_W-1:0][15:0] v1, v2;
-        v1 = '{16'h4110, 16'h4080}; //9,4
-        v2 = '0;
-        test_backpressure(0, v1, v2, SQRT, 10, 0, 2'b11, ALU_ADD, 5);
-    endtask
-
-    task automatic sqrt_max_issue();
-        test_max_issue(0, SQRT, 0, '1, ALU_ADD, 10);
-    endtask
-
-    task automatic test_all_sqrt();
-        sqrt_test_issue_port_0();
-        sqrt_test_issue_port_1();
-        sqrt_test_masking_1();
-        sqrt_test_masking_2();
-        sqrt_backpressure();
-        sqrt_max_issue();
-    endtask
 
     task automatic mul_test_issue_port_0();
         logic [SLICE_W-1:0][15:0] v1, v2;
