@@ -29,7 +29,6 @@ module transpose_unit (
     logic [tif.VEC_LEN-1:0] sram_wdone;
     logic ren, wen;
 
-
     always_ff @(posedge CLK or negedge nRST) begin
         if (!nRST) begin
             state <= IDLE;
@@ -69,7 +68,7 @@ module transpose_unit (
             // PUSH PATH: Wait for SRAM to finish writing current vector
             BUSY_WRITE: begin
                 if(sram_wdone[0]) begin
-                    if(count == 31) begin
+                    if(count == (tif.VEC_LEN - 1)) begin
                         n_count = 0;
                         n_state = IDLE; // Or a 'READY_TO_POP' state
                     end else begin

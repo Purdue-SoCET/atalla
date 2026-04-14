@@ -26,8 +26,27 @@ module transpose_unit_tb;
     // Clock Generation
     always #(PERIOD/2) CLK = ~CLK;
 
+    // Global Status Counters
+    int total_errors = 0;
+    int tests_passed = 0;
+    int tests_failed = 0;
+
+    // Helper Task: Report Results
+    function void report_test_result(string test_name, int errors);
+        if (errors == 0) begin
+            $display("[%0t] >> PASS: %s", $time, test_name);
+            tests_passed++;
+        end else begin
+            $display("[%0t] >> FAIL: %s (%0d errors encountered)", $time, test_name, errors);
+            tests_failed++;
+            total_errors += errors;
+        end
+    endfunction
+
     // --- Test Task ---
     task automatic run_transpose_test(input int num_rows);
+        int local_errors = 0;
+        string t_name = $sformatf("Transpose %0dx%0d", num_rows, VEC_LEN);
         $display("\n[%0t] --- STARTING TEST: %0d x %0d ---", $time, num_rows, VEC_LEN);
         
         // 1. Clear Scoreboard
@@ -70,6 +89,7 @@ module transpose_unit_tb;
                 if (tif.tb.out.vec_out[row_idx] !== expected_matrix[row_idx][col_idx]) begin
                     $error("[%0t] Mismatch! Col %0d, Elem %0d | Exp: %h, Got: %h", 
                             $time, col_idx, row_idx, expected_matrix[row_idx][col_idx], tif.tb.out.vec_out[row_idx]);
+                    local_errors++;
                 end
             end
 
@@ -81,6 +101,59 @@ module transpose_unit_tb;
         end
         
         $display("[%0t] --- TEST PASSED: %0d x %0d ---\n", $time, num_rows, VEC_LEN);
+        report_test_result(t_name, local_errors);
+    endtask
+
+    task automatic run_backpressure_test(input int num_rows);
+        int local_errors = 0;
+        string t_name = $sformatf("Backpressure %0dx%0d", num_rows, VEC_LEN);
+        $display("\n[%0t] --- STARTING BACKPRESSURE TEST: %0d x %0d ---", $time, num_rows, VEC_LEN);
+        
+        // 1. PUSH PHASE (Normal Load)
+        for (int r = 0; r < num_rows; r++) begin
+            wait (tif.tb.out.ready_in);
+            tif.tb.in.push_req = 1;
+            tif.tb.in.valid_in = 1;
+            for (int c = 0; c < VEC_LEN; c++) begin
+                logic [DATA_W-1:0] val = (r << 8) | c;
+                tif.tb.in.vec_in[c] = val;
+                expected_matrix[r][c] = val;
+            end
+            wait (!tif.tb.out.ready_in);
+            tif.tb.in.push_req = 0;
+            tif.tb.in.valid_in = 0;
+        end
+
+        // 2. POP PHASE WITH BACKPRESSURE
+        for (int col_idx = 0; col_idx < VEC_LEN; col_idx++) begin
+            // Randomly apply backpressure before requesting
+            if ($urandom_range(0, 1)) begin
+                tif.tb.in.ready_out = 0;
+                repeat($urandom_range(1, 5)) @(posedge CLK);
+                tif.tb.in.ready_out = 1;
+            end
+
+            tif.tb.in.pop_req = 1;
+            
+            // Wait for valid_out
+            while (!tif.tb.out.valid_out) @(posedge CLK);
+            
+            // Check data
+            for (int row_idx = 0; row_idx < num_rows; row_idx++) begin
+                if (tif.tb.out.vec_out[row_idx] !== expected_matrix[row_idx][col_idx]) begin
+                    $error("[%0t] Mismatch under pressure! Col %0d | Exp: %h, Got: %h", 
+                            $time, col_idx, expected_matrix[row_idx][col_idx], tif.tb.out.vec_out[row_idx]);
+                    local_errors++;
+                end
+            end
+
+            @(posedge CLK);
+            tif.tb.in.pop_req = 0;
+            repeat(2) @(posedge CLK);
+        end
+        
+        $display("[%0t] --- BACKPRESSURE TEST PASSED ---\n", $time);
+        report_test_result(t_name, local_errors);
     endtask
 
     // --- Main Simulation Block ---
@@ -94,17 +167,25 @@ module transpose_unit_tb;
         nRST = 1;
         repeat (5) @(posedge CLK);
 
-        // --- Execute Tests ---
-        run_transpose_test(2);  // Your original test case
-        run_transpose_test(8);  // Mid-size test
-        run_transpose_test(32); // Full matrix test
+        $display("\n--- STARTING TEST SUITE ---");
+        for (int i = 1; i <= 32; i++) run_transpose_test(i);
+        for (int i = 1; i <= 32; i++) run_backpressure_test(i);
 
-        for (int i = 1; i <= 32; i++) begin
-            run_transpose_test(i); // loop through everything
-        end
+        // Final Summary Report
+        $display("\n========================================");
+        $display("          FINAL SIMULATION REPORT        ");
+        $display("========================================");
+        $display("  Total Tests Run:    %0d", (tests_passed + tests_failed));
+        $display("  Tests Passed:       %0d", tests_passed);
+        $display("  Tests Failed:       %0d", tests_failed);
+        $display("  Total Data Errors:  %0d", total_errors);
+        $display("========================================\n");
+        
+        if (total_errors == 0) $display("RESULT: ALL TESTS PASSED\n");
+        else $display("RESULT: TEST SUITE FAILED\n");
 
 
-        $display("[%0t] All configured tests complete.", $time);
+
         $finish;
     end
 
