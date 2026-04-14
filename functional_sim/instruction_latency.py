@@ -84,7 +84,18 @@ BASE_LATENCY = {
 
 # Full mnemonic overrides when load/store directions differ on same base op.
 MNEMONIC_LATENCY = {
-    # Scheduler-core latencies from ISA -- Atalla - scheduler core lats + groupings.csv
+    # Scheduler-core latencies from ISA -- Atalla - scheduler core lats + groupings
+    "add.s": 1,
+    "sub.s": 1,
+    "or.s": 1,
+    "and.s": 1,
+    "xor.s": 1,
+    "sll.s": 1,
+    "srl.s": 1,
+    "sra.s": 1,
+    "bfts.s": 1,
+    "add.bf": 1,
+    "sub.bf": 1,
     "mul.s": 2,
     "muli.s": 2,
     "div.s": 66,
@@ -94,17 +105,58 @@ MNEMONIC_LATENCY = {
     "mul.bf": 1,
     "rcp.bf": 11,
     "sqrt.bf": 11,
-    # CSV notes indicate 4-cycle cache-hit behavior for scalar memory ops.
+    "stbf.s": 1,
+    "addi.s": 1,
+    "subi.s": 1,
+    "ori.s": 1,
+    "andi.s": 1,
+    "xori.s": 1,
+    "slli.s": 1,
+    "srli.s": 1,
+    "srai.s": 1,
+    "jalr.s": 1,
+    "beq.s": 1,
+    "bne.s": 1,
+    "blt.s": 1,
+    "bge.s": 1,
+    "bgt.s": 1,
+    "ble.s": 1,
+    "jal": 1,
+    "lui.s": 1,
+    # 4-cycle cache-hit behavior for scalar memory ops.
     "lw.s": 4,
     "sw.s": 4,
     "lhw.s": 4,
     "shw.s": 4,
+    # Vector-core latencies
+    "add.vv": 5,
+    "sub.vv": 5,
+    "add.vs": 5,
+    "sub.vs": 5,
+    "mgt.mvv": 5,
+    "mlt.mvv": 5,
+    "meq.mvv": 5,
+    "mneq.mvv": 5,
+    "mgt.mvs": 5,
+    "mlt.mvs": 5,
+    "meq.mvs": 5,
+    "mneq.mvs": 5,
+    "mul.vv": 4,
+    "mul.vs": 4,
+    "expi.vi": 6,
+    "rsum.vi": 20,
+    "rmin.vi": 20,
+    "rmax.vi": 20,
+    "gemm.vv": 67, # Standard WS latency
+    "mv.mts": 1, 
+    "mv.stm": 1, 
+    "vmov.vts": 1, 
 
-    "vreg.ld": 3,
-    "vreg.st": 1,
+    "vreg.ld": 15,
+    "vreg.st": 2,
     "scpad.ld": 520, # 512 for DDR, 8 for AXI
     "scpad.st": 520, # 512 for DDR, 8 for AXI
-    "lw.vi": 3,
+    "lw.vi": 0, #  no dependency latency.
 }
 
 latency = dict(BASE_LATENCY)
