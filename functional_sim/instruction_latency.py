@@ -147,7 +147,7 @@ MNEMONIC_LATENCY = {
     "rsum.vi": 20,
     "rmin.vi": 20,
     "rmax.vi": 20,
-    "gemm.vv": 67, # Standard WS latency
+    "gemm.vv": 40, # Standard WS latency
     "mv.mts": 1, 
     "mv.stm": 1, 
     "vmov.vts": 1, 
