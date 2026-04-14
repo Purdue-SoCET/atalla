@@ -123,7 +123,7 @@ module scheduler_core #(
         end else begin
             for(int i = 0; i < NUM_SCALAR_INSTRS; i++) begin
               n_DEC2_EX_latch[i] = '0;
-              n_DEC2_EX_latch[i].op = 7'b0101111;
+              n_DEC2_EX_latch[i].op = 7'b0110001;
             end
             n_DEC2_EX_PC_latch = '0;
         end

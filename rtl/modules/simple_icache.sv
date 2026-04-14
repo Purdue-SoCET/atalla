@@ -94,46 +94,59 @@ module simple_icache (
                 SEND_REQ: begin
                     // Request is visible to RAM during this cycle.
                     // RAM captures it on this edge.
-                    state <= CAPTURE;
+                    if(req_valid) begin
+                        state <= CAPTURE;
+                    end else begin
+                        state <= IDLE;
+                    end
+
                 end
 
                 WAIT_RAM: begin
                     // RAM updates mem_resp_* on this edge.
                     // Icache still cannot safely use the new value on this same edge.
-                    state <= CAPTURE;
+                    if(req_valid) begin
+                        state <= CAPTURE;
+                    end else begin
+                        state <= IDLE;
+                    end
                 end
 
                 CAPTURE: begin
-                    if (mem_resp_hit) begin
-                        case (word_idx)
-                            3'd0: word0 <= mem_resp_rdata;
-                            3'd1: word1 <= mem_resp_rdata;
-                            3'd2: word2 <= mem_resp_rdata;
-                            3'd3: word3 <= mem_resp_rdata;
-                            3'd4: word4 <= mem_resp_rdata;
-                            default: ;
-                        endcase
+                    if(req_valid) begin
+                        if (mem_resp_hit) begin
+                            case (word_idx)
+                                3'd0: word0 <= mem_resp_rdata;
+                                3'd1: word1 <= mem_resp_rdata;
+                                3'd2: word2 <= mem_resp_rdata;
+                                3'd3: word3 <= mem_resp_rdata;
+                                3'd4: word4 <= mem_resp_rdata;
+                                default: ;
+                            endcase
 
-                        if (word_idx == 3'd4) begin
-                            // resp_data <= {
-                            //     word0,
-                            //     word1,
-                            //     word2,
-                            //     word3,
-                            //     mem_resp_rdata
-                            // };
-                            resp_data <= {
-                                mem_resp_rdata,
-                                word3,
-                                word2,
-                                word1,
-                                word0
-                            };
-                            state <= RESP;
-                        end
-                        else begin
-                            word_idx <= word_idx + 3'd1;
-                            state    <= SEND_REQ;
+                            if (word_idx == 3'd4) begin
+                                // resp_data <= {
+                                //     word0,
+                                //     word1,
+                                //     word2,
+                                //     word3,
+                                //     mem_resp_rdata
+                                // };
+                                resp_data <= {
+                                    mem_resp_rdata,
+                                    word3,
+                                    word2,
+                                    word1,
+                                    word0
+                                };
+                                state <= RESP;
+                            end
+                            else begin
+                                word_idx <= word_idx + 3'd1;
+                                state    <= SEND_REQ;
+                            end
+                        end else begin
+                            state    <= IDLE;
                         end
                     end
                     else begin

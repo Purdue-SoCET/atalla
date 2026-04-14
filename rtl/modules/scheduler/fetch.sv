@@ -61,7 +61,7 @@ module fetch (
     else begin
 
       // Currently unsure
-      if (dc_if.ihit && (ready || flush)) begin
+      if (flush || (dc_if.ihit && ready)) begin
         pc <= next_pc;
       end
     end
@@ -79,7 +79,7 @@ module fetch (
   
 
   always_comb begin
-    if(ready && dc_if.imemready) begin
+    if(ready && !flush) begin
       dc_if.imemREN = 1'b1;
     end else begin
       dc_if.imemREN = 1'b0;
