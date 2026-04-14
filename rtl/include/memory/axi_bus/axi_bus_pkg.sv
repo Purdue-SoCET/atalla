@@ -70,7 +70,7 @@ package axi_bus_pkg;
     localparam int AW_PTR_WIDTH   = $clog2(AW_DEPTH); 
 
     // AW+W Manager W FIFO Width
-    localparam int W_DEPTH        = NUM_U_WRITES*8;
+    localparam int W_DEPTH        = NUM_U_WRITES*8; // aryan check this
     localparam int W_PTR_WIDTH   = $clog2(W_DEPTH); 
 
     // Write Response Router Skid Buffer Width
