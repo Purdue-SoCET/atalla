@@ -59,7 +59,7 @@ module test_sdma #(
     localparam int     TILE_ROWS    = 32;    // tile rows
     localparam int     TILE_COLS    = 32;    // tile cols
     localparam int     SDMA_ELEM_B  = 2;    // bytes per element (int16)
-    localparam int     SDMA_TRANS_B = 8;    // bytes per AXI beat (64-bit)
+    localparam int     SDMA_TRANS_B = 32;   // bytes per AXI beat (256-bit)
     // One SDMA covers the entire matrix
     localparam int     SDMA_TRANS_N = MAT_ROWS * (MAT_COLS * SDMA_ELEM_B) / SDMA_TRANS_B;
 
@@ -106,7 +106,7 @@ module test_sdma #(
     longint tick = 0;
     always @(posedge clk) tick++;
 
-    longint shadow [longint];   // addr → expected 64-bit beat value
+    logic [255:0] shadow [longint];   // addr → expected 256-bit beat value
 
     // ----------------------------------------------------------------
     // Scoreboards
@@ -123,20 +123,21 @@ module test_sdma #(
     longint row_ar_stalls  = 0;     // cycles spent waiting for ar_o_ready (bank queue full)
     longint tile_ar_stalls = 0;
 
-    // Pack 4 int16 elements starting at col_base into one 64-bit beat.
+    // Pack ELEMS_PER_T int16 elements starting at col_base into one 256-bit beat.
     // element value = (row * MAT_COLS + col_base + e) & 0xFFFF, little-endian.
-    function automatic longint pack_beat(input int row, input int col_base);
-        longint d;
-        d = 64'h0;
+    function automatic logic [255:0] pack_beat(input int row, input int col_base);
+        logic [255:0] d;
+        d = '0;
         for (int e = 0; e < ELEMS_PER_T; e++)
-            d |= (longint'(row * MAT_COLS + col_base + e) & 64'hFFFF) << (e * 16);
+            d |= (256'(row * MAT_COLS + col_base + e) & 256'hFFFF) << (e * 16);
         return d;
     endfunction
 
     // Write the full matrix row by row, recording each value in shadow[].
     // Called twice (ROW_BASE and TILE_BASE) with identical data.
     task automatic write_matrix(input longint base_addr);
-        longint addr, data;
+        longint       addr;
+        logic [255:0] data;
         for (int row = 0; row < MAT_ROWS; row++) begin
             for (int cg = 0; cg < COL_GROUPS; cg++) begin
                 addr = base_addr
@@ -147,7 +148,7 @@ module test_sdma #(
                 axi.aw_o_valid  = 1'b1;
                 axi.aw_o.addr   = AWADDR'(addr);
                 axi.aw_o.mid_id = '0;
-                axi.aw_o.size   = 3'b011;
+                axi.aw_o.size   = 3'b101;   // 32 bytes (256-bit beat)
                 axi.aw_o.len    = 4'h0;
                 axi.aw_o.burst  = 2'b01;
 
@@ -235,10 +236,10 @@ module test_sdma #(
         ref    int                  fail_cnt
     );
         longint t0;
-        longint batch_addrs[];
-        longint batch_exp  [];
-        bit     consumed   [];
-        longint got;
+        longint       batch_addrs[];
+        logic [255:0] batch_exp  [];
+        bit           consumed   [];
+        logic [255:0] got;
         int     n;
         // (a) one entry per 8-beat row-of-SDMA-instr: span from first to last response in the row
         // (b) one entry per 64-bit beat: inter-response gap (throughput per sub-transaction)
@@ -274,7 +275,7 @@ module test_sdma #(
                     if (issued < num_ars) begin
                         axi.ar_o_valid  = 1'b1;
                         axi.ar_o.id = mid_id;
-                        axi.ar_o.size   = 3'b011;
+                        axi.ar_o.size   = 3'b101;   // 32 bytes (256-bit beat)
                         axi.ar_o.burst  = 2'b01;
                         if (burst_mode) begin
                             axi.ar_o.addr = ARADDR'(batch_addrs[issued * TILE_COL_GRP]);
@@ -295,7 +296,7 @@ module test_sdma #(
                         stalls++;
 
                     if (axi.r_valid) begin
-                        got = longint'(axi.r_i.data);
+                        got = axi.r_i.data;
 
                         if (collected % TILE_COL_GRP == 0) row_t0_local = tick;
 
@@ -306,7 +307,7 @@ module test_sdma #(
                             // wrapper ROB guarantees in-order delivery per burst
                             if (got === batch_exp[collected]) ok_cnt++;
                             else begin
-                                $display("    [MISMATCH] beat %0d got=0x%016h exp=0x%016h addr=0x%08h",
+                                $display("    [MISMATCH] beat %0d got=0x%h exp=0x%h addr=0x%08h",
                                          collected, got, batch_exp[collected],
                                          batch_addrs[collected]);
                                 fail_cnt++;
@@ -324,7 +325,7 @@ module test_sdma #(
                                 end
                                 if (found) ok_cnt++;
                                 else begin
-                                    $display("    [MISMATCH] got=0x%016h not in expected batch (addrs 0x%08h..0x%08h)",
+                                    $display("    [MISMATCH] got=0x%h not in expected batch (addrs 0x%08h..0x%08h)",
                                              got, batch_addrs[0], batch_addrs[n-1]);
                                     fail_cnt++;
                                 end
@@ -400,7 +401,8 @@ module test_sdma #(
             $display("[2] (meminit active) Skipping AXI writes - pre-loading shadow[] ...");
             for (int row = 0; row < MAT_ROWS; row++) begin
                 for (int cg = 0; cg < COL_GROUPS; cg++) begin
-                    longint addr_row, addr_tile, data;
+                    longint       addr_row, addr_tile;
+                    logic [255:0] data;
                     data      = pack_beat(row, cg * ELEMS_PER_T);
                     addr_row  = ROW_BASE  + longint'(row) * ROW_BYTES
                                           + longint'(cg)  * SDMA_TRANS_B;

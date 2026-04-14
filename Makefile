@@ -378,7 +378,7 @@ sdma: ram_lib
 	        -G USE_BURST=$(BURST) \
 	        $(SDMA_MEMINIT_FLAGS) \
 	        $(SCRATCH).test_sdma \
-	        -do "run -all" 2>/dev/null || true; \
+	        -do "run -all" || true; \
 	    if grep -q "=== PASSED ===" transcript 2>/dev/null; then \
 	        echo "[sdma] Result: PASSED"; \
 	    elif grep -q "=== FAILED ===" transcript 2>/dev/null; then \

@@ -13,7 +13,7 @@ package axi_bus_pkg;
     parameter int unsigned NUM_U_READS     = 4;      // Number of outstanding reads for one UNITS (I$, D$, SP0, SP1)
     parameter int unsigned NUM_U_WRITES    = 4;      // Number of outstanding writes for one UNITS (D$, SP0, SP1)
     parameter int unsigned ADDR_WIDTH      = 32;
-    parameter int unsigned DATA_BEAT_WIDTH = 64;     // Size of 1 beat in transaction
+    parameter int unsigned DATA_BEAT_WIDTH = 256;    // Size of 1 beat in transaction
 
     //////////////////////////////////////////////////////////////////////
     ///////////////////////// Derived Parameters /////////////////////////

@@ -28,7 +28,7 @@ module ramulator_sv_wrapper #(
     parameter string  CONFIG_FILE    = "ramulator_config.yaml",
     parameter int     B_DEPTH        = 4,      // B-response FIFO depth
     parameter int     SR_DEPTH       = 512,    // single-beat R-response FIFO depth
-    parameter int     N_BURST_SLOTS  = 64,     // concurrent read burst slots
+    parameter int     N_BURST_SLOTS  = 512,     // concurrent read burst slots
     // Optional preload — set MEM_INIT_FILE to a non-empty path and the
     // wrapper will populate functional_mem before simulation starts.
     //   "bin" — raw binary, loaded at MEM_INIT_BASE
@@ -65,7 +65,10 @@ module ramulator_sv_wrapper #(
 
     import "DPI-C" function longint ramulator_check_response(
         input  chandle handle,
-        output longint data_out,
+        output longint data_out0,     // sub-beat [63:0]
+        output longint data_out1,     // sub-beat [127:64]
+        output longint data_out2,     // sub-beat [191:128]
+        output longint data_out3,     // sub-beat [255:192]
         output int     source_id_out  // echoes the source_id from send_request
     );
 
@@ -97,7 +100,7 @@ module ramulator_sv_wrapper #(
     int     dpi_source_id;  // source_id echoed back by ramulator_check_response
     int     beat_idx;
     longint dpi_resp;
-    longint dpi_data_out;
+    longint dpi_data_out0, dpi_data_out1, dpi_data_out2, dpi_data_out3; // 256-bit R beat sub-words
 
     // r_pending / r_reg hold the burst beat currently on the R channel.
     // Single-beat completions go directly into sr_fifo and are muxed on
@@ -134,7 +137,7 @@ module ramulator_sv_wrapper #(
     logic [ARBURST-1:0]  slot_burst_type  [N_BURST_SLOTS];
     int                  slot_beat_issued [N_BURST_SLOTS];
     int                  slot_beat_out    [N_BURST_SLOTS];
-    longint              slot_rob         [N_BURST_SLOTS][16];
+    logic [RDATA-1:0]    slot_rob         [N_BURST_SLOTS][16]; // 256-bit per beat
     logic [15:0]         slot_rob_valid   [N_BURST_SLOTS];
     int                  slot_fixed_cnt   [N_BURST_SLOTS];
 
@@ -156,6 +159,18 @@ module ramulator_sv_wrapper #(
     logic   any_active;         // OR of slot_active[]
 
     // ----------------------------------------------------------------
+    // Free-list for O(1) burst slot allocation (Fix 3)
+    // ----------------------------------------------------------------
+    int free_q   [N_BURST_SLOTS];  // circular queue of free slot indices
+    int free_rd;                   // dequeue pointer
+    int free_wr;                   // enqueue pointer
+    int free_cnt;                  // number of entries (= free slots)
+    // Blocking shadows committed in step 6
+    int free_rd_nxt;
+    int free_wr_nxt;
+    int free_cnt_nxt;
+
+    // ----------------------------------------------------------------
     // Write burst state
     // ----------------------------------------------------------------
     logic                aw_active;
@@ -173,15 +188,17 @@ module ramulator_sv_wrapper #(
     // Helper functions
     // ----------------------------------------------------------------
 
-    // Merge new_data into existing using strb.
-    function automatic longint apply_wstrb(
-        input longint           existing,
-        input logic [WDATA-1:0] new_data,
-        input logic [WSTRB-1:0] strb
+    // Merge one 8-byte sub-beat of new_data into existing using per-byte strobe.
+    // With 256-bit beats each AXI W beat is split into 4 × 8-byte sub-beats;
+    // this helper operates on one sub-beat at a time.
+    function automatic longint apply_wstrb_sub(
+        input longint      existing,   // current 8-byte value from functional_mem
+        input longint      new_data,   // 8-byte slice of the incoming W beat
+        input logic [7:0]  strb        // 1 bit per byte (8 bits for 8 bytes)
     );
-        logic [WDATA-1:0] result;
-        result = WDATA'(existing);
-        for (int i = 0; i < WSTRB; i++) begin
+        logic [63:0] result;
+        result = existing[63:0];
+        for (int i = 0; i < 8; i++) begin
             if (strb[i])
                 result[8*i +: 8] = new_data[8*i +: 8];
         end
@@ -262,10 +279,14 @@ module ramulator_sv_wrapper #(
             slot_rob_valid[i]  = '0;
             slot_burst_type[i] = 2'b01;
             slot_fixed_cnt[i]  = 0;
+            free_q[i]          = i;  // pre-populate free-list with all slot indices
         end
         slot_order_rd  = 0;
         slot_order_wr  = 0;
         slot_order_cnt = 0;
+        free_rd  = 0;
+        free_wr  = 0;
+        free_cnt = N_BURST_SLOTS;
 
         wait (axi.nRST === 1'b0);
         wait (axi.nRST === 1'b1);
@@ -344,10 +365,14 @@ module ramulator_sv_wrapper #(
             for (int i = 0; i < N_BURST_SLOTS; i++) begin
                 slot_active[i]    <= 1'b0;
                 slot_rob_valid[i] <= '0;
+                free_q[i]         <= i;
             end
             slot_order_rd  <= 0;
             slot_order_wr  <= 0;
             slot_order_cnt <= 0;
+            free_rd  <= 0;
+            free_wr  <= 0;
+            free_cnt <= N_BURST_SLOTS;
             aw_active    <= 1'b0;
             aw_burst_reg <= 2'b01;
             sr_cnt <= 0; sr_rd <= 0; sr_wr <= 0;
@@ -365,13 +390,13 @@ module ramulator_sv_wrapper #(
             sr_wr_next         = sr_wr;
             slot_order_cnt_nxt = slot_order_cnt;
             slot_order_wr_nxt  = slot_order_wr;
+            free_rd_nxt        = free_rd;
+            free_wr_nxt        = free_wr;
+            free_cnt_nxt       = free_cnt;
 
-            any_active = 1'b0;
-            free_slot  = -1;
-            for (int i = 0; i < N_BURST_SLOTS; i++) begin
-                if ( slot_active[i])                    any_active = 1'b1;
-                if (!slot_active[i] && free_slot < 0)  free_slot  = i;
-            end
+            // O(1) free-slot lookup and active check via free-list (Fix 3)
+            any_active = (slot_order_cnt_nxt > 0);
+            free_slot  = (free_cnt_nxt > 0) ? free_q[free_rd_nxt] : -1;
 
             // Clear r_pending once the last burst beat has been accepted
             // and no slot is still active.
@@ -393,7 +418,10 @@ module ramulator_sv_wrapper #(
             // ----------------------------------------------------------
             for (int _drain = 0; _drain < 8; _drain++) begin
                 if (any_active || sr_cnt_next < SR_DEPTH) begin
-                    dpi_resp = ramulator_check_response(handle, dpi_data_out, dpi_source_id);
+                    dpi_resp = ramulator_check_response(handle,
+                                   dpi_data_out0, dpi_data_out1,
+                                   dpi_data_out2, dpi_data_out3,
+                                   dpi_source_id);
                     if (dpi_resp !== -64'sd1) begin
                         resp_slot = dpi_source_id; // slot index, or N_BURST_SLOTS for single-beat
                         if (resp_slot >= 0 && resp_slot < N_BURST_SLOTS) begin
@@ -406,15 +434,23 @@ module ramulator_sv_wrapper #(
                                 slot_burst_type[resp_slot],
                                 slot_fixed_cnt[resp_slot]
                             );
-                            slot_rob[resp_slot][beat_idx]       <= dpi_data_out;
+                            if (beat_idx < 0 || beat_idx >= 16) begin
+                                $display("[wrapper] ERROR: beat_idx=%0d OOB for slot=%0d resp=0x%h base=0x%h",
+                                         beat_idx, resp_slot, dpi_resp, slot_base_addr[resp_slot]);
+                            end else begin
+                            // Pack 4 × 64-bit sub-beats into one 256-bit beat (little-endian).
+                            slot_rob[resp_slot][beat_idx]       <= {dpi_data_out3, dpi_data_out2,
+                                                                    dpi_data_out1, dpi_data_out0};
                             slot_rob_valid[resp_slot][beat_idx] <= 1'b1;
                             if (slot_burst_type[resp_slot] == 2'b00)
                                 slot_fixed_cnt[resp_slot] <= slot_fixed_cnt[resp_slot] + 1;
+                            end // beat_idx bounds check
                         end else if (sr_cnt_next < SR_DEPTH) begin
                             // Single-beat response → SR FIFO.
                             // Use sr_wr_next (blocking) so back-to-back responses
                             // within the same drain loop write to distinct slots.
-                            sr_fifo[sr_wr_next].data <= dpi_data_out[RDATA-1:0];
+                            sr_fifo[sr_wr_next].data <= {dpi_data_out3, dpi_data_out2,
+                                                         dpi_data_out1, dpi_data_out0};
                             sr_fifo[sr_wr_next].id   <= read_mid_id[dpi_resp][RID-1:0];
                             sr_fifo[sr_wr_next].last <= 1'b1;
                             sr_fifo[sr_wr_next].resp <= R_OKAY;
@@ -440,7 +476,7 @@ module ramulator_sv_wrapper #(
 
             if (out_slot >= 0 && (!r_pending || axi.r_ready)) begin
                 // Load the next in-order beat from the head slot.
-                r_reg.data  <= slot_rob[out_slot][slot_beat_out[out_slot]][RDATA-1:0];
+                r_reg.data  <= slot_rob[out_slot][slot_beat_out[out_slot]];
                 r_reg.id    <= slot_id[out_slot][RID-1:0];
                 r_reg.last  <= (slot_beat_out[out_slot] == int'(slot_len[out_slot]));
                 r_reg.resp  <= R_OKAY;
@@ -448,6 +484,10 @@ module ramulator_sv_wrapper #(
                 slot_rob_valid[out_slot][slot_beat_out[out_slot]] <= 1'b0;
                 if (slot_beat_out[out_slot] == int'(slot_len[out_slot])) begin
                     slot_active[out_slot] <= 1'b0;   // last beat — free the slot
+                    // Return slot to free-list (Fix 3)
+                    free_q[free_wr_nxt]  <= out_slot;
+                    free_wr_nxt           = (free_wr_nxt + 1) % N_BURST_SLOTS;
+                    free_cnt_nxt          = free_cnt_nxt + 1;
                     // Pop the oldest entry from the issue-order FIFO.
                     slot_order_rd      <= (slot_order_rd + 1) % N_BURST_SLOTS;
                     slot_order_cnt_nxt  = slot_order_cnt_nxt - 1;
@@ -522,21 +562,40 @@ module ramulator_sv_wrapper #(
                         );
                         if (dpi_accepted) begin
                             axi.ar_o_ready <= 1'b1;
-                            slot_active[free_slot]      <= 1'b1;
-                            slot_base_addr[free_slot]   <= longint'(axi.ar_o.addr);
-                            slot_len[free_slot]         <= axi.ar_o.len;
-                            slot_size[free_slot]        <= axi.ar_o.size;
-                            slot_id[free_slot]          <= axi.ar_o.id;
-                            slot_burst_type[free_slot]  <= axi.ar_o.burst;
-                            slot_beat_issued[free_slot] <= 1; // beat 0 sent above
-                            slot_beat_out[free_slot]    <= 0;
-                            slot_rob_valid[free_slot]   <= '0;
-                            slot_fixed_cnt[free_slot]   <= 0;
-                            // Push slot index into issue-order FIFO so output
-                            // always follows the AR reception sequence.
+                            slot_active[free_slot]     <= 1'b1;
+                            slot_base_addr[free_slot]  <= longint'(axi.ar_o.addr);
+                            slot_len[free_slot]        <= axi.ar_o.len;
+                            slot_size[free_slot]       <= axi.ar_o.size;
+                            slot_id[free_slot]         <= axi.ar_o.id;
+                            slot_burst_type[free_slot] <= axi.ar_o.burst;
+                            slot_beat_out[free_slot]   <= 0;
+                            slot_rob_valid[free_slot]  <= '0;
+                            slot_fixed_cnt[free_slot]  <= 0;
+                            // Fix 2: issue remaining burst beats upfront so
+                            // Ramulator sees maximum ILP without waiting a cycle
+                            // per beat. Step 2 retries any that were rejected.
+                            begin : ar_upfront_issue
+                                int _next_issued;
+                                _next_issued = 1;
+                                for (int _b = 1; _b <= int'(axi.ar_o.len); _b++) begin
+                                    if (ramulator_send_request(handle,
+                                            burst_beat_addr(longint'(axi.ar_o.addr), _b,
+                                                            axi.ar_o.size, axi.ar_o.len,
+                                                            axi.ar_o.burst),
+                                            0, free_slot, 0))
+                                        _next_issued = _b + 1;
+                                    else
+                                        break;
+                                end
+                                slot_beat_issued[free_slot] <= _next_issued;
+                            end
+                            // Push slot into issue-order FIFO
                             slot_order_q[slot_order_wr_nxt] <= free_slot;
                             slot_order_wr_nxt                = (slot_order_wr_nxt + 1) % N_BURST_SLOTS;
                             slot_order_cnt_nxt               = slot_order_cnt_nxt + 1;
+                            // Fix 3: consume slot from free-list
+                            free_rd_nxt  = (free_rd_nxt + 1) % N_BURST_SLOTS;
+                            free_cnt_nxt = free_cnt_nxt - 1;
                         end else begin
                             axi.ar_o_ready <= 1'b0;  // Ramulator queue full
                         end
@@ -547,7 +606,7 @@ module ramulator_sv_wrapper #(
             end else begin
                 // No AR presented this cycle — assert ready speculatively
                 // so the master sees no gap on the next valid.
-                axi.ar_o_ready <= (free_slot >= 0) && (sr_cnt_next < SR_DEPTH);
+                axi.ar_o_ready <= (free_cnt_nxt > 0) && (sr_cnt_next < SR_DEPTH);
             end
 
             // ----------------------------------------------------------
@@ -565,13 +624,19 @@ module ramulator_sv_wrapper #(
             if (aw_active && axi.w_o_valid) begin
                 wr_beat_addr = burst_beat_addr(aw_base_addr, aw_beat,
                                                aw_size_reg, aw_len_reg, aw_burst_reg);
-                wr_merged    = (axi.w_o.strb == '1)
-                               ? longint'(axi.w_o.data)
-                               : apply_wstrb(ramulator_read_mem(handle, wr_beat_addr),
-                                             axi.w_o.data, axi.w_o.strb);
-                dpi_accepted = ramulator_send_request(
-                    handle, wr_beat_addr, 1, int'(aw_id_reg), wr_merged
-                );
+                // Issue 4 × 8-byte sub-beat writes for the 256-bit beat.
+                dpi_accepted = 1;
+                for (int _sb = 0; _sb < 4; _sb++) begin
+                    wr_merged = (axi.w_o.strb[8*_sb +: 8] == 8'hFF)
+                                ? longint'(axi.w_o.data[64*_sb +: 64])
+                                : apply_wstrb_sub(
+                                      ramulator_read_mem(handle, wr_beat_addr + _sb * 8),
+                                      longint'(axi.w_o.data[64*_sb +: 64]),
+                                      axi.w_o.strb[8*_sb +: 8]);
+                    if (!ramulator_send_request(handle, wr_beat_addr + _sb * 8,
+                                                1, int'(aw_id_reg), wr_merged))
+                        dpi_accepted = 0;
+                end
                 if (dpi_accepted) begin
                     axi.w_o_ready <= 1'b1;
                     aw_beat       <= aw_beat + 1;
@@ -589,13 +654,19 @@ module ramulator_sv_wrapper #(
             end else if (!aw_active && axi.aw_o_valid && axi.w_o_valid
                          && b_cnt_next < B_DEPTH) begin
                 wr_beat_addr = longint'(axi.aw_o.addr);
-                wr_merged    = (axi.w_o.strb == '1)
-                               ? longint'(axi.w_o.data)
-                               : apply_wstrb(ramulator_read_mem(handle, wr_beat_addr),
-                                             axi.w_o.data, axi.w_o.strb);
-                dpi_accepted = ramulator_send_request(
-                    handle, wr_beat_addr, 1, int'(axi.aw_o.mid_id), wr_merged
-                );
+                // Issue 4 × 8-byte sub-beat writes for the 256-bit beat.
+                dpi_accepted = 1;
+                for (int _sb = 0; _sb < 4; _sb++) begin
+                    wr_merged = (axi.w_o.strb[8*_sb +: 8] == 8'hFF)
+                                ? longint'(axi.w_o.data[64*_sb +: 64])
+                                : apply_wstrb_sub(
+                                      ramulator_read_mem(handle, wr_beat_addr + _sb * 8),
+                                      longint'(axi.w_o.data[64*_sb +: 64]),
+                                      axi.w_o.strb[8*_sb +: 8]);
+                    if (!ramulator_send_request(handle, wr_beat_addr + _sb * 8,
+                                                1, int'(axi.aw_o.mid_id), wr_merged))
+                        dpi_accepted = 0;
+                end
                 if (dpi_accepted) begin
                     axi.aw_o_ready <= 1'b1;
                     axi.w_o_ready  <= 1'b1;
@@ -625,6 +696,9 @@ module ramulator_sv_wrapper #(
             sr_wr          <= sr_wr_next;
             slot_order_cnt <= slot_order_cnt_nxt;
             slot_order_wr  <= slot_order_wr_nxt;
+            free_rd        <= free_rd_nxt;
+            free_wr        <= free_wr_nxt;
+            free_cnt       <= free_cnt_nxt;
 
             // ----------------------------------------------------------
             // 7. Tick Ramulator ×2

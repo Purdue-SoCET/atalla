@@ -150,7 +150,9 @@ void ramulator_tick(ramulator_handle_t handle) {
     }
 }
 
-long long ramulator_check_response(ramulator_handle_t handle, uint64_t* data_out,
+long long ramulator_check_response(ramulator_handle_t handle,
+                                   uint64_t* data_out0, uint64_t* data_out1,
+                                   uint64_t* data_out2, uint64_t* data_out3,
                                    int* source_id_out) {
     auto* wrapper = static_cast<RamulatorWrapper*>(handle);
     if (!wrapper || wrapper->completed_requests.empty()) {
@@ -160,10 +162,22 @@ long long ramulator_check_response(ramulator_handle_t handle, uint64_t* data_out
     CompletedReq cr = wrapper->completed_requests.front();
     wrapper->completed_requests.pop();
 
-    if (data_out)      *data_out      = normalize_data(wrapper, cr.data);
+    // Align down to the 32-byte (4 × 8-byte) beat boundary.
+    Addr_t base = cr.addr & ~(Addr_t)0x1F;
+
+    uint64_t* outs[4] = {data_out0, data_out1, data_out2, data_out3};
+    for (int i = 0; i < 4; i++) {
+        if (outs[i]) {
+            Addr_t a = base + static_cast<Addr_t>(i * 8);
+            auto it = wrapper->functional_mem.find(a);
+            *outs[i] = (it != wrapper->functional_mem.end())
+                       ? normalize_data(wrapper, it->second)
+                       : normalize_data(wrapper, static_cast<uint64_t>(a));
+        }
+    }
     if (source_id_out) *source_id_out = cr.source_id;
 
-    return static_cast<long long>(cr.addr);
+    return static_cast<long long>(base);
 }
 
 uint64_t ramulator_read_mem(ramulator_handle_t handle, unsigned long long addr) {
@@ -250,8 +264,11 @@ void ramulator_finalize(ramulator_handle_t handle) {
 
 // Use this instead of $finish. QuestaSim's post-sim teardown walks into
 // the heap corruption that Ramulator2 leaves behind, so we just call
-// _Exit() and skip destructors entirely.
+// _Exit() and skip destructors entirely. Flush stdout/stderr first so
+// $display output is not lost.
 void ramulator_exit(int code) {
+    fflush(stdout);
+    fflush(stderr);
     std::_Exit(code);
 }
 

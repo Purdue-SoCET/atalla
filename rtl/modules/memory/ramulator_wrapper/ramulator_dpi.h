@@ -27,12 +27,14 @@ int ramulator_send_request(
 // Tick the clock one cycle.
 void ramulator_tick(ramulator_handle_t handle);
 
-// Check for a completed read. Returns the request address, or -1 if nothing
-// has finished yet. If data_out is non-NULL it gets the value last written
-// to that address. If source_id_out is non-NULL it gets the source_id that
-// was passed to ramulator_send_request, allowing the caller to route the
-// response without scanning address ranges.
-long long ramulator_check_response(ramulator_handle_t handle, uint64_t* data_out,
+// Check for a completed read. Returns the 32-byte-aligned base address of the
+// beat, or -1 if nothing has finished yet. data_out0..3 are filled with the
+// four consecutive 8-byte words at base, base+8, base+16, base+24 from
+// functional_mem (the 256-bit R beat). source_id_out echoes the source_id
+// from ramulator_send_request.
+long long ramulator_check_response(ramulator_handle_t handle,
+                                   uint64_t* data_out0, uint64_t* data_out1,
+                                   uint64_t* data_out2, uint64_t* data_out3,
                                    int* source_id_out);
 
 // Peek at what's currently stored for an address without issuing a timing
