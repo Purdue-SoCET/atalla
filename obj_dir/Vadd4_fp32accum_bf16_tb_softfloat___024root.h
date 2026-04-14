@@ -7,7 +7,7 @@
 
 #include "verilated.h"
 #include "verilated_timing.h"
-class Vadd4_fp32accum_bf16_tb_softfloat_systolic_array_4_input_adder_if;
+class Vadd4_fp32accum_bf16_tb_softfloat_systolic_array_4_input_adder_if__pi1;
 
 
 class Vadd4_fp32accum_bf16_tb_softfloat__Syms;
@@ -15,7 +15,7 @@ class Vadd4_fp32accum_bf16_tb_softfloat__Syms;
 class alignas(VL_CACHE_LINE_BYTES) Vadd4_fp32accum_bf16_tb_softfloat___024root final : public VerilatedModule {
   public:
     // CELLS
-    Vadd4_fp32accum_bf16_tb_softfloat_systolic_array_4_input_adder_if* __PVT__add4_fp32accum_bf16_tb_softfloat__DOT__add_if;
+    Vadd4_fp32accum_bf16_tb_softfloat_systolic_array_4_input_adder_if__pi1* __PVT__add4_fp32accum_bf16_tb_softfloat__DOT__add_if;
 
     // DESIGN SPECIFIC STATE
     // Anonymous structures to workaround compiler member-count bugs
@@ -82,21 +82,19 @@ class alignas(VL_CACHE_LINE_BYTES) Vadd4_fp32accum_bf16_tb_softfloat___024root f
         CData/*0:0*/ add4_fp32accum_bf16_tb_softfloat__DOT__bf16adder__DOT__st2_res_sign;
         CData/*0:0*/ add4_fp32accum_bf16_tb_softfloat__DOT__bf16adder__DOT__st2_sticky;
         CData/*0:0*/ add4_fp32accum_bf16_tb_softfloat__DOT__bf16adder__DOT__st2_special;
-        CData/*5:0*/ add4_fp32accum_bf16_tb_softfloat__DOT__bf16adder__DOT__lead_zeros;
-        CData/*0:0*/ add4_fp32accum_bf16_tb_softfloat__DOT__bf16adder__DOT__guard_bit;
+        CData/*4:0*/ add4_fp32accum_bf16_tb_softfloat__DOT__bf16adder__DOT__lead_zeros;
+        CData/*7:0*/ add4_fp32accum_bf16_tb_softfloat__DOT__reduce__DOT__rounded;
     };
     struct {
-        CData/*0:0*/ add4_fp32accum_bf16_tb_softfloat__DOT__bf16adder__DOT__round_bit;
-        CData/*0:0*/ add4_fp32accum_bf16_tb_softfloat__DOT__bf16adder__DOT__sticky_bit;
-        CData/*0:0*/ add4_fp32accum_bf16_tb_softfloat__DOT__bf16adder__DOT__round_up;
-        CData/*7:0*/ add4_fp32accum_bf16_tb_softfloat__DOT__reduce__DOT__rounded;
         CData/*0:0*/ add4_fp32accum_bf16_tb_softfloat__DOT__reduce__DOT__guard;
         CData/*0:0*/ add4_fp32accum_bf16_tb_softfloat__DOT__reduce__DOT__rnd;
         CData/*0:0*/ add4_fp32accum_bf16_tb_softfloat__DOT__reduce__DOT__sticky;
         CData/*0:0*/ add4_fp32accum_bf16_tb_softfloat__DOT__reduce__DOT__round_up;
+        CData/*0:0*/ __VstlDidInit;
         CData/*0:0*/ __VstlFirstIteration;
         CData/*0:0*/ __Vtrigprevexpr___TOP__add4_fp32accum_bf16_tb_softfloat__DOT__tb_clk__0;
         CData/*0:0*/ __Vtrigprevexpr___TOP__add4_fp32accum_bf16_tb_softfloat__DOT__tb_nrst__0;
+        CData/*0:0*/ __VactDidInit;
         CData/*0:0*/ __VactContinue;
         SData/*15:0*/ add4_fp32accum_bf16_tb_softfloat__DOT__tb_a;
         SData/*15:0*/ add4_fp32accum_bf16_tb_softfloat__DOT__tb_b;
@@ -121,52 +119,55 @@ class alignas(VL_CACHE_LINE_BYTES) Vadd4_fp32accum_bf16_tb_softfloat___024root f
         IData/*31:0*/ add4_fp32accum_bf16_tb_softfloat__DOT__pass_count;
         IData/*31:0*/ add4_fp32accum_bf16_tb_softfloat__DOT__fail_count;
         IData/*31:0*/ add4_fp32accum_bf16_tb_softfloat__DOT__ulp_big_count;
+        IData/*31:0*/ add4_fp32accum_bf16_tb_softfloat__DOT__largest_ulp;
         IData/*31:0*/ add4_fp32accum_bf16_tb_softfloat__DOT__fd;
         IData/*31:0*/ add4_fp32accum_bf16_tb_softfloat__DOT__total_count;
         IData/*31:0*/ add4_fp32accum_bf16_tb_softfloat__DOT__unnamedblk1__DOT__ret;
-        IData/*23:0*/ add4_fp32accum_bf16_tb_softfloat__DOT__bf16adder__DOT__x_mant;
-        IData/*23:0*/ add4_fp32accum_bf16_tb_softfloat__DOT__bf16adder__DOT__y_shifted;
-        IData/*23:0*/ add4_fp32accum_bf16_tb_softfloat__DOT__bf16adder__DOT__m_shifted;
-        IData/*23:0*/ add4_fp32accum_bf16_tb_softfloat__DOT__bf16adder__DOT__n_shifted;
-        IData/*23:0*/ add4_fp32accum_bf16_tb_softfloat__DOT__bf16adder__DOT__y_mant_base;
-        IData/*23:0*/ add4_fp32accum_bf16_tb_softfloat__DOT__bf16adder__DOT__m_mant_base;
-        IData/*23:0*/ add4_fp32accum_bf16_tb_softfloat__DOT__bf16adder__DOT__n_mant_base;
-        IData/*31:0*/ add4_fp32accum_bf16_tb_softfloat__DOT__bf16adder__DOT__special_result;
-        IData/*31:0*/ add4_fp32accum_bf16_tb_softfloat__DOT__bf16adder__DOT__st1_special_result;
-        IData/*26:0*/ add4_fp32accum_bf16_tb_softfloat__DOT__bf16adder__DOT__st1_sum_vec;
-        IData/*26:0*/ add4_fp32accum_bf16_tb_softfloat__DOT__bf16adder__DOT__st1_carry_vec;
-        IData/*27:0*/ add4_fp32accum_bf16_tb_softfloat__DOT__bf16adder__DOT__raw_sum;
-        IData/*25:0*/ add4_fp32accum_bf16_tb_softfloat__DOT__bf16adder__DOT__mag_sum;
-        IData/*25:0*/ add4_fp32accum_bf16_tb_softfloat__DOT__bf16adder__DOT__st2_sum_mag;
-        IData/*31:0*/ add4_fp32accum_bf16_tb_softfloat__DOT__bf16adder__DOT__st2_spec_res;
-        IData/*25:0*/ add4_fp32accum_bf16_tb_softfloat__DOT__bf16adder__DOT__lzd_scan;
-        IData/*25:0*/ add4_fp32accum_bf16_tb_softfloat__DOT__bf16adder__DOT__norm_val;
-        IData/*22:0*/ add4_fp32accum_bf16_tb_softfloat__DOT__bf16adder__DOT__raw_mant;
-        IData/*22:0*/ add4_fp32accum_bf16_tb_softfloat__DOT__bf16adder__DOT__final_mant;
-        IData/*23:0*/ add4_fp32accum_bf16_tb_softfloat__DOT__bf16adder__DOT__rounded_mant_int;
-        IData/*31:0*/ add4_fp32accum_bf16_tb_softfloat__DOT__bf16adder__DOT__result_out;
-        IData/*26:0*/ add4_fp32accum_bf16_tb_softfloat__DOT__bf16adder__DOT__op_x;
-        IData/*26:0*/ add4_fp32accum_bf16_tb_softfloat__DOT__bf16adder__DOT__op_y;
-        IData/*26:0*/ add4_fp32accum_bf16_tb_softfloat__DOT__bf16adder__DOT__op_m;
-        IData/*26:0*/ add4_fp32accum_bf16_tb_softfloat__DOT__bf16adder__DOT__op_n;
-        IData/*26:0*/ add4_fp32accum_bf16_tb_softfloat__DOT__bf16adder__DOT__csa_s1;
+        IData/*26:0*/ add4_fp32accum_bf16_tb_softfloat__DOT__bf16adder__DOT__x_mant;
+        IData/*26:0*/ add4_fp32accum_bf16_tb_softfloat__DOT__bf16adder__DOT__y_shifted;
+        IData/*26:0*/ add4_fp32accum_bf16_tb_softfloat__DOT__bf16adder__DOT__m_shifted;
+        IData/*26:0*/ add4_fp32accum_bf16_tb_softfloat__DOT__bf16adder__DOT__n_shifted;
+        IData/*26:0*/ add4_fp32accum_bf16_tb_softfloat__DOT__bf16adder__DOT__y_mant_base;
+        IData/*26:0*/ add4_fp32accum_bf16_tb_softfloat__DOT__bf16adder__DOT__m_mant_base;
+        IData/*26:0*/ add4_fp32accum_bf16_tb_softfloat__DOT__bf16adder__DOT__n_mant_base;
+        IData/*29:0*/ add4_fp32accum_bf16_tb_softfloat__DOT__bf16adder__DOT__st1_sum_vec;
+        IData/*29:0*/ add4_fp32accum_bf16_tb_softfloat__DOT__bf16adder__DOT__st1_carry_vec;
+        IData/*29:0*/ add4_fp32accum_bf16_tb_softfloat__DOT__bf16adder__DOT__raw_sum;
+        IData/*29:0*/ add4_fp32accum_bf16_tb_softfloat__DOT__bf16adder__DOT__mag_sum;
+        IData/*29:0*/ add4_fp32accum_bf16_tb_softfloat__DOT__bf16adder__DOT__st2_sum_mag;
+        IData/*29:0*/ add4_fp32accum_bf16_tb_softfloat__DOT__bf16adder__DOT__lzd_scan;
+        IData/*29:0*/ add4_fp32accum_bf16_tb_softfloat__DOT__bf16adder__DOT__norm_val;
+        IData/*25:0*/ add4_fp32accum_bf16_tb_softfloat__DOT__bf16adder__DOT__raw_mant;
+        IData/*25:0*/ add4_fp32accum_bf16_tb_softfloat__DOT__bf16adder__DOT__final_mant;
+        IData/*26:0*/ add4_fp32accum_bf16_tb_softfloat__DOT__bf16adder__DOT__rounded_mant_int;
+        IData/*29:0*/ add4_fp32accum_bf16_tb_softfloat__DOT__bf16adder__DOT__op_x;
+        IData/*29:0*/ add4_fp32accum_bf16_tb_softfloat__DOT__bf16adder__DOT__op_y;
+        IData/*29:0*/ add4_fp32accum_bf16_tb_softfloat__DOT__bf16adder__DOT__op_m;
+        IData/*29:0*/ add4_fp32accum_bf16_tb_softfloat__DOT__bf16adder__DOT__op_n;
+        IData/*29:0*/ add4_fp32accum_bf16_tb_softfloat__DOT__bf16adder__DOT__csa_s1;
+        IData/*29:0*/ add4_fp32accum_bf16_tb_softfloat__DOT__bf16adder__DOT__csa_c1;
+        IData/*29:0*/ add4_fp32accum_bf16_tb_softfloat__DOT__bf16adder__DOT__csa_s2;
+        IData/*29:0*/ add4_fp32accum_bf16_tb_softfloat__DOT__bf16adder__DOT__csa_c2;
+        IData/*31:0*/ add4_fp32accum_bf16_tb_softfloat__DOT__bf16adder__DOT__stage3_logic__DOT__unnamedblk1__DOT__i;
+        IData/*29:0*/ __Vtrigprevexpr___TOP__add4_fp32accum_bf16_tb_softfloat__DOT__bf16adder__DOT__norm_val__0;
     };
     struct {
-        IData/*26:0*/ add4_fp32accum_bf16_tb_softfloat__DOT__bf16adder__DOT__csa_c1;
-        IData/*26:0*/ add4_fp32accum_bf16_tb_softfloat__DOT__bf16adder__DOT__csa_s2;
-        IData/*26:0*/ add4_fp32accum_bf16_tb_softfloat__DOT__bf16adder__DOT__csa_c2;
-        IData/*31:0*/ add4_fp32accum_bf16_tb_softfloat__DOT__bf16adder__DOT__stage3_logic__DOT__unnamedblk1__DOT__i;
+        IData/*29:0*/ __Vtrigprevexpr___TOP__add4_fp32accum_bf16_tb_softfloat__DOT__bf16adder__DOT__norm_val__1;
         IData/*31:0*/ __VactIterCount;
         QData/*63:0*/ add4_fp32accum_bf16_tb_softfloat__DOT__total_ulp_diff;
         QData/*63:0*/ add4_fp32accum_bf16_tb_softfloat__DOT__get_ulp_distance__Vstatic__int_a;
         QData/*63:0*/ add4_fp32accum_bf16_tb_softfloat__DOT__get_ulp_distance__Vstatic__int_b;
-        VlUnpacked<CData/*0:0*/, 6> __Vm_traceActivity;
+        QData/*34:0*/ add4_fp32accum_bf16_tb_softfloat__DOT__bf16adder__DOT__special_result;
+        QData/*34:0*/ add4_fp32accum_bf16_tb_softfloat__DOT__bf16adder__DOT__st1_special_result;
+        QData/*34:0*/ add4_fp32accum_bf16_tb_softfloat__DOT__bf16adder__DOT__st2_spec_res;
+        QData/*34:0*/ add4_fp32accum_bf16_tb_softfloat__DOT__bf16adder__DOT__result_out;
+        VlUnpacked<CData/*0:0*/, 7> __Vm_traceActivity;
     };
     VlDelayScheduler __VdlySched;
     VlTriggerScheduler __VtrigSched_h44fc30c7__0;
-    VlTriggerVec<1> __VstlTriggered;
-    VlTriggerVec<4> __VactTriggered;
-    VlTriggerVec<4> __VnbaTriggered;
+    VlTriggerVec<2> __VstlTriggered;
+    VlTriggerVec<5> __VactTriggered;
+    VlTriggerVec<5> __VnbaTriggered;
 
     // INTERNAL VARIABLES
     Vadd4_fp32accum_bf16_tb_softfloat__Syms* const vlSymsp;

@@ -292,6 +292,18 @@ VL_INLINE_OPT VlCoroutine Vadd4_fp32_tb_softfloat___024root___eval_initial__TOP_
     __Vfunc_add4_fp32_tb_softfloat__DOT__get_ulp_err__52__hw_bits = 0;
     IData/*31:0*/ __Vfunc_add4_fp32_tb_softfloat__DOT__get_ulp_err__52__ref_bits;
     __Vfunc_add4_fp32_tb_softfloat__DOT__get_ulp_err__52__ref_bits = 0;
+    IData/*31:0*/ __Vfunc_add4_fp32_tb_softfloat__DOT__get_ulp_err__53__Vfuncout;
+    __Vfunc_add4_fp32_tb_softfloat__DOT__get_ulp_err__53__Vfuncout = 0;
+    IData/*31:0*/ __Vfunc_add4_fp32_tb_softfloat__DOT__get_ulp_err__53__hw_bits;
+    __Vfunc_add4_fp32_tb_softfloat__DOT__get_ulp_err__53__hw_bits = 0;
+    IData/*31:0*/ __Vfunc_add4_fp32_tb_softfloat__DOT__get_ulp_err__53__ref_bits;
+    __Vfunc_add4_fp32_tb_softfloat__DOT__get_ulp_err__53__ref_bits = 0;
+    IData/*31:0*/ __Vfunc_add4_fp32_tb_softfloat__DOT__get_ulp_err__54__Vfuncout;
+    __Vfunc_add4_fp32_tb_softfloat__DOT__get_ulp_err__54__Vfuncout = 0;
+    IData/*31:0*/ __Vfunc_add4_fp32_tb_softfloat__DOT__get_ulp_err__54__hw_bits;
+    __Vfunc_add4_fp32_tb_softfloat__DOT__get_ulp_err__54__hw_bits = 0;
+    IData/*31:0*/ __Vfunc_add4_fp32_tb_softfloat__DOT__get_ulp_err__54__ref_bits;
+    __Vfunc_add4_fp32_tb_softfloat__DOT__get_ulp_err__54__ref_bits = 0;
     VlWide<7>/*223:0*/ __Vtemp_1;
     VlWide<7>/*223:0*/ __Vtemp_2;
     double __Vtemp_31;
@@ -325,14 +337,15 @@ VL_INLINE_OPT VlCoroutine Vadd4_fp32_tb_softfloat___024root___eval_initial__TOP_
     vlSelfRef.add4_fp32_tb_softfloat__DOT__tb_b = 0U;
     vlSelfRef.add4_fp32_tb_softfloat__DOT__tb_c = 0U;
     vlSelfRef.add4_fp32_tb_softfloat__DOT__tb_d = 0U;
+    vlSelfRef.add4_fp32_tb_softfloat__DOT__total_count = 0U;
     co_await vlSelfRef.__VdlySched.delay(0x7d0ULL, 
                                          nullptr, "tb/unit/systolic_array/add4_fp32_tb_softfloat.sv", 
-                                         169);
+                                         176);
     vlSelfRef.__Vm_traceActivity[2U] = 1U;
     vlSelfRef.add4_fp32_tb_softfloat__DOT__tb_nrst = 1U;
     co_await vlSelfRef.__VdlySched.delay(0x7d0ULL, 
                                          nullptr, "tb/unit/systolic_array/add4_fp32_tb_softfloat.sv", 
-                                         171);
+                                         178);
     vlSelfRef.__Vm_traceActivity[2U] = 1U;
     VL_WRITEF_NX("--- Hardcoded 4-input Addition Cases ---\n",0);
     __Vtask_add4_fp32_tb_softfloat__DOT__test_case__0__d = 0x3f800000U;
@@ -343,7 +356,7 @@ VL_INLINE_OPT VlCoroutine Vadd4_fp32_tb_softfloat___024root___eval_initial__TOP_
                                                          nullptr, 
                                                          "@(negedge add4_fp32_tb_softfloat.tb_clk)", 
                                                          "tb/unit/systolic_array/add4_fp32_tb_softfloat.sv", 
-                                                         103);
+                                                         109);
     vlSelfRef.__Vm_traceActivity[2U] = 1U;
     vlSelfRef.add4_fp32_tb_softfloat__DOT__tb_a = __Vtask_add4_fp32_tb_softfloat__DOT__test_case__0__a;
     vlSelfRef.add4_fp32_tb_softfloat__DOT__tb_b = __Vtask_add4_fp32_tb_softfloat__DOT__test_case__0__b;
@@ -352,7 +365,7 @@ VL_INLINE_OPT VlCoroutine Vadd4_fp32_tb_softfloat___024root___eval_initial__TOP_
     vlSelfRef.add4_fp32_tb_softfloat__DOT__exp = 0x40800000U;
     co_await vlSelfRef.__VdlySched.delay(0x2710ULL, 
                                          nullptr, "tb/unit/systolic_array/add4_fp32_tb_softfloat.sv", 
-                                         178);
+                                         185);
     vlSelfRef.__Vm_traceActivity[2U] = 1U;
     __Vtask_add4_fp32_tb_softfloat__DOT__check_case__1__expected 
         = vlSelfRef.add4_fp32_tb_softfloat__DOT__exp;
@@ -411,7 +424,7 @@ VL_INLINE_OPT VlCoroutine Vadd4_fp32_tb_softfloat___024root___eval_initial__TOP_
     }
     co_await vlSelfRef.__VdlySched.delay(0x7d0ULL, 
                                          nullptr, "tb/unit/systolic_array/add4_fp32_tb_softfloat.sv", 
-                                         180);
+                                         187);
     vlSelfRef.__Vm_traceActivity[2U] = 1U;
     __Vtask_add4_fp32_tb_softfloat__DOT__test_case__4__d = 0x40000000U;
     __Vtask_add4_fp32_tb_softfloat__DOT__test_case__4__c = 0x40000000U;
@@ -421,7 +434,7 @@ VL_INLINE_OPT VlCoroutine Vadd4_fp32_tb_softfloat___024root___eval_initial__TOP_
                                                          nullptr, 
                                                          "@(negedge add4_fp32_tb_softfloat.tb_clk)", 
                                                          "tb/unit/systolic_array/add4_fp32_tb_softfloat.sv", 
-                                                         103);
+                                                         109);
     vlSelfRef.__Vm_traceActivity[2U] = 1U;
     vlSelfRef.add4_fp32_tb_softfloat__DOT__tb_a = __Vtask_add4_fp32_tb_softfloat__DOT__test_case__4__a;
     vlSelfRef.add4_fp32_tb_softfloat__DOT__tb_b = __Vtask_add4_fp32_tb_softfloat__DOT__test_case__4__b;
@@ -430,7 +443,7 @@ VL_INLINE_OPT VlCoroutine Vadd4_fp32_tb_softfloat___024root___eval_initial__TOP_
     vlSelfRef.add4_fp32_tb_softfloat__DOT__exp = 0x41000000U;
     co_await vlSelfRef.__VdlySched.delay(0x2710ULL, 
                                          nullptr, "tb/unit/systolic_array/add4_fp32_tb_softfloat.sv", 
-                                         185);
+                                         192);
     vlSelfRef.__Vm_traceActivity[2U] = 1U;
     __Vtask_add4_fp32_tb_softfloat__DOT__check_case__5__expected 
         = vlSelfRef.add4_fp32_tb_softfloat__DOT__exp;
@@ -489,7 +502,7 @@ VL_INLINE_OPT VlCoroutine Vadd4_fp32_tb_softfloat___024root___eval_initial__TOP_
     }
     co_await vlSelfRef.__VdlySched.delay(0x7d0ULL, 
                                          nullptr, "tb/unit/systolic_array/add4_fp32_tb_softfloat.sv", 
-                                         187);
+                                         194);
     vlSelfRef.__Vm_traceActivity[2U] = 1U;
     __Vtask_add4_fp32_tb_softfloat__DOT__test_case__8__d = 0U;
     __Vtask_add4_fp32_tb_softfloat__DOT__test_case__8__c = 0U;
@@ -499,7 +512,7 @@ VL_INLINE_OPT VlCoroutine Vadd4_fp32_tb_softfloat___024root___eval_initial__TOP_
                                                          nullptr, 
                                                          "@(negedge add4_fp32_tb_softfloat.tb_clk)", 
                                                          "tb/unit/systolic_array/add4_fp32_tb_softfloat.sv", 
-                                                         103);
+                                                         109);
     vlSelfRef.__Vm_traceActivity[2U] = 1U;
     vlSelfRef.add4_fp32_tb_softfloat__DOT__tb_a = __Vtask_add4_fp32_tb_softfloat__DOT__test_case__8__a;
     vlSelfRef.add4_fp32_tb_softfloat__DOT__tb_b = __Vtask_add4_fp32_tb_softfloat__DOT__test_case__8__b;
@@ -508,7 +521,7 @@ VL_INLINE_OPT VlCoroutine Vadd4_fp32_tb_softfloat___024root___eval_initial__TOP_
     vlSelfRef.add4_fp32_tb_softfloat__DOT__exp = 0U;
     co_await vlSelfRef.__VdlySched.delay(0x2710ULL, 
                                          nullptr, "tb/unit/systolic_array/add4_fp32_tb_softfloat.sv", 
-                                         192);
+                                         199);
     vlSelfRef.__Vm_traceActivity[2U] = 1U;
     __Vtask_add4_fp32_tb_softfloat__DOT__check_case__9__expected 
         = vlSelfRef.add4_fp32_tb_softfloat__DOT__exp;
@@ -567,7 +580,7 @@ VL_INLINE_OPT VlCoroutine Vadd4_fp32_tb_softfloat___024root___eval_initial__TOP_
     }
     co_await vlSelfRef.__VdlySched.delay(0x7d0ULL, 
                                          nullptr, "tb/unit/systolic_array/add4_fp32_tb_softfloat.sv", 
-                                         194);
+                                         201);
     vlSelfRef.__Vm_traceActivity[2U] = 1U;
     __Vtask_add4_fp32_tb_softfloat__DOT__test_case__12__d = 0U;
     __Vtask_add4_fp32_tb_softfloat__DOT__test_case__12__c = 0U;
@@ -577,7 +590,7 @@ VL_INLINE_OPT VlCoroutine Vadd4_fp32_tb_softfloat___024root___eval_initial__TOP_
                                                          nullptr, 
                                                          "@(negedge add4_fp32_tb_softfloat.tb_clk)", 
                                                          "tb/unit/systolic_array/add4_fp32_tb_softfloat.sv", 
-                                                         103);
+                                                         109);
     vlSelfRef.__Vm_traceActivity[2U] = 1U;
     vlSelfRef.add4_fp32_tb_softfloat__DOT__tb_a = __Vtask_add4_fp32_tb_softfloat__DOT__test_case__12__a;
     vlSelfRef.add4_fp32_tb_softfloat__DOT__tb_b = __Vtask_add4_fp32_tb_softfloat__DOT__test_case__12__b;
@@ -586,7 +599,7 @@ VL_INLINE_OPT VlCoroutine Vadd4_fp32_tb_softfloat___024root___eval_initial__TOP_
     vlSelfRef.add4_fp32_tb_softfloat__DOT__exp = 0x3f800000U;
     co_await vlSelfRef.__VdlySched.delay(0x2710ULL, 
                                          nullptr, "tb/unit/systolic_array/add4_fp32_tb_softfloat.sv", 
-                                         199);
+                                         206);
     vlSelfRef.__Vm_traceActivity[2U] = 1U;
     __Vtask_add4_fp32_tb_softfloat__DOT__check_case__13__expected 
         = vlSelfRef.add4_fp32_tb_softfloat__DOT__exp;
@@ -645,7 +658,7 @@ VL_INLINE_OPT VlCoroutine Vadd4_fp32_tb_softfloat___024root___eval_initial__TOP_
     }
     co_await vlSelfRef.__VdlySched.delay(0x7d0ULL, 
                                          nullptr, "tb/unit/systolic_array/add4_fp32_tb_softfloat.sv", 
-                                         201);
+                                         208);
     vlSelfRef.__Vm_traceActivity[2U] = 1U;
     __Vtask_add4_fp32_tb_softfloat__DOT__test_case__16__d = 0x3f800000U;
     __Vtask_add4_fp32_tb_softfloat__DOT__test_case__16__c = 0x3f800000U;
@@ -655,7 +668,7 @@ VL_INLINE_OPT VlCoroutine Vadd4_fp32_tb_softfloat___024root___eval_initial__TOP_
                                                          nullptr, 
                                                          "@(negedge add4_fp32_tb_softfloat.tb_clk)", 
                                                          "tb/unit/systolic_array/add4_fp32_tb_softfloat.sv", 
-                                                         103);
+                                                         109);
     vlSelfRef.__Vm_traceActivity[2U] = 1U;
     vlSelfRef.add4_fp32_tb_softfloat__DOT__tb_a = __Vtask_add4_fp32_tb_softfloat__DOT__test_case__16__a;
     vlSelfRef.add4_fp32_tb_softfloat__DOT__tb_b = __Vtask_add4_fp32_tb_softfloat__DOT__test_case__16__b;
@@ -664,7 +677,7 @@ VL_INLINE_OPT VlCoroutine Vadd4_fp32_tb_softfloat___024root___eval_initial__TOP_
     vlSelfRef.add4_fp32_tb_softfloat__DOT__exp = 0x7f800000U;
     co_await vlSelfRef.__VdlySched.delay(0x2710ULL, 
                                          nullptr, "tb/unit/systolic_array/add4_fp32_tb_softfloat.sv", 
-                                         206);
+                                         213);
     vlSelfRef.__Vm_traceActivity[2U] = 1U;
     __Vtask_add4_fp32_tb_softfloat__DOT__check_case__17__expected 
         = vlSelfRef.add4_fp32_tb_softfloat__DOT__exp;
@@ -723,7 +736,7 @@ VL_INLINE_OPT VlCoroutine Vadd4_fp32_tb_softfloat___024root___eval_initial__TOP_
     }
     co_await vlSelfRef.__VdlySched.delay(0x7d0ULL, 
                                          nullptr, "tb/unit/systolic_array/add4_fp32_tb_softfloat.sv", 
-                                         208);
+                                         215);
     vlSelfRef.__Vm_traceActivity[2U] = 1U;
     __Vtask_add4_fp32_tb_softfloat__DOT__test_case__20__d = 0x3f800000U;
     __Vtask_add4_fp32_tb_softfloat__DOT__test_case__20__c = 0x3f800000U;
@@ -733,7 +746,7 @@ VL_INLINE_OPT VlCoroutine Vadd4_fp32_tb_softfloat___024root___eval_initial__TOP_
                                                          nullptr, 
                                                          "@(negedge add4_fp32_tb_softfloat.tb_clk)", 
                                                          "tb/unit/systolic_array/add4_fp32_tb_softfloat.sv", 
-                                                         103);
+                                                         109);
     vlSelfRef.__Vm_traceActivity[2U] = 1U;
     vlSelfRef.add4_fp32_tb_softfloat__DOT__tb_a = __Vtask_add4_fp32_tb_softfloat__DOT__test_case__20__a;
     vlSelfRef.add4_fp32_tb_softfloat__DOT__tb_b = __Vtask_add4_fp32_tb_softfloat__DOT__test_case__20__b;
@@ -742,7 +755,7 @@ VL_INLINE_OPT VlCoroutine Vadd4_fp32_tb_softfloat___024root___eval_initial__TOP_
     vlSelfRef.add4_fp32_tb_softfloat__DOT__exp = 0x7f800000U;
     co_await vlSelfRef.__VdlySched.delay(0x2710ULL, 
                                          nullptr, "tb/unit/systolic_array/add4_fp32_tb_softfloat.sv", 
-                                         213);
+                                         220);
     vlSelfRef.__Vm_traceActivity[2U] = 1U;
     __Vtask_add4_fp32_tb_softfloat__DOT__check_case__21__expected 
         = vlSelfRef.add4_fp32_tb_softfloat__DOT__exp;
@@ -801,7 +814,7 @@ VL_INLINE_OPT VlCoroutine Vadd4_fp32_tb_softfloat___024root___eval_initial__TOP_
     }
     co_await vlSelfRef.__VdlySched.delay(0x7d0ULL, 
                                          nullptr, "tb/unit/systolic_array/add4_fp32_tb_softfloat.sv", 
-                                         215);
+                                         222);
     vlSelfRef.__Vm_traceActivity[2U] = 1U;
     __Vtask_add4_fp32_tb_softfloat__DOT__test_case__24__d = 0x3f800000U;
     __Vtask_add4_fp32_tb_softfloat__DOT__test_case__24__c = 0x3f800000U;
@@ -811,7 +824,7 @@ VL_INLINE_OPT VlCoroutine Vadd4_fp32_tb_softfloat___024root___eval_initial__TOP_
                                                          nullptr, 
                                                          "@(negedge add4_fp32_tb_softfloat.tb_clk)", 
                                                          "tb/unit/systolic_array/add4_fp32_tb_softfloat.sv", 
-                                                         103);
+                                                         109);
     vlSelfRef.__Vm_traceActivity[2U] = 1U;
     vlSelfRef.add4_fp32_tb_softfloat__DOT__tb_a = __Vtask_add4_fp32_tb_softfloat__DOT__test_case__24__a;
     vlSelfRef.add4_fp32_tb_softfloat__DOT__tb_b = __Vtask_add4_fp32_tb_softfloat__DOT__test_case__24__b;
@@ -820,7 +833,7 @@ VL_INLINE_OPT VlCoroutine Vadd4_fp32_tb_softfloat___024root___eval_initial__TOP_
     vlSelfRef.add4_fp32_tb_softfloat__DOT__exp = 0x7fc00000U;
     co_await vlSelfRef.__VdlySched.delay(0x2710ULL, 
                                          nullptr, "tb/unit/systolic_array/add4_fp32_tb_softfloat.sv", 
-                                         220);
+                                         227);
     vlSelfRef.__Vm_traceActivity[2U] = 1U;
     __Vtask_add4_fp32_tb_softfloat__DOT__check_case__25__expected 
         = vlSelfRef.add4_fp32_tb_softfloat__DOT__exp;
@@ -879,7 +892,7 @@ VL_INLINE_OPT VlCoroutine Vadd4_fp32_tb_softfloat___024root___eval_initial__TOP_
     }
     co_await vlSelfRef.__VdlySched.delay(0x7d0ULL, 
                                          nullptr, "tb/unit/systolic_array/add4_fp32_tb_softfloat.sv", 
-                                         222);
+                                         229);
     vlSelfRef.__Vm_traceActivity[2U] = 1U;
     __Vtask_add4_fp32_tb_softfloat__DOT__test_case__28__d = 0x3f800000U;
     __Vtask_add4_fp32_tb_softfloat__DOT__test_case__28__c = 0x3f800000U;
@@ -889,7 +902,7 @@ VL_INLINE_OPT VlCoroutine Vadd4_fp32_tb_softfloat___024root___eval_initial__TOP_
                                                          nullptr, 
                                                          "@(negedge add4_fp32_tb_softfloat.tb_clk)", 
                                                          "tb/unit/systolic_array/add4_fp32_tb_softfloat.sv", 
-                                                         103);
+                                                         109);
     vlSelfRef.__Vm_traceActivity[2U] = 1U;
     vlSelfRef.add4_fp32_tb_softfloat__DOT__tb_a = __Vtask_add4_fp32_tb_softfloat__DOT__test_case__28__a;
     vlSelfRef.add4_fp32_tb_softfloat__DOT__tb_b = __Vtask_add4_fp32_tb_softfloat__DOT__test_case__28__b;
@@ -898,7 +911,7 @@ VL_INLINE_OPT VlCoroutine Vadd4_fp32_tb_softfloat___024root___eval_initial__TOP_
     vlSelfRef.add4_fp32_tb_softfloat__DOT__exp = 0x7fc00000U;
     co_await vlSelfRef.__VdlySched.delay(0x2710ULL, 
                                          nullptr, "tb/unit/systolic_array/add4_fp32_tb_softfloat.sv", 
-                                         227);
+                                         234);
     vlSelfRef.__Vm_traceActivity[2U] = 1U;
     __Vtask_add4_fp32_tb_softfloat__DOT__check_case__29__expected 
         = vlSelfRef.add4_fp32_tb_softfloat__DOT__exp;
@@ -957,7 +970,7 @@ VL_INLINE_OPT VlCoroutine Vadd4_fp32_tb_softfloat___024root___eval_initial__TOP_
     }
     co_await vlSelfRef.__VdlySched.delay(0x7d0ULL, 
                                          nullptr, "tb/unit/systolic_array/add4_fp32_tb_softfloat.sv", 
-                                         229);
+                                         236);
     vlSelfRef.__Vm_traceActivity[2U] = 1U;
     __Vtask_add4_fp32_tb_softfloat__DOT__test_case__32__d = 0x3f800000U;
     __Vtask_add4_fp32_tb_softfloat__DOT__test_case__32__c = 0x3f800000U;
@@ -967,7 +980,7 @@ VL_INLINE_OPT VlCoroutine Vadd4_fp32_tb_softfloat___024root___eval_initial__TOP_
                                                          nullptr, 
                                                          "@(negedge add4_fp32_tb_softfloat.tb_clk)", 
                                                          "tb/unit/systolic_array/add4_fp32_tb_softfloat.sv", 
-                                                         103);
+                                                         109);
     vlSelfRef.__Vm_traceActivity[2U] = 1U;
     vlSelfRef.add4_fp32_tb_softfloat__DOT__tb_a = __Vtask_add4_fp32_tb_softfloat__DOT__test_case__32__a;
     vlSelfRef.add4_fp32_tb_softfloat__DOT__tb_b = __Vtask_add4_fp32_tb_softfloat__DOT__test_case__32__b;
@@ -976,7 +989,7 @@ VL_INLINE_OPT VlCoroutine Vadd4_fp32_tb_softfloat___024root___eval_initial__TOP_
     vlSelfRef.add4_fp32_tb_softfloat__DOT__exp = 0x40000000U;
     co_await vlSelfRef.__VdlySched.delay(0x2710ULL, 
                                          nullptr, "tb/unit/systolic_array/add4_fp32_tb_softfloat.sv", 
-                                         234);
+                                         241);
     vlSelfRef.__Vm_traceActivity[2U] = 1U;
     __Vtask_add4_fp32_tb_softfloat__DOT__check_case__33__expected 
         = vlSelfRef.add4_fp32_tb_softfloat__DOT__exp;
@@ -1035,7 +1048,7 @@ VL_INLINE_OPT VlCoroutine Vadd4_fp32_tb_softfloat___024root___eval_initial__TOP_
     }
     co_await vlSelfRef.__VdlySched.delay(0x7d0ULL, 
                                          nullptr, "tb/unit/systolic_array/add4_fp32_tb_softfloat.sv", 
-                                         236);
+                                         243);
     vlSelfRef.__Vm_traceActivity[2U] = 1U;
     __Vtask_add4_fp32_tb_softfloat__DOT__test_case__36__d = 0x7f7fffffU;
     __Vtask_add4_fp32_tb_softfloat__DOT__test_case__36__c = 0x7f7fffffU;
@@ -1045,7 +1058,7 @@ VL_INLINE_OPT VlCoroutine Vadd4_fp32_tb_softfloat___024root___eval_initial__TOP_
                                                          nullptr, 
                                                          "@(negedge add4_fp32_tb_softfloat.tb_clk)", 
                                                          "tb/unit/systolic_array/add4_fp32_tb_softfloat.sv", 
-                                                         103);
+                                                         109);
     vlSelfRef.__Vm_traceActivity[2U] = 1U;
     vlSelfRef.add4_fp32_tb_softfloat__DOT__tb_a = __Vtask_add4_fp32_tb_softfloat__DOT__test_case__36__a;
     vlSelfRef.add4_fp32_tb_softfloat__DOT__tb_b = __Vtask_add4_fp32_tb_softfloat__DOT__test_case__36__b;
@@ -1054,7 +1067,7 @@ VL_INLINE_OPT VlCoroutine Vadd4_fp32_tb_softfloat___024root___eval_initial__TOP_
     vlSelfRef.add4_fp32_tb_softfloat__DOT__exp = 0x7f800000U;
     co_await vlSelfRef.__VdlySched.delay(0x2710ULL, 
                                          nullptr, "tb/unit/systolic_array/add4_fp32_tb_softfloat.sv", 
-                                         241);
+                                         248);
     vlSelfRef.__Vm_traceActivity[2U] = 1U;
     __Vtask_add4_fp32_tb_softfloat__DOT__check_case__37__expected 
         = vlSelfRef.add4_fp32_tb_softfloat__DOT__exp;
@@ -1113,7 +1126,7 @@ VL_INLINE_OPT VlCoroutine Vadd4_fp32_tb_softfloat___024root___eval_initial__TOP_
     }
     co_await vlSelfRef.__VdlySched.delay(0x7d0ULL, 
                                          nullptr, "tb/unit/systolic_array/add4_fp32_tb_softfloat.sv", 
-                                         243);
+                                         250);
     vlSelfRef.__Vm_traceActivity[2U] = 1U;
     __Vtask_add4_fp32_tb_softfloat__DOT__test_case__40__d = 0xbf800000U;
     __Vtask_add4_fp32_tb_softfloat__DOT__test_case__40__c = 0x3f800000U;
@@ -1123,7 +1136,7 @@ VL_INLINE_OPT VlCoroutine Vadd4_fp32_tb_softfloat___024root___eval_initial__TOP_
                                                          nullptr, 
                                                          "@(negedge add4_fp32_tb_softfloat.tb_clk)", 
                                                          "tb/unit/systolic_array/add4_fp32_tb_softfloat.sv", 
-                                                         103);
+                                                         109);
     vlSelfRef.__Vm_traceActivity[2U] = 1U;
     vlSelfRef.add4_fp32_tb_softfloat__DOT__tb_a = __Vtask_add4_fp32_tb_softfloat__DOT__test_case__40__a;
     vlSelfRef.add4_fp32_tb_softfloat__DOT__tb_b = __Vtask_add4_fp32_tb_softfloat__DOT__test_case__40__b;
@@ -1132,7 +1145,7 @@ VL_INLINE_OPT VlCoroutine Vadd4_fp32_tb_softfloat___024root___eval_initial__TOP_
     vlSelfRef.add4_fp32_tb_softfloat__DOT__exp = 0U;
     co_await vlSelfRef.__VdlySched.delay(0x2710ULL, 
                                          nullptr, "tb/unit/systolic_array/add4_fp32_tb_softfloat.sv", 
-                                         248);
+                                         255);
     vlSelfRef.__Vm_traceActivity[2U] = 1U;
     __Vtask_add4_fp32_tb_softfloat__DOT__check_case__41__expected 
         = vlSelfRef.add4_fp32_tb_softfloat__DOT__exp;
@@ -1191,7 +1204,7 @@ VL_INLINE_OPT VlCoroutine Vadd4_fp32_tb_softfloat___024root___eval_initial__TOP_
     }
     co_await vlSelfRef.__VdlySched.delay(0x7d0ULL, 
                                          nullptr, "tb/unit/systolic_array/add4_fp32_tb_softfloat.sv", 
-                                         250);
+                                         257);
     vlSelfRef.__Vm_traceActivity[2U] = 1U;
     __Vtask_add4_fp32_tb_softfloat__DOT__test_case__44__d = 0xc0000000U;
     __Vtask_add4_fp32_tb_softfloat__DOT__test_case__44__c = 0xc0000000U;
@@ -1201,7 +1214,7 @@ VL_INLINE_OPT VlCoroutine Vadd4_fp32_tb_softfloat___024root___eval_initial__TOP_
                                                          nullptr, 
                                                          "@(negedge add4_fp32_tb_softfloat.tb_clk)", 
                                                          "tb/unit/systolic_array/add4_fp32_tb_softfloat.sv", 
-                                                         103);
+                                                         109);
     vlSelfRef.__Vm_traceActivity[2U] = 1U;
     vlSelfRef.add4_fp32_tb_softfloat__DOT__tb_a = __Vtask_add4_fp32_tb_softfloat__DOT__test_case__44__a;
     vlSelfRef.add4_fp32_tb_softfloat__DOT__tb_b = __Vtask_add4_fp32_tb_softfloat__DOT__test_case__44__b;
@@ -1210,7 +1223,7 @@ VL_INLINE_OPT VlCoroutine Vadd4_fp32_tb_softfloat___024root___eval_initial__TOP_
     vlSelfRef.add4_fp32_tb_softfloat__DOT__exp = 0xc1000000U;
     co_await vlSelfRef.__VdlySched.delay(0x2710ULL, 
                                          nullptr, "tb/unit/systolic_array/add4_fp32_tb_softfloat.sv", 
-                                         256);
+                                         263);
     vlSelfRef.__Vm_traceActivity[2U] = 1U;
     __Vtask_add4_fp32_tb_softfloat__DOT__check_case__45__expected 
         = vlSelfRef.add4_fp32_tb_softfloat__DOT__exp;
@@ -1269,7 +1282,7 @@ VL_INLINE_OPT VlCoroutine Vadd4_fp32_tb_softfloat___024root___eval_initial__TOP_
     }
     co_await vlSelfRef.__VdlySched.delay(0x7d0ULL, 
                                          nullptr, "tb/unit/systolic_array/add4_fp32_tb_softfloat.sv", 
-                                         258);
+                                         265);
     vlSelfRef.__Vm_traceActivity[2U] = 1U;
     VL_WRITEF_NX("\n--- Berkeley SoftFloat Random Test Cases ---\n",0);
     vlSelfRef.add4_fp32_tb_softfloat__DOT__fd = VL_FOPEN_NN(
@@ -1279,7 +1292,7 @@ VL_INLINE_OPT VlCoroutine Vadd4_fp32_tb_softfloat___024root___eval_initial__TOP_
     ;
     if (VL_UNLIKELY(((0U == vlSelfRef.add4_fp32_tb_softfloat__DOT__fd)))) {
         VL_WRITEF_NX("error: could not open testfloat_cases_4_pure.csv\nmake sure it is in the right directory! check tb for pathing\n",0);
-        VL_FINISH_MT("tb/unit/systolic_array/add4_fp32_tb_softfloat.sv", 267, "");
+        VL_FINISH_MT("tb/unit/systolic_array/add4_fp32_tb_softfloat.sv", 274, "");
     }
     (void)VL_FGETS_NI(add4_fp32_tb_softfloat__DOT__header, vlSelfRef.add4_fp32_tb_softfloat__DOT__fd);
     while ((! (vlSelfRef.add4_fp32_tb_softfloat__DOT__fd ? feof(VL_CVT_I_FP(vlSelfRef.add4_fp32_tb_softfloat__DOT__fd)) : true))) {
@@ -1294,13 +1307,13 @@ VL_INLINE_OPT VlCoroutine Vadd4_fp32_tb_softfloat___024root___eval_initial__TOP_
             if ((5U != vlSelfRef.add4_fp32_tb_softfloat__DOT__unnamedblk1__DOT__ret)) {
                 goto __Vlabel1;
             }
-            vlSelfRef.add4_fp32_tb_softfloat__DOT__unnamedblk1__DOT__total_count 
-                = ((IData)(1U) + vlSelfRef.add4_fp32_tb_softfloat__DOT__unnamedblk1__DOT__total_count);
+            vlSelfRef.add4_fp32_tb_softfloat__DOT__total_count 
+                = ((IData)(1U) + vlSelfRef.add4_fp32_tb_softfloat__DOT__total_count);
             co_await vlSelfRef.__VtrigSched_hdf4deb7b__0.trigger(0U, 
                                                                  nullptr, 
                                                                  "@(negedge add4_fp32_tb_softfloat.tb_clk)", 
                                                                  "tb/unit/systolic_array/add4_fp32_tb_softfloat.sv", 
-                                                                 282);
+                                                                 288);
             vlSelfRef.__Vm_traceActivity[2U] = 1U;
             vlSelfRef.add4_fp32_tb_softfloat__DOT__tb_a 
                 = vlSelfRef.add4_fp32_tb_softfloat__DOT__a;
@@ -1313,7 +1326,7 @@ VL_INLINE_OPT VlCoroutine Vadd4_fp32_tb_softfloat___024root___eval_initial__TOP_
             co_await vlSelfRef.__VdlySched.delay(0x1f40ULL, 
                                                  nullptr, 
                                                  "tb/unit/systolic_array/add4_fp32_tb_softfloat.sv", 
-                                                 288);
+                                                 294);
             vlSelfRef.__Vm_traceActivity[2U] = 1U;
             vlSelfRef.add4_fp32_tb_softfloat__DOT__unnamedblk1__DOT__is_zero_result 
                 = (((0U == vlSymsp->TOP__add4_fp32_tb_softfloat__DOT__add_if.out) 
@@ -1409,64 +1422,153 @@ VL_INLINE_OPT VlCoroutine Vadd4_fp32_tb_softfloat___024root___eval_initial__TOP_
                             }(), __Vfunc_add4_fp32_tb_softfloat__DOT__get_ulp_err__50__Vfuncout)));
                 vlSelfRef.add4_fp32_tb_softfloat__DOT__total_ulp_error 
                     = __Vtemp_31;
+                if (VL_GTS_III(32, ([&]() {
+                                __Vfunc_add4_fp32_tb_softfloat__DOT__get_ulp_err__51__ref_bits 
+                                    = vlSelfRef.add4_fp32_tb_softfloat__DOT__expected;
+                                __Vfunc_add4_fp32_tb_softfloat__DOT__get_ulp_err__51__hw_bits 
+                                    = vlSymsp->TOP__add4_fp32_tb_softfloat__DOT__add_if.out;
+                                {
+                                    if ((__Vfunc_add4_fp32_tb_softfloat__DOT__get_ulp_err__51__hw_bits 
+                                         == __Vfunc_add4_fp32_tb_softfloat__DOT__get_ulp_err__51__ref_bits)) {
+                                        __Vfunc_add4_fp32_tb_softfloat__DOT__get_ulp_err__51__Vfuncout = 0U;
+                                        goto __Vlabel3;
+                                    }
+                                    if (((IData)(((0x7f800000U 
+                                                   == 
+                                                   (0x7f800000U 
+                                                    & __Vfunc_add4_fp32_tb_softfloat__DOT__get_ulp_err__51__hw_bits)) 
+                                                  & (0U 
+                                                     != 
+                                                     (0x7fffffU 
+                                                      & __Vfunc_add4_fp32_tb_softfloat__DOT__get_ulp_err__51__hw_bits)))) 
+                                         | (IData)(
+                                                   ((0x7f800000U 
+                                                     == 
+                                                     (0x7f800000U 
+                                                      & __Vfunc_add4_fp32_tb_softfloat__DOT__get_ulp_err__51__ref_bits)) 
+                                                    & (0U 
+                                                       != 
+                                                       (0x7fffffU 
+                                                        & __Vfunc_add4_fp32_tb_softfloat__DOT__get_ulp_err__51__ref_bits)))))) {
+                                        __Vfunc_add4_fp32_tb_softfloat__DOT__get_ulp_err__51__Vfuncout = 0xffffffffU;
+                                        goto __Vlabel3;
+                                    }
+                                    if (((__Vfunc_add4_fp32_tb_softfloat__DOT__get_ulp_err__51__hw_bits 
+                                          >> 0x1fU) 
+                                         != (__Vfunc_add4_fp32_tb_softfloat__DOT__get_ulp_err__51__ref_bits 
+                                             >> 0x1fU))) {
+                                        __Vfunc_add4_fp32_tb_softfloat__DOT__get_ulp_err__51__Vfuncout = 0x7fffffffU;
+                                        goto __Vlabel3;
+                                    }
+                                    __Vfunc_add4_fp32_tb_softfloat__DOT__get_ulp_err__51__Vfuncout 
+                                        = ((__Vfunc_add4_fp32_tb_softfloat__DOT__get_ulp_err__51__hw_bits 
+                                            > __Vfunc_add4_fp32_tb_softfloat__DOT__get_ulp_err__51__ref_bits)
+                                            ? (__Vfunc_add4_fp32_tb_softfloat__DOT__get_ulp_err__51__hw_bits 
+                                               - __Vfunc_add4_fp32_tb_softfloat__DOT__get_ulp_err__51__ref_bits)
+                                            : (__Vfunc_add4_fp32_tb_softfloat__DOT__get_ulp_err__51__ref_bits 
+                                               - __Vfunc_add4_fp32_tb_softfloat__DOT__get_ulp_err__51__hw_bits));
+                                    __Vlabel3: ;
+                                }
+                            }(), __Vfunc_add4_fp32_tb_softfloat__DOT__get_ulp_err__51__Vfuncout), vlSelfRef.add4_fp32_tb_softfloat__DOT__largest_ulp)) {
+                    __Vfunc_add4_fp32_tb_softfloat__DOT__get_ulp_err__52__ref_bits 
+                        = vlSelfRef.add4_fp32_tb_softfloat__DOT__expected;
+                    __Vfunc_add4_fp32_tb_softfloat__DOT__get_ulp_err__52__hw_bits 
+                        = vlSymsp->TOP__add4_fp32_tb_softfloat__DOT__add_if.out;
+                    {
+                        if ((__Vfunc_add4_fp32_tb_softfloat__DOT__get_ulp_err__52__hw_bits 
+                             == __Vfunc_add4_fp32_tb_softfloat__DOT__get_ulp_err__52__ref_bits)) {
+                            __Vfunc_add4_fp32_tb_softfloat__DOT__get_ulp_err__52__Vfuncout = 0U;
+                            goto __Vlabel4;
+                        }
+                        if (((IData)(((0x7f800000U 
+                                       == (0x7f800000U 
+                                           & __Vfunc_add4_fp32_tb_softfloat__DOT__get_ulp_err__52__hw_bits)) 
+                                      & (0U != (0x7fffffU 
+                                                & __Vfunc_add4_fp32_tb_softfloat__DOT__get_ulp_err__52__hw_bits)))) 
+                             | (IData)(((0x7f800000U 
+                                         == (0x7f800000U 
+                                             & __Vfunc_add4_fp32_tb_softfloat__DOT__get_ulp_err__52__ref_bits)) 
+                                        & (0U != (0x7fffffU 
+                                                  & __Vfunc_add4_fp32_tb_softfloat__DOT__get_ulp_err__52__ref_bits)))))) {
+                            __Vfunc_add4_fp32_tb_softfloat__DOT__get_ulp_err__52__Vfuncout = 0xffffffffU;
+                            goto __Vlabel4;
+                        }
+                        if (((__Vfunc_add4_fp32_tb_softfloat__DOT__get_ulp_err__52__hw_bits 
+                              >> 0x1fU) != (__Vfunc_add4_fp32_tb_softfloat__DOT__get_ulp_err__52__ref_bits 
+                                            >> 0x1fU))) {
+                            __Vfunc_add4_fp32_tb_softfloat__DOT__get_ulp_err__52__Vfuncout = 0x7fffffffU;
+                            goto __Vlabel4;
+                        }
+                        __Vfunc_add4_fp32_tb_softfloat__DOT__get_ulp_err__52__Vfuncout 
+                            = ((__Vfunc_add4_fp32_tb_softfloat__DOT__get_ulp_err__52__hw_bits 
+                                > __Vfunc_add4_fp32_tb_softfloat__DOT__get_ulp_err__52__ref_bits)
+                                ? (__Vfunc_add4_fp32_tb_softfloat__DOT__get_ulp_err__52__hw_bits 
+                                   - __Vfunc_add4_fp32_tb_softfloat__DOT__get_ulp_err__52__ref_bits)
+                                : (__Vfunc_add4_fp32_tb_softfloat__DOT__get_ulp_err__52__ref_bits 
+                                   - __Vfunc_add4_fp32_tb_softfloat__DOT__get_ulp_err__52__hw_bits));
+                        __Vlabel4: ;
+                    }
+                    vlSelfRef.add4_fp32_tb_softfloat__DOT__largest_ulp 
+                        = __Vfunc_add4_fp32_tb_softfloat__DOT__get_ulp_err__52__Vfuncout;
+                }
                 if (VL_UNLIKELY(((VL_GTES_III(32, 0xaU, vlSelfRef.add4_fp32_tb_softfloat__DOT__fail_count) 
                                   | VL_LTS_III(32, 0x3e8U, 
                                                ([&]() {
-                                            __Vfunc_add4_fp32_tb_softfloat__DOT__get_ulp_err__51__ref_bits 
+                                            __Vfunc_add4_fp32_tb_softfloat__DOT__get_ulp_err__53__ref_bits 
                                                 = vlSelfRef.add4_fp32_tb_softfloat__DOT__expected;
-                                            __Vfunc_add4_fp32_tb_softfloat__DOT__get_ulp_err__51__hw_bits 
+                                            __Vfunc_add4_fp32_tb_softfloat__DOT__get_ulp_err__53__hw_bits 
                                                 = vlSymsp->TOP__add4_fp32_tb_softfloat__DOT__add_if.out;
                                             {
                                                 if (
-                                                    (__Vfunc_add4_fp32_tb_softfloat__DOT__get_ulp_err__51__hw_bits 
-                                                     == __Vfunc_add4_fp32_tb_softfloat__DOT__get_ulp_err__51__ref_bits)) {
-                                                    __Vfunc_add4_fp32_tb_softfloat__DOT__get_ulp_err__51__Vfuncout = 0U;
-                                                    goto __Vlabel3;
+                                                    (__Vfunc_add4_fp32_tb_softfloat__DOT__get_ulp_err__53__hw_bits 
+                                                     == __Vfunc_add4_fp32_tb_softfloat__DOT__get_ulp_err__53__ref_bits)) {
+                                                    __Vfunc_add4_fp32_tb_softfloat__DOT__get_ulp_err__53__Vfuncout = 0U;
+                                                    goto __Vlabel5;
                                                 }
                                                 if (
                                                     ((IData)(
                                                              ((0x7f800000U 
                                                                == 
                                                                (0x7f800000U 
-                                                                & __Vfunc_add4_fp32_tb_softfloat__DOT__get_ulp_err__51__hw_bits)) 
+                                                                & __Vfunc_add4_fp32_tb_softfloat__DOT__get_ulp_err__53__hw_bits)) 
                                                               & (0U 
                                                                  != 
                                                                  (0x7fffffU 
-                                                                  & __Vfunc_add4_fp32_tb_softfloat__DOT__get_ulp_err__51__hw_bits)))) 
+                                                                  & __Vfunc_add4_fp32_tb_softfloat__DOT__get_ulp_err__53__hw_bits)))) 
                                                      | (IData)(
                                                                ((0x7f800000U 
                                                                  == 
                                                                  (0x7f800000U 
-                                                                  & __Vfunc_add4_fp32_tb_softfloat__DOT__get_ulp_err__51__ref_bits)) 
+                                                                  & __Vfunc_add4_fp32_tb_softfloat__DOT__get_ulp_err__53__ref_bits)) 
                                                                 & (0U 
                                                                    != 
                                                                    (0x7fffffU 
-                                                                    & __Vfunc_add4_fp32_tb_softfloat__DOT__get_ulp_err__51__ref_bits)))))) {
-                                                    __Vfunc_add4_fp32_tb_softfloat__DOT__get_ulp_err__51__Vfuncout = 0xffffffffU;
-                                                    goto __Vlabel3;
+                                                                    & __Vfunc_add4_fp32_tb_softfloat__DOT__get_ulp_err__53__ref_bits)))))) {
+                                                    __Vfunc_add4_fp32_tb_softfloat__DOT__get_ulp_err__53__Vfuncout = 0xffffffffU;
+                                                    goto __Vlabel5;
                                                 }
                                                 if (
-                                                    ((__Vfunc_add4_fp32_tb_softfloat__DOT__get_ulp_err__51__hw_bits 
+                                                    ((__Vfunc_add4_fp32_tb_softfloat__DOT__get_ulp_err__53__hw_bits 
                                                       >> 0x1fU) 
                                                      != 
-                                                     (__Vfunc_add4_fp32_tb_softfloat__DOT__get_ulp_err__51__ref_bits 
+                                                     (__Vfunc_add4_fp32_tb_softfloat__DOT__get_ulp_err__53__ref_bits 
                                                       >> 0x1fU))) {
-                                                    __Vfunc_add4_fp32_tb_softfloat__DOT__get_ulp_err__51__Vfuncout = 0x7fffffffU;
-                                                    goto __Vlabel3;
+                                                    __Vfunc_add4_fp32_tb_softfloat__DOT__get_ulp_err__53__Vfuncout = 0x7fffffffU;
+                                                    goto __Vlabel5;
                                                 }
-                                                __Vfunc_add4_fp32_tb_softfloat__DOT__get_ulp_err__51__Vfuncout 
+                                                __Vfunc_add4_fp32_tb_softfloat__DOT__get_ulp_err__53__Vfuncout 
                                                     = 
-                                                    ((__Vfunc_add4_fp32_tb_softfloat__DOT__get_ulp_err__51__hw_bits 
-                                                      > __Vfunc_add4_fp32_tb_softfloat__DOT__get_ulp_err__51__ref_bits)
+                                                    ((__Vfunc_add4_fp32_tb_softfloat__DOT__get_ulp_err__53__hw_bits 
+                                                      > __Vfunc_add4_fp32_tb_softfloat__DOT__get_ulp_err__53__ref_bits)
                                                       ? 
-                                                     (__Vfunc_add4_fp32_tb_softfloat__DOT__get_ulp_err__51__hw_bits 
-                                                      - __Vfunc_add4_fp32_tb_softfloat__DOT__get_ulp_err__51__ref_bits)
+                                                     (__Vfunc_add4_fp32_tb_softfloat__DOT__get_ulp_err__53__hw_bits 
+                                                      - __Vfunc_add4_fp32_tb_softfloat__DOT__get_ulp_err__53__ref_bits)
                                                       : 
-                                                     (__Vfunc_add4_fp32_tb_softfloat__DOT__get_ulp_err__51__ref_bits 
-                                                      - __Vfunc_add4_fp32_tb_softfloat__DOT__get_ulp_err__51__hw_bits));
-                                                __Vlabel3: ;
+                                                     (__Vfunc_add4_fp32_tb_softfloat__DOT__get_ulp_err__53__ref_bits 
+                                                      - __Vfunc_add4_fp32_tb_softfloat__DOT__get_ulp_err__53__hw_bits));
+                                                __Vlabel5: ;
                                             }
-                                        }(), __Vfunc_add4_fp32_tb_softfloat__DOT__get_ulp_err__51__Vfuncout)))))) {
+                                        }(), __Vfunc_add4_fp32_tb_softfloat__DOT__get_ulp_err__53__Vfuncout)))))) {
                     VL_WRITEF_NX("FAIL: A=%x B=%x C=%x D=%x | Got=%x Exp=%x, ULP Diff: %0d\n",0,
                                  32,vlSelfRef.add4_fp32_tb_softfloat__DOT__a,
                                  32,vlSelfRef.add4_fp32_tb_softfloat__DOT__b,
@@ -1475,54 +1577,54 @@ VL_INLINE_OPT VlCoroutine Vadd4_fp32_tb_softfloat___024root___eval_initial__TOP_
                                  32,vlSymsp->TOP__add4_fp32_tb_softfloat__DOT__add_if.out,
                                  32,vlSelfRef.add4_fp32_tb_softfloat__DOT__expected,
                                  32,([&]() {
-                                    __Vfunc_add4_fp32_tb_softfloat__DOT__get_ulp_err__52__ref_bits 
+                                    __Vfunc_add4_fp32_tb_softfloat__DOT__get_ulp_err__54__ref_bits 
                                         = vlSelfRef.add4_fp32_tb_softfloat__DOT__expected;
-                                    __Vfunc_add4_fp32_tb_softfloat__DOT__get_ulp_err__52__hw_bits 
+                                    __Vfunc_add4_fp32_tb_softfloat__DOT__get_ulp_err__54__hw_bits 
                                         = vlSymsp->TOP__add4_fp32_tb_softfloat__DOT__add_if.out;
                                     {
-                                        if ((__Vfunc_add4_fp32_tb_softfloat__DOT__get_ulp_err__52__hw_bits 
-                                             == __Vfunc_add4_fp32_tb_softfloat__DOT__get_ulp_err__52__ref_bits)) {
-                                            __Vfunc_add4_fp32_tb_softfloat__DOT__get_ulp_err__52__Vfuncout = 0U;
-                                            goto __Vlabel4;
+                                        if ((__Vfunc_add4_fp32_tb_softfloat__DOT__get_ulp_err__54__hw_bits 
+                                             == __Vfunc_add4_fp32_tb_softfloat__DOT__get_ulp_err__54__ref_bits)) {
+                                            __Vfunc_add4_fp32_tb_softfloat__DOT__get_ulp_err__54__Vfuncout = 0U;
+                                            goto __Vlabel6;
                                         }
                                         if (((IData)(
                                                      ((0x7f800000U 
                                                        == 
                                                        (0x7f800000U 
-                                                        & __Vfunc_add4_fp32_tb_softfloat__DOT__get_ulp_err__52__hw_bits)) 
+                                                        & __Vfunc_add4_fp32_tb_softfloat__DOT__get_ulp_err__54__hw_bits)) 
                                                       & (0U 
                                                          != 
                                                          (0x7fffffU 
-                                                          & __Vfunc_add4_fp32_tb_softfloat__DOT__get_ulp_err__52__hw_bits)))) 
+                                                          & __Vfunc_add4_fp32_tb_softfloat__DOT__get_ulp_err__54__hw_bits)))) 
                                              | (IData)(
                                                        ((0x7f800000U 
                                                          == 
                                                          (0x7f800000U 
-                                                          & __Vfunc_add4_fp32_tb_softfloat__DOT__get_ulp_err__52__ref_bits)) 
+                                                          & __Vfunc_add4_fp32_tb_softfloat__DOT__get_ulp_err__54__ref_bits)) 
                                                         & (0U 
                                                            != 
                                                            (0x7fffffU 
-                                                            & __Vfunc_add4_fp32_tb_softfloat__DOT__get_ulp_err__52__ref_bits)))))) {
-                                            __Vfunc_add4_fp32_tb_softfloat__DOT__get_ulp_err__52__Vfuncout = 0xffffffffU;
-                                            goto __Vlabel4;
+                                                            & __Vfunc_add4_fp32_tb_softfloat__DOT__get_ulp_err__54__ref_bits)))))) {
+                                            __Vfunc_add4_fp32_tb_softfloat__DOT__get_ulp_err__54__Vfuncout = 0xffffffffU;
+                                            goto __Vlabel6;
                                         }
-                                        if (((__Vfunc_add4_fp32_tb_softfloat__DOT__get_ulp_err__52__hw_bits 
+                                        if (((__Vfunc_add4_fp32_tb_softfloat__DOT__get_ulp_err__54__hw_bits 
                                               >> 0x1fU) 
-                                             != (__Vfunc_add4_fp32_tb_softfloat__DOT__get_ulp_err__52__ref_bits 
+                                             != (__Vfunc_add4_fp32_tb_softfloat__DOT__get_ulp_err__54__ref_bits 
                                                  >> 0x1fU))) {
-                                            __Vfunc_add4_fp32_tb_softfloat__DOT__get_ulp_err__52__Vfuncout = 0x7fffffffU;
-                                            goto __Vlabel4;
+                                            __Vfunc_add4_fp32_tb_softfloat__DOT__get_ulp_err__54__Vfuncout = 0x7fffffffU;
+                                            goto __Vlabel6;
                                         }
-                                        __Vfunc_add4_fp32_tb_softfloat__DOT__get_ulp_err__52__Vfuncout 
-                                            = ((__Vfunc_add4_fp32_tb_softfloat__DOT__get_ulp_err__52__hw_bits 
-                                                > __Vfunc_add4_fp32_tb_softfloat__DOT__get_ulp_err__52__ref_bits)
-                                                ? (__Vfunc_add4_fp32_tb_softfloat__DOT__get_ulp_err__52__hw_bits 
-                                                   - __Vfunc_add4_fp32_tb_softfloat__DOT__get_ulp_err__52__ref_bits)
-                                                : (__Vfunc_add4_fp32_tb_softfloat__DOT__get_ulp_err__52__ref_bits 
-                                                   - __Vfunc_add4_fp32_tb_softfloat__DOT__get_ulp_err__52__hw_bits));
-                                        __Vlabel4: ;
+                                        __Vfunc_add4_fp32_tb_softfloat__DOT__get_ulp_err__54__Vfuncout 
+                                            = ((__Vfunc_add4_fp32_tb_softfloat__DOT__get_ulp_err__54__hw_bits 
+                                                > __Vfunc_add4_fp32_tb_softfloat__DOT__get_ulp_err__54__ref_bits)
+                                                ? (__Vfunc_add4_fp32_tb_softfloat__DOT__get_ulp_err__54__hw_bits 
+                                                   - __Vfunc_add4_fp32_tb_softfloat__DOT__get_ulp_err__54__ref_bits)
+                                                : (__Vfunc_add4_fp32_tb_softfloat__DOT__get_ulp_err__54__ref_bits 
+                                                   - __Vfunc_add4_fp32_tb_softfloat__DOT__get_ulp_err__54__hw_bits));
+                                        __Vlabel6: ;
                                     }
-                                }(), __Vfunc_add4_fp32_tb_softfloat__DOT__get_ulp_err__52__Vfuncout));
+                                }(), __Vfunc_add4_fp32_tb_softfloat__DOT__get_ulp_err__54__Vfuncout));
                 } else if (VL_UNLIKELY(((0xbU == vlSelfRef.add4_fp32_tb_softfloat__DOT__fail_count)))) {
                     VL_WRITEF_NX("... (suppressing further terminal output, all failures logged to test_failures.csv) ...\n",0);
                 }
@@ -1530,16 +1632,16 @@ VL_INLINE_OPT VlCoroutine Vadd4_fp32_tb_softfloat___024root___eval_initial__TOP_
                 vlSelfRef.add4_fp32_tb_softfloat__DOT__pass_count 
                     = ((IData)(1U) + vlSelfRef.add4_fp32_tb_softfloat__DOT__pass_count);
             }
-            if (VL_UNLIKELY(((0U == VL_MODDIVS_III(32, vlSelfRef.add4_fp32_tb_softfloat__DOT__unnamedblk1__DOT__total_count, (IData)(0x186a0U)))))) {
+            if (VL_UNLIKELY(((0U == VL_MODDIVS_III(32, vlSelfRef.add4_fp32_tb_softfloat__DOT__total_count, (IData)(0x186a0U)))))) {
                 VL_WRITEF_NX("progress: %0d tested (%0d pass, %0d fail)...\n",0,
-                             32,vlSelfRef.add4_fp32_tb_softfloat__DOT__unnamedblk1__DOT__total_count,
+                             32,vlSelfRef.add4_fp32_tb_softfloat__DOT__total_count,
                              32,vlSelfRef.add4_fp32_tb_softfloat__DOT__pass_count,
                              32,vlSelfRef.add4_fp32_tb_softfloat__DOT__fail_count);
             }
             __Vlabel1: ;
         }
     }
-    VL_FCLOSE_I(vlSelfRef.add4_fp32_tb_softfloat__DOT__fd); VL_FCLOSE_I(vlSelfRef.add4_fp32_tb_softfloat__DOT__fail_fd); VL_WRITEF_NX("\n=== test summary ===\nPRECISION BITS: 3\nPASSED: %0d\nFAILED: %0d\nAVERAGE ULP ERROR: %f\nfailure cases logged to: test_failures_pure.csv\n",0,
+    VL_FCLOSE_I(vlSelfRef.add4_fp32_tb_softfloat__DOT__fd); VL_FCLOSE_I(vlSelfRef.add4_fp32_tb_softfloat__DOT__fail_fd); VL_WRITEF_NX("\n=== test summary ===\nPRECISION BITS: 3\nPASSED: %0d\nFAILED: %0d\nAVERAGE ULP ERROR: %f\nLARGEST ULP ERROR: %0d\nfailure cases logged to: test_failures_pure.csv\n",0,
                                                                                 32,
                                                                                 vlSelfRef.add4_fp32_tb_softfloat__DOT__pass_count,
                                                                                 32,
@@ -1547,13 +1649,15 @@ VL_INLINE_OPT VlCoroutine Vadd4_fp32_tb_softfloat___024root___eval_initial__TOP_
                                                                                 64,
                                                                                 (vlSelfRef.add4_fp32_tb_softfloat__DOT__total_ulp_error 
                                                                                 / 
-                                                                                VL_ISTOR_D_I(32, vlSelfRef.add4_fp32_tb_softfloat__DOT__fail_count)));
+                                                                                VL_ISTOR_D_I(32, vlSelfRef.add4_fp32_tb_softfloat__DOT__total_count)),
+                                                                                32,
+                                                                                vlSelfRef.add4_fp32_tb_softfloat__DOT__largest_ulp);
     if ((0U == vlSelfRef.add4_fp32_tb_softfloat__DOT__fail_count)) {
         VL_WRITEF_NX("ALL TESTS PASSED!\n",0);
     } else {
         VL_WRITEF_NX("SOME TESTS FAILED!\n",0);
     }
-    VL_FINISH_MT("tb/unit/systolic_array/add4_fp32_tb_softfloat.sv", 338, "");
+    VL_FINISH_MT("tb/unit/systolic_array/add4_fp32_tb_softfloat.sv", 348, "");
     vlSelfRef.__Vm_traceActivity[2U] = 1U;
 }
 
@@ -1566,17 +1670,25 @@ void Vadd4_fp32_tb_softfloat___024root___eval_triggers__act(Vadd4_fp32_tb_softfl
     Vadd4_fp32_tb_softfloat__Syms* const __restrict vlSymsp VL_ATTR_UNUSED = vlSelf->vlSymsp;
     auto& vlSelfRef = std::ref(*vlSelf).get();
     // Body
-    vlSelfRef.__VactTriggered.setBit(0U, ((IData)(vlSelfRef.add4_fp32_tb_softfloat__DOT__tb_clk) 
+    vlSelfRef.__VactTriggered.setBit(0U, (vlSelfRef.add4_fp32_tb_softfloat__DOT__etchedfp4adder__DOT__norm_val 
+                                          != vlSelfRef.__Vtrigprevexpr___TOP__add4_fp32_tb_softfloat__DOT__etchedfp4adder__DOT__norm_val__1));
+    vlSelfRef.__VactTriggered.setBit(1U, ((IData)(vlSelfRef.add4_fp32_tb_softfloat__DOT__tb_clk) 
                                           & (~ (IData)(vlSelfRef.__Vtrigprevexpr___TOP__add4_fp32_tb_softfloat__DOT__tb_clk__0))));
-    vlSelfRef.__VactTriggered.setBit(1U, ((~ (IData)(vlSelfRef.add4_fp32_tb_softfloat__DOT__tb_nrst)) 
+    vlSelfRef.__VactTriggered.setBit(2U, ((~ (IData)(vlSelfRef.add4_fp32_tb_softfloat__DOT__tb_nrst)) 
                                           & (IData)(vlSelfRef.__Vtrigprevexpr___TOP__add4_fp32_tb_softfloat__DOT__tb_nrst__0)));
-    vlSelfRef.__VactTriggered.setBit(2U, vlSelfRef.__VdlySched.awaitingCurrentTime());
-    vlSelfRef.__VactTriggered.setBit(3U, ((~ (IData)(vlSelfRef.add4_fp32_tb_softfloat__DOT__tb_clk)) 
+    vlSelfRef.__VactTriggered.setBit(3U, vlSelfRef.__VdlySched.awaitingCurrentTime());
+    vlSelfRef.__VactTriggered.setBit(4U, ((~ (IData)(vlSelfRef.add4_fp32_tb_softfloat__DOT__tb_clk)) 
                                           & (IData)(vlSelfRef.__Vtrigprevexpr___TOP__add4_fp32_tb_softfloat__DOT__tb_clk__0)));
+    vlSelfRef.__Vtrigprevexpr___TOP__add4_fp32_tb_softfloat__DOT__etchedfp4adder__DOT__norm_val__1 
+        = vlSelfRef.add4_fp32_tb_softfloat__DOT__etchedfp4adder__DOT__norm_val;
     vlSelfRef.__Vtrigprevexpr___TOP__add4_fp32_tb_softfloat__DOT__tb_clk__0 
         = vlSelfRef.add4_fp32_tb_softfloat__DOT__tb_clk;
     vlSelfRef.__Vtrigprevexpr___TOP__add4_fp32_tb_softfloat__DOT__tb_nrst__0 
         = vlSelfRef.add4_fp32_tb_softfloat__DOT__tb_nrst;
+    if (VL_UNLIKELY(((1U & (~ (IData)(vlSelfRef.__VactDidInit)))))) {
+        vlSelfRef.__VactDidInit = 1U;
+        vlSelfRef.__VactTriggered.setBit(0U, 1U);
+    }
 #ifdef VL_DEBUG
     if (VL_UNLIKELY(vlSymsp->_vm_contextp__->debug())) {
         Vadd4_fp32_tb_softfloat___024root___dump_triggers__act(vlSelf);
@@ -1639,75 +1751,14 @@ VL_INLINE_OPT void Vadd4_fp32_tb_softfloat___024root___nba_sequent__TOP__0(Vadd4
     vlSelfRef.add4_fp32_tb_softfloat__DOT__etchedfp4adder__DOT__st1_special_case 
         = ((IData)(vlSelfRef.add4_fp32_tb_softfloat__DOT__tb_nrst) 
            && (IData)(vlSelfRef.add4_fp32_tb_softfloat__DOT__etchedfp4adder__DOT__special_case));
-    if ((0U == vlSelfRef.add4_fp32_tb_softfloat__DOT__etchedfp4adder__DOT__st2_sum_mag)) {
-        vlSelfRef.add4_fp32_tb_softfloat__DOT__etchedfp4adder__DOT__lzd_scan = 0U;
-        vlSelfRef.add4_fp32_tb_softfloat__DOT__etchedfp4adder__DOT__lead_zeros = 0x1cU;
-    } else {
-        vlSelfRef.add4_fp32_tb_softfloat__DOT__etchedfp4adder__DOT__lzd_scan 
-            = vlSelfRef.add4_fp32_tb_softfloat__DOT__etchedfp4adder__DOT__st2_sum_mag;
-        vlSelfRef.add4_fp32_tb_softfloat__DOT__etchedfp4adder__DOT__lead_zeros = 0U;
-        if ((0U == VL_SHIFTR_III(32,32,32, vlSelfRef.add4_fp32_tb_softfloat__DOT__etchedfp4adder__DOT__lzd_scan, 0xdU))) {
-            vlSelfRef.add4_fp32_tb_softfloat__DOT__etchedfp4adder__DOT__lead_zeros 
-                = (0x3fU & ((IData)(0x10U) + (IData)(vlSelfRef.add4_fp32_tb_softfloat__DOT__etchedfp4adder__DOT__lead_zeros)));
-            vlSelfRef.add4_fp32_tb_softfloat__DOT__etchedfp4adder__DOT__lzd_scan 
-                = (0x1fffffffU & VL_SHIFTL_III(29,29,32, vlSelfRef.add4_fp32_tb_softfloat__DOT__etchedfp4adder__DOT__lzd_scan, 0x10U));
-        }
-        if ((0U == VL_SHIFTR_III(32,32,32, vlSelfRef.add4_fp32_tb_softfloat__DOT__etchedfp4adder__DOT__lzd_scan, 0x15U))) {
-            vlSelfRef.add4_fp32_tb_softfloat__DOT__etchedfp4adder__DOT__lead_zeros 
-                = (0x3fU & ((IData)(8U) + (IData)(vlSelfRef.add4_fp32_tb_softfloat__DOT__etchedfp4adder__DOT__lead_zeros)));
-            vlSelfRef.add4_fp32_tb_softfloat__DOT__etchedfp4adder__DOT__lzd_scan 
-                = (0x1fffffffU & VL_SHIFTL_III(29,29,32, vlSelfRef.add4_fp32_tb_softfloat__DOT__etchedfp4adder__DOT__lzd_scan, 8U));
-        }
-        if ((0U == VL_SHIFTR_III(32,32,32, vlSelfRef.add4_fp32_tb_softfloat__DOT__etchedfp4adder__DOT__lzd_scan, 0x19U))) {
-            vlSelfRef.add4_fp32_tb_softfloat__DOT__etchedfp4adder__DOT__lead_zeros 
-                = (0x3fU & ((IData)(4U) + (IData)(vlSelfRef.add4_fp32_tb_softfloat__DOT__etchedfp4adder__DOT__lead_zeros)));
-            vlSelfRef.add4_fp32_tb_softfloat__DOT__etchedfp4adder__DOT__lzd_scan 
-                = (0x1fffffffU & VL_SHIFTL_III(29,29,32, vlSelfRef.add4_fp32_tb_softfloat__DOT__etchedfp4adder__DOT__lzd_scan, 4U));
-        }
-        if ((0U == VL_SHIFTR_III(32,32,32, vlSelfRef.add4_fp32_tb_softfloat__DOT__etchedfp4adder__DOT__lzd_scan, 0x1bU))) {
-            vlSelfRef.add4_fp32_tb_softfloat__DOT__etchedfp4adder__DOT__lead_zeros 
-                = (0x3fU & ((IData)(2U) + (IData)(vlSelfRef.add4_fp32_tb_softfloat__DOT__etchedfp4adder__DOT__lead_zeros)));
-            vlSelfRef.add4_fp32_tb_softfloat__DOT__etchedfp4adder__DOT__lzd_scan 
-                = (0x1fffffffU & VL_SHIFTL_III(29,29,32, vlSelfRef.add4_fp32_tb_softfloat__DOT__etchedfp4adder__DOT__lzd_scan, 2U));
-        }
-        if ((0U == VL_SHIFTR_III(32,32,32, vlSelfRef.add4_fp32_tb_softfloat__DOT__etchedfp4adder__DOT__lzd_scan, 0x1cU))) {
-            vlSelfRef.add4_fp32_tb_softfloat__DOT__etchedfp4adder__DOT__lead_zeros 
-                = (0x3fU & ((IData)(1U) + (IData)(vlSelfRef.add4_fp32_tb_softfloat__DOT__etchedfp4adder__DOT__lead_zeros)));
-            vlSelfRef.add4_fp32_tb_softfloat__DOT__etchedfp4adder__DOT__lzd_scan 
-                = (0x1fffffffU & VL_SHIFTL_III(29,29,32, vlSelfRef.add4_fp32_tb_softfloat__DOT__etchedfp4adder__DOT__lzd_scan, 1U));
-        }
-    }
-    vlSelfRef.add4_fp32_tb_softfloat__DOT__etchedfp4adder__DOT__norm_val 
-        = (0x1fffffffU & VL_SHIFTL_III(29,29,6, vlSelfRef.add4_fp32_tb_softfloat__DOT__etchedfp4adder__DOT__st2_sum_mag, (IData)(vlSelfRef.add4_fp32_tb_softfloat__DOT__etchedfp4adder__DOT__lead_zeros)));
-    vlSelfRef.add4_fp32_tb_softfloat__DOT__etchedfp4adder__DOT__final_mant 
-        = (0x7fffffU & (vlSelfRef.add4_fp32_tb_softfloat__DOT__etchedfp4adder__DOT__norm_val 
-                        >> 5U));
-    vlSelfRef.add4_fp32_tb_softfloat__DOT__etchedfp4adder__DOT__final_exp_calc 
-        = (0x7ffU & (((IData)(2U) + VL_EXTENDS_II(11,10, (IData)(vlSelfRef.add4_fp32_tb_softfloat__DOT__etchedfp4adder__DOT__st2_exp_base))) 
-                     - VL_EXTENDS_II(11,8, (IData)(vlSelfRef.add4_fp32_tb_softfloat__DOT__etchedfp4adder__DOT__lead_zeros))));
-    vlSelfRef.add4_fp32_tb_softfloat__DOT__etchedfp4adder__DOT__result_out 
-        = ((((0U == vlSelfRef.add4_fp32_tb_softfloat__DOT__etchedfp4adder__DOT__st2_sum_mag) 
-             | VL_GTES_III(32, 0U, VL_EXTENDS_II(32,11, (IData)(vlSelfRef.add4_fp32_tb_softfloat__DOT__etchedfp4adder__DOT__final_exp_calc)))) 
-            | (0U == (IData)(vlSelfRef.add4_fp32_tb_softfloat__DOT__etchedfp4adder__DOT__st2_exp_base)))
-            ? 0U : (VL_LTES_III(32, 0xffU, VL_EXTENDS_II(32,11, (IData)(vlSelfRef.add4_fp32_tb_softfloat__DOT__etchedfp4adder__DOT__final_exp_calc)))
-                     ? (0x7f800000U | ((IData)(vlSelfRef.add4_fp32_tb_softfloat__DOT__etchedfp4adder__DOT__st2_res_sign) 
-                                       << 0x1fU)) : 
-                    (((IData)(vlSelfRef.add4_fp32_tb_softfloat__DOT__etchedfp4adder__DOT__st2_res_sign) 
-                      << 0x1fU) | ((0x7f800000U & ((IData)(vlSelfRef.add4_fp32_tb_softfloat__DOT__etchedfp4adder__DOT__final_exp_calc) 
-                                                   << 0x17U)) 
-                                   | vlSelfRef.add4_fp32_tb_softfloat__DOT__etchedfp4adder__DOT__final_mant))));
-    if (vlSelfRef.add4_fp32_tb_softfloat__DOT__etchedfp4adder__DOT__st2_special) {
-        vlSelfRef.add4_fp32_tb_softfloat__DOT__etchedfp4adder__DOT__result_out 
-            = vlSelfRef.add4_fp32_tb_softfloat__DOT__etchedfp4adder__DOT__st2_spec_res;
-    }
     vlSelfRef.add4_fp32_tb_softfloat__DOT__etchedfp4adder__DOT__raw_sum 
-        = (0x7fffffffU & ((vlSelfRef.add4_fp32_tb_softfloat__DOT__etchedfp4adder__DOT__st1_sum_vec 
-                           + VL_EXTENDS_II(31,30, (0x3fffffffU 
+        = (0x3fffffffU & ((VL_EXTENDS_II(30,31, vlSelfRef.add4_fp32_tb_softfloat__DOT__etchedfp4adder__DOT__st1_sum_vec) 
+                           + VL_EXTENDS_II(30,30, (0x3fffffffU 
                                                    & VL_SHIFTL_III(30,30,32, vlSelfRef.add4_fp32_tb_softfloat__DOT__etchedfp4adder__DOT__st1_carry_vec, 1U)))) 
                           + (IData)(vlSelfRef.add4_fp32_tb_softfloat__DOT__etchedfp4adder__DOT__st1_hot_ones)));
     if ((0x20000000U & vlSelfRef.add4_fp32_tb_softfloat__DOT__etchedfp4adder__DOT__raw_sum)) {
         vlSelfRef.add4_fp32_tb_softfloat__DOT__etchedfp4adder__DOT__mag_sum 
-            = (0x1fffffffU & ((IData)(1U) + (~ vlSelfRef.add4_fp32_tb_softfloat__DOT__etchedfp4adder__DOT__raw_sum)));
+            = (0x3fffffffU & ((IData)(1U) + (~ vlSelfRef.add4_fp32_tb_softfloat__DOT__etchedfp4adder__DOT__raw_sum)));
         vlSelfRef.add4_fp32_tb_softfloat__DOT__etchedfp4adder__DOT__res_sign 
             = (1U & (~ (IData)(vlSelfRef.add4_fp32_tb_softfloat__DOT__etchedfp4adder__DOT__st1_a_s)));
     } else {
