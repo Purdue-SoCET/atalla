@@ -202,6 +202,8 @@ module vector_datapath (
         ruif.in.wb_ready = vif.wb_ready_signals.reduction_wb_ready;
         
         vif.lanes_out.reduction = ruif.out;
+
+        vif.unit_ready_signals.reduction_status = vif.lanes_out.reduction.input_ready;
     end
 
 
