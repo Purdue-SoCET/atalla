@@ -163,6 +163,17 @@ module vector_core_L2_tb;
     );
 
     // -----------------------------------------------------------------------
+    // Performance Monitor
+    // -----------------------------------------------------------------------
+    perf_monitor perf_inst (
+        .CLK(CLK),
+        .nRST(nRST),
+        .vif(vif),
+        .gsauif(gsauif),
+        .sif(sif)
+    );
+
+    // -----------------------------------------------------------------------
     // DRAM Tie-off (controllable for backpressure testing)
     // -----------------------------------------------------------------------
     logic dram_stall_inject [NUM_SCPADS];
@@ -793,6 +804,8 @@ module vector_core_L2_tb;
             for (int e = 0; e < 32; e++)
                 $display("[TB]   v1[%0d] = %h (expect 4000)", e, dpi_veggie_read_vector_elem(8'd1, e));
         `endif
+
+        perf_inst.print_summary(cycle_count);
 
         dpi_scheduler_destroy();
         dpi_veggie_destroy();
