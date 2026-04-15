@@ -132,8 +132,8 @@ logic [NUM_SDMA_INSTRS-1:0][1:0] SDMA_scalar_sids;
 
 // Per-unit need signals for struct hazard checking: does any instr in this packet need this unit?
     logic need_scalar_ex1, need_scalar_ex2, need_scalar_ex3, need_scalar_ex4, need_scalar_ex5;
-    logic need_vector_alu, need_vector_mul, need_vector_exp, need_vector_reduction, need_vector_vlsu, need_vector_gsau;
-    logic need_sdma_ex;
+    logic need_vector_alu, need_vector_mul, need_vector_exp, need_vector_reduction, need_vector_gsau;
+    logic [NUM_SDMA_INSTRS-1:0] need_vector_vlsu; //one per scpad since vlsu is per-lane
 
 always_comb begin
     for (int i = 0; i < NUM_SCALAR_INSTRS; i++) begin
@@ -176,9 +176,8 @@ always_comb begin
     need_vector_mul = 1'b0;
     need_vector_exp = 1'b0;
     need_vector_reduction = 1'b0;
-    need_vector_vlsu = 1'b0;
+    need_vector_vlsu = 4'b0;
     need_vector_gsau = 1'b0;
-    need_sdma_ex = 1'b0;
 
     for (int i = 0; i < NUM_SCALAR_INSTRS; i++) begin
         if (scif.decoded_scalar_instrs[i].valid_in) begin
@@ -204,7 +203,7 @@ always_comb begin
                 ALU_ADD, ALU_SUB, ALU_OR, ALU_AND, ALU_XOR, ALU_NOT, ALU_MGT, ALU_MLT, ALU_MEQ, ALU_MNEQ: need_vector_alu = 1'b1;
                 MUL: need_vector_mul = 1'b1;
                 EXP: need_vector_exp = 1'b1;
-                VLSU: need_vector_vlsu = 1'b1;
+                VLSU: need_vector_vlsu[vcif.decoded_vector_instrs[i].sid] = 1'b1;
                 GSAU: need_vector_gsau = 1'b1;
                 REDU: begin
                     need_vector_reduction = 1'b1;
@@ -215,7 +214,8 @@ always_comb begin
         end
     end
 
-    need_sdma_ex = |SDMA_scalar_WEN; //this will only be 1 for a valid SDMA instr
+    // need_sdma_ex = |SDMA_scalar_WEN; //this will only be 1 for a valid SDMA instr
+    
 
 end
 
@@ -226,18 +226,20 @@ logic vector_FU_ready;
 logic sdma_FU_ready;
 
 //TODO figure out where vts, mts, stm are being handled 
+//TODO c
 //if we need and ready, not blocked. if don't need, we don't care about ready. if we need and not ready, blocked
 assign scalar_FU_ready = (~need_scalar_ex1 | d2if.ready_DEC2_ex1) &
                          (~need_scalar_ex2 | d2if.ready_DEC2_ex2) &
                          (~need_scalar_ex3 | d2if.ready_DEC2_ex3) &
                          (~need_scalar_ex4 | d2if.ready_DEC2_ex4) &
                          (~need_scalar_ex5 | d2if.ready_DEC2_ex5);
-assign vector_FU_ready = (~need_vector_alu | d2if.alu_ready) &
-                         (~need_vector_mul | d2if.mul_ready) &
-                         (~need_vector_exp | d2if.exp_ready) &
-                         (~need_vector_reduction | d2if.reduction_ready) &
-                         (~need_vector_vlsu | d2if.vlsu_ready) &
-                         (~need_vector_gsau | d2if.gsau_ready);
+// assign vector_FU_ready = (~need_vector_alu | d2if.alu_ready) &
+//                          (~need_vector_mul | d2if.mul_ready) &
+//                          (~need_vector_exp | d2if.exp_ready) &
+//                          (~need_vector_reduction | d2if.reduction_ready) &
+//                          (~need_vector_vlsu | d2if.vlsu_ready) &
+//                          (~need_vector_gsau | d2if.gsau_ready);
+assign vector_FU_ready = 1'b1;
 
 always_comb begin
     sdma_FU_ready = 1'b1; // assume ready unless proven otherwise

@@ -35,14 +35,14 @@ module decode1_stage (
       
       cat[i] = TYPE_NONE;
       if (inst[i] != '0) begin 
-        if ((op >= ADD_S && op <= HALT_S) || (op == LHW_S) || (op == SHW_S)) begin
+        if ((op >= ADD_S && op <= HALT_S) || op == MV_STM) begin
           cat[i] = TYPE_SCALAR;
         end 
-        // else if (op >= ADD_VV && op <= MNEQ_MVS) begin
-        //   cat[i] = TYPE_VECTOR;
-        // end else if (op == SCPAD_LD || op == SCPAD_ST) begin
-        //   cat[i] = TYPE_SCPAD;
-        // end
+        else if (op >= ADD_VV && op <= MUL_VS && op != MV_STM && op != SCPAD_LD && op != SCPAD_ST) begin
+          cat[i] = TYPE_VECTOR;
+        end else if (op == SCPAD_LD || op == SCPAD_ST) begin
+          cat[i] = TYPE_SCPAD;
+        end
       end
     end
   end
@@ -53,8 +53,8 @@ module decode1_stage (
 
 
     for (int i = 0; i < SCALAR_SLOTS; i++) dec12_if.scalar_inst_in[i] = '0;
-    // for (int i = 0; i < VECTOR_SLOTS; i++) dec12_if.vector_inst_in[i] = '0;
-    // for (int i = 0; i < SCRATCH_SLOTS; i++) dec12_if.scpad_inst_in[i]  = '0;
+    for (int i = 0; i < VECTOR_SLOTS; i++) dec12_if.vector_inst_in[i] = '0;
+    for (int i = 0; i < SCRATCH_SLOTS; i++) dec12_if.scpad_inst_in[i]  = '0;
 
 
     for (int i = 0; i < PACKET_SIZE; i++) begin
@@ -64,17 +64,17 @@ module decode1_stage (
             dec12_if.scalar_inst_in[i] = inst[i];
         end
 
-        // TYPE_VECTOR: begin
-        //   if (i < VECTOR_SLOTS)
-        //     dec12_if.vector_inst_in[i] = inst[i];
-        // end
+        TYPE_VECTOR: begin
+          if (i < VECTOR_SLOTS)
+            dec12_if.vector_inst_in[i] = inst[i];
+        end
 
-        // TYPE_SCPAD: begin
-        //   if (scpad_wptr < SCRATCH_SLOTS) begin
-        //     dec12_if.scpad_inst_in[scpad_wptr] = inst[i];
-        //     scpad_wptr = scpad_wptr + 1'b1;
-        //   end
-        // end
+        TYPE_SCPAD: begin
+          if (scpad_wptr < SCRATCH_SLOTS) begin
+            dec12_if.scpad_inst_in[scpad_wptr] = inst[i];
+            scpad_wptr = scpad_wptr + 1'b1;
+          end
+        end
 
         default: ; // TYPE_NONE
       endcase

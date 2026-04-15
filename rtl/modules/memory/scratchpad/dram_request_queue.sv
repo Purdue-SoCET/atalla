@@ -4,18 +4,6 @@
 /*  Julio Hernandez - herna628@purdue.edu */
 /*  Akshath Raghav Ravikiran - araviki@purdue.edu */
 
-<<<<<<< HEAD
-module dram_request_queue (scpad_if.backend_dram_req_queue be_dr_req_q);
-    import scpad_pkg::*;
-
-    dram_req_q_t [NUM_ROWS-1:0] dram_req_latch_block; 
-    dram_req_q_t nxt_dram_head_latch_set, nxt_dram_tail_latch_set;
-
-    logic [MAX_DIM_WIDTH-1:0] fifo_head, nxt_fifo_head, fifo_tail, nxt_fifo_tail;
-    logic [MAX_REQ_WIDTH-1:0] request_completed_counter, nxt_request_completed_counter;
-    logic sram_res_valid;
-    scpad_data_t sram_rdata;
-=======
 module dram_request_queue #(parameter int DEPTH = 32) (scpad_if.backend_dram_req_queue be_dr_req_q);
     import scpad_pkg::*;
 
@@ -35,7 +23,6 @@ module dram_request_queue #(parameter int DEPTH = 32) (scpad_if.backend_dram_req
     assign fifo_full = (head_idx == tail_idx) && (fifo_head[MAX_DIM_WIDTH] != fifo_tail[MAX_DIM_WIDTH]);
 
     assign fifo_empty = (fifo_head == fifo_tail);
->>>>>>> origin/Vector_S26_L1_TB
     
     always_ff @(posedge be_dr_req_q.clk, negedge be_dr_req_q.n_rst) begin
         if(!be_dr_req_q.n_rst) begin
@@ -59,13 +46,8 @@ module dram_request_queue #(parameter int DEPTH = 32) (scpad_if.backend_dram_req
             sram_res_valid <= be_dr_req_q.be_dr_req_q_in.sram_res_valid;
             sram_rdata <= be_dr_req_q.be_dr_req_q_in.sram_rdata;
         end
-    end
-
-    always_comb begin
-        be_dr_req_q.be_dr_req_q_out.dram_req = 0;
 
 <<<<<<< HEAD
-        nxt_dram_head_latch_set = dram_req_latch_block[fifo_head];
         nxt_dram_tail_latch_set = dram_req_latch_block[fifo_tail];
 =======
         nxt_dram_head_latch_set = dram_req_latch_block[head_idx];
@@ -77,13 +59,8 @@ module dram_request_queue #(parameter int DEPTH = 32) (scpad_if.backend_dram_req
         be_dr_req_q.be_dr_req_q_out.transaction_complete = 1'b0;
 
         be_dr_req_q.be_dr_req_q_out.dram_queue_full = 1'b0;
-        be_dr_req_q.be_dr_req_q_out.burst_complete = 1'b0;
-        if(be_dr_req_q.be_dr_req_q_in.sched_valid == 1'b1) begin
-            if(be_dr_req_q.be_dr_req_q_in.sched_write == 1'b1) begin
-                if(sram_res_valid == 1'b1) begin
                     nxt_dram_tail_latch_set.valid = 1'b1;
                     nxt_dram_tail_latch_set.write = 1'b1;
-                    nxt_dram_tail_latch_set.id = {be_dr_req_q.be_dr_req_q_in.id, be_dr_req_q.be_dr_req_q_in.sub_id};
                     nxt_dram_tail_latch_set.dram_addr = be_dr_req_q.be_dr_req_q_in.dram_addr;
                     nxt_dram_tail_latch_set.dram_vector_mask = be_dr_req_q.be_dr_req_q_in.dram_vector_mask;
                     nxt_dram_tail_latch_set.wdata = sram_rdata;

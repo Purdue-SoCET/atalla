@@ -38,6 +38,10 @@ package vector_pkg;
     localparam MASK_BANK_COUNT = 2;
     localparam MASK_IDX        = $clog2(NUM_MASKS);
 
+    localparam MASK_REG_BITS = 4;
+    localparam MASK_WRITE_PORTS = 2;
+    localparam MASK_DATA_LENGTH = 32;
+
     // Instruction Fields
     localparam OPCODE_W = 7;
     localparam VIDX_W   = 8;
@@ -45,11 +49,6 @@ package vector_pkg;
     localparam IMM_W    = 8;
     localparam DTYPE_W  = 2;
     localparam INSTR_W  = 32;
-
-    // Mask parameters (handle differently later)
-    localparam MASK_REG_BITS = 4;
-    localparam MASK_WRITE_PORTS = 2;
-    localparam MASK_DATA_LENGTH = 32;
 
     typedef logic [OPCODE_W-1:0] opcode_t;
     typedef logic [VIDX_W-1:0]   vsel_t;
@@ -68,7 +67,7 @@ package vector_pkg;
     // Data Structures
     // =========================================================================
     typedef logic [VLMAX-1:0][ESZ-1:0]   vreg_t;     // full vector
-    typedef enum logic [1:0] {
+    typedef enum logic [2:0] {
         VALU = 3'b00,
         MUL = 3'b01,
         EXP = 3'b10
@@ -407,7 +406,7 @@ package vector_pkg;
         result_collector_out_t [LANE_FU_COUNT-1:0] result_collectors;
         vector_if_reduction_out_t reduction;
     } vector_if_lanes_out_t;
-    
+
     typedef struct packed {
         vector_if_gsau_out_t vector_if_gsau_out;
         vector_if_reduction_out_t vector_if_reduction_out;

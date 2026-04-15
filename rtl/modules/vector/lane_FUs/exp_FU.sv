@@ -50,7 +50,7 @@ module exp_FU (
         lsif.in.mask = 'b0;
         vd = 'b0;
         for (int i = 0; i < LANE_ISSUE_W; i++) begin
-            if (fuif.in.ports[i].input_valid & (fuif.in.ports[i].usel == SQRT) & fuif.out.input_ready) begin //are any of the input ports issuing to this FU? and we are ready
+            if (fuif.in.ports[i].input_valid & (fuif.in.ports[i].usel == EXP) & fuif.out.input_ready) begin //are any of the input ports issuing to this FU? and we are ready
                 lsif.in.valid_in = 'b1;
                 lsif.in.v1 = fuif.in.ports[i].v1;
                 lsif.in.mask = fuif.in.ports[i].mask;

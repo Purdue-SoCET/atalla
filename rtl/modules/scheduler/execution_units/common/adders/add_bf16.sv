@@ -1,6 +1,6 @@
 `timescale 1ns/1ps
 
-module add_bf16(input logic clk, nRST, 
+module add_bf16_scalar(input logic clk, nRST, 
                 input logic [15:0] bf1_in, bf2_in,
                 output logic [15:0] bf_out,
                 output logic overflow, underflow, invalid);

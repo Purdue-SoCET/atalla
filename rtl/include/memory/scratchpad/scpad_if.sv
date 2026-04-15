@@ -57,12 +57,8 @@ interface scpad_if (input logic clk, input logic n_rst);
     // Head => Stomach => Tail (Write)
     sel_req_t head_stomach_req [NUM_SCPADS]; // into wr xbar
     sel_req_t xbar_cntrl_req [NUM_SCPADS]; // into body fifo 
-<<<<<<< HEAD
-    sel_req_t cntrl_spad_req [NUM_SCPADS]; // into spad 
-=======
     sel_req_t cntrl_spad_req [NUM_SCPADS]; // read requests into spad
     sel_req_t cntrl_spad_wr_req [NUM_SCPADS]; // write requests into spad (concurrent with reads)
->>>>>>> origin/Vector_S26_L1_TB
     sel_res_t spad_xbar_req [NUM_SCPADS]; // into rd xbar
     sel_res_t stomach_tail_res [NUM_SCPADS]; // into tail 
 
@@ -81,24 +77,16 @@ interface scpad_if (input logic clk, input logic n_rst);
 
     modport vec_frontend (
         input  fe_vec_stall, vec_res, 
-<<<<<<< HEAD
-        output vec_req
-=======
         output vec_req, fe_vec_res_stall
->>>>>>> origin/Vector_S26_L1_TB
     );
 
     modport sched_backend (
         output sched_req,
-<<<<<<< HEAD
-        input sched_res
-=======
         input sched_res,
         input sched_stall,
         input sched_accepted,
         input sdma_done,
         input sdma_done_req
->>>>>>> origin/Vector_S26_L1_TB
     );
 
     // ----------------------------------------------------------------------
@@ -108,11 +96,7 @@ interface scpad_if (input logic clk, input logic n_rst);
     // Scheduler <=> Backend
     modport backend_sched (
         input  clk, n_rst, sched_req,
-<<<<<<< HEAD
-        output sched_res
-=======
         output sched_res, sched_stall, sched_accepted, sdma_done, sdma_done_req
->>>>>>> origin/Vector_S26_L1_TB
     );
 
     // Backend <=> Body
@@ -143,15 +127,6 @@ interface scpad_if (input logic clk, input logic n_rst);
         output sr_wr_l_out
     );
 
-<<<<<<< HEAD
-    // Swizzle
-    modport swizzle (
-        input  swizz_req,
-        output swizz_res
-    );
-
-=======
->>>>>>> origin/Vector_S26_L1_TB
     // Vec. Core <=> Frontend 
     modport frontend_vec (
         input clk, n_rst, 
@@ -190,11 +165,7 @@ interface scpad_if (input logic clk, input logic n_rst);
         input  head_stomach_req,
         input  spad_cntrl_res,
         input  xbar_cntrl_req,
-<<<<<<< HEAD
-        output cntrl_spad_req,
-=======
         output cntrl_spad_req, cntrl_spad_wr_req,
->>>>>>> origin/Vector_S26_L1_TB
         output spad_xbar_req,
         output stomach_tail_res
     );
@@ -237,13 +208,10 @@ interface scpad_if (input logic clk, input logic n_rst);
         // Scheduler <=> Backend
         output sched_req,
         input sched_res,
-<<<<<<< HEAD
-=======
         input sched_stall,
         input sched_accepted,
         input sdma_done,
         input sdma_done_req,
->>>>>>> origin/Vector_S26_L1_TB
 
         // Backend <=> DRAM
         output be_dram_req,
@@ -274,11 +242,7 @@ interface scpad_if (input logic clk, input logic n_rst);
     // Backend TB
     modport backend_tb (
         input clk, 
-<<<<<<< HEAD
-        input sched_res, be_req,
-=======
         input sched_res, sched_stall, sched_accepted, sdma_done, sdma_done_req, be_req,
->>>>>>> origin/Vector_S26_L1_TB
         input be_dram_stall, be_dram_req,
 
         output be_stall, dram_be_stall, n_rst,
@@ -313,11 +277,7 @@ interface scpad_if (input logic clk, input logic n_rst);
     modport sram_ctrl_tb (
         input clk, n_rst, 
         input w_stall, r_stall,
-<<<<<<< HEAD
-        input cntrl_spad_req, spad_xbar_req, 
-=======
         input cntrl_spad_req, cntrl_spad_wr_req, spad_xbar_req, 
->>>>>>> origin/Vector_S26_L1_TB
         input stomach_tail_res,
 
         output spad_busy, head_stomach_req,
@@ -348,11 +308,6 @@ interface scpad_if (input logic clk, input logic n_rst);
         output fe_req, be_req
     );
 
-<<<<<<< HEAD
-endinterface
-
-`endif 
-=======
     // Scratchpad TB - full access for testing
     modport scratchpad_tb (
         input clk, n_rst,
@@ -376,4 +331,3 @@ endinterface
 endinterface
 
 `endif
->>>>>>> origin/Vector_S26_L1_TB

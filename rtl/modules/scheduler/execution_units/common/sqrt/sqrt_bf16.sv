@@ -126,7 +126,7 @@ module sqrt_bf16 (
 
     logic [15:0] mul_a, mul_b, mul_out;
     logic mul_done, mul_start;
-    mul_bf16 mul1 (.clk(CLK), .nRST(nRST), .start(mul_start), .a(mul_a), .b(mul_b), .result(mul_out), .done(mul_done));
+    mul_bf16_scalar mul1 (.clk(CLK), .nRST(nRST), .start(mul_start), .a(mul_a), .b(mul_b), .result(mul_out), .done(mul_done));
 
     //critical path helper, maybe can go unsure at the moment
     always_ff @(posedge CLK, negedge nRST) begin
@@ -163,7 +163,7 @@ module sqrt_bf16 (
     logic [15:0] add_out;
     logic add_start;
 
-    add_bf16 add1 (
+    add_bf16_scalar add1 (
         .clk(CLK), 
         .nRST(nRST),
         .bf1_in(mul_out_reg),

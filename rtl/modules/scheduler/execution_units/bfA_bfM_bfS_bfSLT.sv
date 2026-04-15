@@ -26,8 +26,8 @@ assign mult_start = portmap.valid_in && cur_mult;
 
 flex_counter counter (.clk(clk), .nrst(nRST), .enable(counter_enable), .clear(counter_clear), .count(current_count));
 
-add_bf16 adder_subber (.clk(clk), .nRST(nRST), .bf1_in(cur_bf_1), .bf2_in(updated_bf_2_in), .bf_out(add_sub_slt_output), .overflow(), .underflow(), .invalid());
-mul_bf16 multiplier (.clk(clk), .nRST(nRST), .start(mult_start), .a(cur_bf_1), .b(updated_bf_2_in), .result(mult_output), .done());
+add_bf16_scalar adder_subber (.clk(clk), .nRST(nRST), .bf1_in(cur_bf_1), .bf2_in(updated_bf_2_in), .bf_out(add_sub_slt_output), .overflow(), .underflow(), .invalid());
+mul_bf16_scalar multiplier (.clk(clk), .nRST(nRST), .start(mult_start), .a(cur_bf_1), .b(updated_bf_2_in), .result(mult_output), .done());
 
 
 always_comb begin

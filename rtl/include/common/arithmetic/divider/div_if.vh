@@ -22,9 +22,14 @@ interface div_if #(
   div_in_t  in;
   div_out_t out;
 
-  modport dvif (
+  modport div (
     input  in,
     output out
+  );
+
+  modport tb (
+    input  out,
+    output in
   );
 
 endinterface

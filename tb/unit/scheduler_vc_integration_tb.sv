@@ -27,7 +27,7 @@ module scheduler_vc_integration_tb;
     
 
     // Vector Core
-    vector_datapath dut (
+    vector_datapath vecdp (
         .CLK    (CLK),
         .nRST   (nRST),
         .vif    (vif),
@@ -36,15 +36,21 @@ module scheduler_vc_integration_tb;
     );
 
     // Scratchpad RTL
-    scratchpad sp_inst (
+    scratchpad scpad (
         .sif(sif)
     );
 
     // Systolic Array RTL
-    sysarr_MEISSA_top sa_inst (
+    sysarr_MEISSA_top sysarr (
         .clk    (CLK),
         .nRST   (nRST),
         .gsau_if(gsauif)
+    );
+
+    scheduler_core scheduler (
+        .CLK(CLK),
+        .nRST(nRST),
+        .scif(scif)
     );
 
     

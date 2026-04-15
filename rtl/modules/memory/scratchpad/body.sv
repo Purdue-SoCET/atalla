@@ -3,13 +3,9 @@
 `include "scpad_pkg.sv"
 `include "scpad_if.sv"
 
-<<<<<<< HEAD
-module body #(parameter logic [scpad_pkg::SCPAD_ID_WIDTH-1:0] IDX = '0) (scpad_if.spad_body bif); 
-=======
 // NOTE: Using full interface (no modport) because body needs access to internal signals
 // like cntrl_spad_req, cntrl_spad_wr_req, spad_busy, spad_cntrl_res, spad_xbar_req
 module body #(parameter logic [scpad_pkg::SCPAD_ID_WIDTH-1:0] IDX = '0) (scpad_if bif); 
->>>>>>> origin/Vector_S26_L1_TB
 
     import scpad_pkg::*;
 
@@ -19,39 +15,6 @@ module body #(parameter logic [scpad_pkg::SCPAD_ID_WIDTH-1:0] IDX = '0) (scpad_i
 
     scpad_cntrl #(.IDX(IDX)) scpad_cntrl (.srif(bif));
 
-<<<<<<< HEAD
-    genvar gi, ti;
-    generate
-        for (gi = 0; gi < NUM_COLS; gi++) begin : g_bank
-            for (ti = 0; ti < SRAM_VERT_FOLD_FACTOR; ti++) begin : g_subarray
-                logic rdone [SRAM_VERT_FOLD_FACTOR];
-                logic wdone [SRAM_VERT_FOLD_FACTOR]; 
-                logic [ELEM_BITS-1:0] rdata [SRAM_VERT_FOLD_FACTOR];
-
-                logic is_data_in_arr = (bif.cntrl_spad_req[IDX].slot_mask[gi][SRAM_SUBARRAY_WIDTH_BITS-1:0] == ti); 
-
-                sram_bank #(
-                    .READ_LATENCY (2), .WRITE_LATENCY(2), 
-                    .HEIGHT(SRAM_SUBARRAY_HEIGHT), .WIDTH(ELEM_BITS)
-                ) u_bank (
-                    .clk(bif.clk), .n_rst(bif.n_rst), .busy(bif.spad_busy[IDX][gi]), 
-
-                    .ren(bif.cntrl_spad_req[IDX].valid_mask[gi] && bif.cntrl_spad_req[IDX].valid && !bif.cntrl_spad_req.write && is_data_in_arr),
-                    .raddr(bif.cntrl_spad_req[IDX].slot_mask[gi][SRAM_SUBARRAY_HEIGHT_BITS-1:0]),
-                    .rdone(rdone),
-                    .rdata(rdata),
-
-                    .wen(bif.cntrl_spad_req[IDX].xbar.valid_mask[gi] && bif.cntrl_spad_req[IDX].valid && !bif.cntrl_spad_req.write && is_data_in_arr),
-                    .waddr(bif.cntrl_spad_req[IDX].xbar.slot_mask[gi][SRAM_SUBARRAY_HEIGHT_BITS-1:0]),
-                    .wdone(wdone),
-                    .wdata(bif.cntrl_spad_req[IDX].wdata[gi])
-                );
-
-                assign bif.spad_cntrl_res[IDX][gi] = (rdone[ti] && is_data_in_arr) || (wdone[ti] && is_data_in_arr); 
-                assign bif.spad_xbar_req.rdata[IDX][gi] = rdata[ti]; 
-            end 
-        end
-=======
     // SRAM read latency - must match sram_bank parameter
     localparam SRAM_READ_LATENCY = 2;
     
@@ -155,19 +118,15 @@ module body #(parameter logic [scpad_pkg::SCPAD_ID_WIDTH-1:0] IDX = '0) (scpad_i
             assign bif.spad_cntrl_res[IDX][gi] = bank_rdone[gi] || bank_wdone[gi]; 
             assign bif.spad_xbar_req[IDX].rdata[gi] = bank_rdata[gi]; 
         end 
->>>>>>> origin/Vector_S26_L1_TB
     endgenerate
 
     rxbar #(.IDX(IDX)) rxbar (.rif(bif));
 
-<<<<<<< HEAD
-=======
     // Drive spad_xbar_req metadata from DELAYED pipeline (matches SRAM read latency)
     assign bif.spad_xbar_req[IDX].valid = |bank_rdone;
     assign bif.spad_xbar_req[IDX].write = 1'b0;  // only reads reach rxbar
     assign bif.spad_xbar_req[IDX].src   = meta_src_pipe[SRAM_READ_LATENCY];
 
->>>>>>> origin/Vector_S26_L1_TB
     tail #(.IDX(IDX)) tail (.tif(bif));
 
 endmodule

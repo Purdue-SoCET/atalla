@@ -7,7 +7,7 @@ module vector_control_unit
 #(
     parameter NUM_INSTRUCTIONS = 4
 ) (
-    input logic clk, 
+    input logic clk,                                                                                                                                                                                                                                                                                                                                                                                                                                                                        
     vector_control_unit_if.cu cuif
 );
 

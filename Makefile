@@ -40,6 +40,8 @@ ifeq ($(COVERAGE),ON)
   VLOG_FLAGS += -cover bcesft
 endif
 
+
+
 # --- Target-Specific Variable Mappings ---
 # Define specific DUT files for specific tests here
 lane_sequencer.sim lane_sequencer.wav: dut := lane_sequencer.sv,lane.sv
@@ -341,7 +343,7 @@ lint:
 ## Example: 
 ##  make test folder=/common/xbar tb_file=batcher_xbar_tb.sv
 # to turn on the GUI: add GUI=ON
-test:
+test2:
 	@if [ -z "$(folder)" ] || [ -z "$(tb_file)" ]; then \
 	  echo "Usage: make $@ folder=/sub/dir tb_file=tb_top.sv [include=/foo,/bar]"; exit 1; \
 	fi; \

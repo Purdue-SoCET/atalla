@@ -14,7 +14,7 @@
 
 `timescale 1ns/1ps
 
-module adder_8b (
+module adder_8b_scalar (
     input        carry,
     input  [7:0] exp1,
     input  [7:0] exp2,

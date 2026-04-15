@@ -9,6 +9,7 @@ Owner: Jacob Walter
 `include "vector_pkg.vh"
 `include "vector_if.vh"
 `include "lane_if.vh"
+`include "vlsu_if.sv"
 `include "result_collector_if.vh"
 `include "gsau_control_unit_if.vh"
 `include "reduction_FU_if.vh"

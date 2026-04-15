@@ -1,7 +1,7 @@
 `timescale 1ns/1ps
 // need to add description
 
-module mul_bf16(input logic clk, input logic nRST, input logic start, input logic [15:0] a, b, output logic [15:0] result, output logic done);
+module mul_bf16_scalar(input logic clk, input logic nRST, input logic start, input logic [15:0] a, b, output logic [15:0] result, output logic done);
 
     logic lat1_ready;               // Signals to denote when the value is ready at each stage of the multiply unit pipeline.
     assign done = lat1_ready;                   // Mul result is ready when the value-latch register is ready - everything downstream of that is combinational.
@@ -76,7 +76,7 @@ module mul_bf16(input logic clk, input logic nRST, input logic start, input logi
     // Step 2.2: Add exponent bits, taking into account overflow from mantissa multiplication
     logic [7:0] exp_sum;
     logic mul_ovf, mul_unf;
-    adder_8b add_EXPs (
+    adder_8b_scalar add_EXPs (
         .carry(mul_carryout),
         .exp1 (a_latched[14:7]),
         .exp2 (b_latched[14:7]),
