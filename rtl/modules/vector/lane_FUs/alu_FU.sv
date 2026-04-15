@@ -172,6 +172,7 @@ module alu_FU (
         .wr_en(lsif.in.valid_in & lsif.out.ready_in),
         .shift(aluif.out.valid_out & fuif.in.wb_ready),
         .din(rm)
+        .dout(fuif.out.rm)
     );
     sync_fifo #(
         .FIFODEPTH(4),

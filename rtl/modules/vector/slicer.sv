@@ -13,7 +13,7 @@ module slicer
     import vector_pkg::*;
 (
     vector_if.lanes vif,
-    lane_if.lane_in lif [NUM_LANES-1:0] 
+    lane_if.slicer  lif [NUM_LANES-1:0] 
 );
     
 

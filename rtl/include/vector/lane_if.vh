@@ -22,6 +22,10 @@ interface lane_if #(
     modport lane_out (
         output out
     );
+
+    modport slicer (
+        output in
+    );
 endinterface
 
 `endif

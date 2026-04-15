@@ -33,7 +33,7 @@ module vector_datapath (
 
     //slicer
     slicer slicer_inst (
-        .vif(vif),
+        .vif(vif.lanes),
         .lif(lane_interfaces)
     );
 
@@ -44,7 +44,7 @@ module vector_datapath (
             lane lane_inst (
                 .CLK(CLK),
                 .nRST(nRST),
-                .lif(lane_interfaces[ln_i])
+                .lif(lane_interfaces[ln_i].lif)
             );
         end
         
