@@ -203,8 +203,10 @@ module vector_core_dpi_tb;
 
                 // V2: broadcast scalar or VRF read
                 if (dpi_get_lane_broadcast_v2(p)) begin
+                    bit [15:0] scalar_val;
+                    scalar_val = dpi_veggie_read_vector_elem(dpi_get_veggie_rs1(p), 0);
                     for (int e = 0; e < 32; e++)
-                        tmp_vec2[e] = dpi_get_lane_v2_broadcast_elem(p, e);
+                        tmp_vec2[e] = scalar_val;
                 end else begin
                     for (int e = 0; e < 32; e++)
                         tmp_vec2[e] = dpi_veggie_read_vector_elem(dpi_get_veggie_vs2(p), e);
