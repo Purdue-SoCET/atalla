@@ -5,6 +5,7 @@
 `include "decode_2_if.vh"
 `include "atalla_isa_types.vh"
 `include "if_dec1_if.vh"
+`include "icaches_if.vh"
 
 import execution_unit_types_pkg::*;
 import scalar_wb_pkg::*;
@@ -32,11 +33,15 @@ module scheduler_core #(
     // output logic ready
 
     //fetch in
-    input logic ihit,
-    input instruction_packet_t imemload,
-    input logic imemready,
-    output logic imemREN,
-    output word_t imemaddr,
+    //input logic ihit,
+    //input instruction_packet_t imemload,
+    //input logic imemready,
+    //output logic imemREN,
+    //output word_t imemaddr,
+
+    // for icache
+    input logic [63:0] iload,
+    input logic iwait,
 
     //ready (idk if we need this)
     output logic ready,
@@ -60,10 +65,10 @@ module scheduler_core #(
     decode_2_if decode_2_if ();
     datapath_cache_if datapath_cache_if ();
     dec1_dec2_if decode_1_if();
-    // caches_if caches_if();
+    icaches_if icaches_if();
 
     //instantiations
-    //icache ICACHE(.CLK(CLK), .nRST(nRST), .dcif(datapath_cache_if), .cif(caches_if));
+    icache ICACHE(.CLK(CLK), .nRST(nRST), .dcif(datapath_cache_if), .cif(icaches_if));
     s_wb_arbiter S_WB_ARBITER(.CLK(CLK), .nRST(nRST), .vif(scalar_wb_if));
     execute_stage S_EXECUTE(.clk(CLK), .nRST(nRST), .ex_if(scalar_ex_if));
     decode_2 S_V_DECODE_2(.CLK(CLK), .nRST(nRST), .d2if(decode_2_if));
@@ -218,13 +223,13 @@ module scheduler_core #(
     // assign decode_2_if.pc_in = pc_in;
     assign ready = decode_2_if.ready;
 
-    assign datapath_cache_if.ihit = ihit;
-    assign datapath_cache_if.imemload = imemload;
-    assign datapath_cache_if.imemready = imemready;
-    assign imemaddr = datapath_cache_if.imemaddr;
-    assign imemREN = datapath_cache_if.imemREN;
-    // assign caches_if.iload = iload;
-    // assign caches_if.iwait = iwait;
+    //assign datapath_cache_if.ihit = ihit;
+    //assign datapath_cache_if.imemload = imemload;
+    //assign datapath_cache_if.imemready = imemready;
+    //assign imemaddr = datapath_cache_if.imemaddr;
+    //assign imemREN = datapath_cache_if.imemREN;
+    assign icaches_if.iload = iload;
+    assign icaches_if.iwait = iwait;
 
     assign halt = scalar_ex_if.halt_out;
 
