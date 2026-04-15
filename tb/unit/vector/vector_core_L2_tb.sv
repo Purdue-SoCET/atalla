@@ -282,7 +282,7 @@ module vector_core_L2_tb;
                 vif.vlsu_in.sched_req[p].spad_addr   = dpi_get_sp_sid(p);
                 vif.vlsu_in.sched_req[p].vdst        = dpi_get_sp_vd(p);
                 vif.vlsu_in.sched_req[p].num_cols    = dpi_get_sp_num_cols(p);
-                vif.vlsu_in.sched_req[p].row_id      = dpi_get_sp_rcid(p);
+                vif.vlsu_in.sched_req[p].row_id      = dpi_get_sp_row_num(p);
 
                 vif.vlsu_in.vrf_data[p].data  = pack_vreg(tmp_vec);
                 vif.vlsu_in.vrf_data[p].valid = 1'b1;
@@ -353,11 +353,9 @@ module vector_core_L2_tb;
             vlsu_rdy[p] = vif.unit_ready_signals.vlsu_status[p].ready;
 
         dpi_set_ready_signals(
-            lane_ready[0], // alu -> VALU
-            1'b1, // exp (not done yet, always ready)
-            1'b1, // sqrt (removed, always ready)
-            lane_ready[1], // mul -> MUL
-            1'b1, // div (removed, always ready)
+            lane_ready[0],  // alu
+            lane_ready[1],  // mul
+            1'b1,           // exp (not done yet)
             gsau_rdy,
             (vlsu_rdy != 0) ? 1'b1 : 1'b0
         );
@@ -496,10 +494,10 @@ module vector_core_L2_tb;
                     cycle_count, dpi_get_sys_vd(), dpi_get_sys_weight());
             for (int p = 0; p < 2; p++) begin
                 if (dpi_get_sp_valid_in(p))
-                    $display("[TB] Cyc %0d: SP[%0d] vd=%0d rows=%0d cols=%0d wen=%0b",
+                    $display("[TB] Cyc %0d: SP[%0d] vd=%0d row=%0d cols=%0d wen=%0b",
                         cycle_count, p,
                         dpi_get_sp_vd(p),
-                        dpi_get_sp_num_rows(p),
+                        dpi_get_sp_row_num(p),
                         dpi_get_sp_num_cols(p),
                         dpi_get_sp_wen(p));
             end
@@ -550,7 +548,7 @@ module vector_core_L2_tb;
         /*for (int e = 0; e < 32; e++)
             $display("[TB]   v1[%0d] = %h", e, dpi_veggie_read_vector_elem(8'd1, e));
         */
-        
+
         $display("[TB] Verify gemm output (v65):");
         for (int e = 0; e < 4; e++)
             $display("[TB]   v65[%0d] = %h", e, dpi_veggie_read_vector_elem(8'd65, e));

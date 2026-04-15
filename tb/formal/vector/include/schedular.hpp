@@ -18,10 +18,8 @@ class schedular
 public:
     struct unit_ready_t {
         uint8_t lane_alu_ready;
-        uint8_t lane_exp_ready;
-        uint8_t lane_sqrt_ready;
         uint8_t lane_mul_ready;
-        uint8_t lane_div_ready;
+        uint8_t lane_exp_ready;
         uint8_t sys_ready;
         uint8_t sp_ready;
     };
@@ -65,20 +63,18 @@ public:
         uint8_t vd;
         uint8_t rs1;
         uint8_t num_cols;
-        uint8_t num_rows;
         uint8_t sid;
-        uint8_t rc;
-        uint8_t rcid;
+        uint8_t row_num;
         uint8_t valid_in;
         uint8_t wen;
     };
     
     struct veggie_signals_t
     {
-        uint8_t ren; //havent a clue but keeping it
-        uint8_t vs1; //source
-        uint8_t vs2; //source
-        uint8_t rs1; //fake scalar register
+        uint8_t ren;
+        uint8_t vs1;
+        uint8_t vs2;
+        uint8_t rs1;
     };
 
     struct mask_signals_t
@@ -97,65 +93,12 @@ public:
     std::array<veggie_signals_t, 2> sc_veggie_signals;
     std::array<mask_signals_t, 3> sc_mask_signals;
 
-    
-
-    /*
-    std::array<uint8_t, 2> lane_valid_in;
-    uint8_t broadcast_value;
-    std::array<uint8_t, 2> broadcast_v2;
-    std::array<std::array<uint16_t, 32>,2> lane_v2_broadcast;
-    std::array<uint8_t, 2> lane_vd;
-    std::array<uint8_t, 2> lane_op;
-    std::array<uint8_t, 2> fu_sel;
-    std::array<uint8_t, 2> reduction_mode;
-    std::array<uint8_t, 2> alu_op;
-    std::array<uint8_t, 2> imm8;
-    std::array<uint8_t, 2> imm5;
-    std::array<uint8_t, 2> broadcast;
-    std::array<uint8_t, 2> clear;
-    std::array<uint8_t, 2> reudction_imm;
-    */
-
-    /*
-    uint8_t sys_vd;
-    uint8_t sys_valid_in;
-    uint8_t sys_weight;
-    uint8_t sys_vs1;
-    uint8_t sys_vs2;
-    std::array<uint8_t, 2> sys_ren;
-    */
-
-    /*
-    std::array<uint8_t, 2> sp_vd;
-    std::array<uint8_t, 2> sp_rs1;
-    std::array<uint8_t, 2> sp_num_cols;
-    std::array<uint8_t, 2> sp_num_rows;
-    std::array<uint8_t, 2> sp_sid;
-    std::array<uint8_t, 2> sp_rc;
-    std::array<uint8_t, 2> sp_rcid;
-    std::array<uint8_t, 2> sp_valid_in;
-    */
-
-    /*
-    std::array<uint8_t, 2> lane_ren; //not sure, we will keep the signal for now
-    std::array<uint8_t, 2> lane_vs1; //selecting vector sorce
-    std::array<uint8_t, 2> lane_vs2; //selecting vector sorce
-    std::array<uint8_t, 2> lane_rs1; //for the fake broadcast value
-    
-    std::array<uint8_t, 3> vmrf_vs;
-    std::array<uint8_t, 3> vmrf_mren;
-
-    */
-
     bool all_issued = false;
-
 
     typedef enum {
         VALU  = 0,
-        EXP  =  1,
-        SQRT =  2,
-        MUL  =  3,
-        DIV  =  4
+        MUL   = 1,
+        EXP   = 2
     } fu_t;
     
 
@@ -193,10 +136,8 @@ public:
 
         // VM fields
         uint8_t num_cols = 0;
-        uint8_t num_rows = 0;
         uint8_t sid = 0;
-        uint8_t rc = 0;
-        uint8_t rc_id = 0;
+        uint8_t row_num = 0;
 
         uint8_t rd = 0;
         uint8_t vms = 0;
@@ -232,7 +173,6 @@ private:
         {"add.vv", {VV, 50}},
         {"sub.vv", {VV, 51}},
         {"mul.vv", {VV, 52}},
-        {"div.vv", {VV, 53}},
         {"and.vv", {VV, 54}},
         {"or.vv", {VV, 55}},
         {"xor.vv", {VV, 56}},
@@ -244,9 +184,7 @@ private:
         {"addi.vi", {VI, 62}},
         {"subi.vi", {VI, 63}},
         {"muli.vi", {VI, 64}},
-        {"divi.vi", {VI, 65}},
         {"expi.vi", {VI, 66}},
-        {"sqrti.vi", {VI, 67}},
         {"not.vi", {VI, 68}},
         {"shift.vi", {VI, 69}},
         {"lw.vi", {VI, 70}},
@@ -262,7 +200,6 @@ private:
         {"add.vs",  {VS, 80}},
         {"sub.vs",  {VS, 81}},
         {"mul.vs",  {VS, 82}},
-        {"div.vs",  {VS, 83}},
         {"mgt.vs",  {VS, 84}},
         {"mlt.vs",  {VS, 85}},
         {"meq.vs",  {VS, 86}},

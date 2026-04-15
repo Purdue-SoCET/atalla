@@ -83,11 +83,10 @@ schedular::instruction schedular::parse_instruction(const std::string& instr_str
             std::getline(ss, token, ','); instr.vd = std::stoi(token);
             std::getline(ss, token, ','); instr.rs1 = std::stoi(token);
             std::getline(ss, token, ','); instr.num_cols = std::stoi(token);
-            std::getline(ss, token, ','); instr.num_rows = std::stoi(token);
             std::getline(ss, token, ','); instr.sid = std::stoi(token);
-            std::getline(ss, token, ','); instr.rc = std::stoi(token);
-            std::getline(ss, token, ','); instr.rc_id = std::stoi(token);
+            std::getline(ss, token, ','); instr.row_num = std::stoi(token);
             break;
+
         case MTS:
             std::getline(ss, token, ','); instr.rd = std::stoi(token);
             std::getline(ss, token, ','); instr.vms = std::stoi(token);
@@ -112,9 +111,7 @@ void schedular::decode(packet pkt)
         bool add = (instr.opcode == 50 || instr.opcode == 62 || instr.opcode == 71 || instr.opcode == 80);
         bool subtract = (instr.opcode == 51 || instr.opcode == 63 || instr.opcode == 81);
         bool mult = (instr.opcode == 52 || instr.opcode == 64 || instr.opcode == 82);
-        bool div = (instr.opcode == 53 || instr.opcode == 65 || instr.opcode == 83);
         bool exp = instr.opcode == 66;
-        bool sqrt = instr.opcode == 67;
         if (instr.opcode == 71 || instr.opcode == 72 || instr.opcode == 73)
             sc_reduction_signals.reduction_mode = 1;
 
@@ -132,17 +129,9 @@ void schedular::decode(packet pkt)
         {
             sc_lane_signals[i].fu_sel = MUL;
         }
-        else if (div)
-        {
-            sc_lane_signals[i].fu_sel = DIV;
-        }
         else if (exp)
         {
             sc_lane_signals[i].fu_sel = EXP;
-        }
-        else if (sqrt)
-        {
-            sc_lane_signals[i].fu_sel = SQRT;
         }
         else if (instr.opcode == 72)
         {
@@ -222,10 +211,8 @@ void schedular::decode(packet pkt)
         sc_sp_signals[0].vd = instr.vd;
         sc_sp_signals[0].rs1 = instr.rs1;
         sc_sp_signals[0].num_cols = instr.num_cols;
-        sc_sp_signals[0].num_rows = instr.num_rows;
         sc_sp_signals[0].sid = instr.sid;
-        sc_sp_signals[0].rc = instr.rc;
-        sc_sp_signals[0].rcid = instr.rc_id;
+        sc_sp_signals[0].row_num = instr.row_num;
         sc_sp_signals[0].valid_in = 1;
         sc_sp_signals[0].wen = 0;
     }
@@ -234,10 +221,8 @@ void schedular::decode(packet pkt)
         sc_sp_signals[0].vd = instr.vd;
         sc_sp_signals[0].rs1 = instr.rs1;
         sc_sp_signals[0].num_cols = instr.num_cols;
-        sc_sp_signals[0].num_rows = instr.num_rows;
         sc_sp_signals[0].sid = instr.sid;
-        sc_sp_signals[0].rc = instr.rc;
-        sc_sp_signals[0].rcid = instr.rc_id;
+        sc_sp_signals[0].row_num = instr.row_num;
         sc_sp_signals[0].valid_in = 1;
         sc_sp_signals[0].wen = 1;
     }
@@ -263,10 +248,8 @@ void schedular::decode(packet pkt)
         sc_sp_signals[1].vd = instr.vd;
         sc_sp_signals[1].rs1 = instr.rs1;
         sc_sp_signals[1].num_cols = instr.num_cols;
-        sc_sp_signals[1].num_rows = instr.num_rows;
         sc_sp_signals[1].sid = instr.sid;
-        sc_sp_signals[1].rc = instr.rc;
-        sc_sp_signals[1].rcid = instr.rc_id;
+        sc_sp_signals[1].row_num = instr.row_num;
         sc_sp_signals[1].valid_in = 1;
         sc_sp_signals[1].wen = 0;
     }
@@ -275,10 +258,8 @@ void schedular::decode(packet pkt)
         sc_sp_signals[1].vd = instr.vd;
         sc_sp_signals[1].rs1 = instr.rs1;
         sc_sp_signals[1].num_cols = instr.num_cols;
-        sc_sp_signals[1].num_rows = instr.num_rows;
         sc_sp_signals[1].sid = instr.sid;
-        sc_sp_signals[1].rc = instr.rc;
-        sc_sp_signals[1].rcid = instr.rc_id;
+        sc_sp_signals[1].row_num = instr.row_num;
         sc_sp_signals[1].valid_in = 1;
         sc_sp_signals[1].wen = 1;
     }
@@ -350,9 +331,8 @@ void schedular::dump_program_queue()
                     break;
                 case VM:
                     std::cout << ", vd=" << +instr.vd << ", rs1=" << +instr.rs1
-                              << ", num_cols=" << +instr.num_cols << ", num_rows=" << +instr.num_rows
-                              << ", sid=" << +instr.sid << ", rc=" << +instr.rc
-                              << ", rc_id=" << +instr.rc_id;
+                              << ", num_cols=" << +instr.num_cols
+                              << ", sid=" << +instr.sid << ", row_num=" << +instr.row_num;
                     break;
                 case S:
                     std::cout << " (NOP)";
@@ -373,9 +353,7 @@ void schedular::reset()
     // Ready signals
     ready_signals.lane_alu_ready = 0;
     ready_signals.lane_exp_ready = 0;
-    ready_signals.lane_sqrt_ready = 0;
     ready_signals.lane_mul_ready = 0;
-    ready_signals.lane_div_ready = 0;
     ready_signals.sys_ready = 0;
     ready_signals.sp_ready = 0;
 
@@ -415,10 +393,8 @@ void schedular::reset()
         sc_sp_signals[i].vd = 0;
         sc_sp_signals[i].rs1 = 0;
         sc_sp_signals[i].num_cols = 0;
-        sc_sp_signals[i].num_rows = 0;
         sc_sp_signals[i].sid = 0;
-        sc_sp_signals[i].rc = 0;
-        sc_sp_signals[i].rcid = 0;
+        sc_sp_signals[i].row_num = 0;
         sc_sp_signals[i].valid_in = 0;
         sc_sp_signals[i].wen = 0;
     }
@@ -451,16 +427,12 @@ bool schedular::all_ready()
             bool add = (instr.opcode == 50 || instr.opcode == 62 || instr.opcode == 71 || instr.opcode == 80);
             bool subtract = (instr.opcode == 51 || instr.opcode == 63 || instr.opcode == 81);
             bool mult = (instr.opcode == 52 || instr.opcode == 64 || instr.opcode == 82);
-            bool div = (instr.opcode == 53 || instr.opcode == 65 || instr.opcode == 83);
             bool exp = instr.opcode == 66;
-            bool sqrt = instr.opcode == 67;
             bool reduction = (instr.opcode == 71 || instr.opcode == 72 || instr.opcode == 73);
             if (add && !ready_signals.lane_alu_ready) {return false;}
             if (subtract && !ready_signals.lane_alu_ready) {return false;}
             if (mult && !ready_signals.lane_mul_ready) {return false;}
-            if (div && !ready_signals.lane_div_ready) {return false;}
             if (exp && !ready_signals.lane_exp_ready) {return false;}
-            if (sqrt && !ready_signals.lane_sqrt_ready) {return false;}
             if (reduction && !ready_signals.lane_alu_ready) {return false;}
         }
         else if (i == 2)

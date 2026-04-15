@@ -19,10 +19,8 @@ package inst_parser_dpi_pkg;
     // Per-cycle
     import "DPI-C" function void dpi_set_ready_signals(
         input bit lane_alu_ready,
-        input bit lane_exp_ready,
-        input bit lane_sqrt_ready,
         input bit lane_mul_ready,
-        input bit lane_div_ready,
+        input bit lane_exp_ready,
         input bit sys_ready,
         input bit sp_ready
     );
@@ -31,7 +29,7 @@ package inst_parser_dpi_pkg;
     // Completion
     import "DPI-C" function bit dpi_get_all_issued();
 
-    // new adds:
+    // Element-by-element DPI functions
     import "DPI-C" function void dpi_veggie_write_vector_elem(
         input byte unsigned vr_idx, input int elem_idx, input shortint unsigned val);
     import "DPI-C" function shortint unsigned dpi_veggie_read_vector_elem(
@@ -84,10 +82,8 @@ package inst_parser_dpi_pkg;
     import "DPI-C" function byte unsigned  dpi_get_sp_vd       (input int idx);
     import "DPI-C" function byte unsigned  dpi_get_sp_rs1      (input int idx);
     import "DPI-C" function byte unsigned  dpi_get_sp_num_cols (input int idx);
-    import "DPI-C" function byte unsigned  dpi_get_sp_num_rows (input int idx);
     import "DPI-C" function byte unsigned  dpi_get_sp_sid      (input int idx);
-    import "DPI-C" function byte unsigned  dpi_get_sp_rc       (input int idx);
-    import "DPI-C" function byte unsigned  dpi_get_sp_rcid     (input int idx);
+    import "DPI-C" function byte unsigned  dpi_get_sp_row_num  (input int idx);
 
     // Veggie VRF read control (idx = 0 or 1)
     import "DPI-C" function byte unsigned  dpi_get_veggie_vs1  (input int idx);
