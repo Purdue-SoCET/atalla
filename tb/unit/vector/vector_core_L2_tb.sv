@@ -287,10 +287,17 @@ module vector_core_L2_tb;
                     tmp_vec[e] = dpi_veggie_read_vector_elem(dpi_get_veggie_vs1(p), e);
 
                 if (dpi_get_lane_broadcast_v2(p)) begin
-                    bit [15:0] scalar_val;
-                    scalar_val = dpi_veggie_read_vector_elem(dpi_get_veggie_rs1(p), 0);
-                    for (int e = 0; e < 32; e++)
-                        tmp_vec2[e] = scalar_val;
+                    if (dpi_get_veggie_rs1(p) != 0) begin
+                        // VS: read scalar from veggie VRF register rs1
+                        bit [15:0] scalar_val;
+                        scalar_val = dpi_veggie_read_vector_elem(dpi_get_veggie_rs1(p), 0);
+                        for (int e = 0; e < 32; e++)
+                            tmp_vec2[e] = scalar_val;
+                    end else begin
+                        // VI: use packed immediate from scheduler
+                        for (int e = 0; e < 32; e++)
+                            tmp_vec2[e] = dpi_get_lane_v2_broadcast_elem(p, e);
+                    end
                 end else begin
                     for (int e = 0; e < 32; e++)
                         tmp_vec2[e] = dpi_veggie_read_vector_elem(dpi_get_veggie_vs2(p), e);
