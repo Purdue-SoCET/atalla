@@ -567,9 +567,12 @@ interface axi_bus_if(input logic CLK, input logic nRST);
     // WRITE TOP LEVEL MODPORT TB
     modport write_path_tb(
         // From Master
-        output aw_sp0_i_valid, aw_sp0_i, w_sp0_i_valid, w_sp0_i,
-        output aw_sp1_i_valid, aw_sp1_i, w_sp1_i_valid, w_sp1_i,
-        output aw_d_i_valid, aw_d_i, w_d_i_valid, w_d_i,
+        // output aw_sp0_i_valid, aw_sp0_i, w_sp0_i_valid, w_sp0_i,
+        // output aw_sp1_i_valid, aw_sp1_i, w_sp1_i_valid, w_sp1_i,
+        // output aw_d_i_valid, aw_d_i, w_d_i_valid, w_d_i,
+        input sp0_i_valid, aw_sp0_i, w_sp0_i,
+        input sp1_i_valid, aw_sp1_i, w_sp1_i,
+        input d_i_valid, aw_d_i, w_d_i,
 
         // To Master 
         // input aw_sp0_i_ready, w_sp0_i_ready,

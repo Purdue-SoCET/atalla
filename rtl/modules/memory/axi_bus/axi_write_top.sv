@@ -45,7 +45,7 @@ module axi_write_top(
                     sp0_in_burst <= 1'b1;
             end
             // end of current burst
-            else if (sp0_in_burst && wr_path_if.sp0_i_valid && wr_path_if.w_sp0_i.last) begin
+            else if (sp0_in_burst && wr_path_if.w_sp0_i.last) begin
                 sp0_in_burst <= 1'b0;
             end
         end
@@ -60,7 +60,7 @@ module axi_write_top(
                     sp1_in_burst <= 1'b1;
             end
             // end of current burst
-            else if (sp1_in_burst && wr_path_if.sp1_i_valid && wr_path_if.w_sp1_i.last) begin
+            else if (sp1_in_burst && wr_path_if.w_sp1_i.last) begin
                 sp1_in_burst <= 1'b0;
             end
         end
@@ -75,7 +75,7 @@ module axi_write_top(
                     d_in_burst <= 1'b1;
             end
             // end of current burst
-            else if (d_in_burst && wr_path_if.d_i_valid && wr_path_if.w_d_i.last) begin
+            else if (d_in_burst && wr_path_if.w_d_i.last) begin
                 d_in_burst <= 1'b0;
             end
         end
@@ -85,11 +85,11 @@ module axi_write_top(
     logic sp0_mgr_wvalid,  sp1_mgr_wvalid, d_mgr_wvalid;
 
     assign sp0_mgr_awvalid = wr_path_if.sp0_i_valid && !sp0_in_burst;
-    assign sp0_mgr_wvalid  = wr_path_if.sp0_i_valid;
+    assign sp0_mgr_wvalid  = wr_path_if.sp0_i_valid || sp0_in_burst;
     assign sp1_mgr_awvalid = wr_path_if.sp1_i_valid && !sp1_in_burst;
-    assign sp1_mgr_wvalid  = wr_path_if.sp1_i_valid;
+    assign sp1_mgr_wvalid  = wr_path_if.sp1_i_valid || sp1_in_burst;
     assign d_mgr_awvalid   = wr_path_if.d_i_valid && !d_in_burst;
-    assign d_mgr_wvalid    = wr_path_if.d_i_valid;
+    assign d_mgr_wvalid    = wr_path_if.d_i_valid || d_in_burst;
 
     // SCRATCHPAD0 (SP0) WRITE MANAGER
     axi_write_manager #(
