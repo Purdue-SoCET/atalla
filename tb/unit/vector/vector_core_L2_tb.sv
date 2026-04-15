@@ -36,10 +36,9 @@ module vector_core_L2_tb;
     // -----------------------------------------------------------------------
     // Parameters
     // -----------------------------------------------------------------------
-    parameter string PROGRAM_PATH = "./tb/formal/vector/testcases/vector-vector/add_vv";
-    //parameter string PROGRAM_PATH = "./tb/formal/vector/testcases/load-store/store_load_l2";
+    //parameter string PROGRAM_PATH = "./tb/formal/vector/testcases/vector-vector/add_vv";
+    parameter string PROGRAM_PATH = "./tb/formal/vector/testcases/load-store/store_load_l2";
     //parameter string PROGRAM_PATH = "./tb/formal/vector/testcases/gemmm/gemm_vv";
-    //parameter string PROGRAM_PATH = "./tb/formal/vector/testcases/load-store/store_load_l2";
 
     // bp test for sys array works, there is a timeout from scheduler stalls and the NO OPs dont go thru so my cond in the all_issued doesnt work,
     // my termination cond didnt trigger causing the timeout, sys array works properly, need to fix the tb condition, but backpressure is now done for both spad and sys array
@@ -385,20 +384,20 @@ module vector_core_L2_tb;
 
         // Preload VRF with test data
         // (adjust per testcase — this is for add_vv)
-        
+        /*
         for (int i = 0; i < 32; i++) begin
             dpi_veggie_write_vector_elem(8'd2, i, 16'h3F80);  // v2 = 1.0
             dpi_veggie_write_vector_elem(8'd3, i, 16'h3F80);  // v3 = 1.0
         end
-        
+        */
 
         // Preload v0 with BEEF for store-load test
-        /*
+        
         for (int i = 0; i < 32; i++)
             dpi_veggie_write_vector_elem(8'd0, i, 16'hBEEF);
         dpi_veggie_write_mask(8'd0, 32'hFFFFFFFF);
         $display("[TB] Preloaded VRF and mask register");
-        */
+        
 
         // Preload VRF for gemm: weights in v0-v31, activations in v32-v64
         /*
@@ -544,12 +543,13 @@ module vector_core_L2_tb;
 
         // Verify results (adjust per testcase)
         $display("[TB] ---- Verification ----");
-        for (int e = 0; e < 4; e++)
+        for (int e = 0; e < 32; e++)
             $display("[TB]   v1[%0d] = %h", e, dpi_veggie_read_vector_elem(8'd1, e));
-        for (int e = 0; e < 4; e++)
+        for (int e = 0; e < 32; e++)
             $display("[TB]   v0[%0d] = %h", e, dpi_veggie_read_vector_elem(8'd0, e));
-        for (int e = 0; e < 4; e++)
+        /*for (int e = 0; e < 32; e++)
             $display("[TB]   v1[%0d] = %h", e, dpi_veggie_read_vector_elem(8'd1, e));
+        */
         
         $display("[TB] Verify gemm output (v65):");
         for (int e = 0; e < 4; e++)
