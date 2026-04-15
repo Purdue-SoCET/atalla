@@ -17,23 +17,24 @@ interface dec1_dec2_if;
   // --- Control ---
   logic              ready;
   logic              flush;
+  logic              valid_in, valid_out;
 
 
   modport src (
-    output pc_in, predict_taken_in, pc_pred_addr_in,
+    output pc_in, predict_taken_in, pc_pred_addr_in, valid_in,
     output scalar_inst_in, vector_inst_in, scpad_inst_in
   );
 
 
   modport dst (
-    input  pc_out, predict_taken_out, pc_pred_addr_out,
+    input  pc_out, predict_taken_out, pc_pred_addr_out, valid_out,
     input  scalar_inst_out, vector_inst_out, scpad_inst_out
   );
 
   modport latch_view (
-    input  pc_in, predict_taken_in, pc_pred_addr_in,
+    input  pc_in, predict_taken_in, pc_pred_addr_in, valid_in,
     input  scalar_inst_in, vector_inst_in, scpad_inst_in,
-    output pc_out, predict_taken_out, pc_pred_addr_out,
+    output pc_out, predict_taken_out, pc_pred_addr_out, valid_out,
     output scalar_inst_out, vector_inst_out, scpad_inst_out,
     input  ready, flush
   );

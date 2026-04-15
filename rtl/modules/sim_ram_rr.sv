@@ -123,8 +123,7 @@ module sim_ram_rr_32 #(
                 sel_we    = ic_req_we;
                 sel_addr  = ic_req_addr;
                 sel_wdata = ic_req_wdata;
-            end
-            else begin
+            end else begin
                 sel_valid = 1'b1;
                 sel_is_dc = 1'b1;
                 sel_we    = dc_req_we;
@@ -148,80 +147,76 @@ module sim_ram_rr_32 #(
         end
     end
 
+    logic [31:0] read_word;
+
+    always_comb begin
+        ic_resp_rdata = 32'h0;
+        ic_resp_hit   = 1'b0;
+        dc_resp_rdata = 32'h0;
+        dc_resp_hit   = 1'b0;
+        read_word     = 32'h0;
+
+        if (sel_valid && !sel_we && addr_in_range && (sel_addr[1:0] == 2'b00)) begin
+            if (BIG_ENDIAN) begin
+                read_word = {
+                    mem[sel_addr + 0],
+                    mem[sel_addr + 1],
+                    mem[sel_addr + 2],
+                    mem[sel_addr + 3]
+                };
+            end
+            else begin
+                read_word = {
+                    mem[sel_addr + 3],
+                    mem[sel_addr + 2],
+                    mem[sel_addr + 1],
+                    mem[sel_addr + 0]
+                };
+            end
+
+            if (sel_is_dc) begin
+                dc_resp_rdata = read_word;
+                dc_resp_hit   = 1'b1;
+            end
+            else begin
+                ic_resp_rdata = read_word;
+                ic_resp_hit   = 1'b1;
+            end
+        end
+        if (sel_valid && sel_we && addr_in_range && (sel_addr[1:0] == 2'b00)) begin
+            if (sel_is_dc) begin
+                dc_resp_hit   = 1'b1;
+            end
+            else begin
+                ic_resp_hit   = 1'b1;
+            end
+        end
+    end
+
     assign addr_in_range = (sel_addr + 3) < MEM_BYTES;
 
     always @(posedge clk or negedge rst_n) begin
-        logic [31:0] tmp_rdata;
-
         if (!rst_n) begin
-            rr_turn       <= 1'b0;
-            ic_resp_rdata <= 32'h0;
-            ic_resp_hit   <= 1'b0;
-            dc_resp_rdata <= 32'h0;
-            dc_resp_hit   <= 1'b0;
+            rr_turn <= 1'b0;
         end
         else begin
-            ic_resp_hit <= 1'b0;
-            dc_resp_hit <= 1'b0;
-
-            if (sel_valid) begin
-                if (addr_in_range && (sel_addr[1:0] == 2'b00)) begin
-
-                    if (BIG_ENDIAN) begin
-                        tmp_rdata = {
-                            mem[sel_addr + 0],
-                            mem[sel_addr + 1],
-                            mem[sel_addr + 2],
-                            mem[sel_addr + 3]
-                        };
-                    end
-                    else begin
-                        tmp_rdata = {
-                            mem[sel_addr + 3],
-                            mem[sel_addr + 2],
-                            mem[sel_addr + 1],
-                            mem[sel_addr + 0]
-                        };
-                    end
-
-                    if (sel_we) begin
-                        if (BIG_ENDIAN) begin
-                            mem[sel_addr + 0] <= sel_wdata[31:24];
-                            mem[sel_addr + 1] <= sel_wdata[23:16];
-                            mem[sel_addr + 2] <= sel_wdata[15:8];
-                            mem[sel_addr + 3] <= sel_wdata[7:0];
-                        end
-                        else begin
-                            mem[sel_addr + 0] <= sel_wdata[7:0];
-                            mem[sel_addr + 1] <= sel_wdata[15:8];
-                            mem[sel_addr + 2] <= sel_wdata[23:16];
-                            mem[sel_addr + 3] <= sel_wdata[31:24];
-                        end
-                    end
-
-                    if (sel_is_dc) begin
-                        dc_resp_rdata <= tmp_rdata;
-                        dc_resp_hit   <= 1'b1;
-                    end
-                    else begin
-                        ic_resp_rdata <= tmp_rdata;
-                        ic_resp_hit   <= 1'b1;
-                    end
+            if (sel_valid && sel_we && addr_in_range && (sel_addr[1:0] == 2'b00)) begin
+                if (BIG_ENDIAN) begin
+                    mem[sel_addr + 0] <= sel_wdata[31:24];
+                    mem[sel_addr + 1] <= sel_wdata[23:16];
+                    mem[sel_addr + 2] <= sel_wdata[15:8];
+                    mem[sel_addr + 3] <= sel_wdata[7:0];
                 end
                 else begin
-                    if (sel_is_dc) begin
-                        dc_resp_rdata <= 32'h0;
-                        dc_resp_hit   <= 1'b0;
-                    end
-                    else begin
-                        ic_resp_rdata <= 32'h0;
-                        ic_resp_hit   <= 1'b0;
-                    end
+                    mem[sel_addr + 0] <= sel_wdata[7:0];
+                    mem[sel_addr + 1] <= sel_wdata[15:8];
+                    mem[sel_addr + 2] <= sel_wdata[23:16];
+                    mem[sel_addr + 3] <= sel_wdata[31:24];
                 end
+            end
 
-                if (ic_req_valid && dc_req_valid) begin
-                    rr_turn <= ~rr_turn;
-                end
+            if (ic_req_valid && dc_req_valid) begin
+                rr_turn <= ~rr_turn;
             end
         end
     end

@@ -16,6 +16,7 @@ module if_dec1_reg (
       ifdec1_if.inst_packet_out   <= '0;
       ifdec1_if.predict_taken_out <= '0;
       ifdec1_if.pc_pred_addr_out  <= '0;
+      ifdec1_if.valid_out <= '0;
     end
     else begin
       if (ifdec1_if.flush || halt) begin
@@ -23,6 +24,7 @@ module if_dec1_reg (
         ifdec1_if.inst_packet_out   <= NOP_PACKET;
         ifdec1_if.predict_taken_out <= '0; 
         ifdec1_if.pc_pred_addr_out  <= '0;
+        ifdec1_if.valid_out <= '0;
       end
 
       else if (ifdec1_if.ready) begin
@@ -30,6 +32,7 @@ module if_dec1_reg (
         ifdec1_if.inst_packet_out   <= ifdec1_if.inst_packet_in;
         ifdec1_if.predict_taken_out <= ifdec1_if.predict_taken_in;
         ifdec1_if.pc_pred_addr_out  <= ifdec1_if.pc_pred_addr_in;
+        ifdec1_if.valid_out         <= ifdec1_if.valid_in;
       end
 
     end

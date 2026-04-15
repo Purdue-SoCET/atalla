@@ -18,8 +18,8 @@ module control (
     localparam logic [6:0] OP_BGT  = 7'b0100111; // bgt.s (signed)
     localparam logic [6:0] OP_BLE  = 7'b0101000; // ble.s (signed)
 
-    localparam logic [6:0] OP_JAL  = 7'b0101011; // jal
-    localparam logic [6:0] OP_JALR = 7'b0101100; // jalr
+    localparam logic [6:0] OP_JAL  = 7'b0101101; // jal
+    localparam logic [6:0] OP_JALR = 7'b0101110; // jalr
 
     // -----------------------------
     // Combinational results

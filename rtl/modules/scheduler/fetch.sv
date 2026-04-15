@@ -76,10 +76,10 @@ module fetch (
   assign ifdec1_if.pc_pred_addr_in  = dc_if.ihit ? btb_if.predict_target : '0;
 
   assign ifdec1_if.inst_packet_in   = (dc_if.ihit && !halt) ? dc_if.imemload : NOP_PACKET;
-  
+  assign ifdec1_if.valid_in = (dc_if.ihit && !halt) ? 1 : 0;
 
   always_comb begin
-    if(ready && !flush) begin
+    if(ready && !flush && !halt) begin
       dc_if.imemREN = 1'b1;
     end else begin
       dc_if.imemREN = 1'b0;

@@ -85,5 +85,6 @@ module decode1_stage (
   assign dec12_if.pc_in            = ifdec1_if.pc_out;
   assign dec12_if.predict_taken_in = ifdec1_if.predict_taken_out;
   assign dec12_if.pc_pred_addr_in  = ifdec1_if.pc_pred_addr_out;
+  assign dec12_if.valid_in = ifdec1_if.valid_out;
 
 endmodule

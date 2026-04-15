@@ -52,6 +52,7 @@ module scheduler_core #(
     scheduler_pkg::DEC1_DEC2_LATCH n_D1_D2_latch, D1_D2_latch;
 
     logic n_DEC2_EX_halt_latch, DEC2_EX_halt_latch;
+    logic dec1_dec2_latch_ready;
 
     //interfaces
     s_wb_arbiter_if scalar_wb_if ();
@@ -67,7 +68,7 @@ module scheduler_core #(
     execute_stage S_EXECUTE(.clk(CLK), .nRST(nRST), .ex_if(scalar_ex_if));
     decode_2 S_V_DECODE_2(.CLK(CLK), .nRST(nRST), .d2if(decode_2_if));
     fetch_decode1 S_FETCH_DECODE_1 (.clk(CLK), .rst_n(nRST), .flush(scalar_ex_if.redirect_valid), 
-                                    .ready(decode_2_if.ready), .pc_branch(scalar_ex_if.redirect_target), .halt(scalar_ex_if.halt_out),
+                                    .ready(dec1_dec2_latch_ready), .pc_branch(scalar_ex_if.redirect_target), .halt(scalar_ex_if.halt_out),
                                     .btb_update_en(scalar_ex_if.redirect_valid), .btb_pc_update(scalar_ex_if.pc_out),
                                     .btb_true_target(scalar_ex_if.redirect_target), .dc_if(datapath_cache_if),
                                     .dec12_if(decode_1_if));
@@ -79,15 +80,18 @@ module scheduler_core #(
         if(scalar_ex_if.redirect_valid || scalar_ex_if.halt_out) begin
             n_D1_D2_latch.scalar_instrs = NOP_PACKET;
         end
-        else if(decode_2_if.ready) begin
+        else if(dec1_dec2_latch_ready) begin
             n_D1_D2_latch.scalar_instrs = decode_1_if.scalar_inst_in;
             n_D1_D2_latch.pc = decode_1_if.pc_in;
             n_D1_D2_latch.predict_taken = decode_1_if.predict_taken_in;
             n_D1_D2_latch.pc_pred_addr = decode_1_if.pc_pred_addr_in;
+            n_D1_D2_latch.valid = decode_1_if.valid_in;
         end else begin
             n_D1_D2_latch = D1_D2_latch;
         end
     end
+
+    assign dec1_dec2_latch_ready = decode_2_if.ready || !D1_D2_latch.valid;
 
     //DEC2 inputs form D1_D2 latch
     assign decode_2_if.scalar_instrs = D1_D2_latch.scalar_instrs;

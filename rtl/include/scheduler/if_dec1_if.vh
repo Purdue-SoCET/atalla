@@ -11,22 +11,23 @@ interface if_dec1_if;
   instruction_packet_t inst_packet_in, inst_packet_out;
   logic         ready, flush;
   logic         ihit;
+  logic         valid_in, valid_out;
 
 
   modport src (
-    output pc_in, predict_taken_in, pc_pred_addr_in, inst_packet_in
+    output pc_in, predict_taken_in, pc_pred_addr_in, inst_packet_in, valid_in
   );
 
 
   modport dst (
-    input  pc_out, predict_taken_out, pc_pred_addr_out, inst_packet_out
+    input  pc_out, predict_taken_out, pc_pred_addr_out, inst_packet_out, valid_out
   );
 
 
   modport latch_view (
-    input  pc_in, predict_taken_in, pc_pred_addr_in, inst_packet_in,
+    input  pc_in, predict_taken_in, pc_pred_addr_in, inst_packet_in, valid_in,
     input  ready, flush, ihit,
-    output pc_out, predict_taken_out, pc_pred_addr_out, inst_packet_out
+    output pc_out, predict_taken_out, pc_pred_addr_out, inst_packet_out, valid_out
   );
 
 endinterface
