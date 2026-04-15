@@ -19,3 +19,9 @@ waves/
 *waves*/
 out/
 waves/
+
+scripts/systolic_array/*.csv
+/*failures.csv
+/*failure.csv
+
+obj_dir/*

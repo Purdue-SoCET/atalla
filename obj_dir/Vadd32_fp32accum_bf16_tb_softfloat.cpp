@@ -10,17 +10,17 @@
 Vadd32_fp32accum_bf16_tb_softfloat::Vadd32_fp32accum_bf16_tb_softfloat(VerilatedContext* _vcontextp__, const char* _vcname__)
     : VerilatedModel{*_vcontextp__}
     , vlSymsp{new Vadd32_fp32accum_bf16_tb_softfloat__Syms(contextp(), _vcname__, this)}
-    , __PVT__add32_fp32accum_bf16_tb_softfloat__DOT__stage1_if__BRA__7__KET__{vlSymsp->TOP.__PVT__add32_fp32accum_bf16_tb_softfloat__DOT__stage1_if__BRA__7__KET__}
-    , __PVT__add32_fp32accum_bf16_tb_softfloat__DOT__stage1_if__BRA__6__KET__{vlSymsp->TOP.__PVT__add32_fp32accum_bf16_tb_softfloat__DOT__stage1_if__BRA__6__KET__}
-    , __PVT__add32_fp32accum_bf16_tb_softfloat__DOT__stage1_if__BRA__5__KET__{vlSymsp->TOP.__PVT__add32_fp32accum_bf16_tb_softfloat__DOT__stage1_if__BRA__5__KET__}
-    , __PVT__add32_fp32accum_bf16_tb_softfloat__DOT__stage1_if__BRA__4__KET__{vlSymsp->TOP.__PVT__add32_fp32accum_bf16_tb_softfloat__DOT__stage1_if__BRA__4__KET__}
-    , __PVT__add32_fp32accum_bf16_tb_softfloat__DOT__stage1_if__BRA__3__KET__{vlSymsp->TOP.__PVT__add32_fp32accum_bf16_tb_softfloat__DOT__stage1_if__BRA__3__KET__}
-    , __PVT__add32_fp32accum_bf16_tb_softfloat__DOT__stage1_if__BRA__2__KET__{vlSymsp->TOP.__PVT__add32_fp32accum_bf16_tb_softfloat__DOT__stage1_if__BRA__2__KET__}
-    , __PVT__add32_fp32accum_bf16_tb_softfloat__DOT__stage1_if__BRA__1__KET__{vlSymsp->TOP.__PVT__add32_fp32accum_bf16_tb_softfloat__DOT__stage1_if__BRA__1__KET__}
-    , __PVT__add32_fp32accum_bf16_tb_softfloat__DOT__stage1_if__BRA__0__KET__{vlSymsp->TOP.__PVT__add32_fp32accum_bf16_tb_softfloat__DOT__stage1_if__BRA__0__KET__}
-    , __PVT__add32_fp32accum_bf16_tb_softfloat__DOT__stage2_if__BRA__1__KET__{vlSymsp->TOP.__PVT__add32_fp32accum_bf16_tb_softfloat__DOT__stage2_if__BRA__1__KET__}
-    , __PVT__add32_fp32accum_bf16_tb_softfloat__DOT__stage2_if__BRA__0__KET__{vlSymsp->TOP.__PVT__add32_fp32accum_bf16_tb_softfloat__DOT__stage2_if__BRA__0__KET__}
-    , __PVT__add32_fp32accum_bf16_tb_softfloat__DOT__stage3_if{vlSymsp->TOP.__PVT__add32_fp32accum_bf16_tb_softfloat__DOT__stage3_if}
+    , __PVT__add32_fp32accum_bf16_tb_softfloat__DOT__dut__DOT__stage1_if__BRA__7__KET__{vlSymsp->TOP.__PVT__add32_fp32accum_bf16_tb_softfloat__DOT__dut__DOT__stage1_if__BRA__7__KET__}
+    , __PVT__add32_fp32accum_bf16_tb_softfloat__DOT__dut__DOT__stage1_if__BRA__6__KET__{vlSymsp->TOP.__PVT__add32_fp32accum_bf16_tb_softfloat__DOT__dut__DOT__stage1_if__BRA__6__KET__}
+    , __PVT__add32_fp32accum_bf16_tb_softfloat__DOT__dut__DOT__stage1_if__BRA__5__KET__{vlSymsp->TOP.__PVT__add32_fp32accum_bf16_tb_softfloat__DOT__dut__DOT__stage1_if__BRA__5__KET__}
+    , __PVT__add32_fp32accum_bf16_tb_softfloat__DOT__dut__DOT__stage1_if__BRA__4__KET__{vlSymsp->TOP.__PVT__add32_fp32accum_bf16_tb_softfloat__DOT__dut__DOT__stage1_if__BRA__4__KET__}
+    , __PVT__add32_fp32accum_bf16_tb_softfloat__DOT__dut__DOT__stage1_if__BRA__3__KET__{vlSymsp->TOP.__PVT__add32_fp32accum_bf16_tb_softfloat__DOT__dut__DOT__stage1_if__BRA__3__KET__}
+    , __PVT__add32_fp32accum_bf16_tb_softfloat__DOT__dut__DOT__stage1_if__BRA__2__KET__{vlSymsp->TOP.__PVT__add32_fp32accum_bf16_tb_softfloat__DOT__dut__DOT__stage1_if__BRA__2__KET__}
+    , __PVT__add32_fp32accum_bf16_tb_softfloat__DOT__dut__DOT__stage1_if__BRA__1__KET__{vlSymsp->TOP.__PVT__add32_fp32accum_bf16_tb_softfloat__DOT__dut__DOT__stage1_if__BRA__1__KET__}
+    , __PVT__add32_fp32accum_bf16_tb_softfloat__DOT__dut__DOT__stage1_if__BRA__0__KET__{vlSymsp->TOP.__PVT__add32_fp32accum_bf16_tb_softfloat__DOT__dut__DOT__stage1_if__BRA__0__KET__}
+    , __PVT__add32_fp32accum_bf16_tb_softfloat__DOT__dut__DOT__stage2_if__BRA__1__KET__{vlSymsp->TOP.__PVT__add32_fp32accum_bf16_tb_softfloat__DOT__dut__DOT__stage2_if__BRA__1__KET__}
+    , __PVT__add32_fp32accum_bf16_tb_softfloat__DOT__dut__DOT__stage2_if__BRA__0__KET__{vlSymsp->TOP.__PVT__add32_fp32accum_bf16_tb_softfloat__DOT__dut__DOT__stage2_if__BRA__0__KET__}
+    , __PVT__add32_fp32accum_bf16_tb_softfloat__DOT__dut__DOT__stage3_if{vlSymsp->TOP.__PVT__add32_fp32accum_bf16_tb_softfloat__DOT__dut__DOT__stage3_if}
     , rootp{&(vlSymsp->TOP)}
 {
     // Register model with the context
@@ -71,14 +71,6 @@ void Vadd32_fp32accum_bf16_tb_softfloat::eval_step() {
     Vadd32_fp32accum_bf16_tb_softfloat___024root___eval(&(vlSymsp->TOP));
     // Evaluate cleanup
     Verilated::endOfEval(vlSymsp->__Vm_evalMsgQp);
-}
-
-void Vadd32_fp32accum_bf16_tb_softfloat::eval_end_step() {
-    VL_DEBUG_IF(VL_DBG_MSGF("+eval_end_step Vadd32_fp32accum_bf16_tb_softfloat::eval_end_step\n"); );
-#ifdef VM_TRACE
-    // Tracing
-    if (VL_UNLIKELY(vlSymsp->__Vm_dumping)) vlSymsp->_traceDump();
-#endif  // VM_TRACE
 }
 
 //============================================================
