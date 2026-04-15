@@ -32,7 +32,8 @@ module scalar_alu (
     localparam logic [6:0] OP_SLTI  = 7'b0100001; // slti.s (signed)
     localparam logic [6:0] OP_SLTUI = 7'b0100010; // sltui.s (unsigned)
 
-    localparam logic [6:0] OP_LUI   = 7'b0101110; // lui.s
+    //TODO in future we should change this to please pull directly from atalla_isa_types so don't haev to manuall change it 
+    localparam logic [6:0] OP_LUI   = 7'b0110000; // lui.s
 
     logic [31:0] result_comb;
 

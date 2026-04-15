@@ -71,14 +71,24 @@ module scheduler_core_new_tb;
         @(posedge CLK);
         @(posedge CLK);
 
+        //lui imm=7f will put 3f80 (1) in reg
         @(negedge CLK);
         scif.ihit = 1'b1;
-        scif.iload.inst0 = 40'h0000800096;  // ADD_I {'opcode': 0b0010110, 'rs1': 0, 'rd': 1, 'imm12': 1}
+        scif.iload.inst0 = 40'h3F80B0;  // LUI, rd=1, imm=0x7f (3f80 in bf16)
         scif.iload.inst1 = 40'h2f; //NOP
         scif.iload.inst2 = 40'h2f; //NOP
         scif.iload.inst3 = 40'h2f; //NOP
         @(negedge CLK);
         scif.ihit = 1'b0;
+
+        // @(negedge CLK); // 16'b1 is way too small for bf16 shit
+        // scif.ihit = 1'b1;
+        // scif.iload.inst0 = 40'h0000800096;  // ADD_I {'opcode': 0b0010110, 'rs1': 0, 'rd': 1, 'imm12': 1}
+        // scif.iload.inst1 = 40'h2f; //NOP
+        // scif.iload.inst2 = 40'h2f; //NOP
+        // scif.iload.inst3 = 40'h2f; //NOP
+        // @(negedge CLK);
+        // scif.ihit = 1'b0;
 
 
         repeat(6) @(negedge CLK);   

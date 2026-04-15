@@ -9,7 +9,6 @@ Owner: Jacob Walter
 `include "vector_pkg.vh"
 `include "vector_if.vh"
 `include "lane_if.vh"
-`include "vlsu_if.sv"
 `include "result_collector_if.vh"
 `include "gsau_control_unit_if.vh"
 `include "reduction_FU_if.vh"
@@ -18,7 +17,7 @@ Owner: Jacob Walter
 module vector_datapath (
     input  logic     CLK,
     input  logic     nRST,
-    vector_if.vif    vif,
+    vector_if           vif,
     scpad_if.vec_frontend  sif,
     gsau_control_unit_if.gsau gsauif
 );
@@ -34,7 +33,7 @@ module vector_datapath (
 
     //slicer
     slicer slicer_inst (
-        .vif(vif),
+        .vif(vif.lanes),
         .lif(lane_interfaces)
     );
 
@@ -45,7 +44,7 @@ module vector_datapath (
             lane lane_inst (
                 .CLK(CLK),
                 .nRST(nRST),
-                .lif(lane_interfaces[ln_i])
+                .lif(lane_interfaces[ln_i].lif)
             );
         end
         
@@ -203,6 +202,8 @@ module vector_datapath (
         ruif.in.wb_ready = vif.wb_ready_signals.reduction_wb_ready;
         
         vif.lanes_out.reduction = ruif.out;
+
+        vif.unit_ready_signals.reduction_status = vif.lanes_out.reduction.input_ready;
     end
 
 
