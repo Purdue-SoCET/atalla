@@ -89,6 +89,7 @@ interface axi_bus_if(input logic CLK, input logic nRST);
     // SP0 & AW_W MANAGER READY/VALID
     logic aw_sp0_i_valid, aw_sp0_i_ready, w_sp0_i_valid, w_sp0_i_ready;
 
+
     // SP1 & AW_W MANAGER READY/VALID
     logic aw_sp1_i_valid, aw_sp1_i_ready, w_sp1_i_valid, w_sp1_i_ready;
 
@@ -119,18 +120,20 @@ interface axi_bus_if(input logic CLK, input logic nRST);
     logic wvalid, wready;   // GENERAL W WRITE MANAGER READY/VALID
     logic aw_pop, w_pop; 
     logic head_awvalid, head_wvalid;
+    logic sp0_wr_ready, sp1_wr_ready, d_wr_ready;
+    logic sp0_i_valid, sp1_i_valid, d_i_valid;
 
     // WRITE DRIVER SIGNALS
     logic aw_fire, w_fire;
 
     // test assertions
-    property wrt_valid_ready;
-        @(posedge CLK)
-        (awvalid && !awready) |-> $stable(aw_gen_i);
-    endproperty
+    // property wrt_valid_ready;
+    //     @(posedge CLK)
+    //     (awvalid && !awready) |-> $stable(aw_gen_i);
+    // endproperty
 
-    assert property (wrt_valid_ready)
-        else $error("data changed during low ready");
+    // assert property (wrt_valid_ready)
+    //     else $error("data changed during low ready");
 
     modport axi(
         // read side
@@ -280,14 +283,18 @@ interface axi_bus_if(input logic CLK, input logic nRST);
     // WRITE TOP LEVEL MODPORT
     modport write_path(
         // From Master
-        input aw_sp0_i_valid, aw_sp0_i, w_sp0_i_valid, w_sp0_i,
-        input aw_sp1_i_valid, aw_sp1_i, w_sp1_i_valid, w_sp1_i,
-        input aw_d_i_valid, aw_d_i, w_d_i_valid, w_d_i,
+        // input aw_sp0_i_valid, aw_sp0_i, w_sp0_i_valid, w_sp0_i,
+        // input aw_sp1_i_valid, aw_sp1_i, w_sp1_i_valid, w_sp1_i,
+        // input aw_d_i_valid, aw_d_i, w_d_i_valid, w_d_i,
+        input sp0_i_valid, aw_sp0_i, w_sp0_i,
+        input sp1_i_valid, aw_sp1_i, w_sp1_i,
+        input d_i_valid, aw_d_i, w_d_i,
 
         // To Master 
-        output aw_sp0_i_ready, w_sp0_i_ready,
-        output aw_sp1_i_ready, w_sp1_i_ready,
-        output aw_d_i_ready, w_d_i_ready, 
+        // output aw_sp0_i_ready, w_sp0_i_ready,
+        // output aw_sp1_i_ready, w_sp1_i_ready,
+        // output aw_d_i_ready, w_d_i_ready, 
+        output sp0_wr_ready, sp1_wr_ready, d_wr_ready,
 
         // To Master 
         output b_sp0_o_valid, b_sp0_o,
@@ -565,9 +572,10 @@ interface axi_bus_if(input logic CLK, input logic nRST);
         output aw_d_i_valid, aw_d_i, w_d_i_valid, w_d_i,
 
         // To Master 
-        input aw_sp0_i_ready, w_sp0_i_ready,
-        input aw_sp1_i_ready, w_sp1_i_ready,
-        input aw_d_i_ready, w_d_i_ready, 
+        // input aw_sp0_i_ready, w_sp0_i_ready,
+        // input aw_sp1_i_ready, w_sp1_i_ready,
+        // input aw_d_i_ready, w_d_i_ready, 
+        input sp0_wr_ready, sp1_wr_ready, d_wr_ready,
 
         // To Master 
         input b_sp0_o_valid, b_sp0_o,

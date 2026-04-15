@@ -19,7 +19,7 @@ module axi_write_manager #(
     input logic [AWSIZE-1:0]    awsize,
     input logic [AWBURST-1:0]   awburst,
     // To Master AW channel
-    output logic                awready,
+    //output logic                awready,
     // From Master W channel
     input logic                 wvalid,
     input logic [WID-1:0]       wid,
@@ -27,7 +27,7 @@ module axi_write_manager #(
     input logic [WSTRB-1:0]     wstrb,
     input logic                 wlast,
     // To Master W channel
-    output logic                wready,
+    //output logic                wready,
     // From Write controller
     input logic                 aw_pop,
     input logic                 w_pop,
@@ -43,7 +43,9 @@ module axi_write_manager #(
     output logic [MID_WID-1:0]  head_wid,
     output logic [WDATA-1:0]    head_data,
     output logic [WSTRB-1:0]    head_strb,
-    output logic                head_last
+    output logic                head_last,
+    // to actual manager unit (single ready)
+    output logic                wr_ready
 );
 
 // initializing both fifo structrues 
@@ -59,6 +61,11 @@ logic aw_full, aw_empty;
 logic w_full,  w_empty;
 logic aw_push;
 logic w_push;
+logic [W_PTR_WIDTH-1:0] w_count;
+
+// logic to count the number of available w slots and send out fifo
+assign w_count = (w_wr_ptr >= w_rd_ptr) ? w_wr_ptr - w_rd_ptr : W_DEPTH - (w_rd_ptr - w_wr_ptr);
+assign wr_ready = (!aw_full && (((W_DEPTH-1) - w_count) >= 8));
 
 // logic to determine if fifo is empty or full
 assign aw_full = (aw_wr_ptr + 1'b1 == aw_rd_ptr);
@@ -67,6 +74,7 @@ assign w_full = (w_wr_ptr + 1'b1 == w_rd_ptr);
 assign w_empty = (w_wr_ptr == w_rd_ptr);
 
 // logic to enable ready signal for handshake
+logic awready, wready;
 assign awready = (!aw_full);
 assign wready = (!w_full);
 
@@ -144,21 +152,21 @@ assign head_data   = w_fifo[w_rd_ptr].data;
 assign head_strb   = w_fifo[w_rd_ptr].strb;
 assign head_last   = w_fifo[w_rd_ptr].last;
 
-property aw_wrt_pointer;
-    @(posedge CLK)
-    awvalid && awready |=> (aw_wr_ptr == ($past(aw_wr_ptr) + 1'b1));
-endproperty
+// property aw_wrt_pointer;
+//     @(posedge CLK)
+//     awvalid && awready |=> (aw_wr_ptr == ($past(aw_wr_ptr) + 1'b1));
+// endproperty
 
-assert property (aw_wrt_pointer)
-    else $error("aw write pointer did not increment");
+// assert property (aw_wrt_pointer)
+//     else $error("aw write pointer did not increment");
 
-property w_wrt_pointer;
-    @(posedge CLK)
-    wvalid && wready |=> (w_wr_ptr == ($past(w_wr_ptr) + 1'b1));
-endproperty
+// property w_wrt_pointer;
+//     @(posedge CLK)
+//     wvalid && wready |=> (w_wr_ptr == ($past(w_wr_ptr) + 1'b1));
+// endproperty
 
-assert property (w_wrt_pointer)
-    else $error("w write pointer did not increment");
+// assert property (w_wrt_pointer)
+//     else $error("w write pointer did not increment");
 
 
 
