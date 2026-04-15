@@ -1,7 +1,7 @@
-ifndef ICACHES_IF_VH
-define ICACHES_IF_VH
+`ifndef CACHES_IF_VH
+`define CACHES_IF_VH
 
-interface icaches_if;
+interface caches_if;
 
   // arbitration
   logic          iwait, iREN;
@@ -16,4 +16,4 @@ interface icaches_if;
 
 endinterface
 
-`endif //ICACHES_IF_VH
+`endif //CACHES_IF_VH

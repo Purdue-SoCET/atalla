@@ -6,25 +6,25 @@ module icache_fetch_tb;
     logic CLK = 0, nRST;
     always #5 CLK = ~CLK;
 
-    datapath_cache_if dcif();
+    
     icaches_if cif();
 
-    icache DUT (
-        .CLK(CLK),
-        .nRST(nRST),
-        .dcif(dcif.icache),
-        .cif(cif.icache)
-    );
+    // icache DUT (
+    //     .CLK(CLK),
+    //     .nRST(nRST),
+    //     .dcif(dcif.icache),
+    //     .cif(cif.icache)
+    // );
 
     scheduler_core DUT (
         .CLK(CLK),
         .nRST(nRST),
         //.hit(dhit),
         //.data_load(data_load),
-        .iload(ihit),
-        .iwait(imemload),
+        .cif(cif)
         //.ready(ready_DEC2_out)
     );
+
 
     // ========================================================================
     // MEMORY CONTROLLER (always_ff FSM)
@@ -48,13 +48,11 @@ module icache_fetch_tb;
                     
 
                     if (cif.iaddr == 32'h00)
-                        mem_data_reg <= {512'h 2a 01 00 64 00 00 00 00 00 00 00 31 00 00 31 00 07 31 00 00 a3 81 00 81 00 00 00 00 00 00 00 31 00 00 31 00 00 31 00 00 16 01 80 26 00 00 00 00 00 00 00 31 00 00 31 00 00 31 00 00 96 00 80 26};
+                        mem_data_reg <= 512'h00000000_0000000031_0000000031_0000000031_07810081a3_0000000031_0000000031_0000000031_0026800116_0000000031_0000000031_0000000031_0026800096;
                     else if (cif.iaddr == 32'h40)
-                        mem_data_reg <= {512'h 00 31 00 00 aa 01 00 66 00 00 00 00 00 00 00 31 00 00 31 00 00 31 00 00 96 01 80 00 00 00 00 00 00 00 00 31 00 00 31 00 00 31 00 00 32 00 00 00 00 00 00 00 00 00 00 31 00 00 31 00 00 31 00 00};
+                        mem_data_reg <= 512'h 0000000031_0000000031_0000000031_0000000032_31_0000000031_0000000031_006400012a;
                     else if (cif.iaddr == 32'h80)
-                        mem_data_reg <= {512'h 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 31 00 00 31 00 00 31 00 00 32 00 00 00 00 00 00 00 00 00 00 31 00 00 31 00 00 31 00 00 aa 00 00 68 00 00 00 00 00 00 00 31 00 00 31 00};
-                    else // 0xC0
-                        mem_data_reg <= 0;
+                        mem_data_reg <= 512'h00000000000000000000000000000000000000;
                 end
             end 
             else if (mem_cnt <= 2) begin
@@ -85,7 +83,8 @@ module icache_fetch_tb;
     // ========================================================================
     initial begin
         // --- Initialization ---
-        nRST = 0; dcif.imemREN = 0; dcif.imemaddr = '0; 
+        nRST = 0; 
+        
         @(posedge CLK); nRST = 1;
         repeat(2) @(posedge CLK);
 
@@ -94,31 +93,31 @@ module icache_fetch_tb;
         $display("--------------------------------------------------");
         
         // Initial Request
-        dcif.imemREN = 1;
-        dcif.imemaddr = 32'h0;
+        // dcif.imemREN = 1;
+        // dcif.imemaddr = 32'h0;
 
-        // Loop runs until 12 successful requests are completed
-        for (int reqs = 0; reqs < 12; ) begin
-            @(posedge CLK);
+        // // Loop runs until 12 successful requests are completed
+        // for (int reqs = 0; reqs < 12; ) begin
+        //     @(posedge CLK);
             
-            // Because the cache is combinational, we can trust ihit immediately
-            // and don't need artificial stall cycles.
-            if (dcif.ihit && dcif.imemREN) begin
-                reqs++; 
+        //     // Because the cache is combinational, we can trust ihit immediately
+        //     // and don't need artificial stall cycles.
+        //     if (dcif.ihit && dcif.imemREN) begin
+        //         reqs++; 
                 
-                $display("@%0t: HIT %0d! Addr: %h | Data (lower 32b): %h", 
-                         $time, reqs, dcif.imemaddr, dcif.imemload[31:0]); 
+        //         $display("@%0t: HIT %0d! Addr: %h | Data (lower 32b): %h", 
+        //                  $time, reqs, dcif.imemaddr, dcif.imemload[31:0]); 
                 
-                // Advance PC by 20 bytes (0x14) to fetch the next sequential instruction
-                dcif.imemaddr <= dcif.imemaddr + 32'h14; 
-            end
-        end
+        //         // Advance PC by 20 bytes (0x14) to fetch the next sequential instruction
+        //         dcif.imemaddr <= dcif.imemaddr + 32'h14; 
+        //     end
+        // end
         
         // Cleanup
         @(posedge CLK);
-        dcif.imemREN <= 0;
+        
 
-        repeat(10) @(posedge CLK);
+        repeat(2000) @(posedge CLK);
         $display("--------------------------------------------------");
         $display("Simulation Finished Successfully.");
         $finish;

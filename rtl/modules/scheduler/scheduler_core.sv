@@ -40,8 +40,11 @@ module scheduler_core #(
     //output word_t imemaddr,
 
     // for icache
-    input logic [63:0] iload,
-    input logic iwait,
+    // input logic [63:0] iload,
+    // input logic iwait,
+    // output logic iREN,
+    // output [31:0] iaddr,
+    icaches_if.icache cif,
 
     //ready (idk if we need this)
     output logic ready,
@@ -65,10 +68,10 @@ module scheduler_core #(
     decode_2_if decode_2_if ();
     datapath_cache_if datapath_cache_if ();
     dec1_dec2_if decode_1_if();
-    icaches_if icaches_if();
+    // icaches_if icaches_if();
 
     //instantiations
-    icache ICACHE(.CLK(CLK), .nRST(nRST), .dcif(datapath_cache_if), .cif(icaches_if));
+    icache ICACHE(.CLK(CLK), .nRST(nRST), .dcif(datapath_cache_if), .cif(cif));
     s_wb_arbiter S_WB_ARBITER(.CLK(CLK), .nRST(nRST), .vif(scalar_wb_if));
     execute_stage S_EXECUTE(.clk(CLK), .nRST(nRST), .ex_if(scalar_ex_if));
     decode_2 S_V_DECODE_2(.CLK(CLK), .nRST(nRST), .d2if(decode_2_if));
@@ -228,8 +231,10 @@ module scheduler_core #(
     //assign datapath_cache_if.imemready = imemready;
     //assign imemaddr = datapath_cache_if.imemaddr;
     //assign imemREN = datapath_cache_if.imemREN;
-    assign icaches_if.iload = iload;
-    assign icaches_if.iwait = iwait;
+    // assign icaches_if.iload = iload;
+    // assign icaches_if.iwait = iwait;
+    // assign iREN = icaches_if.iREN;
+    // assign iaddr = icaches_if.iaddr;
 
     assign halt = scalar_ex_if.halt_out;
 
