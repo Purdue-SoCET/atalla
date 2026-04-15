@@ -302,23 +302,14 @@ module vector_core_dpi_tb;
                 for (int e = 0; e < 32; e++)
                     tmp_vec[e] = dpi_veggie_read_vector_elem(dpi_get_veggie_vs1(p), e);
 
-                vif.vlsu_in.sched_req[p].valid = 1'b1;
-                vif.vlsu_in.sched_req[p].write = (dpi_get_sp_wen(p) == 1) ? 1'b1 : 1'b0;
-                vif.vlsu_in.sched_req[p].spad_addr = dpi_get_sp_sid(p);
-                vif.vlsu_in.sched_req[p].vdst = dpi_get_sp_vd(p);
-                vif.vlsu_in.sched_req[p].num_rows = dpi_get_sp_num_rows(p);
-                vif.vlsu_in.sched_req[p].num_cols = dpi_get_sp_num_cols(p);
-                vif.vlsu_in.sched_req[p].row_or_col = dpi_get_sp_rc(p);
+                vif.vlsu_in.sched_req[p].valid      = 1'b1;
+                vif.vlsu_in.sched_req[p].write       = (dpi_get_sp_wen(p) == 1) ? 1'b1 : 1'b0;
+                vif.vlsu_in.sched_req[p].spad_addr   = dpi_get_sp_sid(p);
+                vif.vlsu_in.sched_req[p].vdst        = dpi_get_sp_vd(p);
+                vif.vlsu_in.sched_req[p].num_cols    = dpi_get_sp_num_cols(p);
+                vif.vlsu_in.sched_req[p].row_id      = dpi_get_sp_rcid(p);
 
-                if (dpi_get_sp_rc(p) == 0) begin
-                    vif.vlsu_in.sched_req[p].row_id = dpi_get_sp_rcid(p);
-                    vif.vlsu_in.sched_req[p].col_id = '0;
-                end else begin
-                    vif.vlsu_in.sched_req[p].row_id = '0;
-                    vif.vlsu_in.sched_req[p].col_id = dpi_get_sp_rcid(p);
-                end
-
-                vif.vlsu_in.vrf_data[p].data = pack_vreg(tmp_vec);
+                vif.vlsu_in.vrf_data[p].data  = pack_vreg(tmp_vec);
                 vif.vlsu_in.vrf_data[p].valid = 1'b1;
             end else begin
                 clear_vlsu_port(p);
@@ -334,10 +325,10 @@ module vector_core_dpi_tb;
                 sif.vec_req[p].write,
                 sif.vec_req[p].spad_addr,
                 sif.vec_req[p].row_id,
-                sif.vec_req[p].col_id,
+                '0,                          // col_id (removed)
                 sif.vec_req[p].num_rows,
                 sif.vec_req[p].num_cols,
-                sif.vec_req[p].row_or_col
+                1'b0                         // row_or_col (removed, default row)
             );
 
             if (sif.vec_req[p].write && sif.vec_req[p].valid) begin
@@ -346,17 +337,14 @@ module vector_core_dpi_tb;
                     dpi_scratchpad_write_elem(p, e, tmp_vec[e]);
             end
 
-            for (int p = 0; p < NUM_SCPADS; p++) begin
             if (sif.vec_req[p].valid)
-                $display("[TB-SPREQ] Cyc %0d: port=%0d write=%0b addr=%h row=%0d col=%0d nrows=%0d ncols=%0d rc=%0b",
+                $display("[TB-SPREQ] Cyc %0d: port=%0d write=%0b addr=%h row=%0d nrows=%0d ncols=%0d",
                     cycle_count, p, sif.vec_req[p].write, sif.vec_req[p].spad_addr,
-                    sif.vec_req[p].row_id, sif.vec_req[p].col_id,
-                    sif.vec_req[p].num_rows, sif.vec_req[p].num_cols, sif.vec_req[p].row_or_col);
-        end
+                    sif.vec_req[p].row_id, sif.vec_req[p].num_rows, sif.vec_req[p].num_cols);
         end
 
         dpi_scratchpad_tick(nRST);
-        // Debug scratchpad response
+
         for (int p = 0; p < NUM_SCPADS; p++) begin
             if (dpi_scratchpad_get_valid(p))
                 $display("[TB-SP] Cyc %0d: SP[%0d] response valid, rdata[0]=%h", cycle_count, p, dpi_scratchpad_read_elem(p, 0));
@@ -416,8 +404,6 @@ module vector_core_dpi_tb;
             $display("[TB-RED] Reduction WB: vd=%0d data[0]=%h", 
                 vif.lanes_out.reduction.vd_output, tmp_vec[0]);
         end
-
-        // No veggie tick needed — direct VRF writes take effect immediately
     endtask
 
     task automatic sample_and_push_ready();
@@ -433,10 +419,10 @@ module vector_core_dpi_tb;
 
         dpi_set_ready_signals(
             lane_ready[0], // alu -> VALU
-            lane_ready[3], // exp -> EXP
-            lane_ready[4], // sqrt -> SQRT
+            1'b1, // exp (not done yet, always ready)
+            1'b1, // sqrt (removed, always ready)
             lane_ready[1], // mul -> MUL
-            lane_ready[2], // div -> DIV
+            1'b1, // div (removed, always ready)
             gsau_rdy,
             (vlsu_rdy != 0) ? 1'b1 : 1'b0
         );
@@ -467,12 +453,12 @@ module vector_core_dpi_tb;
 
         // Preload VRF — simple 1.0 + 1.0 = 2.0
         // bf16 1.0 = 0x3F80
-        /*for (int i = 0; i < 32; i++) begin
+        for (int i = 0; i < 32; i++) begin
             dpi_veggie_write_vector_elem(8'd2, i, 16'h3F80);  // vs1 = 1.0
             dpi_veggie_write_vector_elem(8'd3, i, 16'h3F80);  // vs2 = 1.0
         end
         $display("[TB] Preloaded v1 and v2 with test vectors");
-        */
+        
 
         /*
         // Preload VRF — 3.0 - 1.0 = 2.0
@@ -541,10 +527,12 @@ module vector_core_dpi_tb;
         */
 
         // Preload v0: element 0 = 10.0 (0x4120), rest = 1.0 (0x3F80)
+        /*
         dpi_veggie_write_vector_elem(8'd0, 0, 16'h4120);  // 10.0 = max
         for (int i = 1; i < 32; i++) begin
             dpi_veggie_write_vector_elem(8'd0, i, 16'h3F80);  // 1.0
         end
+        */
 
         // ---- Main loop ----
         forever begin

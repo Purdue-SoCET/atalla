@@ -45,7 +45,7 @@ module vector_core_L2_tb;
     // my termination cond didnt trigger causing the timeout, sys array works properly, need to fix the tb condition, but backpressure is now done for both spad and sys array
     //parameter string PROGRAM_PATH = "./tb/formal/vector/testcases/gemmm/gemm_bp_test";
     // make drain 500 for sysarray bp test, 300 for gemm, 150 for reg.
-    parameter int    DRAIN_CYCLES = 500;
+    parameter int    DRAIN_CYCLES = 150;
     parameter int    TIMEOUT      = 10000;
 
     // -----------------------------------------------------------------------
@@ -275,29 +275,20 @@ module vector_core_L2_tb;
     task automatic drive_vlsu_issue();
         for (int p = 0; p < 2; p++) begin
             if (dpi_get_sp_valid_in(p)) begin
-                int sp_port;
-                sp_port = dpi_get_sp_sid(p);  // Route to correct VLSU by sid
-                $display("[TB-VLSU-DRIVE] Cyc %0d: sp_port=%0d vd=%0d wen=%0b",
-                    cycle_count, sp_port, dpi_get_sp_vd(p), dpi_get_sp_wen(p));
-                
                 for (int e = 0; e < 32; e++)
-                    tmp_vec[e] = dpi_veggie_read_vector_elem(dpi_get_sp_vd(p), e);
+                    tmp_vec[e] = dpi_veggie_read_vector_elem(dpi_get_veggie_vs1(p), e);
 
-                vif.vlsu_in.sched_req[sp_port].valid      = 1'b1;
-                vif.vlsu_in.sched_req[sp_port].write       = (dpi_get_sp_wen(p) == 1) ? 1'b1 : 1'b0;
-                vif.vlsu_in.sched_req[sp_port].spad_addr   = dpi_get_sp_sid(p);
-                vif.vlsu_in.sched_req[sp_port].vdst        = dpi_get_sp_vd(p);
-                vif.vlsu_in.sched_req[sp_port].num_rows    = dpi_get_sp_num_rows(p);
-                vif.vlsu_in.sched_req[sp_port].num_cols    = dpi_get_sp_num_cols(p);
+                vif.vlsu_in.sched_req[p].valid      = 1'b1;
+                vif.vlsu_in.sched_req[p].write       = (dpi_get_sp_wen(p) == 1) ? 1'b1 : 1'b0;
+                vif.vlsu_in.sched_req[p].spad_addr   = dpi_get_sp_sid(p);
+                vif.vlsu_in.sched_req[p].vdst        = dpi_get_sp_vd(p);
+                vif.vlsu_in.sched_req[p].num_cols    = dpi_get_sp_num_cols(p);
+                vif.vlsu_in.sched_req[p].row_id      = dpi_get_sp_rcid(p);
 
-                if (dpi_get_sp_rc(p) == 0) begin
-                    vif.vlsu_in.sched_req[sp_port].row_id = dpi_get_sp_rcid(p);
-                end else begin
-                    vif.vlsu_in.sched_req[sp_port].row_id = '0;
-                end
-
-                vif.vlsu_in.vrf_data[sp_port].data  = pack_vreg(tmp_vec);
-                vif.vlsu_in.vrf_data[sp_port].valid = 1'b1;
+                vif.vlsu_in.vrf_data[p].data  = pack_vreg(tmp_vec);
+                vif.vlsu_in.vrf_data[p].valid = 1'b1;
+            end else begin
+                clear_vlsu_port(p);
             end
         end
     endtask
@@ -357,17 +348,17 @@ module vector_core_L2_tb;
         logic [NUM_SCPADS-1:0] vlsu_rdy;
 
         lane_ready = vif.unit_ready_signals.fu_global_status;
-        gsau_rdy   = gsauif.sb_ready_out;
+        gsau_rdy = gsauif.sb_ready_out;
 
         for (int p = 0; p < NUM_SCPADS; p++)
             vlsu_rdy[p] = vif.unit_ready_signals.vlsu_status[p].ready;
 
         dpi_set_ready_signals(
-            lane_ready[0],  // alu   -> VALU
-            lane_ready[3],  // exp   -> EXP
-            lane_ready[4],  // sqrt  -> SQRT
-            lane_ready[1],  // mul   -> MUL
-            lane_ready[2],  // div   -> DIV
+            lane_ready[0], // alu -> VALU
+            1'b1, // exp (not done yet, always ready)
+            1'b1, // sqrt (removed, always ready)
+            lane_ready[1], // mul -> MUL
+            1'b1, // div (removed, always ready)
             gsau_rdy,
             (vlsu_rdy != 0) ? 1'b1 : 1'b0
         );
@@ -394,12 +385,12 @@ module vector_core_L2_tb;
 
         // Preload VRF with test data
         // (adjust per testcase — this is for add_vv)
-        /*
+        
         for (int i = 0; i < 32; i++) begin
             dpi_veggie_write_vector_elem(8'd2, i, 16'h3F80);  // v2 = 1.0
             dpi_veggie_write_vector_elem(8'd3, i, 16'h3F80);  // v3 = 1.0
         end
-        */
+        
 
         // Preload v0 with BEEF for store-load test
         /*
@@ -410,13 +401,14 @@ module vector_core_L2_tb;
         */
 
         // Preload VRF for gemm: weights in v0-v31, activations in v32-v64
-        
+        /*
         for (int v = 0; v < 32; v++)
             for (int e = 0; e < 32; e++)
                 dpi_veggie_write_vector_elem(v[7:0], e, 16'h3F80);  // 1.0
         for (int v = 32; v <= 64; v++)
             for (int e = 0; e < 32; e++)
                 dpi_veggie_write_vector_elem(v[7:0], e, 16'h3F80);  // 1.0
+        */
 
         // Backpressure test: inject DRAM stall on port 1 from cycle 10-20
         /*

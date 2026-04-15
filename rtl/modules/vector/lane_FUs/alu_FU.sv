@@ -171,7 +171,7 @@ module alu_FU (
         .nRST(nRST),
         .wr_en(lsif.in.valid_in & lsif.out.ready_in),
         .shift(aluif.out.valid_out & fuif.in.wb_ready),
-        .din(rm)
+        .din(rm),
         .dout(fuif.out.rm)
     );
     sync_fifo #(

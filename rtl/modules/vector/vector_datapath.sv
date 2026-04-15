@@ -17,7 +17,7 @@ Owner: Jacob Walter
 module vector_datapath (
     input  logic     CLK,
     input  logic     nRST,
-    vector_if.vif    vif,
+    vector_if           vif,
     scpad_if.vec_frontend  sif,
     gsau_control_unit_if.gsau gsauif
 );
