@@ -10,9 +10,9 @@ module system #()
     output logic ram_mem_REN_d,
     output logic ram_mem_WEN_d,
     output logic [31:0] ram_mem_addr_d,
-    output logic [31:0] ram_mem_store_d,
+    output logic [63:0] ram_mem_store_d,
     //to dcache
-    input logic [31:0] ram_mem_data_d,
+    input logic [63:0] ram_mem_data_d,
     input logic ram_mem_complete_d,
 
     //from icache
@@ -92,7 +92,7 @@ module system #()
     );
 
     icache ICACHE(
-        .CLK(CLK), .nRST(nRST),
+        .CLK(CLK), .nRST(nRST), .halt(halt),
         //to/from scheduler (fetch)
         .imemaddr(imemaddr),
         .imemREN(imemREN),

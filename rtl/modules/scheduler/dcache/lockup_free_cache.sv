@@ -20,8 +20,8 @@ module lockup_free_cache (
     output logic [NUM_BANKS-1:0] ram_mem_REN,
     output logic [NUM_BANKS-1:0] ram_mem_WEN,
     output logic [NUM_BANKS-1:0][31:0] ram_mem_addr,
-    output logic [NUM_BANKS-1:0][31:0] ram_mem_store,
-    input logic [NUM_BANKS-1:0][31:0] ram_mem_data,
+    output logic [NUM_BANKS-1:0][63:0] ram_mem_store,
+    input logic [NUM_BANKS-1:0][63:0] ram_mem_data,
     input logic [NUM_BANKS-1:0] ram_mem_complete
 );
 

@@ -4,7 +4,7 @@ module cache_bank (
     input logic CLK, nRST,
     input logic[BANKS_LEN-1:0] bank_id, 
     input logic instr_valid,  
-    input logic[CACHE_RW_SIZE-1:0] ram_mem_data, 
+    input logic[63:0] ram_mem_data, 
     input mshr_reg mshr_entry_in,
     input in_mem_instr mem_instr_in,
     input logic ram_mem_complete, 
@@ -15,7 +15,7 @@ module cache_bank (
     output logic hc_stall,
     output logic ram_mem_REN, 
     output logic ram_mem_WEN,
-    output logic [CACHE_RW_SIZE-1:0] ram_mem_store, 
+    output logic [63:0] ram_mem_store, 
     output addr_t ram_mem_addr,
     output logic [31:0] scheduler_data_out,
     output logic [UUID_SIZE-1:0] scheduler_uuid_out,
@@ -230,8 +230,8 @@ module cache_bank (
         else if ((
             (ram_mem_complete && !latched_mshr_hit) || 
             latched_mshr_hit || 
-            ((latched_mshr_entry.write_status[count_FSM] && (count_FSM != (BLOCK_SIZE - 1))))
-        )) next_count_FSM = count_FSM + 1; 
+            (((latched_mshr_entry.write_status[count_FSM] || latched_mshr_entry.write_status[count_FSM + 1]) && (count_FSM != (BLOCK_SIZE - 2))))
+        )) next_count_FSM = count_FSM + 2; 
         else next_count_FSM = count_FSM;
     end
 
@@ -353,14 +353,19 @@ module cache_bank (
                 count_flush = 1'b0; 
                 if (latched_mshr_entry.write_status[NUM_BLOCKS_LEN'(count_FSM)]) begin 
                     block_pull_buffer.block[NUM_BLOCKS_LEN'(count_FSM)] = latched_mshr_entry.write_block[NUM_BLOCKS_LEN'(count_FSM)];
+                    block_pull_buffer.block[NUM_BLOCKS_LEN'(count_FSM + 1)] = ram_mem_data[63:32];
+                end else if (latched_mshr_entry.write_status[NUM_BLOCKS_LEN'(count_FSM + 1)]) begin 
+                    block_pull_buffer.block[NUM_BLOCKS_LEN'(count_FSM)] = ram_mem_data[31:0];
+                    block_pull_buffer.block[NUM_BLOCKS_LEN'(count_FSM + 1)] = latched_mshr_entry.write_block[NUM_BLOCKS_LEN'(count_FSM + 1)];
                 end else if (ram_mem_complete && !latched_mshr_hit) begin 
-                    block_pull_buffer.block[NUM_BLOCKS_LEN'(count_FSM)] = ram_mem_data;
+                    block_pull_buffer.block[NUM_BLOCKS_LEN'(count_FSM)] = ram_mem_data[31:0];
+                    block_pull_buffer.block[NUM_BLOCKS_LEN'(count_FSM + 1)] = ram_mem_data[63:32];
                 end 
 
                 ram_mem_REN = 1; //!latched_mshr_hit && !latched_mshr_entry.write_status[NUM_BLOCKS_LEN'(count_FSM)];
-                ram_mem_addr = addr_t'{latched_mshr_entry.block_addr.tag, ((latched_victim_set_index  << BANK_SHIFT) | bank_id), BLOCK_OFF_BIT_LEN'(count_FSM), BYTE_OFF_BIT_LEN'('0)};
+                ram_mem_addr = addr_t'{latched_mshr_entry.block_addr.tag, ((latched_victim_set_index  << BANK_SHIFT) | bank_id), BLOCK_OFF_BIT_LEN'('0), BYTE_OFF_BIT_LEN'('0)};
 
-                if ((count_FSM == (BLOCK_SIZE - 1)) && (next_count_FSM == 0)) begin
+                if ((count_FSM == (BLOCK_SIZE - 2)) && (next_count_FSM == 0)) begin
                      victim_eject_buffer = next_main_latched_set[latched_victim_way_index];
                 end
             end 
@@ -368,7 +373,8 @@ module cache_bank (
                 count_flush = 1'b0; 
                 ram_mem_WEN = 1'b1; 
                 ram_mem_addr = addr_t'{latched_victim_eject_buffer.tag, ((latched_victim_set_index  << BANK_SHIFT) | bank_id), NUM_BLOCKS_LEN'(count_FSM), BYTE_OFF_BIT_LEN'('0)};
-                ram_mem_store = latched_victim_eject_buffer.block[NUM_BLOCKS_LEN'(count_FSM)];
+                ram_mem_store = {latched_victim_eject_buffer.block[NUM_BLOCKS_LEN'(count_FSM + 1)], 
+                                    latched_victim_eject_buffer.block[NUM_BLOCKS_LEN'(count_FSM)]};
             end
             FINISH_WRITE: begin
                 next_main_latched_set[latched_victim_way_index] = latched_block_pull_buffer;
@@ -406,7 +412,8 @@ module cache_bank (
                 count_flush = 1'b0; 
                 ram_mem_WEN = 1'b1; 
                 ram_mem_addr = addr_t'{next_main_latched_set[flush_way].tag, ((flush_set  << BANK_SHIFT) | bank_id), NUM_BLOCKS_LEN'(count_FSM), BYTE_OFF_BIT_LEN'('0)};
-                ram_mem_store = next_main_latched_set[flush_way].block[NUM_BLOCKS_LEN'(count_FSM)];
+                ram_mem_store = {next_main_latched_set[flush_way].block[NUM_BLOCKS_LEN'(count_FSM + 1)], 
+                                    next_main_latched_set[flush_way].block[NUM_BLOCKS_LEN'(count_FSM)]};
             end
             WRITEBACK_WRITE: begin
                 next_main_latched_set[flush_way].dirty = 1'b0;
@@ -477,7 +484,7 @@ module cache_bank (
                 if (main_sram_wdone) next_state = BLOCK_PULL;
             end
             BLOCK_PULL: begin 
-                if ((count_FSM == (BLOCK_SIZE - 1)) && (next_count_FSM == 0)) begin 
+                if ((count_FSM == (BLOCK_SIZE - 2)) && (next_count_FSM == 0)) begin 
                     if (next_main_latched_set[latched_victim_way_index].dirty && !latched_mshr_hit) next_state = VICTIM_EJECT;
                     else begin 
                         next_state = FINISH_WRITE;  
@@ -485,7 +492,7 @@ module cache_bank (
                 end 
             end
             VICTIM_EJECT: begin 
-                if (count_FSM == (BLOCK_SIZE - 1) && (next_count_FSM == 0)) begin 
+                if (count_FSM == (BLOCK_SIZE - 2) && (next_count_FSM == 0)) begin 
                     next_state = FINISH_WRITE; 
                 end 
             end 
@@ -519,7 +526,7 @@ module cache_bank (
                 end
             end
             WRITEBACK: begin 
-                if (count_FSM == (BLOCK_SIZE - 1) && (next_count_FSM == 0)) begin 
+                if (count_FSM == (BLOCK_SIZE - 2) && (next_count_FSM == 0)) begin 
                     next_state = WRITEBACK_WRITE; 
                 end 
             end 
