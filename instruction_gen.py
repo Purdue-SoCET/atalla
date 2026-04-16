@@ -6,387 +6,311 @@ sys.path.insert(0, str(Path(__file__).parent.parent))
 
 from opcode_table import OPCODES
 
-# # def encode_instruction(instr_dict):
-#     """
-#     Encodes an instruction dictionary into a 40-bit hexadecimal string.
-    
-#     Args:
-#         instr_dict: Dictionary containing instruction fields like:
-#                    {'opcode', 'mnemonic', 'type', 'vd', 'rs1', ...}
-    
-#     Returns:
-#         String: 10-character hexadecimal representation (40 bits)
-#     """
-#     opcode = instr_dict['opcode']
-#     instr_type = instr_dict['type']
-    
-#     # Initialize 40-bit instruction to 0
-#     instruction = 0
-    
-#     # Opcode is always bits [6:0]
-#     instruction |= (opcode & 0x7F)
-    
-#     # Encode based on instruction type
-#     if instr_type == "R":
-#         # R-Type: rd 7-14, rs1 15-22, rs2 23-30
-#         rd = instr_dict.get('rd', 0)
-#         rs1 = instr_dict.get('rs1', 0)
-#         rs2 = instr_dict.get('rs2', 0)
-        
-#         instruction |= (rd & 0xFF) << 7
-#         instruction |= (rs1 & 0xFF) << 15
-#         instruction |= (rs2 & 0xFF) << 23
-        
-#     elif instr_type == "BR":
-#         # BR-Type: incr-imm7 7-13, i1 14, rs1 15-22, rs2 23-30, imm9 31-39
-#         incr_imm = instr_dict.get('incr_imm', 0)
-#         imm1 = instr_dict.get('imm1', 0)
-#         rs1 = instr_dict.get('rs1', 0)
-#         rs2 = instr_dict.get('rs2', 0)
-#         imm9 = instr_dict.get('imm9', 0)
-        
-#         instruction |= (incr_imm & 0x7F) << 7
-#         instruction |= (imm1 & 0x1) << 14
-#         instruction |= (rs1 & 0xFF) << 15
-#         instruction |= (rs2 & 0xFF) << 23
-#         instruction |= (imm9 & 0x1FF) << 31
-        
-#     elif instr_type == "I":
-#         # I-Type: rd 7-14, rs1 15-22, imm12 23-34
-#         rd = instr_dict.get('rd', 0)
-#         rs1 = instr_dict.get('rs1', 0)
-#         imm12 = instr_dict.get('imm12', instr_dict.get('imm', 0))
-        
-#         instruction |= (rd & 0xFF) << 7
-#         instruction |= (rs1 & 0xFF) << 15
-#         instruction |= (imm12 & 0xFFF) << 23
-        
-#     elif instr_type == "M":
-#         # M-Type: rd 7-14, rs1 15-22, imm12 23-34
-#         rd = instr_dict.get('rd', 0)
-#         rs1 = instr_dict.get('rs1', 0)
-#         imm12 = instr_dict.get('imm12', instr_dict.get('imm', 0))
-        
-#         instruction |= (rd & 0xFF) << 7
-#         instruction |= (rs1 & 0xFF) << 15
-#         instruction |= (imm12 & 0xFFF) << 23
-        
-#     elif instr_type == "MI":
-#         # MI-Type: rd 7-14, imm25 15-39
-#         rd = instr_dict.get('rd', 0)
-#         imm25 = instr_dict.get('imm25', instr_dict.get('imm', 0))
-        
-#         instruction |= (rd & 0xFF) << 7
-#         instruction |= (imm25 & 0x1FFFFFF) << 15
-        
-#     elif instr_type == "S":
-#         # S-Type: special instructions, no operands
-#         pass
-        
-#     elif instr_type == "VV":
-#         # VV-Type: vd 7-14, vs1 15-22, vs2 23-30, mask 31-34, sac 35-39
-#         vd = instr_dict.get('vd', 0)
-#         vs1 = instr_dict.get('vs1', 0)
-#         vs2 = instr_dict.get('vs2', 0)
-#         mask = instr_dict.get('mask', 0)
-#         sac = instr_dict.get('sac', 0)
-        
-#         instruction |= (vd & 0xFF) << 7
-#         instruction |= (vs1 & 0xFF) << 15
-#         instruction |= (vs2 & 0xFF) << 23
-#         instruction |= (mask & 0xF) << 31
-#         instruction |= (sac & 0x1F) << 35
-        
-#     elif instr_type == "VS":
-#         # VS-Type: vd 7-14, vs1 15-22, rs1 23-30, mask 31-34
-#         vd = instr_dict.get('vd', 0)
-#         vs1 = instr_dict.get('vs1', 0)
-#         rs1 = instr_dict.get('rs1', 0)
-#         mask = instr_dict.get('mask', 0)
-        
-#         instruction |= (vd & 0xFF) << 7
-#         instruction |= (vs1 & 0xFF) << 15
-#         instruction |= (rs1 & 0xFF) << 23
-#         instruction |= (mask & 0xF) << 31
-        
-#     elif instr_type == "VI":
-#         # VI-Type: vd 7-14, vs1 15-22, imm8 23-30, mask 31-34, imm5 35-39
-#         vd = instr_dict.get('vd', 0)
-#         vs1 = instr_dict.get('vs1', 0)
-#         imm8 = instr_dict.get('imm8', 0)
-#         mask = instr_dict.get('mask', 0)
-#         imm5 = instr_dict.get('imm5', 0)
-        
-#         instruction |= (vd & 0xFF) << 7
-#         instruction |= (vs1 & 0xFF) << 15
-#         instruction |= (imm8 & 0xFF) << 23
-#         instruction |= (mask & 0xF) << 31
-#         instruction |= (imm5 & 0x1F) << 35
-        
-#     elif instr_type == "VM":
-#         # VM-Type: vd 7-14, rs1 15-22, num_cols 23-27, num_rows 28-32, sid 33, rc 34, rc_id 35-39
-#         vd = instr_dict.get('vd', 0)
-#         rs1 = instr_dict.get('rs1', 0)
-#         num_cols = instr_dict.get('num_cols', 0)
-#         num_rows = instr_dict.get('num_rows', 0)
-#         sid = instr_dict.get('sid', 0)
-#         rc = instr_dict.get('rc', 0)
-#         rc_id = instr_dict.get('rc_id', 0)
-        
-#         instruction |= (vd & 0xFF) << 7
-#         instruction |= (rs1 & 0xFF) << 15
-#         instruction |= (num_cols & 0x1F) << 23
-#         instruction |= (num_rows & 0x1F) << 28
-#         instruction |= (sid & 0x1) << 33
-#         instruction |= (rc & 0x1) << 34
-#         instruction |= (rc_id & 0x1F) << 35
-        
-#     elif instr_type == "SDMA":
-#         # SDMA: rs1/rd1 7-14, rs2 15-22, num_cols 23-27, num_rows 28-32, sid 33
-#         rs1_rd1 = instr_dict.get('rs1', instr_dict.get('rd1', 0))
-#         rs2 = instr_dict.get('rs2', 0)
-#         num_cols = instr_dict.get('num_cols', 0)
-#         num_rows = instr_dict.get('num_rows', 0)
-#         sid = instr_dict.get('sid', 0)
-        
-#         instruction |= (rs1_rd1 & 0xFF) << 7
-#         instruction |= (rs2 & 0xFF) << 15
-#         instruction |= (num_cols & 0x1F) << 23
-#         instruction |= (num_rows & 0x1F) << 28
-#         instruction |= (sid & 0x1) << 33
-        
-#     elif instr_type == "MTS":
-#         # MTS: rd 7-14, vms 15-22
-#         rd = instr_dict.get('rd', 0)
-#         vms = instr_dict.get('vms', 0)
-        
-#         instruction |= (rd & 0xFF) << 7
-#         instruction |= (vms & 0xFF) << 15
-        
-#     elif instr_type == "STM":
-#         # STM: vmd 7-14, rs1 15-22
-#         vmd = instr_dict.get('vmd', 0)
-#         rs1 = instr_dict.get('rs1', 0)
-        
-#         instruction |= (vmd & 0xFF) << 7
-#         instruction |= (rs1 & 0xFF) << 15
-    
-#     # Convert to 40-bit hex (10 hex characters)
-#     hex_str = format(instruction, '010x')
-#     return hex_str
+
+def _mask(width: int) -> int:
+    return (1 << width) - 1
+
+
+def _set_bits(instruction: int, value: int, start_bit: int, width: int) -> int:
+    """
+    Insert `value` into `instruction` starting at `start_bit` with `width` bits.
+    Bit numbering is LSB-first, inclusive of start_bit.
+    """
+    instruction |= (value & _mask(width)) << start_bit
+    return instruction
+
+
 def encode_instruction(instr_dict):
     """
     Encodes an instruction dictionary into a 40-bit hexadecimal string.
-    
-    Args:
-        instr_dict: Dictionary containing instruction fields like:
-                   {'opcode': 22, 'rd': 2, 'rs1': 0, 'imm': 10}
-                   Note: 'mnemonic' and 'type' are optional - will be looked up from opcode
-    
-    Returns:
-        String: 10-character hexadecimal representation (40 bits)
+
+    Expected instruction width: 40 bits total
+      bits [6:0] = opcode
+
+    Type layouts from the updated format:
+
+    R:
+      [30:23] rs2
+      [22:15] rs1
+      [14:7]  rd
+      [6:0]   opcode
+
+    BR:
+      [39:31] imm9
+      [30:23] rs2
+      [22:15] rs1_rd
+      [14]    imm1
+      [13:7]  incr_imm7
+      [6:0]   opcode
+
+    I / M:
+      [34:23] imm12
+      [22:15] rs1
+      [14:7]  rd
+      [6:0]   opcode
+
+    MI:
+      [39:15] imm25
+      [14:7]  rd
+      [6:0]   opcode
+
+    VV:
+      [34:31] mask
+      [30:23] vs2
+      [22:15] vs1
+      [14:7]  vd
+      [6:0]   opcode
+
+    VS:
+      [34:31] mask
+      [30:23] rs1
+      [22:15] vs1
+      [14:7]  vd
+      [6:0]   opcode
+
+    VI:
+      [34:31] mask
+      [30:23] imm8
+      [22:15] vs1
+      [14:7]  vd
+      [6:0]   opcode
+
+    VTS:
+      [30:23] imm8
+      [22:15] vs1
+      [14:7]  rd
+      [6:0]   opcode
+
+    VMV:
+      [34:31] mask
+      [30:23] vs2
+      [22:15] vs1
+      [14:11] vmd
+      [6:0]   opcode
+
+    VMS:
+      [34:31] mask
+      [30:23] rs1
+      [22:15] vs1
+      [14:11] vmd
+      [6:0]   opcode
+
+    MTS:
+      [22:15] vms
+      [14:7]  rd
+      [6:0]   opcode
+
+    STM:
+      [22:15] rs1
+      [14:11] vmd
+      [6:0]   opcode
+
+    VM:
+      [33]    sid
+      [32:28] num_cols
+      [30:23] rs2   (row_number reg)
+      [22:15] rs1
+      [14:7]  vd
+      [6:0]   opcode
+
+    SDMA:
+      [30:23] rs3   (metadata)
+      [22:15] rs2   (DRAM address)
+      [14:7]  rs1/rd1 (scratchpad addr)
+      [6:0]   opcode
     """
-    opcode = instr_dict['opcode']
-    
-    # Look up instruction type from opcode table if not provided
-    if 'type' in instr_dict:
-        instr_type = instr_dict['type']
+    opcode = instr_dict["opcode"]
+
+    if "type" in instr_dict:
+        instr_type = instr_dict["type"]
     else:
         if opcode not in OPCODES:
             raise ValueError(f"Unknown opcode: {opcode}")
         _, instr_type = OPCODES[opcode]
-    
-    # Initialize 40-bit instruction to 0
+
     instruction = 0
-    
-    # Opcode is always bits [6:0]
-    instruction |= (opcode & 0x7F)
-    
-    # Encode based on instruction type
+
+    # opcode [6:0]
+    instruction = _set_bits(instruction, opcode, 0, 7)
+
     if instr_type == "R":
-        # R-Type: rd 7-14, rs1 15-22, rs2 23-30
-        rd = instr_dict.get('rd', 0)
-        rs1 = instr_dict.get('rs1', 0)
-        rs2 = instr_dict.get('rs2', 0)
-        
-        instruction |= (rd & 0xFF) << 7
-        instruction |= (rs1 & 0xFF) << 15
-        instruction |= (rs2 & 0xFF) << 23
-        
+        rd = instr_dict.get("rd", 0)
+        rs1 = instr_dict.get("rs1", 0)
+        rs2 = instr_dict.get("rs2", 0)
+
+        instruction = _set_bits(instruction, rd, 7, 8)
+        instruction = _set_bits(instruction, rs1, 15, 8)
+        instruction = _set_bits(instruction, rs2, 23, 8)
+
     elif instr_type == "BR":
-        # BR-Type: incr-imm7 7-13, i1 14, rs1 15-22, rs2 23-30, imm9 31-39
-        incr_imm = instr_dict.get('incr_imm', 0)
-        imm1 = instr_dict.get('imm1', 0)
-        rs1 = instr_dict.get('rs1', 0)
-        rs2 = instr_dict.get('rs2', 0)
-        imm9 = instr_dict.get('imm9', 0)
-        
-        instruction |= (incr_imm & 0x7F) << 7
-        instruction |= (imm1 & 0x1) << 14
-        instruction |= (rs1 & 0xFF) << 15
-        instruction |= (rs2 & 0xFF) << 23
-        instruction |= (imm9 & 0x1FF) << 31
-        
+        incr_imm7 = instr_dict.get("incr_imm7", instr_dict.get("incr_imm", 0))
+        imm1 = instr_dict.get("imm1", 0)
+
+        # Shared field in new spec: "rs1 & rd"
+        rs1_rd = instr_dict.get("rs1_rd", instr_dict.get("rs1", instr_dict.get("rd", 0)))
+        rs2 = instr_dict.get("rs2", 0)
+        imm9 = instr_dict.get("imm9", 0)
+
+        instruction = _set_bits(instruction, incr_imm7, 7, 7)
+        instruction = _set_bits(instruction, imm1, 14, 1)
+        instruction = _set_bits(instruction, rs1_rd, 15, 8)
+        instruction = _set_bits(instruction, rs2, 23, 8)
+        instruction = _set_bits(instruction, imm9, 31, 9)
+
     elif instr_type == "I":
-        # I-Type: rd 7-14, rs1 15-22, imm12 23-34
-        rd = instr_dict.get('rd', 0)
-        rs1 = instr_dict.get('rs1', 0)
-        imm12 = instr_dict.get('imm12', instr_dict.get('imm', 0))
-        
-        instruction |= (rd & 0xFF) << 7
-        instruction |= (rs1 & 0xFF) << 15
-        instruction |= (imm12 & 0xFFF) << 23
-        
+        rd = instr_dict.get("rd", 0)
+        rs1 = instr_dict.get("rs1", 0)
+        imm12 = instr_dict.get("imm12", instr_dict.get("imm", 0))
+
+        instruction = _set_bits(instruction, rd, 7, 8)
+        instruction = _set_bits(instruction, rs1, 15, 8)
+        instruction = _set_bits(instruction, imm12, 23, 12)
+
     elif instr_type == "M":
-        # M-Type: rd 7-14, rs1 15-22, imm12 23-34
-        rd = instr_dict.get('rd', 0)
-        rs1 = instr_dict.get('rs1', 0)
-        imm12 = instr_dict.get('imm12', instr_dict.get('imm', 0))
-        
-        instruction |= (rd & 0xFF) << 7
-        instruction |= (rs1 & 0xFF) << 15
-        instruction |= (imm12 & 0xFFF) << 23
-        
+        rd = instr_dict.get("rd", 0)
+        rs1 = instr_dict.get("rs1", 0)
+        imm12 = instr_dict.get("imm12", instr_dict.get("imm", 0))
+
+        instruction = _set_bits(instruction, rd, 7, 8)
+        instruction = _set_bits(instruction, rs1, 15, 8)
+        instruction = _set_bits(instruction, imm12, 23, 12)
+
     elif instr_type == "MI":
-        # MI-Type: rd 7-14, imm25 15-39
-        rd = instr_dict.get('rd', 0)
-        imm25 = instr_dict.get('imm25', instr_dict.get('imm', 0))
-        
-        instruction |= (rd & 0xFF) << 7
-        instruction |= (imm25 & 0x1FFFFFF) << 15
-        
+        rd = instr_dict.get("rd", 0)
+        imm25 = instr_dict.get("imm25", instr_dict.get("imm", 0))
+
+        instruction = _set_bits(instruction, rd, 7, 8)
+        instruction = _set_bits(instruction, imm25, 15, 25)
+
     elif instr_type == "S":
-        # S-Type: special instructions, no operands
+        # No operands
         pass
-        
+
     elif instr_type == "VV":
-        # VV-Type: vd 7-14, vs1 15-22, vs2 23-30, mask 31-34, sac 35-39
-        vd = instr_dict.get('vd', 0)
-        vs1 = instr_dict.get('vs1', 0)
-        vs2 = instr_dict.get('vs2', 0)
-        mask = instr_dict.get('mask', 0)
-        sac = instr_dict.get('sac', 0)
-        
-        instruction |= (vd & 0xFF) << 7
-        instruction |= (vs1 & 0xFF) << 15
-        instruction |= (vs2 & 0xFF) << 23
-        instruction |= (mask & 0xF) << 31
-        instruction |= (sac & 0x1F) << 35
-        
+        vd = instr_dict.get("vd", 0)
+        vs1 = instr_dict.get("vs1", 0)
+        vs2 = instr_dict.get("vs2", 0)
+        mask = instr_dict.get("mask", 0)
+
+        instruction = _set_bits(instruction, vd, 7, 8)
+        instruction = _set_bits(instruction, vs1, 15, 8)
+        instruction = _set_bits(instruction, vs2, 23, 8)
+        instruction = _set_bits(instruction, mask, 31, 4)
+
     elif instr_type == "VS":
-        # VS-Type: vd 7-14, vs1 15-22, rs1 23-30, mask 31-34
-        vd = instr_dict.get('vd', 0)
-        vs1 = instr_dict.get('vs1', 0)
-        rs1 = instr_dict.get('rs1', 0)
-        mask = instr_dict.get('mask', 0)
-        
-        instruction |= (vd & 0xFF) << 7
-        instruction |= (vs1 & 0xFF) << 15
-        instruction |= (rs1 & 0xFF) << 23
-        instruction |= (mask & 0xF) << 31
-        
+        vd = instr_dict.get("vd", 0)
+        vs1 = instr_dict.get("vs1", 0)
+        rs1 = instr_dict.get("rs1", 0)
+        mask = instr_dict.get("mask", 0)
+
+        instruction = _set_bits(instruction, vd, 7, 8)
+        instruction = _set_bits(instruction, vs1, 15, 8)
+        instruction = _set_bits(instruction, rs1, 23, 8)
+        instruction = _set_bits(instruction, mask, 31, 4)
+
     elif instr_type == "VI":
-        # VI-Type: vd 7-14, vs1 15-22, imm8 23-30, mask 31-34, imm5 35-39
-        vd = instr_dict.get('vd', 0)
-        vs1 = instr_dict.get('vs1', 0)
-        imm8_1 = instr_dict.get('imm8_1', 0)
-        mask = instr_dict.get('mask', 0)
-        imm8_2 = instr_dict.get('imm8_2', 0)
-        
-        instruction |= (vd & 0xFF) << 7
-        instruction |= (vs1 & 0xFF) << 15
-        instruction |= (imm8_1 & 0xFF) << 23
-        instruction |= (mask & 0xF) << 31
-        instruction |= (imm8_2 & 0xFF) << 35
-        
-    elif instr_type == "VM":
-        # VM-Type: vd 7-14, rs1 15-22, num_cols 23-27, num_rows 28-32, sid 33, rc 34, rc_id 35-39
-        vd = instr_dict.get('vd', 0)
-        rs1 = instr_dict.get('rs1', 0)
-        num_cols = instr_dict.get('num_cols', 0)
-        num_rows = instr_dict.get('num_rows', 0)
-        sid = instr_dict.get('sid', 0)
-        rc = instr_dict.get('rc', 0)
-        rc_id = instr_dict.get('rc_id', 0)
-        
-        instruction |= (vd & 0xFF) << 7
-        instruction |= (rs1 & 0xFF) << 15
-        instruction |= (num_cols & 0x1F) << 23
-        instruction |= (num_rows & 0x1F) << 28
-        instruction |= (sid & 0x1) << 33
-        instruction |= (rc & 0x1) << 34
-        instruction |= (rc_id & 0x1F) << 35
-        
-    elif instr_type == "SDMA":
-        # SDMA: rs1/rd1 7-14, rs2 15-22, num_cols 23-27, num_rows 28-32, sid 33
-        rs1_rd1 = instr_dict.get('rs1', instr_dict.get('rd1', 0))
-        rs2 = instr_dict.get('rs2', 0)
-        num_cols = instr_dict.get('num_cols', 0)
-        num_rows = instr_dict.get('num_rows', 0)
-        sid = instr_dict.get('sid', 0)
-        
-        instruction |= (rs1_rd1 & 0xFF) << 7
-        instruction |= (rs2 & 0xFF) << 15
-        instruction |= (num_cols & 0x1F) << 23
-        instruction |= (num_rows & 0x1F) << 28
-        instruction |= (sid & 0x1) << 33
-        
-    elif instr_type == "MTS":
-        # MTS: rd 7-14, vms 15-22
-        rd = instr_dict.get('rd', 0)
-        vms = instr_dict.get('vms', 0)
-        
-        instruction |= (rd & 0xFF) << 7
-        instruction |= (vms & 0xFF) << 15
-        
-    elif instr_type == "STM":
-        # STM: vmd 7-14, rs1 15-22
-        vmd = instr_dict.get('vmd', 0)
-        rs1 = instr_dict.get('rs1', 0)
-        
-        instruction |= (vmd & 0xFF) << 7
-        instruction |= (rs1 & 0xFF) << 15
+        vd = instr_dict.get("vd", 0)
+        vs1 = instr_dict.get("vs1", 0)
+        imm8 = instr_dict.get("imm8", instr_dict.get("imm", 0))
+        mask = instr_dict.get("mask", 0)
+
+        instruction = _set_bits(instruction, vd, 7, 8)
+        instruction = _set_bits(instruction, vs1, 15, 8)
+        instruction = _set_bits(instruction, imm8, 23, 8)
+        instruction = _set_bits(instruction, mask, 31, 4)
 
     elif instr_type == "VTS":
-        imm8 = instr_dict.get('imm8', 0)
-        vs1 = instr_dict.get('vs1', 0)
-        rd = instr_dict.get('rd', 0)
-        
-        instruction |= (rd & 0xFF) << 7
-        instruction |= (vs1 & 0xFF) << 15
-        instruction |= (imm8 & 0xFF) << 23
+        rd = instr_dict.get("rd", 0)
+        vs1 = instr_dict.get("vs1", 0)
+        imm8 = instr_dict.get("imm8", instr_dict.get("imm", 0))
 
+        instruction = _set_bits(instruction, rd, 7, 8)
+        instruction = _set_bits(instruction, vs1, 15, 8)
+        instruction = _set_bits(instruction, imm8, 23, 8)
+
+    # Your opcode table uses MVV/MVS names; these correspond to the new VMV/VMS layouts.
     elif instr_type == "MVV":
-        vmd = instr_dict.get('vmd', 0)
-        vs1 = instr_dict.get('vs1', 0)
-        vs2 = instr_dict.get('vs2', 0)
-        mask = instr_dict.get('mask', 0)
-        
-        instruction |= (vmd & 0xF) << 7
-        instruction |= (vs1 & 0xFF) << 11
-        instruction |= (vs2 & 0xFF) << 19
-        instruction |= (mask & 0xF) << 27
+        vmd = instr_dict.get("vmd", 0)
+        vs1 = instr_dict.get("vs1", 0)
+        vs2 = instr_dict.get("vs2", 0)
+        mask = instr_dict.get("mask", 0)
+
+        instruction = _set_bits(instruction, vmd, 11, 4)
+        instruction = _set_bits(instruction, vs1, 15, 8)
+        instruction = _set_bits(instruction, vs2, 23, 8)
+        instruction = _set_bits(instruction, mask, 31, 4)
 
     elif instr_type == "MVS":
-        vmd = instr_dict.get('vmd', 0)
-        vs1 = instr_dict.get('vs1', 0)
-        rs1 = instr_dict.get('rs1', 0)
-        mask = instr_dict.get('mask', 0)
-        
-        instruction |= (vmd & 0xF) << 7
-        instruction |= (vs1 & 0xFF) << 11
-        instruction |= (rs1 & 0xFF) << 19
-        instruction |= (mask & 0xF) << 27
-    
-    # Convert to 48-bit hex (12 hex characters)
-    hex_str = format(instruction, '012x')
-    return hex_str
+        vmd = instr_dict.get("vmd", 0)
+        vs1 = instr_dict.get("vs1", 0)
+        rs1 = instr_dict.get("rs1", 0)
+        mask = instr_dict.get("mask", 0)
 
-# Test with your examples
-test1 = {'opcode': 0b0000011, 'rs1': 2, 'rs2': 1, 'rd': 13}
-test2 = {'opcode': 0b0011001, 'imm12': 10, 'rs1': 1, 'rd': 2}
-test3 = {'opcode': 0b0011000, 'imm12': 2, 'rs1': 2, 'rd': 3}
+        instruction = _set_bits(instruction, vmd, 11, 4)
+        instruction = _set_bits(instruction, vs1, 15, 8)
+        instruction = _set_bits(instruction, rs1, 23, 8)
+        instruction = _set_bits(instruction, mask, 31, 4)
 
-print(f"Instruction: {encode_instruction(test1)}")
-print(f"Instruction: {encode_instruction(test2)}")
-print(f"Instruction: {encode_instruction(test3)}")
+    elif instr_type == "MTS":
+        rd = instr_dict.get("rd", 0)
+        vms = instr_dict.get("vms", 0)
+
+        instruction = _set_bits(instruction, rd, 7, 8)
+        instruction = _set_bits(instruction, vms, 15, 8)
+
+    elif instr_type == "STM":
+        vmd = instr_dict.get("vmd", 0)
+        rs1 = instr_dict.get("rs1", 0)
+
+        instruction = _set_bits(instruction, vmd, 11, 4)
+        instruction = _set_bits(instruction, rs1, 15, 8)
+
+    elif instr_type == "VM":
+        vd = instr_dict.get("vd", 0)
+        rs1 = instr_dict.get("rs1", 0)
+        rs2 = instr_dict.get("rs2", 0)  # row_number reg
+        num_cols = instr_dict.get("num_cols", 0)
+        sid = instr_dict.get("sid", 0)
+
+        instruction = _set_bits(instruction, vd, 7, 8)
+        instruction = _set_bits(instruction, rs1, 15, 8)
+        instruction = _set_bits(instruction, rs2, 23, 8)
+        instruction = _set_bits(instruction, num_cols, 28, 5)
+        instruction = _set_bits(instruction, sid, 33, 1)
+
+    elif instr_type == "SDMA":
+        # Shared scratchpad register field: rs1 and/or rd1
+        rs1_rd1 = instr_dict.get("rs1_rd1", instr_dict.get("rs1", instr_dict.get("rd1", 0)))
+        rs2 = instr_dict.get("rs2", 0)  # DRAM address
+        rs3 = instr_dict.get("rs3", 0)  # metadata
+
+        instruction = _set_bits(instruction, rs1_rd1, 7, 8)
+        instruction = _set_bits(instruction, rs2, 15, 8)
+        instruction = _set_bits(instruction, rs3, 23, 8)
+
+    else:
+        raise ValueError(f"Unsupported instruction type: {instr_type}")
+
+    # 40 bits = 10 hex characters
+    return format(instruction, "010x")
+
+
+if __name__ == "__main__":
+    # Example tests
+    nop = {"opcode": 0b0110001, "rs1": 0, "rd": 0, "rs2": 0}
+    halt = {"opcode": 0b0110010, "rs1": 0, "rd": 0, "rs2": 0}
+    st_wd_200 = {"opcode": 0b0101010, "rs1": 0, "rd": 1, "imm12": 200}
+    st_wd_204 = {"opcode": 0b0101010, "rs1": 0, "rd": 3, "imm12": 204}
+    st_wd_208 = {"opcode": 0b0101010, "rs1": 0, "rd": 2, "imm12": 208}
+    addi_1 = {"opcode": 0b0010110, "rs1": 0, "imm12": 60, "rd": 1}
+    addi_2 = {"opcode": 0b0010110, "rs1": 0, "imm12": 1, "rd": 3}
+    jal = {"opcode": 0b0101101, "rd": 2, "imm25": 15}
+
+    print(f"st_wd_200 {encode_instruction(st_wd_200)}")
+    print(f"st_wd_204 {encode_instruction(st_wd_204)}")
+    print(f"st_wd_208 {encode_instruction(st_wd_208)}")
+    print(f"addi_1 {encode_instruction(addi_1)}")
+    print(f"addi_2 {encode_instruction(addi_2)}")
+    print(f"jal {encode_instruction(jal)}")
+    print(f"nop {encode_instruction(nop)}")
+    print(f"halt {encode_instruction(halt)}")

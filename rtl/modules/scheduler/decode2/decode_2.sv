@@ -20,6 +20,16 @@ module decode_2
     parameter VECTOR_WRITE_PORTS    = 4,
     parameter MASK_READ_PORTS       = 2,    
     parameter MASK_WRITE_PORTS      = 2
+    parameter NUM_SDMA_INSTRS    = 4, 
+    parameter SCALAR_REG_BITS     = 8,
+    parameter VECTOR_REG_BITS      = 8,
+    parameter MASK_REG_BITS        = 4, 
+    parameter SCALAR_READ_PORTS     = 4,
+    parameter SCALAR_WRITE_PORTS    = 4,
+    parameter VECTOR_READ_PORTS     = 4,
+    parameter VECTOR_WRITE_PORTS    = 4,
+    parameter MASK_READ_PORTS       = 2,    
+    parameter MASK_WRITE_PORTS      = 2
 ) (
   input logic CLK, nRST,
   decode_2_if.dec d2if
@@ -30,12 +40,19 @@ scalar_control_unit_if scif();
 vector_control_unit_if vcif();
 sdma_control_unit_if sdmacif();
 
+vector_control_unit_if vcif();
+sdma_control_unit_if sdmacif();
+
 reg_file_if srfif();
+reg_file_if #(.DATA_WIDTH(16), .NUM_ELEMENTS(32)) vrfif ();
+reg_file_if #(.BANK_COUNT(2), .BANK_REGS(8), .DREAD_PORTS(2), .DWRITE_PORTS(2), .ZERO_REG_VAL(1)) mrfif ();
+
 reg_file_if #(.DATA_WIDTH(16), .NUM_ELEMENTS(32)) vrfif ();
 reg_file_if #(.BANK_COUNT(2), .BANK_REGS(8), .DREAD_PORTS(2), .DWRITE_PORTS(2), .ZERO_REG_VAL(1)) mrfif ();
 
 
 dependency_checker_if dcif();
+source_reg_allocator_if sraif ();
 source_reg_allocator_if sraif ();
 
 scalar_control_unit scu1(CLK, scif);
@@ -226,7 +243,6 @@ logic vector_FU_ready;
 logic sdma_FU_ready;
 
 //TODO figure out where vts, mts, stm are being handled 
-//TODO c
 //if we need and ready, not blocked. if don't need, we don't care about ready. if we need and not ready, blocked
 assign scalar_FU_ready = (~need_scalar_ex1 | d2if.ready_DEC2_ex1) &
                          (~need_scalar_ex2 | d2if.ready_DEC2_ex2) &

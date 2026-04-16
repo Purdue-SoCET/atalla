@@ -23,6 +23,24 @@ module scheduler_core #(
     input logic CLK, nRST,
     scheduler_core_if.sc scif
 
+    //to dcache
+    output logic WEN, REN, mem_in_valid,
+    output logic [31:0] data_store, data_addr,
+
+    //from dcache
+    input logic [31:0] data_load,
+    input logic hit, block_status, stall, miss,
+
+    //fetch in
+    input logic ihit,
+    input instruction_packet_t imemload,
+    input logic imemready,
+    output logic imemREN,
+    output word_t imemaddr,
+
+    //halt
+    output logic halt
+
 );
 
     scheduler_pkg::EXEC_WB_LATCH n_EX_WB_latch, EX_WB_latch;
@@ -32,6 +50,7 @@ module scheduler_core #(
     scheduler_pkg::DEC2_EX_VEC_SDMA_LATCH n_D2_EX_vec_sdma_latch, D2_EX_vec_sdma_latch;
 
     logic n_DEC2_EX_halt_latch, DEC2_EX_halt_latch;
+    logic dec1_dec2_latch_ready;
 
     //interfaces
     s_wb_arbiter_if scalar_wb_if ();
@@ -43,12 +62,15 @@ module scheduler_core #(
     // caches_if caches_if();
 
     //instantiations
-    // icache ICACHE(.CLK(CLK), .nRST(nRST), .dcif(datapath_cache_if), .cif(caches_if));
     s_wb_arbiter S_WB_ARBITER(.CLK(CLK), .nRST(nRST), .vif(scalar_wb_if));
     v_wb_arbiter V_WB_ARBITER(.CLK(CLK), .nRST(nRST), .vif(vector_wb_if));
     execute_stage S_EXECUTE(.clk(CLK), .nRST(nRST), .ex_if(scalar_ex_if));
     decode_2 S_V_DECODE_2(.CLK(CLK), .nRST(nRST), .d2if(decode_2_if));
-    fetch_decode1 S_FETCH_DECODE_1 (.clk(CLK), .rst_n(nRST), .flush(scalar_ex_if.redirect_valid), .ready(decode_2_if.ready), .pc_branch(scalar_ex_if.redirect_target), .halt(scalar_ex_if.halt_out), .btb_update_en(scalar_ex_if.redirect_valid), .btb_pc_update(scalar_ex_if.pc_out), .btb_true_target(scalar_ex_if.redirect_target), .dc_if(datapath_cache_if), .dec12_if(decode_1_if));
+    fetch_decode1 S_FETCH_DECODE_1 (.clk(CLK), .rst_n(nRST), .flush(scalar_ex_if.redirect_valid), 
+                                    .ready(dec1_dec2_latch_ready), .pc_branch(scalar_ex_if.redirect_target), .halt(scalar_ex_if.halt_out),
+                                    .btb_update_en(scalar_ex_if.redirect_valid), .btb_pc_update(scalar_ex_if.pc_out),
+                                    .btb_true_target(scalar_ex_if.redirect_target), .dc_if(datapath_cache_if),
+                                    .dec12_if(decode_1_if));
 
 
 
@@ -57,17 +79,20 @@ module scheduler_core #(
         if(scalar_ex_if.redirect_valid || scalar_ex_if.halt_out) begin
             n_D1_D2_latch.scalar_instrs = NOP_PACKET;
         end
-        else if(decode_2_if.ready) begin
+        else if(dec1_dec2_latch_ready) begin
             n_D1_D2_latch.scalar_instrs = decode_1_if.scalar_inst_in;
             n_D1_D2_latch.vector_instrs = decode_1_if.vector_inst_in;
             n_D1_D2_latch.SDMA_instrs = decode_1_if.scpad_inst_in;
             n_D1_D2_latch.pc = decode_1_if.pc_in;
             n_D1_D2_latch.predict_taken = decode_1_if.predict_taken_in;
             n_D1_D2_latch.pc_pred_addr = decode_1_if.pc_pred_addr_in;
+            n_D1_D2_latch.valid = decode_1_if.valid_in;
         end else begin
             n_D1_D2_latch = D1_D2_latch;
         end
     end
+
+    assign dec1_dec2_latch_ready = decode_2_if.ready || !D1_D2_latch.valid;
 
     //DEC2 inputs form D1_D2 latch
     assign decode_2_if.scalar_instrs = D1_D2_latch.scalar_instrs;
@@ -109,7 +134,7 @@ module scheduler_core #(
             n_D2_EX_vec_sdma_latch = '0;
             for(int i = 0; i < NUM_SCALAR_INSTRS; i++) begin
               n_DEC2_EX_latch[i] = '0;
-              n_DEC2_EX_latch[i].op = 7'b0101111;
+              n_DEC2_EX_latch[i].op = 7'b0110001;
             end
             n_DEC2_EX_PC_latch = '0;
         end
@@ -206,9 +231,11 @@ module scheduler_core #(
 
     //dcache in/outs
     //from dcache
-    assign scalar_ex_if.hit = scif.hit;
-    assign scalar_ex_if.data_load = scif.data_load;
-    assign scalar_ex_if.block_status = scif.block_status;
+    assign scalar_ex_if.hit = hit;
+    assign scalar_ex_if.data_load = data_load;
+    assign scalar_ex_if.block_status = block_status;
+    assign scalar_ex_if.stall = stall;
+    assign scalar_ex_if.miss = miss;
     //to dcache
     assign scif.WEN = scalar_ex_if.WEN;
     assign scif.REN = scalar_ex_if.REN;
@@ -217,9 +244,15 @@ module scheduler_core #(
     assign scif.data_addr = scalar_ex_if.data_addr;
     assign ready = decode_2_if.ready;
 
-    //icache stuff
-    assign datapath_cache_if.imemload = scif.iload;
-    assign datapath_cache_if.ihit = scif.ihit;
+    assign datapath_cache_if.ihit = ihit;
+    assign datapath_cache_if.imemload = imemload;
+    assign datapath_cache_if.imemready = imemready;
+    assign imemaddr = datapath_cache_if.imemaddr;
+    assign imemREN = datapath_cache_if.imemREN;
+    // assign caches_if.iload = iload;
+    // assign caches_if.iwait = iwait;
+
+    assign halt = scalar_ex_if.halt_out;
 
     always_ff @( posedge CLK, negedge nRST ) begin : EX_WB_LATCH
         if(!nRST) begin

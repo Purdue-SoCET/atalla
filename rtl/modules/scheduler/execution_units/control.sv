@@ -18,8 +18,8 @@ module control (
     localparam logic [6:0] OP_BGT  = 7'b0100111; // bgt.s (signed)
     localparam logic [6:0] OP_BLE  = 7'b0101000; // ble.s (signed)
 
-    localparam logic [6:0] OP_JAL  = 7'b0101011; // jal
-    localparam logic [6:0] OP_JALR = 7'b0101100; // jalr
+    localparam logic [6:0] OP_JAL  = 7'b0101101; // jal
+    localparam logic [6:0] OP_JALR = 7'b0101110; // jalr
 
     // -----------------------------
     // Combinational results
@@ -77,7 +77,7 @@ module control (
                 rd_write_en_comb     = 1'b1;
                 rd_idx_out_comb      = ctrl_if.rd_idx_in; 
                 rd_value_comb        = pc_plus4;
-                redirect_target_comb = ctrl_if.pc + ctrl_if.imm;
+                redirect_target_comb = ctrl_if.pc + (ctrl_if.imm << 2);
                 if(ctrl_if.predict_pc && ctrl_if.predict_taken && redirect_target_comb == ctrl_if.predict_pc) begin
                     // Perfectly predicted jump - no redirect needed
                     redirect_valid_comb = 1'b0;
@@ -91,7 +91,7 @@ module control (
                 rd_idx_out_comb      = ctrl_if.rd_idx_in; 
                 rd_value_comb        = pc_plus4;
                 redirect_valid_comb  = 1'b1;
-                redirect_target_comb = ctrl_if.rs1_value + ctrl_if.imm;
+                redirect_target_comb = ctrl_if.rs1_value + (ctrl_if.imm << 2);
                 if(ctrl_if.predict_pc && ctrl_if.predict_taken && redirect_target_comb == ctrl_if.predict_pc) begin
                     // Perfectly predicted jump - no redirect needed
                     redirect_valid_comb = 1'b0;
@@ -107,10 +107,10 @@ module control (
                 rd_write_en_comb     = 1'b1;
                 rd_value_comb        = ctrl_if.rs1_value + ctrl_if.incr7;
                 rd_idx_out_comb      = ctrl_if.rs1_idx; 
-                redirect_target_comb = ctrl_if.pc + ctrl_if.imm;
+                redirect_target_comb = ctrl_if.pc + (ctrl_if.imm << 2);
             
                 if (taken_comb) begin
-                    redirect_target_comb = ctrl_if.pc + ctrl_if.imm;
+                    redirect_target_comb = ctrl_if.pc + (ctrl_if.imm << 2);
                 end else begin
                     redirect_target_comb = pc_plus4;
                 end

@@ -30,9 +30,11 @@ module fetch_decode1 (
   if_dec1_if ifdec1_if();
   BTB_if     btb_if();
 
+  logic dec1_if_ready;
 
+  assign dec1_if_ready = ready || !ifdec1_if.valid_out;
 
-  assign ifdec1_if.ready = ready;
+  assign ifdec1_if.ready = dec1_if_ready;
   assign ifdec1_if.flush = flush;
   assign ifdec1_if.ihit  = dc_if.ihit;
 
@@ -43,7 +45,7 @@ module fetch_decode1 (
 
 
   fetch fu (
-    .clk(clk), .rst_n(rst_n), .flush(flush), .ready(ready), .halt(halt), .pc_branch(pc_branch), .dc_if(dc_if), .ifdec1_if(ifdec1_if.src), .btb_if(btb_if.fetch_view)
+    .clk(clk), .rst_n(rst_n), .flush(flush), .ready(dec1_if_ready), .halt(halt), .pc_branch(pc_branch), .dc_if(dc_if), .ifdec1_if(ifdec1_if.src), .btb_if(btb_if.fetch_view)
   );
 
 

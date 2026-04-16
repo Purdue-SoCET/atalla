@@ -54,7 +54,8 @@ package scheduler_pkg;
         instr_t [NUM_VECTOR_INSTRUCTIONS-1:0] vector_instrs;
         instr_t [NUM_SDMA_INSTRUCTIONS-1:0] SDMA_instrs;
         word_t pc, pc_pred_addr;
-        logic predict_taken;      
+        logic predict_taken;
+        logic valid;
         
     } DEC1_DEC2_LATCH;
 
