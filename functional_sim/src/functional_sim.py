@@ -69,10 +69,8 @@ def apply_imm_vector_op(
 
 def _collect_static_packet_metrics(mem: Memory, packet_length: int) -> dict[str, int]:
     packets_static_total = 0
-    packets_static_non_nop = 0
     packet_slots_total = 0
     packet_slots_filled = 0
-    packet_slots_total_non_nop_packets = 0
 
     for addr in sorted(mem.instr_mem.keys()):
         dec_packet = decode_packet(
@@ -85,16 +83,10 @@ def _collect_static_packet_metrics(mem: Memory, packet_length: int) -> dict[str,
         packet_slots_total += packet_len
         packet_slots_filled += filled_slots
 
-        if filled_slots > 0:
-            packets_static_non_nop += 1
-            packet_slots_total_non_nop_packets += packet_len
-
     return {
         "packets_static_total": packets_static_total,
-        "packets_static_non_nop": packets_static_non_nop,
         "packet_slots_total": packet_slots_total,
         "packet_slots_filled": packet_slots_filled,
-        "packet_slots_total_non_nop_packets": packet_slots_total_non_nop_packets,
     }
 
 
@@ -125,17 +117,8 @@ def run(mem: Memory, sregs: ScalarRegisterFile, mregs: ScalarRegisterFile, vregs
         dec_packet = decode_packet(packet=mem.read_instr(pc), packet_length=packet_length, debug=debug)
 
         packet_len = len(dec_packet)
-        filled_slots_in_packet = sum(
-            1 for inst in dec_packet if inst.get("mnemonic") != "nop.s"
-        )
         EU.perf_metrics.increment("packets_executed")
         EU.perf_metrics.increment("packet_slots_executed", packet_len)
-        EU.perf_metrics.increment("packet_slots_executed_filled", filled_slots_in_packet)
-        if filled_slots_in_packet > 0:
-            EU.perf_metrics.increment("packets_executed_non_nop")
-            EU.perf_metrics.increment(
-                "packet_slots_executed_non_nop_packets", packet_len
-            )
 
         if debug:
             print(f"PC: 0x{pc:08X}")

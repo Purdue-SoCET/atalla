@@ -910,8 +910,8 @@ def materialize_scheduled_instructions_tracked(
     scheduled: list[tuple[str, str, int | None]] = []
 
     for packet in packets:
+        # Empty packets represent latency-only idle cycles; do not emit full NOP rows.
         if not packet:
-            scheduled.extend([(nop_hex, "", None)] * packet_width)
             continue
         for idx in packet:
             h, c = instrs[idx]
@@ -1515,7 +1515,7 @@ def _op_latency(op: str, latency_map: Dict[str, int]) -> int:
             try:
                 return max(1, int(latency_map[key]))
             except (TypeError, ValueError):
-                pass
+                print(f"Op Latency not found for {key}")
 
     if _is_memory_load(op_norm):
         return 3
@@ -1753,8 +1753,8 @@ def materialize_scheduled_instructions(
     scheduled: list[tuple[str, str]] = []
 
     for packet in packets:
+        # Empty packets represent latency-only idle cycles; do not emit full NOP rows.
         if not packet:
-            scheduled.extend([nop_entry] * packet_width)
             continue
 
         for idx in packet:
