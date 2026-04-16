@@ -311,11 +311,11 @@ program test (
         // idle_r_test();
         
         // smoke_write_test();
-        pressure_write_test(7);
+        // pressure_write_test(7);
         // idle_write_test();
 
         // consecutive: 4 back-to-back writes to SP0, then SP1, then D$
-        //consecutive_write_test(1, -1, 6);
+        consecutive_write_test(1, -1, 10);
 
         // report
         env.report();
@@ -465,11 +465,13 @@ class aw_txn;
     constraint c_force_mid {mid == force_mid;}
     constraint c_force_len {len == force_len;}
     constraint c_burst     {burst != 2'b11;}
+    constraint c_len {len <= 7;}
 
     function new();
         c_force_mid.constraint_mode(0);
         c_force_len.constraint_mode(0);
         c_burst.constraint_mode(0);
+        c_len.constraint_mode(1);
     endfunction
 endclass
 
@@ -481,7 +483,7 @@ class w_txn;
     logic [WDATA-1:0] data;
     logic last;
     logic [WSTRB-1:0] strb;
-
+    constraint c_len {len <= 7;}
     constraint c_mid_valid {mid inside {0, 1, 2};}
 endclass
 

@@ -33,7 +33,8 @@ module axi_write_driver(
     logic same_txn_sp0, same_txn_sp1, same_txn_d; // enforces aw + w in lockstep
     logic aw_loaded; // checks if aw request has been loaded into the skid buffer
     logic final_w_fire;
-    assign final_w_fire = wdrv_if.w_fire && !aw_skid_empty && w_skid_buffer[w_rd_ptr].last;
+    //assign final_w_fire = wdrv_if.w_fire && !aw_skid_empty && w_skid_buffer[w_rd_ptr].last;
+    assign final_w_fire = 0; // aryan check this 
 
     always_ff@(posedge CLK, negedge nRST) begin 
         if(!nRST) begin
@@ -61,7 +62,7 @@ module axi_write_driver(
                         aw_skid_buffer[aw_wr_ptr].len    <= wdrv_if.head_sp0_aw_o.len;
                         aw_skid_buffer[aw_wr_ptr].burst  <= wdrv_if.head_sp0_aw_o.burst;
                         aw_wr_ptr <= aw_wr_ptr + 1'b1;
-                        aw_loaded <= 1'b1;
+                        //aw_loaded <= 1'b1;
                     end
                     if(!w_skid_full && wdrv_if.head_sp0_wvalid && same_txn_sp0 && !final_w_fire) begin
                         w_skid_buffer[w_wr_ptr].valid    <= wdrv_if.head_sp0_wvalid;
@@ -86,7 +87,7 @@ module axi_write_driver(
                         aw_skid_buffer[aw_wr_ptr].len    <= wdrv_if.head_sp1_aw_o.len;
                         aw_skid_buffer[aw_wr_ptr].burst  <= wdrv_if.head_sp1_aw_o.burst;
                         aw_wr_ptr <= aw_wr_ptr + 1'b1;
-                        aw_loaded <= 1'b1;
+                        //aw_loaded <= 1'b1;
                     end
                     if (!w_skid_full && wdrv_if.head_sp1_wvalid && same_txn_sp1 && !final_w_fire) begin
                         w_skid_buffer[w_wr_ptr].valid    <= wdrv_if.head_sp1_wvalid;
@@ -111,7 +112,7 @@ module axi_write_driver(
                         aw_skid_buffer[aw_wr_ptr].len    <= wdrv_if.head_d_aw_o.len;
                         aw_skid_buffer[aw_wr_ptr].burst  <= wdrv_if.head_d_aw_o.burst;
                         aw_wr_ptr <= aw_wr_ptr + 1'b1;
-                        aw_loaded <= 1'b1;
+                        //aw_loaded <= 1'b1;
                     end 
                     if (!w_skid_full && wdrv_if.head_d_wvalid && same_txn_d && !final_w_fire) begin
                         w_skid_buffer[w_wr_ptr].valid    <= wdrv_if.head_d_wvalid;
