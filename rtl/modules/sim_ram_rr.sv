@@ -16,7 +16,7 @@ module sim_ram_rr_32 #(
     input  logic                  ic_req_we,
     input  logic [ADDR_WIDTH-1:0] ic_req_addr,
     input  logic [31:0]           ic_req_wdata,
-    output logic [31:0]           ic_resp_rdata,
+    output logic [63:0]           ic_resp_rdata,
     output logic                  ic_resp_hit,
 
     // D-cache
@@ -147,14 +147,14 @@ module sim_ram_rr_32 #(
         end
     end
 
-    logic [31:0] read_word;
+    logic [63:0] read_word;
 
     always_comb begin
-        ic_resp_rdata = 32'h0;
+        ic_resp_rdata = 64'h0;
         ic_resp_hit   = 1'b0;
         dc_resp_rdata = 32'h0;
         dc_resp_hit   = 1'b0;
-        read_word     = 32'h0;
+        read_word     = 64'h0;
 
         if (sel_valid && !sel_we && addr_in_range && (sel_addr[1:0] == 2'b00)) begin
             if (BIG_ENDIAN) begin
@@ -162,11 +162,19 @@ module sim_ram_rr_32 #(
                     mem[sel_addr + 0],
                     mem[sel_addr + 1],
                     mem[sel_addr + 2],
-                    mem[sel_addr + 3]
+                    mem[sel_addr + 3],
+                    mem[sel_addr + 4],
+                    mem[sel_addr + 5],
+                    mem[sel_addr + 6],
+                    mem[sel_addr + 7]
                 };
             end
             else begin
                 read_word = {
+                    mem[sel_addr + 7],
+                    mem[sel_addr + 6],
+                    mem[sel_addr + 5],
+                    mem[sel_addr + 4],
                     mem[sel_addr + 3],
                     mem[sel_addr + 2],
                     mem[sel_addr + 1],
@@ -175,7 +183,7 @@ module sim_ram_rr_32 #(
             end
 
             if (sel_is_dc) begin
-                dc_resp_rdata = read_word;
+                dc_resp_rdata = read_word[31:0];
                 dc_resp_hit   = 1'b1;
             end
             else begin

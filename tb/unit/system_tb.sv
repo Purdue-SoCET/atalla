@@ -18,7 +18,7 @@ module system_tb;
     logic ram_mem_WEN_i;
     logic [31:0] ram_mem_addr_i;
     logic [31:0] ram_mem_store_i;
-    logic [31:0] ram_mem_data_i;
+    logic [63:0] ram_mem_data_i;
     logic ram_mem_complete_i;
 
     logic halt;
@@ -38,9 +38,7 @@ module system_tb;
 
         //from icache
         .mem_req_valid_i(ram_mem_valid_i),
-        .mem_req_we_i(ram_mem_WEN_i),
         .mem_req_addr_i(ram_mem_addr_i),
-        .mem_req_wdata_i(ram_mem_store_i),
         .mem_resp_rdata_i(ram_mem_data_i),
         .mem_resp_hit_i(ram_mem_complete_i),
 
@@ -59,9 +57,9 @@ module system_tb;
         .clk(CLK), .rst_n(nRST),
         // I-cache
         .ic_req_valid(ram_mem_valid_i),
-        .ic_req_we(ram_mem_WEN_i),
+        .ic_req_we(1'b0),
         .ic_req_addr(ram_mem_addr_i),
-        .ic_req_wdata(ram_mem_store_i),
+        .ic_req_wdata(32'b0),
         .ic_resp_rdata(ram_mem_data_i),
         .ic_resp_hit(ram_mem_complete_i),
         // D-cache

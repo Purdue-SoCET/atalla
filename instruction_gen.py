@@ -299,12 +299,18 @@ if __name__ == "__main__":
     # Example tests
     nop = {"opcode": 0b0110001, "rs1": 0, "rd": 0, "rs2": 0}
     halt = {"opcode": 0b0110010, "rs1": 0, "rd": 0, "rs2": 0}
-    ld_wd_128 = {"opcode": 0b0101001, "rs1": 0, "rd": 1, "imm12": 128}
-    st_wd_half_132 = {"opcode": 0b0101100, "rs1": 0, "rd": 3, "imm12": 132}
-    int_to_bf = {"opcode": 0b0010101, "rs1": 1, "rs2": 0, "rd": 3}
+    st_wd_200 = {"opcode": 0b0101010, "rs1": 0, "rd": 1, "imm12": 200}
+    st_wd_204 = {"opcode": 0b0101010, "rs1": 0, "rd": 3, "imm12": 204}
+    st_wd_208 = {"opcode": 0b0101010, "rs1": 0, "rd": 2, "imm12": 208}
+    addi_1 = {"opcode": 0b0010110, "rs1": 0, "imm12": 60, "rd": 1}
+    addi_2 = {"opcode": 0b0010110, "rs1": 0, "imm12": 1, "rd": 3}
+    jal = {"opcode": 0b0101101, "rd": 2, "imm25": 15}
 
-    print(f"ld_wd_128 {encode_instruction(ld_wd_128)}")
-    print(f"st_wd_half_132 {encode_instruction(st_wd_half_132)}")
-    print(f"int_to_bf {encode_instruction(int_to_bf)}")
+    print(f"st_wd_200 {encode_instruction(st_wd_200)}")
+    print(f"st_wd_204 {encode_instruction(st_wd_204)}")
+    print(f"st_wd_208 {encode_instruction(st_wd_208)}")
+    print(f"addi_1 {encode_instruction(addi_1)}")
+    print(f"addi_2 {encode_instruction(addi_2)}")
+    print(f"jal {encode_instruction(jal)}")
     print(f"nop {encode_instruction(nop)}")
     print(f"halt {encode_instruction(halt)}")

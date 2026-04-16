@@ -17,10 +17,8 @@ module system #()
 
     //from icache
     output logic         mem_req_valid_i,
-    output logic         mem_req_we_i,
     output logic [31:0]  mem_req_addr_i,
-    output logic [31:0]  mem_req_wdata_i,
-    input  logic [31:0]  mem_resp_rdata_i,
+    input  logic [63:0]  mem_resp_rdata_i,
     input  logic         mem_resp_hit_i,
 
     output logic halt,
@@ -93,22 +91,19 @@ module system #()
         .ram_mem_complete(ram_mem_complete_d)
     );
 
-    simple_icache ICACHE(
-        .clk(CLK), .rst_n(nRST),
-        // Request from fetch stage
-        .req_valid(imemREN),
-        .req_base_addr(imemaddr),
-        .req_ready(imemready),
-        // Response back to fetch stage
-        .resp_valid(ihit),
-        .resp_data(imemload),
-        // Interface to memory
-        .mem_req_valid(mem_req_valid_i),
-        .mem_req_we(mem_req_we_i),
-        .mem_req_addr(mem_req_addr_i),
-        .mem_req_wdata(mem_req_wdata_i),
-        .mem_resp_rdata(mem_resp_rdata_i),
-        .mem_resp_hit(mem_resp_hit_i)
+    icache ICACHE(
+        .CLK(CLK), .nRST(nRST),
+        //to/from scheduler (fetch)
+        .imemaddr(imemaddr),
+        .imemREN(imemREN),
+        .ihit(ihit),
+        .imemready(imemready),
+        .imemload(imemload),
+        //to/from memory
+        .iwait(!mem_resp_hit_i),
+        .iload(mem_resp_rdata_i),
+        .iREN(mem_req_valid_i),
+        .iaddr(mem_req_addr_i)
     );
 
 

@@ -1,129 +1,164 @@
-// module icache (
-//   input logic CLK, nRST,
-//   datapath_cache_if.icache dcif,
-//   caches_if.icache cif
-// );
-//     import cpu_types_pkg::*;
 
-//     // Two separate cache banks
-//     icache_frame [15:0] bank0_cache, n_bank0_cache;
-//     icache_frame [15:0] bank1_cache, n_bank1_cache;
+`include "atalla_isa_types.vh"
+
+module icache (
+  input logic CLK, nRST,
+  //to/from scheduler (fetch)
+  input word_t imemaddr,
+  input logic imemREN,
+  output logic ihit,
+  output logic imemready,
+  output instruction_packet_t imemload,
+  //to/from memory
+  input logic iwait,
+  input logic [63:0] iload,
+  output logic iREN,
+  output logic [31:0] iaddr
+);
+    typedef struct packed {
+        logic valid;
+        logic [18:0] tag;
+        logic [511:0] data;
+    } icache_frame;
+
+    icache_frame [127:0] cache, n_cache;
+
+    // --- Address Parsing (Directly from CPU for Same-Cycle Hits) ---
+    logic [31:0] addr_a, addr_b;
+    assign addr_a = imemaddr;
+    assign addr_b = addr_a + 32'd64; 
+
+    logic [18:0] tag_a, tag_b;
+    logic [6:0]  idx_a, idx_b;
+    logic [5:0]  off_a;
+
+    assign {tag_a, idx_a, off_a} = addr_a;
+    assign {tag_b, idx_b}        = addr_b[31:6];
+
+    // --- FSM Registers ---
+    typedef enum logic {IDLE, FILL} state_t;
+    state_t state, n_state;
+    logic [2:0] fill_count, n_fill_count;
     
-//     // Address parsing
-//     logic [31:0] base_addr, next_addr;
-//     logic is_bank1_start;
-    
-//     assign base_addr = dcif.imemaddr;
-//     assign next_addr = base_addr + 16; // +16 bytes pushes to the next 128-bit block
-    
-//     // Determine which bank holds the start of the 160-bit instruction
-//     // Assuming 16-byte blocks, bit [4] determines even/odd block (Bank 0 vs Bank 1)
-//     assign is_bank1_start = base_addr[4]; 
-    
-//     // Route addresses to the correct banks
-//     logic [31:0] addr_b0, addr_b1;
-//     assign addr_b0 = is_bank1_start ? next_addr : base_addr;
-//     assign addr_b1 = is_bank1_start ? base_addr : next_addr;
+    // Latched fill targets (Protects memory state if CPU flushes/changes addr mid-miss)
+    logic [6:0]  active_fill_idx, n_active_fill_idx;
+    logic [18:0] active_fill_tag, n_active_fill_tag;
+    logic [31:0] active_fill_addr, n_active_fill_addr;
 
-//     // Extract Index and Tag for each bank (Assumes 5:4 is index if 4 blocks per bank, adjust to your exact sizing)
-//     // Format: [31:X] Tag, [X-1:5] Index, [4] Bank, [3:0] Byte Offset
-//     logic [31:0] tag_b0, tag_b1;
-//     logic [3:0]  idx_b0, idx_b1; // Adjust index width based on cache size
+    // --- Safe & Elegant Chunk Calculation ---
+    logic [6:0] end_byte;
+    assign end_byte = {1'b0, off_a} + 7'd19; 
 
-//     assign tag_b0 = addr_b0[31:5]; // Simplification: replace with your exact tag slice
-//     assign idx_b0 = addr_b0[8:5];  // Simplification: replace with your exact index slice
-    
-//     assign tag_b1 = addr_b1[31:5];
-//     assign idx_b1 = addr_b1[8:5];
+    logic is_split;
+    assign is_split = end_byte[6]; 
 
-//     // Hit Logic
-//     logic hit_b0, hit_b1, full_hit;
-//     assign hit_b0 = bank0_cache[idx_b0].valid && (bank0_cache[idx_b0].tag == tag_b0);
-//     assign hit_b1 = bank1_cache[idx_b1].valid && (bank1_cache[idx_b1].tag == tag_b1);
-//     assign full_hit = hit_b0 && hit_b1;
+    logic [2:0] last_chunk_a, last_chunk_b;
+    assign last_chunk_a = is_split ? 3'd7 : end_byte[5:3]; 
+    assign last_chunk_b = end_byte[5:3];
 
-//     // STATE MACHINE
-//     typedef enum logic [1:0] {REQ, FETCH_B0, FETCH_B1} istate;
-//     istate state, n_state;
+    // --- Strictly Registered Hit Logic ---
+    logic hit_a, hit_b, full_hit;
 
-//     always_ff @(posedge CLK, negedge nRST) begin
-//         if (!nRST) begin
-//             state <= REQ;
-//             bank0_cache <= '0;
-//             bank1_cache <= '0;
-//         end else begin
-//             state <= n_state;
-//             bank0_cache <= n_bank0_cache;
-//             bank1_cache <= n_bank1_cache;
-//         end
-//     end
+    // Hit A: True if already in cache, OR if it just finished latching during a fill
+    assign hit_a = (cache[idx_a].valid && (cache[idx_a].tag == tag_a)) ||
+                   (state == FILL && (active_fill_idx == idx_a) && (active_fill_tag == tag_a) &&
+                    (fill_count > last_chunk_a)); // > ensures data is safely latched!
 
-//     always_comb begin
-//         // Defaults
-//         n_bank0_cache = bank0_cache;
-//         n_bank1_cache = bank1_cache;
-//         n_state = state;
-//         cif.iREN = 0;
-//         cif.iaddr = 32'b0;
+    // Hit B: True if already in cache, OR if it just finished latching during a fill
+    assign hit_b = (cache[idx_b].valid && (cache[idx_b].tag == tag_b)) ||
+                   (state == FILL && (active_fill_idx == idx_b) && (active_fill_tag == tag_b) &&
+                    (fill_count > last_chunk_b));
 
-//         case (state)
-//             REQ: begin
-//                 if (!full_hit) begin
-//                     // Decide which bank to fetch first based on which one missed
-//                     if (!hit_b0)      n_state = FETCH_B0;
-//                     else if (!hit_b1) n_state = FETCH_B1;
-//                 end
-//             end
-            
-//             FETCH_B0: begin
-//                 cif.iREN = 1;
-//                 cif.iaddr = {addr_b0[31:4], 4'b0000}; // Block aligned memory address
-                
-//                 if (!cif.iwait) begin
-//                     n_bank0_cache[idx_b0].valid = 1;
-//                     n_bank0_cache[idx_b0].tag   = tag_b0;
-//                     n_bank0_cache[idx_b0].data  = cif.iload; // 128-bit load
-                    
-//                     // If Bank 1 also missed, fetch it next. Otherwise, return to REQ.
-//                     if (!hit_b1) n_state = FETCH_B1;
-//                     else         n_state = REQ;
-//                 end
-//             end
-            
-//             FETCH_B1: begin
-//                 cif.iREN = 1;
-//                 cif.iaddr = {addr_b1[31:4], 4'b0000}; // Block aligned memory address
-                
-//                 if (!cif.iwait) begin
-//                     n_bank1_cache[idx_b1].valid = 1;
-//                     n_bank1_cache[idx_b1].tag   = tag_b1;
-//                     n_bank1_cache[idx_b1].data  = cif.iload; // 128-bit load
-                    
-//                     n_state = REQ; // Both banks are now valid
-//                 end
-//             end
-//         endcase
-//     end
+    assign full_hit = is_split ? (hit_a && hit_b) : hit_a;
 
-//     // DATA READOUT LOGIC
-//     logic [255:0] merged_data;
-//     logic [1:0]   word_offset;
-    
-//     always_comb begin
-//         dcif.ihit = (state == REQ) ? full_hit : 0;
+    // --- Sequential Logic ---
+    always_ff @(posedge CLK, negedge nRST) begin
+        if (!nRST) begin
+            state <= IDLE;
+            cache <= '0;
+            fill_count <= '0;
+            active_fill_idx <= '0;
+            active_fill_tag <= '0;
+            active_fill_addr <= '0;
+        end else begin
+            state <= n_state;
+            cache <= n_cache;
+            fill_count <= n_fill_count;
+            active_fill_idx <= n_active_fill_idx;
+            active_fill_tag <= n_active_fill_tag;
+            active_fill_addr <= n_active_fill_addr;
+        end
+    end
+
+    // --- Next State and Control Logic ---
+    always_comb begin
+        n_state = state;
+        n_cache = cache;
+        n_fill_count = fill_count;
+        n_active_fill_idx = active_fill_idx;
+        n_active_fill_tag = active_fill_tag;
+        n_active_fill_addr = active_fill_addr;
         
-//         // Concatenate the two 128-bit blocks appropriately
-//         if (is_bank1_start) begin
-//             merged_data = {bank0_cache[idx_b0].data, bank1_cache[idx_b1].data};
-//         end else begin
-//             merged_data = {bank1_cache[idx_b1].data, bank0_cache[idx_b0].data};
-//         end
+        iREN   = (state == FILL);
+        iaddr  = active_fill_addr; 
+        
+        // ihit combinationally gated by CPU Read Enable
+        ihit  = (imemREN && full_hit);
 
-//         // Shift the merged 256-bit bus based on the starting word offset
-//         // Extract the exact 160 bits needed
-//         word_offset = base_addr[3:2]; 
-//         dcif.imemload = merged_data >> (word_offset * 32); 
-//         // Note: dcif.imemload must be explicitly defined as logic [159:0] in your interface
-//     end
+        case (state)
+            IDLE: begin
+                if (imemREN) begin
+                    if (!hit_a) begin
+                        n_state = FILL;
+                        n_fill_count = 0;
+                        n_active_fill_idx = idx_a;
+                        n_active_fill_tag = tag_a;
+                        n_active_fill_addr = {addr_a[31:6], 6'b0};
+                        n_cache[idx_a].valid = 0; 
+                    end else if (is_split && !hit_b) begin
+                        n_state = FILL;
+                        n_fill_count = 0;
+                        n_active_fill_idx = idx_b;
+                        n_active_fill_tag = tag_b;
+                        n_active_fill_addr = {addr_b[31:6], 6'b0};
+                        n_cache[idx_b].valid = 0;
+                    end
+                end
+            end
 
-// endmodule
+            FILL: begin
+                if (!iwait) begin
+                    n_cache[active_fill_idx].data[(fill_count*64) +: 64] = iload;
+                    n_fill_count = fill_count + 1;
+                end
+
+                if (!iwait && fill_count == 3'd7) begin
+                    n_cache[active_fill_idx].valid = 1;
+                    n_cache[active_fill_idx].tag = active_fill_tag;
+                    
+                    // If CPU still wants this split instruction, queue up the next block
+                    if (imemREN && is_split && !hit_b && (idx_a == active_fill_idx)) begin
+                        n_fill_count = 0;
+                        n_active_fill_idx = idx_b;
+                        n_active_fill_tag = tag_b;
+                        n_active_fill_addr = {addr_b[31:6], 6'b0};
+                        n_cache[idx_b].valid = 0;
+                    end else begin
+                        n_state = IDLE;
+                        n_fill_count = 0;
+                    end
+                end
+            end
+        endcase
+    end
+
+    // --- Strictly Registered Data Output ---
+    logic [1023:0] virtual_window;
+    always_comb begin
+        // CRITICAL PATH CUT: Output strictly reads from the physical flip-flops.
+        // It never reads directly from iload or n_cache.
+        virtual_window = {cache[idx_b].data, cache[idx_a].data};
+        imemload = virtual_window[(off_a * 8) +: 160];
+    end
+
+endmodule
