@@ -12,7 +12,7 @@ VM_TIMING = 1
 # Coverage output mode?  0/1 (from --coverage)
 VM_COVERAGE = 0
 # Parallel builds?  0/1 (from --output-split)
-VM_PARALLEL_BUILDS = 0
+VM_PARALLEL_BUILDS = 1
 # Tracing output mode?  0/1 (from --trace-fst/--trace-saif/--trace-vcd)
 VM_TRACE = 1
 # Tracing output mode in FST format?  0/1 (from --trace-fst)
@@ -25,43 +25,41 @@ VM_TRACE_VCD = 1
 ### Object file lists...
 # Generated module classes, fast-path, compile with highest optimization
 VM_CLASSES_FAST += \
-	Vadd32_fp32accum_bf16_tb_softfloat \
-	Vadd32_fp32accum_bf16_tb_softfloat___024root__DepSet_hfcf6fb0c__0 \
-	Vadd32_fp32accum_bf16_tb_softfloat___024root__DepSet_h6a446fd1__0 \
-	Vadd32_fp32accum_bf16_tb_softfloat_systolic_array_4_input_adder_if__DepSet_h85ee98ed__0 \
-	Vadd32_fp32accum_bf16_tb_softfloat_systolic_array_4_input_adder_if__pi1__DepSet_h1decefab__0 \
-	Vadd32_fp32accum_bf16_tb_softfloat__main \
+  Vadd32_fp32accum_bf16_tb_softfloat \
+  Vadd32_fp32accum_bf16_tb_softfloat___024root__0 \
+  Vadd32_fp32accum_bf16_tb_softfloat___024root__1 \
+  Vadd32_fp32accum_bf16_tb_softfloat_systolic_array_4_input_adder_if__0 \
+  Vadd32_fp32accum_bf16_tb_softfloat_systolic_array_4_input_adder_if__pi1__0 \
+  Vadd32_fp32accum_bf16_tb_softfloat__main \
 
 # Generated module classes, non-fast-path, compile with low/medium optimization
 VM_CLASSES_SLOW += \
-	Vadd32_fp32accum_bf16_tb_softfloat__ConstPool_0 \
-	Vadd32_fp32accum_bf16_tb_softfloat___024root__Slow \
-	Vadd32_fp32accum_bf16_tb_softfloat___024root__DepSet_hfcf6fb0c__0__Slow \
-	Vadd32_fp32accum_bf16_tb_softfloat___024root__DepSet_h6a446fd1__0__Slow \
-	Vadd32_fp32accum_bf16_tb_softfloat_systolic_array_4_input_adder_if__Slow \
-	Vadd32_fp32accum_bf16_tb_softfloat_systolic_array_4_input_adder_if__DepSet_h85ee98ed__0__Slow \
-	Vadd32_fp32accum_bf16_tb_softfloat_systolic_array_4_input_adder_if__pi1__Slow \
-	Vadd32_fp32accum_bf16_tb_softfloat_systolic_array_4_input_adder_if__pi1__DepSet_h1decefab__0__Slow \
+  Vadd32_fp32accum_bf16_tb_softfloat__ConstPool__0__Slow \
+  Vadd32_fp32accum_bf16_tb_softfloat___024root__Slow \
+  Vadd32_fp32accum_bf16_tb_softfloat___024root__0__Slow \
+  Vadd32_fp32accum_bf16_tb_softfloat_systolic_array_4_input_adder_if__Slow \
+  Vadd32_fp32accum_bf16_tb_softfloat_systolic_array_4_input_adder_if__0__Slow \
+  Vadd32_fp32accum_bf16_tb_softfloat_systolic_array_4_input_adder_if__pi1__Slow \
+  Vadd32_fp32accum_bf16_tb_softfloat_systolic_array_4_input_adder_if__pi1__0__Slow \
 
 # Generated support classes, fast-path, compile with highest optimization
 VM_SUPPORT_FAST += \
-	Vadd32_fp32accum_bf16_tb_softfloat__Trace__0 \
+  Vadd32_fp32accum_bf16_tb_softfloat__Trace__0 \
 
 # Generated support classes, non-fast-path, compile with low/medium optimization
 VM_SUPPORT_SLOW += \
-	Vadd32_fp32accum_bf16_tb_softfloat__Syms \
-	Vadd32_fp32accum_bf16_tb_softfloat__Trace__0__Slow \
-	Vadd32_fp32accum_bf16_tb_softfloat__TraceDecls__0__Slow \
+  Vadd32_fp32accum_bf16_tb_softfloat__Syms__Slow \
+  Vadd32_fp32accum_bf16_tb_softfloat__Trace__0__Slow \
+  Vadd32_fp32accum_bf16_tb_softfloat__TraceDecls__0__Slow \
 
 # Global classes, need linked once per executable, fast-path, compile with highest optimization
 VM_GLOBAL_FAST += \
-	verilated \
-	verilated_vcd_c \
-	verilated_timing \
-	verilated_threads \
+  verilated \
+  verilated_vcd_c \
+  verilated_timing \
+  verilated_threads \
 
 # Global classes, need linked once per executable, non-fast-path, compile with low/medium optimization
 VM_GLOBAL_SLOW += \
-
 
 # Verilated -*- Makefile -*-

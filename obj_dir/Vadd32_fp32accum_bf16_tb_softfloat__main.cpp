@@ -1,5 +1,5 @@
 // Verilated -*- C++ -*-
-// DESCRIPTION: main() calling loop, created with Verilator --main
+// DESCRIPTION: Verilator output: main() simulation loop, created with --main
 
 #include "verilated.h"
 #include "Vadd32_fp32accum_bf16_tb_softfloat.h"
@@ -11,13 +11,14 @@ int main(int argc, char** argv, char**) {
     Verilated::debug(0);
     const std::unique_ptr<VerilatedContext> contextp{new VerilatedContext};
     contextp->traceEverOn(true);
+    contextp->threads(8);
     contextp->commandArgs(argc, argv);
 
     // Construct the Verilated model, from Vtop.h generated from Verilating
     const std::unique_ptr<Vadd32_fp32accum_bf16_tb_softfloat> topp{new Vadd32_fp32accum_bf16_tb_softfloat{contextp.get(), ""}};
 
     // Simulate until $finish
-    while (!contextp->gotFinish()) {
+    while (VL_LIKELY(!contextp->gotFinish())) {
         // Evaluate model
         topp->eval();
         // Advance time
@@ -25,7 +26,7 @@ int main(int argc, char** argv, char**) {
         contextp->time(topp->nextTimeSlot());
     }
 
-    if (!contextp->gotFinish()) {
+    if (VL_LIKELY(!contextp->gotFinish())) {
         VL_DEBUG_IF(VL_PRINTF("+ Exiting without $finish; no events left\n"););
     }
 

@@ -5,7 +5,6 @@
 // unless using verilator public meta comments.
 // Suggest use Vadd32_fp32accum_bf16_tb_softfloat.h instead.
 
-
 #ifndef VERILATED_VADD32_FP32ACCUM_BF16_TB_SOFTFLOAT__PCH_H_
 #define VERILATED_VADD32_FP32ACCUM_BF16_TB_SOFTFLOAT__PCH_H_  // guard
 

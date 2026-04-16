@@ -19,7 +19,7 @@
 #include "Vadd32_fp32accum_bf16_tb_softfloat_systolic_array_4_input_adder_if__pi1.h"
 
 // SYMS CLASS (contains all model state)
-class alignas(VL_CACHE_LINE_BYTES)Vadd32_fp32accum_bf16_tb_softfloat__Syms final : public VerilatedSyms {
+class alignas(VL_CACHE_LINE_BYTES) Vadd32_fp32accum_bf16_tb_softfloat__Syms final : public VerilatedSyms {
   public:
     // INTERNAL STATE
     Vadd32_fp32accum_bf16_tb_softfloat* const __Vm_modelp;
@@ -27,6 +27,12 @@ class alignas(VL_CACHE_LINE_BYTES)Vadd32_fp32accum_bf16_tb_softfloat__Syms final
     uint32_t __Vm_baseCode = 0;  ///< Used by trace routines when tracing multiple models
     VlDeleter __Vm_deleter;
     bool __Vm_didInit = false;
+
+    // MULTI-THREADING
+    VlThreadPool* __Vm_threadPoolp;
+    bool __Vm_even_cycle__ico = false;
+    bool __Vm_even_cycle__act = false;
+    bool __Vm_even_cycle__nba = false;
 
     // MODULE INSTANCE STATE
     Vadd32_fp32accum_bf16_tb_softfloat___024root TOP;
@@ -47,7 +53,7 @@ class alignas(VL_CACHE_LINE_BYTES)Vadd32_fp32accum_bf16_tb_softfloat__Syms final
     ~Vadd32_fp32accum_bf16_tb_softfloat__Syms();
 
     // METHODS
-    const char* name() { return TOP.name(); }
+    const char* name() const { return TOP.vlNamep; }
 };
 
 #endif  // guard

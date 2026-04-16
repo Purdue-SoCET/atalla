@@ -61,11 +61,11 @@ void Vadd32_fp32accum_bf16_tb_softfloat::eval_step() {
     vlSymsp->__Vm_activity = true;
     vlSymsp->__Vm_deleter.deleteAll();
     if (VL_UNLIKELY(!vlSymsp->__Vm_didInit)) {
-        vlSymsp->__Vm_didInit = true;
         VL_DEBUG_IF(VL_DBG_MSGF("+ Initial\n"););
         Vadd32_fp32accum_bf16_tb_softfloat___024root___eval_static(&(vlSymsp->TOP));
         Vadd32_fp32accum_bf16_tb_softfloat___024root___eval_initial(&(vlSymsp->TOP));
         Vadd32_fp32accum_bf16_tb_softfloat___024root___eval_settle(&(vlSymsp->TOP));
+        vlSymsp->__Vm_didInit = true;
     }
     VL_DEBUG_IF(VL_DBG_MSGF("+ Eval\n"););
     Vadd32_fp32accum_bf16_tb_softfloat___024root___eval(&(vlSymsp->TOP));
@@ -75,7 +75,7 @@ void Vadd32_fp32accum_bf16_tb_softfloat::eval_step() {
 
 //============================================================
 // Events and timing
-bool Vadd32_fp32accum_bf16_tb_softfloat::eventsPending() { return !vlSymsp->TOP.__VdlySched.empty(); }
+bool Vadd32_fp32accum_bf16_tb_softfloat::eventsPending() { return !vlSymsp->TOP.__VdlySched.empty() && !contextp()->gotFinish(); }
 
 uint64_t Vadd32_fp32accum_bf16_tb_softfloat::nextTimeSlot() { return vlSymsp->TOP.__VdlySched.nextTimeSlot(); }
 
@@ -100,13 +100,13 @@ VL_ATTR_COLD void Vadd32_fp32accum_bf16_tb_softfloat::final() {
 
 const char* Vadd32_fp32accum_bf16_tb_softfloat::hierName() const { return vlSymsp->name(); }
 const char* Vadd32_fp32accum_bf16_tb_softfloat::modelName() const { return "Vadd32_fp32accum_bf16_tb_softfloat"; }
-unsigned Vadd32_fp32accum_bf16_tb_softfloat::threads() const { return 1; }
+unsigned Vadd32_fp32accum_bf16_tb_softfloat::threads() const { return 8; }
 void Vadd32_fp32accum_bf16_tb_softfloat::prepareClone() const { contextp()->prepareClone(); }
 void Vadd32_fp32accum_bf16_tb_softfloat::atClone() const {
-    contextp()->threadPoolpOnClone();
+    vlSymsp->__Vm_threadPoolp = static_cast<VlThreadPool*>(contextp()->threadPoolpOnClone());
 }
 std::unique_ptr<VerilatedTraceConfig> Vadd32_fp32accum_bf16_tb_softfloat::traceConfig() const {
-    return std::unique_ptr<VerilatedTraceConfig>{new VerilatedTraceConfig{false, false, false}};
+    return std::unique_ptr<VerilatedTraceConfig>{new VerilatedTraceConfig{true, false, false}};
 };
 
 //============================================================
@@ -125,7 +125,7 @@ VL_ATTR_COLD static void trace_init(void* voidSelf, VerilatedVcd* tracep, uint32
             "Turning on wave traces requires Verilated::traceEverOn(true) call before time 0.");
     }
     vlSymsp->__Vm_baseCode = code;
-    tracep->pushPrefix(std::string{vlSymsp->name()}, VerilatedTracePrefixType::SCOPE_MODULE);
+    tracep->pushPrefix(vlSymsp->name(), VerilatedTracePrefixType::SCOPE_MODULE);
     Vadd32_fp32accum_bf16_tb_softfloat___024root__trace_decl_types(tracep);
     Vadd32_fp32accum_bf16_tb_softfloat___024root__trace_init_top(vlSelf, tracep);
     tracep->popPrefix();
@@ -141,6 +141,6 @@ VL_ATTR_COLD void Vadd32_fp32accum_bf16_tb_softfloat::traceBaseModel(VerilatedTr
             " use --trace-fst with VerilatedFst object, and --trace-vcd with VerilatedVcd object");
     }
     stfp->spTrace()->addModel(this);
-    stfp->spTrace()->addInitCb(&trace_init, &(vlSymsp->TOP));
+    stfp->spTrace()->addInitCb(&trace_init, &(vlSymsp->TOP), name(), false, 1404);
     Vadd32_fp32accum_bf16_tb_softfloat___024root__trace_register(&(vlSymsp->TOP), stfp->spTrace());
 }

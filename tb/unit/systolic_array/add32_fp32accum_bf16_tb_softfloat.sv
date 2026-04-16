@@ -1,13 +1,19 @@
 `timescale 1ns/1ps
 `include "systolic_array_4_input_adder_if.vh"
 
+/* Run: 
+
+ verilator -Irtl/include/systolic_array --binary -j 0 -Wall -Wno-fatal --timing --top-module add32_fp32accum_bf16_tb_softfloat tb/unit/systolic_array/add32_fp32accum_bf16_tb_softfloat.sv rtl/modules/systolic_array/reducer.sv rtl/modules/systolic_array/sysarr_4_input_fp_adder.sv rtl/modules/systolic_array/add32_FPADD4.sv --trace
+
+*/
+
 module add32_fp32accum_bf16_tb_softfloat;
 
     // --- Params ---
     localparam PERIOD = 2;
     localparam LATENCY = 14; // Adjusted for pipeline depth
-    localparam GRS = 1;
-    localparam PRECISION_BITS = 100;
+    localparam GRS = 0;
+    localparam PRECISION_BITS = 3;
     localparam MANTISSA_SIZE = 23;
 
     logic tb_clk = 0;
@@ -33,6 +39,11 @@ module add32_fp32accum_bf16_tb_softfloat;
     integer fail_fd;
     int total_processed = 0;
 
+    // Numerical Error Diagnostics
+    real total_num_diff;
+    real largest_num_diff;
+    real num_diff; 
+
     // DUT Signals
     logic [31:0][15:0] tb_inputs;
     logic [15:0] tb_result;
@@ -53,11 +64,44 @@ module add32_fp32accum_bf16_tb_softfloat;
         return (val[14:7] == 8'hFF) && (val[6:0] != 7'h0);
     endfunction
 
-    function automatic longint get_ulp_distance(logic [15:0] a, logic [15:0] b);
-        longint int_a, int_b;
-        int_a = (a[15]) ? (64'h7FFFFFFF - a[14:0]) : (64'h80000000 + a[14:0]);
-        int_b = (b[15]) ? (64'h7FFFFFFF - b[14:0]) : (64'h80000000 + b[14:0]);
-        return (int_a > int_b) ? (int_a - int_b) : (int_b - int_a);
+    function get_exponent(input logic [15:0] val);
+        return val[14:7];
+    endfunction
+
+    function automatic longint unsigned get_ulp_distance(
+        input logic [15:0] hw_out,   // your systolic array BF16 output
+        input logic [15:0] ref_out   // bf16(fp64_accumulate(bf16_inputs))
+    );
+        longint unsigned int_hw, int_ref;
+
+        // Normalize -0 to +0
+        if (hw_out  == 16'h8000) hw_out  = 16'h0000;
+        if (ref_out == 16'h8000) ref_out = 16'h0000;
+
+        // Map to ordered integer space
+        int_hw  = (hw_out[15])  ? (16'h7FFF - hw_out[14:0])  : (16'h8000 + hw_out[14:0]);
+        int_ref = (ref_out[15]) ? (16'h7FFF - ref_out[14:0]) : (16'h8000 + ref_out[14:0]);
+
+        return (int_hw > int_ref) ? (int_hw - int_ref) : (int_ref - int_hw);
+
+    endfunction
+
+    function automatic shortreal get_bf16_numerical_difference(logic [15:0] a, logic [15:0] b);
+        shortreal float_a, float_b, diff;
+
+        // Losslessly convert bf16 to 32-bit float by padding 16 zeros at the LSB
+        float_a = $bitstoshortreal({a, 16'h0000});
+        float_b = $bitstoshortreal({b, 16'h0000});
+
+        // Calculate difference
+        diff = float_a - float_b;
+
+        // Return absolute value
+        if (diff < 0.0) begin
+            return -diff;
+        end else begin
+            return diff;
+        end
     endfunction
 
     // --- Driver Process ---
@@ -139,12 +183,15 @@ module add32_fp32accum_bf16_tb_softfloat;
                 end else begin
                     match = (tb_result === check_entry.expected);
                     ulp = get_ulp_distance(tb_result, check_entry.expected);
+                    num_diff = get_bf16_numerical_difference(tb_result, check_entry.expected);
                 end
 
                 // Update Stats
                 total_ulp_diff += ulp;
+                total_num_diff += num_diff; 
                 if (ulp > 1) ulp_big_count++;
                 if (ulp > largest_ulp) largest_ulp = int'(ulp);
+                if (num_diff > largest_num_diff) largest_num_diff = num_diff;
 
                 if (!match) begin
                     if (fail_count < 20)
@@ -153,6 +200,9 @@ module add32_fp32accum_bf16_tb_softfloat;
                     if (fail_fd != 0) begin
                         for (int k=0; k<32; k++) $fwrite(fail_fd, "%h,", check_entry.inputs[k]);
                         $fwrite(fail_fd, "%h,%h,%0d\n", check_entry.expected, tb_result, ulp);
+
+                        // Write the exponent of result vs expected for deeper diagnostics
+                        $fwrite(fail_fd, "Exponent - Got: %h, Expected: %h\n", tb_result[14:7], check_entry.expected[14:7]);
                     end
                     fail_count++;
                 end else begin

@@ -36,7 +36,10 @@ module sysarr_4_input_fp_adder #(
     logic [IN_EXPONENT_SIZE:0]   y_shift, m_shift, n_shift;
     logic [NEW_MANT_WIDTH-1:0] x_mant, y_shifted, m_shifted, n_shifted;
     logic [NEW_MANT_WIDTH-1:0] y_mant_base, m_mant_base, n_mant_base;
-    logic sticky_y, sticky_m, sticky_n;
+    logic [1:0] sticky_y, sticky_m, sticky_n;
+    logic y_sticky_nonzero, m_sticky_nonzero, n_sticky_nonzero; 
+    logic ym_mismatch, yn_mismatch, mn_mismatch; 
+    logic any_mismatch, any_nonzero;
     logic y_op, m_op, n_op;
     
     // Exception signals
@@ -45,7 +48,8 @@ module sysarr_4_input_fp_adder #(
 
     // --- Pipeline Stage 1 Registers (Compressed Vectors) ---
     logic [IN_EXPONENT_SIZE-1:0]  st1_a_e;
-    logic st1_a_s, st1_align_sticky, st1_special_case;
+    logic st1_a_s, st1_special_case;
+    logic [1:0] st1_align_sticky_n, st1_align_sticky;
     logic [RES_WIDTH-1:0] st1_special_result;
     logic [SUM_WIDTH-1:0] st1_sum_vec;
     logic [SUM_WIDTH-1:0] st1_carry_vec;
@@ -136,19 +140,50 @@ module sysarr_4_input_fp_adder #(
         m_mant_base = { (|exp_mx), frac_mx, {MANTISSA_SIZE-IN_MANTISSA_SIZE{1'b0}} ,{PRECISION_BITS{1'b0}}};
         n_mant_base = { (|exp_nx), frac_nx, {MANTISSA_SIZE-IN_MANTISSA_SIZE{1'b0}} ,{PRECISION_BITS{1'b0}}};
 
-        sticky_y  = |(y_mant_base & ~({NEW_MANT_WIDTH{1'b1}} << y_shift));
         y_shifted = ((y_shift >= NEW_MANT_WIDTH) ? 0 : (y_mant_base >> y_shift));
-        // y_shifted[0] = y_shifted[0] | sticky_y; // OR sticky bit into LSB of shifted mantissa
-
-        sticky_m  = |(m_mant_base & ~({NEW_MANT_WIDTH{1'b1}} << m_shift));
+        
         m_shifted = ((m_shift >= NEW_MANT_WIDTH) ? 0 : (m_mant_base >> m_shift));
-        // m_shifted[0] = m_shifted[0] | sticky_m; // OR sticky bit into LSB of shifted mantissa
 
-        sticky_n  = |(n_mant_base & ~({NEW_MANT_WIDTH{1'b1}} << n_shift));
         n_shifted = ((n_shift >= NEW_MANT_WIDTH) ? 0 : (n_mant_base >> n_shift));
-        // n_shifted[0] = n_shifted[0] | sticky_n; // OR sticky bit into LSB of shifted mantissa
         
         y_op = sign_x ^ sign_y; m_op = sign_x ^ sign_mx; n_op = sign_x ^ sign_nx;
+
+        sticky_y  = {y_op, |(y_mant_base & ~({NEW_MANT_WIDTH{1'b1}} << y_shift))};
+        sticky_m  = {m_op, |(m_mant_base & ~({NEW_MANT_WIDTH{1'b1}} << m_shift))};
+        sticky_n  = {n_op, |(n_mant_base & ~({NEW_MANT_WIDTH{1'b1}} << n_shift))};
+
+        y_sticky_nonzero = sticky_y[0];
+        m_sticky_nonzero = sticky_m[0];
+        n_sticky_nonzero = sticky_n[0];
+
+        ym_mismatch = y_sticky_nonzero & m_sticky_nonzero & (sticky_y[1] != sticky_m[1]);
+        yn_mismatch = y_sticky_nonzero & n_sticky_nonzero & (sticky_y[1] != sticky_n[1]);
+        mn_mismatch = m_sticky_nonzero & n_sticky_nonzero & (sticky_m[1] != sticky_n[1]);
+
+        any_mismatch = ym_mismatch | yn_mismatch | mn_mismatch;
+        any_nonzero  = y_sticky_nonzero | m_sticky_nonzero | n_sticky_nonzero;
+
+        if (!any_nonzero || any_mismatch) begin
+            st1_align_sticky_n = 2'b00;
+        end else begin
+            if      (y_sticky_nonzero) st1_align_sticky_n = sticky_y;
+            else if (m_sticky_nonzero) st1_align_sticky_n = sticky_m;
+            else                       st1_align_sticky_n = sticky_n;
+        end
+
+        if (st1_align_sticky_n[0]) begin
+            if (!st1_align_sticky_n[1]) begin
+                // Positive sticky: assign to a same-sign operand (y_op=0 means same sign as x)
+                if      (!y_op) y_shifted[0] = 1'b1;
+                else if (!m_op) m_shifted[0] = 1'b1;
+                else if (!n_op) n_shifted[0] = 1'b1;
+            end else begin
+                // Negative sticky: assign to an inverted operand (y_op=1 means opposite sign)
+                if      (y_op) y_shifted[0] = 1'b1;
+                else if (m_op) m_shifted[0] = 1'b1;
+                else if (n_op) n_shifted[0] = 1'b1;
+            end
+        end
 
         // -- COMPRESS (CSA Tree) --
         op_x = {3'b000, x_mant};
@@ -170,11 +205,11 @@ module sysarr_4_input_fp_adder #(
             st1_sum_vec <= 0; st1_carry_vec <= 0; st1_hot_ones <= 0;
         end else begin
             st1_a_s <= sign_x; st1_a_e <= exp_x; 
-            st1_align_sticky <= sticky_y | sticky_m | sticky_n;
+            st1_align_sticky <= st1_align_sticky_n;
             st1_special_case <= special_case; st1_special_result <= special_result;
             st1_sum_vec   <= csa_s2;
             st1_carry_vec <= csa_c2;
-            st1_hot_ones  <= (y_op + m_op + n_op);
+            st1_hot_ones  <= (y_op && ~sticky_y) + (m_op && ~sticky_m) + (n_op && ~sticky_n);
         end
     end
 
@@ -232,9 +267,16 @@ module sysarr_4_input_fp_adder #(
             // Generate GRS bits and modify rounding logic accordingly (not implemented in this snippet for brevity)
             guard_bit = norm_val[SUM_WIDTH-2-MANTISSA_SIZE];
             round_bit = norm_val[SUM_WIDTH-3-MANTISSA_SIZE];
-            sticky_bit = (|norm_val[SUM_WIDTH-4-MANTISSA_SIZE : 0]) | st2_sticky;
             // sticky_bit = (|norm_val[SUM_WIDTH-4-MANTISSA_SIZE : 0]);
             l_bit = norm_val[SUM_WIDTH-1-MANTISSA_SIZE];
+
+            if (lead_zeros >= PRECISION_BITS) begin
+                norm_val[lead_zeros] = 1'b0;
+                sticky_bit = |norm_val[SUM_WIDTH-4-MANTISSA_SIZE : 0];
+            end
+            else begin
+                sticky_bit = (|norm_val[SUM_WIDTH-4-MANTISSA_SIZE : 0]) | st2_sticky;
+            end
 
             round_up = guard_bit & (round_bit | sticky_bit | l_bit); // Round to even on tie
 
