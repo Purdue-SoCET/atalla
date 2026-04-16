@@ -107,7 +107,7 @@ echo ""
 echo "[COMPARE] Running PyTorch comparison ..."
 echo ""
 
-$PYTHON -m kernels.gemms.compare_gemms \
+$PYTHON -m kernels.gemms.compare_gemms_64x64 \
     --output_mem_file "$OUT_MEM" \
     --debug "$DEBUG_ARG" \
     && COMPARE_EXIT=0 || COMPARE_EXIT=$?

@@ -64,11 +64,24 @@ def main():
     OFF_A_TABLE = OFF_B_TABLE + NUM_TILE_K    * NUM_TILE_COLS * 4
     OFF_C_TABLE = OFF_A_TABLE + NUM_TILE_ROWS * NUM_TILE_K    * 4
 
-    A_full = np.array([[float(r + c) for c in range(FULL_K)]
-                       for r in range(FULL_ROWS)], dtype=np.float64)
-    B_full = np.array([[float((r + 1) * (c + 1)) for c in range(FULL_COLS)]
-                       for r in range(FULL_K)], dtype=np.float64)
-    C_expected = A_full @ B_full
+    def to_bf16_f32(x: np.ndarray) -> np.ndarray:
+        """Round float64/float32 array to bf16 precision, stored as float32."""
+        x = np.asarray(x, dtype=np.float32)
+        u = x.view(np.uint32)
+        lsb = (u >> 16) & np.uint32(1)
+        u_round = u + np.uint32(0x7FFF) + lsb
+        u_bf16 = (u_round & np.uint32(0xFFFF0000)).astype(np.uint32)
+        return u_bf16.view(np.float32)
+
+    A_full_f64 = np.array([[float(r + c) for c in range(FULL_K)]
+                            for r in range(FULL_ROWS)], dtype=np.float64)
+    B_full_f64 = np.array([[float((r + 1) * (c + 1)) for c in range(FULL_COLS)]
+                            for r in range(FULL_K)], dtype=np.float64)
+
+    A_full = to_bf16_f32(A_full_f64.astype(np.float32))
+    B_full = to_bf16_f32(B_full_f64.astype(np.float32))
+
+    C_expected = A_full.astype(np.float64) @ B_full.astype(np.float64)
 
     if args.check is not None:
         check_output(

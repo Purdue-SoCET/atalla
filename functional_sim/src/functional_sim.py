@@ -392,12 +392,15 @@ def run(mem: Memory, sregs: ScalarRegisterFile, mregs: ScalarRegisterFile, vregs
             elif m.endswith(".vv"):
                 # ------------ GEMM ------------------------------
                 if (m == "gemm.vv"):
-                    # result = vregs.read(inst['vs1']) @ gemm_weights + vregs.read(inst['vs2'])
-                    # if not getattr(run, '_gemm_debug_done', False):
-                    #     print(f"DEBUG gemm.vv[0]: vs1={vregs.read(inst['vs1'])[:5]}, result[:5]={result[:5]}, num_weights={num_weights}", flush=True)
-                    #     run._gemm_debug_done = True
-                    # vregs.write(inst['vd'], result)
-                    vregs.write(inst['vd'], vregs.read(inst['vs1']) @ gemm_weights + vregs.read(inst['vs2']))
+                    vs1_vec = np.array(vregs.read(inst['vs1']), dtype=np.float32)
+                    vs2_vec = np.array(vregs.read(inst['vs2']), dtype=np.float32)
+
+                    vs1_trimmed = vs1_vec.copy()
+                    vs1_trimmed[num_weights:] = 0.0
+                               
+                    result = vs1_trimmed @ gemm_weights + vs2_vec
+                    vregs.write(inst['vd'], result)
+                    # vregs.write(inst['vd'], vregs.read(inst['vs1']) @ gemm_weights + vregs.read(inst['vs2']))
                 else:
                     src1 = vregs.read(inst['vs1'])
                     src2 = vregs.read(inst['vs2'])
@@ -424,16 +427,16 @@ def run(mem: Memory, sregs: ScalarRegisterFile, mregs: ScalarRegisterFile, vregs
             # ---------------- VI (WEIGHTS ONLY) ----------------
             elif (m == "lw.vi"):
                 src1 = vregs.read(inst['vs1'])
-    
+                if num_weights == 0:
+                    gemm_weights = np.zeros((32, 32), dtype=np.float32)
                 if num_weights < 32:
-                    # Initial fill: Place at the next available slot from left to right
-                    gemm_weights[:, num_weights] = src1
+                    col = src1.copy()
+                    col[len(src1):] = 0.0   # shouldn't be needed but be safe
+                    gemm_weights[:, num_weights] = col
                     num_weights += 1
                 else:
-                    # Matrix is full: Shift everything to the right and insert at the left (index 0)
-                    # gemm_weights[:, 1:] moves columns 0-30 to positions 1-31
-                    gemm_weights[:, 1:] = gemm_weights[:, :-1]
-                    gemm_weights[:, 0] = src1
+                    gemm_weights[:, :-1] = gemm_weights[:, 1:]
+                    gemm_weights[:, -1] = src1
             elif (m == "vmov.vts"):
                 src1 = vregs.read(inst['vs1'])
                 temp = fp32_to_hex(src1[inst['imm8']])

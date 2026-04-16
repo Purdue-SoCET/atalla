@@ -187,8 +187,12 @@ def sdma_store(
             if bank >= scpad.B:
                 break
             val = scpad.banks[bank][slot]
-            bits = struct.unpack('<I', struct.pack('<f', val))[0]
-            bits = bits >> 16
+            # bits = struct.unpack('<I', struct.pack('<f', val))[0]
+            # bits = bits >> 16
+            u = struct.unpack('<I', struct.pack('<f', val))[0]
+            lsb = (u >> 16) & 1
+            u = (u + 0x7FFF + lsb) & 0xFFFFFFFF
+            bits = u >> 16            
             #x_shifted = struct.unpack('<f', struct.pack('<I', bits & 0xFFFFFFFF))[0]
             g_addr = gmem_base + (i * (NC) + j) * 2
             gmem.write_data(g_addr, bits)
