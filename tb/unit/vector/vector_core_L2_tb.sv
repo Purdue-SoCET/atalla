@@ -115,10 +115,14 @@ module vector_core_L2_tb;
     `elsif TEST_MASKED3
         parameter string PROGRAM_PATH = "./tb/formal/vector/testcases/masked-unit-tests/masked_testing3";
         parameter int    DRAIN_CYCLES = 40;
+    `elsif TEST_WB
+        parameter string PROGRAM_PATH = "./tb/formal/vector/testcases/load-store/wb_test";
+        parameter int    DRAIN_CYCLES = 150;
     `else
         parameter string PROGRAM_PATH = "./tb/formal/vector/testcases/vector-vector/add_vv";
         parameter int    DRAIN_CYCLES = 40;
     `endif
+    
 
     parameter int TIMEOUT = 10000;
 
@@ -354,20 +358,28 @@ module vector_core_L2_tb;
     task automatic drive_vlsu_issue();
         for (int p = 0; p < 2; p++) begin
             if (dpi_get_sp_valid_in(p)) begin
+                int sp_port;
+                bit [15:0] addr_lo, addr_hi;
+                logic [SCPAD_ADDR_WIDTH-1:0] full_addr;
+
+                sp_port  = dpi_get_sp_sid(p);
+                addr_lo  = dpi_veggie_read_vector_elem(dpi_get_sp_rs1(p), 0);  // lower 16 bits
+                addr_hi  = dpi_veggie_read_vector_elem(dpi_get_sp_rs1(p), 1);  // upper bits
+                full_addr = {addr_hi[SCPAD_ADDR_WIDTH-17:0], addr_lo};          // combine to 20 bits
+
+                // Read store data from VRF[vd]
                 for (int e = 0; e < 32; e++)
                     tmp_vec[e] = dpi_veggie_read_vector_elem(dpi_get_sp_vd(p), e);
 
-                vif.vlsu_in.sched_req[p].valid = 1'b1;
-                vif.vlsu_in.sched_req[p].write = (dpi_get_sp_wen(p) == 1) ? 1'b1 : 1'b0;
-                vif.vlsu_in.sched_req[p].spad_addr = dpi_get_sp_sid(p);
-                vif.vlsu_in.sched_req[p].vdst = dpi_get_sp_vd(p);
-                vif.vlsu_in.sched_req[p].num_cols = dpi_get_sp_num_cols(p);
-                vif.vlsu_in.sched_req[p].row_id = dpi_get_sp_row_num(p);
+                vif.vlsu_in.sched_req[sp_port].valid      = 1'b1;
+                vif.vlsu_in.sched_req[sp_port].write       = (dpi_get_sp_wen(p) == 1) ? 1'b1 : 1'b0;
+                vif.vlsu_in.sched_req[sp_port].spad_addr   = full_addr;
+                vif.vlsu_in.sched_req[sp_port].vdst        = dpi_get_sp_vd(p);
+                vif.vlsu_in.sched_req[sp_port].num_cols    = dpi_get_sp_num_cols(p);
+                vif.vlsu_in.sched_req[sp_port].row_id      = dpi_get_sp_row_num(p);
 
-                vif.vlsu_in.vrf_data[p].data = pack_vreg(tmp_vec);
-                vif.vlsu_in.vrf_data[p].valid = 1'b1;
-            end else begin
-                clear_vlsu_port(p);
+                vif.vlsu_in.vrf_data[sp_port].data  = pack_vreg(tmp_vec);
+                vif.vlsu_in.vrf_data[sp_port].valid = 1'b1;
             end
         end
     endtask
@@ -545,7 +557,10 @@ module vector_core_L2_tb;
         `elsif TEST_STORE_LOAD
             for (int i = 0; i < 32; i++)
                 dpi_veggie_write_vector_elem(8'd0, i, 16'hBEEF);
-            $display("[TB] Preloaded: store_load (v0=BEEF)");
+            // Address register v10: spad_addr = 0x0040
+            dpi_veggie_write_vector_elem(8'd10, 0, 16'h0040);  // lower 16 bits
+            dpi_veggie_write_vector_elem(8'd10, 1, 16'h0000);  // upper 4 bits
+            $display("[TB] Preloaded: store_load (v0=BEEF, v10=addr 0x0040)");
 
         `elsif TEST_GEMM_BP
             for (int v = 0; v < 32; v++)
@@ -559,7 +574,9 @@ module vector_core_L2_tb;
         `elsif TEST_DRAM_BP
             for (int i = 0; i < 32; i++)
                 dpi_veggie_write_vector_elem(8'd0, i, 16'hBEEF);
-            $display("[TB] Preloaded: dram_bp (v0=BEEF)");
+            dpi_veggie_write_vector_elem(8'd10, 0, 16'h0040);
+            dpi_veggie_write_vector_elem(8'd10, 1, 16'h0000);
+            $display("[TB] Preloaded: dram_bp (v0=BEEF, v10=addr 0x0040)");
 
         `elsif TEST_MASKED0
             $display("[TB] Preloaded: masked_testing0 (mv.stm only)");
@@ -591,6 +608,17 @@ module vector_core_L2_tb;
                 dpi_veggie_write_vector_elem(8'd1, i, 16'h3F80);
             dpi_veggie_write_mask(8'd3, 32'h0000FFFF);
             $display("[TB] Preloaded: masked_testing3");
+
+       `elsif TEST_WB
+            for (int i = 0; i < 32; i++) begin
+                dpi_veggie_write_vector_elem(8'd0, i, 16'hFFFF);
+                dpi_veggie_write_vector_elem(8'd1, i, 16'hAAAA);
+            end
+            dpi_veggie_write_vector_elem(8'd10, 0, 16'h0040);
+            dpi_veggie_write_vector_elem(8'd10, 1, 16'h0000);
+            dpi_veggie_write_vector_elem(8'd11, 0, 16'h0080);
+            dpi_veggie_write_vector_elem(8'd11, 1, 16'h0000);
+            $display("[TB] Preloaded: wb_test (v0=FFFF, v1=AAAA, v10=addr0x40, v11=addr0x80)");
 
         `else
             for (int i = 0; i < 32; i++) begin
@@ -799,6 +827,14 @@ module vector_core_L2_tb;
                 $display("[TB]   v8[%0d] = %h (masked vi sub)", e, dpi_veggie_read_vector_elem(8'd8, e));
             for (int e = 0; e < 32; e++)
                 $display("[TB]   v9[%0d] = %h (masked vi mul)", e, dpi_veggie_read_vector_elem(8'd9, e));
+
+        `elsif TEST_WB
+            $display("[TB] WB Test - v2 (from bank 1, expect FFFF):");
+            for (int e = 0; e < 32; e++)
+                $display("[TB]   v2[%0d] = %h (expect FFFF)", e, dpi_veggie_read_vector_elem(8'd2, e));
+            $display("[TB] WB Test - v3 (from bank 2, expect AAAA):");
+            for (int e = 0; e < 32; e++)
+                $display("[TB]   v3[%0d] = %h (expect AAAA)", e, dpi_veggie_read_vector_elem(8'd3, e));
 
         `else
             for (int e = 0; e < 32; e++)
