@@ -5,6 +5,8 @@
 #include <queue>
 #include <memory>
 #include <unordered_map>
+#include <vector>
+#include <utility>
 #include <stdexcept>
 #include <cstdio>
 #include <cstdlib>
@@ -42,6 +44,14 @@ struct RamulatorWrapper {
     int      mem_tick_ratio;
     int      frontend_tick_ratio;
     uint64_t cycle_count;
+
+    // Read-request coalescing: multiple sub-block requests (e.g. two consecutive
+    // 32-byte AXI beats) that fall inside the same DRAM transaction granule
+    // (coalesce_unit bytes) share a single Ramulator CAS.  Each entry holds the
+    // list of (original_byte_addr, source_id) pairs waiting on that granule.
+    // The map is keyed on granule-aligned address.
+    Addr_t coalesce_unit = 64;   // bytes per DRAM transaction (DDR4 default)
+    std::unordered_map<Addr_t, std::vector<std::pair<Addr_t,int>>> coalesce_pending;
 };
 
 static inline uint64_t normalize_data(const RamulatorWrapper* wrapper, uint64_t v) {
@@ -58,13 +68,15 @@ ramulator_handle_t ramulator_init(const char* config_file) {
 
         std::string cfg = config_file ? config_file : "";
         if (cfg.find("hbm3") != std::string::npos || cfg.find("HBM3") != std::string::npos) {
-            wrapper->mode       = MemMode::HBM3_PC32;
-            wrapper->data_mask  = 0x0000'0000'FFFF'FFFFULL;
-            wrapper->data_bytes = 4;
+            wrapper->mode          = MemMode::HBM3_PC32;
+            wrapper->data_mask     = 0x0000'0000'FFFF'FFFFULL;
+            wrapper->data_bytes    = 4;
+            wrapper->coalesce_unit = 32;  // HBM3 PC32: 8-beat × 32-bit bus = 32 bytes
         } else {
-            wrapper->mode       = MemMode::DDR4_64;
-            wrapper->data_mask  = 0xFFFF'FFFF'FFFF'FFFFULL;
-            wrapper->data_bytes = 8;
+            wrapper->mode          = MemMode::DDR4_64;
+            wrapper->data_mask     = 0xFFFF'FFFF'FFFF'FFFFULL;
+            wrapper->data_bytes    = 8;
+            wrapper->coalesce_unit = 64;  // DDR4 x64: 8-beat × 64-bit bus = 64 bytes
         }
 
         wrapper->frontend.reset(Factory::create_frontend(config));
@@ -101,32 +113,59 @@ int ramulator_send_request(ramulator_handle_t handle,
         auto* wrapper = static_cast<RamulatorWrapper*>(handle);
         if (!wrapper) return 0;
 
-        if (req_type == 1) {
-            wrapper->functional_mem[addr] = normalize_data(wrapper, data);
-        }
-
         Addr_t original_addr = static_cast<Addr_t>(addr);
 
-        int captured_source_id = source_id;
-        auto callback = [wrapper, req_type, original_addr, captured_source_id](Request& req) {
-            if (req_type != 0) return;
+        // Writes: update functional memory and pass through directly.
+        if (req_type == 1) {
+            wrapper->functional_mem[original_addr] = normalize_data(wrapper, data);
 
-            uint64_t val = 0;
-            auto it = wrapper->functional_mem.find(original_addr);
-            if (it != wrapper->functional_mem.end()) {
-                val = normalize_data(wrapper, it->second);
-            } else {
-                val = normalize_data(wrapper, static_cast<uint64_t>(original_addr));
+            auto callback = [](Request& req) {};   // writes need no read-back
+            bool accepted = wrapper->frontend->receive_external_requests(
+                req_type, addr, source_id, callback
+            );
+            return accepted ? 1 : 0;
+        }
+
+        // Reads: coalesce sub-block requests that fall in the same DRAM granule.
+        // Two consecutive 32-byte AXI beats (e.g. 0x000 and 0x020) both address
+        // the same 64-byte DRAM transaction; without coalescing we would issue
+        // two CAS commands for the same row/bank and waste half the bus bandwidth.
+        Addr_t granule = original_addr & ~static_cast<Addr_t>(wrapper->coalesce_unit - 1);
+
+        auto map_it = wrapper->coalesce_pending.find(granule);
+        if (map_it != wrapper->coalesce_pending.end()) {
+            // A Ramulator request for this granule is already outstanding.
+            // Just register this beat's completion; no second CAS needed.
+            map_it->second.push_back({original_addr, source_id});
+            return 1;
+        }
+
+        // First request for this granule: insert into the coalesce map BEFORE
+        // calling into Ramulator so the callback (which fires synchronously in
+        // some implementations) can always find the entry.
+        wrapper->coalesce_pending[granule] = {{original_addr, source_id}};
+
+        auto callback = [wrapper, granule](Request& req) {
+            auto it = wrapper->coalesce_pending.find(granule);
+            if (it == wrapper->coalesce_pending.end()) return;
+
+            for (auto& [orig_addr, src_id] : it->second) {
+                wrapper->completed_requests.push({orig_addr, 0, src_id});
             }
-
-            wrapper->completed_requests.push({original_addr, val, captured_source_id});
+            wrapper->coalesce_pending.erase(it);
         };
 
         bool accepted = wrapper->frontend->receive_external_requests(
-            req_type, addr, source_id, callback
+            0, granule, source_id, callback
         );
 
-        return accepted ? 1 : 0;
+        if (!accepted) {
+            // Ramulator rejected the request (queue full). Roll back the map
+            // entry so the SV wrapper can retry next cycle.
+            wrapper->coalesce_pending.erase(granule);
+            return 0;
+        }
+        return 1;
     } catch (const std::exception& e) {
         fprintf(stderr, "[ramulator_send_request] ERROR: %s\n", e.what());
         return 0;

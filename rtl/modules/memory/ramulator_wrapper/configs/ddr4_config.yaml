@@ -11,12 +11,14 @@ MemorySystem:
     org:
       preset: DDR4_8Gb_x16
       channel: 1
-      rank: 2
+      rank: 1    # 2→1: eliminates rank-switching starvation; bg0/bg1 now alternate freely at tCCD_S=4
     timing:
       preset: DDR4_3200W
 
   Controller:
     impl: Generic
+    read_buffer_size: 256    # deep queue for bank-level parallelism (default was 32)
+    write_buffer_size: 64
     Scheduler:
       impl: FRFCFS
     RefreshManager:

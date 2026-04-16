@@ -108,7 +108,9 @@ endif
 SDMA_MEMINIT      ?=
 SDMA_MEMINIT_TYPE ?= bin
 SDMA_MEMINIT_BASE ?= 0
-BURST ?= 0
+BURST     ?= 0
+SR_DEPTH  ?= 8192
+N_BURST_SLOTS ?= 8192
 
 ifneq ($(SDMA_MEMINIT),)
   SDMA_MEMINIT_FLAGS := -G MEM_INIT_FILE="$(SDMA_MEMINIT)" \
@@ -367,6 +369,8 @@ sdma: ram_lib
 	        -sv_lib ./$(RAMULATOR_LIB) \
 	        -G CFG="$(CFG)" \
 	        -G USE_BURST=$(BURST) \
+	        -G SR_DEPTH=$(SR_DEPTH) \
+	        -G N_BURST_SLOTS=$(N_BURST_SLOTS) \
 	        $(SDMA_MEMINIT_FLAGS) \
 	        $(SCRATCH).test_sdma \
 	        -onfinish stop \
@@ -376,6 +380,8 @@ sdma: ram_lib
 	        -sv_lib ./$(RAMULATOR_LIB) \
 	        -G CFG="$(CFG)" \
 	        -G USE_BURST=$(BURST) \
+	        -G SR_DEPTH=$(SR_DEPTH) \
+	        -G N_BURST_SLOTS=$(N_BURST_SLOTS) \
 	        $(SDMA_MEMINIT_FLAGS) \
 	        $(SCRATCH).test_sdma \
 	        -do "run -all" || true; \

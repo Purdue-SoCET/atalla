@@ -27,8 +27,8 @@
 module ramulator_sv_wrapper #(
     parameter string  CONFIG_FILE    = "ramulator_config.yaml",
     parameter int     B_DEPTH        = 4,      // B-response FIFO depth
-    parameter int     SR_DEPTH       = 512,    // single-beat R-response FIFO depth
-    parameter int     N_BURST_SLOTS  = 512,     // concurrent read burst slots
+    parameter int     SR_DEPTH       = 8192,   // single-beat R-response FIFO depth
+    parameter int     N_BURST_SLOTS  = 8192,   // concurrent read burst slots
     // Optional preload — set MEM_INIT_FILE to a non-empty path and the
     // wrapper will populate functional_mem before simulation starts.
     //   "bin" — raw binary, loaded at MEM_INIT_BASE
