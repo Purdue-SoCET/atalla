@@ -31,6 +31,66 @@ module axi_write_top(
     sub_aw_channel_t head_d_aw;
     sub_w_channel_t  head_d_w;
 
+    // logic regarding single ready/valid to actual master
+    logic sp0_in_burst;
+    logic sp1_in_burst;
+    logic d_in_burst;
+    always_ff @(posedge CLK or negedge nRST) begin
+        if (!nRST) begin
+            sp0_in_burst <= 1'b0;
+        end else begin
+            // start of a new burst
+            if (!sp0_in_burst && wr_path_if.sp0_i_valid && wr_path_if.sp0_wr_ready) begin
+                if (!wr_path_if.w_sp0_i.last)
+                    sp0_in_burst <= 1'b1;
+            end
+            // end of current burst
+            else if (sp0_in_burst && wr_path_if.w_sp0_i.last) begin
+                sp0_in_burst <= 1'b0;
+            end
+        end
+    end
+    always_ff @(posedge CLK or negedge nRST) begin
+        if (!nRST) begin
+            sp1_in_burst <= 1'b0;
+        end else begin
+            // start of a new burst
+            if (!sp1_in_burst && wr_path_if.sp1_i_valid && wr_path_if.sp1_wr_ready) begin
+                if (!wr_path_if.w_sp1_i.last)
+                    sp1_in_burst <= 1'b1;
+            end
+            // end of current burst
+            else if (sp1_in_burst && wr_path_if.w_sp1_i.last) begin
+                sp1_in_burst <= 1'b0;
+            end
+        end
+    end
+    always_ff @(posedge CLK or negedge nRST) begin
+        if (!nRST) begin
+            d_in_burst <= 1'b0;
+        end else begin
+            // start of a new burst
+            if (!d_in_burst && wr_path_if.d_i_valid && wr_path_if.d_wr_ready) begin
+                if (!wr_path_if.w_d_i.last)
+                    d_in_burst <= 1'b1;
+            end
+            // end of current burst
+            else if (d_in_burst && wr_path_if.w_d_i.last) begin
+                d_in_burst <= 1'b0;
+            end
+        end
+    end
+
+    logic sp0_mgr_awvalid, sp1_mgr_awvalid, d_mgr_awvalid;
+    logic sp0_mgr_wvalid,  sp1_mgr_wvalid, d_mgr_wvalid;
+
+    assign sp0_mgr_awvalid = wr_path_if.sp0_i_valid && !sp0_in_burst;
+    assign sp0_mgr_wvalid  = wr_path_if.sp0_i_valid || sp0_in_burst;
+    assign sp1_mgr_awvalid = wr_path_if.sp1_i_valid && !sp1_in_burst;
+    assign sp1_mgr_wvalid  = wr_path_if.sp1_i_valid || sp1_in_burst;
+    assign d_mgr_awvalid   = wr_path_if.d_i_valid && !d_in_burst;
+    assign d_mgr_wvalid    = wr_path_if.d_i_valid || d_in_burst;
+
     // SCRATCHPAD0 (SP0) WRITE MANAGER
     axi_write_manager #(
         .MASTER_ID(SP0)
@@ -38,22 +98,23 @@ module axi_write_top(
         .CLK(CLK),
         .nRST(nRST),
         // From Master AW channel
-        .awvalid(wr_path_if.aw_sp0_i_valid),
+        //.awvalid(wr_path_if.aw_sp0_i_valid),
+        .awvalid(sp0_mgr_awvalid),
         .awid(wr_path_if.aw_sp0_i.id),
         .awaddr(wr_path_if.aw_sp0_i.addr),
         .awlen(wr_path_if.aw_sp0_i.len),
         .awsize(wr_path_if.aw_sp0_i.size),
         .awburst(wr_path_if.aw_sp0_i.burst),
         // To Master AW channel
-        .awready(wr_path_if.aw_sp0_i_ready),
+        //.awready(wr_path_if.aw_sp0_i_ready),
         // From Master W channel
-        .wvalid(wr_path_if.w_sp0_i_valid),
+        .wvalid(sp0_mgr_wvalid),
         .wid(wr_path_if.w_sp0_i.id),
         .wdata(wr_path_if.w_sp0_i.data),
         .wstrb(wr_path_if.w_sp0_i.strb),
         .wlast(wr_path_if.w_sp0_i.last),
         // To Master W channel
-        .wready(wr_path_if.w_sp0_i_ready),
+        //.wready(wr_path_if.w_sp0_i_ready),
         // From Write Driver 
         .aw_pop(aw_sp0_pop),
         .w_pop(w_sp0_pop),
@@ -69,7 +130,8 @@ module axi_write_top(
         .head_wid(head_sp0_w.mid_id),
         .head_data(head_sp0_w.data),
         .head_strb(head_sp0_w.strb),
-        .head_last(head_sp0_w.last)
+        .head_last(head_sp0_w.last),
+        .wr_ready(wr_path_if.sp0_wr_ready)
     );
 
     // SCRATCHPAD1 (SP1) WRITE MANAGER
@@ -79,22 +141,22 @@ module axi_write_top(
         .CLK(CLK),
         .nRST(nRST),
         // From Master AW channel
-        .awvalid(wr_path_if.aw_sp1_i_valid),
+        .awvalid(sp1_mgr_awvalid),
         .awid(wr_path_if.aw_sp1_i.id),
         .awaddr(wr_path_if.aw_sp1_i.addr),
         .awlen(wr_path_if.aw_sp1_i.len),
         .awsize(wr_path_if.aw_sp1_i.size),
         .awburst(wr_path_if.aw_sp1_i.burst),
         // To Master AW channel
-        .awready(wr_path_if.aw_sp1_i_ready),
+        //.awready(wr_path_if.aw_sp1_i_ready),
         // From Master W channel
-        .wvalid(wr_path_if.w_sp1_i_valid),
+        .wvalid(sp1_mgr_wvalid),
         .wid(wr_path_if.w_sp1_i.id),
         .wdata(wr_path_if.w_sp1_i.data),
         .wstrb(wr_path_if.w_sp1_i.strb),
         .wlast(wr_path_if.w_sp1_i.last),
         // To Master W channel
-        .wready(wr_path_if.w_sp1_i_ready),
+        //.wready(wr_path_if.w_sp1_i_ready),
         // From Write Driver 
         .aw_pop(aw_sp1_pop),
         .w_pop(w_sp1_pop),
@@ -110,7 +172,8 @@ module axi_write_top(
         .head_wid(head_sp1_w.mid_id),
         .head_data(head_sp1_w.data),
         .head_strb(head_sp1_w.strb),
-        .head_last(head_sp1_w.last)
+        .head_last(head_sp1_w.last),
+        .wr_ready(wr_path_if.sp1_wr_ready)
     );
     
     // DCACHE WRITE MANAGER
@@ -120,22 +183,22 @@ module axi_write_top(
         .CLK(CLK),
         .nRST(nRST),
         // From Master AW channel
-        .awvalid(wr_path_if.aw_d_i_valid),
+        .awvalid(d_mgr_awvalid),
         .awid(wr_path_if.aw_d_i.id),
         .awaddr(wr_path_if.aw_d_i.addr),
         .awlen(wr_path_if.aw_d_i.len),
         .awsize(wr_path_if.aw_d_i.size),
         .awburst(wr_path_if.aw_d_i.burst),
         // To Master AW channel
-        .awready(wr_path_if.aw_d_i_ready),
+        //.awready(wr_path_if.aw_d_i_ready),
         // From Master W channel
-        .wvalid(wr_path_if.w_d_i_valid),
+        .wvalid(d_mgr_wvalid),
         .wid(wr_path_if.w_d_i.id),
         .wdata(wr_path_if.w_d_i.data),
         .wstrb(wr_path_if.w_d_i.strb),
         .wlast(wr_path_if.w_d_i.last),
         // To Master W channel
-        .wready(wr_path_if.w_d_i_ready),
+        //.wready(wr_path_if.w_d_i_ready),
         // From Write Driver 
         .aw_pop(aw_d_pop),
         .w_pop(w_d_pop),
@@ -151,7 +214,8 @@ module axi_write_top(
         .head_wid(head_d_w.mid_id),
         .head_data(head_d_w.data),
         .head_strb(head_d_w.strb),
-        .head_last(head_d_w.last)
+        .head_last(head_d_w.last),
+        .wr_ready(wr_path_if.d_wr_ready)
     );
 
     // WRITE ARBITER

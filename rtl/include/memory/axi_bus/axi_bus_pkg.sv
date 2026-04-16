@@ -67,10 +67,10 @@ package axi_bus_pkg;
 
     // AW+W Manager AW FIFO Width
     localparam int AW_DEPTH       = NUM_U_WRITES;
-    localparam int AW_PTR_WIDTH   = $clog2(AW_DEPTH); 
+    localparam int AW_PTR_WIDTH   = $clog2(AW_DEPTH);  // remember circular fifo so depth of 4 means 3 actual valid entries
 
     // AW+W Manager W FIFO Width
-    localparam int W_DEPTH        = NUM_U_WRITES*8; // aryan check this
+    localparam int W_DEPTH        = NUM_U_WRITES*8; // be careful with size, the fifos use circular logic which break when depth is not a power of 2 (keep depth a power of two)
     localparam int W_PTR_WIDTH   = $clog2(W_DEPTH); 
 
     // Write Response Router Skid Buffer Width
