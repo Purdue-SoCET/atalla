@@ -144,17 +144,11 @@ module icache (
                         n_cache[active_fill_idx].valid = 1;
                         n_cache[active_fill_idx].tag = active_fill_tag;
                         
-                        // If CPU still wants this split instruction, queue up the next block
-                        if (imemREN && is_split && !hit_b && (idx_a == active_fill_idx)) begin
-                            n_fill_count = 0;
-                            n_active_fill_idx = idx_b;
-                            n_active_fill_tag = tag_b;
-                            n_active_fill_addr = {addr_b[31:6], 6'b0};
-                            n_cache[idx_b].valid = 0;
-                        end else begin
-                            n_state = IDLE;
-                            n_fill_count = 0;
-                        end
+                        // ALWAYS return to IDLE unconditionally to cleanly close the burst.
+                        // If it's a split instruction, the IDLE state will naturally catch 
+                        // the missing block 'B' on the very next clock edge.
+                        n_state = IDLE;
+                        n_fill_count = 0;
                     end
                 end
             end
