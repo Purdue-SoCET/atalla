@@ -1,5 +1,7 @@
 /*
  * test_dpi.c — smoke test for the Ramulator C DPI wrapper
+ * Heng-I (Ivor) Chu - ivorchu@gmail.com
+ * 
  *
  * Build:  cmake .. && make test_dpi -j$(nproc)
  * Run:    LD_LIBRARY_PATH=. ./test_dpi dpi_test_config.yaml

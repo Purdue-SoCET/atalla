@@ -23,8 +23,8 @@ MemorySystem:
       impl: AllBank
     RowPolicy:
       impl: OpenRowPolicy
-
+      cap: 8
 
   AddrMapper:
-    impl: RoBaRaCoCh
+    impl: MOP4CLXOR
 

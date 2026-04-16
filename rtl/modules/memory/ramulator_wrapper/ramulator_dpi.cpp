@@ -1,3 +1,7 @@
+// ramulator_dpi.cpp
+// Heng-I (Ivor) Chu - ivorchu@gmail.com
+
+
 #include "ramulator_dpi.h"
 #include "base/config.h"
 #include "frontend/frontend.h"
@@ -17,6 +21,7 @@ using namespace Ramulator;
 
 enum class MemMode {
     DDR4_64,
+    HBM2_64,
     HBM3_PC32
 };
 
@@ -45,12 +50,9 @@ struct RamulatorWrapper {
     int      frontend_tick_ratio;
     uint64_t cycle_count;
 
-    // Read-request coalescing: multiple sub-block requests (e.g. two consecutive
-    // 32-byte AXI beats) that fall inside the same DRAM transaction granule
-    // (coalesce_unit bytes) share a single Ramulator CAS.  Each entry holds the
-    // list of (original_byte_addr, source_id) pairs waiting on that granule.
-    // The map is keyed on granule-aligned address.
-    Addr_t coalesce_unit = 64;   // bytes per DRAM transaction (DDR4 default)
+    // Coalescing map: granule-aligned addr → list of (beat_addr, source_id) sharing that CAS.
+    // Two AXI beats in the same granule (e.g. 0x000 and 0x020) issue only one Ramulator request.
+    Addr_t coalesce_unit = 64;   // bytes per DRAM granule (DDR4 default)
     std::unordered_map<Addr_t, std::vector<std::pair<Addr_t,int>>> coalesce_pending;
 };
 
@@ -69,9 +71,14 @@ ramulator_handle_t ramulator_init(const char* config_file) {
         std::string cfg = config_file ? config_file : "";
         if (cfg.find("hbm3") != std::string::npos || cfg.find("HBM3") != std::string::npos) {
             wrapper->mode          = MemMode::HBM3_PC32;
-            wrapper->data_mask     = 0x0000'0000'FFFF'FFFFULL;
-            wrapper->data_bytes    = 4;
-            wrapper->coalesce_unit = 32;  // HBM3 PC32: 8-beat × 32-bit bus = 32 bytes
+            wrapper->data_mask     = 0xFFFF'FFFF'FFFF'FFFFULL;
+            wrapper->data_bytes    = 8;   // tx_bytes = prefetch(2) × channel_width(32) / 8 = 8 bytes
+            wrapper->coalesce_unit = 32;  // HBM3 PC32: 2-beat × 32-bit bus = 32 bytes
+        } else if (cfg.find("hbm2") != std::string::npos || cfg.find("HBM2") != std::string::npos) {
+            wrapper->mode          = MemMode::HBM2_64;
+            wrapper->data_mask     = 0xFFFF'FFFF'FFFF'FFFFULL;
+            wrapper->data_bytes    = 8;
+            wrapper->coalesce_unit = 16;  // HBM2: 2-beat × 64-bit bus = 16 bytes
         } else {
             wrapper->mode          = MemMode::DDR4_64;
             wrapper->data_mask     = 0xFFFF'FFFF'FFFF'FFFFULL;
@@ -126,10 +133,9 @@ int ramulator_send_request(ramulator_handle_t handle,
             return accepted ? 1 : 0;
         }
 
-        // Reads: coalesce sub-block requests that fall in the same DRAM granule.
-        // Two consecutive 32-byte AXI beats (e.g. 0x000 and 0x020) both address
-        // the same 64-byte DRAM transaction; without coalescing we would issue
-        // two CAS commands for the same row/bank and waste half the bus bandwidth.
+        // Reads: coalesce beats that fall in the same DRAM granule.
+        // 0x000 and 0x020 both land in the same 64-byte granule — without this we'd
+        // issue two CAS commands to the same row.
         Addr_t granule = original_addr & ~static_cast<Addr_t>(wrapper->coalesce_unit - 1);
 
         auto map_it = wrapper->coalesce_pending.find(granule);
@@ -140,9 +146,8 @@ int ramulator_send_request(ramulator_handle_t handle,
             return 1;
         }
 
-        // First request for this granule: insert into the coalesce map BEFORE
-        // calling into Ramulator so the callback (which fires synchronously in
-        // some implementations) can always find the entry.
+        // Insert into the map before calling Ramulator — the callback can fire
+        // synchronously and needs to find this entry.
         wrapper->coalesce_pending[granule] = {{original_addr, source_id}};
 
         auto callback = [wrapper, granule](Request& req) {
@@ -292,6 +297,12 @@ long long ramulator_load_mem_hex(
     }
     fclose(f);
     return entries;
+}
+
+int ramulator_get_clock_ratio(ramulator_handle_t handle) {
+    auto* wrapper = static_cast<RamulatorWrapper*>(handle);
+    if (!wrapper) return 1;
+    return wrapper->mem_tick_ratio;
 }
 
 void ramulator_finalize(ramulator_handle_t handle) {

@@ -1,13 +1,15 @@
 #!/usr/bin/env python3
 """
-gen_sdma_meminit.py — generate functional_mem preload for test_sdma.sv
+gen_sdma_meminit.py
+Heng-I (Ivor) Chu - ivorchu@gmail.com
+
 
 Produces a raw binary file covering two contiguous 2MB memory regions:
 
-  Bytes 0x000000 – 0x1FFFFF  (ROW_BASE  = 0x0000_0000)
-  Bytes 0x200000 – 0x3FFFFF  (TILE_BASE = 0x0020_0000)
+  Bytes 0x000000 - 0x1FFFFF  (ROW_BASE  = 0x0000_0000)
+  Bytes 0x200000 - 0x3FFFFF  (TILE_BASE = 0x0020_0000)
 
-Both regions hold the same 1024×1024 int16 matrix, laid out row-major:
+Both regions hold the same 1024x1024 int16 matrix, laid out row-major:
   element[row][col] = (row * MAT_COLS + col) & 0xFFFF
 
 Each 8-byte beat packs 4 consecutive int16 elements (little-endian):

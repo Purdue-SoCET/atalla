@@ -1,3 +1,7 @@
+// ramulator_dpi.h
+// Heng-I (Ivor) Chu - ivorchu@gmail.com
+
+
 #ifndef RAMULATOR_DPI_WRAPPER_H
 #define RAMULATOR_DPI_WRAPPER_H
 
@@ -57,6 +61,10 @@ long long ramulator_load_mem_hex(
     ramulator_handle_t handle,
     const char*        path
 );
+
+// Returns the memory system clock ratio (DRAM ticks per ramulator_tick() call).
+// DDR4 → 2, HBM2 → 1, HBM3 → 1. Use this to size the response drain loop.
+int ramulator_get_clock_ratio(ramulator_handle_t handle);
 
 // Cleanup — mostly a no-op, see comments in ramulator_dpi.cpp.
 void ramulator_finalize(ramulator_handle_t handle);

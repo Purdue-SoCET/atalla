@@ -1,4 +1,6 @@
-// test_ramulator.sv — AXI smoketest for ramulator_sv_wrapper
+// test_ramulator.sv
+// Heng-I (Ivor) Chu - ivorchu@gmail.com
+//
 //
 // Runs through the main features in order:
 //   [1]  Reset + init
@@ -30,70 +32,37 @@ module test_ramulator #(
 );
     import axi_bus_pkg::*;
 
-`ifdef USE_HBM3_WRAPPER
-    localparam logic [2:0] AXI_SIZE = 3'b010; // 4 bytes/beat for HBM3 pseudo-channel
-`else
-    localparam logic [2:0] AXI_SIZE = 3'b011; // 8 bytes/beat for DDR4
-`endif
+    localparam logic [2:0] AXI_SIZE = 3'b101; // 32 bytes/beat — full 256-bit bus width
 
     // ------------------------------------------------------------
     // Helpers
     // ------------------------------------------------------------
     function automatic longint norm_data(input longint d);
-`ifdef USE_HBM3_WRAPPER
-        return (d & 64'h0000_0000_FFFF_FFFF);
-`else
         return d;
-`endif
     endfunction
 
     function automatic longint wr_pattern(input int i);
-`ifdef USE_HBM3_WRAPPER
-        // keep the interesting tag in the low 32 bits for PC32 mode
-        return 64'h0000_0000_C0FF_EE00 | longint'(i);
-`else
         return 64'hC0FF_EE00_0000_0000 | longint'(i);
-`endif
     endfunction
 
     function automatic longint bp_pattern_a(input int i);
-`ifdef USE_HBM3_WRAPPER
-        return 64'h0000_0000_AAAA_0000 | longint'(i);
-`else
         return 64'hAAAA_0000_0000_0000 | longint'(i);
-`endif
     endfunction
 
     function automatic longint bp_pattern_b(input int i);
-`ifdef USE_HBM3_WRAPPER
-        return 64'h0000_0000_BBBB_0000 | longint'(i);
-`else
         return 64'hBBBB_0000_0000_0000 | longint'(i);
-`endif
     endfunction
 
     function automatic longint simul_pattern();
-`ifdef USE_HBM3_WRAPPER
-        return 64'h0000_0000_CAFE_BABE;
-`else
         return 64'hFEED_FACE_CAFE_BABE;
-`endif
     endfunction
 
     function automatic longint burst4_pattern();
-`ifdef USE_HBM3_WRAPPER
-        return 64'h0000_0000_CAFE_0000;
-`else
         return 64'hCAFE_0000_0050_0000;
-`endif
     endfunction
 
     function automatic longint burst8_pattern();
-`ifdef USE_HBM3_WRAPPER
-        return 64'h0000_0000_DEAD_0000;
-`else
         return 64'hDEAD_0000_0060_0000;
-`endif
     endfunction
 
     // Use ramulator_exit() to bypass QuestaSim post-sim cleanup which
@@ -116,12 +85,12 @@ module test_ramulator #(
     localparam longint SIMUL_BASE   = 64'h0040_0000;
     localparam longint BURST4_BASE  = 64'h0050_0000;  // [8] 4-beat burst test
     localparam longint BURST8_BASE  = 64'h0060_0000;  // [8] 8-beat burst test
-    localparam longint PIPE_BASE    = 64'h0070_0000;  // [9] SR FIFO pipeline test
-    localparam longint STRB_BASE    = 64'h0080_0000;  // [10] WSTRB byte-mask test
-    localparam longint FIXED_BASE   = 64'h0090_0000;  // [11] FIXED burst test
-    localparam longint WRAP_BASE    = 64'h00A0_0000;  // [12] WRAP burst test
+    localparam longint PIPE_BASE    = 64'h0070_0000;  // [11] SR FIFO pipeline test
+    localparam longint STRB_BASE    = 64'h0080_0000;  // [12] WSTRB byte-mask test
+    localparam longint FIXED_BASE   = 64'h0090_0000;  // [9]  FIXED burst test
+    localparam longint WRAP_BASE    = 64'h00A0_0000;  // [10] WRAP burst test
     localparam longint STRIDE       = 64;
-    localparam int     NUM_PIPE     = 16;              // [9] must be <= SR_DEPTH
+    localparam int     NUM_PIPE     = 16;              // [11] must be <= SR_DEPTH
 
     // ----------------------------------------------------------------
     // Clock / reset
@@ -136,15 +105,6 @@ module test_ramulator #(
     axi_bus_if axi(.CLK(clk), .nRST(nrst));
     logic init_done;
 
-`ifdef USE_HBM3_WRAPPER
-    ramulator_sv_wrapper_hbm3_pc32 #(
-        .CONFIG_FILE(CFG),
-        .B_DEPTH    (B_DEPTH)
-    ) dut (
-        .axi      (axi),
-        .init_done(init_done)
-    );
-`else
     ramulator_sv_wrapper #(
         .CONFIG_FILE   (CFG),
         .B_DEPTH       (B_DEPTH),
@@ -155,7 +115,6 @@ module test_ramulator #(
         .axi      (axi),
         .init_done(init_done)
     );
-`endif
 
     // ----------------------------------------------------------------
     // Tick counter
@@ -689,11 +648,7 @@ module test_ramulator #(
         @(posedge clk); #1;
         $display("OK");
 
-`ifdef USE_HBM3_WRAPPER
-        $display("    Mode: HBM3 pseudo-channel wrapper (32-bit payload, AXI_SIZE=%0d)", AXI_SIZE);
-`else
-        $display("    Mode: DDR-style wrapper (64-bit payload, AXI_SIZE=%0d)", AXI_SIZE);
-`endif
+        $display("    Mode: 256-bit AXI wrapper (32-byte beats, AXI_SIZE=%0d)", AXI_SIZE);
 
         // [2] Write phase — skipped when USE_MEMINIT=1 (data already in functional_mem)
         if (USE_MEMINIT) begin
@@ -973,18 +928,8 @@ module test_ramulator #(
         $display("  [8] Total burst rd_ok=%0d/12  rd_fail=%0d  wr_ok=%0d  wr_fail=%0d",
                  burst_rd_ok, burst_rd_fail, burst_wr_ok, burst_wr_fail);
 
-        // ============================================================
-        // [9] FIXED burst
-        //
-        // All beats of a FIXED burst target the same address, so the last
-        // write wins.  A subsequent FIXED read returns that same value for
-        // every beat with the correct last flag.
-        //
-        // [9a] 4-beat FIXED write then 4-beat FIXED read.
-        //   Beats 0-3 written: base_data+0 .. base_data+3.
-        //   Shadow ends at base_data+3 (last write wins).
-        //   Each read beat expects shadow[base_addr] = base_data+3.
-        // ============================================================
+        // [9] FIXED burst — all 4 beats go to the same address, last write wins.
+        //   4-beat write then read; every read beat should return base_data+3.
         $display("[9] FIXED burst ...");
         begin
             longint fixed_addr, fixed_base_data;
@@ -992,62 +937,42 @@ module test_ramulator #(
             fixed_base_data = 64'hF1F1_0000_0000_0000;
 
             $display("  [9a] 4-beat FIXED write at 0x%08h (all beats → same addr)", fixed_addr);
-            axi_write_burst_typed(fixed_addr, fixed_base_data, 3, 3'b011, 2'b00, MID_AWID'(0));
+            axi_write_burst_typed(fixed_addr, fixed_base_data, 3, 3'b101, 2'b00, MID_AWID'(0));
             // shadow[fixed_addr] = fixed_base_data+3 = 0xF1F1_0000_0000_0003
 
             $display("  [9a] 4-beat FIXED read  at 0x%08h (expect 0x%016h x4)",
                      fixed_addr, shadow[fixed_addr]);
-            axi_read_burst_typed(fixed_addr, 3, 3'b011, 2'b00, MID_ARID'(0),
+            axi_read_burst_typed(fixed_addr, 3, 3'b101, 2'b00, MID_ARID'(0),
                                  fixed_ok, fixed_fail);
             $display("    FIXED: OK=%0d/4  FAIL=%0d", fixed_ok, fixed_fail);
         end
 
-        // ============================================================
-        // [10] WRAP burst
-        //
-        // 4-beat WRAP (len=3, size=3 → 8 B/beat, wrap_len=32 B).
-        // Start address is WRAP_BASE+0x10 (offset 16 within the 32-byte
-        // aligned region starting at WRAP_BASE).
-        // Beat addresses:
-        //   beat 0 → WRAP_BASE+0x10  (base address as given)
-        //   beat 1 → WRAP_BASE+0x18
-        //   beat 2 → WRAP_BASE+0x00  (wrap!)
-        //   beat 3 → WRAP_BASE+0x08
-        //
-        // [10a] 4-beat WRAP write + read; verify data and last flag.
-        // ============================================================
+        // [10] WRAP burst — 4 beats, 32 B/beat, 128-byte boundary.
+        //   Start at +0x40: beats land at +0x40, +0x60, +0x00 (wrap), +0x20.
         $display("[10] WRAP burst ...");
         begin
             longint wrap_start, wrap_base_data;
-            // Start mid-region: offset 16 within a 32-byte (4*8) wrap boundary
-            wrap_start     = WRAP_BASE + 64'h10;
+            // Start mid-region: offset 64 within a 128-byte (4*32) wrap boundary
+            wrap_start     = WRAP_BASE + 64'h40;
             wrap_base_data = 64'hC0DE_0000_0000_0000;
 
-            $display("  [10a] 4-beat WRAP write at 0x%08h (wrap_len=32B, starts mid-region)",
+            $display("  [10a] 4-beat WRAP write at 0x%08h (wrap_len=128B, starts mid-region)",
                      wrap_start);
-            axi_write_burst_typed(wrap_start, wrap_base_data, 3, 3'b011, 2'b10, MID_AWID'(1));
+            axi_write_burst_typed(wrap_start, wrap_base_data, 3, 3'b101, 2'b10, MID_AWID'(1));
             // Beat addresses (verified against burst_beat_addr formula):
-            //   0: WRAP_BASE+0x10  data=0xC0DE_...0000
-            //   1: WRAP_BASE+0x18  data=0xC0DE_...0001
+            //   0: WRAP_BASE+0x40  data=0xC0DE_...0000
+            //   1: WRAP_BASE+0x60  data=0xC0DE_...0001
             //   2: WRAP_BASE+0x00  data=0xC0DE_...0002  (wrapped)
-            //   3: WRAP_BASE+0x08  data=0xC0DE_...0003
+            //   3: WRAP_BASE+0x20  data=0xC0DE_...0003
 
             $display("  [10a] 4-beat WRAP read  at 0x%08h", wrap_start);
-            axi_read_burst_typed(wrap_start, 3, 3'b011, 2'b10, MID_ARID'(1),
+            axi_read_burst_typed(wrap_start, 3, 3'b101, 2'b10, MID_ARID'(1),
                                  wrap_ok, wrap_fail);
             $display("    WRAP:  OK=%0d/4  FAIL=%0d", wrap_ok, wrap_fail);
         end
 
-        // ============================================================
-        // [11] Multiple outstanding reads (SR FIFO pipeline test)
-        //
-        // Issue NUM_PIPE single-beat ARs back-to-back while keeping
-        // r_i_ready=0.  Ramulator queues all requests simultaneously;
-        // completions accumulate in the SR FIFO (SR_DEPTH=16 entries).
-        // In Phase B, r_i_ready=1 drains all responses; each returned
-        // data value must equal the corresponding request address
-        // (unwritten region — functional model default).
-        // ============================================================
+        // [11] SR FIFO pipeline: fire NUM_PIPE ARs with r_i_ready=0, then drain.
+        //   Unwritten addresses return addr-as-data; responses may arrive out of order.
         $display("[11] Multiple outstanding reads: %0d ARs pipelined (r_i_ready=0) ...", NUM_PIPE);
         begin
             // --- Phase A: issue all ARs back-to-back, r_i_ready=0 ---
@@ -1096,19 +1021,8 @@ module test_ramulator #(
                      pipe_acc, pipe_cmp, pipe_ok, pipe_fail);
         end
 
-        // ============================================================
-        // [12] WSTRB byte masking
-        //
-        // All writes use axi_write_strb (explicit strobe) and reads use
-        // axi_read_raw (does not touch global rd counters).
-        // The wrapper maintains its own wr_shadow and merges bytes before
-        // passing to Ramulator — no masking logic reaches Ramulator.
-        //
-        // [12a] Lower-half strobe (0x0F): upper 4 B preserved from first write
-        // [12b] Upper-half strobe (0xF0): lower 4 B preserved from first write
-        // [12c] Zero strobe (0x00): entire word unchanged (no-op write)
-        // [12d] Single-byte strobe (0x01) to a fresh address: only byte 0 set
-        // ============================================================
+        // [12] WSTRB: wrapper merges bytes before Ramulator sees the write.
+        //   lower-half mask, upper-half mask, zero strobe (no-op), single byte.
         $display("[12] WSTRB byte masking ...");
         begin
             longint got, exp;

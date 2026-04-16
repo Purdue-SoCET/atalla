@@ -1,34 +1,14 @@
-// test_sdma.sv — SDMA tile load testbench for ramulator_sv_wrapper
+// test_sdma.sv
+// Heng-I (Ivor) Chu - ivorchu@gmail.com
 //
-// Models the AXI reads an SDMA instruction generates when loading tiles from a
-// 1024x1024 int16 matrix. Each SDMA loads one full 32×32 tile:
-//   32 rows × (32 cols × 2 B) = 32 rows × 64 B = 2048 B = 256 beats per instr.
 //
-// Two access patterns:
-//   [3] Row-major  — scan the matrix row by row. Each SDMA covers 32 cols of
-//                    one row; all 8 addresses are consecutive (stride = 8 B).
-//   [4] Tile-major — scan tile by tile (32×32 grid of 32×32 tiles). One SDMA
-//                    loads the entire tile row-by-row: 32 rows × 8 beats each
-//                    = 256 beats. Within a tile-row beats are consecutive
-//                    (stride = 8 B); between tile-rows stride = ROW_BYTES = 2048 B.
+// Loads a 1024×1024 int16 matrix two ways: row-major and tile-major.
+// Each AXI beat is 32 bytes (256-bit); the matrix is 2 MB = 65536 beats.
+// [1] init, [2] write matrix to two regions, [3] row-major read,
+// [4] tile-major read, [5] timing report.
 //
-// Matrix layout:
-//   1024 × 1024 × 2 bytes = 2 MB  |  row width = 2048 B
-//   SDMA = 256 × 8 B = 2048 B/instr  |  1024 instrs per layout, 262144 txns total
-//
-// Data pattern: element[row][col] = (row * MAT_COLS + col) & 0xFFFF
-//   Each beat packs 4 elements little-endian:
-//     beat[15:0]  = col_base+0,  beat[31:16] = col_base+1, etc.
-//
-// Test plan:
-//   [1] Reset + init
-//   [2] Write matrix (262144 writes × 2 regions) — skipped with USE_MEMINIT=1
-//   [3] Row-major read — 262144 beats, verify vs shadow
-//   [4] Tile-major read — 262144 beats, verify vs shadow
-//   [5] Timing report + pass/fail
-//
-// To skip the write phase: python3 scripts/gen_sdma_meminit.py
-//   then: make sdma SDMA_MEMINIT=rtl/modules/memory/ramulator_wrapper/configs/sdma_meminit.bin
+// To skip phase [2]: python3 scripts/gen_sdma_meminit.py
+//   make sdma SDMA_MEMINIT=rtl/modules/memory/ramulator_wrapper/configs/sdma_meminit.bin
 
 `timescale 1ns / 1ps
 
@@ -214,16 +194,9 @@ module test_sdma #(
         end
     endtask
 
-    // Drain the address queue SDMA_TRANS_N beats at a time.
-    // Each SDMA instruction (256 beats = one full tile) uses single-beat ARs
-    // issued with r_i_ready=1 throughout so Ramulator sees all 256 requests
-    // in flight simultaneously — giving its scheduler maximum freedom to
-    // pipeline across banks and hide row-activation latency.
-    // Responses come back out of order so we match against the whole batch.
-    //
-    // Stats:
-    //   avg_row_cyc  (a): span from first to last response in each 8-beat group (Cyc/tile-row)
-    //   avg_beat_cyc (b): inter-response gap (throughput per beat, Cyc/beat)
+    // Issue all ARs in the batch with r_i_ready=1 so Ramulator sees maximum ILP.
+    // Responses arrive out of order; we match each against the whole batch.
+    // avg_row_cyc: span across each 8-beat tile-row. avg_beat_cyc: inter-beat gap.
     task automatic sdma_drain(
         ref    longint              q[$],
         input  logic [RID-1:0] mid_id,
@@ -241,11 +214,9 @@ module test_sdma #(
         bit           consumed   [];
         logic [255:0] got;
         int     n;
-        // (a) one entry per 8-beat row-of-SDMA-instr: span from first to last response in the row
-        // (b) one entry per 64-bit beat: inter-response gap (throughput per sub-transaction)
-        longint row_cyc_list[$];
-        longint beat_cyc_list[$];
-        longint stalls = 0;   // counts cycles where ar_o_valid=1 but ar_o_ready=0 (bank queue full)
+        longint row_cyc_list[$];   // span across each 8-beat tile-row
+        longint beat_cyc_list[$];  // inter-beat gap
+        longint stalls = 0;        // cycles where ar_o_valid=1 but ar_o_ready=0
         t0 = tick;
 
         while (q.size() > 0) begin
@@ -502,9 +473,6 @@ module test_sdma #(
             $display("  %-14s  %12s  %12s  %16s  %14s  %14s  %12s",
                      "--------------", "------------", "------------",
                      "----------------", "--------------", "--------------", "------------");
-            // Cyc/matrix-row  = total_cycles / MAT_ROWS  (cycles per 256-beat matrix row)
-            // Cyc/8-beat      = avg span across one 8-beat (64B) tile-row
-            // Cyc/inter-beat  = avg gap between consecutive beat responses
             $display("  %-14s  %12d  %9d.%02d  %16d  %14d  %14d  %8d.%02d",
                      "Row-major",
                      row_cycles,

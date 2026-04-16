@@ -71,21 +71,7 @@ DRAM_CFG_lpddr5 := $(CFGROOT)/lpddr5_config.yaml
 CFG ?= $(DRAM_CFG_$(DRAM))
 
 # ---- Wrapper SV selection ----
-WRAPPER_SV_DEFAULT := $(DPIROOT)/ramulator_sv_wrapper.sv
-WRAPPER_SV_HBM3    := $(DPIROOT)/ramulator_sv_wrapper_32.sv
-
-WRAPPER_SV  := $(WRAPPER_SV_DEFAULT)
-WRAPPER_DEF :=
-
-ifeq ($(DRAM),hbm3)
-  WRAPPER_SV  := $(WRAPPER_SV_HBM3)
-  WRAPPER_DEF := +define+USE_HBM3_WRAPPER
-endif
-
-ifneq ($(findstring hbm3_config.yaml,$(CFG)),)
-  WRAPPER_SV  := $(WRAPPER_SV_HBM3)
-  WRAPPER_DEF := +define+USE_HBM3_WRAPPER
-endif
+WRAPPER_SV := $(DPIROOT)/ramulator_sv_wrapper.sv
 
 # ---- Memory preload (test_ramulator) ----
 MEMINIT      ?=
@@ -313,7 +299,6 @@ sim: ram_lib
 	echo "[sim] compiling SV sources..."; \
 	echo "[sim] using wrapper: $(WRAPPER_SV)"; \
 	$(VLOG64) -sv -mfcu -work $(SCRATCH) +acc $(VLOG_COV_FLAGS) \
-	    $(WRAPPER_DEF) \
 	    +incdir+$(AXIROOT) \
 	    $(AXI_SRCS) \
 	    $(DPI_SRCS); \

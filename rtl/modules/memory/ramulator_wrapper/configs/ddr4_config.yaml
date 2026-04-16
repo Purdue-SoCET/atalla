@@ -1,23 +1,27 @@
+# ddr4_config.yaml
+# Heng-I (Ivor) Chu - ivorchu@gmail.com
+
+
 Frontend:
   impl: GEM5
-  clock_ratio: 2    # tick every 2 ramulator_tick calls → 800 MHz = SV core clock
+  clock_ratio: 2
 
 MemorySystem:
   impl: GenericDRAM
-  clock_ratio: 1    # tick every ramulator_tick call → 1600 MHz = DDR4-3200 memory clock
+  clock_ratio: 1
 
   DRAM:
     impl: DDR4
     org:
       preset: DDR4_8Gb_x16
       channel: 1
-      rank: 1    # 2→1: eliminates rank-switching starvation; bg0/bg1 now alternate freely at tCCD_S=4
+      rank: 2
     timing:
       preset: DDR4_3200W
 
   Controller:
     impl: Generic
-    read_buffer_size: 256    # deep queue for bank-level parallelism (default was 32)
+    read_buffer_size: 256
     write_buffer_size: 64
     Scheduler:
       impl: FRFCFS
