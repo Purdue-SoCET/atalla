@@ -26,118 +26,6 @@ def bf16_bits_to_float(bits: int) -> float:
     return struct.unpack("<f", struct.pack("<I", fp32_bits))[0]
 
 
-def debug_trace(
-    NUM_TILE_ROWS, NUM_TILE_COLS, NUM_TILE_K, TILE_ROWS, TILE_COLS,
-    TABLE_BASE, OFF_B_TABLE, OFF_A_TABLE, OFF_C_TABLE,
-    OFF_NJ, OFF_NK, OFF_NI, OFF_TILE_ROWS,
-    B_GMEM_BASE, A_GMEM_BASE, C_GMEM_BASE,
-    B_SCPAD_ADDR, A_SCPAD_ADDR, C_SCPAD_ADDR,
-    TILE_BYTES, A_full, B_full,
-):
-    SEP = "=" * 70
-    print(SEP)
-    print("DEBUG: Address Lookup Table")
-    print(SEP)
-    print(f"  TABLE_BASE    = 0x{TABLE_BASE:08X}")
-    print(f"  OFF_B_TABLE   = 0x{OFF_B_TABLE:02X}  OFF_A_TABLE = 0x{OFF_A_TABLE:02X}  OFF_C_TABLE = 0x{OFF_C_TABLE:02X}")
-    print()
-
-    print(f"DEBUG: Tile grid: {NUM_TILE_ROWS}x{NUM_TILE_COLS}, NUM_TILE_K={NUM_TILE_K}")
-    print(f"  Total tiles: B={NUM_TILE_K*NUM_TILE_COLS}  A={NUM_TILE_ROWS*NUM_TILE_K}  C={NUM_TILE_ROWS*NUM_TILE_COLS}")
-    print(f"  TILE_BYTES = {TILE_BYTES}  (TILE_ROWS={TILE_ROWS} x TILE_COLS={TILE_COLS} x 2)")
-    print()
-
-    MAX_PRINT = 4
-    print(f"DEBUG: B tile GMEM addresses  (k, j) — first {MAX_PRINT}")
-    for tk in range(min(NUM_TILE_K, MAX_PRINT)):
-        for tj in range(min(NUM_TILE_COLS, MAX_PRINT)):
-            idx  = tk * NUM_TILE_COLS + tj
-            addr = B_GMEM_BASE + idx * TILE_BYTES
-            tbl  = TABLE_BASE + OFF_B_TABLE + idx * 4
-            print(f"  B[k={tk},j={tj}] idx={idx}  gmem=0x{addr:08X}  table@0x{tbl:08X}")
-    print(f"  ...")
-    print()
-
-    print(f"DEBUG: A tile GMEM addresses  (i, k) — first {MAX_PRINT}")
-    for ti in range(min(NUM_TILE_ROWS, MAX_PRINT)):
-        for tk in range(min(NUM_TILE_K, MAX_PRINT)):
-            idx  = ti * NUM_TILE_K + tk
-            addr = A_GMEM_BASE + idx * TILE_BYTES
-            tbl  = TABLE_BASE + OFF_A_TABLE + idx * 4
-            print(f"  A[i={ti},k={tk}] idx={idx}  gmem=0x{addr:08X}  table@0x{tbl:08X}")
-    print(f"  ...")
-    print()
-
-    print(f"DEBUG: C tile GMEM addresses  (i, j) — first {MAX_PRINT}")
-    for ti in range(min(NUM_TILE_ROWS, MAX_PRINT)):
-        for tj in range(min(NUM_TILE_COLS, MAX_PRINT)):
-            idx  = ti * NUM_TILE_COLS + tj
-            addr = C_GMEM_BASE + idx * TILE_BYTES
-            tbl  = TABLE_BASE + OFF_C_TABLE + idx * 4
-            print(f"  C[i={ti},j={tj}] idx={idx}  gmem=0x{addr:08X}  table@0x{tbl:08X}")
-    print(f"  ...")
-    print()
-
-    errors = 0
-    checked = 0
-    MAX_CHECK = 8
-    print(f"DEBUG: Soft-multiply spot-check (first {MAX_CHECK} j/k/i combos)")
-    for j in range(NUM_TILE_COLS):
-        for k in range(NUM_TILE_K):
-            r31 = 0; r8 = 0
-            while r8 < k:
-                r31 += NUM_TILE_COLS; r8 += 1
-            r31 = (r31 + j) * 4 + OFF_B_TABLE
-            got = TABLE_BASE + r31
-            exp = TABLE_BASE + OFF_B_TABLE + (k * NUM_TILE_COLS + j) * 4
-            if got != exp:
-                print(f"  j={j} k={k}  [B] MISMATCH got=0x{got:08X} exp=0x{exp:08X}")
-                errors += 1
-            for i in range(NUM_TILE_ROWS):
-                r31 = 0; r8 = 0
-                while r8 < i:
-                    r31 += NUM_TILE_K; r8 += 1
-                r31 = (r31 + k) * 4 + OFF_A_TABLE
-                got = TABLE_BASE + r31
-                exp = TABLE_BASE + OFF_A_TABLE + (i * NUM_TILE_K + k) * 4
-                if got != exp:
-                    print(f"  j={j} k={k} i={i}  [A] MISMATCH got=0x{got:08X} exp=0x{exp:08X}")
-                    errors += 1
-                r31 = 0; r8 = 0
-                while r8 < i:
-                    r31 += NUM_TILE_COLS; r8 += 1
-                r31 = (r31 + j) * 4 + OFF_C_TABLE
-                got = TABLE_BASE + r31
-                exp = TABLE_BASE + OFF_C_TABLE + (i * NUM_TILE_COLS + j) * 4
-                if got != exp:
-                    print(f"  j={j} k={k} i={i}  [C] MISMATCH got=0x{got:08X} exp=0x{exp:08X}")
-                    errors += 1
-                checked += 1
-                if checked >= MAX_CHECK:
-                    break
-            if checked >= MAX_CHECK:
-                break
-        if checked >= MAX_CHECK:
-            break
-
-    print(f"  Checked {checked} combos: {'All OK' if not errors else str(errors) + ' MISMATCHES'}")
-    print()
-
-    print("DEBUG: Expected partial-C [0,0] element accumulation")
-    C_p = np.zeros((TILE_ROWS, TILE_COLS), dtype=np.float64)
-    for k in range(NUM_TILE_K):
-        pre = C_p[0, 0]
-        r0 = 0; c0 = k * TILE_COLS
-        rend = min(TILE_ROWS, A_full.shape[0])
-        cend = min(TILE_COLS, A_full.shape[1] - c0) if c0 < A_full.shape[1] else 0
-        if cend > 0:
-            Ak = A_full[0:rend, c0:c0+cend]
-            Bk = B_full[c0:c0+cend, 0:min(TILE_COLS, B_full.shape[1])]
-            if Ak.shape[1] == Bk.shape[0]:
-                C_p[0:rend, 0:Bk.shape[1]] += Ak @ Bk
-        if k < 4 or k == NUM_TILE_K - 1:
-            print(f"  k={k:3d}: POST C[0,0][0,0]={C_p[0,0]:.1f}  bf16=0x{bf16_round(C_p[0,0]):04X}")
-    print()
 
 def to_bf16_f32(x):
     x = np.asarray(x, dtype=np.float32)
@@ -220,17 +108,6 @@ def main():
     
     print("Done.")
     print()
-
-    debug_trace(
-        NUM_TILE_ROWS=NUM_TILE_ROWS, NUM_TILE_COLS=NUM_TILE_COLS,
-        NUM_TILE_K=NUM_TILE_K, TILE_ROWS=TILE_ROWS, TILE_COLS=TILE_COLS,
-        TABLE_BASE=TABLE_BASE,
-        OFF_B_TABLE=OFF_B_TABLE, OFF_A_TABLE=OFF_A_TABLE, OFF_C_TABLE=OFF_C_TABLE,
-        OFF_NJ=OFF_NJ, OFF_NK=OFF_NK, OFF_NI=OFF_NI, OFF_TILE_ROWS=OFF_TILE_ROWS,
-        B_GMEM_BASE=B_GMEM_BASE, A_GMEM_BASE=A_GMEM_BASE, C_GMEM_BASE=C_GMEM_BASE,
-        B_SCPAD_ADDR=B_SCPAD_ADDR, A_SCPAD_ADDR=A_SCPAD_ADDR, C_SCPAD_ADDR=C_SCPAD_ADDR,
-        TILE_BYTES=TILE_BYTES, A_full=A_full, B_full=B_full,
-    )
 
     asm = f"""
         lui.s   $20, {TABLE_BASE >> 7} #lui.s instead of addi.s?? 
