@@ -14,25 +14,9 @@ module icache (
 
     icache_frame [127:0] cache, n_cache;
 
-    // ========================================================================
-    // NEW: INPUT REGISTERS (Breaks the imemaddr -> ihit critical path)
-    // ========================================================================
-    logic [31:0] r_imemaddr;
-    logic r_imemREN;
-
-    always_ff @(posedge CLK, negedge nRST) begin
-        if (!nRST) begin
-            r_imemaddr <= '0;
-            r_imemREN <= 1'b0;
-        end else begin
-            r_imemaddr <= dcif.imemaddr;
-            r_imemREN <= dcif.imemREN;
-        end
-    end
-
-    // --- Address Parsing (Now uses the LATCHED address) ---
+    // --- Address Parsing (Directly from CPU for Same-Cycle Hits) ---
     logic [31:0] addr_a, addr_b;
-    assign addr_a = r_imemaddr;
+    assign addr_a = dcif.imemaddr;
     assign addr_b = addr_a + 32'd64; 
 
     logic [18:0] tag_a, tag_b;
@@ -47,7 +31,7 @@ module icache (
     state_t state, n_state;
     logic [2:0] fill_count, n_fill_count;
     
-    // Latched fill targets
+    // Latched fill targets (Protects memory state if CPU flushes/changes addr mid-miss)
     logic [6:0]  active_fill_idx, n_active_fill_idx;
     logic [18:0] active_fill_tag, n_active_fill_tag;
     logic [31:0] active_fill_addr, n_active_fill_addr;
@@ -64,17 +48,19 @@ module icache (
     assign last_chunk_b = end_byte[5:3];
 
     // --- Strictly Registered Hit Logic ---
-    logic hit_a_registered, hit_b_registered, full_hit;
+    logic hit_a, hit_b, full_hit;
 
-    assign hit_a_registered = (cache[idx_a].valid && (cache[idx_a].tag == tag_a)) ||
-                              (state == FILL && (active_fill_idx == idx_a) && (active_fill_tag == tag_a) &&
-                               (fill_count > last_chunk_a)); 
+    // Hit A: True if already in cache, OR if it just finished latching during a fill
+    assign hit_a = (cache[idx_a].valid && (cache[idx_a].tag == tag_a)) ||
+                   (state == FILL && (active_fill_idx == idx_a) && (active_fill_tag == tag_a) &&
+                    (fill_count > last_chunk_a)); // > ensures data is safely latched!
 
-    assign hit_b_registered = (cache[idx_b].valid && (cache[idx_b].tag == tag_b)) ||
-                              (state == FILL && (active_fill_idx == idx_b) && (active_fill_tag == tag_b) &&
-                               (fill_count > last_chunk_b));
+    // Hit B: True if already in cache, OR if it just finished latching during a fill
+    assign hit_b = (cache[idx_b].valid && (cache[idx_b].tag == tag_b)) ||
+                   (state == FILL && (active_fill_idx == idx_b) && (active_fill_tag == tag_b) &&
+                    (fill_count > last_chunk_b));
 
-    assign full_hit = is_split ? (hit_a_registered && hit_b_registered) : hit_a_registered;
+    assign full_hit = is_split ? (hit_a && hit_b) : hit_a;
 
     // --- Sequential Logic ---
     always_ff @(posedge CLK, negedge nRST) begin
@@ -107,20 +93,20 @@ module icache (
         cif.iREN   = (state == FILL);
         cif.iaddr  = active_fill_addr; 
         
-        // ihit is now gated by the latched Read Enable
-        dcif.ihit  = (r_imemREN && full_hit);
+        // ihit combinationally gated by CPU Read Enable
+        dcif.ihit  = (dcif.imemREN && full_hit);
 
         case (state)
             IDLE: begin
-                if (r_imemREN) begin
-                    if (!hit_a_registered) begin
+                if (dcif.imemREN) begin
+                    if (!hit_a) begin
                         n_state = FILL;
                         n_fill_count = 0;
                         n_active_fill_idx = idx_a;
                         n_active_fill_tag = tag_a;
                         n_active_fill_addr = {addr_a[31:6], 6'b0};
                         n_cache[idx_a].valid = 0; 
-                    end else if (is_split && !hit_b_registered) begin
+                    end else if (is_split && !hit_b) begin
                         n_state = FILL;
                         n_fill_count = 0;
                         n_active_fill_idx = idx_b;
@@ -141,7 +127,8 @@ module icache (
                     n_cache[active_fill_idx].valid = 1;
                     n_cache[active_fill_idx].tag = active_fill_tag;
                     
-                    if (r_imemREN && is_split && !hit_b_registered) begin
+                    // If CPU still wants this split instruction, queue up the next block
+                    if (dcif.imemREN && is_split && !hit_b && (idx_a == active_fill_idx)) begin
                         n_fill_count = 0;
                         n_active_fill_idx = idx_b;
                         n_active_fill_tag = tag_b;
@@ -159,6 +146,8 @@ module icache (
     // --- Strictly Registered Data Output ---
     logic [1023:0] virtual_window;
     always_comb begin
+        // CRITICAL PATH CUT: Output strictly reads from the physical flip-flops.
+        // It never reads directly from cif.iload or n_cache.
         virtual_window = {cache[idx_b].data, cache[idx_a].data};
         dcif.imemload = virtual_window[(off_a * 8) +: 160];
     end
