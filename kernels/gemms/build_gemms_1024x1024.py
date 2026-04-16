@@ -139,6 +139,13 @@ def debug_trace(
             print(f"  k={k:3d}: POST C[0,0][0,0]={C_p[0,0]:.1f}  bf16=0x{bf16_round(C_p[0,0]):04X}")
     print()
 
+def to_bf16_f32(x):
+    x = np.asarray(x, dtype=np.float32)
+    u = x.view(np.uint32).copy()
+    lsb = (u >> 16) & np.uint32(1)
+    u_round = u + np.uint32(0x7FFF) + lsb
+    u_bf16 = (u_round & np.uint32(0xFFFF0000)).astype(np.uint32)
+    return u_bf16.view(np.float32)
 
 def main():
     ap = argparse.ArgumentParser()
@@ -205,6 +212,11 @@ def main():
     # A_full = np.ones((FULL_ROWS, FULL_K), dtype=np.float32)
     # B_full = np.ones((FULL_K, FULL_COLS), dtype=np.float32)
     # Expected C: every element = 1024.0
+
+
+
+    A_full = to_bf16_f32(A_full)
+    B_full = to_bf16_f32(B_full)
     
     print("Done.")
     print()
@@ -221,7 +233,7 @@ def main():
     )
 
     asm = f"""
-        lui.s   $20, {TABLE_BASE >> 7} //lui.s instead of addi.s?? 
+        lui.s   $20, {TABLE_BASE >> 7} #lui.s instead of addi.s?? 
         #immediate lenght for addi.s -> 12 bits (0 to 4095) 
 
         lw.s    $3,  {OFF_B_SCPAD}($20)
@@ -379,9 +391,9 @@ def main():
             B_slice = B_full[r0:r_end, c0:c_end] 
 
             BT = B_slice.T
-            for r in range(cols_this):     
-                for c in range(rows_this): 
-                    img_matrix.bf16(tile_base + (r * TILE_COLS + c) * 2, float(BT[r, c]))
+            for r in range(cols_this):
+                for c in range(rows_this):
+                    img_matrix.bf16(tile_base + (r * TILE_COLS + c) * 2, float(BT[r, c]))    
     print("Done.")
 
     print("Writing A tiles...")
