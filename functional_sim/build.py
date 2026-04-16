@@ -1855,7 +1855,43 @@ if __name__ == "__main__":
     ap = argparse.ArgumentParser()
     ap.add_argument("-i", "--input", type=Path, default=None, help="Input assembly file")
     ap.add_argument("-o", "--output", type=Path, default=None, help="Output test file")
+    ap.add_argument(
+        "--packetize",
+        action="store_true",
+        help="Emit packetized instruction rows using program-order scheduling.",
+    )
+    ap.add_argument(
+        "--latency",
+        action="store_true",
+        help="With --packetize, materialize dependency/LSU latency as empty packet rows.",
+    )
+    ap.add_argument(
+        "--bb-local-pack",
+        action="store_true",
+        help="With --packetize, only pack within source-order basic blocks.",
+    )
+    ap.add_argument(
+        "--global-dag-pack",
+        action="store_true",
+        help="Use global DAG packer (may reorder across labels/branches).",
+    )
+    ap.add_argument("--graph", action="store_true", help=argparse.SUPPRESS)
+    ap.add_argument("--no-graph", action="store_true", help=argparse.SUPPRESS)
     args = ap.parse_args()
+
+    use_packetize = bool(
+        args.packetize
+        or args.latency
+        or args.bb_local_pack
+        or args.global_dag_pack
+        or args.graph
+    )
+    if args.no_graph and (args.latency or args.graph):
+        ap.error("Do not combine --no-graph with --latency")
+    if args.bb_local_pack and (args.global_dag_pack or args.graph):
+        ap.error("--bb-local-pack cannot be combined with global DAG packetization")
+    if args.input is not None and args.output is None:
+        args.output = args.input.with_suffix(".in")
 
     demo_asm = """
         lw.s    $1, 0($0)        # $1 = *(0x0) = 0x100
@@ -1867,8 +1903,18 @@ if __name__ == "__main__":
     """
 
     asm = args.input.read_text() if args.input is not None else demo_asm
-    instr_text = emit_test_format(assemble_file(asm))
+    if args.global_dag_pack or args.graph:
+        instr_text = emit_test_format_global_dag_pack(asm)
+    elif use_packetize:
+        instr_text = emit_test_format_latency_program_order(
+            asm,
+            latency_stalls=bool(args.latency),
+            bb_local_pack=bool(args.bb_local_pack),
+        )
+    else:
+        instr_text = emit_test_format(assemble_file(asm))
 
+    # Initialize DRAM state
     if args.input is None:
         img = DRAMWriter() 
         #  mem[0x0] -> 0x100
