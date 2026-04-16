@@ -13,7 +13,7 @@ module add32_fp32accum_bf16_tb_softfloat;
     localparam PERIOD = 2;
     localparam LATENCY = 14; // Adjusted for pipeline depth
     localparam GRS = 0;
-    localparam PRECISION_BITS = 3;
+    localparam PRECISION_BITS = 10;
     localparam MANTISSA_SIZE = 23;
 
     logic tb_clk = 0;
@@ -197,7 +197,7 @@ module add32_fp32accum_bf16_tb_softfloat;
                     if (fail_count < 20)
                         $display("FAIL: Row %0d | Got=%h Exp=%h | ULP=%0d", check_entry.id, tb_result, check_entry.expected, ulp);
                     
-                    if (fail_fd != 0) begin
+                    if (fail_fd != 0 && ulp > 1) begin
                         for (int k=0; k<32; k++) $fwrite(fail_fd, "%h,", check_entry.inputs[k]);
                         $fwrite(fail_fd, "%h,%h,%0d\n", check_entry.expected, tb_result, ulp);
 

@@ -1,0 +1,10 @@
+Describes the seed used and the max ULP error found when seed is given to 
+gen_drif_test.c program
+
+0x12345678F35CB4C6 - 65
+0x12345678F35CB242 - 45
+0x12345678F35C5A8A - 13
+0x12345678F35C54EC - 27 (-37 to 37)
+0x12345678F35C33D8 - 65245 (unconstrained)
+0x12345678F35C2E91 - 12
+0x12345678F35C29D0 - 40

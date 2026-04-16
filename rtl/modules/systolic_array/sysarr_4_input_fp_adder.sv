@@ -289,8 +289,9 @@ module sysarr_4_input_fp_adder #(
         
         // Handle overflow (e.g., 1.111 -> 10.000)
         // sticky_bit = (|norm_val[SUM_WIDTH-4-MANTISSA_SIZE : 0]) | st2_sticky;
-        final_mant = rounded_mant_int[MANTISSA_SIZE-1:0];
         lead_zeros = lead_zeros - (rounded_mant_int[MANTISSA_SIZE] ? 1 : 0); // If we had a carry out, we effectively have one less leading zero
+        final_mant = rounded_mant_int[MANTISSA_SIZE-1:0];
+
         // Exponent Adjustment
         final_exp_calc = $signed({2'b00, st2_exp_base}) + 3 - $signed({2'b00, lead_zeros}) + BIAS_DIFF;
 

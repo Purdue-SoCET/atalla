@@ -25,3 +25,4 @@ scripts/systolic_array/*.csv
 /*failure.csv
 
 obj_dir/*
+!seed.txt
