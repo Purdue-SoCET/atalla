@@ -17,13 +17,8 @@ module head #(parameter logic [scpad_pkg::SCPAD_ID_WIDTH-1:0] IDX = '0) (scpad_i
     logic be_v, fe_v;
     logic grant_be, grant_fe;
 
-<<<<<<< HEAD
-    // Intermediate
-    req_t req_d;
-=======
     // Intermediate - use sel_req_t since that's what head_stomach_req expects
     sel_req_t sel_req_d;
->>>>>>> origin/Vector_S26_L1_TB
 
     always_ff @(posedge hif.clk, negedge hif.n_rst) begin
         if (!hif.n_rst) pipe_busy <= 1'b0;
@@ -31,35 +26,6 @@ module head #(parameter logic [scpad_pkg::SCPAD_ID_WIDTH-1:0] IDX = '0) (scpad_i
     end
 
     always_comb begin
-<<<<<<< HEAD
-        req_d = '0;
-
-        be_v = hif.be_req_valid[IDX];
-        fe_v = hif.fe_req_valid[IDX];
-
-        grant_be = (!hif.w_stall) && be_v;
-        grant_fe = (!hif.w_stall) && (!be_v) && fe_v;
-
-        if (grant_be) req_d = hif.be_req[IDX];
-        else if (grant_fe) req_d = hif.fe_req[IDX];
-    end
- 
-    // head_stomach_req will either go into the scpad_cntrl FIFO or xbar. 
-    // No need to latch here -> LATCH_INT
-    assign hif.head_stomach_req = fvif.vec_req[IDX];
-
-    assign downstream_stall = hif.w_stall || hif.r_stall;
-    assign hif.fe_stall[IDX] = downstream_stall || (fe_v && (pipe_busy || be_v));
-    assign hif.be_stall[IDX] = downstream_stall || (be_v && pipe_busy);
-
-endmodule
-
-`ifndef SYNTHESIS
-
-
-
-`endif 
-=======
         sel_req_d = '0;
 
         // Access .valid field from req_t struct
@@ -95,4 +61,3 @@ endmodule
     assign hif.be_stall[IDX] = downstream_stall;
 
 endmodule
->>>>>>> origin/Vector_S26_L1_TB

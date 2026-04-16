@@ -563,6 +563,9 @@ module vector_core_L2_tb;
         for (int e = 0; e < 4; e++)
             $display("[TB]   v65[%0d] = %h", e, dpi_veggie_read_vector_elem(8'd65, e));
 
+
+        perf_inst.print_summary(cycle_count);
+
         // Cleanup
         dpi_scheduler_destroy();
         dpi_veggie_destroy();
