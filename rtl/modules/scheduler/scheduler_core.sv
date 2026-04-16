@@ -21,7 +21,7 @@ module scheduler_core #(
 )
 (
     input logic CLK, nRST,
-    scheduler_core_if.sc scif
+    scheduler_core_if.sc scif,
 
     //to dcache
     output logic WEN, REN, mem_in_valid,

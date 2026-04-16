@@ -1,24 +1,18 @@
 // ============================================================================
-// vector_core_L2_tb.sv
-// L2 Integration Testbench — DPI-C driven
+// vector_core_L3_tb.sv
+// L3 Integration Testbench 
 //
-// L2 replaces C++ models with real RTL:
-//   Scheduler  → still C++ DPI (drives instructions)
-//   Veggie     → still C++ DPI (VRF reads/writes)
+//   Scheduler  → REAL RTL
+//   Veggie     → REAL RTL
 //   Sysarr     → REAL RTL (sysarr_MEISSA_top)
 //   Scratchpad → REAL RTL (scratchpad)
 //
-// DUT: vector_datapath + scratchpad + systolic_array
-// Owner: Vedant Sharma
+// DUT: scheduler + vector_datapath + scratchpad + systolic_array
+// Owner: Navya Datla
 // ============================================================================
 
 /*
-L2 TB Notes:
-- respond_vlsu() and respond_gsau() are GONE — real RTL handles it
-- sysarr/scratchpad DPI init/destroy/tick are GONE
-- DRAM interface tied off with controllable backpressure injection
-- NUM_SCPADS = 4, all 4 VLSU ports cleared
-- Element-by-element DPI for veggie (same as L1)
+L3 TB:
 */
 
 `timescale 1ns/1ps
@@ -27,9 +21,11 @@ L2 TB Notes:
 `include "vector_if.vh"
 `include "gsau_control_unit_if.vh"
 `include "scheduler_core_if.vh"
+`include "atalla_isa_types.vh"
 
 module vector_core_L3_tb;
     `include "scpad_params.svh"
+    import atalla_isa_pkg::*;
     import vector_pkg::*;
     import scpad_pkg::*;
     import inst_parser_dpi_pkg::*;
@@ -65,13 +61,15 @@ module vector_core_L3_tb;
     // -----------------------------------------------------------------------
     // Interfaces
     // -----------------------------------------------------------------------
+    instruction_packet_t imemload; 
+    logic ihit;
     scheduler_core_if scif ();
     vector_if vif();
     gsau_control_unit_if gsauif();
     scpad_if sif(CLK, nRST);
 
     // -----------------------------------------------------------------------
-    scheduler_core sched_core (.CLK(CLK), .nRST(nRST), .scif(scif));
+    scheduler_core sched_core (.CLK(CLK), .nRST(nRST), .scif(scif), .imemload(imemload), .ihit(ihit));
 
     // -----------------------------------------------------------------------
     // DUT: Vector Datapath
@@ -122,8 +120,8 @@ module vector_core_L3_tb;
         scif.data_load      = '0;
         scif.hit            = 0;
         scif.block_status   = 0;
-        scif.ihit           = 0;
-        scif.iload          = '0;
+        ihit           = 0;
+        imemload          = '0;
         scif.vector_wb_in   = '0;
         scif.SDMA_scalar_rs1s = '0;
         scif.SDMA_scalar_WEN  = '0;
@@ -166,34 +164,34 @@ module vector_core_L3_tb;
 
         //lui imm=7f will put 3f80 (1) in reg
         @(negedge CLK);
-        scif.ihit = 1'b1;
-        scif.iload.inst0 = 40'h3F80B0;  // LUI, rd=1, imm=0x7f (3f80 in bf16)
-        scif.iload.inst1 = 40'h2f; //NOP
-        scif.iload.inst2 = 40'h2f; //NOP
-        scif.iload.inst3 = 40'h2f; //NOP
+        ihit = 1'b1;
+        imemload.inst0 = 40'h3F80B0;  // LUI, rd=1, imm=0x7f (3f80 in bf16)
+        imemload.inst1 = 40'h2f; //NOP
+        imemload.inst2 = 40'h2f; //NOP
+        imemload.inst3 = 40'h2f; //NOP
         @(negedge CLK);
-        scif.ihit = 1'b0;
+        ihit = 1'b0;
 
         // @(negedge CLK); // 16'b1 is way too small for bf16 shit
-        // scif.ihit = 1'b1;
-        // scif.iload.inst0 = 40'h0000800096;  // ADD_I {'opcode': 0b0010110, 'rs1': 0, 'rd': 1, 'imm12': 1}
-        // scif.iload.inst1 = 40'h2f; //NOP
-        // scif.iload.inst2 = 40'h2f; //NOP
-        // scif.iload.inst3 = 40'h2f; //NOP
+        // ihit = 1'b1;
+        // imemload.inst0 = 40'h0000800096;  // ADD_I {'opcode': 0b0010110, 'rs1': 0, 'rd': 1, 'imm12': 1}
+        // imemload.inst1 = 40'h2f; //NOP
+        // imemload.inst2 = 40'h2f; //NOP
+        // imemload.inst3 = 40'h2f; //NOP
         // @(negedge CLK);
-        // scif.ihit = 1'b0;
+        // ihit = 1'b0;
 
 
         repeat(6) @(negedge CLK);   
 
         @(negedge CLK);
-        scif.ihit = 1'b1;
-        scif.iload.inst0 = 40'h00008000CB;  // ADD_VS (vms = 0 (all 1's), vd=1, vs1=0, rs1=1)
-        scif.iload.inst1 = 40'h2f; //NOP
-        scif.iload.inst2 = 40'h2f; //NOP
-        scif.iload.inst3 = 40'h2f; //NOP
+        ihit = 1'b1;
+        imemload.inst0 = 40'h00008000CB;  // ADD_VS (vms = 0 (all 1's), vd=1, vs1=0, rs1=1)
+        imemload.inst1 = 40'h2f; //NOP
+        imemload.inst2 = 40'h2f; //NOP
+        imemload.inst3 = 40'h2f; //NOP
         @(negedge CLK);
-        scif.ihit = 1'b0;
+        ihit = 1'b0;
 
         repeat(15) @(negedge CLK);   
 
