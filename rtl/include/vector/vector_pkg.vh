@@ -50,6 +50,9 @@ package vector_pkg;
     localparam MASK_REG_BITS = 4;
     localparam MASK_WRITE_PORTS = 2;
     localparam MASK_DATA_LENGTH = 32;
+    
+    parameter RDATA_W_forMaskWB = 32;
+    parameter RIDX_W_forMaskWB = 8;
 
     typedef logic [OPCODE_W-1:0] opcode_t;
     typedef logic [VIDX_W-1:0]   vsel_t;
@@ -418,16 +421,24 @@ package vector_pkg;
     } vector_wb_in_t;
 
     typedef struct packed {
+        logic [RDATA_W_forMaskWB-1:0]  data;
+        logic   valid;  // from execute
+        logic   maskOrNot_scalar;
+        logic [RIDX_W_forMaskWB-1:0]  rd; 
+    } scalar_wb_in_maskWBonly_t;
+
+    typedef struct packed {
         vsel_t [WRITE_PORTS-1:0] vd;
         vreg_t [WRITE_PORTS-1:0] vdata;
         logic  [WRITE_PORTS-1:0] WEN;
+        vector_if_wb_ready_t vector_if_wb_ready;
+    } vector_wb_out_t;
 
+    typedef struct packed {
         logic [MASK_WRITE_PORTS-1:0][MASK_REG_BITS-1:0]     mask_WB_wsel;
         logic [MASK_WRITE_PORTS-1:0]                        mask_WB_WEN;
         logic [MASK_WRITE_PORTS-1:0][MASK_DATA_LENGTH-1:0]  mask_WB_wdata;
-        
-        vector_if_wb_ready_t vector_if_wb_ready;
-    } vector_wb_out_t;
+    } mask_wb_out_t;
 
 endpackage
 
