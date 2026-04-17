@@ -31,9 +31,9 @@ def main():
     args = ap.parse_args()
 
     # Change values here for parametrization:
-    COLS      = 20
-    ROWS      = 20
-    NUM_TILES = 3
+    COLS      = 31
+    ROWS      = 31
+    NUM_TILES = 1
 
 
     TILE_ADDR_LOCATION = 60
