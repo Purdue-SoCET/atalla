@@ -25,7 +25,7 @@ module nb_bank_queue(
             assign b_rsel[i] = (bqif.bq_pop == i);
 
             // Generate fifos
-            sync_fifo #(.DEPTH(BANK_NUM), .DWIDTH($bits(bq_slot_t))) bq_fifo_gen ( // TODO: DEPTH NEEDS FINALIZATION - might not matter
+            sync_fifo #(.DEPTH(BANK_NUM), .DWIDTH($bits(bq_slot_t))) bq_fifo_gen ( 
                 .clk(CLK), .rstn(nRST),
                 .wr_en(b_wsel[i]),
                 .din(bqif.fe_bq_slot),

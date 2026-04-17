@@ -1,4 +1,5 @@
-`include "dram_pkg.vh"
+`include "dram_pkg.svh"
+`include "ddr_controller_if.sv"
 `include "scheduler_buffer_if.vh"
 `include "data_transfer_if.vh"
 `include "control_unit_if.vh"
