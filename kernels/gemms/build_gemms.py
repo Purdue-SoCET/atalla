@@ -9,8 +9,8 @@ from pathlib import Path
 import argparse
 import numpy as np
 
-from src.misc.opcode_table import OPCODES, name_to_opcode
-from build_emulator_mary import *
+from functional_sim.src.misc.opcode_table import OPCODES, name_to_opcode
+from functional_sim.build import *
 
 
 def bf16_round(x: float) -> int:
@@ -26,12 +26,14 @@ def bf16_round(x: float) -> int:
 def main():
     ap = argparse.ArgumentParser()
     ap.add_argument("-o", "--output", type=Path, default=Path('tests/gemms.in'), help="Output test file")
+    ap.add_argument("--no-graph", action="store_true", help="Disable dependency graph packet scheduling")
+
     args = ap.parse_args()
 
     # Change values here for parametrization:
-    COLS      = 20
-    ROWS      = 20
-    NUM_TILES = 3
+    COLS      = 31
+    ROWS      = 31
+    NUM_TILES = 1
 
 
     TILE_ADDR_LOCATION = 60
@@ -140,6 +142,24 @@ row_loop:
     """
 
     instrs = assemble_file(asm)
+
+    if args.no_graph:
+        instr_text = emit_test_format(instrs)
+    else:
+        dependency_instrs = convert_instructions(instrs)
+        ready = build_dependency_graph(dependency_instrs, DEFAULT_LATENCY_MAP)
+        packets = greedy_pack(dependency_instrs, ready, max_width=GRAPH_PACKET_WIDTH)
+        scheduled = materialize_scheduled_instructions(
+            instrs,
+            packets,
+            packet_width=GRAPH_PACKET_WIDTH,
+        )
+        instr_text = emit_test_format(
+            scheduled,
+            virtual_packet_size=GRAPH_PACKET_WIDTH,
+        )
+
+
     instr_text = emit_test_format(instrs)
 
     img = DRAMWriter()

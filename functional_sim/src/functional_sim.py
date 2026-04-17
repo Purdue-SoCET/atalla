@@ -537,14 +537,15 @@ def run(mem: Memory, sregs: ScalarRegisterFile, mregs: ScalarRegisterFile, vregs
             elif m.endswith(".vv"):
                 # ------------ GEMM ------------------------------
                 if (m == "gemm.vv"):
-                    # lw.vi fills columns of gemm_weights; SystolicArray.matmul(A, B) with B=gemm_weights (teammate model).
-                    src1 = np.asarray(vregs.read(inst["vs1"]), dtype=np.float32)
-                    src2 = np.asarray(vregs.read(inst["vs2"]), dtype=np.float32)
-                    matmul_out = EU.execute(m, A=src1.reshape(1, -1), B=gemm_weights)
-                    vregs.write(
-                        inst["vd"],
-                        np.asarray(matmul_out, dtype=np.float32).reshape(-1) + src2,
-                    )
+                    vs1_vec = np.array(vregs.read(inst['vs1']), dtype=np.float32)
+                    vs2_vec = np.array(vregs.read(inst['vs2']), dtype=np.float32)
+
+                    vs1_trimmed = vs1_vec.copy()
+                    vs1_trimmed[num_weights:] = 0.0
+                               
+                    result = vs1_trimmed @ gemm_weights + vs2_vec
+                    vregs.write(inst['vd'], result)
+                    # vregs.write(inst['vd'], vregs.read(inst['vs1']) @ gemm_weights + vregs.read(inst['vs2']))
                 else:
                     src1 = vregs.read(inst['vs1'])
                     src2 = vregs.read(inst['vs2'])
@@ -571,15 +572,16 @@ def run(mem: Memory, sregs: ScalarRegisterFile, mregs: ScalarRegisterFile, vregs
             # ---------------- VI (WEIGHTS ONLY) ----------------
             elif (m == "lw.vi"):
                 src1 = vregs.read(inst['vs1'])
+                if num_weights == 0:
+                    gemm_weights = np.zeros((32, 32), dtype=np.float32)
                 if num_weights < 32:
-                    # Initial fill: Place at the next available slot from left to right
-                    gemm_weights[:, num_weights] = src1
+                    col = src1.copy()
+                    col[len(src1):] = 0.0   # shouldn't be needed but be safe
+                    gemm_weights[:, num_weights] = col
                     num_weights += 1
                 else:
-                    # Matrix is full: Shift everything to the right and insert at the left (index 0)
-                    # gemm_weights[:, 1:] moves columns 0-30 to positions 1-31
-                    gemm_weights[:, 1:] = gemm_weights[:, :-1]
-                    gemm_weights[:, 0] = src1
+                    gemm_weights[:, :-1] = gemm_weights[:, 1:]
+                    gemm_weights[:, -1] = src1
             elif (m == "vmov.vts"):
                 src1 = vregs.read(inst['vs1'])
                 temp = fp32_to_hex(src1[inst['imm8']])
