@@ -7,8 +7,8 @@ EXTRA_dram_top = $(wildcard $(SCRDIR)/*.sv)
 INCLUDE = ./rtl/include/memory/axi_bus/
 TB = ./tb/unit/memory/axi_bus/
 MODULE = ./rtl/modules/memory/axi_bus/
-#SCRIPT = ./scripts/memory/axi_bus/
-SCRIPT = ./waves/
+SCRIPT = ./scripts/memory/axi_bus/
+#SCRIPT = ./waves/
 SCRATCH := work
 
 VSIM_FLAGS ?= -coverage -voptargs="+acc"
