@@ -23,33 +23,68 @@ module v_wb_arbiter #(
     logic [1:0] bankSelected;
     vreg_t local_vreg;
 
+    logic [1:0] banks_mask; // valid for each port in Mask
+    logic bankSelected_mask;
+
     always_comb begin
 	//vif.vector_wb_out.vector_if_wb_ready = '0;
 	vif.vector_wb_out.WEN   = '0;
 	vif.vector_wb_out.vd    = '0;
 	vif.vector_wb_out.vdata = '0;
 
-    vif.vector_wb_out.mask_WB_wsel = '0;
-    vif.vector_wb_out.mask_WB_WEN = '0;
-    vif.vector_wb_out.mask_WB_wdata = '0;
+    vif.mask_wb_out.mask_WB_wsel = '0;
+    vif.mask_wb_out.mask_WB_WEN = '0;
+    vif.mask_wb_out.mask_WB_wdata = '0;
 
 	vif.vector_wb_out.vector_if_wb_ready = '1; // First, all writeback readys are 1.
+    vif.scalarMaskNotReady = 1; // Unit 2 of scalar core: handling masks
     //clear bank when veggie ready to accept new data
     banks = '0;
+    banks_mask = '0;
 
-
-    //Mask stuff: writing only using port 0 for now
+    //Mask stuff:
+    //Vector Mask write
     if (vif.vector_wb_in.mvvOrMvs) begin
-        vif.vector_wb_out.mask_WB_wsel[0] = vif.vector_wb_in.vector_if_lanes_out.result_collectors[0].vd_output; //Will this work??
-        vif.vector_wb_out.mask_WB_WEN[0] = 1;
-        vif.vector_wb_out.mask_WB_wdata = '0;
+        bankSelected_mask = vif.vector_wb_in.vector_if_lanes_out.result_collectors[0].vd_output[0];
+        // Bank 0 if last bit of address is 0. Bank 1 if last bit of address is 1
 
-        local_vreg = vif.vector_wb_in.vector_if_lanes_out.result_collectors[0].vector_output;
+        if (!(banks_mask[bankSelected_mask])) begin
+            banks_mask[bankSelected_mask] = 1;
+            vif.mask_wb_out.mask_WB_wsel[bankSelected_mask] = vif.vector_wb_in.vector_if_lanes_out.result_collectors[0].vd_output; //Will this work??
+            vif.mask_wb_out.mask_WB_WEN[bankSelected_mask] = 1;
+            vif.mask_wb_out.mask_WB_wdata = '0;
 
-        for (int i = 0; i < 32; i++) begin
-            vif.vector_wb_out.mask_WB_wdata[0][i] = local_vreg[i][0];
+            local_vreg = vif.vector_wb_in.vector_if_lanes_out.result_collectors[0].vector_output;
+
+            for (int i = 0; i < 32; i++) begin
+                vif.mask_wb_out.mask_WB_wdata[bankSelected_mask][i] = local_vreg[i][0];
+            end
+        end else begin
+            vif.vector_wb_out.vector_if_wb_ready.lanes_wb_ready[0] = 0; // Bank conflict for mask writeback
         end
     end
+
+    //Scalar Writeback Mask
+    if (vif.scalar_wb_in_maskWBonly.maskOrNot_scalar) begin
+        bankSelected_mask = vif.scalar_wb_in_maskWBonly.rd[0];
+        // Bank 0 if last bit of address is 0. Bank 1 if last bit of address is 1
+
+        if (!(banks_mask[bankSelected_mask])) begin
+            banks_mask[bankSelected_mask] = 1;
+            vif.mask_wb_out.mask_WB_wsel[bankSelected_mask] = vif.scalar_wb_in_maskWBonly.rd;
+            vif.mask_wb_out.mask_WB_WEN[bankSelected_mask] = 1;
+            vif.mask_wb_out.mask_WB_wdata = '0;
+
+            local_vreg = vif.scalar_wb_in_maskWBonly.data;
+
+            for (int i = 0; i < 32; i++) begin
+                vif.mask_wb_out.mask_WB_wdata[bankSelected_mask][i] = local_vreg[0];
+            end
+        end else begin
+            vif.scalarMaskNotReady = 0;
+        end
+    end
+
 
     //WB0
     if (vif.vector_wb_in.vector_if_vlsu_out.wb[0].valid) begin

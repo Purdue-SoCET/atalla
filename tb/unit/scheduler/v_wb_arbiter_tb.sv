@@ -134,15 +134,16 @@ module tb_v_wb_arbiter;
         vif.vector_wb_in.mvvOrMvs = 1;
         vif.vector_wb_in.vector_if_lanes_out.result_collectors[0].wb_valid = 1;
         vif.vector_wb_in.vector_if_lanes_out.result_collectors[0].vd_output= 8'b00001011; // Bank ID 00
-        vif.vector_wb_in.vector_if_lanes_out.result_collectors[0].vector_output  = '0;
+        vif.vector_wb_in.vector_if_lanes_out.result_collectors[0].vector_output  = '0+1'b1;
 
         // should sent out a mask full of ones
 
-        #10; //don't do anything
-        vif.vector_wb_in.mvvOrMvs = 1;
-        vif.vector_wb_in.vector_if_lanes_out.result_collectors[0].wb_valid = 1;
-        vif.vector_wb_in.vector_if_lanes_out.result_collectors[0].vd_output= 8'b00001011; // Bank ID 00
-        vif.vector_wb_in.vector_if_lanes_out.result_collectors[0].vector_output  = '1;
+        //MaskBankConflict I guess
+
+        vif.scalar_wb_in_maskWBonly.maskOrNot_scalar = 1;
+        vif.scalar_wb_in_maskWBonly.valid = 1;
+        vif.scalar_wb_in_maskWBonly.rd= 8'b00001011; // Bank ID 00
+        vif.scalar_wb_in_maskWBonly.data  = '0+1'b1;
 
         #10; //don't do anything
         vif.vector_wb_in.mvvOrMvs = 0;

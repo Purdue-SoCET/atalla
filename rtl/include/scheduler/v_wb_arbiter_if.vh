@@ -12,10 +12,16 @@ interface v_wb_arbiter_if;
 
   vector_wb_in_t vector_wb_in;
   vector_wb_out_t vector_wb_out;
+  scalar_wb_in_maskWBonly_t scalar_wb_in_maskWBonly;
+  mask_wb_out_t mask_wb_out;
+  logic scalarMaskNotReady;
 
   modport v_wb_arbiter_if (
     input vector_wb_in,
-    output vector_wb_out
+    input scalar_wb_in_maskWBonly,
+    output vector_wb_out,
+    output mask_wb_out,
+    output scalarMaskNotReady
   );
 
 endinterface
