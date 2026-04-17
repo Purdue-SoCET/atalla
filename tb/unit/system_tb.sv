@@ -10,14 +10,14 @@ module system_tb;
     logic ram_mem_REN_d;
     logic ram_mem_WEN_d;
     logic [31:0] ram_mem_addr_d;
-    logic [31:0] ram_mem_store_d;
-    logic [31:0] ram_mem_data_d;
+    logic [63:0] ram_mem_store_d;
+    logic [63:0] ram_mem_data_d;
     logic ram_mem_complete_d;
 
     logic ram_mem_valid_i;
     logic ram_mem_WEN_i;
     logic [31:0] ram_mem_addr_i;
-    logic [31:0] ram_mem_store_i;
+    logic [63:0] ram_mem_store_i;
     logic [63:0] ram_mem_data_i;
     logic ram_mem_complete_i;
 
@@ -46,10 +46,10 @@ module system_tb;
         .dp_out_flushed(dcache_flushed)
     );
 
-    sim_ram_rr_32 #(
+    sim_ram_rr #(
         .ADDR_WIDTH (ADDR_WIDTH),
         .MEM_BYTES  (MEM_BYTES),
-        .INIT_FILE  ("tb/unit/mem_files/divi_three_times.hex"),
+        .INIT_FILE  ("tb/unit/mem_files/lui.hex"),
         .INIT_IS_HEX(1'b1),
         .DUMP_FILE  ("tb/unit/mem_files/final_mem.hex"),
         .BIG_ENDIAN (1'b0)
@@ -59,7 +59,7 @@ module system_tb;
         .ic_req_valid(ram_mem_valid_i),
         .ic_req_we(1'b0),
         .ic_req_addr(ram_mem_addr_i),
-        .ic_req_wdata(32'b0),
+        .ic_req_wdata(64'b0),
         .ic_resp_rdata(ram_mem_data_i),
         .ic_resp_hit(ram_mem_complete_i),
         // D-cache

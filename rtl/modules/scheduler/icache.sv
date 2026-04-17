@@ -1,21 +1,20 @@
-
 `include "atalla_isa_types.vh"
 
-import atalla_isa_pkg::*;
-
 module icache (
-  input logic CLK, nRST,
-  //to/from scheduler (fetch)
-  input word_t imemaddr,
-  input logic imemREN,
-  output logic ihit,
-  output logic imemready,
-  output instruction_packet_t imemload,
-  //to/from memory
-  input logic iwait,
-  input logic [63:0] iload,
-  output logic iREN,
-  output logic [31:0] iaddr
+    input logic CLK, nRST,
+    // System control
+    input logic halt,               // Connect to dcif.halt
+    // to/from scheduler (fetch)
+    input word_t imemaddr,
+    input logic imemREN,
+    output logic ihit,
+    output logic imemready,
+    output instruction_packet_t imemload,
+    // to/from memory
+    input logic iwait,
+    input logic [63:0] iload,
+    output logic iREN,
+    output logic [31:0] iaddr
 );
     typedef struct packed {
         logic valid;
@@ -101,7 +100,8 @@ module icache (
         n_active_fill_tag = active_fill_tag;
         n_active_fill_addr = active_fill_addr;
         
-        iREN   = (state == FILL);
+        // Gate iREN combinationally so requests stop the exact cycle halt goes high
+        iREN   = (state == FILL) && !halt;
         iaddr  = active_fill_addr; 
         
         // ihit combinationally gated by CPU Read Enable
@@ -109,7 +109,8 @@ module icache (
 
         case (state)
             IDLE: begin
-                if (imemREN) begin
+                // Do not initiate a fill if halted
+                if (imemREN && !halt) begin
                     if (!hit_a) begin
                         n_state = FILL;
                         n_fill_count = 0;
@@ -129,23 +130,23 @@ module icache (
             end
 
             FILL: begin
-                if (!iwait) begin
-                    n_cache[active_fill_idx].data[(fill_count*64) +: 64] = iload;
-                    n_fill_count = fill_count + 1;
-                end
+                // Immediate escape hatch if halted
+                if (halt) begin
+                    n_state = IDLE;
+                    n_fill_count = 0;
+                end else begin
+                    if (!iwait) begin
+                        n_cache[active_fill_idx].data[(fill_count*64) +: 64] = iload;
+                        n_fill_count = fill_count + 1;
+                    end
 
-                if (!iwait && fill_count == 3'd7) begin
-                    n_cache[active_fill_idx].valid = 1;
-                    n_cache[active_fill_idx].tag = active_fill_tag;
-                    
-                    // If CPU still wants this split instruction, queue up the next block
-                    if (imemREN && is_split && !hit_b && (idx_a == active_fill_idx)) begin
-                        n_fill_count = 0;
-                        n_active_fill_idx = idx_b;
-                        n_active_fill_tag = tag_b;
-                        n_active_fill_addr = {addr_b[31:6], 6'b0};
-                        n_cache[idx_b].valid = 0;
-                    end else begin
+                    if (!iwait && fill_count == 3'd7) begin
+                        n_cache[active_fill_idx].valid = 1;
+                        n_cache[active_fill_idx].tag = active_fill_tag;
+                        
+                        // ALWAYS return to IDLE unconditionally to cleanly close the burst.
+                        // If it's a split instruction, the IDLE state will naturally catch 
+                        // the missing block 'B' on the very next clock edge.
                         n_state = IDLE;
                         n_fill_count = 0;
                     end

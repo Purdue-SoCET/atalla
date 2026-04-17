@@ -2,7 +2,7 @@
 `define CACHE_TYPES_PKG_VH
 
     parameter CACHE_SIZE = 1024;
-    parameter BLOCK_SIZE = 4;
+    parameter BLOCK_SIZE =16;
     parameter WORD_SIZE = 1; 
     parameter NUM_WAYS = 4;
     parameter NUM_BANKS = 1;

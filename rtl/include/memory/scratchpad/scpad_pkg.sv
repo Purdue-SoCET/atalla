@@ -35,6 +35,8 @@ package scpad_pkg;
     localparam int DRAM_VECTOR_MASK_LANES = MAX_DRAM_BUS_BITS/ELEM_BITS; // (64 bits / 16 bits) means 4 elements, lanes, per request. 
     localparam int DRAM_VECTOR_MASK_LANES_SHIFT = $clog2(DRAM_VECTOR_MASK_LANES);
 
+    localparam int SCALAR_REG_BITS=8;
+
     //////////////////////////////////////////////////////////////////////
     /////////////////////////// Helper Functions /////////////////////////
     //////////////////////////////////////////////////////////////////////
@@ -79,6 +81,7 @@ package scpad_pkg;
         logic [MAX_DIM_WIDTH-1:0] num_cols;
         logic [FULL_MATRIX_DIM_WIDTH-1:0] full_num_cols;
         logic [SCPAD_ID_WIDTH-1:0] scpad_id;
+        logic [SCALAR_REG_BITS-1:0] rd;
     } sched_req_t;
 
     typedef struct packed {
