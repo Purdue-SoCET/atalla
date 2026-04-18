@@ -474,6 +474,50 @@ class write_driver;
         end
     endtask
 
+    // task drive(aw_txn t);
+    //     w_txn wt;
+    //     logic [WDATA-1:0] dat;
+    //     logic [WSTRB-1:0] stb;
+
+    //     // Beat 0: AW + W fire on a single unified handshake
+    //     @(negedge axi_tb.CLK);
+    //     dat = {$urandom, $urandom}; stb = $urandom;
+    //     wt = new();
+    //     wt.mid = t.mid; wt.id = t.id; wt.len = t.len;
+    //     wt.data = dat; wt.strb = stb; wt.last = (t.len == 0);
+    //     scb.push_w_exp(wt);
+
+    //     set_valid(1'b1);
+    //     set_aw(t);
+    //     set_w(t.id, dat, stb, wt.last);
+
+    //     // do @(posedge axi_tb.CLK); while (!get_wr_ready());
+    //     if (get_wr_ready()) @(negedge axi_tb.CLK);
+    //     else begin
+    //         while (!get_wr_ready()) @(negedge axi_tb.CLK); @(negedge axi_tb.CLK);
+    //     end
+    //     clear_aw();
+
+    //     // Beats 1..len: only W changes
+    //     for (int i = 1; i <= t.len; i++) begin
+    //         dat = {$urandom, $urandom}; stb = $urandom;
+    //         wt = new();
+    //         wt.mid = t.mid; wt.id = t.id; wt.len = t.len;
+    //         wt.data = dat; wt.strb = stb; wt.last = (i == t.len);
+    //         scb.push_w_exp(wt);
+
+    //         set_w(t.id, dat, stb, wt.last);
+    //         //do @(posedge axi_tb.CLK); while (!get_wr_ready());
+    //         if (get_wr_ready()) @(negedge axi_tb.CLK);
+    //         else begin
+    //             while (!get_wr_ready()) @(negedge axi_tb.CLK); @(negedge axi_tb.CLK);
+    //         end
+    //     end
+
+    //     set_valid(1'b0);
+    //     clear_w();
+    // endtask
+
     task drive(aw_txn t);
         w_txn wt;
         logic [WDATA-1:0] dat;
@@ -491,14 +535,16 @@ class write_driver;
         set_aw(t);
         set_w(t.id, dat, stb, wt.last);
 
-        // do @(posedge axi_tb.CLK); while (!get_wr_ready());
+        // Initial handshake: Wait for ready to go high
         if (get_wr_ready()) @(negedge axi_tb.CLK);
         else begin
             while (!get_wr_ready()) @(negedge axi_tb.CLK); @(negedge axi_tb.CLK);
         end
+        
         clear_aw();
+        set_valid(1'b0); // Drop valid immediately after handshake
 
-        // Beats 1..len: only W changes
+        // Beats 1..len: Stream continuously, ignoring ready
         for (int i = 1; i <= t.len; i++) begin
             dat = {$urandom, $urandom}; stb = $urandom;
             wt = new();
@@ -507,14 +553,10 @@ class write_driver;
             scb.push_w_exp(wt);
 
             set_w(t.id, dat, stb, wt.last);
-            //do @(posedge axi_tb.CLK); while (!get_wr_ready());
-            if (get_wr_ready()) @(negedge axi_tb.CLK);
-            else begin
-                while (!get_wr_ready()) @(negedge axi_tb.CLK); @(negedge axi_tb.CLK);
-            end
+            
+            // Just advance the clock one cycle. No ready check!
+            @(negedge axi_tb.CLK);
         end
-
-        set_valid(1'b0);
         clear_w();
     endtask
 
