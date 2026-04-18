@@ -66,7 +66,7 @@ module nb_barb(
     //Priority encoder for finding bank with priority.
     logic [$clog2(BANK_NUM)-1:0] priority_idx;
     logic idrc; //I don't really care about what this bit is, it should always be one. 
-    //priority_enc #(.BANK_NUM(16)) ENCODER_PRI (priority_sr, priority_idx, idrc);
+    priority_enc #(.BANK_NUM(16)) ENCODER_PRI (priority_sr, priority_idx, idrc);
 
     //  register storing bank group of the last command. This ensures the compliance of timing parameters of two 
     //  successive transactions that target the same bank group. This timimg parameter, tCCD_L, is slightly more 
@@ -82,32 +82,72 @@ module nb_barb(
         end
     end
     
-    logic [BANK_NUM-1:0] be_arb_next; 
+    logic [2*BANK_NUM-1:0] be_arb_next; 
     always_ff @(posedge CLK, negedge nRST) begin
 	if(!nRST)
 		barb.be_arb <= 'b0;
 	else 
 		barb.be_arb <= (be_arb_next[2 * BANK_NUM - 1:BANK_NUM] | be_arb_next[BANK_NUM-1:0]);	
     end
+
+    logic [$clog2(ID_NUM)-1:0] selected_bank_next; 
+    logic selected_bank_ready_next;
+
+    priority_enc #(.BANK_NUM(16)) ENCODER_NEXT ((be_arb_next & barb.be_queue_ready), selected_bank_next, selected_bank_ready_next);
     //Combinational block for selecting bank based on priority.
-    logic [$clog2(BANK_NUM):0] k;
-    logic [$clog2(BANK_NUM):0] x;
+    //logic [$clog2(BANK_NUM):0] k;
+    //logic [$clog2(BANK_NUM):0] x;
     logic [BANK_NUM*2-1:0] mask;
     logic [BANK_NUM*2-1:0] be_queue_ready_double;
     logic [BANK_NUM*2-1:0] be_cmd_double_ref;
     logic [BANK_NUM*2-1:0] be_cmd_double_act;
     logic [BANK_NUM*2-1:0] bg_mask;  
+    logic ref_re_next; 
+    dram_state_t state_next;
+    logic [RANK_BITS-1:0] RA0_next;
+    logic [BANK_GROUP_BITS-1:0] BG0_next;
+    logic [BANK_BITS-1:0] BA0_next;
+    logic [ROW_BITS-1:0] R0_next;
+    logic [COLUMN_BITS-1:0] C0_next; 
     assign mask = {(BANK_NUM*2){1'b1}} << priority_idx;
-    assign bg_mask = ({BG_MASK, BG_MASK} << prev_group) | { {(2*BANK_NUM - $clog2(BANK_NUM)-2){1'b0}}  , prev_group};
+    assign bg_mask = ({BG_MASK, BG_MASK} << prev_group) | { {(2*BANK_NUM - ($clog2(BANK_NUM)-2)){1'b0}}  , prev_group};
     assign be_queue_ready_double = {barb.be_queue_ready, barb.be_queue_ready} & mask; 
     assign be_cmd_double_ref = {enum_compare(barb.be_cmd, {(BANK_NUM){fsm_t'(REF)}}), enum_compare(barb.be_cmd, {(BANK_NUM){fsm_t'(REF)}} ) } & mask; 
     assign be_cmd_double_act = {enum_compare(barb.be_cmd, {(BANK_NUM){fsm_t'(ACT)}}), enum_compare(barb.be_cmd, {(BANK_NUM){fsm_t'(ACT)}} ) } & mask;
+    assign RA0_next = 0;
+    assign BG0_next = selected_bank_next[$clog2(BANK_NUM)-3:0];
+    assign BA0_next = selected_bank_next[$clog2(BANK_NUM)-1:$clog2(BANK_NUM)-2]; 
+    assign R0_next = barb.be_r[selected_bank_next]; 
+    assign C0_next = barb.be_c[selected_bank_next]; 
     always_comb begin : ARB_BLOCK
 	be_arb_next = 'b0;
+	ref_re_next = 1'b0;
+	state_next = NOP; 
         if(rollover_S && !rollover_L) begin
 
 	    be_arb_next = ( (be_queue_ready_double & (~be_cmd_double_ref) & ( four_access ? ~(be_cmd_double_act) : {(2*BANK_NUM){1'b1}}) & (bg_mask) ) &  ~(be_queue_ready_double & (~be_cmd_double_ref) & (four_access ? ~(be_cmd_double_act) : {(BANK_NUM*2){1'b1}} ) & (bg_mask) - 'b1 )); 
-/*
+		
+	    if(!selected_bank_ready_next) begin
+		state_next = NOP; 
+	    end else begin
+		case(barb.be_cmd[selected_bank_next])
+				
+			ACT: begin
+				state_next = ACTIVATE;
+			end
+			FSM_READ: begin
+				state_next = READ;
+			end
+			FSM_WRITE: begin
+				state_next = WRITE;
+			end
+			PRE: begin
+				state_next = PRECHARGE; 
+			end
+	
+		endcase	
+	    end
+	    /*
             for(k = 'b0; k < (BANK_NUM << 1) ; k++) begin
                 if(be_queue_ready_double[k] && ( (prev_group != k[1:0]) && (prev_group != k[BANK_NUM + 'b1:BANK_NUM]) ) && (!be_cmd_double_ref[k])  ) begin
                     if( (be_cmd_double_act[k]) &&  !four_access  || (be_cmd_double_act[k]) ) begin
@@ -122,13 +162,16 @@ module nb_barb(
 
             //Handling refreshes
             if( (barb.be_cmd == {BANK_NUM{REF}}) && (barb.be_queue_ready == {BANK_NUM{1'b1}}) ) begin 
+		ref_re_next = 1'b1;
+		state_next = REFRESH; 
+		
 
                 be_arb_next = {(BANK_NUM * 2){1'b1}};
 
             end else begin //Now the default case for for selecting banks after rollover_L is reached.
 
 		be_arb_next = (be_queue_ready_double & ~be_cmd_double_ref & (four_access ? ~(be_cmd_double_act) : {(2*BANK_NUM){1'b1}})) & ~(be_queue_ready_double & ~be_cmd_double_ref & (four_access ? ~(be_cmd_double_act) : {(2*BANK_NUM){1'b1}} ) - 'b1 );
-		/*
+	/*
                 for(x = 'b0; x < BANK_NUM; x++) begin
                     if(be_queue_ready_double[x]) begin
                         if( be_cmd_double_act[x] && !four_access || (be_cmd_double_ref[x]) ) begin
@@ -138,12 +181,58 @@ module nb_barb(
                     end
                 end
 		*/
+		
+	    if(!selected_bank_ready_next) begin
+		state_next = NOP; 
+	    end else begin
+		case(barb.be_cmd[selected_bank_next])
+				
+			ACT: begin
+				state_next = ACTIVATE;
+			end
+			FSM_READ: begin
+				state_next = READ;
+			end
+			FSM_WRITE: begin
+				state_next = WRITE;
+			end
+			PRE: begin
+				state_next = PRECHARGE; 
+			end
+	
+		endcase	
+	    end
 
             end
 
         end
 
 
+    end
+    
+    always_ff @(posedge CLK, negedge nRST) begin
+	
+	    if(!nRST) begin
+		barb.ref_re <= 1'b0;
+		barb.state <= IDLE;
+		barb.nstate <= IDLE;
+		barb.RA0 <= 'b0;
+		barb.BG0 <= 'b0;
+		barb.BA0 <= 'b0;
+		barb.R0 <= 'b0;
+		barb.C0 <= 'b0;
+	    end
+	    else begin
+		barb.ref_re <= ref_re_next;
+		barb.state <= state_next;
+		barb.nstate <= IDLE;
+		barb.RA0 <= RA0_next;
+		barb.BG0 <= BG0_next;
+		barb.BA0 <= BA0_next;
+		barb.R0 <= R0_next;
+		barb.C0 <= C0_next; 
+	    end
+	
     end
 
     //logic for pushing metadata to the read id queue for storing in-flight read IDs.
@@ -154,6 +243,7 @@ module nb_barb(
     //logic for commanding write data queues to burst data to DRAM.
     assign barb.be_wid = barb.be_id[selected_bank];
     assign barb.be_write = selected_bank_ready && (fsm_t'(barb.be_cmd[selected_bank]) == FSM_WRITE);
-
-
+    
+   
+ 
 endmodule 

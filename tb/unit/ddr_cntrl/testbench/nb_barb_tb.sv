@@ -10,7 +10,7 @@ module nb_barb_tb;
     parameter PERIOD = 10;
     int test_num = 0;
     int passed_cnt = 0;
-    localparam TEST_CNT = 1000;
+    localparam TEST_CNT = 10000;
 
     // clock
     always #(PERIOD/2) CLK++;
@@ -237,7 +237,9 @@ module nb_barb_tb;
             for (int i = 0; i < TEST_CNT; i++) begin
                 bank_id = {input_vec[i].b, input_vec[i].bg};
                 $display("T=%0t | Bank %0d Ready: Cmd=%s, Row=%h", $time, bank_id, input_vec[i].cmd.name(), input_vec[i].row);
-                drive_bank_case(i);
+                @(posedge CLK);
+		drive_bank_case(i);
+		@(posedge CLK);
                 wait_pos(bank_id, input_vec[i].cmd); 
                 case (input_vec[i].cmd)
                     FSM_READ: check_read(i, exp_vec[i].exp_push_id, exp_vec[i].exp_rid, exp_vec[i].exp_rlen);
@@ -250,6 +252,7 @@ module nb_barb_tb;
                 endcase
                 ddrif.be_queue_ready[bank_id] = 'b0;
                 ddrif.be_cmd[bank_id] = FSM_IDLE;
+		@(posedge CLK);
             end
         end
     endtask
@@ -284,11 +287,12 @@ module nb_barb_tb;
         drive_bank_request(1, ACT, 15'h2222, 10'h002, 4'h1);
         drive_bank_request(2, ACT, 15'h3333, 10'h003, 4'h2);
         drive_bank_request(3, ACT, 15'h4444, 10'h004, 4'h3);
-
-
+        drive_bank_request(4, ACT, 15'h5555, 10'h005, 4'h4);
+        wait_pos(3, FSM_READ);
+        @(posedge CLK);
 
         if (passed_cnt == TEST_CNT) $display("\n--- All DRAM behavior tests passed ---");
-        else $display("\n--- Passed %0d/%0d cases ---", passed_cnt, TEST_CNT);
+        else $display("\n--- Passed %0d/%0d Vector cases --- ", passed_cnt, TEST_CNT);
         $finish;
     end
 
