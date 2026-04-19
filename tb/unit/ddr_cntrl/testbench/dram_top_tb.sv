@@ -402,17 +402,17 @@ module dram_top_tb;
     } : {64{1'bz}};
 
     //Assign these DQ signals back with data transfer (bidirectional) //TODO: Is this necessary? 
-    assign ddrif.DQS_t = ~dq_en ? iDDR4_1.DQS_t : 1'bz;
-    assign ddrif.DQS_c = ~dq_en ? iDDR4_1.DQS_c: 1'bz;
-    assign ddrif.DM_n = ~dq_en ? iDDR4_1.DM_n: 1'bz;
-    assign ddrif.COL_choice = ddrif.ctrl.offset; 
+    assign ddrif.data_trans.DQS_t = ~dq_en ? iDDR4_1.DQS_t : 1'bz;
+    assign ddrif.data_trans.DQS_c = ~dq_en ? iDDR4_1.DQS_c: 1'bz;
+    assign ddrif.data_trans.DM_n = ~dq_en ? iDDR4_1.DM_n: 1'bz;
+    // NOTE: COL_choice mapping needs to be verified - check if this exists in ctrl modport
+    // assign ddrif.data_trans.COL_choice = ddrif.ctrl.offset; 
 
     // Creating class for the transaction -> since this is now an AXI bus vs. scheduler fifo  
     class axi_trans;
         // Getting the AXI Sub->Load/Store Queue and WDQ(wrapper)
         virtual ddr_controller_if.stq           svif;
         virtual ddr_controller_if.ldq           lvif; 
-        virtual ddr_controller_if.wdata_wrapper wvif; 
 
         //Random rank, bank group, bank, row, col, offset (these go in stq/ldq)
         rand logic [RANK_BITS - 1:0] rank;
@@ -425,12 +425,6 @@ module dram_top_tb;
         // RANDOM AXI COMMANDS
         rand logic [$clog2(ID_NUM)-1:0] id;
         rand logic [3:0] len; // TODO: Maybe this needs a separate function 
-
-        // RANDOM WDQ COMMANDS
-        rand logic [7:0] wstrb;
-        rand logic [63:0] wdata; 
-        rand logic [$clog2(ID_NUM)-1:0] wid; 
-        rand logic [2:0] wlen;
 
         // Function based 
         logic valid; 
@@ -462,13 +456,11 @@ module dram_top_tb;
         } */
 
         function new (
-            virtual ddr_controller_if.stq           svif, 
-            virtual ddr_controller_if.ldq           lvif, 
-            virtual ddr_controller_if.wdata_wrapper wvif
+            virtual ddr_controller_if.stq  svif, 
+            virtual ddr_controller_if.ldq  lvif, 
         );
             this.svif = svif;
             this.lvif = lvif;
-            this.wvif = wvif;
             // sch_group = new();
         endfunction
 
@@ -485,25 +477,35 @@ module dram_top_tb;
             end
         endfunction
 
-        function gen_valid(string testcase)
+        function gen_valid(string testcase); // TODO: 
             if (testcase == "invalid") valid = '0;
             else valid = '1;  
         endfunction 
     endclass
 
     //Class for generate data (This is not necessary)
-    /* class creating_dt;
-        rand logic [63:0] data_store;
-        function new ();
+    class creating_dt;
+        virtual ddr_controller_if.wdata_wrapper wvif;
+        
+        rand logic [7:0] wstrb;
+        rand logic [63:0] wdata; 
+        rand logic [$clog2(ID_NUM)-1:0] wid; 
+        rand logic [2:0] wlen;
 
+        function new (
+            // RANDOM WDQ COMMANDS
+            virtual ddr_controller_if.wdata_wrapper wvif;
+        );
+            this.wvif = wvif;
         endfunction
+
         function display;
             $display ("data_store %0x", data_store);
         endfunction
-    endclass */
+    endclass
 
     //Define class
-    // creating_dt dt_class;   
+    creating_dt dt_class;   
     axi_trans sch;
 
     /* //Use this task to add a request into scheduler FIFO
@@ -528,34 +530,21 @@ module dram_top_tb;
 
     
     // TODO: FIX ABOVE, THEN WORK ON BELOW 
-    /* task writing_1(input logic [31:0] addr, input creating_dt dt_class);
+    task writing_1(input logic [31:0] addr);
         begin
-        add_request(.addr(addr), .write(1'b1), .data(64'hAAAA_AAAA_AAAA_AAAA));
-        while (!ddrif.wr_en) begin
-            @(posedge CLK);
-        end
-
-        //This loop will wriete
+        //This loop will write
         for (int i = 0; i < 9; i++) begin
             dt_class.randomize();
             // dt_class.display();
-            ddrif.memstore = dt_class.data_store;
-            // $display ("Here is  i : %0x, and memstore: %0x", i, dt_class.data_store);
-            if (i != 0) begin
-                cache_addr = addr[30:16];
-                cache_write = 1'b1;
-                cache_store = dt_class.data_store;
-                cache_offset = i - 1;
-            end
+            // Send the Write Data to both the STQ and WDQ
+            ddrif.awaddr = addr; 
+            // Check for valid
             @(posedge CLKx2);
         end
-        ddrif.clear = 1'b1; //Should not be here, check later this
-        cache_write = 1'b0;
         @(posedge CLK);
-        ddrif.clear = 1'b0;
         end
     endtask
-
+    /* 
     //A random testing case
     task writing_read_row_hit(input creating_dt dt_class);
         task_name = "Writing_Cycle";
@@ -663,14 +652,14 @@ module dram_top_tb;
       repeat (25) @(posedge CLK);
 
     
-    /*
-    task_name = "Writing_Cycle";
-    sch.randomize();
-    sch.gen_addr("row miss", prev_addr);
-    writing_1(sch.creating_addr, dt_class);
-    repeat (50) @(posedge CLK);
+      task_name = "Writing_Cycle";
+      sch.randomize();
+      sch.gen_addr("row miss", prev_addr);
+      sch.gen_valid("valid");
+      writing_1(sch.creating_addr, dt_class);
+      repeat (50) @(posedge CLK);
 
-    
+    /*
     task_name = "Reading_Cycle";
     dq_en = 1'b0;
     read_with_verify(sch.creating_addr, sch);
