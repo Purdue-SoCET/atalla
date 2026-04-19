@@ -79,8 +79,6 @@ module dram_top_tb;
 
     //No more Cache or Scheduler, but keep the prev_addr
     // TODO: Bank Group maybe? Check TCCD_L vs TCCD_S 
-    logic [31:0] prev_addr; 
-
 
     //DRAM interface latch
     always @(posedge clk_val && clk_enb) begin
@@ -413,6 +411,8 @@ module dram_top_tb;
         // Getting the AXI Sub->Load/Store Queue and WDQ(wrapper)
         virtual ddr_controller_if.stq           svif;
         virtual ddr_controller_if.ldq           lvif; 
+        virtual ddr_controller_if.wdata_wrapper wvif;
+
 
         //Random rank, bank group, bank, row, col, offset (these go in stq/ldq)
         rand logic [RANK_BITS - 1:0] rank;
@@ -422,13 +422,19 @@ module dram_top_tb;
         rand logic [COLUMN_BITS - 1:0] col;
         rand logic [OFFSET_BITS - 1:0] offset;
 
+        // RANDOM WRITE QUEUE SLOT
+        rand logic [7:0] wstrb;
+        rand logic [63:0] wdata; 
+        rand logic [$clog2(ID_NUM)-1:0] wid; 
+        rand logic [2:0] wlen;
+
         // RANDOM AXI COMMANDS
         rand logic [$clog2(ID_NUM)-1:0] id;
         rand logic [3:0] len; // TODO: Maybe this needs a separate function 
 
         // Function based 
-        logic valid; 
-        logic [31:0] creating_addr; //the actual address
+        logic valid, bwready, wlast;
+        logic [31:0] creating_addr, prev_addr; //the actual address
 
         /* R/W CAN OCCUR SIMULT
         //1. Creating covergroup
@@ -446,22 +452,24 @@ module dram_top_tb;
         constraint req_cons {
             {vif.dREN, vif.dWEN} != 2'b11;
         }
-
+        */
         //constraint of addr_rank 
         constraint addr_rank {
             rank == 1'b0;
             row != '1;
             offset == 0;
             col[2:0] == 0; //8-byte align
-        } */
+        } 
+
 
         function new (
-            virtual ddr_controller_if.stq  svif, 
-            virtual ddr_controller_if.ldq  lvif, 
+            virtual ddr_controller_if.stq           svif, 
+            virtual ddr_controller_if.wdata_wrapper wvif,
+            virtual ddr_controller_if.ldq           lvif
         );
             this.svif = svif;
+            this.wvif = wvif;
             this.lvif = lvif;
-            // sch_group = new();
         endfunction
 
         //function for generate the address
@@ -477,36 +485,43 @@ module dram_top_tb;
             end
         endfunction
 
-        function gen_valid(string testcase); // TODO: 
+        function gen_valid(string testcase); 
             if (testcase == "invalid") valid = '0;
             else valid = '1;  
         endfunction 
-    endclass
 
-    //Class for generate data (This is not necessary)
-    class creating_dt;
-        virtual ddr_controller_if.wdata_wrapper wvif;
+        function gen_write(string ready, string last);
+            if (ready == "ready") ready = '1;
+            else ready = '0;
+            if (last == "last") last = '1;
+            else last = '0;
+        endfunction
         
-        rand logic [7:0] wstrb;
-        rand logic [63:0] wdata; 
-        rand logic [$clog2(ID_NUM)-1:0] wid; 
-        rand logic [2:0] wlen;
+        //This is the task you want to write something in a specific addr
+        //Don't worry about the data context
 
-        function new (
-            // RANDOM WDQ COMMANDS
-            virtual ddr_controller_if.wdata_wrapper wvif;
-        );
-            this.wvif = wvif;
-        endfunction
-
-        function display;
-            $display ("data_store %0x", data_store);
-        endfunction
+        // AXI_WRITE_CHANNEL -> WRAPPER
+        // input wdq_slot, bwready, wvalid, wlast, 
+        task writing();
+                @(posedge CLK);
+                // Send the Write Data to both the STQ and WDQ
+                // WDQ
+                wvif.wdq_slot = {this.wstrb, this.wdata, this.wid, this.wlen};
+                wvif.bwready  = this.bwready; // TODO: How is this signal determined? 
+                wvif.wvalid   = valid;
+                wvif.wlast    = this.wlast; // TODO: How is this signal determined?
+                // STQ
+                wvif.awvalid = valid;
+                wvif.awaddr  = creating_addr;
+                wvif.awlen   = len;
+                wvif.awid    = id;
+                // Store previous for more
+                this.prev_addr = creating_addr;
+        endtask
     endclass
 
-    //Define class
-    creating_dt dt_class;   
-    axi_trans sch;
+    //Define class   
+    axi_trans axi;
 
     /* //Use this task to add a request into scheduler FIFO
     task add_request(input logic [31:0] addr, input logic write, input logic [63:0] data);
@@ -525,25 +540,7 @@ module dram_top_tb;
       ddrif.sche.dREN = 1'b0;
     endtask */
 
-    //This is the task you want to write something in a specific addr
-    //Don't worry about the data context
-
-    
     // TODO: FIX ABOVE, THEN WORK ON BELOW 
-    task writing_1(input logic [31:0] addr);
-        begin
-        //This loop will write
-        for (int i = 0; i < 9; i++) begin
-            dt_class.randomize();
-            // dt_class.display();
-            // Send the Write Data to both the STQ and WDQ
-            ddrif.awaddr = addr; 
-            // Check for valid
-            @(posedge CLKx2);
-        end
-        @(posedge CLK);
-        end
-    endtask
     /* 
     //A random testing case
     task writing_read_row_hit(input creating_dt dt_class);
@@ -639,8 +636,7 @@ module dram_top_tb;
       dq_en = 1'b1;
       
       
-      // dt_class = new();
-      sch = new(ddrif.stq, ddrif.ldq, ddrif.wdata_wrapper);
+      axi = new();
       nRST = 1'b0;
       @(posedge CLK);
       @(posedge CLK);
@@ -653,10 +649,11 @@ module dram_top_tb;
 
     
       task_name = "Writing_Cycle";
-      sch.randomize();
-      sch.gen_addr("row miss", prev_addr);
-      sch.gen_valid("valid");
-      writing_1(sch.creating_addr, dt_class);
+      axi.randomize();
+      axi.gen_addr("row miss", axi.prev_addr);
+      axi.gen_valid("valid");
+      axi.gen_write("ready", "not last");
+      axi.writing();
       repeat (50) @(posedge CLK);
 
     /*
