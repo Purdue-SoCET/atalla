@@ -36,6 +36,10 @@ module axi_write_driver(
     //assign final_w_fire = wdrv_if.w_fire && !aw_skid_empty && w_skid_buffer[w_rd_ptr].last;
     assign final_w_fire = 0; // aryan check this 
 
+    logic grant_switch;
+    assign grant_switch = (wdrv_if.aw_grant[MID] &&
+               (wdrv_if.aw_grant != wdrv_if.nxt_aw_grant));
+
     always_ff@(posedge CLK, negedge nRST) begin 
         if(!nRST) begin
             aw_wr_ptr <= '0;
@@ -64,7 +68,7 @@ module axi_write_driver(
                         aw_wr_ptr <= aw_wr_ptr + 1'b1;
                         //aw_loaded <= 1'b1;
                     end
-                    if(!w_skid_full && wdrv_if.head_sp0_wvalid && same_txn_sp0 && !final_w_fire) begin
+                    if(!w_skid_full && wdrv_if.head_sp0_wvalid && same_txn_sp0 && !final_w_fire && !grant_switch) begin
                         w_skid_buffer[w_wr_ptr].valid    <= wdrv_if.head_sp0_wvalid;
                         w_skid_buffer[w_wr_ptr].mid_id   <= wdrv_if.head_sp0_w_o.mid_id;
                         w_skid_buffer[w_wr_ptr].data     <= wdrv_if.head_sp0_w_o.data;
@@ -89,7 +93,7 @@ module axi_write_driver(
                         aw_wr_ptr <= aw_wr_ptr + 1'b1;
                         //aw_loaded <= 1'b1;
                     end
-                    if (!w_skid_full && wdrv_if.head_sp1_wvalid && same_txn_sp1 && !final_w_fire) begin
+                    if (!w_skid_full && wdrv_if.head_sp1_wvalid && same_txn_sp1 && !final_w_fire && !grant_switch) begin
                         w_skid_buffer[w_wr_ptr].valid    <= wdrv_if.head_sp1_wvalid;
                         w_skid_buffer[w_wr_ptr].mid_id   <= wdrv_if.head_sp1_w_o.mid_id;
                         w_skid_buffer[w_wr_ptr].data     <= wdrv_if.head_sp1_w_o.data;
@@ -114,7 +118,7 @@ module axi_write_driver(
                         aw_wr_ptr <= aw_wr_ptr + 1'b1;
                         //aw_loaded <= 1'b1;
                     end 
-                    if (!w_skid_full && wdrv_if.head_d_wvalid && same_txn_d && !final_w_fire) begin
+                    if (!w_skid_full && wdrv_if.head_d_wvalid && same_txn_d && !final_w_fire && !grant_switch) begin
                         w_skid_buffer[w_wr_ptr].valid    <= wdrv_if.head_d_wvalid;
                         w_skid_buffer[w_wr_ptr].mid_id   <= wdrv_if.head_d_w_o.mid_id;
                         w_skid_buffer[w_wr_ptr].data     <= wdrv_if.head_d_w_o.data;
@@ -149,6 +153,9 @@ module axi_write_driver(
         end 
     end
 
+    // logic same_head_txn;
+    // assign same_head_txn = (w_skid_buffer[w_rd_ptr].mid_id == aw_skid_buffer[aw_rd_ptr].mid_id);
+
     assign same_txn_sp0 = (!aw_sent && (wdrv_if.head_sp0_w_o.mid_id == wdrv_if.head_sp0_aw_o.mid_id)) || (aw_sent && (wdrv_if.head_sp0_w_o.mid_id == aw_skid_buffer[aw_rd_ptr].mid_id));
     assign same_txn_sp1 = (!aw_sent && (wdrv_if.head_sp1_w_o.mid_id == wdrv_if.head_sp1_aw_o.mid_id)) || (aw_sent && (wdrv_if.head_sp1_w_o.mid_id == aw_skid_buffer[aw_rd_ptr].mid_id));
     assign same_txn_d = (!aw_sent && (wdrv_if.head_d_w_o.mid_id == wdrv_if.head_d_aw_o.mid_id)) || (aw_sent && (wdrv_if.head_d_w_o.mid_id == aw_skid_buffer[aw_rd_ptr].mid_id));
@@ -175,15 +182,15 @@ module axi_write_driver(
 
     assign wdrv_if.w_sp0_pop = (wdrv_if.aw_grant[MID] && 
                                (wdrv_if.aw_grant[MID-1:0] == SP0) && 
-                               !w_skid_full && wdrv_if.head_sp0_wvalid && same_txn_sp0 && !final_w_fire);
+                               !w_skid_full && wdrv_if.head_sp0_wvalid && same_txn_sp0 && !final_w_fire && !grant_switch);
     
     assign wdrv_if.w_sp1_pop = (wdrv_if.aw_grant[MID] && 
                                (wdrv_if.aw_grant[MID-1:0] == SP1) && 
-                               !w_skid_full && wdrv_if.head_sp1_wvalid && same_txn_sp1 && !final_w_fire);
+                               !w_skid_full && wdrv_if.head_sp1_wvalid && same_txn_sp1 && !final_w_fire && !grant_switch);
 
     assign wdrv_if.w_d_pop   = (wdrv_if.aw_grant[MID] && 
                                (wdrv_if.aw_grant[MID-1:0] == DCACHE) && 
-                               !w_skid_full && wdrv_if.head_d_wvalid && same_txn_d && !final_w_fire);
+                               !w_skid_full && wdrv_if.head_d_wvalid && same_txn_d && !final_w_fire && !grant_switch);
 
     assign wdrv_if.aw_o_valid  = aw_skid_buffer[aw_rd_ptr].valid;
     assign wdrv_if.aw_o.addr   = aw_skid_buffer[aw_rd_ptr].addr;

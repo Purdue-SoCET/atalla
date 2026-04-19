@@ -92,4 +92,6 @@ module axi_write_arbiter (
             end 
         endcase
     end 
+
+    assign arbw_if.nxt_aw_grant = next_grant_sel;
 endmodule
