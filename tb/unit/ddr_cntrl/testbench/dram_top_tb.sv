@@ -77,7 +77,8 @@ module dram_top_tb;
 
     ddr_controller_wrapper DUT (.CLK(CLK), .nRST(nRST), .top(ddrif));
 
-    //No more Cache or Scheduler, but keep the prev_addr 
+    //No more Cache or Scheduler, but keep the prev_addr
+    // TODO: Bank Group maybe? Check TCCD_L vs TCCD_S 
     logic [31:0] prev_addr; 
 
 
@@ -524,7 +525,10 @@ module dram_top_tb;
 
     //This is the task you want to write something in a specific addr
     //Don't worry about the data context
-    task writing_1(input logic [31:0] addr, input creating_dt dt_class);
+
+    
+    // TODO: FIX ABOVE, THEN WORK ON BELOW 
+    /* task writing_1(input logic [31:0] addr, input creating_dt dt_class);
         begin
         add_request(.addr(addr), .write(1'b1), .data(64'hAAAA_AAAA_AAAA_AAAA));
         while (!ddrif.wr_en) begin
@@ -636,7 +640,7 @@ module dram_top_tb;
                 read_with_verify(sch.creating_addr, sch);
             end 
         end
-    endtask
+    endtask */
 
     initial begin
       iDDR4_1.CK = 2'b01;
