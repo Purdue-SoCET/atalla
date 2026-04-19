@@ -35,9 +35,15 @@ logic [31:0]                araddr;  // -> LQ
 logic [$clog2(ID_NUM)-1:0]  arid;    // -> LQ
 logic [2:0]                 arlen;   // -> LQ
 logic       arready; // -> AXI
+
+
+// AXI <-> READ_PATH
 logic       rvalid;  // -> AXI 
 logic [1:0] rresp;   // -> AXI 
-logic       rready;  // -> LQ
+logic       rready;  // -> READ_PATH
+logic rlast; // -> AXI READ CHANNEL
+logic [$clog2(ID_NUM)-1:0] rid; // -> AXI READ CHANNEL
+logic [63:0] rdata; // -> AXI READ CHANNEL
 
 // AXI <-> STQ
 lstq_slot_t stq_slot; // -> STQ
@@ -117,8 +123,8 @@ logic be_write;
 logic init_done;
 
 // AXI -> READ_ID_QUEUE
-logic                      rq_rready;
-logic [$clog2(ID_NUM)-1:0] rq_rid, rq_rvalid;
+//logic                      rq_rready;
+logic [$clog2(ID_NUM)-1:0] rq_rid; //rq_rvalid;
 logic [2:0]                rq_rlen; 
 
 // WDATA_QUEUE_WRAPPER -> AXI 
@@ -171,6 +177,15 @@ logic [$clog2(ID_NUM)-1:0] wrap_bw_arb;
     logic [BANK_BITS-1:0] BA;
     logic [ADDR_BITS-1:0] ADDR;
     logic ADDR_17;
+
+    // Data transfer module signals
+    logic wr_en, rd_en, clear;
+    logic edge_flag;
+    logic [WORD_W - 1: 0] memstore, memload;
+    logic [2:0] COL_choice;
+    wire [WORD_W - 1 :0] DQ;
+    wire DQS_t, DQS_c, DM_n;
+
 // // MODPORTS
 
 
@@ -245,8 +260,8 @@ modport bq (
 
 modport read_id_queue ( 
     //BQ -> FSM
-    input  be_push_id, be_rid, be_rlen, rready,
-    output rq_rid, rq_rvalid, rq_rlen
+    input  be_push_id, be_rid, be_rlen,
+    output rq_rid
 );
 
 
@@ -262,6 +277,17 @@ modport wdata_wrapper (
     output wready, bwvalid, bwresp, bwid,
     // WRAPPER -> DRAM
     ddr_wdata_data, ddr_wdata_en, ddr_wdata_mask, ddr_we
+);
+
+modport rdata_wrapper (
+    // AXI R Data path
+    input rready, 
+    // READ_ID_QUEUE -> RDATA_WRAPPER
+    rq_rid,
+    // Data Transfer
+    memload, edge_flag,
+    // AXI R Path
+    output rvalid, rdata, rid, rlast, rresp
 );
 
 modport command_fsm (
@@ -294,7 +320,10 @@ modport backend_arb (
     //BE -> R_ID_QUEUE
     be_rid, be_push_id, be_rlen,
     //BE -> REFRESH COUNTER
-    rf_enable, rf_done, init_done
+    rf_enable, rf_done, init_done,
+    
+    //BE -> SIGNAL GEN
+    ref_re, state, nstate, RA0, BG0, BA0, R0, C0
 );
 
 modport refresh_cntrl (
@@ -377,15 +406,18 @@ modport ddr_cntrl_top (
     // W/B Response (Write Data Wrapper -> AXI)
     wready, bwvalid, bwresp, bwid,
     // R Data (Read ID Queue -> AXI)
-    rq_rvalid, rq_rid, rq_rlen,
+    rvalid, rdata, rid, rlast, rresp,
 
     // ===== OUTPUTS (TO DRAM) =====
     // Write Data Path (WDQ Wrapper -> DRAM)
-    ddr_wdata_data, ddr_wdata_en, ddr_wdata_mask, ddr_we,
-    // Command Path (Backend Arbiter/FSM -> Signal Generator)
+    //ddr_wdata_data, ddr_wdata_en, ddr_wdata_mask, ddr_we,
+    // Command Path (Signal gen -> DRAM)
+    ACT_n, RAS_n_A16, CAS_n_A15, WE_n_A14, ALERT_n, PARITY, RESET_n, TEN, CS_n, CKE, ODT, C, BG, BA, ADDR, ADDR_17, PWR, VREF_CA, VREF_DQ, ZQ
     //be_arb, be_cmd, be_r, be_c, be_b, be_bg, be_id,
     // Init Status
     //init_done, init_state, next_init_state
+    inout DQ, DQS_t, DQS_c, DM_n
+
 );
 
 modport signal_gen (
@@ -393,6 +425,16 @@ modport signal_gen (
         input state, nstate, RA0, BG0, BA0, R0, C0,
         output ACT_n, RAS_n_A16, CAS_n_A15, WE_n_A14, ALERT_n, PARITY, RESET_n, TEN, CS_n, CKE, ODT, C, BG, BA, ADDR, ADDR_17, PWR, VREF_CA, VREF_DQ, ZQ
     );
+
+modport data_trans (
+        input wr_en, rd_en, clear, memstore, COL_choice,
+        inout DQ, DQS_t, DQS_c, DM_n, // same names as above, so do not need to map
+        output memload, edge_flag
+    );
+
+
+
+
 endinterface
 
 `endif // DDR_CONTROLLER_IF_SV

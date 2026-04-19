@@ -94,6 +94,7 @@ package dram_pkg;
         WRITING,
         PRECHARGE,
         PRECHARGING,
+        PRECHARGE_RE,
         READ,
         READING,
         REFRESH,

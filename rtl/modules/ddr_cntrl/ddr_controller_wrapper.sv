@@ -60,35 +60,70 @@ module ddr_controller_wrapper (
     assign top.bwid    = cif.bwid;
 
     // R Data (RID Queue -> AXI)
-    assign top.rq_rvalid = cif.rq_rvalid;
-    assign top.rq_rid    = cif.rq_rid;
-    assign top.rq_rlen   = cif.rq_rlen;
+    assign top.rvalid = cif.rvalid;
+    assign top.rdata  = cif.rdata;
+    assign top.rid    = cif.rid;
+    assign top.rlast  = cif.rlast;
+    assign top.rresp  = cif.rresp;
+
+    // In Outs for the data transfer unit to DRAM
+    assign top.DQ = cif.DQ;
+    assign top.DQS_t = cif.DQS_t;
+    assign top.DQS_c = cif.DQS_c;
+    assign top.DM_n = cif.DM_n;
 
     // ================================================================
     // Internal interface -> External outputs (to DRAM)
     // ================================================================
 
     // Write Data Path (WDQ Wrapper -> DRAM)
-    assign top.ddr_wdata_data = cif.ddr_wdata_data;
-    assign top.ddr_wdata_en   = cif.ddr_wdata_en;
-    assign top.ddr_wdata_mask = cif.ddr_wdata_mask;
-    assign top.ddr_we         = cif.ddr_we;
+    // assign top.ddr_wdata_data = cif.ddr_wdata_data;
+    // assign top.ddr_wdata_en   = cif.ddr_wdata_en;
+    // assign top.ddr_wdata_mask = cif.ddr_wdata_mask;
+    // assign top.ddr_we         = cif.ddr_we;
 
     // Command Path (Backend Arbiter -> Signal Generator)
-    assign top.be_arb = cif.be_arb;
-    assign top.be_cmd = cif.be_cmd;
+    // assign top.be_arb = cif.be_arb;
+    // assign top.be_cmd = cif.be_cmd;
 
     // Address Path (Command FSM -> Signal Generator)
-    assign top.be_r  = cif.be_r;
-    assign top.be_c  = cif.be_c;
-    assign top.be_b  = cif.be_b;
-    assign top.be_bg = cif.be_bg;
-    assign top.be_id = cif.be_id;
+    // assign top.be_r  = cif.be_r;
+    // assign top.be_c  = cif.be_c;
+    // assign top.be_b  = cif.be_b;
+    // assign top.be_bg = cif.be_bg;
+    // assign top.be_id = cif.be_id;
 
-    // Init Status
-    assign top.init_done       = cif.init_done;
-    assign top.init_state      = cif.init_state;
-    assign top.next_init_state = cif.next_init_state;
+    // // Init Status
+    // assign top.init_done       = cif.init_done;
+    // assign top.init_state      = cif.init_state;
+    // assign top.next_init_state = cif.next_init_state;
+
+    // Outputs to Signal Generator
+    assign top.ACT_n = cif.ACT_n;
+    assign top.RAS_n_A16 = cif.RAS_n_A16;
+    assign top.CAS_n_A15 = cif.CAS_n_A15;
+    assign top.WE_n_A14 = cif.WE_n_A14;
+    assign top.ALERT_n = cif.ALERT_n;
+    assign top.PARITY = cif.PARITY;
+    assign top.RESET_n = cif.RESET_n;
+    assign top.TEN = cif.TEN;
+    assign top.CS_n = cif.CS_n;
+    assign top.CKE = cif.CKE;
+    assign top.ODT = cif.ODT;
+    assign top.C = cif.C;
+    assign top.BG = cif.BG;
+    assign top.BA = cif.BA;
+    assign top.ADDR = cif.ADDR;
+    assign top.ADDR_17 = cif.ADDR_17;
+    assign top.PWR = cif.PWR;
+    assign top.VREF_CA = cif.VREF_CA;
+    assign top.VREF_DQ = cif.VREF_DQ;
+    assign top.ZQ = cif.ZQ;
+
+    // Wdata queue and inputs to data transfer unit
+    assign cif.wr_en = cif.ddr_wdata_mask; // this is byte level, need to change this
+    assign cif.memstore = cif.ddr_wdata_data;
+
 
     // ================================================================
     // Module Instantiations
@@ -149,7 +184,20 @@ module ddr_controller_wrapper (
         .nRST (nRST),
         .wdw  (cif.wdata_wrapper)
     );
-/*
+
+    // Signal Generator
+    signal_gen SG (
+        .CLK  (CLK),
+        .nRST (nRST),
+        .sgif (cif.signal_gen)
+    );
+
+    data_transfer data_trans (
+        .CLK  (CLK),
+        .nRST (nRST),
+        .dtif (cif.data_transfer)
+    );
+
     // Read ID Queue
     nb_read_id_queue RID_Q (
         .CLK  (CLK),
@@ -157,6 +205,13 @@ module ddr_controller_wrapper (
         .r_id_queue (cif.read_id_queue)
     );
 
+    // Read Data wrapper
+    nb_rdata_wrapper RDQ_WRAP (
+        .CLK  (CLK),
+        .nRST (nRST),
+        .rdw (cif.rdata_wrapper)
+    )
+/*
     // Initialization State Machine
     init_state INIT (
         .CLK  (CLK),
