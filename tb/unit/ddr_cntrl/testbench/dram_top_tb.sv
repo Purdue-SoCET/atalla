@@ -1,9 +1,5 @@
 `include "dram_pkg.svh"
 `include "ddr_controller_if.sv"
-`include "scheduler_buffer_if.vh"
-`include "data_transfer_if.vh"
-`include "control_unit_if.vh"
-`include "signal_gen_if.vh"
 `include "arch_defines.v"
 `include "dimm.vh"
 `timescale 1 ns / 1 ps
@@ -26,14 +22,14 @@
 module dram_top_tb;
     parameter PERIOD = 1.5;
     parameter tCK = 1.5;
-    import dram_pkg::*;
-    import proj_package::*;
+    import dram_pkg::*; 
+    import proj_package::*; // protected vcs
 
     //parameter from dram_command_if.vh
     parameter CONFIGURED_DQ_BITS     = 8;
-    parameter CONFIGURED_DQS_BITS     = (16 == CONFIGURED_DQ_BITS) ? 2 : 1;
+    parameter CONFIGURED_DQS_BITS    = (16 == CONFIGURED_DQ_BITS) ? 2 : 1;
     parameter CONFIGURED_DM_BITS     = (16 == CONFIGURED_DQ_BITS) ? 2 : 1;
-    parameter CONFIGURED_RANKS = 1;
+    parameter CONFIGURED_RANKS       = 1;
     
     //CLK and debug signals
     logic CLK = 1, nRST;
@@ -49,17 +45,6 @@ module dram_top_tb;
     //Signal flag to choose write or read
     reg dq_en;
     reg dqs_en;
-    
-
-    //Cache signals and signals for verifying the data transmission
-    logic cache_write;
-    logic cache_read;
-    logic [ROW_BITS-1:0] cache_addr;
-    logic [2:0] cache_offset;
-    logic [63:0] cache_store;
-    logic [63:0] cache_load;
-    logic don_t_write; //Signals it use for telling whether you want to latch prev addr or not
-    logic [31:0] prev_addr; 
     
     //Clock generation of CK and CKx2
     //Issue right now, CK is follow TS_1500 tCK is 1.5ns
@@ -79,35 +64,23 @@ module dram_top_tb;
     end
 
     //Instantiate the interface of DRAM controller and DDR4 DRAM
-    control_unit_if dc_if();
-    signal_gen_if sig_if();
-    scheduler_buffer_if sch_if();
-    data_transfer_if dt_if();
+    ddr_controller_if ddrif();
 
     DDR4_if #(.CONFIGURED_DQ_BITS(CONFIGURED_DQ_BITS)) iDDR4_1();
     DDR4_if #(.CONFIGURED_DQ_BITS(CONFIGURED_DQ_BITS)) iDDR4_2();
     DDR4_if #(.CONFIGURED_DQ_BITS(CONFIGURED_DQ_BITS)) iDDR4_3();
     DDR4_if #(.CONFIGURED_DQ_BITS(CONFIGURED_DQ_BITS)) iDDR4_4();
+    DDR4_if #(.CONFIGURED_DQ_BITS(CONFIGURED_DQ_BITS)) iDDR4_5();
+    DDR4_if #(.CONFIGURED_DQ_BITS(CONFIGURED_DQ_BITS)) iDDR4_6();
+    DDR4_if #(.CONFIGURED_DQ_BITS(CONFIGURED_DQ_BITS)) iDDR4_7();
+    DDR4_if #(.CONFIGURED_DQ_BITS(CONFIGURED_DQ_BITS)) iDDR4_8();
 
-    dram_top DUT (.CLK(CLK), .nRST(nRST), .myctrl(dc_if), .myctrl_sig(dc_if), .mysig(sig_if));
-    scheduler_buffer SCH_BUFF (.CLK(CLK), .nRST(nRST), .mysche(sch_if));
-    data_transfer DT (.CLK(CLK), .CLKx2(CLKx2),.nRST(nRST), .mydata(dt_if));
+    ddr_controller_wrapper DUT (.CLK(CLK), .nRST(nRST), .top(ddrif));
 
-    //Instantiate cache as a referrence model to verify data load
-    sw_cache CACHE (.CLKx2(CLKx2), .nRST(nRST), .wr_en(cache_write), .rd_en(cache_read), .row_addr(cache_addr), .offset(cache_offset), .dmemstore(cache_store), .dmemload(cache_load));
+    //No more Cache or Scheduler, but keep the prev_addr 
+    logic [31:0] prev_addr; 
 
-    //Scheduler interface with the 
-    always_comb begin
-      dc_if.dREN = (!dc_if.ram_wait) ? 0 : sch_if.ramREN_curr;
-      dc_if.dWEN = (!dc_if.ram_wait) ? 0 : sch_if.ramWEN_curr;
-      dc_if.ram_addr = sch_if.ramaddr_rq;
-      sch_if.request_done = !dc_if.ram_wait;
-      //Interface between scheduler buffer and the data_transfer
-      dt_if.wr_en = dc_if.wr_en;
-      dt_if.rd_en = dc_if.rd_en;
-    end
 
-    
     //DRAM interface latch
     always @(posedge clk_val && clk_enb) begin
         clk_val <= #(tCK/2) 1'b0;
@@ -131,6 +104,26 @@ module dram_top_tb;
         iDDR4_4.CK[1] <= #(tCK) 1'b1;
         iDDR4_4.CK[0] <= #(tCK/2) 1'b1;
         iDDR4_4.CK[0] <= #(tCK) 1'b0;
+
+        iDDR4_5.CK[1] <= #(tCK/2) 1'b0;
+        iDDR4_5.CK[1] <= #(tCK) 1'b1;
+        iDDR4_5.CK[0] <= #(tCK/2) 1'b1;
+        iDDR4_5.CK[0] <= #(tCK) 1'b0;
+
+        iDDR4_6.CK[1] <= #(tCK/2) 1'b0;
+        iDDR4_6.CK[1] <= #(tCK) 1'b1;
+        iDDR4_6.CK[0] <= #(tCK/2) 1'b1;
+        iDDR4_6.CK[0] <= #(tCK) 1'b0;
+
+        iDDR4_7.CK[1] <= #(tCK/2) 1'b0;
+        iDDR4_7.CK[1] <= #(tCK) 1'b1;
+        iDDR4_7.CK[0] <= #(tCK/2) 1'b1;
+        iDDR4_7.CK[0] <= #(tCK) 1'b0;
+
+        iDDR4_8.CK[1] <= #(tCK/2) 1'b0;
+        iDDR4_8.CK[1] <= #(tCK) 1'b1;
+        iDDR4_8.CK[0] <= #(tCK/2) 1'b1;
+        iDDR4_8.CK[0] <= #(tCK) 1'b0;
 
 
         iDDR4_1.ACT_n     <= sig_if.ACT_n;
@@ -219,18 +212,106 @@ module dram_top_tb;
         iDDR4_4.PWR       <= sig_if.PWR;
         iDDR4_4.VREF_CA   <= sig_if.VREF_CA;
         iDDR4_4.VREF_DQ   <= sig_if.VREF_DQ;
+
+        //DRAM 5
+        iDDR4_5.ACT_n     <= sig_if.ACT_n;
+        iDDR4_5.RAS_n_A16 <= sig_if.RAS_n_A16;
+        iDDR4_5.CAS_n_A15 <= sig_if.CAS_n_A15;
+        iDDR4_5.WE_n_A14  <= sig_if.WE_n_A14;
+        iDDR4_5.ALERT_n   <= sig_if.ALERT_n;
+        iDDR4_5.PARITY    <= sig_if.PARITY;
+        iDDR4_5.RESET_n   <= sig_if.RESET_n;
+        iDDR4_5.TEN       <= sig_if.TEN;
+        iDDR4_5.CS_n      <= sig_if.CS_n;
+        iDDR4_5.CKE       <= sig_if.CKE;
+        iDDR4_5.ODT       <= sig_if.ODT;
+        iDDR4_5.C         <= sig_if.C;
+        iDDR4_5.BG        <= sig_if.BG;
+        iDDR4_5.BA        <= sig_if.BA;
+        iDDR4_5.ADDR      <= sig_if.ADDR;
+        iDDR4_5.ADDR_17   <= sig_if.ADDR_17;
+        iDDR4_5.ZQ        <= sig_if.ZQ;
+        iDDR4_5.PWR       <= sig_if.PWR;
+        iDDR4_5.VREF_CA   <= sig_if.VREF_CA;
+        iDDR4_5.VREF_DQ   <= sig_if.VREF_DQ;
+
+        //DRAM 6
+        iDDR4_6.ACT_n     <= sig_if.ACT_n;
+        iDDR4_6.RAS_n_A16 <= sig_if.RAS_n_A16;
+        iDDR4_6.CAS_n_A15 <= sig_if.CAS_n_A15;
+        iDDR4_6.WE_n_A14  <= sig_if.WE_n_A14;
+        iDDR4_6.ALERT_n   <= sig_if.ALERT_n;
+        iDDR4_6.PARITY    <= sig_if.PARITY;
+        iDDR4_6.RESET_n   <= sig_if.RESET_n;
+        iDDR4_6.TEN       <= sig_if.TEN;
+        iDDR4_6.CS_n      <= sig_if.CS_n;
+        iDDR4_6.CKE       <= sig_if.CKE;
+        iDDR4_6.ODT       <= sig_if.ODT;
+        iDDR4_6.C         <= sig_if.C;
+        iDDR4_6.BG        <= sig_if.BG;
+        iDDR4_6.BA        <= sig_if.BA;
+        iDDR4_6.ADDR      <= sig_if.ADDR;
+        iDDR4_6.ADDR_17   <= sig_if.ADDR_17;
+        iDDR4_6.ZQ        <= sig_if.ZQ;
+        iDDR4_6.PWR       <= sig_if.PWR;
+        iDDR4_6.VREF_CA   <= sig_if.VREF_CA;
+        iDDR4_6.VREF_DQ   <= sig_if.VREF_DQ;
+
+        //DRAM 7
+        iDDR4_7.ACT_n     <= sig_if.ACT_n;
+        iDDR4_7.RAS_n_A16 <= sig_if.RAS_n_A16;
+        iDDR4_7.CAS_n_A15 <= sig_if.CAS_n_A15;
+        iDDR4_7.WE_n_A14  <= sig_if.WE_n_A14;
+        iDDR4_7.ALERT_n   <= sig_if.ALERT_n;
+        iDDR4_7.PARITY    <= sig_if.PARITY;
+        iDDR4_7.RESET_n   <= sig_if.RESET_n;
+        iDDR4_7.TEN       <= sig_if.TEN;
+        iDDR4_7.CS_n      <= sig_if.CS_n;
+        iDDR4_7.CKE       <= sig_if.CKE;
+        iDDR4_7.ODT       <= sig_if.ODT;
+        iDDR4_7.C         <= sig_if.C;
+        iDDR4_7.BG        <= sig_if.BG;
+        iDDR4_7.BA        <= sig_if.BA;
+        iDDR4_7.ADDR      <= sig_if.ADDR;
+        iDDR4_7.ADDR_17   <= sig_if.ADDR_17;
+        iDDR4_7.ZQ        <= sig_if.ZQ;
+        iDDR4_7.PWR       <= sig_if.PWR;
+        iDDR4_7.VREF_CA   <= sig_if.VREF_CA;
+        iDDR4_7.VREF_DQ   <= sig_if.VREF_DQ;
+
+        //DRAM 8
+        iDDR4_8.ACT_n     <= sig_if.ACT_n;
+        iDDR4_8.RAS_n_A16 <= sig_if.RAS_n_A16;
+        iDDR4_8.CAS_n_A15 <= sig_if.CAS_n_A15;
+        iDDR4_8.WE_n_A14  <= sig_if.WE_n_A14;
+        iDDR4_8.ALERT_n   <= sig_if.ALERT_n;
+        iDDR4_8.PARITY    <= sig_if.PARITY;
+        iDDR4_8.RESET_n   <= sig_if.RESET_n;
+        iDDR4_8.TEN       <= sig_if.TEN;
+        iDDR4_8.CS_n      <= sig_if.CS_n;
+        iDDR4_8.CKE       <= sig_if.CKE;
+        iDDR4_8.ODT       <= sig_if.ODT;
+        iDDR4_8.C         <= sig_if.C;
+        iDDR4_8.BG        <= sig_if.BG;
+        iDDR4_8.BA        <= sig_if.BA;
+        iDDR4_8.ADDR      <= sig_if.ADDR;
+        iDDR4_8.ADDR_17   <= sig_if.ADDR_17;
+        iDDR4_8.ZQ        <= sig_if.ZQ;
+        iDDR4_8.PWR       <= sig_if.PWR;
+        iDDR4_8.VREF_CA   <= sig_if.VREF_CA;
+        iDDR4_8.VREF_DQ   <= sig_if.VREF_DQ;
     end
 
     // Component instantiation
-    //Only use 4 chips only, so 32-bit data
+    //Only use 8 chips only, so 64-bit data
     ddr4_model #(.CONFIGURED_DQ_BITS(CONFIGURED_DQ_BITS),  .CONFIGURED_RANKS(CONFIGURED_RANKS)) u0_r0(.model_enable(model_enable), .iDDR4(iDDR4_1));
     ddr4_model #(.CONFIGURED_DQ_BITS(CONFIGURED_DQ_BITS),  .CONFIGURED_RANKS(CONFIGURED_RANKS)) u1_r0(.model_enable(model_enable), .iDDR4(iDDR4_2));
     ddr4_model #(.CONFIGURED_DQ_BITS(CONFIGURED_DQ_BITS),  .CONFIGURED_RANKS(CONFIGURED_RANKS)) u2_r0(.model_enable(model_enable), .iDDR4(iDDR4_3));
     ddr4_model #(.CONFIGURED_DQ_BITS(CONFIGURED_DQ_BITS),  .CONFIGURED_RANKS(CONFIGURED_RANKS)) u3_r0(.model_enable(model_enable), .iDDR4(iDDR4_4));
-    // ddr4_model #(.CONFIGURED_DQ_BITS(CONFIGURED_DQ_BITS),  .CONFIGURED_RANKS(CONFIGURED_RANKS)) u4_r0(.model_enable(model_enable), .iDDR4(iDDR4_1.u4_r0));
-    // ddr4_model #(.CONFIGURED_DQ_BITS(CONFIGURED_DQ_BITS),  .CONFIGURED_RANKS(CONFIGURED_RANKS)) u5_r0(.model_enable(model_enable), .iDDR4(iDDR4_1.u5_r0));
-    // ddr4_model #(.CONFIGURED_DQ_BITS(CONFIGURED_DQ_BITS),  .CONFIGURED_RANKS(CONFIGURED_RANKS)) u6_r0(.model_enable(model_enable), .iDDR4(iDDR4_1.u6_r0));
-    // ddr4_model #(.CONFIGURED_DQ_BITS(CONFIGURED_DQ_BITS),  .CONFIGURED_RANKS(CONFIGURED_RANKS)) u7_r0(.model_enable(model_enable), .iDDR4(iDDR4_1.u7_r0));
+    ddr4_model #(.CONFIGURED_DQ_BITS(CONFIGURED_DQ_BITS),  .CONFIGURED_RANKS(CONFIGURED_RANKS)) u4_r0(.model_enable(model_enable), .iDDR4(iDDR4_5));
+    ddr4_model #(.CONFIGURED_DQ_BITS(CONFIGURED_DQ_BITS),  .CONFIGURED_RANKS(CONFIGURED_RANKS)) u5_r0(.model_enable(model_enable), .iDDR4(iDDR4_6));
+    ddr4_model #(.CONFIGURED_DQ_BITS(CONFIGURED_DQ_BITS),  .CONFIGURED_RANKS(CONFIGURED_RANKS)) u6_r0(.model_enable(model_enable), .iDDR4(iDDR4_7));
+    ddr4_model #(.CONFIGURED_DQ_BITS(CONFIGURED_DQ_BITS),  .CONFIGURED_RANKS(CONFIGURED_RANKS)) u7_r0(.model_enable(model_enable), .iDDR4(iDDR4_8));
 
     //Interface between iDDR4 and data transfer example
     // Connect DQ, DQS_t, DQS_c, DM_n
@@ -239,89 +320,122 @@ module dram_top_tb;
         iDDR4_1.DQ,
         iDDR4_2.DQ,
         iDDR4_3.DQ,
-        iDDR4_4.DQ
-    } = dq_en ? {dt_if.DQ} : {32{1'bz}};
+        iDDR4_4.DQ,
+        iDDR4_5.DQ,
+        iDDR4_6.DQ,
+        iDDR4_7.DQ,
+        iDDR4_8.DQ
+    } = dq_en ? {ddrif.DQ} : {64{1'bz}};
 
 
     assign {
         iDDR4_1.DQS_t,
         iDDR4_2.DQS_t,
         iDDR4_3.DQS_t,
-        iDDR4_4.DQS_t
-    } = dq_en ? {dt_if.DQS_t,
-                 dt_if.DQS_t,
-                 dt_if.DQS_t,
-                 dt_if.DQS_t  
-                 } : 4'bzz;
+        iDDR4_4.DQS_t,
+        iDDR4_5.DQS_t,
+        iDDR4_6.DQS_t,
+        iDDR4_7.DQS_t,
+        iDDR4_8.DQS_t
+    } = dq_en ? {ddrif.DQS_t,
+                 ddrif.DQS_t,
+                 ddrif.DQS_t,
+                 ddrif.DQS_t,
+                 ddrif.DQS_t,
+                 ddrif.DQS_t,
+                 ddrif.DQS_t,
+                 ddrif.DQS_t  
+                 } : 8'bzz;
 
     assign {
         iDDR4_1.DQS_c,
         iDDR4_2.DQS_c,
         iDDR4_3.DQS_c,
-        iDDR4_4.DQS_c
+        iDDR4_4.DQS_c,
+        iDDR4_5.DQS_c,
+        iDDR4_6.DQS_c,
+        iDDR4_7.DQS_c,
+        iDDR4_8.DQS_c
     } = dq_en ? {
-        dt_if.DQS_c,
-        dt_if.DQS_c,
-        dt_if.DQS_c,
-        dt_if.DQS_c
-        } : 4'bzz;
+        ddrif.DQS_c,
+        ddrif.DQS_c,
+        ddrif.DQS_c,
+        ddrif.DQS_c,
+        ddrif.DQS_c,
+        ddrif.DQS_c,
+        ddrif.DQS_c,
+        ddrif.DQS_c
+        } : 8'bzz;
 
     //Writing mask feature
     assign {
         iDDR4_1.DM_n,
         iDDR4_2.DM_n,
         iDDR4_3.DM_n,
-        iDDR4_4.DM_n
+        iDDR4_4.DM_n,
+        iDDR4_5.DM_n,
+        iDDR4_6.DM_n,
+        iDDR4_7.DM_n,
+        iDDR4_8.DM_n
     } = dq_en ? {
-        dt_if.DM_n,
-        dt_if.DM_n,
-        dt_if.DM_n,
-        dt_if.DM_n
-    } : 4'bzz;
+        ddrif.DM_n,
+        ddrif.DM_n,
+        ddrif.DM_n,
+        ddrif.DM_n,
+        ddrif.DM_n,
+        ddrif.DM_n,
+        ddrif.DM_n,
+        ddrif.DM_n
+    } : 8'bzz;
 
 
-    assign dt_if.DQ = ~dq_en ? {
+    assign ddrif.DQ = ~dq_en ? {
         iDDR4_1.DQ,
         iDDR4_2.DQ,
         iDDR4_3.DQ,
-        iDDR4_4.DQ
-    } : {32{1'bz}};
+        iDDR4_4.DQ,
+        iDDR4_5.DQ,
+        iDDR4_6.DQ,
+        iDDR4_7.DQ,
+        iDDR4_8.DQ
+    } : {64{1'bz}};
 
-    //Assign these DQ signals back with data transfer (bidirectional)
-    assign dt_if.DQS_t = ~dq_en ? iDDR4_1.DQS_t : 1'bz;
-    assign dt_if.DQS_c = ~dq_en ? iDDR4_1.DQS_c: 1'bz;
-    assign dt_if.DM_n = ~dq_en ? iDDR4_1.DM_n: 1'bz;
-    assign dt_if.COL_choice = dc_if.offset; 
+    //Assign these DQ signals back with data transfer (bidirectional) //TODO: Is this necessary? 
+    assign ddrif.DQS_t = ~dq_en ? iDDR4_1.DQS_t : 1'bz;
+    assign ddrif.DQS_c = ~dq_en ? iDDR4_1.DQS_c: 1'bz;
+    assign ddrif.DM_n = ~dq_en ? iDDR4_1.DM_n: 1'bz;
+    assign ddrif.COL_choice = ddrif.ctrl.offset; 
 
-    //Latch for the prev_addr, I use this for row hit, row conflict case
-    always_ff @(posedge CLK) begin
-        if (!nRST) begin
-            prev_addr <= 0;
-        end else begin
-            if (!don_t_write) begin
-                prev_addr <= sch.creating_addr;
-            end
-        end
-    end
+    // Creating class for the transaction -> since this is now an AXI bus vs. scheduler fifo  
+    class axi_trans;
+        // Getting the AXI Sub->Load/Store Queue and WDQ(wrapper)
+        virtual ddr_controller_if.stq           svif;
+        virtual ddr_controller_if.ldq           lvif; 
+        virtual ddr_controller_if.wdata_wrapper wvif; 
 
-    //Creating class for the transaction
-    class sche_trans;
-        //Getting the scheduler buffer interface
-        virtual scheduler_buffer_if vif;
-
-        //Random rank, bank group, bank, row, col, offset
+        //Random rank, bank group, bank, row, col, offset (these go in stq/ldq)
         rand logic [RANK_BITS - 1:0] rank;
-        // randc logic [BANK_GROUP_BITS - 1:0] BG;
-        // randc logic [BANK_BITS - 1:0] bank;
         rand logic [BANK_GROUP_BITS - 1:0] BG;
         rand logic [BANK_BITS - 1:0] bank;
         rand logic [ROW_BITS - 1:0] row;
         rand logic [COLUMN_BITS - 1:0] col;
         rand logic [OFFSET_BITS - 1:0] offset;
 
+        // RANDOM AXI COMMANDS
+        rand logic [$clog2(ID_NUM)-1:0] id;
+        rand logic [3:0] len; // TODO: Maybe this needs a separate function 
+
+        // RANDOM WDQ COMMANDS
+        rand logic [7:0] wstrb;
+        rand logic [63:0] wdata; 
+        rand logic [$clog2(ID_NUM)-1:0] wid; 
+        rand logic [2:0] wlen;
+
+        // Function based 
+        logic valid; 
         logic [31:0] creating_addr; //the actual address
 
-
+        /* R/W CAN OCCUR SIMULT
         //1. Creating covergroup
         covergroup sch_group @(posedge CLK);
             //2.Creating coverpoint
@@ -338,17 +452,23 @@ module dram_top_tb;
             {vif.dREN, vif.dWEN} != 2'b11;
         }
 
-        //constraint of addr_rank
+        //constraint of addr_rank 
         constraint addr_rank {
             rank == 1'b0;
             row != '1;
             offset == 0;
             col[2:0] == 0; //8-byte align
-        }
+        } */
 
-        function new (virtual scheduler_buffer_if vif);
-            this.vif = vif;
-            sch_group = new();
+        function new (
+            virtual ddr_controller_if.stq           svif, 
+            virtual ddr_controller_if.ldq           lvif, 
+            virtual ddr_controller_if.wdata_wrapper wvif
+        );
+            this.svif = svif;
+            this.lvif = lvif;
+            this.wvif = wvif;
+            // sch_group = new();
         endfunction
 
         //function for generate the address
@@ -363,46 +483,51 @@ module dram_top_tb;
                 creating_addr = {rank, row, bank, BG[1], col[9:3], BG[0], col[2:0], offset};
             end
         endfunction
+
+        function gen_valid(string testcase)
+            if (testcase == "invalid") valid = '0;
+            else valid = '1;  
+        endfunction 
     endclass
 
     //Class for generate data (This is not necessary)
-    class creating_dt;
-        rand logic [31:0] data_store;
+    /* class creating_dt;
+        rand logic [63:0] data_store;
         function new ();
 
         endfunction
         function display;
             $display ("data_store %0x", data_store);
         endfunction
-    endclass
+    endclass */
 
     //Define class
-    creating_dt dt_class;   
-    sche_trans sch;
+    // creating_dt dt_class;   
+    axi_trans sch;
 
-    //Use this task to add a request into scheduler FIFO
-    task add_request(input logic [31:0] addr, input logic write, input logic [31:0] data);
+    /* //Use this task to add a request into scheduler FIFO
+    task add_request(input logic [31:0] addr, input logic write, input logic [63:0] data);
       if (write) begin
-          sch_if.dWEN = 1'b1;
-          sch_if.dREN = 1'b0;
-          sch_if.ramaddr = addr;
-          sch_if.memstore = data;
+          ddrif.sche.dWEN = 1'b1;
+          ddrif.sche.dREN = 1'b0;
+          ddrif.sche.ramaddr = addr;
+          ddrif.sche.memstore = data;
       end else begin
-          sch_if.dWEN = 1'b0;
-          sch_if.dREN = 1'b1;
-          sch_if.ramaddr = addr;
+          ddrif.sche.dWEN = 1'b0;
+          ddrif.sche.dREN = 1'b1;
+          ddrif.sche.ramaddr = addr;
       end
       #(PERIOD);
-      sch_if.dWEN = 1'b0;
-      sch_if.dREN = 1'b0;
-    endtask
+      ddrif.sche.dWEN = 1'b0;
+      ddrif.sche.dREN = 1'b0;
+    endtask */
 
     //This is the task you want to write something in a specific addr
     //Don't worry about the data context
     task writing_1(input logic [31:0] addr, input creating_dt dt_class);
         begin
-        add_request(.addr(addr), .write(1'b1), .data(32'hAAAA_AAAA));
-        while (!dt_if.wr_en) begin
+        add_request(.addr(addr), .write(1'b1), .data(64'hAAAA_AAAA_AAAA_AAAA));
+        while (!ddrif.wr_en) begin
             @(posedge CLK);
         end
 
@@ -410,7 +535,7 @@ module dram_top_tb;
         for (int i = 0; i < 9; i++) begin
             dt_class.randomize();
             // dt_class.display();
-            dt_if.memstore = dt_class.data_store;
+            ddrif.memstore = dt_class.data_store;
             // $display ("Here is  i : %0x, and memstore: %0x", i, dt_class.data_store);
             if (i != 0) begin
                 cache_addr = addr[30:16];
@@ -420,10 +545,10 @@ module dram_top_tb;
             end
             @(posedge CLKx2);
         end
-        dt_if.clear = 1'b1; //Should not be here, check later this
+        ddrif.clear = 1'b1; //Should not be here, check later this
         cache_write = 1'b0;
         @(posedge CLK);
-        dt_if.clear = 1'b0;
+        ddrif.clear = 1'b0;
         end
     endtask
 
@@ -441,21 +566,21 @@ module dram_top_tb;
         task_name = "Reading_Cycle";
         dq_en = 1'b0;
         //Case 3 check the reading cycle
-        add_request(.addr(sch.creating_addr), .write(1'b0), .data(32'hAAAA_AAAA));
+        add_request(.addr(sch.creating_addr), .write(1'b0), .data(64'hAAAA_AAAA_AAAA_AAAA));
         repeat (50) @(posedge CLK);
     endtask
 
     //This is the task where you want to read the address and verify with cache model
     task read_with_verify (
         input logic [31:0] addr,
-        input sche_trans sch
+        input axi_trans sch
     );
         dq_en = 0;
-        add_request(.addr(addr), .write(1'b0), .data(32'hAAAA_AAAA));
-        while (dc_if.ram_wait) begin
+        add_request(.addr(addr), .write(1'b0), .data(64'hAAAA_AAAA_AAAA_AAAA));
+        while (ddrif.ctrl.ram_wait) begin
             cache_read = 1;
             cache_addr = addr[30:16];
-            if (dt_if.edge_flag) begin
+            if (ddrif.edge_flag) begin
                 cache_offset = cache_offset + 1;
                 @(posedge CLKx2);
             end else begin
@@ -465,17 +590,17 @@ module dram_top_tb;
         end
         dq_en = 1;
         cache_read = 1;
-        dt_if.clear = 0;
+        ddrif.clear = 0;
     endtask
     //Creating the assert to check the failed case of data load
     property wr_verify;
         @(posedge CLK) disable iff (!nRST)
-        dt_if.rd_en && (dt_if.edge_flag) |-> (cache_load == dt_if.memload);
+        ddrif.rd_en && (ddrif.edge_flag) |-> (cache_load == ddrif.memload);
     endproperty
     assert property (wr_verify)
     else 
         //If failed it should stop simulation
-        $fatal("Time: [%0t], Addr: %0x, offset: %0x, cache load: %0x, dt_memload: %0x",$time,sch.creating_addr[30:16], cache_offset, cache_load, dt_if.memload);
+        $fatal("Time: [%0t], Addr: %0x, offset: %0x, cache load: %0x, dt_memload: %0x",$time,sch.creating_addr[30:16], cache_offset, cache_load, ddrif.memload);
 
 
     //Task of writing different 16 writes of different banks
@@ -486,7 +611,7 @@ module dram_top_tb;
             sch.randomize();
             sch.gen_addr("row miss", prev_addr);
             writing_1(sch.creating_addr, dt_class);
-            while (dc_if.ram_wait) begin
+            while (ddrif.ctrl.ram_wait) begin
                 @(posedge CLK);
             end
         end
@@ -503,7 +628,7 @@ module dram_top_tb;
                 sch.randomize();
                 sch.gen_addr("row miss", prev_addr);
                 writing_1(sch.creating_addr, dt_class);
-                while (dc_if.ram_wait) begin
+                while (ddrif.ctrl.ram_wait) begin
                     @(posedge CLK);
                 end
             end else begin
@@ -519,18 +644,10 @@ module dram_top_tb;
       clk_val = 1'b1;  
       model_enable_val = 1;
       dq_en = 1'b1;
-      don_t_write = 0;
-      
-      //Cache
-      cache_addr = 0;
-      cache_write = 0;
-      cache_read = 0;
-      cache_offset = 0;
-      cache_store = 0;
       
       
-      dt_class = new();
-      sch = new(sch_if);
+      // dt_class = new();
+      sch = new(ddrif.stq, ddrif.ldq, ddrif.wdata_wrapper);
       nRST = 1'b0;
       @(posedge CLK);
       @(posedge CLK);
@@ -542,7 +659,7 @@ module dram_top_tb;
       repeat (25) @(posedge CLK);
 
     
-    
+    /*
     task_name = "Writing_Cycle";
     sch.randomize();
     sch.gen_addr("row miss", prev_addr);
@@ -559,7 +676,7 @@ module dram_top_tb;
     task_name = "write - write - read - row hit";
     dq_en = 1'b1;
     writing_1(prev_addr, dt_class);
-    while (dc_if.ram_wait) begin
+    while (ddrif.ctrl.ram_wait) begin
         @(posedge CLK);
     end
     repeat(10) @(posedge CLK);
@@ -584,7 +701,7 @@ module dram_top_tb;
     sch.randomize();
     sch.gen_addr("row miss", prev_addr);
     writing_1(sch.creating_addr, dt_class);
-    while (dc_if.ram_wait) begin
+    while (ddrif.ctrl.ram_wait) begin
         @(posedge CLK);
     end
     repeat(10) @(posedge CLK);
@@ -593,7 +710,7 @@ module dram_top_tb;
     sch.randomize();
     sch.gen_addr("row miss", prev_addr);
     writing_1(sch.creating_addr, dt_class);
-    while (dc_if.ram_wait) begin
+    while (ddrif.ctrl.ram_wait) begin
         @(posedge CLK);
     end
     repeat(10) @(posedge CLK);
@@ -603,7 +720,7 @@ module dram_top_tb;
     sch.randomize();
     sch.gen_addr("row miss", prev_addr);
     writing_1(sch.creating_addr, dt_class);
-    while (dc_if.ram_wait) begin
+    while (ddrif.ctrl.ram_wait) begin
         @(posedge CLK);
     end
     repeat(10) @(posedge CLK);
@@ -614,7 +731,7 @@ module dram_top_tb;
     don_t_write = 1'b1;
     sch.gen_addr("row conflict", prev_addr);
     writing_1(sch.creating_addr, dt_class);
-    while(dc_if.ram_wait) begin
+    while(ddrif.ctrl.ram_wait) begin
         @(posedge CLK);
     end
     repeat(10) @(posedge CLK);
@@ -632,11 +749,12 @@ module dram_top_tb;
     random_req();
 
     //CHECKPOINT: DONE ALL PREVIOUS CASES
-    //TODO may be: the writing burst mask cases doesn't have general test cases
+    //TODO may be: the writing burst mask cases doesn't have general test cases */
     $finish;
     end
 endmodule
 
+/* NOT USED AT ALL
 
 //Reference cache for verification
 //Use to store 64byte of data in different rows
