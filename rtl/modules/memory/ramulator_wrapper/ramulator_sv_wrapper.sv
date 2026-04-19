@@ -38,6 +38,11 @@ module ramulator_sv_wrapper #(
         input string config_file
     );
 
+    import "DPI-C" function void ramulator_set_single_beat_sentinel(
+        input chandle handle,
+        input int     sentinel
+    );
+
     import "DPI-C" function int ramulator_send_request(
         input chandle handle,
         input longint addr,
@@ -286,6 +291,8 @@ module ramulator_sv_wrapper #(
         handle = ramulator_init(CONFIG_FILE);
         if (handle == null)
             $fatal(1, "[ramulator_sv_wrapper] ramulator_init() returned null. Config: %s", CONFIG_FILE);
+
+        ramulator_set_single_beat_sentinel(handle, N_BURST_SLOTS);
 
         clock_ratio_val = ramulator_get_clock_ratio(handle);
 

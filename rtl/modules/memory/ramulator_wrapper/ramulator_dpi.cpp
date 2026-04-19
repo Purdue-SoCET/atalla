@@ -54,6 +54,10 @@ struct RamulatorWrapper {
     // Two AXI beats in the same granule (e.g. 0x000 and 0x020) issue only one Ramulator request.
     Addr_t coalesce_unit = 64;   // bytes per DRAM granule (DDR4 default)
     std::unordered_map<Addr_t, std::vector<std::pair<Addr_t,int>>> coalesce_pending;
+
+    // source_id sentinel for single-beat (len=0) ARs — set by the SV wrapper
+    // via ramulator_set_single_beat_sentinel(). Those requests bypass coalescing.
+    int single_beat_sentinel = -1;
 };
 
 static inline uint64_t normalize_data(const RamulatorWrapper* wrapper, uint64_t v) {
@@ -130,6 +134,16 @@ int ramulator_send_request(ramulator_handle_t handle,
             bool accepted = wrapper->frontend->receive_external_requests(
                 req_type, addr, source_id, callback
             );
+            return accepted ? 1 : 0;
+        }
+
+        // Single-beat requests (source_id == single_beat_sentinel) bypass coalescing
+        // so each beat goes directly to Ramulator as its own CAS.
+        if (wrapper->single_beat_sentinel >= 0 && source_id == wrapper->single_beat_sentinel) {
+            auto callback = [wrapper, original_addr, source_id](Request& req) {
+                wrapper->completed_requests.push({original_addr, 0, source_id});
+            };
+            bool accepted = wrapper->frontend->receive_external_requests(0, addr, source_id, callback);
             return accepted ? 1 : 0;
         }
 
@@ -303,6 +317,11 @@ int ramulator_get_clock_ratio(ramulator_handle_t handle) {
     auto* wrapper = static_cast<RamulatorWrapper*>(handle);
     if (!wrapper) return 1;
     return wrapper->mem_tick_ratio;
+}
+
+void ramulator_set_single_beat_sentinel(ramulator_handle_t handle, int sentinel) {
+    auto* wrapper = static_cast<RamulatorWrapper*>(handle);
+    if (wrapper) wrapper->single_beat_sentinel = sentinel;
 }
 
 void ramulator_finalize(ramulator_handle_t handle) {

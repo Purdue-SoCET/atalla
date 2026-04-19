@@ -66,6 +66,11 @@ long long ramulator_load_mem_hex(
 // DDR4 → 2, HBM2 → 1, HBM3 → 1. Use this to size the response drain loop.
 int ramulator_get_clock_ratio(ramulator_handle_t handle);
 
+// Tell the DPI layer the source_id sentinel used for single-beat requests
+// (= N_BURST_SLOTS in the SV wrapper). Single-beat requests bypass coalescing
+// so their latency is not inflated by waiting for a paired beat.
+void ramulator_set_single_beat_sentinel(ramulator_handle_t handle, int sentinel);
+
 // Cleanup — mostly a no-op, see comments in ramulator_dpi.cpp.
 void ramulator_finalize(ramulator_handle_t handle);
 
