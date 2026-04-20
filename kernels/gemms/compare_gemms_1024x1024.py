@@ -33,7 +33,16 @@ def read_output_mem(mem_file: str) -> dict:
     return mem
 
 def read_bf16(mem: dict, addr: int) -> float:
-    return bf16_to_float(mem.get(addr, 0) & 0xFFFF)
+    ba = int(addr)
+    wa = ba & ~3
+    w = mem.get(wa, 0)
+    if ba & 2:
+        bits = (w >> 16) & 0xFFFF
+    else:
+        bits = w & 0xFFFF
+    if bits == 0 and wa not in mem and ba in mem:
+        bits = mem.get(ba, 0) & 0xFFFF
+    return bf16_to_float(bits)
 
 
 def main():

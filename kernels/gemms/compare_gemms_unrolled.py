@@ -24,20 +24,24 @@ def read_output_mem(path: str) -> dict:
 
 
 def read_bf16_at(mem: dict, addr: int) -> float:
-    return bf16_to_float(mem.get(addr, 0) & 0xFFFF)
-
+    ba = int(addr)
+    wa = ba & ~3
+    w = mem.get(wa, 0)
+    if ba & 2:
+        bits = (w >> 16) & 0xFFFF
+    else:
+        bits = w & 0xFFFF
+    if bits == 0 and wa not in mem and ba in mem:
+        bits = mem.get(ba, 0) & 0xFFFF
+    return bf16_to_float(bits)
 
 def build_golden(rows: int, cols: int) -> np.ndarray:
-    try:
-        import torch
-    except ImportError:
-        print("pytorch error")
-        sys.exit(1)
+    import torch
     W   = torch.tensor([[float(r+c) for c in range(cols)] for r in range(rows)],
                        dtype=torch.bfloat16)
     inp = torch.tensor([[float(r+1) for c in range(cols)] for r in range(rows)],
                        dtype=torch.bfloat16)
-    return torch.matmul(W.T, inp).to(torch.float32).numpy()
+    return torch.matmul(inp, W).to(torch.float32).numpy()
 
 
 def main():

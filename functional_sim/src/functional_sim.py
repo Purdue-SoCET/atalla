@@ -291,7 +291,10 @@ def run(mem: Memory, sregs: ScalarRegisterFile, mregs: ScalarRegisterFile, vregs
                     else:
                         tile_id0 += 1
                         tileID0Dict[spad_addr] = tile_id0
-                        localID = tileID0Dict[spad_addr]
+                        localID = tileID0Dict[spad_addr]    
+                    #using now for tiled mat mul 
+                    if spad_addr == int(sregs.read(3)):   # $3 = B_SCPAD_ADDR
+                        num_weights = 0
                     sdma_load(
                         gmem=mem,
                         scpad=SP0,
@@ -546,6 +549,10 @@ def run(mem: Memory, sregs: ScalarRegisterFile, mregs: ScalarRegisterFile, vregs
                     result = vs1_trimmed @ gemm_weights + vs2_vec
                     vregs.write(inst['vd'], result)
                     # vregs.write(inst['vd'], vregs.read(inst['vs1']) @ gemm_weights + vregs.read(inst['vs2']))
+                    flops = (2 * num_weights - 1) * 32 + 32
+                    EU.perf_metrics.increment("flops_matmul", flops)
+                    EU.perf_metrics.increment("flops_total", flops)
+
                 else:
                     src1 = vregs.read(inst['vs1'])
                     src2 = vregs.read(inst['vs2'])

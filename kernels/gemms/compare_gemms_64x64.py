@@ -27,8 +27,15 @@ def read_output_mem(mem_file: str) -> dict:
     return mem
 
 def read_bf16(mem: dict, addr: int) -> float:
-    word = mem.get(addr, 0)
-    bits = word & 0xFFFF          # only the lower 16 bits are the bf16 value; upper bits should be zero`
+    ba = int(addr)
+    wa = ba & ~3
+    w = mem.get(wa, 0)
+    if ba & 2:
+        bits = (w >> 16) & 0xFFFF
+    else:
+        bits = w & 0xFFFF
+    if bits == 0 and wa not in mem and ba in mem:
+        bits = mem.get(ba, 0) & 0xFFFF
     return bf16_to_float(bits)
 
 
@@ -50,7 +57,7 @@ def build_matrices(debug: bool):
 def to_bf16(x: np.ndarray) -> np.ndarray:
     """Round float32 array to bf16 precision, stored as float32."""
     x = np.asarray(x, dtype=np.float32)
-    u = x.view(np.uint32)
+    u = x.view(np.uint32) 
     lsb = (u >> 16) & np.uint32(1)
     u_round = u + np.uint32(0x7FFF) + lsb
     u_bf16 = (u_round & np.uint32(0xFFFF0000)).astype(np.uint32)

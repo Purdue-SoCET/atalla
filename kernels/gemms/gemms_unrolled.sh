@@ -37,7 +37,7 @@ if [ ${#MISSING[@]} -gt 0 ]; then
 fi
 
 OUTPUT_DIR="$ATALLA_ROOT/out"
-IN_FILE="$ATALLA_ROOT/tests/gemms_unrolled.in"  
+IN_FILE="$ATALLA_ROOT/tests/gemms_unrolled.in"
 
 OUT_MEM="$OUTPUT_DIR/output_mem.out"
 OUT_SREGS="$OUTPUT_DIR/output_sregs.out"
@@ -48,7 +48,7 @@ OUT_SCPAD1="$OUTPUT_DIR/output_scpad1.out"
 OUT_PERF="$OUTPUT_DIR/output_perf_metrics.out"
 
 echo "============================================================"
-echo "  GEMM unrolled: 32x32 single tile"
+echo "  GEMM unrolled: 31x31 single tile"
 if [ -n "$NO_GRAPH" ]; then
     echo "  Packet scheduling: disabled (--no-graph)"
 else
@@ -61,6 +61,9 @@ echo "[BUILD] Generating test file ..."
 echo "  Module : kernels.gemms.build_gemms_pipelined_loop_unroll"
 echo "  Output : $IN_FILE"
 echo ""
+
+mkdir -p "$(dirname "$IN_FILE")"
+
 
 $PYTHON -m kernels.gemms.build_gemms_pipelined_loop_unroll \
     --output "$IN_FILE" \

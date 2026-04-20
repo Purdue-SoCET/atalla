@@ -305,9 +305,11 @@ def sdma_store(
             u = (u + 0x7FFF + lsb) & 0xFFFFFFFF
             bits = u >> 16            
             #x_shifted = struct.unpack('<f', struct.pack('<I', bits & 0xFFFFFFFF))[0]
-            g_addr = gmem_base + (i * (NC) + j) * 2
-            gmem.write_data(g_addr, bits)
-
+            # g_addr = gmem_base + (i * (NC) + j) * 2
+            g_addr = gmem_base + (i * dram_stride_cols + j) * BF16_ELEM_BYTES
+            gmem.write_bf16_le(g_addr, bits)
+            if perf_metrics is not None:
+                perf_metrics.increment("bytes_stored", BF16_ELEM_BYTES)
 
 def dump_scpad_rc(scpad: Scratchpad, file=None):
     if not file:

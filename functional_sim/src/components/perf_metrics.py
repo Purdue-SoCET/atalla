@@ -40,6 +40,8 @@ class PerfMetrics:
         # Dynamic packet metrics (each fetch/execute step)
         self.metrics["packets_executed"] = 0
         self.metrics["packet_slots_executed"] = 0
+        self.metrics["arithmetic_intensity"] = 0.0
+        self.metrics["arithmetic_intensity_load_store"] = 0.0
 
     def update_derived_metrics(self) -> None:
         flops_total = float(self.metrics.get("flops_total", 0))
@@ -49,10 +51,15 @@ class PerfMetrics:
         bytes_moved = bytes_loaded + bytes_stored
         self.metrics["bytes_moved"] = bytes_moved
 
-        if bytes_moved > 0.0:
-            self.metrics["arithmetic_intensity"] = flops_total / bytes_moved
+        if bytes_loaded > 0.0:
+            self.metrics["arithmetic_intensity"] = flops_total / bytes_loaded
         else:
             self.metrics["arithmetic_intensity"] = 0.0
+
+        if bytes_moved > 0.0:
+            self.metrics["arithmetic_intensity_load_store"] = flops_total / bytes_moved
+        else:
+            self.metrics["arithmetic_intensity_load_store"] = 0.0
 
         packet_slots_total = float(self.metrics.get("packet_slots_total", 0))
         packet_slots_filled = float(self.metrics.get("packet_slots_filled", 0))

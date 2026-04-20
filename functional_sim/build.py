@@ -14,7 +14,10 @@ import argparse
 import numpy as np
 
 from kernels.utils.dataloader import load_tile_data
-from src.misc.opcode_table import OPCODES, name_to_opcode
+try:
+    from functional_sim.src.misc.opcode_table import OPCODES, name_to_opcode
+except ImportError:
+    from src.misc.opcode_table import OPCODES, name_to_opcode
 
 try:
     from instruction_latency import latency as DEFAULT_LATENCY_MAP

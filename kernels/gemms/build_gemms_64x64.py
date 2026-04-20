@@ -54,8 +54,10 @@ def main():
     B_GMEM_BASE = 0x0001_0000
     A_GMEM_BASE = 0x0002_0000
     C_GMEM_BASE = 0x0003_0000
-    B_SCPAD_ADDR = 0; A_SCPAD_ADDR = 1024; C_SCPAD_ADDR = 0
+    B_SCPAD_ADDR = 0; A_SCPAD_ADDR = 1984; C_SCPAD_ADDR = 0
     SID0 = 0; SID1 = 1
+    META_SID0 = (SID0 << 30) | ((TILE_ROWS - 1) << 25) | ((TILE_COLS - 1) << 20)
+    META_SID1 = (SID1 << 30) | ((TILE_ROWS - 1) << 25) | ((TILE_COLS - 1) << 20)
     TABLE_BASE   = 0x0000_00F0
 
     OFF_B_SCPAD = 0x00; OFF_A_SCPAD = 0x04; OFF_C_SCPAD = 0x08
@@ -100,6 +102,8 @@ def main():
         lw.s    $3,  {OFF_B_SCPAD}($20)
         lw.s    $22, {OFF_A_SCPAD}($20)
         lw.s    $23, {OFF_C_SCPAD}($20)
+        lui.s   $14, {META_SID0 >> 7}
+        lui.s   $15, {META_SID1 >> 7}
 
         lui.s   $6, 0
         addi.s  $6, $6, 0xf
@@ -127,7 +131,8 @@ def main():
         add.s   $31, $31, $20
         lw.s    $2,  0($31)
 
-        scpad.ld $3, $2, {TILE_COLS}, {TILE_ROWS}, {SID0}
+        # scpad.ld $3, $2, {TILE_COLS}, {TILE_ROWS}, {SID0}
+        scpad.ld $3, $2, $14
 
         addi.s  $27, $0, 0
         lw.s    $28, {OFF_TILE_ROWS}($20)
@@ -174,8 +179,10 @@ def main():
         add.s   $31, $31, $20
         lw.s    $24, 0($31)
 
-        scpad.ld $22, $21, {TILE_COLS}, {TILE_ROWS}, {SID0}
-        scpad.ld $23, $24, {TILE_COLS}, {TILE_ROWS}, {SID1}
+        # scpad.ld $22, $21, {TILE_COLS}, {TILE_ROWS}, {SID0}
+        # scpad.ld $23, $24, {TILE_COLS}, {TILE_ROWS}, {SID1}
+        scpad.ld $22, $21, $14
+        scpad.ld $23, $24, $15
 
         addi.s  $27, $0, 0
         lw.s    $30, {OFF_TILE_ROWS}($20)
@@ -188,7 +195,8 @@ def main():
         addi.s  $27, $27, 1
         blt.s   $27, $30, pipeline_loop
 
-        scpad.st $23, $24, {TILE_COLS}, {TILE_ROWS}, {SID1}
+        # scpad.st $23, $24, {TILE_COLS}, {TILE_ROWS}, {SID1}
+        scpad.st $23, $24, $15
 
         addi.s  $29, $29, 1
         lw.s    $30, {OFF_NI}($20)
