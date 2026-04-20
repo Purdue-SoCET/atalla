@@ -410,7 +410,7 @@ module dram_top_tb;
     class axi_trans;
         // Getting the AXI Sub->Load/Store Queue and WDQ(wrapper)
         virtual ddr_controller_if.stq           svif;
-        virtual ddr_controller_if.ldq           lvif; 
+        virtual ddr_controller_if.lq           lvif; 
         virtual ddr_controller_if.wdata_wrapper wvif;
 
 
@@ -465,7 +465,7 @@ module dram_top_tb;
         function new (
             virtual ddr_controller_if.stq           svif, 
             virtual ddr_controller_if.wdata_wrapper wvif,
-            virtual ddr_controller_if.ldq           lvif
+            virtual ddr_controller_if.lq            lvif
         );
             this.svif = svif;
             this.wvif = wvif;
@@ -473,7 +473,7 @@ module dram_top_tb;
         endfunction
 
         //function for generate the address
-        function gen_addr (string testcase, input logic[31:0] prev_addr);
+        function gen_addr (string testcase);
             //If you want to add row conflict
             if (testcase == "row conflict") begin
                 creating_addr = prev_addr;
@@ -485,16 +485,13 @@ module dram_top_tb;
             end
         endfunction
 
-        function gen_valid(string testcase); 
-            if (testcase == "invalid") valid = '0;
-            else valid = '1;  
-        endfunction 
+        function gen_valid(logic is_valid); 
+            valid = is_valid; 
+        endfunction
 
-        function gen_write(string ready, string last);
-            if (ready == "ready") ready = '1;
-            else ready = '0;
-            if (last == "last") last = '1;
-            else last = '0;
+        function gen_write(logic is_ready, logic is_last);
+            bwready = is_ready;
+            wlast = is_last;
         endfunction
         
         //This is the task you want to write something in a specific addr
@@ -503,7 +500,7 @@ module dram_top_tb;
         // AXI_WRITE_CHANNEL -> WRAPPER
         // input wdq_slot, bwready, wvalid, wlast, 
         task writing();
-                @(posedge CLK);
+            begin 
                 // Send the Write Data to both the STQ and WDQ
                 // WDQ
                 wvif.wdq_slot = {this.wstrb, this.wdata, this.wid, this.wlen};
@@ -511,46 +508,41 @@ module dram_top_tb;
                 wvif.wvalid   = valid;
                 wvif.wlast    = this.wlast; // TODO: How is this signal determined?
                 // STQ
-                wvif.awvalid = valid;
-                wvif.awaddr  = creating_addr;
-                wvif.awlen   = len;
-                wvif.awid    = id;
+                svif.awvalid = valid;
+                svif.awaddr  = creating_addr;
+                svif.awlen   = len;
+                svif.awid    = id;
                 // Store previous for more
                 this.prev_addr = creating_addr;
+            end
+        endtask
+
+        task reading();
+            begin 
+                // Send the Read Commands to the LQ
+                lvif.arvalid = valid;
+                lvif.araddr  = creating_addr;
+                lvif.arlen   = len;
+                lvif.arid    = id;            
+            end
         endtask
     endclass
 
     //Define class   
     axi_trans axi;
 
-    /* //Use this task to add a request into scheduler FIFO
-    task add_request(input logic [31:0] addr, input logic write, input logic [63:0] data);
-      if (write) begin
-          ddrif.sche.dWEN = 1'b1;
-          ddrif.sche.dREN = 1'b0;
-          ddrif.sche.ramaddr = addr;
-          ddrif.sche.memstore = data;
-      end else begin
-          ddrif.sche.dWEN = 1'b0;
-          ddrif.sche.dREN = 1'b1;
-          ddrif.sche.ramaddr = addr;
-      end
-      #(PERIOD);
-      ddrif.sche.dWEN = 1'b0;
-      ddrif.sche.dREN = 1'b0;
-    endtask */
-
-    // TODO: FIX ABOVE, THEN WORK ON BELOW 
-    /* 
+    // TODO: FIX ABOVE, THEN WORK ON BELOW  
     //A random testing case
-    task writing_read_row_hit(input creating_dt dt_class);
+    task writing_read_row_hit(input axi_trans axi_inst);
         task_name = "Writing_Cycle";
         //Case 2 check the writing cycle
         //Case checking the writing burst
         //Creating new addr
-        sch.randomize();
-        sch.gen_addr("row miss", prev_addr);
-        writing_1(sch.creating_addr, dt_class);
+        axi_inst.gen_addr("row miss");
+        axi_inst.gen_valid(1'b1);
+        axi_inst.gen_write(1'b1, 1'b0); // ready, last
+        @(posedge CLK);
+        axi.writing();
         repeat (50) @(posedge CLK);
 
         task_name = "Reading_Cycle";
@@ -560,6 +552,7 @@ module dram_top_tb;
         repeat (50) @(posedge CLK);
     endtask
 
+    /* 
     //This is the task where you want to read the address and verify with cache model
     task read_with_verify (
         input logic [31:0] addr,
@@ -636,7 +629,7 @@ module dram_top_tb;
       dq_en = 1'b1;
       
       
-      axi = new();
+      axi = new(ddrif.stq, ddrif.wdata_wrapper, ddrif.lq);
       nRST = 1'b0;
       @(posedge CLK);
       @(posedge CLK);
@@ -648,11 +641,12 @@ module dram_top_tb;
       repeat (25) @(posedge CLK);
 
     
-      task_name = "Writing_Cycle";
+      task_name = "Writing_Cycle Case 1";
       axi.randomize();
-      axi.gen_addr("row miss", axi.prev_addr);
-      axi.gen_valid("valid");
-      axi.gen_write("ready", "not last");
+      axi.gen_addr("row miss");
+      axi.gen_valid(1'b1);
+      axi.gen_write(1'b1, 1'b0); // ready, last
+      @(posedge CLK);
       axi.writing();
       repeat (50) @(posedge CLK);
 
