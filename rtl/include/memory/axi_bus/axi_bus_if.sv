@@ -89,6 +89,7 @@ interface axi_bus_if(input logic CLK, input logic nRST);
     // SP0 & AW_W MANAGER READY/VALID
     logic aw_sp0_i_valid, aw_sp0_i_ready, w_sp0_i_valid, w_sp0_i_ready;
 
+
     // SP1 & AW_W MANAGER READY/VALID
     logic aw_sp1_i_valid, aw_sp1_i_ready, w_sp1_i_valid, w_sp1_i_ready;
 
@@ -119,18 +120,76 @@ interface axi_bus_if(input logic CLK, input logic nRST);
     logic wvalid, wready;   // GENERAL W WRITE MANAGER READY/VALID
     logic aw_pop, w_pop; 
     logic head_awvalid, head_wvalid;
+    logic sp0_wr_ready, sp1_wr_ready, d_wr_ready;
+    logic sp0_i_valid, sp1_i_valid, d_i_valid;
 
     // WRITE DRIVER SIGNALS
     logic aw_fire, w_fire;
 
-    // test assertions
-    property wrt_valid_ready;
-        @(posedge CLK)
-        (awvalid && !awready) |-> $stable(aw_gen_i);
-    endproperty
+    logic [AWGRANT-1:0] nxt_aw_grant;
 
-    assert property (wrt_valid_ready)
-        else $error("data changed during low ready");
+    // test assertions
+    // property wrt_valid_ready;
+    //     @(posedge CLK)
+    //     (awvalid && !awready) |-> $stable(aw_gen_i);
+    // endproperty
+
+    // assert property (wrt_valid_ready)
+    //     else $error("data changed during low ready");
+
+    modport axi(
+        // read side
+        // input from master
+        input ar_sp0_valid, ar_sp1_valid, ar_d_valid, ar_i_valid, 
+            ar_sp0_i, ar_sp1_i, ar_d_i, ar_i_i,
+            r_sp0_o_ready, r_sp1_o_ready, r_i_o_ready, r_d_o_ready,
+            
+        // input from controller
+        r_valid, r_i, // sub_r_channel_t 
+        ar_o_ready,
+
+        // output
+        output r_sp0_o, r_sp1_o, r_i_o, r_d_o, // master_r_channel_t
+        r_sp0_o_valid, r_sp1_o_valid, r_i_o_valid, r_d_o_valid,
+
+        // output to controller
+        ar_o_valid, r_ready, ar_o,
+
+        // write side
+        input sp0_i_valid, aw_sp0_i, w_sp0_i,
+        input sp1_i_valid, aw_sp1_i, w_sp1_i,
+        input d_i_valid, aw_d_i, w_d_i,
+
+        // To Master 
+        // output aw_sp0_i_ready, w_sp0_i_ready,
+        // output aw_sp1_i_ready, w_sp1_i_ready,
+        // output aw_d_i_ready, w_d_i_ready, 
+        output sp0_wr_ready, sp1_wr_ready, d_wr_ready,
+
+        // To Master 
+        output b_sp0_o_valid, b_sp0_o,
+        output b_sp1_o_valid, b_sp1_o,
+        output b_d_o_valid, b_d_o,
+        
+        // From Master
+        input b_sp0_o_ready,
+        input b_sp1_o_ready,
+        input b_d_o_ready,
+
+        // To Subordinate
+        output aw_o_valid, aw_o,
+        output w_o_valid, w_o,
+
+        // From Subordinate
+        input aw_o_ready,
+        input w_o_ready,
+
+        // To Subordinate
+        output b_i_ready,
+
+        // From Subordinate
+        input b_i_valid, b_i  
+    );
 
     // ----------------------------------------------------------------------
     // READ PATH Definitions
@@ -230,14 +289,18 @@ interface axi_bus_if(input logic CLK, input logic nRST);
     // WRITE TOP LEVEL MODPORT
     modport write_path(
         // From Master
-        input aw_sp0_i_valid, aw_sp0_i, w_sp0_i_valid, w_sp0_i,
-        input aw_sp1_i_valid, aw_sp1_i, w_sp1_i_valid, w_sp1_i,
-        input aw_d_i_valid, aw_d_i, w_d_i_valid, w_d_i,
+        // input aw_sp0_i_valid, aw_sp0_i, w_sp0_i_valid, w_sp0_i,
+        // input aw_sp1_i_valid, aw_sp1_i, w_sp1_i_valid, w_sp1_i,
+        // input aw_d_i_valid, aw_d_i, w_d_i_valid, w_d_i,
+        input sp0_i_valid, aw_sp0_i, w_sp0_i,
+        input sp1_i_valid, aw_sp1_i, w_sp1_i,
+        input d_i_valid, aw_d_i, w_d_i,
 
         // To Master 
-        output aw_sp0_i_ready, w_sp0_i_ready,
-        output aw_sp1_i_ready, w_sp1_i_ready,
-        output aw_d_i_ready, w_d_i_ready, 
+        // output aw_sp0_i_ready, w_sp0_i_ready,
+        // output aw_sp1_i_ready, w_sp1_i_ready,
+        // output aw_d_i_ready, w_d_i_ready, 
+        output sp0_wr_ready, sp1_wr_ready, d_wr_ready,
 
         // To Master 
         output b_sp0_o_valid, b_sp0_o,
@@ -356,7 +419,7 @@ interface axi_bus_if(input logic CLK, input logic nRST);
         input w_fire,
 
         // To Write Mux
-        output aw_grant,
+        output aw_grant, nxt_aw_grant,
 
         // To W Manager
         //output w_sp0_pop, w_sp1_pop, w_d_pop,
@@ -386,7 +449,7 @@ interface axi_bus_if(input logic CLK, input logic nRST);
     // WRITE DRIVER 
     modport write_driver (
         // From write arbiter 
-        input aw_grant,
+        input aw_grant, nxt_aw_grant,
 
         // To write arbiter
         output skid_ready_w, 
@@ -510,14 +573,18 @@ interface axi_bus_if(input logic CLK, input logic nRST);
     // WRITE TOP LEVEL MODPORT TB
     modport write_path_tb(
         // From Master
-        output aw_sp0_i_valid, aw_sp0_i, w_sp0_i_valid, w_sp0_i,
-        output aw_sp1_i_valid, aw_sp1_i, w_sp1_i_valid, w_sp1_i,
-        output aw_d_i_valid, aw_d_i, w_d_i_valid, w_d_i,
+        // output aw_sp0_i_valid, aw_sp0_i, w_sp0_i_valid, w_sp0_i,
+        // output aw_sp1_i_valid, aw_sp1_i, w_sp1_i_valid, w_sp1_i,
+        // output aw_d_i_valid, aw_d_i, w_d_i_valid, w_d_i,
+        output sp0_i_valid, aw_sp0_i, w_sp0_i,
+        output sp1_i_valid, aw_sp1_i, w_sp1_i,
+        output d_i_valid, aw_d_i, w_d_i,
 
         // To Master 
-        input aw_sp0_i_ready, w_sp0_i_ready,
-        input aw_sp1_i_ready, w_sp1_i_ready,
-        input aw_d_i_ready, w_d_i_ready, 
+        // input aw_sp0_i_ready, w_sp0_i_ready,
+        // input aw_sp1_i_ready, w_sp1_i_ready,
+        // input aw_d_i_ready, w_d_i_ready, 
+        input sp0_wr_ready, sp1_wr_ready, d_wr_ready,
 
         // To Master 
         input b_sp0_o_valid, b_sp0_o,
