@@ -22,7 +22,7 @@
 //     already open.
 //   - A row must be closed (PRE) before REF can be issued.
 
-`include "ddr_controller_if.vh"
+// `include "ddr_controller_if.vh" // File not found, include removed or path needs fixing
 `include "dram_pkg.vh"
 
 module fsm_mod (

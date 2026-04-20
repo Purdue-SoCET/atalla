@@ -460,8 +460,7 @@ module dram_top_tb;
             row != '1;
             offset == 0;
             col[2:0] == 0; //8-byte align
-        } 
-
+        }
 
         function new (
             virtual ddr_controller_if.stq           svif, 
@@ -477,7 +476,7 @@ module dram_top_tb;
         endfunction
 
         //function for generate the address
-        function gen_addr (string testcase);
+        function void gen_addr (string testcase);
             //If you want to add row conflict
             if (testcase == "row conflict") begin
                 creating_addr = prev_addr;
@@ -488,6 +487,7 @@ module dram_top_tb;
                 creating_addr = {rank, row, bank, BG[1], col[9:3], BG[0], col[2:0], offset};
             end
         endfunction
+    endclass
 
         function gen_valid(logic is_valid); 
             valid = is_valid; 

@@ -56,8 +56,8 @@ set DESIGN_SRCS {
     ./rtl/modules/ddr_cntrl/frontend_wrapper.sv
 }
 
-# --- Assemble all sources (order matters: design, then TB) ---
-set SRC_FILES [concat $DESIGN_SRCS [list $TB_FILE]]
+# --- Assemble all sources (order matters: design, then arch_package, then Micron package, then TB) ---
+set SRC_FILES [concat $DESIGN_SRCS [list ./rtl/include/ddr_cntrl/arch_package.sv ./rtl/include/ddr_cntrl/micron/proj_package.sv $TB_FILE]]
 
 puts "INC_FLAGS  : $INC_FLAGS"
 puts "DEFINES    : $MICRON_DEFINES"

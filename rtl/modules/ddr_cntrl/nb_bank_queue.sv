@@ -12,7 +12,7 @@ module nb_bank_queue(
     input logic CLK, nRST,
     ddr_controller_if.bq bqif
 );
-    `include "dram_pkg.sv"
+    `include "dram_pkg.svh"
     import dram_pkg::*;
 
     logic [BANK_NUM-1:0] b_wsel, b_rsel;

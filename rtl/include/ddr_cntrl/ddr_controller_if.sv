@@ -106,7 +106,7 @@ logic [BANK_NUM-1:0]       rf_done;     // Refresh command completed
 
 // INIT STATE
 logic                      init_start;      // Trigger to begin initialization
-logic                      init_done;       // Initialization complete
+logic init_done;       // Initialization complete (restored for modport)
 dram_state_t               init_state;      // Current initialization state
 dram_state_t               next_init_state; // Next initialization state
 
@@ -120,7 +120,8 @@ logic [$clog2(ID_NUM)-1:0] be_wid;
 logic be_write; 
 
 // BACKEND ARBITER -> REF TIMER
-logic init_done;
+// (restored below for modport)
+logic ref_done;        // Refresh done (restored for modport)
 
 // AXI -> READ_ID_QUEUE
 //logic                      rq_rready;
@@ -408,11 +409,12 @@ modport ddr_cntrl_top (
     // R Data (Read ID Queue -> AXI)
     rvalid, rdata, rid, rlast, rresp,
 
+
     // ===== OUTPUTS (TO DRAM) =====
     // Write Data Path (WDQ Wrapper -> DRAM)
     //ddr_wdata_data, ddr_wdata_en, ddr_wdata_mask, ddr_we,
     // Command Path (Signal gen -> DRAM)
-    ACT_n, RAS_n_A16, CAS_n_A15, WE_n_A14, ALERT_n, PARITY, RESET_n, TEN, CS_n, CKE, ODT, C, BG, BA, ADDR, ADDR_17, PWR, VREF_CA, VREF_DQ, ZQ
+    ACT_n, RAS_n_A16, CAS_n_A15, WE_n_A14, ALERT_n, PARITY, RESET_n, TEN, CS_n, CKE, ODT, C, BG, BA, ADDR, ADDR_17, PWR, VREF_CA, VREF_DQ, ZQ,
     //be_arb, be_cmd, be_r, be_c, be_b, be_bg, be_id,
     // Init Status
     //init_done, init_state, next_init_state

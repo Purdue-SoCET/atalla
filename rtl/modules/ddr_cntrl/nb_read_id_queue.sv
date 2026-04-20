@@ -1,4 +1,4 @@
-`include "ddr_controller_if.vh"
+`include "ddr_controller_if.sv" // Changed to .sv, update if not needed
 `include "dram_pkg.vh"
  
 typedef struct packed {
@@ -25,7 +25,7 @@ module nb_read_id_queue (
             head_ptr <= '0;
             tail_ptr <= '0;
             riq_reg <= '0;
-            count < = '0;
+            count <= '0;
             enable <= 0;
         end else begin
             head_ptr <= head_ptr_n;
@@ -64,7 +64,7 @@ module nb_read_id_queue (
         
         // Counter going to length + 1 to find the number of beats in transfer
         if (enable) begin
-            if (count == riq_reg_n[tail_head_ptr].len + 1) begin // Total beats
+            if (count == riq_reg_n[head_ptr].len + 1) begin // Total beats (fixed tail_head_ptr to head_ptr)
                 enable_n = 0;
                 count_n = '0;
                 if (head_ptr + 1 == ID_NUM) begin
@@ -78,7 +78,7 @@ module nb_read_id_queue (
             end
             r_id_queue.rq_rvalid = 1; // Valid signal is high entire duration of counter
             r_id_queue.rq_rid = riq_reg_n[head_ptr].id;
-            r_id_queue.rq_rlen = riq_reg_n[head_ptr].len
+            r_id_queue.rq_rlen = riq_reg_n[head_ptr].len;
         end     
     end
 endmodule
