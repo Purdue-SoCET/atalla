@@ -27,22 +27,9 @@ set MICRON_DEFINES [list \
     "+define+DDR4_8G_X8" \
 ]
 
-# --- Micron DDR4 Model Sources (compile-order sensitive) ---
-# arch_package depends on arch_defines.v via `include
-# proj_package depends on arch_package
-# interface.sv (DDR4_if) depends on arch_package
-# timing_tasks.sv depends on arch_package
-# The .svp encrypted files (ddr4_model, MemoryArray, StateTable*) depend on all of the above
-set MICRON_SRCS {
-    ./rtl/include/ddr_cntrl/micron/arch_package.sv
-    ./rtl/include/ddr_cntrl/micron/proj_package.sv
-    ./rtl/include/ddr_cntrl/micron/interface.sv
-    ./rtl/include/ddr_cntrl/micron/timing_tasks.sv
-    ./rtl/modules/ddr_cntrl/micron/StateTableCore.svp
-    ./rtl/modules/ddr_cntrl/micron/StateTable.svp
-    ./rtl/modules/ddr_cntrl/micron/MemoryArray.svp
-    ./rtl/modules/ddr_cntrl/micron/ddr4_model.svp
-}
+# --- Micron DDR4 Model Sources (handled by modelsim.do) ---
+# The Micron encrypted model and related files are compiled by ./protected_modelsim/modelsim.do, not here.
+set MICRON_SRCS {}
 
 # --- Your DDR Controller RTL Sources ---
 set DESIGN_SRCS {
@@ -69,8 +56,8 @@ set DESIGN_SRCS {
     ./rtl/modules/ddr_cntrl/frontend_wrapper.sv
 }
 
-# --- Assemble all sources (order matters: packages, then micron, then design, then TB) ---
-set SRC_FILES [concat $MICRON_SRCS $DESIGN_SRCS [list $TB_FILE]]
+# --- Assemble all sources (order matters: design, then TB) ---
+set SRC_FILES [concat $DESIGN_SRCS [list $TB_FILE]]
 
 puts "INC_FLAGS  : $INC_FLAGS"
 puts "DEFINES    : $MICRON_DEFINES"
@@ -83,8 +70,25 @@ if {![file exists work]} {
 }
 vmap work work
 
-# --- Compilation ---
+
+
+
+# --- Always compile all sources (Micron model and user modules) ---
 vlog -sv -mfcu +acc {*}$INC_FLAGS {*}$MICRON_DEFINES {*}$SRC_FILES
+
+puts "=============================================================="
+puts "Compilation complete. Launching simulation with Micron ModelSim flow"
+puts "=============================================================="
+
+if {[file exists "./protected_modelsim/modelsim.do"]} {
+    puts "Launching: vsim -do ./protected_modelsim/modelsim.do"
+    exec vsim -do ./protected_modelsim/modelsim.do
+    puts "Micron model simulation launched."
+    return
+} else {
+    puts "ERROR: Micron modelsim.do script not found at ./protected_modelsim/modelsim.do"
+    quit -f
+}
 
 puts "=============================================================="
 puts "Compilation complete. Launching simulation for $TB_TOP"
