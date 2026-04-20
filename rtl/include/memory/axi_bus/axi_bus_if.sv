@@ -126,6 +126,8 @@ interface axi_bus_if(input logic CLK, input logic nRST);
     // WRITE DRIVER SIGNALS
     logic aw_fire, w_fire;
 
+    logic [AWGRANT-1:0] nxt_aw_grant;
+
     // test assertions
     // property wrt_valid_ready;
     //     @(posedge CLK)
@@ -417,7 +419,7 @@ interface axi_bus_if(input logic CLK, input logic nRST);
         input w_fire,
 
         // To Write Mux
-        output aw_grant,
+        output aw_grant, nxt_aw_grant,
 
         // To W Manager
         //output w_sp0_pop, w_sp1_pop, w_d_pop,
@@ -447,7 +449,7 @@ interface axi_bus_if(input logic CLK, input logic nRST);
     // WRITE DRIVER 
     modport write_driver (
         // From write arbiter 
-        input aw_grant,
+        input aw_grant, nxt_aw_grant,
 
         // To write arbiter
         output skid_ready_w, 

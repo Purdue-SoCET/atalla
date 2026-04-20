@@ -265,6 +265,7 @@ module axi_write_top(
 
     // WRITE ARBITER -> WRITE DRIVER
     assign drv_if.aw_grant = arb_if.aw_grant;
+    assign drv_if.nxt_aw_grant = arb_if.nxt_aw_grant;
 
     // WRITE DRIVER -> WRITE ARBITER
     assign arb_if.skid_ready_w = drv_if.skid_ready_w;
