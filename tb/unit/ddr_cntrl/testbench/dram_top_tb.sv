@@ -412,7 +412,7 @@ module dram_top_tb;
         virtual ddr_controller_if.stq           svif;
         virtual ddr_controller_if.lq           lvif; 
         virtual ddr_controller_if.wdata_wrapper wvif;
-
+        virtual logic CLK, CLKx2;
 
         //Random rank, bank group, bank, row, col, offset (these go in stq/ldq)
         rand logic [RANK_BITS - 1:0] rank;
@@ -423,7 +423,7 @@ module dram_top_tb;
         rand logic [OFFSET_BITS - 1:0] offset;
 
         // RANDOM WRITE QUEUE SLOT
-        rand logic [7:0] wstrb;
+        rand logic [7:0] wstrb; // TODO: Possible adjustment necessary 
         rand logic [63:0] wdata; 
         rand logic [$clog2(ID_NUM)-1:0] wid; 
         rand logic [2:0] wlen;
@@ -432,8 +432,8 @@ module dram_top_tb;
         rand logic [$clog2(ID_NUM)-1:0] id;
         rand logic [3:0] len; // TODO: Maybe this needs a separate function 
 
-        // Function based 
-        logic valid, bwready, wlast;
+        // Function based
+        logic valid, bwready, wlast; // TODO: Possible adjustment necessary 
         logic [31:0] creating_addr, prev_addr; //the actual address
 
         /* R/W CAN OCCUR SIMULT
@@ -465,11 +465,14 @@ module dram_top_tb;
         function new (
             virtual ddr_controller_if.stq           svif, 
             virtual ddr_controller_if.wdata_wrapper wvif,
-            virtual ddr_controller_if.lq            lvif
+            virtual ddr_controller_if.lq            lvif,
+            virtual logic CLK, CLKx2
         );
-            this.svif = svif;
-            this.wvif = wvif;
-            this.lvif = lvif;
+            this.svif  = svif;
+            this.wvif  = wvif;
+            this.lvif  = lvif;
+            this.CLK   = CLK;
+            this.CLKx2 = CLKx2;
         endfunction
 
         //function for generate the address
@@ -514,6 +517,9 @@ module dram_top_tb;
                 svif.awid    = id;
                 // Store previous for more
                 this.prev_addr = creating_addr;
+                // Randomize 
+                // this.randomize();
+                // @(posedge CLKx2);
             end
         endtask
 
@@ -542,13 +548,13 @@ module dram_top_tb;
         axi_inst.gen_valid(1'b1);
         axi_inst.gen_write(1'b1, 1'b0); // ready, last
         @(posedge CLK);
-        axi.writing();
+        axi_inst.writing();
         repeat (50) @(posedge CLK);
 
         task_name = "Reading_Cycle";
         dq_en = 1'b0;
         //Case 3 check the reading cycle
-        add_request(.addr(sch.creating_addr), .write(1'b0), .data(64'hAAAA_AAAA_AAAA_AAAA));
+        axi_inst.reading();
         repeat (50) @(posedge CLK);
     endtask
 
@@ -629,7 +635,7 @@ module dram_top_tb;
       dq_en = 1'b1;
       
       
-      axi = new(ddrif.stq, ddrif.wdata_wrapper, ddrif.lq);
+      axi = new(ddrif.stq, ddrif.wdata_wrapper, ddrif.lq, CLK, CLKx2);
       nRST = 1'b0;
       @(posedge CLK);
       @(posedge CLK);
