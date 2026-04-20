@@ -260,6 +260,7 @@ program test (
                 bif.dram_be_res[0].valid = bif.be_dram_req[0].valid;
                 bif.dram_be_res[0].write = bif.be_dram_req[0].write;
                 bif.dram_be_res[0].id    = bif.be_dram_req[0].id;
+                bif.dram_be_res[0].dram_vector_mask = bif.be_dram_req[0].dram_vector_mask;
                 
                 if (bif.be_dram_req[0].valid) begin
                     request_count++;
@@ -662,7 +663,7 @@ program test (
             for (int j = 0; j < 32; j++) begin
                 // Rotate through different base addresses
                 // spad_addr: use different row-aligned bases (multiples of 32)
-                spad_base = 20'(((i * 32 + j) % 16) << 5);  // 0x000, 0x020, 0x040, ... 0x1E0
+                spad_base = 20'(((i * 32 + j) % 16) << ROW_SHIFT);  // row-aligned bases
                 dram_base = 32'(((i * 32 + j) % 8) << 12);  // 0x0000, 0x1000, 0x2000, ... 0x7000
                 current_num_rows = i; current_num_cols = j;
                 schedule_request(1'b1, 1'b0, spad_base, dram_base, 5'(i), 5'(j), 1'b0);
@@ -681,7 +682,7 @@ program test (
             for (int j = 0; j < 32; j++) begin
                 // Rotate through different base addresses
                 // spad_addr: use different row-aligned bases (multiples of 32)
-                spad_base = 20'(((i * 32 + j) % 16) << 5);  // 0x000, 0x020, 0x040, ... 0x1E0
+                spad_base = 20'(((i * 32 + j) % 16) << ROW_SHIFT);  // row-aligned bases
                 dram_base = 32'(((i * 32 + j) % 8) << 12);  // 0x0000, 0x1000, 0x2000, ... 0x7000
                 current_num_rows = i; current_num_cols = j;
                 schedule_request(1'b1, 1'b1, spad_base, dram_base, 5'(i), 5'(j), 1'b0);
@@ -1300,20 +1301,6 @@ program test (
         // Stall signal tests
         test_all_stall_signals();
 
-        // Full suites
-        // scpad_load_all_dims();
-        // scpad_store_all_dims();
-
-        // Base address coverage
-        // test_base_addresses();
-
-        // Full suites with varied addresses (2048 tests each)
-        // scpad_load_all_dims_with_addrs();
-        // scpad_store_all_dims_with_addrs();
-
-        // Stall signal tests
-        // test_all_stall_signals();
-        
         print_summary();
         if (failed_tests > 0) $fatal(1, "Test suite failed with %0d failures", failed_tests);
         $finish;

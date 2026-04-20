@@ -35,6 +35,8 @@ package scpad_pkg;
     localparam int DRAM_VECTOR_MASK_LANES = MAX_DRAM_BUS_BITS/ELEM_BITS; // (64 bits / 16 bits) means 4 elements, lanes, per request. 
     localparam int DRAM_VECTOR_MASK_LANES_SHIFT = $clog2(DRAM_VECTOR_MASK_LANES);
 
+    localparam int SCALAR_REG_BITS = 8;
+
     //////////////////////////////////////////////////////////////////////
     /////////////////////////// Helper Functions /////////////////////////
     //////////////////////////////////////////////////////////////////////
@@ -79,6 +81,7 @@ package scpad_pkg;
         logic [MAX_DIM_WIDTH-1:0] num_cols;
         logic [FULL_MATRIX_DIM_WIDTH-1:0] full_num_cols;
         logic [SCPAD_ID_WIDTH-1:0] scpad_id;
+        logic [SCALAR_REG_BITS-1:0] rd;
     } sched_req_t;
 
     typedef struct packed {
@@ -101,6 +104,8 @@ package scpad_pkg;
         logic [DRAM_ADDR_WIDTH-1:0]  dram_addr;
         logic [DRAM_VECTOR_MASK_LANES-1:0] dram_vector_mask;
         logic [MAX_DRAM_BUS_BITS-1:0] wdata;
+        logic [MAX_REQ_WIDTH-1:0] num_request;
+        logic w_last;
     } dram_req_t;
 
     typedef struct packed {
@@ -114,6 +119,7 @@ package scpad_pkg;
         logic valid; 
         logic write; 
         logic [DRAM_ID_WIDTH-1:0] id;
+        logic [DRAM_VECTOR_MASK_LANES-1:0] dram_vector_mask;
         logic [MAX_DRAM_BUS_BITS-1:0] rdata;
     } dram_res_t;
 
@@ -199,6 +205,7 @@ package scpad_pkg;
     typedef struct packed {
         logic [DRAM_ID_WIDTH-1:0] dram_id;
         logic dram_res_valid;
+        logic [DRAM_VECTOR_MASK_LANES-1:0] dram_vector_mask;
         xbar_desc_t xbar;
         logic [MAX_DRAM_BUS_BITS-1:0] dram_rddata;
         logic [MAX_REQ_WIDTH-1:0] num_request;
