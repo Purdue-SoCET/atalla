@@ -1,5 +1,6 @@
 `include "ddr_controller_if.sv"
 `include "dram_pkg.svh"
+import dram_pkg::*;
 
 module refresh_counter #(
     parameter N = $clog2(9 * tREFI) + 1
@@ -7,9 +8,6 @@ module refresh_counter #(
     input logic CLK, nRST,
     ddr_controller_if.refresh_cntrl rcif
 );
-
-    import dram_pkg::*;
-
     logic [N-1:0] refresh_limit, next_refresh_limit;
     logic [N-1:0] refresh_count, next_refresh_count;
 

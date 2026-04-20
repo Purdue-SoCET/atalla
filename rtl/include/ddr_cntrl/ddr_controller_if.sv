@@ -120,7 +120,6 @@ logic [$clog2(ID_NUM)-1:0] be_wid;
 logic be_write; 
 
 // BACKEND ARBITER -> REF TIMER
-logic init_done;
 
 // AXI -> READ_ID_QUEUE
 //logic                      rq_rready;
@@ -328,7 +327,7 @@ modport backend_arb (
 
 modport refresh_cntrl (
     //BE -> REFRESH COUNTER
-    input rf_enable, ref_done,
+    input rf_enable, rf_done,
     //REFRESH COUNTER -> FSM
     output fsm_ref
 );
@@ -412,12 +411,11 @@ modport ddr_cntrl_top (
     // Write Data Path (WDQ Wrapper -> DRAM)
     //ddr_wdata_data, ddr_wdata_en, ddr_wdata_mask, ddr_we,
     // Command Path (Signal gen -> DRAM)
-    ACT_n, RAS_n_A16, CAS_n_A15, WE_n_A14, ALERT_n, PARITY, RESET_n, TEN, CS_n, CKE, ODT, C, BG, BA, ADDR, ADDR_17, PWR, VREF_CA, VREF_DQ, ZQ
+    ACT_n, RAS_n_A16, CAS_n_A15, WE_n_A14, ALERT_n, PARITY, RESET_n, TEN, CS_n, CKE, ODT, C, BG, BA, ADDR, ADDR_17, PWR, VREF_CA, VREF_DQ, ZQ,
     //be_arb, be_cmd, be_r, be_c, be_b, be_bg, be_id,
     // Init Status
     //init_done, init_state, next_init_state
     inout DQ, DQS_t, DQS_c, DM_n
-
 );
 
 modport signal_gen (

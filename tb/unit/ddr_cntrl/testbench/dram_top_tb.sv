@@ -25,16 +25,14 @@ module dram_top_tb;
     import dram_pkg::*; 
     import proj_package::*; // protected vcs
 
-    //parameter from dram_command_if.vh
-    parameter CONFIGURED_DQ_BITS     = 8;
-    parameter CONFIGURED_DQS_BITS    = (16 == CONFIGURED_DQ_BITS) ? 2 : 1;
-    parameter CONFIGURED_DM_BITS     = (16 == CONFIGURED_DQ_BITS) ? 2 : 1;
-    parameter CONFIGURED_RANKS       = 1;
-    
+    parameter CONFIGURED_DQ_BITS = 8;
+    parameter CONFIGURED_RANKS = 1;
+
     //CLK and debug signals
     logic CLK = 1, nRST;
     logic CLKx2=0;
     reg model_enable_val;
+    logic model_enable;
     string task_name;
 
     //Instantiate the the iDDR4_1 version
@@ -412,7 +410,7 @@ module dram_top_tb;
         virtual ddr_controller_if.stq           svif;
         virtual ddr_controller_if.lq           lvif; 
         virtual ddr_controller_if.wdata_wrapper wvif;
-        virtual logic CLK, CLKx2;
+        logic CLK, CLKx2;
 
         //Random rank, bank group, bank, row, col, offset (these go in stq/ldq)
         rand logic [RANK_BITS - 1:0] rank;
@@ -452,21 +450,22 @@ module dram_top_tb;
         constraint req_cons {
             {vif.dREN, vif.dWEN} != 2'b11;
         }
-        */
+        
         //constraint of addr_rank 
         constraint addr_rank {
             rank == 1'b0;
             row != '1;
             offset == 0;
             col[2:0] == 0; //8-byte align
-        } 
+        }
+        */ 
 
 
         function new (
             virtual ddr_controller_if.stq           svif, 
             virtual ddr_controller_if.wdata_wrapper wvif,
             virtual ddr_controller_if.lq            lvif,
-            virtual logic CLK, CLKx2
+            logic CLK, logic CLKx2
         );
             this.svif  = svif;
             this.wvif  = wvif;
@@ -784,4 +783,4 @@ module sw_cache #( parameter ROW_BITS = 15)
             dmemload = sw_cache[row_addr].arr[offset];
         end
     end
-endmodule
+endmodule */

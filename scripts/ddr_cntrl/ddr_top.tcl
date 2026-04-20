@@ -1,6 +1,7 @@
 # --- Configuration ---
 set TB_FILE ./tb/unit/ddr_cntrl/testbench/dram_top_tb.sv
 set TB_TOP  dram_top_tb
+set DRAM_define [list ./protected_modelsim/arch_package.sv ./protected_modelsim/proj_package.sv ./protected_modelsim/interface.sv]
 
 if {![info exists TB_FILE]} {
     puts "ERROR: TB_FILE not set. Use:  vsim -c -do \"set TB_FILE <path>; set TB_TOP <top>; do test.tcl\""
@@ -24,22 +25,24 @@ set INC_FLAGS [list \
 set DESIGN_SRCS {
     ./rtl/include/ddr_cntrl/dram_pkg.svh
     ./rtl/include/ddr_cntrl/ddr_controller_if.sv
-    ./protected_modelsim/arch_defines.v
-    ./protected_modelsim/dimm.vh
-    ./protected_modelsim/ddr4_model.svp
     ./rtl/modules/ddr_cntrl/ddr_controller_wrapper.sv
-    ./rtl/modules/ddr_cntrl/ddr_controller.sv
+    ./rtl/modules/ddr_cntrl/nb_store_queue.sv
+    ./rtl/modules/ddr_cntrl/load_queue_nb.sv
+    ./rtl/modules/ddr_cntrl/frontend_arb_nb.sv
+    ./rtl/modules/ddr_cntrl/address_mapper.sv
+    ./rtl/modules/ddr_cntrl/nb_bank_queue.sv
+    ./rtl/modules/ddr_cntrl/cmd_fsm_nb.sv
+    ./rtl/modules/ddr_cntrl/fsm_module.sv
     ./rtl/modules/ddr_cntrl/nb_barb.sv
+    ./rtl/modules/ddr_cntrl/refresh_counter.sv
+    ./rtl/modules/ddr_cntrl/nb_wdata_wrapper.sv
+    ./rtl/modules/ddr_cntrl/nb_wdata_queue.sv
+    ./rtl/modules/ddr_cntrl/nb_read_id_queue.sv
     ./rtl/modules/ddr_cntrl/flex_counter.sv
     ./rtl/modules/ddr_cntrl/flex_sr.sv
     ./rtl/modules/ddr_cntrl/priority_enc.sv
     ./rtl/modules/ddr_cntrl/enum_compare.sv
-    ./rtl/modules/ddr_cntrl/command_scheduler.sv
-    ./rtl/modules/ddr_cntrl/command_arbiter.sv
-    ./rtl/modules/ddr_cntrl/command_generator.sv
-    ./rtl/modules/ddr_cntrl/data_transfer.sv
-    ./rtl/modules/ddr_cntrl/refresh_controller.sv
-    ./rtl/modules/ddr_cntrl/timing_controller.sv
+    ./rtl/modules/common/general/fifo.sv
 }
 
 set SRC_FILES [concat $DESIGN_SRCS [list $TB_FILE]] 
@@ -55,7 +58,7 @@ if {![file exists work]} {
 vmap work work
 
 # --- Compilation ---
-vlog -sv -compile_uselibs -cover bst -coveropt 1 -sv -pedanticerrors -lint -mfcu {*}$INC_FLAGS {*}$SRC_FILES
+vlog -sv -compile_uselibs -cover bst -coveropt 1 -pedanticerrors -lint -mfcu +define+DDR4_4G_X8 +define+FIXED_1333 {*}$INC_FLAGS {*}$DRAM_define {*}$SRC_FILES
 
 puts "=============================================================="
 puts "Compilation complete. Launching simulation for $TB_TOP"

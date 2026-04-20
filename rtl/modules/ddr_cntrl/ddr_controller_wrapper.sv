@@ -185,6 +185,7 @@ module ddr_controller_wrapper (
         .wdw  (cif.wdata_wrapper)
     );
 
+    /* 
     // Signal Generator
     signal_gen SG (
         .CLK  (CLK),
@@ -196,7 +197,7 @@ module ddr_controller_wrapper (
         .CLK  (CLK),
         .nRST (nRST),
         .dtif (cif.data_transfer)
-    );
+    ); */
 
     // Read ID Queue
     nb_read_id_queue RID_Q (
@@ -206,11 +207,11 @@ module ddr_controller_wrapper (
     );
 
     // Read Data wrapper
-    nb_rdata_wrapper RDQ_WRAP (
-        .CLK  (CLK),
-        .nRST (nRST),
-        .rdw (cif.rdata_wrapper)
-    )
+    // nb_rdata_wrapper RDQ_WRAP (
+    //     .CLK  (CLK),
+    //     .nRST (nRST),
+    //     .rdw (cif.rdata_wrapper)
+    // )
 /*
     // Initialization State Machine
     init_state INIT (
