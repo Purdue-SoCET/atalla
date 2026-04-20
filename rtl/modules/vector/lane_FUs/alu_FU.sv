@@ -21,6 +21,7 @@ module alu_FU (
 
     logic [7:0] vd;
     logic rm;
+    logic [2:0] mop;
     alu_op_t alu_op;
     logic [ESZ-1:0] v1_adjusted, v2_adjusted; //ability to adjust the values in case of reduction
 
@@ -73,6 +74,7 @@ module alu_FU (
         lsif.in.aluop = '0;
         rm = '0;
         vd = 'b0;
+        mop = 'b0;
         for (int i = 0; i < LANE_ISSUE_W; i++) begin
             if (fuif.in.ports[i].input_valid & (fuif.in.ports[i].usel == VALU) & fuif.out.input_ready) begin //are any of the input ports issuing to this FU? and we are ready
                 lsif.in.valid_in = 'b1;
@@ -80,6 +82,18 @@ module alu_FU (
                 vd = fuif.in.ports[i].vd;
                 lsif.in.rm = {SLICE_W{fuif.in.ports[i].rm}};
                 lsif.in.aluop = {SLICE_W{fuif.in.ports[i].alu_op}};
+                
+                // Determine mop based on mask operations when NOT in reduction mode
+                if (!fuif.in.ports[i].rm) begin
+                    case (fuif.in.ports[i].alu_op)
+                        ALU_MGT:  mop = 3'b001;  // Greater than
+                        ALU_MLT:  mop = 3'b010;  // Less than
+                        ALU_MEQ:  mop = 3'b011;  // Equal
+                        ALU_MNEQ: mop = 3'b100;  // Not equal
+                        default:  mop = 3'b000;  // Not a mask operation
+                    endcase
+                end
+                
                 if (fuif.in.ports[i].rm) begin
                     //flatten v1 into the 2 ports and padd with 0s so that we can still just go through the seq
                     lsif.in.v1[1] = '0;
@@ -136,29 +150,42 @@ module alu_FU (
     logic is_last_element;
     assign is_last_element = (output_count_r == (SLICE_W - 1));
 
-    lane_unit_fifo #(
-        .DEPTH(4),
-        .DWIDTH(8)
+
+    sync_fifo #(
+        .FIFODEPTH(4),
+        .DATAWIDTH(8)
     ) vd_fifo (
-        .clk(CLK),
+        .CLK(CLK),
         .nRST(nRST),
         .wr_en(lsif.in.valid_in & lsif.out.ready_in),
-        .rd_en(aluif.out.valid_out & fuif.in.wb_ready & is_last_element),  // Pop on last element only
+        .shift(aluif.out.valid_out & fuif.in.wb_ready & is_last_element),
         .din(vd),
         .dout(fuif.out.vd)
     );
-    lane_unit_fifo #(
-        .DEPTH(4),
-        .DWIDTH(1)
+
+    sync_fifo #(
+        .FIFODEPTH(4),
+        .DATAWIDTH(1)
     ) rm_fifo (
-        .clk(CLK),
+        .CLK(CLK),
         .nRST(nRST),
         .wr_en(lsif.in.valid_in & lsif.out.ready_in),
-        .rd_en(aluif.out.valid_out & fuif.in.wb_ready),  // Pop on first output of ALU
-        .din(rm),
+        .shift(aluif.out.valid_out & fuif.in.wb_ready),
+        .din(rm), 
         .dout(fuif.out.rm)
-    ); 
-
+    );
+    sync_fifo #(
+        .FIFODEPTH(4),
+        .DATAWIDTH(3)
+    ) mop_fifo (
+        .CLK(CLK),
+        .nRST(nRST),
+        .wr_en(lsif.in.valid_in & lsif.out.ready_in),
+        .shift(aluif.out.valid_out & fuif.in.wb_ready & is_last_element),
+        .din(mop),
+        .dout(fuif.out.mop_out)
+    );
+    
     assign fuif.out.result = aluif.out.result;
     assign fuif.out.wb_valid = aluif.out.valid_out;
 

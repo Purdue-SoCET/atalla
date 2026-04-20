@@ -22,6 +22,7 @@ module result_collector (
     logic reset_all_counters;
     logic [$clog2(TIMES)-1:0] count_array [NUM_LANES-1:0];
     logic [7:0] vd, vd_n;
+    logic [2:0] mop, mop_n;
 
     //counter instanciation
     assign reset_all_counters = (&array_full) & rcif.out.wb_valid & rcif.in.wb_ready; //global reset
@@ -70,16 +71,21 @@ module result_collector (
         
     assign rcif.out.vector_output = collection_arrays; //theoretically this works cause they are both packed and the same bit width
 
-    //vd latching
+    //vd and mop latching
     logic vd_locked, vd_locked_n;
+    logic mop_locked, mop_locked_n;
     always_ff @(posedge CLK, negedge nRST) begin : vd_ff
         if (!nRST) begin
             vd <= 'b0;
             vd_locked <= 1'b0;
+            mop <= 'b0;
+            mop_locked <= 1'b0;
         end
         else begin
             vd <= vd_n;
             vd_locked <= vd_locked_n;
+            mop <= mop_n;
+            mop_locked <= mop_locked_n;
         end
     end
 
@@ -87,26 +93,35 @@ module result_collector (
 
     always_comb begin
         vd_locked_n = vd_locked;
-        // Lock VD when first valid data arrives
+        mop_locked_n = mop_locked;
+        // Lock VD and MOP when first valid data arrives
         if ((|rcif.in.input_valid) & (|rcif.out.input_ready) & !vd_locked) begin
             vd_locked_n = 1'b1;
+        end
+        if ((|rcif.in.input_valid) & (|rcif.out.input_ready) & !mop_locked) begin
+            mop_locked_n = 1'b1;
         end
         
         // Unlock when handshake completes (vector written back)
         if (rcif.out.wb_valid & rcif.in.wb_ready) begin
             vd_locked_n = 1'b0;
+            mop_locked_n = 1'b0;
         end
     end
 
     always_comb begin : vd_comb
         vd_n = vd;
-        // Capture vd on first valid input, only when unlocked
+        mop_n = mop;
+        // Capture vd and mop on first valid input, only when unlocked
         if ((|rcif.in.input_valid) & (|rcif.out.input_ready) & !vd_locked) begin
             vd_n = rcif.in.vd_input;
         end
+        if ((|rcif.in.input_valid) & (|rcif.out.input_ready) & !mop_locked) begin
+            mop_n = rcif.in.mop_in;
+        end
     end
     assign rcif.out.vd_output = vd;
-
+    assign rcif.out.mop_out = mop;
     //valid ready determination
     logic [NUM_LANES-1:0] ready, ready_n;
     always_ff @(posedge CLK, negedge nRST) begin : ready_ff

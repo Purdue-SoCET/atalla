@@ -17,7 +17,7 @@ Owner: Jacob Walter
 module vector_datapath (
     input  logic     CLK,
     input  logic     nRST,
-    vector_if.vif    vif,
+    vector_if           vif,
     scpad_if.vec_frontend  sif,
     gsau_control_unit_if.gsau gsauif
 );
@@ -33,7 +33,7 @@ module vector_datapath (
 
     //slicer
     slicer slicer_inst (
-        .vif(vif),
+        .vif(vif.lanes),
         .lif(lane_interfaces)
     );
 
@@ -44,7 +44,7 @@ module vector_datapath (
             lane lane_inst (
                 .CLK(CLK),
                 .nRST(nRST),
-                .lif(lane_interfaces[ln_i])
+                .lif(lane_interfaces[ln_i].lif)
             );
         end
         
@@ -62,6 +62,7 @@ module vector_datapath (
                     // Per-lane, per-FU signals
                     if (i == 0) begin
                         rc_interfaces[i].in.input_valid[j] = lane_interfaces[j].out.units[i].wb_valid & !(lane_interfaces[j].out.units[i].rm);
+                        
                     end 
                     else begin
                         rc_interfaces[i].in.input_valid[j] = lane_interfaces[j].out.units[i].wb_valid;
@@ -74,9 +75,15 @@ module vector_datapath (
 
             always_comb begin : rc_scalar_connection
                 rc_interfaces[i].in.vd_input  = lane_interfaces[0].out.units[i].vd;
+                //rc_interfaces[2].in.mop_in = 'b0;
             end
         end : gen_rc_fu
     endgenerate
+
+    always_comb begin
+        rc_interfaces[0].in.mop_in = lane_interfaces[0].out.units[0].mop_out;
+        rc_interfaces[1].in.mop_in = 'b0;
+    end
 
  
 
@@ -195,6 +202,8 @@ module vector_datapath (
         ruif.in.wb_ready = vif.wb_ready_signals.reduction_wb_ready;
         
         vif.lanes_out.reduction = ruif.out;
+
+        vif.unit_ready_signals.reduction_status = vif.lanes_out.reduction.input_ready;
     end
 
 

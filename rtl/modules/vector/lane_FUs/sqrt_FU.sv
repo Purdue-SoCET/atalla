@@ -4,6 +4,7 @@
 // Owner: Jacob Walter
 // Paramater control for this file is in vector_pkg.vh
 // ------------------------------------------------------------
+/*
 `include "vector_pkg.vh"
 `include "functional_unit_if.vh"
 `include "lane_sequencer_if.vh"
@@ -123,3 +124,5 @@ module sqrt_FU (
     assign fuif.out.wb_valid = srif.out.valid_out;
 
 endmodule
+
+*/

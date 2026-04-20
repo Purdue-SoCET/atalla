@@ -21,7 +21,7 @@ package vector_pkg;
     localparam VL_W        = $clog2(VLMAX);
 
     // FU layout per lane
-    localparam LANE_FU_COUNT  = 5;              // How many FUs per lane
+    localparam LANE_FU_COUNT  = 2;              // How many FUs per lane
     localparam LANE_FU_ID_W   = $clog2(LANE_FU_COUNT);
 
     // Other localparams
@@ -63,12 +63,10 @@ package vector_pkg;
     // Data Structures
     // =========================================================================
     typedef logic [VLMAX-1:0][ESZ-1:0]   vreg_t;     // full vector
-    typedef enum logic [2:0] {
-        VALU = 3'b000,
-        MUL = 3'b001,
-        DIV = 3'b010,
-        EXP = 3'b011,
-        SQRT = 3'b100
+    typedef enum logic [1:0] {
+        VALU = 2'b00,
+        MUL = 2'b01,
+        EXP = 2'b10
     } fu_t;
 
     // =========================================================================
@@ -220,6 +218,7 @@ package vector_pkg;
         logic wb_ready;
         logic [NUM_LANES-1:0][ESZ-1:0] lane_input;
         logic [VIDX_W-1:0]     vd_input;
+        logic           mop_in;
     } result_collector_in_t;
 
     typedef struct packed {
@@ -228,6 +227,7 @@ package vector_pkg;
 
         vreg_t          vector_output;
         logic [VIDX_W-1:0]     vd_output;
+        logic           mop_out;
     } result_collector_out_t;
 
     // =========================================================================
@@ -255,6 +255,7 @@ package vector_pkg;
         logic [VIDX_W-1:0] vd;
         logic input_ready;
         logic mask;
+        logic mop_out;
     } functional_unit_out_t;
 
 
@@ -296,6 +297,7 @@ package vector_pkg;
         logic [VIDX_W-1:0]          vdst;
         logic [MAX_DIM_WIDTH-1:0]   num_cols;
         logic [MAX_DIM_WIDTH-1:0]   row_id;
+        
     } vlsu_sched_req_t;
 
     // VLSU => Scheduler
