@@ -24,6 +24,7 @@ typedef enum logic [4:0] {
         READ_COMMAND
     } dram_state_t;
 
+<<<<<<< HEAD
     //Format for addressing mapping testing
     typedef struct packed {
         logic rank;
@@ -36,6 +37,8 @@ typedef enum logic [4:0] {
         logic [1:0] offset;
     } addr_x4_t;
 
+=======
+>>>>>>> ddr_cntrl
 
     //CONFIGURABLE MODE (define by MICRON arch_defines.v)
 
@@ -63,7 +66,7 @@ typedef enum logic [4:0] {
     parameter int MAX_BANK_GROUPS     = 2**(MAX_BANK_GROUP_BITS);
     parameter int MAX_RANKS           = 2**(MAX_RANK_BITS);
     parameter int RTT_BITS = 16;
-    parameter FLY_BY = 1;
+    parameter FLY_BY = 0;
     parameter NO_AUTO_PRE = 0;
 
     // parameter     
@@ -89,15 +92,13 @@ typedef enum logic [4:0] {
         WRITE_CMD     = 5'b01100,
         READ_CMD      = 5'b01101,
         ZQ_CMD        = 5'b01110,
-        DESEL_CMD     = 5'b11000
+        DESEL_CMD     = 5'b10000
     } cmd_t;
-
-    
     ////////////////// Parameters DDR4 Speed 1600 ///////////////
-    parameter BURST_LENGTH  = 8;
-    parameter CONFIGURED_DQ_BITS     = 8;
-    parameter CONFIGURED_DQS_BITS     = (16 == CONFIGURED_DQ_BITS) ? 2 : 1;
-    parameter CONFIGURED_DM_BITS     = (16 == CONFIGURED_DQ_BITS) ? 2 : 1;
+    parameter BURST_LENGTH  = 4;
+    parameter CONFIGURED_DQ_BITS     = 16;
+    parameter CONFIGURED_DQS_BITS     = 16;
+    parameter CONFIGURED_DM_BITS     = 16;
 
     parameter CONFIGURED_RANKS = 1;
     parameter DM_BITS       = 16;
@@ -105,7 +106,7 @@ typedef enum logic [4:0] {
     parameter tPWUP         = 80;
     parameter tRESETCKE     = 80;
     parameter tPDc          = 3;
-    parameter tXPR          = 217;
+    parameter tXPR          = 215;
     parameter tDLLKc        = 597;
     parameter tZQinitc      = 1024;
     parameter tMOD          = 25;
@@ -189,20 +190,18 @@ interface dram_command_if();
     logic [MAX_RANK_BITS - 1 : 0]Ra0, Ra1; //Rank prev and curr
     logic [MAX_BANK_BITS - 1 : 0] BA0, BA1; //bank prev and curr
     logic [MAX_ROW_ADDR_BITS - 1 : 0] R0, R1; //Rol prev and curr
-    logic [10 - 1 : 0]COL0, COL1; //Col prev and curr
+    logic [MAX_COL_ADDR_BITS - 1 : 0]COL0, COL1; //Col prev and curr
     logic [MAX_BANK_GROUP_BITS - 1: 0] BG0, BG1;
     logic ramREN_curr, ramWEN_curr, ramREN_ftrt, ramWEN_ftrt;
     
     logic [31:0] data_callback, write_data;
     logic request_done;
 
-    logic wr_en, rd_en;
-
     //Timing counter REFRESH
     logic REFRESH;
     modport dram_command_sche_buff(
         input Ra0, Ra1, BG0, BG1, BA0, BA1, R0, R1, COL0, COL1, ramREN_curr, ramWEN_curr, ramREN_ftrt, ramWEN_ftrt, REFRESH, write_data,
-        output data_callback, request_done, wr_en, rd_en
+        output data_callback, request_done
     );
 
     modport dram_command_RAM (

@@ -1,0 +1,28 @@
+QuestaSim-64 vlog 2021.4 Compiler 2021.10 Oct 13 2021
+Start time: 02:04:17 on Mar 29,2025
+vlog -reportprogress 300 -work work "+acc" -l vcs.log -sv "+define+DDR4_4G_X8" arch_package.sv proj_package.sv interface.sv dram_command.sv StateTable.svp MemoryArray.svp ddr4_model.svp dram_command_tb.sv 
+-- Compiling package arch_package
+-- Compiling package proj_package
+-- Importing package arch_package
+-- Compiling interface DDR4_if
+-- Compiling package dram_pack
+-- Compiling interface dram_command_if
+-- Importing package dram_pack
+-- Compiling module dram_command
+-- Importing package proj_package
+** Warning: ** while parsing file included at ddr4_model.svp(17)
+** at StateTable.svp(17): (vlog-2275) Existing <protected> '<protected>'<protected> will be overwritten<protected>.
+** Warning: ** while parsing file included at ddr4_model.svp(17)
+** at MemoryArray.svp(17): (vlog-2275) Existing <protected> '<protected>'<protected> will be overwritten<protected>.
+-- Compiling package dram_pack
+** Warning: ** while parsing file included at dram_command_tb.sv(1)
+** at dram_command_if.vh(4): (vlog-2275) Existing package 'dram_pack' at line 4 will be overwritten.
+-- Compiling interface dram_command_if
+** Warning: ** while parsing file included at dram_command_tb.sv(1)
+** at dram_command_if.vh(144): (vlog-2275) Existing interface 'dram_command_if' at line 144 will be overwritten.
+-- Compiling module dram_command_tb
+
+Top level modules:
+	dram_command_tb
+End time: 02:04:18 on Mar 29,2025, Elapsed time: 0:00:01
+Errors: 0, Warnings: 4

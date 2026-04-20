@@ -19,7 +19,6 @@ module dram_command (
     logic [2:0] count_act, n_count_act;
     logic act_not_5;
     logic issue_cmd;
-    logic time_bug;
 
     always_ff @(posedge CLK, negedge nRST) begin: ACT_n
         if(!nRST) begin
@@ -127,7 +126,7 @@ module dram_command (
                 end else if (dr_sche.ramREN_curr && timing_count == rollover_value) begin
                     n_state = READ_COMMAND;
                     n_count_act = 3'd1;
-                end else if ( (dr_sche.ramWEN_ftrt || dr_sche.ramREN_ftrt) && dr_sche.BA0 != dr_sche.BA1) begin
+                end else if (dr_sche.BA0 != dr_sche.BA1) begin
                     n_count_act = count_act + 3'd1;
                     n_state = state;
                 end
@@ -173,7 +172,7 @@ module dram_command (
         end
     end
 
-    
+
     always_comb begin : OUTPUT_VALUE
         //Default value
         cmd_addr = DESEL_CMD;
@@ -186,27 +185,21 @@ module dram_command (
         dr_ram.BG = '0;
         dr_ram.BA = '0;
         dr_ram.ADDR =  '0;
-        dr_ram.CKE = 1'b1;
         // dr_ram.RAS_n_A16 = '1;
         // dr_ram.CAS_n_A15 = '1;
         // dr_ram.WE_n_A14 = '1;
         dr_ram.ADDR_17 = '0;
 
         dr_ram.ZQ = 0;
-        dr_ram.PWR = 1;
-        dr_ram.VREF_CA = 1;
-        dr_ram.VREF_DQ = 1;
+        dr_ram.PWR = 0;
+        dr_ram.VREF_CA = 0;
+        dr_ram.VREF_DQ = 0;
         
 
         dr_sche.data_callback = '0;
         dr_sche.request_done = 1'b0;
         issue_cmd = 1'b0;
         
-
-        dr_sche.wr_en = 1'b0;
-        dr_sche.rd_en = 1'b0;
-
-        time_bug = 1'b0;
 
         case (state)
             POWER_UP: begin
@@ -238,16 +231,6 @@ module dram_command (
                 
             end
             RESET: begin
-                cmd_addr = POWER_UP_PRG;
-                dr_ram.CKE = 0;
-                dr_ram.TEN = 0;
-                dr_ram.PARITY = 0;
-                dr_ram.ALERT_n = 1;
-                
-                dr_ram.ZQ = 0;
-                dr_ram.PWR = 1;
-                dr_ram.VREF_CA = 1;
-                dr_ram.VREF_DQ = 1;
                 dr_ram.RESET_n = 1;
             end
             NOP: begin
@@ -259,8 +242,6 @@ module dram_command (
                     dr_ram.BG       = 2'h0;
                     dr_ram.BA       = 2'h1;
                     dr_ram.ADDR     = 14'h1;
-                end else begin
-                    cmd_addr = DESEL_CMD;
                 end
             end
             LOAD_BG0_REG3: begin
@@ -269,8 +250,6 @@ module dram_command (
                     dr_ram.BG       = 2'h0;
                     dr_ram.BA       = 2'h3;
                     dr_ram.ADDR     = 14'h0;
-                end else begin
-                    cmd_addr = DESEL_CMD;
                 end
             end
             LOAD_BG1_REG6: begin
@@ -279,8 +258,6 @@ module dram_command (
                     dr_ram.BG       = 2'h1;
                     dr_ram.BA       = 2'h2;
                     dr_ram.ADDR     = 14'h080F;
-                end else begin
-                    cmd_addr = DESEL_CMD;
                 end
             end
             LOAD_BG1_REG5: begin
@@ -288,9 +265,7 @@ module dram_command (
                     cmd_addr = LOAD_MODE_CMD;
                     dr_ram.BG       = 2'h1;
                     dr_ram.BA       = 2'h1;
-                    dr_ram.ADDR     = 14'b0001000_0000000;
-                end else begin
-                    cmd_addr = DESEL_CMD;
+                    dr_ram.ADDR     = 14'h0;
                 end
             end
             LOAD_BG1_REG4: begin
@@ -299,8 +274,6 @@ module dram_command (
                     dr_ram.BG       = 2'h1;
                     dr_ram.BA       = 2'h0;
                     dr_ram.ADDR     = 14'h1000;
-                end else begin
-                    cmd_addr = DESEL_CMD;
                 end
             end
             LOAD_BG0_REG2: begin
@@ -309,8 +282,6 @@ module dram_command (
                     dr_ram.BG       = 2'h0;
                     dr_ram.BA       = 2'h2;
                     dr_ram.ADDR     = 14'h0088;
-                end else begin
-                    cmd_addr = DESEL_CMD;
                 end
             end
             LOAD_BG0_REG1: begin 
@@ -318,11 +289,7 @@ module dram_command (
                     cmd_addr = LOAD_MODE_CMD;
                     dr_ram.BG       = 2'h0;
                     dr_ram.BA       = 2'h1;
-                    dr_ram.ADDR     = 14'h0000;
-                    //A[0] for DLL disable
-                    // dr_ram.ADDR     = 14'h0001;
-                end else begin
-                    cmd_addr = DESEL_CMD;
+                    dr_ram.ADDR     = 14'h0001;
                 end
             end
             LOAD_BG0_REG0: begin
@@ -331,16 +298,12 @@ module dram_command (
                     dr_ram.BG       = 2'h0;
                     dr_ram.BA       = 2'h0;
                     dr_ram.ADDR     = 14'h041d;
-                end else begin
-                    cmd_addr = DESEL_CMD;
                 end
             end
             ZQ_CL: begin
                 if (timing_count < 2) begin
                     cmd_addr = ZQ_CMD;
                     dr_ram.ADDR = 14'h0400;
-                end else begin
-                    cmd_addr = DESEL_CMD;
                 end
             end
             IDLE: begin
@@ -348,16 +311,13 @@ module dram_command (
             end
             ACTIVATE: begin
                 if (timing_count < 2) begin
-                    
-                    cmd_addr = cmd_t'({2'b0, dr_sche.R0[16], dr_sche.R0[15], dr_sche.R0[14]});
+                    cmd_addr = ACTIVATE_CMD;
                     dr_ram.BG = dr_sche.BG0;
                     dr_ram.BA = dr_sche.BA0;
-                    // dr_ram.RAS_n_A16 = dr_sche.R0[16]; 
-                    // dr_ram.CAS_n_A15 = dr_sche.R0[15];
-                    // dr_ram.WE_n_A14 =  dr_sche.R0[14];
+                    dr_ram.RAS_n_A16 = dr_sche.R0[16]; 
+                    dr_ram.CAS_n_A15 = dr_sche.R0[15];
+                    dr_ram.WE_n_A14 =  dr_sche.R0[14];
                     dr_ram.ADDR =      dr_sche.R0[13:0];
-                end else begin
-                    cmd_addr = DESEL_CMD;
                 end
             end
             WRITE_COMMAND: begin
@@ -368,29 +328,7 @@ module dram_command (
                     dr_ram.RAS_n_A16 = 1'b1; 
                     dr_ram.CAS_n_A15 = 1'b0;
                     dr_ram.WE_n_A14 =  1'b0;
-                    // dr_ram.ADDR = {1'b0, ~FLY_BY, 1'b0, NO_AUTO_PRE, dr_sche.COL0};
-                    dr_ram.ADDR = {1'b0, 1'b1, 1'b0, 1'b0, dr_sche.COL0};
-                end else begin
-                    cmd_addr = DESEL_CMD;
-                    dr_ram.BG = dr_sche.BG0;
-                    dr_ram.BA = dr_sche.BA0;
-                    // dr_ram.ADDR = {1'b0, ~FLY_BY, 1'b0, NO_AUTO_PRE, dr_sche.COL0};
-                    dr_ram.ADDR = {1'b0, 1'b1, 1'b0, 1'b0, dr_sche.COL0};
-                end
-                // dr_sche.wr_en = 1'b1;
-
-                //Communication between dram command and data_transfer
-                //curr: follow the timing constraint
-                if (timing_count > 16) begin
-                    dr_sche.wr_en = 1'b0;
-                end
-                else if (timing_count > 9) begin
-                    time_bug = 1'b1;
-                    dr_sche.wr_en = 1'b1;
-                end
-
-                if (timing_count == rollover_value) begin
-                    dr_sche.request_done = 1'b1;
+                    dr_ram.ADDR = {1'b0, FLY_BY, 1'b0, NO_AUTO_PRE, dr_sche.COL0};
                 end
             end
             READ_COMMAND: begin
@@ -398,28 +336,10 @@ module dram_command (
                     cmd_addr = READ_CMD;
                     dr_ram.BG = dr_sche.BG0;
                     dr_ram.BA = dr_sche.BA0;
-                    
-                    // dr_ram.ADDR = {1'b0, FLY_BY, 1'b0, NO_AUTO_PRE, dr_sche.COL0};
-                    // dr_ram.ADDR = {1'b0, ~FLY_BY, 1'b0, NO_AUTO_PRE, dr_sche.COL0};
-                    dr_ram.ADDR = {1'b0, 1'b1, 1'b0, 1'b0, dr_sche.COL0};
-                end else begin
-                    cmd_addr = DESEL_CMD;
-                    dr_ram.BG = dr_sche.BG0;
-                    dr_ram.BA = dr_sche.BA0;
-                    dr_ram.ADDR = {1'b0, 1'b1, 1'b0, 1'b0, dr_sche.COL0};
-                    // dr_ram.ADDR = {1'b0, FLY_BY, 1'b0, NO_AUTO_PRE, dr_sche.COL0};
-                end
-
-                dr_sche.rd_en = 1'b1;
-                // if (timing_count > tCAS + tBURST + 2) begin
-                //     dr_sche.rd_en = 1'b0;
-                // end else if (timing_count > tCAS) begin
-                //     time_bug = 1'b1;
-                //     dr_sche.rd_en = 1'b1;
-                // end
-
-                if (timing_count == rollover_value) begin
-                    dr_sche.request_done = 1'b1;
+                    dr_ram.RAS_n_A16 = 1'b1; 
+                    dr_ram.CAS_n_A15 = 1'b0;
+                    dr_ram.WE_n_A14 =  1'b1;
+                    dr_ram.ADDR = {1'b0, FLY_BY, 1'b0, NO_AUTO_PRE, dr_sche.COL0};
                 end
 
             end
@@ -429,22 +349,14 @@ module dram_command (
                     dr_ram.BG = dr_sche.BG0;
                     dr_ram.BA = dr_sche.BA0;
                     dr_ram.ADDR[10] = 1'b0;
-                end else begin
-                    cmd_addr = DESEL_CMD;
                 end
             end
 
-            default: begin
-               cmd_addr = DESEL_CMD; 
-            end 
-
-            
+            default: ;
             
         endcase 
-
-        {dr_ram.CS_n, dr_ram.ACT_n, dr_ram.RAS_n_A16, dr_ram.CAS_n_A15, dr_ram.WE_n_A14} = cmd_addr;         
         
-               
+        {dr_ram.CS_n, dr_ram.ACT_n, dr_ram.RAS_n_A16, dr_ram.CAS_n_A15, dr_ram.WE_n_A14} = (!nRST) ? DESEL_CMD : cmd_addr;       
     end
 
 
@@ -471,13 +383,11 @@ module dram_command (
                     if (dr_sche.ramREN_curr || dr_sche.ramWEN_curr) begin
                         rollover_value = tRCD;
                     end 
-                    //non-blocking timing
                     else if (dr_sche.BG0 != dr_sche.BG1) begin
                         rollover_value = tRRD_S;
                     end else begin
                         rollover_value = tRRD_L;    
                     end
-                    //non-blocking timing
                 end else begin
                         rollover_value = tFAW; //This is meant act is 5
                 end
@@ -489,11 +399,11 @@ module dram_command (
                 else if (dr_sche.ramWEN_ftrt && dr_sche.R0 == dr_sche.R1) begin
                     rollover_value = tCAS + tBURST + tRTRS - tCWD;     
                 end
-                else if ((dr_sche.ramREN_ftrt || dr_sche.ramWEN_ftrt)&& dr_sche.BA0 != dr_sche.BA1 && dr_sche.R0 != dr_sche.R1) begin
+                else if (dr_sche.BA0 != dr_sche.BA1 && dr_sche.R0 != dr_sche.R1) begin
                     rollover_value = 2;
                 end
                 else begin
-                    rollover_value = tCAS + tBURST + 20; //20 is adding delay
+                    rollover_value = tCAS + tBURST;
                 end 
             end
 
