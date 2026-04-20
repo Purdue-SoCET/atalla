@@ -41,8 +41,8 @@ package dram_pkg;
     parameter tRAS = 45; //tns 1.5ns -> 25 cycles
     parameter tRC = tRAS + tRP;
     parameter tRL = tAL + tCL;        // Read Latency
-    parameter tCCD_L = 2; // 8 CLK, 800 MHz = 10ns -> 2CLK CYCLE FOR TESTING
-    parameter tCCD_S = 1; // 4 CLK, 800 MHz = 5ns -> 1CLK CYCLE FOR TESTING 
+    parameter tCCD_L = 8; // 8 CLK, 800 MHz = 10ns -> 2CLK CYCLE FOR TESTING
+    parameter tCCD_S = 4; // 4 CLK, 800 MHz = 5ns -> 1CLK CYCLE FOR TESTING 
     //Tri debug
 
     parameter tWR = 12;//tWR should be 10 but work for 12 //tCK 1.5ns -> 10, tCK 1.25ns 12 cycles, tCK 0.833ns 18 cycles

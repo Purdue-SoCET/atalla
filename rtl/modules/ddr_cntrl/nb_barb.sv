@@ -110,7 +110,7 @@ module nb_barb(
     logic [ROW_BITS-1:0] R0_next;
     logic [COLUMN_BITS-1:0] C0_next; 
     assign mask = {(BANK_NUM*2){1'b1}} << priority_idx;
-    assign bg_mask = ({BG_MASK, BG_MASK} << prev_group) | { {(2*BANK_NUM - $clog2(BANK_NUM)-2){1'b0}}  , prev_group};
+    assign bg_mask = ({BG_MASK, BG_MASK} << prev_group) | { {(2*BANK_NUM - ($clog2(BANK_NUM)-2)){1'b0}}  , prev_group};
     assign be_queue_ready_double = {barb.be_queue_ready, barb.be_queue_ready} & mask; 
     assign be_cmd_double_ref = {enum_compare(barb.be_cmd, {(BANK_NUM){fsm_t'(REF)}}), enum_compare(barb.be_cmd, {(BANK_NUM){fsm_t'(REF)}} ) } & mask; 
     assign be_cmd_double_act = {enum_compare(barb.be_cmd, {(BANK_NUM){fsm_t'(ACT)}}), enum_compare(barb.be_cmd, {(BANK_NUM){fsm_t'(ACT)}} ) } & mask;

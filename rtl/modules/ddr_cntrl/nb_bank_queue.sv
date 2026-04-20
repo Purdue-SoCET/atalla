@@ -1,5 +1,6 @@
 `timescale 1ns/1ps
 `include "ddr_controller_if.sv"
+`include "dram_pkg.svh"
 
 /*
     logic [BANK_GROUP_BITS-1:0] fe_bg, [$clog2(BANK_NUM)-1:0] fe_b, [ROW_BITS-1:0] fe_r, [COLUMN_BITS-1:0] fe_c;
@@ -12,7 +13,6 @@ module nb_bank_queue(
     input logic CLK, nRST,
     ddr_controller_if.bq bqif
 );
-    `include "dram_pkg.sv"
     import dram_pkg::*;
 
     logic [BANK_NUM-1:0] b_wsel, b_rsel;
@@ -25,7 +25,7 @@ module nb_bank_queue(
             assign b_rsel[i] = (bqif.bq_pop == i);
 
             // Generate fifos
-            sync_fifo #(.DEPTH(BANK_NUM), .DWIDTH($bits(bq_slot_t))) bq_fifo_gen ( // TODO: DEPTH NEEDS FINALIZATION - might not matter
+            sync_fifo #(.DEPTH(BANK_NUM), .DWIDTH($bits(bq_slot_t))) bq_fifo_gen ( 
                 .clk(CLK), .rstn(nRST),
                 .wr_en(b_wsel[i]),
                 .din(bqif.fe_bq_slot),
