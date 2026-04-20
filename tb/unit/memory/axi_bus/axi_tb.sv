@@ -248,7 +248,7 @@ program test(
         // idle_r_test();
 
         // smoke_write_test();
-        pressure_write_test(10);
+        pressure_write_test(20);
         // idle_write_test();
 
         //consecutive_write_test(1, -1, 6);
