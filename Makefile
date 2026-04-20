@@ -206,7 +206,7 @@ sim: ram_lib
 	$(VLIB64) $(SCRATCH); \
 	echo "[sim] compiling (wrapper: $(WRAPPER_SV))..."; \
 	$(VLOG64) -sv -mfcu -work $(SCRATCH) +acc $(VLOG_COV_FLAGS) \
-	    +incdir+$(AXIROOT) $(AXI_SRCS) $(DPI_SRCS); \
+	    +incdir+$(AXIROOT) $(AXI_SRCS) $(AXI_MOD_SRCS) $(DPI_SRCS); \
 	echo "[sim] running $(if $(filter ON,$(GUI)),GUI,batch) (config: $(CFG))..."; \
 	if [ "$(GUI)" = "ON" ]; then \
 	    $(VSIM64) $(VSIM_COV_FLAGS) -voptargs="+acc" \
