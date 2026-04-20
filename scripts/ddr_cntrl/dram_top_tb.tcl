@@ -2,6 +2,13 @@
 set TB_FILE ./tb/unit/ddr_cntrl/testbench/dram_top_tb.sv
 set TB_TOP  dram_top_tb
 
+# Non-encrypted Micron sources (packages + interface) — compiled with design
+set DRAM_SRCS [list \
+    ./protected_modelsim/arch_package.sv \
+    ./protected_modelsim/proj_package.sv \
+    ./protected_modelsim/interface.sv \
+]
+
 if {![info exists TB_FILE]} {
     puts "ERROR: TB_FILE not set."
     quit -f
@@ -17,21 +24,10 @@ puts "Top module     : $TB_TOP"
 # --- Include Directories ---
 set INC_FLAGS [list \
     "+incdir+./rtl/include/ddr_cntrl" \
-    "+incdir+./rtl/include/ddr_cntrl/micron" \
+    "+incdir+./protected_modelsim" \
 ]
 
-# --- DDR4 Density/Width Configuration ---
-# The Micron model requires exactly one density+width define.
-# Common options: DDR4_2G_X8, DDR4_4G_X8, DDR4_8G_X8, DDR4_8G_X16, etc.
-set MICRON_DEFINES [list \
-    "+define+DDR4_8G_X8" \
-]
-
-# --- Micron DDR4 Model Sources (handled by modelsim.do) ---
-# The Micron encrypted model and related files are compiled by ./protected_modelsim/modelsim.do, not here.
-set MICRON_SRCS {}
-
-# --- Your DDR Controller RTL Sources ---
+# --- Design RTL Sources ---
 set DESIGN_SRCS {
     ./rtl/include/ddr_cntrl/dram_pkg.svh
     ./rtl/include/ddr_cntrl/ddr_controller_if.sv
@@ -41,7 +37,6 @@ set DESIGN_SRCS {
     ./rtl/modules/ddr_cntrl/enum_compare.sv
     ./rtl/modules/ddr_cntrl/address_mapper.sv
     ./rtl/modules/ddr_cntrl/fsm_module.sv
-    ./rtl/modules/ddr_cntrl/cmd_fsm.sv
     ./rtl/modules/ddr_cntrl/cmd_fsm_nb.sv
     ./rtl/modules/ddr_cntrl/init_state.sv
     ./rtl/modules/ddr_cntrl/refresh_counter.sv
@@ -54,13 +49,15 @@ set DESIGN_SRCS {
     ./rtl/modules/ddr_cntrl/nb_barb.sv
     ./rtl/modules/ddr_cntrl/frontend_arb_nb.sv
     ./rtl/modules/ddr_cntrl/frontend_wrapper.sv
+    ./rtl/modules/ddr_cntrl/signal_gen.sv
+    ./rtl/modules/ddr_cntrl/ddr_controller_wrapper.sv
+    ./rtl/modules/common/general/fifo.sv
 }
 
-# --- Assemble all sources (order matters: design, then arch_package, then Micron package, then TB) ---
-set SRC_FILES [concat $DESIGN_SRCS [list ./rtl/include/ddr_cntrl/arch_package.sv ./rtl/include/ddr_cntrl/micron/proj_package.sv $TB_FILE]]
+# --- Assemble: Micron non-encrypted + design + testbench ---
+set SRC_FILES [concat $DRAM_SRCS $DESIGN_SRCS [list $TB_FILE]]
 
 puts "INC_FLAGS  : $INC_FLAGS"
-puts "DEFINES    : $MICRON_DEFINES"
 puts "SRC_FILES  : $SRC_FILES"
 puts "Num sources: [llength $SRC_FILES]"
 
@@ -70,25 +67,22 @@ if {![file exists work]} {
 }
 vmap work work
 
+# --- Step 1: Compile Micron encrypted model (.svp files) ---
+# These must be compiled from inside protected_modelsim/ using the
+# original Micron vlog invocation. They go into the same work library.
+set PROJ_ROOT [pwd]
+puts "Step 1: Compiling Micron DDR4 encrypted model..."
+cd ./protected_modelsim
+vlog -work $PROJ_ROOT/work +acc -sv \
+    +define+DDR4_8G_X8 +define+FIXED_2400 \
+    flexcounter.sv StateTable.svp MemoryArray.svp ddr4_model.svp
+cd $PROJ_ROOT
 
-
-
-# --- Always compile all sources (Micron model and user modules) ---
-vlog -sv -mfcu +acc {*}$INC_FLAGS {*}$MICRON_DEFINES {*}$SRC_FILES
-
-puts "=============================================================="
-puts "Compilation complete. Launching simulation with Micron ModelSim flow"
-puts "=============================================================="
-
-if {[file exists "./protected_modelsim/modelsim.do"]} {
-    puts "Launching: vsim -do ./protected_modelsim/modelsim.do"
-    exec vsim -do ./protected_modelsim/modelsim.do
-    puts "Micron model simulation launched."
-    return
-} else {
-    puts "ERROR: Micron modelsim.do script not found at ./protected_modelsim/modelsim.do"
-    quit -f
-}
+# --- Step 2: Compile non-encrypted Micron + design RTL + testbench ---
+puts "Step 2: Compiling design sources..."
+vlog -sv -mfcu +acc -svinputport=var \
+    +define+DDR4_8G_X8 +define+FIXED_2400 \
+    {*}$INC_FLAGS {*}$SRC_FILES
 
 puts "=============================================================="
 puts "Compilation complete. Launching simulation for $TB_TOP"
@@ -98,13 +92,11 @@ puts "=============================================================="
 vsim -voptargs="+acc" work.$TB_TOP -onfinish stop
 
 # --- Waveform Setup ---
-# TODO: Create a matching .do waveform file once testbench signals are finalized
 if {[file exists "./waves/dram_top_tb.do"]} {
     puts "Applying wave configurations from ./waves/dram_top_tb.do"
     do ./waves/dram_top_tb.do
 } else {
-    puts "WARNING: No .do waveform file found at ./waves/dram_top_tb.do — adding all signals"
-    add wave -r /*
+    puts "WARNING: No .do file found at ./waves/dram_top_tb.do"
 }
 
 puts "=============================================================="
@@ -112,3 +104,7 @@ puts "Starting Simulation..."
 puts "=============================================================="
 
 run -all
+
+# --- Coverage ---
+coverage save dram_top_sim.ucdb
+vcover report -cvg -details dram_top_sim.ucdb

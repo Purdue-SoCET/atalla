@@ -36,6 +36,7 @@ module dram_top_tb;
     logic CLK = 1, nRST;
     logic CLKx2=0;
     reg model_enable_val;
+    logic model_enable;
     string task_name;
 
     //Instantiate the the iDDR4_1 version
@@ -126,180 +127,180 @@ module dram_top_tb;
         iDDR4_8.CK[0] <= #(tCK) 1'b0;
 
 
-        iDDR4_1.ACT_n     <= sig_if.ACT_n;
-        iDDR4_1.RAS_n_A16 <= sig_if.RAS_n_A16;
-        iDDR4_1.CAS_n_A15 <= sig_if.CAS_n_A15;
-        iDDR4_1.WE_n_A14  <= sig_if.WE_n_A14;
-        iDDR4_1.ALERT_n   <= sig_if.ALERT_n;
-        iDDR4_1.PARITY    <= sig_if.PARITY;
-        iDDR4_1.RESET_n   <= sig_if.RESET_n;
-        iDDR4_1.TEN       <= sig_if.TEN;
-        iDDR4_1.CS_n      <= sig_if.CS_n;
-        iDDR4_1.CKE       <= sig_if.CKE;
-        iDDR4_1.ODT       <= sig_if.ODT;
-        iDDR4_1.C         <= sig_if.C;
-        iDDR4_1.BG        <= sig_if.BG;
-        iDDR4_1.BA        <= sig_if.BA;
-        iDDR4_1.ADDR      <= sig_if.ADDR;
-        iDDR4_1.ADDR_17   <= sig_if.ADDR_17;
-        iDDR4_1.ZQ        <= sig_if.ZQ;
-        iDDR4_1.PWR       <= sig_if.PWR;
-        iDDR4_1.VREF_CA   <= sig_if.VREF_CA;
-        iDDR4_1.VREF_DQ   <= sig_if.VREF_DQ;
+        iDDR4_1.ACT_n     <= ddrif.ACT_n;
+        iDDR4_1.RAS_n_A16 <= ddrif.RAS_n_A16;
+        iDDR4_1.CAS_n_A15 <= ddrif.CAS_n_A15;
+        iDDR4_1.WE_n_A14  <= ddrif.WE_n_A14;
+        iDDR4_1.ALERT_n   <= ddrif.ALERT_n;
+        iDDR4_1.PARITY    <= ddrif.PARITY;
+        iDDR4_1.RESET_n   <= ddrif.RESET_n;
+        iDDR4_1.TEN       <= ddrif.TEN;
+        iDDR4_1.CS_n      <= ddrif.CS_n;
+        iDDR4_1.CKE       <= ddrif.CKE;
+        iDDR4_1.ODT       <= ddrif.ODT;
+        iDDR4_1.C         <= ddrif.C;
+        iDDR4_1.BG        <= ddrif.BG;
+        iDDR4_1.BA        <= ddrif.BA;
+        iDDR4_1.ADDR      <= ddrif.ADDR;
+        iDDR4_1.ADDR_17   <= ddrif.ADDR_17;
+        iDDR4_1.ZQ        <= ddrif.ZQ;
+        iDDR4_1.PWR       <= ddrif.PWR;
+        iDDR4_1.VREF_CA   <= ddrif.VREF_CA;
+        iDDR4_1.VREF_DQ   <= ddrif.VREF_DQ;
 
         //DRAM 2
-        iDDR4_2.ACT_n     <= sig_if.ACT_n;
-        iDDR4_2.RAS_n_A16 <= sig_if.RAS_n_A16;
-        iDDR4_2.CAS_n_A15 <= sig_if.CAS_n_A15;
-        iDDR4_2.WE_n_A14  <= sig_if.WE_n_A14;
-        iDDR4_2.ALERT_n   <= sig_if.ALERT_n;
-        iDDR4_2.PARITY    <= sig_if.PARITY;
-        iDDR4_2.RESET_n   <= sig_if.RESET_n;
-        iDDR4_2.TEN       <= sig_if.TEN;
-        iDDR4_2.CS_n      <= sig_if.CS_n;
-        iDDR4_2.CKE       <= sig_if.CKE;
-        iDDR4_2.ODT       <= sig_if.ODT;
-        iDDR4_2.C         <= sig_if.C;
-        iDDR4_2.BG        <= sig_if.BG;
-        iDDR4_2.BA        <= sig_if.BA;
-        iDDR4_2.ADDR      <= sig_if.ADDR;
-        iDDR4_2.ADDR_17   <= sig_if.ADDR_17;
-        iDDR4_2.ZQ        <= sig_if.ZQ;
-        iDDR4_2.PWR       <= sig_if.PWR;
-        iDDR4_2.VREF_CA   <= sig_if.VREF_CA;
-        iDDR4_2.VREF_DQ   <= sig_if.VREF_DQ;
+        iDDR4_2.ACT_n     <= ddrif.ACT_n;
+        iDDR4_2.RAS_n_A16 <= ddrif.RAS_n_A16;
+        iDDR4_2.CAS_n_A15 <= ddrif.CAS_n_A15;
+        iDDR4_2.WE_n_A14  <= ddrif.WE_n_A14;
+        iDDR4_2.ALERT_n   <= ddrif.ALERT_n;
+        iDDR4_2.PARITY    <= ddrif.PARITY;
+        iDDR4_2.RESET_n   <= ddrif.RESET_n;
+        iDDR4_2.TEN       <= ddrif.TEN;
+        iDDR4_2.CS_n      <= ddrif.CS_n;
+        iDDR4_2.CKE       <= ddrif.CKE;
+        iDDR4_2.ODT       <= ddrif.ODT;
+        iDDR4_2.C         <= ddrif.C;
+        iDDR4_2.BG        <= ddrif.BG;
+        iDDR4_2.BA        <= ddrif.BA;
+        iDDR4_2.ADDR      <= ddrif.ADDR;
+        iDDR4_2.ADDR_17   <= ddrif.ADDR_17;
+        iDDR4_2.ZQ        <= ddrif.ZQ;
+        iDDR4_2.PWR       <= ddrif.PWR;
+        iDDR4_2.VREF_CA   <= ddrif.VREF_CA;
+        iDDR4_2.VREF_DQ   <= ddrif.VREF_DQ;
 
         //DRAM 3
-        iDDR4_3.ACT_n     <= sig_if.ACT_n;
-        iDDR4_3.RAS_n_A16 <= sig_if.RAS_n_A16;
-        iDDR4_3.CAS_n_A15 <= sig_if.CAS_n_A15;
-        iDDR4_3.WE_n_A14  <= sig_if.WE_n_A14;
-        iDDR4_3.ALERT_n   <= sig_if.ALERT_n;
-        iDDR4_3.PARITY    <= sig_if.PARITY;
-        iDDR4_3.RESET_n   <= sig_if.RESET_n;
-        iDDR4_3.TEN       <= sig_if.TEN;
-        iDDR4_3.CS_n      <= sig_if.CS_n;
-        iDDR4_3.CKE       <= sig_if.CKE;
-        iDDR4_3.ODT       <= sig_if.ODT;
-        iDDR4_3.C         <= sig_if.C;
-        iDDR4_3.BG        <= sig_if.BG;
-        iDDR4_3.BA        <= sig_if.BA;
-        iDDR4_3.ADDR      <= sig_if.ADDR;
-        iDDR4_3.ADDR_17   <= sig_if.ADDR_17;
-        iDDR4_3.ZQ        <= sig_if.ZQ;
-        iDDR4_3.PWR       <= sig_if.PWR;
-        iDDR4_3.VREF_CA   <= sig_if.VREF_CA;
-        iDDR4_3.VREF_DQ   <= sig_if.VREF_DQ;
+        iDDR4_3.ACT_n     <= ddrif.ACT_n;
+        iDDR4_3.RAS_n_A16 <= ddrif.RAS_n_A16;
+        iDDR4_3.CAS_n_A15 <= ddrif.CAS_n_A15;
+        iDDR4_3.WE_n_A14  <= ddrif.WE_n_A14;
+        iDDR4_3.ALERT_n   <= ddrif.ALERT_n;
+        iDDR4_3.PARITY    <= ddrif.PARITY;
+        iDDR4_3.RESET_n   <= ddrif.RESET_n;
+        iDDR4_3.TEN       <= ddrif.TEN;
+        iDDR4_3.CS_n      <= ddrif.CS_n;
+        iDDR4_3.CKE       <= ddrif.CKE;
+        iDDR4_3.ODT       <= ddrif.ODT;
+        iDDR4_3.C         <= ddrif.C;
+        iDDR4_3.BG        <= ddrif.BG;
+        iDDR4_3.BA        <= ddrif.BA;
+        iDDR4_3.ADDR      <= ddrif.ADDR;
+        iDDR4_3.ADDR_17   <= ddrif.ADDR_17;
+        iDDR4_3.ZQ        <= ddrif.ZQ;
+        iDDR4_3.PWR       <= ddrif.PWR;
+        iDDR4_3.VREF_CA   <= ddrif.VREF_CA;
+        iDDR4_3.VREF_DQ   <= ddrif.VREF_DQ;
 
         //DRAM 4
-        iDDR4_4.ACT_n     <= sig_if.ACT_n;
-        iDDR4_4.RAS_n_A16 <= sig_if.RAS_n_A16;
-        iDDR4_4.CAS_n_A15 <= sig_if.CAS_n_A15;
-        iDDR4_4.WE_n_A14  <= sig_if.WE_n_A14;
-        iDDR4_4.ALERT_n   <= sig_if.ALERT_n;
-        iDDR4_4.PARITY    <= sig_if.PARITY;
-        iDDR4_4.RESET_n   <= sig_if.RESET_n;
-        iDDR4_4.TEN       <= sig_if.TEN;
-        iDDR4_4.CS_n      <= sig_if.CS_n;
-        iDDR4_4.CKE       <= sig_if.CKE;
-        iDDR4_4.ODT       <= sig_if.ODT;
-        iDDR4_4.C         <= sig_if.C;
-        iDDR4_4.BG        <= sig_if.BG;
-        iDDR4_4.BA        <= sig_if.BA;
-        iDDR4_4.ADDR      <= sig_if.ADDR;
-        iDDR4_4.ADDR_17   <= sig_if.ADDR_17;
-        iDDR4_4.ZQ        <= sig_if.ZQ;
-        iDDR4_4.PWR       <= sig_if.PWR;
-        iDDR4_4.VREF_CA   <= sig_if.VREF_CA;
-        iDDR4_4.VREF_DQ   <= sig_if.VREF_DQ;
+        iDDR4_4.ACT_n     <= ddrif.ACT_n;
+        iDDR4_4.RAS_n_A16 <= ddrif.RAS_n_A16;
+        iDDR4_4.CAS_n_A15 <= ddrif.CAS_n_A15;
+        iDDR4_4.WE_n_A14  <= ddrif.WE_n_A14;
+        iDDR4_4.ALERT_n   <= ddrif.ALERT_n;
+        iDDR4_4.PARITY    <= ddrif.PARITY;
+        iDDR4_4.RESET_n   <= ddrif.RESET_n;
+        iDDR4_4.TEN       <= ddrif.TEN;
+        iDDR4_4.CS_n      <= ddrif.CS_n;
+        iDDR4_4.CKE       <= ddrif.CKE;
+        iDDR4_4.ODT       <= ddrif.ODT;
+        iDDR4_4.C         <= ddrif.C;
+        iDDR4_4.BG        <= ddrif.BG;
+        iDDR4_4.BA        <= ddrif.BA;
+        iDDR4_4.ADDR      <= ddrif.ADDR;
+        iDDR4_4.ADDR_17   <= ddrif.ADDR_17;
+        iDDR4_4.ZQ        <= ddrif.ZQ;
+        iDDR4_4.PWR       <= ddrif.PWR;
+        iDDR4_4.VREF_CA   <= ddrif.VREF_CA;
+        iDDR4_4.VREF_DQ   <= ddrif.VREF_DQ;
 
         //DRAM 5
-        iDDR4_5.ACT_n     <= sig_if.ACT_n;
-        iDDR4_5.RAS_n_A16 <= sig_if.RAS_n_A16;
-        iDDR4_5.CAS_n_A15 <= sig_if.CAS_n_A15;
-        iDDR4_5.WE_n_A14  <= sig_if.WE_n_A14;
-        iDDR4_5.ALERT_n   <= sig_if.ALERT_n;
-        iDDR4_5.PARITY    <= sig_if.PARITY;
-        iDDR4_5.RESET_n   <= sig_if.RESET_n;
-        iDDR4_5.TEN       <= sig_if.TEN;
-        iDDR4_5.CS_n      <= sig_if.CS_n;
-        iDDR4_5.CKE       <= sig_if.CKE;
-        iDDR4_5.ODT       <= sig_if.ODT;
-        iDDR4_5.C         <= sig_if.C;
-        iDDR4_5.BG        <= sig_if.BG;
-        iDDR4_5.BA        <= sig_if.BA;
-        iDDR4_5.ADDR      <= sig_if.ADDR;
-        iDDR4_5.ADDR_17   <= sig_if.ADDR_17;
-        iDDR4_5.ZQ        <= sig_if.ZQ;
-        iDDR4_5.PWR       <= sig_if.PWR;
-        iDDR4_5.VREF_CA   <= sig_if.VREF_CA;
-        iDDR4_5.VREF_DQ   <= sig_if.VREF_DQ;
+        iDDR4_5.ACT_n     <= ddrif.ACT_n;
+        iDDR4_5.RAS_n_A16 <= ddrif.RAS_n_A16;
+        iDDR4_5.CAS_n_A15 <= ddrif.CAS_n_A15;
+        iDDR4_5.WE_n_A14  <= ddrif.WE_n_A14;
+        iDDR4_5.ALERT_n   <= ddrif.ALERT_n;
+        iDDR4_5.PARITY    <= ddrif.PARITY;
+        iDDR4_5.RESET_n   <= ddrif.RESET_n;
+        iDDR4_5.TEN       <= ddrif.TEN;
+        iDDR4_5.CS_n      <= ddrif.CS_n;
+        iDDR4_5.CKE       <= ddrif.CKE;
+        iDDR4_5.ODT       <= ddrif.ODT;
+        iDDR4_5.C         <= ddrif.C;
+        iDDR4_5.BG        <= ddrif.BG;
+        iDDR4_5.BA        <= ddrif.BA;
+        iDDR4_5.ADDR      <= ddrif.ADDR;
+        iDDR4_5.ADDR_17   <= ddrif.ADDR_17;
+        iDDR4_5.ZQ        <= ddrif.ZQ;
+        iDDR4_5.PWR       <= ddrif.PWR;
+        iDDR4_5.VREF_CA   <= ddrif.VREF_CA;
+        iDDR4_5.VREF_DQ   <= ddrif.VREF_DQ;
 
         //DRAM 6
-        iDDR4_6.ACT_n     <= sig_if.ACT_n;
-        iDDR4_6.RAS_n_A16 <= sig_if.RAS_n_A16;
-        iDDR4_6.CAS_n_A15 <= sig_if.CAS_n_A15;
-        iDDR4_6.WE_n_A14  <= sig_if.WE_n_A14;
-        iDDR4_6.ALERT_n   <= sig_if.ALERT_n;
-        iDDR4_6.PARITY    <= sig_if.PARITY;
-        iDDR4_6.RESET_n   <= sig_if.RESET_n;
-        iDDR4_6.TEN       <= sig_if.TEN;
-        iDDR4_6.CS_n      <= sig_if.CS_n;
-        iDDR4_6.CKE       <= sig_if.CKE;
-        iDDR4_6.ODT       <= sig_if.ODT;
-        iDDR4_6.C         <= sig_if.C;
-        iDDR4_6.BG        <= sig_if.BG;
-        iDDR4_6.BA        <= sig_if.BA;
-        iDDR4_6.ADDR      <= sig_if.ADDR;
-        iDDR4_6.ADDR_17   <= sig_if.ADDR_17;
-        iDDR4_6.ZQ        <= sig_if.ZQ;
-        iDDR4_6.PWR       <= sig_if.PWR;
-        iDDR4_6.VREF_CA   <= sig_if.VREF_CA;
-        iDDR4_6.VREF_DQ   <= sig_if.VREF_DQ;
+        iDDR4_6.ACT_n     <= ddrif.ACT_n;
+        iDDR4_6.RAS_n_A16 <= ddrif.RAS_n_A16;
+        iDDR4_6.CAS_n_A15 <= ddrif.CAS_n_A15;
+        iDDR4_6.WE_n_A14  <= ddrif.WE_n_A14;
+        iDDR4_6.ALERT_n   <= ddrif.ALERT_n;
+        iDDR4_6.PARITY    <= ddrif.PARITY;
+        iDDR4_6.RESET_n   <= ddrif.RESET_n;
+        iDDR4_6.TEN       <= ddrif.TEN;
+        iDDR4_6.CS_n      <= ddrif.CS_n;
+        iDDR4_6.CKE       <= ddrif.CKE;
+        iDDR4_6.ODT       <= ddrif.ODT;
+        iDDR4_6.C         <= ddrif.C;
+        iDDR4_6.BG        <= ddrif.BG;
+        iDDR4_6.BA        <= ddrif.BA;
+        iDDR4_6.ADDR      <= ddrif.ADDR;
+        iDDR4_6.ADDR_17   <= ddrif.ADDR_17;
+        iDDR4_6.ZQ        <= ddrif.ZQ;
+        iDDR4_6.PWR       <= ddrif.PWR;
+        iDDR4_6.VREF_CA   <= ddrif.VREF_CA;
+        iDDR4_6.VREF_DQ   <= ddrif.VREF_DQ;
 
         //DRAM 7
-        iDDR4_7.ACT_n     <= sig_if.ACT_n;
-        iDDR4_7.RAS_n_A16 <= sig_if.RAS_n_A16;
-        iDDR4_7.CAS_n_A15 <= sig_if.CAS_n_A15;
-        iDDR4_7.WE_n_A14  <= sig_if.WE_n_A14;
-        iDDR4_7.ALERT_n   <= sig_if.ALERT_n;
-        iDDR4_7.PARITY    <= sig_if.PARITY;
-        iDDR4_7.RESET_n   <= sig_if.RESET_n;
-        iDDR4_7.TEN       <= sig_if.TEN;
-        iDDR4_7.CS_n      <= sig_if.CS_n;
-        iDDR4_7.CKE       <= sig_if.CKE;
-        iDDR4_7.ODT       <= sig_if.ODT;
-        iDDR4_7.C         <= sig_if.C;
-        iDDR4_7.BG        <= sig_if.BG;
-        iDDR4_7.BA        <= sig_if.BA;
-        iDDR4_7.ADDR      <= sig_if.ADDR;
-        iDDR4_7.ADDR_17   <= sig_if.ADDR_17;
-        iDDR4_7.ZQ        <= sig_if.ZQ;
-        iDDR4_7.PWR       <= sig_if.PWR;
-        iDDR4_7.VREF_CA   <= sig_if.VREF_CA;
-        iDDR4_7.VREF_DQ   <= sig_if.VREF_DQ;
+        iDDR4_7.ACT_n     <= ddrif.ACT_n;
+        iDDR4_7.RAS_n_A16 <= ddrif.RAS_n_A16;
+        iDDR4_7.CAS_n_A15 <= ddrif.CAS_n_A15;
+        iDDR4_7.WE_n_A14  <= ddrif.WE_n_A14;
+        iDDR4_7.ALERT_n   <= ddrif.ALERT_n;
+        iDDR4_7.PARITY    <= ddrif.PARITY;
+        iDDR4_7.RESET_n   <= ddrif.RESET_n;
+        iDDR4_7.TEN       <= ddrif.TEN;
+        iDDR4_7.CS_n      <= ddrif.CS_n;
+        iDDR4_7.CKE       <= ddrif.CKE;
+        iDDR4_7.ODT       <= ddrif.ODT;
+        iDDR4_7.C         <= ddrif.C;
+        iDDR4_7.BG        <= ddrif.BG;
+        iDDR4_7.BA        <= ddrif.BA;
+        iDDR4_7.ADDR      <= ddrif.ADDR;
+        iDDR4_7.ADDR_17   <= ddrif.ADDR_17;
+        iDDR4_7.ZQ        <= ddrif.ZQ;
+        iDDR4_7.PWR       <= ddrif.PWR;
+        iDDR4_7.VREF_CA   <= ddrif.VREF_CA;
+        iDDR4_7.VREF_DQ   <= ddrif.VREF_DQ;
 
         //DRAM 8
-        iDDR4_8.ACT_n     <= sig_if.ACT_n;
-        iDDR4_8.RAS_n_A16 <= sig_if.RAS_n_A16;
-        iDDR4_8.CAS_n_A15 <= sig_if.CAS_n_A15;
-        iDDR4_8.WE_n_A14  <= sig_if.WE_n_A14;
-        iDDR4_8.ALERT_n   <= sig_if.ALERT_n;
-        iDDR4_8.PARITY    <= sig_if.PARITY;
-        iDDR4_8.RESET_n   <= sig_if.RESET_n;
-        iDDR4_8.TEN       <= sig_if.TEN;
-        iDDR4_8.CS_n      <= sig_if.CS_n;
-        iDDR4_8.CKE       <= sig_if.CKE;
-        iDDR4_8.ODT       <= sig_if.ODT;
-        iDDR4_8.C         <= sig_if.C;
-        iDDR4_8.BG        <= sig_if.BG;
-        iDDR4_8.BA        <= sig_if.BA;
-        iDDR4_8.ADDR      <= sig_if.ADDR;
-        iDDR4_8.ADDR_17   <= sig_if.ADDR_17;
-        iDDR4_8.ZQ        <= sig_if.ZQ;
-        iDDR4_8.PWR       <= sig_if.PWR;
-        iDDR4_8.VREF_CA   <= sig_if.VREF_CA;
-        iDDR4_8.VREF_DQ   <= sig_if.VREF_DQ;
+        iDDR4_8.ACT_n     <= ddrif.ACT_n;
+        iDDR4_8.RAS_n_A16 <= ddrif.RAS_n_A16;
+        iDDR4_8.CAS_n_A15 <= ddrif.CAS_n_A15;
+        iDDR4_8.WE_n_A14  <= ddrif.WE_n_A14;
+        iDDR4_8.ALERT_n   <= ddrif.ALERT_n;
+        iDDR4_8.PARITY    <= ddrif.PARITY;
+        iDDR4_8.RESET_n   <= ddrif.RESET_n;
+        iDDR4_8.TEN       <= ddrif.TEN;
+        iDDR4_8.CS_n      <= ddrif.CS_n;
+        iDDR4_8.CKE       <= ddrif.CKE;
+        iDDR4_8.ODT       <= ddrif.ODT;
+        iDDR4_8.C         <= ddrif.C;
+        iDDR4_8.BG        <= ddrif.BG;
+        iDDR4_8.BA        <= ddrif.BA;
+        iDDR4_8.ADDR      <= ddrif.ADDR;
+        iDDR4_8.ADDR_17   <= ddrif.ADDR_17;
+        iDDR4_8.ZQ        <= ddrif.ZQ;
+        iDDR4_8.PWR       <= ddrif.PWR;
+        iDDR4_8.VREF_CA   <= ddrif.VREF_CA;
+        iDDR4_8.VREF_DQ   <= ddrif.VREF_DQ;
     end
 
     // Component instantiation
@@ -413,7 +414,6 @@ module dram_top_tb;
         virtual ddr_controller_if.stq           svif;
         virtual ddr_controller_if.lq           lvif; 
         virtual ddr_controller_if.wdata_wrapper wvif;
-        virtual logic CLK, CLKx2;
 
         //Random rank, bank group, bank, row, col, offset (these go in stq/ldq)
         rand logic [RANK_BITS - 1:0] rank;
@@ -465,14 +465,11 @@ module dram_top_tb;
         function new (
             virtual ddr_controller_if.stq           svif, 
             virtual ddr_controller_if.wdata_wrapper wvif,
-            virtual ddr_controller_if.lq            lvif,
-            virtual logic CLK, CLKx2
+            virtual ddr_controller_if.lq            lvif
         );
             this.svif  = svif;
             this.wvif  = wvif;
             this.lvif  = lvif;
-            this.CLK   = CLK;
-            this.CLKx2 = CLKx2;
         endfunction
 
         //function for generate the address
@@ -487,15 +484,14 @@ module dram_top_tb;
                 creating_addr = {rank, row, bank, BG[1], col[9:3], BG[0], col[2:0], offset};
             end
         endfunction
-    endclass
 
-        function gen_valid(logic is_valid); 
-            valid = is_valid; 
+        function void gen_valid(logic is_valid); 
+            this.valid = is_valid; 
         endfunction
 
-        function gen_write(logic is_ready, logic is_last);
-            bwready = is_ready;
-            wlast = is_last;
+        function void gen_write(logic is_ready, logic is_last);
+            this.bwready = is_ready;
+            this.wlast = is_last;
         endfunction
         
         //This is the task you want to write something in a specific addr
@@ -507,17 +503,17 @@ module dram_top_tb;
             begin 
                 // Send the Write Data to both the STQ and WDQ
                 // WDQ
-                wvif.wdq_slot = {this.wstrb, this.wdata, this.wid, this.wlen};
-                wvif.bwready  = this.bwready; // TODO: How is this signal determined? 
-                wvif.wvalid   = valid;
-                wvif.wlast    = this.wlast; // TODO: How is this signal determined?
+                this.wvif.wdq_slot = {this.wstrb, this.wdata, this.wid, this.wlen};
+                this.wvif.bwready  = this.bwready; // TODO: How is this signal determined? 
+                this.wvif.wvalid   = this.valid;
+                this.wvif.wlast    = this.wlast; // TODO: How is this signal determined?
                 // STQ
-                svif.awvalid = valid;
-                svif.awaddr  = creating_addr;
-                svif.awlen   = len;
-                svif.awid    = id;
+                this.svif.awvalid = this.valid;
+                this.svif.awaddr  = this.creating_addr;
+                this.svif.awlen   = this.len;
+                this.svif.awid    = this.id;
                 // Store previous for more
-                this.prev_addr = creating_addr;
+                this.prev_addr = this.creating_addr;
                 // Randomize 
                 // this.randomize();
                 // @(posedge CLKx2);
@@ -527,10 +523,10 @@ module dram_top_tb;
         task reading();
             begin 
                 // Send the Read Commands to the LQ
-                lvif.arvalid = valid;
-                lvif.araddr  = creating_addr;
-                lvif.arlen   = len;
-                lvif.arid    = id;            
+                this.lvif.arvalid = this.valid;
+                this.lvif.araddr  = this.creating_addr;
+                this.lvif.arlen   = this.len;
+                this.lvif.arid    = this.id;            
             end
         endtask
     endclass
@@ -636,7 +632,7 @@ module dram_top_tb;
       dq_en = 1'b1;
       
       
-      axi = new(ddrif.stq, ddrif.wdata_wrapper, ddrif.lq, CLK, CLKx2);
+      axi = new(ddrif.stq, ddrif.wdata_wrapper, ddrif.lq);
       nRST = 1'b0;
       @(posedge CLK);
       @(posedge CLK);
@@ -649,7 +645,7 @@ module dram_top_tb;
 
     
       task_name = "Writing_Cycle Case 1";
-      axi.randomize();
+      void'(axi.randomize());
       axi.gen_addr("row miss");
       axi.gen_valid(1'b1);
       axi.gen_write(1'b1, 1'b0); // ready, last
@@ -786,3 +782,4 @@ module sw_cache #( parameter ROW_BITS = 15)
         end
     end
 endmodule
+*/

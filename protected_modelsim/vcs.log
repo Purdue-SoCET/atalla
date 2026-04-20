@@ -1,28 +1,34 @@
 QuestaSim-64 vlog 2021.4 Compiler 2021.10 Oct 13 2021
-Start time: 02:04:17 on Mar 29,2025
-vlog -reportprogress 300 -work work "+acc" -l vcs.log -sv "+define+DDR4_4G_X8" arch_package.sv proj_package.sv interface.sv dram_command.sv StateTable.svp MemoryArray.svp ddr4_model.svp dram_command_tb.sv 
+Start time: 13:46:08 on Apr 20,2026
+vlog "+cover" -work work "+acc" -l vcs.log -sv "+incdir+./include" "+define+DDR4_4G_X8" "+define+TS_1500" ./arch_defines.v ./dimm.vh ./arch_package.sv ./proj_package.sv ./interface.sv ./ddr4_model.svp ./src/timing_signal.sv ./src/dram_top.sv ./src/flex_counter.sv ./src/signal_gen.sv ./src/init_state.sv ./src/command_FSM.sv ./src/control_unit.sv ./src/address_mapper.sv ./src/socetlib_counter.sv ./src/scheduler_buffer.sv ./src/edge_det.sv ./src/row_open.sv ./src/data_transfer.sv ./tb/dram_top_tb.sv 
+** Warning: ./dimm.vh(12): (vlog-13233) Design unit "dimm_vh_unit" already exists and will be overwritten. Overwriting SystemVerilog $unit with different source files.
+-- Compiling package dimm_vh_unit
 -- Compiling package arch_package
 -- Compiling package proj_package
 -- Importing package arch_package
 -- Compiling interface DDR4_if
--- Compiling package dram_pack
--- Compiling interface dram_command_if
--- Importing package dram_pack
--- Compiling module dram_command
--- Importing package proj_package
-** Warning: ** while parsing file included at ddr4_model.svp(17)
-** at StateTable.svp(17): (vlog-2275) Existing <protected> '<protected>'<protected> will be overwritten<protected>.
-** Warning: ** while parsing file included at ddr4_model.svp(17)
-** at MemoryArray.svp(17): (vlog-2275) Existing <protected> '<protected>'<protected> will be overwritten<protected>.
--- Compiling package dram_pack
-** Warning: ** while parsing file included at dram_command_tb.sv(1)
-** at dram_command_if.vh(4): (vlog-2275) Existing package 'dram_pack' at line 4 will be overwritten.
--- Compiling interface dram_command_if
-** Warning: ** while parsing file included at dram_command_tb.sv(1)
-** at dram_command_if.vh(144): (vlog-2275) Existing interface 'dram_command_if' at line 144 will be overwritten.
--- Compiling module dram_command_tb
+** Error: ./ddr4_model.svp(17): (vlog-2163) Macro `<protected> is undefined.
+** Error: ./ddr4_model.svp(17): (vlog-2163) Macro `<protected> is undefined.
+** Error: ./ddr4_model.svp(17): (vlog-2163) Macro `<protected> is undefined.
+** Error: ./ddr4_model.svp(17): (vlog-2163) Macro `<protected> is undefined.
+** Error: (vlog-13069) ./ddr4_model.svp(17): syntax error in protected region.
 
-Top level modules:
-	dram_command_tb
-End time: 02:04:18 on Mar 29,2025, Elapsed time: 0:00:01
-Errors: 0, Warnings: 4
+** Error: ./ddr4_model.svp(17): (vlog-13205) Syntax error found in the scope following '<protected>'. Is there a missing '::'?
+** Error: ** while parsing file included at ./ddr4_model.svp(17)
+** at ./include/dram_pkg.vh(1): (vlog-2163) Macro `ifndef AL_TRUE_ ITS is undefined.
+** Error: ** while parsing file included at ./ddr4_model.svp(17)
+** at ./include/dram_pkg.vh(2): (vlog-2163) Macro `define  is undefined.
+** Error: (vlog-13069) ** while parsing file included at ./ddr4_model.svp(17)
+** at ./include/dram_pkg.vh(1): near "DRAM_PKG_VH UE_ Corporation": syntax error, unexpected IDENTIFIER.
+** Error: ** while parsing file included at ./ddr4_model.svp(17)
+** at ./ddr4_model.svp(17): (vlog-13205) Syntax error found in the scope following '_INTERNAL_TRUE_ Corporation'. Is there a missing '::'?
+** Error: ** while parsing file included at ./ddr4_model.svp(17)
+** at ./include/dram_pkg.vh(2): (vlog-2163) Macro `timescale _DQS_BITS is undefined.
+** Error: (vlog-13069) ** while parsing file included at ./ddr4_model.svp(17)
+** at ./include/dram_pkg.vh(2): near "1ps": syntax error, unexpected TIME_LITERAL.
+** Error: ** while parsing file included at ./ddr4_model.svp(17)
+** at ./include/dram_pkg.vh(2): (vlog-13205) Syntax error found in the scope following 'DRAM_PKG_VH M-RSA-2'. Is there a missing '::'?
+** Error: (On Command Line): (vlog-14205) Unexpected end of file encountered in decryption envelope.
+(On Command Line): Verilog Compiler exiting
+End time: 13:46:08 on Apr 20,2026, Elapsed time: 0:00:00
+Errors: 14, Warnings: 1

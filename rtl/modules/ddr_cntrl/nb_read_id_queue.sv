@@ -1,5 +1,5 @@
-`include "ddr_controller_if.sv" // Changed to .sv, update if not needed
-`include "dram_pkg.vh"
+`include "ddr_controller_if.sv"
+`include "dram_pkg.svh"
  
 typedef struct packed {
     logic [$clog2(ID_NUM) - 1:0] id;
@@ -13,7 +13,7 @@ module nb_read_id_queue (
     import dram_pkg::*;
 
     // Queue Signals
-    logic [$clog(ID_NUM) - 1:0] head_ptr, head_ptr_n, tail_ptr, tail_ptr_n;
+    logic [$clog2(ID_NUM) - 1:0] head_ptr, head_ptr_n, tail_ptr, tail_ptr_n;
     riq_slot_t [ID_NUM - 1:0] riq_reg, riq_reg_n;
 
     // Counter Signals

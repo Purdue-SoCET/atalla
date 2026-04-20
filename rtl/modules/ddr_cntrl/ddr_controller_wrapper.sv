@@ -210,7 +210,7 @@ module ddr_controller_wrapper (
         .CLK  (CLK),
         .nRST (nRST),
         .rdw (cif.rdata_wrapper)
-    )
+    );
 /*
     // Initialization State Machine
     init_state INIT (

@@ -90,7 +90,7 @@ module nb_barb(
 		barb.be_arb <= (be_arb_next[2 * BANK_NUM - 1:BANK_NUM] | be_arb_next[BANK_NUM-1:0]);	
     end
 
-    logic [$clog2(ID_NUM)-1:0] selected_bank_next; 
+    logic [$clog2(BANK_NUM)-1:0] selected_bank_next; 
     logic selected_bank_ready_next;
 
     priority_enc #(.BANK_NUM(16)) ENCODER_NEXT ((be_arb_next & barb.be_queue_ready), selected_bank_next, selected_bank_ready_next);
