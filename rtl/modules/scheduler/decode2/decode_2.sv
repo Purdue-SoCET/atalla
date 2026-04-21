@@ -204,10 +204,7 @@ always_comb begin
                 EXP: need_vector_exp = 1'b1;
                 VLSU: need_vector_vlsu[vcif.decoded_vector_instrs[i].sid] = 1'b1;
                 GSAU: need_vector_gsau = 1'b1;
-                REDU: begin
-                    need_vector_reduction = 1'b1;
-                    need_vector_alu = 1'b1;                     
-                end
+                REDU: need_vector_reduction = 1'b1;
               default: ;
             endcase
         end
@@ -231,13 +228,16 @@ assign scalar_FU_ready = (~need_scalar_ex1 | d2if.ready_DEC2_ex1) &
                          (~need_scalar_ex3 | d2if.ready_DEC2_ex3) &
                          (~need_scalar_ex4 | d2if.ready_DEC2_ex4) &
                          (~need_scalar_ex5 | d2if.ready_DEC2_ex5);
-// assign vector_FU_ready = (~need_vector_alu | d2if.alu_ready) &
-//                          (~need_vector_mul | d2if.mul_ready) &
-//                          (~need_vector_exp | d2if.exp_ready) &
-//                          (~need_vector_reduction | d2if.reduction_ready) &
-//                          (~need_vector_vlsu | d2if.vlsu_ready) &
-//                          (~need_vector_gsau | d2if.gsau_ready);
-assign vector_FU_ready = 1'b1;
+assign vector_FU_ready = (~need_vector_alu | d2if.vec_alu_ready) &
+                         (~need_vector_mul | d2if.vec_mul_ready) &
+                         (~need_vector_exp | d2if.vec_exp_ready) &
+                         (~need_vector_reduction | d2if.vec_reduction_ready) &
+                         (~need_vector_vlsu[0] | d2if.vlsu_ready[0]) &
+                         (~need_vector_vlsu[1] | d2if.vlsu_ready[1]) & //TODO for sake of time this is not parametrizable rn
+                         (~need_vector_vlsu[2] | d2if.vlsu_ready[2]) &
+                         (~need_vector_vlsu[3] | d2if.vlsu_ready[3]) &
+                         (~need_vector_gsau | d2if.gsau_ready);
+// assign vector_FU_ready = 1'b1;
 
 always_comb begin
     sdma_FU_ready = 1'b1; // assume ready unless proven otherwise
@@ -248,7 +248,7 @@ always_comb begin
             sid = SDMA_scalar_sids[i];
 
             // If this instruction needs SDMA and that lane is not ready then stall
-            if (SDMA_scalar_WEN[i] && !d2if.sdma_ready[sid]) begin
+            if (SDMA_scalar_WEN[i] && d2if.scpad_busy[sid]) begin
                 sdma_FU_ready = 1'b0;
             end
         end

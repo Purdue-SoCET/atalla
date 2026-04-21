@@ -29,6 +29,9 @@ module system #()
     input  logic [63:0]  mem_resp_rdata_i,
     input  logic         mem_resp_hit_i,
 
+    //scpad signals
+    input logic dram_scpad_stall [3:0],
+
     output logic halt,
     output logic dp_out_flushed
 );
@@ -56,14 +59,30 @@ module system #()
     word_t imemaddr;
 
     assign vif.lanes_in = scif.lanes_in;
+    assign vif.vlsu_in = scif.vlsu_in;
+    assign vif.gsau_in = scif.gsau_in;
+    assign sif.sched_req = scif.scpad_in;
+
+    //READY SIGNALS
+    assign scif.vector_unit_ready_signals = vif.unit_ready_signals;
+    assign scif.scpad_busy = sif.sched_stall;
+
+    //WB
     assign vif.wb_ready_signals = scif.vector_if_wb_ready;
     assign scif.vector_wb_in.vector_if_lanes_out = vif.lanes_out;
 
-    // always_comb begin
-    //     scif.vector_wb_in   = '0;
-    //     scif.SDMA_scalar_rs1s = '0;
-    //     scif.SDMA_scalar_WEN  = '0;
-    // end
+    //clear sdma dest reg in dependency tracker
+    assign scif.SDMA_scalar_WEN[0] = sif.sdma_done_req[0].valid;
+    assign scif.SDMA_scalar_WEN[1] = sif.sdma_done_req[1].valid;
+    assign scif.SDMA_scalar_WEN[2] = sif.sdma_done_req[2].valid;
+    assign scif.SDMA_scalar_WEN[3] = sif.sdma_done_req[3].valid;
+    assign scif.SDMA_scalar_rs1s[0] = sif.sdma_done_req[0].rd;
+    assign scif.SDMA_scalar_rs1s[1] = sif.sdma_done_req[1].rd;
+    assign scif.SDMA_scalar_rs1s[2] = sif.sdma_done_req[2].rd;
+    assign scif.SDMA_scalar_rs1s[3] = sif.sdma_done_req[3].rd;
+
+    //dram to scpad
+    assign sif.dram_be_stall = dram_scpad_stall;
 
 
     scheduler_core CORE(

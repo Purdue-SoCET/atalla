@@ -76,11 +76,11 @@ module vector_control_unit
                     cuif.decoded_vector_instrs[i].fu_enable = GSAU;
                     cuif.decoded_vector_instrs[i].vms = cuif.vector_instrs[i][34:31]; 
                     cuif.decoded_vector_instrs[i].vs1 = cuif.vector_instrs[i][22:15]; 
-                    cuif.decoded_vector_instrs[i].vs2 = cuif.vector_instrs[i][30:23];
+                    // cuif.decoded_vector_instrs[i].vs2 = cuif.vector_instrs[i][30:23];
                     cuif.decoded_vector_instrs[i].vd = cuif.vector_instrs[i][14:7];
-                    cuif.decoded_vector_instrs[i].use_vms = 1'b1;
+                    // cuif.decoded_vector_instrs[i].use_vms = 1'b1;
                     cuif.decoded_vector_instrs[i].use_vs1 = 1'b1;
-                    cuif.decoded_vector_instrs[i].use_vs2 = 1'b1;
+                    // cuif.decoded_vector_instrs[i].use_vs2 = 1'b1;
                     cuif.decoded_vector_instrs[i].scalar_reg_write = 1'b0;
                     cuif.decoded_vector_instrs[i].vector_reg_write = 1'b1;
                     cuif.decoded_vector_instrs[i].mask_reg_write = 1'b0;

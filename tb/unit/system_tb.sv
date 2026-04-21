@@ -44,6 +44,9 @@ module system_tb;
         .mem_resp_rdata_i(ram_mem_data_i),
         .mem_resp_hit_i(ram_mem_complete_i),
 
+        //scpad signals
+        .dram_scpad_stall('{default:0}),
+
         .halt(halt),
         .dp_out_flushed(dcache_flushed)
     );
