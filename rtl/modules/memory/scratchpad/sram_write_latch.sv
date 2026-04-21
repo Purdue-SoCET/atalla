@@ -21,6 +21,14 @@ module sram_write_latch (scpad_if.sram_write_latch sr_wr_l);
         end
     end
 
+    logic [MAX_DRAM_BUS_BITS-1:0] masked_rddata;
+    always_comb begin
+        for (int i = 0; i < DRAM_VECTOR_MASK_LANES; i++) begin
+            masked_rddata[i*ELEM_BITS +: ELEM_BITS] = sr_wr_l.sr_wr_l_in.dram_vector_mask[i] ?
+                sr_wr_l.sr_wr_l_in.dram_rddata[i*ELEM_BITS +: ELEM_BITS] : '0;
+        end
+    end
+
     always_comb begin
         nxt_sram_write_latch = sram_write_latch;
         nxt_request_completed_counter = request_completed_counter;
@@ -37,7 +45,7 @@ module sram_write_latch (scpad_if.sram_write_latch sr_wr_l);
 
         if(sr_wr_l.sr_wr_l_in.dram_res_valid == 1'b1 && sr_wr_l.sr_wr_l_out.latch_full == 1'b0) begin
             nxt_sram_write_latch.valid = ((request_completed_counter) == sr_wr_l.sr_wr_l_in.num_request) ? 1'b1 : 1'b0;
-            nxt_sram_write_latch.wdata[({DRAM_VECTOR_MASK_LANES_SHIFT'(0), sr_wr_l.sr_wr_l_in.dram_id[MAX_REQ_WIDTH-1:0]} << DRAM_VECTOR_MASK_LANES_SHIFT) +: DRAM_VECTOR_MASK_LANES] = sr_wr_l.sr_wr_l_in.dram_rddata;
+            nxt_sram_write_latch.wdata[({DRAM_VECTOR_MASK_LANES_SHIFT'(0), sr_wr_l.sr_wr_l_in.dram_id[MAX_REQ_WIDTH-1:0]} << DRAM_VECTOR_MASK_LANES_SHIFT) +: DRAM_VECTOR_MASK_LANES] = masked_rddata;
             nxt_sram_write_latch.spad_addr = sr_wr_l.sr_wr_l_in.spad_addr;
             nxt_sram_write_latch.xbar = sr_wr_l.sr_wr_l_in.xbar;
             nxt_request_completed_counter = request_completed_counter + 1;

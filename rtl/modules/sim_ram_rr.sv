@@ -1,17 +1,20 @@
 `timescale 1ns/1ps
 
 module sim_ram_rr #(
-    parameter int ADDR_WIDTH   = 32,
-    parameter int MEM_BYTES    = 1 << 20,
-    parameter string INIT_FILE = "",
-    parameter bit INIT_IS_HEX  = 1'b1,
-    parameter string DUMP_FILE = "mem_dump.hex",
-    parameter bit BIG_ENDIAN   = 1'b0   // 0=little-endian, 1=big-endian
+    parameter int ADDR_WIDTH        = 32,
+    parameter int MEM_BYTES         = 1 << 20,
+    parameter string INIT_FILE      = "",
+    parameter bit INIT_IS_HEX       = 1'b1,
+    parameter string DUMP_FILE      = "mem_dump.hex",
+    parameter bit BIG_ENDIAN        = 1'b0,  // 0=little-endian, 1=big-endian
+    parameter bit REVERSE_MASK_MAP  = 1'b0   // 0: mask[0]->[15:0], 1: mask[0]->[63:48]
 )(
     input  logic                  clk,
     input  logic                  rst_n,
 
+    // -----------------------------
     // I-cache side
+    // -----------------------------
     input  logic                  ic_req_valid,
     input  logic                  ic_req_we,
     input  logic [ADDR_WIDTH-1:0] ic_req_addr,
@@ -19,62 +22,154 @@ module sim_ram_rr #(
     output logic [63:0]           ic_resp_rdata,
     output logic                  ic_resp_hit,
 
+    // -----------------------------
     // D-cache side
+    // -----------------------------
     input  logic                  dc_req_valid,
     input  logic                  dc_req_we,
     input  logic [ADDR_WIDTH-1:0] dc_req_addr,
     input  logic [63:0]           dc_req_wdata,
     output logic [63:0]           dc_resp_rdata,
-    output logic                  dc_resp_hit
+    output logic                  dc_resp_hit,
+
+    // -----------------------------
+    // Scratchpad 0
+    // -----------------------------
+    input  logic                  sc0_req_valid,
+    input  logic                  sc0_req_rw,       // 0=read, 1=write
+    input  logic [ADDR_WIDTH-1:0] sc0_req_addr,
+    input  logic [63:0]           sc0_req_wdata,
+    input  logic [7:0]            sc0_req_id,
+    input  logic [3:0]            sc0_req_mask,
+    input  logic                  sc0_stall_in,
+    output logic [63:0]           sc0_resp_rdata,
+    output logic                  sc0_resp_hit,
+    output logic [7:0]            sc0_resp_id,
+    output logic                  sc0_resp_rw,
+    output logic                  sc0_stall_out,
+
+    // -----------------------------
+    // Scratchpad 1
+    // -----------------------------
+    input  logic                  sc1_req_valid,
+    input  logic                  sc1_req_rw,
+    input  logic [ADDR_WIDTH-1:0] sc1_req_addr,
+    input  logic [63:0]           sc1_req_wdata,
+    input  logic [7:0]            sc1_req_id,
+    input  logic [3:0]            sc1_req_mask,
+    input  logic                  sc1_stall_in,
+    output logic [63:0]           sc1_resp_rdata,
+    output logic                  sc1_resp_hit,
+    output logic [7:0]            sc1_resp_id,
+    output logic                  sc1_resp_rw,
+    output logic                  sc1_stall_out,
+
+    // -----------------------------
+    // Scratchpad 2
+    // -----------------------------
+    input  logic                  sc2_req_valid,
+    input  logic                  sc2_req_rw,
+    input  logic [ADDR_WIDTH-1:0] sc2_req_addr,
+    input  logic [63:0]           sc2_req_wdata,
+    input  logic [7:0]            sc2_req_id,
+    input  logic [3:0]            sc2_req_mask,
+    input  logic                  sc2_stall_in,
+    output logic [63:0]           sc2_resp_rdata,
+    output logic                  sc2_resp_hit,
+    output logic [7:0]            sc2_resp_id,
+    output logic                  sc2_resp_rw,
+    output logic                  sc2_stall_out,
+
+    // -----------------------------
+    // Scratchpad 3
+    // -----------------------------
+    input  logic                  sc3_req_valid,
+    input  logic                  sc3_req_rw,
+    input  logic [ADDR_WIDTH-1:0] sc3_req_addr,
+    input  logic [63:0]           sc3_req_wdata,
+    input  logic [7:0]            sc3_req_id,
+    input  logic [3:0]            sc3_req_mask,
+    input  logic                  sc3_stall_in,
+    output logic [63:0]           sc3_resp_rdata,
+    output logic                  sc3_resp_hit,
+    output logic [7:0]            sc3_resp_id,
+    output logic                  sc3_resp_rw,
+    output logic                  sc3_stall_out
 );
 
     localparam int BEAT_BYTES  = 8;
-    localparam int BURST_BEATS = 8;
+    localparam int FIXED_BEATS = 8;
 
-    typedef enum logic {
-        OWNER_IC = 1'b0,
-        OWNER_DC = 1'b1
+    typedef enum logic [2:0] {
+        OWNER_IC  = 3'd0,
+        OWNER_DC  = 3'd1,
+        OWNER_SC0 = 3'd2,
+        OWNER_SC1 = 3'd3,
+        OWNER_SC2 = 3'd4,
+        OWNER_SC3 = 3'd5
     } owner_t;
 
     logic [7:0] mem [0:MEM_BYTES-1];
 
-    // Round-robin tie breaker:
-    // 0 => next tie goes to icache
-    // 1 => next tie goes to dcache
-    logic rr_turn;
+    // tie-breaker / next starting priority
+    logic [2:0] rr_turn;
 
-    // Burst state
+    // locked burst state only for icache/dcache
     logic                  burst_active;
     owner_t                burst_owner;
     logic [ADDR_WIDTH-1:0] burst_base_addr;
     logic [2:0]            burst_beat_idx;
     logic                  burst_contended;
 
-    // Arbitration / selected transaction in IDLE
-    logic                  idle_sel_valid;
-    logic                  idle_sel_is_dc;
-    logic                  idle_sel_we;
-    logic [ADDR_WIDTH-1:0] idle_sel_addr;
-    logic [63:0]           idle_sel_wdata;
-    logic                  idle_sel_contended;
+    // selected requester in current cycle
+    logic                  sel_valid;
+    owner_t                sel_owner;
+    logic                  sel_we;
+    logic [ADDR_WIDTH-1:0] sel_addr;
+    logic [63:0]           sel_wdata;
+    logic [7:0]            sel_sc_id;
+    logic [3:0]            sel_sc_mask;
+    logic                  sel_sc_stall_in;
+    logic                  sel_contended;
 
-    // Current effective transaction for combinational read path
-    logic                  cur_valid;
-    logic                  cur_is_dc;
-    logic                  cur_we;
-    logic [ADDR_WIDTH-1:0] cur_addr;
-    logic [63:0]           cur_wdata;
+    logic                  sel_addr_in_range;
+    logic                  sel_addr_aligned;
+    logic [63:0]           sel_read_word;
 
-    logic                  cur_addr_in_range;
-    logic                  cur_addr_aligned;
-    logic [63:0]           cur_read_word;
+    logic [5:0] req_present;
 
     string dump_file_name;
     integer i;
 
-    // ------------------------------------------------------------
-    // Memory init
-    // ------------------------------------------------------------
+    function automatic logic [63:0] assemble_read64(input logic [ADDR_WIDTH-1:0] a);
+        if (BIG_ENDIAN) begin
+            assemble_read64 = {
+                mem[a + 0], mem[a + 1], mem[a + 2], mem[a + 3],
+                mem[a + 4], mem[a + 5], mem[a + 6], mem[a + 7]
+            };
+        end else begin
+            assemble_read64 = {
+                mem[a + 7], mem[a + 6], mem[a + 5], mem[a + 4],
+                mem[a + 3], mem[a + 2], mem[a + 1], mem[a + 0]
+            };
+        end
+    endfunction
+
+    function automatic logic mask_lane_enabled(
+        input logic [3:0] mask,
+        input int lane_idx
+    );
+        if (!REVERSE_MASK_MAP) mask_lane_enabled = mask[lane_idx];
+        else                   mask_lane_enabled = mask[3-lane_idx];
+    endfunction
+
+    function automatic logic is_scpad_owner(input owner_t o);
+        is_scpad_owner = (o == OWNER_SC0) || (o == OWNER_SC1) || (o == OWNER_SC2) || (o == OWNER_SC3);
+    endfunction
+
+    // -----------------------------
+    // init
+    // -----------------------------
     initial begin : init_mem
         string file_name;
         bit init_is_hex_local;
@@ -93,253 +188,353 @@ module sim_ram_rr #(
 
         if (file_name != "") begin
             if (init_is_hex_local) begin
-                $display("[sim_ram_rr_burst64] Loading HEX file: %s", file_name);
+                $display("[sim_ram_rr_burst64_4scpad] Loading HEX file: %s", file_name);
                 $readmemh(file_name, mem);
-            end
-            else begin
-                $display("[sim_ram_rr_burst64] Loading BIN file: %s", file_name);
+            end else begin
+                $display("[sim_ram_rr_burst64_4scpad] Loading BIN file: %s", file_name);
                 $readmemb(file_name, mem);
             end
-        end
-        else begin
-            $display("[sim_ram_rr_burst64] No init file provided; memory zeroed.");
-        end
-
-        $display("[sim_ram_rr_burst64] Endianness: %s",
-                 BIG_ENDIAN ? "BIG_ENDIAN" : "LITTLE_ENDIAN");
-    end
-
-    // ------------------------------------------------------------
-    // Idle arbitration
-    // Only used when no burst is currently active
-    // ------------------------------------------------------------
-    always_comb begin
-        idle_sel_valid     = 1'b0;
-        idle_sel_is_dc     = 1'b0;
-        idle_sel_we        = 1'b0;
-        idle_sel_addr      = '0;
-        idle_sel_wdata     = '0;
-        idle_sel_contended = 1'b0;
-
-        if (!burst_active) begin
-            if (ic_req_valid && dc_req_valid) begin
-                idle_sel_contended = 1'b1;
-                if (rr_turn == 1'b0) begin
-                    idle_sel_valid = 1'b1;
-                    idle_sel_is_dc = 1'b0;
-                    idle_sel_we    = ic_req_we;
-                    idle_sel_addr  = ic_req_addr;
-                    idle_sel_wdata = ic_req_wdata;
-                end
-                else begin
-                    idle_sel_valid = 1'b1;
-                    idle_sel_is_dc = 1'b1;
-                    idle_sel_we    = dc_req_we;
-                    idle_sel_addr  = dc_req_addr;
-                    idle_sel_wdata = dc_req_wdata;
-                end
-            end
-            else if (ic_req_valid) begin
-                idle_sel_valid = 1'b1;
-                idle_sel_is_dc = 1'b0;
-                idle_sel_we    = ic_req_we;
-                idle_sel_addr  = ic_req_addr;
-                idle_sel_wdata = ic_req_wdata;
-            end
-            else if (dc_req_valid) begin
-                idle_sel_valid = 1'b1;
-                idle_sel_is_dc = 1'b1;
-                idle_sel_we    = dc_req_we;
-                idle_sel_addr  = dc_req_addr;
-                idle_sel_wdata = dc_req_wdata;
-            end
+        end else begin
+            $display("[sim_ram_rr_burst64_4scpad] No init file provided; memory zeroed.");
         end
     end
 
-    // ------------------------------------------------------------
-    // Current effective request
-    //
-    // If burst is active:
-    //   keep ownership locked and stream beat addresses
-    //
-    // If no burst active:
-    //   use the newly arbitrated idle request
-    // ------------------------------------------------------------
+    // -----------------------------
+    // request presence
+    // -----------------------------
     always_comb begin
-        cur_valid = 1'b0;
-        cur_is_dc = 1'b0;
-        cur_we    = 1'b0;
-        cur_addr  = '0;
-        cur_wdata = '0;
+        req_present[0] = ic_req_valid;
+        req_present[1] = dc_req_valid;
+        req_present[2] = sc0_req_valid && !sc0_stall_in;
+        req_present[3] = sc1_req_valid && !sc1_stall_in;
+        req_present[4] = sc2_req_valid && !sc2_stall_in;
+        req_present[5] = sc3_req_valid && !sc3_stall_in;
+    end
+
+    // -----------------------------
+    // selection
+    // burst lock applies only to icache/dcache fixed 8-beat reads
+    // scpads are re-arbitrated every cycle they are active
+    // -----------------------------
+    always_comb begin
+        sel_valid        = 1'b0;
+        sel_owner        = OWNER_IC;
+        sel_we           = 1'b0;
+        sel_addr         = '0;
+        sel_wdata        = '0;
+        sel_sc_id        = 8'h00;
+        sel_sc_mask      = 4'h0;
+        sel_sc_stall_in  = 1'b0;
+        sel_contended    = 1'b0;
 
         if (burst_active) begin
-            cur_valid = 1'b1;
-            cur_is_dc = (burst_owner == OWNER_DC);
-            cur_we    = 1'b0;
-            cur_addr  = burst_base_addr + (burst_beat_idx * BEAT_BYTES);
-            cur_wdata = 64'h0;
-        end
-        else begin
-            cur_valid = idle_sel_valid;
-            cur_is_dc = idle_sel_is_dc;
-            cur_we    = idle_sel_we;
-            cur_addr  = idle_sel_addr;
-            cur_wdata = idle_sel_wdata;
+            sel_valid = 1'b1;
+            sel_owner = burst_owner;
+            sel_we    = 1'b0;
+            sel_addr  = burst_base_addr + (burst_beat_idx * BEAT_BYTES);
+            sel_wdata = 64'h0;
+        end else begin
+            sel_contended = (req_present[0] + req_present[1] + req_present[2] +
+                             req_present[3] + req_present[4] + req_present[5]) > 1;
+
+            unique case (rr_turn)
+                3'd0: begin
+                    if (req_present[0]) begin
+                        sel_valid = 1'b1; sel_owner = OWNER_IC; sel_we = ic_req_we; sel_addr = ic_req_addr; sel_wdata = ic_req_wdata;
+                    end else if (req_present[1]) begin
+                        sel_valid = 1'b1; sel_owner = OWNER_DC; sel_we = dc_req_we; sel_addr = dc_req_addr; sel_wdata = dc_req_wdata;
+                    end else if (req_present[2]) begin
+                        sel_valid = 1'b1; sel_owner = OWNER_SC0; sel_we = sc0_req_rw; sel_addr = sc0_req_addr; sel_wdata = sc0_req_wdata; sel_sc_id = sc0_req_id; sel_sc_mask = sc0_req_mask; sel_sc_stall_in = sc0_stall_in;
+                    end else if (req_present[3]) begin
+                        sel_valid = 1'b1; sel_owner = OWNER_SC1; sel_we = sc1_req_rw; sel_addr = sc1_req_addr; sel_wdata = sc1_req_wdata; sel_sc_id = sc1_req_id; sel_sc_mask = sc1_req_mask; sel_sc_stall_in = sc1_stall_in;
+                    end else if (req_present[4]) begin
+                        sel_valid = 1'b1; sel_owner = OWNER_SC2; sel_we = sc2_req_rw; sel_addr = sc2_req_addr; sel_wdata = sc2_req_wdata; sel_sc_id = sc2_req_id; sel_sc_mask = sc2_req_mask; sel_sc_stall_in = sc2_stall_in;
+                    end else if (req_present[5]) begin
+                        sel_valid = 1'b1; sel_owner = OWNER_SC3; sel_we = sc3_req_rw; sel_addr = sc3_req_addr; sel_wdata = sc3_req_wdata; sel_sc_id = sc3_req_id; sel_sc_mask = sc3_req_mask; sel_sc_stall_in = sc3_stall_in;
+                    end
+                end
+
+                3'd1: begin
+                    if (req_present[1]) begin
+                        sel_valid = 1'b1; sel_owner = OWNER_DC; sel_we = dc_req_we; sel_addr = dc_req_addr; sel_wdata = dc_req_wdata;
+                    end else if (req_present[2]) begin
+                        sel_valid = 1'b1; sel_owner = OWNER_SC0; sel_we = sc0_req_rw; sel_addr = sc0_req_addr; sel_wdata = sc0_req_wdata; sel_sc_id = sc0_req_id; sel_sc_mask = sc0_req_mask;
+                    end else if (req_present[3]) begin
+                        sel_valid = 1'b1; sel_owner = OWNER_SC1; sel_we = sc1_req_rw; sel_addr = sc1_req_addr; sel_wdata = sc1_req_wdata; sel_sc_id = sc1_req_id; sel_sc_mask = sc1_req_mask;
+                    end else if (req_present[4]) begin
+                        sel_valid = 1'b1; sel_owner = OWNER_SC2; sel_we = sc2_req_rw; sel_addr = sc2_req_addr; sel_wdata = sc2_req_wdata; sel_sc_id = sc2_req_id; sel_sc_mask = sc2_req_mask;
+                    end else if (req_present[5]) begin
+                        sel_valid = 1'b1; sel_owner = OWNER_SC3; sel_we = sc3_req_rw; sel_addr = sc3_req_addr; sel_wdata = sc3_req_wdata; sel_sc_id = sc3_req_id; sel_sc_mask = sc3_req_mask;
+                    end else if (req_present[0]) begin
+                        sel_valid = 1'b1; sel_owner = OWNER_IC; sel_we = ic_req_we; sel_addr = ic_req_addr; sel_wdata = ic_req_wdata;
+                    end
+                end
+
+                3'd2: begin
+                    if (req_present[2]) begin
+                        sel_valid = 1'b1; sel_owner = OWNER_SC0; sel_we = sc0_req_rw; sel_addr = sc0_req_addr; sel_wdata = sc0_req_wdata; sel_sc_id = sc0_req_id; sel_sc_mask = sc0_req_mask;
+                    end else if (req_present[3]) begin
+                        sel_valid = 1'b1; sel_owner = OWNER_SC1; sel_we = sc1_req_rw; sel_addr = sc1_req_addr; sel_wdata = sc1_req_wdata; sel_sc_id = sc1_req_id; sel_sc_mask = sc1_req_mask;
+                    end else if (req_present[4]) begin
+                        sel_valid = 1'b1; sel_owner = OWNER_SC2; sel_we = sc2_req_rw; sel_addr = sc2_req_addr; sel_wdata = sc2_req_wdata; sel_sc_id = sc2_req_id; sel_sc_mask = sc2_req_mask;
+                    end else if (req_present[5]) begin
+                        sel_valid = 1'b1; sel_owner = OWNER_SC3; sel_we = sc3_req_rw; sel_addr = sc3_req_addr; sel_wdata = sc3_req_wdata; sel_sc_id = sc3_req_id; sel_sc_mask = sc3_req_mask;
+                    end else if (req_present[0]) begin
+                        sel_valid = 1'b1; sel_owner = OWNER_IC; sel_we = ic_req_we; sel_addr = ic_req_addr; sel_wdata = ic_req_wdata;
+                    end else if (req_present[1]) begin
+                        sel_valid = 1'b1; sel_owner = OWNER_DC; sel_we = dc_req_we; sel_addr = dc_req_addr; sel_wdata = dc_req_wdata;
+                    end
+                end
+
+                3'd3: begin
+                    if (req_present[3]) begin
+                        sel_valid = 1'b1; sel_owner = OWNER_SC1; sel_we = sc1_req_rw; sel_addr = sc1_req_addr; sel_wdata = sc1_req_wdata; sel_sc_id = sc1_req_id; sel_sc_mask = sc1_req_mask;
+                    end else if (req_present[4]) begin
+                        sel_valid = 1'b1; sel_owner = OWNER_SC2; sel_we = sc2_req_rw; sel_addr = sc2_req_addr; sel_wdata = sc2_req_wdata; sel_sc_id = sc2_req_id; sel_sc_mask = sc2_req_mask;
+                    end else if (req_present[5]) begin
+                        sel_valid = 1'b1; sel_owner = OWNER_SC3; sel_we = sc3_req_rw; sel_addr = sc3_req_addr; sel_wdata = sc3_req_wdata; sel_sc_id = sc3_req_id; sel_sc_mask = sc3_req_mask;
+                    end else if (req_present[0]) begin
+                        sel_valid = 1'b1; sel_owner = OWNER_IC; sel_we = ic_req_we; sel_addr = ic_req_addr; sel_wdata = ic_req_wdata;
+                    end else if (req_present[1]) begin
+                        sel_valid = 1'b1; sel_owner = OWNER_DC; sel_we = dc_req_we; sel_addr = dc_req_addr; sel_wdata = dc_req_wdata;
+                    end else if (req_present[2]) begin
+                        sel_valid = 1'b1; sel_owner = OWNER_SC0; sel_we = sc0_req_rw; sel_addr = sc0_req_addr; sel_wdata = sc0_req_wdata; sel_sc_id = sc0_req_id; sel_sc_mask = sc0_req_mask;
+                    end
+                end
+
+                3'd4: begin
+                    if (req_present[4]) begin
+                        sel_valid = 1'b1; sel_owner = OWNER_SC2; sel_we = sc2_req_rw; sel_addr = sc2_req_addr; sel_wdata = sc2_req_wdata; sel_sc_id = sc2_req_id; sel_sc_mask = sc2_req_mask;
+                    end else if (req_present[5]) begin
+                        sel_valid = 1'b1; sel_owner = OWNER_SC3; sel_we = sc3_req_rw; sel_addr = sc3_req_addr; sel_wdata = sc3_req_wdata; sel_sc_id = sc3_req_id; sel_sc_mask = sc3_req_mask;
+                    end else if (req_present[0]) begin
+                        sel_valid = 1'b1; sel_owner = OWNER_IC; sel_we = ic_req_we; sel_addr = ic_req_addr; sel_wdata = ic_req_wdata;
+                    end else if (req_present[1]) begin
+                        sel_valid = 1'b1; sel_owner = OWNER_DC; sel_we = dc_req_we; sel_addr = dc_req_addr; sel_wdata = dc_req_wdata;
+                    end else if (req_present[2]) begin
+                        sel_valid = 1'b1; sel_owner = OWNER_SC0; sel_we = sc0_req_rw; sel_addr = sc0_req_addr; sel_wdata = sc0_req_wdata; sel_sc_id = sc0_req_id; sel_sc_mask = sc0_req_mask;
+                    end else if (req_present[3]) begin
+                        sel_valid = 1'b1; sel_owner = OWNER_SC1; sel_we = sc1_req_rw; sel_addr = sc1_req_addr; sel_wdata = sc1_req_wdata; sel_sc_id = sc1_req_id; sel_sc_mask = sc1_req_mask;
+                    end
+                end
+
+                default: begin
+                    if (req_present[5]) begin
+                        sel_valid = 1'b1; sel_owner = OWNER_SC3; sel_we = sc3_req_rw; sel_addr = sc3_req_addr; sel_wdata = sc3_req_wdata; sel_sc_id = sc3_req_id; sel_sc_mask = sc3_req_mask;
+                    end else if (req_present[0]) begin
+                        sel_valid = 1'b1; sel_owner = OWNER_IC; sel_we = ic_req_we; sel_addr = ic_req_addr; sel_wdata = ic_req_wdata;
+                    end else if (req_present[1]) begin
+                        sel_valid = 1'b1; sel_owner = OWNER_DC; sel_we = dc_req_we; sel_addr = dc_req_addr; sel_wdata = dc_req_wdata;
+                    end else if (req_present[2]) begin
+                        sel_valid = 1'b1; sel_owner = OWNER_SC0; sel_we = sc0_req_rw; sel_addr = sc0_req_addr; sel_wdata = sc0_req_wdata; sel_sc_id = sc0_req_id; sel_sc_mask = sc0_req_mask;
+                    end else if (req_present[3]) begin
+                        sel_valid = 1'b1; sel_owner = OWNER_SC1; sel_we = sc1_req_rw; sel_addr = sc1_req_addr; sel_wdata = sc1_req_wdata; sel_sc_id = sc1_req_id; sel_sc_mask = sc1_req_mask;
+                    end else if (req_present[4]) begin
+                        sel_valid = 1'b1; sel_owner = OWNER_SC2; sel_we = sc2_req_rw; sel_addr = sc2_req_addr; sel_wdata = sc2_req_wdata; sel_sc_id = sc2_req_id; sel_sc_mask = sc2_req_mask;
+                    end
+                end
+            endcase
         end
     end
 
-    assign cur_addr_in_range = ((cur_addr + BEAT_BYTES - 1) < MEM_BYTES);
-    assign cur_addr_aligned  = (cur_addr[2:0] == 3'b000);
+    assign sel_addr_in_range = ((sel_addr + BEAT_BYTES - 1) < MEM_BYTES);
+    assign sel_addr_aligned  = (sel_addr[2:0] == 3'b000);
 
-    // ------------------------------------------------------------
-    // Combinational 64-bit read assembly
-    // 0-cycle read behavior
-    // ------------------------------------------------------------
     always_comb begin
-        cur_read_word = 64'h0;
-
-        if (cur_valid && !cur_we && cur_addr_in_range && cur_addr_aligned) begin
-            if (BIG_ENDIAN) begin
-                cur_read_word = {
-                    mem[cur_addr + 0],
-                    mem[cur_addr + 1],
-                    mem[cur_addr + 2],
-                    mem[cur_addr + 3],
-                    mem[cur_addr + 4],
-                    mem[cur_addr + 5],
-                    mem[cur_addr + 6],
-                    mem[cur_addr + 7]
-                };
-            end
-            else begin
-                cur_read_word = {
-                    mem[cur_addr + 7],
-                    mem[cur_addr + 6],
-                    mem[cur_addr + 5],
-                    mem[cur_addr + 4],
-                    mem[cur_addr + 3],
-                    mem[cur_addr + 2],
-                    mem[cur_addr + 1],
-                    mem[cur_addr + 0]
-                };
-            end
+        sel_read_word = 64'h0;
+        if (sel_valid && !sel_we && sel_addr_in_range && sel_addr_aligned) begin
+            sel_read_word = assemble_read64(sel_addr);
         end
     end
 
-    // ------------------------------------------------------------
-    // Response generation
-    //
-    // Read:
-    //   resp_hit goes high immediately when the selected/locked read is valid
-    //
-    // Write:
-    //   resp_hit also goes high immediately as an acknowledge, but
-    //   memory contents update on the next clock edge.
-    // ------------------------------------------------------------
+    // -----------------------------
+    // outputs
+    // -----------------------------
     always_comb begin
         ic_resp_rdata = 64'h0;
         ic_resp_hit   = 1'b0;
         dc_resp_rdata = 64'h0;
         dc_resp_hit   = 1'b0;
 
-        if (cur_valid && cur_addr_in_range && cur_addr_aligned) begin
-            if (cur_is_dc) begin
-                dc_resp_hit = 1'b1;
-                if (!cur_we) begin
-                    dc_resp_rdata = cur_read_word;
+        sc0_resp_rdata = 64'h0; sc0_resp_hit = 1'b0; sc0_resp_id = 8'h00; sc0_resp_rw = 1'b0; sc0_stall_out = 1'b0;
+        sc1_resp_rdata = 64'h0; sc1_resp_hit = 1'b0; sc1_resp_id = 8'h00; sc1_resp_rw = 1'b0; sc1_stall_out = 1'b0;
+        sc2_resp_rdata = 64'h0; sc2_resp_hit = 1'b0; sc2_resp_id = 8'h00; sc2_resp_rw = 1'b0; sc2_stall_out = 1'b0;
+        sc3_resp_rdata = 64'h0; sc3_resp_hit = 1'b0; sc3_resp_id = 8'h00; sc3_resp_rw = 1'b0; sc3_stall_out = 1'b0;
+
+        // stall non-selected scpads immediately when they request
+        if (!(sel_valid && sel_owner == OWNER_SC0)) sc0_stall_out = 1'b1;
+        if (!(sel_valid && sel_owner == OWNER_SC1)) sc1_stall_out = 1'b1;
+        if (!(sel_valid && sel_owner == OWNER_SC2)) sc2_stall_out = 1'b1;
+        if (!(sel_valid && sel_owner == OWNER_SC3)) sc3_stall_out = 1'b1;
+
+        if (sel_valid && sel_addr_in_range && sel_addr_aligned) begin
+            unique case (sel_owner)
+                OWNER_IC: begin
+                    ic_resp_hit = 1'b1;
+                    if (!sel_we) ic_resp_rdata = sel_read_word;
                 end
-            end
-            else begin
-                ic_resp_hit = 1'b1;
-                if (!cur_we) begin
-                    ic_resp_rdata = cur_read_word;
+
+                OWNER_DC: begin
+                    dc_resp_hit = 1'b1;
+                    if (!sel_we) dc_resp_rdata = sel_read_word;
                 end
-            end
+
+                OWNER_SC0: begin
+                    if (!sc0_stall_in) begin
+                        sc0_resp_hit = 1'b1;
+                        sc0_resp_id  = sel_sc_id;
+                        sc0_resp_rw  = sel_we;
+                        if (!sel_we) sc0_resp_rdata = sel_read_word;
+                    end
+                end
+
+                OWNER_SC1: begin
+                    if (!sc1_stall_in) begin
+                        sc1_resp_hit = 1'b1;
+                        sc1_resp_id  = sel_sc_id;
+                        sc1_resp_rw  = sel_we;
+                        if (!sel_we) sc1_resp_rdata = sel_read_word;
+                    end
+                end
+
+                OWNER_SC2: begin
+                    if (!sc2_stall_in) begin
+                        sc2_resp_hit = 1'b1;
+                        sc2_resp_id  = sel_sc_id;
+                        sc2_resp_rw  = sel_we;
+                        if (!sel_we) sc2_resp_rdata = sel_read_word;
+                    end
+                end
+
+                OWNER_SC3: begin
+                    if (!sc3_stall_in) begin
+                        sc3_resp_hit = 1'b1;
+                        sc3_resp_id  = sel_sc_id;
+                        sc3_resp_rw  = sel_we;
+                        if (!sel_we) sc3_resp_rdata = sel_read_word;
+                    end
+                end
+
+                default: begin
+                end
+            endcase
         end
     end
 
-    // ------------------------------------------------------------
-    // Sequential state update
-    //
-    // - writes happen here
-    // - read burst ownership / beat index advance here
-    // - rr_turn updates here
-    // ------------------------------------------------------------
+    // -----------------------------
+    // state / writes / rr rotation
+    // -----------------------------
     always @(posedge clk or negedge rst_n) begin
         if (!rst_n) begin
-            rr_turn         <= 1'b0;
+            rr_turn         <= 3'd0;
             burst_active    <= 1'b0;
             burst_owner     <= OWNER_IC;
             burst_base_addr <= '0;
             burst_beat_idx  <= 3'd0;
             burst_contended <= 1'b0;
-        end
-        else begin
+        end else begin
             if (burst_active) begin
-                // Advance one beat per cycle.
-                // Since there is no resp_ready input, we assume the owner
-                // accepts one beat every clock.
-                if (cur_addr_in_range && cur_addr_aligned) begin
+                if (sel_addr_in_range && sel_addr_aligned) begin
                     if (burst_beat_idx == 3'd7) begin
                         burst_active <= 1'b0;
                         burst_beat_idx <= 3'd0;
-
                         if (burst_contended) begin
-                            rr_turn <= ~rr_turn;
+                            if (rr_turn == 3'd5) rr_turn <= 3'd0;
+                            else                 rr_turn <= rr_turn + 3'd1;
                         end
-                    end
-                    else begin
+                    end else begin
                         burst_beat_idx <= burst_beat_idx + 3'd1;
                     end
                 end
-            end
-            else begin
-                // No burst active: handle newly arbitrated transaction
-                if (idle_sel_valid && cur_addr_in_range && cur_addr_aligned) begin
-                    if (idle_sel_we) begin
-                        // Single-beat 64-bit write
-                        if (BIG_ENDIAN) begin
-                            mem[cur_addr + 0] <= cur_wdata[63:56];
-                            mem[cur_addr + 1] <= cur_wdata[55:48];
-                            mem[cur_addr + 2] <= cur_wdata[47:40];
-                            mem[cur_addr + 3] <= cur_wdata[39:32];
-                            mem[cur_addr + 4] <= cur_wdata[31:24];
-                            mem[cur_addr + 5] <= cur_wdata[23:16];
-                            mem[cur_addr + 6] <= cur_wdata[15:8];
-                            mem[cur_addr + 7] <= cur_wdata[7:0];
-                        end
-                        else begin
-                            mem[cur_addr + 0] <= cur_wdata[7:0];
-                            mem[cur_addr + 1] <= cur_wdata[15:8];
-                            mem[cur_addr + 2] <= cur_wdata[23:16];
-                            mem[cur_addr + 3] <= cur_wdata[31:24];
-                            mem[cur_addr + 4] <= cur_wdata[39:32];
-                            mem[cur_addr + 5] <= cur_wdata[47:40];
-                            mem[cur_addr + 6] <= cur_wdata[55:48];
-                            mem[cur_addr + 7] <= cur_wdata[63:56];
+            end else begin
+                if (sel_valid && sel_addr_in_range && sel_addr_aligned) begin
+                    if (is_scpad_owner(sel_owner)) begin
+                        // scpad access is one serviced beat per cycle while selected;
+                        // no lock beyond that cycle
+                        if (sel_we) begin
+                            if (BIG_ENDIAN) begin
+                                if (mask_lane_enabled(sel_sc_mask, 3)) begin
+                                    mem[sel_addr + 0] <= sel_wdata[63:56];
+                                    mem[sel_addr + 1] <= sel_wdata[55:48];
+                                end
+                                if (mask_lane_enabled(sel_sc_mask, 2)) begin
+                                    mem[sel_addr + 2] <= sel_wdata[47:40];
+                                    mem[sel_addr + 3] <= sel_wdata[39:32];
+                                end
+                                if (mask_lane_enabled(sel_sc_mask, 1)) begin
+                                    mem[sel_addr + 4] <= sel_wdata[31:24];
+                                    mem[sel_addr + 5] <= sel_wdata[23:16];
+                                end
+                                if (mask_lane_enabled(sel_sc_mask, 0)) begin
+                                    mem[sel_addr + 6] <= sel_wdata[15:8];
+                                    mem[sel_addr + 7] <= sel_wdata[7:0];
+                                end
+                            end else begin
+                                if (mask_lane_enabled(sel_sc_mask, 0)) begin
+                                    mem[sel_addr + 0] <= sel_wdata[7:0];
+                                    mem[sel_addr + 1] <= sel_wdata[15:8];
+                                end
+                                if (mask_lane_enabled(sel_sc_mask, 1)) begin
+                                    mem[sel_addr + 2] <= sel_wdata[23:16];
+                                    mem[sel_addr + 3] <= sel_wdata[31:24];
+                                end
+                                if (mask_lane_enabled(sel_sc_mask, 2)) begin
+                                    mem[sel_addr + 4] <= sel_wdata[39:32];
+                                    mem[sel_addr + 5] <= sel_wdata[47:40];
+                                end
+                                if (mask_lane_enabled(sel_sc_mask, 3)) begin
+                                    mem[sel_addr + 6] <= sel_wdata[55:48];
+                                    mem[sel_addr + 7] <= sel_wdata[63:56];
+                                end
+                            end
                         end
 
-                        if (idle_sel_contended) begin
-                            rr_turn <= ~rr_turn;
+                        // rotate every serviced scpad beat so other requesters can interleave
+                        if (rr_turn == 3'd5) rr_turn <= 3'd0;
+                        else                 rr_turn <= rr_turn + 3'd1;
+                    end else begin
+                        // icache / dcache behavior unchanged
+                        if (sel_we) begin
+                            if (BIG_ENDIAN) begin
+                                mem[sel_addr + 0] <= sel_wdata[63:56];
+                                mem[sel_addr + 1] <= sel_wdata[55:48];
+                                mem[sel_addr + 2] <= sel_wdata[47:40];
+                                mem[sel_addr + 3] <= sel_wdata[39:32];
+                                mem[sel_addr + 4] <= sel_wdata[31:24];
+                                mem[sel_addr + 5] <= sel_wdata[23:16];
+                                mem[sel_addr + 6] <= sel_wdata[15:8];
+                                mem[sel_addr + 7] <= sel_wdata[7:0];
+                            end else begin
+                                mem[sel_addr + 0] <= sel_wdata[7:0];
+                                mem[sel_addr + 1] <= sel_wdata[15:8];
+                                mem[sel_addr + 2] <= sel_wdata[23:16];
+                                mem[sel_addr + 3] <= sel_wdata[31:24];
+                                mem[sel_addr + 4] <= sel_wdata[39:32];
+                                mem[sel_addr + 5] <= sel_wdata[47:40];
+                                mem[sel_addr + 6] <= sel_wdata[55:48];
+                                mem[sel_addr + 7] <= sel_wdata[63:56];
+                            end
+                            if (sel_contended) begin
+                                if (rr_turn == 3'd5) rr_turn <= 3'd0;
+                                else                 rr_turn <= rr_turn + 3'd1;
+                            end
+                        end else begin
+                            // fixed 8-beat read burst for icache/dcache
+                            burst_active    <= 1'b1;
+                            burst_owner     <= sel_owner;
+                            burst_base_addr <= sel_addr;
+                            burst_beat_idx  <= 3'd1; // beat 0 already visible now
+                            burst_contended <= sel_contended;
                         end
-                    end
-                    else begin
-                        // Start 8-beat read burst
-                        burst_active    <= 1'b1;
-                        burst_owner     <= idle_sel_is_dc ? OWNER_DC : OWNER_IC;
-                        burst_base_addr <= idle_sel_addr;
-                        burst_beat_idx  <= 3'd1;  // beat 0 already visible this cycle
-                        burst_contended <= idle_sel_contended;
                     end
                 end
             end
         end
     end
 
-    // ------------------------------------------------------------
-    // Dump memory on exit
-    // Dumps 8 bytes per line for readability
-    // ------------------------------------------------------------
+    // -----------------------------
+    // dump on exit
+    // -----------------------------
     final begin
         integer fd;
         integer idx;
@@ -347,17 +542,15 @@ module sim_ram_rr #(
 
         fd = $fopen(dump_file_name, "w");
         if (fd == 0) begin
-            $error("[sim_ram_rr_burst64] Failed to open dump file: %s", dump_file_name);
-        end
-        else begin
+            $error("[sim_ram_rr_burst64_4scpad] Failed to open dump file: %s", dump_file_name);
+        end else begin
             for (idx = 0; idx < MEM_BYTES; idx += 8) begin
                 if (idx + 7 < MEM_BYTES) begin
                     $fwrite(fd, "%02x %02x %02x %02x %02x %02x %02x %02x\n",
                         mem[idx + 0], mem[idx + 1], mem[idx + 2], mem[idx + 3],
                         mem[idx + 4], mem[idx + 5], mem[idx + 6], mem[idx + 7]
                     );
-                end
-                else begin
+                end else begin
                     for (j = idx; j < MEM_BYTES; j++) begin
                         $fwrite(fd, "%02x ", mem[j]);
                     end
@@ -365,7 +558,7 @@ module sim_ram_rr #(
                 end
             end
             $fclose(fd);
-            $display("[sim_ram_rr_burst64] Memory dumped to %s", dump_file_name);
+            $display("[sim_ram_rr_burst64_4scpad] Memory dumped to %s", dump_file_name);
         end
     end
 

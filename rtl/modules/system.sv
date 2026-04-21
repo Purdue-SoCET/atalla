@@ -30,7 +30,21 @@ module system #()
     input  logic         mem_resp_hit_i,
 
     //scpad signals
-    input logic dram_scpad_stall [3:0],
+    input logic dram_scpad_stall [3:0], //dram stalls the scpad
+    output logic scpad_dram_stall [3:0], //scpad stalls the dram
+
+    //to dram
+    output dram_req_t scpad_0_req,
+    output dram_req_t scpad_1_req,
+    output dram_req_t scpad_2_req,
+    output dram_req_t scpad_3_req,
+
+    //from dram
+    input dram_res_t scpad_0_res,
+    input dram_res_t scpad_1_res,
+    input dram_res_t scpad_2_res,
+    input dram_res_t scpad_3_res,
+
 
     output logic halt,
     output logic dp_out_flushed
@@ -83,6 +97,17 @@ module system #()
 
     //dram to scpad
     assign sif.dram_be_stall = dram_scpad_stall;
+    assign scpad_dram_stall = sif.be_dram_stall;
+
+    assign scpad_0_req = sif.be_dram_req[0];
+    assign scpad_1_req = sif.be_dram_req[1];
+    assign scpad_2_req = sif.be_dram_req[2];
+    assign scpad_3_req = sif.be_dram_req[3];
+
+    assign sif.dram_be_res[0] = scpad_0_res;
+    assign sif.dram_be_res[1] = scpad_1_res;
+    assign sif.dram_be_res[2] = scpad_2_res;
+    assign sif.dram_be_res[3] = scpad_3_res;
 
 
     scheduler_core CORE(

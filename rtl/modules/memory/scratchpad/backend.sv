@@ -20,15 +20,10 @@ module backend #(parameter logic [scpad_pkg::SCPAD_ID_WIDTH-1:0] IDX = '0) (
     logic [DRAM_VECTOR_MASK_LANES-1:0] dram_vector_mask;
     logic initial_request_done, nxt_initial_request_done;
 
-    // Accumulated DRAM row base address — replaces multiply with iterative add
     logic [DRAM_ADDR_WIDTH-1:0] row_base_addr, nxt_row_base_addr;
 
-    // Busy register for valid/ready handshake
     logic busy, nxt_busy;
 
-    // Latched request — captured on acceptance, used for the entire transfer.
-    // This decouples the in-flight SDMA from sched_req, so the scheduler can
-    // deassert valid (or even change sched_req) without affecting us.
     sched_req_t latched_req, nxt_latched_req;
 
     always_ff @(posedge bshif.clk, negedge bshif.n_rst ) begin
@@ -54,7 +49,6 @@ module backend #(parameter logic [scpad_pkg::SCPAD_ID_WIDTH-1:0] IDX = '0) (
     scpad_if be_internal(bbif.clk, bbif.n_rst);
 
     sched_req_t effective_req;
-    // Use latched request once busy; use incoming request during acceptance cycle
     assign effective_req = busy ? latched_req : bshif.sched_req[IDX];
 
     xbar_desc_t be_identity_xbar;
@@ -72,13 +66,12 @@ module backend #(parameter logic [scpad_pkg::SCPAD_ID_WIDTH-1:0] IDX = '0) (
     assign be_internal.be_dr_req_q_in.sched_valid = busy || (bshif.sched_req[IDX].valid && !busy);
     assign be_internal.be_dr_req_q_in.initial_request_done = initial_request_done;
 
-    // be_id: extracted from DRAM response ID for loads, or uuid for stores
-    // Driven as continuous assign so downstream continuous assigns see the right value
     assign be_id = effective_req.write ? uuid : bdrif.dram_be_res[IDX].id[7:3];
 
     sram_write_latch be_sr_wr_latch(.sr_wr_l(be_internal));
     assign be_internal.sr_wr_l_in.dram_id = bdrif.dram_be_res[IDX].id;
     assign be_internal.sr_wr_l_in.dram_res_valid = bdrif.dram_be_res[IDX].valid;
+    assign be_internal.sr_wr_l_in.dram_vector_mask = bdrif.dram_be_res[IDX].dram_vector_mask;
     assign be_internal.sr_wr_l_in.spad_addr = effective_req.spad_addr + (be_id << ROW_SHIFT);
     assign be_internal.sr_wr_l_in.xbar = be_identity_xbar;
     assign be_internal.sr_wr_l_in.dram_rddata = bdrif.dram_be_res[IDX].rdata;
@@ -103,7 +96,6 @@ module backend #(parameter logic [scpad_pkg::SCPAD_ID_WIDTH-1:0] IDX = '0) (
         nxt_busy = busy;
         nxt_latched_req = latched_req;
 
-        // Default sdma_done outputs (one-cycle pulse on completion)
         bshif.sdma_done[IDX]      = 1'b0;
         bshif.sdma_done_req[IDX]  = latched_req;
         bshif.sched_accepted[IDX] = 1'b0;
@@ -111,13 +103,10 @@ module backend #(parameter logic [scpad_pkg::SCPAD_ID_WIDTH-1:0] IDX = '0) (
         be_internal.be_dr_req_q_in.sram_res_valid = 0;
         be_internal.be_dr_req_q_in.sram_rdata = 0;
         
-        // Process when busy (continuing), or accepting a new request (valid && !busy)
         if(busy || (bshif.sched_req[IDX].valid && !busy)) begin
             if(!busy) begin
                 nxt_busy = 1'b1;
-                // Latch the incoming request for the duration of the transfer
                 nxt_latched_req = bshif.sched_req[IDX];
-                // Pulse acceptance signal so the scheduler knows we took the request
                 bshif.sched_accepted[IDX] = 1'b1;
             end
             
@@ -138,7 +127,6 @@ module backend #(parameter logic [scpad_pkg::SCPAD_ID_WIDTH-1:0] IDX = '0) (
             be_internal.be_dr_req_q_in.id = uuid;
             be_internal.be_dr_req_q_in.sub_id = sub_uuid;
             
-            // DRAM address: dram_addr is the base, row_base_addr accumulates the row offset
             be_internal.be_dr_req_q_in.dram_addr = effective_req.dram_addr + row_base_addr + {sub_uuid, 2'b00};
 
             be_internal.be_dr_req_q_in.dram_vector_mask = dram_vector_mask;
@@ -149,9 +137,7 @@ module backend #(parameter logic [scpad_pkg::SCPAD_ID_WIDTH-1:0] IDX = '0) (
                     nxt_sub_uuid = 0;
                     if(effective_req.write == 1'b0) begin 
                         nxt_uuid = uuid + 1;
-                        // Advance row offset by full matrix stride (full_num_cols is 0-based)
                         nxt_row_base_addr = row_base_addr + effective_req.full_num_cols + 1;
-                        // Mark all DRAM requests sent only after the last burst of the last row
                         if(uuid == effective_req.num_rows) begin
                             nxt_initial_request_done = 1'b1;
                         end
@@ -174,6 +160,8 @@ module backend #(parameter logic [scpad_pkg::SCPAD_ID_WIDTH-1:0] IDX = '0) (
             bdrif.be_dram_req[IDX].dram_addr = be_internal.be_dr_req_q_out.dram_req.dram_addr;
             bdrif.be_dram_req[IDX].dram_vector_mask = be_internal.be_dr_req_q_out.dram_req.dram_vector_mask;
             bdrif.be_dram_req[IDX].wdata = 0;
+            bdrif.be_dram_req[IDX].num_request = num_request;
+            bdrif.be_dram_req[IDX].w_last = be_internal.be_dr_req_q_out.burst_complete;
             bdrif.be_dram_stall[IDX] = be_internal.sr_wr_l_out.latch_full;
 
             if(effective_req.write == 1'b1) begin
@@ -195,7 +183,6 @@ module backend #(parameter logic [scpad_pkg::SCPAD_ID_WIDTH-1:0] IDX = '0) (
 
                 if(be_internal.be_dr_req_q_out.transaction_complete == 1'b1) begin
                     nxt_schedule_request_counter = schedule_request_counter + 1;
-                    // Advance row offset by full matrix stride (full_num_cols is 0-based)
                     nxt_row_base_addr = row_base_addr + effective_req.full_num_cols + 1;
                 end
                 
@@ -206,21 +193,16 @@ module backend #(parameter logic [scpad_pkg::SCPAD_ID_WIDTH-1:0] IDX = '0) (
                 bdrif.be_dram_req[IDX].write = be_internal.be_dr_req_q_out.dram_req.write;
                 bdrif.be_dram_req[IDX].id = be_internal.be_dr_req_q_out.dram_req.id;
 
-                // DRAM address: dram_addr is the base, row_base_addr accumulates the row offset
                 bdrif.be_dram_req[IDX].dram_addr = effective_req.dram_addr + row_base_addr + {sub_uuid, 2'b00};
 
                 bdrif.be_dram_req[IDX].dram_vector_mask = dram_vector_mask;
                 bdrif.be_dram_req[IDX].wdata = be_internal.be_dr_req_q_out.dram_req.wdata;
+                bdrif.be_dram_req[IDX].num_request = num_request;
+                bdrif.be_dram_req[IDX].w_last = be_internal.be_dr_req_q_out.burst_complete;
                 bdrif.be_dram_stall[IDX] = 0;
             end
 
-            // Completion: split by load/store to prevent premature completion on loads.
-            // For loads: transaction_complete (all DRAM responses received) can fire before the
-            // last sram_write_req_latched drains from the write latch. Only complete on the
-            // actual last SRAM write.
-            // For stores: transaction_complete correctly indicates the last DRAM write is done.
             if(effective_req.write == 1'b1) begin
-                // Store completion
                 if((schedule_request_counter == effective_req.num_rows) && (be_internal.be_dr_req_q_out.transaction_complete == 1'b1)) begin
                     nxt_busy = 1'b0;
                     nxt_uuid = 0;
@@ -228,12 +210,10 @@ module backend #(parameter logic [scpad_pkg::SCPAD_ID_WIDTH-1:0] IDX = '0) (
                     nxt_schedule_request_counter = 0;
                     nxt_initial_request_done = 0;
                     nxt_row_base_addr = 0;
-                    // Pulse sdma_done with the latched request fields
                     bshif.sdma_done[IDX]     = 1'b1;
                     bshif.sdma_done_req[IDX] = latched_req;
                 end
             end else begin
-                // Load completion — only on the last SRAM write
                 if((schedule_request_counter == effective_req.num_rows) && (be_internal.sr_wr_l_out.sram_write_req_latched == 1'b1)) begin
                     nxt_busy = 1'b0;
                     nxt_uuid = 0;
@@ -241,14 +221,12 @@ module backend #(parameter logic [scpad_pkg::SCPAD_ID_WIDTH-1:0] IDX = '0) (
                     nxt_schedule_request_counter = 0;
                     nxt_initial_request_done = 0;
                     nxt_row_base_addr = 0;
-                    // Pulse sdma_done with the latched request fields
                     bshif.sdma_done[IDX]     = 1'b1;
                     bshif.sdma_done_req[IDX] = latched_req;
                 end
             end
         end
 
-        // Drive stall from nxt_busy so it reacts immediately on acceptance
         bshif.sched_stall[IDX] = nxt_busy;
     end
 
