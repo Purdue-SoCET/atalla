@@ -300,17 +300,23 @@ if __name__ == "__main__":
     nop = {"opcode": 0b0110001, "rs1": 0, "rd": 0, "rs2": 0}
     halt = {"opcode": 0b0110010, "rs1": 0, "rd": 0, "rs2": 0}
     st_wd_200 = {"opcode": 0b0101010, "rs1": 0, "rd": 1, "imm12": 200}
-    st_wd_204 = {"opcode": 0b0101010, "rs1": 0, "rd": 3, "imm12": 204}
-    st_wd_208 = {"opcode": 0b0101010, "rs1": 0, "rd": 2, "imm12": 208}
-    addi_1 = {"opcode": 0b0010110, "rs1": 0, "imm12": 60, "rd": 1}
-    addi_2 = {"opcode": 0b0010110, "rs1": 0, "imm12": 1, "rd": 3}
-    jal = {"opcode": 0b0101101, "rd": 2, "imm25": 15}
 
-    print(f"st_wd_200 {encode_instruction(st_wd_200)}")
-    print(f"st_wd_204 {encode_instruction(st_wd_204)}")
-    print(f"st_wd_208 {encode_instruction(st_wd_208)}")
+
+    #reg 1 of sdma will be 0
+
+    #for reg 2 of sdma
+    addi_1 = {"opcode": 0b0010110, "rs1": 0, "imm12": 200, "rd": 2}
+
+    #for reg 3 of sdma
+    lui = {"opcode": 0b0110000, "imm25": 8134656, "rd": 3}
+    addi_2 = {"opcode": 0b0010110, "rs1": 3, "imm12": 1, "rd": 3}
+
+    #sdma
+    sdma = {"opcode": 0b1000110, "rs3": 3, "rs2": 2, "rs1": 1}
+
     print(f"addi_1 {encode_instruction(addi_1)}")
+    print(f"lui {encode_instruction(lui)}")
     print(f"addi_2 {encode_instruction(addi_2)}")
-    print(f"jal {encode_instruction(jal)}")
+    print(f"sdma {encode_instruction(sdma)}")
     print(f"nop {encode_instruction(nop)}")
     print(f"halt {encode_instruction(halt)}")
