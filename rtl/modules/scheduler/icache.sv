@@ -1,5 +1,7 @@
 `include "atalla_isa_types.vh"
 
+import atalla_isa_pkg::*;
+
 module icache (
     input logic CLK, nRST,
     // System control

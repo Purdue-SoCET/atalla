@@ -1,7 +1,15 @@
 `include "atalla_isa_types.vh"
+`include "vector_pkg.vh"
+`include "vector_if.vh"
+`include "gsau_control_unit_if.vh"
+`include "scheduler_core_if.vh"
+`include "scpad_params.svh"
 
 import scheduler_pkg::*;
 import atalla_isa_pkg::*;
+import vector_pkg::*;
+import scpad_pkg::*;
+import inst_parser_dpi_pkg::*;
 
 module system #()
 (
@@ -25,6 +33,11 @@ module system #()
     output logic dp_out_flushed
 );
 
+    scheduler_core_if scif ();
+    vector_if vif();
+    gsau_control_unit_if gsauif();
+    scpad_if sif(CLK, nRST);
+
     logic mem_in;
     logic [31:0] mem_in_addr;
     logic mem_in_rw_mode;
@@ -42,9 +55,19 @@ module system #()
     logic imemREN;
     word_t imemaddr;
 
+    assign vif.lanes_in = scif.lanes_in;
+    assign vif.wb_ready_signals = scif.vector_if_wb_ready;
+    assign scif.vector_wb_in.vector_if_lanes_out = vif.lanes_out;
+
+    // always_comb begin
+    //     scif.vector_wb_in   = '0;
+    //     scif.SDMA_scalar_rs1s = '0;
+    //     scif.SDMA_scalar_WEN  = '0;
+    // end
+
 
     scheduler_core CORE(
-        .CLK(CLK), .nRST(nRST),
+        .CLK(CLK), .nRST(nRST), .scif(scif),
         //dcache
         .WEN(mem_in_rw_mode), .REN(),
         .mem_in_valid(mem_in),
@@ -62,8 +85,33 @@ module system #()
         .imemREN(imemREN),
         .imemaddr(imemaddr),
         //stuff
-        .ready(),
         .halt(halt)
+    );
+
+    vector_datapath vec_datapath (
+        .CLK    (CLK),
+        .nRST   (nRST),
+        .vif    (vif),
+        .sif    (sif),
+        .gsauif (gsauif)
+    );
+
+    scratchpad sp_inst (
+        .sif(sif)
+    );
+
+    sysarr_MEISSA_top sa_inst (
+        .clk    (CLK),
+        .nRST   (nRST),
+        .gsau_if(gsauif)
+    );
+
+    perf_monitor monitor (
+        .CLK(CLK),
+        .nRST(nRST),
+        .sif(sif),
+        .gsauif(gsauif),
+        .vif(vif)
     );
 
     lockup_free_cache DCACHE (

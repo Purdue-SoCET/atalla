@@ -1,12 +1,18 @@
+/*
+  Eric Villasenor
+  evillase@gmail.com
+
+  holds datapath and cache interface signals
+*/
 `ifndef DATAPATH_CACHE_IF_VH
 `define DATAPATH_CACHE_IF_VH
 
 // types
-`include "isa_types.vh"
+`include "atalla_isa_types.vh"
 
 interface datapath_cache_if;
   // import types
-  import isa_pkg::*;
+    import atalla_isa_pkg::*;
 
 // datapath signals
   // stop processing
@@ -16,8 +22,8 @@ interface datapath_cache_if;
   // hit and enable
   logic               ihit, imemready, imemREN;
   // instruction addr
-  word_t             imemload, imemaddr;
-
+  word_t             imemaddr;
+  instruction_packet_t imemload;
 // Dcache signals
   // hit, atomic and enables
   logic               dhit, datomic, dmemREN, dmemWEN, flushed;

@@ -237,11 +237,16 @@ module scheduler_core #(
     assign scalar_ex_if.stall = stall;
     assign scalar_ex_if.miss = miss;
     //to dcache
-    assign scif.WEN = scalar_ex_if.WEN;
-    assign scif.REN = scalar_ex_if.REN;
-    assign scif.mem_in_valid = scalar_ex_if.mem_in_valid;
-    assign scif.data_store = scalar_ex_if.data_store;
-    assign scif.data_addr = scalar_ex_if.data_addr;
+    // assign scif.WEN = scalar_ex_if.WEN;
+    // assign scif.REN = scalar_ex_if.REN;
+    // assign scif.mem_in_valid = scalar_ex_if.mem_in_valid;
+    // assign scif.data_store = scalar_ex_if.data_store;
+    // assign scif.data_addr = scalar_ex_if.data_addr;
+    assign WEN = scalar_ex_if.WEN;
+    assign REN = scalar_ex_if.REN;
+    assign mem_in_valid = scalar_ex_if.mem_in_valid;
+    assign data_store = scalar_ex_if.data_store;
+    assign data_addr = scalar_ex_if.data_addr;
     assign ready = decode_2_if.ready;
 
     assign datapath_cache_if.ihit = ihit;

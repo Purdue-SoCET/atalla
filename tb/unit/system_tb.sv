@@ -1,3 +1,5 @@
+`timescale 1ns/1ps
+
 module system_tb;
 
     localparam int ADDR_WIDTH = 32;
@@ -49,7 +51,7 @@ module system_tb;
     sim_ram_rr #(
         .ADDR_WIDTH (ADDR_WIDTH),
         .MEM_BYTES  (MEM_BYTES),
-        .INIT_FILE  ("tb/unit/mem_files/lui.hex"),
+        .INIT_FILE  ("tb/unit/mem_files/sdma_ld.hex"),
         .INIT_IS_HEX(1'b1),
         .DUMP_FILE  ("tb/unit/mem_files/final_mem.hex"),
         .BIG_ENDIAN (1'b0)
@@ -78,9 +80,11 @@ module system_tb;
         @(posedge CLK);
         nRST = 1'b1;
 
-        while(dcache_flushed != 1'b1) begin
-            @(posedge CLK);
-        end
+        // while(dcache_flushed != 1'b1) begin
+        //     @(posedge CLK);
+        // end
+
+        repeat(200) @(posedge CLK);
 
         @(posedge CLK);
         @(posedge CLK);
