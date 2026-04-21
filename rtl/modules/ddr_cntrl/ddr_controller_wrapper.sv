@@ -189,7 +189,7 @@ module ddr_controller_wrapper (
     signal_gen SG (
         .CLK  (CLK),
         .nRST (nRST),
-        .sgif (cif.signal_gen)
+        .sig  (cif.signal_gen)
     );
 
     data_transfer data_trans (

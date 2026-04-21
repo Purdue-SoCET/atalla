@@ -428,14 +428,11 @@ modport signal_gen (
         output ACT_n, RAS_n_A16, CAS_n_A15, WE_n_A14, ALERT_n, PARITY, RESET_n, TEN, CS_n, CKE, ODT, C, BG, BA, ADDR, ADDR_17, PWR, VREF_CA, VREF_DQ, ZQ
     );
 
-modport data_trans (
+modport data_transfer (
         input wr_en, rd_en, clear, memstore, COL_choice,
         inout DQ, DQS_t, DQS_c, DM_n, // same names as above, so do not need to map
         output memload, edge_flag
     );
-
-
-
 
 endinterface
 

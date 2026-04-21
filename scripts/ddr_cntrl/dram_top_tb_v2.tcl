@@ -42,6 +42,7 @@ set DESIGN_SRCS [list \
     $PROJ_ROOT/rtl/modules/ddr_cntrl/frontend_arb_nb.sv \
     $PROJ_ROOT/rtl/modules/ddr_cntrl/frontend_wrapper.sv \
     $PROJ_ROOT/rtl/modules/ddr_cntrl/signal_gen.sv \
+    $PROJ_ROOT/rtl/modules/ddr_cntrl/data_transfer.sv \
     $PROJ_ROOT/rtl/modules/ddr_cntrl/ddr_controller_wrapper.sv \
     $PROJ_ROOT/rtl/modules/common/general/fifo.sv \
 ]

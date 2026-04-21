@@ -23,6 +23,28 @@ module nb_barb(
         CLK, nRST, selected_bank_ready, en_S , tCCD_S[11:0], rollover_S 
     );
 
+    //init fsm
+    ddr_controller_if init_cif();
+
+    // init_start_reg: high on reset release so init begins immediately;
+    // cleared once init_done fires to prevent re-initialization.
+    logic init_start_reg;
+    always_ff @(posedge CLK, negedge nRST) begin
+        if (!nRST)
+            init_start_reg <= 1'b1;
+        else if (init_cif.init_done)
+            init_start_reg <= 1'b0;
+    end
+    assign init_cif.init_start = init_start_reg;
+
+    init_state INIT_FSM (
+        .CLK  (CLK),
+        .nRST (nRST),
+        .isif (init_cif.init_ctrl)
+    );
+
+    assign barb.init_done = init_cif.init_done;
+
     //tCCD timers enable logic. Also tracks previous command
     fsm_t prev_cmd;
     logic n_en_L, n_en_S;
@@ -85,6 +107,8 @@ module nb_barb(
     logic [2*BANK_NUM-1:0] be_arb_next; 
     always_ff @(posedge CLK, negedge nRST) begin
 	if(!nRST)
+		barb.be_arb <= 'b0;
+	else if (!init_cif.init_done)
 		barb.be_arb <= 'b0;
 	else 
 		barb.be_arb <= (be_arb_next[2 * BANK_NUM - 1:BANK_NUM] | be_arb_next[BANK_NUM-1:0]);	
@@ -221,8 +245,18 @@ module nb_barb(
 		barb.BA0 <= 'b0;
 		barb.R0 <= 'b0;
 		barb.C0 <= 'b0;
-	    end
-	    else begin
+	    end else if (!init_cif.init_done) begin
+		// During initialization: forward init FSM state to signal_gen,
+		// suppress refresh requests and address fields.
+		barb.ref_re <= 1'b0;
+		barb.state  <= init_cif.init_state;
+		barb.nstate <= init_cif.next_init_state;
+		barb.RA0 <= 'b0;
+		barb.BG0 <= 'b0;
+		barb.BA0 <= 'b0;
+		barb.R0 <= 'b0;
+		barb.C0 <= 'b0;
+	    end else begin
 		barb.ref_re <= ref_re_next;
 		barb.state <= state_next;
 		barb.nstate <= IDLE;
