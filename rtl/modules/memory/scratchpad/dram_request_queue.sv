@@ -79,7 +79,7 @@ module dram_request_queue #(parameter int DEPTH = 32) (scpad_if.backend_dram_req
             end
         end
 
-        if((be_dr_req_q.be_dr_req_q_in.dram_be_stall == 1'b0) && !fifo_empty) begin
+        if (!fifo_empty) begin
             be_dr_req_q.be_dr_req_q_out.dram_req.valid = dram_req_latch_block[head_idx].valid;
             be_dr_req_q.be_dr_req_q_out.dram_req.write = dram_req_latch_block[head_idx].write;
             be_dr_req_q.be_dr_req_q_out.dram_req.id = dram_req_latch_block[head_idx].id;
@@ -87,8 +87,6 @@ module dram_request_queue #(parameter int DEPTH = 32) (scpad_if.backend_dram_req
             be_dr_req_q.be_dr_req_q_out.dram_req.dram_vector_mask = dram_req_latch_block[head_idx].dram_vector_mask;
             be_dr_req_q.be_dr_req_q_out.dram_req.wdata = 0;
 
-            nxt_dram_head_latch_set = 0;
-            nxt_fifo_head = fifo_head + 1;
             if(dram_req_latch_block[head_idx].write == 1'b1) begin
                 be_dr_req_q.be_dr_req_q_out.dram_req.valid = 1'b1;
                 be_dr_req_q.be_dr_req_q_out.dram_req.write = 1'b1;
@@ -96,18 +94,24 @@ module dram_request_queue #(parameter int DEPTH = 32) (scpad_if.backend_dram_req
                 be_dr_req_q.be_dr_req_q_out.dram_req.dram_addr = dram_req_latch_block[head_idx].dram_addr;
                 be_dr_req_q.be_dr_req_q_out.dram_req.dram_vector_mask = dram_req_latch_block[head_idx].dram_vector_mask;
                 be_dr_req_q.be_dr_req_q_out.dram_req.wdata = dram_req_latch_block[head_idx].wdata[({DRAM_VECTOR_MASK_LANES_SHIFT'(0), request_completed_counter[MAX_REQ_WIDTH-1:0]} << DRAM_VECTOR_MASK_LANES_SHIFT) +: DRAM_VECTOR_MASK_LANES];
+            end
 
+            if (be_dr_req_q.be_dr_req_q_in.dram_be_stall == 1'b0) begin
+                nxt_dram_head_latch_set = 0;
+                nxt_fifo_head = fifo_head + 1;
 
-                nxt_dram_head_latch_set = dram_req_latch_block[head_idx];
-                nxt_fifo_head = fifo_head;
-                nxt_request_completed_counter = request_completed_counter + 1;
+                if(dram_req_latch_block[head_idx].write == 1'b1) begin
+                    nxt_dram_head_latch_set = dram_req_latch_block[head_idx];
+                    nxt_fifo_head = fifo_head;
+                    nxt_request_completed_counter = request_completed_counter + 1;
 
-                be_dr_req_q.be_dr_req_q_out.burst_complete = 1'b1;
+                    be_dr_req_q.be_dr_req_q_out.burst_complete = 1'b1;
 
-                if(request_completed_counter == be_dr_req_q.be_dr_req_q_in.num_request) begin
-                    nxt_dram_head_latch_set = 0; 
-                    nxt_fifo_head = fifo_head + 1;
-                    be_dr_req_q.be_dr_req_q_out.transaction_complete = 1'b1;
+                    if(request_completed_counter == be_dr_req_q.be_dr_req_q_in.num_request) begin
+                        nxt_dram_head_latch_set = 0; 
+                        nxt_fifo_head = fifo_head + 1;
+                        be_dr_req_q.be_dr_req_q_out.transaction_complete = 1'b1;
+                    end
                 end
             end
         end

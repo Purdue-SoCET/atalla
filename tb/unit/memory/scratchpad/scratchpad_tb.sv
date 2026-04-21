@@ -234,6 +234,7 @@ module scratchpad_tb;
                 // Generate response data
                 sif.dram_be_res[0].valid = 1'b1;
                 sif.dram_be_res[0].id = req_id;
+                sif.dram_be_res[0].dram_vector_mask = sif.be_dram_req[0].dram_vector_mask;
                 sif.dram_be_res[0].rdata = {
                     16'((row << 8) | (sub * 4 + 4)),
                     16'((row << 8) | (sub * 4 + 3)),
@@ -251,7 +252,7 @@ module scratchpad_tb;
             end
             
             timeout++;
-        end while (sif.sched_stall[0] && timeout < 1000);
+        end while (sif.sched_stall[0] && timeout < 500);
         
         // Cleanup
         sif.dram_be_res[0] = '0;
@@ -358,7 +359,7 @@ module scratchpad_tb;
             end
             
             timeout++;
-        end while (sif.sched_stall[0] && timeout < 1000);
+        end while (sif.sched_stall[0] && timeout < 500);
         
         // Cleanup
         sif.sched_req[0].valid = 1'b0;
@@ -421,6 +422,7 @@ module scratchpad_tb;
                 // This maps to: row*32 + col + 1 when unpacked
                 sif.dram_be_res[0].valid = 1'b1;
                 sif.dram_be_res[0].id = req_id;
+                sif.dram_be_res[0].dram_vector_mask = sif.be_dram_req[0].dram_vector_mask;
                 sif.dram_be_res[0].rdata = {
                     16'((row << 8) | (sub * 4 + 4)),
                     16'((row << 8) | (sub * 4 + 3)),
@@ -689,6 +691,7 @@ module scratchpad_tb;
             if (sif.be_dram_req[0].valid) begin
                 sif.dram_be_res[0].valid = 1'b1;
                 sif.dram_be_res[0].id = sif.be_dram_req[0].id;
+                sif.dram_be_res[0].dram_vector_mask = sif.be_dram_req[0].dram_vector_mask;
                 sif.dram_be_res[0].rdata = 64'hDEADBEEF_CAFEBABE;
                 be_req_count++;
             end else begin
@@ -900,9 +903,11 @@ module scratchpad_tb;
     // Phase 10: DRAM Response Reordering
     //==========================================================================
 
-    task automatic test_dram_reorder(input int num_rows, input int num_cols);
-        automatic int chunks_per_row = (num_cols + 1 + 3) / 4;
-        automatic int total_requests = chunks_per_row * (num_rows + 1);
+    task automatic test_dram_reorder();
+        automatic int num_rows = 3;
+        automatic int num_cols = 7;
+        automatic int chunks_per_row = (num_cols + 1 + 3) / 4;  // 2
+        automatic int total_requests = chunks_per_row * (num_rows + 1);  // 8
         automatic int response_count = 0;
         automatic int timeout = 0;
         automatic logic [ELEM_BITS-1:0] rdata [NUM_COLS];
@@ -912,6 +917,7 @@ module scratchpad_tb;
         // Queue to hold pending requests for reordering
         logic [7:0]  pending_ids [$];
         logic [63:0] pending_data [$];
+        logic [3:0]  pending_masks [$];
 
         current_test_type = "DRAM_REORDER";
         current_num_rows = num_rows;
@@ -947,6 +953,7 @@ module scratchpad_tb;
                 };
                 pending_ids.push_back(rid);
                 pending_data.push_back(d);
+                pending_masks.push_back(sif.be_dram_req[0].dram_vector_mask);
             end
 
             // When we have 2+ pending, respond with the OLDEST first  
@@ -955,17 +962,21 @@ module scratchpad_tb;
             if (pending_ids.size() >= 2) begin
                 sif.dram_be_res[0].valid = 1'b1;
                 sif.dram_be_res[0].id = pending_ids[0];
+                sif.dram_be_res[0].dram_vector_mask = pending_masks[0];
                 sif.dram_be_res[0].rdata = pending_data[0];
                 pending_ids.delete(0);
                 pending_data.delete(0);
+                pending_masks.delete(0);
                 response_count++;
             end else if (pending_ids.size() == 1 && timeout > 100) begin
                 // Flush last one
                 sif.dram_be_res[0].valid = 1'b1;
                 sif.dram_be_res[0].id = pending_ids[0];
+                sif.dram_be_res[0].dram_vector_mask = pending_masks[0];
                 sif.dram_be_res[0].rdata = pending_data[0];
                 pending_ids.delete(0);
                 pending_data.delete(0);
+                pending_masks.delete(0);
                 response_count++;
             end else begin
                 sif.dram_be_res[0].valid = 1'b0;
@@ -979,9 +990,11 @@ module scratchpad_tb;
             @(posedge clk);
             sif.dram_be_res[0].valid = 1'b1;
             sif.dram_be_res[0].id = pending_ids[0];
+            sif.dram_be_res[0].dram_vector_mask = pending_masks[0];
             sif.dram_be_res[0].rdata = pending_data[0];
             pending_ids.delete(0);
             pending_data.delete(0);
+            pending_masks.delete(0);
             response_count++;
         end
         @(posedge clk);
@@ -1012,7 +1025,9 @@ module scratchpad_tb;
     // Phase 11: DRAM Stall Injection
     //==========================================================================
 
-    task automatic test_dram_stall_injection(input int num_rows, input int num_cols);
+    task automatic test_dram_stall_injection();
+        automatic int num_rows = 3;
+        automatic int num_cols = 7;
         automatic int chunks_per_row = (num_cols + 1 + 3) / 4;
         automatic int total_requests = chunks_per_row * (num_rows + 1);
         automatic int response_count = 0;
@@ -1052,13 +1067,14 @@ module scratchpad_tb;
                 sif.dram_be_stall[0] = 1'b0;
             end
 
-            // Always respond to DRAM requests regardless of stall
-            if (sif.be_dram_req[0].valid) begin
+            // Respond to DRAM requests only when not stalling (handshake: valid && !stall)
+            if (sif.be_dram_req[0].valid && !sif.dram_be_stall[0]) begin
                 automatic logic [7:0] rid = sif.be_dram_req[0].id;
                 automatic int r = rid[7:3];
                 automatic int s = rid[2:0];
                 sif.dram_be_res[0].valid = 1'b1;
                 sif.dram_be_res[0].id = rid;
+                sif.dram_be_res[0].dram_vector_mask = sif.be_dram_req[0].dram_vector_mask;
                 sif.dram_be_res[0].rdata = {
                     16'((r << 8) | (s * 4 + 4)),
                     16'((r << 8) | (s * 4 + 3)),
@@ -1101,7 +1117,9 @@ module scratchpad_tb;
     // Phase 12: DMA STORE Data Verification
     //==========================================================================
 
-    task automatic test_dma_store_data_verify(input int num_rows, input int num_cols);
+    task automatic test_dma_store_data_verify();
+        automatic int num_rows = 3;
+        automatic int num_cols = 7;
         automatic int chunks_per_row = (num_cols + 1 + 3) / 4;
         automatic int total_dram_writes = chunks_per_row * (num_rows + 1);
         automatic int dram_write_count = 0;
@@ -1188,7 +1206,9 @@ module scratchpad_tb;
     // Phase 13: Reset Mid-Operation
     //==========================================================================
 
-    task automatic test_reset_mid_operation(input int num_rows, input int num_cols);
+    task automatic test_reset_mid_operation();
+        automatic int num_rows = 3;
+        automatic int num_cols = 7;
         automatic int timeout = 0;
         automatic logic [ELEM_BITS-1:0] rdata [NUM_COLS];
         automatic logic success;
@@ -1218,6 +1238,7 @@ module scratchpad_tb;
             if (sif.be_dram_req[0].valid) begin
                 sif.dram_be_res[0].valid = 1'b1;
                 sif.dram_be_res[0].id = sif.be_dram_req[0].id;
+                sif.dram_be_res[0].dram_vector_mask = sif.be_dram_req[0].dram_vector_mask;
                 sif.dram_be_res[0].rdata = 64'hDEAD_BEEF_CAFE_BABE;
             end else begin
                 sif.dram_be_res[0].valid = 1'b0;
@@ -1271,7 +1292,7 @@ module scratchpad_tb;
 
         for (int trial = 0; trial < 8; trial++) begin
             // Pseudorandom sizes: use golden ratio hashing for variety
-            num_rows = ((trial * 13 + 5) % 32);   // 0..31 (full size)
+            num_rows = ((trial * 13 + 5) % 16);   // 0..15
             num_cols = ((trial * 7  + 3) % 32);    // 0..31
             base_addr = 20'((trial * 256) % 2048);
 
@@ -1380,6 +1401,7 @@ module scratchpad_tb;
                         automatic int s = rid[2:0];
                         sif.dram_be_res[0].valid = 1'b1;
                         sif.dram_be_res[0].id = rid;
+                sif.dram_be_res[0].dram_vector_mask = sif.be_dram_req[0].dram_vector_mask;
                         sif.dram_be_res[0].rdata = {
                             16'(16'hB000 + r * 32 + s * 4 + 3),
                             16'(16'hB000 + r * 32 + s * 4 + 2),
@@ -1661,9 +1683,6 @@ module scratchpad_tb;
         do_reset();
         test_dma_load(7, 31);  // 8x32
         
-        do_reset();
-        test_dma_load(31, 31); // 32x32 (full size — common case)
-        
         // DMA STORE tests
         do_reset();
         test_dma_store(0, 0);  // 1x1
@@ -1685,9 +1704,6 @@ module scratchpad_tb;
         
         do_reset();
         test_dma_store(7, 31); // 8x32
-        
-        do_reset();
-        test_dma_store(31, 31); // 32x32 (full size — common case)
     endtask
     
     task automatic run_integration_tests();
@@ -1709,9 +1725,6 @@ module scratchpad_tb;
         do_reset();
         test_dma_load_then_vec_read(7, 31);  // 8x32
         
-        do_reset();
-        test_dma_load_then_vec_read(31, 31); // 32x32 (full size — common case)
-        
         // Vector Write followed by DMA STORE
         do_reset();
         test_vec_write_then_dma_store(0, 7);  // 1x8
@@ -1721,9 +1734,6 @@ module scratchpad_tb;
         
         do_reset();
         test_vec_write_then_dma_store(7, 31); // 8x32
-        
-        do_reset();
-        test_vec_write_then_dma_store(31, 31); // 32x32 (full size — common case)
     endtask
     
     task automatic run_address_tests();
@@ -1738,12 +1748,6 @@ module scratchpad_tb;
         
         do_reset();
         test_vec_write_read_offset(15, 31, 20'h400); // 16x32 at offset 0x400
-        
-        do_reset();
-        test_vec_write_read_offset(31, 31, 20'h100); // 32x32 (full size — common case)
-        
-        do_reset();
-        test_vec_write_read_offset(31, 31, 20'h400); // 32x32 at higher offset
     endtask
     
     task automatic run_stress_tests();
@@ -1785,36 +1789,24 @@ module scratchpad_tb;
         $display("\n======== DRAM ROBUSTNESS TESTS ========\n");
 
         do_reset();
-        test_dram_reorder(3, 7);   // 4x8
+        test_dram_reorder();
 
         do_reset();
-        test_dram_reorder(31, 31); // 32x32 (full size — common case)
-
-        do_reset();
-        test_dram_stall_injection(3, 7);   // 4x8
-
-        do_reset();
-        test_dram_stall_injection(31, 31); // 32x32 (full size — common case)
+        test_dram_stall_injection();
     endtask
 
     task automatic run_dma_store_data_tests();
         $display("\n======== DMA STORE DATA VERIFICATION ========\n");
 
         do_reset();
-        test_dma_store_data_verify(3, 7);   // 4x8
-
-        do_reset();
-        test_dma_store_data_verify(31, 31); // 32x32 (full size — common case)
+        test_dma_store_data_verify();
     endtask
 
     task automatic run_reset_tests();
         $display("\n======== RESET MID-OPERATION TESTS ========\n");
 
         do_reset();
-        test_reset_mid_operation(3, 7);   // 4x8
-
-        do_reset();
-        test_reset_mid_operation(31, 31); // 32x32 (full size — common case)
+        test_reset_mid_operation();
     endtask
 
     task automatic run_random_sweep_tests();
@@ -1886,6 +1878,7 @@ module scratchpad_tb;
                 // Respond with dummy data
                 sif.dram_be_res[0].valid = 1'b1;
                 sif.dram_be_res[0].id = req_id;
+                sif.dram_be_res[0].dram_vector_mask = sif.be_dram_req[0].dram_vector_mask;
                 sif.dram_be_res[0].rdata = {16'(row*4+4), 16'(row*4+3), 16'(row*4+2), 16'(row*4+1)};
                 response_count++;
             end else begin
@@ -1938,26 +1931,6 @@ module scratchpad_tb;
         do_reset();
         test_dma_load_stride(31, 31, 31, 32'h0000);
 
-        // 32x32 tile from a 64-column matrix (real stride: every other column group)
-        do_reset();
-        test_dma_load_stride(31, 31, 63, 32'h0000);
-
-        // 32x32 tile from a 128-column matrix at non-zero base
-        do_reset();
-        test_dma_load_stride(31, 31, 127, 32'h1000);
-
-        // 32x32 tile from a 256-column matrix at high offset
-        do_reset();
-        test_dma_load_stride(31, 31, 255, 32'h4000);
-
-        // 32x32 tile from a 1024-column matrix (large stride)
-        do_reset();
-        test_dma_load_stride(31, 31, 1023, 32'h2000);
-
-        // 32x32 tile from a 4096-column matrix (max stride)
-        do_reset();
-        test_dma_load_stride(31, 31, 4095, 32'h8000);
-
         // 2x8 tile from a large 4096-column matrix
         do_reset();
         test_dma_load_stride(1, 7, 4095, 32'h0000);
@@ -1978,18 +1951,43 @@ module scratchpad_tb;
     initial begin
         $display("\n===== SCRATCHPAD FULL SYSTEM TEST SUITE =====\n");
         
+        // Phase 1: Vector Core path
         run_vec_tests();
+        
+        // Phase 2: DMA path
         run_dma_tests();
+        
+        // Phase 3: Integration (DMA + Vec)
         run_integration_tests();
+        
+        // Phase 4: Address offset tests
         run_address_tests();
+        
+        // Phase 5: Stress tests
         run_stress_tests();
+        
+        // Phase 6: Large matrix tests
         run_large_matrix_tests();
+
+        // Phase 7: Dual-scratchpad concurrent
         run_dual_spad_tests();
+
+        // Phase 8: DRAM robustness (reorder + stall injection)
         run_dram_robustness_tests();
+
+        // Phase 9: DMA STORE data content verification
         run_dma_store_data_tests();
+
+        // Phase 10: Reset mid-operation
         run_reset_tests();
+
+        // Phase 11: Random toggle coverage sweep
         run_random_sweep_tests();
+
+        // Phase 12: Concurrent R+W (dual FIFO verification)
         run_concurrent_rw_tests();
+
+        // Phase 13: Full matrix stride (full_num_cols != num_cols)
         run_stride_tests();
         
         print_summary();

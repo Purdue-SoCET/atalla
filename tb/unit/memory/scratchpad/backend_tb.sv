@@ -1028,8 +1028,8 @@ program test (
             for (int i = 0; i < 32; i++)
                 bif.be_res[0].rdata[i] = 16'((sram_resp_row_reg * 32) + i + 1);
             
-            // Track DRAM writes
-            if (bif.be_dram_req[0].valid && bif.be_dram_req[0].write) begin
+            // Track DRAM writes — only count when not stalled (accepted by memory)
+            if (bif.be_dram_req[0].valid && bif.be_dram_req[0].write && !bif.dram_be_stall[0]) begin
                 dram_write_count++;
             end
             
@@ -1121,8 +1121,8 @@ program test (
             for (int i = 0; i < 32; i++)
                 bif.be_res[0].rdata[i] = 16'((sram_resp_row_reg * 32) + i + 1);
             
-            // Track DRAM writes
-            if (bif.be_dram_req[0].valid && bif.be_dram_req[0].write) begin
+            // Track DRAM writes — only count when not stalled (accepted by memory)
+            if (bif.be_dram_req[0].valid && bif.be_dram_req[0].write && !bif.dram_be_stall[0]) begin
                 dram_write_count++;
             end
             

@@ -2330,6 +2330,7 @@ module vlsu_tb;
                     end
                     sif.dram_be_res[0].valid = 1'b1;
                     sif.dram_be_res[0].id    = sif.be_dram_req[0].id;
+                    sif.dram_be_res[0].dram_vector_mask = sif.be_dram_req[0].dram_vector_mask;
                     sif.dram_be_res[0].rdata = d;
                     response_count++;
                 end else begin
