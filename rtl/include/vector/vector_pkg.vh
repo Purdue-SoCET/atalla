@@ -21,7 +21,7 @@ package vector_pkg;
     localparam VL_W        = $clog2(VLMAX);
 
     // FU layout per lane
-    localparam LANE_FU_COUNT  = 2;              // How many FUs per lane
+    localparam LANE_FU_COUNT  = 3;              // How many FUs per lane
     localparam LANE_FU_ID_W   = $clog2(LANE_FU_COUNT);
 
     // Other localparams

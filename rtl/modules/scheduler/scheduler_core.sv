@@ -157,6 +157,14 @@ module scheduler_core #(
     assign decode_2_if.ready_DEC2_ex3 = scalar_ex_if.ready_DEC2_ex3;
     assign decode_2_if.ready_DEC2_ex4 = scalar_ex_if.ready_DEC2_ex4;
     assign decode_2_if.ready_DEC2_ex5 = scalar_ex_if.ready_DEC2_ex5;
+    assign decode_2_if.vec_alu_ready = scif.vector_unit_ready_signals.fu_global_status[0];
+    assign decode_2_if.vec_mul_ready = scif.vector_unit_ready_signals.fu_global_status[1];
+    assign decode_2_if.vec_exp_ready = scif.vector_unit_ready_signals.fu_global_status[2];
+    assign decode_2_if.vec_reduction_ready = scif.vector_unit_ready_signals.reduction_status;
+    assign decode_2_if.gsau_ready = scif.vector_unit_ready_signals.gsau_status;
+    assign decode_2_if.vlsu_ready = scif.vector_unit_ready_signals.vlsu_status;
+    assign decode_2_if.scpad_busy = scif.scpad_busy; 
+
 
     //Dec2 inputs from WB
     assign decode_2_if.scalar_WB_WEN = EX_WB_latch.s_WEN;
@@ -237,12 +245,12 @@ module scheduler_core #(
     assign scalar_ex_if.stall = stall;
     assign scalar_ex_if.miss = miss;
     //to dcache
-    assign scif.WEN = scalar_ex_if.WEN;
-    assign scif.REN = scalar_ex_if.REN;
-    assign scif.mem_in_valid = scalar_ex_if.mem_in_valid;
-    assign scif.data_store = scalar_ex_if.data_store;
-    assign scif.data_addr = scalar_ex_if.data_addr;
-    assign ready = decode_2_if.ready;
+    assign WEN = scalar_ex_if.WEN;
+    assign REN = scalar_ex_if.REN;
+    assign mem_in_valid = scalar_ex_if.mem_in_valid;
+    assign data_store = scalar_ex_if.data_store;
+    assign data_addr = scalar_ex_if.data_addr;
+    // assign ready = decode_2_if.ready;
 
     assign datapath_cache_if.ihit = ihit;
     assign datapath_cache_if.imemload = imemload;
@@ -286,7 +294,7 @@ module scheduler_core #(
         scif.lanes_in = '0;  // clear all lanes
         scif.vlsu_in = '0;   
         scif.gsau_in = '0;    
-        scif.scpad_in = '0;   
+        scif.scpad_in = '{default: '0};   
         lane_idx = 0;  
 
         // iterate over all decoded vector instructions
@@ -383,7 +391,7 @@ module scheduler_core #(
                 scif.scpad_in[dec_SDMA_instrs[i].rs3_data[31:30]].num_cols = dec_SDMA_instrs[i].rs3_data[24:20];
                 scif.scpad_in[dec_SDMA_instrs[i].rs3_data[31:30]].full_num_cols = dec_SDMA_instrs[i].rs3_data[19:0];
                 scif.scpad_in[dec_SDMA_instrs[i].rs3_data[31:30]].scpad_id = dec_SDMA_instrs[i].rs3_data[31:30];
-
+                scif.scpad_in[dec_SDMA_instrs[i].rs3_data[31:30]].rd = dec_SDMA_instrs[i].rs1_rd;
             end
         end
     end
