@@ -40,6 +40,7 @@ def main():
     ap.add_argument("-o", "--output", type=Path,
                     default=Path('./emulator/tests/gemms_1024x1024.in'),
                     help="Output test file")
+    ap.add_argument("--no-graph", action="store_true")
     ap.add_argument("--check", type=Path, default=None, metavar="OUTPUT_MEM",
                     help="Path to emulator output_mem.txt — diff against expected C")
     args = ap.parse_args()
@@ -222,8 +223,13 @@ def main():
         halt.s
     """
 
-    instrs     = assemble_file(asm)
-    instr_text = emit_test_format(instrs)
+    if args.no_graph:
+        instrs = assemble_file(asm)
+        instr_text = emit_test_format(instrs)
+    else:
+        instr_text = emit_test_format_global_dag_pack(asm)
+    # instrs     = assemble_file(asm)
+    # instr_text = emit_test_format(instrs)
 
     img_table  = DRAMWriter()
     img_matrix = DRAMWriter()
