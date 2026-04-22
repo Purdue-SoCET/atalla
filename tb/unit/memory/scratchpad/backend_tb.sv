@@ -150,13 +150,13 @@ program test (
     endfunction
 
     function automatic logic [31:0] calc_expected_addr(logic [31:0] base_addr, int num_cols, int row_id, int sub_id);
-        if (num_cols == 31) return base_addr + {row_id[4:0], sub_id[2:0], 2'b00};
-        else return base_addr + row_id * (num_cols + 1) + {sub_id[2:0], 2'b00};
+        if (num_cols == 31) return base_addr + {row_id[4:0], sub_id[2:0], 3'b000};
+        else return base_addr + row_id * ((num_cols + 1) << 1) + {sub_id[2:0], 3'b000};
     endfunction
 
     function automatic logic [31:0] calc_expected_store_addr(logic [31:0] base_addr, int num_cols, int sched_counter, int sub_id);
-        if (num_cols == 31) return base_addr + {sched_counter[4:0], sub_id[2:0], 2'b00};
-        else return base_addr + sched_counter * (num_cols + 1) + {sub_id[2:0], 2'b00};
+        if (num_cols == 31) return base_addr + {sched_counter[4:0], sub_id[2:0], 3'b000};
+        else return base_addr + sched_counter * ((num_cols + 1) << 1) + {sub_id[2:0], 3'b000};
     endfunction
 
     task automatic clear_expected_row();

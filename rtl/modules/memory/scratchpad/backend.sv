@@ -127,7 +127,7 @@ module backend #(parameter logic [scpad_pkg::SCPAD_ID_WIDTH-1:0] IDX = '0) (
             be_internal.be_dr_req_q_in.id = uuid;
             be_internal.be_dr_req_q_in.sub_id = sub_uuid;
             
-            be_internal.be_dr_req_q_in.dram_addr = effective_req.dram_addr + row_base_addr + {sub_uuid, 2'b00};
+            be_internal.be_dr_req_q_in.dram_addr = effective_req.dram_addr + row_base_addr + {sub_uuid, 3'b000};
 
             be_internal.be_dr_req_q_in.dram_vector_mask = dram_vector_mask;
 
@@ -137,7 +137,7 @@ module backend #(parameter logic [scpad_pkg::SCPAD_ID_WIDTH-1:0] IDX = '0) (
                     nxt_sub_uuid = 0;
                     if(effective_req.write == 1'b0) begin 
                         nxt_uuid = uuid + 1;
-                        nxt_row_base_addr = row_base_addr + effective_req.full_num_cols + 1;
+                        nxt_row_base_addr = row_base_addr + ((effective_req.full_num_cols + 1) << 1);
                         if(uuid == effective_req.num_rows) begin
                             nxt_initial_request_done = 1'b1;
                         end
@@ -183,7 +183,7 @@ module backend #(parameter logic [scpad_pkg::SCPAD_ID_WIDTH-1:0] IDX = '0) (
 
                 if(be_internal.be_dr_req_q_out.transaction_complete == 1'b1) begin
                     nxt_schedule_request_counter = schedule_request_counter + 1;
-                    nxt_row_base_addr = row_base_addr + effective_req.full_num_cols + 1;
+                    nxt_row_base_addr = row_base_addr + ((effective_req.full_num_cols + 1) << 1);
                 end
                 
                 be_internal.be_dr_req_q_in.sram_res_valid = bbif.be_res[IDX].valid;
@@ -193,7 +193,7 @@ module backend #(parameter logic [scpad_pkg::SCPAD_ID_WIDTH-1:0] IDX = '0) (
                 bdrif.be_dram_req[IDX].write = be_internal.be_dr_req_q_out.dram_req.write;
                 bdrif.be_dram_req[IDX].id = be_internal.be_dr_req_q_out.dram_req.id;
 
-                bdrif.be_dram_req[IDX].dram_addr = effective_req.dram_addr + row_base_addr + {sub_uuid, 2'b00};
+                bdrif.be_dram_req[IDX].dram_addr = effective_req.dram_addr + row_base_addr + {sub_uuid, 3'b000};
 
                 bdrif.be_dram_req[IDX].dram_vector_mask = dram_vector_mask;
                 bdrif.be_dram_req[IDX].wdata = be_internal.be_dr_req_q_out.dram_req.wdata;

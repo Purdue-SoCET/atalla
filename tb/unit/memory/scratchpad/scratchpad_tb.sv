@@ -1865,9 +1865,8 @@ module scratchpad_tb;
                 row = req_id[7:3];
                 sub = req_id[2:0];
 
-                // Verify DRAM address uses full matrix stride
                 actual_addr = sif.be_dram_req[0].dram_addr;
-                expected_addr = dram_base + row * (full_cols + 1) + sub * 4;
+                expected_addr = dram_base + row * ((full_cols + 1) << 1) + (sub << 3);
 
                 if (actual_addr !== expected_addr) begin
                     $display("[STRIDE] Row %0d Sub %0d: addr=0x%08h expected=0x%08h (stride=%0d)",
