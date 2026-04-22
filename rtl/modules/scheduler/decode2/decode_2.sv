@@ -131,7 +131,7 @@ logic [NUM_SDMA_INSTRS-1:0][1:0] SDMA_scalar_sids;
 
 // Per-unit need signals for struct hazard checking: does any instr in this packet need this unit?
     logic need_scalar_ex1, need_scalar_ex2, need_scalar_ex3, need_scalar_ex4, need_scalar_ex5;
-    logic need_vector_alu, need_vector_mul, need_vector_exp, need_vector_reduction, need_vector_gsau;
+    logic need_vector_alu, need_vector_mul, need_vector_exp, need_vector_reduction, need_vector_gsau, need_movement;
     logic [NUM_SDMA_INSTRS-1:0] need_vector_vlsu; //one per scpad since vlsu is per-lane
 
 always_comb begin
@@ -177,6 +177,7 @@ always_comb begin
     need_vector_reduction = 1'b0;
     need_vector_vlsu = 4'b0;
     need_vector_gsau = 1'b0;
+    need_movement = 1'b0;
 
     for (int i = 0; i < NUM_SCALAR_INSTRS; i++) begin
         if (scif.decoded_scalar_instrs[i].valid_in) begin
@@ -205,6 +206,7 @@ always_comb begin
                 VLSU: need_vector_vlsu[vcif.decoded_vector_instrs[i].sid] = 1'b1;
                 GSAU: need_vector_gsau = 1'b1;
                 REDU: need_vector_reduction = 1'b1;
+                MVMT: need_movement = 1'b1;
               default: ;
             endcase
         end
@@ -230,12 +232,14 @@ assign scalar_FU_ready = (~need_scalar_ex1 | d2if.ready_DEC2_ex1) &
                          (~need_scalar_ex5 | d2if.ready_DEC2_ex5);
 assign vector_FU_ready = (~need_vector_alu | d2if.vec_alu_ready) &
                          (~need_vector_mul | d2if.vec_mul_ready) &
-                         (~need_vector_exp | d2if.vec_exp_ready) &
+                        //  (~need_vector_exp | d2if.vec_exp_ready) & //TODO exp doesn't exist yet
+                         (~need_vector_exp |   1) &
                          (~need_vector_reduction | d2if.vec_reduction_ready) &
                          (~need_vector_vlsu[0] | d2if.vlsu_ready[0]) &
                          (~need_vector_vlsu[1] | d2if.vlsu_ready[1]) & //TODO for sake of time this is not parametrizable rn
                          (~need_vector_vlsu[2] | d2if.vlsu_ready[2]) &
                          (~need_vector_vlsu[3] | d2if.vlsu_ready[3]) &
+                         (~need_movement | d2if.movement_ready) & 
                          (~need_vector_gsau | d2if.gsau_ready);
 // assign vector_FU_ready = 1'b1;
 

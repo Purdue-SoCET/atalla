@@ -40,6 +40,9 @@ package vector_pkg;
     localparam MASK_REG_BITS = 4;
     localparam MASK_WRITE_PORTS = 2;
     localparam MASK_DATA_LENGTH = 32;
+        
+    parameter RDATA_W_forMaskWB = 32;
+    parameter RIDX_W_forMaskWB = 8;
     
     // Instruction Fields
     localparam OPCODE_W = 7;
@@ -407,6 +410,27 @@ package vector_pkg;
         vector_if_reduction_out_t reduction;
     } vector_if_lanes_out_t;
 
+    // typedef struct packed {
+    //     vector_if_gsau_out_t vector_if_gsau_out;
+    //     vector_if_reduction_out_t vector_if_reduction_out;
+    //     vector_if_lanes_out_t vector_if_lanes_out;
+    //     vector_if_vlsu_out_t vector_if_vlsu_out;
+    //     logic mvvOrMvs; //MVS FLAG
+    // } vector_wb_in_t;
+
+    // typedef struct packed {
+    //     vsel_t [WRITE_PORTS-1:0] vd;
+    //     vreg_t [WRITE_PORTS-1:0] vdata;
+    //     logic  [WRITE_PORTS-1:0] WEN;
+
+    //     logic [MASK_WRITE_PORTS-1:0][MASK_REG_BITS-1:0]     mask_WB_wsel;
+    //     logic [MASK_WRITE_PORTS-1:0]                        mask_WB_WEN;
+    //     logic [MASK_WRITE_PORTS-1:0][MASK_DATA_LENGTH-1:0]  mask_WB_wdata;
+        
+    //     vector_if_wb_ready_t vector_if_wb_ready;
+    // } vector_wb_out_t;
+
+
     typedef struct packed {
         vector_if_gsau_out_t vector_if_gsau_out;
         vector_if_reduction_out_t vector_if_reduction_out;
@@ -416,16 +440,24 @@ package vector_pkg;
     } vector_wb_in_t;
 
     typedef struct packed {
+        logic [RDATA_W_forMaskWB-1:0]  data;
+        logic   valid;  // from execute
+        logic   maskOrNot_scalar;
+        logic [RIDX_W_forMaskWB-1:0]  rd; 
+    } scalar_wb_in_maskWBonly_t;
+
+    typedef struct packed {
         vsel_t [WRITE_PORTS-1:0] vd;
         vreg_t [WRITE_PORTS-1:0] vdata;
         logic  [WRITE_PORTS-1:0] WEN;
+        vector_if_wb_ready_t vector_if_wb_ready;
+    } vector_wb_out_t;
 
+    typedef struct packed {
         logic [MASK_WRITE_PORTS-1:0][MASK_REG_BITS-1:0]     mask_WB_wsel;
         logic [MASK_WRITE_PORTS-1:0]                        mask_WB_WEN;
         logic [MASK_WRITE_PORTS-1:0][MASK_DATA_LENGTH-1:0]  mask_WB_wdata;
-        
-        vector_if_wb_ready_t vector_if_wb_ready;
-    } vector_wb_out_t;
+    } mask_wb_out_t;
 
 endpackage
 

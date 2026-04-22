@@ -329,6 +329,7 @@ module vector_control_unit
                 // ----------------------------------------------------------------
                 VMOV_VTS: begin
                     cuif.decoded_vector_instrs[i].valid_in = 1'b1;
+                    cuif.decoded_vector_instrs[i].fu_enable = MVMT;
                     cuif.decoded_vector_instrs[i].imm = cuif.vector_instrs[i][30:23];
                     cuif.decoded_vector_instrs[i].op2_src = 1'b1;
                     cuif.decoded_vector_instrs[i].vs1 = cuif.vector_instrs[i][22:15];
@@ -345,26 +346,13 @@ module vector_control_unit
                 // ----------------------------------------------------------------
                 MV_MTS: begin
                     cuif.decoded_vector_instrs[i].valid_in = 1'b1;
+                    cuif.decoded_vector_instrs[i].fu_enable = MVMT;
                     cuif.decoded_vector_instrs[i].vms = cuif.vector_instrs[i][18:15];
                     cuif.decoded_vector_instrs[i].rd = cuif.vector_instrs[i][14:7];
                     cuif.decoded_vector_instrs[i].use_vms = 1'b1;
                     cuif.decoded_vector_instrs[i].scalar_reg_write = 1'b1;
                     cuif.decoded_vector_instrs[i].vector_reg_write = 1'b0;
                     cuif.decoded_vector_instrs[i].mask_reg_write = 1'b0;
-
-                end
-
-                // ----------------------------------------------------------------
-                // STM
-                // ----------------------------------------------------------------
-                MV_STM: begin
-                    cuif.decoded_vector_instrs[i].valid_in = 1'b1;
-                    cuif.decoded_vector_instrs[i].rs1 = cuif.vector_instrs[i][22:15];
-                    cuif.decoded_vector_instrs[i].vmd =  cuif.vector_instrs[i][10:7];
-                    cuif.decoded_vector_instrs[i].use_rs1 = 1'b1;
-                    cuif.decoded_vector_instrs[i].scalar_reg_write = 1'b0;
-                    cuif.decoded_vector_instrs[i].vector_reg_write = 1'b0;
-                    cuif.decoded_vector_instrs[i].mask_reg_write = 1'b1;
 
                 end
 

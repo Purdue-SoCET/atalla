@@ -196,7 +196,8 @@ package atalla_isa_pkg;
     EXP = 4'b1011, // Exponential
     VLSU = 4'b1100, // Vector load/store unit
     GSAU = 4'b1101, // GEMM unit 
-    REDU = 4'b1110 // Reduction unit (this is technically not a separate FU but we need this signal to check structural hazards for reduction ops)
+    REDU = 4'b1110, // Reduction unit (this is technically not a separate FU but we need this signal to check structural hazards for reduction ops)
+    MVMT = 4'b1111 //MTS/VTS (movement to scalar)
   } vector_fu_enable_t; //check rm flag for reduction ops
 
   // ============================================================
@@ -269,6 +270,7 @@ package atalla_isa_pkg;
     word_t incr7;
     opcode_t op;
     logic halt;
+    logic mask_reg_write; //STM FLAG
 
     logic [SCALAR_REG_W-1:0] rs1, rs2, rdIn;
     word_t r1_data, r2_data;

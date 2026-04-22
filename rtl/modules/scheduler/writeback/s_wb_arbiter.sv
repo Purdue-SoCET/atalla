@@ -40,7 +40,9 @@ module s_wb_arbiter #(
         //     vif.scalar_wb_out.ready[0] = 1'b0;
         // end
 
+        // if (vif.scalar_wb_in.valid[1] && (!banks[0][vif.scalar_wb_in.rd[1][1:0]]&& !vif.scalar_wb_in.maskornotscalar)) begin //TODO change once we haev the unit 2 stm stuff hooked up
         if (vif.scalar_wb_in.valid[1] && (!banks[0][vif.scalar_wb_in.rd[1][1:0]])) begin
+
             vif.scalar_wb_out.data[vif.scalar_wb_in.rd[1][1:0]]  = vif.scalar_wb_in.data[1];
             vif.scalar_wb_out.rd[vif.scalar_wb_in.rd[1][1:0]]    = vif.scalar_wb_in.rd[1];
             vif.scalar_wb_out.WEN[vif.scalar_wb_in.rd[1][1:0]]   = 1'b1;
@@ -85,17 +87,17 @@ module s_wb_arbiter #(
         else if (vif.scalar_wb_in.valid[4] && banks[3][vif.scalar_wb_in.rd[4][1:0]]) begin
             vif.scalar_wb_out.ready[4] = 1'b0;
         end
-        // banks[4] = banks[4] | banks[3];
+        banks[4] = banks[4] | banks[3];
 
-        // if (vif.scalar_wb_in.valid[5] && (!banks[4][vif.scalar_wb_in.rd[5][1:0]])) begin
-        //     vif.scalar_wb_out.data[vif.scalar_wb_in.rd[5][1:0]]  = vif.scalar_wb_in.data[5];
-        //     vif.scalar_wb_out.rd[vif.scalar_wb_in.rd[5][1:0]]    = vif.scalar_wb_in.rd[5];
-        //     vif.scalar_wb_out.WEN[vif.scalar_wb_in.rd[5][1:0]]   = 1'b1;
-        //     banks[5][vif.scalar_wb_in.rd[5][1:0]] = 1'b1;
-        // end
-        // else if (!vif.scalar_wb_in.valid[5] && banks[4][vif.scalar_wb_in.rd[5][1:0]]) begin
-        //     vif.scalar_wb_out.ready[5] = 1'b0;
-        // end
+        if (vif.scalar_wb_in.valid[5] && (!banks[4][vif.scalar_wb_in.rd[5][1:0]])) begin
+            vif.scalar_wb_out.data[vif.scalar_wb_in.rd[5][1:0]]  = vif.scalar_wb_in.data[5];
+            vif.scalar_wb_out.rd[vif.scalar_wb_in.rd[5][1:0]]    = vif.scalar_wb_in.rd[5];
+            vif.scalar_wb_out.WEN[vif.scalar_wb_in.rd[5][1:0]]   = 1'b1;
+            banks[5][vif.scalar_wb_in.rd[5][1:0]] = 1'b1;
+        end
+        else if (vif.scalar_wb_in.valid[5] && banks[4][vif.scalar_wb_in.rd[5][1:0]]) begin
+            vif.scalar_wb_out.ready[5] = 1'b0;
+        end
         // banks[5] = banks[5] | banks[4];
 
         // if (vif.scalar_wb_in.valid[6] && (!banks[5][vif.scalar_wb_in.rd[6][1:0]])) begin
