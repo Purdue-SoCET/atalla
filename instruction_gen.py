@@ -321,6 +321,15 @@ if __name__ == "__main__":
     #vector load
     vload = {"opcode": 0b1000100, "sid": 0, "num_cols": 31, "rs2": 4, "rs1": 1, "vd": 1}
 
+    #addi for getting the starting value for bf16
+    addi_4 = {"opcode": 0b0010110, "rs1": 0, "imm12": 2, "rd": 5}
+
+    #conversion from s to bf
+    conv_s_bf = {"opcode": 0b0010101, "rs1": 5, "rs2": 0, "rd": 5}
+
+    #vector scalar mult
+    mult_vs = {"opcode": 0b1001101, "mask": 0, "rs1": 5, "vs1": 1, "vd": 2}
+
     print(f"addi_1 {encode_instruction(addi_1)}")
     print(f"lui {encode_instruction(lui)}")
     print(f"addi_2 {encode_instruction(addi_2)}")
@@ -329,3 +338,6 @@ if __name__ == "__main__":
     print(f"halt {encode_instruction(halt)}")
     print(f"vload {encode_instruction(vload)}")
     print(f"addi_3 {encode_instruction(addi_3)}")
+    print(f"addi_4 {encode_instruction(addi_4)}")
+    print(f"conv_s_bf {encode_instruction(conv_s_bf)}")
+    print(f"mult_vs {encode_instruction(mult_vs)}")
