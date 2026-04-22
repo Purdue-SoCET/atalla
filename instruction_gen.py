@@ -328,7 +328,7 @@ if __name__ == "__main__":
     conv_s_bf = {"opcode": 0b0010101, "rs1": 5, "rs2": 0, "rd": 5}
 
     #vector scalar mult
-    add_vs = {"opcode": 0b1001011, "mask": 0, "rs1": 5, "vs1": 1, "vd": 2}
+    sub_vs = {"opcode": 0b1001100, "mask": 0, "rs1": 5, "vs1": 1, "vd": 2}
 
     #vector store
     vstore = {"opcode": 0b1000101, "sid": 1, "num_cols": 31, "rs2": 4, "rs1": 0, "vd": 2}
@@ -351,7 +351,7 @@ if __name__ == "__main__":
     print(f"addi_3 {encode_instruction(addi_3)}")
     print(f"addi_4 {encode_instruction(addi_4)}")
     print(f"conv_s_bf {encode_instruction(conv_s_bf)}")
-    print(f"add_vs {encode_instruction(add_vs)}")
+    print(f"sub_vs {encode_instruction(sub_vs)}")
     print(f"vstore {encode_instruction(vstore)}")
     print(f"lui_2 {encode_instruction(lui_2)}")
     print(f"addi_5 {encode_instruction(addi_5)}")

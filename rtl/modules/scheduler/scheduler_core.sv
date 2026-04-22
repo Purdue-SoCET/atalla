@@ -73,7 +73,6 @@ module scheduler_core #(
                                     .dec12_if(decode_1_if));
 
 
-
     //DEC1 outputs to latch
     always_comb begin
         if(scalar_ex_if.redirect_valid || scalar_ex_if.halt_out) begin
@@ -182,7 +181,11 @@ module scheduler_core #(
 
     //continuous assignment for EX/WB
 
-    assign vector_wb_if.vector_wb_in = scif.vector_wb_in; //directly from scheduler core interface since it's coming from VC and going to the arbiter without needing to be latched
+    always_comb begin
+        vector_wb_if.vector_wb_in = scif.vector_wb_in; //directly from scheduler core interface since it's coming from VC and going to the arbiter without needing to be latched
+        vector_wb_if.vector_wb_in.mvvOrMvs = 1'b0;
+    end
+    
 
     //ld/st unit
     //ex outputs
