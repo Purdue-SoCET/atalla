@@ -87,7 +87,7 @@ logic [BANK_NUM-1:0][COLUMN_BITS-1:0]             be_c; // 10*16
 logic [BANK_NUM-1:0][$clog2(ID_NUM)-1:0]          be_id; // 4*16
 logic [BANK_NUM-1:0]                              be_arb;
 logic [BANK_NUM-1:0]                              be_queue_ready;
-logic [2:0]                                       be_len;
+logic [BANK_NUM-1:0][2:0]                         be_len;
 fsm_t [BANK_NUM-1:0]                              be_cmd; 
 
 // COMMAND FSM <-> FSM_MOD (per-bank internal signals)
@@ -299,7 +299,7 @@ modport command_fsm (
     //REFRESH
     fsm_ref,
     //FSM -> BE 
-    output be_r, be_c, be_b, be_bg, be_cmd, be_id, be_rlen, be_queue_ready,
+    output be_r, be_c, be_b, be_bg, be_cmd, be_id, be_len, be_queue_ready,
     //FSM -> BQ
     bq_pop
 );

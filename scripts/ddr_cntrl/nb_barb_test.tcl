@@ -27,6 +27,7 @@ set DESIGN_SRCS {
     ./rtl/modules/ddr_cntrl/flex_counter.sv
     ./rtl/modules/ddr_cntrl/flex_sr.sv
     ./rtl/modules/ddr_cntrl/priority_enc.sv
+    ./rtl/modules/ddr_cntrl/init_state.sv
     ./rtl/modules/ddr_cntrl/nb_barb.sv
     ./rtl/modules/ddr_cntrl/enum_compare.sv
 }

@@ -62,29 +62,18 @@ module cmd_fsm (
     endgenerate
 
     assign fsm.be_queue_ready = bank_ready;
-
     assign fsm.bq_pop = bank_pop;
 
-    // One-hot be_arb to binary index for output mux
-    logic [$clog2(BANK_NUM)-1:0] arb_sel;
     always_comb begin
-        arb_sel = '0;
+        // Drive each bank's address/id/len directly from its own queue slot
+        // so the arbiter can index by selected_bank without a separate mux.
         for (int j = 0; j < BANK_NUM; j++) begin
-            if (fsm.be_arb[j]) arb_sel = j[$clog2(BANK_NUM)-1:0];
-        end
-    end
-
-    always_comb begin
-        fsm.be_bg   = arb_sel[3:2];
-        fsm.be_b    = arb_sel[1:0];
-        fsm.be_r    = fsm.bq_slot[arb_sel].row;
-        fsm.be_c    = fsm.bq_slot[arb_sel].column;
-        fsm.be_id   = fsm.bq_slot[arb_sel].id_addr;
-        fsm.be_rlen = '0;
-
-        // be_cmd must carry ALL banks' commands so the arbiter can
-        // inspect each bank's state independently for scheduling.
-        for (int j = 0; j < BANK_NUM; j++) begin
+            fsm.be_bg[j]  = j[3:2];
+            fsm.be_b[j]   = j[1:0];
+            fsm.be_r[j]   = fsm.bq_slot[j].row;
+            fsm.be_c[j]   = fsm.bq_slot[j].column;
+            fsm.be_id[j]  = fsm.bq_slot[j].id_addr;
+            fsm.be_len[j] = '0;
             fsm.be_cmd[j] = fsm_t'(bank_cmd[j]);
         end
     end
