@@ -3,17 +3,18 @@
 
 package scalar_wb_pkg;
     parameter RDATA_W = 32;
-    parameter NUM_FU = 5;
+    parameter NUM_FU = 6;
     parameter RIDX_W = 8;
     parameter SWRITE_PORTS = 4;
 
     typedef logic [RIDX_W-1:0] rsel_t;
     typedef logic [RDATA_W-1:0] rdat_t;
-
+    
     typedef struct packed {
         rdat_t  [NUM_FU-1:0] data;
         logic   [NUM_FU-1:0] valid;  // from execute
         rsel_t  [NUM_FU-1:0] rd; 
+        logic maskornotscalar;
     } scalar_wb_in_t;
 
     typedef struct packed {

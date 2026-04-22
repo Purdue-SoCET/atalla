@@ -59,6 +59,7 @@ module scheduler_core #(
     decode_2_if decode_2_if ();
     datapath_cache_if datapath_cache_if ();
     dec1_dec2_if decode_1_if();
+    move_to_scalar_if mvmt_if ();
     // caches_if caches_if();
 
     //instantiations
@@ -71,6 +72,7 @@ module scheduler_core #(
                                     .btb_update_en(scalar_ex_if.redirect_valid), .btb_pc_update(scalar_ex_if.pc_out),
                                     .btb_true_target(scalar_ex_if.redirect_target), .dc_if(datapath_cache_if),
                                     .dec12_if(decode_1_if));
+    move_to_scalar mvmt(.CLK(CLK), .nRST(nRST), .mvmt_if(mvmt_if));
 
 
 
@@ -124,6 +126,8 @@ module scheduler_core #(
                 n_DEC2_EX_latch[i].rs1_value          = decode_2_if.decoded_scalar_instrs[i].r1_data;
                 n_DEC2_EX_latch[i].rs2_value          = decode_2_if.decoded_scalar_instrs[i].r2_data;
                 n_DEC2_EX_latch[i].rdIn               = decode_2_if.decoded_scalar_instrs[i].rdIn;
+                n_DEC2_EX_latch[i].mask_reg_write     = decode_2_if.decoded_scalar_instrs[i].mask_reg_write;
+
             end
             n_DEC2_EX_PC_latch.pc                  = decode_2_if.pc_out;
             n_DEC2_EX_PC_latch.pc_pred_addr_out    = decode_2_if.pc_pred_addr_out;
@@ -157,6 +161,7 @@ module scheduler_core #(
     assign decode_2_if.ready_DEC2_ex3 = scalar_ex_if.ready_DEC2_ex3;
     assign decode_2_if.ready_DEC2_ex4 = scalar_ex_if.ready_DEC2_ex4;
     assign decode_2_if.ready_DEC2_ex5 = scalar_ex_if.ready_DEC2_ex5;
+    assign decode_2_if.movement_ready = mvmt_if.d2_ready;
     assign decode_2_if.vec_alu_ready = scif.vector_unit_ready_signals.fu_global_status[0];
     assign decode_2_if.vec_mul_ready = scif.vector_unit_ready_signals.fu_global_status[1];
     assign decode_2_if.vec_exp_ready = scif.vector_unit_ready_signals.fu_global_status[2];
@@ -220,6 +225,11 @@ module scheduler_core #(
     //ex inputs
     assign scalar_ex_if.ready_WB_ex2 = scalar_wb_if.scalar_wb_out.ready[4];
 
+    assign mvmt_if.ready_WB = scalar_wb_if.scalar_wb_out.ready[5];
+    assign scalar_wb_if.scalar_wb_in.data[5] = mvmt_if.data_out;
+    assign scalar_wb_if.scalar_wb_in.rd[5] = mvmt_if.rdOut;
+    assign scalar_wb_if.scalar_wb_in.valid[5] = mvmt_if.valid_out;
+
     //continuous assignment for WB arbiter latch
     assign n_EX_WB_latch.s_data = scalar_wb_if.scalar_wb_out.data;
     assign n_EX_WB_latch.s_rd = scalar_wb_if.scalar_wb_out.rd;
@@ -227,11 +237,13 @@ module scheduler_core #(
     assign n_EX_WB_latch.v_data = vector_wb_if.vector_wb_out.vdata; 
     assign n_EX_WB_latch.v_rd = vector_wb_if.vector_wb_out.vd; 
     assign n_EX_WB_latch.v_WEN = vector_wb_if.vector_wb_out.WEN; 
-    assign n_EX_WB_latch.m_data = vector_wb_if.vector_wb_out.mask_WB_wdata;
-    assign n_EX_WB_latch.m_rd = vector_wb_if.vector_wb_out.mask_WB_wsel;
-    assign n_EX_WB_latch.m_WEN = vector_wb_if.vector_wb_out.mask_WB_WEN;
+    assign n_EX_WB_latch.m_data = vector_wb_if.mask_wb_out.mask_WB_wdata;
+    assign n_EX_WB_latch.m_rd = vector_wb_if.mask_wb_out.mask_WB_wsel;
+    assign n_EX_WB_latch.m_WEN = vector_wb_if.mask_wb_out.mask_WB_WEN;
     assign n_EX_WB_latch.SDMA_s_rd = scif.SDMA_scalar_rs1s;
     assign n_EX_WB_latch.SDMA_s_WEN = scif.SDMA_scalar_WEN;
+
+    //TODO connect the STM stuff to vector wb 
 
 
     //back to vector core for write bank conflict prevention
@@ -296,9 +308,23 @@ module scheduler_core #(
         scif.gsau_in = '0;    
         scif.scpad_in = '{default: '0};   
         lane_idx = 0;  
+        mvmt_if.valid_in = '0;
+        mvmt_if.rdIn = '0;
+        mvmt_if.data_in = '0;
 
         // iterate over all decoded vector instructions
         for (int i = 0; i < NUM_VECTOR_INSTRS; i++) begin
+            if (dec_vector_instrs[i].valid_in && dec_vector_instrs[i].fu_enable == atalla_isa_pkg::MVMT) begin
+                mvmt_if.valid_in = 1'b1;
+                mvmt_if.rdIn = dec_vector_instrs[i].rd;
+                if (dec_vector_instrs[i].use_vs1) begin //VTS 
+                    mvmt_if.data_in = {16'b0, dec_vector_instrs[i].vs1_data[dec_vector_instrs[i].imm]};
+                end else begin //MTS
+                    mvmt_if.data_in = dec_vector_instrs[i].vms_data;
+                end
+                
+            end
+
             if (dec_vector_instrs[i].valid_in && dec_vector_instrs[i].fu_enable == atalla_isa_pkg::VLSU) begin
                 scif.vlsu_in.sched_req[dec_vector_instrs[i].sid].valid = 1'b1;
                 scif.vlsu_in.sched_req[dec_vector_instrs[i].sid].write = !(dec_vector_instrs[i].vector_reg_write); //if it's writing to a vec reg that means its a load (!vector_reg_write = vreg.st)
@@ -326,6 +352,7 @@ module scheduler_core #(
 
             // check if this instruction should go into LANES
             if (dec_vector_instrs[i].valid_in &&
+                dec_vector_instrs[i].fu_enable != atalla_isa_pkg::MVMT &&
                 dec_vector_instrs[i].fu_enable != atalla_isa_pkg::GSAU &&
                 dec_vector_instrs[i].fu_enable != atalla_isa_pkg::VLSU) 
             begin

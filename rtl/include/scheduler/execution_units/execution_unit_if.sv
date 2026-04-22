@@ -15,6 +15,7 @@ package execution_unit_types_pkg;
     logic [31:0] incr7;
     logic [31:0] imm;
     logic [6:0]  op;
+    logic mask_reg_write;
   } in_DEC2_EX_t;
 
   typedef struct packed {

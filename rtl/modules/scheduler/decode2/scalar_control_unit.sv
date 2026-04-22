@@ -151,6 +151,17 @@ module scalar_control_unit
                     cuif.decoded_scalar_instrs[i].reg_write  = 1'b1;
                 end
 
+                
+                // ----------------------------------------------------------------
+                // STM
+                // ----------------------------------------------------------------
+                MV_STM: begin
+                    cuif.decoded_scalar_instrs[i].valid_in   = 1'b1;
+                    cuif.decoded_scalar_instrs[i].use_rs1    = 1'b1;
+                    cuif.decoded_scalar_instrs[i].mask_reg_write  = 1'b1;
+
+                end
+
                 // ----------------------------------------------------------------
                 // Conversion ops
                 // ----------------------------------------------------------------
