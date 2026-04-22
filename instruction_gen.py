@@ -328,7 +328,18 @@ if __name__ == "__main__":
     conv_s_bf = {"opcode": 0b0010101, "rs1": 5, "rs2": 0, "rd": 5}
 
     #vector scalar mult
-    mult_vs = {"opcode": 0b1001101, "mask": 0, "rs1": 5, "vs1": 1, "vd": 2}
+    add_vs = {"opcode": 0b1001011, "mask": 0, "rs1": 5, "vs1": 1, "vd": 2}
+
+    #vector store
+    vstore = {"opcode": 0b1000101, "sid": 1, "num_cols": 31, "rs2": 4, "rs1": 0, "vd": 2}
+
+    #for reg 3 of sdma
+    # 01 00000 11111 0000000000000 0011111
+    lui_2 = {"opcode": 0b0110000, "imm25": 8642560, "rd": 3}
+    addi_5 = {"opcode": 0b0010110, "rs1": 3, "imm12": 31, "rd": 3}
+
+    #sdma store
+    sdma_st = {"opcode": 0b1000111, "rs3": 3, "rs2": 2, "rs1": 1}
 
     print(f"addi_1 {encode_instruction(addi_1)}")
     print(f"lui {encode_instruction(lui)}")
@@ -340,4 +351,8 @@ if __name__ == "__main__":
     print(f"addi_3 {encode_instruction(addi_3)}")
     print(f"addi_4 {encode_instruction(addi_4)}")
     print(f"conv_s_bf {encode_instruction(conv_s_bf)}")
-    print(f"mult_vs {encode_instruction(mult_vs)}")
+    print(f"add_vs {encode_instruction(add_vs)}")
+    print(f"vstore {encode_instruction(vstore)}")
+    print(f"lui_2 {encode_instruction(lui_2)}")
+    print(f"addi_5 {encode_instruction(addi_5)}")
+    print(f"sdma_st {encode_instruction(sdma_st)}")
