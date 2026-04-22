@@ -22,6 +22,7 @@ module mul_bf16_fu (
     logic        result_valid;
 
     assign mul_stall = result_valid && !mif.in.ready_out;
+    assign mul_start = mif.in.valid_in && mif.out.ready_in;
 
     mul_bf16 mul (
         .clk   (CLK),
@@ -45,14 +46,7 @@ module mul_bf16_fu (
         if (!nRST) begin
             result_reg   <= '0;
             result_valid <= 1'b0;
-            mul_start   <= 1'b0;
         end else begin
-            // Default: no start pulse
-            mul_start <= 1'b0;
-            if (mif.in.valid_in && mif.out.ready_in) begin
-                mul_start <= 1'b1;
-            end
-            
             if (mul_done && (result_valid && mif.in.ready_out)) begin
                 result_reg   <= mul_result;
                 result_valid <= 1'b1;

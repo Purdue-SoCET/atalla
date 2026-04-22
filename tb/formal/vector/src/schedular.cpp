@@ -136,12 +136,12 @@ void schedular::decode(packet pkt)
         else if (instr.opcode == 72)
         {
             sc_lane_signals[i].fu_sel = VALU;
-            sc_lane_signals[i].alu_op = 0;
+            sc_lane_signals[i].alu_op = 5;
         }
         else if (instr.opcode == 73)
         {
             sc_lane_signals[i].fu_sel = VALU;
-            sc_lane_signals[i].alu_op = 1;
+            sc_lane_signals[i].alu_op = 4;
         }
         
         switch (instr.type)

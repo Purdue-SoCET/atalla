@@ -28,7 +28,7 @@ module vector_datapath (
     logic [LANE_FU_COUNT-1:0][NUM_LANES-1:0] fu_lane_readies;
 
     //interface definitons
-    lane_if lane_interfaces [NUM_LANES]();
+    lane_if lane_interfaces [NUM_LANES-1:0]();
     result_collector_if rc_interfaces [LANE_FU_COUNT]();
 
     //slicer
