@@ -84,12 +84,14 @@ module system #()
     //WB
     assign vif.wb_ready_signals = scif.vector_if_wb_ready;
     assign scif.vector_wb_in.vector_if_lanes_out = vif.lanes_out;
+    assign scif.vector_wb_in.vector_if_vlsu_out = vif.vlsu_out;
+    assign scif.vector_wb_in.vector_if_gsau_out = vif.gsau_out;
 
     //clear sdma dest reg in dependency tracker
-    assign scif.SDMA_scalar_WEN[0] = sif.sdma_done_req[0].valid;
-    assign scif.SDMA_scalar_WEN[1] = sif.sdma_done_req[1].valid;
-    assign scif.SDMA_scalar_WEN[2] = sif.sdma_done_req[2].valid;
-    assign scif.SDMA_scalar_WEN[3] = sif.sdma_done_req[3].valid;
+    assign scif.SDMA_scalar_WEN[0] = sif.sdma_done[0];
+    assign scif.SDMA_scalar_WEN[1] = sif.sdma_done[1];
+    assign scif.SDMA_scalar_WEN[2] = sif.sdma_done[2];
+    assign scif.SDMA_scalar_WEN[3] = sif.sdma_done[3];
     assign scif.SDMA_scalar_rs1s[0] = sif.sdma_done_req[0].rd;
     assign scif.SDMA_scalar_rs1s[1] = sif.sdma_done_req[1].rd;
     assign scif.SDMA_scalar_rs1s[2] = sif.sdma_done_req[2].rd;

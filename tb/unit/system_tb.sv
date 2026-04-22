@@ -5,7 +5,7 @@ import scpad_pkg::*;
 module system_tb;
 
     localparam int ADDR_WIDTH = 32;
-    localparam int MEM_BYTES  = 256;
+    localparam int MEM_BYTES  = 16384;
 
     parameter PERIOD = 2;
     logic CLK = 0, nRST;
@@ -118,7 +118,7 @@ module system_tb;
         .sc0_resp_hit(scpad_0_res.valid),
         .sc0_resp_id(scpad_0_res.id),
         .sc0_resp_rw(scpad_0_res.write),
-        //need one slot fo the response mask
+        .sc0_resp_mask(scpad_0_res.dram_vector_mask),
         .sc0_stall_out(dram_scpad_stall[3]),
 
         // -----------------------------
@@ -135,7 +135,7 @@ module system_tb;
         .sc1_resp_hit(scpad_1_res.valid),
         .sc1_resp_id(scpad_1_res.id),
         .sc1_resp_rw(scpad_1_res.write),
-        //need one slot fo the response mask
+        .sc1_resp_mask(scpad_1_res.dram_vector_mask),
         .sc1_stall_out(dram_scpad_stall[2]),
 
         // -----------------------------
@@ -152,7 +152,7 @@ module system_tb;
         .sc2_resp_hit(scpad_2_res.valid),
         .sc2_resp_id(scpad_2_res.id),
         .sc2_resp_rw(scpad_2_res.write),
-        //need one slot fo the response mask
+        .sc2_resp_mask(scpad_2_res.dram_vector_mask),
         .sc2_stall_out(dram_scpad_stall[1]),
 
         // -----------------------------
@@ -169,7 +169,7 @@ module system_tb;
         .sc3_resp_hit(scpad_3_res.valid),
         .sc3_resp_id(scpad_3_res.id),
         .sc3_resp_rw(scpad_3_res.write),
-        //need one slot fo the response mask
+        .sc3_resp_mask(scpad_3_res.dram_vector_mask),
         .sc3_stall_out(dram_scpad_stall[0])
     );
 

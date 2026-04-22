@@ -275,8 +275,8 @@ def encode_instruction(instr_dict):
         instruction = _set_bits(instruction, vd, 7, 8)
         instruction = _set_bits(instruction, rs1, 15, 8)
         instruction = _set_bits(instruction, rs2, 23, 8)
-        instruction = _set_bits(instruction, num_cols, 28, 5)
-        instruction = _set_bits(instruction, sid, 33, 1)
+        instruction = _set_bits(instruction, num_cols, 31, 5)
+        instruction = _set_bits(instruction, sid, 36, 1)
 
     elif instr_type == "SDMA":
         # Shared scratchpad register field: rs1 and/or rd1
@@ -308,11 +308,18 @@ if __name__ == "__main__":
     addi_1 = {"opcode": 0b0010110, "rs1": 0, "imm12": 200, "rd": 2}
 
     #for reg 3 of sdma
-    lui = {"opcode": 0b0110000, "imm25": 8134656, "rd": 3}
-    addi_2 = {"opcode": 0b0010110, "rs1": 3, "imm12": 1, "rd": 3}
+    # 00 00000 11111 0000000000000 0011111
+    lui = {"opcode": 0b0110000, "imm25": 253952, "rd": 3}
+    addi_2 = {"opcode": 0b0010110, "rs1": 3, "imm12": 31, "rd": 3}
 
     #sdma
     sdma = {"opcode": 0b1000110, "rs3": 3, "rs2": 2, "rs1": 1}
+
+    #for reg 2 of vec load
+    addi_3 = {"opcode": 0b0010110, "rs1": 0, "imm12": 0, "rd": 4}
+
+    #vector load
+    vload = {"opcode": 0b1000100, "sid": 0, "num_cols": 31, "rs2": 4, "rs1": 1, "vd": 1}
 
     print(f"addi_1 {encode_instruction(addi_1)}")
     print(f"lui {encode_instruction(lui)}")
@@ -320,3 +327,5 @@ if __name__ == "__main__":
     print(f"sdma {encode_instruction(sdma)}")
     print(f"nop {encode_instruction(nop)}")
     print(f"halt {encode_instruction(halt)}")
+    print(f"vload {encode_instruction(vload)}")
+    print(f"addi_3 {encode_instruction(addi_3)}")
