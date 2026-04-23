@@ -46,7 +46,7 @@ interface execution_unit_if # (
   logic [31:0] data_store, data_addr;
 
   logic to_mask_reg;
-
+  logic scalar_halt_ready, vector_halt_ready, mask_halt_ready, scpads_busy, internal_halt;
 
   //halt
   logic halt, halt_out;
@@ -61,9 +61,9 @@ interface execution_unit_if # (
 
   modport execution_units (
     input ready_WB_ex1, ready_WB_ex2, ready_WB_ex3, ready_WB_ex4, ready_WB_ex5, mask_ready_WB,
-    input data_load, hit, block_status, stall, miss,
+    input data_load, hit, block_status, stall, miss, scalar_halt_ready, vector_halt_ready, mask_halt_ready, scpads_busy,
     input DEC2_inputs, halt, pc, pc_pred_addr_out, predict_taken_out,
-    output ready_DEC2_ex1, ready_DEC2_ex2, ready_DEC2_ex3, ready_DEC2_ex4, ready_DEC2_ex5, halt_out,
+    output ready_DEC2_ex1, ready_DEC2_ex2, ready_DEC2_ex3, ready_DEC2_ex4, ready_DEC2_ex5, halt_out, internal_halt,
     output redirect_valid, redirect_target, WEN, REN, mem_in_valid, data_store, data_addr, to_mask_reg,
     output ex1, ex2, ex3, ex4, ex5,
     output pc_out
@@ -71,9 +71,9 @@ interface execution_unit_if # (
 
   modport tb (
     output ready_WB_ex1, ready_WB_ex2, ready_WB_ex3, ready_WB_ex4, ready_WB_ex5, mask_ready_WB,
-    output data_load, hit, block_status, stall, miss,
+    output data_load, hit, block_status, stall, miss, scalar_halt_ready, vector_halt_ready, mask_halt_ready, scpads_busy,
     output DEC2_inputs, halt, pc, pc_pred_addr_out, predict_taken_out,
-    input ready_DEC2_ex1, ready_DEC2_ex2, ready_DEC2_ex3, ready_DEC2_ex4, ready_DEC2_ex5, halt_out,
+    input ready_DEC2_ex1, ready_DEC2_ex2, ready_DEC2_ex3, ready_DEC2_ex4, ready_DEC2_ex5, halt_out, internal_halt,
     input redirect_valid, redirect_target, WEN, REN, mem_in_valid, data_store, data_addr,
     input ex1, ex2, ex3, ex4, ex5,
     input pc_out

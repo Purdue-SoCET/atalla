@@ -86,6 +86,7 @@ module system #()
     assign scif.vector_wb_in.vector_if_lanes_out = vif.lanes_out;
     assign scif.vector_wb_in.vector_if_vlsu_out = vif.vlsu_out;
     assign scif.vector_wb_in.vector_if_gsau_out = vif.gsau_out;
+    assign scif.vector_wb_in.mvvOrMvs = vif.lanes_out.result_collectors[0].mop_out;
 
     //clear sdma dest reg in dependency tracker
     assign scif.SDMA_scalar_WEN[0] = sif.sdma_done[0];

@@ -23,6 +23,10 @@ module dependency_checker #(
     logic [NUM_VECTOR_REGS-1:0] vector_dependency_table;
     logic [NUM_MASK_REGS-1:0] mask_dependency_table;
 
+    assign dc_if.scalar_halt_ready = |scalar_dependency_table;
+    assign dc_if.vector_halt_ready = |vector_dependency_table;
+    assign dc_if.mask_halt_ready = |mask_dependency_table;
+
     logic [SCALAR_READ_PORTS-1:0] scalar_hit;
     logic [VECTOR_READ_PORTS-1:0] vector_hit;
     logic [MASK_READ_PORTS-1:0]   mask_hit;

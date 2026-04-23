@@ -44,7 +44,7 @@ module v_wb_arbiter #(
 
     //Mask stuff:
     //Vector Mask write
-    if (vif.vector_wb_in.mvvOrMvs) begin
+    if ((vif.vector_wb_in.vector_if_lanes_out.result_collectors[0].wb_valid) & vif.vector_wb_in.mvvOrMvs) begin
         bankSelected_mask = vif.vector_wb_in.vector_if_lanes_out.result_collectors[0].vd_output[0];
         // Bank 0 if last bit of address is 0. Bank 1 if last bit of address is 1
 
@@ -73,13 +73,7 @@ module v_wb_arbiter #(
             banks_mask[bankSelected_mask] = 1;
             vif.mask_wb_out.mask_WB_wsel[bankSelected_mask] = vif.scalar_wb_in_maskWBonly.rd;
             vif.mask_wb_out.mask_WB_WEN[bankSelected_mask] = 1;
-            vif.mask_wb_out.mask_WB_wdata = '0;
-
-            local_vreg = vif.scalar_wb_in_maskWBonly.data;
-
-            for (int i = 0; i < 32; i++) begin
-                vif.mask_wb_out.mask_WB_wdata[bankSelected_mask][i] = local_vreg[0];
-            end
+            vif.mask_wb_out.mask_WB_wdata[bankSelected_mask] = vif.scalar_wb_in_maskWBonly.data;
         end else begin
             vif.scalarMaskNotReady = 0;
         end
@@ -137,8 +131,7 @@ module v_wb_arbiter #(
             vif.vector_wb_out.vector_if_wb_ready.reduction_wb_ready = 0; // Bank conflict with higher-priority port, stall this request. Indicate which input is causing the stall
         end
     end
-    // if ((vif.vector_wb_in.vector_if_lanes_out.result_collectors[0].wb_valid) & (!vif.vector_wb_in.mvvOrMvs)) begin //Only if mask is not masking
-    if ((vif.vector_wb_in.vector_if_lanes_out.result_collectors[0].wb_valid)) begin //TODO change back once connected Only if mask is not masking
+    if ((vif.vector_wb_in.vector_if_lanes_out.result_collectors[0].wb_valid) & (!vif.vector_wb_in.mvvOrMvs)) begin //Only if mask is not masking
         bankSelected = vif.vector_wb_in.vector_if_lanes_out.result_collectors[0].vd_output[7:6];
         if (!(banks[bankSelected])) begin
             banks[bankSelected] = 1'b1; // Mark bank as used
@@ -169,6 +162,28 @@ module v_wb_arbiter #(
             vif.vector_wb_out.WEN[bankSelected] = 1;
         end else begin
             vif.vector_wb_out.vector_if_wb_ready.lanes_wb_ready[2] = 0; // Bank conflict with higher-priority port, stall this request. Indicate which input is causing the stall
+        end
+    end
+    if (vif.vector_wb_in.vector_if_lanes_out.result_collectors[3].wb_valid) begin
+        bankSelected = vif.vector_wb_in.vector_if_lanes_out.result_collectors[3].vd_output[7:6];
+        if (!(banks[bankSelected])) begin
+            banks[bankSelected] = 1'b1; // Mark bank as used
+            vif.vector_wb_out.vd[bankSelected]   = vif.vector_wb_in.vector_if_lanes_out.result_collectors[3].vd_output;
+            vif.vector_wb_out.vdata[bankSelected] = vif.vector_wb_in.vector_if_lanes_out.result_collectors[3].vector_output;
+            vif.vector_wb_out.WEN[bankSelected] = 1;
+        end else begin
+            vif.vector_wb_out.vector_if_wb_ready.lanes_wb_ready[3] = 0; // Bank conflict with higher-priority port, stall this request. Indicate which input is causing the stall
+        end
+    end
+    if (vif.vector_wb_in.vector_if_lanes_out.result_collectors[4].wb_valid) begin
+        bankSelected = vif.vector_wb_in.vector_if_lanes_out.result_collectors[4].vd_output[7:6];
+        if (!(banks[bankSelected])) begin
+            banks[bankSelected] = 1'b1; // Mark bank as used
+            vif.vector_wb_out.vd[bankSelected]   = vif.vector_wb_in.vector_if_lanes_out.result_collectors[4].vd_output;
+            vif.vector_wb_out.vdata[bankSelected] = vif.vector_wb_in.vector_if_lanes_out.result_collectors[4].vector_output;
+            vif.vector_wb_out.WEN[bankSelected] = 1;
+        end else begin
+            vif.vector_wb_out.vector_if_wb_ready.lanes_wb_ready[4] = 0; // Bank conflict with higher-priority port, stall this request. Indicate which input is causing the stall
         end
     end
     end

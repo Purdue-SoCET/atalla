@@ -68,7 +68,7 @@ module scheduler_core #(
     execute_stage S_EXECUTE(.clk(CLK), .nRST(nRST), .ex_if(scalar_ex_if));
     decode_2 S_V_DECODE_2(.CLK(CLK), .nRST(nRST), .d2if(decode_2_if));
     fetch_decode1 S_FETCH_DECODE_1 (.clk(CLK), .rst_n(nRST), .flush(scalar_ex_if.redirect_valid), 
-                                    .ready(dec1_dec2_latch_ready), .pc_branch(scalar_ex_if.redirect_target), .halt(scalar_ex_if.halt_out),
+                                    .ready(dec1_dec2_latch_ready), .pc_branch(scalar_ex_if.redirect_target), .halt(scalar_ex_if.internal_halt),
                                     .btb_update_en(scalar_ex_if.redirect_valid), .btb_pc_update(scalar_ex_if.pc_out),
                                     .btb_true_target(scalar_ex_if.redirect_target), .dc_if(datapath_cache_if),
                                     .dec12_if(decode_1_if));
@@ -77,7 +77,7 @@ module scheduler_core #(
 
     //DEC1 outputs to latch
     always_comb begin
-        if(scalar_ex_if.redirect_valid || scalar_ex_if.halt_out) begin
+        if(scalar_ex_if.redirect_valid || scalar_ex_if.internal_halt) begin
             n_D1_D2_latch.scalar_instrs = NOP_PACKET;
         end
         else if(dec1_dec2_latch_ready) begin
@@ -110,7 +110,7 @@ module scheduler_core #(
         //EX inputs from DEC2
         n_DEC2_EX_halt_latch = 1'b0;
         n_D2_EX_vec_sdma_latch = '0;
-        if(decode_2_if.ready && !scalar_ex_if.redirect_valid && !scalar_ex_if.halt_out) begin
+        if(decode_2_if.ready && !scalar_ex_if.redirect_valid && !scalar_ex_if.internal_halt) begin
             n_D2_EX_vec_sdma_latch.decoded_vector_instrs = decode_2_if.decoded_vector_instrs;
             n_D2_EX_vec_sdma_latch.decoded_SDMA_instrs = decode_2_if.decoded_SDMA_instrs;
             for(int i = 0; i < NUM_SCALAR_INSTRS; i++) begin
@@ -150,7 +150,10 @@ module scheduler_core #(
         scalar_ex_if.predict_taken_out = DEC2_EX_PC_latch.predict_taken_out;
     end
 
-    
+    assign scalar_ex_if.scalar_halt_ready = decode_2_if.scalar_halt_ready;
+    assign scalar_ex_if.vector_halt_ready = decode_2_if.vector_halt_ready;
+    assign scalar_ex_if.mask_halt_ready = decode_2_if.mask_halt_ready;
+    assign scalar_ex_if.scpads_busy = scif.scpad_busy[0] | scif.scpad_busy[1] | scif.scpad_busy[2] | scif.scpad_busy[3];
 
 
 
@@ -188,7 +191,6 @@ module scheduler_core #(
 
     always_comb begin
         vector_wb_if.vector_wb_in = scif.vector_wb_in; //directly from scheduler core interface since it's coming from VC and going to the arbiter without needing to be latched
-        vector_wb_if.vector_wb_in.mvvOrMvs = 1'b0;
     end
     
 
@@ -380,7 +382,11 @@ module scheduler_core #(
                     end else if (dec_vector_instrs[i].op2_src == 2'b10) begin  //vs
                         scif.lanes_in.lane_issue_ports[lane_idx].v2 = '{32{dec_vector_instrs[i].rs1_data[15:0]}};
                     end
-                    scif.lanes_in.lane_issue_ports[lane_idx].vd = dec_vector_instrs[i].vd;
+                    if(dec_vector_instrs[i].mask_reg_write == 1'b1) begin
+                        scif.lanes_in.lane_issue_ports[lane_idx].vd = dec_vector_instrs[i].vmd;
+                    end else begin
+                        scif.lanes_in.lane_issue_ports[lane_idx].vd = dec_vector_instrs[i].vd;
+                    end
                     scif.lanes_in.lane_issue_ports[lane_idx].rm = dec_vector_instrs[i].rm;
                     scif.lanes_in.lane_issue_ports[lane_idx].mask = dec_vector_instrs[i].vms_data;
 

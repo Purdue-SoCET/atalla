@@ -40,8 +40,7 @@ module s_wb_arbiter #(
         //     vif.scalar_wb_out.ready[0] = 1'b0;
         // end
 
-        // if (vif.scalar_wb_in.valid[1] && (!banks[0][vif.scalar_wb_in.rd[1][1:0]]&& !vif.scalar_wb_in.maskornotscalar)) begin //TODO change once we haev the unit 2 stm stuff hooked up
-        if (vif.scalar_wb_in.valid[1] && (!banks[0][vif.scalar_wb_in.rd[1][1:0]])) begin
+        if (vif.scalar_wb_in.valid[1] && (!banks[0][vif.scalar_wb_in.rd[1][1:0]])) begin //TODO change once we haev the unit 2 stm stuff hooked up
 
             vif.scalar_wb_out.data[vif.scalar_wb_in.rd[1][1:0]]  = vif.scalar_wb_in.data[1];
             vif.scalar_wb_out.rd[vif.scalar_wb_in.rd[1][1:0]]    = vif.scalar_wb_in.rd[1];
@@ -78,7 +77,7 @@ module s_wb_arbiter #(
         end
         banks[3] = banks[3] | banks[2];
 
-        if (vif.scalar_wb_in.valid[4] && (!banks[3][vif.scalar_wb_in.rd[4][1:0]])) begin
+        if (vif.scalar_wb_in.valid[4] && (!banks[3][vif.scalar_wb_in.rd[4][1:0]] && !vif.scalar_wb_in.maskornotscalar)) begin
             vif.scalar_wb_out.data[vif.scalar_wb_in.rd[4][1:0]]  = vif.scalar_wb_in.data[4];
             vif.scalar_wb_out.rd[vif.scalar_wb_in.rd[4][1:0]]    = vif.scalar_wb_in.rd[4];
             vif.scalar_wb_out.WEN[vif.scalar_wb_in.rd[4][1:0]]   = 1'b1;

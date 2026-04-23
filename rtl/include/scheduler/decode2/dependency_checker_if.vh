@@ -63,6 +63,7 @@ interface dependency_checker_if #(
 
     logic dependencies_ready;
     logic ready;
+    logic scalar_halt_ready, vector_halt_ready, mask_halt_ready;
 
     modport dc (
         //src reg signals from D2
@@ -79,11 +80,11 @@ interface dependency_checker_if #(
         //signal for when to mark dest registers as busy
         input ready, 
         //all RAW/WAW hazards cleared
-        output dependencies_ready
+        output dependencies_ready, scalar_halt_ready, vector_halt_ready, mask_halt_ready
     );
 
     modport tb (
-        input  dependencies_ready,
+        input  dependencies_ready, scalar_halt_ready, vector_halt_ready, mask_halt_ready,
         //src reg signals from D2
         output scalar_REN, scalar_rsel, vector_REN, vector_rsel, mask_REN, mask_rsel,
         //dest reg signals from D2

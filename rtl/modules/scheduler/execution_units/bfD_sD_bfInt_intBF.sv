@@ -75,7 +75,7 @@ always_comb begin
         if(cur_imm_src) begin
             src2 = cur_imm;
         end
-    end else if(cur_BF_Int == 1) begin
+    end else if(cur_BF_Int == 1 && !cur_mask_move == 1) begin
         latency = 1;
         portmap.data_out = bf_int_output;
     end else if(cur_Int_BF == 1) begin
@@ -84,7 +84,7 @@ always_comb begin
     end else if(cur_sqrt == 1) begin
         latency = 11;
         portmap.data_out = {16'b0, bf_sqrt_output};
-    end else if(cur_mask_move == 1) begin
+    end else if(cur_BF_Int == 1 && cur_mask_move == 1) begin
         latency = 1;
         portmap.data_out = cur_input_1;
         portmap.to_mask_out = 1;

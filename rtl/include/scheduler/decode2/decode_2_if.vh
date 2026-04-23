@@ -36,6 +36,7 @@ interface decode_2_if #(
     logic scpad_busy [NUM_SDMA_INSTRUCTIONS]; //one per scpad
 
     logic ready; // RAW hazards and structural hazards cleared 
+    logic scalar_halt_ready, vector_halt_ready, mask_halt_ready;
 
     word_t pc_in, pc_out, pc_pred_addr_in, pc_pred_addr_out;
     logic  predict_taken_in, predict_taken_out;
@@ -71,7 +72,7 @@ interface decode_2_if #(
 
         output decoded_scalar_instrs, decoded_vector_instrs, decoded_SDMA_instrs,
         output pc_out, pc_pred_addr_out, predict_taken_out, 
-        output ready
+        output ready, scalar_halt_ready, vector_halt_ready, mask_halt_ready
     );
 
     modport tb (

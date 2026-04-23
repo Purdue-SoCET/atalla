@@ -53,6 +53,11 @@ assign d2if.pc_out           = d2if.pc_in;
 assign d2if.pc_pred_addr_out = d2if.pc_pred_addr_in;
 assign d2if.predict_taken_out = d2if.predict_taken_in;
 
+assign d2if.scalar_halt_ready = dcif.scalar_halt_ready;
+assign d2if.vector_halt_ready = dcif.vector_halt_ready;
+assign d2if.mask_halt_ready = dcif.mask_halt_ready;
+
+
 assign scif.scalar_instrs = d2if.scalar_instrs;
 assign vcif.vector_instrs = d2if.vector_instrs;
 assign sdmacif.sdma_instrs = d2if.SDMA_instrs;

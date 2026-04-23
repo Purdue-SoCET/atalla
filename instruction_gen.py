@@ -235,7 +235,7 @@ def encode_instruction(instr_dict):
         vs2 = instr_dict.get("vs2", 0)
         mask = instr_dict.get("mask", 0)
 
-        instruction = _set_bits(instruction, vmd, 11, 4)
+        instruction = _set_bits(instruction, vmd, 7, 4)
         instruction = _set_bits(instruction, vs1, 15, 8)
         instruction = _set_bits(instruction, vs2, 23, 8)
         instruction = _set_bits(instruction, mask, 31, 4)
@@ -246,7 +246,7 @@ def encode_instruction(instr_dict):
         rs1 = instr_dict.get("rs1", 0)
         mask = instr_dict.get("mask", 0)
 
-        instruction = _set_bits(instruction, vmd, 11, 4)
+        instruction = _set_bits(instruction, vmd, 7, 4)
         instruction = _set_bits(instruction, vs1, 15, 8)
         instruction = _set_bits(instruction, rs1, 23, 8)
         instruction = _set_bits(instruction, mask, 31, 4)
@@ -256,7 +256,7 @@ def encode_instruction(instr_dict):
         vms = instr_dict.get("vms", 0)
 
         instruction = _set_bits(instruction, rd, 7, 8)
-        instruction = _set_bits(instruction, vms, 15, 8)
+        instruction = _set_bits(instruction, vms, 15, 4)
 
     elif instr_type == "STM":
         vmd = instr_dict.get("vmd", 0)
@@ -322,7 +322,7 @@ if __name__ == "__main__":
     vload = {"opcode": 0b1000100, "sid": 0, "num_cols": 31, "rs2": 4, "rs1": 1, "vd": 1}
 
     #addi for getting the starting value for bf16
-    addi_4 = {"opcode": 0b0010110, "rs1": 0, "imm12": 2, "rd": 5}
+    addi_4 = {"opcode": 0b0010110, "rs1": 0, "imm12": 16, "rd": 5}
 
     #conversion from s to bf
     conv_s_bf = {"opcode": 0b0010101, "rs1": 5, "rs2": 0, "rd": 5}
@@ -347,6 +347,12 @@ if __name__ == "__main__":
     #scalar to mask
     s_to_m = {"opcode": 0b1001010, "rs1": 3, "vmd": 2}
 
+    #mask to scalar
+    m_to_s = {"opcode": 0b1001001, "rd": 4, "vms": 2}
+
+    #mask greater than w scalar
+    mgt_vs = {"opcode": 0b1000000, "mask": 0, "rs1": 5, "vs1": 1, "vmd": 2}
+
     print(f"addi_1 {encode_instruction(addi_1)}")
     print(f"lui {encode_instruction(lui)}")
     print(f"addi_2 {encode_instruction(addi_2)}")
@@ -364,3 +370,5 @@ if __name__ == "__main__":
     print(f"sdma_st {encode_instruction(sdma_st)}")
     print(f"v_to_s {encode_instruction(v_to_s)}")
     print(f"s_to_m {encode_instruction(s_to_m)}")
+    print(f"m_to_s {encode_instruction(m_to_s)}")
+    print(f"mgt_vs {encode_instruction(mgt_vs)}")

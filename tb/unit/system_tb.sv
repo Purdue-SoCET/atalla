@@ -82,7 +82,7 @@ module system_tb;
     sim_ram_rr #(
         .ADDR_WIDTH (ADDR_WIDTH),
         .MEM_BYTES  (MEM_BYTES),
-        .INIT_FILE  ("tb/unit/mem_files/sqrt_bf.hex"),
+        .INIT_FILE  ("tb/unit/mem_files/mgt_vs.hex"),
         .INIT_IS_HEX(1'b1),
         .DUMP_FILE  ("tb/unit/mem_files/final_mem.hex"),
         .BIG_ENDIAN (1'b0),
@@ -180,11 +180,9 @@ module system_tb;
         @(posedge CLK);
         nRST = 1'b1;
 
-        // while(dcache_flushed != 1'b1) begin
-        //     @(posedge CLK);
-        // end
-
-        repeat(200) @(posedge CLK);
+        while(dcache_flushed != 1'b1) begin
+            @(posedge CLK);
+        end
 
         @(posedge CLK);
         @(posedge CLK);

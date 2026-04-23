@@ -18,7 +18,6 @@ module execute_stage
 );
     logic ex1_valid, ex2_valid, ex3_valid, ex4_valid, ex5_valid;
     logic n_halt_latch, halt_latch;
-    logic internal_halt;
 
     always_comb begin
         if(ex_if.halt == 1) begin
@@ -28,12 +27,12 @@ module execute_stage
             n_halt_latch = halt_latch;
         end
 
-        if(halt_latch && unit1_if.ready_in && unit2_if.ready_in && unit3_if.ready_in && unit4_if.ready_in && unit5_if.ready_in) begin
+        if(halt_latch && !ex_if.scalar_halt_ready && !ex_if.vector_halt_ready && !ex_if.mask_halt_ready && unit5_if.ready_in && !ex_if.scpads_busy) begin
             ex_if.halt_out = halt_latch;
         end else begin
             ex_if.halt_out = 1'b0;
         end
-        internal_halt = n_halt_latch | halt_latch;
+        ex_if.internal_halt = n_halt_latch | halt_latch;
     end
 
     always_ff @( posedge clk, negedge nRST ) begin
@@ -85,7 +84,7 @@ module execute_stage
     assign ex_if.ex1.rdOut = unit1_if.rdOut;
     //ready handshake
     assign unit1_if.ready_out = ex_if.ready_WB_ex1;
-    assign ex_if.ready_DEC2_ex1 = !internal_halt ? unit1_if.ready_in : 0;
+    assign ex_if.ready_DEC2_ex1 = unit1_if.ready_in;
     //branch side
     assign ex_if.redirect_valid = unit1_if.redirect_valid;
     assign ex_if.redirect_target = unit1_if.redirect_target;
@@ -111,7 +110,7 @@ module execute_stage
     //ready handshake
     assign unit2_if.ready_out = ex_if.ready_WB_ex2;
     assign unit2_if.mask_ready_out = ex_if.mask_ready_WB;
-    assign ex_if.ready_DEC2_ex2 = !internal_halt ? unit2_if.ready_in : 0;
+    assign ex_if.ready_DEC2_ex2 = unit2_if.ready_in;
 
     //UNIT_3 CONNECTIONS
     //inputs
@@ -126,7 +125,7 @@ module execute_stage
     assign ex_if.ex3.rdOut = unit3_if.rdOut;
     //ready handshake
     assign unit3_if.ready_out = ex_if.ready_WB_ex3;
-    assign ex_if.ready_DEC2_ex3 = !internal_halt ? unit3_if.ready_in : 0;
+    assign ex_if.ready_DEC2_ex3 = unit3_if.ready_in;
 
     //UNIT_4 CONNECTIONS
     //inputs
@@ -143,7 +142,7 @@ module execute_stage
     assign ex_if.ex4.rdOut = unit4_if.rdOut;
     //ready handshake
     assign unit4_if.ready_out = ex_if.ready_WB_ex4;
-    assign ex_if.ready_DEC2_ex4 = !internal_halt ? unit4_if.ready_in : 0;
+    assign ex_if.ready_DEC2_ex4 = unit4_if.ready_in;
 
     //UNIT_5 CONNECTIONS
     //inputs
@@ -159,7 +158,7 @@ module execute_stage
     assign ex_if.ex5.rdOut = unit5_if.rdOut;
     //ready handshake
     assign unit5_if.ready_out = ex_if.ready_WB_ex5;
-    assign ex_if.ready_DEC2_ex5 = !internal_halt ? unit5_if.ready_in : 0;
+    assign ex_if.ready_DEC2_ex5 = unit5_if.ready_in;
     //D$ signals
     assign unit5_if.data_load = ex_if.data_load;
     assign unit5_if.hit = ex_if.hit;
