@@ -73,13 +73,7 @@ module v_wb_arbiter #(
             banks_mask[bankSelected_mask] = 1;
             vif.mask_wb_out.mask_WB_wsel[bankSelected_mask] = vif.scalar_wb_in_maskWBonly.rd;
             vif.mask_wb_out.mask_WB_WEN[bankSelected_mask] = 1;
-            vif.mask_wb_out.mask_WB_wdata = '0;
-
-            local_vreg = vif.scalar_wb_in_maskWBonly.data;
-
-            for (int i = 0; i < 32; i++) begin
-                vif.mask_wb_out.mask_WB_wdata[bankSelected_mask][i] = local_vreg[0];
-            end
+            vif.mask_wb_out.mask_WB_wdata[bankSelected_mask] = vif.scalar_wb_in_maskWBonly.data;
         end else begin
             vif.scalarMaskNotReady = 0;
         end
