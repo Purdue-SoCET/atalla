@@ -120,12 +120,12 @@ module v_wb_arbiter #(
     end
 
     //Reduction Unit
-    if (vif.vector_wb_in.vector_if_reduction_out.wb_valid) begin
-        bankSelected = vif.vector_wb_in.vector_if_reduction_out.vd_output[7:6];
+    if (vif.vector_wb_in.vector_if_lanes_out.reduction.wb_valid) begin
+        bankSelected = vif.vector_wb_in.vector_if_lanes_out.reduction.vd_output[7:6];
         if (!(banks[bankSelected])) begin
             banks[bankSelected] = 1'b1; // Mark bank as used
-            vif.vector_wb_out.vd[bankSelected]   = vif.vector_wb_in.vector_if_reduction_out.vd_output;
-            vif.vector_wb_out.vdata[bankSelected] = vif.vector_wb_in.vector_if_reduction_out.vector_output;
+            vif.vector_wb_out.vd[bankSelected]   = vif.vector_wb_in.vector_if_lanes_out.reduction.vd_output;
+            vif.vector_wb_out.vdata[bankSelected] = vif.vector_wb_in.vector_if_lanes_out.reduction.vector_output;
             vif.vector_wb_out.WEN[bankSelected] = 1;
         end else begin
             vif.vector_wb_out.vector_if_wb_ready.reduction_wb_ready = 0; // Bank conflict with higher-priority port, stall this request. Indicate which input is causing the stall
