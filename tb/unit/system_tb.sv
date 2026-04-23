@@ -82,7 +82,7 @@ module system_tb;
     sim_ram_rr #(
         .ADDR_WIDTH (ADDR_WIDTH),
         .MEM_BYTES  (MEM_BYTES),
-        .INIT_FILE  ("tb/unit/mem_files/mgt_vs.hex"),
+        .INIT_FILE  ("tb/unit/mem_files/mul_vv.hex"),
         .INIT_IS_HEX(1'b1),
         .DUMP_FILE  ("tb/unit/mem_files/final_mem.hex"),
         .BIG_ENDIAN (1'b0),

@@ -305,21 +305,22 @@ if __name__ == "__main__":
     #reg 1 of sdma will be 0
 
     #for reg 2 of sdma
-    addi_1 = {"opcode": 0b0010110, "rs1": 0, "imm12": 200, "rd": 2}
+    addi_1 = {"opcode": 0b0010110, "rs1": 0, "imm12": 260, "rd": 2}
 
     #for reg 3 of sdma
-    # 00 00000 11111 0000000000000 0011111
-    lui = {"opcode": 0b0110000, "imm25": 253952, "rd": 3}
+    # 00 00001 11111 0000000000000 0011111
+    lui = {"opcode": 0b0110000, "imm25": 516096, "rd": 3}
     addi_2 = {"opcode": 0b0010110, "rs1": 3, "imm12": 31, "rd": 3}
 
     #sdma
     sdma = {"opcode": 0b1000110, "rs3": 3, "rs2": 2, "rs1": 1}
 
     #for reg 2 of vec load
-    addi_3 = {"opcode": 0b0010110, "rs1": 0, "imm12": 0, "rd": 4}
+    addi_3 = {"opcode": 0b0010110, "rs1": 0, "imm12": 1, "rd": 4}
 
     #vector load
-    vload = {"opcode": 0b1000100, "sid": 0, "num_cols": 31, "rs2": 4, "rs1": 1, "vd": 1}
+    vload_1 = {"opcode": 0b1000100, "sid": 0, "num_cols": 31, "rs2": 0, "rs1": 1, "vd": 1}
+    vload_2 = {"opcode": 0b1000100, "sid": 0, "num_cols": 31, "rs2": 4, "rs1": 1, "vd": 2}
 
     #addi for getting the starting value for bf16
     addi_4 = {"opcode": 0b0010110, "rs1": 0, "imm12": 16, "rd": 5}
@@ -328,7 +329,7 @@ if __name__ == "__main__":
     conv_s_bf = {"opcode": 0b0010101, "rs1": 5, "rs2": 0, "rd": 5}
 
     #vector scalar mult
-    sub_vs = {"opcode": 0b1001100, "mask": 0, "rs1": 5, "vs1": 1, "vd": 2}
+    mul_vv = {"opcode": 0b0110101, "mask": 0, "vs1": 2, "vs2": 1, "vd": 3}
 
     #vector store
     vstore = {"opcode": 0b1000101, "sid": 1, "num_cols": 31, "rs2": 4, "rs1": 0, "vd": 2}
@@ -351,7 +352,7 @@ if __name__ == "__main__":
     m_to_s = {"opcode": 0b1001001, "rd": 4, "vms": 2}
 
     #mask greater than w scalar
-    mgt_vs = {"opcode": 0b1000000, "mask": 0, "rs1": 5, "vs1": 1, "vmd": 2}
+    mneq_vs = {"opcode": 0b1000011, "mask": 0, "rs1": 5, "vs1": 1, "vmd": 2}
 
     print(f"addi_1 {encode_instruction(addi_1)}")
     print(f"lui {encode_instruction(lui)}")
@@ -359,11 +360,12 @@ if __name__ == "__main__":
     print(f"sdma {encode_instruction(sdma)}")
     print(f"nop {encode_instruction(nop)}")
     print(f"halt {encode_instruction(halt)}")
-    print(f"vload {encode_instruction(vload)}")
+    print(f"vload_1 {encode_instruction(vload_1)}")
+    print(f"vload_2 {encode_instruction(vload_2)}")
     print(f"addi_3 {encode_instruction(addi_3)}")
     print(f"addi_4 {encode_instruction(addi_4)}")
     print(f"conv_s_bf {encode_instruction(conv_s_bf)}")
-    print(f"sub_vs {encode_instruction(sub_vs)}")
+    print(f"mul_vv {encode_instruction(mul_vv)}")
     print(f"vstore {encode_instruction(vstore)}")
     print(f"lui_2 {encode_instruction(lui_2)}")
     print(f"addi_5 {encode_instruction(addi_5)}")
@@ -371,4 +373,4 @@ if __name__ == "__main__":
     print(f"v_to_s {encode_instruction(v_to_s)}")
     print(f"s_to_m {encode_instruction(s_to_m)}")
     print(f"m_to_s {encode_instruction(m_to_s)}")
-    print(f"mgt_vs {encode_instruction(mgt_vs)}")
+    print(f"mneq_vs {encode_instruction(mneq_vs)}")
