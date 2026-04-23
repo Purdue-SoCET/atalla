@@ -92,6 +92,9 @@ module dependency_checker #(
                 for (w = 0; w < MASK_WRITE_PORTS; w++) begin
                     if (dc_if.vector_m_WEN[w])
                         mask_dependency_table[dc_if.vector_m_wsels[w]] <= 1'b1;
+                    else if (dc_if.scalar_m_WEN[w]) begin
+                        mask_dependency_table[dc_if.scalar_wsel[w][3:0]] <= 1'b1;
+                    end
                 end
             end
 

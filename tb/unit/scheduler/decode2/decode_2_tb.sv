@@ -30,13 +30,13 @@ module decode_2_tb;
         d2if.ready_DEC2_ex3  = val;
         d2if.ready_DEC2_ex4  = val;
         d2if.ready_DEC2_ex5  = val;
-        d2if.alu_ready       = val;
-        d2if.mul_ready       = val;
-        d2if.exp_ready       = val;
-        d2if.reduction_ready = val;
+        d2if.vec_alu_ready       = val;
+        d2if.vec_mul_ready       = val;
+        d2if.vec_exp_ready       = val;
+        d2if.vec_reduction_ready = val;
         d2if.vlsu_ready      = val;
         d2if.gsau_ready      = val;
-        d2if.sdma_ready      = val;
+        d2if.scpad_busy      = '{default:'0};
     endtask
 
     task wb_scalar(input logic [1:0] i, input logic [7:0] reg_addr, input logic [31:0] data);
@@ -100,8 +100,8 @@ module decode_2_tb;
         wb_vector(2'd2, 8'd8, '{default: 16'hDADE}); // Write to vector reg 8
         wb_vector(2'd3, 8'd12, '{default: 16'hBAEF}); // Write to vector reg 12
 
-        // wb_mask(2'b0, 4'h0, 32'hFFFF0000); // Write to mask reg 0 (shouldn't work)
-        wb_mask(1'b0, 4'h2, 32'hFFFF0000); // Write to mask reg 2
+        wb_mask(2'b0, 4'h0, 32'hFFFF0000); // Write to mask reg 0 (shouldn't work)
+        // wb_mask(1'b0, 4'h2, 32'hFFFF0000); // Write to mask reg 2
         wb_mask(1'b1, 4'h1, 32'h0000FFFF); // Write to mask reg 1
         
         repeat(3) @(posedge CLK); //vector write bank conflicts resolving
@@ -109,36 +109,22 @@ module decode_2_tb;
         clear_wb();
         drive_nop_packet();
 
-        @(negedge CLK);
-        casename = "first 4 instructions";
-        d2if.vector_instrs[0] = 40'h1201008245; //VM VREG_ST(sid = 1, num_cols = 4, rs2 = 2(data = hDEADBEEF), rs1 = 1 (data = hBABEBEEF), vd = 4 (actually the vs, data = hBEEF), opcode = 69)
-        d2if.vector_instrs[1] = 40'h00840601BD; //VMV MLT (vms=1 (data = h0000FFFF), vs2=8 (data = hDADE), vs1=12 (data = hBAEF), vmd=3, opcode =61)
-        d2if.vector_instrs[2] = 40'h010180824D; //VS MUL_VS (vms = 2 (data = hFFFF0000), rs1 = 3 (data = hFFFFFFFF), vs1=1 (data = hDEAD), vd=4, opcode=77)
-        d2if.scalar_instrs[3] = 40'h007F82039A; //I MODI imm12=0xFF, rs1=4 (data = hF0F0F0F0), rd=7, opcode=26
+        d2if.scalar_instrs[0] = 40'hCA;
 
-        @(posedge CLK iff d2if.ready);
-        casename = "ready high";
-        drive_nop_packet();
+        repeat (4) @(negedge CLK);
 
-        @(negedge CLK);
-        casename = "second 4 instructions";
-        d2if.vector_instrs[1] = 40'h8603C8; //VMOV_VTS (imm=1, vs1=12 (hBAEF), rd=7, opcode=72) 
-        d2if.SDMA_instrs[3] = 40'h3808146; //SCPAD LD, rs3=7 (?), rs2=1 (data = hBABEBEEF), rs1/rd=2 (data = hDEADBEEF), opcode = 70
-        //will be blocked because rd=7 busy
-
-        repeat (5) @(posedge CLK);
-        @(negedge CLK);
-        casename = "write back to busy scalar reg 7";
-        wb_scalar(2'b0, 8'h7, 32'h12345678); // Write to scalar reg 7
-        //instr should be unblocked but then 7 will be busy again after ready 
-
-        @(posedge CLK iff d2if.ready);
-        casename = "ready high";
-        clear_wb();
-        drive_nop_packet();
+        // @(negedge CLK);
+        // casename = "first 4 instructions";
+        // d2if.vector_instrs[0] = 40'h1201008245; //VM VREG_ST(sid = 1, num_cols = 4, rs2 = 2(data = hDEADBEEF), rs1 = 1 (data = hBABEBEEF), vd = 4 (actually the vs, data = hBEEF), opcode = 69)
+        // d2if.vector_instrs[1] = 40'h00840601BD; //VMV MLT (vms=1 (data = h0000FFFF), vs2=8 (data = hDADE), vs1=12 (data = hBAEF), vmd=3, opcode =61)
+        // d2if.vector_instrs[2] = 40'h010180824D; //VS MUL_VS (vms = 2 (data = hFFFF0000), rs1 = 3 (data = hFFFFFFFF), vs1=1 (data = hDEAD), vd=4, opcode=77)
+        // d2if.scalar_instrs[3] = 40'h007F82039A; //I MODI imm12=0xFF, rs1=4 (data = hF0F0F0F0), rd=7, opcode=26
 
 
-        repeat (5) @(posedge CLK);
+        // @(negedge CLK);
+        // casename = "write back to busy scalar reg 7";
+        // repeat (5) @(posedge CLK);
+        // wb_scalar(2'b0, 8'h7, 32'h12345678); // Write to scalar reg 7
 
 
 

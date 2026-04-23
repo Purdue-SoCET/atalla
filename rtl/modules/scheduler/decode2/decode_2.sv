@@ -120,6 +120,7 @@ assign dcif.ready = d2if.ready;
 
 scalar_fu_enable_t [NUM_SCALAR_INSTRS-1:0] scalar_fu_enables;
 logic [NUM_SCALAR_INSTRS-1:0] scalar_reg_writes;
+logic [NUM_SCALAR_INSTRS-1:0] scalar_m_reg_writes;
 logic [NUM_SCALAR_INSTRS-1:0][SCALAR_REG_BITS-1:0] scalar_wsels;
 
 vector_fu_enable_t [NUM_VECTOR_INSTRS-1:0] vector_fu_enables;
@@ -144,6 +145,7 @@ always_comb begin
         scalar_fu_enables[i] = scif.decoded_scalar_instrs[i].fu_enable;
         scalar_reg_writes[i] = scif.decoded_scalar_instrs[i].reg_write;
         scalar_wsels[i] = scif.decoded_scalar_instrs[i].rdIn;
+        scalar_m_reg_writes[i] = scif.decoded_scalar_instrs[i].mask_reg_write;
     end
 
     for (int i = 0; i < NUM_VECTOR_INSTRS; i++) begin
@@ -283,6 +285,7 @@ assign dcif.mask_REN = sraif.mask_REN;
 //Dest reg signals to dependency checker to set these bits as busy in checker
 assign dcif.scalar_wsel = scalar_wsels;
 assign dcif.scalar_WEN = scalar_reg_writes;
+assign dcif.scalar_m_WEN = scalar_m_reg_writes;
 assign dcif.vector_s_wsels = vector_s_wsels;
 assign dcif.vector_v_wsels = vector_v_wsels;
 assign dcif.vector_m_wsels = vector_m_wsels;

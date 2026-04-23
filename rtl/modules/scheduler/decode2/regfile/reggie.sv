@@ -221,7 +221,8 @@ module reggie #(
                 .DATA_WIDTH  (DATA_WIDTH),
                 .NUM_ROWS    (BANK_REGS),
                 .ADDR_WIDTH  (ADDR_IDX),
-                .ZERO_REG_VAL(ZERO_REG_VAL)
+                .ZERO_REG_VAL(ZERO_REG_VAL), 
+                .IS_ZERO_BANK (i_db == 0 ? 1 : 0)
             ) u_bank (
                 .clk  (CLK),
                 .nRST (nRST), 
