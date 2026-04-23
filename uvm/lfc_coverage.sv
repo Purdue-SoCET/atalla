@@ -25,8 +25,17 @@ class lfc_coverage extends uvm_subscriber #(lfc_cpu_transaction);
 		bins addr[32] = {[0:$]}; // range broken up into 32 bins
 	}
 	coverpoint tx.mem_in_rw_mode;
+	coverpoint tx.hit;
+	coverpoint tx.block_status {
+		bins block0 = {1};
+		bins block1 = {2};
+		bins block2 = {4};
+		bins block3 = {8};
+	}	
 
 	cross tx.mem_in_addr, tx.mem_in_rw_mode;
+	cross tx.mem_in_addr, tx.hit;
+	cross tx.block_status, tx.hit;
   endgroup
 
   function new(string name, uvm_component parent);
