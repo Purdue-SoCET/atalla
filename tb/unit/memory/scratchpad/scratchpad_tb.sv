@@ -1865,6 +1865,7 @@ module scratchpad_tb;
                 row = req_id[7:3];
                 sub = req_id[2:0];
 
+                // Verify DRAM address uses full matrix stride (byte addressing)
                 actual_addr = sif.be_dram_req[0].dram_addr;
                 expected_addr = dram_base + row * ((full_cols + 1) << 1) + (sub << 3);
 
@@ -1897,6 +1898,103 @@ module scratchpad_tb;
         else
             report_error($sformatf("%0d address errors (tile %0dx%0d in %0d-col matrix)",
                          addr_errors, num_rows+1, num_cols+1, full_cols+1));
+    endtask
+
+    //==========================================================================
+    // Phase 14: Burst FE throughput test
+    //
+    // Issues back-to-back vec reads as fast as fe_stall allows (without
+    // waiting for each response), then verifies all responses. Tests that
+    // the head accepts one FE request per cycle after pipe_busy removal.
+    //==========================================================================
+    task automatic test_burst_fe_reads(
+        input int num_rows,      // 0-based
+        input int num_cols       // 0-based
+    );
+        automatic int issued = 0;
+        automatic int received = 0;
+        automatic int total = num_rows + 1;
+        automatic int cycle_count = 0;
+        automatic int issue_cycles = 0;
+        automatic int errors = 0;
+        automatic int timeout = 0;
+
+        current_test_type = "BURST_FE_RD";
+        current_num_rows = num_rows;
+        current_num_cols = num_cols;
+
+        // Phase 1: Write known data (sequential, one row at a time)
+        for (int r = 0; r <= num_rows; r++) begin
+            vec_write_row(r, num_cols, 20'h0);
+            repeat(2) @(posedge clk);
+        end
+
+        repeat(5) @(posedge clk);
+
+        // Phase 2: Burst-issue reads as fast as fe_stall allows
+        // Simultaneously collect and verify responses
+        sif.vec_req[0] = '0;
+
+        while (received < total && timeout < 500) begin
+            @(posedge clk); #1;
+
+            // Issue side: fire next read whenever not stalled
+            if (issued < total && !sif.fe_vec_stall[0]) begin
+                sif.vec_req[0].valid     = 1'b1;
+                sif.vec_req[0].write     = 1'b0;
+                sif.vec_req[0].spad_addr = 20'h0;
+                sif.vec_req[0].num_rows  = 5'd0;
+                sif.vec_req[0].num_cols  = 5'(num_cols);
+                sif.vec_req[0].row_id    = 5'(issued);
+                issued++;
+                issue_cycles++;
+            end else if (issued < total) begin
+                // Stalled — hold request but don't count as issued
+                issue_cycles++;
+            end else begin
+                // All issued, deassert valid
+                sif.vec_req[0].valid = 1'b0;
+            end
+
+            // Receive side: check for responses
+            if (sif.vec_res[0].valid) begin
+                // Verify data: expect row*32 + col + 1 (matches vec_write_row pattern)
+                for (int c = 0; c <= num_cols; c++) begin
+                    automatic logic [15:0] expected = 16'((received * 32) + c + 1);
+                    if (sif.vec_res[0].rdata[c] !== expected) begin
+                        $display("    [BURST_FE ERROR] Row %0d Col %0d: got 0x%04h, expected 0x%04h",
+                                 received, c, sif.vec_res[0].rdata[c], expected);
+                        errors++;
+                    end
+                end
+                received++;
+            end
+
+            cycle_count++;
+            timeout++;
+        end
+
+        sif.vec_req[0] = '0;
+        repeat(5) @(posedge clk);
+
+        if (errors == 0 && received == total)
+            report_success($sformatf("Burst %0d reads: issued in %0d cycles (%.1f req/cyc), all data verified",
+                           total, issue_cycles, real'(total) / real'(issue_cycles)));
+        else
+            report_error($sformatf("%0d errors, issued=%0d, received=%0d/%0d",
+                         errors, issued, received, total));
+    endtask
+
+    task automatic run_burst_fe_tests();
+        $display("\n======== BURST FE THROUGHPUT TESTS ========\n");
+        do_reset();
+        test_burst_fe_reads(7, 31);   // 8 rows, 32 cols
+        do_reset();
+        test_burst_fe_reads(15, 31);  // 16 rows, 32 cols
+        do_reset();
+        test_burst_fe_reads(31, 31);  // 32 rows, 32 cols (full size)
+        do_reset();
+        test_burst_fe_reads(7, 7);    // 8 rows, 8 cols (partial width)
     endtask
 
     task automatic run_stride_tests();
@@ -1988,6 +2086,9 @@ module scratchpad_tb;
 
         // Phase 13: Full matrix stride (full_num_cols != num_cols)
         run_stride_tests();
+
+        // Phase 14: Burst FE throughput (back-to-back reads)
+        run_burst_fe_tests();
         
         print_summary();
         

@@ -10,20 +10,13 @@ module head #(parameter logic [scpad_pkg::SCPAD_ID_WIDTH-1:0] IDX = '0) (scpad_i
 
     // Stalls
     logic downstream_stall;
-    logic pipe_busy; 
 
     // Tracking grants
-    // Need to hold fe_stall high on the N+1th cycle to ensure we don't overwrite the request. 
     logic be_v, fe_v;
     logic grant_be, grant_fe;
 
     // Intermediate - use sel_req_t since that's what head_stomach_req expects
     sel_req_t sel_req_d;
-
-    always_ff @(posedge hif.clk, negedge hif.n_rst) begin
-        if (!hif.n_rst) pipe_busy <= 1'b0;
-        else pipe_busy <= (grant_be || grant_fe);
-    end
 
     always_comb begin
         sel_req_d = '0;
@@ -33,7 +26,7 @@ module head #(parameter logic [scpad_pkg::SCPAD_ID_WIDTH-1:0] IDX = '0) (scpad_i
         fe_v = hif.fe_req[IDX].valid;
 
         grant_be = (!hif.w_stall[IDX]) && be_v;
-        grant_fe = (!hif.w_stall[IDX]) && (!pipe_busy) && (!be_v) && fe_v;
+        grant_fe = (!hif.w_stall[IDX]) && (!be_v) && fe_v;
 
         // Convert req_t to sel_req_t
         if (grant_be) begin
@@ -57,7 +50,7 @@ module head #(parameter logic [scpad_pkg::SCPAD_ID_WIDTH-1:0] IDX = '0) (scpad_i
 
     // w_stall and r_stall are arrays, need [IDX]
     assign downstream_stall = hif.w_stall[IDX] || hif.r_stall[IDX];
-    assign hif.fe_stall[IDX] = downstream_stall || pipe_busy || be_v;
+    assign hif.fe_stall[IDX] = downstream_stall || be_v;
     assign hif.be_stall[IDX] = downstream_stall;
 
 endmodule
