@@ -205,12 +205,6 @@ module ddr_controller_wrapper (
         .sig  (cif.signal_gen)
     );
 
-    // Read ID Queue
-    nb_read_id_queue RID_Q (
-        .CLK  (CLK),
-        .nRST (nRST),
-        .r_id_queue (cif.read_id_queue)
-    );
 
     // Read Data wrapper
     nb_rdata_wrapper RDQ_WRAP (
@@ -219,12 +213,5 @@ module ddr_controller_wrapper (
         .nRST  (nRST),
         .rdw   (cif.rdata_wrapper)
     );
-/*
-    // Initialization State Machine
-    init_state INIT (
-        .CLK  (CLK),
-        .nRST (nRST),
-        .isif (cif.init_ctrl)
-    );
-*/
+
 endmodule

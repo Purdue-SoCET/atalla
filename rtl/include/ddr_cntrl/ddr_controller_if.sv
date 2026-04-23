@@ -136,13 +136,15 @@ logic [1:0] bwresp;
 logic [$clog2(ID_NUM)-1:0] bwid;
 
 // WDATA_QUEUE_WRAPPER -> DRAM
+/*
 logic [63:0] ddr_wdata_data;
 logic  ddr_wdata_en;
 logic [7:0] ddr_wdata_mask;
 logic ddr_we;
+*/
 
 // WDATA_QUEUE_WRAPPER -> WDATA_QUEUE
-logic [$clog2(ID_NUM)-1:0] wrap_bw_arb;
+//logic [$clog2(ID_NUM)-1:0] wrap_bw_arb;
 
 
 // Signal generator signals pulled from Tri's branch:
@@ -181,12 +183,13 @@ logic [$clog2(ID_NUM)-1:0] wrap_bw_arb;
     logic ADDR_17;
 
     // Data transfer module signals
-    logic wr_en, rd_en, clear;
-    logic edge_flag;
-    logic [WORD_W - 1: 0] memstore, memload;
-    logic [2:0] COL_choice;
+    //logic wr_en, rd_en, clear;
+    //logic edge_flag;
+    //logic [WORD_W - 1: 0] memstore, memload;
+    //logic [2:0] COL_choice;
     wire [WORD_W - 1 :0] DQ;
-    wire DQS_t, DQS_c, DM_n;
+    wire DQS_t, DQS_c;
+    wire [7:0] DM_n;
 
 // // MODPORTS
 
@@ -260,17 +263,6 @@ modport bq (
     bq_slot
 );
 
-modport read_id_queue (
-    // BACKEND_ARBITER -> READ_ID_QUEUE
-    input  be_push_id, be_rid, be_rlen,
-    // RDATA_WRAPPER -> READ_ID_QUEUE
-    dqs_done,
-    // AXI -> READ_ID_QUEUE
-    rready,
-    // READ_ID_QUEUE -> RDATA_WRAPPER
-    output rq_rid, rq_rvalid, rq_rlen
-);
-
 
 modport wdata_wrapper (
 
@@ -283,24 +275,19 @@ modport wdata_wrapper (
     inout DQ, DQS_t, DQS_c, DM_n,
 
     // WRAPPER -> AXI_WRITE AND RESPONSE CHANNEL
-    output wready, bwvalid, bwresp, bwid,
+    output wready, bwvalid, bwresp, bwid
     // WRAPPER -> interface (observability / formal verification)
-    ddr_wdata_data, ddr_wdata_en, ddr_wdata_mask, ddr_we
 );
 
 modport rdata_wrapper (
     // AXI R Data path
     input rready,
-    // READ_ID_QUEUE -> RDATA_WRAPPER
-    rq_rid, rq_rvalid, rq_rlen,
     // BACKEND_ARBITER -> RDATA_WRAPPER
-    be_push_id, be_rlen,
+    be_push_id, be_rid,
     // DRAM -> RDATA_WRAPPER (read data capture)
-    DQ, DQS_t,
+    inout DQ, DQS_t,
     // AXI R Path
-    output rvalid, rdata, rid, rlast, rresp,
-    // RDATA_WRAPPER -> READ_ID_QUEUE
-    dqs_done
+    output rvalid, rdata, rid, rlast, rresp
 );
 
 modport command_fsm (
@@ -366,7 +353,7 @@ modport barb_prop (
     //BE -> R_ID_QUEUE
     be_rid, be_push_id, be_rlen
 );
-
+/*
 modport wdq_prop (
     //AXI -> WDATA_QUEUE
     input  wdq_slot, bwready,
@@ -377,7 +364,7 @@ modport wdq_prop (
     //WDATA_QUEUE -> WRAPPER
     ddr_wdata_data, ddr_wdata_en, ddr_wdata_mask, ddr_we  
 );
-
+*/
 modport frontend_tb (
     // TB drives AXI write channel -> STQ
     output awvalid, awaddr, awid, awlen,
@@ -439,12 +426,13 @@ modport signal_gen (
         input state, nstate, RA0, BG0, BA0, R0, C0,
         output ACT_n, RAS_n_A16, CAS_n_A15, WE_n_A14, ALERT_n, PARITY, RESET_n, TEN, CS_n, CKE, ODT, C, BG, BA, ADDR, ADDR_17, PWR, VREF_CA, VREF_DQ, ZQ
     );
-
+/*
 modport data_transfer (
         input wr_en, rd_en, clear, memstore, COL_choice,
         inout DQ, DQS_t, DQS_c, DM_n, // same names as above, so do not need to map
         output memload, edge_flag
     );
+    */
 
 endinterface
 

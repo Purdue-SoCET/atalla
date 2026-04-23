@@ -51,7 +51,7 @@ package dram_pkg;
     //INITIALIZE TIME
     parameter tRESET        = 80;
     parameter tPWUP         = 80;
-    parameter tRESETCKE     = 80;
+    parameter tRESETCKE     = 200;
     parameter tPDc          = 3;
     parameter tXPR          = 217;
     parameter tDLLKc        = 597;
