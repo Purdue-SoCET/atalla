@@ -156,6 +156,7 @@ module scalar_control_unit
                 // STM
                 // ----------------------------------------------------------------
                 MV_STM: begin
+                    cuif.decoded_scalar_instrs[i].fu_enable  = BF_to_int_valid;
                     cuif.decoded_scalar_instrs[i].valid_in   = 1'b1;
                     cuif.decoded_scalar_instrs[i].use_rs1    = 1'b1;
                     cuif.decoded_scalar_instrs[i].mask_reg_write  = 1'b1;

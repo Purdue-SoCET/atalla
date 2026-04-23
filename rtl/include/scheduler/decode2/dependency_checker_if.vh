@@ -32,6 +32,7 @@ interface dependency_checker_if #(
     //Dest register signals
     logic [NUM_SCALAR_INSTS-1:0][SCALAR_REG_BITS-1:0] scalar_wsel;
     logic [NUM_SCALAR_INSTS-1:0]                     scalar_WEN;
+    logic [NUM_SCALAR_INSTS-1:0]                     scalar_m_WEN;
     logic [NUM_VECTOR_INSTS-1:0][SCALAR_REG_BITS-1:0] vector_s_wsels; //when vec instr wants to wb to scalar reg
     logic [NUM_VECTOR_INSTS-1:0][VECTOR_REG_BITS-1:0] vector_v_wsels; //when vec instr wants to wb to vec reg
     logic [NUM_VECTOR_INSTS-1:0][MASK_REG_BITS-1:0] vector_m_wsels; //when vec instr wants to wb to mask reg
@@ -68,9 +69,9 @@ interface dependency_checker_if #(
         //src reg signals from D2
         input scalar_REN, scalar_rsel, vector_REN, vector_rsel, mask_REN, mask_rsel,
         //dest reg signals from D2
-        input scalar_wsel, scalar_WEN, 
+        input scalar_wsel, scalar_WEN, scalar_m_WEN,
         input vector_s_wsels, vector_v_wsels, vector_m_wsels, vector_s_WEN, vector_v_WEN, vector_m_WEN,
-        input SDMA_scalar_rs1s, SDMA_scalar_WEN,
+        input SDMA_scalar_rs1s, SDMA_scalar_WEN, 
         //wb signals from WB for clearing bits
         input scalar_WB_wsel, scalar_WB_WEN,
         input vector_WB_wsel, vector_WB_WEN,
