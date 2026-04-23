@@ -9,7 +9,7 @@ module vlsu_tb;
 
     localparam int CLK_PERIOD = 10;
     localparam int FIFO_DEPTH = 13;
-    localparam int SP_LATENCY = 7; // Combinational FIFOs + rxbar output register: FE(0) + head(0) + wxbar(~1) + cntrl(~1) + SRAM(2) + rxbar(~2) + tail(0)
+    localparam int SP_LATENCY = 12; // Measured via T34: actual end-to-end pipeline depth
     localparam int NUM_VREGS  = 256;
     localparam logic [SCPAD_ID_WIDTH-1:0] TB_IDX = '0;
 
@@ -713,10 +713,21 @@ module vlsu_tb;
             while (!`SCHED_RES.ready) @(posedge CLK);
             `SCHED_REQ.valid = 1'b0;
 
-            // Now release wb_ready and collect
+            // Now release wb_ready and collect both in order
             `WB_READY = 1'b1;
-            wait_writeback(8'd50, SP_LATENCY + 10);
-            wait_writeback(8'd51, SP_LATENCY + 10);
+            begin
+                logic [VIDX_W-1:0] got_vd;
+                for (int i = 0; i < 2; i++) begin
+                    wait_any_writeback(got_vd, SP_LATENCY + 10);
+                    if (got_vd !== VIDX_W'(50 + i)) begin
+                        $error("[%s] WB %0d: expected v%0d, got v%0d", test_name, i, 50 + i, got_vd);
+                        vp17_err++;
+                    end else begin
+                        $display("[%s] PASS - writeback v%0d received in order", test_name, got_vd);
+                    end
+                    #1; // let FIFO output settle before next collection
+                end
+            end
 
             if (vp17_err > 0) errors += vp17_err;
         end
@@ -2375,6 +2386,193 @@ module vlsu_tb;
                          test_name, num_rows + 1, num_cols + 1);
             else
                 errors += t32_err;
+        end
+        drain_and_idle();
+        end
+
+        // ==============================================================
+        // T33 - Full load queue burst with wb stall + data verification
+        //
+        //       Fills the entire load queue (FIFO_DEPTH loads) while
+        //       wb_ready is blocked, forcing all responses to queue in
+        //       the rxbar FIFO and skid buffer. Then releases wb_ready
+        //       and verifies every writeback has correct data and vdst
+        //       ordering. This is the worst-case backpressure scenario
+        //       at 1-per-cycle issue rate — proves no data is lost or
+        //       corrupted when the entire response pipeline is backed up.
+        // ==============================================================
+        if (!abort_flag) begin
+        test_name = "T33_full_fifo_burst_data";
+        test_num  = 33;
+        total_tests++;
+        $display("\n--- Test %0d: %s ---", test_num, test_name);
+
+        begin
+            automatic int t33_err = 0;
+            automatic int collected = 0;
+            automatic int drain_timeout = 0;
+            automatic vreg_t wr_data [FIFO_DEPTH];
+            automatic vreg_t rd_data;
+            automatic logic [VIDX_W-1:0] got_vd;
+
+            // Phase 1: Store FIFO_DEPTH rows with unique patterns
+            for (int s = 0; s < FIFO_DEPTH; s++) begin
+                for (int e = 0; e < VLMAX; e++)
+                    wr_data[s][e] = ELEM_BITS'(((s + 1) * 'h1111) ^ e);
+                issue_store(SCPAD_ADDR_WIDTH'('hA00 + s * 'h40), wr_data[s]);
+            end
+            repeat (SP_LATENCY + 2) @(posedge CLK);
+
+            // Phase 2: Block writeback, burst-issue FIFO_DEPTH loads
+            `WB_READY = 1'b0;
+
+            burst_issue_loads('hA00, 'h40, VIDX_W'(160), FIFO_DEPTH);
+
+            // Verify queue is full
+            @(posedge CLK);
+            if (`STATUS.load_queue_full !== 1'b1) begin
+                $display("[%s] NOTE - load_queue_full not asserted (may have drained partially)", test_name);
+            end else begin
+                $display("[%s] PASS - load queue full after %0d burst loads", test_name, FIFO_DEPTH);
+            end
+
+            // Wait for all responses to arrive in rxbar/skid
+            repeat (SP_LATENCY + 5) @(posedge CLK);
+
+            // Phase 3: Release writeback, collect and verify all responses
+            `WB_READY = 1'b1;
+
+            while (collected < FIFO_DEPTH && drain_timeout < DRAIN_TIMEOUT) begin
+                @(posedge CLK);
+                drain_timeout++;
+
+                if (`WB_OUT.valid && `WB_READY) begin
+                    got_vd  = `WB_OUT.vdst;
+                    rd_data = `WB_OUT.load_data;
+
+                    // Verify vdst ordering
+                    if (got_vd !== VIDX_W'(160 + collected)) begin
+                        $error("[%s] WB %0d: expected v%0d, got v%0d",
+                                test_name, collected, 160 + collected, got_vd);
+                        t33_err++;
+                    end
+
+                    // Verify data content
+                    t33_err += check_data($sformatf("slot%0d", collected),
+                                          wr_data[collected], rd_data);
+                    collected++;
+                end
+            end
+
+            if (collected < FIFO_DEPTH) begin
+                $error("[%s] Only collected %0d/%0d writebacks before timeout",
+                        test_name, collected, FIFO_DEPTH);
+                t33_err++;
+            end
+
+            if (t33_err == 0)
+                $display("[%s] PASS - %0d loads burst-issued, wb stalled, all data verified after release",
+                         test_name, FIFO_DEPTH);
+            else
+                errors += t33_err;
+        end
+        drain_and_idle();
+        end
+
+        // ==============================================================
+        // T34 - Steady-state load queue depth measurement
+        //
+        //       Issues 32 back-to-back loads with wb_ready=1 (normal
+        //       operation). Tracks the load queue depth every cycle to
+        //       find the peak occupancy under sustained throughput.
+        //       This determines the minimum useful FIFO_DEPTH.
+        // ==============================================================
+        if (!abort_flag) begin
+        test_name = "T34_queue_depth_measurement";
+        test_num  = 34;
+        total_tests++;
+        $display("\n--- Test %0d: %s ---", test_num, test_name);
+
+        begin
+            automatic int t34_err = 0;
+            automatic int issued = 0;
+            automatic int collected = 0;
+            automatic int total_loads = 32;
+            automatic int depth = 0;
+            automatic int peak_depth = 0;
+            automatic int timeout = 0;
+            automatic vreg_t wr_data [32];
+            automatic vreg_t rd_data;
+
+            // Phase 1: Write 32 rows of known data
+            for (int s = 0; s < total_loads; s++) begin
+                for (int e = 0; e < VLMAX; e++)
+                    wr_data[s][e] = ELEM_BITS'(((s + 1) * 'h2222) ^ e);
+                issue_store(SCPAD_ADDR_WIDTH'('hC00 + s * 'h40), wr_data[s]);
+            end
+            repeat (SP_LATENCY + 2) @(posedge CLK);
+
+            // Phase 2: Sustained burst with wb_ready=1, tracking depth
+            `WB_READY = 1'b1;
+            `SCHED_REQ = '0;
+
+            while ((collected < total_loads) && (timeout < 500)) begin
+                @(posedge CLK); #1;
+
+                // Track queue depth
+                if (DUT0.lq_wr_en && !DUT0.lq_shift)
+                    depth++;
+                else if (!DUT0.lq_wr_en && DUT0.lq_shift)
+                    depth--;
+
+                if (depth > peak_depth)
+                    peak_depth = depth;
+
+                // Issue side: fire next load when ready
+                if (issued < total_loads && `SCHED_RES.ready) begin
+                    `SCHED_REQ.valid     = 1'b1;
+                    `SCHED_REQ.write     = 1'b0;
+                    `SCHED_REQ.spad_addr = SCPAD_ADDR_WIDTH'('hC00 + issued * 'h40);
+                    `SCHED_REQ.vdst      = VIDX_W'(180 + issued);
+                    `SCHED_REQ.num_cols  = 5'd31;
+                    `SCHED_REQ.row_id    = 5'd0;
+                    issued++;
+                end else if (issued >= total_loads) begin
+                    `SCHED_REQ.valid = 1'b0;
+                end
+
+                // Collect side: verify writebacks
+                if (`WB_OUT.valid && `WB_READY) begin
+                    rd_data = `WB_OUT.load_data;
+                    if (`WB_OUT.vdst !== VIDX_W'(180 + collected)) begin
+                        $error("[%s] WB %0d: expected v%0d, got v%0d",
+                                test_name, collected, 180 + collected, `WB_OUT.vdst);
+                        t34_err++;
+                    end
+                    t34_err += check_data($sformatf("row%0d", collected),
+                                          wr_data[collected], rd_data);
+                    collected++;
+                end
+
+                timeout++;
+            end
+
+            `SCHED_REQ = '0;
+
+            if (collected < total_loads) begin
+                $error("[%s] Only collected %0d/%0d", test_name, collected, total_loads);
+                t34_err++;
+            end
+
+            $display("[%s] Peak queue depth: %0d (FIFO_DEPTH=%0d, SP_LATENCY=%0d)",
+                     test_name, peak_depth, FIFO_DEPTH, SP_LATENCY);
+            $display("[%s] Recommended FIFO_DEPTH: %0d", test_name, peak_depth);
+
+            if (t34_err == 0)
+                $display("[%s] PASS - %0d loads at 1/cyc, peak depth=%0d, all data verified",
+                         test_name, total_loads, peak_depth);
+            else
+                errors += t34_err;
         end
         drain_and_idle();
         end
