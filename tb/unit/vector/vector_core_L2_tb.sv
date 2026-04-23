@@ -472,11 +472,13 @@ module vector_core_L2_tb;
         dpi_veggie_write_mask(8'd0, 32'hFFFFFFFF);
 
         `ifdef TEST_ADD_VV
-            for (int i = 0; i < 32; i++) begin
-                dpi_veggie_write_vector_elem(8'd2, i, 16'h3F80);
-                dpi_veggie_write_vector_elem(8'd3, i, 16'h3F80);
-            end
-            $display("[TB] Preloaded: add_vv (v2=1.0, v3=1.0)");
+        for (int i = 0; i < 32; i++) begin
+            dpi_veggie_write_vector_elem(8'd2, i, 16'h3F80); // 1.0
+            dpi_veggie_write_vector_elem(8'd3, i, 16'h3F80); // 1.0
+        end
+        dpi_veggie_write_vector_elem(8'd2, 0,  16'h4200); // elem 0 = 32.0
+        dpi_veggie_write_vector_elem(8'd2, 31, 16'h4000); // elem 31 = 2.0
+        $display("[TB] Preloaded: add_vv (v2[0]=32.0, v2[1..30]=1.0, v2[31]=2.0, v3=1.0)");
 
         `elsif TEST_SUB_VV
             for (int i = 0; i < 32; i++) begin
@@ -522,11 +524,43 @@ module vector_core_L2_tb;
             $display("[TB] Preloaded: sub_vs (v1=3.0, v4=1.0)");
 
         `elsif TEST_MUL_VS
-            for (int i = 0; i < 32; i++) begin
-                dpi_veggie_write_vector_elem(8'd2, i, 16'h4000);
-                dpi_veggie_write_vector_elem(8'd6, i, 16'h4040);
-            end
-            $display("[TB] Preloaded: mul_vs (v2=2.0, v6=3.0)");
+        // v2 = {1.0, 2.0, 3.0, ..., 32.0}
+        dpi_veggie_write_vector_elem(8'd2, 0,  16'h3F80); // 1.0
+        dpi_veggie_write_vector_elem(8'd2, 1,  16'h4000); // 2.0
+        dpi_veggie_write_vector_elem(8'd2, 2,  16'h4040); // 3.0
+        dpi_veggie_write_vector_elem(8'd2, 3,  16'h4080); // 4.0
+        dpi_veggie_write_vector_elem(8'd2, 4,  16'h40A0); // 5.0
+        dpi_veggie_write_vector_elem(8'd2, 5,  16'h40C0); // 6.0
+        dpi_veggie_write_vector_elem(8'd2, 6,  16'h40E0); // 7.0
+        dpi_veggie_write_vector_elem(8'd2, 7,  16'h4100); // 8.0
+        dpi_veggie_write_vector_elem(8'd2, 8,  16'h4110); // 9.0
+        dpi_veggie_write_vector_elem(8'd2, 9,  16'h4120); // 10.0
+        dpi_veggie_write_vector_elem(8'd2, 10, 16'h4130); // 11.0
+        dpi_veggie_write_vector_elem(8'd2, 11, 16'h4140); // 12.0
+        dpi_veggie_write_vector_elem(8'd2, 12, 16'h4150); // 13.0
+        dpi_veggie_write_vector_elem(8'd2, 13, 16'h4160); // 14.0
+        dpi_veggie_write_vector_elem(8'd2, 14, 16'h4170); // 15.0
+        dpi_veggie_write_vector_elem(8'd2, 15, 16'h4180); // 16.0
+        dpi_veggie_write_vector_elem(8'd2, 16, 16'h4188); // 17.0
+        dpi_veggie_write_vector_elem(8'd2, 17, 16'h4190); // 18.0
+        dpi_veggie_write_vector_elem(8'd2, 18, 16'h4198); // 19.0
+        dpi_veggie_write_vector_elem(8'd2, 19, 16'h41A0); // 20.0
+        dpi_veggie_write_vector_elem(8'd2, 20, 16'h41A8); // 21.0
+        dpi_veggie_write_vector_elem(8'd2, 21, 16'h41B0); // 22.0
+        dpi_veggie_write_vector_elem(8'd2, 22, 16'h41B8); // 23.0
+        dpi_veggie_write_vector_elem(8'd2, 23, 16'h41C0); // 24.0
+        dpi_veggie_write_vector_elem(8'd2, 24, 16'h41C8); // 25.0
+        dpi_veggie_write_vector_elem(8'd2, 25, 16'h41D0); // 26.0
+        dpi_veggie_write_vector_elem(8'd2, 26, 16'h41D8); // 27.0
+        dpi_veggie_write_vector_elem(8'd2, 27, 16'h41E0); // 28.0
+        dpi_veggie_write_vector_elem(8'd2, 28, 16'h41E8); // 29.0
+        dpi_veggie_write_vector_elem(8'd2, 29, 16'h41F0); // 30.0
+        dpi_veggie_write_vector_elem(8'd2, 30, 16'h41F8); // 31.0
+        dpi_veggie_write_vector_elem(8'd2, 31, 16'h4200); // 32.0
+        // scalar v6 = 2.0
+        for (int i = 0; i < 32; i++)
+            dpi_veggie_write_vector_elem(8'd6, i, 16'h4000);
+        $display("[TB] Preloaded: mul_vs (v2={1..32}, scalar v6=2.0)");
 
         `elsif TEST_RSUM_VI
             for (int i = 0; i < 32; i++)
