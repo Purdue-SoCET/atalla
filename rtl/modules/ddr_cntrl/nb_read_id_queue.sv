@@ -1,6 +1,8 @@
 `include "ddr_controller_if.sv"
 `include "dram_pkg.svh"
- 
+
+import dram_pkg::*;  // needed at CU scope for the typedef below
+
 typedef struct packed {
     logic [$clog2(ID_NUM) - 1:0] id;
     logic [3:0] len;

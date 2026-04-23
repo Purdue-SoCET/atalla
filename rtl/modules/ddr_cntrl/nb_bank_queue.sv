@@ -17,23 +17,34 @@ module nb_bank_queue(
 
     logic [BANK_NUM-1:0] b_wsel, b_rsel;
 
+    // bq_bg and bq_b are legacy scalar signals; the per-bank FSM derives its
+    // own bank index from the generate loop, so these are tied off here.
+    assign bqif.bq_bg = '0;
+    assign bqif.bq_b  = '0;
+
     genvar i;
     generate 
         for (i = 0; i < BANK_NUM; i++) begin
+            logic bq_empty;
+
             // Assign the write/read selection signal
             assign b_wsel[i] = ({bqif.fe_b, bqif.fe_bg} == i) && bqif.fe_write_bq;
-            assign b_rsel[i] = (bqif.bq_pop == i);
+            assign b_rsel[i] = bqif.bq_pop[i]; // bq_pop is a one-hot mask, not an index
 
-            // Generate fifos
-            sync_fifo #(.DEPTH(BANK_NUM), .DWIDTH($bits(bq_slot_t))) bq_fifo_gen ( 
+            // FWFT=1: bq_slot[i] reflects the head entry combinationally as soon
+            // as data is written, without requiring a prior rd_en pulse.
+            // The FSM reads bq_slot[i] combinationally while bq_ready[i] is high.
+            sync_fifo #(.DEPTH(BANK_NUM), .DWIDTH($bits(bq_slot_t)), .FWFT(1)) bq_fifo_gen ( 
                 .clk(CLK), .rstn(nRST),
                 .wr_en(b_wsel[i]),
                 .din(bqif.fe_bq_slot),
                 .rd_en(b_rsel[i]),
                 .dout(bqif.bq_slot[i]), 
                 .full(bqif.fe_full[i]),
-                .empty()
+                .empty(bq_empty)
             );
+
+            assign bqif.bq_ready[i] = !bq_empty;
 
         end
 

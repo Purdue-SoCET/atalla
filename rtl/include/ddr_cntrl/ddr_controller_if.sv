@@ -124,9 +124,10 @@ logic be_write;
 logic ref_done;        // Refresh done (restored for modport)
 
 // AXI -> READ_ID_QUEUE
-//logic                      rq_rready;
-logic [$clog2(ID_NUM)-1:0] rq_rid; //rq_rvalid;
-logic [2:0]                rq_rlen; 
+logic                      rq_rvalid;
+logic [$clog2(ID_NUM)-1:0] rq_rid;
+logic [2:0]                rq_rlen;
+logic                      dqs_done; // RDATA_WRAPPER -> READ_ID_QUEUE: burst capture complete
 
 // WDATA_QUEUE_WRAPPER -> AXI 
 logic wready;
@@ -259,36 +260,47 @@ modport bq (
     bq_slot
 );
 
-modport read_id_queue ( 
-    //BQ -> FSM
+modport read_id_queue (
+    // BACKEND_ARBITER -> READ_ID_QUEUE
     input  be_push_id, be_rid, be_rlen,
-    output rq_rid
+    // RDATA_WRAPPER -> READ_ID_QUEUE
+    dqs_done,
+    // AXI -> READ_ID_QUEUE
+    rready,
+    // READ_ID_QUEUE -> RDATA_WRAPPER
+    output rq_rid, rq_rvalid, rq_rlen
 );
 
 
 modport wdata_wrapper (
 
     // AXI_WRITE_CHANNEL -> WRAPPER
-    input wdq_slot, bwready, wvalid, wlast, 
-    // BAACKEND_ARBITER -> WRAPPER
+    input wdq_slot, bwready, wvalid, wlast,
+    // BACKEND_ARBITER -> WRAPPER
     be_wid, be_write,
 
-    
+    // WRAPPER -> DRAM (physical bus, tristate)
+    inout DQ, DQS_t, DQS_c, DM_n,
+
     // WRAPPER -> AXI_WRITE AND RESPONSE CHANNEL
     output wready, bwvalid, bwresp, bwid,
-    // WRAPPER -> DRAM
+    // WRAPPER -> interface (observability / formal verification)
     ddr_wdata_data, ddr_wdata_en, ddr_wdata_mask, ddr_we
 );
 
 modport rdata_wrapper (
     // AXI R Data path
-    input rready, 
+    input rready,
     // READ_ID_QUEUE -> RDATA_WRAPPER
-    rq_rid,
-    // Data Transfer
-    memload, edge_flag,
+    rq_rid, rq_rvalid, rq_rlen,
+    // BACKEND_ARBITER -> RDATA_WRAPPER
+    be_push_id, be_rlen,
+    // DRAM -> RDATA_WRAPPER (read data capture)
+    DQ, DQS_t,
     // AXI R Path
-    output rvalid, rdata, rid, rlast, rresp
+    output rvalid, rdata, rid, rlast, rresp,
+    // RDATA_WRAPPER -> READ_ID_QUEUE
+    dqs_done
 );
 
 modport command_fsm (
@@ -329,7 +341,7 @@ modport backend_arb (
 
 modport refresh_cntrl (
     //BE -> REFRESH COUNTER
-    input rf_enable, ref_done,
+    input rf_enable, ref_done, rf_done,
     //REFRESH COUNTER -> FSM
     output fsm_ref
 );

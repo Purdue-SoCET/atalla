@@ -8,14 +8,20 @@ puts "Top module     : $TB_TOP"
 puts "Project root   : $PROJ_ROOT"
 
 # --- Micron DDR4 model sources (from protected_modelsim/) ---
-# Modeled after the working Makefile dram_top target.
-# These are bare filenames resolved from inside protected_modelsim/.
+# Order matches the official Micron modelsim.do compile script exactly:
+#   arch_package → proj_package → interface → flexcounter →
+#   StateTable.svp → MemoryArray.svp → ddr4_model.svp
+# StateTable.svp and MemoryArray.svp MUST be compiled before ddr4_model.svp;
+# ddr4_model.svp expects their packages/modules to already be in the work library.
+# arch_defines.v and dimm.vh are found via `include inside arch_package.sv /
+# ddr4_model.svp with +incdir+. pointing to protected_modelsim/.
 set DRAM_SRCS [list \
-    arch_defines.v \
-    dimm.vh \
     arch_package.sv \
     proj_package.sv \
     interface.sv \
+    flexcounter.sv \
+    StateTable.svp \
+    MemoryArray.svp \
     ddr4_model.svp \
 ]
 
@@ -26,7 +32,6 @@ set DESIGN_SRCS [list \
     $PROJ_ROOT/rtl/modules/ddr_cntrl/flex_counter.sv \
     $PROJ_ROOT/rtl/modules/ddr_cntrl/flex_sr.sv \
     $PROJ_ROOT/rtl/modules/ddr_cntrl/priority_enc.sv \
-    $PROJ_ROOT/rtl/modules/ddr_cntrl/enum_compare.sv \
     $PROJ_ROOT/rtl/modules/ddr_cntrl/address_mapper.sv \
     $PROJ_ROOT/rtl/modules/ddr_cntrl/fsm_module.sv \
     $PROJ_ROOT/rtl/modules/ddr_cntrl/cmd_fsm_nb.sv \
@@ -38,16 +43,20 @@ set DESIGN_SRCS [list \
     $PROJ_ROOT/rtl/modules/ddr_cntrl/nb_wdata_queue.sv \
     $PROJ_ROOT/rtl/modules/ddr_cntrl/nb_wdata_wrapper.sv \
     $PROJ_ROOT/rtl/modules/ddr_cntrl/nb_read_id_queue.sv \
+    $PROJ_ROOT/rtl/modules/ddr_cntrl/nb_rdata_wrapper.sv \
     $PROJ_ROOT/rtl/modules/ddr_cntrl/nb_barb.sv \
     $PROJ_ROOT/rtl/modules/ddr_cntrl/frontend_arb_nb.sv \
     $PROJ_ROOT/rtl/modules/ddr_cntrl/frontend_wrapper.sv \
     $PROJ_ROOT/rtl/modules/ddr_cntrl/signal_gen.sv \
-    $PROJ_ROOT/rtl/modules/ddr_cntrl/data_transfer.sv \
     $PROJ_ROOT/rtl/modules/ddr_cntrl/ddr_controller_wrapper.sv \
     $PROJ_ROOT/rtl/modules/common/general/fifo.sv \
 ]
 
 set TB_FILE $PROJ_ROOT/tb/unit/ddr_cntrl/testbench/dram_top_tb.sv
+
+set TB_PROP_FILES [list \
+    $PROJ_ROOT/tb/unit/ddr_cntrl/testbench/nb_wdata_queue_prop.sv \
+]
 
 # --- Include directories (absolute paths) ---
 set INC_FLAGS [list \
@@ -57,7 +66,7 @@ set INC_FLAGS [list \
 ]
 
 # --- Assemble all sources: Micron first, then design, then TB ---
-set ALL_SRCS [concat $DRAM_SRCS $DESIGN_SRCS [list $TB_FILE]]
+set ALL_SRCS [concat $DRAM_SRCS $DESIGN_SRCS $TB_PROP_FILES [list $TB_FILE]]
 
 puts "INC_FLAGS  : $INC_FLAGS"
 puts "Num sources: [llength $ALL_SRCS]"

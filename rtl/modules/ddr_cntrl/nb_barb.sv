@@ -2,6 +2,12 @@
 `include "ddr_controller_if.sv"
 `include "dram_pkg.svh"
 
+import dram_pkg::*;
+function automatic logic [BANK_NUM-1:0] enum_compare (fsm_t [BANK_NUM-1:0] in0, fsm_t [BANK_NUM-1:0] in1);
+    for (int i = 0; i < BANK_NUM; i++)
+        enum_compare[i] = (in0[i] == in1[i]);
+endfunction
+
 module nb_barb(
     input logic CLK, nRST,
     ddr_controller_if.backend_arb barb
@@ -118,7 +124,7 @@ module nb_barb(
     logic [$clog2(BANK_NUM)-1:0] selected_bank_next; 
     logic selected_bank_ready_next;
 
-    priority_enc #(.BANK_NUM(16)) ENCODER_NEXT ((be_arb_next & barb.be_queue_ready), selected_bank_next, selected_bank_ready_next);
+    priority_enc #(.BANK_NUM(16)) ENCODER_NEXT (be_arb_folded & barb.be_queue_ready, selected_bank_next, selected_bank_ready_next);
     //Combinational block for selecting bank based on priority.
     //logic [$clog2(BANK_NUM):0] k;
     //logic [$clog2(BANK_NUM):0] x;

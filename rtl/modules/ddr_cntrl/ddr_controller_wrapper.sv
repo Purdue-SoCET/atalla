@@ -2,7 +2,7 @@
 `include "dram_pkg.svh"
 
 module ddr_controller_wrapper (
-    input logic CLK, nRST,
+    input logic CLK, CLKx2, nRST,
     ddr_controller_if.ddr_cntrl_top top
 );
 
@@ -66,11 +66,14 @@ module ddr_controller_wrapper (
     assign top.rlast  = cif.rlast;
     assign top.rresp  = cif.rresp;
 
-    // In Outs for the data transfer unit to DRAM
-    assign top.DQ = cif.DQ;
-    assign top.DQS_t = cif.DQS_t;
-    assign top.DQS_c = cif.DQS_c;
-    assign top.DM_n = cif.DM_n;
+    // ── DQ / DQS bidirectional bus ────────────────────────────────────────────
+    // alias makes cif.DQ the same net as top.DQ (= ddrif.DQ in the TB).
+    // nb_wdata_wrapper drives this net during writes (others tri-stated Z);
+    // nb_rdata_wrapper reads it during reads; DRAM model drives during reads.
+    alias top.DQ    = cif.DQ;
+    alias top.DQS_t = cif.DQS_t;
+    alias top.DQS_c = cif.DQS_c;
+    alias top.DM_n  = cif.DM_n;
 
     // ================================================================
     // Internal interface -> External outputs (to DRAM)
@@ -120,9 +123,18 @@ module ddr_controller_wrapper (
     assign top.VREF_DQ = cif.VREF_DQ;
     assign top.ZQ = cif.ZQ;
 
-    // Wdata queue and inputs to data transfer unit
-    assign cif.wr_en = cif.ddr_wdata_mask; // this is byte level, need to change this
-    assign cif.memstore = cif.ddr_wdata_data;
+    // Write data path: wr_en and DQ/DQS are now driven inside nb_wdata_queue_wrapper.
+
+    // ── Frontend Arbiter → Bank Queue struct bridge ───────────────────────────
+    // frontend_arb writes individual signals (fe_r, fe_c, fe_write, fe_id).
+    // nb_bank_queue reads the packed bq_slot_t fe_bq_slot as FIFO write data.
+    // Assemble the struct here so the bank queue FIFO receives correct data.
+    assign cif.fe_bq_slot = bq_slot_t'{
+        row:     cif.fe_r,
+        column:  cif.fe_c,
+        write:   cif.fe_write,
+        id_addr: cif.fe_id
+    };
 
 
     // ================================================================
@@ -180,9 +192,10 @@ module ddr_controller_wrapper (
 
     // Write Data Queue Wrapper (8 per-ID queues)
     nb_wdata_queue_wrapper WDQ_WRAP (
-        .CLK  (CLK),
-        .nRST (nRST),
-        .wdw  (cif.wdata_wrapper)
+        .CLK   (CLK),
+        .CLKx2 (CLKx2),
+        .nRST  (nRST),
+        .wdw   (cif.wdata_wrapper)
     );
 
     // Signal Generator
@@ -190,12 +203,6 @@ module ddr_controller_wrapper (
         .CLK  (CLK),
         .nRST (nRST),
         .sig  (cif.signal_gen)
-    );
-
-    data_transfer data_trans (
-        .CLK  (CLK),
-        .nRST (nRST),
-        .dtif (cif.data_transfer)
     );
 
     // Read ID Queue
@@ -207,9 +214,10 @@ module ddr_controller_wrapper (
 
     // Read Data wrapper
     nb_rdata_wrapper RDQ_WRAP (
-        .CLK  (CLK),
-        .nRST (nRST),
-        .rdw (cif.rdata_wrapper)
+        .CLK   (CLK),
+        .CLKx2 (CLKx2),
+        .nRST  (nRST),
+        .rdw   (cif.rdata_wrapper)
     );
 /*
     // Initialization State Machine

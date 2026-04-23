@@ -36,11 +36,10 @@ module dram_top_tb;
     logic CLK = 1, nRST;
     logic CLKx2=0;
     reg model_enable_val;
-    logic model_enable;
+    wire model_enable;
     string task_name;
 
     //Instantiate the the iDDR4_1 version
-    reg clk_val, clk_enb;
     logic DM_debug; //Used it if you want to debug with writing mask
     assign model_enable = model_enable_val;
 
@@ -77,231 +76,187 @@ module dram_top_tb;
     DDR4_if #(.CONFIGURED_DQ_BITS(CONFIGURED_DQ_BITS)) iDDR4_7();
     DDR4_if #(.CONFIGURED_DQ_BITS(CONFIGURED_DQ_BITS)) iDDR4_8();
 
-    ddr_controller_wrapper DUT (.CLK(CLK), .nRST(nRST), .top(ddrif));
+    ddr_controller_wrapper DUT (.CLK(CLK), .CLKx2(CLKx2), .nRST(nRST), .top(ddrif));
 
     //No more Cache or Scheduler, but keep the prev_addr
     // TODO: Bank Group maybe? Check TCCD_L vs TCCD_S 
 
-    //DRAM interface latch
-    always @(posedge clk_val && clk_enb) begin
-        clk_val <= #(tCK/2) 1'b0;
-        clk_val <= #(tCK) 1'b1;
-        iDDR4_1.CK[1] <= #(tCK/2) 1'b0;
-        iDDR4_1.CK[1] <= #(tCK) 1'b1;
-        iDDR4_1.CK[0] <= #(tCK/2) 1'b1;
-        iDDR4_1.CK[0] <= #(tCK) 1'b0;  
+    // ── DRAM model CK and command bus connections ─────────────────────────────
+    // The DRAM model is clocked by iDDR4_N.CK[1] (CK_t) / CK[0] (CK_c).
+    // Connect these directly to the free-running CLK so the model always has
+    // a clock.  All command/address signals are continuous assigns so the DRAM
+    // sees every transition without a registered intermediate.
+    // CK[1] = CK_t, CK[0] = CK_c (differential pair)
+    assign iDDR4_1.CK = {CLK, ~CLK};
+    assign iDDR4_2.CK = {CLK, ~CLK};
+    assign iDDR4_3.CK = {CLK, ~CLK};
+    assign iDDR4_4.CK = {CLK, ~CLK};
+    assign iDDR4_5.CK = {CLK, ~CLK};
+    assign iDDR4_6.CK = {CLK, ~CLK};
+    assign iDDR4_7.CK = {CLK, ~CLK};
+    assign iDDR4_8.CK = {CLK, ~CLK};
 
-        iDDR4_2.CK[1] <= #(tCK/2) 1'b0;
-        iDDR4_2.CK[1] <= #(tCK) 1'b1;
-        iDDR4_2.CK[0] <= #(tCK/2) 1'b1;
-        iDDR4_2.CK[0] <= #(tCK) 1'b0;
+    assign iDDR4_1.ACT_n     = ddrif.ACT_n;
+    assign iDDR4_1.RAS_n_A16 = ddrif.RAS_n_A16;
+    assign iDDR4_1.CAS_n_A15 = ddrif.CAS_n_A15;
+    assign iDDR4_1.WE_n_A14  = ddrif.WE_n_A14;
+    // ALERT_n is driven by the DRAM model (parity error output) — do not drive here
+    assign iDDR4_1.PARITY    = ddrif.PARITY;
+    assign iDDR4_1.RESET_n   = ddrif.RESET_n;
+    assign iDDR4_1.TEN       = ddrif.TEN;
+    assign iDDR4_1.CS_n      = ddrif.CS_n;
+    assign iDDR4_1.CKE       = ddrif.CKE;
+    assign iDDR4_1.ODT       = ddrif.ODT;
+    assign iDDR4_1.C         = ddrif.C;
+    assign iDDR4_1.BG        = ddrif.BG;
+    assign iDDR4_1.BA        = ddrif.BA;
+    assign iDDR4_1.ADDR      = ddrif.ADDR;
+    assign iDDR4_1.ADDR_17   = ddrif.ADDR_17;
+    assign iDDR4_1.ZQ        = ddrif.ZQ;
+    assign iDDR4_1.PWR       = ddrif.PWR;
+    assign iDDR4_1.VREF_CA   = ddrif.VREF_CA;
+    assign iDDR4_1.VREF_DQ   = ddrif.VREF_DQ;
 
-        iDDR4_3.CK[1] <= #(tCK/2) 1'b0;
-        iDDR4_3.CK[1] <= #(tCK) 1'b1;
-        iDDR4_3.CK[0] <= #(tCK/2) 1'b1;
-        iDDR4_3.CK[0] <= #(tCK) 1'b0;
+    assign iDDR4_2.ACT_n     = ddrif.ACT_n;
+    assign iDDR4_2.RAS_n_A16 = ddrif.RAS_n_A16;
+    assign iDDR4_2.CAS_n_A15 = ddrif.CAS_n_A15;
+    assign iDDR4_2.WE_n_A14  = ddrif.WE_n_A14;
+    assign iDDR4_2.PARITY    = ddrif.PARITY;
+    assign iDDR4_2.RESET_n   = ddrif.RESET_n;
+    assign iDDR4_2.TEN       = ddrif.TEN;
+    assign iDDR4_2.CS_n      = ddrif.CS_n;
+    assign iDDR4_2.CKE       = ddrif.CKE;
+    assign iDDR4_2.ODT       = ddrif.ODT;
+    assign iDDR4_2.C         = ddrif.C;
+    assign iDDR4_2.BG        = ddrif.BG;
+    assign iDDR4_2.BA        = ddrif.BA;
+    assign iDDR4_2.ADDR      = ddrif.ADDR;
+    assign iDDR4_2.ADDR_17   = ddrif.ADDR_17;
+    assign iDDR4_2.ZQ        = ddrif.ZQ;
+    assign iDDR4_2.PWR       = ddrif.PWR;
+    assign iDDR4_2.VREF_CA   = ddrif.VREF_CA;
+    assign iDDR4_2.VREF_DQ   = ddrif.VREF_DQ;
 
-        iDDR4_4.CK[1] <= #(tCK/2) 1'b0;
-        iDDR4_4.CK[1] <= #(tCK) 1'b1;
-        iDDR4_4.CK[0] <= #(tCK/2) 1'b1;
-        iDDR4_4.CK[0] <= #(tCK) 1'b0;
+    assign iDDR4_3.ACT_n     = ddrif.ACT_n;
+    assign iDDR4_3.RAS_n_A16 = ddrif.RAS_n_A16;
+    assign iDDR4_3.CAS_n_A15 = ddrif.CAS_n_A15;
+    assign iDDR4_3.WE_n_A14  = ddrif.WE_n_A14;
+    assign iDDR4_3.PARITY    = ddrif.PARITY;
+    assign iDDR4_3.RESET_n   = ddrif.RESET_n;
+    assign iDDR4_3.TEN       = ddrif.TEN;
+    assign iDDR4_3.CS_n      = ddrif.CS_n;
+    assign iDDR4_3.CKE       = ddrif.CKE;
+    assign iDDR4_3.ODT       = ddrif.ODT;
+    assign iDDR4_3.C         = ddrif.C;
+    assign iDDR4_3.BG        = ddrif.BG;
+    assign iDDR4_3.BA        = ddrif.BA;
+    assign iDDR4_3.ADDR      = ddrif.ADDR;
+    assign iDDR4_3.ADDR_17   = ddrif.ADDR_17;
+    assign iDDR4_3.ZQ        = ddrif.ZQ;
+    assign iDDR4_3.PWR       = ddrif.PWR;
+    assign iDDR4_3.VREF_CA   = ddrif.VREF_CA;
+    assign iDDR4_3.VREF_DQ   = ddrif.VREF_DQ;
 
-        iDDR4_5.CK[1] <= #(tCK/2) 1'b0;
-        iDDR4_5.CK[1] <= #(tCK) 1'b1;
-        iDDR4_5.CK[0] <= #(tCK/2) 1'b1;
-        iDDR4_5.CK[0] <= #(tCK) 1'b0;
+    assign iDDR4_4.ACT_n     = ddrif.ACT_n;
+    assign iDDR4_4.RAS_n_A16 = ddrif.RAS_n_A16;
+    assign iDDR4_4.CAS_n_A15 = ddrif.CAS_n_A15;
+    assign iDDR4_4.WE_n_A14  = ddrif.WE_n_A14;
+    assign iDDR4_4.PARITY    = ddrif.PARITY;
+    assign iDDR4_4.RESET_n   = ddrif.RESET_n;
+    assign iDDR4_4.TEN       = ddrif.TEN;
+    assign iDDR4_4.CS_n      = ddrif.CS_n;
+    assign iDDR4_4.CKE       = ddrif.CKE;
+    assign iDDR4_4.ODT       = ddrif.ODT;
+    assign iDDR4_4.C         = ddrif.C;
+    assign iDDR4_4.BG        = ddrif.BG;
+    assign iDDR4_4.BA        = ddrif.BA;
+    assign iDDR4_4.ADDR      = ddrif.ADDR;
+    assign iDDR4_4.ADDR_17   = ddrif.ADDR_17;
+    assign iDDR4_4.ZQ        = ddrif.ZQ;
+    assign iDDR4_4.PWR       = ddrif.PWR;
+    assign iDDR4_4.VREF_CA   = ddrif.VREF_CA;
+    assign iDDR4_4.VREF_DQ   = ddrif.VREF_DQ;
 
-        iDDR4_6.CK[1] <= #(tCK/2) 1'b0;
-        iDDR4_6.CK[1] <= #(tCK) 1'b1;
-        iDDR4_6.CK[0] <= #(tCK/2) 1'b1;
-        iDDR4_6.CK[0] <= #(tCK) 1'b0;
+    assign iDDR4_5.ACT_n     = ddrif.ACT_n;
+    assign iDDR4_5.RAS_n_A16 = ddrif.RAS_n_A16;
+    assign iDDR4_5.CAS_n_A15 = ddrif.CAS_n_A15;
+    assign iDDR4_5.WE_n_A14  = ddrif.WE_n_A14;
+    assign iDDR4_5.PARITY    = ddrif.PARITY;
+    assign iDDR4_5.RESET_n   = ddrif.RESET_n;
+    assign iDDR4_5.TEN       = ddrif.TEN;
+    assign iDDR4_5.CS_n      = ddrif.CS_n;
+    assign iDDR4_5.CKE       = ddrif.CKE;
+    assign iDDR4_5.ODT       = ddrif.ODT;
+    assign iDDR4_5.C         = ddrif.C;
+    assign iDDR4_5.BG        = ddrif.BG;
+    assign iDDR4_5.BA        = ddrif.BA;
+    assign iDDR4_5.ADDR      = ddrif.ADDR;
+    assign iDDR4_5.ADDR_17   = ddrif.ADDR_17;
+    assign iDDR4_5.ZQ        = ddrif.ZQ;
+    assign iDDR4_5.PWR       = ddrif.PWR;
+    assign iDDR4_5.VREF_CA   = ddrif.VREF_CA;
+    assign iDDR4_5.VREF_DQ   = ddrif.VREF_DQ;
 
-        iDDR4_7.CK[1] <= #(tCK/2) 1'b0;
-        iDDR4_7.CK[1] <= #(tCK) 1'b1;
-        iDDR4_7.CK[0] <= #(tCK/2) 1'b1;
-        iDDR4_7.CK[0] <= #(tCK) 1'b0;
+    assign iDDR4_6.ACT_n     = ddrif.ACT_n;
+    assign iDDR4_6.RAS_n_A16 = ddrif.RAS_n_A16;
+    assign iDDR4_6.CAS_n_A15 = ddrif.CAS_n_A15;
+    assign iDDR4_6.WE_n_A14  = ddrif.WE_n_A14;
+    assign iDDR4_6.PARITY    = ddrif.PARITY;
+    assign iDDR4_6.RESET_n   = ddrif.RESET_n;
+    assign iDDR4_6.TEN       = ddrif.TEN;
+    assign iDDR4_6.CS_n      = ddrif.CS_n;
+    assign iDDR4_6.CKE       = ddrif.CKE;
+    assign iDDR4_6.ODT       = ddrif.ODT;
+    assign iDDR4_6.C         = ddrif.C;
+    assign iDDR4_6.BG        = ddrif.BG;
+    assign iDDR4_6.BA        = ddrif.BA;
+    assign iDDR4_6.ADDR      = ddrif.ADDR;
+    assign iDDR4_6.ADDR_17   = ddrif.ADDR_17;
+    assign iDDR4_6.ZQ        = ddrif.ZQ;
+    assign iDDR4_6.PWR       = ddrif.PWR;
+    assign iDDR4_6.VREF_CA   = ddrif.VREF_CA;
+    assign iDDR4_6.VREF_DQ   = ddrif.VREF_DQ;
 
-        iDDR4_8.CK[1] <= #(tCK/2) 1'b0;
-        iDDR4_8.CK[1] <= #(tCK) 1'b1;
-        iDDR4_8.CK[0] <= #(tCK/2) 1'b1;
-        iDDR4_8.CK[0] <= #(tCK) 1'b0;
+    assign iDDR4_7.ACT_n     = ddrif.ACT_n;
+    assign iDDR4_7.RAS_n_A16 = ddrif.RAS_n_A16;
+    assign iDDR4_7.CAS_n_A15 = ddrif.CAS_n_A15;
+    assign iDDR4_7.WE_n_A14  = ddrif.WE_n_A14;
+    assign iDDR4_7.PARITY    = ddrif.PARITY;
+    assign iDDR4_7.RESET_n   = ddrif.RESET_n;
+    assign iDDR4_7.TEN       = ddrif.TEN;
+    assign iDDR4_7.CS_n      = ddrif.CS_n;
+    assign iDDR4_7.CKE       = ddrif.CKE;
+    assign iDDR4_7.ODT       = ddrif.ODT;
+    assign iDDR4_7.C         = ddrif.C;
+    assign iDDR4_7.BG        = ddrif.BG;
+    assign iDDR4_7.BA        = ddrif.BA;
+    assign iDDR4_7.ADDR      = ddrif.ADDR;
+    assign iDDR4_7.ADDR_17   = ddrif.ADDR_17;
+    assign iDDR4_7.ZQ        = ddrif.ZQ;
+    assign iDDR4_7.PWR       = ddrif.PWR;
+    assign iDDR4_7.VREF_CA   = ddrif.VREF_CA;
+    assign iDDR4_7.VREF_DQ   = ddrif.VREF_DQ;
 
-
-        iDDR4_1.ACT_n     <= ddrif.ACT_n;
-        iDDR4_1.RAS_n_A16 <= ddrif.RAS_n_A16;
-        iDDR4_1.CAS_n_A15 <= ddrif.CAS_n_A15;
-        iDDR4_1.WE_n_A14  <= ddrif.WE_n_A14;
-        iDDR4_1.ALERT_n   <= ddrif.ALERT_n;
-        iDDR4_1.PARITY    <= ddrif.PARITY;
-        iDDR4_1.RESET_n   <= ddrif.RESET_n;
-        iDDR4_1.TEN       <= ddrif.TEN;
-        iDDR4_1.CS_n      <= ddrif.CS_n;
-        iDDR4_1.CKE       <= ddrif.CKE;
-        iDDR4_1.ODT       <= ddrif.ODT;
-        iDDR4_1.C         <= ddrif.C;
-        iDDR4_1.BG        <= ddrif.BG;
-        iDDR4_1.BA        <= ddrif.BA;
-        iDDR4_1.ADDR      <= ddrif.ADDR;
-        iDDR4_1.ADDR_17   <= ddrif.ADDR_17;
-        iDDR4_1.ZQ        <= ddrif.ZQ;
-        iDDR4_1.PWR       <= ddrif.PWR;
-        iDDR4_1.VREF_CA   <= ddrif.VREF_CA;
-        iDDR4_1.VREF_DQ   <= ddrif.VREF_DQ;
-
-        //DRAM 2
-        iDDR4_2.ACT_n     <= ddrif.ACT_n;
-        iDDR4_2.RAS_n_A16 <= ddrif.RAS_n_A16;
-        iDDR4_2.CAS_n_A15 <= ddrif.CAS_n_A15;
-        iDDR4_2.WE_n_A14  <= ddrif.WE_n_A14;
-        iDDR4_2.ALERT_n   <= ddrif.ALERT_n;
-        iDDR4_2.PARITY    <= ddrif.PARITY;
-        iDDR4_2.RESET_n   <= ddrif.RESET_n;
-        iDDR4_2.TEN       <= ddrif.TEN;
-        iDDR4_2.CS_n      <= ddrif.CS_n;
-        iDDR4_2.CKE       <= ddrif.CKE;
-        iDDR4_2.ODT       <= ddrif.ODT;
-        iDDR4_2.C         <= ddrif.C;
-        iDDR4_2.BG        <= ddrif.BG;
-        iDDR4_2.BA        <= ddrif.BA;
-        iDDR4_2.ADDR      <= ddrif.ADDR;
-        iDDR4_2.ADDR_17   <= ddrif.ADDR_17;
-        iDDR4_2.ZQ        <= ddrif.ZQ;
-        iDDR4_2.PWR       <= ddrif.PWR;
-        iDDR4_2.VREF_CA   <= ddrif.VREF_CA;
-        iDDR4_2.VREF_DQ   <= ddrif.VREF_DQ;
-
-        //DRAM 3
-        iDDR4_3.ACT_n     <= ddrif.ACT_n;
-        iDDR4_3.RAS_n_A16 <= ddrif.RAS_n_A16;
-        iDDR4_3.CAS_n_A15 <= ddrif.CAS_n_A15;
-        iDDR4_3.WE_n_A14  <= ddrif.WE_n_A14;
-        iDDR4_3.ALERT_n   <= ddrif.ALERT_n;
-        iDDR4_3.PARITY    <= ddrif.PARITY;
-        iDDR4_3.RESET_n   <= ddrif.RESET_n;
-        iDDR4_3.TEN       <= ddrif.TEN;
-        iDDR4_3.CS_n      <= ddrif.CS_n;
-        iDDR4_3.CKE       <= ddrif.CKE;
-        iDDR4_3.ODT       <= ddrif.ODT;
-        iDDR4_3.C         <= ddrif.C;
-        iDDR4_3.BG        <= ddrif.BG;
-        iDDR4_3.BA        <= ddrif.BA;
-        iDDR4_3.ADDR      <= ddrif.ADDR;
-        iDDR4_3.ADDR_17   <= ddrif.ADDR_17;
-        iDDR4_3.ZQ        <= ddrif.ZQ;
-        iDDR4_3.PWR       <= ddrif.PWR;
-        iDDR4_3.VREF_CA   <= ddrif.VREF_CA;
-        iDDR4_3.VREF_DQ   <= ddrif.VREF_DQ;
-
-        //DRAM 4
-        iDDR4_4.ACT_n     <= ddrif.ACT_n;
-        iDDR4_4.RAS_n_A16 <= ddrif.RAS_n_A16;
-        iDDR4_4.CAS_n_A15 <= ddrif.CAS_n_A15;
-        iDDR4_4.WE_n_A14  <= ddrif.WE_n_A14;
-        iDDR4_4.ALERT_n   <= ddrif.ALERT_n;
-        iDDR4_4.PARITY    <= ddrif.PARITY;
-        iDDR4_4.RESET_n   <= ddrif.RESET_n;
-        iDDR4_4.TEN       <= ddrif.TEN;
-        iDDR4_4.CS_n      <= ddrif.CS_n;
-        iDDR4_4.CKE       <= ddrif.CKE;
-        iDDR4_4.ODT       <= ddrif.ODT;
-        iDDR4_4.C         <= ddrif.C;
-        iDDR4_4.BG        <= ddrif.BG;
-        iDDR4_4.BA        <= ddrif.BA;
-        iDDR4_4.ADDR      <= ddrif.ADDR;
-        iDDR4_4.ADDR_17   <= ddrif.ADDR_17;
-        iDDR4_4.ZQ        <= ddrif.ZQ;
-        iDDR4_4.PWR       <= ddrif.PWR;
-        iDDR4_4.VREF_CA   <= ddrif.VREF_CA;
-        iDDR4_4.VREF_DQ   <= ddrif.VREF_DQ;
-
-        //DRAM 5
-        iDDR4_5.ACT_n     <= ddrif.ACT_n;
-        iDDR4_5.RAS_n_A16 <= ddrif.RAS_n_A16;
-        iDDR4_5.CAS_n_A15 <= ddrif.CAS_n_A15;
-        iDDR4_5.WE_n_A14  <= ddrif.WE_n_A14;
-        iDDR4_5.ALERT_n   <= ddrif.ALERT_n;
-        iDDR4_5.PARITY    <= ddrif.PARITY;
-        iDDR4_5.RESET_n   <= ddrif.RESET_n;
-        iDDR4_5.TEN       <= ddrif.TEN;
-        iDDR4_5.CS_n      <= ddrif.CS_n;
-        iDDR4_5.CKE       <= ddrif.CKE;
-        iDDR4_5.ODT       <= ddrif.ODT;
-        iDDR4_5.C         <= ddrif.C;
-        iDDR4_5.BG        <= ddrif.BG;
-        iDDR4_5.BA        <= ddrif.BA;
-        iDDR4_5.ADDR      <= ddrif.ADDR;
-        iDDR4_5.ADDR_17   <= ddrif.ADDR_17;
-        iDDR4_5.ZQ        <= ddrif.ZQ;
-        iDDR4_5.PWR       <= ddrif.PWR;
-        iDDR4_5.VREF_CA   <= ddrif.VREF_CA;
-        iDDR4_5.VREF_DQ   <= ddrif.VREF_DQ;
-
-        //DRAM 6
-        iDDR4_6.ACT_n     <= ddrif.ACT_n;
-        iDDR4_6.RAS_n_A16 <= ddrif.RAS_n_A16;
-        iDDR4_6.CAS_n_A15 <= ddrif.CAS_n_A15;
-        iDDR4_6.WE_n_A14  <= ddrif.WE_n_A14;
-        iDDR4_6.ALERT_n   <= ddrif.ALERT_n;
-        iDDR4_6.PARITY    <= ddrif.PARITY;
-        iDDR4_6.RESET_n   <= ddrif.RESET_n;
-        iDDR4_6.TEN       <= ddrif.TEN;
-        iDDR4_6.CS_n      <= ddrif.CS_n;
-        iDDR4_6.CKE       <= ddrif.CKE;
-        iDDR4_6.ODT       <= ddrif.ODT;
-        iDDR4_6.C         <= ddrif.C;
-        iDDR4_6.BG        <= ddrif.BG;
-        iDDR4_6.BA        <= ddrif.BA;
-        iDDR4_6.ADDR      <= ddrif.ADDR;
-        iDDR4_6.ADDR_17   <= ddrif.ADDR_17;
-        iDDR4_6.ZQ        <= ddrif.ZQ;
-        iDDR4_6.PWR       <= ddrif.PWR;
-        iDDR4_6.VREF_CA   <= ddrif.VREF_CA;
-        iDDR4_6.VREF_DQ   <= ddrif.VREF_DQ;
-
-        //DRAM 7
-        iDDR4_7.ACT_n     <= ddrif.ACT_n;
-        iDDR4_7.RAS_n_A16 <= ddrif.RAS_n_A16;
-        iDDR4_7.CAS_n_A15 <= ddrif.CAS_n_A15;
-        iDDR4_7.WE_n_A14  <= ddrif.WE_n_A14;
-        iDDR4_7.ALERT_n   <= ddrif.ALERT_n;
-        iDDR4_7.PARITY    <= ddrif.PARITY;
-        iDDR4_7.RESET_n   <= ddrif.RESET_n;
-        iDDR4_7.TEN       <= ddrif.TEN;
-        iDDR4_7.CS_n      <= ddrif.CS_n;
-        iDDR4_7.CKE       <= ddrif.CKE;
-        iDDR4_7.ODT       <= ddrif.ODT;
-        iDDR4_7.C         <= ddrif.C;
-        iDDR4_7.BG        <= ddrif.BG;
-        iDDR4_7.BA        <= ddrif.BA;
-        iDDR4_7.ADDR      <= ddrif.ADDR;
-        iDDR4_7.ADDR_17   <= ddrif.ADDR_17;
-        iDDR4_7.ZQ        <= ddrif.ZQ;
-        iDDR4_7.PWR       <= ddrif.PWR;
-        iDDR4_7.VREF_CA   <= ddrif.VREF_CA;
-        iDDR4_7.VREF_DQ   <= ddrif.VREF_DQ;
-
-        //DRAM 8
-        iDDR4_8.ACT_n     <= ddrif.ACT_n;
-        iDDR4_8.RAS_n_A16 <= ddrif.RAS_n_A16;
-        iDDR4_8.CAS_n_A15 <= ddrif.CAS_n_A15;
-        iDDR4_8.WE_n_A14  <= ddrif.WE_n_A14;
-        iDDR4_8.ALERT_n   <= ddrif.ALERT_n;
-        iDDR4_8.PARITY    <= ddrif.PARITY;
-        iDDR4_8.RESET_n   <= ddrif.RESET_n;
-        iDDR4_8.TEN       <= ddrif.TEN;
-        iDDR4_8.CS_n      <= ddrif.CS_n;
-        iDDR4_8.CKE       <= ddrif.CKE;
-        iDDR4_8.ODT       <= ddrif.ODT;
-        iDDR4_8.C         <= ddrif.C;
-        iDDR4_8.BG        <= ddrif.BG;
-        iDDR4_8.BA        <= ddrif.BA;
-        iDDR4_8.ADDR      <= ddrif.ADDR;
-        iDDR4_8.ADDR_17   <= ddrif.ADDR_17;
-        iDDR4_8.ZQ        <= ddrif.ZQ;
-        iDDR4_8.PWR       <= ddrif.PWR;
-        iDDR4_8.VREF_CA   <= ddrif.VREF_CA;
-        iDDR4_8.VREF_DQ   <= ddrif.VREF_DQ;
-    end
+    assign iDDR4_8.ACT_n     = ddrif.ACT_n;
+    assign iDDR4_8.RAS_n_A16 = ddrif.RAS_n_A16;
+    assign iDDR4_8.CAS_n_A15 = ddrif.CAS_n_A15;
+    assign iDDR4_8.WE_n_A14  = ddrif.WE_n_A14;
+    assign iDDR4_8.PARITY    = ddrif.PARITY;
+    assign iDDR4_8.RESET_n   = ddrif.RESET_n;
+    assign iDDR4_8.TEN       = ddrif.TEN;
+    assign iDDR4_8.CS_n      = ddrif.CS_n;
+    assign iDDR4_8.CKE       = ddrif.CKE;
+    assign iDDR4_8.ODT       = ddrif.ODT;
+    assign iDDR4_8.C         = ddrif.C;
+    assign iDDR4_8.BG        = ddrif.BG;
+    assign iDDR4_8.BA        = ddrif.BA;
+    assign iDDR4_8.ADDR      = ddrif.ADDR;
+    assign iDDR4_8.ADDR_17   = ddrif.ADDR_17;
+    assign iDDR4_8.ZQ        = ddrif.ZQ;
+    assign iDDR4_8.PWR       = ddrif.PWR;
+    assign iDDR4_8.VREF_CA   = ddrif.VREF_CA;
+    assign iDDR4_8.VREF_DQ   = ddrif.VREF_DQ;
+    // (end of continuous command bus connections)
 
     // Component instantiation
     //Only use 8 chips only, so 64-bit data
@@ -401,10 +356,10 @@ module dram_top_tb;
         iDDR4_8.DQ
     } : {64{1'bz}};
 
-    //Assign these DQ signals back with data transfer (bidirectional) //TODO: Is this necessary? 
-    assign ddrif.data_trans.DQS_t = ~dq_en ? iDDR4_1.DQS_t : 1'bz;
-    assign ddrif.data_trans.DQS_c = ~dq_en ? iDDR4_1.DQS_c: 1'bz;
-    assign ddrif.data_trans.DM_n = ~dq_en ? iDDR4_1.DM_n: 1'bz;
+    //Assign DQS/DM signals from DRAM model back into the controller interface (read path)
+    assign ddrif.DQS_t = ~dq_en ? iDDR4_1.DQS_t : 1'bz;
+    assign ddrif.DQS_c = ~dq_en ? iDDR4_1.DQS_c: 1'bz;
+    assign ddrif.DM_n  = ~dq_en ? iDDR4_1.DM_n: 1'bz;
     // NOTE: COL_choice mapping needs to be verified - check if this exists in ctrl modport
     // assign ddrif.data_trans.COL_choice = ddrif.ctrl.offset; 
 
@@ -502,11 +457,12 @@ module dram_top_tb;
         task writing();
             begin 
                 // Send the Write Data to both the STQ and WDQ
-                // WDQ
-                this.wvif.wdq_slot = {this.wstrb, this.wdata, this.wid, this.wlen};
-                this.wvif.bwready  = this.bwready; // TODO: How is this signal determined? 
+                // WDQ: wid and wlen must match awid/awlen so the backend arbiter
+                // drains the correct per-ID queue (be_wid = be_id = awid).
+                this.wvif.wdq_slot = {this.wstrb, this.wdata, this.id, this.len[2:0]};
+                this.wvif.bwready  = this.bwready;
                 this.wvif.wvalid   = this.valid;
-                this.wvif.wlast    = this.wlast; // TODO: How is this signal determined?
+                this.wvif.wlast    = this.wlast;
                 // STQ
                 this.svif.awvalid = this.valid;
                 this.svif.awaddr  = this.creating_addr;
@@ -553,6 +509,146 @@ module dram_top_tb;
         //Case 3 check the reading cycle
         axi_inst.reading();
         repeat (50) @(posedge CLK);
+    endtask
+
+    // ── ID tracking: 1 = in-flight, 0 = free ─────────────────────────────
+    logic [ID_NUM-1:0] id_in_flight;
+    // Shadow memory: addr -> last written data (associative array)
+    logic [63:0] shadow_mem [logic [31:0]];
+
+    // Acquire next free ID; blocks until one available
+    task automatic acquire_id(output logic [$clog2(ID_NUM)-1:0] got_id);
+        got_id = '0;
+        forever begin
+            for (int k = 0; k < ID_NUM; k++) begin
+                if (!id_in_flight[k]) begin
+                    id_in_flight[k] = 1'b1;
+                    got_id = k[$clog2(ID_NUM)-1:0];
+                    return;
+                end
+            end
+            @(posedge CLK);
+        end
+    endtask
+
+    // Drive AW+W channels for an 8-beat burst write; de-asserts after last beat.
+    // Beat b data = wdata ^ {b[3:0], 60'h0}  (beat index in top nibble for traceability).
+    task automatic issue_write(
+        input logic [31:0]               addr,
+        input logic [63:0]               wdata,
+        input logic [$clog2(ID_NUM)-1:0] wid
+    );
+        dq_en          = 1'b1;
+        ddrif.awvalid  = 1'b1;
+        ddrif.awaddr   = addr;
+        ddrif.awid     = wid;
+        ddrif.awlen    = 3'd7;   // 8 beats (AXI len = N-1)
+        ddrif.bwready  = 1'b1;
+        @(posedge CLK);
+        while (!ddrif.awready) @(posedge CLK);
+        ddrif.awvalid = 1'b0;
+        // Drive 8 W-channel beats consecutively; wdq_slot.wlen=7 in every beat
+        for (int b = 0; b < 8; b++) begin
+            ddrif.wvalid   = 1'b1;
+            ddrif.wlast    = (b == 7);
+            ddrif.wdq_slot = {8'hFF, wdata ^ {b[3:0], 60'h0}, wid, 3'd7};
+            @(posedge CLK);
+        end
+        ddrif.wvalid = 1'b0;
+        ddrif.wlast  = 1'b0;
+    endtask
+
+    // Wait for write response matching wid; de-asserts bwready and frees ID
+    task automatic wait_write_done(input logic [$clog2(ID_NUM)-1:0] wid);
+        while (!(ddrif.bwvalid && ddrif.bwid == wid)) @(posedge CLK);
+        ddrif.bwready = 1'b1;
+        @(posedge CLK);
+        ddrif.bwready     = 1'b0;
+        id_in_flight[wid] = 1'b0;
+    endtask
+
+    // Drive AR channel for an 8-beat burst read; de-asserts after arready
+    task automatic issue_read(
+        input logic [31:0]               addr,
+        input logic [$clog2(ID_NUM)-1:0] rid
+    );
+        dq_en         = 1'b0;
+        ddrif.arvalid = 1'b1;
+        ddrif.araddr  = addr;
+        ddrif.arid    = rid;
+        ddrif.arlen   = 3'd7;   // 8 beats
+        @(posedge CLK);
+        while (!ddrif.arready) @(posedge CLK);
+        ddrif.arvalid = 1'b0;
+    endtask
+
+    // Wait for all 8 read beats from this rid; checks each beat against shadow_mem.
+    // Beat b is expected at expected_addr + b*8.  Frees the ID after rlast.
+    task automatic wait_read_done(
+        input logic [$clog2(ID_NUM)-1:0] rid,
+        input logic [31:0]               expected_addr,
+        input string                     tc_label
+    );
+        logic [63:0] got;
+        logic        done;
+        int          b;
+        b    = 0;
+        done = 1'b0;
+        while (!done) begin
+            // Wait for a valid read beat belonging to this transaction
+            while (!(ddrif.rvalid && ddrif.rid == rid)) @(posedge CLK);
+            got = ddrif.rdata;
+            begin : beat_check
+                logic [31:0] baddr;
+                baddr = expected_addr + 32'(b) * 32'd8;
+                if (shadow_mem.exists(baddr)) begin
+                    if (got === shadow_mem[baddr])
+                        $display("[PASS] %s beat%0d addr=%0h exp=%0h got=%0h",
+                                 tc_label, b, baddr, shadow_mem[baddr], got);
+                    else
+                        $error("[FAIL] %s beat%0d addr=%0h exp=%0h got=%0h",
+                               tc_label, b, baddr, shadow_mem[baddr], got);
+                end else
+                    $display("[INFO] %s beat%0d addr=%0h got=%0h (no shadow)",
+                             tc_label, b, baddr, got);
+            end
+            if (ddrif.rlast) done = 1'b1;
+            else begin b++; @(posedge CLK); end
+        end
+        dq_en             = 1'b1;
+        id_in_flight[rid] = 1'b0;
+    endtask
+
+    // Directed write then read on a specific bank.
+    // bank_idx[3:0] = {BG[1], bank[1], bank[0], BG[0]}
+    task automatic directed_wr_rd(
+        input logic [3:0]  bank_idx,
+        input logic [14:0] row,
+        input logic [9:0]  col,
+        input logic [63:0] wdata,
+        input string       label
+    );
+        logic [$clog2(ID_NUM)-1:0] txid;
+        logic [31:0] addr;
+        // {rank=0, row[14:0], bank[1:0]=bank_idx[2:1], BG[1]=bank_idx[3],
+        //  col[9:3], BG[0]=bank_idx[0], col[2:0], offset=00}
+        addr = {1'b0, row, bank_idx[2:1], bank_idx[3],
+                col[9:3], bank_idx[0], col[2:0], 2'b00};
+        acquire_id(txid);
+        task_name = $sformatf("%s: wr bk%0d", label, bank_idx);
+        issue_write(addr, wdata, txid);
+        repeat (25) @(posedge CLK);
+        wait_write_done(txid);
+        // Store expected data for all 8 beats; beat b data = wdata ^ {b[3:0], 60'h0}
+        for (int b = 0; b < 8; b++)
+            shadow_mem[addr + 32'(b) * 32'd8] = wdata ^ {b[3:0], 60'h0};
+        repeat (25) @(posedge CLK);
+        acquire_id(txid);
+        task_name = $sformatf("%s: rd bk%0d", label, bank_idx);
+        issue_read(addr, txid);
+        repeat (25) @(posedge CLK);
+        wait_read_done(txid, addr, label);
+        repeat (25) @(posedge CLK);
     endtask
 
     /* 
@@ -625,119 +721,38 @@ module dram_top_tb;
     endtask */
 
     initial begin
-      iDDR4_1.CK = 2'b01;
-      clk_enb = 1'b1;
-      clk_val = 1'b1;  
-      model_enable_val = 1;
-      dq_en = 1'b1;
-      
-      
+      // ── DRAM model initialization ─────────────────────────────────────────
+      // iDDR4_N.CK is driven by continuous assign {CLK, ~CLK} above — no init needed
+      model_enable_val = 1'b1;
+      dq_en = 1'b1; id_in_flight = '0;
+
+      // ── All DUT inputs idle ────────────────────────────────────────────────
+      ddrif.awvalid = 1'b0; ddrif.awaddr = '0; ddrif.awid = '0; ddrif.awlen = '0;
+      ddrif.wdq_slot = '0; ddrif.wvalid = 1'b0; ddrif.wlast = 1'b0;
+      ddrif.bwready = 1'b0;
+      ddrif.arvalid = 1'b0; ddrif.araddr = '0; ddrif.arid = '0; ddrif.arlen = '0;
+      ddrif.rready = 1'b1;  // master always ready to accept read data
+      ddrif.init_start = 1'b1;
+      ddrif.ref_done   = 1'b0;
+
       axi = new(ddrif.stq, ddrif.wdata_wrapper, ddrif.lq);
+
+      // ── Reset ─────────────────────────────────────────────────────────────
       nRST = 1'b0;
-      @(posedge CLK);
-      @(posedge CLK);
+      repeat (2) @(posedge CLK);
       nRST = 1'b1;
 
-      
       task_name = "Power_up";
       #((tRESET + tPWUP + tRESETCKE + tPDc + tXPR + tDLLKc + tMOD * 7 + tZQinitc) * PERIOD);
       repeat (25) @(posedge CLK);
 
-    
-      task_name = "Writing_Cycle Case 1";
-      void'(axi.randomize());
-      axi.gen_addr("row miss");
-      axi.gen_valid(1'b1);
-      axi.gen_write(1'b1, 1'b0); // ready, last
-      @(posedge CLK);
-      axi.writing();
+      // TC1: Basic single write → read-back (bank 0, row miss)
+      directed_wr_rd(.bank_idx(4'd0), .row(15'h0001), .col(10'h008),
+                     .wdata(64'hDEAD_BEEF_CAFE_BABE), .label("TC1"));
+
       repeat (50) @(posedge CLK);
-
-    /*
-    task_name = "Reading_Cycle";
-    dq_en = 1'b0;
-    read_with_verify(sch.creating_addr, sch);
-    
-    
-    //checking the write - write - read row hit
-    task_name = "write - write - read - row hit";
-    dq_en = 1'b1;
-    writing_1(prev_addr, dt_class);
-    while (ddrif.ctrl.ram_wait) begin
-        @(posedge CLK);
-    end
-    repeat(10) @(posedge CLK);
-    read_with_verify(prev_addr, sch);
-    
-
-    //Case wait for refreshing refresh everything
-    task_name = "refresh 150 cycles";
-    repeat(150) @(posedge CLK);
-    //PASS CHECKPOINT
-
-    // For the purpose of checking the refresh command
-    // We will load the same address and observe
-    // 1. Command FSM IDLE -> ACT -> READ
-    // 2. Row policy is updated
-    read_with_verify(prev_addr, sch);
-
-    //Test case: Testing row miss case with 3 consecutive writes of random address
-    task_name = "3 consectutive writing";
-    dq_en = 1'b1;
-    //1 consectutive
-    sch.randomize();
-    sch.gen_addr("row miss", prev_addr);
-    writing_1(sch.creating_addr, dt_class);
-    while (ddrif.ctrl.ram_wait) begin
-        @(posedge CLK);
-    end
-    repeat(10) @(posedge CLK);
-
-    //2 consectutive
-    sch.randomize();
-    sch.gen_addr("row miss", prev_addr);
-    writing_1(sch.creating_addr, dt_class);
-    while (ddrif.ctrl.ram_wait) begin
-        @(posedge CLK);
-    end
-    repeat(10) @(posedge CLK);
-
-    //3 consectutive
-    task_name = "The last consecutive write of the testcase";
-    sch.randomize();
-    sch.gen_addr("row miss", prev_addr);
-    writing_1(sch.creating_addr, dt_class);
-    while (ddrif.ctrl.ram_wait) begin
-        @(posedge CLK);
-    end
-    repeat(10) @(posedge CLK);
-
-
-    //After that we use the last consecutive write to test the conflict case
-    task_name = "Test row conflict write row hit read";
-    don_t_write = 1'b1;
-    sch.gen_addr("row conflict", prev_addr);
-    writing_1(sch.creating_addr, dt_class);
-    while(ddrif.ctrl.ram_wait) begin
-        @(posedge CLK);
-    end
-    repeat(10) @(posedge CLK);
-
-    //This task is special because after 3 consecutive writes, and while reading, we jump into refresh request
-    task_name = "Test row conflcit read (the old address that cause write)";
-    read_with_verify(prev_addr, sch);
-    repeat(200) @(posedge CLK);
-
-    //Task 16_consecutive writes
-    task_name = "16 write-dif bank";
-    consecutive_16_write();
-
-    //Task random
-    random_req();
-
-    //CHECKPOINT: DONE ALL PREVIOUS CASES
-    //TODO may be: the writing burst mask cases doesn't have general test cases */
-    $finish;
+      $display("[SIM] TC1 complete.");
+      $finish;
     end
 endmodule
 

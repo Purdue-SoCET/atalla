@@ -5,7 +5,7 @@
 import dram_pkg::*;
 
 module nb_wdata_queue  #(Q_ID = 0, ID_NUM = 8) (
-    input logic CLK, nRST,
+    input logic CLK, CLKx2, nRST,
     input wdq_slot_t wdq_slot, logic bwready, logic wvalid, logic wlast, logic [$clog2(ID_NUM)-1:0] be_wid, logic be_write, 
     logic [$clog2(ID_NUM)-1:0] bw_arb , output logic wready, bwvalid, logic [1:0] bwresp, logic [$clog2(ID_NUM)-1:0] bwid, 
     logic [63:0] ddr_wdata_data, logic ddr_wdata_en, logic [7:0] ddr_wdata_mask, logic ddr_we
@@ -59,16 +59,23 @@ module nb_wdata_queue  #(Q_ID = 0, ID_NUM = 8) (
   end
   
   //write pointer logic
-  
-  	//regs for pointers
+
+  // write_ptr: AXI W-channel side — advances on posedge CLK only
   always_ff @(posedge CLK, negedge nRST) begin
-    if(!nRST) begin
-      dram_ptr <= {PTR_W{1'b0}};
+    if(!nRST)
       write_ptr <= {PTR_W{1'b0}};
-    end else begin
-      dram_ptr <= dram_ptr_next;
+    else
       write_ptr <= write_ptr_next;
-    end
+  end
+
+  // dram_ptr: DRAM read-side — advances on every posedge CLKx2 (DDR rate).
+  // CLKx2 is 2× CLK, so dram_ptr steps twice per CLK cycle, presenting a new
+  // beat to nb_wdata_wrapper each time DQS toggles.
+  always_ff @(posedge CLKx2, negedge nRST) begin
+    if(!nRST)
+      dram_ptr <= {PTR_W{1'b0}};
+    else
+      dram_ptr <= dram_ptr_next;
   end
   
   //assign write_ptr_next = (wvalid && !full) ? write_ptr + 'b1 : write_ptr;
@@ -195,7 +202,7 @@ module nb_wdata_queue  #(Q_ID = 0, ID_NUM = 8) (
   assign wready = !full;
 
   
-  flex_counter #(.SIZE(4'd4)) BEAT_CNT (CLK, nRST, clear, cnt_en, 4'd7, rollover);
+  flex_counter #(.SIZE(4'd4)) BEAT_CNT (CLK, nRST, clear, cnt_en, 4'd3, rollover);
 
   logic clear_cwl; //clears cwl timer.
   logic cnt_en_cwl; //enables cwl timer.

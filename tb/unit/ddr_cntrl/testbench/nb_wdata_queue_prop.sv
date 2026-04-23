@@ -1,7 +1,9 @@
 `include "dram_pkg.svh"
 `include "ddr_controller_if.sv"
 
-module nb_wdata_queue_prop(
+module nb_wdata_queue_prop
+    import dram_pkg::*;
+(
     input logic CLK,
     input logic nRST,
     input logic [ID_NUM-1:0] bwvalid,
@@ -12,7 +14,6 @@ module nb_wdata_queue_prop(
     input logic [ID_NUM-1:0] ddr_we 
     );
 
-    import dram_pkg::*;
 /*
     covergroup wdq_cg @(posedge CLK) // TODO: FIX COVERPOINTS 
         awdata : coverpoint {wstrb, wdq_slot, wready};

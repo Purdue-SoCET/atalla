@@ -2,7 +2,7 @@
 `include "ddr_controller_if.sv"
 
 module nb_wdata_queue_wrapper (
-    input logic CLK, nRST,
+    input logic CLK, CLKx2, nRST,
     ddr_controller_if.wdata_wrapper wdw
 );
 
@@ -46,7 +46,7 @@ module nb_wdata_queue_wrapper (
         for (i = 0; i < ID_NUM; i++) begin
             // Generating wdata_queues. 
             nb_wdata_queue #(.Q_ID(i)) WDATA_QUEUE_GEN ( 
-                CLK, nRST, wdw.wdq_slot, wdw.bwready, wdw.wvalid, wdw.wlast, wdw.be_wid, wdw.be_write, bw_arb, 
+                CLK, CLKx2, nRST, wdw.wdq_slot, wdw.bwready, wdw.wvalid, wdw.wlast, wdw.be_wid, wdw.be_write, bw_arb, 
 	       	wready[i], bwvalid[i], bwresp[i], bwid[i], ddr_wdata_data[i], ddr_wdata_en[i], ddr_wdata_mask[i], ddr_we[i]	
             );
 
@@ -94,6 +94,39 @@ module nb_wdata_queue_wrapper (
         else if(wdw.be_write)
             selected_queue <= wdw.be_wid;
 
+    end
+
+    // ── Write data transfer to DRAM (DDR) ────────────────────────────────────
+    // CLKx2 runs at 2× the controller clock rate.  Each posedge of CLKx2
+    // advances the wdata queue's dram_ptr by one beat, so 8 beats are drained
+    // over 4 controller CLK cycles (2 beats per CLK = DDR).
+    //
+    // DQS_t is driven directly from CLKx2 during write-enable: the DRAM
+    // latches DQ on every CLKx2 edge, which is exactly the DDR rate.
+
+    logic              wr_en_i;
+    logic [WORD_W-1:0] wr_DQ_reg;
+
+    assign wr_en_i = ddr_we[selected_queue];
+
+    // DQS_t = CLKx2 while writing → one DQS toggle per CLKx2 half-period = DDR
+    assign wdw.DQS_t = wr_en_i ? CLKx2   : 1'bz;
+    assign wdw.DQS_c = wr_en_i ? ~CLKx2  : 1'bz;
+    assign wdw.DM_n  = wr_en_i ? 1'b0    : 1'bz;  // DM# low = data valid
+    assign wdw.DQ    = wr_en_i ? wr_DQ_reg : {WORD_W{1'bz}};
+
+    // Latch DQ on negedge CLKx2 — data is stable half a CLKx2 period before
+    // the next posedge CLKx2 (= rising DQS edge) where the DRAM samples it.
+    // This matches the original data_transfer.sv timing (negedge CLKx2 latch).
+    // dram_ptr advanced on the preceding posedge CLKx2, so ddr_wdata_data is
+    // already settled by the time this latch fires.
+    always_ff @(negedge CLKx2, negedge nRST) begin : WR_DQ_LATCH
+        if (!nRST)
+            wr_DQ_reg <= '0;
+        else if (wr_en_i)
+            wr_DQ_reg <= ddr_wdata_data[selected_queue];
+        else
+            wr_DQ_reg <= '0;
     end
 
 endmodule 
