@@ -102,12 +102,15 @@ module execute_stage
     assign unit2_if.scalar_type_enable = post_xbar_ex2.scalar_type_enable;
     assign unit2_if.imm = post_xbar_ex2.imm;
     assign unit2_if.imm_src = post_xbar_ex2.imm_src;
+    assign unit2_if.to_mask_in = post_xbar_ex2.mask_reg_write;
     //outputs
     assign ex_if.ex2.valid_out = unit2_if.valid_out;
     assign ex_if.ex2.data_out = unit2_if.data_out;
     assign ex_if.ex2.rdOut = unit2_if.rdOut;
+    assign ex_if.to_mask_reg = unit2_if.to_mask_out;
     //ready handshake
     assign unit2_if.ready_out = ex_if.ready_WB_ex2;
+    assign unit2_if.mask_ready_out = ex_if.mask_ready_WB;
     assign ex_if.ready_DEC2_ex2 = !internal_halt ? unit2_if.ready_in : 0;
 
     //UNIT_3 CONNECTIONS

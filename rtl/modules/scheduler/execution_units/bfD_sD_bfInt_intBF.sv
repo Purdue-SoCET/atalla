@@ -32,6 +32,7 @@ logic [31:0] cur_imm, nlatched_imm, latched_imm;
 logic cur_imm_src, nlatched_imm_src, latched_imm_src;
 logic start_div_mod, latch_valid;
 logic internal_temp;
+logic cur_mask_move, nlatched_mask_move, latched_mask_move;
 
 assign divif.in.operand1 = 16'h3f80;
 assign divif.in.operand2 = cur_input_1[15:0];
@@ -58,6 +59,7 @@ always_comb begin
     latency = 1;
     portmap.data_out = 32'b0;
     src2 = cur_input_2;
+    portmap.to_mask_out = 1'b0;
     if(cur_BFdiv == 1) begin
         latency = 11;
         portmap.data_out = {16'b0, bf_div_output};
@@ -82,6 +84,10 @@ always_comb begin
     end else if(cur_sqrt == 1) begin
         latency = 11;
         portmap.data_out = {16'b0, bf_sqrt_output};
+    end else if(cur_mask_move == 1) begin
+        latency = 1;
+        portmap.data_out = cur_input_1;
+        portmap.to_mask_out = 1;
     end
 end
 
@@ -104,6 +110,8 @@ always_comb begin
     cur_Int_BF = portmap.valid_in && (4'b1010 == portmap.scalar_type_enable) ? 1 : 0;
     nlatched_sqrt = latched_sqrt;
     cur_sqrt = portmap.valid_in && (4'b1111 == portmap.scalar_type_enable) ? 1 : 0;
+    nlatched_mask_move = latched_mask_move;
+    cur_mask_move = portmap.to_mask_in;
 
     nlatched_imm_src = latched_imm_src;
     cur_imm_src = portmap.imm_src;
@@ -139,6 +147,7 @@ always_comb begin
             nlatched_BF_Int = portmap.valid_in && (4'b1001 == portmap.scalar_type_enable) ? 1 : 0;
             nlatched_Int_BF = portmap.valid_in && (4'b1010 == portmap.scalar_type_enable) ? 1 : 0;
             nlatched_sqrt = portmap.valid_in && (4'b1111 == portmap.scalar_type_enable) ? 1 : 0;
+            nlatched_mask_move = portmap.to_mask_in;
 
             nlatched_imm_src = portmap.imm_src;
             nlatched_imm = portmap.imm;
@@ -163,6 +172,7 @@ always_comb begin
             cur_BF_Int = latched_BF_Int;
             cur_Int_BF = latched_Int_BF;
             cur_sqrt = latched_sqrt;
+            cur_mask_move = latched_mask_move;
 
             cur_imm_src = latched_imm_src;
             cur_imm = latched_imm;
@@ -171,7 +181,7 @@ always_comb begin
             latch_valid = 1'b1;
         end
         done: begin
-            if(portmap.ready_out) begin
+            if((portmap.ready_out && ~cur_mask_move) || (portmap.mask_ready_out && cur_mask_move)) begin
                 n_state = start;
             end
             counter_clear = 1'b1;
@@ -188,6 +198,7 @@ always_comb begin
             cur_BF_Int = latched_BF_Int;
             cur_Int_BF = latched_Int_BF;
             cur_sqrt = latched_sqrt;
+            cur_mask_move = latched_mask_move;
 
             cur_imm_src = latched_imm_src;
             cur_imm = latched_imm;
@@ -212,6 +223,7 @@ always_ff @(posedge clk, negedge nRST) begin
         latchedRD <= 8'b0;
         latched_imm_src <= 1'b0;
         latched_imm <= 32'b0;
+        latched_mask_move <= 1'b0;
     end
     else begin
         latched_input1 <= nlatched_input1;
@@ -226,6 +238,7 @@ always_ff @(posedge clk, negedge nRST) begin
         latchedRD <= nlatchedRD;
         latched_imm_src <= nlatched_imm_src;
         latched_imm <= nlatched_imm;
+        latched_mask_move <= nlatched_mask_move;
     end
 end
 

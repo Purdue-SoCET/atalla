@@ -262,7 +262,7 @@ def encode_instruction(instr_dict):
         vmd = instr_dict.get("vmd", 0)
         rs1 = instr_dict.get("rs1", 0)
 
-        instruction = _set_bits(instruction, vmd, 11, 4)
+        instruction = _set_bits(instruction, vmd, 7, 4)
         instruction = _set_bits(instruction, rs1, 15, 8)
 
     elif instr_type == "VM":
@@ -341,6 +341,12 @@ if __name__ == "__main__":
     #sdma store
     sdma_st = {"opcode": 0b1000111, "rs3": 3, "rs2": 2, "rs1": 1}
 
+    #vec to scalar
+    v_to_s = {"opcode": 0b1001000, "imm8": 1, "vs1": 1, "rd": 8}
+
+    #scalar to mask
+    s_to_m = {"opcode": 0b1001010, "rs1": 3, "vmd": 2}
+
     print(f"addi_1 {encode_instruction(addi_1)}")
     print(f"lui {encode_instruction(lui)}")
     print(f"addi_2 {encode_instruction(addi_2)}")
@@ -356,3 +362,5 @@ if __name__ == "__main__":
     print(f"lui_2 {encode_instruction(lui_2)}")
     print(f"addi_5 {encode_instruction(addi_5)}")
     print(f"sdma_st {encode_instruction(sdma_st)}")
+    print(f"v_to_s {encode_instruction(v_to_s)}")
+    print(f"s_to_m {encode_instruction(s_to_m)}")

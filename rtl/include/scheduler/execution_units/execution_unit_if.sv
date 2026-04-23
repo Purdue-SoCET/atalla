@@ -34,7 +34,7 @@ interface execution_unit_if # (
   //control signals to decode 2
   logic ready_DEC2_ex1, ready_DEC2_ex2, ready_DEC2_ex3, ready_DEC2_ex4, ready_DEC2_ex5;
   //control signals from WB
-  logic ready_WB_ex1, ready_WB_ex2, ready_WB_ex3, ready_WB_ex4, ready_WB_ex5;
+  logic ready_WB_ex1, ready_WB_ex2, ready_WB_ex3, ready_WB_ex4, ready_WB_ex5, mask_ready_WB;
   //branch output
   logic redirect_valid;
   logic [31:0] redirect_target;
@@ -44,6 +44,8 @@ interface execution_unit_if # (
   //to dcache 
   logic WEN, REN, mem_in_valid;
   logic [31:0] data_store, data_addr;
+
+  logic to_mask_reg;
 
 
   //halt
@@ -58,17 +60,17 @@ interface execution_unit_if # (
   logic [31:0] pc_out;
 
   modport execution_units (
-    input ready_WB_ex1, ready_WB_ex2, ready_WB_ex3, ready_WB_ex4, ready_WB_ex5, 
+    input ready_WB_ex1, ready_WB_ex2, ready_WB_ex3, ready_WB_ex4, ready_WB_ex5, mask_ready_WB,
     input data_load, hit, block_status, stall, miss,
     input DEC2_inputs, halt, pc, pc_pred_addr_out, predict_taken_out,
     output ready_DEC2_ex1, ready_DEC2_ex2, ready_DEC2_ex3, ready_DEC2_ex4, ready_DEC2_ex5, halt_out,
-    output redirect_valid, redirect_target, WEN, REN, mem_in_valid, data_store, data_addr,
+    output redirect_valid, redirect_target, WEN, REN, mem_in_valid, data_store, data_addr, to_mask_reg,
     output ex1, ex2, ex3, ex4, ex5,
     output pc_out
   );
 
   modport tb (
-    output ready_WB_ex1, ready_WB_ex2, ready_WB_ex3, ready_WB_ex4, ready_WB_ex5, 
+    output ready_WB_ex1, ready_WB_ex2, ready_WB_ex3, ready_WB_ex4, ready_WB_ex5, mask_ready_WB,
     output data_load, hit, block_status, stall, miss,
     output DEC2_inputs, halt, pc, pc_pred_addr_out, predict_taken_out,
     input ready_DEC2_ex1, ready_DEC2_ex2, ready_DEC2_ex3, ready_DEC2_ex4, ready_DEC2_ex5, halt_out,

@@ -33,11 +33,11 @@ module xbar_4x5_exec_comb
 
   function automatic dest_e decode_dest(input execution_unit_types_pkg::in_DEC2_EX_t s);
     // If multiple valids are high in one slot, this imposes priority.
-    if ((s.scalar_type_enable == 4'b0000 || s.scalar_type_enable == 4'b0001) && s.valid_in) begin
+    if ((s.scalar_type_enable == 4'b0000 || s.scalar_type_enable == 4'b0001) && s.valid_in && ~s.mask_reg_write) begin
       return DEST_EX1;
     end
     else if ((s.scalar_type_enable == 4'b0110 || s.scalar_type_enable == 4'b0111 || s.scalar_type_enable == 4'b1000 ||
-             s.scalar_type_enable == 4'b1001 || s.scalar_type_enable == 4'b1010 || s.scalar_type_enable == 4'b1111) && s.valid_in) begin
+             s.scalar_type_enable == 4'b1001 || s.scalar_type_enable == 4'b1010 || s.scalar_type_enable == 4'b1111 || s.mask_reg_write) && s.valid_in) begin
       return DEST_EX2;
     end
     else if ((s.scalar_type_enable == 4'b0010 || s.scalar_type_enable == 4'b0011 || s.scalar_type_enable == 4'b0100 || s.scalar_type_enable == 4'b0101) && s.valid_in) begin

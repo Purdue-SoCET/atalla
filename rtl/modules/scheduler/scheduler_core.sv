@@ -233,6 +233,15 @@ module scheduler_core #(
     assign scalar_wb_if.scalar_wb_in.rd[5] = mvmt_if.rdOut;
     assign scalar_wb_if.scalar_wb_in.valid[5] = mvmt_if.valid_out;
 
+    assign scalar_wb_if.scalar_wb_in.maskornotscalar = scalar_ex_if.to_mask_reg;
+
+    //wb to mask reg
+    assign vector_wb_if.scalar_wb_in_maskWBonly.maskOrNot_scalar = scalar_ex_if.to_mask_reg;
+    assign vector_wb_if.scalar_wb_in_maskWBonly.data = scalar_ex_if.ex2.data_out;
+    assign vector_wb_if.scalar_wb_in_maskWBonly.valid = scalar_ex_if.ex2.valid_out;
+    assign vector_wb_if.scalar_wb_in_maskWBonly.rd = scalar_ex_if.ex2.rdOut;
+    assign scalar_ex_if.mask_ready_WB = vector_wb_if.scalarMaskNotReady;
+
     //continuous assignment for WB arbiter latch
     assign n_EX_WB_latch.s_data = scalar_wb_if.scalar_wb_out.data;
     assign n_EX_WB_latch.s_rd = scalar_wb_if.scalar_wb_out.rd;
