@@ -5,16 +5,13 @@
 import dram_pkg::*;
 
 module nb_wdata_queue  #(Q_ID = 0, ID_NUM = 8) (
-    input logic CLK, nRST,
+    input logic CLK, CLKx2,  nRST,
     wdq_slot_t wdq_slot, logic bwready, logic wvalid, logic wlast, logic [$clog2(ID_NUM)-1:0] be_wid, logic be_write, 
-    logic [$clog2(ID_NUM)-1:0] bw_arb , output logic wready, bwvalid, logic [1:0] bwresp, logic [$clog2(ID_NUM)-1:0] bwid, 
-    logic [63:0] ddr_wdata_data, logic ddr_wdata_en, logic [7:0] ddr_wdata_mask, logic ddr_we
+    logic [$clog2(ID_NUM)-1:0] bw_arb , output logic wready, bwvalid, logic [1:0] bwresp, logic [$clog2(ID_NUM)-1:0] bwid, logic we
+    inout logic [63:0] DQ, logic DQS_t, logic DQS_c,  logic [7:0] DM_n
   );  
 
-    
   
-
-
   typedef struct packed {
     logic [63:0] wdata;
     logic [7:0] wstrb;
@@ -28,6 +25,7 @@ module nb_wdata_queue  #(Q_ID = 0, ID_NUM = 8) (
   DATA_Q_Slot_t [DEPTH-1:0] regs;
   //pointers
   logic [PTR_W-1:0] dram_ptr;
+  logic [PTR_W-1:0] dram_ptr_sync; 
   logic [PTR_W-1:0] write_ptr;
   logic [PTR_W-1:0] dram_ptr_next;
   logic [PTR_W-1:0] write_ptr_next;
@@ -39,14 +37,15 @@ module nb_wdata_queue  #(Q_ID = 0, ID_NUM = 8) (
   fifo_state_t next_fifo_state;
   fifo_state_t fifo_state;
 
-  logic wen; //write enable for wdata queue to fifo.
+  logic wen_sync; //write enable for wdata queue to dram.
+  logic wen; 
   logic clear; //clears beat counter for bursts.
   logic cnt_en; //enable signal for beat counter.
   logic rollover; //rollover of beat counter.
   
   //reg file logic
 	
-  always_ff @ (posedge CLK, negedge nRST) begin
+  always_ff @ (posedge CLKx2, negedge nRST) begin
     
     if(!nRST) begin
       for(int i = 0; i < DEPTH; i++)
@@ -57,18 +56,27 @@ module nb_wdata_queue  #(Q_ID = 0, ID_NUM = 8) (
       regs[write_ptr] <= data_in; 
     
   end
+
+  
   
   //write pointer logic
   
   	//regs for pointers
   always_ff @(posedge CLK, negedge nRST) begin
     if(!nRST) begin
-      dram_ptr <= {PTR_W{1'b0}};
       write_ptr <= {PTR_W{1'b0}};
     end else begin
-      dram_ptr <= dram_ptr_next;
       write_ptr <= write_ptr_next;
     end
+  end
+
+  always_ff@(posedge CLKx2, negedge nRST) begin
+    if(!nRST) begin
+      dram_ptr <= {PTR_W{1'b0}};
+    end else begin
+      dram_ptr <= dram_ptr_next; 
+    end
+
   end
   
   //assign write_ptr_next = (wvalid && !full) ? write_ptr + 'b1 : write_ptr;
@@ -87,7 +95,7 @@ module nb_wdata_queue  #(Q_ID = 0, ID_NUM = 8) (
   end
 
 
-  assign dram_ptr_next = (wen && !empty) ? dram_ptr + 'b1 : dram_ptr; 
+  assign dram_ptr_next = (wen_sync && !empty) ? dram_ptr + 'b1 : dram_ptr; 
   
   //push data logic
   
@@ -100,16 +108,12 @@ module nb_wdata_queue  #(Q_ID = 0, ID_NUM = 8) (
     end else if(wen)
         data_in = DATA_Q_Slot_t'({ regs[dram_ptr].wdata, 8'b1111_1111, regs[dram_ptr].wvalid });
     else 
-	data_in = regs[write_ptr];
+	  data_in = regs[write_ptr];
 
   end
   
   //pop data logic
-  
-  assign ddr_wdata_data = regs[dram_ptr].wdata; 
-//  assign ddr_wdata_en = regs[dram_ptr].wvalid;
-  assign ddr_wdata_mask = regs[dram_ptr].wstrb;
-  
+    
   //fsm for everything full or empty
   
   always_ff @(posedge CLK, negedge nRST) begin
@@ -193,18 +197,20 @@ module nb_wdata_queue  #(Q_ID = 0, ID_NUM = 8) (
 //   assign empty_o = empty;
 
   assign wready = !full;
+  
+  logic clk_sampled; 
 
   
-  flex_counter #(.SIZE(4'd4)) BEAT_CNT (CLK, nRST, clear, cnt_en, 4'd7, rollover);
+  flex_counter #(.SIZE(4'd4)) BEAT_CNT (CLK, nRST, clear, cnt_en, 2'd3, rollover);
 
   logic clear_cwl; //clears cwl timer.
   logic cnt_en_cwl; //enables cwl timer.
   logic rollover_cwl; //rollover of cwl timer. 
   flex_counter #(.SIZE(6'd32)) T_CWL_TIM (CLK, nRST, clear_cwl, cnt_en_cwl, (tCWL - 'b1), rollover_cwl);
 
-  typedef enum logic [1:0] {IDLE, CWL_WAIT, WRITING, RESP} cnt_ctrl_state_t;
+  typedef enum logic [2:0] {IDLE, CWL_WAIT,PREAMBLE,  WRITING, POSTAMBLE, RESP} cnt_ctrl_state_t;
   
-  cnt_ctrl_state_t cnt_ctrl; 
+  cnt_ctrl_state_t cnt_ctrl, cnt_cntrlx2; 
   cnt_ctrl_state_t cnt_ctrl_next;
   always_comb begin : NEXT_CNT_CTRL 
     
@@ -223,12 +229,20 @@ module nb_wdata_queue  #(Q_ID = 0, ID_NUM = 8) (
 		else 
 			cnt_ctrl_next = CWL_WAIT;
 		end	
+  
+  PREAMBLE: begin
+    cnt_ctrl_next = WRITING;
+  end
 	WRITING: begin
 		 if( rollover ) 
 			cnt_ctrl_next = RESP; 
 		 else 
 			cnt_ctrl_next = WRITING;
 		 end
+  
+  POSTAMBLE: begin
+    cnt_ctrl_next = RESP; 
+  end
 	RESP: begin 
 		if(bwready && (bw_arb == Q_ID)) 
 			cnt_ctrl_next = IDLE;   
@@ -249,7 +263,45 @@ module nb_wdata_queue  #(Q_ID = 0, ID_NUM = 8) (
     end
 
   end
-  
+
+  always_ff @(negedge CLKx2, negedge nRST) begin
+    if(!nRST) begin
+      cnt_cntrlx2 <= IDLE;
+    end else begin
+      cnt_cntrlx2 <= cnt_ctrl;
+    end
+  end
+  always_ff @(posedge CLKx2, negedge nRST) begin
+    if(!nRST) begin
+      clk_sampled <= 1'b0;
+    end else begin
+      clk_sampled <= CLK; 
+    end
+  end
+
+  //logic for controlling the 2x clock domain. 
+
+  assign wen_sync = (cnt_cntrlx2 == WRITING); 
+  assign DQ = wen_sync ? regs[dram_ptr].wdata : 'bz; 
+  //assign ddr_wdata_en = regs[dram_ptr].wvalid;
+  assign DM_n = wen_sync ? ~regs[dram_ptr].wstrb : 'bz;
+
+  always_comb begin : DQ_CNTRL
+    DQS_t = 'bz;
+    DQS_c = 'bz;
+    case(cnt_cntrlx2) 
+
+      PREAMBLE, POSTAMBLE: begin
+        DQS_t = 1'b0;
+        DQS_c = 1'b1;
+      end
+      WRITING: begin
+        DQS_t = clk_sampled;
+        DQS_c = ~clk_sampled;
+      end
+
+    endcase
+  end
 
   always_comb begin : CNT_CTRL
 
@@ -261,24 +313,21 @@ module nb_wdata_queue  #(Q_ID = 0, ID_NUM = 8) (
     bwid = Q_ID;
     bwresp = 2'b0; 
     bwvalid = 'b0;
-    ddr_we = 'b0;
-    ddr_wdata_en = 'b0;
-    case(cnt_ctrl)
+ case(cnt_ctrl)
 	CWL_WAIT: begin 
 		cnt_en_cwl = 'b1; 
 		clear_cwl = 'b0;
 	end
 	WRITING: begin
-	       	wen = 'b1; 
+	  wen = 'b1; 
 		clear = 'b0; 
 		cnt_en = 'b1; 
-		ddr_we = 'b1;
-		ddr_wdata_en = 'b1;
 	end
-        RESP : bwvalid = 'b1;
-    endcase
+    RESP : bwvalid = 'b1;
+ endcase
 
   end
+  assign we = wen;
 
   
   

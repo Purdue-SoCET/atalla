@@ -42,10 +42,12 @@ module nb_barb(
     end
 
     //tFAW logic and SR instantiation. 
+    logic idrc, idrc1, idrc2; //I don't really care about what this bit is, it should always be one. 
+
     logic [tFAW:0] sr_window;
     logic four_access; 
     logic [3:0] access_cnt;
-    flex_sr #(.SIZE(tFAW + 'b1)) ACTIVATE_WINDOW (CLK, nRST, 1'b1, 1'b0, selected_bank_ready & (barb.be_cmd[selected_bank] == ACT) , {(tFAW + 'b1){1'b0}}, sr_window);
+    flex_sr #(.SIZE(tFAW + 'b1)) ACTIVATE_WINDOW (CLK, nRST, 1'b1, 1'b0, selected_bank_ready & (barb.be_cmd[selected_bank] == ACT) , {(tFAW + 'b1){1'b0}}, idrc1,  sr_window);
     
     integer i;
     assign four_access = (access_cnt >= 'd4);
@@ -61,11 +63,11 @@ module nb_barb(
 
     //simple round robin logic for priority.
     logic [BANK_NUM-1:0] priority_sr;
-    flex_sr #(.SIZE(BANK_NUM), .RING(1'b1)) PRIORITY_SR (CLK, nRST, selected_bank_ready, 1'b0, 1'b0,  {BANK_NUM{1'b0}} , priority_sr); 
+    flex_sr #(.SIZE(BANK_NUM), .RING(1'b1)) PRIORITY_SR (CLK, nRST, selected_bank_ready, 1'b0, 1'b0,  {BANK_NUM{1'b0}} , idrc2, priority_sr); 
 
     //Priority encoder for finding bank with priority.
     logic [$clog2(BANK_NUM)-1:0] priority_idx;
-    logic idrc; //I don't really care about what this bit is, it should always be one. 
+
     priority_enc #(.BANK_NUM(16)) ENCODER_PRI (priority_sr, priority_idx, idrc);
 
     //  register storing bank group of the last command. This ensures the compliance of timing parameters of two 

@@ -2,6 +2,7 @@
 `include "ddr_controller_if.sv"
 `include "arch_defines.v"
 `include "dimm.vh"
+`include "interface.sv"
 `timescale 1 ns / 1 ps
 
 

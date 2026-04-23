@@ -178,12 +178,16 @@ logic [$clog2(ID_NUM)-1:0] wrap_bw_arb;
     logic ADDR_17;
 
     // Data transfer module signals
+    /*
     logic wr_en, rd_en, clear;
     logic edge_flag;
     logic [WORD_W - 1: 0] memstore, memload;
     logic [2:0] COL_choice;
-    wire [WORD_W - 1 :0] DQ;
-    wire DQS_t, DQS_c, DM_n;
+*/
+ 
+    wire [63 :0] DQ;
+    wire DQS_t, DQS_c;
+    wire [7:0] DM_n;
 
 // // MODPORTS
 
@@ -257,11 +261,11 @@ modport bq (
     bq_slot
 );
 
-modport read_id_queue ( 
-    //BQ -> FSM
-    input  be_push_id, be_rid, be_rlen,
-    output rq_rid
-);
+modport data_trans (
+        input wr_en, rd_en, clear, memstore, COL_choice,
+        inout DQ, DQS_t, DQS_c, DM_n, // same names as above, so do not need to map
+        output memload, edge_flag
+    );
 
 
 modport wdata_wrapper (
@@ -275,17 +279,17 @@ modport wdata_wrapper (
     // WRAPPER -> AXI_WRITE AND RESPONSE CHANNEL
     output wready, bwvalid, bwresp, bwid,
     // WRAPPER -> DRAM
-    ddr_wdata_data, ddr_wdata_en, ddr_wdata_mask, ddr_we
+    inout DQ, DQS_t, DQS_c, DM_n
 );
 
 modport rdata_wrapper (
     // AXI R Data path
     input rready, 
-    // READ_ID_QUEUE -> RDATA_WRAPPER
-    rq_rid,
+    // BARB -> RDATA_WRAPPER
+    be_push_id, be_rid, 
     // Data Transfer
-    memload, edge_flag,
-    // AXI R Path
+    inout DQS_t, DQS_c, DQ, DM_n
+    // AXI R Data Path
     output rvalid, rdata, rid, rlast, rresp
 );
 
@@ -424,11 +428,7 @@ modport signal_gen (
         output ACT_n, RAS_n_A16, CAS_n_A15, WE_n_A14, ALERT_n, PARITY, RESET_n, TEN, CS_n, CKE, ODT, C, BG, BA, ADDR, ADDR_17, PWR, VREF_CA, VREF_DQ, ZQ
     );
 
-modport data_trans (
-        input wr_en, rd_en, clear, memstore, COL_choice,
-        inout DQ, DQS_t, DQS_c, DM_n, // same names as above, so do not need to map
-        output memload, edge_flag
-    );
+
 
 
 

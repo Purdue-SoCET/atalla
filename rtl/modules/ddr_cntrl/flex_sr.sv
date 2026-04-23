@@ -11,7 +11,7 @@ module flex_sr #(
                 input logic load_enable,
                 input logic serial_in,
                 input logic [SIZE - 1:0] parallel_in,
-                //output logic serial_out,
+                output logic serial_out,
                 output logic [SIZE - 1:0] parallel_out
                 );
 

@@ -2,52 +2,57 @@
 `include "ddr_controller_if.sv"
 
 module nb_wdata_queue_wrapper (
-    input logic CLK, nRST,
+    input logic CLK, CLKx2,  nRST,
     ddr_controller_if.wdata_wrapper wdw
 );
 
       
 
     import dram_pkg::*;
-
+    logic [ID_NUM-1:0] we;
+    logic [$clog2(ID_NUM)-1:0] we_enc;
     logic [ID_NUM-1:0] wready; 
     logic [ID_NUM-1:0] bwvalid;
     logic [ID_NUM-1:0][1:0] bwresp;
     logic [ID_NUM-1:0][$clog2(ID_NUM)-1:0] bwid;
-    logic [ID_NUM-1:0][63:0] ddr_wdata_data;
-    logic [ID_NUM-1:0] ddr_wdata_en;
-    logic [ID_NUM-1:0][7:0] ddr_wdata_mask;
-    logic [ID_NUM-1:0] ddr_we; 
+    wire [ID_NUM-1:0][63:0] DQ;
+    wire [ID_NUM-1:0] DQS_t;
+    wire [ID_NUM-1:0] DQS_c; 
+    wire [ID_NUM-1:0][7:0] DM_n;
+    //logic [ID_NUM-1:0] ddr_we; 
     logic [2*ID_NUM-1:0] selected_queue_decoded;
     logic [$clog2(ID_NUM)-1:0]  bw_arb; 
     logic [$clog2(ID_NUM)-1:0] pri; //priority storing for bresp channel arbitration.
     logic idrc;
+    logic idrc1;
     priority_enc #(.BANK_NUM(ID_NUM)) ENCODER  ( (selected_queue_decoded[2*ID_NUM-1:ID_NUM] | selected_queue_decoded[ID_NUM-1:0]), bw_arb , idrc);
+    priority_enc #(.BANK_NUM(ID_NUM)) ENCODER  ( we, we_enc, idrc1);
 
 
     logic [$clog2(ID_NUM)-1:0] selected_queue; //for outputting data to dram. Backend arbiter should be in charge of making sure that no two output bursts intefere. 
     
-
+/*
     bind nb_wdata_queue_wrapper nb_wdata_queue_prop WDATA_QUEUE_MONITOR (CLK, nRST, bwvalid, bw_arb, wdw.bwready, wdw.be_write, 
     wdw.be_wid, ddr_we);
-
+*/
 
     assign wdw.wready = wready[wdw.wdq_slot.wid];
     assign wdw.bwvalid = bwvalid[bw_arb];
     assign wdw.bwresp = bwresp[bw_arb];
     assign wdw.bwid = bwid[bw_arb];
-    assign wdw.ddr_wdata_data = ddr_wdata_data[selected_queue];
-    assign wdw.ddr_wdata_en = ddr_wdata_en[selected_queue];
-    assign wdw.ddr_wdata_mask = ddr_wdata_mask[selected_queue];
-    assign wdw.ddr_we = ddr_we[selected_queue]; 
+    assign wdw.DQ = DQ[selected_queue];
+    assign wdw.DQS_t = DQS_t[selected_queue];
+    assign wdw.DQS_c = DQS_c[selected_queue];
+    assign wdw.DM_n = DM_n[selected_queue];
+    //assign wdw.ddr_we = ddr_we[selected_queue]; 
     
     genvar i;
     generate 
         for (i = 0; i < ID_NUM; i++) begin
             // Generating wdata_queues. 
             nb_wdata_queue #(.Q_ID(i)) WDATA_QUEUE_GEN ( 
-                CLK, nRST, wdw.wdq_slot, wdw.bwready, wdw.wvalid, wdw.wlast, wdw.be_wid, wdw.be_write, bw_arb, 
-	       	wready[i], bwvalid[i], bwresp[i], bwid[i], ddr_wdata_data[i], ddr_wdata_en[i], ddr_wdata_mask[i], ddr_we[i]	
+                CLK, CLKx2,  nRST, wdw.wdq_slot, wdw.bwready, wdw.wvalid, wdw.wlast, wdw.be_wid, wdw.be_write, bw_arb, 
+	       	wready[i], bwvalid[i], bwresp[i], bwid[i], we[i],  DQ[i], DQS_t[i], DQS_c[i], DM_n[i]	
             );
 
         end
@@ -91,8 +96,8 @@ module nb_wdata_queue_wrapper (
 
         if(!nRST) 
             selected_queue <= 'b0;
-        else if(wdw.be_write)
-            selected_queue <= wdw.be_wid;
+        else 
+            selected_queue <= we_enc;
 
     end
 
