@@ -179,7 +179,7 @@ module vector_control_unit
                     cuif.decoded_vector_instrs[i].use_vms = 1'b1;
                     cuif.decoded_vector_instrs[i].use_vs1 = 1'b1;
                     cuif.decoded_vector_instrs[i].scalar_reg_write = 1'b0;
-                    cuif.decoded_vector_instrs[i].vector_reg_write = 1'b1;
+                    cuif.decoded_vector_instrs[i].vector_reg_write = 1'b0;
                     cuif.decoded_vector_instrs[i].mask_reg_write = 1'b0;
                 end
 
