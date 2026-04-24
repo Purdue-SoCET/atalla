@@ -203,7 +203,7 @@ end
 
 always_comb begin : EDGE_DET
   edge_detected = 1'b0;
-  if( (DQS_t_prev === 1'bz)  && (rdw.DQS_t === 1'b0)) 
+  if( (DQS_t_prev === 1'bz)  && (rdw.DQS_t === 1'b1)) 
     edge_detected = 1'b1;
 
 end
@@ -363,6 +363,8 @@ always_comb begin : AXI_STATE_OUTPUTS
     rvalid = 1'b0;
     rlast = 1'b0;
     rresp = 'b0;
+    clear_axi = 1'b1;
+    cnt_en_axi = 1'b0;
   case(raxi_state)
 
 
@@ -372,6 +374,8 @@ always_comb begin : AXI_STATE_OUTPUTS
     BURSTING_AXI: begin
       rvalid = 1'b1;
       rlast = rollover_axi;
+      cnt_en_axi = 1'b1;
+      clear_axi = 1'b0;
     end
 
   endcase

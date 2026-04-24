@@ -70,7 +70,7 @@ module nb_wdata_queue  #(Q_ID = 0, ID_NUM = 8) (
     end
   end
 
-  always_ff@(posedge CLKx2, negedge nRST) begin
+  always_ff@(negedge CLKx2, negedge nRST) begin
     if(!nRST) begin
       dram_ptr <= {PTR_W{1'b0}};
     end else begin

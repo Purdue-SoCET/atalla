@@ -54,7 +54,7 @@ module rid_wrapper (
     end 
 
     //fifos for taking IDs.
-    sync_fifo #(.DEPTH(ID_NUM), .DWIDTH( $clog2(ID_NUM) ) ) ID_FIFO (.clk(CLK), .wr_en(be_push_id), .din(be_rid), .rd_en(fifo_pop), .dout(req_id), .full(), .empty()  );
+    sync_fifo #(.DEPTH(ID_NUM), .DWIDTH( $clog2(ID_NUM) ), .FWFT(1) ) ID_FIFO (.clk(CLK), .rstn(nRST), .wr_en(be_push_id), .din(be_rid), .rd_en(fifo_pop), .dout(req_id), .full(), .empty()  );
 
     always_comb begin : CONTROL_OUTPUT_LOGIC
         //req_valid = 1'b0;
