@@ -1,10 +1,10 @@
 `timescale 1ns/1ps
-`include "ddr_controller_if.sv"
-`include "dram_pkg.svh"
+//`include "ddr_controller_if.sv"
+//`include "dram_pkg.svh"
 
-import dram_pkg::*;
-function automatic logic [BANK_NUM-1:0] enum_compare (fsm_t [BANK_NUM-1:0] in0, fsm_t [BANK_NUM-1:0] in1);
-    for (int i = 0; i < BANK_NUM; i++)
+
+function automatic logic [(dram_pkg::BANK_NUM)-1:0] enum_compare (dram_pkg::fsm_t [(dram_pkg::BANK_NUM)-1:0] in0, dram_pkg::fsm_t [(dram_pkg::BANK_NUM)-1:0] in1);
+    for (int i = 0; i < (dram_pkg::BANK_NUM); i++)
         enum_compare[i] = (in0[i] == in1[i]);
 endfunction
 
@@ -243,47 +243,56 @@ module nb_barb(
 
     end
     
-    logic ref_re_ff_next;
+    logic ref_re_ff_next, nref_re_ff_next;
     dram_state_t state_ff_next, nstate_ff_next;
-    logic [RANK_BITS-1:0]       RA0_ff_next;
-    logic [BANK_GROUP_BITS-1:0] BG0_ff_next;
-    logic [BANK_BITS-1:0]       BA0_ff_next;
-    logic [ROW_BITS-1:0]        R0_ff_next;
-    logic [COLUMN_BITS-1:0]     C0_ff_next;
+    logic [RANK_BITS-1:0]       RA0_ff_next, nRA0_ff_next;
+    logic [BANK_GROUP_BITS-1:0] BG0_ff_next, nBG0_ff_next;
+    logic [BANK_BITS-1:0]       BA0_ff_next, nBA0_ff_next;
+    logic [ROW_BITS-1:0]        R0_ff_next, nR0_ff_next;
+    logic [COLUMN_BITS-1:0]     C0_ff_next, nC0_ff_next;
 
     always_comb begin : SIG_GEN_FF_NEXT
         if (!init_cif.init_done) begin
-            ref_re_ff_next  = 1'b0;
+            nref_re_ff_next = 1'b0;
             state_ff_next   = init_cif.init_state;
             nstate_ff_next  = init_cif.next_init_state;
-            RA0_ff_next     = '0;
-            BG0_ff_next     = '0;
-            BA0_ff_next     = '0;
-            R0_ff_next      = '0;
-            C0_ff_next      = '0;
+            nRA0_ff_next  = 1'b0;
+            nBG0_ff_next     = 1'b0;
+            nBA0_ff_next  = 1'b0;
+             nR0_ff_next    = 1'b0;
+            nC0_ff_next     = 1'b0;
         end else begin
-            ref_re_ff_next  = ref_re_next;
-            state_ff_next   = state_next;
-            nstate_ff_next  = IDLE;
-            RA0_ff_next     = RA0_next;
-            BG0_ff_next     = BG0_next;
-            BA0_ff_next     = BA0_next;
-            R0_ff_next      = R0_next;
-            C0_ff_next      = C0_next;
+            nref_re_ff_next  = ref_re_next;
+            nstate_ff_next   = state_next;
+            nRA0_ff_next     = RA0_next;
+            nBG0_ff_next     = BG0_next;
+            nBA0_ff_next     = BA0_next;
+            nR0_ff_next      = R0_next;
+            nC0_ff_next      = C0_next;
+            state_ff_next = barb.nstate;
+
         end
     end
 
     always_ff @(posedge CLK, negedge nRST) begin
         if (!nRST) begin
             barb.ref_re <= 1'b0;
-            barb.state  <= IDLE;
-            barb.nstate <= IDLE;
+            barb.state  <= POWER_UP;
+            barb.nstate <= POWER_UP;
             barb.RA0    <= '0;
             barb.BG0    <= '0;
             barb.BA0    <= '0;
             barb.R0     <= '0;
             barb.C0     <= '0;
         end else begin
+            ref_re_ff_next <= nref_re_ff_next;
+            RA0_ff_next <= nRA0_ff_next;
+            BG0_ff_next <= nBG0_ff_next;
+            BA0_ff_next <= nBA0_ff_next;
+            R0_ff_next <= nR0_ff_next;
+            C0_ff_next <= nC0_ff_next;
+
+
             barb.ref_re <= ref_re_ff_next;
             barb.state  <= state_ff_next;
             barb.nstate <= nstate_ff_next;

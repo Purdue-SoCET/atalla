@@ -1,16 +1,16 @@
 
-`include "ddr_controller_if.sv"
-`include "dram_pkg.svh"
+//`include "ddr_controller_if.sv"
+//`include "dram_pkg.svh"
 
-import dram_pkg::*;
+
 
 module nb_wdata_queue  #(Q_ID = 0, ID_NUM = 8) (
     input logic CLK, CLKx2,  nRST,
-    wdq_slot_t wdq_slot, logic bwready, logic wvalid, logic wlast, logic [$clog2(ID_NUM)-1:0] be_wid, logic be_write, 
-    logic [$clog2(ID_NUM)-1:0] bw_arb , output logic wready, bwvalid, logic [1:0] bwresp, logic [$clog2(ID_NUM)-1:0] bwid, logic we,
-    inout wire [63:0] DQ, wire DQS_t, wire DQS_c,  wire [7:0] DM_n
+    dram_pkg::wdq_slot_t wdq_slot, logic bwready, logic wvalid, logic wlast, logic [$clog2(dram_pkg::ID_NUM)-1:0] be_wid, logic be_write, 
+    logic [$clog2(dram_pkg::ID_NUM)-1:0] bw_arb , output logic wready, bwvalid, logic [1:0] bwresp, logic [$clog2(dram_pkg::ID_NUM)-1:0] bwid, logic we,
+    ddr_controller_if.wdata_wrapper wdw
   );  
-
+  import dram_pkg::*;
   
   typedef struct packed {
     logic [63:0] wdata;
@@ -206,7 +206,7 @@ module nb_wdata_queue  #(Q_ID = 0, ID_NUM = 8) (
   logic clear_cwl; //clears cwl timer.
   logic cnt_en_cwl; //enables cwl timer.
   logic rollover_cwl; //rollover of cwl timer. 
-  flex_counter #(.SIZE(6'd32)) T_CWL_TIM (CLK, nRST, clear_cwl, cnt_en_cwl, (tCWL - 'b1), rollover_cwl);
+  flex_counter #(.SIZE($clog2(tCWL) + 1 )) T_CWL_TIM (CLK, nRST, clear_cwl, cnt_en_cwl, (tCWL - 2), rollover_cwl);
 
   typedef enum logic [2:0] {IDLE, CWL_WAIT,PREAMBLE,  WRITING, POSTAMBLE, RESP} cnt_ctrl_state_t;
   
@@ -225,7 +225,7 @@ module nb_wdata_queue  #(Q_ID = 0, ID_NUM = 8) (
 	      end
 	CWL_WAIT: begin 
 		if( rollover_cwl )  
-			cnt_ctrl_next = WRITING; 
+			cnt_ctrl_next = PREAMBLE; 
 		else 
 			cnt_ctrl_next = CWL_WAIT;
 		end	
@@ -235,7 +235,7 @@ module nb_wdata_queue  #(Q_ID = 0, ID_NUM = 8) (
   end
 	WRITING: begin
 		 if( rollover ) 
-			cnt_ctrl_next = RESP; 
+			cnt_ctrl_next = POSTAMBLE; 
 		 else 
 			cnt_ctrl_next = WRITING;
 		 end
@@ -282,12 +282,12 @@ module nb_wdata_queue  #(Q_ID = 0, ID_NUM = 8) (
   //logic for controlling the 2x clock domain. 
 
   assign wen_sync = (cnt_ctrlx2 == WRITING); 
-  assign DQ = wen_sync ? regs[dram_ptr].wdata : 'bz; 
+  assign wdw.DQ = wen_sync ? regs[dram_ptr].wdata : 'bz; 
   //assign ddr_wdata_en = regs[dram_ptr].wvalid;
-  assign DM_n = wen_sync ? ~regs[dram_ptr].wstrb : 'bz;
+  assign wdw.DM_n = wen_sync ? ~regs[dram_ptr].wstrb : 'bz;
 
-  assign DQS_t = (cnt_ctrlx2 == PREAMBLE || cnt_ctrlx2 == POSTAMBLE) ? 1'b0 :  ( (cnt_ctrlx2 == WRITING) ? clk_sampled : 1'bz  );
-  assign DQS_c = (cnt_ctrlx2 == PREAMBLE || cnt_ctrlx2 == POSTAMBLE) ? 1'b1 :  ( (cnt_ctrlx2 == WRITING) ? ~clk_sampled : 1'bz  );
+  assign wdw.DQS_t = (cnt_ctrlx2 == PREAMBLE || cnt_ctrlx2 == POSTAMBLE) ? 1'b0 :  ( (cnt_ctrlx2 == WRITING) ? clk_sampled : 1'bz  );
+  assign wdw.DQS_c = (cnt_ctrlx2 == PREAMBLE || cnt_ctrlx2 == POSTAMBLE) ? 1'b1 :  ( (cnt_ctrlx2 == WRITING) ? ~clk_sampled : 1'bz  );
 
 
 

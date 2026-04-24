@@ -1,5 +1,5 @@
-`include "dram_pkg.svh"
-`include "ddr_controller_if.sv"
+//`include "dram_pkg.svh"
+//`include "ddr_controller_if.sv"
 
 module nb_barb_prop(
     input logic CLK,

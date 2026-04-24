@@ -55,7 +55,7 @@ package dram_pkg;
     parameter tPDc          = 3;
     parameter tXPR          = 217;
     parameter tDLLKc        = 597;
-    parameter tZQinitc      = 1024;
+    parameter tZQinitc      = 2100;
     parameter tMOD          = 25;
 
     // BARB

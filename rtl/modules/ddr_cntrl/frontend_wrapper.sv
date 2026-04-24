@@ -1,5 +1,5 @@
-`include "ddr_controller_if.sv"
-`include "dram_pkg.svh"
+//`include "ddr_controller_if.sv"
+//`include "dram_pkg.svh"
 
 module frontend_wrapper (
     input logic CLK, nRST,

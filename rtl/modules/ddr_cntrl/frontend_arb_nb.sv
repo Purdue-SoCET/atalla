@@ -14,9 +14,9 @@
 // );
 
 // Front End Arbiter //
-`include "ddr_controller_if.sv"
-`include "address_mapper_if.vh"
-`include "dram_pkg.svh"
+//`include "dram_pkg.svh"
+//`include "ddr_controller_if.sv"
+//`include "address_mapper_if.vh"
 
 module frontend_arb (
     input logic CLK, nRST, 

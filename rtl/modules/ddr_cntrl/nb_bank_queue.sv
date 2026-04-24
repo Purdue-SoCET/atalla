@@ -1,6 +1,6 @@
 `timescale 1ns/1ps
-`include "dram_pkg.svh"
-`include "ddr_controller_if.sv"
+//`include "dram_pkg.svh"
+//`include "ddr_controller_if.sv"
 
 /*
     logic [BANK_GROUP_BITS-1:0] fe_bg, [$clog2(BANK_NUM)-1:0] fe_b, [ROW_BITS-1:0] fe_r, [COLUMN_BITS-1:0] fe_c;
@@ -13,7 +13,7 @@ module nb_bank_queue(
     input logic CLK, nRST,
     ddr_controller_if.bq bqif
 );
-    `include "dram_pkg.svh"
+
     import dram_pkg::*;
 
     logic [BANK_NUM-1:0] b_wsel, b_rsel;

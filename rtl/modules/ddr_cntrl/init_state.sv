@@ -1,7 +1,7 @@
 `timescale 1ns/1ps
 
-`include "ddr_controller_if.sv"
-`include "dram_pkg.svh"
+//`include "ddr_controller_if.sv"
+//`include "dram_pkg.svh"
 
 module init_state (
     input logic CLK, nRST,

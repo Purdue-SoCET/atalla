@@ -1,6 +1,6 @@
 `ifndef DDR_CONTROLLER_IF_SV
 `define DDR_CONTROLLER_IF_SV
-`include "dram_pkg.svh"
+//`include "dram_pkg.svh"
 
 interface ddr_controller_if;
 
@@ -285,7 +285,7 @@ modport rdata_wrapper (
     // BACKEND_ARBITER -> RDATA_WRAPPER
     be_push_id, be_rid,
     // DRAM -> RDATA_WRAPPER (read data capture)
-    inout DQ, DQS_t,
+    input DQ, DQS_t, DQS_c, 
     // AXI R Path
     output rvalid, rdata, rid, rlast, rresp
 );

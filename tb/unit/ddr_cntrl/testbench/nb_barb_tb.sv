@@ -1,5 +1,5 @@
-`include "dram_pkg.svh"
-`include "ddr_controller_if.sv"
+//`include "dram_pkg.svh"
+//`include "ddr_controller_if.sv"
 `timescale 1ns/1ps
 // be_r, be_c, be_b, be_bg, be_cmd, be_id, be_queue_ready
 
@@ -284,11 +284,28 @@ module nb_barb_tb;
         // --- PHASE 2 : FAW Testing ---
         $display("\n --- Running through FAW tests ---");
         drive_bank_request(0, ACT, 15'h1111, 10'h001, 4'h0);
+        wait_pos(0, ACT);
+        ddrif.be_queue_ready = 'b0;
+        @(posedge CLK);
+
         drive_bank_request(1, ACT, 15'h2222, 10'h002, 4'h1);
+        wait_pos(1, ACT);
+        ddrif.be_queue_ready = 'b0;
+        @(posedge CLK);
+
         drive_bank_request(2, ACT, 15'h3333, 10'h003, 4'h2);
+        wait_pos(2, ACT);
+        ddrif.be_queue_ready = 'b0;
+        @(posedge CLK);
+
         drive_bank_request(3, ACT, 15'h4444, 10'h004, 4'h3);
+        wait_pos(3, ACT);
+        ddrif.be_queue_ready = 'b0;
+        @(posedge CLK);
+
         drive_bank_request(4, ACT, 15'h5555, 10'h005, 4'h4);
-        wait_pos(3, FSM_READ);
+        wait_pos(4, ACT);
+        ddrif.be_queue_ready = 'b0;
         @(posedge CLK);
 
         if (passed_cnt == TEST_CNT) $display("\n--- All DRAM behavior tests passed ---");

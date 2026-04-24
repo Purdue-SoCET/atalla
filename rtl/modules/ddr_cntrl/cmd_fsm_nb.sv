@@ -5,8 +5,8 @@
 // When the arbiter acknowledges a bank (be_arb), that bank's address
 // signals are routed to the backend arbiter outputs.
 
-`include "ddr_controller_if.sv"
-`include "dram_pkg.svh"
+//`include "ddr_controller_if.sv"
+//`include "dram_pkg.svh"
 
 module cmd_fsm (
     input logic CLK, nRST,

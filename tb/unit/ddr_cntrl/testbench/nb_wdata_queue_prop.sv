@@ -1,5 +1,5 @@
-`include "dram_pkg.svh"
-`include "ddr_controller_if.sv"
+//`include "dram_pkg.svh"
+//`include "ddr_controller_if.sv"
 
 module nb_wdata_queue_prop
     import dram_pkg::*;

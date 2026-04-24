@@ -1,5 +1,5 @@
-`include "dram_pkg.svh"
-`include "ddr_controller_if.sv"
+//`include "dram_pkg.svh"
+//`include "ddr_controller_if.sv"
 
 module nb_rdata_queue_wrapper (
     input logic CLK,CLKx2, nRST,
@@ -27,7 +27,7 @@ module nb_rdata_queue_wrapper (
     logic [ID_NUM-1:0] preamble_detected; 
     logic [ID_NUM-1:0] rd_pop_id; 
 
-    rid_wrapper(CLK, nRST, rdw.be_rid, rdw.be_push_id, preamble_detected, |rd_pop_id, |rid_out);
+    rid_wrapper ID (CLK, nRST, rdw.be_rid, rdw.be_push_id, |preamble_detected, |rd_pop_id, rid_out);
     
 /*
     bind nb_wdata_queue_wrapper nb_wdata_queue_prop WDATA_QUEUE_MONITOR (CLK, nRST, bwvalid, bw_arb, wdw.bwready, wdw.be_write, 
@@ -48,7 +48,7 @@ module nb_rdata_queue_wrapper (
         for (i = 0; i < ID_NUM; i++) begin
             // Generating wdata_queues. 
             nb_rdata_queue #(.Q_ID(i)) WDATA_QUEUE_GEN ( 
-                CLK, CLKx2,  nRST, rdw.rready && (rd_arb == i), rid_out, rdw.DQS_t , rdw.DQS_c, rdw.DQ, rdw.DM_n, rvalid[i], 
+                CLK, CLKx2,  nRST, rdw.rready && (rd_arb == i), rid_out, rdw,  rvalid[i], 
 	       	rdata[i], rlast[i], rresp[i], preamble_detected[i], rd_pop_id[i]	
             );
 
@@ -70,7 +70,7 @@ module nb_rdata_queue_wrapper (
     arb_state_t state, state_next;
     logic burst_cnt_done, burst_cnt_enable, burst_cnt_clear;
 
-    flex_counter #(.SIZE('d4)) BURST_CNT (CLK, nRST,burst_cnt_clear, burst_cnt_enable, 4'd10, burst_cnt_done); 
+    flex_counter #(.SIZE(4)) BURST_CNT (CLK, nRST,burst_cnt_clear, burst_cnt_enable, 4'd10, burst_cnt_done); 
 
     always_ff @(posedge CLK, negedge nRST) begin
         

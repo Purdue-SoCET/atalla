@@ -1,7 +1,7 @@
 `ifndef ADDRESS_MAPPER_IF_VH
 `define ADDRESS_MAPPER_IF_VH
 
-`include "dram_pkg.svh"
+//`include "dram_pkg.svh"
 
 interface address_mapper_if;
     

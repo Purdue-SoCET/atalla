@@ -1,5 +1,5 @@
-`include "dram_pkg.svh"
-`include "ddr_controller_if.sv"
+//`include "dram_pkg.svh"
+//`include "ddr_controller_if.sv"
 
 module nb_wdata_queue_wrapper (
     input logic CLK, CLKx2,  nRST,
@@ -40,10 +40,11 @@ module nb_wdata_queue_wrapper (
     assign wdw.bwvalid = bwvalid[bw_arb];
     assign wdw.bwresp = bwresp[bw_arb];
     assign wdw.bwid = bwid[bw_arb];
-    assign wdw.DQ = DQ[selected_queue];
-    assign wdw.DQS_t = DQS_t[selected_queue];
-    assign wdw.DQS_c = DQS_c[selected_queue];
-    assign wdw.DM_n = DM_n[selected_queue];
+
+    //assign wdw.DQ = DQ[selected_queue];
+    //assign wdw.DQS_t = DQS_t[selected_queue];
+    //assign wdw.DQS_c = DQS_c[selected_queue];
+    //assign wdw.DM_n = DM_n[selected_queue];
     //assign wdw.ddr_we = ddr_we[selected_queue]; 
     
     genvar i;
@@ -52,7 +53,7 @@ module nb_wdata_queue_wrapper (
             // Generating wdata_queues. 
             nb_wdata_queue #(.Q_ID(i)) WDATA_QUEUE_GEN ( 
                 CLK, CLKx2,  nRST, wdw.wdq_slot, wdw.bwready, wdw.wvalid, wdw.wlast, wdw.be_wid, wdw.be_write, bw_arb, 
-	       	wready[i], bwvalid[i], bwresp[i], bwid[i], we[i],  DQ[i], DQS_t[i], DQS_c[i], DM_n[i]	
+	       	wready[i], bwvalid[i], bwresp[i], bwid[i], we[i], wdw
             );
 
         end

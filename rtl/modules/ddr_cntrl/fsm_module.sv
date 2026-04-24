@@ -22,8 +22,8 @@
 //     already open.
 //   - A row must be closed (PRE) before REF can be issued.
 
-`include "ddr_controller_if.sv"
-`include "dram_pkg.svh"
+//`include "ddr_controller_if.sv"
+//`include "dram_pkg.svh"
 
 module fsm_mod (
     input logic CLK, nRST,

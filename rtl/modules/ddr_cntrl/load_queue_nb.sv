@@ -9,8 +9,8 @@
 //     address_l, request_l, len_l, id_l
 
 //Front End Load Queue
-`include "ddr_controller_if.sv"
-`include "dram_pkg.svh"
+//`include "ddr_controller_if.sv"
+//`include "dram_pkg.svh"
 
 module load_queue (
     input logic CLK, nRST, 

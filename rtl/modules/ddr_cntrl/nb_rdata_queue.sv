@@ -1,31 +1,31 @@
 
-`include "ddr_controller_if.sv"
-`include "dram_pkg.svh"
+//`include "ddr_controller_if.sv"
+//`include "dram_pkg.svh"
 
-import dram_pkg::*;
+
 
 module nb_rdata_queue  #(Q_ID = 0, ID_NUM = 8) (
     input logic CLK, CLKx2,  nRST,
-    logic rready, logic rid, 
-    inout wire DQS_t, wire DQS_c, wire [63:0] DQ, wire [7:0] DM_n 
+    logic rready, logic [$clog2(ID_NUM)-1:0] rid, 
+        ddr_controller_if.rdata_wrapper rdw
     , output logic rvalid, logic [63:0] rdata,  logic rlast,
     logic [1:0] rresp, logic preamble_detected, logic rd_pop_id
   );  
-
+import dram_pkg::*;
 //AXI clock domain bursting control.
 logic clear_axi;
 logic cnt_en_axi;
 logic rollover_axi;
 
-flex_counter #(.SIZE(4'd3)) BEAT_CNT_AXI (CLK, nRST, clear_axi, cnt_en_axi, 4'd7, rollover_axi);
+flex_counter #(.SIZE(4'd3)) BEAT_CNT_AXI (CLK, nRST, clear_axi, cnt_en_axi, 3'd7, rollover_axi);
 
-typedef enum logic [1:0] {IDLE, VALID, BURSTING} axi_rdata_state_t;
+typedef enum logic [1:0] {IDLE_AXI, VALID_AXI, BURSTING_AXI} axi_rdata_state_t;
 
 axi_rdata_state_t raxi_state, raxi_state_next;
 
 
   //DRAM clock domain control states.
-  typedef enum logic [5:0] {IDLE, PREAMBLE ,  RECEIVING, BURST_DONE_POP0, BURST_DONE_POP1, BURST_DONE_POP2, BURST_DONE0, BURST_DONE1, BURST_DONE_POP2} rdata_ctrl_state_t;
+  typedef enum logic [5:0] {IDLE_DDR, PREAMBLE_DDR ,  RECEIVING_DDR, BURST_DONE_POP0_DDR, BURST_DONE_POP1_DDR, BURST_DONE_POP2_DDR, BURST_DONE0_DDR, BURST_DONE1_DDR, BURST_DONE2_DDR} rdata_ctrl_state_t;
   
   rdata_ctrl_state_t rcv_ctrl;
   rdata_ctrl_state_t rcv_ctrl_next;
@@ -65,9 +65,9 @@ axi_rdata_state_t raxi_state, raxi_state_next;
     if(!nRST) begin
       for(int i = 0; i < DEPTH; i++)
         regs[i] <= 'b0;
-    end else if(rcv_ctrl == RECEIVING)
-      regs[dram_ptr] <= DQ;
-    else
+    end else if(rcv_ctrl == RECEIVING_DDR) 
+      regs[dram_ptr] <= rdw.DQ;
+    
 
   end
 
@@ -96,7 +96,7 @@ axi_rdata_state_t raxi_state, raxi_state_next;
   //TODO fix this read pointer increment logics
   always_comb begin : WRITE_PTR_NEXT
 
-    if(raxi_state == BURSTING) begin
+    if(raxi_state == BURSTING_AXI) begin
 
         read_ptr_next = read_ptr + 'b1;
 
@@ -106,7 +106,7 @@ axi_rdata_state_t raxi_state, raxi_state_next;
 
   end
 
-  assign dram_ptr_next = (rcv_ctrl == RECEIVING) ? dram_ptr + 'b1 : dram_ptr; 
+  assign dram_ptr_next = (rcv_ctrl == RECEIVING_DDR) ? dram_ptr + 'b1 : dram_ptr; 
   
 
     
@@ -127,7 +127,6 @@ axi_rdata_state_t raxi_state, raxi_state_next;
   assign inc_r_ptr = read_ptr + 'b1;
   assign inc_w_ptr = dram_ptr + 'b1;
   
-  //TODO fix internal states here.
   always_comb begin : FSM_NEXT_STATE
     
     case(fifo_state)
@@ -144,7 +143,7 @@ axi_rdata_state_t raxi_state, raxi_state_next;
           //next_fifo_state = ACTIVE;
         if(burst_done)
           next_fifo_state = FULL;
-        else if(rollover_axi && (inc_r_ptr == write_ptr))
+        else if(rollover_axi && (inc_r_ptr == dram_ptr))
           next_fifo_state = EMPTY;
         else
           next_fifo_state = ACTIVE;
@@ -198,20 +197,20 @@ always_ff @(posedge CLKx2, negedge nRST) begin
   if(!nRST) begin
     DQS_t_prev <= 1'bz;
   end else begin
-    DQS_t_prev <= DQS_t;
+    DQS_t_prev <= rdw.DQS_t;
   end
 end
 
 always_comb begin : EDGE_DET
   edge_detected = 1'b0;
-  if( (DQS_t_prev === 1'bz)  && (DQS_t === 1'b0)) 
+  if( (DQS_t_prev === 1'bz)  && (rdw.DQS_t === 1'b0)) 
     edge_detected = 1'b1;
 
 end
   
 
   
-  flex_counter #(.SIZE(4'd3)) BEAT_CNT_DRAM (CLKx2, nRST, clear_dram, cnt_en_dram, 4'd7, rollover_dram);
+  flex_counter #(.SIZE(4'd3)) BEAT_CNT_DRAM (CLKx2, nRST, clear_dram, cnt_en_dram, 3'd7, rollover_dram);
 
 
   always_comb begin : NEXT_RDATA_CTRL
@@ -219,38 +218,38 @@ end
     rcv_ctrl_next = rcv_ctrl;
   case(rcv_ctrl)
 
-	IDLE: begin
+	IDLE_DDR: begin
 		if( (rid == Q_ID) && edge_detected) 
-			rcv_cntrl_next = PREAMBLE; 
+			rcv_ctrl_next = PREAMBLE_DDR; 
 		else 
-			rcv_ctrl_next = IDLE;
+			rcv_ctrl_next = IDLE_DDR;
 	  end
-	PREAMBLE: begin 
-    rcv_ctrl_next = RECEIVING;
+	PREAMBLE_DDR: begin 
+    rcv_ctrl_next = RECEIVING_DDR;
 	end	
   
-  RECEIVING: begin
-    if(rollover)
-      rcv_ctrl_next = BURST_DONE_POP0;
+  RECEIVING_DDR: begin
+    if(rollover_dram)
+      rcv_ctrl_next = BURST_DONE_POP0_DDR;
   end
-	BURST_DONE_POP0: begin
-    rcv_ctrl_next = BURST_DONE_POP1;
+	BURST_DONE_POP0_DDR: begin
+    rcv_ctrl_next = BURST_DONE_POP1_DDR;
 	end
   
-  BURST_DONE_POP1: begin
-    rcv_ctrl_next = BURST_DONE_POP2; 
+  BURST_DONE_POP1_DDR: begin
+    rcv_ctrl_next = BURST_DONE_POP2_DDR; 
   end
-  BURST_DONE_POP2: begin
-    rcv_ctrl_next = BURST_DONE0;
+  BURST_DONE_POP2_DDR: begin
+    rcv_ctrl_next = BURST_DONE0_DDR;
   end
-	BURST_DONE0: begin 
-    rcv_ctrl_next = BURST_DONE1;
+	BURST_DONE0_DDR: begin 
+    rcv_ctrl_next = BURST_DONE1_DDR;
 	end
-  BURST_DONE1: begin
-    rcv_ctrl_next = BURST_DONE2;
+  BURST_DONE1_DDR: begin
+    rcv_ctrl_next = BURST_DONE2_DDR;
   end
-  BURST_DONE2: begin
-    rcv_ctrl_next = IDLE;
+  BURST_DONE2_DDR: begin
+    rcv_ctrl_next = IDLE_DDR;
   end
 
   endcase
@@ -260,7 +259,7 @@ end
   always_ff @(posedge CLKx2, negedge nRST) begin
 
     if(!nRST) begin
-      rcv_ctrl <= IDLE;
+      rcv_ctrl <= IDLE_DDR;
     end else begin
       rcv_ctrl <= rcv_ctrl_next;
     end
@@ -278,21 +277,22 @@ always_comb begin : RCV_CTRL_OUT
     rd_pop_id_unsynch = 1'b0;
     burst_done_unsynch = 1'b0;
  case(rcv_ctrl)
-	PREAMBLE: begin 
+	PREAMBLE_DDR: begin 
 		preamble_detected_unsynch = 1'b1;
 	end
-	RECEIVING: begin
+	RECEIVING_DDR: begin
 		clear_dram = 'b0; 
 		cnt_en_dram = 'b1; 
     preamble_detected_unsynch = 1'b1;
 	end
-    BURST_DONE_POP0, BURST_DONE_POP1, BURST_DONE_POP2  : rd_pop_id_unsynch = 'b1;
-    BURST_DONE0, BURST_DONE1, BURST_DONE2 : burst_done_unsynch = 1'b1; 
+    BURST_DONE_POP0_DDR, BURST_DONE_POP1_DDR, BURST_DONE_POP2_DDR  : rd_pop_id_unsynch = 'b1;
+    BURST_DONE0_DDR, BURST_DONE1_DDR, BURST_DONE2_DDR : burst_done_unsynch = 1'b1; 
  endcase
 
   end
   
 //synchronizers for the three unsynchronized signals.
+logic preamble_detected1, rd_pop_id1, burst_done1;
 always_ff @(posedge CLK, negedge nRST) begin
   if(!nRST) begin
     preamble_detected1 <= 1'b0;
@@ -314,19 +314,14 @@ always_ff @(posedge CLK, negedge nRST) begin
 end
 
 //Logic for controlling bursts into axi rdata channel.
-logic clear_axi;
-logic cnt_en_axi;
-logic rollover_axi;
 
-flex_counter #(.SIZE(4'd3)) BEAT_CNT_AXI (CLK, nRST, clear_axi, cnt_en_axi, 4'd7, rollover_axi);
 
-typedef enum logic [1:0] {IDLE, VALID, BURSTING} axi_rdata_state_t;
 
-axi_rdata_state_t raxi_state, raxi_state_next;
+//axi_rdata_state_t raxi_state, raxi_state_next;
 
 always_ff @(posedge CLK, negedge nRST) begin
   if(!nRST) begin
-    raxi_state <= IDLE;
+    raxi_state <= IDLE_AXI;
   end else begin
     raxi_state <= raxi_state_next;
   end
@@ -337,25 +332,25 @@ always_comb begin : AXI_STATE_NEXT
   raxi_state_next = raxi_state;
   case(raxi_state)
 
-    IDLE : begin
+    IDLE_AXI : begin
       if(burst_done) begin
-        raxi_state_next = VALID;
+        raxi_state_next = VALID_AXI;
       end else begin
-        raxi_state_next = IDLE;
+        raxi_state_next = IDLE_AXI;
       end
     end
-    VALID : begin
+    VALID_AXI : begin
       if(rready) begin
-        raxi_state_next = BURSTING;
+        raxi_state_next = BURSTING_AXI;
       end else begin
-        raxi_state_next = VALID;
+        raxi_state_next = VALID_AXI;
       end
     end
-    BURSTING: begin
+    BURSTING_AXI: begin
       if(rollover_axi) begin
-        raxi_state_next = IDLE;
+        raxi_state_next = IDLE_AXI;
       end else begin
-        raxi_state_next = BURSTING;
+        raxi_state_next = BURSTING_AXI;
       end
     end
 
@@ -364,17 +359,17 @@ always_comb begin : AXI_STATE_NEXT
 
 end
 
-always_comb begin : AXI_STATE_OUTPUTS
-
-  case(raxi_state)
-
+always_comb begin : AXI_STATE_OUTPUTS    
     rvalid = 1'b0;
     rlast = 1'b0;
     rresp = 'b0;
-    VALID: begin
+  case(raxi_state)
+
+
+    VALID_AXI: begin
       rvalid = 1'b1;
     end
-    BURSTING: begin
+    BURSTING_AXI: begin
       rvalid = 1'b1;
       rlast = rollover_axi;
     end

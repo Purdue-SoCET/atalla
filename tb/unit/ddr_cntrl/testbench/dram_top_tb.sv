@@ -1,9 +1,10 @@
-`include "dram_pkg.svh"
-`include "arch_defines.v"
-`include "ddr_controller_if.sv"
-`include "arch_defines.v"
-`include "dimm.vh"
+//`include "dram_pkg.svh"
+//`include "arch_defines.v"
+//`include "ddr_controller_if.sv"
+//`include "arch_defines.v"
+//`include "dimm.vh"
 `timescale 1 ns / 1 ps
+`define DDR4_1333
 
 
 //Welcome to the mess, here is just a bunch of code that trying to verify DDR4!
@@ -21,8 +22,8 @@
 //RUNING SIMULATION: make dram_top
 
 module dram_top_tb;
-    parameter PERIOD = 1.5;
-    parameter tCK = 1.5;
+    parameter PERIOD = 1500ps;
+    parameter tCK = 1500ps;
     import dram_pkg::*; 
     import proj_package::*; // protected vcs
 
@@ -33,7 +34,7 @@ module dram_top_tb;
     parameter CONFIGURED_RANKS       = 1;
     
     //CLK and debug signals
-    logic CLK = 1, nRST;
+    logic CLK = 0, nRST;
     logic CLKx2=0;
     reg model_enable_val;
     wire model_enable;
@@ -58,9 +59,9 @@ module dram_top_tb;
     end
 
     always begin
-        CLKx2 = 1'b1;
-        #(PERIOD / 4.0);
         CLKx2 = 1'b0;
+        #(PERIOD / 4.0);
+        CLKx2 = 1'b1;
         #(PERIOD / 4.0);
     end
 
@@ -87,6 +88,7 @@ module dram_top_tb;
     // a clock.  All command/address signals are continuous assigns so the DRAM
     // sees every transition without a registered intermediate.
     // CK[1] = CK_t, CK[0] = CK_c (differential pair)
+    /*
     assign iDDR4_1.CK = {CLK, ~CLK};
     assign iDDR4_2.CK = {CLK, ~CLK};
     assign iDDR4_3.CK = {CLK, ~CLK};
@@ -95,7 +97,221 @@ module dram_top_tb;
     assign iDDR4_6.CK = {CLK, ~CLK};
     assign iDDR4_7.CK = {CLK, ~CLK};
     assign iDDR4_8.CK = {CLK, ~CLK};
+    */
 
+    reg clk_val, clk_enb;
+
+    always @(posedge clk_val && clk_enb) begin
+      clk_val <= #(tCK/2) 1'b0;
+      clk_val <= #(tCK) 1'b1;
+      iDDR4_1.CK[1] <= #(tCK/2) 1'b0;
+      iDDR4_1.CK[1] <= #(tCK) 1'b1;
+      iDDR4_1.CK[0] <= #(tCK/2) 1'b1;
+      iDDR4_1.CK[0] <= #(tCK) 1'b0;
+
+      iDDR4_2.CK[1] <= #(tCK/2) 1'b0;
+      iDDR4_2.CK[1] <= #(tCK) 1'b1;
+      iDDR4_2.CK[0] <= #(tCK/2) 1'b1;
+      iDDR4_2.CK[0] <= #(tCK) 1'b0;
+
+
+      iDDR4_3.CK[1] <= #(tCK/2) 1'b0;
+      iDDR4_3.CK[1] <= #(tCK) 1'b1;
+      iDDR4_3.CK[0] <= #(tCK/2) 1'b1;
+      iDDR4_3.CK[0] <= #(tCK) 1'b0;
+
+      iDDR4_4.CK[1] <= #(tCK/2) 1'b0;
+      iDDR4_4.CK[1] <= #(tCK) 1'b1;
+      iDDR4_4.CK[0] <= #(tCK/2) 1'b1;
+      iDDR4_4.CK[0] <= #(tCK) 1'b0;
+
+
+
+      iDDR4_5.CK[1] <= #(tCK/2) 1'b0;
+      iDDR4_5.CK[1] <= #(tCK) 1'b1;
+      iDDR4_5.CK[0] <= #(tCK/2) 1'b1;
+      iDDR4_5.CK[0] <= #(tCK) 1'b0;
+
+      iDDR4_6.CK[1] <= #(tCK/2) 1'b0;
+      iDDR4_6.CK[1] <= #(tCK) 1'b1;
+      iDDR4_6.CK[0] <= #(tCK/2) 1'b1;
+      iDDR4_6.CK[0] <= #(tCK) 1'b0;
+
+
+      iDDR4_7.CK[1] <= #(tCK/2) 1'b0;
+      iDDR4_7.CK[1] <= #(tCK) 1'b1;
+      iDDR4_7.CK[0] <= #(tCK/2) 1'b1;
+      iDDR4_7.CK[0] <= #(tCK) 1'b0;
+
+      iDDR4_8.CK[1] <= #(tCK/2) 1'b0;
+      iDDR4_8.CK[1] <= #(tCK) 1'b1;
+      iDDR4_8.CK[0] <= #(tCK/2) 1'b1;
+      iDDR4_8.CK[0] <= #(tCK) 1'b0;
+      
+
+
+      iDDR4_1.ACT_n      <= ddrif.ACT_n;
+      iDDR4_1.RAS_n_A16  <= ddrif.RAS_n_A16;
+      iDDR4_1.CAS_n_A15  <= ddrif.CAS_n_A15;
+      iDDR4_1.WE_n_A14   <= ddrif.WE_n_A14;
+    // ALERT_n is driven by the DRAM model (parity error output) — do not drive here
+      iDDR4_1.PARITY     <= ddrif.PARITY;
+      iDDR4_1.RESET_n    <= ddrif.RESET_n;
+      iDDR4_1.TEN        <= ddrif.TEN;
+      iDDR4_1.CS_n       <= ddrif.CS_n;
+      iDDR4_1.CKE        <= ddrif.CKE;
+      iDDR4_1.ODT        <= ddrif.ODT;
+      iDDR4_1.C          <= ddrif.C;
+      iDDR4_1.BG         <= ddrif.BG;
+      iDDR4_1.BA         <= ddrif.BA;
+      iDDR4_1.ADDR       <= ddrif.ADDR;
+      iDDR4_1.ADDR_17    <= ddrif.ADDR_17;
+      iDDR4_1.ZQ         <= ddrif.ZQ;
+      iDDR4_1.PWR        <= ddrif.PWR;
+      iDDR4_1.VREF_CA    <= ddrif.VREF_CA;
+      iDDR4_1.VREF_DQ    <= ddrif.VREF_DQ;
+
+      iDDR4_2.ACT_n      <= ddrif.ACT_n;
+      iDDR4_2.RAS_n_A16  <= ddrif.RAS_n_A16;
+      iDDR4_2.CAS_n_A15  <= ddrif.CAS_n_A15;
+      iDDR4_2.WE_n_A14   <= ddrif.WE_n_A14;
+      iDDR4_2.PARITY     <= ddrif.PARITY;
+      iDDR4_2.RESET_n    <= ddrif.RESET_n;
+      iDDR4_2.TEN        <= ddrif.TEN;
+      iDDR4_2.CS_n       <= ddrif.CS_n;
+      iDDR4_2.CKE        <= ddrif.CKE;
+      iDDR4_2.ODT        <= ddrif.ODT;
+      iDDR4_2.C          <= ddrif.C;
+      iDDR4_2.BG         <= ddrif.BG;
+      iDDR4_2.BA         <= ddrif.BA;
+      iDDR4_2.ADDR       <= ddrif.ADDR;
+      iDDR4_2.ADDR_17    <= ddrif.ADDR_17;
+      iDDR4_2.ZQ         <= ddrif.ZQ;
+      iDDR4_2.PWR        <= ddrif.PWR;
+      iDDR4_2.VREF_CA    <= ddrif.VREF_CA;
+      iDDR4_2.VREF_DQ    <= ddrif.VREF_DQ;
+
+      iDDR4_3.ACT_n      <= ddrif.ACT_n;
+      iDDR4_3.RAS_n_A16  <= ddrif.RAS_n_A16;
+      iDDR4_3.CAS_n_A15  <= ddrif.CAS_n_A15;
+      iDDR4_3.WE_n_A14   <= ddrif.WE_n_A14;
+      iDDR4_3.PARITY     <= ddrif.PARITY;
+      iDDR4_3.RESET_n    <= ddrif.RESET_n;
+      iDDR4_3.TEN        <= ddrif.TEN;
+      iDDR4_3.CS_n       <= ddrif.CS_n;
+      iDDR4_3.CKE        <= ddrif.CKE;
+      iDDR4_3.ODT        <= ddrif.ODT;
+      iDDR4_3.C          <= ddrif.C;
+      iDDR4_3.BG         <= ddrif.BG;
+      iDDR4_3.BA         <= ddrif.BA;
+      iDDR4_3.ADDR       <= ddrif.ADDR;
+      iDDR4_3.ADDR_17    <= ddrif.ADDR_17;
+      iDDR4_3.ZQ         <= ddrif.ZQ;
+      iDDR4_3.PWR        <= ddrif.PWR;
+      iDDR4_3.VREF_CA    <= ddrif.VREF_CA;
+      iDDR4_3.VREF_DQ    <= ddrif.VREF_DQ;
+
+      iDDR4_4.ACT_n      <= ddrif.ACT_n;
+      iDDR4_4.RAS_n_A16  <= ddrif.RAS_n_A16;
+      iDDR4_4.CAS_n_A15  <= ddrif.CAS_n_A15;
+      iDDR4_4.WE_n_A14   <= ddrif.WE_n_A14;
+      iDDR4_4.PARITY     <= ddrif.PARITY;
+      iDDR4_4.RESET_n    <= ddrif.RESET_n;
+      iDDR4_4.TEN        <= ddrif.TEN;
+      iDDR4_4.CS_n       <= ddrif.CS_n;
+      iDDR4_4.CKE        <= ddrif.CKE;
+      iDDR4_4.ODT        <= ddrif.ODT;
+      iDDR4_4.C          <= ddrif.C;
+      iDDR4_4.BG         <= ddrif.BG;
+      iDDR4_4.BA         <= ddrif.BA;
+      iDDR4_4.ADDR       <= ddrif.ADDR;
+      iDDR4_4.ADDR_17    <= ddrif.ADDR_17;
+      iDDR4_4.ZQ         <= ddrif.ZQ;
+      iDDR4_4.PWR        <= ddrif.PWR;
+      iDDR4_4.VREF_CA    <= ddrif.VREF_CA;
+      iDDR4_4.VREF_DQ    <= ddrif.VREF_DQ;
+
+      iDDR4_5.ACT_n      <= ddrif.ACT_n;
+      iDDR4_5.RAS_n_A16  <= ddrif.RAS_n_A16;
+      iDDR4_5.CAS_n_A15  <= ddrif.CAS_n_A15;
+      iDDR4_5.WE_n_A14   <= ddrif.WE_n_A14;
+      iDDR4_5.PARITY     <= ddrif.PARITY;
+      iDDR4_5.RESET_n    <= ddrif.RESET_n;
+      iDDR4_5.TEN        <= ddrif.TEN;
+      iDDR4_5.CS_n       <= ddrif.CS_n;
+      iDDR4_5.CKE        <= ddrif.CKE;
+      iDDR4_5.ODT        <= ddrif.ODT;
+      iDDR4_5.C          <= ddrif.C;
+      iDDR4_5.BG         <= ddrif.BG;
+      iDDR4_5.BA         <= ddrif.BA;
+      iDDR4_5.ADDR       <= ddrif.ADDR;
+      iDDR4_5.ADDR_17    <= ddrif.ADDR_17;
+      iDDR4_5.ZQ         <= ddrif.ZQ;
+      iDDR4_5.PWR        <= ddrif.PWR;
+      iDDR4_5.VREF_CA    <= ddrif.VREF_CA;
+      iDDR4_5.VREF_DQ    <= ddrif.VREF_DQ;
+
+      iDDR4_6.ACT_n      <= ddrif.ACT_n;
+      iDDR4_6.RAS_n_A16  <= ddrif.RAS_n_A16;
+      iDDR4_6.CAS_n_A15  <= ddrif.CAS_n_A15;
+      iDDR4_6.WE_n_A14   <= ddrif.WE_n_A14;
+      iDDR4_6.PARITY     <= ddrif.PARITY;
+      iDDR4_6.RESET_n    <= ddrif.RESET_n;
+      iDDR4_6.TEN        <= ddrif.TEN;
+      iDDR4_6.CS_n       <= ddrif.CS_n;
+      iDDR4_6.CKE        <= ddrif.CKE;
+      iDDR4_6.ODT        <= ddrif.ODT;
+      iDDR4_6.C          <= ddrif.C;
+      iDDR4_6.BG         <= ddrif.BG;
+      iDDR4_6.BA         <= ddrif.BA;
+      iDDR4_6.ADDR       <= ddrif.ADDR;
+      iDDR4_6.ADDR_17    <= ddrif.ADDR_17;
+      iDDR4_6.ZQ         <= ddrif.ZQ;
+      iDDR4_6.PWR        <= ddrif.PWR;
+      iDDR4_6.VREF_CA    <= ddrif.VREF_CA;
+      iDDR4_6.VREF_DQ    <= ddrif.VREF_DQ;
+
+      iDDR4_7.ACT_n      <= ddrif.ACT_n;
+      iDDR4_7.RAS_n_A16  <= ddrif.RAS_n_A16;
+      iDDR4_7.CAS_n_A15  <= ddrif.CAS_n_A15;
+      iDDR4_7.WE_n_A14   <= ddrif.WE_n_A14;
+      iDDR4_7.PARITY     <= ddrif.PARITY;
+      iDDR4_7.RESET_n    <= ddrif.RESET_n;
+      iDDR4_7.TEN        <= ddrif.TEN;
+      iDDR4_7.CS_n       <= ddrif.CS_n;
+      iDDR4_7.CKE        <= ddrif.CKE;
+      iDDR4_7.ODT        <= ddrif.ODT;
+      iDDR4_7.C          <= ddrif.C;
+      iDDR4_7.BG         <= ddrif.BG;
+      iDDR4_7.BA         <= ddrif.BA;
+      iDDR4_7.ADDR       <= ddrif.ADDR;
+      iDDR4_7.ADDR_17    <= ddrif.ADDR_17;
+      iDDR4_7.ZQ         <= ddrif.ZQ;
+      iDDR4_7.PWR        <= ddrif.PWR;
+      iDDR4_7.VREF_CA    <= ddrif.VREF_CA;
+      iDDR4_7.VREF_DQ    <= ddrif.VREF_DQ;
+
+      iDDR4_8.ACT_n      <= ddrif.ACT_n;
+      iDDR4_8.RAS_n_A16  <= ddrif.RAS_n_A16;
+      iDDR4_8.CAS_n_A15  <= ddrif.CAS_n_A15;
+      iDDR4_8.WE_n_A14   <= ddrif.WE_n_A14;
+      iDDR4_8.PARITY     <= ddrif.PARITY;
+      iDDR4_8.RESET_n    <= ddrif.RESET_n;
+      iDDR4_8.TEN        <= ddrif.TEN;
+      iDDR4_8.CS_n       <= ddrif.CS_n;
+      iDDR4_8.CKE        <= ddrif.CKE;
+      iDDR4_8.ODT        <= ddrif.ODT;
+      iDDR4_8.C          <= ddrif.C;
+      iDDR4_8.BG         <= ddrif.BG;
+      iDDR4_8.BA         <= ddrif.BA;
+      iDDR4_8.ADDR       <= ddrif.ADDR;
+      iDDR4_8.ADDR_17    <= ddrif.ADDR_17;
+      iDDR4_8.ZQ         <= ddrif.ZQ;
+      iDDR4_8.PWR        <= ddrif.PWR;
+      iDDR4_8.VREF_CA    <= ddrif.VREF_CA;
+      iDDR4_8.VREF_DQ    <= ddrif.VREF_DQ;
+end
+/*
     assign iDDR4_1.ACT_n     = ddrif.ACT_n;
     assign iDDR4_1.RAS_n_A16 = ddrif.RAS_n_A16;
     assign iDDR4_1.CAS_n_A15 = ddrif.CAS_n_A15;
@@ -257,6 +473,7 @@ module dram_top_tb;
     assign iDDR4_8.VREF_CA   = ddrif.VREF_CA;
     assign iDDR4_8.VREF_DQ   = ddrif.VREF_DQ;
     // (end of continuous command bus connections)
+    */
 
     // Component instantiation
     //Only use 8 chips only, so 64-bit data
@@ -334,14 +551,14 @@ module dram_top_tb;
         iDDR4_7.DM_n,
         iDDR4_8.DM_n
     } = dq_en ? {
-        ddrif.DM_n,
-        ddrif.DM_n,
-        ddrif.DM_n,
-        ddrif.DM_n,
-        ddrif.DM_n,
-        ddrif.DM_n,
-        ddrif.DM_n,
-        ddrif.DM_n
+        ddrif.DM_n[0],
+        ddrif.DM_n[1],
+        ddrif.DM_n[2],
+        ddrif.DM_n[3],
+        ddrif.DM_n[4],
+        ddrif.DM_n[5],
+        ddrif.DM_n[6],
+        ddrif.DM_n[7]
     } : 8'bzz;
 
 
@@ -359,7 +576,7 @@ module dram_top_tb;
     //Assign DQS/DM signals from DRAM model back into the controller interface (read path)
     assign ddrif.DQS_t = ~dq_en ? iDDR4_1.DQS_t : 1'bz;
     assign ddrif.DQS_c = ~dq_en ? iDDR4_1.DQS_c: 1'bz;
-    assign ddrif.DM_n  = ~dq_en ? iDDR4_1.DM_n: 1'bz;
+    assign ddrif.DM_n  = ~dq_en ? iDDR4_1.DM_n: 8'bz;
     // NOTE: COL_choice mapping needs to be verified - check if this exists in ctrl modport
     // assign ddrif.data_trans.COL_choice = ddrif.ctrl.offset; 
 
@@ -723,6 +940,9 @@ module dram_top_tb;
     initial begin
       // ── DRAM model initialization ─────────────────────────────────────────
       // iDDR4_N.CK is driven by continuous assign {CLK, ~CLK} above — no init needed
+      {iDDR4_1.CK, iDDR4_2.CK , iDDR4_3.CK, iDDR4_4.CK , iDDR4_5.CK, iDDR4_6.CK , iDDR4_7.CK, iDDR4_8.CK } <= {8{2'b01}};
+      clk_enb <= 1'b1;
+      clk_val <= 1'b1;
       model_enable_val = 1'b1;
       dq_en = 1'b1; id_in_flight = '0;
 
@@ -743,7 +963,7 @@ module dram_top_tb;
       nRST = 1'b1;
 
       task_name = "Power_up";
-      #((tRESET + tPWUP + tRESETCKE + tPDc + tXPR + tDLLKc + tMOD * 7 + tZQinitc) * PERIOD);
+      #((tRESET + tPWUP + tRESETCKE + tPDc + tXPR + tDLLKc + tMOD * 7 + tZQinitc) );
       repeat (25) @(posedge CLK);
 
       // TC1: Basic single write → read-back (bank 0, row miss)

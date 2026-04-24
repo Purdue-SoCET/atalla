@@ -42,8 +42,9 @@ set DESIGN_SRCS [list \
     $PROJ_ROOT/rtl/modules/ddr_cntrl/nb_bank_queue.sv \
     $PROJ_ROOT/rtl/modules/ddr_cntrl/nb_wdata_queue.sv \
     $PROJ_ROOT/rtl/modules/ddr_cntrl/nb_wdata_wrapper.sv \
-    $PROJ_ROOT/rtl/modules/ddr_cntrl/nb_read_id_queue.sv \
+    $PROJ_ROOT/rtl/modules/ddr_cntrl/nb_rid_wrapper.sv \
     $PROJ_ROOT/rtl/modules/ddr_cntrl/nb_rdata_wrapper.sv \
+    $PROJ_ROOT/rtl/modules/ddr_cntrl/nb_rdata_queue.sv \
     $PROJ_ROOT/rtl/modules/ddr_cntrl/nb_barb.sv \
     $PROJ_ROOT/rtl/modules/ddr_cntrl/frontend_arb_nb.sv \
     $PROJ_ROOT/rtl/modules/ddr_cntrl/frontend_wrapper.sv \
@@ -83,8 +84,9 @@ vmap work $PROJ_ROOT/work
 # --- Single vlog call — matches the working Makefile pattern ---
 # The Makefile does: vlog +cover -work work +acc -sv +incdir+./include
 #   +define+ DDR4_4G_X8 +define+ TS_1500 $(DRAM_define) $(EXTRA) ./tb/dram_top_tb.sv
+
 vlog +cover -work $PROJ_ROOT/work +acc -l $PROJ_ROOT/vcs.log -sv \
-    +define+DDR4_4G_X8 +define+TS_1500 \
+    +define+DDR4_4G_X8 +define+FIXED_1333 \
     {*}$INC_FLAGS {*}$ALL_SRCS
 
 # --- Return to project root ---

@@ -1,9 +1,9 @@
 `timescale 1ns/1ps
-`include "ddr_controller_if.sv"
-`include "dram_pkg.svh"
+//`include "ddr_controller_if.sv"
+//`include "dram_pkg.svh"
 
 module signal_gen (
-    input logic CLK,
+    input logic CLK, CLKx2,
     input logic nRST,
     ddr_controller_if.signal_gen sig
 );
@@ -12,9 +12,17 @@ module signal_gen (
     logic [4:0] cmd_addr;
     logic issue;
 
+    dram_state_t  prev_state;
+    always_ff @(posedge CLK, nRST) begin
+        if(!nRST) 
+            prev_state <= NOP;
+        else 
+            prev_state <= sig.state;
+    end
+
     // issue is true when the state is transitioning — signals that a new
     // DDR4 command should be placed on the bus this cycle.
-    assign issue = (sig.state != sig.nstate);
+    assign issue = (sig.state != prev_state);
 
     always_comb begin : OUTPUT_VALUE
         // Default values — DESELECT (no operation)
@@ -40,7 +48,7 @@ module signal_gen (
         // guard (POWER_UP, PRE_RESET, RESET, NOP), the physical pin levels are
         // driven continuously while in that state — nstate == state on hold
         // cycles, so the case still matches.
-        case (sig.nstate)
+        case (sig.state)
             POWER_UP: begin
                 cmd_addr    = POWER_UP_PRG;
                 sig.CKE     = 1'b0;
@@ -148,6 +156,7 @@ module signal_gen (
                 if (issue) begin
                     cmd_addr  = ZQ_CMD;
                     sig.ADDR  = 14'h0400;
+                    sig.ZQ = 1'b1;
                 end
             end
 

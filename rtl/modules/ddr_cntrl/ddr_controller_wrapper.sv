@@ -1,5 +1,5 @@
-`include "ddr_controller_if.sv"
-`include "dram_pkg.svh"
+//`include "ddr_controller_if.sv"
+//`include "dram_pkg.svh"
 
 module ddr_controller_wrapper (
     input logic CLK, CLKx2, nRST,
@@ -70,10 +70,12 @@ module ddr_controller_wrapper (
     // alias makes cif.DQ the same net as top.DQ (= ddrif.DQ in the TB).
     // nb_wdata_wrapper drives this net during writes (others tri-stated Z);
     // nb_rdata_wrapper reads it during reads; DRAM model drives during reads.
+
     alias top.DQ    = cif.DQ;
     alias top.DQS_t = cif.DQS_t;
     alias top.DQS_c = cif.DQS_c;
     alias top.DM_n  = cif.DM_n;
+    
 
     // ================================================================
     // Internal interface -> External outputs (to DRAM)
@@ -201,13 +203,14 @@ module ddr_controller_wrapper (
     // Signal Generator
     signal_gen SG (
         .CLK  (CLK),
+        .CLKx2 (CLKx2),
         .nRST (nRST),
         .sig  (cif.signal_gen)
     );
 
 
     // Read Data wrapper
-    nb_rdata_wrapper RDQ_WRAP (
+    nb_rdata_queue_wrapper RDQ_WRAP (
         .CLK   (CLK),
         .CLKx2 (CLKx2),
         .nRST  (nRST),

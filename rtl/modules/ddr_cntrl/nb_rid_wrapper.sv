@@ -1,13 +1,13 @@
-`include "ddr_controller_if.sv"
-`include "dram_pkg.svh"
+//`include "ddr_controller_if.sv"
+//`include "dram_pkg.svh"
  
-    import dram_pkg::*;
+
 module rid_wrapper (
     input logic CLK, nRST,
     logic [$clog2(ID_NUM)-1:0] be_rid, logic be_push_id, logic rd_incoming, logic rd_pop_id,
     output logic [$clog2(ID_NUM)-1:0] req_id
 );
-
+        import dram_pkg::*;
     //SR for tracking reads. Sliding window style.
     //logic shift_en;
     //logic read_incoming; 
