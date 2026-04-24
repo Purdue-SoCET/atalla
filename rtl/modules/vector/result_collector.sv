@@ -22,7 +22,7 @@ module result_collector (
     logic reset_all_counters;
     logic [$clog2(TIMES)-1:0] count_array [NUM_LANES-1:0];
     logic [7:0] vd, vd_n;
-    logic [2:0] mop, mop_n;
+    logic mop, mop_n;
 
     //counter instanciation
     assign reset_all_counters = (&array_full) & rcif.out.wb_valid & rcif.in.wb_ready; //global reset

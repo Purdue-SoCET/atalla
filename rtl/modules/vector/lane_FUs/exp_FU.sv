@@ -33,12 +33,12 @@ module exp_FU (
     assign lsif.in.rm = '0;
 
     exp_if exif();
-    sqrt_bf16 exp(
+    exp exp(
         .CLK(CLK),
         .nRST(nRST),
         .exif(exif)
     );
-    //take ready from sequencer
+
     assign fuif.out.input_ready = lsif.out.ready_in;
     assign lsif.in.v2 = 'b0;
 
@@ -50,7 +50,7 @@ module exp_FU (
         lsif.in.mask = 'b0;
         vd = 'b0;
         for (int i = 0; i < LANE_ISSUE_W; i++) begin
-            if (fuif.in.ports[i].input_valid & (fuif.in.ports[i].usel == SQRT) & fuif.out.input_ready) begin //are any of the input ports issuing to this FU? and we are ready
+            if (fuif.in.ports[i].input_valid & (fuif.in.ports[i].usel == EXP) & fuif.out.input_ready) begin //are any of the input ports issuing to this FU? and we are ready
                 lsif.in.valid_in = 'b1;
                 lsif.in.v1 = fuif.in.ports[i].v1;
                 lsif.in.mask = fuif.in.ports[i].mask;
@@ -64,24 +64,22 @@ module exp_FU (
     assign exif.in.operand = lsif.out.v1;
     assign exif.in.ready_out = fuif.in.wb_ready;
     assign lsif.in.ready_out = exif.out.ready_in;
-    
-    //idea for tracking masking: when seq streams out valid data, push the mask bit, when there is a valid output handshake, pop it
-    lane_unit_fifo #(
-        .DEPTH(4),   // Twice as big as i think i need
-        .DWIDTH(1)    // Single mask bit
+
+    //mask
+    sync_fifo #(
+        .FIFODEPTH(4),
+        .DATAWIDTH(1)
     ) mask_fifo (
-        .clk(CLK),
+        .CLK(CLK),
         .nRST(nRST),
         .wr_en(lsif.out.valid_out & exif.out.ready_in),
-        .rd_en(exif.out.valid_out & fuif.in.wb_ready),
+        .shift(exif.out.valid_out & fuif.in.wb_ready),
         .din(lsif.out.mask),
         .dout(fuif.out.mask)
     );
 
     // VD metadata
     logic [$clog2(SLICE_W)-1:0] output_count_r, output_count_n;
-    //this is the best idea i could come up with. Its probably bad. The idea is when the lane is issued a valid input that we can accept we push the VD into a fifo
-    //we track what element of the slice is being sent, and only pop the fifo once the last element has been sent through
 
     always_ff @(posedge CLK, negedge nRST) begin
         if (!nRST) begin
@@ -105,22 +103,22 @@ module exp_FU (
     logic is_last_element;
     assign is_last_element = (output_count_r == (SLICE_W - 1));
 
-    lane_unit_fifo #(
-        .DEPTH(4),
-        .DWIDTH(8)
+    sync_fifo #(
+        .FIFODEPTH(4),
+        .DATAWIDTH(8)
     ) vd_fifo (
-        .clk(CLK),
+        .CLK(CLK),
         .nRST(nRST),
         .wr_en(lsif.in.valid_in & lsif.out.ready_in),
-        .rd_en(exif.out.valid_out & fuif.in.wb_ready & is_last_element),  // Pop on last element only
+        .shift(exif.out.valid_out & fuif.in.wb_ready & is_last_element),
         .din(vd),
         .dout(fuif.out.vd)
     );
 
-
     //output
     assign fuif.out.result = exif.out.result;
     assign fuif.out.rm = 0;
+    assign fuif.out.mop_out = 0;
     assign fuif.out.wb_valid = exif.out.valid_out;
 
 endmodule

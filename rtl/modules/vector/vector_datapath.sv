@@ -207,4 +207,16 @@ module vector_datapath (
     end
 
 
+    transpose_unit_if tpif ();
+    transpose_unit transpose(
+        .CLK(CLK),
+        .nRST(nRST),
+        .tif(tpif)
+    );
+    always_comb begin : transpose_connections
+        tpif.in = vif.transpose_in;
+        vif.transpose_out = tpif.out;
+    end
+
+
 endmodule

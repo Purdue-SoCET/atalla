@@ -21,6 +21,10 @@ interface vector_if;
   vector_if_lanes_in_t lanes_in;
   //lanes to writeback
   vector_if_lanes_out_t lanes_out;
+
+  //traspose
+  vtransp_in_t transpose_in;
+  vtransp_out_t transpose_out;
   
 
   //unit ready and wb ready
@@ -42,14 +46,21 @@ interface vector_if;
     output lanes_out
   );
 
+  modport transpose (
+    input transpose_in,
+    output transpose_out
+  );
+
   modport vif (
     input gsau_in,
     input vlsu_in,
     input lanes_in,
+    input transpose_in,
     output unit_ready_signals,
     output gsau_out,
     output vlsu_out,
     output lanes_out,
+    output transpose_out,
     input wb_ready_signals
   );
 
