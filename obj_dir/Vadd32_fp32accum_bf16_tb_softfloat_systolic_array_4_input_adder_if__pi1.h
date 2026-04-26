@@ -16,7 +16,7 @@ class alignas(VL_CACHE_LINE_BYTES) Vadd32_fp32accum_bf16_tb_softfloat_systolic_a
   public:
 
     // DESIGN SPECIFIC STATE
-    IData/*31:0*/ out;
+    QData/*38:0*/ out;
 
     // INTERNAL VARIABLES
     Vadd32_fp32accum_bf16_tb_softfloat__Syms* vlSymsp;

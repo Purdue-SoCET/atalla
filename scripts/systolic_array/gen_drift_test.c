@@ -6,6 +6,27 @@
 #include <math.h>
 #include "softfloat.h"
 
+/*
+
+gcc -O2 -I ~/berkeley-softfloat-3/source/include \                     
+        -I ~/berkeley-testfloat-3/build/Linux-x86_64-GCC \
+        gen_drift_test.c \
+        ~/berkeley-softfloat-3/build/Linux-x86_64-GCC/softfloat.a \
+        -lm \
+        -o gen_drift_test
+
+*/
+
+// Command Line Options:
+// -n <num_cases>         : Number of test cases to generate (default: 10000)
+// --unconstrained        : Generate fully random BF16 values (including NaNs and subnormals)
+// --no-daz              : Disable Denormals-Are-Zero (default: enabled)
+// --no-ftz              : Disable Flush-To-Zero (default: enabled)
+// -s <seed> or --seed <seed> : Set RNG seed for reproducibility (default: time-based)
+// --fp64accum            : Use FP64 accumulation for reference (default: FP32 accumulation)
+
+// Run: ./gen_drift_test [options] > test_cases.csv
+
 /* Global Configuration Toggles */
 static int ENABLE_DAZ = 1;  // Flush subnormal inputs to +/-0
 static int ENABLE_FTZ = 1;  // Flush subnormal outputs to +/-0

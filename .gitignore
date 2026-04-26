@@ -26,3 +26,5 @@ scripts/systolic_array/*.csv
 
 obj_dir/*
 !seed.txt
+reports/*_tree_width_sweep/**/*.csv
+!reports/*_tree_width_sweep/**/*.txt
