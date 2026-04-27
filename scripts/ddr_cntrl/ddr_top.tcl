@@ -1,7 +1,7 @@
 # --- Configuration ---
 set TB_FILE ./tb/unit/ddr_cntrl/testbench/dram_top_tb.sv
 set TB_TOP  dram_top_tb
-set DRAM_define [list ./protected_modelsim/arch_package.sv ./protected_modelsim/proj_package.sv ./protected_modelsim/interface.sv]
+set DRAM_define [list ./protected_modelsim/arch_package.sv ./protected_modelsim/proj_package.sv ./protected_modelsim/interface.sv ./protected_modelsim/ddr4_model.svp]
 
 if {![info exists TB_FILE]} {
     puts "ERROR: TB_FILE not set. Use:  vsim -c -do \"set TB_FILE <path>; set TB_TOP <top>; do test.tcl\""
