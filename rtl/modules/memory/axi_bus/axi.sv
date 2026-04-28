@@ -1,7 +1,7 @@
 `include "axi_bus_if.sv"
 `include "axi_bus_pkg.sv"
 
-module axi(
+module axi (
     input logic CLK, nRST,
     axi_bus_if abif
 );
