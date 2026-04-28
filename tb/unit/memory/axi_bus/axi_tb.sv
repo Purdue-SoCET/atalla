@@ -239,19 +239,19 @@ program test(
         env = new(abif); env.start();
         reset_dut();
 
-        // smoke_ar_test();
-        // pressure_ar_test(100);
-        // idle_ar_test();
+        smoke_ar_test();
+        pressure_ar_test(50);
+        idle_ar_test();
 
-        // smoke_r_test();
-        // pressure_r_test(10);
-        // idle_r_test();
+        smoke_r_test();
+        pressure_r_test(50);
+        idle_r_test();
 
         // smoke_write_test();
-        // pressure_write_test(7);
-        // idle_write_test();
+        // pressure_write_test(50);
+        // // idle_write_test();
 
-        consecutive_write_test(1, -1, 6);
+        // consecutive_write_test(1, -1, 6);
 
         env.report();
         $finish;
@@ -364,39 +364,23 @@ class ar_driver;
 
     task drive(ar_txn t);
         @(negedge axi_tb.CLK);
-        set_valid(1); set_payload(t);
-        @(negedge axi_tb.CLK);
-        set_valid(0); clear_payload();
-    endtask
-
-    task set_valid(logic v);
-        case (mid)
-            MID_SP0: vif.ar_sp0_valid = v;
-            MID_SP1: vif.ar_sp1_valid = v;
-            MID_D:   vif.ar_d_valid   = v;
-            MID_I:   vif.ar_i_valid   = v;
-        endcase
-    endtask
-
-    task set_payload(ar_txn t);
-        case (mid)
-            MID_SP0: begin vif.ar_sp0_i.addr=t.addr; vif.ar_sp0_i.id=t.id;
+        case (t.mid)
+            MID_SP0: begin vif.ar_sp0_valid=1; vif.ar_sp0_i.addr=t.addr; vif.ar_sp0_i.id=t.id;
                            vif.ar_sp0_i.size=t.size; vif.ar_sp0_i.len=t.len; vif.ar_sp0_i.burst=t.burst; end
-            MID_SP1: begin vif.ar_sp1_i.addr=t.addr; vif.ar_sp1_i.id=t.id;
+            MID_SP1: begin vif.ar_sp1_valid=1; vif.ar_sp1_i.addr=t.addr; vif.ar_sp1_i.id=t.id;
                            vif.ar_sp1_i.size=t.size; vif.ar_sp1_i.len=t.len; vif.ar_sp1_i.burst=t.burst; end
-            MID_D:   begin vif.ar_d_i.addr=t.addr; vif.ar_d_i.id=t.id;
-                           vif.ar_d_i.size=t.size; vif.ar_d_i.len=t.len; vif.ar_d_i.burst=t.burst; end
-            MID_I:   begin vif.ar_i_i.addr=t.addr; vif.ar_i_i.id=t.id;
-                           vif.ar_i_i.size=t.size; vif.ar_i_i.len=t.len; vif.ar_i_i.burst=t.burst; end
+            MID_I:   begin vif.ar_i_valid=1;   vif.ar_i_i.addr=t.addr;   vif.ar_i_i.id=t.id;
+                           vif.ar_i_i.size=t.size;   vif.ar_i_i.len=t.len;   vif.ar_i_i.burst=t.burst; end
+            MID_D:   begin vif.ar_d_valid=1;   vif.ar_d_i.addr=t.addr;   vif.ar_d_i.id=t.id;
+                           vif.ar_d_i.size=t.size;   vif.ar_d_i.len=t.len;   vif.ar_d_i.burst=t.burst; end
         endcase
-    endtask
+        @(negedge axi_tb.CLK);
 
-    task clear_payload();
-        case (mid)
-            MID_SP0: vif.ar_sp0_i = '0;
-            MID_SP1: vif.ar_sp1_i = '0;
-            MID_D:   vif.ar_d_i   = '0;
-            MID_I:   vif.ar_i_i   = '0;
+        case (t.mid)
+            MID_SP0: begin while (!vif.ar_sp0_ready) @(negedge axi_tb.CLK); vif.ar_sp0_valid=0; vif.ar_sp0_i='0; end
+            MID_SP1: begin while (!vif.ar_sp1_ready) @(negedge axi_tb.CLK); vif.ar_sp1_valid=0; vif.ar_sp1_i='0; end
+            MID_D:   begin while (!vif.ar_d_ready)   @(negedge axi_tb.CLK); vif.ar_d_valid=0;   vif.ar_d_i='0;   end
+            MID_I:   begin while (!vif.ar_i_ready)   @(negedge axi_tb.CLK); vif.ar_i_valid=0;   vif.ar_i_i='0;   end
         endcase
     endtask
 endclass

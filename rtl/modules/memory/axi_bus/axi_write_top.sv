@@ -84,12 +84,24 @@ module axi_write_top(
     logic sp0_mgr_awvalid, sp1_mgr_awvalid, d_mgr_awvalid;
     logic sp0_mgr_wvalid,  sp1_mgr_wvalid, d_mgr_wvalid;
 
-    assign sp0_mgr_awvalid = wr_path_if.sp0_i_valid && !sp0_in_burst;
-    assign sp0_mgr_wvalid  = wr_path_if.sp0_i_valid || sp0_in_burst;
-    assign sp1_mgr_awvalid = wr_path_if.sp1_i_valid && !sp1_in_burst;
-    assign sp1_mgr_wvalid  = wr_path_if.sp1_i_valid || sp1_in_burst;
-    assign d_mgr_awvalid   = wr_path_if.d_i_valid && !d_in_burst;
-    assign d_mgr_wvalid    = wr_path_if.d_i_valid || d_in_burst;
+    // assign sp0_mgr_awvalid = wr_path_if.sp0_i_valid && !sp0_in_burst;
+    // assign sp0_mgr_wvalid  = wr_path_if.sp0_i_valid || sp0_in_burst;
+    // assign sp1_mgr_awvalid = wr_path_if.sp1_i_valid && !sp1_in_burst;
+    // assign sp1_mgr_wvalid  = wr_path_if.sp1_i_valid || sp1_in_burst;
+    // assign d_mgr_awvalid   = wr_path_if.d_i_valid && !d_in_burst;
+    // assign d_mgr_wvalid    = wr_path_if.d_i_valid || d_in_burst;
+
+    // SP0: Gate Beat 0 with wr_ready, stream continuously once in_burst is 1
+    assign sp0_mgr_awvalid = wr_path_if.sp0_i_valid && wr_path_if.sp0_wr_ready && !sp0_in_burst;
+    assign sp0_mgr_wvalid  = (wr_path_if.sp0_i_valid && wr_path_if.sp0_wr_ready && !sp0_in_burst) || sp0_in_burst;
+
+    // SP1: Gate Beat 0 with wr_ready, stream continuously once in_burst is 1
+    assign sp1_mgr_awvalid = wr_path_if.sp1_i_valid && wr_path_if.sp1_wr_ready && !sp1_in_burst;
+    assign sp1_mgr_wvalid  = (wr_path_if.sp1_i_valid && wr_path_if.sp1_wr_ready && !sp1_in_burst) || sp1_in_burst;
+
+    // D$: Gate Beat 0 with wr_ready, stream continuously once in_burst is 1
+    assign d_mgr_awvalid   = wr_path_if.d_i_valid && wr_path_if.d_wr_ready && !d_in_burst;
+    assign d_mgr_wvalid    = (wr_path_if.d_i_valid && wr_path_if.d_wr_ready && !d_in_burst) || d_in_burst;
 
     // SCRATCHPAD0 (SP0) WRITE MANAGER
     axi_write_manager #(
@@ -265,6 +277,7 @@ module axi_write_top(
 
     // WRITE ARBITER -> WRITE DRIVER
     assign drv_if.aw_grant = arb_if.aw_grant;
+    assign drv_if.nxt_aw_grant = arb_if.nxt_aw_grant;
 
     // WRITE DRIVER -> WRITE ARBITER
     assign arb_if.skid_ready_w = drv_if.skid_ready_w;
