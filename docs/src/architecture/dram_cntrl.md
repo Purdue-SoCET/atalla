@@ -96,7 +96,11 @@ This section documents the currently active DRAM subsystem projects, including t
 
 ### Split-Transaction Interconnect
 
-  **Description**: The goal of this project is to design a split-transaction memory bus that can manage simultaneous in-flight requests from caches/scratchpad and simultaneous in-flight responses from the DRAM controller.
+  **Description**
+
+  This is a non-blocing interconnect that borrows idea of AMBA AXI bus. we call it costomized AXI interconnect. It is designed to increase interconnect bandwidth from DRAM to on-chip peripherals. 
+  
+  The customized interconnect is designed from scratch, without using existing design.
 
   **Contributors**
 
@@ -105,27 +109,35 @@ This section documents the currently active DRAM subsystem projects, including t
 
   **RTL Diagrams**
   
-  This sections links the location of all Block-/RTL-diagrams that were made for this design: https://app.diagrams.net/#G18bqekF9I8oZJpSTm-BcsDvPkOPy_cdul#%7B%22pageId%22%3A%22fpKTT8HEuwSpTkvlEaWT%22%7D
+  This draw.io link contains all the submodule and top level RTL diagram of the customized AXI interconnect. If you are asked for access, contact Aryan.
+
+  https://app.diagrams.net/#G1ak1hnCkFTo_PjdCdB6iJGtsUCmu-5aql#%7B%22pageId%22%3A%22wfVu87Kw0Yh81MMMt9Ax%22%7D
 
   **Active Branches**
 
-  This section links the location of active branches that are being used for the design: 
-
-  - Aryan Kadakia's Branch: https://github.com/Purdue-SoCET/atalla/tree/memory_subsystem_aryan#
-  - Main DRAM Branch: https://github.com/Purdue-SoCET/atalla/tree/memory_subsystem_dram
+  - AXI main branch: https://github.com/Purdue-SoCET/atalla/tree/axi_bus_main
+  - AXI Integration Testbench: https://github.com/Purdue-SoCET/atalla/blob/axi_bus_main/tb/unit/memory/axi_bus/axi_tb.sv
+  - RTL Design: https://github.com/Purdue-SoCET/atalla/tree/axi_bus_main/rtl/modules/memory/axi_bus
+  - Interface/Package: https://github.com/Purdue-SoCET/atalla/tree/axi_bus_main/rtl/include/memory/axi_bus
 
   **Verification**
-
-  This section links the location of verification related documents like verification plans: 
+  
+  - Testbench Flowchart: https://app.diagrams.net/#G1ak1hnCkFTo_PjdCdB6iJGtsUCmu-5aql#%7B%22pageId%22%3A%22-i_NBzUPSbW4Tr8fWsaY%22%7D
 
   **Design Documentation/Resources**
 
-  This section links any documentation or resources that was used specific for this design. This includes meeting notes, design logs, research papers, etc. 
+  - ARM AMBA AXI SPEC: https://developer.arm.com/documentation/ihi0022/k/
+  - Fall 2025 Report: https://docs.google.com/document/d/1fIBgyiB3g3OImUYkugq2czNFDmUUhIS_DO6sGcxqxDY/edit?tab=t.0
+  - Spring 2026 Report: https://www.overleaf.com/3423373736xqbvxskksvrh#a71e11 
+  - SV Testbench Study: https://www.chipverify.com/tutorials/systemverilog
 
-  - https://developer.arm.com/documentation/102202/0300/AXI-protocol-overview
-  - https://www.cis.upenn.edu/~cis5710/spring2024/slides/13_axi.pdf
+  **What to Run**
 
-    
+  Goto cloned atalla `axi_bus_main` branch. In atalla folder:
+  - Run `make axi.wav`. AXI integration testbench wave.
+  - Run `make MODULE.wav`. MODULE testbench wave, where MODULE = {axi_read, axi_read_arbiter, axi_write_arbiter, ...}
+
+
 ### Ramulator Simulator
 
   **Description**: The goal of this project is to understand the ramulator simualtor and design an interface that can connect from the split-transaction bus into the simulator.
