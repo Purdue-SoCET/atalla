@@ -277,13 +277,9 @@ This section documents the currently active DRAM subsystem projects, including t
   - **HBM3 reaches ~32 B/cycle with 0% stall even at 1 channel**, comparable to DDR4 4-channel, due to its pseudo-channel architecture and strong bank-level parallelism. Adding more HBM3 channels beyond 1 shows no further improvement on this workload, indicating the memory system is no longer the bottleneck.
   - **Tile-major access helps on bandwidth-limited DDR4** (better row locality reduces bank conflicts) but has negligible impact on high-bandwidth configs where the workload is already compute-bound.
 
-  Full results tables are in the Spring 2026 Final Report linked below.
-
   **Design Documentation/Resources**
 
-  - Ramulator2 source and documentation: https://github.com/CMU-SAFARI/ramulator2
-  - AXI4 Protocol Specification: https://developer.arm.com/documentation/102202/0300/AXI-protocol-overview
-  - Spring 2026 Final Report (includes full benchmark tables): linked in Past Reports section below
+  - https://github.com/CMU-SAFARI/ramulator2
 
 -----------------------------------------------------------
 ## Past Reports and Presentations
@@ -291,7 +287,6 @@ This section lists all past final reports, presentations, abstracts, and any oth
 
 **Final Reports**
 
-   - Spring 2026 Final Report (Scalable Non-Blocking DRAM Memory Subsystem): includes Ramulator SDMA benchmark results tables for all 8 DDR4/HBM3 configurations in single-beat and burst mode
    - Fall 2025 Final Report: https://docs.google.com/document/d/1fIBgyiB3g3OImUYkugq2czNFDmUUhIS_DO6sGcxqxDY/edit?usp=sharing
    - Spring 2025 Final Report: https://docs.google.com/document/d/1J7sHHt2H2yTATN91Cda57GuU_zQYz0v8/edit?usp=sharing&ouid=112766930685277737014&rtpof=true&sd=true
 
