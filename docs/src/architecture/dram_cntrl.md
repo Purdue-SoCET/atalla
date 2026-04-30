@@ -80,11 +80,106 @@ This section documents the currently active DRAM subsystem projects, including t
 
   This section links the location of active branches that are being used for the design: 
 
-   - Main DRAM Branch: https://github.com/Purdue-SoCET/atalla/tree/memory_subsystem_dram
+   - Main DRAM Branch: https://github.com/Purdue-SoCET/atalla/tree/ddr_cntrl
 
-  **Verification**
+  **Architecture Overview**
+  The design of Non-blocking Memory Controller was based around using queues and arbiters to maximize the throughput of data. Memory requests flow in from the split-transaction AXI, which then connect to the Read ID and Load Queue (Load Requests), as well as the Write Data and Store Queue (Store Requests). These requests are processed through a frontend arbiter, which balances the ratio of request types, and the backend arbiter, which uses a Command FSM to determine the timing of bank/bank group activation and readiness. This then allows for multiple requests to occur in flight.
 
-  This section links the location of verification related documents like verification plans: 
+  **Key Files**
+
+  ```
+  └── rtl/
+      ├── include/
+      │   └── ddr_cntrl/
+      │       ├── dram_pkg.svh           # Package definitions (timings, commands)
+      │       └── ddr_controller_if.sv   # Top-level interface for the controller
+      ├── modules/
+      │   ├── common/
+      │   │   └── general/
+      │   │       └── fifo.sv            # Generic FIFO utility
+      │   └── ddr_cntrl/
+      │       ├── ddr_controller_wrapper.sv # Top-level module integration
+      │       ├── frontend_arb_nb.sv     # AXI front-end arbitration logic
+      │       ├── address_mapper.sv      # AXI address to DRAM Rank/Bank/Row/Col
+      │       ├── nb_store_queue.sv      # Store queue for non-blocking writes
+      │       ├── load_queue_nb.sv       # Load queue for non-blocking reads
+      │       ├── nb_bank_queue.sv       # Bank-specific transaction tracking
+      │       ├── cmd_fsm_nb.sv          # Main Command FSM for DDR protocols
+      │       ├── fsm_module.sv          # Sub-FSM logic components
+      │       ├── nb_barb.sv             # Bank Arbiter for Command Generator
+      │       ├── refresh_counter.sv     # Periodic refresh management
+      │       ├── nb_wdata_wrapper.sv    # Write data path integration
+      │       ├── nb_wdata_queue.sv      # Buffering for write data
+      │       ├── nb_read_id_queue.sv    # Tracking AXI IDs for out-of-order reads
+      │       ├── flex_counter.sv        # Parametric counter utility (With rollover)
+      │       ├── flex_sr.sv             # Parametric shift register
+      │       ├── priority_enc.sv        # Priority encoder for arbiters
+      │       └── enum_compare.sv        # Comparison logic for FSM states
+  └── tb/
+    └── unit/
+        └── ddr_cntrl/
+            └── testbench/               
+                ├── dram_top_tb.sv            # Top - this connects to Micron TB  
+                ├── frontend_tb.sv            # Frontend
+                ├── init_state_tb.sv          # State Machine tb
+                ├── nb_barb_tb.sv             # Backend Arbiter
+                ├── nb_wdata_queue_tb.sv      # Write Path Queue
+                └── refresh_counter_tb.sv     # Simulation
+  ```
+
+  **Usage**
+  Within the scripts folder(`scripts/ddr_cntrl`), there are TCL scripts to run the various modules as well as the top level. Using them only requires that the same Makefile that is found in the branch to be used, specifically the section that reads
+  ```
+  ## Example: 
+  ## 		make run FILE=./scripts/xbar/benes_rom/verify.tcl
+  ## 		make run FILE=./scripts/memory/scratchpad/swizzle/verify.tcl
+  run:
+    vsim -do "source $(FILE)"
+  run_sim:
+    vsim -c -do "source $(FILE)"
+  ```
+  - Use the scripts as a base to iterate, with -c to test for command line only (i.e. debugging compilation/elaboration errors) 
+  - This model uses the Micron TB found within the protected_modelsim folder, so it is necessary for the folder to be in the branch during operation - **WARNING: THE TOP LEVEL CAN ONLY BE RAN WITH A SPECIFIC BASHRC WRITTEN BELOW**
+  ```
+    # Check that shell is interactive
+    [[ $- == *i* ]] || return
+    HOSTNAME=$(hostname)
+
+    if [ ${HOSTNAME} == "asicfab.ecn.purdue.edu" ]; then
+      source /package/asicfab/AccountSetup/init.bash
+
+      alias ls="ls --color"
+      alias ll="ls -la"
+
+
+      export COPYBUFFER=/package/asicfab/CopyBuffer
+      export MODULEPATH=/package/asicfab/AccountSetup/modulefiles:$MODULEPATH
+      export PATH=$HOME/.local/bin:$PATH # for python packages
+      unset PYTHONPATH
+      # For fusesoc + Questa usage
+      export MODEL_TECH="$(dirname $(which vsim))"
+
+      ###### CUSTOM CHANGES BELOW THIS LINE #######
+      module load git/2.18.0 gcc/11.2.0 python3/3.11
+      module load riscv-gcc verilator/5.028 gtkwave
+      module load cadence/xcelium/23.03 siemens/questa/2021.4 intel/quartus-std
+      module load lcov
+    elif [ ${HOSTNAME} == "asicfabu.ecn.purdue.edu" ]; then
+      module load verilator gtkwave surfer lcov
+    else
+      echo "Unknown host ${HOSTNAME}; not loading modules"
+    fi
+
+
+
+    # Set prompt
+    source $HOME/.bash/git-prompt.sh
+    export GIT_PS1_SHOWDIRTYSTATE=true
+    export GIT_PS1_SHOWSTASHSTATE=true
+    export GIT_PS1_SHOWCOLORHINTS=true
+    export PROMPT_COMMAND='__git_ps1 "\[\e]0;\u@\h: \w\a\]\[\033[01;32m\]\u@\h\[\033[00m\]:\[\033[01;34m\]\w\[\033[00m\]" "\$ "'
+  ```
+  - The assumption is made that the regular asicfab setup as already been completed for this to work. Note - while the bashrc may look similar, no work has been done to truly determine why top doesn't work with the regular bashrc. Future work can be done to check why before iterating on this design.
 
   **Design Documentation/Resources**
 
