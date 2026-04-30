@@ -83,7 +83,7 @@ This section documents the currently active DRAM subsystem projects, including t
    - Main DRAM Branch: https://github.com/Purdue-SoCET/atalla/tree/ddr_cntrl
 
   **Architecture Overview**
-  This section discusses the 
+  The design of Non-blocking Memory Controller was based around using queues and arbiters to maximize the throughput of data. Memory requests flow in from the split-transaction AXI, which then connect to the Read ID and Load Queue (Load Requests), as well as the Write Data and Store Queue (Store Requests). These requests are processed through a frontend arbiter, which balances the ratio of request types, and the backend arbiter, which uses a Command FSM to determine the timing of bank/bank group activation and readiness. This then allows for multiple requests to occur in flight.
 
   **Key Files**
 
@@ -127,10 +127,59 @@ This section documents the currently active DRAM subsystem projects, including t
                 └── refresh_counter_tb.sv     # Simulation
   ```
 
-  **Verification**
+  **Usage**
+  Within the scripts folder(`scripts/ddr_cntrl`), there are TCL scripts to run the various modules as well as the top level. Using them only requires that the same Makefile that is found in the branch to be used, specifically the section that reads
+  ```
+  ## Example: 
+  ## 		make run FILE=./scripts/xbar/benes_rom/verify.tcl
+  ## 		make run FILE=./scripts/memory/scratchpad/swizzle/verify.tcl
+  run:
+    vsim -do "source $(FILE)"
+  run_sim:
+    vsim -c -do "source $(FILE)"
+  ```
+  - Use the scripts as a base to iterate, with -c to test for command line only (i.e. debugging compilation/elaboration errors) 
+  - This model uses the Micron TB found within the protected_modelsim folder, so it is necessary for the folder to be in the branch during operation - **WARNING: THE TOP LEVEL CAN ONLY BE RAN WITH A SPECIFIC BASHRC WRITTEN BELOW**
+  ```
+    # Check that shell is interactive
+    [[ $- == *i* ]] || return
+    HOSTNAME=$(hostname)
 
-  This section links the location of verification related documents like verification plans:
-  - This model uses the Micron TB found within the protected_modelsim folder
+    if [ ${HOSTNAME} == "asicfab.ecn.purdue.edu" ]; then
+      source /package/asicfab/AccountSetup/init.bash
+
+      alias ls="ls --color"
+      alias ll="ls -la"
+
+
+      export COPYBUFFER=/package/asicfab/CopyBuffer
+      export MODULEPATH=/package/asicfab/AccountSetup/modulefiles:$MODULEPATH
+      export PATH=$HOME/.local/bin:$PATH # for python packages
+      unset PYTHONPATH
+      # For fusesoc + Questa usage
+      export MODEL_TECH="$(dirname $(which vsim))"
+
+      ###### CUSTOM CHANGES BELOW THIS LINE #######
+      module load git/2.18.0 gcc/11.2.0 python3/3.11
+      module load riscv-gcc verilator/5.028 gtkwave
+      module load cadence/xcelium/23.03 siemens/questa/2021.4 intel/quartus-std
+      module load lcov
+    elif [ ${HOSTNAME} == "asicfabu.ecn.purdue.edu" ]; then
+      module load verilator gtkwave surfer lcov
+    else
+      echo "Unknown host ${HOSTNAME}; not loading modules"
+    fi
+
+
+
+    # Set prompt
+    source $HOME/.bash/git-prompt.sh
+    export GIT_PS1_SHOWDIRTYSTATE=true
+    export GIT_PS1_SHOWSTASHSTATE=true
+    export GIT_PS1_SHOWCOLORHINTS=true
+    export PROMPT_COMMAND='__git_ps1 "\[\e]0;\u@\h: \w\a\]\[\033[01;32m\]\u@\h\[\033[00m\]:\[\033[01;34m\]\w\[\033[00m\]" "\$ "'
+  ```
+  - The assumption is made that the regular asicfab setup as already been completed for this to work. Note - while the bashrc may look similar, no work has been done to truly determine why top doesn't work with the regular bashrc. Future work can be done to check why before iterating on this design.
 
   **Design Documentation/Resources**
 
