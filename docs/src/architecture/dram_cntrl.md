@@ -80,11 +80,57 @@ This section documents the currently active DRAM subsystem projects, including t
 
   This section links the location of active branches that are being used for the design: 
 
-   - Main DRAM Branch: https://github.com/Purdue-SoCET/atalla/tree/memory_subsystem_dram
+   - Main DRAM Branch: https://github.com/Purdue-SoCET/atalla/tree/ddr_cntrl
+
+  **Architecture Overview**
+  This section discusses the 
+
+  **Key Files**
+
+  ```
+  └── rtl/
+      ├── include/
+      │   └── ddr_cntrl/
+      │       ├── dram_pkg.svh           # Package definitions (timings, commands)
+      │       └── ddr_controller_if.sv   # Top-level interface for the controller
+      ├── modules/
+      │   ├── common/
+      │   │   └── general/
+      │   │       └── fifo.sv            # Generic FIFO utility
+      │   └── ddr_cntrl/
+      │       ├── ddr_controller_wrapper.sv # Top-level module integration
+      │       ├── frontend_arb_nb.sv     # AXI front-end arbitration logic
+      │       ├── address_mapper.sv      # AXI address to DRAM Rank/Bank/Row/Col
+      │       ├── nb_store_queue.sv      # Store queue for non-blocking writes
+      │       ├── load_queue_nb.sv       # Load queue for non-blocking reads
+      │       ├── nb_bank_queue.sv       # Bank-specific transaction tracking
+      │       ├── cmd_fsm_nb.sv          # Main Command FSM for DDR protocols
+      │       ├── fsm_module.sv          # Sub-FSM logic components
+      │       ├── nb_barb.sv             # Bank Arbiter for Command Generator
+      │       ├── refresh_counter.sv     # Periodic refresh management
+      │       ├── nb_wdata_wrapper.sv    # Write data path integration
+      │       ├── nb_wdata_queue.sv      # Buffering for write data
+      │       ├── nb_read_id_queue.sv    # Tracking AXI IDs for out-of-order reads
+      │       ├── flex_counter.sv        # Parametric counter utility (With rollover)
+      │       ├── flex_sr.sv             # Parametric shift register
+      │       ├── priority_enc.sv        # Priority encoder for arbiters
+      │       └── enum_compare.sv        # Comparison logic for FSM states
+  └── tb/
+    └── unit/
+        └── ddr_cntrl/
+            └── testbench/               
+                ├── dram_top_tb.sv            # Top - this connects to Micron TB  
+                ├── frontend_tb.sv            # Frontend
+                ├── init_state_tb.sv          # State Machine tb
+                ├── nb_barb_tb.sv             # Backend Arbiter
+                ├── nb_wdata_queue_tb.sv      # Write Path Queue
+                └── refresh_counter_tb.sv     # Simulation
+  ```
 
   **Verification**
 
-  This section links the location of verification related documents like verification plans: 
+  This section links the location of verification related documents like verification plans:
+  - This model uses the Micron TB found within the protected_modelsim folder
 
   **Design Documentation/Resources**
 
