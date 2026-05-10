@@ -1,0 +1,2 @@
+  CREATE_STREAM @0 {NAME:basic_seq T:Transactions SCOPE:uvm_test_top.env.cpu_active_agent.sqr STREAM:1125}
+  CREATE_STREAM @170 {NAME:wr_seq T:Transactions SCOPE:uvm_test_top.env.cpu_active_agent.sqr STREAM:1326}

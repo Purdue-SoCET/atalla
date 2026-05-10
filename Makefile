@@ -39,3 +39,44 @@ sf:
 
 clean: 
 	rm -rf ./obj_dir ./verilator ./work ./.deps
+
+TBTOP    = tb_top
+TESTNAME = test
+VERBOSITY= UVM_MEDIUM
+
+QUESTA_HOME ?= /package/eda/mg/questa2021.4/questasim
+UVM_LIB      = $(QUESTA_HOME)/uvm-1.2
+
+uvm_lfc_build:
+	@echo "Building lockup-free cache UVM testbench..."
+	rm -rf work
+	vlib work
+	vlog +acc \
+	     +cover \
+	     -sv \
+	     +incdir+./src/include \
+	     +incdir+./uvm \
+	     -L $(UVM_LIB) \
+	     ./src/modules/cache_mshr_buffer.sv \
+	     ./src/modules/cache_bank.sv \
+	     ./uvm/tb_top.sv \
+	     -logfile uvm_lfc_compile.log \
+	     -printinfilenames=uvm_lfc_file_search.log
+
+uvm_lfc: uvm_lfc_build
+	vsim -c work.$(TBTOP) \
+	     -L $(UVM_LIB) \
+	     -voptargs=+acc \
+	     -coverage \
+	     +UVM_TESTNAME="$(TESTNAME)" \
+	     +UVM_VERBOSITY=$(VERBOSITY) \
+	     -do "run -all; quit"
+
+uvm_lfc_gui: uvm_lfc_build
+	vsim -coverage -i work.$(TBTOP) \
+	     -L $(UVM_LIB) \
+	     -voptargs=+acc \
+	     +UVM_TESTNAME="$(TESTNAME)" \
+	     +UVM_VERBOSITY=$(VERBOSITY) \
+	     -do "run -all"
+

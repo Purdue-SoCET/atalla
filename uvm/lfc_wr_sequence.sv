@@ -21,7 +21,7 @@ class lfc_wr_sequence extends uvm_sequence#(lfc_cpu_transaction);
 
     `uvm_info(get_type_name(), "Starting lfc_wr_sequence...", UVM_MEDIUM)
 
-    req = lfc_cpu_transaction::type_id::create("req");
+    req = lfc_cpu_transaction#()::type_id::create("req");
 
     `uvm_info(get_type_name(), "Starting write transactions...", UVM_MEDIUM)
     addrs_idx = 0;

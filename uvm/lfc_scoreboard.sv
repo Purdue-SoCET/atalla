@@ -56,35 +56,35 @@ class lfc_scoreboard extends uvm_scoreboard;
         forever begin
             expected_cpu_fifo.get(expected_tx);
             actual_cpu_fifo.get(actual_tx);
-            if (exp_tx == null || act_tx == null) begin
+            if (expected_tx == null || actual_tx == null) begin
               `uvm_error("SCOREBOARD", "Received null transaction")
               continue;
             end
-            
-            if ($isunknown(act_tx.stall) || $isunknown(act_tx.hit)) begin
-                `uvm_warning("SCOREBOARD", $sformatf("Skipping tx with unknown values: uuid=%0d", act_tx.mem_out_uuid))
+
+            if ($isunknown(actual_tx.stall) || $isunknown(actual_tx.hit)) begin
+                `uvm_warning("SCOREBOARD", $sformatf("Skipping tx with unknown values: uuid=%0d", actual_tx.mem_out_uuid))
                 continue;
             end
-            
-            if ($isunknown(exp_tx.mem_out_uuid)) begin
-                `uvm_warning("SCOREBOARD", $sformatf("Skipping exp_tx with unknown UUID: %0d", exp_tx.mem_out_uuid))
+
+            if ($isunknown(expected_tx.mem_out_uuid)) begin
+                `uvm_warning("SCOREBOARD", $sformatf("Skipping expected_tx with unknown UUID: %0d", expected_tx.mem_out_uuid))
                 continue;
             end
             // UUID match check
-            if (exp_tx.mem_out_uuid !== act_tx.mem_out_uuid) begin
+            if (expected_tx.mem_out_uuid !== actual_tx.mem_out_uuid) begin
                 m_mismatches++;
-                `uvm_error("SCOREBOARD", $sformatf("UUID mismatch: Expected %0d, Got %0d", exp_tx.mem_out_uuid, act_tx.mem_out_uuid))
+                `uvm_error("SCOREBOARD", $sformatf("UUID mismatch: Expected %0d, Got %0d", expected_tx.mem_out_uuid, actual_tx.mem_out_uuid))
                 continue;
             end
 
             // Stall check
-            if (exp_tx.stall !== act_tx.stall) begin
+            if (expected_tx.stall !== actual_tx.stall) begin
                 m_mismatches++;
                 `uvm_error("SCOREBOARD", $sformatf("STALL mismatch (uuid=%0d): Expected %0b, Got %0b",
-                    exp_tx.mem_out_uuid, exp_tx.stall, act_tx.stall))
+                    expected_tx.mem_out_uuid, expected_tx.stall, actual_tx.stall))
             end else begin
                 m_matches++;
-                `uvm_info("SCOREBOARD", $sformatf("STALL match (uuid=%0d): stall=%0b", act_tx.mem_out_uuid, act_tx.stall), UVM_LOW)
+                `uvm_info("SCOREBOARD", $sformatf("STALL match (uuid=%0d): stall=%0b", actual_tx.mem_out_uuid, actual_tx.stall), UVM_LOW)
             end
         end
     endtask: run_phase

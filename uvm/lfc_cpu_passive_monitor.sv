@@ -40,7 +40,7 @@ class lfc_cpu_passive_monitor extends uvm_monitor;
   int has_run_once;
  virtual task run_phase(uvm_phase phase);
   super.run_phase(phase);
-  prev_tx = lfc_cpu_transaction::type_id::create("prev_tx");
+  prev_tx = lfc_cpu_transaction#()::type_id::create("prev_tx");
   has_run_once = 0;
 
   `uvm_info("CPU_MON", "Entered run_phase of CPU monitor", UVM_LOW)
@@ -48,7 +48,7 @@ class lfc_cpu_passive_monitor extends uvm_monitor;
   forever begin
     lfc_cpu_transaction tx;
     @(posedge vif.clk);
-    tx = lfc_cpu_transaction::type_id::create("tx");
+    tx = lfc_cpu_transaction#()::type_id::create("tx");
 
     tx.mem_out_uuid     = vif.mem_out_uuid;
     tx.stall            = vif.stall;

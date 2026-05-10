@@ -13,7 +13,7 @@ import uvm_pkg::*;
 `uvm_analysis_imp_decl(_ram)
 
 // class lfc_predictor extends uvm_subscriber#(lfc_cpu_transaction, lfc_ram_transaction);
-class lfc_predictor extends uvm_component#(lfc_cpu_transaction, lfc_ram_transaction);
+class lfc_predictor extends uvm_component;
     `uvm_component_utils(lfc_predictor)
 
     parameter NUM_BANKS = 4;

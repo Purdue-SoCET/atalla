@@ -75,7 +75,7 @@ class lfc_ram_active_driver extends uvm_driver#(lfc_ram_transaction);
       for (int b = 0; b < vif.NUM_BANKS; b++) begin
         // ---------- READ ----------
         if (vif.ram_mem_REN[b]) begin
-          tr = lfc_ram_transaction::type_id::create($sformatf("READ_bank%0d", b));
+          tr = lfc_ram_transaction#()::type_id::create($sformatf("READ_bank%0d", b));
 
           // capture from interface
           tr.ram_mem_REN[b]   = 1;
@@ -97,7 +97,7 @@ class lfc_ram_active_driver extends uvm_driver#(lfc_ram_transaction);
 
         // ---------- WRITE ----------
         else if (vif.ram_mem_WEN[b]) begin
-          tr = lfc_ram_transaction::type_id::create($sformatf("WRITE_bank%0d", b));
+          tr = lfc_ram_transaction#()::type_id::create($sformatf("WRITE_bank%0d", b));
 
           // capture from interface
           tr.ram_mem_WEN[b]   = 1;

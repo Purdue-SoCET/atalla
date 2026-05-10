@@ -40,13 +40,13 @@ class lfc_ram_active_monitor extends uvm_monitor;
   int has_run_once;
   virtual task run_phase(uvm_phase phase);
     super.run_phase(phase);
-    prev_tx = lfc_ram_transaction::type_id::create("prev_tx");
+    prev_tx = lfc_ram_transaction#()::type_id::create("prev_tx");
 
     has_run_once = 0;
     forever begin
       lfc_ram_transaction tx;
       @(posedge vif.clk);
-      tx = lfc_ram_transaction::type_id::create("tx");
+      tx = lfc_ram_transaction#()::type_id::create("tx");
 
       tx.ram_mem_data = vif.ram_mem_data;
       tx.ram_mem_complete = vif.ram_mem_complete;

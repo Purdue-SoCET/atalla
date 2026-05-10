@@ -46,7 +46,7 @@ class lfc_ram_passive_monitor extends uvm_monitor;
         // sample read or write
         if (vif.ram_mem_REN[b] || vif.ram_mem_WEN[b]) begin
           lfc_ram_transaction tr;
-          tr = lfc_ram_transaction::type_id::create($sformatf("ram_tr_bank%0d", b));
+          tr = lfc_ram_transaction#()::type_id::create($sformatf("ram_tr_bank%0d", b));
 
           // capture from interface
           tr.ram_mem_REN[b]   = vif.ram_mem_REN[b];
