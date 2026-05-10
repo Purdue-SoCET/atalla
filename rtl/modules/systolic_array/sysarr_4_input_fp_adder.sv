@@ -64,7 +64,7 @@ module sysarr_4_input_fp_adder #(
     logic [IN_EXPONENT_SIZE-1:0] st2_exp_base;
     logic [SUM_WIDTH-1:0]      st2_sum_mag;
     logic [RES_WIDTH-1:0]      st2_spec_res;
-    logic st2_res_sign, st2_sticky, st2_special;
+    logic st2_res_sign, st2_special, st2_sticky; 
 
     // --- Stage 3 Signals ---
     logic [SUM_WIDTH-1:0]      lzd_scan;
@@ -83,7 +83,7 @@ module sysarr_4_input_fp_adder #(
     // =================================================================================
     logic [SUM_WIDTH-1:0] op_x, op_y, op_m, op_n;
     logic [SUM_WIDTH-1:0] csa_s1, csa_c1, csa_s2, csa_c2;
-
+    
     always_comb begin : stage1_logic
 
         // Take fp32 representation from conversion logic and proceed as expected
@@ -220,10 +220,10 @@ module sysarr_4_input_fp_adder #(
         raw_sum = $signed({1'b0, st1_sum_vec}) + $signed( st1_carry_vec << 1) + $signed({{(SUM_WIDTH){1'b0}}, st1_hot_ones});
 
         if (raw_sum[SUM_WIDTH-1]) begin
-            mag_sum = SUM_WIDTH'((~raw_sum + 1'b1));
             res_sign = ~st1_a_s;
+            mag_sum = (~st1_align_sticky[1] && st1_align_sticky[0]) ? SUM_WIDTH'((~raw_sum + 1'b1)) : SUM_WIDTH'((~raw_sum + 1'b1)) - 1;
         end else begin
-            mag_sum = SUM_WIDTH'(raw_sum[SUM_WIDTH-2:0]);
+            mag_sum = (&st1_align_sticky) ? SUM_WIDTH'(raw_sum[SUM_WIDTH-2:0]) - 1 : SUM_WIDTH'(raw_sum[SUM_WIDTH-2:0]);
             res_sign = st1_a_s;
         end
     end
@@ -232,10 +232,10 @@ module sysarr_4_input_fp_adder #(
     always_ff @(posedge clk or negedge nRST) begin
         if (!nRST) begin
             st2_sum_mag <= 0; st2_res_sign <= 0; st2_exp_base <= 0;
-            st2_sticky <= 0; st2_special <= 0; st2_spec_res <= 0;
+            st2_sticky <= '0; st2_special <= 0; st2_spec_res <= 0;
         end else begin
             st2_sum_mag <= mag_sum; st2_res_sign <= res_sign;
-            st2_exp_base <= st1_a_e; st2_sticky <= st1_align_sticky;
+            st2_exp_base <= st1_a_e; st2_sticky <= st1_align_sticky[0];
             st2_special <= st1_special_case; st2_spec_res <= st1_special_result;
         end
     end

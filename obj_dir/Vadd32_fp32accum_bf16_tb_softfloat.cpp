@@ -100,13 +100,13 @@ VL_ATTR_COLD void Vadd32_fp32accum_bf16_tb_softfloat::final() {
 
 const char* Vadd32_fp32accum_bf16_tb_softfloat::hierName() const { return vlSymsp->name(); }
 const char* Vadd32_fp32accum_bf16_tb_softfloat::modelName() const { return "Vadd32_fp32accum_bf16_tb_softfloat"; }
-unsigned Vadd32_fp32accum_bf16_tb_softfloat::threads() const { return 2; }
+unsigned Vadd32_fp32accum_bf16_tb_softfloat::threads() const { return 1; }
 void Vadd32_fp32accum_bf16_tb_softfloat::prepareClone() const { contextp()->prepareClone(); }
 void Vadd32_fp32accum_bf16_tb_softfloat::atClone() const {
-    vlSymsp->__Vm_threadPoolp = static_cast<VlThreadPool*>(contextp()->threadPoolpOnClone());
+    contextp()->threadPoolpOnClone();
 }
 std::unique_ptr<VerilatedTraceConfig> Vadd32_fp32accum_bf16_tb_softfloat::traceConfig() const {
-    return std::unique_ptr<VerilatedTraceConfig>{new VerilatedTraceConfig{true, false, false}};
+    return std::unique_ptr<VerilatedTraceConfig>{new VerilatedTraceConfig{false, false, false}};
 };
 
 //============================================================
@@ -141,6 +141,6 @@ VL_ATTR_COLD void Vadd32_fp32accum_bf16_tb_softfloat::traceBaseModel(VerilatedTr
             " use --trace-fst with VerilatedFst object, and --trace-vcd with VerilatedVcd object");
     }
     stfp->spTrace()->addModel(this);
-    stfp->spTrace()->addInitCb(&trace_init, &(vlSymsp->TOP), name(), false, 1715);
+    stfp->spTrace()->addInitCb(&trace_init, &(vlSymsp->TOP), name(), false, 1639);
     Vadd32_fp32accum_bf16_tb_softfloat___024root__trace_register(&(vlSymsp->TOP), stfp->spTrace());
 }

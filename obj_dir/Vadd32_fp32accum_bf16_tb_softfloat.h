@@ -9,7 +9,6 @@
 #define VERILATED_VADD32_FP32ACCUM_BF16_TB_SOFTFLOAT_H_  // guard
 
 #include "verilated.h"
-#include "verilated_threads.h"
 
 class Vadd32_fp32accum_bf16_tb_softfloat__Syms;
 class Vadd32_fp32accum_bf16_tb_softfloat___024root;

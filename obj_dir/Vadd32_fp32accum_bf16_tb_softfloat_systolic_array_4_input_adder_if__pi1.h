@@ -6,7 +6,6 @@
 #define VERILATED_VADD32_FP32ACCUM_BF16_TB_SOFTFLOAT_SYSTOLIC_ARRAY_4_INPUT_ADDER_IF__PI1_H_  // guard
 
 #include "verilated.h"
-#include "verilated_threads.h"
 #include "verilated_timing.h"
 
 
@@ -16,7 +15,7 @@ class alignas(VL_CACHE_LINE_BYTES) Vadd32_fp32accum_bf16_tb_softfloat_systolic_a
   public:
 
     // DESIGN SPECIFIC STATE
-    QData/*38:0*/ out;
+    QData/*34:0*/ out;
 
     // INTERNAL VARIABLES
     Vadd32_fp32accum_bf16_tb_softfloat__Syms* vlSymsp;

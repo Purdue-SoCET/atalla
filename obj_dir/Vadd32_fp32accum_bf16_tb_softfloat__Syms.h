@@ -28,12 +28,6 @@ class alignas(VL_CACHE_LINE_BYTES) Vadd32_fp32accum_bf16_tb_softfloat__Syms fina
     VlDeleter __Vm_deleter;
     bool __Vm_didInit = false;
 
-    // MULTI-THREADING
-    VlThreadPool* __Vm_threadPoolp;
-    bool __Vm_even_cycle__ico = false;
-    bool __Vm_even_cycle__act = false;
-    bool __Vm_even_cycle__nba = false;
-
     // MODULE INSTANCE STATE
     Vadd32_fp32accum_bf16_tb_softfloat___024root TOP;
     Vadd32_fp32accum_bf16_tb_softfloat_systolic_array_4_input_adder_if__pi1 TOP__add32_fp32accum_bf16_tb_softfloat__DOT__dut__DOT__stage1_if__BRA__0__KET__;

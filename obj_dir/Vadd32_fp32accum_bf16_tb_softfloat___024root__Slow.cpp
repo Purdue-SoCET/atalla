@@ -8,13 +8,6 @@ void Vadd32_fp32accum_bf16_tb_softfloat___024root___ctor_var_reset(Vadd32_fp32ac
 
 Vadd32_fp32accum_bf16_tb_softfloat___024root::Vadd32_fp32accum_bf16_tb_softfloat___024root(Vadd32_fp32accum_bf16_tb_softfloat__Syms* symsp, const char* namep)
     : __VdlySched{*symsp->_vm_contextp__}
-    , __Vm_mtaskstate_6(1U)
-    , __Vm_mtaskstate_4(1U)
-    , __Vm_mtaskstate_2(1U)
-    , __Vm_mtaskstate_7(1U)
-    , __Vm_mtaskstate_3(1U)
-    , __Vm_mtaskstate_5(1U)
-    , __Vm_mtaskstate_final__0nba(2U)
  {
     vlSymsp = symsp;
     vlNamep = strdup(namep);

@@ -6,7 +6,6 @@
 #define VERILATED_VADD32_FP32ACCUM_BF16_TB_SOFTFLOAT_SYSTOLIC_ARRAY_4_INPUT_ADDER_IF_H_  // guard
 
 #include "verilated.h"
-#include "verilated_threads.h"
 #include "verilated_timing.h"
 
 

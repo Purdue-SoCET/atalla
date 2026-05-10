@@ -84,12 +84,13 @@ def generate_sv(n, a_list, pipeline_map, directory, filename):
         next_pool = []
         sv.append(f"    // --- Stage {level}: {a}-way Reduction ---")
         
-        # 1. Logic Generation
+        # 1. Logic Generation (Declare first, then assign)
         for i in range(0, len(current_pool), a):
             group = current_pool[i : i + a]
             node = f"s{level}_g{i//a}"
             if len(group) > 1:
-                sv.append(f"    logic [EXT_WIDTH-1:0] {node}_c = " + " + ".join(group) + ";")
+                sv.append(f"    logic [EXT_WIDTH-1:0] {node}_c;")
+                sv.append(f"    assign {node}_c = " + " + ".join(group) + ";")
                 next_pool.append(f"{node}_r")
             else:
                 # Signal is a leftover - prepare it for a bypass register
@@ -97,7 +98,11 @@ def generate_sv(n, a_list, pipeline_map, directory, filename):
 
         # 2. Register/Bypass Generation
         if level < len(pipeline_map) and pipeline_map[level]:
-            sv.append(f"\n    always_ff @(posedge clk or negedge nRST) begin")
+            # Declare sequential signals
+            for sig in next_pool: 
+                sv.append(f"    logic [EXT_WIDTH-1:0] {sig};")
+                
+            sv.append(f"    always_ff @(posedge clk or negedge nRST) begin")
             sv.append(f"        if (!nRST) begin")
             for sig in next_pool: sv.append(f"            {sig} <= '0;")
             sv.append(f"        end else begin")
@@ -112,16 +117,20 @@ def generate_sv(n, a_list, pipeline_map, directory, filename):
                     sv.append(f"            {node}_r <= {group[0]};")
             sv.append(f"        end")
             sv.append(f"    end\n")
-            for sig in next_pool: sv.append(f"    logic [EXT_WIDTH-1:0] {sig};")
         else:
             # Combinatorial path: map _r names to _c or raw signals
+            # Declare combinatorial pass-through signals
+            for i in range(0, len(current_pool), a):
+                node = f"s{level}_g{i//a}"
+                sv.append(f"    logic [EXT_WIDTH-1:0] {node}_r;")
+                
             for i in range(0, len(current_pool), a):
                 group = current_pool[i : i + a]
                 node = f"s{level}_g{i//a}"
                 if len(group) > 1:
-                    sv.append(f"    logic [EXT_WIDTH-1:0] {node}_r = {node}_c;")
+                    sv.append(f"    assign {node}_r = {node}_c;")
                 else:
-                    sv.append(f"    logic [EXT_WIDTH-1:0] {node}_r = {group[0]};")
+                    sv.append(f"    assign {node}_r = {group[0]};")
         
         current_pool = next_pool
         sv.append("")
