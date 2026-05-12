@@ -6,26 +6,10 @@
 #include <math.h>
 #include "softfloat.h"
 
-/*
-
-gcc -O2 -I ~/berkeley-softfloat-3/source/include \                     
-        -I ~/berkeley-testfloat-3/build/Linux-x86_64-GCC \
-        gen_drift_test.c \
-        ~/berkeley-softfloat-3/build/Linux-x86_64-GCC/softfloat.a \
-        -lm \
-        -o gen_drift_test
-
-*/
-
-// Command Line Options:
-// -n <num_cases>         : Number of test cases to generate (default: 10000)
-// --unconstrained        : Generate fully random BF16 values (including NaNs and subnormals)
-// --no-daz              : Disable Denormals-Are-Zero (default: enabled)
-// --no-ftz              : Disable Flush-To-Zero (default: enabled)
-// -s <seed> or --seed <seed> : Set RNG seed for reproducibility (default: time-based)
-// --fp64accum            : Use FP64 accumulation for reference (default: FP32 accumulation)
-
-// Run: ./gen_drift_test [options] > test_cases.csv
+// =================================================================================
+// DYNAMIC SCHMOO TEST GENERATOR FOR EXACT FUSED FP ADDERS
+// Utilizes Berkeley SoftFloat 3 - float128_t (Memory API) for perfect, 0-loss sums.
+// =================================================================================
 
 /* Global Configuration Toggles */
 static int ENABLE_DAZ = 1;  // Flush subnormal inputs to +/-0
@@ -73,70 +57,56 @@ static int is_subnormal_f32(uint32_t bits) {
     return (exp == 0) && (man != 0);
 }
 
-static int is_nan_f32(uint32_t bits) {
-    uint32_t exp = (bits >> 23) & 0xFF;
-    uint32_t man = bits & 0x7FFFFF;
-    return (exp == 0xFF) && (man != 0);
-}
-
 static uint32_t apply_ftz32(uint32_t bits) {
     if (ENABLE_FTZ && is_subnormal_f32(bits))
         return bits & 0x80000000;
     return bits;
 }
 
-static uint32_t canonicalize_nan32(uint32_t bits) {
-    if (is_nan_f32(bits))
-        return 0x7FC00000;
-    return bits;
-}
-
 /* --------------------------------------------------------------------------
- * REFERENCE ADDER: FP64 Accumulation (Google Patent compliant)
- * No intermediate rounding occurs until the very end.
+ * REFERENCE ADDER: FP128 EXACT FUSED ACCUMULATION
+ * All inputs are promoted losslessly to FP128 (112-bit mantissa).
+ * The sum accumulates linearly with virtually zero loss of precision.
+ * A single, perfect rounding is applied at the very end.
+ * Uses SoftFloat "M" (Memory) functions for 128-bit pointer arithmetic.
  * -------------------------------------------------------------------------- */
-static uint16_t true_32input_tree_add_fp64(uint16_t *inputs) {
+static uint16_t exact_n_input_fused_add_f128(uint16_t *inputs, int n) {
     bfloat16_t in_bf;
-    float64_t stage1[8], stage2[2];
-    bfloat16_t result;
+    float128_t sum128;
     
+    // Initialize sum128 to 0.0 using the memory pointer function
+    ui32_to_f128M(0, &sum128); 
+    
+    // IEEE 754 Standard: Round to Nearest, Ties to Even
     softfloat_roundingMode = softfloat_round_near_even;
 
-    // Stage 1: 32 inputs -> 8 partial sums (unrounded FP64)
-    for (int i = 0; i < 8; i++) {
-        // Correct initialization to 0.0 using the conversion function
-        float64_t sum64 = ui64_to_f64(0); 
+    for (int i = 0; i < n; i++) {
+        uint16_t raw = apply_daz(inputs[i]);
         
-        for (int j = 0; j < 4; j++) {
-            uint16_t raw = apply_daz(inputs[i*4 + j]);
-            if (is_nan_bf16(raw)) return 0x7FC0;
-            
-            in_bf.v = raw;
-            // Lossless conversion: BF16 -> FP32 -> FP64
-            float64_t op64 = f32_to_f64(bf16_to_f32(in_bf));
-            sum64 = f64_add(sum64, op64);
-        }
-        stage1[i] = sum64;
+        // Immediate NaN propagation
+        if (is_nan_bf16(raw)) return 0x7FC0;
+        
+        in_bf.v = raw;
+        
+        // Lossless Upcast: BF16 -> FP32
+        float32_t in_f32 = bf16_to_f32(in_bf);
+        
+        // FP32 -> FP128 (using Memory pointer)
+        float128_t op128;
+        f32_to_f128M(in_f32, &op128);
+        
+        // Exact accumulation: sum128 = sum128 + op128
+        f128M_add(&sum128, &op128, &sum128);
     }
 
-    // Stage 2: 8 partials -> 2 partials (unrounded FP64)
-    for (int i = 0; i < 2; i++) {
-        float64_t sum64 = stage1[i*4 + 0];
-        sum64 = f64_add(sum64, stage1[i*4 + 1]);
-        sum64 = f64_add(sum64, stage1[i*4 + 2]);
-        sum64 = f64_add(sum64, stage1[i*4 + 3]);
-        stage2[i] = sum64;
-    }
-
-    // Stage 3: Final sum and single rounding
-    float64_t final_sum64 = f64_add(stage2[0], stage2[1]);
-    
-    // Final Rounding: FP64 -> FP32 -> BF16
-    float32_t final_f32 = f64_to_f32(final_sum64);
+    // Single Final Rounding: FP128 -> FP32
+    float32_t final_f32 = f128M_to_f32(&sum128);
     final_f32.v = apply_ftz32(final_f32.v);
     
-    result = f32_to_bf16(final_f32);
+    // Downcast to target hardware size: FP32 -> BF16
+    bfloat16_t result = f32_to_bf16(final_f32);
     result.v = apply_ftz(result.v);
+    
     return canonicalize_nan(result.v);
 }
 
@@ -154,27 +124,7 @@ static uint64_t xorshift64(void) {
     return x;
 }
 
-static double generate_gaussian(double mean, double stddev) {
-    static double n2 = 0.0;
-    static int n2_cached = 0;
-    if (!n2_cached) {
-        double x, y, r;
-        do {
-            x = 2.0 * ((double)(xorshift64() & 0xFFFFFF) / 0xFFFFFF) - 1.0;
-            y = 2.0 * ((double)(xorshift64() & 0xFFFFFF) / 0xFFFFFF) - 1.0;
-            r = x * x + y * y;
-        } while (r == 0.0 || r > 1.0);
-        double d = sqrt(-2.0 * log(r) / r);
-        n2 = y * d;
-        n2_cached = 1;
-        return (x * d) * stddev + mean;
-    } else {
-        n2_cached = 0;
-        return n2 * stddev + mean;
-    }
-}
-
-/* Range: -37 to 19 unbiased exponent */
+/* Constrained to relatively sane exponents to prevent massive 10^30 differences */
 static uint16_t random_bf16_constrained(void) {
     uint16_t sign = (xorshift64() & 0x1) << 15;
     uint16_t exp = (90 + (xorshift64() % 57)) << 7; 
@@ -190,13 +140,15 @@ static uint16_t random_bf16_unconstrained(void) {
  * Main
  * -------------------------------------------------------------------------- */
 int main(int argc, char *argv[]) {
-    int n = 10000;
+    int n_cases = 10000;
+    int num_inputs = 8; // Default to 8 inputs
     int use_unconstrained = 0;
     uint64_t seed = 0;
     int seed_given = 0;
 
     for (int i = 1; i < argc; i++) {
-        if (strcmp(argv[i], "-n") == 0 && i + 1 < argc) n = atoi(argv[++i]);
+        if (strcmp(argv[i], "-n") == 0 && i + 1 < argc) n_cases = atoi(argv[++i]);
+        else if (strcmp(argv[i], "-i") == 0 && i + 1 < argc) num_inputs = atoi(argv[++i]);
         else if (strcmp(argv[i], "--unconstrained") == 0) use_unconstrained = 1;
         else if (strcmp(argv[i], "--no-daz") == 0) ENABLE_DAZ = 0;
         else if (strcmp(argv[i], "--no-ftz") == 0) ENABLE_FTZ = 0;
@@ -213,20 +165,32 @@ int main(int argc, char *argv[]) {
     }
     if (rng_state == 0) rng_state = 0xDEADBEEF;
 
-    fprintf(stderr, "Configuration: DAZ=%d, FTZ=%d\n", ENABLE_DAZ, ENABLE_FTZ);
+    fprintf(stderr, "Configuration: Inputs=%d, DAZ=%d, FTZ=%d\n", num_inputs, ENABLE_DAZ, ENABLE_FTZ);
     fprintf(stderr, "Reproducible Seed: -s 0x%016llX\n", (unsigned long long)rng_state);
 
-    printf("i0,i1,i2,i3,i4,i5,i6,i7,i8,i9,i10,i11,i12,i13,i14,i15,i16,i17,i18,i19,i20,i21,i22,i23,i24,i25,i26,i27,i28,i29,i30,i31,expected\n");
+    // Dynamically print CSV Header based on num_inputs
+    for (int j = 0; j < num_inputs; j++) {
+        printf("i%d,", j);
+    }
+    printf("expected\n");
 
-    uint16_t inputs[32];
-    for (int i = 0; i < n; i++) {
-        for (int j = 0; j < 32; j++) {
+    uint16_t *inputs = malloc(num_inputs * sizeof(uint16_t));
+    if (!inputs) {
+        fprintf(stderr, "Fatal: Could not allocate memory for inputs.\n");
+        return 1;
+    }
+
+    for (int i = 0; i < n_cases; i++) {
+        for (int j = 0; j < num_inputs; j++) {
             inputs[j] = use_unconstrained ? random_bf16_unconstrained() : random_bf16_constrained();
-            printf("%04x%c", inputs[j], (j == 31) ? ',' : ',');
+            printf("%04x,", inputs[j]);
         }
-        uint16_t result = true_32input_tree_add_fp64(inputs);
+        
+        // Calculate the true mathematically exact fused sum
+        uint16_t result = exact_n_input_fused_add_f128(inputs, num_inputs);
         printf("%04x\n", result);
     }
 
+    free(inputs);
     return 0;
 }

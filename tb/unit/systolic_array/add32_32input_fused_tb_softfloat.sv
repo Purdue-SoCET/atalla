@@ -7,12 +7,13 @@ RUN: verilator -Irtl/include/systolic_array \
   --binary -j 0 -Wall -Wno-fatal --timing --trace \
   --top-module add32_32input_fused_tb_softfloat \
   tb/unit/systolic_array/add32_32input_fused_tb_softfloat.sv \
-  rtl/modules/systolic_array/sysarr_32_input_adder.sv \
+  rtl/modules/systolic_array/sysarr_32_adder/sysarr_32_input_adder.sv \
   rtl/modules/systolic_array/reducer.sv \
-  rtl/modules/systolic_array/sysarr_32_input_fp_aligner.sv \
-  rtl/modules/systolic_array/V0_0_S1_cfg_00.sv
+  rtl/modules/systolic_array/sysarr_32_adder/sysarr_32_input_fp_aligner.sv \
+  rtl/modules/systolic_array/sysarr_32_adder/V0_0_S1_cfg_00.sv
 
 */
+
 
 module add32_32input_fused_tb_softfloat;
 
@@ -228,7 +229,7 @@ module add32_32input_fused_tb_softfloat;
                     
                     if (fail_fd != 0 && ulp > 1) begin
                         for (int k=0; k<32; k++) $fwrite(fail_fd, "%h,", check_entry.inputs[k]);
-                        $fwrite(fail_fd, "%h,%h,%0d\n", tb_result, check_entry.expected, ulp);
+                        $fwrite(fail_fd, "%h,%h,%0d\n", check_entry.expected, tb_result, ulp);
 
                         // Write the exponent of result vs expected for deeper diagnostics
                         $fwrite(fail_fd, "Exponent - Got: %h, Expected: %h\n", tb_result[14:7], check_entry.expected[14:7]);

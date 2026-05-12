@@ -14,7 +14,7 @@ module add32_fp32accum_bf16_tb_softfloat;
     localparam LATENCY = 14; // Adjusted for pipeline depth
     localparam GRS = 1;
     localparam PRECISION_BITS = 3;
-    localparam MANTISSA_SIZE = 26;
+    localparam MANTISSA_SIZE = 23;
 
     logic tb_clk = 0;
     logic tb_nrst;
