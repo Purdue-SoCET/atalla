@@ -10,7 +10,7 @@ RUN: verilator -Irtl/include/systolic_array \
   rtl/modules/systolic_array/sysarr_32_adder/sysarr_32_input_adder.sv \
   rtl/modules/systolic_array/reducer.sv \
   rtl/modules/systolic_array/sysarr_32_adder/sysarr_32_input_fp_aligner.sv \
-  rtl/modules/systolic_array/sysarr_32_adder/V0_0_S1_cfg_00.sv
+  rtl/modules/systolic_array/sysarr_32_adder/add32_tree_2_2_2_2_2_pipe_0000_lat1_var0_0.sv
 
 */
 

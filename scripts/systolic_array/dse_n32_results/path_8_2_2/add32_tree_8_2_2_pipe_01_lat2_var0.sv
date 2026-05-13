@@ -1,5 +1,5 @@
 `timescale 1ns/1ps
-module V0_0_S1_cfg_00 #(parameter int WIDTH = 32) (
+module add32_tree_8_2_2_pipe_01_lat2_var0 #(parameter int WIDTH = 32) (
     input logic clk, nRST,
     input logic [WIDTH-1:0] in [0:31],
     output logic [(WIDTH + 5)-1:0] out_sum
@@ -39,8 +39,16 @@ module V0_0_S1_cfg_00 #(parameter int WIDTH = 32) (
     assign s1_g1_c = s0_g2_r + s0_g3_r;
     logic [EXT_WIDTH-1:0] s1_g0_r;
     logic [EXT_WIDTH-1:0] s1_g1_r;
-    assign s1_g0_r = s1_g0_c;
-    assign s1_g1_r = s1_g1_c;
+    always_ff @(posedge clk or negedge nRST) begin
+        if (!nRST) begin
+            s1_g0_r <= '0;
+            s1_g1_r <= '0;
+        end else begin
+            s1_g0_r <= s1_g0_c;
+            s1_g1_r <= s1_g1_c;
+        end
+    end
+
 
     // --- Stage 2: 2-way Reduction ---
     logic [EXT_WIDTH-1:0] s2_g0_c;

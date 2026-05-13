@@ -13,7 +13,7 @@ from itertools import product
 # Directory structure:
 # dse_n[inputs]_results/
 #   path_[radix_path]/
-#     V[var]_S[stages]_cfg_[pipeline_config].sv
+#     add[N]_tree_[path]_pipe_[pipeline_config]_lat[latency]_var[variance].sv
 
 
 def find_normalized_paths(current_n, allowed_radices, current_path, all_paths):
@@ -166,13 +166,16 @@ def main():
             adders, regs, var, depths = calculate_metrics(args.n, path, combo)
             cfg_str = "".join(['1' if x else '0' for x in combo])
             safe_var = str(var).replace('.', '_')
-            fname = f"V{safe_var}_S{len(depths)}_cfg_{cfg_str}"
+            latency = len(depths)
+            
+            # --- NEW NAMING CONVENTION ---
+            fname = f"add{args.n}_tree_{path_str}_pipe_{cfg_str}_lat{latency}_var{safe_var}"
             
             generate_sv(args.n, path, combo, path_dir, fname)
             
             summary_data.append({
                 "Path": path_str, "Config": cfg_str, "Variance": var,
-                "Latency_Cycles": len(depths), "Logic_Depths": str(depths),
+                "Latency_Cycles": latency, "Logic_Depths": str(depths),
                 "Total_Adders": adders, "Total_Reg_Signals": regs,
                 "Filename": f"path_{path_str}/{fname}.sv"
             })

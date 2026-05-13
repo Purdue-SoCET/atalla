@@ -85,7 +85,7 @@ module sysarr_32_input_adder #(
     logic [SUM_WIDTH-1:0] out_sum, mag_sum; 
     logic res_sign; 
 
-    V0_0_S1_cfg_00 #(
+    add32_tree_2_2_2_2_2_pipe_0000_lat1_var0_0 #(
         .WIDTH(NEW_MANT_WIDTH)
     ) adder (
         .clk(clk),

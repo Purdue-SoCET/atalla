@@ -112,9 +112,8 @@ for WRAPPER_SUBDIR in "$WRAPPER_DIR"/sysarr_${NUM_INPUTS}_TOP_*; do
     (
         WRAPPER_LATENCY=$(grep "TOTAL PIPELINE LATENCY:" "$WRAPPER_SV" | grep -oEi "[0-9]+")
         ALIGNER_MOD=$(grep -oEi "sysarr_${NUM_INPUTS}_aligner_tree_[01]+_reg_[01]" "$WRAPPER_SV" | head -n 1)
-        ADDER_MOD=$(grep -oEi "V[0-9_]+S[0-9]+_cfg_[01]+" "$WRAPPER_SV" | head -n 1)
+        ADDER_MOD=$(grep -oEi "add${NUM_INPUTS}_tree_[0-9_]+_pipe_[01]+_lat[0-9]+_var[0-9_]+" "$WRAPPER_SV" | head -n 1)        
         TOTAL_TB_WAIT=$(( WRAPPER_LATENCY + RESET_DELAY ))
-
         ALIGNER_SV="$WRAPPER_SUBDIR/${ALIGNER_MOD}.sv"
         ADDER_SV="$WRAPPER_SUBDIR/${ADDER_MOD}.sv"
 
