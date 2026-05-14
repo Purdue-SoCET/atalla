@@ -1,4 +1,22 @@
 #!/usr/bin/env python3
+
+# Generates self-contained top level wrapper modules for design exploration of a n-input fused adder
+
+# Usage:   
+#   1) To generate a single wrapper for a specific adder tree configuration:
+#       python master_wrapper_gen.py -n 16 --adder-path 4_4_2 --adder-cfg 10 --tree-pipe 101 --align-pipe 1
+#   2) To generate wrappers for ALL DSE configurations with a variety of aligner pipeline options:
+#       python master_wrapper_gen.py -n 16 --wrap-all
+
+# Options: 
+#   -n: Number of inputs to the adder
+#   --radices: Allowed radix shapes for the DSE (default: 2,4,8,15)
+#   --tree-pipe: Aligner Max Tree pipeline config (e.g. 101)
+#   --align-pipe: Aligner output register (1=yes, 0=no)
+#   --adder-path: Specific reduction path to wrap (e.g., 4_4_2)
+#   --adder-cfg: Pipeline config for the adder path (e.g., 10)
+
+
 import argparse
 import subprocess
 import sys
@@ -83,12 +101,56 @@ def generate_top_wrapper(n, adder_module_name, adder_src_path, aligner_src_path,
         f"    localparam SYNC_EXP = {SYNC_EXP}; // Delay for max_exp (Adder + LZD)",
         "",
         "    // =================================================================================",
-        "    // STAGE 1: Exception Detection & DAZ (Combinational)",
+        "    // 2. STRICT TOP-DOWN LOGIC DECLARATIONS",
         "    // =================================================================================",
+        "    // Stage 1",
         "    logic c_is_nan, c_any_inf_p, c_any_inf_n, c_spec_case;",
         "    logic [EXPONENT_SIZE + MANTISSA_SIZE:0] c_spec_res;",
         f"    logic [EXPONENT_SIZE + MANTISSA_SIZE:0] in_daz [0:{n-1}];",
         "",
+        "    // Stage A & B",
+        "    logic [EXPONENT_SIZE-1:0] w_max_exp;",
+        "    logic [1:0] w_overall_sticky;",
+        f"    logic w_signs [0:{n-1}];",
+        f"    logic [NEW_MANT_WIDTH-1:0] w_aligned_mants [0:{n-1}];",
+        "    logic [SUM_WIDTH-1:0] w_tree_sum_raw;",
+        "",
+        "    // Pipeline Delays",
+        "    logic [SYNC_EXC-1:0] spec_case_pipe;",
+        "    logic [EXPONENT_SIZE + MANTISSA_SIZE:0] spec_res_pipe [0:SYNC_EXC-1];",
+        "    logic [EXPONENT_SIZE-1:0] max_exp_pipe [0:SYNC_EXP-1];",
+        "    logic [1:0] sticky_pipe [0:SYNC_EXP-1];",
+        "    logic final_sign_pipe;",
+        "    logic [1:0] aligned_sticky_for_mag;",
+        "",
+        "    // Stage 3",
+        "    logic [SUM_WIDTH-1:0] abs_sum;",
+        "    logic final_sign;",
+        "",
+        "    // Stage 4",
+        "    logic [$clog2(SUM_WIDTH)-1:0] c_lzd_count;",
+        "    logic [SUM_WIDTH-1:0] c_normalized_sum;",
+        "    logic [$clog2(SUM_WIDTH)-1:0] lzd_count;",
+        "    logic [SUM_WIDTH-1:0] normalized_sum;",
+        "    logic [SUM_WIDTH-1:0] lzd_scan;",
+        "",
+        "    // Stage 5",
+        "    logic         guard_bit;",
+        "    logic         round_bit;",
+        "    logic         sticky_bit;",
+        "    logic         l_bit;",
+        "    logic         round_up;",
+        "    logic [MANTISSA_SIZE:0] rounded_mant_int;",
+        "    logic [MANTISSA_SIZE-1:0] final_mant;",
+        "    logic signed [EXPONENT_SIZE+1:0] final_exp_calc;",
+        "    logic [EXPONENT_SIZE + MANTISSA_SIZE:0] final_out_data;",
+        "    logic signed [$clog2(SUM_WIDTH)+1:0] adjusted_lead_zeros;",
+        "    logic [SUM_WIDTH-1:0] temp_norm_val;",
+        "",
+        "    // =================================================================================",
+        "    // 3. LOGIC IMPLEMENTATION",
+        "    // =================================================================================",
+        "    // STAGE 1: Exception Detection & DAZ (Combinational)",
         "    always_comb begin",
         "        c_is_nan = 0; c_any_inf_p = 0; c_any_inf_n = 0;",
         f"        for (int i=0; i<{n}; i++) begin",
@@ -106,14 +168,7 @@ def generate_top_wrapper(n, adder_module_name, adder_src_path, aligner_src_path,
         "        else c_spec_res = {1'b1, {EXPONENT_SIZE{1'b1}}, {MANTISSA_SIZE{1'b0}}}; // -Inf",
         "    end",
         "",
-        "    // =================================================================================",
         "    // STAGE A & B: Aligner and Adder Tree",
-        "    // =================================================================================",
-        "    logic [EXPONENT_SIZE-1:0] w_max_exp;",
-        "    logic [1:0] w_overall_sticky;",
-        f"    logic w_signs [0:{n-1}];",
-        f"    logic [NEW_MANT_WIDTH-1:0] w_aligned_mants [0:{n-1}];",
-        "",
         f"    {aligner_module_name} #(",
         "        .EXPONENT_SIZE(EXPONENT_SIZE),",
         "        .MANTISSA_SIZE(MANTISSA_SIZE),",
@@ -123,36 +178,20 @@ def generate_top_wrapper(n, adder_module_name, adder_src_path, aligner_src_path,
         "        .out_max_exp(w_max_exp), .out_sticky(w_overall_sticky), .sign_out(w_signs), .aligned_mant_out(w_aligned_mants)",
         "    );",
         "",
-        "    logic [SUM_WIDTH-1:0] w_tree_sum_raw;",
         f"    {adder_module_name} #(",
         "        .WIDTH(NEW_MANT_WIDTH)",
         "    ) adder_tree_inst (",
         "        .clk(clk), .nRST(nRST), .in(w_aligned_mants), .out_sum(w_tree_sum_raw)",
         "    );",
-        "",
-        "    // =================================================================================",
-        "    // PIPELINE DELAY REGISTERS (Dynamic Syncing)",
-        "    // =================================================================================",
-        "    logic [SYNC_EXC-1:0] spec_case_pipe;",
-        "    logic [EXPONENT_SIZE + MANTISSA_SIZE:0] spec_res_pipe [0:SYNC_EXC-1];",
-        "    logic [EXPONENT_SIZE-1:0] max_exp_pipe [0:SYNC_EXP-1];",
-        "    logic [1:0] sticky_pipe [0:SYNC_EXP-1];",
-        "    logic final_sign_pipe;",
-        ""]
+        ""
+    ]
     
     if adder_lat == 0:
-        sv.append("    logic [1:0] aligned_sticky_for_mag;")
         sv.append("    assign aligned_sticky_for_mag = w_overall_sticky;")
     else:
-        sv.append("    logic [1:0] aligned_sticky_for_mag;")
         sv.append(f"    assign aligned_sticky_for_mag = sticky_pipe[{adder_lat - 1}];")
 
-    sv.append("    // =================================================================================")
     sv.append("    // STAGE 3: Magnitude Extraction")
-    sv.append("    // =================================================================================")
-    sv.append("    logic [SUM_WIDTH-1:0] abs_sum;")
-    sv.append("    logic final_sign;")
-    sv.append("")
     sv.append("    always_ff @(posedge clk) begin")
     sv.append("        if (w_tree_sum_raw[SUM_WIDTH-1]) begin")
     sv.append("            final_sign <= 1'b1;")
@@ -179,15 +218,7 @@ def generate_top_wrapper(n, adder_module_name, adder_src_path, aligner_src_path,
     sv.append("        end")
     sv.append("    end")
     sv.append("")
-    sv.append("    // =================================================================================")
     sv.append("    // STAGE 4: LZD & Normalization (Pipelined)")
-    sv.append("    // =================================================================================")
-    sv.append("    logic [$clog2(SUM_WIDTH)-1:0] c_lzd_count;")
-    sv.append("    logic [SUM_WIDTH-1:0] c_normalized_sum;")
-    sv.append("    logic [$clog2(SUM_WIDTH)-1:0] lzd_count;")
-    sv.append("    logic [SUM_WIDTH-1:0] normalized_sum;")
-    sv.append("    logic [SUM_WIDTH-1:0] lzd_scan;")
-    sv.append("")
     sv.append("    always_comb begin")
     sv.append("        if (~|abs_sum) begin")
     sv.append("            lzd_scan = 0;")
@@ -210,6 +241,7 @@ def generate_top_wrapper(n, adder_module_name, adder_src_path, aligner_src_path,
     sv.append("        normalized_sum <= c_normalized_sum;")
     sv.append("    end")
     sv.append("")
+    sv.append("    // PIPELINE DELAY REGISTERS (Dynamic Syncing)")
     sv.append("    always_ff @(posedge clk) begin")
     sv.append("        spec_case_pipe <= {spec_case_pipe[SYNC_EXC-2:0], c_spec_case};")
     sv.append("        spec_res_pipe[0] <= c_spec_res;")
@@ -225,22 +257,7 @@ def generate_top_wrapper(n, adder_module_name, adder_src_path, aligner_src_path,
     sv.append("        final_sign_pipe <= final_sign;")
     sv.append("    end")
     sv.append("")
-    sv.append("    // =================================================================================")
     sv.append("    // STAGE 5: Exponent Calculation & Output Packing")
-    sv.append("    // =================================================================================")
-    sv.append("    logic         guard_bit;")
-    sv.append("    logic         round_bit;")
-    sv.append("    logic         sticky_bit;")
-    sv.append("    logic         l_bit;")
-    sv.append("    logic         round_up;")
-    sv.append("    logic [MANTISSA_SIZE:0] rounded_mant_int;")
-    sv.append("    logic [MANTISSA_SIZE-1:0] final_mant;")
-    sv.append("    logic signed [EXPONENT_SIZE+1:0] final_exp_calc;")
-    sv.append("    logic [EXPONENT_SIZE + MANTISSA_SIZE:0] final_out_data;")
-    sv.append("")
-    sv.append("    logic signed [$clog2(SUM_WIDTH)+1:0] adjusted_lead_zeros;")
-    sv.append("    logic [SUM_WIDTH-1:0] temp_norm_val;")
-    sv.append("")
     sv.append("    always_comb begin")
     sv.append("        temp_norm_val = normalized_sum;")
     sv.append("")
@@ -250,11 +267,9 @@ def generate_top_wrapper(n, adder_module_name, adder_src_path, aligner_src_path,
     sv.append("            l_bit     = temp_norm_val[SUM_WIDTH-1-MANTISSA_SIZE];")
     sv.append("            ")
     sv.append("            if (lzd_count >= PRECISION_BITS) begin")
-    sv.append("                // ERASES the injected sticky bit once it reaches the rounding zone")
     sv.append("                temp_norm_val[lzd_count] = 1'b0;")
     sv.append("                sticky_bit = |temp_norm_val[SUM_WIDTH-4-MANTISSA_SIZE : 0];")
     sv.append("            end else begin")
-    sv.append("                // FIXED: Implicitly truncates the pipe to [0] to match golden Verilog rule!")
     sv.append("                sticky_bit = (|temp_norm_val[SUM_WIDTH-4-MANTISSA_SIZE : 0]) | sticky_pipe[SYNC_EXP-1][0];")
     sv.append("            end")
     sv.append("            ")

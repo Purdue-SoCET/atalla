@@ -1,8 +1,12 @@
 #!/bin/bash
 
-# Description: UNIFIED PARALLELIZED schmoo testing for dynamically generated DSE Wrappers.
-# Automatically generates parameterized datasets, dynamically constructs a perfectly sized 
-# SystemVerilog testbench, and runs Verilator in parallel.
+# Tests the performance of the auto-generated 32 input fused adders for verification of the design
+# Compare against sysarr_32_adder which is manually made 
+
+# Usage:
+# 1) Generate the fused adders with gen_sysarr_fused_adder.py (make sure to set NUM_INPUTS=32 and UNCONSTRAINED if you want unconstrained cases)
+# 2) Run this script: ./sysarr_adder_schmoo_master.sh
+# 3) Analyze results with analyze_sysarr_adder.py
 
 # --- Default Configuration ---
 NUM_INPUTS=32

@@ -1,3 +1,5 @@
+// Generates all permuations of a 32 input test to verify commutativity and associativity
+
 #include <stdio.h>
 #include <stdint.h>
 #include <stdbool.h>

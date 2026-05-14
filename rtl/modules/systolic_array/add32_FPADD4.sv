@@ -1,3 +1,5 @@
+// 32-input FP adder using 4-input FP adder tree structure 4->4->2 reduction stages
+
 `include "systolic_array_4_input_adder_if.vh"
 
 module add32_FPADD4 #(

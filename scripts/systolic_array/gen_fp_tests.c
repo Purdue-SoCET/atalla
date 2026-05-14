@@ -11,6 +11,18 @@
 // Utilizes Berkeley SoftFloat 3 - float128_t (Memory API) for perfect, 0-loss sums.
 // =================================================================================
 
+// Usage: 
+// 1) Compile: gcc -O3 -march=native -flto gen_drift_test.c softfloat.a -o gen_drift_test
+// 2) Run: ./gen_drift_test > drift_test_cases.csv
+//    Optional args:
+//    -n <num_cases> : Number of random test cases to generate (default: 10k)
+//    -i <num_inputs> : Number of inputs to fuse (default: 8, max: 32)
+//    --unconstrained : Generate fully random bit patterns instead of constrained floats
+//    --no-daz : Disable Denormals-Are-Zero (DAZ) behavior
+//    --no-ftz : Disable Flush-To-Zero (FTZ) behavior
+//    -s <seed> or --seed <seed> : Set a specific seed for reproducibility (hex or decimal)
+
+
 /* Global Configuration Toggles */
 static int ENABLE_DAZ = 1;  // Flush subnormal inputs to +/-0
 static int ENABLE_FTZ = 1;  // Flush subnormal outputs to +/-0

@@ -1,5 +1,16 @@
 #!/bin/bash
 
+# Comparison script for 4-input adder tree vs 32-input fused adder across a large dataset of random test cases, for 
+# different number of precision bits (fused) / accumulation width (tree)
+
+# Usage: 
+# 1) Generate the test cases with gen_drift_test.c (make sure to set -n 10000000 and --unconstrained if you want unconstrained cases)
+# 2) Run this script: ./sysarr_adder_schmoo_master.sh [--unconstrained] [-j MAX_JOBS] [-m MODE] [NUM_SETS]
+#    - --unconstrained: If set, generates unconstrained random FP values (including NaNs, Infs, denormals). If not set, generates only "normal" FP values.
+#    - -j MAX_JOBS: Maximum number of concurrent Verilator jobs to run in parallel (default: 3)
+#    - -m MODE: Which architecture(s) to test: "tree" for 4-input adder tree only, "fused" for 32-input fused adder only, "both" for both architectures (default: "both")
+#    - NUM_SETS: Optional positional argument to specify how many times to repeat the entire process with different random datasets (default: 1). Each set generates a new dataset and runs all tests, allowing for statistical analysis across multiple random seeds.      
+
 # Description: UNIFIED PARALLELIZED schmoo testing for Systolic Array FP Adders.
 # Supports testing the 4-Input Tree Adder, the 32-Input Fused Adder, or BOTH simultaneously 
 # on the exact same dataset for 1:1 architectural comparisons. Includes comprehensive timing diagnostics.

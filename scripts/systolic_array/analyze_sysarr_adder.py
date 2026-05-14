@@ -4,10 +4,10 @@ import glob
 import matplotlib.pyplot as plt
 from collections import defaultdict
 
-# Run: python schmoo_data_aggregate.py <path_to_directory>
+# Run: python analysze_sysarr_adder.py <path_to_directory>
 
 if len(sys.argv) < 2:
-    print("Usage: python schmoo_data_aggregate.py <path_to_directory>")
+    print("Usage: python analyze_sysarr_adder.py <path_to_directory>")
     sys.exit(1)
 
 target_dir = sys.argv[1]
