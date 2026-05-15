@@ -9,11 +9,12 @@
 # 3) Analyze results with analyze_sysarr_adder.py
 
 # --- Default Configuration ---
-NUM_INPUTS=32
+NUM_INPUTS=4
 NUM_CASES=100000
 MAX_JOBS=4
 UNCONSTRAINED_FLAG=""
 MODE_TEXT="Constrained"
+PRECISION_BITS=15
 RESET_DELAY=5 # Testbench #(PERIOD * 5) offset
 
 while [[ $# -gt 0 ]]; do
@@ -30,6 +31,10 @@ while [[ $# -gt 0 ]]; do
             UNCONSTRAINED_FLAG="--unconstrained"
             MODE_TEXT="Unconstrained"
             shift
+            ;;
+        -p|--precision)
+            PRECISION_BITS="$2"
+            shift 2
             ;;
         *)
             echo "Unknown argument: $1"
@@ -49,6 +54,7 @@ echo "Target Inputs: $NUM_INPUTS"
 echo "Test Cases:    $NUM_CASES ($MODE_TEXT)"
 echo "Concurrency:   $MAX_JOBS simultaneous jobs"
 echo "Target Dir:    $WRAPPER_DIR"
+echo "Precision:     $PRECISION_BITS bits"
 echo "======================================================="
 
 if [[ ! -d "$WRAPPER_DIR" ]]; then
@@ -65,18 +71,18 @@ echo ""
 echo "Phase 1: Compiling Generator & Producing $NUM_CASES Test Cases..."
 cd "$SCRIPTS_DIR" || exit 1
 
-if [[ ! -x "gen_drift_test" ]]; then
+if [[ ! -x "gen_fp_tests" ]]; then
     gcc -O2 -I ~/berkeley-softfloat-3/source/include \
         -I ~/berkeley-testfloat-3/build/Linux-x86_64-GCC \
-        gen_drift_test.c \
+        gen_fp_tests.c \
         ~/berkeley-softfloat-3/build/Linux-x86_64-GCC/softfloat.a \
-        -lm -o gen_drift_test || { echo "Compile failed"; exit 1; }
+        -lm -o gen_fp_tests || { echo "Compile failed"; exit 1; }
 fi
 
 CSV_FILE="testfloat_cases_${NUM_INPUTS}_pure_bf16.csv"
 
-# Generating data. (Make sure gen_drift_test accepts -i for num inputs!)
-./gen_drift_test -n "$NUM_CASES" -i "$NUM_INPUTS" $UNCONSTRAINED_FLAG > "$CSV_FILE" 2> temp_stderr.log
+# Generating data. (Make sure gen_fp_tests accepts -i for num inputs!)
+./gen_fp_tests -n "$NUM_CASES" -i "$NUM_INPUTS" $UNCONSTRAINED_FLAG > "$CSV_FILE" 2> temp_stderr.log
 
 SEED=$(grep "Reproducible Seed:" temp_stderr.log | grep -oEi "0x[0-9a-f]+")
 [[ -z "$SEED" ]] && SEED="unknown_seed_$(date +%s)"
@@ -132,7 +138,7 @@ module add32_32input_fused_tb_softfloat;
     localparam PERIOD = 2;
     localparam LATENCY = $TOTAL_TB_WAIT;
     localparam GRS = 1;
-    localparam PRECISION_BITS = 3;
+    localparam PRECISION_BITS = $PRECISION_BITS;
     
     localparam MANTISSA_SIZE = 23;
     localparam EXPONENT_SIZE = 8;

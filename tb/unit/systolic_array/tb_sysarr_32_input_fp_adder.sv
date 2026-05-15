@@ -6,13 +6,13 @@
 RUN: verilator -Irtl/include/systolic_array \
   --binary -j 0 -Wall -Wno-fatal --timing --trace \
   --top-module add32_32input_fused_tb_softfloat \
-  tb/unit/systolic_array/add32_32input_fused_tb_softfloat.sv \
-  rtl/modules/systolic_array/sysarr_32_adder/sysarr_32_input_adder.sv \
+  tb/unit/systolic_array/tb_sysarr_32_input_fp_adder.sv \
+  rtl/modules/systolic_array/sysarr_32_input_fp_adder/sysarr_32_input_adder.sv \
   rtl/modules/systolic_array/reducer.sv \
-  rtl/modules/systolic_array/sysarr_32_adder/sysarr_32_input_fp_aligner.sv \
-  rtl/modules/systolic_array/sysarr_32_adder/add32_tree_2_2_2_2_2_pipe_0000_lat1_var0_0.sv
+  rtl/modules/systolic_array/sysarr_32_input_fp_adder/sysarr_32_input_fp_aligner.sv \
+  rtl/modules/systolic_array/sysarr_32_input_fp_adder/add32_tree_2_2_2_2_2_pipe_0000_lat1_var0_0.sv
 
-*/
+*/  
 
 
 module add32_32input_fused_tb_softfloat;
@@ -152,11 +152,10 @@ module add32_32input_fused_tb_softfloat;
         tb_nrst = 1'b1;
 
         fd = $fopen("scripts/systolic_array/testfloat_cases_32_pure_bf16.csv", "r");
-        fail_fd = $fopen("tree_failures.csv", "w");
+        fail_fd = $fopen("tree_failures_fused32.csv", "w");
         if (fd == 0) begin $display("FATAL: CSV not found"); $finish; end
         
         void'($fgets(header, fd));
-
         $display("Starting Continuous Simulation with Full Diagnostics...");
 
         while (!$feof(fd)) begin

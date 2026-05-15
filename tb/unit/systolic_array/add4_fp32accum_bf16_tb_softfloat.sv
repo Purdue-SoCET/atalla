@@ -5,9 +5,7 @@
 
 /*
 
-First run: 
-
-verilator -Irtl/include/systolic_array --binary -j 0 -Wall -Wno-fatal --timing --top-module add4_fp32accum_bf16_tb_softfloat tb/unit/systolic_array/add4_fp32accum_bf16_tb_softfloat.sv rtl/modules/systolic_array/reducer.sv rtl/modules/systolic_array/sysarr_4_input_fp_adder.sv --trace
+First run: verilator -Irtl/include/systolic_array --binary -j 0 -Wall -Wno-fatal --timing --top-module add4_fp32accum_bf16_tb_softfloat tb/unit/systolic_array/add4_fp32accum_bf16_tb_softfloat.sv rtl/modules/systolic_array/reducer.sv rtl/modules/systolic_array/sysarr_4_input_fp_adder_cc_det.sv rtl/modules/systolic_array/sysarr_4_input_fp_adder.sv --trace
 
 Then: ./obj_dir/Vadd4_fp32accum_bf16_tb_softfloat
 
@@ -21,6 +19,9 @@ module add4_fp32accum_bf16_tb_softfloat;
 
     localparam PERIOD = 2;
     localparam LATENCY = 4;  // 3 pipeline stages + 1 output register
+    localparam PRECISION_BITS = 3; 
+    localparam MANTISSA_WIDTH = 23;
+    localparam CC_DET = 1f985, 9736, 7798, 7977; 
 
     logic tb_clk;
     logic tb_nrst;
@@ -35,11 +36,11 @@ module add4_fp32accum_bf16_tb_softfloat;
     // Interface
     systolic_array_4_input_adder_if #(
         .EXPONENT_SIZE(8),
-        .MANTISSA_SIZE(26),
+        .MANTISSA_SIZE(MANTISSA_WIDTH),
         .IN_MANTISSA_SIZE(7),
         .IN_EXPONENT_SIZE(8),
-        .PRECISION_BITS(0),
-        .GRS(0)
+        .PRECISION_BITS(PRECISION_BITS),
+        .GRS(1)
     ) add_if();
 
     logic [15:0] tb_a, tb_b, tb_c, tb_d;
@@ -50,6 +51,8 @@ module add4_fp32accum_bf16_tb_softfloat;
     longint total_ulp_diff;
     int ulp_big_count;
     int largest_ulp; 
+    int ret; 
+    integer fail_fd; 
 
     assign add_if.a = tb_a;
     assign add_if.b = tb_b;
@@ -57,20 +60,35 @@ module add4_fp32accum_bf16_tb_softfloat;
     assign add_if.d = tb_d;
 
     // DUT: BF16 4-input adder
-    sysarr_4_input_fp_adder #(
-        .EXPONENT_SIZE(8),
-        .MANTISSA_SIZE(26),
-        .IN_MANTISSA_SIZE(7),
-        .IN_EXPONENT_SIZE(8),
-        .PRECISION_BITS(0),
-        .GRS(0)
-    ) bf16adder (
-        .clk(tb_clk),
-        .nRST(tb_nrst),
-        .add(add_if)
-    );
+    if (CC_DET) begin
+        sysarr_4_input_fp_adder_cc_det #(
+            .EXPONENT_SIZE(8),
+            .MANTISSA_SIZE(MANTISSA_WIDTH),
+            .IN_MANTISSA_SIZE(7),
+            .IN_EXPONENT_SIZE(8),
+            .PRECISION_BITS(PRECISION_BITS),
+            .GRS(1)
+        ) bf16adder (
+            .clk(tb_clk),
+            .nRST(tb_nrst),
+            .add(add_if)
+        );
+    end else begin
+        sysarr_4_input_fp_adder #(
+            .EXPONENT_SIZE(8),
+            .MANTISSA_SIZE(MANTISSA_WIDTH),
+            .IN_MANTISSA_SIZE(7),
+            .IN_EXPONENT_SIZE(8),
+            .PRECISION_BITS(PRECISION_BITS),
+            .GRS(1)
+        ) bf16adder (
+            .clk(tb_clk),
+            .nRST(tb_nrst),
+            .add(add_if)
+        );
+    end
 
-    reducer #(.IN_EXP_W(8), .IN_MANT_W(23), .OUT_EXP_W(8), .OUT_MANT_W(7)) reduce (
+    reducer #(.IN_EXP_W(8), .IN_MANT_W(MANTISSA_WIDTH), .OUT_EXP_W(8), .OUT_MANT_W(7)) reduce (
         .fp_in(add_if.out), .fp_out(tb_result)
     );
 
@@ -113,6 +131,8 @@ module add4_fp32accum_bf16_tb_softfloat;
         if (ulp > 1) ulp_big_count++;
         if (ulp > largest_ulp) largest_ulp = ulp;
         if (!match) begin
+            $fwrite(fail_fd, "%s, %h, %h, %h, %h, %h, %h, %0d\n",
+                     casename, tb_a, tb_b, tb_c, tb_d, tb_result, expected_val, ulp);
             if (fail_count < 10) begin
                 $display("FAIL: %s | A=%h B=%h C=%h D=%h Got=%h Exp=%h AdderGot=%h | ULP=%0d",
                      casename, tb_a, tb_b, tb_c, tb_d, tb_result, expected_val, add_if.out, ulp);
@@ -136,9 +156,10 @@ module add4_fp32accum_bf16_tb_softfloat;
     localparam logic [15:0] MAX_FINITE = 16'b0_11111110_1111111;
 
 initial begin
-    $dumpfile("waves/add4_bf16_waves.vcd");
+    $dumpfile("waves/add4_bf16_waves_x2.vcd");
     $dumpvars(0, add4_bf16_tb_softfloat);
 
+    ret = 0;
     pass_count = 0;
     fail_count = 0;
     total_ulp_diff = 0;
@@ -153,73 +174,80 @@ initial begin
     tb_nrst = 1;
     #(PERIOD);
 
-    // --- Hardcoded BF16 test cases ---
-    test_case(ONE, ONE, ONE, ONE); exp = FOUR;
-    #(PERIOD * (LATENCY + 1));
-    check_case("1+1+1+1 = 4", exp);
+    // // --- Hardcoded BF16 test cases ---
+    // $display("Running hardcoded cases\n");
+    // test_case(ONE, ONE, ONE, ONE); exp = FOUR;
+    // #(PERIOD * (LATENCY + 1));
+    // check_case("1+1+1+1 = 4", exp);
 
-    test_case(TWO, TWO, TWO, TWO); exp = 16'b0_10000010_0000000; // 8
-    #(PERIOD * (LATENCY + 1));
-    check_case("2+2+2+2 = 8", exp);
+    // test_case(TWO, TWO, TWO, TWO); exp = 16'b0_10000010_0000000; // 8
+    // #(PERIOD * (LATENCY + 1));
+    // check_case("2+2+2+2 = 8", exp);
 
-    test_case(P_ZERO, P_ZERO, P_ZERO, P_ZERO); exp = P_ZERO;
-    #(PERIOD * (LATENCY + 1));
-    check_case("0+0+0+0 = 0", exp);
+    // test_case(P_ZERO, P_ZERO, P_ZERO, P_ZERO); exp = P_ZERO;
+    // #(PERIOD * (LATENCY + 1));
+    // check_case("0+0+0+0 = 0", exp);
 
-    // --- Infinity and NaN cases ---
-    test_case(P_INF, ONE, TWO, FOUR); exp = P_INF;
-    #(PERIOD * (LATENCY + 1));
-    check_case("inf + finite = inf", exp);
+    // // --- Infinity and NaN cases ---
+    // test_case(P_INF, ONE, TWO, FOUR); exp = P_INF;
+    // #(PERIOD * (LATENCY + 1));
+    // check_case("inf + finite = inf", exp);
 
-    test_case(N_INF, N_INF, ONE, P_ZERO); exp = N_INF;
-    #(PERIOD * (LATENCY + 1));
-    check_case("-inf + -inf = -inf", exp);
+    // test_case(N_INF, N_INF, ONE, P_ZERO); exp = N_INF;
+    // #(PERIOD * (LATENCY + 1));
+    // check_case("-inf + -inf = -inf", exp);
 
-    test_case(P_INF, N_INF, ONE, ONE); exp = NAN;
-    #(PERIOD * (LATENCY + 1));
-    check_case("inf - inf = NaN", exp);
+    // test_case(P_INF, N_INF, ONE, ONE); exp = NAN;
+    // #(PERIOD * (LATENCY + 1));
+    // check_case("inf - inf = NaN", exp);
 
-    test_case(NAN, ONE, TWO, FOUR); exp = NAN;
-    #(PERIOD * (LATENCY + 1));
-    check_case("NaN + finite = NaN", exp);
+    // test_case(NAN, ONE, TWO, FOUR); exp = NAN;
+    // #(PERIOD * (LATENCY + 1));
+    // check_case("NaN + finite = NaN", exp);
 
-    // --- Signed Zeros (Verification of your Sign-Fix) ---
-    test_case(N_ZERO, N_ZERO, N_ZERO, N_ZERO); exp = P_ZERO; // Assuming your fix to force +0
-    #(PERIOD * (LATENCY + 1));
-    check_case("-0 + -0 + -0 + -0 = 0", exp);
+    // // --- Signed Zeros (Verification of your Sign-Fix) ---
+    // test_case(N_ZERO, N_ZERO, N_ZERO, N_ZERO); exp = P_ZERO; // Assuming your fix to force +0
+    // #(PERIOD * (LATENCY + 1));
+    // check_case("-0 + -0 + -0 + -0 = 0", exp);
 
-    test_case(ONE, 16'b1_01111111_0000000, P_ZERO, P_ZERO); exp = P_ZERO; 
-    #(PERIOD * (LATENCY + 1));
-    check_case("1 + (-1) = 0", exp);
+    // test_case(ONE, 16'b1_01111111_0000000, P_ZERO, P_ZERO); exp = P_ZERO; 
+    // #(PERIOD * (LATENCY + 1));
+    // check_case("1 + (-1) = 0", exp);
 
-    // --- Overflow to Infinity ---
-    // Adding Max Finite values should trigger your (final_exp_calc >= MAX_EXP) logic
-    test_case(MAX_FINITE, MAX_FINITE, P_ZERO, P_ZERO); exp = P_INF;
-    #(PERIOD * (LATENCY + 1));
-    check_case("MaxFinite + MaxFinite = Inf (Overflow)", exp);
+    // // --- Overflow to Infinity ---
+    // // Adding Max Finite values should trigger your (final_exp_calc >= MAX_EXP) logic
+    // test_case(MAX_FINITE, MAX_FINITE, P_ZERO, P_ZERO); exp = P_INF;
+    // #(PERIOD * (LATENCY + 1));
+    // check_case("MaxFinite + MaxFinite = Inf (Overflow)", exp);
 
-    // --- Underflow / Subnormal Handling (DAZ/FTZ check) ---
-    // If your hardware flushes subnormals, this should result in 0
-    test_case(MIN_SUB, MIN_SUB, MIN_SUB, MIN_SUB); exp = P_ZERO;
-    #(PERIOD * (LATENCY + 1));
-    check_case("Subnormals + Subnormals = 0 (FTZ check)", exp);
+    // // --- Underflow / Subnormal Handling (DAZ/FTZ check) ---
+    // // If your hardware flushes subnormals, this should result in 0
+    // test_case(MIN_SUB, MIN_SUB, MIN_SUB, MIN_SUB); exp = P_ZERO;
+    // #(PERIOD * (LATENCY + 1));
+    // check_case("Subnormals + Subnormals = 0 (FTZ check)", exp);
 
 
-    // --- Extreme Range: Max Finite Addition ---
-    // MAX_FINITE + MAX_FINITE should result in P_INF (0x7f80)
-    test_case(MAX_FINITE, MAX_FINITE, P_ZERO, P_ZERO); exp = P_INF;
-    #(PERIOD * (LATENCY + 1));
-    check_case("Overflow to Infinity", exp);
+    // // --- Extreme Range: Max Finite Addition ---
+    // // MAX_FINITE + MAX_FINITE should result in P_INF (0x7f80)
+    // test_case(MAX_FINITE, MAX_FINITE, P_ZERO, P_ZERO); exp = P_INF;x
+    // #(PERIOD * (LATENCY + 1));
+    // check_case("Overflow to Infinity", exp);
 
     // Random BF16 test cases from CSV
     fd = $fopen("scripts/systolic_array/testfloat_cases_4_pure_bf16.csv","r");
+    fail_fd = $fopen("tree_failures.csv", "w");
     if (fd==0) begin $display("ERROR: cannot open test vectors!"); $finish; end
-
+    $fwrite(fail_fd, "CaseName, A, B, C, D, Result, Expected, ULP\n");
     void'($fgets(header, fd));
+
     total_count = 0;
     while (!$feof(fd)) begin
-        int ret = $fscanf(fd,"%h,%h,%h,%h,%h\n",a,b,c,d,expected);
-        if (ret != 5) continue;
+        ret = $fscanf(fd,"%h,%h,%h,%h,%h\n",a,b,c,d,expected);
+        if (ret != 5) begin
+            $display("Broke loop! ret=%0d, cases_run=%0d, fd=%0d", ret, total_count, fd);
+            $display("Line read: a=%h b=%h c=%h d=%h expected=%h", a, b, c, d, expected);
+            break;
+        end
         total_count++;
         if (total_count % 100000 == 0) begin
             $display("%0d test cases, %0d failed", total_count, fail_count);

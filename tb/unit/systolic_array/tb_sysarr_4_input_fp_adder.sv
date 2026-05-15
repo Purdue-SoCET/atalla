@@ -12,7 +12,7 @@
 // u can only use those commands if u clone soft float (shoot myles a dm if u want to compile new) 
 // also creates file called test_failures.csv w all failed cases (input, exp, got)
 
-// To run: verilator -Irtl/include/systolic_array  --binary -j 0 -Wall -Wno-fatal --timing --top-module add4_fp32accum_fp16_tb_softfloat tb/unit/systolic_array/add4_fp32accum_fp16_tb_softfloat.sv rtl/modules/systolic_array/reducer.sv  rtl/modules/systolic_array/sysarr_4_input_fp_adder.sv --trace
+// To run: verilator -Irtl/include/systolic_array  --binary -j 0 -Wall -Wno-fatal --timing --top-module add4_fp32accum_fp16_tb_softfloat tb/unit/systolic_array/tb_sysarr_4_input_fp_adder.sv rtl/modules/systolic_array/reducer.sv  rtl/modules/systolic_array/sysarr_4_input_fp_adder.sv --trace
 // ./obj_dir/Vadd4_fp32accum_fp16_tb_softfloat
 
 `include "systolic_array_4_input_adder_if.vh"

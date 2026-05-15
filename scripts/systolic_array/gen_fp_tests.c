@@ -12,8 +12,12 @@
 // =================================================================================
 
 // Usage: 
-// 1) Compile: gcc -O3 -march=native -flto gen_drift_test.c softfloat.a -o gen_drift_test
-// 2) Run: ./gen_drift_test > drift_test_cases.csv
+// 1) Compile:     
+// gcc -O2 -I ~/berkeley-softfloat-3/source/include \
+        -I ~/berkeley-testfloat-3/build/Linux-x86_64-GCC \
+        gen_fp_tests.c \
+        ~/berkeley-softfloat-3/build/Linux-x86_64-GCC/softfloat.a \
+        -o gen_fp_tests
 //    Optional args:
 //    -n <num_cases> : Number of random test cases to generate (default: 10k)
 //    -i <num_inputs> : Number of inputs to fuse (default: 8, max: 32)
@@ -82,44 +86,83 @@ static uint32_t apply_ftz32(uint32_t bits) {
  * A single, perfect rounding is applied at the very end.
  * Uses SoftFloat "M" (Memory) functions for 128-bit pointer arithmetic.
  * -------------------------------------------------------------------------- */
+#include <stdbool.h>
+/* Helper: Compare BF16 magnitude (absolute value) for qsort */
+int compare_bf16_mag(const void *a, const void *b) {
+    uint16_t ua = *(const uint16_t *)a;
+    uint16_t ub = *(const uint16_t *)b;
+    // Mask out the sign bit to compare absolute magnitudes
+    uint16_t mag_a = ua & 0x7FFF;
+    uint16_t mag_b = ub & 0x7FFF;
+    
+    if (mag_a > mag_b) return -1; // Descending order
+    if (mag_a < mag_b) return 1;
+    return 0;
+}
+
 static uint16_t exact_n_input_fused_add_f128(uint16_t *inputs, int n) {
-    bfloat16_t in_bf;
+    // 1. Create a local copy and sort by magnitude descending
+    // This ensures dominant pairs cancel before residues are swallowed.
+    uint16_t sorted_inputs[32]; // Max inputs supported by your gen_fp_tests.c
+    for (int i = 0; i < n; i++) sorted_inputs[i] = inputs[i];
+    qsort(sorted_inputs, n, sizeof(uint16_t), compare_bf16_mag);
+
     float128_t sum128;
-    
-    // Initialize sum128 to 0.0 using the memory pointer function
     ui32_to_f128M(0, &sum128); 
-    
-    // IEEE 754 Standard: Round to Nearest, Ties to Even
     softfloat_roundingMode = softfloat_round_near_even;
 
     for (int i = 0; i < n; i++) {
-        uint16_t raw = apply_daz(inputs[i]);
-        
-        // Immediate NaN propagation
+        // DAZ: Flush subnormal inputs to zero
+        uint16_t raw = apply_daz(sorted_inputs[i]); 
         if (is_nan_bf16(raw)) return 0x7FC0;
         
-        in_bf.v = raw;
-        
-        // Lossless Upcast: BF16 -> FP32
+        bfloat16_t in_bf = {raw};
         float32_t in_f32 = bf16_to_f32(in_bf);
-        
-        // FP32 -> FP128 (using Memory pointer)
         float128_t op128;
         f32_to_f128M(in_f32, &op128);
         
-        // Exact accumulation: sum128 = sum128 + op128
+        // Summing in float128_t (112-bit mantissa)
         f128M_add(&sum128, &op128, &sum128);
     }
 
-    // Single Final Rounding: FP128 -> FP32
-    float32_t final_f32 = f128M_to_f32(&sum128);
-    final_f32.v = apply_ftz32(final_f32.v);
-    
-    // Downcast to target hardware size: FP32 -> BF16
-    bfloat16_t result = f32_to_bf16(final_f32);
-    result.v = apply_ftz(result.v);
-    
-    return canonicalize_nan(result.v);
+    // --- RE-USE YOUR EXISTING ROUNDING AND FTZ LOGIC ---
+    uint64_t ui64h = sum128.v[1]; 
+    uint64_t ui64l = sum128.v[0]; 
+
+    uint16_t sign = (ui64h >> 63) & 0x1;
+    int32_t  exp128 = (ui64h >> 48) & 0x7FFF;
+    uint64_t mant128_high = ui64h & 0x0000FFFFFFFFFFFFULL; 
+
+    if (exp128 == 0x7FFF) { 
+        if (mant128_high == 0 && ui64l == 0) return (sign << 15) | 0x7F80;
+        return 0x7FC0; 
+    }
+    if (exp128 == 0 && mant128_high == 0 && ui64l == 0) return sign << 15;
+
+    int32_t exp_bf = exp128 - 16383 + 127;
+
+    // FTZ: Flush subnormal outputs to zero
+    if (exp_bf <= 0) return sign << 15; 
+    if (exp_bf >= 0xFF) return (sign << 15) | 0x7F80;
+
+    uint32_t mant_bf = (mant128_high >> 41) & 0x7F; 
+    bool lsb    = (mant_bf & 1);
+    bool guard  = (mant128_high >> 40) & 1;
+    bool sticky = (mant128_high & 0xFFFFFFFFFFULL) != 0 || (ui64l != 0);
+
+    bool round_up = guard && (sticky || lsb);
+
+    if (round_up) {
+        mant_bf++;
+        if (mant_bf & 0x80) { 
+            mant_bf = 0;
+            exp_bf++;
+        }
+    }
+
+    if (exp_bf >= 0xFF) return (sign << 15) | 0x7F80;
+
+    return (sign << 15) | (exp_bf << 7) | (mant_bf & 0x7F);
 }
 
 /* --------------------------------------------------------------------------
