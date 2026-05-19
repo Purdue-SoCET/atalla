@@ -20,6 +20,11 @@ module sysarr_4_input_fp_adder_cc_det #(
     localparam BIAS_DIFF       = (1 << (EXPONENT_SIZE - 1)) - 1 - ((1 << (IN_EXPONENT_SIZE - 1)) - 1); // Bias difference for exponent adjustment
     localparam IN_WIDTH = 1 + IN_EXPONENT_SIZE + IN_MANTISSA_SIZE; // Total width of input
     localparam CC_SUM_WIDTH = SUM_WIDTH-PRECISION_BITS-1;
+    // Structural boundary where dropped bits begin
+    localparam DROPPED_MAX_INDEX = NEW_MANT_WIDTH - 1 - MANTISSA_SIZE; 
+
+    // LZD threshold allowing a 2-bit guard band for carry/borrow residues
+    localparam RECOVERY_LZ_THRESHOLD = (SUM_WIDTH - 1) - DROPPED_MAX_INDEX - 2;
 
     // Internal Signal Declarations
     logic [IN_EXPONENT_SIZE+IN_MANTISSA_SIZE:0] a_daz, b_daz, c_daz, d_daz;
@@ -28,9 +33,9 @@ module sysarr_4_input_fp_adder_cc_det #(
     logic sign_a, sign_b, sign_c, sign_d;
     
     // Sorting signals
-    logic [IN_EXPONENT_SIZE-1:0] exp_p, exp_m, exp_r, exp_n, exp_x, exp_y, exp_mx, exp_nx;
-    logic [IN_MANTISSA_SIZE-1:0] frac_p, frac_m, frac_r, frac_n, frac_x, frac_y, frac_mx, frac_nx;
-    logic sign_p, sign_m, sign_r, sign_n, sign_x, sign_y, sign_mx, sign_nx;
+    logic [IN_EXPONENT_SIZE-1:0] exp_p, exp_m, exp_r, exp_n, exp_x, exp_y, exp_y_temp, exp_mx, exp_mx_temp, exp_nx;
+    logic [IN_MANTISSA_SIZE-1:0] frac_p, frac_m, frac_r, frac_n, frac_x, frac_y, frac_y_temp, frac_mx, frac_mx_temp, frac_nx;
+    logic sign_p, sign_m, sign_r, sign_n, sign_x, sign_y, sign_y_temp, sign_mx, sign_mx_temp, sign_nx;
     
     // Align signals
     logic [IN_EXPONENT_SIZE-1:0] exp_x_eff, exp_y_eff, exp_mx_eff, exp_nx_eff;
@@ -55,11 +60,13 @@ module sysarr_4_input_fp_adder_cc_det #(
     logic [SUM_WIDTH-1:0] st1_sum_vec;
     logic [SUM_WIDTH-1:0] st1_carry_vec;
     logic [1:0]         st1_hot_ones; 
-    logic st1_cc_det; 
+    logic  st1_cc_det; 
     // logic st1_cc_special, st1_cc_special_n; 
-    logic [2:0] st1_cc_det_n; // one-hot signal for catastrophic cancellation detection {111, 110, 101, 011} = {no CC, CC on n, CC on m, CC on y}
+    logic  st1_cc_det_n; // one-hot signal for catastrophic cancellation detection {111, 110, 101, 011} = {no CC, CC on n, CC on m, CC on y}
     logic [CC_SUM_WIDTH-1:0] st1_cc_a_mant, st1_cc_b_mant, st1_cc_a_mant_n, st1_cc_b_mant_n, st1_cc_a_mant_mag, st1_cc_b_mant_mag; // mantissas to add together if cc detected
     logic [IN_EXPONENT_SIZE-1:0] st1_cc_exp, st1_cc_exp_n; // exponent to use for CC case (should be the larger of the two operands that are close in magnitude)
+    logic st1_in_n_dropped_n, st1_in_n_dropped; 
+    logic [IN_MANTISSA_SIZE + IN_EXPONENT_SIZE:0] recovery_n_input; 
 
     // --- Stage 2 Signals ---
     logic signed [SUM_WIDTH-1:0] raw_sum;
@@ -72,11 +79,13 @@ module sysarr_4_input_fp_adder_cc_det #(
     logic [IN_EXPONENT_SIZE-1:0] st2_exp_base;
     logic [SUM_WIDTH-1:0]      st2_sum_mag;
     logic [RES_WIDTH-1:0]      st2_spec_res;
-    logic st2_res_sign, st2_special, st2_sticky; 
+    logic st2_res_sign, st2_special;
+    logic [1:0] st2_sticky;  
     logic [CC_SUM_WIDTH-1:0] st2_cc_mag_sum; // For CC cases, this will hold the sum of the two same-sign operands that were close in magnitude
     logic st2_cc_res_sign;
     logic [IN_EXPONENT_SIZE-1:0] st2_cc_exp;
-    logic st2_cc_det;
+    logic st2_cc_det, st2_in_n_dropped; 
+    logic [IN_MANTISSA_SIZE + IN_EXPONENT_SIZE:0] st2_recovery_n_input; 
 
     // --- Stage 3 Signals ---
     logic [SUM_WIDTH-1:0]      lzd_scan;
@@ -101,7 +110,7 @@ module sysarr_4_input_fp_adder_cc_det #(
     logic [SUM_WIDTH-1:0] op_x, op_y, op_m, op_n;
     logic [SUM_WIDTH-1:0] csa_s1, csa_c1, csa_s2, csa_c2;
 
-    assign cc_det = (lead_zeros >= SUM_WIDTH - 1); // If all bits are zero, we have catastrophic cancellation and need to use the CC path instead of the normal path for normalization and rounding
+    // assign cc_det = (lead_zeros >= SUM_WIDTH - 2); // If all bits are zero, we have catastrophic cancellation and need to use the CC path instead of the normal path for normalization and rounding
     
     always_comb begin : stage1_logic
 
@@ -141,18 +150,29 @@ module sysarr_4_input_fp_adder_cc_det #(
         else                begin exp_r=exp_d; frac_r=frac_d; sign_r=sign_d; exp_n=exp_c; frac_n=frac_c; sign_n=sign_c; end
         
         if (exp_p >= exp_r) begin
-            exp_x=exp_p; frac_x=frac_p; sign_x=sign_p; exp_y=exp_r; frac_y=frac_r; sign_y=sign_r;
-            exp_mx=exp_m; frac_mx=frac_m; sign_mx=sign_m; exp_nx=exp_n; frac_nx=frac_n; sign_nx=sign_n;
+            exp_x=exp_p; frac_x=frac_p; sign_x=sign_p; exp_y_temp=exp_r; frac_y_temp=frac_r; sign_y_temp=sign_r;
         end else begin
-            exp_x=exp_r; frac_x=frac_r; sign_x=sign_r; exp_y=exp_p; frac_y=frac_p; sign_y=sign_p;
-            exp_mx=exp_n; frac_mx=frac_n; sign_mx=sign_n; exp_nx=exp_m; frac_nx=frac_m; sign_nx=sign_m;
+            exp_x=exp_r; frac_x=frac_r; sign_x=sign_r; exp_y_temp=exp_p; frac_y_temp=frac_p; sign_y_temp=sign_p;  
+        end
+
+        if (exp_m >= exp_n) begin
+            exp_mx_temp=exp_m; frac_mx_temp=frac_m; sign_mx_temp=sign_m; exp_nx=exp_n; frac_nx=frac_n; sign_nx=sign_n;
+        end else begin
+            exp_mx_temp=exp_n; frac_mx_temp=frac_n; sign_mx_temp=sign_n; exp_nx=exp_m; frac_nx=frac_m; sign_nx=sign_m;
+        end   
+
+        if (exp_y_temp >= exp_mx_temp) begin
+            exp_mx=exp_mx_temp; frac_mx=frac_mx_temp; sign_mx=sign_mx_temp; exp_y=exp_y_temp; frac_y=frac_y_temp; sign_y=sign_y_temp;
+        end
+        else begin
+            exp_mx=exp_y_temp; frac_mx=frac_y_temp; sign_mx=sign_y_temp; exp_y=exp_mx_temp; frac_y=frac_mx_temp; sign_y=sign_mx_temp;
         end
 
         // Align
         exp_x_eff = (exp_x == 0) ? 1 : exp_x; exp_y_eff = (exp_y == 0) ? 1 : exp_y;
         exp_mx_eff = (exp_mx == 0) ? 1 : exp_mx; exp_nx_eff = (exp_nx == 0) ? 1 : exp_nx;
         y_shift = exp_x_eff - exp_y_eff; m_shift = exp_x_eff - exp_mx_eff; n_shift = exp_x_eff - exp_nx_eff;
-
+    
         // Note: Inputs still use MANTISSA_SIZE, internal math uses NEW_MANT_WIDTH
         x_mant      = { (|exp_x),  frac_x, {MANTISSA_SIZE-IN_MANTISSA_SIZE{1'b0}} ,{PRECISION_BITS{1'b0}}};
         y_mant_base = { (|exp_y),  frac_y, {MANTISSA_SIZE-IN_MANTISSA_SIZE{1'b0}} ,{PRECISION_BITS{1'b0}}};
@@ -166,6 +186,22 @@ module sysarr_4_input_fp_adder_cc_det #(
         n_shifted = ((n_shift >= NEW_MANT_WIDTH) ? 0 : (n_mant_base >> n_shift));
         
         y_op = sign_x ^ sign_y; m_op = sign_x ^ sign_mx; n_op = sign_x ^ sign_nx;
+        
+        // CC detection
+        st1_cc_det_n = y_op && (exp_x == exp_y) && (frac_x == frac_y); // Check whether m or n are getting shifted out completely 
+        st1_cc_a_mant_mag = '0; st1_cc_b_mant_mag = '0; st1_cc_a_mant_n = '0; st1_cc_b_mant_n = '0; st1_cc_exp_n = '0;
+        
+        st1_in_n_dropped_n = (n_shift >= MANTISSA_SIZE) && |(exp_nx);
+
+        if (st1_cc_det_n) begin
+            st1_cc_a_mant_mag = st1_cc_det_n ? {2'b0, m_mant_base[NEW_MANT_WIDTH-1:PRECISION_BITS]} : '0;
+            st1_cc_a_mant_n = sign_mx && st1_cc_det_n ? ~st1_cc_a_mant_mag + 1 : st1_cc_a_mant_mag;
+            
+            st1_cc_b_mant_mag = st1_cc_det_n ? {2'b0, n_mant_base[NEW_MANT_WIDTH-1:PRECISION_BITS] >> (n_shift - m_shift)} : '0;
+            st1_cc_b_mant_n = sign_nx && st1_cc_det_n ? ~st1_cc_b_mant_mag + 1 : st1_cc_b_mant_mag;
+                
+            st1_cc_exp_n = exp_mx; 
+        end
 
         sticky_y  = {y_op, |(y_mant_base & ~({NEW_MANT_WIDTH{1'b1}} << y_shift))};
         sticky_m  = {m_op, |(m_mant_base & ~({NEW_MANT_WIDTH{1'b1}} << m_shift))};
@@ -214,46 +250,6 @@ module sysarr_4_input_fp_adder_cc_det #(
         csa_c1 = (op_x & op_y) | (op_y & op_m) | (op_m & op_x);
         csa_s2 = csa_s1 ^ (csa_c1 << 1) ^ op_n;
         csa_c2 = (csa_s1 & (csa_c1 << 1)) | ((csa_c1 << 1) & op_n) | (op_n & csa_s1);
-
-        st1_cc_det_n = {y_op == 1 && (y_shift==0 | y_shift==1), m_op == 1 && (m_shift==0 | m_shift==1), n_op == 1 && (n_shift==0 | n_shift==1)}; // Simple CC detection based on whether any operand was fully shifted out
-        
-        // st1_cc_special_n = 1'b0; // Pass through special case signal for CC path to use in final stage
-        if (&st1_cc_det_n) begin
-            st1_cc_det_n = 3'b000; // If all three operands are in CC, we will just treat it as no CC and let the normal path handle it since the precision loss is so extreme that the CC path won't be able to produce a more accurate result anyway
-        end
-        st1_cc_a_mant_n = '0; st1_cc_b_mant_n = '0; st1_cc_exp_n = '0; st1_cc_a_mant_mag = '0; st1_cc_b_mant_mag = '0; // Default values for CC mantissas and exponent
-        casez ({st1_cc_det_n})
-            3'b001: begin
-                st1_cc_a_mant_mag = y_shift > m_shift ? y_mant_base[NEW_MANT_WIDTH-1:PRECISION_BITS] >> (y_shift - m_shift) : y_mant_base[NEW_MANT_WIDTH-1:PRECISION_BITS];
-                st1_cc_b_mant_mag = y_shift > m_shift ? m_mant_base[NEW_MANT_WIDTH-1:PRECISION_BITS] : m_mant_base[NEW_MANT_WIDTH-1:PRECISION_BITS] >> (m_shift - y_shift);
-
-                st1_cc_a_mant_n = sign_y ? ~{1'b0, st1_cc_a_mant_mag} + 1 : {1'b0, st1_cc_a_mant_mag};
-                st1_cc_b_mant_n = sign_m ? ~{1'b0, st1_cc_b_mant_mag} + 1 : {1'b0, st1_cc_b_mant_mag};
-
-                st1_cc_exp_n = y_shift > m_shift ? exp_m : exp_y; // Exponent for CC case should be the larger of the two operands that are close in magnitude
-            end 
-            3'b010: begin
-                st1_cc_a_mant_mag = y_shift > n_shift ? y_mant_base[NEW_MANT_WIDTH-1:PRECISION_BITS] >> (y_shift - n_shift) : y_mant_base[NEW_MANT_WIDTH-1:PRECISION_BITS];
-                st1_cc_b_mant_mag = y_shift > n_shift ? n_mant_base[NEW_MANT_WIDTH-1:PRECISION_BITS] : n_mant_base[NEW_MANT_WIDTH-1:PRECISION_BITS] >> (n_shift - y_shift);
-
-                st1_cc_a_mant_n = sign_y ? ~{1'b0, st1_cc_a_mant_mag} + 1 : {1'b0, st1_cc_a_mant_mag};
-                st1_cc_b_mant_n = sign_n ? ~{1'b0, st1_cc_b_mant_mag} + 1 : {1'b0, st1_cc_b_mant_mag};
-
-                st1_cc_exp_n = y_shift > n_shift ? exp_n : exp_y; // Exponent for CC case should be the larger of the two operands that are close in magnitude
-            end
-            3'b100: begin
-                st1_cc_a_mant_mag = m_shift > n_shift ? m_mant_base[NEW_MANT_WIDTH-1:PRECISION_BITS] >> (m_shift - n_shift) : m_mant_base[NEW_MANT_WIDTH-1:PRECISION_BITS];
-                st1_cc_b_mant_mag = m_shift > n_shift ? n_mant_base[NEW_MANT_WIDTH-1:PRECISION_BITS] : n_mant_base[NEW_MANT_WIDTH-1:PRECISION_BITS] >> (n_shift - m_shift);
-
-                st1_cc_a_mant_n = sign_m ? ~{1'b0, st1_cc_a_mant_mag} + 1 : {1'b0, st1_cc_a_mant_mag};
-                st1_cc_b_mant_n = sign_n ? ~{1'b0, st1_cc_b_mant_mag} + 1 : {1'b0, st1_cc_b_mant_mag};
-
-                st1_cc_exp_n = m_shift > n_shift ? exp_n : exp_m; // Exponent for CC case should be the larger of the two operands that are close in magnitude
-            end
-            default: begin
-                st1_cc_a_mant_n = '0; st1_cc_b_mant_n = '0; st1_cc_exp_n = '0; st1_cc_a_mant_mag = '0; st1_cc_b_mant_mag = '0;
-            end
-        endcase
     end
 
     // Pipeline Stage 1 Flip-Flops
@@ -263,6 +259,7 @@ module sysarr_4_input_fp_adder_cc_det #(
             st1_special_case <= 0; st1_special_result <= 0;
             st1_sum_vec <= 0; st1_carry_vec <= 0; st1_hot_ones <= 0;
             st1_cc_det <= 0; st1_cc_a_mant <= 0; st1_cc_b_mant <= 0; st1_cc_exp <= 0;
+            st1_in_n_dropped <= 0; 
             // st1_cc_special <= 0;
         end else begin
             st1_a_s <= sign_x; st1_a_e <= exp_x; 
@@ -270,9 +267,11 @@ module sysarr_4_input_fp_adder_cc_det #(
             st1_special_case <= special_case; st1_special_result <= special_result;
             st1_sum_vec   <= csa_s2;
             st1_carry_vec <= csa_c2;
-            st1_cc_det <= |st1_cc_det_n; // Simple CC detection based on whether any operand was fully shifted out
+            st1_cc_det <= st1_cc_det_n; // Simple CC detection based on whether any operand was fully shifted out
             st1_cc_a_mant <= st1_cc_a_mant_n; st1_cc_b_mant <= st1_cc_b_mant_n;
             st1_cc_exp <= st1_cc_exp_n;
+            st1_in_n_dropped <= st1_in_n_dropped_n; 
+            recovery_n_input <= {sign_nx, exp_nx, frac_nx};
             // st1_cc_special <= st1_cc_special_n;
             // st1_hot_ones  <= (y_op) + (m_op) + (n_op);
         end
@@ -311,13 +310,17 @@ module sysarr_4_input_fp_adder_cc_det #(
             st2_cc_mag_sum <= 0; st2_cc_res_sign <= 0;
             st2_cc_exp <= 0;
             st2_cc_det <= 0;
+            st2_recovery_n_input <= '0; 
+            st2_in_n_dropped <= 0; 
         end else begin
             st2_sum_mag <= mag_sum; st2_res_sign <= res_sign;
-            st2_exp_base <= st1_a_e; st2_sticky <= st1_align_sticky[0];
+            st2_exp_base <= st1_a_e; st2_sticky <= st1_align_sticky;
             st2_special <= st1_special_case; st2_spec_res <= st1_special_result;
             st2_cc_mag_sum <= cc_mag_sum; st2_cc_res_sign <= cc_res_sign;
             st2_cc_exp <= st1_cc_exp;
             st2_cc_det <= st1_cc_det;
+            st2_recovery_n_input <= recovery_n_input;
+            st2_in_n_dropped <= st1_in_n_dropped;  
         end
     end
 
@@ -368,13 +371,13 @@ module sysarr_4_input_fp_adder_cc_det #(
 
             if (lead_zeros >= PRECISION_BITS) begin
                 norm_val[lead_zeros] = 1'b0;
-                sticky_bit = |norm_val[SUM_WIDTH-4-MANTISSA_SIZE : 0];
+                sticky_bit = |norm_val[SUM_WIDTH-4-MANTISSA_SIZE : 0] | st2_sticky[0]; // If we have more leading zeros than precision bits, then we need to consider the sticky bit from alignment in addition to any bits shifted out during normalization
             end
             else begin
-                sticky_bit = (|norm_val[SUM_WIDTH-4-MANTISSA_SIZE : 0]);
+                sticky_bit = (|norm_val[SUM_WIDTH-4-MANTISSA_SIZE : 0]) | st2_sticky[0]; // If we have fewer leading zeros than precision bits, then we are shifting out bits during normalization that could contribute to the sticky bit, so we need to consider all bits below the guard bit in addition to the alignment sticky bit
             end
 
-            round_up = guard_bit & (round_bit | sticky_bit | l_bit); // Round to even on tie
+            round_up = (guard_bit & (round_bit | sticky_bit | l_bit)); // Round to even on tie
 
             rounded_mant_int = norm_val[SUM_WIDTH-2 -: MANTISSA_SIZE] + round_up;
         end else begin
@@ -387,20 +390,28 @@ module sysarr_4_input_fp_adder_cc_det #(
         // sticky_bit = (|norm_val[SUM_WIDTH-4-MANTISSA_SIZE : 0]) | st2_sticky;
         lead_zeros = lead_zeros - (rounded_mant_int[MANTISSA_SIZE] ? 1 : 0); // If we had a carry out, we effectively have one less leading zero
         final_mant = rounded_mant_int[MANTISSA_SIZE-1:0];
-        final_cc_mant = cc_norm_val[CC_SUM_WIDTH-2 -: MANTISSA_SIZE]; // For CC case, we will just take the top bits without rounding since we are already in a very small magnitude scenario where precision is limited and rounding won't make a meaningful difference
+        final_cc_mant = cc_norm_val[CC_SUM_WIDTH-2-:MANTISSA_SIZE]; // For CC case, we will just take the top bits without rounding since we are already in a very small magnitude scenario where precision is limited and rounding won't make a meaningful difference
 
         // Exponent Adjustment
-        final_exp_calc = $signed({2'b00, st2_exp_base}) + 3 - $signed({2'b00, lead_zeros}) + BIAS_DIFF;
-        final_cc_exp_calc = $signed({2'b00, st2_cc_exp}) + 2 - $signed({2'b00, cc_lead_zeros}) + BIAS_DIFF;
+        final_exp_calc = st2_sum_mag == '0 ? '0 : $signed({2'b00, st2_exp_base}) + 3 - $signed({2'b00, lead_zeros}) + BIAS_DIFF;
+        final_cc_exp_calc = st2_cc_mag_sum == '0 ? '0 : $signed({2'b00, st2_cc_exp}) + 2 - $signed({2'b00, cc_lead_zeros}) + BIAS_DIFF;
 
         // 4. Output Packing
-        if (norm_val == 0 || final_exp_calc <= 0 || st2_exp_base == 0) begin
-            if (cc_det && st2_cc_det) begin   
-                result_out = {st2_cc_res_sign, final_cc_exp_calc[EXPONENT_SIZE-1:0], final_cc_mant};
-            end
-            else begin
-                result_out = {1'b0, {RES_WIDTH-1{1'b0}}};
-            end
+        if (st2_cc_det) begin   
+            result_out = final_cc_exp_calc >= 0 ? {st2_cc_res_sign, final_cc_exp_calc[EXPONENT_SIZE-1:0], final_cc_mant} : {st2_cc_res_sign, {RES_WIDTH-1{1'b0}}};
+        end
+        else if ((lead_zeros >= RECOVERY_LZ_THRESHOLD) && st2_in_n_dropped) begin
+            result_out = {
+                st2_recovery_n_input[IN_MANTISSA_SIZE + IN_EXPONENT_SIZE], // Sign
+                EXPONENT_SIZE'(st2_recovery_n_input[IN_MANTISSA_SIZE +: IN_EXPONENT_SIZE] + BIAS_DIFF),
+                {st2_recovery_n_input[IN_MANTISSA_SIZE-1:0], {(MANTISSA_SIZE-IN_MANTISSA_SIZE){1'b0}}} // Mantissa with zero-padding to fit output
+            };
+        end
+        else if (norm_val == 0 | st2_exp_base == 0) begin
+            result_out = {1'b0, {RES_WIDTH-1{1'b0}}};
+        end
+        else if (final_exp_calc <= 0) begin
+            result_out = {st2_res_sign, {RES_WIDTH-1{1'b0}}};
         end
         else if (final_exp_calc >= MAX_EXP) result_out = {st2_res_sign, {EXPONENT_SIZE{1'b1}}, {MANTISSA_SIZE{1'b0}}}; 
         else result_out = {st2_res_sign, final_exp_calc[EXPONENT_SIZE-1:0], final_mant};

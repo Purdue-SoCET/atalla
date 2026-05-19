@@ -293,10 +293,12 @@ module sysarr_4_input_fp_adder #(
         final_mant = rounded_mant_int[MANTISSA_SIZE-1:0];
 
         // Exponent Adjustment
-        final_exp_calc = $signed({2'b00, st2_exp_base}) + 3 - $signed({2'b00, lead_zeros}) + BIAS_DIFF;
-
+        final_exp_calc = st2_sum_mag == '0 ? 
+                        '0 : $signed({2'b00, st2_exp_base}) + 3 - $signed({2'b00, lead_zeros}) + BIAS_DIFF;
+                        
         // 4. Output Packing
-        if (norm_val == 0 || final_exp_calc <= 0 || st2_exp_base == 0) result_out = {1'b0, {RES_WIDTH-1{1'b0}}};
+        if (norm_val == 0 || st2_exp_base == 0) result_out = {1'b0, {RES_WIDTH-1{1'b0}}};
+        else if (final_exp_calc <= 0) result_out = {st2_res_sign, {RES_WIDTH-1{1'b0}}};
         else if (final_exp_calc >= MAX_EXP) result_out = {st2_res_sign, {EXPONENT_SIZE{1'b1}}, {MANTISSA_SIZE{1'b0}}}; 
         else result_out = {st2_res_sign, final_exp_calc[EXPONENT_SIZE-1:0], final_mant};
 
