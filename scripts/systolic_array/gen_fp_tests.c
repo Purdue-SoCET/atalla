@@ -57,7 +57,6 @@ int compare_bf16_mag(const void *a, const void *b) {
     return 0;
 }
 
-// MODIFIED: Added exact_f64_out pointer to extract the unrounded sum
 static uint16_t exact_n_input_fused_add_f128(uint16_t *inputs, int n, uint64_t *exact_f64_out) {
     uint16_t sorted_inputs[32]; 
     for (int i = 0; i < n; i++) sorted_inputs[i] = inputs[i];
@@ -82,7 +81,7 @@ static uint16_t exact_n_input_fused_add_f128(uint16_t *inputs, int n, uint64_t *
         f128M_add(&sum128, &op128, &sum128);
     }
 
-    // NEW: Extract the mathematically unrounded result downcast safely to 64-bit IEEE float
+    // Extract the mathematically unrounded result downcast safely to 64-bit IEEE float
     float64_t sum64 = f128M_to_f64(&sum128);
     *exact_f64_out = sum64.v;
 
@@ -140,7 +139,7 @@ static uint64_t xorshift64(void) {
 
 static uint16_t random_bf16_constrained(void) {
     uint16_t sign = (xorshift64() & 0x1) << 15;
-    uint16_t exp = (90 + (xorshift64() % 57)) << 7; 
+    uint16_t exp = (90 + (xorshift64() % 75)) << 7; 
     uint16_t man = xorshift64() & 0x7F;
     return sign | exp | man;
 }
@@ -190,7 +189,6 @@ int main(int argc, char *argv[]) {
     for (int j = 0; j < num_inputs; j++) {
         printf("i%d,", j);
     }
-    // MODIFIED: Added exact_f64 header
     printf("expected,exact_f64\n");
 
     uint16_t *inputs = malloc(num_inputs * sizeof(uint16_t));
@@ -199,72 +197,99 @@ int main(int argc, char *argv[]) {
         return 1;
     }
 
-    int cat_size = n_cases / 6;
+    // UPDATED: Using modulo for even distribution across the file
+    int num_categories = 7;
 
     for (int i = 0; i < n_cases; i++) {
-        int category = i / cat_size;
+        int category = i % num_categories;
 
         switch (category) {
-            case 0:
+            case 0: {
+                // 1. PURE RANDOM (The Baseline)
                 for (int j = 0; j < num_inputs; j++) {
                     inputs[j] = use_unconstrained ? random_bf16_unconstrained() : random_bf16_constrained();
                 }
                 break;
-            case 1:
+            }
+            case 1: {
+                // 2. SUBNORMAL & DAZ/FTZ CRASH COURSE
                 for (int j = 0; j < num_inputs; j++) {
                     int roll = xorshift64() % 4;
                     if (roll == 0)      inputs[j] = random_bf16_subnormal();
-                    else if (roll == 1) inputs[j] = random_bf16_subnormal() & 0x8000; 
-                    else                inputs[j] = (random_bf16_constrained() & 0x807F) | (1 << 7); 
+                    else if (roll == 1) inputs[j] = random_bf16_subnormal() | 0x8000; 
+                    else                inputs[j] = (random_bf16_constrained() & 0x807F) | (1 << 7); // Min normal
                 }
                 break;
+            }
             case 2: {
-                uint16_t large_exp = 180 + (xorshift64() % 70); 
-                uint16_t small_exp = 1 + (xorshift64() % 40);   
-                for (int j = 0; j < num_inputs; j++) {
-                    uint16_t target_exp = (j % 2 == 0) ? large_exp : small_exp;
-                    inputs[j] = ((xorshift64() & 0x1) << 15) | (target_exp << 7) | (xorshift64() & 0x7F);
+                // 3. THE GRS BOUNDARY STRADDLE (Aligner Test)
+                // Forces small numbers to land EXACTLY on the Guard, Round, and Sticky bit boundaries
+                uint16_t max_exp = 100 + (xorshift64() % 100); 
+                uint16_t sign_max = (xorshift64() & 0x1) << 15;
+                inputs[0] = sign_max | (max_exp << 7) | (xorshift64() & 0x7F);
+                
+                for (int j = 1; j < num_inputs; j++) {
+                    // Exponent deltas between 11 and 15 (Targeting PRECISION_BITS bounds)
+                    uint16_t boundary_delta = 11 + (xorshift64() % 5);
+                    uint16_t small_exp = (max_exp > boundary_delta) ? (max_exp - boundary_delta) : 1;
+                    uint16_t sign_small = (xorshift64() & 0x1) << 15;
+                    inputs[j] = sign_small | (small_exp << 7) | ((xorshift64() % 0x7E) + 1);
                 }
                 break;
             }
             case 3: {
-                uint16_t anchor_exp = 150 + (xorshift64() % 50); 
-                uint16_t shifted_exp = anchor_exp - (30 + (xorshift64() % 10)); 
-                uint16_t sign_x = (xorshift64() & 0x1) << 15;
-                inputs[0] = sign_x | (anchor_exp << 7) | (xorshift64() & 0x7F);
-
-                int sticky_scenario = xorshift64() % 3;
-                for (int j = 1; j < num_inputs; j++) {
-                    uint16_t sign_shifted;
-                    if (sticky_scenario == 0) {
-                        sign_shifted = sign_x;
-                    } else if (sticky_scenario == 1) {
-                        sign_shifted = sign_x ^ 0x8000;
-                    } else {
-                        sign_shifted = ((j % 2) == 0) ? sign_x : (sign_x ^ 0x8000);
-                    }
-                    uint16_t nonzero_man = (xorshift64() % 0x7E) + 1; 
-                    inputs[j] = sign_shifted | (shifted_exp << 7) | nonzero_man;
+                // 4. THE OFF-BY-ONE CANCELLATION (The "Sweet Spot" Stress Test)
+                // Exponents differ by EXACTLY 0 or 1, forcing heavy LZD use and multi-operand subtractions
+                uint16_t base_exp = 120 + (xorshift64() % 60);
+                for (int j = 0; j < num_inputs; j++) {
+                    uint16_t sign = (j % 2 == 0) ? 0x0000 : 0x8000; // Alternating signs
+                    uint16_t exp_tweak = xorshift64() & 0x1;        // Offset 0 or 1
+                    inputs[j] = sign | ((base_exp + exp_tweak) << 7) | (xorshift64() & 0x7F);
                 }
                 break;
             }
             case 4: {
-                uint16_t common_exp = 100 + (xorshift64() % 60);
-                uint16_t common_man = xorshift64() & 0x7F;
-                for (int j = 0; j < num_inputs; j++) {
-                    uint16_t sign = (j % 2 == 0) ? 0x0000 : 0x8000;
-                    uint16_t man_tweak = (j > 3) ? (xorshift64() & 0x3) : 0; 
-                    inputs[j] = sign | (common_exp << 7) | ((common_man + man_tweak) & 0x7F);
+                // 5. THE ZOMBIE RESCUE (Dropped Lane Recovery Test)
+                // Anchor and primary subtractor perfectly cancel. Remaining numbers are tiny and must be rescued.
+                uint16_t massive_exp = 150 + (xorshift64() % 50);
+                uint16_t massive_man = xorshift64() & 0x7F;
+                
+                inputs[0] = 0x0000 | (massive_exp << 7) | massive_man; // +X
+                if (num_inputs > 1) {
+                    inputs[1] = 0x8000 | (massive_exp << 7) | massive_man; // -X (Perfect cancellation)
+                }
+                
+                for (int j = 2; j < num_inputs; j++) {
+                    uint16_t shift_amount = 20 + (xorshift64() % 20);
+                    uint16_t tiny_exp = (massive_exp > shift_amount) ? (massive_exp - shift_amount) : 1; 
+                    inputs[j] = ((xorshift64() & 0x1) << 15) | (tiny_exp << 7) | (xorshift64() & 0x7F);
                 }
                 break;
             }
-            default: {
-                uint16_t base_exp = 120 + (xorshift64() % 30);
-                uint16_t base_man = xorshift64() & 0x7F;
-                inputs[0] = (0 << 15) | (base_exp << 7) | base_man;
-                inputs[1] = (1 << 15) | ((base_exp - 8) << 7) | 0x00; 
+            case 5: {
+                // 6. NEGATIVE ZERO LEAK TESTER
+                // Forces a perfect sum to 0.0 with a negative anchor to ensure output correctly clamps to +0.0
+                uint16_t exp = 100 + (xorshift64() % 100);
+                uint16_t man = xorshift64() & 0x7F;
+                
+                inputs[0] = 0x8000 | (exp << 7) | man; // Anchor is negative
+                if (num_inputs > 1) {
+                    inputs[1] = 0x0000 | (exp << 7) | man; // Exactly cancels anchor
+                }
                 for (int j = 2; j < num_inputs; j++) {
-                    inputs[j] = 0x0000; 
+                    inputs[j] = 0x0000; // The rest are exact +0.0
+                }
+                break;
+            }
+            case 6: {
+                // 7. IEEE-754 ARCHITECTURAL EDGE CASES
+                // Blasts multiplexers with NaNs, Infs, and zeroes.
+                int trap_type = xorshift64() % 4;
+                for (int j = 0; j < num_inputs; j++) {
+                    if (trap_type == 0)      inputs[j] = (xorshift64() & 1) ? 0x7F80 : 0xFF80; // +/- Inf
+                    else if (trap_type == 1) inputs[j] = (xorshift64() & 1) ? 0x0000 : 0x8000; // +/- 0.0
+                    else if (trap_type == 2) inputs[j] = 0x7FC0;                               // Quiet NaN
+                    else                     inputs[j] = (xorshift64() & 1) ? 0x7F80 : random_bf16_constrained();
                 }
                 break;
             }
@@ -274,7 +299,7 @@ int main(int argc, char *argv[]) {
             printf("%04x,", inputs[j]);
         }
         
-        // MODIFIED: Print the exact 64-bit hex alongside the expected result
+        // Compute and print expected BF16 result alongside unrounded FP64 true outcome
         uint64_t exact_f64_val;
         uint16_t result = exact_n_input_fused_add_f128(inputs, num_inputs, &exact_f64_val);
         printf("%04x,%016lx\n", result, (unsigned long)exact_f64_val);

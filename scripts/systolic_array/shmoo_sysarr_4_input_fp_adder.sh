@@ -21,12 +21,12 @@ FLOWKIT_DIR="$HOME/Flowkit"
 SDC_FILE="$FLOWKIT_DIR/scripts/constraints/sysarr_4_input_fp_adder.sdc"
 REPORTS_SRC="$FLOWKIT_DIR/reports"
 QOR_FILE="$REPORTS_SRC/syn_opt/qor.rpt"
-DEST_BASE="$HOME/atalla/reports/sysarr_4_input_fp_adder_norounding_noprecision"
+DEST_BASE="$HOME/atalla/reports/sysarr_4_input_fp_adder"
 MD_FILE="$FLOWKIT_DIR/rpt.md"
 
 # Which MHz to sweep (inclusive). Edit as needed.
-START_MHZ=850 # 1 GHZ 
-END_MHZ=730 
+START_MHZ=1000 # 1 GHZ 
+END_MHZ=600 
 STEP=-10     # go down by 5 MHz; use +5 if going up
 
 # TCL file for Genus commands only (not flowtool commands)
