@@ -63,7 +63,7 @@ def generate_sv(n, a_list, pipeline_map, directory, filename):
     file_path = os.path.join(directory, f"{filename}.sv")
     
     sv = ["`timescale 1ns/1ps"]
-    sv.append(f"module {filename} #(parameter int WIDTH = 32) (")
+    sv.append(f"module add{n}_tree #(parameter int WIDTH = 32) (")
     sv.append(f"    input logic clk, nRST,")
     sv.append(f"    input logic [WIDTH-1:0] in [0:{n-1}],")
     sv.append(f"    output logic [(WIDTH + {log2_n})-1:0] out_sum")
@@ -170,6 +170,7 @@ def main():
             
             # --- NEW NAMING CONVENTION ---
             fname = f"add{args.n}_tree_{path_str}_pipe_{cfg_str}_lat{latency}_var{safe_var}"
+            # fname = f"add{args.n}_tree"
             
             generate_sv(args.n, path, combo, path_dir, fname)
             

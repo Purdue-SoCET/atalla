@@ -15,13 +15,13 @@
 # Supports testing the 4-Input Tree Adder, the 32-Input Fused Adder, or BOTH simultaneously 
 # on the exact same dataset for 1:1 architectural comparisons. Includes comprehensive timing diagnostics.
 
-NUM_CASES=10000000
+NUM_CASES=10000
 
 # --- Advanced Argument Parsing ---
 NUM_SETS=1
 UNCONSTRAINED_FLAG=""
 MODE_TEXT="Constrained"
-MAX_JOBS=3 # Default to 3 concurrent jobs (Optimal for M4 Air)
+MAX_JOBS=3 # Default to 3 concurrent jobs
 RUN_MODE="both" # Default mode
 
 set -e
@@ -56,7 +56,8 @@ while [[ $# -gt 0 ]]; do
 done
 
 # Define base directories and files
-ATALLA_DIR="/Users/aryankarani/Documents/GitHub/atalla"
+# NOTE: Update this path if moving from macOS to RHEL
+ATALLA_DIR="/home/asicfab/a/karania/atalla"
 SCRIPTS_DIR="$ATALLA_DIR/scripts/systolic_array"
 
 TB_TREE="$ATALLA_DIR/tb/unit/systolic_array/add4_fp32accum_bf16_tb_softfloat.sv"
@@ -143,9 +144,9 @@ for set_idx in $(seq 1 "$NUM_SETS"); do
                 rm -f "$TEMP_TB"
                 cp "$TB_TREE" "$TEMP_TB"
 
-                sed -i '' -E "s/(localparam PRECISION_BITS = )[0-9]+/\1$m_size/" "$TEMP_TB"
-                sed -i '' -E "s/(localparam CC_DET = )[01]/\1 1/" "$TEMP_TB"
-                sed -i '' -E "s/tree_failures\.csv/cc_failures_precision_${m_size}.csv/" "$TEMP_TB"
+                sed -i -E "s/(localparam PRECISION_BITS = )[0-9]+/\1$m_size/" "$TEMP_TB"
+                sed -i -E "s/(localparam CC_DET = )[01]/\1 1/" "$TEMP_TB"
+                sed -i -E "s/tree_failures\.csv/cc_failures_precision_${m_size}.csv/" "$TEMP_TB"
 
                 verilator -Irtl/include/systolic_array --Mdir obj_dir_cc_${m_size} \
                     --binary -j 3 --threads 2 -Wall -Wno-fatal --timing \
@@ -204,9 +205,9 @@ for set_idx in $(seq 1 "$NUM_SETS"); do
                 TEMP_TB="tb_sandbox_fused_${p_bits}.sv"
                 cp "$TB_FUSED" "$TEMP_TB"
 
-                sed -i '' -E "s/(localparam PRECISION_BITS = )[0-9]+/\1$p_bits/" "$TEMP_TB"
-                sed -i '' -E "s/(localparam CC_DET = )[01]/\1 0/" "$TEMP_TB"
-                sed -i '' -E "s/tree_failures\.csv/no_cc_failures_precision_${p_bits}.csv/" "$TEMP_TB"
+                sed -i -E "s/(localparam PRECISION_BITS = )[0-9]+/\1$p_bits/" "$TEMP_TB"
+                sed -i -E "s/(localparam CC_DET = )[01]/\1 0/" "$TEMP_TB"
+                sed -i -E "s/tree_failures\.csv/no_cc_failures_precision_${p_bits}.csv/" "$TEMP_TB"
 
                 verilator -Irtl/include/systolic_array --Mdir obj_dir_no_cc_${p_bits} \
                     --binary -j 3 --threads 2 -Wall -Wno-fatal --timing \

@@ -3,10 +3,10 @@
 module sysarr_4_input_fp_adder_cc_det #(
     parameter MANTISSA_SIZE     = 23, // Input Mantissa Width
     parameter EXPONENT_SIZE     = 8,
-    parameter IN_MANTISSA_SIZE = 23, // Output Mantissa Width (New Parameter)
+    parameter IN_MANTISSA_SIZE = 7, // Output Mantissa Width (New Parameter)
     parameter IN_EXPONENT_SIZE = 8,
-    parameter PRECISION_BITS    = 0,
-    parameter GRS = 0
+    parameter PRECISION_BITS    = 3,
+    parameter GRS = 1
 ) (
     input logic clk, 
     input logic nRST,

@@ -37,12 +37,13 @@ def run_cmd(cmd):
     return result.stdout
 
 def generate_top_wrapper(n, adder_module_name, adder_src_path, aligner_src_path, align_pipe, align_tree_pipe_str, adder_path, adder_cfg_str, out_dir="."):
-    top_module_name = f"sysarr_{n}_TOP_path_{adder_path}_addCfg_{adder_cfg_str}_alignTree_{align_tree_pipe_str}_alignReg_{align_pipe}"
-    wrapper_dir = os.path.join(out_dir, top_module_name)
+    top_module_name_dir = f"sysarr_{n}_TOP_path_{adder_path}_addCfg_{adder_cfg_str}_alignTree_{align_tree_pipe_str}_alignReg_{align_pipe}"
+    top_module_name = f"sysarr_{n}_input_fp_adder"
+    wrapper_dir = os.path.join(out_dir, top_module_name_dir)
     os.makedirs(wrapper_dir, exist_ok=True)
 
     file_path = os.path.join(wrapper_dir, f"{top_module_name}.sv")
-    aligner_module_name = f"sysarr_{n}_aligner_tree_{align_tree_pipe_str}_reg_{align_pipe}"
+    aligner_module_name = f"sysarr_{n}_aligner_tree"
 
     GROWTH = math.ceil(math.log2(n))
     align_tree_lat = str(align_tree_pipe_str).count('1')
@@ -80,8 +81,8 @@ def generate_top_wrapper(n, adder_module_name, adder_src_path, aligner_src_path,
         "    parameter EXPONENT_SIZE    = 8,  // Internal Exponent Width",
         "    parameter IN_MANTISSA_SIZE = 7,  // Input/Output Mantissa Width",
         "    parameter IN_EXPONENT_SIZE = 8,  // Input/Output Exponent Width",
-        "    parameter PRECISION_BITS   = 0,",
-        "    parameter GRS              = 0",
+        "    parameter PRECISION_BITS   = 3,",
+        "    parameter GRS              = 1",
         ") (",
         "    input  logic clk, nRST,",
         f"    input  logic [IN_MANTISSA_SIZE + IN_EXPONENT_SIZE:0] in [0:{n-1}],",
@@ -178,7 +179,7 @@ def generate_top_wrapper(n, adder_module_name, adder_src_path, aligner_src_path,
         "        .out_max_exp(w_max_exp), .out_sticky(w_overall_sticky), .sign_out(w_signs), .aligned_mant_out(w_aligned_mants)",
         "    );",
         "",
-        f"    {adder_module_name} #(",
+        f"    add{args.n}_tree #(",
         "        .WIDTH(NEW_MANT_WIDTH)",
         "    ) adder_tree_inst (",
         "        .clk(clk), .nRST(nRST), .in(w_aligned_mants), .out_sum(w_tree_sum_raw)",
@@ -285,8 +286,10 @@ def generate_top_wrapper(n, adder_module_name, adder_src_path, aligner_src_path,
     sv.append("")
     sv.append("        final_exp_calc = $signed({1'b0, max_exp_pipe[SYNC_EXP-1]}) + $signed({1'b0, BIAS_DIFF}) + GROWTH + 1 - adjusted_lead_zeros;")
     sv.append("        ")
-    sv.append("        if (~|normalized_sum || final_exp_calc <= 0 || max_exp_pipe[SYNC_EXP-1] == 0) begin")
+    sv.append("        if (~|normalized_sum || max_exp_pipe[SYNC_EXP-1] == 0) begin")
     sv.append("            final_out_data = '0;")
+    sv.append("        end else if (final_exp_calc <= 0) begin")
+    sv.append("            final_out_data = {final_sign_pipe, {(EXPONENT_SIZE+MANTISSA_SIZE){1'b0}}};")
     sv.append("        end else if (final_exp_calc >= MAX_EXP) begin")
     sv.append("            final_out_data = {final_sign_pipe, {EXPONENT_SIZE{1'b1}}, {MANTISSA_SIZE{1'b0}}};")
     sv.append("        end else begin")
@@ -308,8 +311,11 @@ def generate_top_wrapper(n, adder_module_name, adder_src_path, aligner_src_path,
 
     if os.path.exists(adder_src_path):
         shutil.copy(adder_src_path, wrapper_dir)
+        os.rename(os.path.join(wrapper_dir, os.path.basename(adder_src_path)), os.path.join(wrapper_dir, f"add{args.n}_tree.sv"))
+        # rename adder tree file that was just copied to wrapper_dirto add32_tree.sv
     if os.path.exists(aligner_src_path):
         shutil.copy(aligner_src_path, wrapper_dir)
+        os.rename(os.path.join(wrapper_dir, os.path.basename(aligner_src_path)), os.path.join(wrapper_dir, f"sysarr_{args.n}_aligner_tree.sv"))
 
 if __name__ == "__main__":
     script_dir = os.path.dirname(os.path.abspath(__file__))
@@ -351,7 +357,7 @@ if __name__ == "__main__":
     if args.wrap_all:
         align_levels = math.ceil(math.log2(args.n))
         align_tree_combos = ["".join(x) for x in product(['0', '1'], repeat=align_levels)]
-        align_pipe_combos = [0, 1]
+        align_pipe_combos = [1]
         
         total_combos = len(align_tree_combos) * len(align_pipe_combos) * len(reader)
         print(f"--> --wrap-all passed. Exploring {len(align_tree_combos) * len(align_pipe_combos)} aligner configs against {len(reader)} adder configs (Total Top-Level Wrappers: {total_combos})...")

@@ -5,10 +5,11 @@ import os
 
 def generate_fp_aligner(n, tree_pipe_cfg, align_pipe, out_dir="."):
     filename = f"sysarr_{n}_aligner_tree_{tree_pipe_cfg}_reg_{align_pipe}"
+    # filename = f"sysarr_{n}_aligner_tree"
     file_path = os.path.join(out_dir, f"{filename}.sv")
     
     sv = ["`timescale 1ns/1ps"]
-    sv.append(f"module {filename} #(")
+    sv.append(f"module sysarr_{n}_aligner_tree #(")
     sv.append(f"    parameter EXPONENT_SIZE = 8,")
     sv.append(f"    parameter MANTISSA_SIZE = 23,")
     sv.append(f"    parameter NEW_MANT_WIDTH = 27")
@@ -66,6 +67,8 @@ def generate_fp_aligner(n, tree_pipe_cfg, align_pipe, out_dir="."):
         
         if pipeline_map[lvl]:
             total_tree_delays += 1
+            for node in next_nodes: sv.append(f"    logic [EXPONENT_SIZE-1:0] {node};")
+            for sign_node in next_signs: sv.append(f"    logic {sign_node};")
             sv.append(f"    always_ff @(posedge clk or negedge nRST) begin")
             sv.append(f"        if (!nRST) begin")
             for i in range(len(next_nodes)):
@@ -78,8 +81,6 @@ def generate_fp_aligner(n, tree_pipe_cfg, align_pipe, out_dir="."):
                 sv.append(f"            sign_{node_name}_r <= sign_{node_name}_c;")
             sv.append(f"        end")
             sv.append(f"    end")
-            for node in next_nodes: sv.append(f"    logic [EXPONENT_SIZE-1:0] {node};")
-            for sign_node in next_signs: sv.append(f"    logic {sign_node};")
         
         current_nodes = next_nodes
         current_signs = next_signs

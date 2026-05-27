@@ -25,6 +25,7 @@ scripts/systolic_array/*.csv
 /*failure.csv
 
 obj_dir/*
+scripts/systolic_array/master_modules_32/
 !seed.txt
 reports/*_tree_width_sweep/**/*.csv
 !reports/*_tree_width_sweep/**/*.txt
