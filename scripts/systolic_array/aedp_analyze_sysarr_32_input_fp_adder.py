@@ -120,6 +120,10 @@ class AedpEvaluator:
                     # 4. Calculate Industrial AEDP (W * mm^2 * ns^2)
                     aedp_score = area_mm2 * edp_score
                     
+                    if slack_ps < 0:
+                        self.logger.debug(f"Skipping {mod_name} @ {mhz}MHz — negative slack ({slack_ps} ps)")
+                        continue
+
                     dataset.append({
                         'module_name': mod_name,
                         'frequency_mhz': mhz,

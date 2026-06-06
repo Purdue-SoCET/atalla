@@ -24,8 +24,14 @@ scripts/systolic_array/*.csv
 /*failures.csv
 /*failure.csv
 
+reports/sysarr_32_input_fp_adder/*
+scripts/systolic_array/shmoo_generated_adders*.sh
+scripts/systolic_array/shmoo_overnight*.sh
 obj_dir/*
 scripts/systolic_array/master_modules_32/
 !seed.txt
 reports/*_tree_width_sweep/**/*.csv
 !reports/*_tree_width_sweep/**/*.txt
+!reports/sysarr_32_input_fp_adder/*.tar.gz
+!scripts/systolic_array/shmoo_generated_adders_template.sh
+!scripts/systolic_array/shmoo_overnight_template.sh
