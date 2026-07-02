@@ -8,7 +8,7 @@
 | ------------------- | --------------------------------------------------------------------------------------------------------------------------------------------- |
 | **Project Status**  | Completed                                                                                                                       |
 | **Timeline**        | Spring 2025                                                                                                                                   |
-| **Team Members**    | Akshath Ravikiran, Vinay Jagan                                                                                                                                           |
+| **Team Members**    | Akshath Ravikiran, Vinay Jagan, Mayank Patibandla                                                                                                                                           |
 | **Primary Contact** | Akshath Ravikiran                                                                                                                                          |
 | **Lead**            | Akshath Ravikiran                                                                                                                                           |
 | **Branch**          | `main`                                                                                                                                        |
