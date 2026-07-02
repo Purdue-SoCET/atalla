@@ -16,7 +16,7 @@ input: block size 𝑁, number of blocks 𝐾, matrix 𝐴𝑖𝑗
 output: transposed matrix 𝐴
 1: Step A: Exchange of elements within a block
 2: for 𝑠𝑡𝑎𝑔𝑒 = 0 to 𝑁 − 2 do
-3: for 𝑘 = 1 to 𝐾 do
+3: for 𝑘 = 1 to 𝐾 doa
 4: for 𝑟𝑜𝑤 = (𝑘 − 1) × 𝑁 to 𝑘 × 𝑁 − 2 − 𝑠𝑡𝑎𝑔𝑒 do
 5: for 𝑐𝑜𝑙 = 𝑠𝑡𝑎𝑔𝑒 + 1 to 𝑁 − 1 do
 6: Swap(𝐴[𝑟𝑜𝑤, 𝑐𝑜𝑙], 𝐴[𝑟𝑜𝑤 + 1, 𝑐𝑜𝑙 − 1])
