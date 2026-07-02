@@ -3,7 +3,7 @@
 ![TopLevel](../img/scratchpad_top_level.png)
 
 Code [here](https://github.com/Purdue-SoCET/atalla/tree/main/rtl/modules/memory/scratchpad). 
-Report [here](https://github.com/Purdue-SoCET/atalla/blob/documentation_update_branch/docs/src/pdfs/ScratchpadReport.pdf).
+Report [here](https://github.com/Purdue-SoCET/atalla/blob/documentation_update_branch/docs/src/pdfs/f25_scratchpad_report.pdf).
 
 Modern AI Accelerators, like the Atalla [Ax01 core](https://github.com/Purdue-SoCET/atalla/tree/main), depend on exploiting predictable, high-bandwidth data movement between on-chip memory and compute modules. The Machine Learning (ML) workloads that these specialized chips target inherently expose deterministic access patterns – including tiled matrix multiplication, toeplitz-based convolution, tensor transposes and vector operations. The memory primitive in such architectures are arrays, often called vectors, as opposed to the scalar-optimized general-purpose chips. Additionally, these chips implement memory hierarchies that rely on conventional cache designs, accommodating a wide variety of workloads. These mechanisms are defined by tag overheads, unpredictable latencies, and hardware-based prefetchers that are optimized for adapting to different workload characteristics at runtime. 
 
