@@ -1,16 +1,56 @@
-### Lockup-Free D/I Cache  
+# Lockup-Free D/I Cache
 
-![TopLevel](../img/dcache_top.png)
+> Lockup-free, multi-banked instruction/data cache with per-bank MSHRs for non-blocking memory access.
+
+---
+
+| Field               | Details                                                                                                                                       |
+| ------------------- | --------------------------------------------------------------------------------------------------------------------------------------------- |
+| **Project Status**  | Completed                                                                                                                       |
+| **Timeline**        | Spring 2025                                                                                                                                   |
+| **Team Members**    | Akshath Ravikiran, Vinay Jagan                                                                                                                                           |
+| **Primary Contact** | Akshath Ravikiran                                                                                                                                          |
+| **Lead**            | Akshath Ravikiran                                                                                                                                           |
+| **Branch**          | `main`                                                                                                                                        |
+| **Path**            | `rtl/modules/memory/caches`                                                                                                                   |
+| **Revision ID**     | `0.0.1`                                                                                                                                       |
+| **Code**            | [Cache RTL](https://github.com/Purdue-SoCET/atalla/tree/main/rtl/modules/memory/caches)                                                       |
+| **Final Report**    | [Lockup-Free Cache Report](https://github.com/Purdue-SoCET/atalla/blob/documentation_update_branch/docs/src/pdfs/lockupfreecache.pdf)         |
+| **Last Updated**    | 2026-07-02                                                                                                                                    |
+
+---
+
+## Overview
 
 This project implements a lockup-free, multi-banked cache intended for integration with the SoCET AIHW and GPU cores. The design allows cache hits to complete independently of outstanding misses, while supporting multiple in-flight memory requests via per-bank MSHR queues.
 
-The cache is fully parameterized (capacity, associativity, block size, banks, MSHR depth) and written in synthesizable SystemVerilog. The implementation targets realistic OoO scheduling behavior rather than simplified blocking semantics.
+The cache is **fully parameterized** (capacity, associativity, block size, banks, MSHR depth) and written in synthesizable SystemVerilog. The implementation targets realistic OoO scheduling behavior rather than simplified blocking semantics.
 
-Code [here](https://github.com/Purdue-SoCET/atalla/tree/main/rtl/modules/memory/caches).
-Report [here](https://github.com/Purdue-SoCET/atalla/blob/documentation_update_branch/docs/src/pdfs/lockupfreecache.pdf).
+---
 
+## System Diagram
 
-### Architectural Overview
+The cache is organized as multiple independent banks. Each bank owns its local cache array, MSHR buffer, replacement logic, and control FSM. Incoming memory operations are routed to banks using set interleaving.
+
+```python
+Processor Memory Request
+   ↓
+Address Decode
+   ↓
+Bank Select
+   ↓
+Cache Bank
+   ↓
+Hit Path / MSHR Miss Path
+   ↓
+Memory Response + UUID Completion
+```
+
+![TopLevel](../img/dcache_top.png)
+
+-- 
+
+## Architectural Overview
 
 At the top level, the cache is organized as N independent banks, each containing:
 
@@ -33,7 +73,7 @@ Miss completion is decoupled from request issue via UUID tagging, allowing the p
 
 ---
 
-### Banking and Set Interleaving
+## Banking and Set Interleaving
 
 Banks partition the total set space rather than duplicating full cache structures. Set indices are interleaved across banks to maximize spatial parallelism:
 
@@ -45,7 +85,7 @@ This mapping allows sequential memory accesses (e.g., streaming through arrays) 
 ![Addressing Logic](../img/addressing.drawio.png)
 
 
-### Miss Status Holding Registers (MSHRs)
+## Miss Status Holding Registers (MSHRs)
 
 Each bank contains a FIFO-style MSHR buffer that tracks outstanding misses. An MSHR entry represents one cache block, not individual words.
 
@@ -59,7 +99,7 @@ Each MSHR stores:
 
 ![Buffer Logic](../img/buffer.drawio.png)
 
-### Secondary Miss Coalescing
+## Secondary Miss Coalescing
 
 If a miss arrives for a block already present in the buffer, it is coalesced into the existing MSHR:
 
@@ -76,7 +116,7 @@ The buffer is implemented as a shift-based pipeline rather than pointer-indexed 
 
 Latency added by shifting is negligible relative to DRAM service time.
 
-### Bank Operation and Hit-Under-Miss
+## Bank Operation and Hit-Under-Miss
 
 Each bank exposes two independent access paths:
 
@@ -97,7 +137,7 @@ On a miss:
 * buffered store data merged
 * UUID returned upon completion
 
-### MSHR Hit Resolution
+## MSHR Hit Resolution
 
 A key corner case arises when a secondary miss reaches the bank after the primary miss has already been latched. To handle this, the bank performs MSHR hit detection:
 
@@ -108,7 +148,7 @@ A key corner case arises when a secondary miss reaches the bank after the primar
 This preserves correctness without forcing full reserialization of misses.
 
 
-### Replacement Policy
+## Replacement Policy
 
 Replacement uses an age-based LRU implementation:
 
@@ -122,7 +162,7 @@ This approach generalizes cleanly to arbitrary associativity but introduces a lo
 Currently, tree-based (pseudo-LRU) is being added to reduce comparator depth and critical path length.
 
 
-### Verification and Results
+## Verification and Results
 
 The design was fully unit-tested and system-tested. Verified behaviors include:
 

@@ -6,7 +6,7 @@
 
 | Field               | Details                                                                                                                                     |
 | ------------------- | ------------------------------------------------------------------------------------------------------------------------------------------- |
-| **Project Status**  | Completed                                                                                                                                   |
+| **Project Status**  | In Progress                                                                                                                                   |
 | **Timeline**        | Spring 2026                                                                                                                                 |
 | **Team Members**    | Julio Hernandez, Jacob Walter, Vedant Sharma, Mayank Patibandla, Akhil Yada, Brian Zhuang                                                   |
 | **Primary Contact** | Vedant Sharma                                                                                                                               |

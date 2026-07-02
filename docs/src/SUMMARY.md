@@ -5,7 +5,7 @@
     - [Setup](./misc/setup.md)
     - [Synthesis](./misc/synthesis.md)
     - [PCACTI](./misc/pcacti.md)
-    - [Ramulator2](./misc/ramulator.md)
+    - [Ramulator2](./misc/ramulator2.md)
     - [Verification](./misc/verification.md)
     - [Style-Guide](./misc/style_guide.md)
     - [DPI-C Tutorial](./misc/dpi.md)
