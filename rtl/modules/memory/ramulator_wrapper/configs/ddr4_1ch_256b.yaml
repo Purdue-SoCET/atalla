@@ -1,0 +1,35 @@
+# ddr4_1ch_256b.yaml — 1 channel, 256-bit bus
+
+Frontend:
+  impl: GEM5
+  clock_ratio: 2
+
+MemorySystem:
+  impl: GenericDRAM
+  clock_ratio: 1
+
+  DRAM:
+    impl: DDR4
+    org:
+      preset: DDR4_8Gb_x16
+      channel: 1
+      channel_width: 256
+      rank: 2
+    timing:
+      preset: DDR4_3200W
+
+  Controller:
+    impl: Generic
+    read_buffer_size: 256
+    write_buffer_size: 64
+    Scheduler:
+      impl: FRFCFS
+    RefreshManager:
+      impl: AllBank
+    RowPolicy:
+      impl: OpenRowPolicy
+      cap: 16
+    plugins:
+
+  AddrMapper:
+    impl: RoBaRaCoCh

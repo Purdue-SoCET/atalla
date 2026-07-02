@@ -1,0 +1,56 @@
+# hbm3_1ch_2pc_32b.yaml — 1 physical channel, 2 pseudochannels, 32-bit each
+# Ramulator models each pseudochannel as an independent channel.
+# channel=2 → 2 pseudochannels, channel_width=32 → 32-bit bus per pseudochannel
+# tx_bytes = prefetch(2) × 32/8 = 8 bytes per pseudochannel
+
+Frontend:
+  impl: GEM5
+  clock_ratio: 1
+
+MemorySystem:
+  impl: GenericDRAM
+  clock_ratio: 1
+
+  DRAM:
+    impl: HBM3
+    org:
+      preset: HBM3_8Gb
+      channel: 2
+      channel_width: 32
+    timing:
+      preset: HBM3_2Gbps
+      nBL:     6
+      nCL:     11
+      nRCDRD:  11
+      nRCDWR:  11
+      nRP:     11
+      nRAS:    27
+      nRC:     30
+      nWR:     13
+      nRTPS:   3
+      nRTPL:   5
+      nCWL:    3
+      nCCDS:   2
+      nCCDL:   3
+      nRRDS:   3
+      nRRDL:   5
+      nWTRS:   5
+      nWTRL:   6
+      nRTW:    5
+      nFAW:    24
+      nRFCSB:  256
+      nREFI:   6240
+      nRREFD:  13
+
+  Controller:
+    impl: Generic
+    read_buffer_size: 256
+    Scheduler:
+      impl: FRFCFS
+    RefreshManager:
+      impl: AllBank
+    RowPolicy:
+      impl: OpenRowPolicy
+
+  AddrMapper:
+    impl: MOP4CLXOR

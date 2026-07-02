@@ -1,0 +1,55 @@
+Frontend:
+  impl: GEM5
+  clock_ratio: 1
+
+MemorySystem:
+  impl: GenericDRAM
+  clock_ratio: 1
+
+  DRAM:
+    impl: HBM3
+    org:
+      preset: HBM3_8Gb
+      channel: 2
+      channel_width: 128    # fix: tx_bytes = prefetch(2) × 128/8 = 32 bytes = AXI beat width
+                            # (was 32 → tx_bytes=8, causing 4× undercount of CAS commands)
+    timing:
+      preset: HBM3_2Gbps
+      # The SV wrapper calls ramulator_tick ×2 per 800 MHz SV cycle → 1600 MHz DRAM clock.
+      # HBM3_2Gbps preset is calibrated for 1000 MHz (tCK=1000ps, rate=2000 MT/s).
+      # Scale all cycle counts by ×1.6 to match the 1600 MHz simulation clock.
+      nBL:     6    # 4  × 1.6
+      nCL:     11   # 7  × 1.6
+      nRCDRD:  11   # 7  × 1.6
+      nRCDWR:  11   # 7  × 1.6
+      nRP:     11   # 7  × 1.6
+      nRAS:    27   # 17 × 1.6
+      nRC:     30   # 19 × 1.6 (= nRAS + nRP, rounded)
+      nWR:     13   # 8  × 1.6
+      nRTPS:   3    # 2  × 1.6
+      nRTPL:   5    # 3  × 1.6
+      nCWL:    3    # 2  × 1.6
+      nCCDS:   2    # 1  × 1.6
+      nCCDL:   3    # 2  × 1.6
+      nRRDS:   3    # 2  × 1.6
+      nRRDL:   5    # 3  × 1.6
+      nWTRS:   5    # 3  × 1.6
+      nWTRL:   6    # 4  × 1.6
+      nRTW:    5    # 3  × 1.6
+      nFAW:    24   # 15 × 1.6
+      nRFCSB:  256  # 160 × 1.6
+      nREFI:   6240 # 3900 × 1.6
+      nRREFD:  13   # 8  × 1.6
+
+  Controller:
+    impl: Generic
+    read_buffer_size: 256    # match DDR4 config — gives scheduler enough lookahead
+    Scheduler:
+      impl: FRFCFS
+    RefreshManager:
+      impl: AllBank
+    RowPolicy:
+      impl: OpenRowPolicy
+
+  AddrMapper:
+    impl: MOP4CLXOR

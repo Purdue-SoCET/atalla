@@ -1,0 +1,36 @@
+# ddr4_config.yaml
+# Heng-I (Ivor) Chu - ivorchu@gmail.com
+
+
+Frontend:
+  impl: GEM5
+  clock_ratio: 2
+
+MemorySystem:
+  impl: GenericDRAM
+  clock_ratio: 1
+
+  DRAM:
+    impl: DDR4
+    org:
+      preset: DDR4_8Gb_x16
+      channel: 1
+      rank: 2
+    timing:
+      preset: DDR4_3200W
+
+  Controller:
+    impl: Generic
+    read_buffer_size: 256
+    write_buffer_size: 64
+    Scheduler:
+      impl: FRFCFS
+    RefreshManager:
+      impl: AllBank
+    RowPolicy:
+      impl: OpenRowPolicy
+      cap: 16
+    plugins:
+
+  AddrMapper:
+    impl: RoBaRaCoCh
