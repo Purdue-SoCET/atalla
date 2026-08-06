@@ -1,16 +1,16 @@
 [submodule "atalla-sim"]
 	path = atalla-sim
-	url = git@github.com:Purdue-SoCET/atalla-sim.git
+	url = org-726@github.itap.purdue.edu:SoCETOrganization/atalla-sim.git
 	branch = master
 [submodule "UVM_1.2"]
 	path = UVM_1.2
-	url = git@github.com:Purdue-SoCET/UVM_1.2.git
+	url = org-726@github.itap.purdue.edu:SoCETOrganization/UVM_1.2.git
 	branch = main
 [submodule "aihw-ppci-compiler"]
 	path = aihw-ppci-compiler
-	url = git@github.com:Purdue-SoCET/aihw-ppci-compiler.git
+	url = org-726@github.itap.purdue.edu:SoCETOrganization/aihw-ppci-compiler.git
 	branch = master
-[submodule "Flowkit"]
-	path = Flowkit
-	url = git@github.com:Purdue-SoCET/Flowkit.git
+[submodule "atalla-flowkit"]
+	path = atalla-flowkit
+	url = org-726@github.itap.purdue.edu:SoCETOrganization/atalla-flowkit.git
 	branch = atallax01
