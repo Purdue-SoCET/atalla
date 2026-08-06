@@ -4,7 +4,7 @@
 
 ![Atalla 0x01 — top-level system view](img/toplevelatallaa.png)
 
-Atalla is a student-led effort within [SoCET](https://engineering.purdue.edu/SoC-Team) at [Purdue University](https://engineering.purdue.edu/ECE) to design a research-grade AI accelerator stack end-to-end.
+Atalla is a student-led effort within [SoCET](https://engineering.purdue.edu/SoC-Team) at [Purdue University](https://engineering.purdue.edu/ECE) to design a research-grade AI accelerator stack end-to-end. H
 
 Modern deep-learning workloads demand high TOPS/W and predictable dataflow. Atalla explores a programmable accelerator architecture that is contributed to by the following teams: 
 
