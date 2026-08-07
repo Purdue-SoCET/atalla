@@ -1,0 +1,29 @@
+@import url('https://fonts.googleapis.com/css2?family=Inter:ital,wght@0,300;0,400;0,600;0,700;1,400&display=swap');
+
+:root {
+  --atalla-font: "Inter", system-ui, -apple-system, "Segoe UI", Roboto, Arial, sans-serif;
+}
+
+html, body,
+#page-wrapper,
+.content,
+.sidebar,
+.sidebar * ,
+nav, header, footer,
+button, input, select, textarea {
+  font-family: var(--atalla-font) !important;
+}
+
+html, body,
+#page-wrapper,
+.content,
+.sidebar,
+nav, header, footer,
+button, input, select, textarea {
+  font-weight: 450 !important; /* try 450 or 500 */
+}
+
+code, pre, kbd, samp, .hljs, .language-text {
+  font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas,
+               "Liberation Mono", "Courier New", monospace !important;
+}

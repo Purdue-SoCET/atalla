@@ -1,0 +1,477 @@
+<!DOCTYPE HTML>
+<html lang="en" class="light sidebar-visible" dir="ltr">
+    <head>
+        <!-- Book generated using mdBook -->
+        <meta charset="UTF-8">
+        <title>Ramulator2 - Atalla Ax01 Documentation</title>
+
+
+        <!-- Custom HTML head -->
+
+        <meta name="description" content="">
+        <meta name="viewport" content="width=device-width, initial-scale=1">
+        <meta name="theme-color" content="#ffffff">
+
+        <link rel="icon" href="../favicon-de23e50b.svg">
+        <link rel="shortcut icon" href="../favicon-8114d1fc.png">
+        <link rel="stylesheet" href="../css/variables-8adf115d.css">
+        <link rel="stylesheet" href="../css/general-2459343d.css">
+        <link rel="stylesheet" href="../css/chrome-ae938929.css">
+        <link rel="stylesheet" href="../css/print-9e4910d8.css" media="print">
+
+        <!-- Fonts -->
+        <link rel="stylesheet" href="../fonts/fonts-9644e21d.css">
+
+        <!-- Highlight.js Stylesheets -->
+        <link rel="stylesheet" id="mdbook-highlight-css" href="../highlight-493f70e1.css">
+        <link rel="stylesheet" id="mdbook-tomorrow-night-css" href="../tomorrow-night-4c0ae647.css">
+        <link rel="stylesheet" id="mdbook-ayu-highlight-css" href="../ayu-highlight-3fdfc3ac.css">
+
+        <!-- Custom theme stylesheets -->
+        <link rel="stylesheet" href="../custom-bc8ccdd2.css">
+
+
+        <!-- Provide site root and default themes to javascript -->
+        <script>
+            const path_to_root = "../";
+            const default_light_theme = "light";
+            const default_dark_theme = "navy";
+            window.path_to_searchindex_js = "../searchindex-7767d737.js";
+        </script>
+        <!-- Start loading toc.js asap -->
+        <script src="../toc-bc995ccc.js"></script>
+    </head>
+    <body>
+    <div id="mdbook-help-container">
+        <div id="mdbook-help-popup">
+            <h2 class="mdbook-help-title">Keyboard shortcuts</h2>
+            <div>
+                <p>Press <kbd>←</kbd> or <kbd>→</kbd> to navigate between chapters</p>
+                <p>Press <kbd>S</kbd> or <kbd>/</kbd> to search in the book</p>
+                <p>Press <kbd>?</kbd> to show this help</p>
+                <p>Press <kbd>Esc</kbd> to hide this help</p>
+            </div>
+        </div>
+    </div>
+    <div id="mdbook-body-container">
+        <!-- Work around some values being stored in localStorage wrapped in quotes -->
+        <script>
+            try {
+                let theme = localStorage.getItem('mdbook-theme');
+                let sidebar = localStorage.getItem('mdbook-sidebar');
+
+                if (theme.startsWith('"') && theme.endsWith('"')) {
+                    localStorage.setItem('mdbook-theme', theme.slice(1, theme.length - 1));
+                }
+
+                if (sidebar.startsWith('"') && sidebar.endsWith('"')) {
+                    localStorage.setItem('mdbook-sidebar', sidebar.slice(1, sidebar.length - 1));
+                }
+            } catch (e) { }
+        </script>
+
+        <!-- Set the theme before any content is loaded, prevents flash -->
+        <script>
+            const default_theme = window.matchMedia("(prefers-color-scheme: dark)").matches ? default_dark_theme : default_light_theme;
+            let theme;
+            try { theme = localStorage.getItem('mdbook-theme'); } catch(e) { }
+            if (theme === null || theme === undefined) { theme = default_theme; }
+            const html = document.documentElement;
+            html.classList.remove('light')
+            html.classList.add(theme);
+            html.classList.add("js");
+        </script>
+
+        <input type="checkbox" id="mdbook-sidebar-toggle-anchor" class="hidden">
+
+        <!-- Hide / unhide sidebar before it is displayed -->
+        <script>
+            let sidebar = null;
+            const sidebar_toggle = document.getElementById("mdbook-sidebar-toggle-anchor");
+            if (document.body.clientWidth >= 1080) {
+                try { sidebar = localStorage.getItem('mdbook-sidebar'); } catch(e) { }
+                sidebar = sidebar || 'visible';
+            } else {
+                sidebar = 'hidden';
+                sidebar_toggle.checked = false;
+            }
+            if (sidebar === 'visible') {
+                sidebar_toggle.checked = true;
+            } else {
+                html.classList.remove('sidebar-visible');
+            }
+        </script>
+
+        <nav id="mdbook-sidebar" class="sidebar" aria-label="Table of contents">
+            <!-- populated by js -->
+            <mdbook-sidebar-scrollbox class="sidebar-scrollbox"></mdbook-sidebar-scrollbox>
+            <noscript>
+                <iframe class="sidebar-iframe-outer" src="../toc.html"></iframe>
+            </noscript>
+            <div id="mdbook-sidebar-resize-handle" class="sidebar-resize-handle">
+                <div class="sidebar-resize-indicator"></div>
+            </div>
+        </nav>
+
+        <div id="mdbook-page-wrapper" class="page-wrapper">
+
+            <div class="page">
+                <div id="mdbook-menu-bar-hover-placeholder"></div>
+                <div id="mdbook-menu-bar" class="menu-bar sticky">
+                    <div class="left-buttons">
+                        <label id="mdbook-sidebar-toggle" class="icon-button" for="mdbook-sidebar-toggle-anchor" title="Toggle Table of Contents" aria-label="Toggle Table of Contents" aria-controls="mdbook-sidebar">
+                            <span class=fa-svg><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 448 512"><!--! Font Awesome Free 6.2.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2022 Fonticons, Inc. --><path d="M0 96C0 78.3 14.3 64 32 64H416c17.7 0 32 14.3 32 32s-14.3 32-32 32H32C14.3 128 0 113.7 0 96zM0 256c0-17.7 14.3-32 32-32H416c17.7 0 32 14.3 32 32s-14.3 32-32 32H32c-17.7 0-32-14.3-32-32zM448 416c0 17.7-14.3 32-32 32H32c-17.7 0-32-14.3-32-32s14.3-32 32-32H416c17.7 0 32 14.3 32 32z"/></svg></span>
+                        </label>
+                        <button id="mdbook-theme-toggle" class="icon-button" type="button" title="Change theme" aria-label="Change theme" aria-haspopup="true" aria-expanded="false" aria-controls="mdbook-theme-list">
+                            <span class=fa-svg><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 576 512"><!--! Font Awesome Free 6.2.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2022 Fonticons, Inc. --><path d="M371.3 367.1c27.3-3.9 51.9-19.4 67.2-42.9L600.2 74.1c12.6-19.5 9.4-45.3-7.6-61.2S549.7-4.4 531.1 9.6L294.4 187.2c-24 18-38.2 46.1-38.4 76.1L371.3 367.1zm-19.6 25.4l-116-104.4C175.9 290.3 128 339.6 128 400c0 3.9 .2 7.8 .6 11.6c1.8 17.5-10.2 36.4-27.8 36.4H96c-17.7 0-32 14.3-32 32s14.3 32 32 32H240c61.9 0 112-50.1 112-112c0-2.5-.1-5-.2-7.5z"/></svg></span>
+                        </button>
+                        <ul id="mdbook-theme-list" class="theme-popup" aria-label="Themes" role="menu">
+                            <li role="none"><button role="menuitem" class="theme" id="mdbook-theme-default_theme">Auto</button></li>
+                            <li role="none"><button role="menuitem" class="theme" id="mdbook-theme-light">Light</button></li>
+                            <li role="none"><button role="menuitem" class="theme" id="mdbook-theme-rust">Rust</button></li>
+                            <li role="none"><button role="menuitem" class="theme" id="mdbook-theme-coal">Coal</button></li>
+                            <li role="none"><button role="menuitem" class="theme" id="mdbook-theme-navy">Navy</button></li>
+                            <li role="none"><button role="menuitem" class="theme" id="mdbook-theme-ayu">Ayu</button></li>
+                        </ul>
+                        <button id="mdbook-search-toggle" class="icon-button" type="button" title="Search (`/`)" aria-label="Toggle Searchbar" aria-expanded="false" aria-keyshortcuts="/ s" aria-controls="mdbook-searchbar">
+                            <span class=fa-svg><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512"><!--! Font Awesome Free 6.2.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2022 Fonticons, Inc. --><path d="M416 208c0 45.9-14.9 88.3-40 122.7L502.6 457.4c12.5 12.5 12.5 32.8 0 45.3s-32.8 12.5-45.3 0L330.7 376c-34.4 25.2-76.8 40-122.7 40C93.1 416 0 322.9 0 208S93.1 0 208 0S416 93.1 416 208zM208 352c79.5 0 144-64.5 144-144s-64.5-144-144-144S64 128.5 64 208s64.5 144 144 144z"/></svg></span>
+                        </button>
+                    </div>
+
+                    <h1 class="menu-title">Atalla Ax01 Documentation</h1>
+
+                    <div class="right-buttons">
+                        <a href="../print.html" title="Print this book" aria-label="Print this book">
+                            <span class=fa-svg id="print-button"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512"><!--! Font Awesome Free 6.2.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2022 Fonticons, Inc. --><path d="M128 0C92.7 0 64 28.7 64 64v96h64V64H354.7L384 93.3V160h64V93.3c0-17-6.7-33.3-18.7-45.3L400 18.7C388 6.7 371.7 0 354.7 0H128zM384 352v32 64H128V384 368 352H384zm64 32h32c17.7 0 32-14.3 32-32V256c0-35.3-28.7-64-64-64H64c-35.3 0-64 28.7-64 64v96c0 17.7 14.3 32 32 32H64v64c0 35.3 28.7 64 64 64H384c35.3 0 64-28.7 64-64V384zm-16-88c-13.3 0-24-10.7-24-24s10.7-24 24-24s24 10.7 24 24s-10.7 24-24 24z"/></svg></span>
+                        </a>
+
+                    </div>
+                </div>
+
+                <div id="mdbook-search-wrapper" class="hidden">
+                    <form id="mdbook-searchbar-outer" class="searchbar-outer">
+                        <div class="search-wrapper">
+                            <input type="search" id="mdbook-searchbar" name="searchbar" placeholder="Search this book ..." aria-controls="mdbook-searchresults-outer" aria-describedby="searchresults-header">
+                            <div class="spinner-wrapper">
+                                <span class=fa-svg id="fa-spin"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512"><!--! Font Awesome Free 6.2.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2022 Fonticons, Inc. --><path d="M304 48c0-26.5-21.5-48-48-48s-48 21.5-48 48s21.5 48 48 48s48-21.5 48-48zm0 416c0-26.5-21.5-48-48-48s-48 21.5-48 48s21.5 48 48 48s48-21.5 48-48zM48 304c26.5 0 48-21.5 48-48s-21.5-48-48-48s-48 21.5-48 48s21.5 48 48 48zm464-48c0-26.5-21.5-48-48-48s-48 21.5-48 48s21.5 48 48 48s48-21.5 48-48zM142.9 437c18.7-18.7 18.7-49.1 0-67.9s-49.1-18.7-67.9 0s-18.7 49.1 0 67.9s49.1 18.7 67.9 0zm0-294.2c18.7-18.7 18.7-49.1 0-67.9S93.7 56.2 75 75s-18.7 49.1 0 67.9s49.1 18.7 67.9 0zM369.1 437c18.7 18.7 49.1 18.7 67.9 0s18.7-49.1 0-67.9s-49.1-18.7-67.9 0s-18.7 49.1 0 67.9z"/></svg></span>
+                            </div>
+                        </div>
+                    </form>
+                    <div id="mdbook-searchresults-outer" class="searchresults-outer hidden">
+                        <div id="mdbook-searchresults-header" class="searchresults-header"></div>
+                        <ul id="mdbook-searchresults">
+                        </ul>
+                    </div>
+                </div>
+
+                <!-- Apply ARIA attributes after the sidebar and the sidebar toggle button are added to the DOM -->
+                <script>
+                    document.getElementById('mdbook-sidebar-toggle').setAttribute('aria-expanded', sidebar === 'visible');
+                    document.getElementById('mdbook-sidebar').setAttribute('aria-hidden', sidebar !== 'visible');
+                    Array.from(document.querySelectorAll('#mdbook-sidebar a')).forEach(function(link) {
+                        link.setAttribute('tabIndex', sidebar === 'visible' ? 0 : -1);
+                    });
+                </script>
+
+                <div id="mdbook-content" class="content">
+                    <main>
+                        <h1 id="ramulator2--axi-bus-setup-guide"><a class="header" href="#ramulator2--axi-bus-setup-guide">Ramulator2 + AXI Bus Setup Guide</a></h1>
+<p>This page explains how to set up <strong>CMU-SAFARI Ramulator2</strong> inside the <code>atalla</code> repository and use it with our <strong>AXI Bus</strong>.</p>
+<p>Run all commands from the <code>atalla</code> root unless stated otherwise.</p>
+<blockquote class="blockquote-tag blockquote-tag-important">
+<p class="blockquote-tag-title"><svg viewbox="0 0 16 16" width="18" height="18"><path d="M0 1.75C0 .784.784 0 1.75 0h12.5C15.216 0 16 .784 16 1.75v9.5A1.75 1.75 0 0 1 14.25 13H8.06l-2.573 2.573A1.458 1.458 0 0 1 3 14.543V13H1.75A1.75 1.75 0 0 1 0 11.25Zm1.75-.25a.25.25 0 0 0-.25.25v9.5c0 .138.112.25.25.25h2a.75.75 0 0 1 .75.75v2.19l2.72-2.72a.749.749 0 0 1 .53-.22h6.5a.25.25 0 0 0 .25-.25v-9.5a.25.25 0 0 0-.25-.25Zm7 2.25v2.5a.75.75 0 0 1-1.5 0v-2.5a.75.75 0 0 1 1.5 0ZM9 9a1 1 0 1 1-2 0 1 1 0 0 1 2 0Z"></path></svg>Important</p>
+<p>This work was primarily achieved by Heng-I (Ivor) Chu and Akram Reda during Spring ’26. This documentation was reverse-engineered from their work.</p>
+</blockquote>
+<p>Useful links:</p>
+<ul>
+<li>For quick setup, go to <a href="#installation">Installation</a></li>
+<li>For a basic Ramulator test, go to <a href="#basic-ramulator-axi-test">Basic Ramulator AXI Test</a></li>
+<li>For the SDMA benchmark, go to <a href="#sdma-test">SDMA Test</a></li>
+</ul>
+<p>Note: While the names below mention “RamulatorWrapper”, it is the official code which acts as the bridge to AXI. It does NOT contain sample scripts/files. Feel free to repurpose them, but don’t edit them at will.</p>
+<hr>
+<h2 id="what-is-ramulator2"><a class="header" href="#what-is-ramulator2">What is Ramulator2?</a></h2>
+<p><strong>Ramulator2</strong> is a modern, modular, cycle-level DRAM simulator from CMU-SAFARI. It models DRAM systems such as <strong>DDR3, DDR4, DDR5, LPDDR5, GDDR6, HBM2, and HBM3</strong> using configurable YAML files.</p>
+<p>In our project, Ramulator2 replaces the need to hard-code behavior for one fixed custom DDR4 (blocking/non-blocking) controller. We can connect our <strong>AXI Bus</strong> to a Ramulator2-backed memory model and quickly evaluate different memory standards and timing configurations.</p>
+<p>Ramulator2 is especially useful for architecture exploration. Our accelerator can now compare:</p>
+<ul>
+<li>DDR3 vs DDR4 vs DDR5</li>
+<li>HBM2 vs HBM3</li>
+<li>Different timing parameters</li>
+<li>Different bandwidth/latency tradeoffs</li>
+<li>Custom memory configurations (X channels vs Y channel-width)</li>
+</ul>
+<p>It can also help answer:</p>
+<ul>
+<li>Is the accelerator compute-bound or memory-bound?</li>
+<li>Does HBM improve throughput for our workload?</li>
+<li>How much does DDR5 help compared to DDR4?</li>
+<li>Are burst patterns efficient for the selected memory standard?</li>
+<li>How sensitive is performance to memory latency and bandwidth?</li>
+</ul>
+<hr>
+<h2 id="installation"><a class="header" href="#installation">Installation</a></h2>
+<p>The original Ramulator2 repository can be found <a href="https://github.com/CMU-SAFARI/ramulator2">here</a>.</p>
+<p>Ramulator2 is included in <code>atalla</code> as a <strong>git submodule</strong>. After cloning <code>atalla</code>, initialize the submodule:</p>
+<pre><code class="language-bash">git submodule update --init --recursive
+</code></pre>
+<p>Then build the Ramulator DPI shared library:</p>
+<pre><code class="language-bash">make ram_lib
+</code></pre>
+<p>This should generate:</p>
+<pre><code class="language-text">libramulator_dpi.so
+</code></pre>
+<p>This shared library is loaded by QuestaSim using:</p>
+<pre><code class="language-bash">-sv_lib ./libramulator_dpi
+</code></pre>
+<hr>
+<h2 id="makefile-setup"><a class="header" href="#makefile-setup">Makefile Setup</a></h2>
+<p>The Ramulator flow depends on:</p>
+<ul>
+<li><strong>CMake</strong></li>
+<li><strong>Make</strong></li>
+<li><strong>C++20-capable compiler</strong></li>
+<li><strong>QuestaSim 64-bit</strong></li>
+<li>Access to the Purdue Questa license server</li>
+</ul>
+<p>On Purdue ECN machines, the Makefile uses:</p>
+<pre><code class="language-make">QUESTA_BIN ?= /package/eda/mg/questa2021.4/questasim/bin
+MGLS_LICENSE_FILE ?= 28000@marina.ecn.purdue.edu
+</code></pre>
+<p>Ramulator2 requires a modern C++ compiler, so the Makefile uses GCC 14:</p>
+<pre><code class="language-make">GCC14_CXX := /opt/rh/gcc-toolset-14/root/usr/bin/g++
+GCC14_CC  := /opt/rh/gcc-toolset-14/root/usr/bin/gcc
+GCC14_LIB := /opt/rh/gcc-toolset-14/root/lib64
+</code></pre>
+<p>The main wrapper paths are:</p>
+<pre><code class="language-make">RAM_DIR := ./rtl/modules/memory/ramulator_wrapper
+AXIROOT := ./rtl/include/memory/axi_bus 
+DPIROOT := $(RAM_DIR) -&gt; DPI wrapper directory  
+TBROOT  := ./tb/unit/memory/ramulator_wrapper
+CFGROOT := $(RAM_DIR)/configs  -&gt; Ramulator YAML config directory
+</code></pre>
+<hr>
+<h2 id="dram-configuration"><a class="header" href="#dram-configuration">DRAM Configuration</a></h2>
+<p>The default DRAM model is <strong>DDR4</strong>:</p>
+<pre><code class="language-make">DRAM ?= ddr4
+</code></pre>
+<p>Supported configs:</p>
+<pre><code class="language-make">DRAM_CFG_ddr3   := $(CFGROOT)/ddr3_config.yaml
+DRAM_CFG_ddr4   := $(CFGROOT)/ddr4_config.yaml
+DRAM_CFG_ddr5   := $(CFGROOT)/ddr5_config.yaml
+DRAM_CFG_gddr6  := $(CFGROOT)/gddr6_config.yaml
+DRAM_CFG_hbm2   := $(CFGROOT)/hbm2_config.yaml
+DRAM_CFG_hbm3   := $(CFGROOT)/hbm3_config.yaml
+DRAM_CFG_lpddr5 := $(CFGROOT)/lpddr5_config.yaml
+
+CFG ?= $(DRAM_CFG_$(DRAM))
+</code></pre>
+<p>Run with a specific DRAM standard:</p>
+<pre><code class="language-bash">make sim DRAM=ddr3
+make sim DRAM=ddr4
+make sim DRAM=hbm3
+</code></pre>
+<p>Run with a custom YAML config:</p>
+<pre><code class="language-bash">make sim CFG=rtl/modules/memory/ramulator_wrapper/configs/my_custom_config.yaml
+</code></pre>
+<hr>
+<h2 id="basic-ramulator-axi-test"><a class="header" href="#basic-ramulator-axi-test">Basic Ramulator AXI Test</a></h2>
+<p>Run the default DDR4 simulation:</p>
+<pre><code class="language-bash">make sim
+</code></pre>
+<p>This target:</p>
+<ol>
+<li>Builds <code>libramulator_dpi.so</code></li>
+<li>Compiles the AXI package/interface</li>
+<li>Compiles the Ramulator SV wrapper and testbench</li>
+<li>Runs <code>test_ramulator</code></li>
+</ol>
+<p>Relevant sources:</p>
+<pre><code class="language-make">AXI_SRCS := \
+	$(AXIROOT)/axi_bus_pkg.sv \
+	$(AXIROOT)/axi_bus_if.sv
+
+DPI_SRCS := \
+	$(DPIROOT)/ramulator_sv_wrapper.sv \
+	$(TBROOT)/test_ramulator.sv
+</code></pre>
+<p>The simulation loads the Ramulator shared library and passes the YAML config into the testbench:</p>
+<pre><code class="language-make">$(VSIM64) -c -voptargs="+acc" \
+    -sv_lib ./libramulator_dpi \
+    -G CFG="$(CFG)" \
+    work.test_ramulator \
+    -do "run -all"
+</code></pre>
+<p>Expected result:</p>
+<pre><code class="language-text">[sim] Result: PASSED
+</code></pre>
+<hr>
+<h2 id="questa-gui"><a class="header" href="#questa-gui">Questa GUI</a></h2>
+<p>Open the waveform GUI:</p>
+<pre><code class="language-bash">make sim GUI=ON
+</code></pre>
+<p>Equivalent shorthand:</p>
+<pre><code class="language-bash">make sim_gui
+</code></pre>
+<p>The GUI flow expects this wave script:</p>
+<pre><code class="language-text">./waves/test_ramulator.do
+</code></pre>
+<p>If this file does not exist, the simulation may still run, but waveform setup will not load automatically.</p>
+<hr>
+<h2 id="memory-preload"><a class="header" href="#memory-preload">Memory Preload</a></h2>
+<p>Use memory preload when the AXI/Ramulator testbench needs memory contents initialized before simulation.</p>
+<p>Makefile variables:</p>
+<pre><code class="language-make">MEMINIT      ?=
+MEMINIT_TYPE ?= hex
+MEMINIT_BASE ?= 0
+</code></pre>
+<p>Basic usage:</p>
+<pre><code class="language-bash">make sim MEMINIT=path/to/meminit.hex
+</code></pre>
+<p>With explicit type and base address:</p>
+<pre><code class="language-bash">make sim \
+  MEMINIT=path/to/meminit.hex \
+  MEMINIT_TYPE=hex \
+  MEMINIT_BASE=0
+</code></pre>
+<p>These are passed into QuestaSim as generics:</p>
+<pre><code class="language-make">-G MEM_INIT_FILE="$(MEMINIT)"
+-G MEM_INIT_TYPE="$(MEMINIT_TYPE)"
+-G MEM_INIT_BASE=$(MEMINIT_BASE)
+-G USE_MEMINIT=1
+</code></pre>
+<hr>
+<h2 id="sdma-test"><a class="header" href="#sdma-test">SDMA Test</a></h2>
+<p>The SDMA kernel/instruction is responsible for loading an entire matrix (maximum 32x32) into the Scratchpad. This procedure involves the Scratchpad, AXI Bus and Memory Controller.</p>
+<ol>
+<li>First, generate the SDMA memory initialization binary. Read the file to understand how memory is laid out into a <code>*.bin</code> file.</li>
+</ol>
+<pre><code class="language-bash">python3 rtl/modules/memory/ramulator_wrapper/gen_sdma_meminit.py
+</code></pre>
+<ol start="2">
+<li>Run the SDMA testbench with the generated file:</li>
+</ol>
+<pre><code class="language-bash">make sdma \
+  GUI=ON \
+  DRAM=ddr4 \
+  SDMA_MEMINIT=rtl/modules/memory/ramulator_wrapper/configs/sdma_meminit.bin \
+  SDMA_MEMINIT_TYPE=bin \
+  SDMA_MEMINIT_BASE=0
+</code></pre>
+<p>Notes:</p>
+<ul>
+<li>Remove <code>GUI=ON</code> if the GUI is not needed.</li>
+<li><code>ddr4</code> is the default DRAM config.</li>
+</ul>
+<p>Relevant sources:</p>
+<pre><code class="language-make">SDMA_SRCS := \
+	$(DPIROOT)/ramulator_sv_wrapper.sv \
+	$(TBROOT)/test_sdma.sv
+</code></pre>
+<hr>
+<h2 id="clean-build-artifacts"><a class="header" href="#clean-build-artifacts">Clean Build Artifacts</a></h2>
+<p>Clean simulation artifacts:</p>
+<pre><code class="language-bash">make clean
+</code></pre>
+<p>This removes:</p>
+<pre><code class="language-text">work/
+transcript
+vsim.wlf
+vsim_stacktrace.vstf
+modelsim.ini
+</code></pre>
+<p>For a full Ramulator rebuild, also remove:</p>
+<pre><code class="language-bash">rm -rf build libramulator_dpi.so
+</code></pre>
+<p>Then rebuild:</p>
+<pre><code class="language-bash">make ram_lib
+make sim
+</code></pre>
+<hr>
+<h2 id="common-commands"><a class="header" href="#common-commands">Common Commands</a></h2>
+<pre><code class="language-bash"># Initialize Ramulator2 submodule
+git submodule update --init --recursive
+
+# Build Ramulator DPI shared library
+make ram_lib
+
+# Run default DDR4 test
+make sim
+
+# Run with HBM3
+make sim DRAM=hbm3
+
+# Run with GUI
+make sim GUI=ON
+
+# Generate SDMA memory init binary
+python3 rtl/modules/memory/ramulator_wrapper/gen_sdma_meminit.py
+
+# Run SDMA test
+make sdma \
+  DRAM=ddr4 \
+  SDMA_MEMINIT=rtl/modules/memory/ramulator_wrapper/configs/sdma_meminit.bin \
+  SDMA_MEMINIT_TYPE=bin \
+  SDMA_MEMINIT_BASE=0
+
+# Clean
+make clean
+</code></pre>
+
+                    </main>
+
+                    <nav class="nav-wrapper" aria-label="Page navigation">
+                        <!-- Mobile navigation buttons -->
+                            <a rel="prev" href="../misc/pcacti.html" class="mobile-nav-chapters previous" title="Previous chapter" aria-label="Previous chapter" aria-keyshortcuts="Left">
+                                <span class=fa-svg><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 320 512"><!--! Font Awesome Free 6.2.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2022 Fonticons, Inc. --><path d="M41.4 233.4c-12.5 12.5-12.5 32.8 0 45.3l160 160c12.5 12.5 32.8 12.5 45.3 0s12.5-32.8 0-45.3L109.3 256 246.6 118.6c12.5-12.5 12.5-32.8 0-45.3s-32.8-12.5-45.3 0l-160 160z"/></svg></span>
+                            </a>
+
+                            <a rel="next prefetch" href="../misc/verification.html" class="mobile-nav-chapters next" title="Next chapter" aria-label="Next chapter" aria-keyshortcuts="Right">
+                                <span class=fa-svg><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 320 512"><!--! Font Awesome Free 6.2.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2022 Fonticons, Inc. --><path d="M278.6 233.4c12.5 12.5 12.5 32.8 0 45.3l-160 160c-12.5 12.5-32.8 12.5-45.3 0s-12.5-32.8 0-45.3L210.7 256 73.4 118.6c-12.5-12.5-12.5-32.8 0-45.3s32.8-12.5 45.3 0l160 160z"/></svg></span>
+                            </a>
+
+                        <div style="clear: both"></div>
+                    </nav>
+                </div>
+            </div>
+
+            <nav class="nav-wide-wrapper" aria-label="Page navigation">
+                    <a rel="prev" href="../misc/pcacti.html" class="nav-chapters previous" title="Previous chapter" aria-label="Previous chapter" aria-keyshortcuts="Left">
+                        <span class=fa-svg><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 320 512"><!--! Font Awesome Free 6.2.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2022 Fonticons, Inc. --><path d="M41.4 233.4c-12.5 12.5-12.5 32.8 0 45.3l160 160c12.5 12.5 32.8 12.5 45.3 0s12.5-32.8 0-45.3L109.3 256 246.6 118.6c12.5-12.5 12.5-32.8 0-45.3s-32.8-12.5-45.3 0l-160 160z"/></svg></span>
+                    </a>
+
+                    <a rel="next prefetch" href="../misc/verification.html" class="nav-chapters next" title="Next chapter" aria-label="Next chapter" aria-keyshortcuts="Right">
+                        <span class=fa-svg><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 320 512"><!--! Font Awesome Free 6.2.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2022 Fonticons, Inc. --><path d="M278.6 233.4c12.5 12.5 12.5 32.8 0 45.3l-160 160c-12.5 12.5-32.8 12.5-45.3 0s-12.5-32.8 0-45.3L210.7 256 73.4 118.6c-12.5-12.5-12.5-32.8 0-45.3s32.8-12.5 45.3 0l160 160z"/></svg></span>
+                    </a>
+            </nav>
+
+        </div>
+
+        <template id=fa-eye><span class=fa-svg><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 576 512"><!--! Font Awesome Free 6.2.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2022 Fonticons, Inc. --><path d="M288 32c-80.8 0-145.5 36.8-192.6 80.6C48.6 156 17.3 208 2.5 243.7c-3.3 7.9-3.3 16.7 0 24.6C17.3 304 48.6 356 95.4 399.4C142.5 443.2 207.2 480 288 480s145.5-36.8 192.6-80.6c46.8-43.5 78.1-95.4 93-131.1c3.3-7.9 3.3-16.7 0-24.6c-14.9-35.7-46.2-87.7-93-131.1C433.5 68.8 368.8 32 288 32zM432 256c0 79.5-64.5 144-144 144s-144-64.5-144-144s64.5-144 144-144s144 64.5 144 144zM288 192c0 35.3-28.7 64-64 64c-11.5 0-22.3-3-31.6-8.4c-.2 2.8-.4 5.5-.4 8.4c0 53 43 96 96 96s96-43 96-96s-43-96-96-96c-2.8 0-5.6 .1-8.4 .4c5.3 9.3 8.4 20.1 8.4 31.6z"/></svg></span></template>
+        <template id=fa-eye-slash><span class=fa-svg><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 640 512"><!--! Font Awesome Free 6.2.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2022 Fonticons, Inc. --><path d="M38.8 5.1C28.4-3.1 13.3-1.2 5.1 9.2S-1.2 34.7 9.2 42.9l592 464c10.4 8.2 25.5 6.3 33.7-4.1s6.3-25.5-4.1-33.7L525.6 386.7c39.6-40.6 66.4-86.1 79.9-118.4c3.3-7.9 3.3-16.7 0-24.6c-14.9-35.7-46.2-87.7-93-131.1C465.5 68.8 400.8 32 320 32c-68.2 0-125 26.3-169.3 60.8L38.8 5.1zM223.1 149.5C248.6 126.2 282.7 112 320 112c79.5 0 144 64.5 144 144c0 24.9-6.3 48.3-17.4 68.7L408 294.5c5.2-11.8 8-24.8 8-38.5c0-53-43-96-96-96c-2.8 0-5.6 .1-8.4 .4c5.3 9.3 8.4 20.1 8.4 31.6c0 10.2-2.4 19.8-6.6 28.3l-90.3-70.8zm223.1 298L373 389.9c-16.4 6.5-34.3 10.1-53 10.1c-79.5 0-144-64.5-144-144c0-6.9 .5-13.6 1.4-20.2L83.1 161.5C60.3 191.2 44 220.8 34.5 243.7c-3.3 7.9-3.3 16.7 0 24.6c14.9 35.7 46.2 87.7 93 131.1C174.5 443.2 239.2 480 320 480c47.8 0 89.9-12.9 126.2-32.5z"/></svg></span></template>
+        <template id=fa-copy><span class=fa-svg><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512"><!--! Font Awesome Free 6.2.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2022 Fonticons, Inc. --><path d="M502.6 70.63l-61.25-61.25C435.4 3.371 427.2 0 418.7 0H255.1c-35.35 0-64 28.66-64 64l.0195 256C192 355.4 220.7 384 256 384h192c35.2 0 64-28.8 64-64V93.25C512 84.77 508.6 76.63 502.6 70.63zM464 320c0 8.836-7.164 16-16 16H255.1c-8.838 0-16-7.164-16-16L239.1 64.13c0-8.836 7.164-16 16-16h128L384 96c0 17.67 14.33 32 32 32h47.1V320zM272 448c0 8.836-7.164 16-16 16H63.1c-8.838 0-16-7.164-16-16L47.98 192.1c0-8.836 7.164-16 16-16H160V128H63.99c-35.35 0-64 28.65-64 64l.0098 256C.002 483.3 28.66 512 64 512h192c35.2 0 64-28.8 64-64v-32h-47.1L272 448z"/></svg></span></template>
+        <template id=fa-play><span class=fa-svg><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 384 512"><!--! Font Awesome Free 6.2.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2022 Fonticons, Inc. --><path d="M73 39c-14.8-9.1-33.4-9.4-48.5-.9S0 62.6 0 80V432c0 17.4 9.4 33.4 24.5 41.9s33.7 8.1 48.5-.9L361 297c14.3-8.7 23-24.2 23-41s-8.7-32.2-23-41L73 39z"/></svg></span></template>
+        <template id=fa-clock-rotate-left><span class=fa-svg><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512"><!--! Font Awesome Free 6.2.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2022 Fonticons, Inc. --><path d="M75 75L41 41C25.9 25.9 0 36.6 0 57.9V168c0 13.3 10.7 24 24 24H134.1c21.4 0 32.1-25.9 17-41l-30.8-30.8C155 85.5 203 64 256 64c106 0 192 86 192 192s-86 192-192 192c-40.8 0-78.6-12.7-109.7-34.4c-14.5-10.1-34.4-6.6-44.6 7.9s-6.6 34.4 7.9 44.6C151.2 495 201.7 512 256 512c141.4 0 256-114.6 256-256S397.4 0 256 0C185.3 0 121.3 28.7 75 75zm181 53c-13.3 0-24 10.7-24 24V256c0 6.4 2.5 12.5 7 17l72 72c9.4 9.4 24.6 9.4 33.9 0s9.4-24.6 0-33.9l-65-65V152c0-13.3-10.7-24-24-24z"/></svg></span></template>
+
+
+
+        <script>
+            window.playground_copyable = true;
+        </script>
+
+
+        <script src="../elasticlunr-ef4e11c1.min.js"></script>
+        <script src="../mark-09e88c2c.min.js"></script>
+        <script src="../searcher-09f2665d.js"></script>
+
+        <script src="../clipboard-1626706a.min.js"></script>
+        <script src="../highlight-abc7f01d.js"></script>
+        <script src="../book-a0b12cfe.js"></script>
+
+        <!-- Custom JS scripts -->
+
+
+
+    </div>
+    </body>
+</html>

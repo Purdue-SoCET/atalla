@@ -1,8 +1,10 @@
 # Summary
 
 [Overview](./overview.md)
-- [Updates]
+
+- [Updates](./updates/overview.md)
     - [Setup](./updates/future.md)
+    
 - [Guidelines / How-To](./misc/overview.md)
     - [Setup](./misc/setup.md)
     - [Synthesis](./misc/synthesis.md)
