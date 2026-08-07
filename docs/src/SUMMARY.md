@@ -2,8 +2,8 @@
 
 [Overview](./overview.md)
 
-- [Updates](./updates/overview.md)
-    - [Setup](./updates/future.md)
+- [News](./updates/overview.md)
+    - [05/04/2026](./updates/future.md)
     
 - [Guidelines / How-To](./misc/overview.md)
     - [Setup](./misc/setup.md)
