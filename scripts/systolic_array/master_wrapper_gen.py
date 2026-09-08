@@ -357,7 +357,7 @@ if __name__ == "__main__":
     if args.wrap_all:
         align_levels = math.ceil(math.log2(args.n))
         align_tree_combos = ["".join(x) for x in product(['0', '1'], repeat=align_levels)]
-        align_pipe_combos = [1]
+        align_pipe_combos = [0]
         
         total_combos = len(align_tree_combos) * len(align_pipe_combos) * len(reader)
         print(f"--> --wrap-all passed. Exploring {len(align_tree_combos) * len(align_pipe_combos)} aligner configs against {len(reader)} adder configs (Total Top-Level Wrappers: {total_combos})...")

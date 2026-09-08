@@ -32,7 +32,7 @@ NTFY_TOPIC            = "karani-xbskdh-shmoo-alert"
 # All 5-bit alignTree configs from 00000 to 11111
 ALL_CONFIGS = [format(i, '05b') for i in range(32)]  # 00000 → 11111
 
-OFF_LIMITS_CONFIGS = {"00000"}
+OFF_LIMITS_CONFIGS = {"00000", "10000", "01000", "11000"}
 # ==========================================
 # HELPERS
 # ==========================================

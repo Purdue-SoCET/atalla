@@ -1,4 +1,4 @@
-mods=$(ls master_modules_32/ | grep ".*alignTree_00110.*")
+mods=$(ls master_modules_32/ | grep ".*alignTree_00110.*alignReg_0.*" | sort -V -r)
 
 # Calculate the total number of modules by counting the words
 total=$(echo "$mods" | wc -w)

@@ -1,6 +1,7 @@
 #!/usr/bin/env python3
 import matplotlib.pyplot as plt
 from parse_qor import collect_data
+from parse_qor import write_table
 
 UM2_TO_MM2 = 1e-6
 
@@ -35,6 +36,9 @@ def plot_power(rows, title, filename):
     print(f'Saved {filename}')
 
 if __name__ == '__main__':
-    data = collect_data('sysarr_16_input_fp_adder_data')
-    plot_area(data, 'sysarr_16_input_fp_adder_noretime — Total Area vs Clock Speed', 'sysarr_16_input_fp_adder_noretime_area.png')
-    plot_power(data, 'sysarr_16_input_fp_adder_noretime — Total Power vs Clock Speed', 'sysarr_16_input_fp_adder_noretime_power.png')
+    data = collect_data('/home/asicfab/a/karania/atalla/reports/sysarr_32_input_fp_adder_best_shmoo/sysarr_32_TOP_path_16_2_addCfg_1_alignTree_00010_alignReg_1')
+    plot_area(data, 'sysarr_32_input_fp_adder_best — Total Area vs Clock Speed', 'sysarr_32_input_fp_adder_best_area.png')
+    plot_power(data, 'sysarr_32_input_fp_adder_best — Total Power vs Clock Speed', 'sysarr_32_input_fp_adder_best_power.png')
+    with open('qor_summary_sysarr_32_input_fp_adder_best.md', 'w') as f:
+        f.write('# QoR Summary\n\n')
+        write_table(f, 'sysarr_32_input_fp_adder_best', data)
