@@ -9,4 +9,4 @@ tb/unit/systolic_array/sysarr_MEISSA_top_tb.sv
 -Wno-TIMESCALEMOD
 --top sysarr_MEISSA_top_tb
 -threads 24
--j 48
+-j 24
