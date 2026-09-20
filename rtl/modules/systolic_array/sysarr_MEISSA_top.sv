@@ -318,6 +318,18 @@ module sysarr_MEISSA_top #(
     //     .full()
     // );
 
+    // Output buffer holds DW-wide words: bf16 takes the reducer output, fp16
+    // takes adder_sum directly (already DW-wide). Selecting with a ternary
+    // would widen both arms to the wider operand and truncate at the port.
+    logic [N - 1:0][DW - 1:0] out_wr_data;
+    generate
+        if (IS_FP16) begin : g_wr_data_fp16
+            assign out_wr_data = adder_sum;
+        end else begin : g_wr_data_bf16
+            assign out_wr_data = reduced_data;
+        end
+    endgenerate
+
     output_buffer #(
         .NUM_COLS(N),
         .DATA_WIDTH(DW),
@@ -327,7 +339,7 @@ module sysarr_MEISSA_top #(
         .nRST(nRST),
         .stall(!gsau_if.sa_ready_out),
         .wr_en(shift_reg[TOTAL_DELAY - 3 : PIPELINE_DEPTH]),
-        .wr_data((IS_FP16)? adder_sum : reduced_data),
+        .wr_data(out_wr_data),
         .rd_en(|next_special_counter),
         .rd_data(output_data),
         .vector_done(vector_done),
