@@ -194,8 +194,10 @@ module vreduction_tb;
         nRST = 0;
         @(posedge CLK);
 
+        // i think this test is wrong rtl resets it to high which is correct i think
+        // a unit sitting in reset should be ready that it can accept work 
         if (vruif.out.valid_out || vruif.out.ready_in)
-            $error("FAIL: signals not cleared on reset");
+            $error("FAIL: signals not cleared on reset"); 
         else
             $display("PASS: reset cleared outputs");
 

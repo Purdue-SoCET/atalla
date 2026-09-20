@@ -14,7 +14,8 @@ module reduction_tree
 );
 
     localparam TREE_DEPTH = $clog2(NUM_LANES);
-    localparam ALU_LATENCY = 2;
+    // changed to be 1 w new adder 
+    localparam ALU_LATENCY = 1;
 
     // Create enough storage for all tree levels, each with ALU_LATENCY stages
     logic [15:0] tree_data [0:TREE_DEPTH][0:ALU_LATENCY][NUM_LANES-1:0];

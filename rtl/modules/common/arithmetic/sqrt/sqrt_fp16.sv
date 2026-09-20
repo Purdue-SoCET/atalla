@@ -169,13 +169,19 @@ module sqrt_fp16 (
     logic [15:0] add_out;
     logic add_start;
     
-    add_fp16 add1 (
+    add_fp #(
+        .MANT_W(FRAC_W),
+        .EXP_W(EXP_W)
+    ) add1 (
         .clk(CLK), 
         .nRST(nRST), 
         .start(add_start),
+        .stall(1'b0),
+        .sub(1'b0),
         .fp1_in(mul_out_reg),
         .fp2_in(intercept),
-        .fp_out(add_out)
+        .fp_out(add_out),
+        .done()
     );
     
     assign add_start = mul_done_reg & !second_pass & !third_pass;
