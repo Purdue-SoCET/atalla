@@ -1,5 +1,23 @@
-.SILENT: lint test
-.ONESHELL: lint test
+# NOTE: the systolic_array_arch branch ships its own Questa flow (filelist
+# driven, with a vopt/ACC visibility step). It defines %.wav and clean, which
+# collide with the targets below, so it is kept verbatim as Makefile_sysarr.
+# Use it with:  make -f Makefile_sysarr <mod>.sim MOD=<mod> TB_TOP=<mod>_tb
+# This Makefile stays authoritative for the DPI-C flow (l1/l2/l3/system_test).
+
+# ──────────────────────────────────────────────────────────────
+#  Atalla Simulation Makefile
+# ──────────────────────────────────────────────────────────────
+#  Usage:
+#    make <module>.sim          – command-line simulation (full visibility)
+#    make <module>.sim ACC=1    – with +acc=npr (nets/ports/regs visible)
+#    make <module>.sim ACC=0    – fully optimized (fastest, no visibility)
+#    make <module>.wav          – GUI simulation (with waves)
+#    make <module>.sim FILELIST=path/to/custom.f
+#    make clean
+#
+#  If <module>.f exists in tb/, it is used as the filelist
+#  automatically. A FILELIST= argument overrides everything.
+# ──────────────────────────────────────────────────────────────
 
 SHELL := /bin/bash
 
@@ -27,8 +45,8 @@ INCFLAGS := $(shell find $(INCDIRROOT) -type d -print0 2>/dev/null | xargs -0 -I
 
 VLIB ?= vlib
 VLOG ?= vlog
+VOPT ?= vopt
 VSIM ?= vsim
-GUI ?= OFF
 
 # --- Coverage Controls ---
 COVERAGE ?= OFF           # set to ON to enable coverage
@@ -82,10 +100,8 @@ cov_gsau:
 
 .PHONY: setup lint test clean
 
-setup:
-	mkdir -p $(SCRATCH)
-	python3 scripts/setup.py
-	@echo "[setup] done"
+# ── Include paths (every directory under rtl/) ───────────────
+INCFLAGS := $(shell find $(RTLDIR) -type d -print 2>/dev/null | sed 's/^/+incdir+/')
 
 lint:
 	@if [ -z "$(folder)" ]; then \
@@ -282,7 +298,7 @@ l1_test_gui: dpi_lib
 		GUI=ON
 
 L2_PACKAGES := /vector/vector_pkg.vh,/memory/scratchpad/scpad_pkg.sv,/common/xbar/xbar_pkg.sv,/systolic_array/sys_arr_pkg.vh,/vector/vector_if.vh,/vector/vlsu_if.sv,/memory/scratchpad/scpad_if.sv,/vector/inst_parser_dpi_pkg.sv
-L2_MODULES  := $(L1_MODULES),$(TBROOT)/unit/vector/perf_monitor.sv,/memory/scratchpad,/common/general,/common/memory,/systolic_array/sysarr_MEISSA_top.sv,/systolic_array/sysarr_control_unit.sv,/systolic_array/sysarr_FIFO.sv,/systolic_array/sysarr_OUT_FIFO.sv,/systolic_array/sysarr_MAC.sv,/systolic_array/sysarr_MAC_fp16_2c.sv,/systolic_array/sysarr_MAC_fp16_4c.sv,/systolic_array/sysarr_add.sv,/systolic_array/mul_grid.sv,/systolic_array/pipelined_adder_tree.sv,/systolic_array/skew_buffer.sv,/systolic_array/left_shift.sv,/systolic_array/left_shift_add_bf16.sv,/systolic_array/systolic_array.sv,/systolic_array/arithmetic/mul_bf.sv,/systolic_array/arithmetic/wtm_bf.sv,/systolic_array/arithmetic/mul_fp16.sv,/systolic_array/arithmetic/mul_fp16_nolatch.sv,/systolic_array/arithmetic/add_fp16.sv,/systolic_array/arithmetic/add_fp16_nolatch.sv,/systolic_array/arithmetic/add_fp16_4_input.sv,/systolic_array/arithmetic/reducer.sv,/systolic_array/TPU/TPU_buffer.sv,/common/general,/common/memory
+L2_MODULES  := $(L1_MODULES),$(TBROOT)/unit/vector/perf_monitor.sv,/memory/scratchpad,/common/general,/common/memory,/systolic_array/sysarr_MEISSA_top.sv,/systolic_array/STANDARD/sysarr_control_unit.sv,/systolic_array/sysarr_FIFO.sv,/systolic_array/sysarr_OUT_FIFO.sv,/systolic_array/sysarr_MAC.sv,/systolic_array/sysarr_MAC_fp16_2c.sv,/systolic_array/sysarr_MAC_fp16_4c.sv,/systolic_array/sysarr_add.sv,/systolic_array/mul_grid.sv,/systolic_array/mixed_pipelined_adder_tree.sv,/systolic_array/pipelined_adder_tree.sv,/systolic_array/skew_buffer.sv,/systolic_array/left_shift.sv,/systolic_array/left_shift_add_bf16.sv,/systolic_array/systolic_array.sv,/systolic_array/arithmetic/mul_bf.sv,/systolic_array/arithmetic/wtm_bf.sv,/systolic_array/arithmetic/mul_fp16.sv,/systolic_array/arithmetic/mul_fp16_nolatch.sv,/systolic_array/arithmetic/add_fp16.sv,/systolic_array/arithmetic/add_fp16_nolatch.sv,/systolic_array/arithmetic/add_fp16_4_input.sv,/systolic_array/arithmetic/reducer.sv,/systolic_array/TPU/TPU_buffer.sv,/common/general,/common/memory
 
 l2_test: dpi_lib
 	$(MAKE) test \
@@ -318,7 +334,7 @@ AXI_VLOG_FLAGS ?= -sv -compile_uselibs -cover bst -pedanticerrors -lint -mfcu
 
 
 L3_PACKAGES := /vector/vector_pkg.vh,/memory/scratchpad/scpad_pkg.sv,/common/xbar/xbar_pkg.sv,/systolic_array/sys_arr_pkg.vh,/vector/vector_if.vh,/vector/vlsu_if.sv,/memory/scratchpad/scpad_if.sv,/vector/inst_parser_dpi_pkg.sv,/scheduler/scheduler_pkg.sv,/scheduler/scheduler_core_if.vh
-L3_MODULES  := $(L2_MODULES),$(TBROOT)/unit/vector/perf_monitor.sv,/memory/scratchpad,/common/general,/common/memory,/systolic_array/sysarr_MEISSA_top.sv,/systolic_array/sysarr_control_unit.sv,/systolic_array/sysarr_FIFO.sv,/systolic_array/sysarr_OUT_FIFO.sv,/systolic_array/sysarr_MAC.sv,/systolic_array/sysarr_MAC_fp16_2c.sv,/systolic_array/sysarr_MAC_fp16_4c.sv,/systolic_array/sysarr_add.sv,/systolic_array/mul_grid.sv,/systolic_array/pipelined_adder_tree.sv,/systolic_array/skew_buffer.sv,/systolic_array/left_shift.sv,/systolic_array/left_shift_add_bf16.sv,/systolic_array/systolic_array.sv,/systolic_array/arithmetic/mul_bf.sv,/systolic_array/arithmetic/wtm_bf.sv,/systolic_array/arithmetic/mul_fp16.sv,/systolic_array/arithmetic/mul_fp16_nolatch.sv,/systolic_array/arithmetic/add_fp16.sv,/systolic_array/arithmetic/add_fp16_nolatch.sv,/systolic_array/arithmetic/add_fp16_4_input.sv,/systolic_array/arithmetic/reducer.sv,/systolic_array/TPU/TPU_buffer.sv,/common/general,/common/memory,/scheduler/
+L3_MODULES  := $(L2_MODULES),$(TBROOT)/unit/vector/perf_monitor.sv,/memory/scratchpad,/common/general,/common/memory,/systolic_array/sysarr_MEISSA_top.sv,/systolic_array/STANDARD/sysarr_control_unit.sv,/systolic_array/sysarr_FIFO.sv,/systolic_array/sysarr_OUT_FIFO.sv,/systolic_array/sysarr_MAC.sv,/systolic_array/sysarr_MAC_fp16_2c.sv,/systolic_array/sysarr_MAC_fp16_4c.sv,/systolic_array/sysarr_add.sv,/systolic_array/mul_grid.sv,/systolic_array/mixed_pipelined_adder_tree.sv,/systolic_array/pipelined_adder_tree.sv,/systolic_array/skew_buffer.sv,/systolic_array/left_shift.sv,/systolic_array/left_shift_add_bf16.sv,/systolic_array/systolic_array.sv,/systolic_array/arithmetic/mul_bf.sv,/systolic_array/arithmetic/wtm_bf.sv,/systolic_array/arithmetic/mul_fp16.sv,/systolic_array/arithmetic/mul_fp16_nolatch.sv,/systolic_array/arithmetic/add_fp16.sv,/systolic_array/arithmetic/add_fp16_nolatch.sv,/systolic_array/arithmetic/add_fp16_4_input.sv,/systolic_array/arithmetic/reducer.sv,/systolic_array/TPU/TPU_buffer.sv,/common/general,/common/memory,/scheduler/
 
 l3_test: dpi_lib
 	$(MAKE) test \
@@ -335,7 +351,7 @@ l3_test_gui: dpi_lib
 		GUI=ON
 
 SYSTEM_PACKAGES := /vector/vector_pkg.vh,/memory/scratchpad/scpad_pkg.sv,/common/xbar/xbar_pkg.sv,/systolic_array/sys_arr_pkg.vh,/vector/vector_if.vh,/vector/vlsu_if.sv,/memory/scratchpad/scpad_if.sv,/vector/inst_parser_dpi_pkg.sv,/scheduler/scheduler_pkg.sv,/scheduler/scheduler_core_if.vh,/scheduler/atalla_isa_types.vh
-SYSTEM_MODULES  := $(L2_MODULES),$(TBROOT)/unit/vector/perf_monitor.sv,/memory/scratchpad,/common/general,/common/memory,/systolic_array/sysarr_MEISSA_top.sv,/systolic_array/sysarr_control_unit.sv,/systolic_array/sysarr_FIFO.sv,/systolic_array/sysarr_OUT_FIFO.sv,/systolic_array/sysarr_MAC.sv,/systolic_array/sysarr_MAC_fp16_2c.sv,/systolic_array/sysarr_MAC_fp16_4c.sv,/systolic_array/sysarr_add.sv,/systolic_array/mul_grid.sv,/systolic_array/pipelined_adder_tree.sv,/systolic_array/skew_buffer.sv,/systolic_array/left_shift.sv,/systolic_array/left_shift_add_bf16.sv,/systolic_array/systolic_array.sv,/systolic_array/arithmetic/mul_bf.sv,/systolic_array/arithmetic/wtm_bf.sv,/systolic_array/arithmetic/mul_fp16.sv,/systolic_array/arithmetic/mul_fp16_nolatch.sv,/systolic_array/arithmetic/add_fp16.sv,/systolic_array/arithmetic/add_fp16_nolatch.sv,/systolic_array/arithmetic/add_fp16_4_input.sv,/systolic_array/arithmetic/reducer.sv,/systolic_array/TPU/TPU_buffer.sv,/common/general,/common/memory,/scheduler/,/sim_ram_rr.sv,/system.sv
+SYSTEM_MODULES  := $(L2_MODULES),$(TBROOT)/unit/vector/perf_monitor.sv,/memory/scratchpad,/common/general,/common/memory,/systolic_array/sysarr_MEISSA_top.sv,/systolic_array/STANDARD/sysarr_control_unit.sv,/systolic_array/sysarr_FIFO.sv,/systolic_array/sysarr_OUT_FIFO.sv,/systolic_array/sysarr_MAC.sv,/systolic_array/sysarr_MAC_fp16_2c.sv,/systolic_array/sysarr_MAC_fp16_4c.sv,/systolic_array/sysarr_add.sv,/systolic_array/mul_grid.sv,/systolic_array/mixed_pipelined_adder_tree.sv,/systolic_array/pipelined_adder_tree.sv,/systolic_array/skew_buffer.sv,/systolic_array/left_shift.sv,/systolic_array/left_shift_add_bf16.sv,/systolic_array/systolic_array.sv,/systolic_array/arithmetic/mul_bf.sv,/systolic_array/arithmetic/wtm_bf.sv,/systolic_array/arithmetic/mul_fp16.sv,/systolic_array/arithmetic/mul_fp16_nolatch.sv,/systolic_array/arithmetic/add_fp16.sv,/systolic_array/arithmetic/add_fp16_nolatch.sv,/systolic_array/arithmetic/add_fp16_4_input.sv,/systolic_array/arithmetic/reducer.sv,/systolic_array/TPU/TPU_buffer.sv,/common/general,/common/memory,/scheduler/,/sim_ram_rr.sv,/system.sv
 
 system_test: dpi_lib
 	$(MAKE) test \

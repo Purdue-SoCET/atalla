@@ -11,11 +11,11 @@ interface systolic_array_MAC_if;
   // Signals
   /* verilator lint_off UNUSEDSIGNAL */
   logic start;          // MAC unit start signal                  // Input weight value to be pre-loaded
-  logic [DW-1:0] in_value;                  // Input value to be multiplied
+  logic [DW-1:0] in_value;                  // Input value to be multiplied (BF16)
   logic MAC_shift;                              // shift the input to the next array
-  logic [DW-1:0] in_pass;                   // Input value to be passed to next MAC
-  logic [DW-1:0] in_accumulate;             // Input accumulate value from above
-  logic [DW-1:0] out_accumulate;            // Output accumulate value
+  logic [DW-1:0] in_pass;                   // Input value to be passed to next MAC (BF16)
+  logic [DW_ACC-1:0] in_accumulate;         // Input accumulate value from above (FP32)
+  logic [DW_ACC-1:0] out_accumulate;        // Output accumulate value (FP32)
   logic value_ready;                            // This signal goes high when an operation is *not* in progress, i.e the op is done
   logic weight_en;                          // switches the input bus between weights and inputs.
   logic weight_next_en;

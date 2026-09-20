@@ -91,16 +91,13 @@ module mul_grid #(
 
                 if (FP_BF) begin: fp16
                     //no input or output latch MAC
-                    mul_fp16 u_mul_fp (
+                    mul_fp16_1c u_mul_fp (
                         .clk(clk),
                         .nRST(nRST),
-                        .start(!mul_stall),
-                        .stall(mul_stall),
                         .a(input_pipe[i][j]),
                         .b(weight_pipe[i][j]),
-                        .result(prod[j][i]),
+                        .result(prod[j][i])
                         //.done(mac_ifs[i][j].value_ready)
-                        .done()
                     );
                 end else begin: bf16
                     // there's a latch in bf16
@@ -118,16 +115,8 @@ module mul_grid #(
                     );
                 end
 
-                //register prod for adder tree
-                always_ff @(posedge clk or negedge nRST) begin
-                    if (!nRST) begin
-                        prod_r[i][j] <= '0;
-                    end else if (!mul_stall) begin
-                        //if (mac_ifs[i][j].value_ready) begin
-                        prod_r[i][j] <= prod[i][j];
-                        //end
-                    end
-                end
+                // combinational pass-through to adder tree
+                assign prod_r[i][j] = prod[i][j];
 
             end
         end

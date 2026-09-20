@@ -1,12 +1,12 @@
 import sys_arr_pkg::*;
 
 module TPU_mul_cell #(
-    parameter IS_FP16 = 1
+    localparam int ACC_WIDTH = IS_FP16 ? DW : DW_ACC
 )(
     input logic clk, nRST,
     input logic [DW-1:0] in,
     input logic weight_en,
-    output logic [DW-1:0] result
+    output logic [ACC_WIDTH-1:0] result
 );
 
 logic [DW-1:0] weight;
@@ -32,18 +32,22 @@ generate
             .a(in),
             .b(weight),
             .stall(1'b0),
-            .result(result)
+            .result(result),
+            .done()
         );
     end
     else begin: bf16_multiplier
-        mul_bf16 u_mul_bf16 (
-            .clk(clk),
-            .nRST(nRST),
-            .start(1'b1),
-            .a(in),
-            .b(weight),
-            .result(result)
-        );
+            mul_bf u_mul_cell (
+                .clk(clk),
+                .nRST(nRST),
+                .start(1'b1),
+                .a(in),
+                .b(weight),
+                .result(result),
+                .done(),
+                .mul_ovf(),
+                .mul_unf()
+            );
     end
 endgenerate
 
