@@ -74,23 +74,16 @@ run_suite.sh
 *~
 .DS_Store
 
+wlft*
 !.gitignore
 !.gitmodules
-*.vcd
 
-*ini
-*.deps/
-build/
 waves/
-*.log
-*.jou
 *waves*/
-out/
 covhtmlreport/
 
 __pycache__
 
-*.pyc
 *.ini
 output/
 # NOTE: *.do / *.f / *.mem come from scheduler_integration_SP26_joshklug,
@@ -104,6 +97,9 @@ output/
 !rtl/modules/common/memory/*.mem
 
 modelsim.ini
-work/
 coverage/
 files.f
+
+# ---- DDR: tool scratch / committed venv ----
+protected_modelsim/.venv/
+wlft*

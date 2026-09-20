@@ -103,6 +103,22 @@ cov_gsau:
 # ── Include paths (every directory under rtl/) ───────────────
 INCFLAGS := $(shell find $(RTLDIR) -type d -print 2>/dev/null | sed 's/^/+incdir+/')
 
+## Example: 
+## 		make run FILE=./scripts/xbar/benes_rom/verify.tcl
+## 		make run FILE=./scripts/memory/scratchpad/swizzle/verify.tcl
+run:
+	vsim -do "source $(FILE)"
+run_sim:
+	vsim -c -do "source $(FILE)"
+
+# Usage: make lint folder=/sub/dir [file=name.sv[,name2.sv,...]] [include=/foo/bar,/baz/qux ...]
+## Example: 
+##  make lint folder=/memory/scratchpad 
+### 	-> `vlogs` all the files under rtl/include/memory/scratchpad and rtl/modules/memory/scratchpad
+##  make lint folder=/memory/scratchpad include=/network/xbar 
+### 	-> `vlogs` all the files under rtl/include/memory/scratchpad and rtl/modules/memory/scratchpad, and adds all the include paths under rtl/modules/network/xbar and rtl/include/network/xbar
+##  make lint folder=/memory/scratchpad file=scpad_cntrl.sv,tail.sv 
+### 	-> `vlogs` the files under rtl/include/memory/scratchpad and only the specified files under it
 lint:
 	@if [ -z "$(folder)" ]; then \
 	  echo "Usage: make lint folder=/sub/dir [file=name.sv] [include=/foo]"; exit 1; \
