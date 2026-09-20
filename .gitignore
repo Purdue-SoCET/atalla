@@ -10,3 +10,14 @@ vsim.*
 !.gitignore
 !.gitmodules
 *.vcd
+
+*ini
+*.deps/
+build/
+waves/
+*.log
+*.jou
+*waves*/
+out/
+covhtmlreport/
+waves/

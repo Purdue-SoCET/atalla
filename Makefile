@@ -241,6 +241,7 @@ test:
 clean:
 	rm -rf $(SCRATCH) transcript vsim.wlf work modelsim.ini
 
+SCRDIR = ./rtl/modules/memory/axi_bus/
 
 .PHONY: dpi_lib l1_test l1_test_gui
 
@@ -298,3 +299,20 @@ l2_test_gui: dpi_lib
 		modules=$(L2_MODULES) \
 		VSIM_EXTRA_FLAGS="-sv_lib ./$(DPI_LIB)" \
 		GUI=ON
+
+# --- AXI bus testing (merged from axi_bus_aryan) ---
+# Renamed from %.wav to %.axiwav: our %.wav pattern rule above routes through
+# `make test`, and Make allows only one %.wav rule. Usage: make axi.axiwav
+SIMTIME        ?= 100us
+AXI_INCLUDE    := ./rtl/include/memory/axi_bus/
+AXI_TB         := ./tb/unit/memory/axi_bus/
+AXI_MODULE     := ./rtl/modules/memory/axi_bus/
+AXI_SCRIPT     := ./scripts/memory/axi_bus/
+AXI_EXTRA_SRCS := $(wildcard $(SCRDIR)/*.sv)
+AXI_VSIM_FLAGS ?= -coverage -voptargs="+acc"
+AXI_VLOG_FLAGS ?= -sv -compile_uselibs -cover bst -pedanticerrors -lint -mfcu
+
+%.axiwav:
+	vlog $(AXI_VLOG_FLAGS) +incdir+$(AXI_INCLUDE) $(AXI_TB)$*_tb.sv $(AXI_MODULE)$*.sv $(AXI_EXTRA_SRCS)
+	vsim $(AXI_VSIM_FLAGS) work.$*_tb -do "do $(AXI_SCRIPT)$*.do; run $(SIMTIME);" -suppress 2275
+
