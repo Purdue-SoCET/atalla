@@ -8,8 +8,8 @@
 `ifndef GSAU_CONTROL_UNIT_IF_VH
 `define GSAU_CONTROL_UNIT_IF_VH
 
-`include "sys_arr_pkg.vh"
-`include "vector_pkg.vh"
+// Packages are already read from the filelist or search path.
+// Using explicit imports inside the interface.
 
 interface gsau_control_unit_if;
   import vector_pkg::*;   // reuse basic typedefs (data, addr, etc.)

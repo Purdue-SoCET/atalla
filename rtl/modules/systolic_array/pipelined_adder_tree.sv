@@ -3,8 +3,8 @@
 // Sums N FP16 products and injects an external partial sum (psum_in).
 
 module pipelined_adder_tree #(
-    parameter int N           = 4,    // Number of inputs to sum (MUST be a power of 2), does not include psum
-    parameter int DATA_WIDTH  = 16,   // Element width; must match adder module (FP16 = 16)
+    parameter int N           = 16,    // Number of inputs to sum (MUST be a power of 2), does not include psum
+    parameter int DATA_WIDTH  = 32,   // Element width; must match adder module (FP16 = 16)
     // parameter int ADD_LATENCY = 2,    // Pipeline depth of the adder (0 = combinational)
     parameter int FP_BF = 0           // Determine whether to use FP16 (1) or BF16 (0)
 )(
@@ -12,7 +12,7 @@ module pipelined_adder_tree #(
     input  logic                    nRST,
     input  logic                    stall,
     input  logic [N - 1:0] [DATA_WIDTH-1:0] terms_in,   // Products from one column
-    input  logic [DATA_WIDTH-1:0]   psum_in,         // Partial sum; must be valid alongside terms_in
+    //input  logic [DATA_WIDTH-1:0]   psum_in,         // Partial sum; must be valid alongside terms_in
     output logic [DATA_WIDTH-1:0]   sum_out          // Final result = sum(terms_in) + psum_in
 );
 

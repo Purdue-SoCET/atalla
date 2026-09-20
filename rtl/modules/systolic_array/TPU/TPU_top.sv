@@ -1,4 +1,3 @@
-
 import sys_arr_pkg::*;
 
 module TPU_top #(
@@ -183,7 +182,7 @@ genvar k;
                     .fp_in(psum_pipe[N / 4][r]),
                     .fp_out(reduced_data[r])
                 );
-            end 
+            end
         end
     endgenerate
 

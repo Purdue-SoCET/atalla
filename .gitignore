@@ -1,23 +1,78 @@
-transcript
-work/
-.venv
-vsim.*
-*.txt
-.deps/
-.mti_uselibs/
-.deps/
-*.vcd
-__pycache__/
-*.csv
-systolic_array_tb_pkg.sv
+# ---- Simulator outputs ----
+# Verilator
 obj_dir/
+# Questa / ModelSim
+work/
+transcript
+vsim.*
+*.wlf
+*.ucdb
+*.vstf
+.mti_uselibs/
+*ini
+# Cadence Xcelium
+xcelium.d/
+xrun.history
+*.shm/
+.simvision/
+# Synopsys VCS
+csrc/
+simv
+simv.daidir/
+ucli.key
+*.vpd
+# cocotb
+sim_build/
+results.xml
+
+# ---- Waveforms ----
+*.vcd
+*.fst
+
+# ---- Synthesis / FPGA tool outputs ----
+.Xil/
+*.jou
+*.str
+alib-*/
+*.svf
+*.mr
+*.pvl
+*.syn
+
+# ---- Logs and generated test data ----
+*.log
+*.txt
+*.csv
+out/
+build/
+
+# ---- Generated sources ----
+systolic_array_tb_pkg.sv
+
+# ---- Compiled objects / dependency files ----
+.deps/
+*.deps/
+*.o
+*.a
+*.so
+*.d
+
+# ---- Python ----
+__pycache__/
+*.pyc
+.venv
+*.prof
+
+# ---- Systolic array local build products / scratch ----
+scripts/systolic_array/C++/gen_test_vectors
+rtl/modules/systolic_array/MEISSA/
+tb/unit/systolic_array/sysarr_MEISSA_top_oldtb.sv
+run_suite.sh
+
+# ---- Editor / OS ----
+*.swp
+*~
+.DS_Store
 
 !.gitignore
 !.gitmodules
-
-*ini
-*.deps/
-build/
-*.log
-*.jou
-out/

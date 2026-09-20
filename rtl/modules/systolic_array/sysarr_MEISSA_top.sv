@@ -82,7 +82,7 @@ module sysarr_MEISSA_top #(
                     .nRST(nRST),
                     .stall(1'b0),
                     .terms_in(mul_prod[j]),
-                    .psum_in(),
+                    //.psum_in(),
                     .sum_out(adder_sum[j])
                 );
             end
@@ -202,12 +202,13 @@ module sysarr_MEISSA_top #(
     ); */
     localparam int PIPELINE_DEPTH =
     USE_MIXED_ADDER? (
-        LOG4_IS_WHOLE? 
+        LOG4_IS_WHOLE?
         (MUL_LATENCY + (($clog2(N) + 1) / 2) * ADD4_LATENCY) : (MUL_LATENCY + (($clog2(N) - 1) / 2) * ADD4_LATENCY + ADD_LATENCY)
         ) : (MUL_LATENCY + $clog2(N) * ADD_LATENCY);
 
     // localparam int PIPELINE_DEPTH = MUL_LATENCY + $clog2(N) * ADD_LATENCY;
-    logic [$clog2(N + PIPELINE_DEPTH) - 1:0] credits, next_credits;
+    // Credits = output_buffer depth; +1 in the width so N + PIPELINE_DEPTH fits when it is a power of 2.
+    logic [$clog2(N + PIPELINE_DEPTH + 1) - 1:0] credits, next_credits;
     localparam int OUTPUT_READ_ENABLE = N;
     localparam int TOTAL_DELAY = PIPELINE_DEPTH + OUTPUT_READ_ENABLE + 2; // 2 because extra flags, valid bit & read enable
 
@@ -216,7 +217,7 @@ module sysarr_MEISSA_top #(
     always_ff @(posedge clk or negedge nRST) begin
         if (!nRST) begin
             shift_reg <= '0;
-            credits <= PIPELINE_DEPTH + N - 1;
+            credits <= PIPELINE_DEPTH + N;
         end else begin
             shift_reg <= {shift_reg[TOTAL_DELAY - 2 : 0], gsau_if.sa_input_en};
             credits <= next_credits;
@@ -225,7 +226,7 @@ module sysarr_MEISSA_top #(
 
     always_comb begin
         case ({rdone && gsau_if.sa_ready_out, gsau_if.sa_input_en})
-            2'b10 : next_credits = credits < (PIPELINE_DEPTH + N - 1) ? credits + 1 : credits;
+            2'b10 : next_credits = credits < (PIPELINE_DEPTH + N) ? credits + 1 : credits;
             // 2'b01 : next_credits = (credits == 0) ? 0 : credits - 1;
             2'b01 : next_credits = credits - 1;
             // if 2'b11 or 2'b00, number of credits stays the same
@@ -279,7 +280,7 @@ module sysarr_MEISSA_top #(
         end
     end */
 
-    logic [$clog2(N + PIPELINE_DEPTH) - 1:0] special_counter, next_special_counter;
+    logic [$clog2(N + PIPELINE_DEPTH + 1) - 1:0] special_counter, next_special_counter;
 
     always_ff @ (posedge clk, negedge nRST) begin
         if(!nRST) begin
@@ -296,7 +297,7 @@ module sysarr_MEISSA_top #(
             2'b01: next_special_counter = (special_counter > 0) ? special_counter - 1 : special_counter;
             2'b10: next_special_counter = special_counter + 1;
             default: next_special_counter = special_counter;
-        endcase 
+        endcase
     end
 
     // TPU_buffer #(
@@ -317,6 +318,18 @@ module sysarr_MEISSA_top #(
     //     .full()
     // );
 
+    // Output buffer holds DW-wide words: bf16 takes the reducer output, fp16
+    // takes adder_sum directly (already DW-wide). Selecting with a ternary
+    // would widen both arms to the wider operand and truncate at the port.
+    logic [N - 1:0][DW - 1:0] out_wr_data;
+    generate
+        if (IS_FP16) begin : g_wr_data_fp16
+            assign out_wr_data = adder_sum;
+        end else begin : g_wr_data_bf16
+            assign out_wr_data = reduced_data;
+        end
+    endgenerate
+
     output_buffer #(
         .NUM_COLS(N),
         .DATA_WIDTH(DW),
@@ -326,7 +339,7 @@ module sysarr_MEISSA_top #(
         .nRST(nRST),
         .stall(!gsau_if.sa_ready_out),
         .wr_en(shift_reg[TOTAL_DELAY - 3 : PIPELINE_DEPTH]),
-        .wr_data((IS_FP16)? adder_sum : reduced_data),
+        .wr_data(out_wr_data),
         .rd_en(|next_special_counter),
         .rd_data(output_data),
         .vector_done(vector_done),
@@ -334,7 +347,7 @@ module sysarr_MEISSA_top #(
     );
 
     assign gsau_if.sa_valid_in = rdone && gsau_if.sa_ready_out;
-    
+
     // Drive GSAU output interface
     // Pack N columns of DW bits into sa_array_output (full vector width)
     // assign gsau_if.sa_array_output = {adder_sum[N - 1], output_data[N - 2:0]};

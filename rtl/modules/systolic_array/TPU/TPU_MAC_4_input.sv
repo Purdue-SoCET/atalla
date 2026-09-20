@@ -1,6 +1,9 @@
 `include "systolic_array_4_input_adder_if.vh"
 
+// suppress verilator warnings
+/* verilator lint_off IMPORTSTAR */
 import sys_arr_pkg::*;
+/* verilator lint_off IMPORTSTAR */
 
 module TPU_MAC_4_input #(
     localparam int ACC_WIDTH = IS_FP16 ? DW : DW_ACC,
@@ -53,7 +56,7 @@ assign add_4_input_out = add_4_input_if.out;
 
 generate
 
-    if (IS_FP16) begin  
+    if (IS_FP16) begin
         add_fp16_4_input u_adder_fp16_4_input (
             .clk(clk),
             .nRST(nRST),
@@ -71,7 +74,7 @@ generate
             .add(add_4_input_if)
         );
     end
- 
+
 
     add_fp16_1c #(
         .MANT_W(MANTISSA_SIZE),

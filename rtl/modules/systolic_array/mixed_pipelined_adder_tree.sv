@@ -4,7 +4,7 @@
 `include "sys_arr_pkg.vh" // for compute num tree levels function
 
 module mixed_pipelined_adder_tree #(
-    parameter int N           = 4,    // Number of inputs to sum (MUST be a power of 2), does not include psum
+    parameter int N           = 16,    // Number of inputs to sum (MUST be a power of 2), does not include psum
     // parameter int DATA_WIDTH  = 16,   // Element width; must match adder module (FP16 = 16)
     // parameter bit FINAL_LEVEL_ADD2 = 0,
     // parameter int FP_BF = 1           // Determine whether to use FP16 (1) or BF16 (0)
@@ -30,7 +30,7 @@ module mixed_pipelined_adder_tree #(
 
     assign stage_data[0] = terms_in;
 
-    // Binary reduction tree  
+    // Binary reduction tree
     generate
         for (genvar l = 0; l < TREE_DEPTH; l++) begin : tree_level
             localparam int num_quads = N >> (2 * (l + 1));
@@ -56,7 +56,11 @@ module mixed_pipelined_adder_tree #(
                     //     .out(stage_data[l+1][k])
                     // );
 
-                    add_fp16_4_input_no_if u_adder_fp16_4_input (
+                    add_fp16_4_input_no_if #(
+                        .MANTISSA_SIZE(MANTISSA_SIZE),
+                        .EXPONENT_SIZE(EXPONENT_SIZE),
+                        .OUT_MANTISSA_SIZE(MANTISSA_SIZE)
+                    ) u_adder_fp16_4_input (
                         .clk    (clk),
                         .nRST   (nRST),
                         // .sub    (1'b0),
@@ -96,7 +100,7 @@ module mixed_pipelined_adder_tree #(
                     //     .fp_out (stage_data[l+1][0]),
                     //     .done   ()
                     // );
-                
+
                 add_fp16_1c #(
                     .MANT_W(MANTISSA_SIZE),
                     .EXP_W(EXPONENT_SIZE)
@@ -118,9 +122,9 @@ module mixed_pipelined_adder_tree #(
                     //     .bf1 (stage_data[l][0]),
                     //     .bf2 (stage_data[l][1]),
                     //     .bf_out (stage_data[l+1][0]),
-                    //     .overflow(), 
-                    //     .underflow(), 
-                    //     .invalid(), 
+                    //     .overflow(),
+                    //     .underflow(),
+                    //     .invalid(),
                     //     .done   ()
                     // );
 
@@ -162,12 +166,12 @@ module mixed_pipelined_adder_tree #(
     //         .bf1 (stage_data[TREE_DEPTH][0]),
     //         .bf2 (psum_in),
     //         .bf_out (sum_out),
-    //         .overflow(), 
-    //         .underflow(), 
-    //         .invalid(), 
+    //         .overflow(),
+    //         .underflow(),
+    //         .invalid(),
     //         .done   ()
     //     );
-    // end 
+    // end
 
     assign sum_out = stage_data[TREE_DEPTH][0];
 
