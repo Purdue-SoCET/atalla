@@ -25,8 +25,6 @@
 ./rtl/modules/systolic_array/arithmetic/sysarr_4_input_fp_adder.sv
 ./rtl/modules/common/memory/sram_bank.sv
 ./rtl/modules/systolic_array/arithmetic/mul_bf.sv
-./rtl/modules/systolic_array/arithmetic/reducer.sv
-./rtl/modules/common/general/wtm_bf.sv
 
 // TPU
 ./rtl/modules/systolic_array/TPU/TPU_control_unit.sv

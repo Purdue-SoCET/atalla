@@ -27,8 +27,6 @@
 ./rtl/modules/systolic_array/arithmetic/sysarr_4_input_fp_adder_no_if.sv
 ./rtl/modules/common/memory/sram_bank.sv
 ./rtl/modules/systolic_array/arithmetic/mul_bf.sv
-./rtl/modules/systolic_array/arithmetic/reducer.sv
-./rtl/modules/common/general/wtm_bf.sv
 
 // High-level modules
 ./rtl/modules/systolic_array/mul_grid.sv
