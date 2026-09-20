@@ -207,7 +207,8 @@ module sysarr_MEISSA_top #(
         ) : (MUL_LATENCY + $clog2(N) * ADD_LATENCY);
 
     // localparam int PIPELINE_DEPTH = MUL_LATENCY + $clog2(N) * ADD_LATENCY;
-    logic [$clog2(N + PIPELINE_DEPTH) - 1:0] credits, next_credits;
+    // Credits = output_buffer depth; +1 in the width so N + PIPELINE_DEPTH fits when it is a power of 2.
+    logic [$clog2(N + PIPELINE_DEPTH + 1) - 1:0] credits, next_credits;
     localparam int OUTPUT_READ_ENABLE = N;
     localparam int TOTAL_DELAY = PIPELINE_DEPTH + OUTPUT_READ_ENABLE + 2; // 2 because extra flags, valid bit & read enable
 
@@ -216,7 +217,7 @@ module sysarr_MEISSA_top #(
     always_ff @(posedge clk or negedge nRST) begin
         if (!nRST) begin
             shift_reg <= '0;
-            credits <= PIPELINE_DEPTH + N - 1;
+            credits <= PIPELINE_DEPTH + N;
         end else begin
             shift_reg <= {shift_reg[TOTAL_DELAY - 2 : 0], gsau_if.sa_input_en};
             credits <= next_credits;
@@ -225,7 +226,7 @@ module sysarr_MEISSA_top #(
 
     always_comb begin
         case ({rdone && gsau_if.sa_ready_out, gsau_if.sa_input_en})
-            2'b10 : next_credits = credits < (PIPELINE_DEPTH + N - 1) ? credits + 1 : credits;
+            2'b10 : next_credits = credits < (PIPELINE_DEPTH + N) ? credits + 1 : credits;
             // 2'b01 : next_credits = (credits == 0) ? 0 : credits - 1;
             2'b01 : next_credits = credits - 1;
             // if 2'b11 or 2'b00, number of credits stays the same
@@ -279,7 +280,7 @@ module sysarr_MEISSA_top #(
         end
     end */
 
-    logic [$clog2(N + PIPELINE_DEPTH) - 1:0] special_counter, next_special_counter;
+    logic [$clog2(N + PIPELINE_DEPTH + 1) - 1:0] special_counter, next_special_counter;
 
     always_ff @ (posedge clk, negedge nRST) begin
         if(!nRST) begin
