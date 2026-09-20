@@ -6,6 +6,7 @@
 #include <chrono>
 #include <cstdlib>
 #include "generate_test_vectors.h"
+#include "bf16_exact_acc.hpp"
 
 
 std::string PATH_TO_INPUT = "/scripts/systolic_array/systolic_array_tb_input.csv";
@@ -236,6 +237,7 @@ uint32_t sim_STANDARD_col(
     return acc;
 }
 
+// Models the STANDARD hardware spec.
 std::vector<std::vector<uint16_t>> sim_STANDARD(
                                     const std::vector<std::vector<uint16_t>>& input,
                                     const std::vector<std::vector<uint16_t>>& weight,
@@ -257,6 +259,7 @@ std::vector<std::vector<uint16_t>> sim_STANDARD(
     return output;
 }
 
+// Models the MEISSA32 hardware spec.
 std::vector<std::vector<uint16_t>> sim_MEISSA32(
                                     const std::vector<std::vector<uint16_t>>& input, 
                                     const std::vector<std::vector<uint16_t>>& weight, 
@@ -401,6 +404,7 @@ std::vector<std::vector<uint16_t>> sim_TPU(
     return output;
 }
 
+// Models the TPU32 hardware spec.
 std::vector<std::vector<uint16_t>> sim_TPU32(
                                     const std::vector<std::vector<uint16_t>>& input, 
                                     const std::vector<std::vector<uint16_t>>& weight, 
@@ -452,6 +456,46 @@ std::vector<std::vector<uint16_t>> sim_TPU32(
     return output;
 }
 
+// ----------------------------------------------------------------------------
+// GOLDEN reference: correctly-rounded bf16 dot product.
+// Uses a 576-bit fixed-point accumulator (see bf16_exact_acc.hpp) so that all
+// bf16*bf16 partial products and the psum are summed exactly, with a single
+// round-to-nearest-ties-to-even applied to the final bf16 output. This is the
+// mathematically exact bf16 result the hardware model should be compared to.
+// ----------------------------------------------------------------------------
+static uint16_t sim_GOLDEN_col(const std::vector<uint16_t>& input_row,
+                               const std::vector<uint16_t>& weight_col,
+                               uint16_t psum_bits)
+{
+    ExactAcc acc;
+    eacc_set_bf16(acc, psum_bits);
+    for (size_t i = 0; i < input_row.size(); ++i) {
+        eacc_madd_bf16(acc, input_row[i], weight_col[i]);
+    }
+    return eacc_to_bf16_rne(acc);
+}
+
+static std::vector<std::vector<uint16_t>> sim_GOLDEN(
+        const std::vector<std::vector<uint16_t>>& input,
+        const std::vector<std::vector<uint16_t>>& weight,
+        const std::vector<std::vector<uint16_t>>& psum)
+{
+    const size_t M = input.size();
+    const size_t K = input[0].size();
+    const size_t N = weight[0].size();
+
+    std::vector<std::vector<uint16_t>> output(M, std::vector<uint16_t>(N));
+
+    for (size_t row = 0; row < M; ++row) {
+        for (size_t col = 0; col < N; ++col) {
+            std::vector<uint16_t> weight_col(K);
+            for (size_t k = 0; k < K; ++k) weight_col[k] = weight[k][col];
+            output[row][col] = sim_GOLDEN_col(input[row], weight_col, psum[row][col]);
+        }
+    }
+    return output;
+}
+
 std::vector<std::vector<uint16_t>> generate_random_matrix(int rows, int cols, int min_exponent, int max_exponent, bool is_fp16) {
     if (is_fp16) {
         return generate_random_matrix_fp16(rows, cols, min_exponent, max_exponent);
@@ -462,34 +506,24 @@ std::vector<std::vector<uint16_t>> generate_random_matrix(int rows, int cols, in
 
 std::vector<std::vector<uint16_t>> sim_output_matrix(std::vector<std::vector<uint16_t>> input_matrix, std::vector<std::vector<uint16_t>> weight_matrix, std::vector<std::vector<uint16_t>> psum_matrix)
 {
+    if (!IS_FP16) {
+        // All bf16 variants share the same correctly-rounded reference result.
+        // VERSION only selects which hardware the testbench drives; expected
+        // outputs are always the mathematically exact bf16 GEMM with a single
+        // final round-to-nearest-ties-to-even.
+        return sim_GOLDEN(input_matrix, weight_matrix, psum_matrix);
+    }
+
     std::vector<std::vector<uint16_t>> output_matrix;
 
-    if(VERSION == "MEISSA")
-    {
+    if (VERSION == "MEISSA") {
         output_matrix = sim_MEISSA(input_matrix, weight_matrix, psum_matrix, IS_FP16);
-    }
-    else if (VERSION == "MEISSA32")
-    {
-        output_matrix = sim_MEISSA32(input_matrix, weight_matrix, psum_matrix, IS_FP16);
-    }
-    else if (VERSION == "TPU")
-    {
+    } else if (VERSION == "TPU") {
         output_matrix = sim_TPU(input_matrix, weight_matrix, psum_matrix, IS_FP16);
+    } else {
+        std::cerr << "Error: VERSION '" << VERSION << "' is bf16-only but IS_FP16=true" << std::endl;
+        std::exit(1);
     }
-    else if (VERSION == "TPU32")
-    {
-        output_matrix = sim_TPU32(input_matrix, weight_matrix, psum_matrix, IS_FP16);
-    }
-    else if (VERSION == "STANDARD")
-    {
-        // STANDARD: weight-stationary, sequential FP32 MAC accumulation
-        output_matrix = sim_STANDARD(input_matrix, weight_matrix, psum_matrix, IS_FP16);
-    }
-    else
-    {
-        std::cerr << "Error: Invalid systolic array version" << std::endl;
-    }
-
     return output_matrix;
 }
 
