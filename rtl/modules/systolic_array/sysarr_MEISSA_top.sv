@@ -82,7 +82,7 @@ module sysarr_MEISSA_top #(
                     .nRST(nRST),
                     .stall(1'b0),
                     .terms_in(mul_prod[j]),
-                    .psum_in(),
+                    //.psum_in(),
                     .sum_out(adder_sum[j])
                 );
             end
@@ -202,7 +202,7 @@ module sysarr_MEISSA_top #(
     ); */
     localparam int PIPELINE_DEPTH =
     USE_MIXED_ADDER? (
-        LOG4_IS_WHOLE? 
+        LOG4_IS_WHOLE?
         (MUL_LATENCY + (($clog2(N) + 1) / 2) * ADD4_LATENCY) : (MUL_LATENCY + (($clog2(N) - 1) / 2) * ADD4_LATENCY + ADD_LATENCY)
         ) : (MUL_LATENCY + $clog2(N) * ADD_LATENCY);
 
@@ -296,7 +296,7 @@ module sysarr_MEISSA_top #(
             2'b01: next_special_counter = (special_counter > 0) ? special_counter - 1 : special_counter;
             2'b10: next_special_counter = special_counter + 1;
             default: next_special_counter = special_counter;
-        endcase 
+        endcase
     end
 
     // TPU_buffer #(
@@ -334,7 +334,7 @@ module sysarr_MEISSA_top #(
     );
 
     assign gsau_if.sa_valid_in = rdone && gsau_if.sa_ready_out;
-    
+
     // Drive GSAU output interface
     // Pack N columns of DW bits into sa_array_output (full vector width)
     // assign gsau_if.sa_array_output = {adder_sum[N - 1], output_data[N - 2:0]};
