@@ -1,0 +1,207 @@
+`timescale 1ns / 10ps
+`include "ld_st_unit_if.sv"
+
+module ld_st_unit_tb;
+
+
+    parameter PERIOD = 2;
+    logic CLK = 0, nRST;
+
+    always #(PERIOD/2) CLK++;
+
+    ld_st_unit_if ld_st_if ();
+    ld_st_unit DUT (.CLK(CLK), .nRST(nRST), .ld_st_if(ld_st_if));
+
+    integer casenum;
+    string casename;
+    integer i;
+
+
+initial begin
+    casename = "nRST";
+    ld_st_if.rdIn = 32'd0;
+    ld_st_if.addr = 32'h0;
+    ld_st_if.ready_out = 1'b0;
+    ld_st_if.valid_in = 1'b0;
+    ld_st_if.halfWord = 1'b0;
+    ld_st_if.hit = 1'b0;
+    ld_st_if.data_load = 32'b0;
+    ld_st_if.data_in = 32'b0;
+    ld_st_if.ld = 1'b0;
+    ld_st_if.st = 1'b0;
+    nRST = 1'b0;
+    @(posedge CLK);
+    @(posedge CLK);
+    @(posedge CLK);
+    nRST = 1'b1;
+    @(posedge CLK);
+    @(posedge CLK);
+    @(negedge CLK);
+    casename = "LD test";
+    ld_st_if.rdIn = 32'd5;
+    ld_st_if.addr = 32'hDEADBEEF;
+    ld_st_if.ready_out = 1'b0;
+    ld_st_if.valid_in = 1'b1;
+    ld_st_if.halfWord = 1'b0;
+    ld_st_if.hit = 1'b0;
+    ld_st_if.data_load = 32'b0;
+    ld_st_if.data_in = 32'b0;
+    ld_st_if.ld = 1'b1;
+    ld_st_if.st = 1'b0;
+    @(negedge CLK);
+    ld_st_if.rdIn = 32'd0;
+    ld_st_if.addr = 32'h0;
+    ld_st_if.ready_out = 1'b0;
+    ld_st_if.valid_in = 1'b0;
+    ld_st_if.halfWord = 1'b0;
+    ld_st_if.hit = 1'b0;
+    ld_st_if.data_load = 32'b0;
+    ld_st_if.data_in = 32'b0;
+    ld_st_if.ld = 1'b0;
+    ld_st_if.st = 1'b0;
+    @(posedge CLK);
+    @(posedge CLK);
+    @(posedge CLK);
+    @(posedge CLK);
+    @(negedge CLK);
+    casename = "LD test, hit, no ready";
+    ld_st_if.hit = 1'b1;
+    ld_st_if.data_load = 32'hABCDABCD;
+    @(posedge CLK);
+    @(posedge CLK);
+    @(posedge CLK);
+    @(negedge CLK);
+    casename = "LD test, hit, ready";
+    ld_st_if.ready_out = 1'b1;
+    @(posedge CLK);
+    @(posedge CLK);
+    @(posedge CLK);
+    @(negedge CLK);
+
+    casename = "LD hw test";
+    ld_st_if.rdIn = 32'd5;
+    ld_st_if.addr = 32'hDEADBEEF;
+    ld_st_if.ready_out = 1'b0;
+    ld_st_if.valid_in = 1'b1;
+    ld_st_if.halfWord = 1'b1;
+    ld_st_if.hit = 1'b0;
+    ld_st_if.data_load = 32'b0;
+    ld_st_if.data_in = 32'b0;
+    ld_st_if.ld = 1'b1;
+    ld_st_if.st = 1'b0;
+    @(negedge CLK);
+    ld_st_if.rdIn = 32'd0;
+    ld_st_if.addr = 32'h0;
+    ld_st_if.ready_out = 1'b0;
+    ld_st_if.valid_in = 1'b0;
+    ld_st_if.halfWord = 1'b0;
+    ld_st_if.hit = 1'b0;
+    ld_st_if.data_load = 32'b0;
+    ld_st_if.data_in = 32'b0;
+    ld_st_if.ld = 1'b0;
+    ld_st_if.st = 1'b0;
+    @(posedge CLK);
+    @(posedge CLK);
+    @(posedge CLK);
+    @(posedge CLK);
+    @(negedge CLK);
+    casename = "LD hw test, hit, no ready";
+    ld_st_if.hit = 1'b1;
+    ld_st_if.data_load = 32'hABCDABCD;
+    @(posedge CLK);
+    @(posedge CLK);
+    @(posedge CLK);
+    @(negedge CLK);
+    casename = "LD hw test, hit, ready";
+    ld_st_if.ready_out = 1'b1;
+    @(posedge CLK);
+    @(posedge CLK);
+    @(posedge CLK);
+    @(negedge CLK);
+
+    casename = "ST test";
+    ld_st_if.rdIn = 32'd5;
+    ld_st_if.addr = 32'hDEADBEEF;
+    ld_st_if.ready_out = 1'b0;
+    ld_st_if.valid_in = 1'b1;
+    ld_st_if.halfWord = 1'b0;
+    ld_st_if.hit = 1'b0;
+    ld_st_if.data_load = 32'b0;
+    ld_st_if.data_in = 32'h12345678;
+    ld_st_if.ld = 1'b0;
+    ld_st_if.st = 1'b1;
+    @(negedge CLK);
+    ld_st_if.rdIn = 32'd0;
+    ld_st_if.addr = 32'h0;
+    ld_st_if.ready_out = 1'b0;
+    ld_st_if.valid_in = 1'b0;
+    ld_st_if.halfWord = 1'b0;
+    ld_st_if.hit = 1'b0;
+    ld_st_if.data_load = 32'b0;
+    ld_st_if.data_in = 32'b0;
+    ld_st_if.ld = 1'b0;
+    ld_st_if.st = 1'b0;
+    @(posedge CLK);
+    @(posedge CLK);
+    @(posedge CLK);
+    @(posedge CLK);
+    @(negedge CLK);
+    casename = "ST test, hit, no ready";
+    ld_st_if.hit = 1'b1;
+    @(posedge CLK);
+    @(posedge CLK);
+    @(posedge CLK);
+    @(negedge CLK);
+    casename = "ST test, hit, ready";
+    ld_st_if.ready_out = 1'b1;
+    @(posedge CLK);
+    @(posedge CLK);
+    @(posedge CLK);
+    @(negedge CLK);
+
+    casename = "ST hw test";
+    ld_st_if.rdIn = 32'd5;
+    ld_st_if.addr = 32'hDEADBEEF;
+    ld_st_if.ready_out = 1'b0;
+    ld_st_if.valid_in = 1'b1;
+    ld_st_if.halfWord = 1'b1;
+    ld_st_if.hit = 1'b0;
+    ld_st_if.data_load = 32'b0;
+    ld_st_if.data_in = 32'h87654321;
+    ld_st_if.ld = 1'b0;
+    ld_st_if.st = 1'b1;
+    @(negedge CLK);
+    ld_st_if.rdIn = 32'd0;
+    ld_st_if.addr = 32'h0;
+    ld_st_if.ready_out = 1'b0;
+    ld_st_if.valid_in = 1'b0;
+    ld_st_if.halfWord = 1'b0;
+    ld_st_if.hit = 1'b0;
+    ld_st_if.data_load = 32'b0;
+    ld_st_if.data_in = 32'b0;
+    ld_st_if.ld = 1'b0;
+    ld_st_if.st = 1'b0;
+    @(posedge CLK);
+    @(posedge CLK);
+    @(posedge CLK);
+    @(posedge CLK);
+    @(negedge CLK);
+    casename = "ST hw test, hit, no ready";
+    ld_st_if.hit = 1'b1;
+    @(posedge CLK);
+    @(posedge CLK);
+    @(posedge CLK);
+    @(negedge CLK);
+    casename = "ST hw test, hit, ready";
+    ld_st_if.ready_out = 1'b1;
+    @(posedge CLK);
+    @(posedge CLK);
+    @(posedge CLK);
+    @(negedge CLK);
+    
+
+    $display("DONE");
+    $finish;
+end
+
+endmodule

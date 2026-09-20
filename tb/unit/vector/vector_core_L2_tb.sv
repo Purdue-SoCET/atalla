@@ -877,6 +877,7 @@ module vector_core_L2_tb;
 
         perf_inst.print_summary(cycle_count);
 
+        // Cleanup
         dpi_scheduler_destroy();
         dpi_veggie_destroy();
 

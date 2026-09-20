@@ -5,7 +5,7 @@ module cbg_benes #(
     localparam int STAGES = (2 * TAGWIDTH) - 1, 
     localparam int BITWIDTH = STAGES * (SIZE >> 1)
 ) (
-    logic xif
+    // logic xif,
     input logic [TAGWIDTH-1:0] perm [SIZE],
     output logic [BITWIDTH-1:0] ctrl
 )   

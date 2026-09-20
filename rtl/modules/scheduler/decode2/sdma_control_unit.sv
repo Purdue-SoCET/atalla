@@ -1,0 +1,45 @@
+//Navya Datla 2/12/2026
+
+`include "sdma_control_unit_if.vh"
+
+module sdma_control_unit
+    import atalla_isa_pkg::*;
+#(
+    parameter NUM_INSTRUCTIONS = 4
+) (
+    input logic clk, 
+    sdma_control_unit_if.cu cuif
+);
+
+    always_comb begin : decode_packet
+        int i;
+
+        for (i = 0; i < NUM_INSTRUCTIONS; i++) begin
+            cuif.decoded_sdma_instrs[i] = '0;
+            cuif.decoded_sdma_instrs[i].rs1_rd = cuif.sdma_instrs[i][14:7];
+            cuif.decoded_sdma_instrs[i].rs2 = cuif.sdma_instrs[i][22:15];
+            cuif.decoded_sdma_instrs[i].rs3 = cuif.sdma_instrs[i][30:23];
+            cuif.decoded_sdma_instrs[i].use_rs1 = 1'b1;
+            cuif.decoded_sdma_instrs[i].use_rs2 = 1'b1; 
+            cuif.decoded_sdma_instrs[i].use_rs3 =  1'b1;
+
+
+            casez (opcode_t'(cuif.sdma_instrs[i][OP_W-1:0]))
+                SCPAD_LD:  begin
+                    cuif.decoded_sdma_instrs[i].valid_in = 1'b1;
+                end
+                
+                SCPAD_ST:  begin
+                    cuif.decoded_sdma_instrs[i].valid_in = 1'b1;
+                    cuif.decoded_sdma_instrs[i].store = 1'b1;
+                end
+
+                default: cuif.decoded_sdma_instrs[i] = '0;                
+                
+            endcase
+            
+        end
+        
+    end
+    
+endmodule

@@ -20,4 +20,23 @@ waves/
 *waves*/
 out/
 covhtmlreport/
-waves/
+
+__pycache__
+
+*.pyc
+*.ini
+output/
+# NOTE: *.do / *.f / *.mem come from scheduler_integration_SP26_joshklug,
+# but this repo tracks 38 .do scripts (scripts/memory/axi_bus/*.do etc),
+# files.f and controlbits.mem. Negations keep those visible.
+*.f
+*.mem
+*.do
+!scripts/**/*.do
+!files.f
+!rtl/modules/common/memory/*.mem
+
+modelsim.ini
+work/
+coverage/
+files.f

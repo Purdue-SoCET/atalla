@@ -1,6 +1,7 @@
 `include "vreduction_if.vh"
 `include "vreduction_alu_if.vh"
 `include "reduction_types.vh"
+`include "vector_pkg.vh"
 
 module vreduction #(
     parameter int LANES = 16
@@ -10,11 +11,12 @@ module vreduction #(
 );
 
     import reduction_pkg::*;
+    import vector_pkg::*;
     
     logic busy, broadcast_registered, clear_registered;
     logic [4:0] imm_registered;
-    logic [1:0] reduction_type_registered;
-    logic [NUM_ELEMENTS-1:0][15:0] vector_registered, output_vector;
+    alu_op_t reduction_type_registered;
+    logic [reduction_pkg::NUM_ELEMENTS-1:0][15:0] vector_registered, output_vector;
     logic valid_out_reg;
 
     //we are ready if ready_out, and not ready until we output valid data again
@@ -43,7 +45,7 @@ module vreduction #(
             broadcast_registered <= 'b0;
             clear_registered <= 'b0;
             imm_registered <= 'b0;
-            reduction_type_registered <= 'b0;
+            reduction_type_registered <= ALU_ADD; 
         end
         else begin
             if (vruif.in.valid_in & vruif.out.ready_in) begin
@@ -80,7 +82,7 @@ module vreduction #(
         else begin
             if (rtree_done) begin
                 // Update output_vector directly when tree is done
-                for (int i = 0; i < NUM_ELEMENTS; i++) begin
+                for (int i = 0; i < reduction_pkg::NUM_ELEMENTS; i++) begin
                     if (clear_registered) begin
                         output_vector[i] <= (i == imm_registered) ? rtree_result : 'b0;
                     end

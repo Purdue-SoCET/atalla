@@ -1,4 +1,5 @@
 `include "vreduction_alu_if.vh"
+import vector_pkg::*;
 
 module reduction_tree #(
     parameter LANES = 16        // Must be power of 2
@@ -6,7 +7,7 @@ module reduction_tree #(
     input  logic CLK,
     input  logic nRST,
     input  logic [LANES-1:0][15:0] data_in,  // Packed input: LANES elements of 16 bits each
-    input  logic [1:0]  alu_op,
+    input  alu_op_t alu_op,
     input  logic        valid_in,
     output logic [15:0] data_out,
     output logic        valid_out
@@ -17,7 +18,7 @@ module reduction_tree #(
 
     // Create enough storage for all tree levels, each with ALU_LATENCY stages
     logic [15:0] tree_data [0:TREE_DEPTH][0:ALU_LATENCY][LANES-1:0];
-    logic [1:0]  tree_op   [0:TREE_DEPTH][0:ALU_LATENCY];
+    alu_op_t tree_op   [0:TREE_DEPTH][0:ALU_LATENCY];
     logic        tree_valid[0:TREE_DEPTH][0:ALU_LATENCY];
 
     // Input stage (tree level 0, pipeline stage 0)
@@ -25,7 +26,7 @@ module reduction_tree #(
         if (!nRST) begin
             for (int i = 0; i < LANES; i++)
                 tree_data[0][0][i] <= '0;
-            tree_op[0][0]   <= 2'b0;
+            tree_op[0][0]   <= ALU_ADD;
             tree_valid[0][0] <= 1'b0;
         end 
         else begin
@@ -69,7 +70,7 @@ module reduction_tree #(
             for (pipe = 1; pipe <= ALU_LATENCY; pipe++) begin : gen_pipe
                 always_ff @(posedge CLK or negedge nRST) begin
                     if (!nRST) begin
-                        tree_op[level][pipe]   <= 2'b0;
+                        tree_op[level][pipe]   <= ALU_ADD;
                         tree_valid[level][pipe] <= 1'b0;
                     end else begin
                         tree_op[level][pipe]   <= tree_op[level][pipe-1];
@@ -81,7 +82,7 @@ module reduction_tree #(
             // Transfer valid/op from end of this level to start of next level
             always_ff @(posedge CLK or negedge nRST) begin
                 if (!nRST) begin
-                    tree_op[level+1][0]   <= 2'b0;
+                    tree_op[level+1][0]   <= ALU_ADD;
                     tree_valid[level+1][0] <= 1'b0;
                 end else begin
                     tree_op[level+1][0]   <= tree_op[level][ALU_LATENCY];

@@ -169,7 +169,6 @@ if {[batch_mode]} {
         do $wave_file
     } else {
         puts "No wave do-file found for $wave_basename, adding all waves."
-        add wave -r sim:/*
     }
 
     wave zoom full

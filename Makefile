@@ -282,7 +282,7 @@ l1_test_gui: dpi_lib
 		GUI=ON
 
 L2_PACKAGES := /vector/vector_pkg.vh,/memory/scratchpad/scpad_pkg.sv,/common/xbar/xbar_pkg.sv,/systolic_array/sys_arr_pkg.vh,/vector/vector_if.vh,/vector/vlsu_if.sv,/memory/scratchpad/scpad_if.sv,/vector/inst_parser_dpi_pkg.sv
-L2_MODULES  := $(L1_MODULES),$(TBROOT)/unit/vector/perf_monitor.sv,/memory/scratchpad,/common/general,/common/memory,/systolic_array/sysarr_MEISSA_top.sv,/systolic_array/sysarr_control_unit.sv,/systolic_array/sysarr_FIFO.sv,/systolic_array/sysarr_OUT_FIFO.sv,/systolic_array/sysarr_MAC.sv,/systolic_array/sysarr_MAC_fp16_2c.sv,/systolic_array/sysarr_MAC_fp16_4c.sv,/systolic_array/sysarr_add.sv,/systolic_array/mul_grid.sv,/systolic_array/mixed_pipelined_adder_tree.sv,/systolic_array/pipelined_adder_tree.sv,/systolic_array/skew_buffer.sv,/systolic_array/left_shift.sv,/systolic_array/left_shift_add_bf16.sv,/systolic_array/systolic_array.sv,/systolic_array/arithmetic/mul_bf.sv,/systolic_array/arithmetic/wtm_bf.sv,/systolic_array/arithmetic/mul_fp16.sv,/systolic_array/arithmetic/mul_fp16_nolatch.sv,/systolic_array/arithmetic/add_fp16.sv,/systolic_array/arithmetic/add_fp16_nolatch.sv,/systolic_array/arithmetic/add_fp16_4_input.sv,/systolic_array/arithmetic/reducer.sv,/systolic_array/TPU/TPU_buffer.sv,/common/general,/common/memory
+L2_MODULES  := $(L1_MODULES),$(TBROOT)/unit/vector/perf_monitor.sv,/memory/scratchpad,/common/general,/common/memory,/systolic_array/sysarr_MEISSA_top.sv,/systolic_array/sysarr_control_unit.sv,/systolic_array/sysarr_FIFO.sv,/systolic_array/sysarr_OUT_FIFO.sv,/systolic_array/sysarr_MAC.sv,/systolic_array/sysarr_MAC_fp16_2c.sv,/systolic_array/sysarr_MAC_fp16_4c.sv,/systolic_array/sysarr_add.sv,/systolic_array/mul_grid.sv,/systolic_array/pipelined_adder_tree.sv,/systolic_array/skew_buffer.sv,/systolic_array/left_shift.sv,/systolic_array/left_shift_add_bf16.sv,/systolic_array/systolic_array.sv,/systolic_array/arithmetic/mul_bf.sv,/systolic_array/arithmetic/wtm_bf.sv,/systolic_array/arithmetic/mul_fp16.sv,/systolic_array/arithmetic/mul_fp16_nolatch.sv,/systolic_array/arithmetic/add_fp16.sv,/systolic_array/arithmetic/add_fp16_nolatch.sv,/systolic_array/arithmetic/add_fp16_4_input.sv,/systolic_array/arithmetic/reducer.sv,/systolic_array/TPU/TPU_buffer.sv,/common/general,/common/memory
 
 l2_test: dpi_lib
 	$(MAKE) test \
@@ -316,3 +316,37 @@ AXI_VLOG_FLAGS ?= -sv -compile_uselibs -cover bst -pedanticerrors -lint -mfcu
 	vlog $(AXI_VLOG_FLAGS) +incdir+$(AXI_INCLUDE) $(AXI_TB)$*_tb.sv $(AXI_MODULE)$*.sv $(AXI_EXTRA_SRCS)
 	vsim $(AXI_VSIM_FLAGS) work.$*_tb -do "do $(AXI_SCRIPT)$*.do; run $(SIMTIME);" -suppress 2275
 
+
+L3_PACKAGES := /vector/vector_pkg.vh,/memory/scratchpad/scpad_pkg.sv,/common/xbar/xbar_pkg.sv,/systolic_array/sys_arr_pkg.vh,/vector/vector_if.vh,/vector/vlsu_if.sv,/memory/scratchpad/scpad_if.sv,/vector/inst_parser_dpi_pkg.sv,/scheduler/scheduler_pkg.sv,/scheduler/scheduler_core_if.vh
+L3_MODULES  := $(L2_MODULES),$(TBROOT)/unit/vector/perf_monitor.sv,/memory/scratchpad,/common/general,/common/memory,/systolic_array/sysarr_MEISSA_top.sv,/systolic_array/sysarr_control_unit.sv,/systolic_array/sysarr_FIFO.sv,/systolic_array/sysarr_OUT_FIFO.sv,/systolic_array/sysarr_MAC.sv,/systolic_array/sysarr_MAC_fp16_2c.sv,/systolic_array/sysarr_MAC_fp16_4c.sv,/systolic_array/sysarr_add.sv,/systolic_array/mul_grid.sv,/systolic_array/pipelined_adder_tree.sv,/systolic_array/skew_buffer.sv,/systolic_array/left_shift.sv,/systolic_array/left_shift_add_bf16.sv,/systolic_array/systolic_array.sv,/systolic_array/arithmetic/mul_bf.sv,/systolic_array/arithmetic/wtm_bf.sv,/systolic_array/arithmetic/mul_fp16.sv,/systolic_array/arithmetic/mul_fp16_nolatch.sv,/systolic_array/arithmetic/add_fp16.sv,/systolic_array/arithmetic/add_fp16_nolatch.sv,/systolic_array/arithmetic/add_fp16_4_input.sv,/systolic_array/arithmetic/reducer.sv,/systolic_array/TPU/TPU_buffer.sv,/common/general,/common/memory,/scheduler/
+
+l3_test: dpi_lib
+	$(MAKE) test \
+		tb_file=vector_core_L3_tb.sv \
+		packages=$(L3_PACKAGES) \
+		modules=$(L3_MODULES) \
+		GUI=OFF
+
+l3_test_gui: dpi_lib
+	$(MAKE) test \
+		tb_file=vector_core_L3_tb.sv \
+		packages=$(L3_PACKAGES) \
+		modules=$(L3_MODULES) \
+		GUI=ON
+
+SYSTEM_PACKAGES := /vector/vector_pkg.vh,/memory/scratchpad/scpad_pkg.sv,/common/xbar/xbar_pkg.sv,/systolic_array/sys_arr_pkg.vh,/vector/vector_if.vh,/vector/vlsu_if.sv,/memory/scratchpad/scpad_if.sv,/vector/inst_parser_dpi_pkg.sv,/scheduler/scheduler_pkg.sv,/scheduler/scheduler_core_if.vh,/scheduler/atalla_isa_types.vh
+SYSTEM_MODULES  := $(L2_MODULES),$(TBROOT)/unit/vector/perf_monitor.sv,/memory/scratchpad,/common/general,/common/memory,/systolic_array/sysarr_MEISSA_top.sv,/systolic_array/sysarr_control_unit.sv,/systolic_array/sysarr_FIFO.sv,/systolic_array/sysarr_OUT_FIFO.sv,/systolic_array/sysarr_MAC.sv,/systolic_array/sysarr_MAC_fp16_2c.sv,/systolic_array/sysarr_MAC_fp16_4c.sv,/systolic_array/sysarr_add.sv,/systolic_array/mul_grid.sv,/systolic_array/pipelined_adder_tree.sv,/systolic_array/skew_buffer.sv,/systolic_array/left_shift.sv,/systolic_array/left_shift_add_bf16.sv,/systolic_array/systolic_array.sv,/systolic_array/arithmetic/mul_bf.sv,/systolic_array/arithmetic/wtm_bf.sv,/systolic_array/arithmetic/mul_fp16.sv,/systolic_array/arithmetic/mul_fp16_nolatch.sv,/systolic_array/arithmetic/add_fp16.sv,/systolic_array/arithmetic/add_fp16_nolatch.sv,/systolic_array/arithmetic/add_fp16_4_input.sv,/systolic_array/arithmetic/reducer.sv,/systolic_array/TPU/TPU_buffer.sv,/common/general,/common/memory,/scheduler/,/sim_ram_rr.sv,/system.sv
+
+system_test: dpi_lib
+	$(MAKE) test \
+		tb_file=system_tb.sv \
+		packages=$(SYSTEM_PACKAGES) \
+		modules=$(SYSTEM_MODULES) \
+		GUI=OFF
+
+system_test_gui: dpi_lib
+	$(MAKE) test \
+		tb_file=system_tb.sv \
+		packages=$(SYSTEM_PACKAGES) \
+		modules=$(SYSTEM_MODULES) \
+		GUI=ON
