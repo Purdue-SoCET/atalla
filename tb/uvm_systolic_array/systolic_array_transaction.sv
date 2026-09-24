@@ -1,11 +1,11 @@
 // transaction for systolic array
 //
 
-'ifndef SYSTOLIC_ARRAY_TRANSACTION_SV
-'define SYSTOLIC_ARRAY_TRANSACTION_SV
+`ifndef SYSTOLIC_ARRAY_TRANSACTION_SV
+`define SYSTOLIC_ARRAY_TRANSACTION_SV
 
 import uvm_pkg::*;
-'include "uvm_macros.svh"
+`include "uvm_macros.svh"
 
 class systolic_array_transaction #(parameter int N = 4, parameter int WIDTH = 16) extends uvm_sequence_item; //random inputs
 	rand bit weight_en; 
@@ -15,10 +15,13 @@ class systolic_array_transaction #(parameter int N = 4, parameter int WIDTH = 16
 	rand bit [$clog2(N)-1:0] row_ps_en;
 	rand bit [N*WIDTH-1:0] array_in;
 	rand bit [N*WIDTH-1:0] array_in_partials;
+	rand bit ignore_fifo;
+	rand bit allow_illegal; // for edge case testing 
 
 	bit out_en; //outputs
-	bit drained;
-	bit fifo_has_space;
+	// two status signals - not per transaction so not sure to include
+	// bit drained;
+	// bit fifo_has_space;
 	bit [$clog2(N)-1:0] row_out;
 	bit [N*WIDTH-1:0] array_output;
 
@@ -41,13 +44,13 @@ class systolic_array_transaction #(parameter int N = 4, parameter int WIDTH = 16
 		super.new(name);
 	endfunction
 
-	constraint c_mode_exclusive
-	{
-		(weight_en + input_en) <= 1; // shouldn't load weight and input at same time
-	}
+	constraint c_no_wt_and_in {!allow_illegal -> !(weight_en && input_en);} // 
+	constraint c_no_wt_and_ps {!allow_illegal -> !(weight_en && partial_en);}
 
 	constraint c_row_in_en_range {row_in_en < N;}// keep rows within dimensions
-  	constraint c_row_ps_en_range {row_ps_en < N;} 
+  	constraint c_row_ps_en_range {row_ps_en < N;}
+	
+	constraint c_input_fifo	{soft (ignore_fifo == 0);}
 
 	// need to add more constraints still thinking of them
 
@@ -57,4 +60,4 @@ class systolic_array_transaction #(parameter int N = 4, parameter int WIDTH = 16
 endclass
 
 
-'endif
+`endif
