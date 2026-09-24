@@ -15,7 +15,7 @@ class systolic_array_transaction #(parameter int N = 4, parameter int WIDTH = 16
 	rand bit [$clog2(N)-1:0] row_ps_en;
 	rand bit [N*WIDTH-1:0] array_in;
 	rand bit [N*WIDTH-1:0] array_in_partials;
-	rand bit ignore_fifo;
+	rand bit ignore_fifo; // for edge case testing
 	rand bit allow_illegal; // for edge case testing 
 
 	bit out_en; //outputs
@@ -40,17 +40,29 @@ class systolic_array_transaction #(parameter int N = 4, parameter int WIDTH = 16
     		`uvm_field_int(array_output, UVM_ALL_ON)
   	`uvm_object_utils_end
 
-	function new(string name = "systolic_array_transation");
+	function new(string name = "systolic_array_transaction");
 		super.new(name);
 	endfunction
 
-	constraint c_no_wt_and_in {!allow_illegal -> !(weight_en && input_en);} // 
-	constraint c_no_wt_and_ps {!allow_illegal -> !(weight_en && partial_en);}
+	constraint illegal_behavior 
+	{
+		!allow_illegal -> !(weight_en && input_en);
+		!allow_illegal -> !(weight_en && partial_en);
+		!allow_illegal -> !(input_en && partial_en);
 
-	constraint c_row_in_en_range {row_in_en < N;}// keep rows within dimensions
-  	constraint c_row_ps_en_range {row_ps_en < N;}
+
+	constraint row_bounds
+	{
+		row_in_en < N;
+		row_ps_en < N;
+	}
 	
-	constraint c_input_fifo	{soft (ignore_fifo == 0);}
+	constraint input_fifo {soft (ignore_fifo == 0);}
+
+	constraint bf16
+	{
+		// still looking into floats
+	}
 
 	// need to add more constraints still thinking of them
 
