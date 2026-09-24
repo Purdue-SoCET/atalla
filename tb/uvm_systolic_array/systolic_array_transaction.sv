@@ -7,8 +7,8 @@
 import uvm_pkg::*;
 'include "uvm_macros.svh"
 
-class systolic_array_transaction #(parameter int N = 4, parameter int WIDTH = 16) extends uvm_sequence_item;
-	rand bit weight_en;
+class systolic_array_transaction #(parameter int N = 4, parameter int WIDTH = 16) extends uvm_sequence_item; //random inputs
+	rand bit weight_en; 
 	rand bit input_en;
 	rand bit partial_en;
 	rand bit [$clog2(N)-1:0] row_in_en;
@@ -16,13 +16,13 @@ class systolic_array_transaction #(parameter int N = 4, parameter int WIDTH = 16
 	rand bit [N*WIDTH-1:0] array_in;
 	rand bit [N*WIDTH-1:0] array_in_partials;
 
-	bit out_en;
+	bit out_en; //outputs
 	bit drained;
 	bit fifo_has_space;
 	bit [$clog2(N)-1:0] row_out;
 	bit [N*WIDTH-1:0] array_output;
 
-	`uvm_object_param_utils_begin(systolic_array_transaction #(N, WIDTH))
+	`uvm_object_param_utils_begin(systolic_array_transaction #(N, WIDTH)) //initialization
 		`uvm_field_int(weight_en, UVM_ALL_ON)
     		`uvm_field_int(input_en, UVM_ALL_ON)
     		`uvm_field_int(partial_en, UVM_ALL_ON)
@@ -37,7 +37,7 @@ class systolic_array_transaction #(parameter int N = 4, parameter int WIDTH = 16
     		`uvm_field_int(array_output, UVM_ALL_ON)
   	`uvm_object_utils_end
 
-	function new(string = "systolic_array_transation");
+	function new(string name = "systolic_array_transation");
 		super.new(name);
 	endfunction
 
