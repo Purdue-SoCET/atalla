@@ -7,7 +7,7 @@
 import uvm_pkg::*;
 `include "uvm_macros.svh"
 
-class systolic_array_transaction #(parameter int N = 4, parameter int WIDTH = 16) extends uvm_sequence_item; //random inputs
+class systolic_array_transaction #(parameter N = 4, parameter WIDTH = 16) extends uvm_sequence_item; //random inputs
 	rand bit weight_en; 
 	rand bit input_en;
 	rand bit partial_en;
@@ -49,6 +49,7 @@ class systolic_array_transaction #(parameter int N = 4, parameter int WIDTH = 16
 		!allow_illegal -> !(weight_en && input_en);
 		!allow_illegal -> !(weight_en && partial_en);
 		!allow_illegal -> !(input_en && partial_en);
+	}
 
 
 	constraint row_bounds
