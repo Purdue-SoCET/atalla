@@ -3,8 +3,8 @@
 
 import uvm_pkg::*;
 `include "uvm_macros.svh"
-`include "tc_if.sv"
-`include "tc_tmu_transaction"
+`include "../tc_if.sv"
+`include "tc_tmu_transaction.sv"
 
 class tc_tmu_active_driver extends uvm_driver#(tc_tmu_transaction);
   `uvm_component_utils(tc_tmu_active_driver)

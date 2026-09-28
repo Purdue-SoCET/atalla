@@ -1,0 +1,14 @@
+QuestaSim-64 vlog 2021.4 Compiler 2021.10 Oct 13 2021
+Start time: 18:19:17 on Sep 27,2026
+vlog "+incdir+~/uvm_tcache+~/uvm_tcache" "+acc" "+cover" "+fcover" -L /package/eda/mg/questa2021.4/questasim/uvm-1.2 tb_top.sv -logfile tb_compile.log -printinfilenames=file_search.log 
+** Note: (vlog-2286) test.sv(2): Using implicit +incdir+/package/eda/mg/questa2021.4/questasim/uvm-1.2/../verilog_src/uvm-1.2/src from import uvm_pkg
+-- Compiling package tb_top_sv_unit
+-- Importing package /package/eda/mg/questa2021.4/questasim/uvm-1.2.uvm_pkg (uvm-1.2 Built-in)
+-- Compiling interface tc_if
+-- Compiling module texture_cache
+-- Compiling module tb_top
+
+Top level modules:
+	tb_top
+End time: 18:19:18 on Sep 27,2026, Elapsed time: 0:00:01
+Errors: 0, Warnings: 0

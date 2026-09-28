@@ -4,13 +4,21 @@
 import uvm_pkg::*;
 `include "uvm_macros.svh"
 `include "../tc_if.sv"
+`include "tc_tmu_transaction.sv"
+
+typedef virtual tc_if tc_vif_t;
 
 class tc_tmu_active_monitor extends uvm_monitor;
   `uvm_component_utils(tc_tmu_active_monitor)
 
+  uvm_analysis_port#(tc_tmu_transaction) tc_ap;
+
+  tc_vif_t vif;
+
   function new(string name, uvm_component parent = null);
     super.new(name, parent);
     // TODO: fill in analysis ports
+    tc_ap = new("tc_ap", this);
   endfunction
 
   virtual function void build_phase(uvm_phase phase);
@@ -31,4 +39,3 @@ class tc_tmu_active_monitor extends uvm_monitor;
 endclass
 
 `endif // TC_TMU_ACTIVE_MONITOR_SVH
-

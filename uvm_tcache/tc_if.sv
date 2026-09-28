@@ -11,6 +11,9 @@ interface tc_if (input logic clk);
 	logic tex_width;
 	logic base_addr;
 
+  logic hit_way;
+  logic hit;
+
 	// TODO: define widths
 	logic [31:0] mem_addr;
 	logic [31:0] mem_data;
