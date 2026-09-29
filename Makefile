@@ -11,12 +11,17 @@ SCRIPT = ./scripts/memory/axi_bus/
 #SCRIPT = ./waves/
 SCRATCH := work
 
-VSIM_FLAGS ?= -coverage -voptargs="+acc"
+VSIM_FLAGS     ?= -c -coverage -voptargs="+acc"
+VSIM_FLAGS_GUI ?= -coverage -voptargs="+acc"
 VLOG_FLAGS ?= -sv -compile_uselibs -cover bst -sv -pedanticerrors -lint -mfcu
 
 %.wav:
 	vlog $(VLOG_FLAGS) +incdir+$(INCLUDE) $(TB)$*_tb.sv $(MODULE)$*.sv $(EXTRA_dram_top)
-	vsim $(VSIM_FLAGS) work.$*_tb -do "do $(SCRIPT)$*.do; run $(SIMTIME);" -suppress 2275
+	vsim $(VSIM_FLAGS_GUI) work.$*_tb -do "do $(SCRIPT)$*.do; run $(SIMTIME);" -suppress 2275
+
+%.sim:
+	vlog $(VLOG_FLAGS) +incdir+$(INCLUDE) $(TB)$*_tb.sv $(MODULE)$*.sv $(EXTRA_dram_top)
+	vsim $(VSIM_FLAGS) work.$*_tb -do "run $(SIMTIME); quit -f" -suppress 2275
 
 clean:
 	rm -rf $(SCRATCH) transcript vsim.wlf work modelsim.ini

@@ -296,10 +296,10 @@ interface axi_bus_if(input logic CLK, input logic nRST);
         input sp1_i_valid, aw_sp1_i, w_sp1_i,
         input d_i_valid, aw_d_i, w_d_i,
 
-        // To Master 
-        // output aw_sp0_i_ready, w_sp0_i_ready,
-        // output aw_sp1_i_ready, w_sp1_i_ready,
-        // output aw_d_i_ready, w_d_i_ready, 
+        // To Master
+        output aw_sp0_i_ready, w_sp0_i_ready,
+        output aw_sp1_i_ready, w_sp1_i_ready,
+        output aw_d_i_ready, w_d_i_ready,
         output sp0_wr_ready, sp1_wr_ready, d_wr_ready,
 
         // To Master 

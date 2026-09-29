@@ -247,11 +247,11 @@ program test(
         pressure_r_test(50);
         idle_r_test();
 
-        // smoke_write_test();
-        // pressure_write_test(50);
-        // // idle_write_test();
+        smoke_write_test();
+        pressure_write_test(50);
+        idle_write_test();
 
-        // consecutive_write_test(1, -1, 6);
+        consecutive_write_test(1, -1, 6);
 
         env.report();
         $finish;

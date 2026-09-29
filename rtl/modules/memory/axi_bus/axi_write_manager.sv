@@ -19,7 +19,7 @@ module axi_write_manager #(
     input logic [AWSIZE-1:0]    awsize,
     input logic [AWBURST-1:0]   awburst,
     // To Master AW channel
-    //output logic                awready,
+    output logic                awready,
     // From Master W channel
     input logic                 wvalid,
     input logic [WID-1:0]       wid,
@@ -27,7 +27,7 @@ module axi_write_manager #(
     input logic [WSTRB-1:0]     wstrb,
     input logic                 wlast,
     // To Master W channel
-    //output logic                wready,
+    output logic                wready,
     // From Write controller
     input logic                 aw_pop,
     input logic                 w_pop,
@@ -74,7 +74,6 @@ assign w_full = (w_wr_ptr + 1'b1 == w_rd_ptr);
 assign w_empty = (w_wr_ptr == w_rd_ptr);
 
 // logic to enable ready signal for handshake
-logic awready, wready;
 assign awready = (!aw_full);
 assign wready = (!w_full);
 

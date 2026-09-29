@@ -118,7 +118,7 @@ module axi_write_top(
         .awsize(wr_path_if.aw_sp0_i.size),
         .awburst(wr_path_if.aw_sp0_i.burst),
         // To Master AW channel
-        //.awready(wr_path_if.aw_sp0_i_ready),
+        .awready(wr_path_if.aw_sp0_i_ready),
         // From Master W channel
         .wvalid(sp0_mgr_wvalid),
         .wid(wr_path_if.w_sp0_i.id),
@@ -126,7 +126,7 @@ module axi_write_top(
         .wstrb(wr_path_if.w_sp0_i.strb),
         .wlast(wr_path_if.w_sp0_i.last),
         // To Master W channel
-        //.wready(wr_path_if.w_sp0_i_ready),
+        .wready(wr_path_if.w_sp0_i_ready),
         // From Write Driver 
         .aw_pop(aw_sp0_pop),
         .w_pop(w_sp0_pop),
@@ -160,7 +160,7 @@ module axi_write_top(
         .awsize(wr_path_if.aw_sp1_i.size),
         .awburst(wr_path_if.aw_sp1_i.burst),
         // To Master AW channel
-        //.awready(wr_path_if.aw_sp1_i_ready),
+        .awready(wr_path_if.aw_sp1_i_ready),
         // From Master W channel
         .wvalid(sp1_mgr_wvalid),
         .wid(wr_path_if.w_sp1_i.id),
@@ -168,7 +168,7 @@ module axi_write_top(
         .wstrb(wr_path_if.w_sp1_i.strb),
         .wlast(wr_path_if.w_sp1_i.last),
         // To Master W channel
-        //.wready(wr_path_if.w_sp1_i_ready),
+        .wready(wr_path_if.w_sp1_i_ready),
         // From Write Driver 
         .aw_pop(aw_sp1_pop),
         .w_pop(w_sp1_pop),
@@ -202,7 +202,7 @@ module axi_write_top(
         .awsize(wr_path_if.aw_d_i.size),
         .awburst(wr_path_if.aw_d_i.burst),
         // To Master AW channel
-        //.awready(wr_path_if.aw_d_i_ready),
+        .awready(wr_path_if.aw_d_i_ready),
         // From Master W channel
         .wvalid(d_mgr_wvalid),
         .wid(wr_path_if.w_d_i.id),
@@ -210,7 +210,7 @@ module axi_write_top(
         .wstrb(wr_path_if.w_d_i.strb),
         .wlast(wr_path_if.w_d_i.last),
         // To Master W channel
-        //.wready(wr_path_if.w_d_i_ready),
+        .wready(wr_path_if.w_d_i_ready),
         // From Write Driver 
         .aw_pop(aw_d_pop),
         .w_pop(w_d_pop),

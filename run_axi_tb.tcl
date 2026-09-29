@@ -42,7 +42,9 @@ puts "=============================================================="
 
 vsim -coverage -voptargs=+acc work.$TB_TOP
 
-do ./waves/axi.do
+if {![batch_mode]} {
+    do ./waves/axi.do
+}
 
 run -all
 
