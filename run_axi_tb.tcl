@@ -34,7 +34,7 @@ if {![file exists work]} {
     vlib work
 }
 
-vlog -sv -mfcu {*}$INC_FLAGS {*}$SRC_FILES
+vlog -sv -mfcu -cover bcesft {*}$INC_FLAGS {*}$SRC_FILES
 
 puts "=============================================================="
 puts "Compilation complete. Launching simulation for $TB_TOP"
@@ -46,8 +46,17 @@ if {![batch_mode]} {
     do ./waves/axi.do
 }
 
+onfinish stop
 run -all
 
 puts "=============================================================="
 puts "Simulation finished."
 puts "=============================================================="
+
+coverage save axi_tb.ucdb
+coverage report -details -cvg -directive -code bcesft -output coverage_report.txt
+coverage report -summary -cvg -directive -code bcesft
+
+puts "Coverage report saved to coverage_report.txt"
+
+quit -f
