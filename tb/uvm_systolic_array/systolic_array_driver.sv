@@ -9,7 +9,7 @@ import uvm_pkg::*;
 `include "uvm_macros.svh"
 
 class systolic_array_driver #(parameter N = 4, parameter WIDTH = 16) extends uvm_driver #(systolic_array_transaction #(N, WIDTH));
-  `uvm_component_utils(systolic_array_driver #(N, WIDTH))
+  `uvm_component_param_utils(systolic_array_driver #(N, WIDTH)) // added param
 
   // Virtual interface handle
   virtual systolic_array_if #(N, WIDTH) vif;
@@ -22,7 +22,7 @@ class systolic_array_driver #(parameter N = 4, parameter WIDTH = 16) extends uvm
   // Build phase gets virtual interface 
   function void build_phase(uvm_phase phase);
     super.build_phase(phase);
-    if (!uvm_config_db#(virtual systolic_array_if)::get(this, "", "vif", vif)) begin
+    if (!uvm_config_db#(virtual systolic_array_if #(N, WIDTH)::get(this, "", "vif", vif)) begin // added in N,WIDTH
       `uvm_fatal(get_type_name(), "Virtual interface not found; not set at top level")
     end
   endfunction
@@ -40,19 +40,19 @@ class systolic_array_driver #(parameter N = 4, parameter WIDTH = 16) extends uvm
   endtask
 
   // task for reseting inputs 
-  task reset_all():
+  task reset_all(); // changed colon to semicolon
     @(vif.driver);  // syncs to clock edge 
-    vif.driver.weight_en <= 1'b0;
-    vif.driver.input_en <= 1'b0;
-    vif.driver.partial_en <= 1'b0;
-    vif.driver.row_in_en <= 1'b0;
-    vif.driver.row_ps_en <= 1'b0;
-    vif.driver.array_in <= 1'b0;
-    vif.driver.array_in_partials <= 1'b0;
+    vif.driver.weight_en <= '0; // changed to '0 so there aren't any size errors
+    vif.driver.input_en <= '0;
+    vif.driver.partial_en <= '0;
+    vif.driver.row_in_en <= '0;
+    vif.driver.row_ps_en <= '0;
+    vif.driver.array_in <= '0;
+    vif.driver.array_in_partials <= '0;
   endtask
 
   // task for driving transaction at clock edge 
-  task drive_trans(systolic_array_transaction #(N, WIDTH) req):
+  task drive_trans(systolic_array_transaction #(N, WIDTH) req);
     @(vif.driver);
     vif.driver.weight_en <= req.weight_en;
     vif.driver.input_en <= req.input_en;
