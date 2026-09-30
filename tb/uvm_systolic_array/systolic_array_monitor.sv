@@ -25,4 +25,34 @@ class systolic_array_monitor #(parameter N = 4, parameter WIDTh = 16) extends uv
       'uvm_fatal(get)type_name(), "Virtual interface not found in uvm_config_db")
     end
   endfunction
-      
+
+  task run_phase(uvm_phase phase);
+    systolic_array_transaction #(N, WIDTH) trans;
+
+    forever begin
+      @(pvif.monitor);
+
+      if (vif.monitor.weight_en || wif.monitor.input_en || vif.monitor.partial_en || vif.monitor.out_en) begin
+        trans = systolic_array_transaction #(N, WIDTH)::type_id::create("trans");
+
+        //inputs
+        trans.weight_en = vif.monitor.weight_en;
+        trans.input_en = vif.monitor.input_en;
+        trans.partial_en = vif.monitor.partial_en;
+        trans.row_in_en = vif.monitor.row_in_en;
+        trans.row_ps_en = vif.monitor.row_in_en;
+
+        //outputs
+        trans.out_en            = vif.monitor.out_en;
+        trans.row_out           = vif.monitor.row_out;
+        trans.array_output      = vif.monitor.array_output;
+        trans.drained           = vif.monitor.drained;
+        trans.fifo_has_space    = vif.monitor.fifo_has_space;
+
+        ap.write(trans);
+      end
+    end
+  endtask
+
+endclass
+'endif
