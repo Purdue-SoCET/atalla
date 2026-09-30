@@ -1,13 +1,13 @@
 //monitor first draft
-'ifndef SYSTOLIC_ARRAY_MONITOR_SV
-'define SYSTOLIC_ARRAY_MONITOR_SV
+`ifndef SYSTOLIC_ARRAY_MONITOR_SV
+`define SYSTOLIC_ARRAY_MONITOR_SV
 
 import uvm_pkg::*;
-'include "uvm.macros.svh"
+`include "uvm_macros.svh"
 
-class systolic_array_monitor #(parameter N = 4, parameter WIDTh = 16) extends uvm_monitor;
+class systolic_array_monitor #(parameter N = 4, parameter WIDTH = 16) extends uvm_monitor;
 
-  'uvm_component_param_utils(systolic_array_monitor #(N, WIDTH))
+  `uvm_component_param_utils(systolic_array_monitor #(N, WIDTH))
 
   //virtual interface and analysis port
   virtual systolic_array_if #(N, WIDTH) vif; 
@@ -21,8 +21,8 @@ class systolic_array_monitor #(parameter N = 4, parameter WIDTh = 16) extends uv
   function void build_phase (uvm_phase phase);
     super.build_phase(phase);
 
-    if (!uvm_config_db##(virtual systolic_array_if #(N, WIDTH))::get(this, "", "vif", vif)) begin
-      'uvm_fatal(get)type_name(), "Virtual interface not found in uvm_config_db")
+    if (!uvm_config_db#(virtual systolic_array_if #(N, WIDTH))::get(this, "", "vif", vif)) begin
+      `uvm_fatal(get)type_name(), "Virtual interface not found in uvm_config_db")
     end
   endfunction
 
@@ -30,9 +30,9 @@ class systolic_array_monitor #(parameter N = 4, parameter WIDTh = 16) extends uv
     systolic_array_transaction #(N, WIDTH) trans;
 
     forever begin
-      @(pvif.monitor);
+      @(vif.monitor);
 
-      if (vif.monitor.weight_en || wif.monitor.input_en || vif.monitor.partial_en || vif.monitor.out_en) begin
+      if (vif.monitor.weight_en || vif.monitor.input_en || vif.monitor.partial_en || vif.monitor.out_en) begin
         trans = systolic_array_transaction #(N, WIDTH)::type_id::create("trans");
 
         //inputs
@@ -40,7 +40,10 @@ class systolic_array_monitor #(parameter N = 4, parameter WIDTh = 16) extends uv
         trans.input_en = vif.monitor.input_en;
         trans.partial_en = vif.monitor.partial_en;
         trans.row_in_en = vif.monitor.row_in_en;
-        trans.row_ps_en = vif.monitor.row_in_en;
+        trans.row_ps_en = vif.monitor.row_ps_en;
+
+        trans.array_in = vif.monitor.array_in;
+        trans.array_in_partials = vif.monitor.array_in_partials;
 
         //outputs
         trans.out_en            = vif.monitor.out_en;
@@ -55,4 +58,4 @@ class systolic_array_monitor #(parameter N = 4, parameter WIDTh = 16) extends uv
   endtask
 
 endclass
-'endif
+`endif
