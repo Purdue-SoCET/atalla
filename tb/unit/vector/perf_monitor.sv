@@ -40,6 +40,7 @@ module perf_monitor (
     int lane_issue_count [2];          // instructions issued per port
     int lane_alu_wb_count;             // ALU writeback count
     int lane_mul_wb_count;             // MUL writeback count
+    int transpose_wb_count;            // Transpose Unit writeback count
     int lane_idle_cycles;              // cycles with no lane issue
 
     // -----------------------------------------------------------------------
@@ -94,6 +95,7 @@ module perf_monitor (
         for (int i = 0; i < 2; i++) lane_issue_count[i] = 0;
         lane_alu_wb_count = 0;
         lane_mul_wb_count = 0;
+        transpose_wb_count = 0;
         lane_idle_cycles = 0;
         reduction_wb_count = 0;
 
@@ -173,6 +175,11 @@ module perf_monitor (
         end
         if (LANE_FU_COUNT > 1 && vif.lanes_out.result_collectors[1].wb_valid) begin
             lane_mul_wb_count++;
+            last_wb_cycle = internal_cycle;
+            any_activity = 1;
+        end
+        if (LANE_FU_COUNT > 2 && vif.lanes_out.result_collectors[2].wb_valid) begin
+            transpose_wb_count++;
             last_wb_cycle = internal_cycle;
             any_activity = 1;
         end
@@ -285,7 +292,7 @@ module perf_monitor (
             total_vlsu_issues += vlsu_issue_count[i];
             total_vlsu_wbs += vlsu_wb_count[i];
         end
-        total_wbs = lane_alu_wb_count + lane_mul_wb_count + reduction_wb_count + gsau_wb_count + total_vlsu_wbs;
+        total_wbs = lane_alu_wb_count + lane_mul_wb_count + transpose_wb_count + reduction_wb_count + gsau_wb_count + total_vlsu_wbs;
 
         if (total_cycles > 0)
             utilization = (real'(total_active_cycles) / real'(total_cycles)) * 100.0;
@@ -316,6 +323,7 @@ module perf_monitor (
             total_cycles > 0 ? (real'(total_cycles - total_active_cycles) / real'(total_cycles)) * 100.0 : 0.0);
         $display("[PERF]    ALU Writebacks:      %0d", lane_alu_wb_count);
         $display("[PERF]    MUL Writebacks:      %0d", lane_mul_wb_count);
+        $display("[PERF]    TU Writebacks:       %0d", transpose_wb_count);
         $display("[PERF]    Reduction WBs:       %0d", reduction_wb_count);
         $display("[PERF] ----------------------------------------------------------------");
         $display("[PERF]  GSAU / SYSTOLIC ARRAY STATISTICS");
@@ -343,6 +351,7 @@ module perf_monitor (
         $display("[PERF]    Idle Cycles:         %0d", transpose_idle_cycles);
         $display("[PERF]    Vectors Pushed:      %0d", transpose_push_count);
         $display("[PERF]    Vectors Popped:      %0d", transpose_pop_count);
+        $display("[PERF]    Column Writebacks:   %0d", transpose_wb_count);
         $display("[PERF]    Matrices Completed:  %0d", transpose_matrix_count);
         $display("[PERF]    SA Overlap Cycles:   %0d", transpose_sa_overlap_cycles);
         $display("[PERF] ----------------------------------------------------------------");
