@@ -17,9 +17,9 @@ class lane_add_sequence extends lane_base_sequence;
             //configure the operation
             req.usel = VALU; //use alu
             req.alu_op = ALU_ADD;
-            req.vd = 8'd3;
-            req.rm = 1'b0;
-            req.mask = '1;
+            req.vd = 8'd3; //destination vector register id
+            req.rm = 1'b0; //redudction mode
+            req.mask = '1; //'1 test all vector elements
 
             //set vector operands
             for (int i = 0; i < VLMAX; i++) begin
