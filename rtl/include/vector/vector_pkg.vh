@@ -299,6 +299,7 @@ package vector_pkg;
     typedef struct packed {
         logic                        valid;
         logic                        write;
+        logic                        transpose;
         logic [SCPAD_ADDR_WIDTH-1:0] spad_addr;
         logic [VIDX_W-1:0]          vdst;
         logic [MAX_DIM_WIDTH-1:0]   num_cols;
@@ -328,6 +329,10 @@ package vector_pkg;
     typedef struct packed {
         logic busy;
         logic load_queue_full;
+        logic transpose_active;
+        logic transpose_push;
+        logic transpose_pop;
+        logic transpose_done;
     } vlsu_status_t;
     
 

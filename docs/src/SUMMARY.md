@@ -16,6 +16,7 @@
     - [Scratchpad](./architecture/scratchpad.md)
     - [Systolic Array](./architecture/systolic_array.md)
     - [Vector Core](./architecture/vector_core.md)
+    - [Transpose Unit](./architecture/transpose.md)
 - [SW Systems](./sw-systems/overview.md)
     - [Compiler](./sw-systems/compiler.md)
     - [Kernels](./sw-systems/kernels.md)

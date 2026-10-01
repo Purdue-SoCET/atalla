@@ -22,6 +22,7 @@ void schedular::load_program(std::string file)
 
     std::string line;
     while (std::getline(infile, line)) {
+        if (!line.empty() && line.back() == '\r') line.pop_back();
         if (line.empty()) continue;
         parse_packet(line);
     }
@@ -437,13 +438,10 @@ bool schedular::all_ready()
         }
         else if (i == 2)
         {
-            if (instr.sac)
-            {
-                if (instr.opcode == 57 && !ready_signals.sys_ready) {return false;} //gemm
-                else if (instr.opcode == 70 && !ready_signals.sys_ready) {return false;}//lw
-                else if (instr.opcode == 77 && !ready_signals.sp_ready) {return false;} //veggie load
-                else if (instr.opcode == 78 && !ready_signals.sp_ready) {return false;}//veggie store
-            }
+            if (instr.opcode == 57 && !ready_signals.sys_ready) {return false;} //gemm
+            else if (instr.opcode == 70 && !ready_signals.sys_ready) {return false;}//lw
+            else if (instr.opcode == 77 && !ready_signals.sp_ready) {return false;} //veggie load
+            else if (instr.opcode == 78 && !ready_signals.sp_ready) {return false;}//veggie store
         }
         else if (i == 3)
         {

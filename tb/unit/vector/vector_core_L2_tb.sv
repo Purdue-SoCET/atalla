@@ -19,7 +19,7 @@
 //     TEST_ADD_VI, TEST_SUB_VI, TEST_MULI_VI,
 //     TEST_ADD_VS, TEST_SUB_VS, TEST_MUL_VS,
 //     TEST_RSUM_VI, TEST_RMIN_VI, TEST_RMAX_VI,
-//     TEST_GEMM_VV, TEST_STORE_LOAD,
+//     TEST_GEMM_VV, TEST_STORE_LOAD, TEST_TRANSPOSE,
 //     TEST_GEMM_BP, TEST_DRAM_BP,
 //     TEST_MASKED0, TEST_MASKED1, TEST_MASKED2, TEST_MASKED3
 //
@@ -118,6 +118,9 @@ module vector_core_L2_tb;
     `elsif TEST_WB
         parameter string PROGRAM_PATH = "./tb/formal/vector/testcases/load-store/wb_test";
         parameter int    DRAIN_CYCLES = 150;
+    `elsif TEST_TRANSPOSE
+        parameter string PROGRAM_PATH = "./tb/formal/vector/testcases/load-store/transpose_l2";
+        parameter int    DRAIN_CYCLES = 500;
     `else
         parameter string PROGRAM_PATH = "./tb/formal/vector/testcases/vector-vector/add_vv";
         parameter int    DRAIN_CYCLES = 40;
@@ -377,6 +380,11 @@ module vector_core_L2_tb;
                 vif.vlsu_in.sched_req[sp_port].vdst        = dpi_get_sp_vd(p);
                 vif.vlsu_in.sched_req[sp_port].num_cols    = dpi_get_sp_num_cols(p);
                 vif.vlsu_in.sched_req[sp_port].row_id      = dpi_get_sp_row_num(p);
+`ifdef TEST_TRANSPOSE
+                vif.vlsu_in.sched_req[sp_port].transpose  = (dpi_get_sp_wen(p) == 0) ? 1'b1 : 1'b0;
+`else
+                vif.vlsu_in.sched_req[sp_port].transpose  = 1'b0;
+`endif
 
                 vif.vlsu_in.vrf_data[sp_port].data  = pack_vreg(tmp_vec);
                 vif.vlsu_in.vrf_data[sp_port].valid = 1'b1;
@@ -445,7 +453,7 @@ module vector_core_L2_tb;
             lane_ready[1],  // mul
             1'b1, // exp (not done yet)
             gsau_rdy,
-            (vlsu_rdy != 0) ? 1'b1 : 1'b0
+            &vlsu_rdy
         );
     endtask
 
@@ -653,6 +661,18 @@ module vector_core_L2_tb;
             dpi_veggie_write_vector_elem(8'd11, 0, 16'h0080);
             dpi_veggie_write_vector_elem(8'd11, 1, 16'h0000);
             $display("[TB] Preloaded: wb_test (v0=FFFF, v1=AAAA, v10=addr0x40, v11=addr0x80)");
+
+       `elsif TEST_TRANSPOSE
+            // Address register v40: spad_addr = 0x0000
+            dpi_veggie_write_vector_elem(8'd40, 0, 16'h0000);
+            dpi_veggie_write_vector_elem(8'd40, 1, 16'h0000);
+            // Preload 32 input vectors (v0..v31) with matrix values: (row << 8) | col
+            for (int r = 0; r < 32; r++) begin
+                for (int c = 0; c < 32; c++) begin
+                    dpi_veggie_write_vector_elem(r[7:0], c, 16'((r << 8) | c));
+                end
+            end
+            $display("[TB] Preloaded: transpose_l2 (v0..v31 = 32x32 matrix, v40=addr 0x0000)");
 
         `else
             for (int i = 0; i < 32; i++) begin
@@ -869,6 +889,29 @@ module vector_core_L2_tb;
             $display("[TB] WB Test - v3 (from bank 2, expect AAAA):");
             for (int e = 0; e < 32; e++)
                 $display("[TB]   v3[%0d] = %h (expect AAAA)", e, dpi_veggie_read_vector_elem(8'd3, e));
+
+        `elsif TEST_TRANSPOSE
+            begin
+                automatic int tr_errors = 0;
+                $display("[TB] Transpose Test - Verifying 32x32 transposed matrix in VRF (v64..v95):");
+                for (int c = 0; c < 32; c++) begin
+                    for (int r = 0; r < 32; r++) begin
+                        bit [15:0] exp_val, act_val;
+                        exp_val = 16'((r << 8) | c);
+                        act_val = dpi_veggie_read_vector_elem(8'(64 + c), r);
+                        if (act_val !== exp_val) begin
+                            $display("[TB-FAIL] Mismatch at col=%0d (v%0d), row=%0d | Exp: %h, Got: %h",
+                                c, 64 + c, r, exp_val, act_val);
+                            tr_errors++;
+                        end
+                    end
+                end
+                if (tr_errors == 0) begin
+                    $display("[TB] >> TRANSPOSE VERIFICATION PASSED: All 1024 elements (32x32) match perfectly! <<");
+                end else begin
+                    $display("[TB] >> TRANSPOSE VERIFICATION FAILED: %0d / 1024 mismatches! <<", tr_errors);
+                end
+            end
 
         `else
             for (int e = 0; e < 32; e++)

@@ -280,7 +280,7 @@ SCRDIR = ./rtl/modules/memory/axi_bus/
 PROGRAM ?= add_vv
 
 dpi_lib:
-	g++ -std=c++20 -fPIC -shared \
+	g++ -std=c++20 -fPIC -shared -static-libstdc++ -static-libgcc \
 		-I$(DPI_INC) \
 		-I$(CPP_MODEL_INC) \
 		-I$(QUESTA_INC) \
@@ -294,8 +294,8 @@ dpi_lib:
 		$(CPP_MODEL_DIR)/scratchpad.cpp \
 		$(CPP_MODEL_DIR)/veggie.cpp
 
-L1_PACKAGES := /vector/vector_pkg.vh,/memory/scratchpad/scpad_pkg.sv,/common/xbar/xbar_pkg.sv,/systolic_array/sys_arr_pkg.vh,/vector/vector_if.vh,/vector/vlsu_if.sv,/memory/scratchpad/scpad_if.sv,/vector/inst_parser_dpi_pkg.sv
-L1_MODULES  := /common/arithmetic/adders,/common/arithmetic/multipliers,/vector/reduction,/vector/vector_datapath.sv,/vector/vlsu.sv,/vector/gsau_control_unit.sv,/vector/lane.sv,/vector/lane_sequencer.sv,/vector/result_collector.sv,/vector/result_collector_counter.sv,/vector/lane_FUs/lane_unit_fifo.sv,/vector/lane_FUs/mul_FU.sv,/vector/lane_FUs/sqrt_FU.sv,/vector/slicer.sv,/vector/sync_fifo.sv,/vector/valu.sv,/vector/lane_FUs/alu_FU.sv,/vector/lane_FUs/reduction_FU.sv
+L1_PACKAGES := /vector/vector_pkg.vh,/memory/scratchpad/scpad_pkg.sv,/common/xbar/xbar_pkg.sv,/systolic_array/sys_arr_pkg.vh,/vector/vector_if.vh,/vector/vlsu_if.sv,/memory/scratchpad/scpad_if.sv,/vector/inst_parser_dpi_pkg.sv,/vector/transpose_unit_if.vh,/common/xbar/xbar_if.vh
+L1_MODULES  := /common/arithmetic/adders,/common/arithmetic/multipliers,/vector/reduction,/vector/vector_datapath.sv,/vector/vlsu.sv,/vector/gsau_control_unit.sv,/vector/lane.sv,/vector/lane_sequencer.sv,/vector/result_collector.sv,/vector/result_collector_counter.sv,/vector/lane_FUs/lane_unit_fifo.sv,/vector/lane_FUs/mul_FU.sv,/vector/lane_FUs/sqrt_FU.sv,/vector/slicer.sv,/vector/sync_fifo.sv,/vector/valu.sv,/vector/lane_FUs/alu_FU.sv,/vector/lane_FUs/reduction_FU.sv,/vector/transpose_unit.sv,/common/xbar/clos.sv,/common/xbar/param_switch.sv,/common/memory/sram_bank.sv
 
 l1_test: dpi_lib
 	$(MAKE) test \
@@ -313,8 +313,8 @@ l1_test_gui: dpi_lib
 		VSIM_EXTRA_FLAGS="-sv_lib ./$(DPI_LIB)" \
 		GUI=ON
 
-L2_PACKAGES := /vector/vector_pkg.vh,/memory/scratchpad/scpad_pkg.sv,/common/xbar/xbar_pkg.sv,/systolic_array/sys_arr_pkg.vh,/vector/vector_if.vh,/vector/vlsu_if.sv,/memory/scratchpad/scpad_if.sv,/vector/inst_parser_dpi_pkg.sv
-L2_MODULES  := $(L1_MODULES),$(TBROOT)/unit/vector/perf_monitor.sv,/memory/scratchpad,/common/general,/common/memory,/systolic_array/sysarr_MEISSA_top.sv,/systolic_array/STANDARD/sysarr_control_unit.sv,/systolic_array/sysarr_FIFO.sv,/systolic_array/sysarr_OUT_FIFO.sv,/systolic_array/sysarr_MAC.sv,/systolic_array/sysarr_MAC_fp16_2c.sv,/systolic_array/sysarr_MAC_fp16_4c.sv,/systolic_array/sysarr_add.sv,/systolic_array/mul_grid.sv,/systolic_array/mixed_pipelined_adder_tree.sv,/systolic_array/pipelined_adder_tree.sv,/systolic_array/skew_buffer.sv,/systolic_array/left_shift.sv,/systolic_array/left_shift_add_bf16.sv,/systolic_array/systolic_array.sv,/systolic_array/arithmetic/mul_bf.sv,/systolic_array/arithmetic/wtm_bf.sv,/systolic_array/arithmetic/mul_fp16.sv,/systolic_array/arithmetic/mul_fp16_nolatch.sv,/systolic_array/arithmetic/add_fp16.sv,/systolic_array/arithmetic/add_fp16_nolatch.sv,/systolic_array/arithmetic/add_fp16_4_input.sv,/systolic_array/arithmetic/reducer.sv,/systolic_array/TPU/TPU_buffer.sv,/common/general,/common/memory
+L2_PACKAGES := /vector/vector_pkg.vh,/memory/scratchpad/scpad_pkg.sv,/common/xbar/xbar_pkg.sv,/systolic_array/sys_arr_pkg.vh,/vector/vector_if.vh,/vector/vlsu_if.sv,/memory/scratchpad/scpad_if.sv,/vector/inst_parser_dpi_pkg.sv,/vector/transpose_unit_if.vh,/common/xbar/xbar_if.vh
+L2_MODULES  := $(L1_MODULES),$(TBROOT)/unit/vector/perf_monitor.sv,/memory/scratchpad,/common/general,/common/memory,/systolic_array/sysarr_MEISSA_top.sv,/systolic_array/STANDARD/sysarr_control_unit.sv,/systolic_array/sysarr_FIFO.sv,/systolic_array/sysarr_OUT_FIFO.sv,/systolic_array/sysarr_MAC.sv,/systolic_array/sysarr_MAC_fp16_2c.sv,/systolic_array/sysarr_MAC_fp16_4c.sv,/systolic_array/sysarr_add.sv,/systolic_array/mul_grid.sv,/systolic_array/mixed_pipelined_adder_tree.sv,/systolic_array/pipelined_adder_tree.sv,/systolic_array/skew_buffer.sv,/systolic_array/left_shift.sv,/systolic_array/left_shift_add_bf16.sv,/systolic_array/systolic_array.sv,/systolic_array/arithmetic/mul_bf.sv,/systolic_array/arithmetic/wtm_bf.sv,/systolic_array/arithmetic/mul_fp16.sv,/systolic_array/arithmetic/mul_fp16_nolatch.sv,/systolic_array/arithmetic/add_fp16.sv,/systolic_array/arithmetic/add_fp16_nolatch.sv,/systolic_array/arithmetic/add_fp16_4_input.sv,/systolic_array/arithmetic/add_fp16_1c.sv,/systolic_array/arithmetic/reducer.sv,/systolic_array/TPU/TPU_buffer.sv,/systolic_array/output_buffer.sv,/common/general,/common/memory
 
 l2_test: dpi_lib
 	$(MAKE) test \

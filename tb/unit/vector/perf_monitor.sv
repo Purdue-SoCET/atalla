@@ -71,6 +71,16 @@ module perf_monitor (
     int vlsu_total_stall;              // total stall across all ports
 
     // -----------------------------------------------------------------------
+    // Transpose Unit Counters
+    // -----------------------------------------------------------------------
+    int transpose_active_cycles;
+    int transpose_idle_cycles;
+    int transpose_push_count;
+    int transpose_pop_count;
+    int transpose_matrix_count;
+    int transpose_sa_overlap_cycles;
+
+    // -----------------------------------------------------------------------
     // Timing
     // -----------------------------------------------------------------------
     int first_issue_cycle;             // cycle of first instruction issue
@@ -96,6 +106,13 @@ module perf_monitor (
         sa_bp_count = 0;
         sa_bp_max_consecutive = 0;
         sa_bp_current_streak = 0;
+
+        transpose_active_cycles = 0;
+        transpose_idle_cycles = 0;
+        transpose_push_count = 0;
+        transpose_pop_count = 0;
+        transpose_matrix_count = 0;
+        transpose_sa_overlap_cycles = 0;
 
         for (int i = 0; i < NUM_SCPADS; i++) begin
             vlsu_issue_count[i] = 0;
@@ -227,6 +244,25 @@ module perf_monitor (
             end
         end
 
+        // --- Transpose Unit (Port 0) ---
+        if (vif.vlsu_out.status[0].transpose_active) begin
+            transpose_active_cycles++;
+            any_activity = 1;
+            if (gsauif.sa_weight_en || gsauif.sa_input_en)
+                transpose_sa_overlap_cycles++;
+        end else if (nRST) begin
+            transpose_idle_cycles++;
+        end
+
+        if (vif.vlsu_out.status[0].transpose_push)
+            transpose_push_count++;
+
+        if (vif.vlsu_out.status[0].transpose_pop)
+            transpose_pop_count++;
+
+        if (vif.vlsu_out.status[0].transpose_done)
+            transpose_matrix_count++;
+
         if (any_activity)
             total_active_cycles++;
     endtask
@@ -297,6 +333,15 @@ module perf_monitor (
                     vlsu_wb_count[p], vlsu_stall_count[p]);
         end
         $display("[PERF]    Total VLSU Stalls:   %0d cycles", vlsu_total_stall);
+        $display("[PERF] ----------------------------------------------------------------");
+        $display("[PERF]  TRANSPOSE UNIT STATISTICS");
+        $display("[PERF]    Active Cycles:       %0d (%.1f%%)", transpose_active_cycles,
+            total_cycles > 0 ? (real'(transpose_active_cycles) / real'(total_cycles)) * 100.0 : 0.0);
+        $display("[PERF]    Idle Cycles:         %0d", transpose_idle_cycles);
+        $display("[PERF]    Vectors Pushed:      %0d", transpose_push_count);
+        $display("[PERF]    Vectors Popped:      %0d", transpose_pop_count);
+        $display("[PERF]    Matrices Completed:  %0d", transpose_matrix_count);
+        $display("[PERF]    SA Overlap Cycles:   %0d", transpose_sa_overlap_cycles);
         $display("[PERF] ----------------------------------------------------------------");
         $display("[PERF]  TOTAL WRITEBACKS:      %0d", total_wbs);
         $display("[PERF] ================================================================");
