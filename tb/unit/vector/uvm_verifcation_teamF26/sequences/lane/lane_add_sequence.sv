@@ -13,7 +13,8 @@ class lane_add_sequence extends lane_base_sequence;
 
             //ask the sequencer for permission to send this item
             start_item(req);
-
+            
+            // v3 = v1 + v2
             //configure the operation
             req.usel = VALU; //use alu
             req.alu_op = ALU_ADD;

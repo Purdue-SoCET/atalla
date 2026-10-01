@@ -1,3 +1,4 @@
+//get transaction from sequencer to drive dut
 class lane_driver extends uvm_driver #(lane_item);
     `uvm_componet_utils(lane_driver)
 

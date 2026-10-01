@@ -1,3 +1,4 @@
+//lane_sequencer: provides transaction to sequencer
 class lane_sequencer extends uvm_sequencer #(lane_item);
     `uvm_component_utils(lane_sequencer) //component
 
