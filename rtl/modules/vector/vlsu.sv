@@ -1,5 +1,5 @@
 module vlsu #(
-    parameter int FIFO_DEPTH = 13,
+    parameter int FIFO_DEPTH = 32,
     parameter int NUM_VREGS  = 256,
     parameter logic [scpad_pkg::SCPAD_ID_WIDTH-1:0] IDX = '0,
     parameter bit HAS_TRANSPOSE = (IDX == 0)
@@ -57,16 +57,43 @@ module vlsu #(
         end
     endgenerate
 
+    // ── Transpose Input FIFO (instantiated on port 0) ──
+    logic                   tu_fifo_wr_en, tu_fifo_shift;
+    logic                   tu_fifo_empty, tu_fifo_full;
+    scpad_data_t            tu_fifo_dout;
+
+    generate
+        if (HAS_TRANSPOSE) begin : gen_tu_fifo
+            sync_fifo #(
+                .FIFODEPTH(32),
+                .DATAWIDTH($bits(scpad_data_t))
+            ) tu_in_fifo_inst (
+                .nRST  (nRST),
+                .CLK   (CLK),
+                .wr_en (tu_fifo_wr_en),
+                .shift (tu_fifo_shift),
+                .din   (sif.vec_res[IDX].rdata),
+                .dout  (tu_fifo_dout),
+                .empty (tu_fifo_empty),
+                .full  (tu_fifo_full)
+            );
+        end else begin : gen_no_tu_fifo
+            assign tu_fifo_empty = 1'b1;
+            assign tu_fifo_full  = 1'b0;
+            assign tu_fifo_dout  = '0;
+        end
+    endgenerate
+
     logic                   skid_valid_r, skid_valid_next;
     logic [RDATA_WIDTH-1:0] skid_data_r,  skid_data_next;
 
     // Transpose control registers
     logic [4:0]             tu_push_cnt_r, tu_push_cnt_next;
     logic [4:0]             tu_pop_cnt_r,  tu_pop_cnt_next;
+    logic [5:0]             tu_loads_issued_r, tu_loads_issued_next;
     logic [VDST_WIDTH-1:0]  tu_base_vdst_r, tu_base_vdst_next;
     logic                   tu_popping_r, tu_popping_next;
     logic                   tu_all_pushed_r, tu_all_pushed_next;
-    logic                   tu_in_flight_r, tu_in_flight_next;
     scpad_data_t            tu_data_r, tu_data_next;
     logic                   tu_stall_scpad;
 
@@ -76,20 +103,20 @@ module vlsu #(
             skid_data_r        <= '0;
             tu_push_cnt_r      <= '0;
             tu_pop_cnt_r       <= '0;
+            tu_loads_issued_r  <= '0;
             tu_base_vdst_r     <= '0;
             tu_popping_r       <= 1'b0;
             tu_all_pushed_r    <= 1'b0;
-            tu_in_flight_r     <= 1'b0;
             tu_data_r          <= '0;
         end else begin
             skid_valid_r       <= skid_valid_next;
             skid_data_r        <= skid_data_next;
             tu_push_cnt_r      <= tu_push_cnt_next;
             tu_pop_cnt_r       <= tu_pop_cnt_next;
+            tu_loads_issued_r  <= tu_loads_issued_next;
             tu_base_vdst_r     <= tu_base_vdst_next;
             tu_popping_r       <= tu_popping_next;
             tu_all_pushed_r    <= tu_all_pushed_next;
-            tu_in_flight_r     <= tu_in_flight_next;
             tu_data_r          <= tu_data_next;
         end
     end
@@ -137,13 +164,15 @@ module vlsu #(
         tu_if.in.ready_out = 1'b0;
         tu_if.in.vec_in    = tu_data_r;
 
+        tu_fifo_wr_en       = 1'b0;
+        tu_fifo_shift       = 1'b0;
         tu_stall_scpad      = 1'b0;
         tu_push_cnt_next    = tu_push_cnt_r;
         tu_pop_cnt_next     = tu_pop_cnt_r;
+        tu_loads_issued_next= tu_loads_issued_r;
         tu_base_vdst_next   = tu_base_vdst_r;
         tu_popping_next     = tu_popping_r;
         tu_all_pushed_next  = tu_all_pushed_r;
-        tu_in_flight_next   = tu_in_flight_r;
         tu_data_next        = tu_data_r;
 
         // ── Input classification ─────────────────────────
@@ -153,15 +182,12 @@ module vlsu #(
         resp_incoming = sif.vec_res[IDX].valid && !sif.vec_res[IDX].write;
 
         // ── Accept logic ─────────────────────────────────
-        if (HAS_TRANSPOSE && (tu_popping_r || tu_all_pushed_r || tu_in_flight_r || !tu_if.out.ready_in)) begin
+        if (HAS_TRANSPOSE && (tu_popping_r || tu_all_pushed_r || (tu_loads_issued_r != 0 && (tu_loads_issued_r == 6'd32 || !vif.sched_req[IDX].transpose)))) begin
             can_accept = 1'b0;
         end else if (is_load) begin
-            if (HAS_TRANSPOSE && tu_push_cnt_r != 0 && !vif.sched_req[IDX].transpose)
-                can_accept = 1'b0;
-            else
-                can_accept = !lq_full && !sif.fe_vec_stall[IDX];
+            can_accept = !lq_full && !sif.fe_vec_stall[IDX];
         end else if (is_store) begin
-            if (HAS_TRANSPOSE && tu_push_cnt_r != 0)
+            if (HAS_TRANSPOSE && tu_loads_issued_r != 0)
                 can_accept = 1'b0;
             else
                 can_accept = !sif.fe_vec_stall[IDX] && vif.vrf_store[IDX].valid;
@@ -175,8 +201,11 @@ module vlsu #(
         if (is_load && can_accept) begin
             lq_wr_en = 1'b1;
             lq_din   = { (HAS_TRANSPOSE ? vif.sched_req[IDX].transpose : 1'b0), vif.sched_req[IDX].vdst };
-            if (HAS_TRANSPOSE && vif.sched_req[IDX].transpose)
-                tu_in_flight_next = 1'b1;
+            if (HAS_TRANSPOSE && vif.sched_req[IDX].transpose) begin
+                tu_loads_issued_next = tu_loads_issued_r + 1;
+                if (tu_loads_issued_r == 6'd0)
+                    tu_base_vdst_next = vif.sched_req[IDX].vdst;
+            end
 
             sif.vec_req[IDX].valid      = 1'b1;
             sif.vec_req[IDX].write      = 1'b0;
@@ -197,27 +226,29 @@ module vlsu #(
             sif.vec_req[IDX].wdata      = vif.vrf_store[IDX].data;
         end
 
-        // ── Transpose Unit Push Path ──────────────────────
+        // ── Transpose Unit FIFO Ingestion Path ────────────
         if (HAS_TRANSPOSE && resp_incoming && !lq_empty && lq_is_transpose) begin
-            if (tu_if.out.ready_in) begin
-                tu_if.in.valid_in = 1'b1;
-                tu_if.in.push_req = 1'b1;
-                tu_if.in.vec_in   = sif.vec_res[IDX].rdata;
-                tu_data_next      = sif.vec_res[IDX].rdata;
-                lq_shift          = 1'b1;
-                tu_in_flight_next = 1'b0;
-                vif.status[IDX].transpose_push = 1'b1;
-                if (tu_push_cnt_r == 5'd0) begin
-                    tu_base_vdst_next = lq_vdst;
-                end
-                if (tu_push_cnt_r == 5'd31) begin
-                    tu_push_cnt_next   = 5'd0;
-                    tu_all_pushed_next = 1'b1;
-                end else begin
-                    tu_push_cnt_next = tu_push_cnt_r + 1;
-                end
+            if (!tu_fifo_full) begin
+                tu_fifo_wr_en = 1'b1;
+                lq_shift      = 1'b1;
             end else begin
                 tu_stall_scpad = 1'b1;
+            end
+        end
+
+        // ── Transpose Unit Push Path (Drain from FIFO into TU) ──
+        if (HAS_TRANSPOSE && !tu_fifo_empty && tu_if.out.ready_in && !tu_all_pushed_r && !tu_popping_r) begin
+            tu_if.in.valid_in = 1'b1;
+            tu_if.in.push_req = 1'b1;
+            tu_if.in.vec_in   = tu_fifo_dout;
+            tu_data_next      = tu_fifo_dout;
+            tu_fifo_shift     = 1'b1;
+            vif.status[IDX].transpose_push = 1'b1;
+            if (tu_push_cnt_r == 5'd31) begin
+                tu_push_cnt_next   = 5'd0;
+                tu_all_pushed_next = 1'b1;
+            end else begin
+                tu_push_cnt_next = tu_push_cnt_r + 1;
             end
         end
 
@@ -238,8 +269,9 @@ module vlsu #(
             vif.status[IDX].transpose_pop = 1'b1;
             if (vif.wb_ready[IDX]) begin
                 if (tu_pop_cnt_r == 5'd31) begin
-                    tu_pop_cnt_next  = 5'd0;
-                    tu_popping_next  = 1'b0;
+                    tu_pop_cnt_next      = 5'd0;
+                    tu_popping_next      = 1'b0;
+                    tu_loads_issued_next = '0;
                     vif.status[IDX].transpose_done = 1'b1;
                 end else begin
                     tu_pop_cnt_next = tu_pop_cnt_r + 1;
@@ -269,9 +301,9 @@ module vlsu #(
         end
 
         // ── Status ───────────────────────────────────────
-        vif.status[IDX].busy            = !lq_empty || skid_valid_r || (HAS_TRANSPOSE && (tu_push_cnt_r != 0 || tu_all_pushed_r || tu_popping_r || tu_in_flight_r));
+        vif.status[IDX].busy            = !lq_empty || skid_valid_r || (HAS_TRANSPOSE && (tu_loads_issued_r != 0 || !tu_fifo_empty || tu_push_cnt_r != 0 || tu_all_pushed_r || tu_popping_r));
         vif.status[IDX].load_queue_full = lq_full;
-        vif.status[IDX].transpose_active= HAS_TRANSPOSE && (tu_push_cnt_r != 0 || tu_all_pushed_r || tu_popping_r || tu_in_flight_r);
+        vif.status[IDX].transpose_active= HAS_TRANSPOSE && (tu_loads_issued_r != 0 || (is_load && can_accept && vif.sched_req[IDX].transpose) || !tu_fifo_empty || tu_push_cnt_r != 0 || tu_all_pushed_r || tu_popping_r);
     end
 
 endmodule
