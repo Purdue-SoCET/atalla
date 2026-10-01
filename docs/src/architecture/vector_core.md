@@ -44,15 +44,14 @@ The core contains multiple pipelined execution units operating on 32-element vec
 The VLSU bridges the Vector Core and the on-chip Scratchpad memory across `NUM_SCPADS = 4` parallel channels:
 - **Multi-Port Access**: Supports up to 4 concurrent read/write transactions per cycle to independent scratchpad banks.
 - **Skid Buffering**: Decouples writeback backpressure from scratchpad response timing, avoiding pipeline deadlocks.
-- **Port 0 Matrix Transpose Unit**: Port 0 integrates a hardware matrix transpose engine capable of transposing up to $32 \times 32$ matrices in-line between the Scratchpad and the VRF without processor intervention.
 
 ---
 
 ## 3. Matrix Transpose Subsystem
 For detailed microarchitecture and verification details, see [Transpose Unit Architecture](./transpose.md).
 
-- **Location**: VLSU Channel 0.
+- **Location**: Vector Core Datapath Functional Unit Slot 2 (`TRANS`).
 - **Capacity**: 32 vectors of 32 16-bit elements (2 KB internal storage across 32 SRAM banks).
 - **Interconnect**: 3-stage $32 \times 32$ non-blocking Clos permutation network.
-- **Activation**: Enabled via the ISA `transpose` flag in vector memory load operations (`rv_mtype_t[54]`).
+- **Activation**: Executed via dedicated ISA instructions `tpus.vi` (opcode 79) and `tpop.vi` (opcode 78).
 - **Telemetry**: Hardware activity, push/pop metrics, and systolic array overlap are reported in real time by the L2 performance monitor (`tb/unit/vector/perf_monitor.sv`).
