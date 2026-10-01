@@ -19,6 +19,7 @@ static uint8_t cpp_fu_to_rtl(uint8_t f)
         case 0: return 0; // VALU
         case 1: return 1; // MUL
         case 2: return 2; // EXP
+        case 3: return 3; // TRANS
         default: return 0;
     }
 }
@@ -29,7 +30,9 @@ static uint8_t cpp_aluop_to_rtl(uint8_t op)
     switch (op) {
         case 2: return 0x0; // add -> ALU_ADD
         case 3: return 0x1; // sub -> ALU_SUB
-        default: return 0x0;
+        case 12: return 0xC; // TU_PUSH
+        case 13: return 0xD; // TU_POP
+        default: return op;
     }
 }
  
