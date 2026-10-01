@@ -113,6 +113,8 @@ void schedular::decode(packet pkt)
         bool subtract = (instr.opcode == 51 || instr.opcode == 63 || instr.opcode == 81);
         bool mult = (instr.opcode == 52 || instr.opcode == 64 || instr.opcode == 82);
         bool exp = instr.opcode == 66;
+        bool is_tpop = (instr.opcode == 78);
+        bool is_tpus = (instr.opcode == 79);
         if (instr.opcode == 71 || instr.opcode == 72 || instr.opcode == 73)
             sc_reduction_signals.reduction_mode = 1;
 
@@ -133,6 +135,16 @@ void schedular::decode(packet pkt)
         else if (exp)
         {
             sc_lane_signals[i].fu_sel = EXP;
+        }
+        else if (is_tpop)
+        {
+            sc_lane_signals[i].fu_sel = TRANS;
+            sc_lane_signals[i].alu_op = 13; // TU_POP
+        }
+        else if (is_tpus)
+        {
+            sc_lane_signals[i].fu_sel = TRANS;
+            sc_lane_signals[i].alu_op = 12; // TU_PUSH
         }
         else if (instr.opcode == 72)
         {
@@ -207,7 +219,7 @@ void schedular::decode(packet pkt)
         sc_sys_signals.weight = 1;
         sc_sys_signals.valid_in = 1;
     }
-    else if (instr.opcode == 77) //veggie load
+    else if (instr.opcode == 77 || instr.opcode == 68) //veggie load
     {
         sc_sp_signals[0].vd = instr.vd;
         sc_sp_signals[0].rs1 = instr.rs1;
@@ -217,7 +229,7 @@ void schedular::decode(packet pkt)
         sc_sp_signals[0].valid_in = 1;
         sc_sp_signals[0].wen = 0;
     }
-    else if (instr.opcode == 78) //veggie store
+    else if (instr.opcode == 78 || instr.opcode == 69) //veggie store
     {
         sc_sp_signals[0].vd = instr.vd;
         sc_sp_signals[0].rs1 = instr.rs1;
@@ -244,7 +256,7 @@ void schedular::decode(packet pkt)
         sc_sp_signals[1].valid_in = 0;
         sc_sp_signals[1].wen = 0;
     }
-    else if (instr.opcode == 77)
+    else if (instr.opcode == 77 || instr.opcode == 68)
     {
         sc_sp_signals[1].vd = instr.vd;
         sc_sp_signals[1].rs1 = instr.rs1;
@@ -254,7 +266,7 @@ void schedular::decode(packet pkt)
         sc_sp_signals[1].valid_in = 1;
         sc_sp_signals[1].wen = 0;
     }
-    else if (instr.opcode == 78)
+    else if (instr.opcode == 78 || instr.opcode == 69)
     {
         sc_sp_signals[1].vd = instr.vd;
         sc_sp_signals[1].rs1 = instr.rs1;
@@ -430,23 +442,25 @@ bool schedular::all_ready()
             bool mult = (instr.opcode == 52 || instr.opcode == 64 || instr.opcode == 82);
             bool exp = instr.opcode == 66;
             bool reduction = (instr.opcode == 71 || instr.opcode == 72 || instr.opcode == 73);
+            bool tu_op = (instr.opcode == 78 || instr.opcode == 79);
             if (add && !ready_signals.lane_alu_ready) {return false;}
             if (subtract && !ready_signals.lane_alu_ready) {return false;}
             if (mult && !ready_signals.lane_mul_ready) {return false;}
             if (exp && !ready_signals.lane_exp_ready) {return false;}
             if (reduction && !ready_signals.lane_alu_ready) {return false;}
+            if (tu_op && !ready_signals.lane_exp_ready) {return false;}
         }
         else if (i == 2)
         {
             if (instr.opcode == 57 && !ready_signals.sys_ready) {return false;} //gemm
             else if (instr.opcode == 70 && !ready_signals.sys_ready) {return false;}//lw
-            else if (instr.opcode == 77 && !ready_signals.sp_ready) {return false;} //veggie load
-            else if (instr.opcode == 78 && !ready_signals.sp_ready) {return false;}//veggie store
+            else if ((instr.opcode == 77 || instr.opcode == 68) && !ready_signals.sp_ready) {return false;} //veggie load
+            else if ((instr.opcode == 78 || instr.opcode == 69) && !ready_signals.sp_ready) {return false;}//veggie store
         }
         else if (i == 3)
         {
-            if (instr.opcode == 77 && !ready_signals.sp_ready) {return false;} //veggie load
-            else if (instr.opcode == 78 && !ready_signals.sp_ready) {return false;}//veggie store
+            if ((instr.opcode == 77 || instr.opcode == 68) && !ready_signals.sp_ready) {return false;} //veggie load
+            else if ((instr.opcode == 78 || instr.opcode == 69) && !ready_signals.sp_ready) {return false;}//veggie store
         }
     }
     return true;

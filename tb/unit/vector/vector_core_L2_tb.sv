@@ -380,11 +380,7 @@ module vector_core_L2_tb;
                 vif.vlsu_in.sched_req[sp_port].vdst        = dpi_get_sp_vd(p);
                 vif.vlsu_in.sched_req[sp_port].num_cols    = dpi_get_sp_num_cols(p);
                 vif.vlsu_in.sched_req[sp_port].row_id      = dpi_get_sp_row_num(p);
-`ifdef TEST_TRANSPOSE
-                vif.vlsu_in.sched_req[sp_port].transpose  = (dpi_get_sp_wen(p) == 0) ? 1'b1 : 1'b0;
-`else
                 vif.vlsu_in.sched_req[sp_port].transpose  = 1'b0;
-`endif
 
                 vif.vlsu_in.vrf_data[sp_port].data  = pack_vreg(tmp_vec);
                 vif.vlsu_in.vrf_data[sp_port].valid = 1'b1;
@@ -451,7 +447,7 @@ module vector_core_L2_tb;
         dpi_set_ready_signals(
             lane_ready[0],  // alu
             lane_ready[1],  // mul
-            1'b1, // exp (not done yet)
+            lane_ready[2],  // transpose unit (FU slot 2)
             gsau_rdy,
             &vlsu_rdy
         );
@@ -757,10 +753,12 @@ module vector_core_L2_tb;
             // Termination
             if (dpi_get_all_issued()) begin
                 $display("[TB] All instructions issued at cycle %0d. Draining...", cycle_count);
+                clear_all_ports();
                 repeat (DRAIN_CYCLES) begin
                     @(posedge CLK);
                     cycle_count++;
                     handle_writeback();
+                    clear_all_ports();
                     if (!gsauif.sa_ready_in)
                         $display("[TB-SA-BP] Cyc %0d: sa_ready_in LOW", cycle_count);
                     if (!gsauif.sb_ready_out)

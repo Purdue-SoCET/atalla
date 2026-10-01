@@ -12,6 +12,7 @@ Owner: Jacob Walter
 `include "result_collector_if.vh"
 `include "gsau_control_unit_if.vh"
 `include "reduction_FU_if.vh"
+`include "transpose_unit_if.vh"
 
 
 module vector_datapath (
@@ -98,22 +99,112 @@ module vector_datapath (
         end
     endgenerate
 
-    //rc to vif out, and vif in to rc
+    // =========================================================================
+    // Transpose Unit (FU slot 2)
+    // =========================================================================
+    transpose_unit_if #(.VEC_LEN(NUM_ELEMENTS), .DATA_W(ESZ)) tu_if();
+
+    transpose_unit tu_inst (
+        .CLK(CLK),
+        .nRST(nRST),
+        .tif(tu_if.transpose)
+    );
+
+    logic tu_issue_valid;
+    logic tu_is_push;
+    logic tu_is_pop;
+    vreg_t tu_issue_v1;
+    logic [7:0] tu_issue_vd;
+
+    always_comb begin
+        tu_issue_valid = 1'b0;
+        tu_is_push     = 1'b0;
+        tu_is_pop      = 1'b0;
+        tu_issue_v1    = '0;
+        tu_issue_vd    = '0;
+
+        if (vif.lanes_in.lane_issue_ports[0].input_valid && (vif.lanes_in.lane_issue_ports[0].usel == TRANS)) begin
+            tu_issue_valid = 1'b1;
+            tu_is_push     = (vif.lanes_in.lane_issue_ports[0].alu_op == TU_PUSH);
+            tu_is_pop      = (vif.lanes_in.lane_issue_ports[0].alu_op == TU_POP);
+            tu_issue_v1    = vif.lanes_in.lane_issue_ports[0].v1;
+            tu_issue_vd    = vif.lanes_in.lane_issue_ports[0].vd;
+        end else if (vif.lanes_in.lane_issue_ports[1].input_valid && (vif.lanes_in.lane_issue_ports[1].usel == TRANS)) begin
+            tu_issue_valid = 1'b1;
+            tu_is_push     = (vif.lanes_in.lane_issue_ports[1].alu_op == TU_PUSH);
+            tu_is_pop      = (vif.lanes_in.lane_issue_ports[1].alu_op == TU_POP);
+            tu_issue_v1    = vif.lanes_in.lane_issue_ports[1].v1;
+            tu_issue_vd    = vif.lanes_in.lane_issue_ports[1].vd;
+        end
+    end
+
+    assign tu_if.in.push_req  = tu_issue_valid && tu_is_push;
+    assign tu_if.in.pop_req   = tu_issue_valid && tu_is_pop;
+    assign tu_if.in.valid_in  = tu_issue_valid && tu_is_push;
+    assign tu_if.in.vec_in    = tu_issue_v1;
+    assign tu_if.in.ready_out = vif.wb_ready_signals.lanes_wb_ready[2];
+
+    logic [7:0] tu_base_vd_r,  tu_base_vd_next;
+    logic [4:0] tu_pop_cnt_r,  tu_pop_cnt_next;
+    logic       tu_popping_r,  tu_popping_next;
+
+    always_ff @(posedge CLK or negedge nRST) begin
+        if (!nRST) begin
+            tu_base_vd_r <= '0;
+            tu_pop_cnt_r <= '0;
+            tu_popping_r <= 1'b0;
+        end else begin
+            tu_base_vd_r <= tu_base_vd_next;
+            tu_pop_cnt_r <= tu_pop_cnt_next;
+            tu_popping_r <= tu_popping_next;
+        end
+    end
+
+    always_comb begin
+        tu_base_vd_next = tu_base_vd_r;
+        tu_pop_cnt_next = tu_pop_cnt_r;
+        tu_popping_next = tu_popping_r;
+
+        if (tu_issue_valid && tu_is_pop) begin
+            tu_base_vd_next = tu_issue_vd;
+            tu_pop_cnt_next = 5'd0;
+            tu_popping_next = 1'b1;
+        end
+
+        if (tu_popping_r && tu_if.out.valid_out && vif.wb_ready_signals.lanes_wb_ready[2]) begin
+            if (tu_pop_cnt_r == 5'd31) begin
+                tu_pop_cnt_next = 5'd0;
+                tu_popping_next = 1'b0;
+            end else begin
+                tu_pop_cnt_next = tu_pop_cnt_r + 1'b1;
+            end
+        end
+    end
+
+    // RC connections: slots 0 (ALU) & 1 (MUL) from RC, slot 2 (TRANS) from TU
     genvar rc_vif_i;
     generate
-        for (rc_vif_i = 0; rc_vif_i < LANE_FU_COUNT; rc_vif_i++) begin : gen_rc_vif_connection
+        for (rc_vif_i = 0; rc_vif_i < 2; rc_vif_i++) begin : gen_rc_vif_connection
             always_comb begin : rc_vif_connection
                 vif.lanes_out.result_collectors[rc_vif_i] = rc_interfaces[rc_vif_i].out;
                 rc_interfaces[rc_vif_i].in.wb_ready = vif.wb_ready_signals.lanes_wb_ready[rc_vif_i];
             end
         end
     endgenerate
-        
 
-    //lanes ready to vif out
+    always_comb begin : tu_rc_connection
+        rc_interfaces[2].in.wb_ready = 1'b0;
+        vif.lanes_out.result_collectors[2].input_ready   = '0;
+        vif.lanes_out.result_collectors[2].wb_valid      = tu_if.out.valid_out;
+        vif.lanes_out.result_collectors[2].vector_output = tu_if.out.vec_out;
+        vif.lanes_out.result_collectors[2].vd_output     = tu_base_vd_r + {3'b000, tu_pop_cnt_r};
+        vif.lanes_out.result_collectors[2].mop_out       = 1'b0;
+    end
+
+    // Lanes ready to vif out: slots 0 & 1 from lane readies, slot 2 from TU
     genvar ready_vif_i, ready_vif_j;
     generate
-        for (ready_vif_i = 0; ready_vif_i < LANE_FU_COUNT; ready_vif_i++) begin : gen_fu_ready
+        for (ready_vif_i = 0; ready_vif_i < 2; ready_vif_i++) begin : gen_fu_ready
             for (ready_vif_j = 0; ready_vif_j < NUM_LANES; ready_vif_j++) begin : gen_lane_ready
                 always_comb begin : ready_vif_connection
                     fu_lane_readies[ready_vif_i][ready_vif_j] = lane_interfaces[ready_vif_j].out.units[ready_vif_i].input_ready;
@@ -125,6 +216,8 @@ module vector_datapath (
             end
         end
     endgenerate
+
+    assign vif.unit_ready_signals.fu_global_status[2] = tu_if.out.ready_in && !tu_popping_r;
     
 
     

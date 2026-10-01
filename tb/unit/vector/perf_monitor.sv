@@ -244,8 +244,8 @@ module perf_monitor (
             end
         end
 
-        // --- Transpose Unit (Port 0) ---
-        if (vif.vlsu_out.status[0].transpose_active) begin
+        // --- Transpose Unit (FU slot 2) ---
+        if (!vif.unit_ready_signals.fu_global_status[2] || vif.lanes_out.result_collectors[2].wb_valid) begin
             transpose_active_cycles++;
             any_activity = 1;
             if (gsauif.sa_weight_en || gsauif.sa_input_en)
@@ -254,13 +254,16 @@ module perf_monitor (
             transpose_idle_cycles++;
         end
 
-        if (vif.vlsu_out.status[0].transpose_push)
+        if ((vif.lanes_in.lane_issue_ports[0].input_valid && vif.lanes_in.lane_issue_ports[0].usel == TRANS && vif.lanes_in.lane_issue_ports[0].alu_op == TU_PUSH) ||
+            (vif.lanes_in.lane_issue_ports[1].input_valid && vif.lanes_in.lane_issue_ports[1].usel == TRANS && vif.lanes_in.lane_issue_ports[1].alu_op == TU_PUSH))
             transpose_push_count++;
 
-        if (vif.vlsu_out.status[0].transpose_pop)
+        if ((vif.lanes_in.lane_issue_ports[0].input_valid && vif.lanes_in.lane_issue_ports[0].usel == TRANS && vif.lanes_in.lane_issue_ports[0].alu_op == TU_POP) ||
+            (vif.lanes_in.lane_issue_ports[1].input_valid && vif.lanes_in.lane_issue_ports[1].usel == TRANS && vif.lanes_in.lane_issue_ports[1].alu_op == TU_POP))
             transpose_pop_count++;
 
-        if (vif.vlsu_out.status[0].transpose_done)
+        if (vif.lanes_out.result_collectors[2].wb_valid && vif.wb_ready_signals.lanes_wb_ready[2] && 
+            (vif.lanes_out.result_collectors[2].vd_output[4:0] == 5'd31))
             transpose_matrix_count++;
 
         if (any_activity)

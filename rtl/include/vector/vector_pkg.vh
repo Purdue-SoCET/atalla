@@ -72,7 +72,8 @@ package vector_pkg;
     typedef enum logic [1:0] {
         VALU = 2'b00,
         MUL = 2'b01,
-        EXP = 2'b10
+        EXP = 2'b10,
+        TRANS = 2'b11
     } fu_t;
 
     // =========================================================================
@@ -173,7 +174,9 @@ package vector_pkg;
         ALU_MGT = 4'b0110, // Mask greater than (v1 > v2)
         ALU_MLT = 4'b0111, // Mask less than (v1 < v2)
         ALU_MEQ = 4'b1000, // Mask equal (v1 == v2)
-        ALU_MNEQ = 4'b1001 // Mask not equal (v1 != v2)
+        ALU_MNEQ = 4'b1001, // Mask not equal (v1 != v2)
+        TU_PUSH  = 4'b1100, // Transpose Unit push (v1 -> TU)
+        TU_POP   = 4'b1101  // Transpose Unit pop (TU -> vd)
     } alu_op_t;
 
     typedef struct packed {

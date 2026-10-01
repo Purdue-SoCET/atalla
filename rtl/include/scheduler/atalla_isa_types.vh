@@ -153,7 +153,11 @@ package atalla_isa_pkg;
     // ---- Vector Scalar ----
     ADD_VS   = 7'd75,
     SUB_VS   = 7'd76,
-    MUL_VS   = 7'd77
+    MUL_VS   = 7'd77,
+
+    // ---- Vector Transpose ----
+    TPOP_VI  = 7'd78,
+    TPUS_VI  = 7'd79
 
   } opcode_t;
 

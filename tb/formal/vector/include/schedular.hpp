@@ -98,7 +98,8 @@ public:
     typedef enum {
         VALU  = 0,
         MUL   = 1,
-        EXP   = 2
+        EXP   = 2,
+        TRANS = 3
     } fu_t;
     
 
@@ -194,9 +195,11 @@ private:
         {"shift.vs", {VS, 74}},
         {"mmv.mts", {MTS, 75}},
         {"mv.stm", {STM, 76}},
-        {"vreg.ld", {VM, 77}},
-        {"vreg.st", {VM, 78}},
-        {"vmov.vi", {VI, 79}},
+        {"vreg.ld", {VM, 68}},
+        {"vreg.st", {VM, 69}},
+        {"vmov.vi", {VI, 72}},
+        {"tpop.vi", {VI, 78}},
+        {"tpus.vi", {VI, 79}},
         {"add.vs",  {VS, 80}},
         {"sub.vs",  {VS, 81}},
         {"mul.vs",  {VS, 82}},
