@@ -693,6 +693,7 @@ module vector_core_L2_tb;
         // ---- Main loop ----
         forever begin
             @(posedge CLK);
+            #1ps;
             cycle_count++;
 
             handle_writeback();
@@ -704,8 +705,8 @@ module vector_core_L2_tb;
                 logic [NUM_SCPADS-1:0] vlsu_dbg;
                 for (int p = 0; p < NUM_SCPADS; p++)
                     vlsu_dbg[p] = vif.unit_ready_signals.vlsu_status[p].ready;
-                $display("[TB-RDY] Cyc %0d: vlsu_rdy=%b gsau_rdy=%b", 
-                    cycle_count, vlsu_dbg, gsauif.sb_ready_out);
+                $display("[TB-RDY] Cyc %0d: vlsu_rdy=%b gsau_rdy=%b lane_ready=%b", 
+                    cycle_count, vlsu_dbg, gsauif.sb_ready_out, vif.unit_ready_signals.fu_global_status);
             end
 
             dpi_scheduler_tick(nRST);
@@ -730,9 +731,10 @@ module vector_core_L2_tb;
             // Debug logging
             for (int p = 0; p < 2; p++) begin
                 if (dpi_get_lane_valid_in(p))
-                    $display("[TB] Cyc %0d: Lane[%0d] vd=%0d fu=%0d aluop=%0d rm=%0b",
+                    $display("[TB] Cyc %0d: Lane[%0d] vd=%0d vs1=%0d fu=%0d aluop=%0d rm=%0b",
                         cycle_count, p,
                         dpi_get_lane_vd(p),
+                        dpi_get_veggie_vs1(p),
                         dpi_get_lane_fu_sel(p),
                         dpi_get_lane_alu_op(p),
                         dpi_get_lane_rm(p));
@@ -756,6 +758,7 @@ module vector_core_L2_tb;
                 clear_all_ports();
                 repeat (DRAIN_CYCLES) begin
                     @(posedge CLK);
+                    #1ps;
                     cycle_count++;
                     handle_writeback();
                     clear_all_ports();

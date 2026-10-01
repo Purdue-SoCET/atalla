@@ -138,10 +138,20 @@ module vector_datapath (
         end
     end
 
+    vreg_t tu_push_vec_r;
+
+    always_ff @(posedge CLK or negedge nRST) begin
+        if (!nRST) begin
+            tu_push_vec_r <= '0;
+        end else if (tu_issue_valid && tu_is_push) begin
+            tu_push_vec_r <= tu_issue_v1;
+        end
+    end
+
     assign tu_if.in.push_req  = tu_issue_valid && tu_is_push;
     assign tu_if.in.pop_req   = tu_issue_valid && tu_is_pop;
     assign tu_if.in.valid_in  = tu_issue_valid && tu_is_push;
-    assign tu_if.in.vec_in    = tu_issue_v1;
+    assign tu_if.in.vec_in    = (tu_issue_valid && tu_is_push) ? tu_issue_v1 : tu_push_vec_r;
     assign tu_if.in.ready_out = vif.wb_ready_signals.lanes_wb_ready[2];
 
     logic [7:0] tu_base_vd_r,  tu_base_vd_next;
@@ -217,7 +227,7 @@ module vector_datapath (
         end
     endgenerate
 
-    assign vif.unit_ready_signals.fu_global_status[2] = tu_if.out.ready_in && !tu_popping_r;
+    assign vif.unit_ready_signals.fu_global_status[2] = tu_if.out.ready_in && !tu_popping_r && !tu_issue_valid;
     
 
     
