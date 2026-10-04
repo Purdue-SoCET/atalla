@@ -31,7 +31,7 @@ float bf16_to_f32(uint16_t bf16_bits)
 uint32_t fp32_to_bf16(float fp32) // mimics hardware implementation
 {
 	uint32_t value; // value
-	memcpy(&value, &f, sizeof(val));
+	memcpy(&value, &fp32, sizeof(value));
 	uint32_t sign = (val >>  31) & 1; // sign of floating point (1 bit)
 	uint32_t exponent = (val >> 23) & 0xFF // exponent of floating point (8 bits)
 	uint32_t mantissa = val & 0x7FFFFF; // mantissa of fp (23 bits)
