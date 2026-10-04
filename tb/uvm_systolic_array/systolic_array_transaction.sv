@@ -12,7 +12,7 @@ class systolic_array_transaction #(parameter N = 4, parameter WIDTH = 16) extend
     	rand bit [WIDTH-1:0] input_matrix [N*N];
     	rand bit [WIDTH-1:0] partial_matrix [N*N]; 
 
-	bit [WIDTH-1:0] ouptut_matrix [N*N];
+	bit [WIDTH-1:0] output_matrix [N*N];
 
 	`uvm_object_param_utils_begin(systolic_array_transaction #(N, WIDTH)) //initialization
 		`uvm_field_sarray_int(weight_matrix, UVM_ALL_ON)
@@ -27,7 +27,7 @@ class systolic_array_transaction #(parameter N = 4, parameter WIDTH = 16) extend
 
 	constraint bf16
 	{
-		// to be added
+		// to be added to keep values in normal areas
 	}
 
 
