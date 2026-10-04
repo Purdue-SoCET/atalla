@@ -30,7 +30,7 @@ class systolic_array_monitor #(parameter N = 4, parameter WIDTH = 16) extends uv
     systolic_array_transaction #(N, WIDTH) trans;
 
     forever begin
-      @(vif.monitor); //change to clk
+      @(posedge vif.clk); //change to clk
 
       if (vif.monitor.weight_en || vif.monitor.input_en || vif.monitor.partial_en || vif.monitor.out_en) begin
         trans = systolic_array_transaction #(N, WIDTH)::type_id::create("trans");
