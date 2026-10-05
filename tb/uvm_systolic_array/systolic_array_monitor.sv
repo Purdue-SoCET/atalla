@@ -22,37 +22,65 @@ class systolic_array_monitor #(parameter N = 4, parameter WIDTH = 16) extends uv
     super.build_phase(phase);
 
     if (!uvm_config_db#(virtual systolic_array_if #(N, WIDTH))::get(this, "", "vif", vif)) begin
-      `uvm_fatal(get)type_name(), "Virtual interface not found in uvm_config_db")
+      `uvm_fatal(get_type_name(), "Virtual interface not found in uvm_config_db")
     end
   endfunction
 
   task run_phase(uvm_phase phase);
     systolic_array_transaction #(N, WIDTH) trans;
 
-    forever begin
-      @(posedge vif.clk); //change to clk
+    bit[N-1:0] weight_seen;
+    bit[N-1:0] input_seen;
+    bit[N-1:0] partial_seen;
+    bit[N-1:0] output_seen;
 
-      if (vif.monitor.weight_en || vif.monitor.input_en || vif.monitor.partial_en || vif.monitor.out_en) begin
-        trans = systolic_array_transaction #(N, WIDTH)::type_id::create("trans");
+    int weight_row;
+    
+    //initialize 
+    trans = null;
+    weight_seen = '0;
+    input_seen = '0;
+    partial_seen = '0;
+    output_seen = '0;
+    weight_row = '0;
+
+    forever begin
+      @(posedge vif.clk); 
+
+      //initialize 
+      if (!vif.n_rst) begin
+        trans = null;
+        weight_seen = '0;
+        input_seen = '0;
+        partial_seen = '0;
+        output_seen = '0;
+        weight_row = '0;
+      end
+
+      else begin
+
+        if (vif.monitor.weight_en || vif.monitor.input_en || vif.monitor.partial_en || vif.monitor.out_en) begin
+          trans = systolic_array_transaction #(N, WIDTH)::type_id::create("trans");
+        end
 
         //inputs
-        trans.weight_en = vif.monitor.weight_en;
-        trans.input_en = vif.monitor.input_en;
-        trans.partial_en = vif.monitor.partial_en;
-        trans.row_in_en = vif.monitor.row_in_en;
-        trans.row_ps_en = vif.monitor.row_ps_en;
+        // trans.weight_en = vif.monitor.weight_en;
+        // trans.input_en = vif.monitor.input_en;
+        // trans.partial_en = vif.monitor.partial_en;
+        // trans.row_in_en = vif.monitor.row_in_en;
+        // trans.row_ps_en = vif.monitor.row_ps_en;
 
-        trans.array_in = vif.monitor.array_in;
-        trans.array_in_partials = vif.monitor.array_in_partials;
+        // trans.array_in = vif.monitor.array_in;
+        // trans.array_in_partials = vif.monitor.array_in_partials;
 
-        //outputs
-        trans.out_en            = vif.monitor.out_en;
-        trans.row_out           = vif.monitor.row_out;
-        trans.array_output      = vif.monitor.array_output;
-        trans.drained           = vif.monitor.drained;
-        trans.fifo_has_space    = vif.monitor.fifo_has_space;
+        // //outputs
+        // trans.out_en            = vif.monitor.out_en;
+        // trans.row_out           = vif.monitor.row_out;
+        // trans.array_output      = vif.monitor.array_output;
+        // trans.drained           = vif.monitor.drained;
+        // trans.fifo_has_space    = vif.monitor.fifo_has_space;
 
-        ap.write(trans);
+        // ap.write(trans);
       end
     end
   endtask
