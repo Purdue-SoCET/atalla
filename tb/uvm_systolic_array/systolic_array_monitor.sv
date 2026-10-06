@@ -29,6 +29,7 @@ class systolic_array_monitor #(parameter N = 4, parameter WIDTH = 16) extends uv
   task run_phase(uvm_phase phase);
     systolic_array_transaction #(N, WIDTH) trans;
 
+    //row tracking variables
     bit[N-1:0] weight_seen;
     bit[N-1:0] input_seen;
     bit[N-1:0] partial_seen;
@@ -63,27 +64,90 @@ class systolic_array_monitor #(parameter N = 4, parameter WIDTH = 16) extends uv
           trans = systolic_array_transaction #(N, WIDTH)::type_id::create("trans");
         end
 
-        //inputs
-        // trans.weight_en = vif.monitor.weight_en;
-        // trans.input_en = vif.monitor.input_en;
-        // trans.partial_en = vif.monitor.partial_en;
-        // trans.row_in_en = vif.monitor.row_in_en;
-        // trans.row_ps_en = vif.monitor.row_ps_en;
+        if (trans != null) begin
 
-        // trans.array_in = vif.monitor.array_in;
-        // trans.array_in_partials = vif.monitor.array_in_partials;
+          //weight rows
+          if (vif.weight_en) begin
+            if (weight_row < N) begin 
+              for (int c = 0; c < N; c++) begin //check for space
+                trans.weight_matrix[weight_row*N + c] = vif.array_in[c*WIDTH +: WIDTH]; //convert to index and select weight bits
+              end
 
-        // //outputs
-        // trans.out_en            = vif.monitor.out_en;
-        // trans.row_out           = vif.monitor.row_out;
-        // trans.array_output      = vif.monitor.array_output;
-        // trans.drained           = vif.monitor.drained;
-        // trans.fifo_has_space    = vif.monitor.fifo_has_space;
+              weight_seen[weight_row] = 1'b1;
+              weight_row++;
+            end
+            else begin 
+              `uvm_error("WEIGHTS", "Extra weight row received")
+            end
+          end
 
-        // ap.write(trans);
+          //input rows
+          if (vif.input_en) begin
+            if (vif.row_in_en < N) begin
+              for (int c = 0; c < N; c++) begin
+                trans.input_matrix[vif.row_in_en*N + c] = vif.array_in[c*WIDTH +: WIDTH];
+              end
+
+              input_seen[vif.row_in_en] = 1'b1;
+            end
+            else begin
+              `uvm_error("INPUT_ROW", "Input row index out of range")
+            end
+          end
+
+          //partial rows
+          if (vif.partial_en) begin
+            if (vif.row_ps_en < N) begin
+              for (int c = 0; c < N; c++) begin
+                trans.partial_matrix[vif.row_ps_en*N + c] = vif.array_in_partials[c*WIDTH +: WIDTH];
+              end
+              
+              partial_seen[vif.row_ps_en] = 1'b1;
+            end
+            else begin
+              `uvm_error("PARTIAL_ROW", "Partial-sum row index out of range")
+            end
+          end
+
+          //output rows
+          if (vif.out_en) begin
+            if (vif.row_out < N) begin
+              if (output_seen[vif.row_out]) begin
+                `uvm_error("OUTPUT_ROW", "Duplicate output row received")
+              end
+              else begin
+                for (int c = 0; c < N; c++) begin
+                  trans.output_matrix[vif.row_out*N + c] = vif.array_output[c*WIDTH +: WIDTH];
+                end
+
+                output_seen[vif.row_out] = 1'b1;
+              end
+            end
+            else begin
+              `uvm_error("OUTPUT_ROW", "Output row index out of range")
+            end
+          end
+
+          //only after all rows are collected, then we write
+          if ((&weight_seen) && (&input_seen) && (&partial_seen) && (&output_seen)) begin
+            ap.write(trans);
+
+          // Wait for next transaction
+            trans = null;
+            weight_seen  = '0;
+            input_seen   = '0;
+            partial_seen = '0;
+            output_seen  = '0;
+            weight_row   = 0;
+          end
+        end
+        
+        else if (vif.out_en) begin
+          `uvm_error("UNEXPECTED_OUTPUT", "Output received with no active transaction")
+        end
       end
     end
-  endtask
+endtask
 
 endclass
 `endif
