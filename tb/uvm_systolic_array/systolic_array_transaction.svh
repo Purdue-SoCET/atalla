@@ -1,8 +1,8 @@
 // transaction for systolic array
 //
 
-`ifndef SYSTOLIC_ARRAY_TRANSACTION_SV
-`define SYSTOLIC_ARRAY_TRANSACTION_SV
+`ifndef SYSTOLIC_ARRAY_TRANSACTION_SVH
+`define SYSTOLIC_ARRAY_TRANSACTION_SVH
 
 import uvm_pkg::*;
 `include "uvm_macros.svh"

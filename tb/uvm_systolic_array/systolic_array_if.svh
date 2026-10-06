@@ -1,8 +1,8 @@
 // first dradt of interface
 //
 
-`ifndef SYSTOLIC_ARRAY_IF_SV
-`define SYSTOLIC_ARRAY_IF_SV
+`ifndef SYSTOLIC_ARRAY_IF_SVH
+`define SYSTOLIC_ARRAY_IF_SVH
 interface systolic_array_if #(parameter N = 4, parameter WIDTH = 16)(input_logic clk, input logic n_rst);
 	// control signals
 	logic weight_en;
