@@ -67,5 +67,34 @@ uint32_t fp32_to_bf16(float fp32) // mimics hardware implementation
 	return (sign << 15) | (new_exp << 7) | final_mant; //bf16
 }
 
+void predict_systolic_array_output(unsigned int N, const svOpenArrayHandle weight_matrix, const svOpenArrayHandle input_matrix, svOpenArrayHandle output_matrix) 
+	// no partials because they are zeroed in module
+{
+	_MM_SET_FLUSH_ZERO_MODE(_MM_FLUSH_ZERO_ON); // set FTZ
+        _MM_SET_DENORMALS_ZERO_MODE(_MM_DENORMALS_ZERO_ON); // set DAZ
+
+	uint16_t* weights = (uint16_t*)svGetArrayPtr(weight_matrix);
+    	uint16_t* inputs = (uint16_t*)svGetArrayPtr(input_matrix);
+    	uint16_t* outputs = (uint16_t*)svGetArrayPtr(output_matrix);
+	float accumulator;
+	for (int i = 0; i < N; i++)
+	{
+		for (int j = 0; j < N; j++)
+		{
+			
+			accumulator = 1.0f;
+
+			for (int k = 0; k < N; k++)
+			{
+				float a = bf16_to_float32(inputs[i * N + k]);
+                		float b = bf16_to_float32(weights[k * N + j]);
+				accumulator += (a*b);
+			}
+
+			outputs[i * N * j] = fp32_to_bf16(accumulator);
+		}
+	}
+}
+
 
 
