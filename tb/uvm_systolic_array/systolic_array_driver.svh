@@ -10,7 +10,7 @@ import uvm_pkg::*;
 `include "uvm_macros.svh"
 
 class systolic_array_driver #(parameter N = 4, parameter WIDTH = 16) extends uvm_driver #(systolic_array_transaction #(N, WIDTH));
-  `uvm_component_utils(systolic_array_driver #(N, WIDTH))   // uvm_component_param_utils maybe use?
+  `uvm_component_param_utils(systolic_array_driver #(N, WIDTH))   // uvm_component_param_utils maybe use?
 
   // Virtual interface handle
   virtual systolic_array_if #(N, WIDTH) vif;
@@ -64,13 +64,13 @@ class systolic_array_driver #(parameter N = 4, parameter WIDTH = 16) extends uvm
   // task for reseting inputs 
   task reset_all();
     @(vif.driver);  // syncs to clock edge defined in interface 
-    vif.driver.weight_en <= 1'b0;
-    vif.driver.input_en <= 1'b0;
-    vif.driver.partial_en <= 1'b0;
-    vif.driver.row_in_en <= 1'b0;
-    vif.driver.row_ps_en <= 1'b0;
-    vif.driver.array_in <= 1'b0;   
-    vif.driver.array_in_partials <= 1'b0;   
+    vif.driver.weight_en <= '0;
+    vif.driver.input_en <= '0;
+    vif.driver.partial_en <= '0;
+    vif.driver.row_in_en <= '0;
+    vif.driver.row_ps_en <= '0;
+    vif.driver.array_in <= '0;   
+    vif.driver.array_in_partials <= '0;   
   endtask
 
   // task for driving transaction at clock edge 
