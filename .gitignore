@@ -3,13 +3,17 @@
 obj_dir/
 # Questa / ModelSim
 work/
+work_*/
 transcript
+modelsim.ini
 vsim.*
+vsim_stacktrace.vstf
 *.wlf
+wlft*
 *.ucdb
-*.vstf
 .mti_uselibs/
-*ini
+covhtmlreport/
+coverage/
 # Cadence Xcelium
 xcelium.d/
 xrun.history
@@ -39,15 +43,8 @@ alib-*/
 *.pvl
 *.syn
 
-# ---- Logs and generated test data ----
+# ---- Logs ----
 *.log
-*.txt
-*.csv
-out/
-build/
-
-# ---- Generated sources ----
-systolic_array_tb_pkg.sv
 
 # ---- Compiled objects / dependency files ----
 .deps/
@@ -57,49 +54,35 @@ systolic_array_tb_pkg.sv
 *.so
 *.d
 
+# ---- Generated sources and test data ----
+libdpi_parser.so
+tb/unit/systolic_array/systolic_array_tb_pkg.sv
+scripts/systolic_array/systolic_array_tb_*.csv
+scripts/systolic_array/systolic_array_tb_ulp_report.txt
+scripts/systolic_array/C++/gen_test_vectors
+out/
+output/
+build/
+docs/book/
+
+# ---- Systolic array local scratch ----
+rtl/modules/systolic_array/MEISSA/
+tb/unit/systolic_array/sysarr_MEISSA_top_oldtb.sv
+run_suite.sh
+
+# ---- DDR: tool scratch ----
+protected_modelsim/.venv/
+
 # ---- Python ----
 __pycache__/
 *.pyc
 .venv
 *.prof
 
-# ---- Systolic array local build products / scratch ----
-scripts/systolic_array/C++/gen_test_vectors
-rtl/modules/systolic_array/MEISSA/
-tb/unit/systolic_array/sysarr_MEISSA_top_oldtb.sv
-run_suite.sh
-
-# ---- Editor / OS ----
+# ---- Editor / OS / merge leftovers ----
 *.swp
 *~
+*.bak
+*.orig
+*.rej
 .DS_Store
-
-wlft*
-!.gitignore
-!.gitmodules
-
-waves/
-*waves*/
-covhtmlreport/
-
-__pycache__
-
-*.ini
-output/
-# NOTE: *.do / *.f / *.mem come from scheduler_integration_SP26_joshklug,
-# but this repo tracks 38 .do scripts (scripts/memory/axi_bus/*.do etc),
-# files.f and controlbits.mem. Negations keep those visible.
-*.f
-*.mem
-*.do
-!scripts/**/*.do
-!files.f
-!rtl/modules/common/memory/*.mem
-
-modelsim.ini
-coverage/
-files.f
-
-# ---- DDR: tool scratch / committed venv ----
-protected_modelsim/.venv/
-wlft*

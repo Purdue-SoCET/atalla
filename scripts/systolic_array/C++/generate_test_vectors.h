@@ -8,7 +8,10 @@
 
 constexpr int ROW = 32;
 constexpr int COL = 32;
-constexpr int TOTAL_TEST_NUM = 10000;
+#ifndef NUM_TESTS
+#define NUM_TESTS 10000
+#endif
+constexpr int TOTAL_TEST_NUM = NUM_TESTS;
 constexpr int PROBABILITY_OF_NEW_WEIGHT = 250; // 25% chance out of 1000
 constexpr int ADDER_INPUT_NUM = 2;
 constexpr unsigned int RANDOM_SEED = 24;
