@@ -12,8 +12,9 @@ class systolic_array_env #(
 
   `uvm_component_param_utils(systolic_array_env #(N, WIDTH))
 
-  //declare agent 
+  //declare agent and scoreboard
   systolic_array_agent #(N, WIDTH) agent;
+  systolic_array_scoreboard #(N, WIDTH) scoreboard;
 
   //constructor def
   function new (
@@ -23,11 +24,19 @@ class systolic_array_env #(
     super.new(name, parent);
   endfunction
 
-  //create agent 
+  //create agent and scoreboard
   function void build_phase(uvm_phase phase);
     super.build_phase(phase);
     
     agent = systolic_array_agent #(N, WIDTH)::type_id::create("agent", this);
+
+    scoreboard = systolic_array_scoreboard #(N, WIDTH)::type_id::create("scoreboard", this);
+  endfunction
+
+  //connect monitor to scoreboard
+  function void connect_phase(uvm_phase phase);
+    super.connect_phase(phase);
+
   endfunction
 
 endclass
