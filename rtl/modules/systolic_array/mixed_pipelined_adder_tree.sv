@@ -3,7 +3,7 @@
 // Sums N FP16 products and injects an external partial sum (psum_in).
 `include "sys_arr_pkg.vh" // for compute num tree levels function
 
-module mixed_pipelined_adder_tree 
+module mixed_pipelined_adder_tree
     import sys_arr_pkg::*;
 #(
     parameter int N           = 16,    // Number of inputs to sum (MUST be a power of 2), does not include psum

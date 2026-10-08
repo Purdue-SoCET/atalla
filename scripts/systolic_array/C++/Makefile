@@ -12,8 +12,10 @@ ALL_SRC=$(wildcard *.cpp)
 # The name of the resulting executable
 APP=gen_test_vectors
 
+NUM_TESTS ?= 100
+
 test:
-	$(CC) $(CFLAGS) -I$(SOFTFLOAT_INC) $(ALL_SRC) $(SOFTFLOAT_LIB) -o $(APP)	
+	$(CC) $(CFLAGS) -DNUM_TESTS=$(NUM_TESTS) -I$(SOFTFLOAT_INC) $(ALL_SRC) $(SOFTFLOAT_LIB) -o $(APP)
 	./$(APP)
 
 clean:

@@ -1,8 +1,10 @@
 // Include directories
 +incdir+./rtl/include/systolic_array
 +incdir+./rtl/include/vector
++incdir+./rtl/include/memory/scratchpad
 
 // Packages & interfaces (order matters)
+./rtl/include/memory/scratchpad/scpad_pkg.sv
 ./rtl/include/vector/vector_pkg.vh
 ./rtl/include/systolic_array/sys_arr_pkg.vh
 ./rtl/include/systolic_array/systolic_array_MAC_if.vh
