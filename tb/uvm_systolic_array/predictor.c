@@ -82,7 +82,7 @@ void predict_systolic_array_output(unsigned int N, const svOpenArrayHandle weigh
 		for (int j = 0; j < N; j++)
 		{
 			
-			accumulator = 1.0f;
+			accumulator = 0.0f;
 
 			for (int k = 0; k < N; k++)
 			{
@@ -91,7 +91,7 @@ void predict_systolic_array_output(unsigned int N, const svOpenArrayHandle weigh
 				accumulator += (a*b);
 			}
 
-			outputs[i * N * j] = fp32_to_bf16(accumulator);
+			outputs[i * N + j] = fp32_to_bf16(accumulator);
 		}
 	}
 }
