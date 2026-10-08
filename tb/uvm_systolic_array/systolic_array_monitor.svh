@@ -1,6 +1,6 @@
 //monitor first draft
-`ifndef SYSTOLIC_ARRAY_MONITOR_SV
-`define SYSTOLIC_ARRAY_MONITOR_SV
+`ifndef SYSTOLIC_ARRAY_MONITOR_SVH
+`define SYSTOLIC_ARRAY_MONITOR_SVH
 
 import uvm_pkg::*;
 `include "uvm_macros.svh"
