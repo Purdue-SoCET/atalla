@@ -1,4 +1,4 @@
-// comparator / predictor
+// predictor
 
 
 #include "svdpi.h"

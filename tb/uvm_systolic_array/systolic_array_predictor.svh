@@ -17,21 +17,20 @@ class systolic_array_predictor #(parameter N = 4, parameter WIDTH = 16) extends 
     	endfunction
 
 	virtual function void write(systolic_array_transaction #(N, WIDTH) tr);
-        // DPI-C compatible dynamic arrays for 16-bit BF16 logic
-        	shortint unsigned c_weight_matrix [];
-        	shortint unsigned c_input_matrix [];
-        	shortint unsigned c_output_matrix [];
+        	shortint unsigned weight_matrix [];
+        	shortint unsigned input_matrix [];
+        	shortint unsigned output_matrix [];
 
-        	c_weight_matrix = new[N*N];
-        	c_input_matrix = new[N*N];
-        	c_output_matrix = new[N*N];
+        	weight_matrix = new[N*N];
+        	input_matrix = new[N*N];
+        	output_matrix = new[N*N];
 
-		foreach (tr.weight_matrix[i]) c_weight_matrix[i] = tr.weight_matrix[i];
-        	foreach (tr.input_matrix[i]) c_input_matrix[i] = tr.input_matrix[i];
+		foreach (tr.weight_matrix[i]) weight_matrix[i] = tr.weight_matrix[i];
+        	foreach (tr.input_matrix[i]) input_matrix[i] = tr.input_matrix[i];
 		// ignore partials
 		
-		predict_sysarr_output(N, c_weight_matrix, c_input_matrix, c_output_matrix);
-		foreach (c_output_matrix[i]) tr.output_matrix[i] = c_output_matrix[i];
+		predict_sysarr_output(N, weight_matrix, input_matrix, output_matrix);
+		foreach (output_matrix[i]) tr.output_matrix[i] = output_matrix[i];
 
 
 		`uvm_info("PREDICTOR", $sformatf("prediction worked"), UVM_HIGH)
