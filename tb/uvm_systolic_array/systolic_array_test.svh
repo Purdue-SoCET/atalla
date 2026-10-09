@@ -7,6 +7,9 @@ import uvm_pkg::*;
 class systolic_array_test extends uvm_test;
     `uvm_component_param_utils(systolic_array_test #(N, WIDTH))
 
+    int N = 4;
+    int WIDTH = 16;
+
     systolic_array_env #(4, 16) env;
 
     function new(string name = "systolic_array_test", uvm_component parent = null);
