@@ -4,10 +4,10 @@
 import uvm_pkg::*;
 `include "uvm_macros.svh"
 
-class systolic_array_test #(parameter N = 4, parameter WIDTH = 16) extends uvm_test;
+class systolic_array_test extends uvm_test;
     `uvm_component_param_utils(systolic_array_test #(N, WIDTH))
 
-    systolic_array_env #(N, WIDTH) env;
+    systolic_array_env #(4, 16) env;
 
     function new(string name = "systolic_array_test", uvm_component parent = null);
         super.new(name, parent);
