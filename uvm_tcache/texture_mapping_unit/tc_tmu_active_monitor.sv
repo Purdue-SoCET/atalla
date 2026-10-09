@@ -17,7 +17,6 @@ class tc_tmu_active_monitor extends uvm_monitor;
 
   function new(string name, uvm_component parent = null);
     super.new(name, parent);
-    // TODO: fill in analysis ports
     tc_ap = new("tc_ap", this);
   endfunction
 
@@ -32,7 +31,18 @@ class tc_tmu_active_monitor extends uvm_monitor;
     super.run_phase(phase);
 
     forever begin
-      // TODO: fill in
+      tc_tmu_transaction tx;
+
+      while (vif.tmu_valid == 1'b0) @(negedge vif.clk);
+
+      tx.s = vif.s;
+      tx.t = vif.t;
+      tx.tex_width = vif.tex_width;
+      tx.tex_height = vif.tex_height;
+      tx.base_addr = vif.base_addr;
+      tx.tmu_valid = vif.tmu_valid;
+
+      tc_ap.write(tx);
     end
   endtask
 

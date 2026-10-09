@@ -1,2 +1,2 @@
-var g_data = {"9":["work.confirm_lru_age",100.00,1],"8":["work.confirm_replacement_mshr",0.00,1],"7":["work.confirm_replacement_singlecycle",0.00,1]};
+var g_data = {"7":["work.cache_bank",54.43,1],"6":["work.cache_mshr_buffer",77.77,1],"4":["work.lfc_if",70.32,1],"5":["work.lockup_free_cache",76.03,1],"3":["work.tb_top",85.16,1],"1":["work.tb_top_sv_unit",65.53,1]};
 processDuLinks(g_data);

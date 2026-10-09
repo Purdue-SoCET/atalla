@@ -1,14 +1,29 @@
 QuestaSim-64 vlog 2021.4 Compiler 2021.10 Oct 13 2021
-Start time: 18:19:17 on Sep 27,2026
+Start time: 18:02:35 on Oct 08,2026
 vlog "+incdir+~/uvm_tcache+~/uvm_tcache" "+acc" "+cover" "+fcover" -L /package/eda/mg/questa2021.4/questasim/uvm-1.2 tb_top.sv -logfile tb_compile.log -printinfilenames=file_search.log 
 ** Note: (vlog-2286) test.sv(2): Using implicit +incdir+/package/eda/mg/questa2021.4/questasim/uvm-1.2/../verilog_src/uvm-1.2/src from import uvm_pkg
+** Warning: ** while parsing file included at tb_top.sv(4)
+** at texture_cache.sv(9): (vlog-13314) Defaulting port 's' kind to 'var' rather than 'wire' due to default compile option setting of -svinputport=relaxed.
+** Warning: ** while parsing file included at tb_top.sv(4)
+** at texture_cache.sv(9): (vlog-13314) Defaulting port 't' kind to 'var' rather than 'wire' due to default compile option setting of -svinputport=relaxed.
+** Warning: ** while parsing file included at tb_top.sv(4)
+** at texture_cache.sv(10): (vlog-13314) Defaulting port 'tex_width' kind to 'var' rather than 'wire' due to default compile option setting of -svinputport=relaxed.
+** Warning: ** while parsing file included at tb_top.sv(4)
+** at texture_cache.sv(11): (vlog-13314) Defaulting port 'tex_height' kind to 'var' rather than 'wire' due to default compile option setting of -svinputport=relaxed.
+** Warning: ** while parsing file included at tb_top.sv(4)
+** at texture_cache.sv(12): (vlog-13314) Defaulting port 'base_addr' kind to 'var' rather than 'wire' due to default compile option setting of -svinputport=relaxed.
 -- Compiling package tb_top_sv_unit
 -- Importing package /package/eda/mg/questa2021.4/questasim/uvm-1.2.uvm_pkg (uvm-1.2 Built-in)
 -- Compiling interface tc_if
 -- Compiling module texture_cache
+** Warning: texture_cache.sv(9): (vlog-13314) Defaulting port 's' kind to 'var' rather than 'wire' due to default compile option setting of -svinputport=relaxed.
+** Warning: texture_cache.sv(9): (vlog-13314) Defaulting port 't' kind to 'var' rather than 'wire' due to default compile option setting of -svinputport=relaxed.
+** Warning: texture_cache.sv(10): (vlog-13314) Defaulting port 'tex_width' kind to 'var' rather than 'wire' due to default compile option setting of -svinputport=relaxed.
+** Warning: texture_cache.sv(11): (vlog-13314) Defaulting port 'tex_height' kind to 'var' rather than 'wire' due to default compile option setting of -svinputport=relaxed.
+** Warning: texture_cache.sv(12): (vlog-13314) Defaulting port 'base_addr' kind to 'var' rather than 'wire' due to default compile option setting of -svinputport=relaxed.
 -- Compiling module tb_top
 
 Top level modules:
 	tb_top
-End time: 18:19:18 on Sep 27,2026, Elapsed time: 0:00:01
-Errors: 0, Warnings: 0
+End time: 18:02:36 on Oct 08,2026, Elapsed time: 0:00:01
+Errors: 0, Warnings: 10

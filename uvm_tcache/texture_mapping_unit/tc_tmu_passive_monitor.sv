@@ -4,6 +4,7 @@
 import uvm_pkg::*;
 `include "uvm_macros.svh"
 `include "../tc_if.sv"
+`include "tc_tmu_transaction.sv"
 
 class tc_tmu_passive_monitor extends uvm_monitor;
   `uvm_component_utils(tc_tmu_passive_monitor)
@@ -28,7 +29,16 @@ class tc_tmu_passive_monitor extends uvm_monitor;
     super.run_phase(phase);
 
     forever begin
-      // TODO: fill in
+      tc_tmu_transaction tx;
+
+      if(vif.cache_ready) begin
+        tx.cache_ready = 1'b1;
+        tx.texel_return = vif.texel_return;
+      end
+
+      tc_result_ap.write(tx);
+
+      @(negedge vif.clk);
     end
   endtask
 

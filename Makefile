@@ -41,6 +41,7 @@ uvm_sim:
 	vlog +incdir+$(SRCDIR)+$(TBDIR) \
 	+acc \
 	+cover \
+	+fcover \
 	-L $(QUESTA_HOME)/uvm-1.2 \
 	uvm/$(TBTOP).sv \
 	-logfile tb_compile.log \
@@ -59,6 +60,7 @@ uvm_gui:
 	vlog +incdir+$(SRCDIR)+$(TBDIR) \
 	+acc \
 	+cover \
+	+fcover \
 	-L $(QUESTA_HOME)/uvm-1.2 \
 	uvm/$(TBTOP).sv \
 	-logfile tb_compile.log \

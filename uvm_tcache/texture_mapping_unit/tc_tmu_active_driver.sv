@@ -31,8 +31,24 @@ class tc_tmu_active_driver extends uvm_driver#(tc_tmu_transaction);
   endtask
 
   task run_phase(uvm_phase phase);
+    tc_tmu_transaction req_item;
+
+    DUT_reset(); 
     forever begin
-      // TODO: fill out
+      seq_item_port.get_next_item(req_item);
+
+      vif.s = req_item.s;
+      vif.t = req_item.t;
+      vif.tex_width = req_item.tex_width;
+      vif.tex_height = req_item.tex_height;
+      vif.base_addr = req_item.base_addr;
+      vif.tmu_valid = 1'b1;
+
+      @(posedge vif.clk);
+      vif.tmu_valid = 1'b0; // assumption is that tcache latches inputs after 1 cycle
+      @(posedge vif.clk);
+
+      seq_item_port.item_done();
     end
   endtask
 

@@ -36,7 +36,7 @@ sim_%:
 	./obj_dir/V$*_tb
 	gtkwave waveforms/$*_tb.fst
 
-uvm_sim:
+cli:
 	@echo "Building testbench and DUT..."
 	vlog +incdir+$(SRCDIR)+$(TBDIR) \
 	+acc \
@@ -55,7 +55,7 @@ uvm_sim:
 	+UVM_VERBOSITY=$(VERBOSITY) \
 	-do "run -all" &
 
-uvm_gui:
+debug:
 	@echo "Building testbench and DUT..."
 	vlog +incdir+$(SRCDIR)+$(TBDIR) \
 	+acc \

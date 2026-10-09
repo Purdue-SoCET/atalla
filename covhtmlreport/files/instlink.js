@@ -1,2 +1,2 @@
-var g_data = {"14":[13,"singlecycle_monitor",1],"15":[13,"mshr_monitor",1],"16":[13,"lru_monitor",1],"13":[11,"dut",1],"11":[-1,"cache_bank_tb",1]};
+var g_data = {"9":[8,"lfc_interface",1],"11":[10,"BANK_GEN[3]/mshr_buffer_i",1],"12":[10,"BANK_GEN[3]/u_cache_bank",1],"13":[10,"BANK_GEN[2]/mshr_buffer_i",1],"14":[10,"BANK_GEN[2]/u_cache_bank",1],"15":[10,"BANK_GEN[1]/mshr_buffer_i",1],"16":[10,"BANK_GEN[1]/u_cache_bank",1],"17":[10,"BANK_GEN[0]/mshr_buffer_i",1],"18":[10,"BANK_GEN[0]/u_cache_bank",1],"10":[8,"DUT",1],"8":[-1,"tb_top",1],"19":[-1,"tb_top_sv_unit",1]};
 processInstLinks(g_data);

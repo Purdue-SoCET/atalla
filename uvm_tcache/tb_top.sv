@@ -2,6 +2,7 @@ import uvm_pkg::*;
 `include "tc_if.sv"
 `include "test.sv"
 `include "texture_cache.sv"
+`include "tc_types.sv"
 
 module tb_top();
     bit clk;
@@ -10,22 +11,24 @@ module tb_top();
     logic n_rst;
 
     // Initializations
+    // TODO: define widths
+    logic batch_id;
+    logic [3:0][S_T_WIDTH-1:0] s;
+    logic [3:0][S_T_WIDTH-1:0] t;
+    logic [3:0][TEXEL_WIDTH-1:0] tex_width;
+    logic [3:0][TEXEL_HEIGHT-1:0] tex_height;
+    logic [3:0][ADDR_WIDTH-1:0] base_addr;
+    logic tmu_valid;
 
-    // TMU Inputs
-    logic v;
-    logic u;
-    logic tex_width;
-    logic base_addr;
+    logic cache_ready;
+    logic [3:0][TEXEL_RETURN_WIDTH-1:0] texel_return;
 
-    // TMU Outputs
-    logic hit_way;
-    logic hit;
+    // TODO: define widths
+    logic [ADDR_WIDTH-1:0] mem_addr;
+    logic mem_valid;
 
-    // MEM Inputs
-    logic [31:0] mem_addr;
-
-    // MEM Outputs
-    logic [31:0] mem_data;
+    logic [DATA_WIDTH-1:0] mem_data;
+    logic mem_ready;
 
     // clock gen
     initial begin
@@ -33,33 +36,38 @@ module tb_top();
         forever #10 clk = !clk;
     end
 
-    tc_if lfc_interface(clk);
+    tc_if tc_if(clk);
 
     // Assign Statements
 
     // Reset input for both TMU and MEM
-    assign n_rst = tc_interface.n_rst;
+    assign n_rst = tc_if.n_rst;
 
     // TMU Inputs
-    assign tc_if.v = v;
-    assign tc_if.u = u;
-    assign tc_if.tex_width = tex_width;
-    assign tc_if.base_addr = base_addr;
+    assign batch_id = tc_if.batch_id;
+    assign s = tc_if.s;
+    assign t = tc_if.t;
+    assign tex_width = tc_if.tex_width;
+    assign tex_height = tc_if.tex_height;
+    assign base_addr = tc_if.base_addr;
+    assign tmu_valid = tc_if.tmu_valid;
     
     // TMU Outputs
-    assign tc_if.hit_way = hit_way;
-    assign tc_if.hit = hit;
+    assign tc_if.cache_ready = cache_ready;
+    assign tc_if.texel_return = texel_return;
     
     // MEM Inputs
-    assign tc_if.mem_addr = mem_addr;
+    assign mem_addr = tc_if.mem_addr;
+    assign mem_valid = tc_if.mem_valid;
 
     // MEM Outputs
     assign tc_if.mem_data = mem_data;
+    assign tc_if.mem_ready = mem_ready;
 
-    texture_cache DUT(.CLK(clk), .nRST(n_rst), .*);
+    texture_cache DUT(.clk(clk), .n_rst(n_rst), .*);
 
     initial begin
-        uvm_config_db#(virtual tc_if)::set(null, "", "lfc_vif", lfc_interface);
+        uvm_config_db#(virtual tc_if)::set(null, "", "tc_vif", tc_if);
         run_test("test");
     end
 

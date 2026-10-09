@@ -11,7 +11,7 @@ class tc_mem_active_agent extends uvm_agent;
     `uvm_component_utils(tc_mem_active_agent)
     tc_mem_active_sqr sqr;
     tc_mem_active_driver drv;
-    tc_mem_active_monitor mon;
+    //tc_mem_active_monitor mon;
 
     function new(string name, uvm_component parent = null);
         super.new(name, parent);
@@ -20,7 +20,7 @@ class tc_mem_active_agent extends uvm_agent;
     virtual function void build_phase(uvm_phase phase);
         sqr = tc_mem_active_sqr::type_id::create("sqr", this);
         drv = tc_mem_active_driver::type_id::create("drv", this);
-        mon = tc_mem_active_monitor::type_id::create("mon", this);
+        //mon = tc_mem_active_monitor::type_id::create("mon", this);
     endfunction
 
     virtual function void connect_phase(uvm_phase phase);

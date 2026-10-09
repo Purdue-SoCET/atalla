@@ -29,7 +29,14 @@ class tc_mem_active_monitor extends uvm_monitor;
     super.run_phase(phase);
 
     forever begin
-      // TODO: fill in
+      tc_mem_transaction tx;
+
+      if(vif.mem_ready) begin
+        tx.mem_ready = 1'b1;
+        tx.mem_data = vif.mem_data;
+
+        
+      end
 	  end
 
   endtask
