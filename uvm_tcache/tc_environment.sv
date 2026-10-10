@@ -39,8 +39,8 @@ class tc_environment extends uvm_env;
   function void connect_phase(uvm_phase phase);
     tmu_active_agent.mon.tc_ap.connect(pred.tmu_imp);
 
-    pred.pred_ap.connect(sb.expected_tmu_ap);
-    tmu_passive_agent.mon.tc_result_ap.connect(sb.actual_tmu_ap);
+    pred.pred_ap.connect(sb.expected_tmu_fifo.analysis_export);
+    tmu_passive_agent.mon.tc_result_ap.connect(sb.actual_tmu_fifo.analysis_export);
   endfunction
 
 endclass

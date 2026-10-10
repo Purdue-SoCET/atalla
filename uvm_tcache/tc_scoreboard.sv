@@ -9,8 +9,8 @@ import uvm_pkg::*;
 class tc_scoreboard extends uvm_scoreboard; // TODO: fill in
   `uvm_component_utils(tc_scoreboard)
 
-  uvm_analysis_imp#(tc_tmu_transaction) expected_tmu_ap;
-  uvm_analysis_imp#(tc_tmu_transaction) actual_tmu_ap;
+  uvm_tlm_analysis_fifo #(tc_tmu_transaction) expected_tmu_fifo;
+  uvm_tlm_analysis_fifo #(tc_tmu_transaction) actual_tmu_fifo;
 
   function new(string name, uvm_component parent);
     super.new(name, parent);
@@ -18,6 +18,9 @@ class tc_scoreboard extends uvm_scoreboard; // TODO: fill in
 
   function void build_phase(uvm_phase phase);
     super.build_phase(phase);
+
+    expected_tmu_fifo = new("expected_tmu_fifo", this);
+    actual_tmu_fifo = new("actual_tmu_fifo", this);
   endfunction
 
   function void connect_phase(uvm_phase phase);

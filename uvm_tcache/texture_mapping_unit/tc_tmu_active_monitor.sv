@@ -31,7 +31,7 @@ class tc_tmu_active_monitor extends uvm_monitor;
     super.run_phase(phase);
 
     forever begin
-      tc_tmu_transaction tx;
+      tc_tmu_transaction tx = tc_tmu_transaction::type_id::create("tx");
 
       while (vif.tmu_valid == 1'b0) @(negedge vif.clk);
 

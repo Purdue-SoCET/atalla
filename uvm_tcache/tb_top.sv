@@ -57,12 +57,12 @@ module tb_top();
     assign tc_if.texel_return = texel_return;
     
     // MEM Inputs
-    assign mem_addr = tc_if.mem_addr;
-    assign mem_valid = tc_if.mem_valid;
+    assign mem_data = tc_if.mem_data;
+    assign mem_ready = tc_if.mem_ready;
 
     // MEM Outputs
-    assign tc_if.mem_data = mem_data;
-    assign tc_if.mem_ready = mem_ready;
+    assign tc_if.mem_addr = mem_addr;
+    assign tc_if.mem_valid = mem_valid;
 
     texture_cache DUT(.clk(clk), .n_rst(n_rst), .*);
 

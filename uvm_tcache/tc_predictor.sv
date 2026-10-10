@@ -9,7 +9,7 @@ import uvm_pkg::*;
 class tc_predictor extends uvm_component;
   `uvm_component_utils(tc_predictor)
 
-  uvm_analysis_imp#(tc_tmu_transaction) tmu_imp;
+  uvm_analysis_imp#(tc_tmu_transaction, tc_predictor) tmu_imp;
   uvm_analysis_port#(tc_tmu_transaction) pred_ap;
 
   function new(string name, uvm_component parent);
@@ -22,7 +22,7 @@ class tc_predictor extends uvm_component;
     pred_ap = new("pred_ap", this);
   endfunction
 
-  function void write_tmu(tc_tmu_transaction tmu_t);
+  function void write(tc_tmu_transaction tmu_t);
   endfunction
 
 endclass
