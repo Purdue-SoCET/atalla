@@ -1,20 +1,10 @@
 `ifndef TRANSPOSE_UNIT_IF_SV
 `define TRANSPOSE_UNIT_IF_SV
+`include "vector_pkg.vh"
 
 interface transpose_unit_if #(
-    parameter int VEC_LEN = 32, 
-    parameter int DATA_W  = 16
 );
-
-  typedef struct packed {
-    logic valid_in, ready_out, push_req, pop_req;
-    logic [VEC_LEN-1:0][DATA_W-1:0] vec_in;
-  } vtransp_in_t;
-
-  typedef struct packed {
-    logic valid_out, ready_in;
-    logic [VEC_LEN-1:0][DATA_W-1:0] vec_out;
-  } vtransp_out_t;
+  import vector_pkg::*;
 
   vtransp_in_t in;
   vtransp_out_t out;

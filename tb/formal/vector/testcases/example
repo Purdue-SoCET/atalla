@@ -1,0 +1,2 @@
+nop.s|nop.s|nop.s|nop.s
+add.vv,0,1,2,3,0|nop.s|nop.s|nop.s

@@ -21,7 +21,7 @@ package vector_pkg;
     localparam VL_W        = $clog2(VLMAX);
 
     // FU layout per lane
-    localparam LANE_FU_COUNT  = 2;              // How many FUs per lane
+    localparam LANE_FU_COUNT  = 3;              // How many FUs per lane
     localparam LANE_FU_ID_W   = $clog2(LANE_FU_COUNT);
 
     // Other localparams
@@ -324,7 +324,16 @@ package vector_pkg;
         logic load_queue_full;
     } vlsu_status_t;
     
+    //Transpose structs
+    typedef struct packed {
+        logic valid_in, ready_out, push_req, pop_req;
+        logic [VLMAX-1:0][ESZ-1:0] vec_in;
+    } vtransp_in_t;
 
+    typedef struct packed {
+        logic valid_out, ready_in;
+        logic [VLMAX-1:0][ESZ-1:0] vec_out;
+    } vtransp_out_t;
 
 
     // =========================================================================

@@ -38,13 +38,11 @@ module lane #(
         .fuif(fu_interfaces[2])
     );
     */
-    /*
     exp_FU exp (
         .CLK(CLK),
         .nRST(nRST),
-        .fuif(fu_interfaces[3])
+        .fuif(fu_interfaces[2])
     );
-    */
     /*
     sqrt_FU sqrt (
         .CLK(CLK),

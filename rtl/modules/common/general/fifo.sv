@@ -1,17 +1,21 @@
 // Credit: https://www.chipverify.com/verilog/synchronous-fifo
 // https://www.chipverify.com/images/verilog/sync_fifo.svg
 
-module sync_fifo #(
+module fifo #(
     parameter DEPTH = 8, 
     parameter DWIDTH = 16
 ) (
     input rstn, clk, wr_en, rd_en, 
     input [DWIDTH-1:0] din, 	
-    output reg [DWIDTH-1:0] dout, 	
+    output logic [DWIDTH-1:0] dout, 	
     output  empty,  full 			
 );
-    reg [$clog2(DEPTH)-1:0]   wptr;
-    reg [$clog2(DEPTH)-1:0]   rptr;
+    localparam PTR_W = $clog2(DEPTH) + 1;
+    reg [PTR_W-1:0] wptr;
+    reg [PTR_W-1:0] rptr;
+
+    wire [PTR_W-2:0] wptr_idx = wptr[PTR_W-2:0];
+    wire [PTR_W-2:0] rptr_idx = rptr[PTR_W-2:0];
 
     reg [DWIDTH-1 : 0]    fifo[DEPTH];
 
@@ -20,7 +24,7 @@ module sync_fifo #(
             wptr <= 0;
         end else begin
             if (wr_en & !full) begin
-                fifo[wptr] <= din;
+                fifo[wptr_idx] <= din;
                 wptr <= wptr + 1;
             end
         end
@@ -31,12 +35,15 @@ module sync_fifo #(
             rptr <= 0;
         end else begin
             if (rd_en & !empty) begin
-                dout <= fifo[rptr];
                 rptr <= rptr + 1;
             end
         end
     end
 
-    assign full  = (wptr + 1) == rptr;
-    assign empty = wptr == rptr;
+    // Combinational output: always show head of FIFO
+    assign dout  = fifo[rptr_idx];
+    // Empty: pointers fully equal (same wrap cycle, same index)
+    assign empty = (wptr == rptr);
+    // Full: same index but different wrap cycle (top bit differs)
+    assign full  = (wptr_idx == rptr_idx) && (wptr[PTR_W-1] != rptr[PTR_W-1]);
 endmodule

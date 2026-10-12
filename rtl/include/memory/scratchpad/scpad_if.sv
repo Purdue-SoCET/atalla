@@ -18,9 +18,21 @@ interface scpad_if (input logic clk, input logic n_rst);
     dram_req_t be_dram_req [NUM_SCPADS];
     dram_res_t dram_be_res [NUM_SCPADS];
 
+    // Internal Backend <=> DRAM Req Queue
+    be_dram_request_queue_in_t  be_dr_req_q_in;
+    be_dram_request_queue_out_t be_dr_req_q_out;
+
+    // Internal Backend <=> SRAM Write Latch
+    be_sram_write_latch_in_t  sr_wr_l_in;
+    be_sram_write_latch_out_t sr_wr_l_out;
+
     // Scheduler <=> Backend 
     sched_req_t sched_req [NUM_SCPADS];
     sched_res_t sched_res [NUM_SCPADS];
+    logic sched_stall [NUM_SCPADS];     // backend stalls scheduler while processing
+    logic sched_accepted [NUM_SCPADS];  // one-cycle pulse when backend accepts a new SDMA
+    logic sdma_done [NUM_SCPADS];       // one-cycle pulse on SDMA completion
+    sched_req_t sdma_done_req [NUM_SCPADS]; // latched req fields echoed back on completion
 
     // Backend <=> Body  
     logic be_stall [NUM_SCPADS]; 
@@ -29,6 +41,7 @@ interface scpad_if (input logic clk, input logic n_rst);
 
     // Vector <=> Frontend 
     logic fe_vec_stall [NUM_SCPADS];
+    logic fe_vec_res_stall [NUM_SCPADS]; // VLSU backpressure on rxbar drain
     req_t  vec_req  [NUM_SCPADS];
     res_t vec_res  [NUM_SCPADS];
 
@@ -44,7 +57,8 @@ interface scpad_if (input logic clk, input logic n_rst);
     // Head => Stomach => Tail (Write)
     sel_req_t head_stomach_req [NUM_SCPADS]; // into wr xbar
     sel_req_t xbar_cntrl_req [NUM_SCPADS]; // into body fifo 
-    sel_req_t cntrl_spad_req [NUM_SCPADS]; // into spad 
+    sel_req_t cntrl_spad_req [NUM_SCPADS]; // read requests into spad
+    sel_req_t cntrl_spad_wr_req [NUM_SCPADS]; // write requests into spad (concurrent with reads)
     sel_res_t spad_xbar_req [NUM_SCPADS]; // into rd xbar
     sel_res_t stomach_tail_res [NUM_SCPADS]; // into tail 
 
@@ -58,17 +72,21 @@ interface scpad_if (input logic clk, input logic n_rst);
 
     modport dram_backend (
         input be_dram_stall, be_dram_req,
-        output dram_be_res
+        output dram_be_res, dram_be_stall
     );
 
     modport vec_frontend (
         input  fe_vec_stall, vec_res, 
-        output vec_req
+        output vec_req, fe_vec_res_stall
     );
 
     modport sched_backend (
         output sched_req,
-        input sched_res
+        input sched_res,
+        input sched_stall,
+        input sched_accepted,
+        input sdma_done,
+        input sdma_done_req
     );
 
     // ----------------------------------------------------------------------
@@ -77,22 +95,36 @@ interface scpad_if (input logic clk, input logic n_rst);
 
     // Scheduler <=> Backend
     modport backend_sched (
-        input clk, n_rst, sched_req,
-        output sched_res
+        input  clk, n_rst, sched_req,
+        output sched_res, sched_stall, sched_accepted, sdma_done, sdma_done_req
     );
 
     // Backend <=> Body
     modport backend_body (
-        input clk, n_rst, 
+        input  clk, n_rst, 
         input  be_stall, be_res, 
         output be_req
     );
 
     // Backend <=> DRAM
     modport backend_dram (
-        input clk, n_rst, 
+        input  clk, n_rst, 
         output be_dram_req, be_dram_stall,
-        input dram_be_res, dram_be_stall
+        input  dram_be_res, dram_be_stall
+    );
+
+    // Backend <=> DRAM Request Queue
+    modport backend_dram_req_queue (
+        input clk, n_rst,
+        input be_dr_req_q_in,
+        output be_dr_req_q_out
+    );
+
+    // Backend <=> SRAM Write Latch
+    modport sram_write_latch (
+        input clk, n_rst,
+        input sr_wr_l_in, 
+        output sr_wr_l_out
     );
 
     // Vec. Core <=> Frontend 
@@ -133,7 +165,7 @@ interface scpad_if (input logic clk, input logic n_rst);
         input  head_stomach_req,
         input  spad_cntrl_res,
         input  xbar_cntrl_req,
-        output cntrl_spad_req,
+        output cntrl_spad_req, cntrl_spad_wr_req,
         output spad_xbar_req,
         output stomach_tail_res
     );
@@ -149,9 +181,7 @@ interface scpad_if (input logic clk, input logic n_rst);
         input fe_req, be_req,
         // Outputs toward Body
         output head_stomach_req
-
     );
-
 
     // Tail (Resp Arb/Demux back to FE/BE) per scratchpad
     // Won't stall. 
@@ -178,6 +208,10 @@ interface scpad_if (input logic clk, input logic n_rst);
         // Scheduler <=> Backend
         output sched_req,
         input sched_res,
+        input sched_stall,
+        input sched_accepted,
+        input sdma_done,
+        input sdma_done_req,
 
         // Backend <=> DRAM
         output be_dram_req,
@@ -207,11 +241,11 @@ interface scpad_if (input logic clk, input logic n_rst);
 
     // Backend TB
     modport backend_tb (
-        input clk, n_rst, 
-        input sched_res, be_req,
+        input clk, 
+        input sched_res, sched_stall, sched_accepted, sdma_done, sdma_done_req, be_req,
         input be_dram_stall, be_dram_req,
 
-        output be_stall, dram_be_stall,
+        output be_stall, dram_be_stall, n_rst,
         output sched_req, be_res, dram_be_res
     );
 
@@ -243,7 +277,7 @@ interface scpad_if (input logic clk, input logic n_rst);
     modport sram_ctrl_tb (
         input clk, n_rst, 
         input w_stall, r_stall,
-        input cntrl_spad_req, spad_xbar_req, 
+        input cntrl_spad_req, cntrl_spad_wr_req, spad_xbar_req, 
         input stomach_tail_res,
 
         output spad_busy, head_stomach_req,
@@ -274,6 +308,26 @@ interface scpad_if (input logic clk, input logic n_rst);
         output fe_req, be_req
     );
 
+    // Scratchpad TB - full access for testing
+    modport scratchpad_tb (
+        input clk, n_rst,
+        // Vector Core interface
+        output vec_req, fe_vec_res_stall,
+        input fe_vec_stall, vec_res,
+        // Scheduler interface  
+        output sched_req,
+        input sched_res,
+        input sched_stall,
+        input sched_accepted,
+        input sdma_done,
+        input sdma_done_req,
+        // DRAM interface
+        input be_dram_req, be_dram_stall,
+        output dram_be_stall, dram_be_res,
+        // Body interface - all these are OUTPUTS from DUT, TB only observes
+        input be_stall, be_res, be_req
+    );
+
 endinterface
 
-`endif 
+`endif

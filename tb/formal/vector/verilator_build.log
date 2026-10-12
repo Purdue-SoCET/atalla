@@ -1,0 +1,308 @@
+%Warning-MODDUP: ../../../rtl/include/common/arithmetic/multipliers/mul_if.vh:2:11: Duplicate declaration of module: 'mul_if'
+    2 | interface mul_if;
+      |           ^~~~~~
+                 ../../../rtl/modules/vector/../../../rtl/modules/vector/lane.sv:9:1: ... note: In file included from 'lane.sv'
+                 ../../../rtl/include/common/arithmetic/multipliers/mul_if.vh:2:11: ... Location of original declaration
+    2 | interface mul_if;
+      |           ^~~~~~
+                 ... For warning description see https://verilator.org/warn/MODDUP?v=5.036
+                 ... Use "/* verilator lint_off MODDUP */" and lint_on around source to disable this message.
+%Warning-IMPORTSTAR: ../../../rtl/modules/vector/../../../rtl/modules/vector/rc_fu.sv:8:18: Import::* in $unit scope may pollute global namespace
+    8 | import vector_pkg::*;
+      |                  ^~
+                     ... For warning description see https://verilator.org/warn/IMPORTSTAR?v=5.036
+                     ... Use "/* verilator lint_off IMPORTSTAR */" and lint_on around source to disable this message.
+%Warning-IMPORTSTAR: ../../../rtl/modules/vector/../../../rtl/modules/vector/lane_sequencer.sv:2:18: Import::* in $unit scope may pollute global namespace
+    2 | import vector_pkg::*;
+      |                  ^~
+%Warning-VARHIDDEN: ../../../rtl/modules/vector/../../../rtl/modules/vector/lane.sv:20:20: Declaration of signal hides declaration in upper scope: 'SLICE_W'
+   20 |     localparam int SLICE_W       = $bits(slice_idx_t);
+      |                    ^~~~~~~
+                    ../../../rtl/modules/vector/../../../rtl/include/vector/vector_pkg.vh:18:16: ... Location of original declaration
+   18 |     localparam SLICE_W     = VLMAX / NUM_LANES;
+      |                ^~~~~~~
+                    ... For warning description see https://verilator.org/warn/VARHIDDEN?v=5.036
+                    ... Use "/* verilator lint_off VARHIDDEN */" and lint_on around source to disable this message.
+%Warning-VARHIDDEN: ../../../rtl/modules/vector/../../../rtl/modules/common/arithmetic/dividers/div.sv:229:27: Declaration of enum value hides declaration in upper scope: DIV
+  229 | typedef enum logic {IDLE, DIV} state_t;
+      |                           ^~~
+                    ../../../rtl/modules/vector/../../../rtl/include/vector/vector_pkg.vh:226:9: ... Location of original declaration
+  226 |         DIV  = 3'b100
+      |         ^~~
+%Warning-WIDTHTRUNC: ../../../rtl/modules/vector/../../../rtl/modules/common/arithmetic/dividers/div.sv:262:24: Operator ASSIGN expects 11 bits on the Assign RHS, but Assign RHS's REPLICATE generates 12 bits.
+                                                                                                              : ... note: In instance 'vector_datapath_wrapper.u_vector_datapath.GEN_LANES[15].u_lane.u_div.m_div'
+  262 |                 next_m = {1'b0, y};
+      |                        ^
+                     ... For warning description see https://verilator.org/warn/WIDTHTRUNC?v=5.036
+                     ... Use "/* verilator lint_off WIDTHTRUNC */" and lint_on around source to disable this message.
+%Warning-WIDTHTRUNC: ../../../rtl/modules/vector/../../../rtl/modules/common/arithmetic/dividers/div.sv:158:12: Operator ASSIGNW expects 6 bits on the Assign RHS, but Assign RHS's ADD generates 32 bits.
+                                                                                                              : ... note: In instance 'vector_datapath_wrapper.u_vector_datapath.GEN_LANES[15].u_lane.u_div'
+  158 | assign exp = exp_a - exp_b + bias;
+      |            ^
+%Warning-LATCH: ../../../rtl/modules/vector/../../../rtl/modules/common/arithmetic/adders/addsub_bf16.sv:179:5: Latch inferred for signal 'adder.unnamedblk1.mask' (not all control paths of combinational always assign a value)
+                                                                                                              : ... note: In instance 'vector_datapath_wrapper.u_vector_datapath.GEN_LANES[0].u_lane.u_valu'
+                                                                                                              : ... Suggest use of always_latch for intentional latches
+  179 |     always_comb begin
+      |     ^~~~~~~~~~~
+                ... For warning description see https://verilator.org/warn/LATCH?v=5.036
+                ... Use "/* verilator lint_off LATCH */" and lint_on around source to disable this message.
+%Warning-SYNCASYNCNET: ../../../rtl/modules/vector/../../../rtl/modules/common/arithmetic/dividers/div.sv:6:22: Signal flopped as both synchronous and async: 'vector_datapath_wrapper.u_vector_datapath.GEN_LANES[0].u_lane.u_div.nRST'
+                                                                                                              : ... note: In instance 'vector_datapath_wrapper.u_vector_datapath.GEN_LANES[0].u_lane.u_div'
+                       ../../../rtl/modules/vector/../../../rtl/modules/common/arithmetic/dividers/div.sv:36:10: ... Location of async usage
+   36 |     if (~nRST) begin
+      |          ^~~~
+                       ../../../rtl/modules/vector/../../../rtl/modules/common/arithmetic/dividers/div.sv:237:10: ... Location of sync usage
+  237 |     if (~nRST) begin
+      |          ^~~~
+                       ... For warning description see https://verilator.org/warn/SYNCASYNCNET?v=5.036
+                       ... Use "/* verilator lint_off SYNCASYNCNET */" and lint_on around source to disable this message.
+%Error-BLKANDNBLK: ../../../rtl/include/vector/vector_if.vh:51:13: Unsupported: Blocked and non-blocking assignments to same variable: 'lane_in'
+                                                                 : ... note: In instance 'vector_datapath_wrapper.u_vector_datapath.lane_if[0]'
+   51 |   lane_in_t lane_in;
+      |             ^~~~~~~
+                   ../../../rtl/modules/vector/../../../rtl/modules/common/arithmetic/exp/vexp.sv:2:1: ... note: In file included from 'vexp.sv'
+                   ../../../rtl/modules/vector/../../../rtl/modules/vector/vector_datapath.sv:176:56: ... Location of blocking assignment
+  176 |                         lane_if[l_gen].lane_in.ready_in[fu] =
+      |                                                        ^
+                   ../../../rtl/modules/vector/../../../rtl/modules/vector/vector_datapath.sv:206:53: ... Location of nonblocking assignment
+  206 |                     lane_if[l_gen].lane_in.valid_in <= '{default:1'b0};
+      |                                                     ^~
+                   ... For error description see https://verilator.org/warn/BLKANDNBLK?v=5.036
+%Error-BLKANDNBLK: ../../../rtl/include/vector/vector_if.vh:51:13: Unsupported: Blocked and non-blocking assignments to same variable: 'lane_in'
+                                                                 : ... note: In instance 'vector_datapath_wrapper.u_vector_datapath.lane_if[0]'
+   51 |   lane_in_t lane_in;
+      |             ^~~~~~~
+                   ../../../rtl/modules/vector/../../../rtl/modules/common/arithmetic/exp/vexp.sv:2:1: ... note: In file included from 'vexp.sv'
+                   ../../../rtl/modules/vector/../../../rtl/modules/vector/vector_datapath.sv:176:56: ... Location of blocking assignment
+  176 |                         lane_if[l_gen].lane_in.ready_in[fu] =
+      |                                                        ^
+                   ../../../rtl/modules/vector/../../../rtl/modules/vector/vector_datapath.sv:215:54: ... Location of nonblocking assignment
+  215 |                             lane_if[l_gen].lane_in.v1[fu_i]    <=
+      |                                                      ^
+%Error-BLKANDNBLK: ../../../rtl/include/vector/vector_if.vh:51:13: Unsupported: Blocked and non-blocking assignments to same variable: 'lane_in'
+                                                                 : ... note: In instance 'vector_datapath_wrapper.u_vector_datapath.lane_if[0]'
+   51 |   lane_in_t lane_in;
+      |             ^~~~~~~
+                   ../../../rtl/modules/vector/../../../rtl/modules/common/arithmetic/exp/vexp.sv:2:1: ... note: In file included from 'vexp.sv'
+                   ../../../rtl/modules/vector/../../../rtl/modules/vector/vector_datapath.sv:176:56: ... Location of blocking assignment
+  176 |                         lane_if[l_gen].lane_in.ready_in[fu] =
+      |                                                        ^
+                   ../../../rtl/modules/vector/../../../rtl/modules/vector/vector_datapath.sv:217:54: ... Location of nonblocking assignment
+  217 |                             lane_if[l_gen].lane_in.v2[fu_i]    <=
+      |                                                      ^
+%Error-BLKANDNBLK: ../../../rtl/include/vector/vector_if.vh:51:13: Unsupported: Blocked and non-blocking assignments to same variable: 'lane_in'
+                                                                 : ... note: In instance 'vector_datapath_wrapper.u_vector_datapath.lane_if[0]'
+   51 |   lane_in_t lane_in;
+      |             ^~~~~~~
+                   ../../../rtl/modules/vector/../../../rtl/modules/common/arithmetic/exp/vexp.sv:2:1: ... note: In file included from 'vexp.sv'
+                   ../../../rtl/modules/vector/../../../rtl/modules/vector/vector_datapath.sv:176:56: ... Location of blocking assignment
+  176 |                         lane_if[l_gen].lane_in.ready_in[fu] =
+      |                                                        ^
+                   ../../../rtl/modules/vector/../../../rtl/modules/vector/vector_datapath.sv:219:57: ... Location of nonblocking assignment
+  219 |                             lane_if[l_gen].lane_in.vmask[fu_i] <=
+      |                                                         ^
+%Error-BLKANDNBLK: ../../../rtl/include/vector/vector_if.vh:51:13: Unsupported: Blocked and non-blocking assignments to same variable: 'lane_in'
+                                                                 : ... note: In instance 'vector_datapath_wrapper.u_vector_datapath.lane_if[0]'
+   51 |   lane_in_t lane_in;
+      |             ^~~~~~~
+                   ../../../rtl/modules/vector/../../../rtl/modules/common/arithmetic/exp/vexp.sv:2:1: ... note: In file included from 'vexp.sv'
+                   ../../../rtl/modules/vector/../../../rtl/modules/vector/vector_datapath.sv:176:56: ... Location of blocking assignment
+  176 |                         lane_if[l_gen].lane_in.ready_in[fu] =
+      |                                                        ^
+                   ../../../rtl/modules/vector/../../../rtl/modules/vector/vector_datapath.sv:223:54: ... Location of nonblocking assignment
+  223 |                             lane_if[l_gen].lane_in.vd[fu_i]       <= vif.vector_in.vd[i];
+      |                                                      ^
+%Error-BLKANDNBLK: ../../../rtl/include/vector/vector_if.vh:51:13: Unsupported: Blocked and non-blocking assignments to same variable: 'lane_in'
+                                                                 : ... note: In instance 'vector_datapath_wrapper.u_vector_datapath.lane_if[0]'
+   51 |   lane_in_t lane_in;
+      |             ^~~~~~~
+                   ../../../rtl/modules/vector/../../../rtl/modules/common/arithmetic/exp/vexp.sv:2:1: ... note: In file included from 'vexp.sv'
+                   ../../../rtl/modules/vector/../../../rtl/modules/vector/vector_datapath.sv:176:56: ... Location of blocking assignment
+  176 |                         lane_if[l_gen].lane_in.ready_in[fu] =
+      |                                                        ^
+                   ../../../rtl/modules/vector/../../../rtl/modules/vector/vector_datapath.sv:224:67: ... Location of nonblocking assignment
+  224 |                             lane_if[l_gen].lane_in.vop[fu_i]      <= vif.vector_in.vop[i];
+      |                                                                   ^~
+%Error-BLKANDNBLK: ../../../rtl/include/vector/vector_if.vh:51:13: Unsupported: Blocked and non-blocking assignments to same variable: 'lane_in'
+                                                                 : ... note: In instance 'vector_datapath_wrapper.u_vector_datapath.lane_if[0]'
+   51 |   lane_in_t lane_in;
+      |             ^~~~~~~
+                   ../../../rtl/modules/vector/../../../rtl/modules/common/arithmetic/exp/vexp.sv:2:1: ... note: In file included from 'vexp.sv'
+                   ../../../rtl/modules/vector/../../../rtl/modules/vector/vector_datapath.sv:176:56: ... Location of blocking assignment
+  176 |                         lane_if[l_gen].lane_in.ready_in[fu] =
+      |                                                        ^
+                   ../../../rtl/modules/vector/../../../rtl/modules/vector/vector_datapath.sv:225:54: ... Location of nonblocking assignment
+  225 |                             lane_if[l_gen].lane_in.rm[fu_i]       <= vif.vector_in.rm[i];
+      |                                                      ^
+%Error-BLKANDNBLK: ../../../rtl/include/vector/vector_if.vh:51:13: Unsupported: Blocked and non-blocking assignments to same variable: 'lane_in'
+                                                                 : ... note: In instance 'vector_datapath_wrapper.u_vector_datapath.lane_if[0]'
+   51 |   lane_in_t lane_in;
+      |             ^~~~~~~
+                   ../../../rtl/modules/vector/../../../rtl/modules/common/arithmetic/exp/vexp.sv:2:1: ... note: In file included from 'vexp.sv'
+                   ../../../rtl/modules/vector/../../../rtl/modules/vector/vector_datapath.sv:176:56: ... Location of blocking assignment
+  176 |                         lane_if[l_gen].lane_in.ready_in[fu] =
+      |                                                        ^
+                   ../../../rtl/modules/vector/../../../rtl/modules/vector/vector_datapath.sv:226:60: ... Location of nonblocking assignment
+  226 |                             lane_if[l_gen].lane_in.valid_in[fu_i] <= 1'b1;
+      |                                                            ^
+%Error-BLKANDNBLK: ../../../rtl/include/vector/vector_if.vh:51:13: Unsupported: Blocked and non-blocking assignments to same variable: 'lane_in'
+                                                                 : ... note: In instance 'vector_datapath_wrapper.u_vector_datapath.lane_if[0]'
+   51 |   lane_in_t lane_in;
+      |             ^~~~~~~
+                   ../../../rtl/modules/vector/../../../rtl/modules/common/arithmetic/exp/vexp.sv:2:1: ... note: In file included from 'vexp.sv'
+                   ../../../rtl/modules/vector/../../../rtl/modules/vector/vector_datapath.sv:176:56: ... Location of blocking assignment
+  176 |                         lane_if[l_gen].lane_in.ready_in[fu] =
+      |                                                        ^
+                   ../../../rtl/modules/vector/../../../rtl/modules/vector/vector_datapath.sv:196:53: ... Location of nonblocking assignment
+  196 |                     lane_if[l_gen].lane_in.v1       <= '{default:'0};
+      |                                                     ^~
+%Error-BLKANDNBLK: ../../../rtl/include/vector/vector_if.vh:51:13: Unsupported: Blocked and non-blocking assignments to same variable: 'lane_in'
+                                                                 : ... note: In instance 'vector_datapath_wrapper.u_vector_datapath.lane_if[0]'
+   51 |   lane_in_t lane_in;
+      |             ^~~~~~~
+                   ../../../rtl/modules/vector/../../../rtl/modules/common/arithmetic/exp/vexp.sv:2:1: ... note: In file included from 'vexp.sv'
+                   ../../../rtl/modules/vector/../../../rtl/modules/vector/vector_datapath.sv:176:56: ... Location of blocking assignment
+  176 |                         lane_if[l_gen].lane_in.ready_in[fu] =
+      |                                                        ^
+                   ../../../rtl/modules/vector/../../../rtl/modules/vector/vector_datapath.sv:201:53: ... Location of nonblocking assignment
+  201 |                     lane_if[l_gen].lane_in.rm       <= '{default:'0};
+      |                                                     ^~
+%Error-BLKANDNBLK: ../../../rtl/include/vector/valu_if.vh:25:7: Unsupported: Blocked and non-blocking assignments to same variable: 'out'
+                                                              : ... note: In instance 'vector_datapath_wrapper.u_vector_datapath.GEN_LANES[0].u_lane.valu_bus'
+   25 |     } out;
+      |       ^~~
+                   ../../../rtl/modules/vector/../../../rtl/modules/vector/valu.sv:4:1: ... note: In file included from 'valu.sv'
+                   ../../../rtl/modules/vector/../../../rtl/modules/vector/valu.sv:56:29: ... Location of blocking assignment
+   56 |     assign alu.out.ready_in = ready_in_reg;
+      |                             ^
+                   ../../../rtl/modules/vector/../../../rtl/modules/vector/valu.sv:157:35: ... Location of nonblocking assignment
+  157 |                 alu.out.valid_out <= 1'b0;
+      |                                   ^~
+%Error-BLKANDNBLK: ../../../rtl/include/vector/valu_if.vh:25:7: Unsupported: Blocked and non-blocking assignments to same variable: 'out'
+                                                              : ... note: In instance 'vector_datapath_wrapper.u_vector_datapath.GEN_LANES[0].u_lane.valu_bus'
+   25 |     } out;
+      |       ^~~
+                   ../../../rtl/modules/vector/../../../rtl/modules/vector/valu.sv:4:1: ... note: In file included from 'valu.sv'
+                   ../../../rtl/modules/vector/../../../rtl/modules/vector/valu.sv:56:29: ... Location of blocking assignment
+   56 |     assign alu.out.ready_in = ready_in_reg;
+      |                             ^
+                   ../../../rtl/modules/vector/../../../rtl/modules/vector/valu.sv:165:35: ... Location of nonblocking assignment
+  165 |                 alu.out.valid_out <= 1'b1;
+      |                                   ^~
+%Error-BLKANDNBLK: ../../../rtl/include/vector/valu_if.vh:25:7: Unsupported: Blocked and non-blocking assignments to same variable: 'out'
+                                                              : ... note: In instance 'vector_datapath_wrapper.u_vector_datapath.GEN_LANES[0].u_lane.valu_bus'
+   25 |     } out;
+      |       ^~~
+                   ../../../rtl/modules/vector/../../../rtl/modules/vector/valu.sv:4:1: ... note: In file included from 'valu.sv'
+                   ../../../rtl/modules/vector/../../../rtl/modules/vector/valu.sv:56:29: ... Location of blocking assignment
+   56 |     assign alu.out.ready_in = ready_in_reg;
+      |                             ^
+                   ../../../rtl/modules/vector/../../../rtl/modules/vector/valu.sv:153:31: ... Location of nonblocking assignment
+  153 |             alu.out.valid_out <= 1'b0;
+      |                               ^~
+%Error-BLKANDNBLK: ../../../rtl/include/common/arithmetic/divider/div_if.vh:23:13: Unsupported: Blocked and non-blocking assignments to same variable: 'out'
+                                                                                 : ... note: In instance 'vector_datapath_wrapper.u_vector_datapath.GEN_LANES[0].u_lane.div_bus'
+   23 |   div_out_t out;
+      |             ^~~
+                   ../../../rtl/modules/vector/../../../rtl/modules/common/arithmetic/dividers/div.sv:3:1: ... note: In file included from 'div.sv'
+                   ../../../rtl/modules/vector/../../../rtl/modules/common/arithmetic/dividers/div.sv:204:26: ... Location of blocking assignment
+  204 |         divif.out.result = {final_sign, {EXP_WIDTH{1'b1}}, 1'b1, {(MANT_WIDTH-1){1'b0}}};
+      |                          ^
+                   ../../../rtl/modules/vector/../../../rtl/modules/common/arithmetic/dividers/div.sv:54:45: ... Location of nonblocking assignment
+   54 |         if (first_cycle) divif.out.ready_in <= 1;
+      |                                             ^~
+%Error-BLKANDNBLK: ../../../rtl/include/common/arithmetic/divider/div_if.vh:23:13: Unsupported: Blocked and non-blocking assignments to same variable: 'out'
+                                                                                 : ... note: In instance 'vector_datapath_wrapper.u_vector_datapath.GEN_LANES[0].u_lane.div_bus'
+   23 |   div_out_t out;
+      |             ^~~
+                   ../../../rtl/modules/vector/../../../rtl/modules/common/arithmetic/dividers/div.sv:3:1: ... note: In file included from 'div.sv'
+                   ../../../rtl/modules/vector/../../../rtl/modules/common/arithmetic/dividers/div.sv:204:26: ... Location of blocking assignment
+  204 |         divif.out.result = {final_sign, {EXP_WIDTH{1'b1}}, 1'b1, {(MANT_WIDTH-1){1'b0}}};
+      |                          ^
+                   ../../../rtl/modules/vector/../../../rtl/modules/common/arithmetic/dividers/div.sv:58:60: ... Location of nonblocking assignment
+   58 |         if (done || fast_path_delayed) divif.out.valid_out <= 1;
+      |                                                            ^~
+%Error-BLKANDNBLK: ../../../rtl/include/common/arithmetic/divider/div_if.vh:23:13: Unsupported: Blocked and non-blocking assignments to same variable: 'out'
+                                                                                 : ... note: In instance 'vector_datapath_wrapper.u_vector_datapath.GEN_LANES[0].u_lane.div_bus'
+   23 |   div_out_t out;
+      |             ^~~
+                   ../../../rtl/modules/vector/../../../rtl/modules/common/arithmetic/dividers/div.sv:3:1: ... note: In file included from 'div.sv'
+                   ../../../rtl/modules/vector/../../../rtl/modules/common/arithmetic/dividers/div.sv:204:26: ... Location of blocking assignment
+  204 |         divif.out.result = {final_sign, {EXP_WIDTH{1'b1}}, 1'b1, {(MANT_WIDTH-1){1'b0}}};
+      |                          ^
+                   ../../../rtl/modules/vector/../../../rtl/modules/common/arithmetic/dividers/div.sv:59:81: ... Location of nonblocking assignment
+   59 |         else if (divif.in.ready_out && divif.out.valid_out) divif.out.valid_out <= 0;
+      |                                                                                 ^~
+%Error-BLKANDNBLK: ../../../rtl/include/common/arithmetic/divider/div_if.vh:23:13: Unsupported: Blocked and non-blocking assignments to same variable: 'out'
+                                                                                 : ... note: In instance 'vector_datapath_wrapper.u_vector_datapath.GEN_LANES[0].u_lane.div_bus'
+   23 |   div_out_t out;
+      |             ^~~
+                   ../../../rtl/modules/vector/../../../rtl/modules/common/arithmetic/dividers/div.sv:3:1: ... note: In file included from 'div.sv'
+                   ../../../rtl/modules/vector/../../../rtl/modules/common/arithmetic/dividers/div.sv:204:26: ... Location of blocking assignment
+  204 |         divif.out.result = {final_sign, {EXP_WIDTH{1'b1}}, 1'b1, {(MANT_WIDTH-1){1'b0}}};
+      |                          ^
+                   ../../../rtl/modules/vector/../../../rtl/modules/common/arithmetic/dividers/div.sv:61:75: ... Location of nonblocking assignment
+   61 |         if (divif.out.valid_out && divif.in.ready_out) divif.out.ready_in <= 1;
+      |                                                                           ^~
+%Error-BLKANDNBLK: ../../../rtl/include/common/arithmetic/divider/div_if.vh:23:13: Unsupported: Blocked and non-blocking assignments to same variable: 'out'
+                                                                                 : ... note: In instance 'vector_datapath_wrapper.u_vector_datapath.GEN_LANES[0].u_lane.div_bus'
+   23 |   div_out_t out;
+      |             ^~~
+                   ../../../rtl/modules/vector/../../../rtl/modules/common/arithmetic/dividers/div.sv:3:1: ... note: In file included from 'div.sv'
+                   ../../../rtl/modules/vector/../../../rtl/modules/common/arithmetic/dividers/div.sv:204:26: ... Location of blocking assignment
+  204 |         divif.out.result = {final_sign, {EXP_WIDTH{1'b1}}, 1'b1, {(MANT_WIDTH-1){1'b0}}};
+      |                          ^
+                   ../../../rtl/modules/vector/../../../rtl/modules/common/arithmetic/dividers/div.sv:62:78: ... Location of nonblocking assignment
+   62 |         else if (divif.in.valid_in && divif.out.ready_in) divif.out.ready_in <= 0;
+      |                                                                              ^~
+%Error-BLKANDNBLK: ../../../rtl/include/common/arithmetic/divider/div_if.vh:23:13: Unsupported: Blocked and non-blocking assignments to same variable: 'out'
+                                                                                 : ... note: In instance 'vector_datapath_wrapper.u_vector_datapath.GEN_LANES[0].u_lane.div_bus'
+   23 |   div_out_t out;
+      |             ^~~
+                   ../../../rtl/modules/vector/../../../rtl/modules/common/arithmetic/dividers/div.sv:3:1: ... note: In file included from 'div.sv'
+                   ../../../rtl/modules/vector/../../../rtl/modules/common/arithmetic/dividers/div.sv:204:26: ... Location of blocking assignment
+  204 |         divif.out.result = {final_sign, {EXP_WIDTH{1'b1}}, 1'b1, {(MANT_WIDTH-1){1'b0}}};
+      |                          ^
+                   ../../../rtl/modules/vector/../../../rtl/modules/common/arithmetic/dividers/div.sv:50:29: ... Location of nonblocking assignment
+   50 |         divif.out.valid_out <= 0;
+      |                             ^~
+%Warning-UNOPTFLAT: ../../../rtl/include/common/arithmetic/divider/div_if.vh:23:13: Signal unoptimizable: Circular combinational logic: 'vector_datapath_wrapper.u_vector_datapath.GEN_LANES[0].u_lane.div_bus.out'
+                                                                                  : ... note: In instance 'vector_datapath_wrapper.u_vector_datapath.GEN_LANES[0].u_lane.div_bus'
+   23 |   div_out_t out;
+      |             ^~~
+                    ../../../rtl/modules/vector/../../../rtl/modules/common/arithmetic/dividers/div.sv:3:1: ... note: In file included from 'div.sv'
+                    ... For warning description see https://verilator.org/warn/UNOPTFLAT?v=5.036
+                    ... Use "/* verilator lint_off UNOPTFLAT */" and lint_on around source to disable this message.
+                    ../../../rtl/include/common/arithmetic/divider/div_if.vh:23:13:      Example path: vector_datapath_wrapper.u_vector_datapath.GEN_LANES[0].u_lane.div_bus.out
+                    ../../../rtl/modules/vector/../../../rtl/modules/vector/lane_fu_pt.sv:33:23:      Example path: ASSIGNW
+                    ../../../rtl/modules/vector/../../../rtl/modules/vector/lane.sv:184:12:      Example path: vector_datapath_wrapper.u_vector_datapath.GEN_LANES[0].u_lane.div_sync_ready
+                    ../../../rtl/modules/vector/../../../rtl/modules/vector/lane.sv:246:5:      Example path: ALWAYS
+                    ../../../rtl/include/common/arithmetic/divider/div_if.vh:22:13:      Example path: vector_datapath_wrapper.u_vector_datapath.GEN_LANES[0].u_lane.div_bus.in
+                    ../../../rtl/modules/vector/../../../rtl/modules/common/arithmetic/dividers/div.sv:101:1:      Example path: ALWAYS
+                    ../../../rtl/modules/vector/../../../rtl/modules/common/arithmetic/dividers/div.sv:99:27:      Example path: vector_datapath_wrapper.u_vector_datapath.GEN_LANES[0].u_lane.u_div.operand1_next
+                    ../../../rtl/modules/vector/../../../rtl/modules/common/arithmetic/dividers/div.sv:202:1:      Example path: ALWAYS
+                    ../../../rtl/include/common/arithmetic/divider/div_if.vh:23:13:      Example path: vector_datapath_wrapper.u_vector_datapath.GEN_LANES[0].u_lane.div_bus.out
+%Warning-UNOPTFLAT: ../../../rtl/modules/vector/../../../rtl/modules/vector/lane.sv:587:11: Signal unoptimizable: Circular combinational logic: 'vector_datapath_wrapper.u_vector_datapath.GEN_LANES[0].u_lane.valu_retire'
+  587 |     logic valu_retire;
+      |           ^~~~~~~~~~~
+                    ../../../rtl/modules/vector/../../../rtl/modules/vector/lane.sv:587:11:      Example path: vector_datapath_wrapper.u_vector_datapath.GEN_LANES[0].u_lane.valu_retire
+                    ../../../rtl/modules/vector/../../../rtl/modules/vector/lane.sv:659:5:      Example path: ALWAYS
+                    ../../../rtl/include/vector/vector_if.vh:52:14:      Example path: vector_datapath_wrapper.u_vector_datapath.lane_if[0].lane_out
+                    ../../../rtl/modules/vector/../../../rtl/modules/vector/vector_datapath.sv:329:42:      Example path: ASSIGNW
+                    ../../../rtl/modules/vector/../../../rtl/modules/vector/vector_datapath.sv:324:33:      Example path: vector_datapath_wrapper.u_vector_datapath.lane_rval_valu
+                    ../../../rtl/modules/vector/../../../rtl/modules/vector/vector_datapath.sv:336:5:      Example path: ALWAYS
+                    ../../../rtl/include/vector/vreduction_if.vh:10:23:      Example path: vector_datapath_wrapper.u_vector_datapath.vruif.in
+                    ../../../rtl/modules/vector/../../../rtl/modules/vector/vreduction.sv:35:5:      Example path: ALWAYS
+                    ../../../rtl/include/vector/vreduction_if.vh:11:24:      Example path: vector_datapath_wrapper.u_vector_datapath.vruif.out
+                    ../../../rtl/modules/vector/../../../rtl/modules/vector/vector_datapath.sv:173:13:      Example path: ALWAYS
+                    ../../../rtl/include/vector/vector_if.vh:51:13:      Example path: vector_datapath_wrapper.u_vector_datapath.lane_if[0].lane_in
+                    ../../../rtl/modules/vector/../../../rtl/modules/vector/lane.sv:246:5:      Example path: ALWAYS
+                    ../../../rtl/include/common/arithmetic/divider/div_if.vh:22:13:      Example path: vector_datapath_wrapper.u_vector_datapath.GEN_LANES[0].u_lane.div_bus.in
+                    ../../../rtl/modules/vector/../../../rtl/modules/common/arithmetic/dividers/div.sv:101:1:      Example path: ALWAYS
+                    ../../../rtl/modules/vector/../../../rtl/modules/common/arithmetic/dividers/div.sv:99:27:      Example path: vector_datapath_wrapper.u_vector_datapath.GEN_LANES[0].u_lane.u_div.operand1_next
+                    ../../../rtl/modules/vector/../../../rtl/modules/common/arithmetic/dividers/div.sv:202:1:      Example path: ALWAYS
+                    ../../../rtl/include/common/arithmetic/divider/div_if.vh:23:13:      Example path: vector_datapath_wrapper.u_vector_datapath.GEN_LANES[0].u_lane.div_bus.out
+                    ../../../rtl/modules/vector/../../../rtl/modules/vector/lane_fu_pt.sv:33:23:      Example path: ASSIGNW
+                    ../../../rtl/modules/vector/../../../rtl/modules/vector/lane.sv:184:12:      Example path: vector_datapath_wrapper.u_vector_datapath.GEN_LANES[0].u_lane.div_sync_ready
+                    ../../../rtl/modules/vector/../../../rtl/modules/vector/lane.sv:246:5:      Example path: ALWAYS
+%Error: Exiting due to 19 error(s), 11 warning(s)

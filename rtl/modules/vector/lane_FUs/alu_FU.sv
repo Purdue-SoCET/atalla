@@ -21,7 +21,7 @@ module alu_FU (
 
     logic [7:0] vd;
     logic rm;
-    logic [2:0] mop;
+    logic mop;
     alu_op_t alu_op;
     logic [ESZ-1:0] v1_adjusted, v2_adjusted; //ability to adjust the values in case of reduction
 
@@ -86,11 +86,11 @@ module alu_FU (
                 // Determine mop based on mask operations when NOT in reduction mode
                 if (!fuif.in.ports[i].rm) begin
                     case (fuif.in.ports[i].alu_op)
-                        ALU_MGT:  mop = 3'b001;  // Greater than
-                        ALU_MLT:  mop = 3'b010;  // Less than
-                        ALU_MEQ:  mop = 3'b011;  // Equal
-                        ALU_MNEQ: mop = 3'b100;  // Not equal
-                        default:  mop = 3'b000;  // Not a mask operation
+                        ALU_MGT:  mop = 'b1;  // Greater than
+                        ALU_MLT:  mop = 'b1;  // Less than
+                        ALU_MEQ:  mop = 'b1;  // Equal
+                        ALU_MNEQ: mop = 'b1;  // Not equal
+                        default:  mop = 'b0;  // Not a mask operation
                     endcase
                 end
                 
@@ -176,7 +176,7 @@ module alu_FU (
     );
     sync_fifo #(
         .FIFODEPTH(4),
-        .DATAWIDTH(3)
+        .DATAWIDTH(1)
     ) mop_fifo (
         .CLK(CLK),
         .nRST(nRST),

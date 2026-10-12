@@ -9,28 +9,22 @@ import sys_arr_pkg::*;
 /* verilator lint_off IMPORTSTAR */
 
 module sysarr_MEISSA_top #(
-    parameter int ADD_LATENCY = 1,
-    parameter int MUL_LATENCY = 1,
-    parameter int ADD4_LATENCY = 3,
-    parameter bit USE_MIXED_ADDER = 0
+    parameter int ADD_LATENCY = 2,
+    parameter int MUL_LATENCY = 2
 )(
     input logic clk, nRST,
     gsau_control_unit_if.systolic_array gsau_if
 );
     // logic sysarr_stall;
-    logic [N - 1:0][N - 1:0][(IS_FP16 ? DW : DW_ACC)-1:0] mul_prod;
-    // logic [N - 1:0][N - 1:0][DW - 1:0] col_prod;
-    logic [N - 1:0][(IS_FP16 ? DW : DW_ACC)-1:0] adder_sum;
+    logic [N - 1:0][N - 1:0][DW_ACC - 1:0] mul_prod;
+    logic [N - 1:0][N - 1:0][DW - 1:0] col_prod;
+    logic [N - 1:0][DW_ACC - 1:0] adder_sum;
 
     // logic [N - 1:0][DW - 1:0] partial_flipped;
     // logic [N - 1:0][DW - 1:0] partial_sram_out;
     // logic [N - 1:0][DW - 1:0] partial_reverted;
 
-    // logic [N - 1:0][DW_ACC - 1:0] psum_buffer_out;
-
-    logic rdone, vector_done;
-
-    localparam bit LOG4_IS_WHOLE = ((N & (N - 1)) == 0) && ((N & 32'h5555_5555) != 0);
+    logic [N - 1:0][DW_ACC - 1:0] psum_buffer_out;
 
     // Credit-based flow control — ready_in driven by output buffer credits
     // (replaces old pass-through: assign gsau_if.sa_ready_in = gsau_if.sa_ready_out)
@@ -38,7 +32,7 @@ module sysarr_MEISSA_top #(
     //mul grid: input and output is latched
 
     mul_grid #(
-        .FP_BF(IS_FP16)
+        .FP_BF(0)
     )u_mul_grid (
         .clk(clk),
         .nRST(nRST),
@@ -58,34 +52,19 @@ module sysarr_MEISSA_top #(
             /*for (k = 0; k < N; k++) begin: col_pack
                 assign col_prod[j][k] = mul_prod[k][j]; //pack mul_prod into 1D arr
             end */
-            if (USE_MIXED_ADDER) begin
-                mixed_pipelined_adder_tree #(
-                    .N(N)
-                    // .DATA_WIDTH(DW_ACC),
-                    // .FINAL_LEVEL_ADD2(!LOG4_IS_WHOLE)
-                    // .FP_BF(0) // bf16 = 0, fp16 = 1
-                ) u_mixed_piped_addr_tree (
-                    .clk(clk),
-                    .nRST(nRST),
-                    .stall(1'b0),
-                    .terms_in(mul_prod[j]),
-                    .psum_in(),
-                    .sum_out(adder_sum[j])
-                );
-            end else begin
-                pipelined_adder_tree #(
-                    .N(N),
-                    .DATA_WIDTH(DW_ACC),
-                    .FP_BF(IS_FP16) // bf16 = 0, fp16 = 1
-                ) u_piped_addr_tree (
-                    .clk(clk),
-                    .nRST(nRST),
-                    .stall(1'b0),
-                    .terms_in(mul_prod[j]),
-                    .psum_in(),
-                    .sum_out(adder_sum[j])
-                );
-            end
+
+            pipelined_adder_tree #(
+                .N(N),
+                .DATA_WIDTH(DW_ACC),
+                .FP_BF(0) // bf16 = 0, fp16 = 1
+            ) u_piped_addr_tree (
+                .clk(clk),
+                .nRST(nRST),
+                .stall(1'b0),
+                .terms_in(mul_prod[j]),
+                .psum_in(psum_buffer_out[j]),
+                .sum_out(adder_sum[j])
+            );
         end
     endgenerate
 
@@ -95,18 +74,16 @@ module sysarr_MEISSA_top #(
     logic [N - 1:0][DW - 1:0] reduced_data;
     genvar r;
     generate
-        if (!IS_FP16) begin
-            for (r = 0; r < N; r++) begin: reduce
-                reducer #(
-                    .IN_EXP_W(8),
-                    .IN_MANT_W(23),
-                    .OUT_EXP_W(8),
-                    .OUT_MANT_W(7)
-                ) u_reducer (
-                    .fp_in(adder_sum[r]),
-                    .fp_out(reduced_data[r])
-                );
-            end
+        for (r = 0; r < N; r++) begin: reduce
+            reducer #(
+                .IN_EXP_W(8),
+                .IN_MANT_W(23),
+                .OUT_EXP_W(8),
+                .OUT_MANT_W(7)
+            ) u_reducer (
+                .fp_in(adder_sum[r]),
+                .fp_out(reduced_data[r])
+            );
         end
         endgenerate
 
@@ -200,14 +177,10 @@ module sysarr_MEISSA_top #(
         .wr_data(adder_sum),
         .rd_data(output_data)
     ); */
-    localparam int PIPELINE_DEPTH =
-    USE_MIXED_ADDER? (
-        LOG4_IS_WHOLE? 
-        (MUL_LATENCY + (($clog2(N) + 1) / 2) * ADD4_LATENCY) : (MUL_LATENCY + (($clog2(N) - 1) / 2) * ADD4_LATENCY + ADD_LATENCY)
-        ) : (MUL_LATENCY + $clog2(N) * ADD_LATENCY);
 
-    // localparam int PIPELINE_DEPTH = MUL_LATENCY + $clog2(N) * ADD_LATENCY;
     logic [$clog2(N + PIPELINE_DEPTH) - 1:0] credits, next_credits;
+
+    localparam int PIPELINE_DEPTH = MUL_LATENCY + $clog2(N) * ADD_LATENCY;
     localparam int OUTPUT_READ_ENABLE = N;
     localparam int TOTAL_DELAY = PIPELINE_DEPTH + OUTPUT_READ_ENABLE + 2; // 2 because extra flags, valid bit & read enable
 
@@ -216,24 +189,23 @@ module sysarr_MEISSA_top #(
     always_ff @(posedge clk or negedge nRST) begin
         if (!nRST) begin
             shift_reg <= '0;
-            credits <= PIPELINE_DEPTH + N - 1;
+            credits <= PIPELINE_DEPTH + N;
         end else begin
-            shift_reg <= {shift_reg[TOTAL_DELAY - 2 : 0], gsau_if.sa_input_en};
+            shift_reg <= {shift_reg[TOTAL_DELAY - 1 : 0], gsau_if.sa_input_en};
             credits <= next_credits;
         end
     end
 
     always_comb begin
-        case ({rdone && gsau_if.sa_ready_out, gsau_if.sa_input_en})
-            2'b10 : next_credits = credits < (PIPELINE_DEPTH + N - 1) ? credits + 1 : credits;
-            // 2'b01 : next_credits = (credits == 0) ? 0 : credits - 1;
+        case ({gsau_if.sa_valid_in, gsau_if.sa_input_en})
+            2'b10 : next_credits = credits < (PIPELINE_DEPTH + N) ? credits + 1 : credits;
             2'b01 : next_credits = credits - 1;
             // if 2'b11 or 2'b00, number of credits stays the same
             default : next_credits = credits;
         endcase
     end
 
-    assign gsau_if.sa_ready_in = |next_credits;
+    assign gsau_if.sa_ready_in = |credits;
     // assign gsau_if.sa_valid_in = shift_reg[TOTAL_DELAY - 1];
 
 
@@ -280,61 +252,48 @@ module sysarr_MEISSA_top #(
     end */
 
     logic [$clog2(N + PIPELINE_DEPTH) - 1:0] special_counter, next_special_counter;
+    logic sa_valid_in;
 
     always_ff @ (posedge clk, negedge nRST) begin
         if(!nRST) begin
             special_counter <= '0;
-        end else begin
+            sa_valid_in <= 0;
+        end
+        else begin
             special_counter <= next_special_counter;
+            sa_valid_in <= |special_counter;
         end
     end
 
-    // assign gsau_if.sa_valid_in = sa_valid_in & gsau_if.sa_ready_out;
+    assign gsau_if.sa_valid_in = sa_valid_in & gsau_if.sa_ready_out;
 
     always_comb begin
-        case ({vector_done, rdone && gsau_if.sa_ready_out})
-            2'b01: next_special_counter = (special_counter > 0) ? special_counter - 1 : special_counter;
+        case ({shift_reg[TOTAL_DELAY - 3], |special_counter & gsau_if.sa_ready_out})
+            2'b01: next_special_counter = special_counter - 1;
             2'b10: next_special_counter = special_counter + 1;
             default: next_special_counter = special_counter;
-        endcase 
+        endcase
     end
 
-    // TPU_buffer #(
-    //     .NUM_COLS(N),
-    //     .DATA_WIDTH(DW),
-    //     .SRAM_DEPTH(N + PIPELINE_DEPTH),
-    //     .IN_OUT(1) // output
-    // ) output_buffer (
-    //     .clk(clk),
-    //     .nRST(nRST),
-    //     .stall(!gsau_if.sa_ready_out),
-    //     .wr_en(|special_counter),
-    //     .wr_data(reduced_data),
-    //     .rd_en(shift_reg[TOTAL_DELAY - 3 : PIPELINE_DEPTH]), // width of N bits
-    //     .rd_data(output_data),
-    //     .rdone(),
-    //     .lane0_empty(),
-    //     .full()
-    // );
 
-    output_buffer #(
+    TPU_buffer #(
         .NUM_COLS(N),
         .DATA_WIDTH(DW),
-        .SRAM_DEPTH(N + PIPELINE_DEPTH)
-    ) u_output_buffer (
+        .SRAM_DEPTH(N + PIPELINE_DEPTH),
+        .IN_OUT(1) // output
+    ) output_buffer (
         .clk(clk),
         .nRST(nRST),
         .stall(!gsau_if.sa_ready_out),
-        .wr_en(shift_reg[TOTAL_DELAY - 3 : PIPELINE_DEPTH]),
-        .wr_data((IS_FP16)? adder_sum : reduced_data),
-        .rd_en(|next_special_counter),
+        .wr_en(|special_counter),
+        .wr_data(reduced_data),
+        .rd_en(shift_reg[TOTAL_DELAY - 3 : PIPELINE_DEPTH]), // width of N bits
         .rd_data(output_data),
-        .vector_done(vector_done),
-        .rdone(rdone)
+        .rdone(),
+        .lane0_empty(),
+        .full()
     );
 
-    assign gsau_if.sa_valid_in = rdone && gsau_if.sa_ready_out;
-    
     // Drive GSAU output interface
     // Pack N columns of DW bits into sa_array_output (full vector width)
     // assign gsau_if.sa_array_output = {adder_sum[N - 1], output_data[N - 2:0]};

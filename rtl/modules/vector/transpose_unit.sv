@@ -1,12 +1,13 @@
 `include "transpose_unit_if.vh"
 `include "xbar_if.vh"
+`include "vector_pkg.vh"
 
 module transpose_unit (
     input logic CLK, nRST,
     transpose_unit_if.transpose tif
 );  
-
-    xbar_if #(.SIZE(tif.VEC_LEN), .DWIDTH(tif.DATA_W)) xif(.clk(CLK), .n_rst(nRST));
+    import vector_pkg::*;
+    xbar_if #(.SIZE(VLMAX), .DWIDTH(ESZ)) xif(.clk(CLK), .n_rst(nRST));
 
     typedef enum logic [2:0] {
         IDLE,
@@ -24,9 +25,9 @@ module transpose_unit (
     logic [1:0] lat_count, n_lat_count;
 
     // SRAM wires
-    logic [tif.DATA_W-1:0] sram_rdata [tif.VEC_LEN-1:0];
-    logic [tif.VEC_LEN-1:0] sram_rdone;
-    logic [tif.VEC_LEN-1:0] sram_wdone;
+    logic [ESZ-1:0] sram_rdata [VLMAX-1:0];
+    logic [VLMAX-1:0] sram_rdone;
+    logic [VLMAX-1:0] sram_wdone;
     logic ren, wen;
 
     always_ff @(posedge CLK or negedge nRST) begin
@@ -68,7 +69,7 @@ module transpose_unit (
             // PUSH PATH: Wait for SRAM to finish writing current vector
             BUSY_WRITE: begin
                 if(sram_wdone[0]) begin
-                    if(count == (tif.VEC_LEN - 1)) begin
+                    if(count == (VLMAX - 1)) begin
                         n_count = 0;
                         n_state = IDLE; // Or a 'READY_TO_POP' state
                     end else begin
@@ -102,7 +103,7 @@ module transpose_unit (
             DONE: begin
                 // Hold valid_out until consumer is ready
                 if (tif.in.ready_out) begin
-                    if (count == (tif.VEC_LEN - 1)) begin
+                    if (count == (VLMAX - 1)) begin
                         n_count = 0;
                         n_state = IDLE;
                     end else begin
@@ -118,33 +119,33 @@ module transpose_unit (
     assign xif.en = (state != IDLE);
 
     always_comb begin : clos_input_mux
-        for (int i = 0; i < tif.VEC_LEN; i++) begin
+        for (int i = 0; i < VLMAX; i++) begin
             if (state == BUSY_WRITE || state == WAIT_CLOS_WRITE) begin
                 xif.in[i].din = tif.in.vec_in[i];
-                xif.in[i].shift = (i + count) % tif.VEC_LEN;
+                xif.in[i].shift = (i + count) % VLMAX;
             end else begin
                 xif.in[i].din = sram_rdata[i];
-                xif.in[i].shift = (i + (tif.VEC_LEN - count)) % tif.VEC_LEN;
+                xif.in[i].shift = (i + (VLMAX - count)) % VLMAX;
             end
         end
     end
 
-    clos #(.CLOS_SIZE(tif.VEC_LEN), .CLOS_DWIDTH(tif.DATA_W)) clos_inst (.xif(xif));
+    clos #(.CLOS_SIZE(VLMAX), .CLOS_DWIDTH(ESZ)) clos_inst (.xif(xif));
 
     assign wen = (state == WAIT_CLOS_WRITE && lat_count == 2'd2);
     assign ren = state == POPPING;
 
     // --- SRAM Bank Instantiation ---
     generate
-        for (genvar b = 0; b < tif.VEC_LEN; b++) begin : gen_banks
+        for (genvar b = 0; b < VLMAX; b++) begin : gen_banks
             localparam int corrected_idx = (b & ~3) | (3 - (b & 3));
 
             logic [4:0] bank_raddr;
-            assign bank_raddr = (b + (tif.VEC_LEN - count)) % tif.VEC_LEN;
+            assign bank_raddr = (b + (VLMAX - count)) % VLMAX;
 
             sram_bank #(
-                .WIDTH(tif.DATA_W), 
-                .HEIGHT(tif.VEC_LEN)
+                .WIDTH(ESZ), 
+                .HEIGHT(VLMAX)
             ) bank_inst (
                 .clk(CLK), 
                 .n_rst(nRST),
@@ -168,7 +169,7 @@ module transpose_unit (
     // The final output is the output of the Clos network during POPPING
     int idx;
     always_comb begin
-    for(int i = 0; i < tif.VEC_LEN; i++) begin
+    for(int i = 0; i < VLMAX; i++) begin
         // Use the same mapping logic here
         idx = (i & ~3) | (3 - (i & 3)); 
         tif.out.vec_out[i] = (state == DONE) ? xif.out[idx] : '0;

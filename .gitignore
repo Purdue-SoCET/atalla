@@ -9,13 +9,4 @@ vsim.*
 
 !.gitignore
 !.gitmodules
-
-*ini
-*.deps/
-build/
-waves/
-*.log
-*.jou
-*waves*/
-out/
-waves/
+*.vcd
