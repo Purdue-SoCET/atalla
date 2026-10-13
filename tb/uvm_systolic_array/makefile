@@ -5,6 +5,7 @@ VMAP = vmap
 
 INC = +incdir+../../rtl/include/systolic_array \
       +incdir+../../rtl/include/vector \
+      +incdir+../../rtl/include/memory/scratchpad \
       +incdir+.
 
 TOP = tb_top
@@ -23,15 +24,12 @@ compile:
 
 # List of files for full testbench compile
 FILES = \
+	../../rtl/include/memory/scratchpad/scpad_pkg.sv \
 	../../rtl/include/vector/vector_pkg.vh \
 	../../rtl/include/systolic_array/sys_arr_pkg.vh \
 	../../rtl/include/systolic_array/systolic_array_MAC_if.vh \
 	../../rtl/include/vector/gsau_control_unit_if.vh \
-	../../rtl/modules/common/general/ha.sv \
-	../../rtl/modules/common/general/fa.sv \
-	../../rtl/modules/common/general/adder_5b.sv \
 	../../rtl/modules/systolic_array/left_shift.sv \
-	../../rtl/modules/common/general/wtm_bf.sv \
 	../../rtl/modules/systolic_array/arithmetic/reducer.sv \
 	../../rtl/modules/systolic_array/arithmetic/mul_bf.sv \
 	../../rtl/modules/systolic_array/arithmetic/mul_bf_nolatch.sv \
