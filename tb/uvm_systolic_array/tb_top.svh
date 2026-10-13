@@ -13,6 +13,7 @@ endinterface
 module tb_top;
 
   import uvm_pkg::*;
+  import systolic_array_tb_pkg::*;
 
   logic clk   = 1'b0;
   logic n_rst = 1'b0;

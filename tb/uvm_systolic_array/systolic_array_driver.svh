@@ -10,10 +10,10 @@ import uvm_pkg::*;
 `include "uvm_macros.svh"
 
 class systolic_array_driver #(parameter N = 4, parameter WIDTH = 16) extends uvm_driver #(systolic_array_transaction #(N, WIDTH));
-  `uvm_component_utils(systolic_array_driver #(N, WIDTH))   // uvm_component_param_utils maybe use?
+  `uvm_component_param_utils(systolic_array_driver #(N, WIDTH))   // uvm_component_param_utils maybe use?
 
   // Virtual interface handle
-  virtual systolic_array_if #(N, WIDTH) vif;  // maybe switch out for gsau_control_if 
+  virtual systolic_array_tb_if vif;
 
   // Constructor
   function new(string name = "driver", uvm_component parent = null);
@@ -23,7 +23,7 @@ class systolic_array_driver #(parameter N = 4, parameter WIDTH = 16) extends uvm
   // Build phase gets virtual interface 
   function void build_phase(uvm_phase phase);
     super.build_phase(phase);
-    if (!uvm_config_db#(virtual systolic_array_if #(N, WIDTH))::get(this, "", "vif", vif)) begin
+    if (!uvm_config_db#(virtual systolic_array_tb_if)::get(this, "", "vif", vif)) begin
       `uvm_fatal(get_type_name(), "Virtual interface not found; not set at top level")
     end
   endfunction
@@ -46,23 +46,23 @@ class systolic_array_driver #(parameter N = 4, parameter WIDTH = 16) extends uvm
   // task format is output name input 
 
   // need to repack each row of matrix into one word to send to sys_arr 
-  task automatic bit [N*WIDTH-1:0] format_row(bit [WIDTH-1:0] my_matrix [N*N], int r);
+  function automatic bit [N*WIDTH-1:0] format_row(bit [WIDTH-1:0] my_matrix [N*N], int r);
     bit [N*WIDTH-1:0] row = '0; // set everything to 0
     for (int col = 0; col < N; col++) begin
       row[col*WIDTH +: WIDTH] = my_matrix[r*N + col];   // gather each row and put it in word 
     end
     return row;  // return the packed row 
-  endtask
+  endfunction
 
   // task for reseting inputs 
   task reset_all();
-    @(vif.clk);  // syncs to clock edge defined in interface 
-    vif.driver.sa_weight_en <= 1'b0;
-    vif.driver.sa_input_en <= 1'b0;
-    vif.driver.sa_partial_en <= 1'b0;
-    vif.driver.sa_array_in <= 1'b0;
-    vif.driver.sa_array_in_partials <= 1'b0;   
-    vif.driver.sa_ready_out <= 1'b1;
+    @(posedge vif.clk);  // syncs to clock edge defined in interface 
+    vif.bus.sa_weight_en <= 1'b0;
+    vif.bus.sa_input_en <= 1'b0;
+    vif.bus.sa_partial_en <= 1'b0;
+    vif.bus.sa_array_in <= 1'b0;
+    vif.bus.sa_array_in_partials <= 1'b0;   
+    vif.bus.sa_ready_out <= 1'b1;
   endtask
 
   // task for driving transaction at clock edge 
@@ -70,41 +70,35 @@ class systolic_array_driver #(parameter N = 4, parameter WIDTH = 16) extends uvm
 
     // load weights 
     for (int row = 0; row < N; row++) begin
-      @(vif.clk);  // clock edge from if 
-      while (!vif.driver.sa_ready_in) begin // keep clocking until ready 
-        @(vif.clk);
+      while (!vif.bus.sa_ready_in) begin // keep clocking until ready 
+        @(posedge vif.clk);
       end
-      vif.driver.sa_weight_en <= 1'b1;
-      vif.driver.sa_array_in <= format_row(req.weight_matrix, row);
-      @(vif.clk); // maybe?
+      vif.bus.sa_weight_en <= 1'b1;
+      vif.bus.sa_array_in <= format_row(req.weight_matrix, row);
+      @(posedge vif.clk); // maybe?
     end
 
     // put signals low 
-    @(vif.clk);
-    vif.driver.sa_weight_en <= 1'b0;  // put low to not interfere with next transaction
-    vif.driver.sa_array_in <= '0;
-    @(vif.clk); // maybe?
+    vif.bus.sa_weight_en <= 1'b0;  // put low to not interfere with next transaction
+    vif.bus.sa_array_in <= '0;
 
     // load inputs or partial sums
      for (int r = 0; r < N; r++) begin
-      @(vif.clk);  // clock edge from if 
-      while (!vif.driver.sa_ready_in) begin // keep clocking until ready 
-        @(vif.clk);
+      while (!vif.bus.sa_ready_in) begin // keep clocking until ready 
+        @(posedge vif.clk);
       end
-      vif.driver.sa_input_en <= 1'b1;
-      vif.driver.sa_array_in <= format_row(req.input_matrix, row);
-      vif.driver.sa_partial_en <= 1'b1;
-      vif.driver.sa_array_in_partials <= format_row(req.partial_matrix, row);
-      @(vif.clk);
+      vif.bus.sa_input_en <= 1'b1;
+      vif.bus.sa_array_in <= format_row(req.input_matrix, r);
+      vif.bus.sa_partial_en <= 1'b1;
+      vif.bus.sa_array_in_partials <= format_row(req.partial_matrix, r);
+      @(posedge vif.clk);
     end
 
     // clearing signals put low 
-    @vif.clk;
-    vif.driver.sa_input_en <= 1'b0;
-    vif.driver.sa_array_in <= '0;
-    vif.driver.sa_partial_en <= 1'b0;
-    vif.driver.sa_array_in_partials <='0;
-    @(vif.clk);
+    vif.bus.sa_input_en <= 1'b0;
+    vif.bus.sa_array_in <= '0;
+    vif.bus.sa_partial_en <= 1'b0;
+    vif.bus.sa_array_in_partials <='0;
 
     // vif.driver.weight_en <= req.weight_en;
     // vif.driver.input_en <= req.input_en;

@@ -15,11 +15,12 @@ class systolic_array_env #(
   //declare agent and scoreboard
   systolic_array_agent #(N, WIDTH) agent;
   systolic_array_scoreboard #(N, WIDTH) scoreboard;
+  systolic_array_predictor #(N, WIDTH) predictor;
 
   //constructor def
   function new (
     string name = "systolic_array_env", 
-    uvm_component_parent = null
+    uvm_component parent = null
   );
     super.new(name, parent);
   endfunction
@@ -31,11 +32,15 @@ class systolic_array_env #(
     agent = systolic_array_agent #(N, WIDTH)::type_id::create("agent", this);
 
     scoreboard = systolic_array_scoreboard #(N, WIDTH)::type_id::create("scoreboard", this);
+    predictor = systolic_array_predictor #(N, WIDTH)::type_id::create("predictor", this);
   endfunction
 
   //connect monitor to scoreboard
   function void connect_phase(uvm_phase phase);
     super.connect_phase(phase);
+    agent.monitor.ap_in.connect(predictor.item_export);
+    predictor.ap.connect(scoreboard.exp_fifo.analysis_export);
+    agent.monitor.ap_out.connect(scoreboard.act_fifo.analysis_export);
 
   endfunction
 

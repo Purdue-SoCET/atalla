@@ -36,7 +36,7 @@ class systolic_array_agent #(parameter N = 4, parameter WIDTH = 16) extends uvm_
   function void connect_phase(uvm_phase phase);
     super.connect_phase(phase);
     if (get_is_active == UVM_ACTIVE) begin
-      drv.seq_item_port.connect(seqr.seq_item_export);
+      driver.seq_item_port.connect(sequencer.seq_item_export);
     end
   endfunction
 

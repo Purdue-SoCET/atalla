@@ -5,10 +5,10 @@ import uvm_pkg::*;
 `include "uvm_macros.svh"
 
 class systolic_array_test extends uvm_test;
-    `uvm_component_param_utils(systolic_array_test #(N, WIDTH))
+    `uvm_component_utils(systolic_array_test)
 
-    int N = 4;
-    int WIDTH = 16;
+    localparam int N = 4;
+    localparam int WIDTH = 16;
 
     systolic_array_env #(4, 16) env;
 
@@ -22,13 +22,14 @@ class systolic_array_test extends uvm_test;
     endfunction
 
     virtual task run_phase(uvm_phase phase);
-        systolic_array_sequence #(N, WIDTH) seq;
+        base_seq #(N, WIDTH) seq;
         phase.raise_objection(this);
 
-        seq = systolic_array_sequence #(N, WIDTH)::type_id::create("seq");
+        seq = base_seq #(N, WIDTH)::type_id::create("seq");
         `uvm_info("Test", "Starting sequence", UVM_LOW)
 
         seq.start(env.agent.sequencer);
+        #1000ns;
         `uvm_info("Test", "Sequence complete", UVM_LOW)
         phase.drop_objection(this);
     endtask

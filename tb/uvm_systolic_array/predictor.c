@@ -4,6 +4,7 @@
 #include "svdpi.h"
 #include <stdio.h>
 #include <stdint.h>
+#include <string.h>
 #include <math.h>
 #include <stdlib.h>
 #include <svdpi.h>
@@ -32,9 +33,9 @@ uint32_t fp32_to_bf16(float fp32) // mimics hardware implementation
 {
 	uint32_t value; // value
 	memcpy(&value, &fp32, sizeof(value));
-	uint32_t sign = (val >>  31) & 1; // sign of floating point (1 bit)
-	uint32_t exponent = (val >> 23) & 0xFF // exponent of floating point (8 bits)
-	uint32_t mantissa = val & 0x7FFFFF; // mantissa of fp (23 bits)
+	uint32_t sign = (value >>  31) & 1; // sign of floating point (1 bit)
+	uint32_t exponent = (value >> 23) & 0xFF; // exponent of floating point (8 bits)
+	uint32_t mantissa = value & 0x7FFFFF; // mantissa of fp (23 bits)
 
 	// go to 16 bits
 	// round_up = guard & (rnd | sticky | lsb) - structure of reducer.sv
@@ -55,7 +56,7 @@ uint32_t fp32_to_bf16(float fp32) // mimics hardware implementation
 
 	if (exponent == 0xFF)
 	{
-		return (sign << 15) | 0x7F80 | (mant ? 0x0040 : 0); // return a bf16 with nan or infinity
+		return (sign << 15) | 0x7F80 | (mantissa ? 0x0040 : 0); // return a bf16 with nan or infinity
 	} else if (new_exponent >= 0xFF)
 	{
 		return (sign << 15) | 0x7F80; // Overflow
@@ -64,7 +65,7 @@ uint32_t fp32_to_bf16(float fp32) // mimics hardware implementation
 		return (sign << 15); // Underflow (FTZ) - return signed 0
 	}
 
-	return (sign << 15) | (new_exp << 7) | final_mant; //bf16
+	return (sign << 15) | (new_exponent << 7) | final_mantissa; //bf16
 }
 
 void predict_systolic_array_output(unsigned int N, const svOpenArrayHandle weight_matrix, const svOpenArrayHandle input_matrix, svOpenArrayHandle output_matrix) 
@@ -86,8 +87,8 @@ void predict_systolic_array_output(unsigned int N, const svOpenArrayHandle weigh
 
 			for (int k = 0; k < N; k++)
 			{
-				float a = bf16_to_float32(inputs[i * N + k]);
-                		float b = bf16_to_float32(weights[k * N + j]);
+				float a = bf16_to_f32(inputs[i * N + k]);
+                float b = bf16_to_f32(weights[k * N + j]);
 				accumulator += (a*b);
 			}
 

@@ -4,20 +4,22 @@
 import uvm_pkg::*;
 `include "uvm_macros.svh"
 
-class systolic_array_monitor extends uvm_monitor;
+class systolic_array_monitor #(parameter N = 4, parameter WIDTH = 16) extends uvm_monitor;
 
-  `uvm_component_utils(systolic_array_monitor)
+  `uvm_component_param_utils(systolic_array_monitor #(N, WIDTH))
 
   virtual systolic_array_tb_if vif;
 
-  uvm_analysis_port #(gsau_sa_observation) ap;
+  uvm_analysis_port #(systolic_array_transaction #(N, WIDTH)) ap_in;
+  uvm_analysis_port #(systolic_array_transaction #(N, WIDTH)) ap_out;
 
   function new(
     string name = "systolic_array_monitor",
     uvm_component parent = null
   );
     super.new(name, parent);
-    ap = new("ap", this);
+    ap_in  = new("ap_in", this);
+    ap_out = new("ap_out", this);
   endfunction
 
   function void build_phase(uvm_phase phase);
@@ -33,36 +35,54 @@ class systolic_array_monitor extends uvm_monitor;
   endfunction
 
   task run_phase(uvm_phase phase);
-    gsau_sa_observation trans;
-    longint unsigned cycle;
-
-    cycle = 0;
+    systolic_array_transaction #(N, WIDTH) in_trans;
+    systolic_array_transaction #(N, WIDTH) out_trans;
+    int w_row = 0, i_row = 0, o_row = 0;
+    in_trans  = systolic_array_transaction #(N, WIDTH)::type_id::create("in_trans");
+    out_trans = systolic_array_transaction #(N, WIDTH)::type_id::create("out_trans");
 
     forever begin
+    // changed monitor - you were creating a new transaction every clock cycle thats no bueno
       @(posedge vif.clk);
+      if (!vif.n_rst) begin
+        w_row = 0; i_row = 0; o_row = 0;
+        continue;
+      end
 
-      trans = gsau_sa_observation::type_id::create("trans");
+      // collecting weights
+      if (vif.bus.sa_weight_en && w_row < N) begin
+        for (int c = 0; c < N; c++) begin
+            in_trans.weight_matrix[w_row*N + c] = vif.bus.sa_array_in[c*WIDTH +: WIDTH];
+          end
+          w_row++;
+      end
 
-      trans.cycle = cycle;
-      trans.n_rst = vif.n_rst;
 
-      // Inputs 
-      trans.array_in         = vif.bus.sa_array_in;
-      trans.array_in_partials = vif.bus.sa_array_in_partials;
+      // collecting inputs
+      if (vif.bus.sa_input_en && i_row < N) begin
+        for (int c = 0; c < N; c++)
+          in_trans.input_matrix[i_row*N + c] = vif.bus.sa_array_in[c*WIDTH +: WIDTH];
+        i_row++;
+      end
 
-      trans.input_en         = vif.bus.sa_input_en;
-      trans.weight_en        = vif.bus.sa_weight_en;
-      trans.partial_en       = vif.bus.sa_partial_en;
-      trans.ready_out        = vif.bus.sa_ready_out;
+      if (w_row == N && i_row == N) begin
+        ap_in.write(in_trans);
+        in_trans = systolic_array_transaction #(N, WIDTH)::type_id::create("in_trans");
+        w_row = 0; i_row = 0;
+      end
 
-      // Outputs 
-      trans.array_output     = vif.bus.sa_array_output;
-      trans.valid_in         = vif.bus.sa_valid_in;
-      trans.ready_in         = vif.bus.sa_ready_in;
-
-      ap.write(trans);
-
-      cycle++;
+      // Collect outputs
+      if (vif.bus.sa_valid_in && vif.bus.sa_ready_out) begin
+        for (int c = 0; c < N; c++)
+          out_trans.output_matrix[o_row*N + c] = vif.bus.sa_array_output[c*WIDTH +: WIDTH];
+        o_row++;
+        if (o_row == N) begin
+          ap_out.write(out_trans);
+          out_trans = systolic_array_transaction #(N, WIDTH)::type_id::create("out_trans");
+          o_row = 0;
+        end
+      end
+      
     end
   endtask
 

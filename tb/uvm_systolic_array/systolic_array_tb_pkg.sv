@@ -15,7 +15,7 @@ package systolic_array_tb_pkg;
     `include "systolic_array_scoreboard.svh"
     `include "systolic_array_agent.svh"
     `include "systolic_array_env.svh"
-    `include "systolic_array_base_test.svh"
+    `include "systolic_array_test.svh"
 endpackage
 
 `endif

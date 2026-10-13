@@ -9,11 +9,13 @@ import "DPI-C" context function void predict_systolic_array_output(input int uns
 class systolic_array_predictor #(parameter N = 4, parameter WIDTH = 16) extends uvm_component;
 	`uvm_component_param_utils(systolic_array_predictor #(N, WIDTH))
 	
-	uvm_analysis_imp #(systolic_array_transaction #(N, WIDTH), systolic_array_predictor) item_export;
+	uvm_analysis_imp #(systolic_array_transaction #(N, WIDTH), systolic_array_predictor #(N, WIDTH)) item_export;
+	uvm_analysis_port #(systolic_array_transaction #(N, WIDTH)) ap;
 
 	function new(string name, uvm_component parent);
         	super.new(name, parent);
         	item_export = new("item_export", this);
+			ap = new("ap", this);
     	endfunction
 
 	virtual function void write(systolic_array_transaction #(N, WIDTH) tr);
@@ -26,11 +28,12 @@ class systolic_array_predictor #(parameter N = 4, parameter WIDTH = 16) extends 
         	output_matrix = new[N*N];
 
 		foreach (tr.weight_matrix[i]) weight_matrix[i] = tr.weight_matrix[i];
-        	foreach (tr.input_matrix[i]) input_matrix[i] = tr.input_matrix[i];
+        foreach (tr.input_matrix[i]) input_matrix[i] = tr.input_matrix[i];
 		// ignore partials
 		
-		predict_sysarr_output(N, weight_matrix, input_matrix, output_matrix);
+		predict_systolic_array_output(N, weight_matrix, input_matrix, output_matrix);
 		foreach (output_matrix[i]) tr.output_matrix[i] = output_matrix[i];
+		ap.write(tr);
 
 
 		`uvm_info("PREDICTOR", $sformatf("prediction worked"), UVM_HIGH)
