@@ -4,7 +4,6 @@ module tb_top;
   timeprecision 1ps;
 
   import uvm_pkg::*;
-  // Import your UVM testbench package here, if applicable.
 
   logic clk   = 1'b0;
   logic n_rst = 1'b0;
@@ -21,6 +20,15 @@ module tb_top;
     n_rst = 1'b1;
   end
 
+  systolic_array #(
+  .N(4),
+  .WIDTH(16)
+) dut (
+  .clk(clk),
+  .nRST(n_rst),
+  .memory(memory_if)
+);
+  
   initial begin
     uvm_config_db#(virtual systolic_array_tb_if)::set(
       null, "uvm_test_top.*", "vif", tb_if
