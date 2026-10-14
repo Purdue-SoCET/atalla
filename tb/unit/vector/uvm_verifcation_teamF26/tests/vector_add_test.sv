@@ -23,6 +23,7 @@ class vector_add_test extends vector_base_test;
 
         // Start sequence on lane agent sequencer
         add_seq.start(env.lane_agt.sequencer);
+        wait (env.scoreboard.check_done == 1'b1);
 
         `uvm_info("VECTOR_ADD_TEST", "ADD sequence completed", UVM_MEDIUM)
 

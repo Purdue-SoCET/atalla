@@ -5,6 +5,7 @@ class lane_agent extends uvm_agent;
 
     lane_driver driver;
     lane_sequencer sequencer;
+    lane_monitor monitor; // Adding monitor
 
     function new(string name = "lane_agent",
                  uvm_component parent = null);
@@ -17,6 +18,7 @@ class lane_agent extends uvm_agent;
 
         driver = lane_driver::type_id::create("driver", this);
         sequencer = lane_sequencer::type_id::create("sequencer", this);
+        monitor = lane_monitor::type_id::create("monitor", this);
     endfunction
 
     // Connect driver to sequencer
