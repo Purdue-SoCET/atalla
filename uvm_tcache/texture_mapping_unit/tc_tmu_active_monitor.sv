@@ -32,17 +32,17 @@ class tc_tmu_active_monitor extends uvm_monitor;
 
     forever begin
       tc_tmu_transaction tx = tc_tmu_transaction::type_id::create("tx");
+      @(negedge vif.clk);
+      if(vif.tmu_valid === 1'b1) begin
+        tx.s = vif.s;
+        tx.t = vif.t;
+        tx.tex_width = vif.tex_width;
+        tx.tex_height = vif.tex_height;
+        tx.base_addr = vif.base_addr;
+        tx.tmu_valid = vif.tmu_valid;
 
-      while (vif.tmu_valid == 1'b0) @(negedge vif.clk);
-
-      tx.s = vif.s;
-      tx.t = vif.t;
-      tx.tex_width = vif.tex_width;
-      tx.tex_height = vif.tex_height;
-      tx.base_addr = vif.base_addr;
-      tx.tmu_valid = vif.tmu_valid;
-
-      tc_ap.write(tx);
+        tc_ap.write(tx);
+      end
     end
   endtask
 

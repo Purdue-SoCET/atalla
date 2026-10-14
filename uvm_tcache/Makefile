@@ -53,7 +53,7 @@ cli:
 	-coverage \
 	+UVM_TESTNAME="$(TESTNAME)" \
 	+UVM_VERBOSITY=$(VERBOSITY) \
-	-do "run -all" &
+	-do "run -all"
 
 debug:
 	@echo "Building testbench and DUT..."
@@ -72,7 +72,7 @@ debug:
 	-voptargs=+acc \
 	+UVM_TESTNAME="$(TESTNAME)" \
 	+UVM_VERBOSITY=$(VERBOSITY) \
-	-do "do wave.do" -do "run -all" &
+	-do "do wave.do" -do "run -all"
 
 cache_wav: cache_bank.log cache_mshr_buffer.log lockup_free_cache.wav
 cache_sim: cache_bank.log cache_mshr_buffer.log lockup_free_cache.sim

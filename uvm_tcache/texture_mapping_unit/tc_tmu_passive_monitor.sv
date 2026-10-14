@@ -34,9 +34,8 @@ class tc_tmu_passive_monitor extends uvm_monitor;
       if(vif.cache_ready) begin
         tx.cache_ready = 1'b1;
         tx.texel_return = vif.texel_return;
+        tc_result_ap.write(tx);
       end
-
-      tc_result_ap.write(tx);
 
       @(negedge vif.clk);
     end

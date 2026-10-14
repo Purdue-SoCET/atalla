@@ -1,0 +1,8 @@
+  CREATE_STREAM @0 {NAME:basic_seq T:Transactions SCOPE:uvm_test_top.env.tmu_active_agent.sqr STREAM:914}
+  CREATE_STREAM @0 {NAME:basic_seq T:Transactions SCOPE:uvm_test_top.env.tmu_active_agent.sqr STREAM:914}
+  CREATE_STREAM @0 {NAME:basic_seq T:Transactions SCOPE:uvm_test_top.env.tmu_active_agent.sqr STREAM:916}
+  CREATE_STREAM @0 {NAME:basic_seq T:Transactions SCOPE:uvm_test_top.env.tmu_active_agent.sqr STREAM:916}
+  CREATE_STREAM @0 {NAME:basic_seq T:Transactions SCOPE:uvm_test_top.env.tmu_active_agent.sqr STREAM:916}
+  CREATE_STREAM @0 {NAME:basic_seq T:Transactions SCOPE:uvm_test_top.env.tmu_active_agent.sqr STREAM:916}
+  CREATE_STREAM @0 {NAME:basic_seq T:Transactions SCOPE:uvm_test_top.env.tmu_active_agent.sqr STREAM:916}
+  CREATE_STREAM @0 {NAME:basic_seq T:Transactions SCOPE:uvm_test_top.env.tmu_active_agent.sqr STREAM:916}

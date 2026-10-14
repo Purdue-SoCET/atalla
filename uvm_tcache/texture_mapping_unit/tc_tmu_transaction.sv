@@ -10,11 +10,11 @@ class tc_tmu_transaction extends uvm_sequence_item;
   logic n_rst;
 
   // TMU Inputs
-  logic [3:0][S_T_WIDTH-1:0] s;
-  logic [3:0][S_T_WIDTH-1:0] t;
-  logic [3:0][TEXEL_WIDTH-1:0] tex_width;
-  logic [3:0][TEXEL_HEIGHT-1:0] tex_height;
-  logic [3:0][ADDR_WIDTH-1:0] base_addr;
+  rand logic [3:0][S_T_WIDTH-1:0] s;
+  rand logic [3:0][S_T_WIDTH-1:0] t;
+  rand logic [3:0][TEXEL_WIDTH-1:0] tex_width;
+  rand logic [3:0][TEXEL_HEIGHT-1:0] tex_height;
+  rand logic [3:0][ADDR_WIDTH-1:0] base_addr;
   logic tmu_valid;
 
   // TMU Outputs

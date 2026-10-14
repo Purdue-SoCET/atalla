@@ -33,6 +33,7 @@ class tc_tmu_active_driver extends uvm_driver#(tc_tmu_transaction);
   task run_phase(uvm_phase phase);
     tc_tmu_transaction req_item;
 
+    `uvm_info("Driver", "Starting run phase", UVM_MEDIUM)
     DUT_reset(); 
     forever begin
       seq_item_port.get_next_item(req_item);

@@ -64,11 +64,16 @@ module tb_top();
     assign tc_if.mem_addr = mem_addr;
     assign tc_if.mem_valid = mem_valid;
 
-    texture_cache DUT(.clk(clk), .n_rst(n_rst), .*);
+    //texture_cache DUT(.clk(clk), .n_rst(n_rst), .*);
 
     initial begin
+        $display("before config_db");
         uvm_config_db#(virtual tc_if)::set(null, "", "tc_vif", tc_if);
+        $display("running test!");
         run_test("test");
+        #10ns;
+        $display("waited");
+        $finish;
     end
 
 endmodule
