@@ -26,12 +26,17 @@ compile:
 	$(VLOG) -work $(LIB) -sv $(INC) UVM_1.2/$(FILE)
 
 # List of files for full testbench compile
+# 1. Packages/Params
+# 2. Interfaces
+# 3. Modules
+# 4. TB/UVM files
 FILES = \
 	rtl/include/memory/scratchpad/scpad_params.svh \
 	rtl/include/memory/scratchpad/scpad_pkg.sv \
 	rtl/include/systolic_array/sys_arr_pkg.vh \
 	rtl/include/common/xbar/xbar_pkg.sv \
 	rtl/include/vector/vector_pkg.vh \
+	tb/unit/vector/uvm_verifcation_teamF26/vector_uvm_pkg.sv \
 	\
 	rtl/include/memory/scratchpad/scpad_if.sv \
 	rtl/include/vector/vlsu_if.sv \
@@ -49,6 +54,7 @@ FILES = \
 	rtl/include/vector/vreduction_if.vh \
 	rtl/include/vector/lane_FUs/reduction_FU_if.vh \
 	rtl/include/vector/vector_if.vh \
+	tb/unit/vector/uvm_verifcation_teamF26/interfaces/vector_tb_if.sv\
 	\
 	rtl/modules/common/arithmetic/adders/left_shift_add_bf16.sv \
 	rtl/modules/common/arithmetic/adders/adder_8b.sv \
@@ -117,4 +123,4 @@ run:
 gui:
 	@rm -rf $(LIB)
 	$(MAKE) compile_all LIB=$(LIB)
-	$(VSIM) -voptargs="+acc" $(LIB).$(TOP) -do "do uvm/waves/plic.do"
+	$(VSIM) -voptargs="+acc" $(LIB).$(TOP) -do "do tb/unit/vector/uvm_verifcation_teamF26/waves/initial_wave.do"
